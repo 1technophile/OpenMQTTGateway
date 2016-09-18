@@ -52,8 +52,8 @@ RCSwitch mySwitch = RCSwitch();
 #define wifi_ssid "mywifiid"
 #define wifi_password "mypwd"
 #define mqtt_server "192.168.0.22"
-#define mqtt_user "your_username" // not compulsory
-#define mqtt_password "your_password" // not compulsory
+#define mqtt_user "your_username" // not compulsory if you set it uncomment line 127 and comment line 129
+#define mqtt_password "your_password" // not compulsory if you set it uncomment line 127 and comment line 129
 
 //adding this to bypass to problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
@@ -124,7 +124,7 @@ boolean reconnect() {
     trc("Attempting MQTT connection...");
     // Attempt to connect
     // If you  want to use a username and password, change next line to
-    //if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) {
+    //if (client.connect("433toMQTTto433", mqtt_user, mqtt_password)) {
     // and set username and password at the program beginning
     if (client.connect("433toMQTTto433")) {
     // Once connected, publish an announcement...
