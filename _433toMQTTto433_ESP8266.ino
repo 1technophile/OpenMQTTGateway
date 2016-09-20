@@ -1,7 +1,7 @@
 /*
   433toMQTTto433  - ESP8266 program for home automation 
 
-   Act as a wifi gateway between your nodes and a MQTT broker
+   Act as a wifi gateway between your 433mhz nodes and a MQTT broker 
    Send and receiving command by MQTT
  
   This program enables to:
@@ -17,7 +17,7 @@
   - ESP8266Wifi
   
   Project home: https://github.com/1technophile/433toMQTTto433_ESP8266
-  Blog: https://1technophile.blogspot.com/
+  Blog, tutorial: http://1technophile.blogspot.com/2016/09/433tomqttto433-bidirectional-esp8266.html
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -32,7 +32,7 @@ TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONIN
 THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Some usefull commands to test gateway with mosquitto
+Some usefull commands to test gateway with mosquitto:
 Subscribe to the subject for data receiption from RF signal
 mosquitto_sub -t home/433toMQTT
 
@@ -92,15 +92,14 @@ void setup()
 {
   //Launch serial for debugging purposes
   Serial.begin(9600);
-  //Begining ethernet connection
+  //Begining wifi connection
   setup_wifi();
-  //client.setServer(mqtt_server, 1883);
   delay(1500);
   lastReconnectAttempt = 0;
   
-  mySwitch.enableTransmit(4); // RF Transmitter is connected to Arduino Pin #10 
+  mySwitch.enableTransmit(4); // RF Transmitter is connected to Pin D2 
   mySwitch.setRepeatTransmit(20); //increase transmit repeat to avoid lost of rf sendings
-  mySwitch.enableReceive(0);  // Receiver on inerrupt 0 => that is pin #2
+  mySwitch.enableReceive(0);  // Receiver on pin D3
 }
 
 void setup_wifi() {
@@ -123,7 +122,7 @@ boolean reconnect() {
   while (!client.connected()) {
     trc("Attempting MQTT connection...");
     // Attempt to connect
-    // If you  want to use a username and password, change next line to
+    // If you  want to use a username and password, uncomment next line and comment the line if (client.connect("433toMQTTto433")) {
     //if (client.connect("433toMQTTto433", mqtt_user, mqtt_password)) {
     // and set username and password at the program beginning
     if (client.connect("433toMQTTto433")) {
@@ -203,13 +202,12 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
   char datacallback[26] = "";
   
   // Below you send RF signal following data value received by MQTT 
-    // converting string to char for condition statement
     callbackstring.toCharArray(datacallback,26);
     trc(datacallback);
     long int data = atol(datacallback);
     trc("Send received data by RF 433");
     trc(String(data));
-    //send received MQTT value by RF signal (example of signal sent data = 5264660), we activate the transmitter on pin 9 the time to send data by RF
+    //send received MQTT value by RF signal (example of signal sent data = 5264660)
     mySwitch.send(data, 24);
 }
 
