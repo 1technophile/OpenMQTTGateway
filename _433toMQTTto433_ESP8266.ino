@@ -110,6 +110,8 @@ void setup_wifi() {
   // We start by connecting to a WiFi network
   trc("Connecting to ");
   trc(wifi_ssid);
+  
+  WiFi.mode(WIFI_STA); //Disable AP
 
   WiFi.begin(wifi_ssid, wifi_password);
 
