@@ -49,11 +49,14 @@ RCSwitch mySwitch = RCSwitch();
 #define TRACE 1  // 0= trace off 1 = trace on
 
 // Update these with values suitable for your network.
-#define wifi_ssid "mywifiid"
-#define wifi_password "mypwd"
-#define mqtt_server "192.168.0.22"
+#define wifi_ssid "wifi_ssid"
+#define wifi_password "wifi_password"
+#define mqtt_server "mqtt_server"
 #define mqtt_user "your_username" // not compulsory if you set it uncomment line 127 and comment line 129
 #define mqtt_password "your_password" // not compulsory if you set it uncomment line 127 and comment line 129
+
+String MQTTsubject = "home/433toMQTT";
+String topicNameRec = "home/MQTTto433";
 
 //adding this to bypass to problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
@@ -125,12 +128,20 @@ boolean reconnect() {
     // If you  want to use a username and password, uncomment next line and comment the line if (client.connect("433toMQTTto433")) {
     //if (client.connect("433toMQTTto433", mqtt_user, mqtt_password)) {
     // and set username and password at the program beginning
-    if (client.connect("433toMQTTto433")) {
+   String deviceName = "MCU-";
+  deviceName = deviceName + "" + random(100, 999);
+   
+  char deviceCharName[deviceName.length()+1];
+  deviceName.toCharArray(deviceCharName, deviceName.length()+1);
+
+
+   trc("Hello world, my name is: " + deviceName);
+    if (client.connect(deviceCharName)) {
     // Once connected, publish an announcement...
       client.publish("outTopic","hello world");
       trc("connected");
     //Topic subscribed so as to get data
-    String topicNameRec = String("home/MQTTto433/");
+    //REMOVED: String topicNameRec = String("home/MQTTto433");
     //Subscribing to topic(s)
     subscribing(topicNameRec);
     } else {
@@ -166,7 +177,7 @@ void loop()
   if (mySwitch.available()) {
     // Topic on which we will send data
     trc("Receiving 433Mhz signal");
-    String MQTTsubject = "home/433toMQTT";
+    //REMOVED: String MQTTsubject = "home/433toMQTT";
     long MQTTvalue;
     MQTTvalue=mySwitch.getReceivedValue();  
     mySwitch.resetAvailable();
@@ -200,6 +211,11 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
   char topicOri[26] = "";
   char topicStrAck[26] = "";
   char datacallback[26] = "";
+
+  trc("Start saying we received request");
+  trc(callbackstring);
+  sendMQTT(MQTTsubject , callbackstring);
+  trc("Stop saying we received request");
   
   // Below you send RF signal following data value received by MQTT 
     callbackstring.toCharArray(datacallback,26);
@@ -232,5 +248,3 @@ void trc(String msg){
   Serial.println(msg);
   }
 }
-
-
