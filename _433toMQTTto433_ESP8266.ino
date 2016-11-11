@@ -99,7 +99,7 @@ void setup()
   
   mySwitch.enableTransmit(4); // RF Transmitter is connected to Pin D2 
   mySwitch.setRepeatTransmit(20); //increase transmit repeat to avoid lost of rf sendings
-  mySwitch.enableReceive(0);  // Receiver on pin D3
+  mySwitch.enableReceive(5);  // Receiver on pin D1
 }
 
 void setup_wifi() {
