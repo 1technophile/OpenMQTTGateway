@@ -3,7 +3,7 @@
   Tested OK on GeekCreek ESP12F
   Not working on NodeMCU V0.9
 
-   Act as a wifi gateway between your 433mhz/IR  and a MQTT broker 
+   Act as a wifi gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
   This program enables to:
