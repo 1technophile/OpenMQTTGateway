@@ -52,7 +52,7 @@ mosquitto_pub -t home/MQTTto433/ -m 1315153
 RCSwitch mySwitch = RCSwitch();
 
 IRrecv irrecv(2);
-IRsend irsend(14); //an IR led is connected to GPIO pin 0
+IRsend irsend(14);
 
 decode_results results;
 
