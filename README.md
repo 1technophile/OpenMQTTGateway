@@ -1,24 +1,11 @@
-433toMQTTto433  - ESP8266 program for home automation 
-
-   Act as a wifi gateway between your nodes and a MQTT broker
-   Send and receiving command by MQTT
+433toMQTTto433  - ESP8266 program for home automation , gateway between 433mhz and MQTT on both directions
+Tutorial and schema are there https://1technophile.blogspot.com/2016/09/433tomqttto433-bidirectional-esp8266.html
  
-  This program enables to:
- - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received 433Mhz signal
-
-  Contributor:
-  - 1technophile
-
-  Based on:
-  - MQTT library (https://github.com/knolleary)
-  - RCSwitch (https://github.com/sui77/rc-switch)
-  - ESP8266Wifi
+433nIRtoMQTTto433nIR - gateway between 433mhz, infrared and MQTT on both directions
+Tutorial and schema are there https://1technophile.blogspot.fr/2016/11/433nIRtomqttto433nIR-bidirectional-esp8266.html
   
-  Project home: https://github.com/1technophile/433toMQTTto433_ESP8266
-
-  Tutorial and schema are there https://1technophile.blogspot.com/2016/09/433tomqttto433-bidirectional-esp8266.html
-
+These gateways can be integrated with home automation systems like Openhab or Home assistant thanks to the MQTT protocol.
+  
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
@@ -31,10 +18,3 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
 THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Some usefull commands to test gateway with mosquitto
-Subscribe to the subject for data receiption from RF signal
-mosquitto_sub -t home/433toMQTT
-
-Send data by MQTT to convert it on RF signal
-mosquitto_pub -t home/MQTTto433/ -m 1315153
