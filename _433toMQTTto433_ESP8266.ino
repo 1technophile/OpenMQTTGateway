@@ -48,11 +48,9 @@ RCSwitch mySwitch = RCSwitch();
 #define mqtt_password "your_password" // not compulsory if you set it uncomment line 127 and comment line 129
 
 //variables to avoid duplicates
-#define time_avoid_duplicate 2000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
-// Time to avoid duplicate
-long lastReceivedRFTime = 0; 
-// string to store previous received RF
-String lastReceivedRF; 
+#define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+// array to store previous received RFs codes and their timestamps
+long ReceivedRF[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 
 //adding this to bypass to problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
@@ -170,9 +168,24 @@ void loop()
     MQTTvalue=mySwitch.getReceivedValue();  
     mySwitch.resetAvailable();
     if (client.connected()) {
+    long now = millis();
+    if (!isAduplicate(MQTTvalue)) {// conditions to avoid duplications of RF -->MQTT
         trc("Sending 433Mhz signal to MQTT");
         trc(String(MQTTvalue));
         sendMQTT(MQTTsubject,String(MQTTvalue));
+        // find oldest value of the buffer
+        int o = getMin();
+        trc("Minimum index: " + String(o));
+        // replace it by the new one
+        ReceivedRF[o][0] = MQTTvalue;
+        ReceivedRF[o][1] = now;
+        trc("send this code :" + String(ReceivedRF[o][0])+"/"+String(ReceivedRF[o][1]));
+        trc("Col: value/timestamp");
+        for (int i = 0; i < 10; i++)
+        {
+          trc(String(i) + ":" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+        }
+    }        
     } else {
       if (reconnect()) {
         sendMQTT(MQTTsubject,String(MQTTvalue));
@@ -180,6 +193,34 @@ void loop()
       }
     }
   }
+}
+int getMin()
+{
+  int minimum = ReceivedRF[0][1];
+  int minindex=0;
+  for (int i = 0; i < 10; i++)
+  {
+    if (ReceivedRF[i][1] < minimum) {
+      minimum = ReceivedRF[i][1];
+      minindex = i;
+    }
+  }
+  return minindex;
+}
+
+boolean isAduplicate(long value){
+trc("isAduplicate");
+// check if the value has been already sent during the last "time_avoid_duplicate"
+for (int i=0; i<10;i++){
+ if (ReceivedRF[i][0] == value){
+      long now = millis();
+      if (now - ReceivedRF[i][1] < time_avoid_duplicate){
+      trc("don't send this code :" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+      return true;
+    }
+  }
+}
+return false;
 }
 
 void subscribing(String topicNameRec){ // MQTT subscribing to topic
@@ -213,10 +254,6 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
 //send MQTT data dataStr to topic topicNameSend
 void sendMQTT(String topicNameSend, String dataStr){
 
-    long now = millis();
-    if ((now - lastReceivedRFTime > time_avoid_duplicate)||(dataStr != lastReceivedRF)) {// conditions to avoid duplications of RF -->MQTT
-      lastReceivedRFTime = now;
-      lastReceivedRF = dataStr;
       char topicStrSend[26];
       topicNameSend.toCharArray(topicStrSend,26);
       char dataStrSend[200];
@@ -226,10 +263,6 @@ void sendMQTT(String topicNameSend, String dataStr){
       trc(dataStr);
       trc("to ");
       trc(topicNameSend);
-    }else{
-      trc("duplicate found");
-      trc(dataStr);
-    }
 }
 
 //trace
