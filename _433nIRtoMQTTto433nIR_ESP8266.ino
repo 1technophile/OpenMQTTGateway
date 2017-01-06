@@ -66,10 +66,15 @@ decode_results results;
 #define mqtt_user "your_username" // not compulsory if you set it uncomment line 143 and comment line 145
 #define mqtt_password "your_password" // not compulsory if you set it uncomment line 143 and comment line 145
 
+//variables to avoid duplicates for RF
+#define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+// array to store previous received RFs codes and their timestamps
+long ReceivedRF[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+
 #define subjectMQTTtoX "home/commands/#"
 //RF MQTT Subjects
-#define subject433toMQTT "home/sensors/rf"
-#define subjectMQTTto433 "home/commands/rf"
+#define subject433toMQTT "home/433toMQTT"
+#define subjectMQTTto433 "home/MQTTto433/"
 //IR MQTT Subjects
 #define subjectIRtoMQTT "home/sensors/ir"
 #define subjectMQTTtoIRCOOLIX "home/commands/sendCOOLIX"
@@ -199,21 +204,27 @@ void loop()
   if (mySwitch.available()) {
     // Topic on which we will send data
     trc("Receiving 433Mhz signal");
-    long MQTTvalue;
+    unsigned long MQTTvalue;
     MQTTvalue=mySwitch.getReceivedValue();  
     mySwitch.resetAvailable();
     if (client.connected()) {
-      trc("Sending 433Mhz signal to MQTT");
-      trc(String(MQTTvalue));
-      sendMQTT(subject433toMQTT,String(MQTTvalue));
+      if (!isAduplicate(MQTTvalue)) {// conditions to avoid duplications of RF -->MQTT
+          trc("Sending 433Mhz signal to MQTT");
+          trc(String(MQTTvalue));
+          sendMQTT(subject433toMQTT,String(MQTTvalue));
+          storeValue(MQTTvalue);
+      }         
     } else {
       if (reconnect()) {
+        trc("Sending 433Mhz signal to MQTT after reconnect");
+        trc(String(MQTTvalue));
         sendMQTT(subject433toMQTT,String(MQTTvalue));
+        storeValue(MQTTvalue);
         lastReconnectAttempt = 0;
       }
     }
   }
-  
+
   // Receive loop, if data received by IR send it by MQTT to subjectIRtoMQTT
   if (irrecv.decode(&results)) {
     trc("Receiving IR signal");
@@ -226,6 +237,50 @@ void loop()
   }
   delay(100);
 
+}
+
+void storeValue(long MQTTvalue){
+    long now = millis();
+    // find oldest value of the buffer
+    int o = getMin();
+    trc("Minimum index: " + String(o));
+    // replace it by the new one
+    ReceivedRF[o][0] = MQTTvalue;
+    ReceivedRF[o][1] = now;
+    trc("send this code :" + String(ReceivedRF[o][0])+"/"+String(ReceivedRF[o][1]));
+    trc("Col: value/timestamp");
+    for (int i = 0; i < 10; i++)
+    {
+      trc(String(i) + ":" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+    }
+}
+
+int getMin(){
+  int minimum = ReceivedRF[0][1];
+  int minindex=0;
+  for (int i = 0; i < 10; i++)
+  {
+    if (ReceivedRF[i][1] < minimum) {
+      minimum = ReceivedRF[i][1];
+      minindex = i;
+    }
+  }
+  return minindex;
+}
+
+boolean isAduplicate(long value){
+trc("isAduplicate");
+// check if the value has been already sent during the last "time_avoid_duplicate"
+for (int i=0; i<10;i++){
+ if (ReceivedRF[i][0] == value){
+      long now = millis();
+      if (now - ReceivedRF[i][1] < time_avoid_duplicate){
+      trc("don't send this code :" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+      return true;
+    }
+  }
+}
+return false;
 }
 
 void subscribing(String topicNameRec){ // MQTT subscribing to topic
