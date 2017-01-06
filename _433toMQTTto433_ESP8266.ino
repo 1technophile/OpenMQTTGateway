@@ -52,6 +52,11 @@ RCSwitch mySwitch = RCSwitch();
 // array to store previous received RFs codes and their timestamps
 long ReceivedRF[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 
+#define subjectMQTTtoX "home/commands/#"
+//RF MQTT Subjects
+#define subject433toMQTT "home/433toMQTT"
+#define subjectMQTTto433 "home/MQTTto433/"
+
 //adding this to bypass to problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 WiFiClient espClient;
@@ -126,10 +131,8 @@ boolean reconnect() {
     // Once connected, publish an announcement...
       client.publish("outTopic","hello world");
       trc("connected");
-    //Topic subscribed so as to get data
-    String topicNameRec = String("home/MQTTto433/");
-    //Subscribing to topic(s)
-    subscribing(topicNameRec);
+      //Subscribing to topic(s)
+      subscribing(subjectMQTTtoX);
     } else {
       trc("failed, rc=");
       trc(String(client.state()));
@@ -159,41 +162,48 @@ void loop()
     client.loop();
   }
 
-  // Receive loop, if data received by RF433 send it by MQTT to MQTTsubject
+  // Receive loop, if data received by RF433 send it by MQTT to subject433toMQTT
   if (mySwitch.available()) {
     // Topic on which we will send data
     trc("Receiving 433Mhz signal");
-    String MQTTsubject = "home/433toMQTT";
-    long MQTTvalue;
+    unsigned long MQTTvalue;
     MQTTvalue=mySwitch.getReceivedValue();  
     mySwitch.resetAvailable();
     if (client.connected()) {
-    long now = millis();
-    if (!isAduplicate(MQTTvalue)) {// conditions to avoid duplications of RF -->MQTT
-        trc("Sending 433Mhz signal to MQTT");
-        trc(String(MQTTvalue));
-        sendMQTT(MQTTsubject,String(MQTTvalue));
-        // find oldest value of the buffer
-        int o = getMin();
-        trc("Minimum index: " + String(o));
-        // replace it by the new one
-        ReceivedRF[o][0] = MQTTvalue;
-        ReceivedRF[o][1] = now;
-        trc("send this code :" + String(ReceivedRF[o][0])+"/"+String(ReceivedRF[o][1]));
-        trc("Col: value/timestamp");
-        for (int i = 0; i < 10; i++)
-        {
-          trc(String(i) + ":" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
-        }
-    }        
+      if (!isAduplicate(MQTTvalue)) {// conditions to avoid duplications of RF -->MQTT
+          trc("Sending 433Mhz signal to MQTT");
+          trc(String(MQTTvalue));
+          sendMQTT(subject433toMQTT,String(MQTTvalue));
+          storeValue(MQTTvalue);
+      }         
     } else {
       if (reconnect()) {
-        sendMQTT(MQTTsubject,String(MQTTvalue));
+        trc("Sending 433Mhz signal to MQTT after reconnect");
+        trc(String(MQTTvalue));
+        sendMQTT(subject433toMQTT,String(MQTTvalue));
+        storeValue(MQTTvalue);
         lastReconnectAttempt = 0;
       }
     }
   }
 }
+
+void storeValue(long MQTTvalue){
+    long now = millis();
+    // find oldest value of the buffer
+    int o = getMin();
+    trc("Minimum index: " + String(o));
+    // replace it by the new one
+    ReceivedRF[o][0] = MQTTvalue;
+    ReceivedRF[o][1] = now;
+    trc("send this code :" + String(ReceivedRF[o][0])+"/"+String(ReceivedRF[o][1]));
+    trc("Col: value/timestamp");
+    for (int i = 0; i < 10; i++)
+    {
+      trc(String(i) + ":" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+    }
+}
+
 int getMin()
 {
   int minimum = ReceivedRF[0][1];
