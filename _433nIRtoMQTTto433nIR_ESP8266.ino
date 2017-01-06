@@ -306,7 +306,7 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
   client.publish("home/ack", DataAck);
   callbackstring.toCharArray(datacallback,26);
   trc(datacallback);
-  long int data = atol(datacallback);
+  unsigned long data = atol(datacallback);
   trc(String(data));  
        
     if (topicNameRec == subjectMQTTto433){
@@ -316,23 +316,26 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
     }
     //send received MQTT value by IR signal (example of signal sent data = 1086296175)
     if (topicNameRec == subjectMQTTtoIRCOOLIX)
-    irsend.sendCOOLIX(data, 36);
+      irsend.sendCOOLIX(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
     if (topicNameRec == subjectMQTTtoIRWhynter)
-    irsend.sendWhynter(data, 36);
+      irsend.sendWhynter(data, 32);
     if (topicNameRec == subjectMQTTtoIRNEC)
-    irsend.sendNEC(data, 36);
+      irsend.sendNEC(data, 32);
     if (topicNameRec == subjectMQTTtoIRLG)
-    irsend.sendLG(data, 36);
+      irsend.sendLG(data, 28);
     if (topicNameRec == subjectMQTTtoIRSony)
-    irsend.sendSony(data, 36);
+      irsend.sendSony(data, 12);
     if (topicNameRec == subjectMQTTtoIRDISH)
-    irsend.sendDISH(data, 36);
+      irsend.sendDISH(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
     if (topicNameRec == subjectMQTTtoIRSharp)
-    irsend.sendSharp(data, 36);
+      irsend.sendSharp(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
+    /*
+    Panasonic has a two arguments per call. An address(16bit) and data(32bit), not data and nr_bits.
     if (topicNameRec == subjectMQTTtoIRPanasonic)
-    irsend.sendPanasonic(data, 36);
+      irsend.sendPanasonic(data, 36);
+    */
     if (topicNameRec == subjectMQTTtoIRSAMSUNG)
-    irsend.sendSAMSUNG(data, 36);
+      irsend.sendSAMSUNG(data, 32);
 }
 
 //send MQTT data dataStr to topic topicNameSend
