@@ -12,8 +12,9 @@
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
  
-  Contributor:
+  Contributors:
   - 1technophile
+  - crankyoldgit
 
   Based on:
   - MQTT library (https://github.com/knolleary)
