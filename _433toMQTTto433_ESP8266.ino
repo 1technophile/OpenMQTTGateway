@@ -1,16 +1,13 @@
 /*
   433toMQTTto433  - ESP8266 program for home automation 
-
    Act as a wifi gateway between your 433mhz nodes and a MQTT broker 
    Send and receiving command by MQTT
  
   This program enables to:
  - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received 433Mhz signal
-
   Contributor:
   - 1technophile
-
   Based on:
   - MQTT library (https://github.com/knolleary)
   - RCSwitch (https://github.com/sui77/rc-switch)
@@ -18,24 +15,19 @@
   
   Project home: https://github.com/1technophile/433toMQTTto433_ESP8266
   Blog, tutorial: http://1technophile.blogspot.com/2016/09/433tomqttto433-bidirectional-esp8266.html
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
 and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
 subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
 TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
 THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 Some usefull commands to test gateway with mosquitto:
 Subscribe to the subject for data receiption from RF signal
 mosquitto_sub -t home/433toMQTT
-
 Send data by MQTT to convert it on RF signal
 mosquitto_pub -t home/MQTTto433/ -m 1315153
 */
@@ -54,6 +46,16 @@ RCSwitch mySwitch = RCSwitch();
 #define mqtt_server "192.168.0.22"
 #define mqtt_user "your_username" // not compulsory if you set it uncomment line 127 and comment line 129
 #define mqtt_password "your_password" // not compulsory if you set it uncomment line 127 and comment line 129
+
+//variables to avoid duplicates
+#define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+// array to store previous received RFs codes and their timestamps
+long ReceivedRF[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+
+#define subjectMQTTtoX "home/commands/#"
+//RF MQTT Subjects
+#define subject433toMQTT "home/433toMQTT"
+#define subjectMQTTto433 "home/MQTTto433/"
 
 //adding this to bypass to problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
@@ -129,10 +131,8 @@ boolean reconnect() {
     // Once connected, publish an announcement...
       client.publish("outTopic","hello world");
       trc("connected");
-    //Topic subscribed so as to get data
-    String topicNameRec = String("home/MQTTto433/");
-    //Subscribing to topic(s)
-    subscribing(topicNameRec);
+      //Subscribing to topic(s)
+      subscribing(subjectMQTTtoX);
     } else {
       trc("failed, rc=");
       trc(String(client.state()));
@@ -162,25 +162,75 @@ void loop()
     client.loop();
   }
 
-  // Receive loop, if data received by RF433 send it by MQTT to MQTTsubject
+  // Receive loop, if data received by RF433 send it by MQTT to subject433toMQTT
   if (mySwitch.available()) {
     // Topic on which we will send data
     trc("Receiving 433Mhz signal");
-    String MQTTsubject = "home/433toMQTT";
-    long MQTTvalue;
+    unsigned long MQTTvalue;
     MQTTvalue=mySwitch.getReceivedValue();  
     mySwitch.resetAvailable();
     if (client.connected()) {
-      trc("Sending 433Mhz signal to MQTT");
-      trc(String(MQTTvalue));
-      sendMQTT(MQTTsubject,String(MQTTvalue));
+      if (!isAduplicate(MQTTvalue)) {// conditions to avoid duplications of RF -->MQTT
+          trc("Sending 433Mhz signal to MQTT");
+          trc(String(MQTTvalue));
+          sendMQTT(subject433toMQTT,String(MQTTvalue));
+          storeValue(MQTTvalue);
+      }         
     } else {
       if (reconnect()) {
-        sendMQTT(MQTTsubject,String(MQTTvalue));
+        trc("Sending 433Mhz signal to MQTT after reconnect");
+        trc(String(MQTTvalue));
+        sendMQTT(subject433toMQTT,String(MQTTvalue));
+        storeValue(MQTTvalue);
         lastReconnectAttempt = 0;
       }
     }
   }
+}
+
+void storeValue(long MQTTvalue){
+    long now = millis();
+    // find oldest value of the buffer
+    int o = getMin();
+    trc("Minimum index: " + String(o));
+    // replace it by the new one
+    ReceivedRF[o][0] = MQTTvalue;
+    ReceivedRF[o][1] = now;
+    trc("send this code :" + String(ReceivedRF[o][0])+"/"+String(ReceivedRF[o][1]));
+    trc("Col: value/timestamp");
+    for (int i = 0; i < 10; i++)
+    {
+      trc(String(i) + ":" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+    }
+}
+
+int getMin()
+{
+  int minimum = ReceivedRF[0][1];
+  int minindex=0;
+  for (int i = 0; i < 10; i++)
+  {
+    if (ReceivedRF[i][1] < minimum) {
+      minimum = ReceivedRF[i][1];
+      minindex = i;
+    }
+  }
+  return minindex;
+}
+
+boolean isAduplicate(long value){
+trc("isAduplicate");
+// check if the value has been already sent during the last "time_avoid_duplicate"
+for (int i=0; i<10;i++){
+ if (ReceivedRF[i][0] == value){
+      long now = millis();
+      if (now - ReceivedRF[i][1] < time_avoid_duplicate){
+      trc("don't send this code :" + String(ReceivedRF[i][0])+"/"+String(ReceivedRF[i][1]));
+      return true;
+    }
+  }
+}
+return false;
 }
 
 void subscribing(String topicNameRec){ // MQTT subscribing to topic
@@ -214,16 +264,15 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
 //send MQTT data dataStr to topic topicNameSend
 void sendMQTT(String topicNameSend, String dataStr){
 
-    char topicStrSend[26];
-    topicNameSend.toCharArray(topicStrSend,26);
-    char dataStrSend[200];
-    dataStr.toCharArray(dataStrSend,200);
-    boolean pubresult = client.publish(topicStrSend,dataStrSend);
-    trc("sending ");
-    trc(dataStr);
-    trc("to ");
-    trc(topicNameSend);
-
+      char topicStrSend[26];
+      topicNameSend.toCharArray(topicStrSend,26);
+      char dataStrSend[200];
+      dataStr.toCharArray(dataStrSend,200);
+      boolean pubresult = client.publish(topicStrSend,dataStrSend);
+      trc("sending ");
+      trc(dataStr);
+      trc("to ");
+      trc(topicNameSend);
 }
 
 //trace
@@ -232,5 +281,3 @@ void trc(String msg){
   Serial.println(msg);
   }
 }
-
-
