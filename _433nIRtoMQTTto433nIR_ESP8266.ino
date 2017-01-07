@@ -317,7 +317,7 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
     }
     //send received MQTT value by IR signal (example of signal sent data = 1086296175)
     if (topicNameRec == subjectMQTTtoIRCOOLIX)
-      irsend.sendCOOLIX(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
+      irsend.sendCOOLIX(data, 24);
     if (topicNameRec == subjectMQTTtoIRWhynter)
       irsend.sendWhynter(data, 32);
     if (topicNameRec == subjectMQTTtoIRNEC)
@@ -327,9 +327,9 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
     if (topicNameRec == subjectMQTTtoIRSony)
       irsend.sendSony(data, 12);
     if (topicNameRec == subjectMQTTtoIRDISH)
-      irsend.sendDISH(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
+      irsend.sendDISH(data, 16);
     if (topicNameRec == subjectMQTTtoIRSharp)
-      irsend.sendSharp(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
+      irsend.sendSharpRaw(data, 15);
     /*
     Panasonic has a two arguments per call. An address(16bit) and data(32bit), not data and nr_bits.
     if (topicNameRec == subjectMQTTtoIRPanasonic)
