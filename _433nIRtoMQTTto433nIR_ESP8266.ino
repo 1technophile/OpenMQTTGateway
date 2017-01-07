@@ -261,7 +261,7 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
     }
     //send received MQTT value by IR signal (example of signal sent data = 1086296175)
     if (topicNameRec == subjectMQTTtoIRCOOLIX)
-      irsend.sendCOOLIX(data, 36);  // Note: data (unsigned long) is only 32bits long on the ESP8266.
+      irsend.sendCOOLIX(data, 24);
     if (topicNameRec == subjectMQTTtoIRWhynter)
       irsend.sendWhynter(data, 32);
     if (topicNameRec == subjectMQTTtoIRNEC)
