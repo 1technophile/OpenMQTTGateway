@@ -2,7 +2,6 @@
   433nIRtoMQTTto433nIR  - ESP8266 program for home automation 
   Tested OK on GeekCreek ESP12F
   Not working on NodeMCU V0.9
-
    Act as a wifi gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
@@ -15,7 +14,6 @@
   Contributors:
   - 1technophile
   - crankyoldgit
-
   Based on:
   - MQTT library (https://github.com/knolleary)
   - RCSwitch (https://github.com/sui77/rc-switch)
@@ -24,24 +22,19 @@
   
   Project home: https://github.com/1technophile/433nIRtoMQTTto433nIR_ESP8266
   Blog, tutorial: http://1technophile.blogspot.com/2016/09/433nIRtomqttto433nIR-bidirectional-esp8266.html
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
 and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
 subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
 TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
 THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 Some usefull commands to test gateway with mosquitto:
 Subscribe to the subject for data receiption from RF signal
 mosquitto_sub -t home/433toMQTT
-
 Send data by MQTT to convert it on RF signal
 mosquitto_pub -t home/MQTTto433/ -m 1315153
 */
@@ -61,9 +54,9 @@ decode_results results;
 #define TRACE 1  // 0= trace off 1 = trace on
 
 // Update these with values suitable for your network.
-#define wifi_ssid "wifi ssid"
-#define wifi_password "wifi pwd"
-#define mqtt_server "mqtt server ip adress"
+#define wifi_ssid "mywifiid"
+#define wifi_password "mypwd"
+#define mqtt_server "192.168.0.22"
 #define mqtt_user "your_username" // not compulsory if you set it uncomment line 143 and comment line 145
 #define mqtt_password "your_password" // not compulsory if you set it uncomment line 143 and comment line 145
 
@@ -300,15 +293,15 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
   trc(topicNameRec);
   char topicOri[26] = "";
   char topicStrAck[26] = "";
-  char datacallback[26] = "";
+  char datacallback[32] = "";
   // Acknowledgement inside a subtopic to avoid loop
   topicNameRec.toCharArray(topicOri,26);
   char DataAck[26] = "OK";
   client.publish("home/ack", DataAck);
-  callbackstring.toCharArray(datacallback,26);
+  callbackstring.toCharArray(datacallback,32);
   trc(datacallback);
-  unsigned long data = atol(datacallback);
-  trc(String(data));  
+  unsigned long data = char2Ulong(datacallback);
+  trc(String(data)); 
        
     if (topicNameRec == subjectMQTTto433){
       trc("Send received data by RF 433");
@@ -337,6 +330,15 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
     */
     if (topicNameRec == subjectMQTTtoIRSAMSUNG)
       irsend.sendSAMSUNG(data, 32);
+}
+
+unsigned long char2Ulong(char *str)
+{
+  unsigned long result = 0; // Initialize result
+  // Iterate through all characters of input string and update result
+  for (int i = 0; str[i] != '\0'; ++i)
+    result = result*10 + str[i] - '0';
+  return result;
 }
 
 //send MQTT data dataStr to topic topicNameSend
