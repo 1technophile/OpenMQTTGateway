@@ -67,8 +67,8 @@ long ReceivedRF[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{
 
 #define subjectMQTTtoX "home/commands/#"
 //RF MQTT Subjects
-#define subject433toMQTT "home/433toMQTT"
-#define subjectMQTTto433 "home/MQTTto433/"
+#define subject433toMQTT "home/commands/433toMQTT"
+#define subjectMQTTto433 "home/commands/MQTTto433"
 //IR MQTT Subjects
 #define subjectIRtoMQTT "home/sensors/ir"
 #define subjectMQTTtoIRCOOLIX "home/commands/sendCOOLIX"
