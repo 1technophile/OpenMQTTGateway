@@ -300,7 +300,7 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
   client.publish("home/ack", DataAck);
   callbackstring.toCharArray(datacallback,32);
   trc(datacallback);
-  unsigned long data = char2Ulong(datacallback); // we will not be able to pass value > 4294967295
+  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass value > 4294967295
   trc(String(data)); 
        
     if (topicNameRec == subjectMQTTto433){
@@ -330,15 +330,6 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
     */
     if (topicNameRec == subjectMQTTtoIRSAMSUNG)
       irsend.sendSAMSUNG(data, 32);
-}
-
-unsigned long char2Ulong(char *str)
-{
-  unsigned long result = 0; // Initialize result
-  // Iterate through all characters of input string and update result
-  for (int i = 0; str[i] != '\0'; ++i)
-    result = result*10 + str[i] - '0';
-  return result;
 }
 
 //send MQTT data dataStr to topic topicNameSend
