@@ -98,7 +98,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // constructing the PUBLISH packet.
   trc("Hey I got a callback ");
   // Allocate the correct amount of memory for the payload copy
-  byte* p = (byte*)malloc(length);
+  byte* p = (byte*)malloc(length + 1);
   // Copy the payload to the new buffer
   memcpy(p,payload,length);
   
