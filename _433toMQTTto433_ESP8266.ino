@@ -55,7 +55,7 @@ long ReceivedRF[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{
 #define subjectMQTTtoX "home/commands/#"
 //RF MQTT Subjects
 #define subject433toMQTT "home/433toMQTT"
-#define subjectMQTTto433 "home/MQTTto433"
+#define subjectMQTTto433 "home/commands/MQTTto433"
 
 //adding this to bypass to problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
