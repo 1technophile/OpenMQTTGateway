@@ -5,7 +5,12 @@ Tutorial and schema are there https://1technophile.blogspot.com/2016/09/433tomqt
 Tutorial and schema are there https://1technophile.blogspot.fr/2016/11/433nIRtomqttto433nIR-bidirectional-esp8266.html
   
 These gateways can be integrated with home automation systems like Openhab or Home assistant thanks to the MQTT protocol.
-  
+
+A list of supported 433mhz devices is available here:
+https://community.home-assistant.io/t/433tomqttto433-gateway-device-list/7819
+
+The gateway integrate Ntuple 433mhz signal detection over a determined time to avoid unnecessary MQTT messages. 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
