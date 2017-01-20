@@ -51,11 +51,6 @@ void FanRemoteGPIO::enableLight(int pin) {
   this->lightPin = pin;
   this->lightPinOff = -1;
   initPin(this->lightPin);
-  // We want to have the light state in sync with what we think the state is.
-  // Oddly, the model tested will turn *off* with a 300-ms hold, but not on,
-  // which is exactly what we need(?):
-  // press(this->lightPin, 300);
-  // More testing shows the fan hates to be turned off then on again rapidly.
 }
 
 /**
@@ -127,12 +122,8 @@ void FanRemoteGPIO::setBrightness(int level) {
         }
     } else if (level > 0) {
         this->bLightOn = true;
-        // So much potential to mess up.
-        //int holdTime = 0;
-        if (this->nBrightness < this->nMaxBrightness) {
-            //seconds tested holding down: 1600, 1800, 2000, 2200, 2400
-            //this->nBrightness
-        }
+        // Visible changes at: 1600, 1800, 2000, 2200, 2400. Difficult to time
+        // correctly matched with a level, and I rarely want the lights dimmed.
         this->nBrightness = level;
         press(this->lightPin);
     }
@@ -144,17 +135,11 @@ void FanRemoteGPIO::setBrightness(int level) {
  */
 void FanRemoteGPIO::turnLight(bool on) {
     if (!on) {
-        Serial.println("Turned light off");
         setBrightness(0);
     } else {
-        Serial.println("Turned light on");
-        //setBrightness(this->nBrightness > 0 ? this->nBrightness : this->nMaxBrightness);
-        // Hack because I am having a lot of trouble with the light:
         this->nBrightness = this->nMaxBrightness;
         this->bLightOn = true;
         press(this->lightPin, 200);
-        //press(this->lightPin, 2400);
-        //press(this->lightPin, 2400);
     }
 }
 
@@ -195,12 +180,10 @@ void FanRemoteGPIO::turnFan(bool on) {
 bool FanRemoteGPIO::available() {
     this->looping = true;
     if (this->heldPin >= 0 && this->heldUntil != 0 && this->heldUntil <= millis()) {
-        Serial.println("timed release!");
         digitalWrite(this->heldPin, HIGH);
         this->heldPin = -1;
         if ((queue.count()) > 0) {
             QueuedPress queued = queue.pop();
-            Serial.println("Queue in use");
             press(queued.pin, queued.time);
         }
         return true;
@@ -254,8 +237,6 @@ void FanRemoteGPIO::press(int pin) {
  * @param time  Delay before releasing, in milliseconds.
  */
 void FanRemoteGPIO::press(int pin, int time) {
-    Serial.print("Pressed");
-    Serial.println(pin);
     if (pin < 0)
         return;
     if  (this->heldPin > -1) {
@@ -271,8 +252,6 @@ void FanRemoteGPIO::press(int pin, int time) {
         this->heldUntil = millis() + time;
     } else {
         if (time > 0) delay(time);
-        Serial.print("Released");
-        Serial.println(pin);
         digitalWrite(pin, HIGH);
     }
 }
