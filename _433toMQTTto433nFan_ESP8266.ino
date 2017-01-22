@@ -330,12 +330,21 @@ void receivingMQTT(String topicNameRec, String callbackstring) {
   trc(datacallback);
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass value > 4294967295
   trc(String(data));
-
-    if (topicNameRec == subjectMQTTto433){
-      trc("Send received data by RF 433");
-      //send received MQTT value by RF signal (example of signal sent data = 5264660)
-      mySwitch.send(data, 24);
-    }
+  String topicNamePart = topicNameRec.substring(0, topicNameRec.lastIndexOf("/"));
+  if (topicNameRec == subjectMQTTto433) {
+     mySwitch.setProtocol(1); // default
+     mySwitch.setPulseLength(350); // default
+     trc("Send received data by RF 433");
+     //send received MQTT value by RF signal (example of signal sent data = 5264660)
+     mySwitch.send(data, 24);
+ } else if (topicNamePart == subjectMQTTto433) {
+     trc("Send received data by RF 433 with custom protocol/pulseLength");
+     String s = topicNameRec.substring(topicNameRec.lastIndexOf("/") + 1);
+     int sep = s.indexOf("-");
+     mySwitch.setProtocol(s.substring(0, sep).toInt());
+     mySwitch.setPulseLength(s.substring(sep + 1).toInt());
+     mySwitch.send(data, 24);
+  }
     /*TODO: Disabled IR]
     //send received MQTT value by IR signal (example of signal sent data = 1086296175)
     if (topicNameRec == subjectMQTTtoIRCOOLIX)
