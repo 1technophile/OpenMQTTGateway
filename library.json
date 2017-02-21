@@ -1,0 +1,17 @@
+{
+    "name": "OpenMQTTGateway",
+    "keywords": "ethernet, mqtt, m2m, iot",
+    "description": "OpenMQTTGateway can be integrated with OpenHAB, Home Assistant, NodeRED and many others. And by the way automate your plugs, TV, Hifi, lights, fan following PIR, door sensors etc…",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/1technophile/433toMQTTto433_ESP8266.git"
+    },
+    "version": "1.0",
+    "exclude": "tests",
+    "examples": "examples_with_gpio_usage/*.ino",
+    "frameworks": "arduino",
+    "platforms": [
+        "atmelavr",
+        "espressif"
+    ]
+}
