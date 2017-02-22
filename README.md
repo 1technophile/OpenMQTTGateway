@@ -1,8 +1,7 @@
-433toMQTTto433  - ESP8266 program for home automation , gateway between 433mhz and MQTT on both directions
-Tutorial and schema are there https://1technophile.blogspot.com/2016/09/433tomqttto433-bidirectional-esp8266.html
+See wiki for more info
+https://github.com/1technophile/OpenMQTTGateway/wiki
 
-433nIRtoMQTTto433nIR - ESP8266  gateway between 433mhz, infrared and MQTT on both directions
-Tutorial and schema are there https://1technophile.blogspot.fr/2016/11/433nIRtomqttto433nIR-bidirectional-esp8266.html
+![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)
 
 examples_with_gpio_usage/433toMQTTto433nFan_ESP8266 - ESP8266 gateway between 433mhz and a fan's remote control, from MQTT to the fan only.
 Tutorial is here https://github.com/rickybrent/433toMQTTto433_ESP8266/wiki/Flower-Angel-18R-ST6
