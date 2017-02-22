@@ -3,7 +3,7 @@ https://github.com/1technophile/OpenMQTTGateway/wiki
 
 ![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)
 
-These gateways can be integrated with home automation systems like Openhab or Home assistant thanks to the MQTT protocol.
+The gateway can be integrated with home automation systems like Openhab or Home assistant thanks to the MQTT protocol.
 
 A list of supported 433mhz devices is available here:
 https://community.home-assistant.io/t/433tomqttto433-gateway-device-list/7819
