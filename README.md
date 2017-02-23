@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway)
+
 See wiki for more info
 https://github.com/1technophile/OpenMQTTGateway/wiki
 

@@ -1,0 +1,31 @@
+language: c
+env:
+  - BD=arduino:avr:uno
+  - BD=arduino:avr:mega:cpu=atmega2560
+  - BD=arduino:avr:nano:cpu=atmega328
+  - BD=esp8266:esp8266:nodemcuv2:CpuFrequency=80,FlashSize=4M3M
+before_install:
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
+  - sleep 3
+  - export DISPLAY=:1.0
+  - wget http://downloads.arduino.cc/arduino-1.8.1-linux64.tar.xz
+  - tar xf arduino-1.8.1-linux64.tar.xz
+  - sudo mv arduino-1.8.1 /usr/local/share/arduino
+  - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+install:
+  - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
+  - git clone https://github.com/z3t0/Arduino-IRremote /usr/local/share/arduino/libraries/IRremote
+  - git clone https://github.com/markszabo/IRremoteESP8266 /usr/local/share/arduino/libraries/IRremoteESP8266
+  - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
+  - git clone https://github.com/knolleary/pubsubclient /usr/local/share/arduino/libraries/pubsubclient
+  - git clone https://github.com/sui77/rc-switch /usr/local/share/arduino/libraries/rc-switch
+  - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
+  - arduino --install-boards esp8266:esp8266
+  - arduino --board $BD --save-prefs
+  - arduino --pref "compiler.warning_level=all" --save-prefs
+script:
+  - arduino --verify --board $BD $PWD/OpenMQTTGateway.ino
+notifications:
+  email:
+    on_success: change
+    on_failure: change
