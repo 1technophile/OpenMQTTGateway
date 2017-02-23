@@ -16,6 +16,7 @@
   - 1technophile
   - crankyoldgit
   - Spudtater
+  - rickybrent
 
 IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
   
