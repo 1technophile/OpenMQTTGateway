@@ -1,0 +1,12 @@
+[submodule "libraries/pubsubclient"]
+	path = libraries/pubsubclient
+	url = git://github.com/knolleary/pubsubclient.git
+[submodule "libraries/rcswitch"]
+	path = libraries/rcswitch
+	url = git://github.com/sui77/rc-switch.git
+[submodule "libraries/IRremoteESP8266"]
+	path = libraries/IRremoteESP8266
+	url = git://github.com/markszabo/IRremoteESP8266.git
+[submodule "libraries/IRremote"]
+	path = libraries/IRremote
+	url = git://github.com/z3t0/Arduino-IRremote.git
