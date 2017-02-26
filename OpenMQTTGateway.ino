@@ -72,12 +72,13 @@ boolean reconnect() {
     trc(F("Attempting MQTT connection...")); //F function enable to decrease sram usage
     #ifdef mqtt_user
       if (client.connect(GatewayName, mqtt_user, mqtt_password)) { // if an mqtt user is defined we connect to the broker with authentication
+      trc(F("connected with authentication"));
     #else
       if (client.connect(GatewayName)) {
+      trc(F("connected without authentication"));
     #endif
     // Once connected, publish an announcement...
       client.publish(GatewayAnnouncementTopic,GatewayAnnouncementMsg);
-      trc(F("connected"));
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
         trc(F("subscription OK to"));
