@@ -61,7 +61,7 @@ RCSwitch mySwitch = RCSwitch();
 decode_results results;
 
 // client parameters
-PubSubClient client(mqtt_server, 1883, callback, eClient);
+PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 
 //MQTT last attemps reconnection date
 int lastReconnectAttempt = 0;

@@ -34,6 +34,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #define mqtt_server "192.168.1.17"
 #define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
+#define mqtt_port 1883
 
 // Update these with values suitable for your network.
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
