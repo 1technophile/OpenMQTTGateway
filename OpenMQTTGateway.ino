@@ -283,7 +283,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     trc(String(datacallback));
     unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
     trc(F("Converted value to unsigned long"));
-    trc(String(data)); 
+    trc(String(data));
 
     // RF DATA ANALYSIS
     //We look into the subject to see if a special RF protocol is defined 
@@ -334,6 +334,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       irsend.sendSony(data, 12);
     if (topic.lastIndexOf("IR_DISH")!=-1)
       irsend.sendDISH(data, 16);
+    if (topic.lastIndexOf("IR_RC5")!=-1)
+      irsend.sendRC5(data, 12);
     if (topic.lastIndexOf("IR_Sharp")!=-1)
       irsend.sendSharpRaw(data, 15);
      if (topic.lastIndexOf("IR_SAMSUNG")!=-1)
