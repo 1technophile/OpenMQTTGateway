@@ -198,24 +198,16 @@ unsigned long MQTTvalue = 0;
   if (mySwitch.available()||irrecv.decode(&results)){
       trc(F("Signal detected"));
       String subject;
-      String subjectAdvanced;
-      String valueAdvanced;
       if (mySwitch.available()){
         MQTTvalue = mySwitch.getReceivedValue();
         mySwitch.resetAvailable();
         subject = subject433toMQTT;
-        subjectAdvanced  = subject433toMQTTAdvanced;
-        valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(mySwitch.getReceivedBitlength()) + " Delay " + String(mySwitch.getReceivedDelay()) + " Protocol " + String(mySwitch.getReceivedProtocol());
       }else if (irrecv.decode(&results)){
         MQTTvalue=results.value;
         irrecv.resume(); // Receive the next value
         subject = subjectIRtoMQTT;
-        subjectAdvanced = subjectIRtoMQTTAdvanced;
-        valueAdvanced = "Not available";
       }
-      if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF or IR -->MQTT
-          trc(F("Sending advanced signal to MQTT"));
-          client.publish((char *)subjectAdvanced.c_str(),(char *)valueAdvanced.c_str());
+      if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
           trc(F("Sending signal to MQTT"));
           String value = String(MQTTvalue);
           trc(value);
