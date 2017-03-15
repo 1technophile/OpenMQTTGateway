@@ -18,7 +18,7 @@
   - Spudtater
   - rickybrent
 
-IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
+IMPORTANT NOTE: On arduino connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
   
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -305,7 +305,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       trc(String(valuePLSL));
     }
     
-    if ((topic == subjectMQTTto433)){
+    if ((topic == subjectMQTTto433) && (valuePRT == 0) && (valuePLSL  == 0)){
       trc(F("Sending data by RF, default parameters"));
       mySwitch.setProtocol(1,350);
       mySwitch.send(data, 24);
