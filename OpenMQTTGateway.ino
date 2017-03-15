@@ -311,8 +311,10 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       mySwitch.send(data, 24);
     } else if ((valuePRT != 0) || (valuePLSL  != 0)){
       trc(F("Sending data by RF, user defined parameters"));
-      if (valuePLSL != 0) valuePRT = 1;
-      if (valuePRT != 0) valuePLSL = 350;
+      if (valuePRT == 0) valuePRT = 1;
+      if (valuePLSL == 0) valuePLSL = 350;
+      trc(String(valuePRT));
+      trc(String(valuePLSL));
       mySwitch.setProtocol(valuePRT,valuePLSL);
       mySwitch.send(data, 24);
     }
