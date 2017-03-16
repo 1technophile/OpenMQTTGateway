@@ -65,6 +65,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTto433 "home/commands/MQTTto433"
 #define subject433toMQTT "home/433toMQTT"
+#define subject433toMQTTAdvanced "home/433toMQTTAdvanced"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 //IR MQTT Subjects
