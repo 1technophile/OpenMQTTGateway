@@ -35,6 +35,12 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
+#define Gateway_Name "OpenMQTTGateway"
+#define will_Topic "home/OpenMQTTGateway/LWT"
+#define will_QoS 0
+#define will_Retain true
+#define will_Message "Offline"
+#define Gateway_AnnouncementMsg "Online"
 
 // Update these with values suitable for your network.
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
@@ -54,10 +60,6 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
 //MQTT definitions
-//RF MQTT Subjects
-#define GatewayName "OpenMQTTGateway"
-#define GatewayAnnouncementTopic "OpenMQTTGateway connected"
-#define GatewayAnnouncementMsg "hello broker!"
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #define subjectMQTTtoX "home/commands/#"
 
@@ -69,8 +71,8 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 //IR MQTT Subjects
-#define subjectIRtoMQTT "home/sensors/ir"
 #define subjectGTWIRtoMQTT "home/sensors/ir"
+#define subjectIRtoMQTT "home/sensors/ir"
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
 /*
 RF supported protocols
