@@ -273,85 +273,102 @@ return false;
 
 void receivingMQTT(char * topicOri, char * datacallback) {
   String topic = topicOri;
-  if(topic.lastIndexOf(subjectAck) == -1){ //avoid loop when publishing an acknowledgement
-    trc(F("Receiving data by MQTT"));
-    trc(topic);
-    
-    // Acknowledgement inside a subtopic to avoid loop
-    char AckSubject[strlen(topicOri)+5];
-    AckSubject[strlen(topicOri)+4] ='\0';
-    strcpy(AckSubject, topicOri);
-    strcat(AckSubject, subjectAck);
-    boolean result = client.publish(AckSubject, "OK");
+
+  trc(F("Receiving data by MQTT"));
+  trc(topic);  
+  trc(F("Callback value"));
+  trc(String(datacallback));
+  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+  trc(F("Converted value to unsigned long"));
+  trc(String(data));
+
+  // RF DATA ANALYSIS
+  //We look into the subject to see if a special RF protocol is defined 
+  int valuePRT = 0;
+  int valuePLSL  = 0;
+  int pos = topic.lastIndexOf(RFprotocolKey);       
+  if (pos != -1){
+    pos = pos + +strlen(RFprotocolKey);
+    valuePRT = (topic.substring(pos,pos + 1)).toInt();
+    trc(F("RF Protocol number:"));
+    trc(String(valuePRT));
+  }
+  //We look into the subject to see if a special RF pulselength is defined 
+  int pos2 = topic.lastIndexOf(RFpulselengthKey);
+  if (pos2 != -1) {
+    pos2 = pos2 + strlen(RFpulselengthKey);
+    valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
+    trc(F("RF Pulse Length:"));
+    trc(String(valuePLSL));
+  }
+  
+  if ((topic == subjectMQTTto433) && (valuePRT == 0) && (valuePLSL  == 0)){
+    trc(F("Sending data by RF, default parameters"));
+    mySwitch.setProtocol(1,350);
+    mySwitch.send(data, 24);
+    // Acknowledgement to the GTWRF topic
+    boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
     if (result)trc(F("Acknowedgement of reception published"));
     
-    trc(F("Callback value"));
-    trc(String(datacallback));
-    unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-    trc(F("Converted value to unsigned long"));
-    trc(String(data));
-
-    // RF DATA ANALYSIS
-    //We look into the subject to see if a special RF protocol is defined 
-    int valuePRT = 0;
-    int valuePLSL  = 0;
-    int pos = topic.lastIndexOf(RFprotocolKey);       
-    if (pos != -1){
-      pos = pos + +strlen(RFprotocolKey);
-      valuePRT = (topic.substring(pos,pos + 1)).toInt();
-      trc(F("RF Protocol number:"));
-      trc(String(valuePRT));
-    }
-    //We look into the subject to see if a special RF pulselength is defined 
-    int pos2 = topic.lastIndexOf(RFpulselengthKey);
-    if (pos2 != -1) {
-      pos2 = pos2 + strlen(RFpulselengthKey);
-      valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
-      trc(F("RF Pulse Length:"));
-      trc(String(valuePLSL));
-    }
-    
-    if ((topic == subjectMQTTto433) && (valuePRT == 0) && (valuePLSL  == 0)){
-      trc(F("Sending data by RF, default parameters"));
-      mySwitch.setProtocol(1,350);
-      mySwitch.send(data, 24);
-    } else if ((valuePRT != 0) || (valuePLSL  != 0)){
-      trc(F("Sending data by RF, user defined parameters"));
-      if (valuePRT == 0) valuePRT = 1;
-      if (valuePLSL == 0) valuePLSL = 350;
-      trc(String(valuePRT));
-      trc(String(valuePLSL));
-      mySwitch.setProtocol(valuePRT,valuePLSL);
-      mySwitch.send(data, 24);
-    }
-    
-    // IR DATA ANALYSIS    
-    //send received MQTT value by IR signal (example of signal sent data = 1086296175)
-    #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-    if (topic.lastIndexOf("IR_COOLIX") != -1 ){
-      irsend.sendCOOLIX(data, 24);
-    }
-    #endif
-    if (topic.lastIndexOf("IR_NEC")!= -1 || topic == subjectMQTTtoIR)
-      irsend.sendNEC(data, 32);
-    if (topic.lastIndexOf("IR_Whynter")!=-1)
-      irsend.sendWhynter(data, 32);
-    if (topic.lastIndexOf("IR_LG")!=-1)
-      irsend.sendLG(data, 28);
-    if (topic.lastIndexOf("IR_Sony")!=-1)
-      irsend.sendSony(data, 12);
-    if (topic.lastIndexOf("IR_DISH")!=-1)
-      irsend.sendDISH(data, 16);
-    if (topic.lastIndexOf("IR_RC5")!=-1)
-      irsend.sendRC5(data, 12);
-    if (topic.lastIndexOf("IR_Sharp")!=-1)
-      irsend.sendSharpRaw(data, 15);
-     if (topic.lastIndexOf("IR_SAMSUNG")!=-1)
-     irsend.sendSAMSUNG(data, 32);
-
-     irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
-  } else
-  trc(F("Not processing this callback contains $subjectAck"));
+  } else if ((valuePRT != 0) || (valuePLSL  != 0)){
+    trc(F("Sending data by RF, user defined parameters"));
+    if (valuePRT == 0) valuePRT = 1;
+    if (valuePLSL == 0) valuePLSL = 350;
+    trc(String(valuePRT));
+    trc(String(valuePLSL));
+    mySwitch.setProtocol(valuePRT,valuePLSL);
+    mySwitch.send(data, 24);
+    // Acknowledgement to the GTWRF topic
+    boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
+    if (result)trc(F("Acknowedgement of reception published"));
+  }
+  
+  // IR DATA ANALYSIS    
+  //send received MQTT value by IR signal (example of signal sent data = 1086296175)
+  boolean signalSent = false;
+  #ifdef ESP8266 // send coolix not available for arduino IRRemote library
+  if (topic.lastIndexOf("IR_COOLIX") != -1 ){
+    irsend.sendCOOLIX(data, 24);
+    signalSent = true;
+  }
+  #endif
+  if (topic.lastIndexOf("IR_NEC")!= -1 || topic == subjectMQTTtoIR){
+    irsend.sendNEC(data, 32);
+    signalSent = true;
+  }
+  if (topic.lastIndexOf("IR_Whynter")!=-1){
+    irsend.sendWhynter(data, 32);
+    signalSent = true;
+  }
+  if (topic.lastIndexOf("IR_LG")!=-1){
+    irsend.sendLG(data, 28);
+    signalSent = true;
+  }
+  if (topic.lastIndexOf("IR_Sony")!=-1){
+    irsend.sendSony(data, 12);
+    signalSent = true;
+  }
+  if (topic.lastIndexOf("IR_DISH")!=-1){
+    irsend.sendDISH(data, 16);
+    signalSent = true;
+  }
+  if (topic.lastIndexOf("IR_RC5")!=-1){
+    irsend.sendRC5(data, 12);
+    signalSent = true;
+  }
+  if (topic.lastIndexOf("IR_Sharp")!=-1){
+    irsend.sendSharpRaw(data, 15);
+    signalSent = true;
+  }
+   if (topic.lastIndexOf("IR_SAMSUNG")!=-1){
+   irsend.sendSAMSUNG(data, 32);
+    signalSent = true;
+  }
+  if (signalSent){
+    boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
+    if (result)trc(F("Acknowedgement of reception published"));
+  }
+   irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
 }
 
 //trace
