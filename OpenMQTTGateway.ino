@@ -17,6 +17,8 @@
   - crankyoldgit
   - Spudtater
   - rickybrent
+  - ekim from Home assistant forum
+  - ronvl from Home assistant forum
 
 IMPORTANT NOTE: On arduino connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
   
@@ -123,7 +125,7 @@ void setup()
     setup_wifi();
   #else
     //Begining ethernet connection in case of Arduino + W5100
-    Ethernet.begin(mac, ip);
+    setup_ethernet();
   #endif
   
   delay(1500);
@@ -150,14 +152,30 @@ void setup_wifi() {
   // We start by connecting to a WiFi network
   trc(F("Connecting to "));
   trc(wifi_ssid);
-
+  IPAddress ip_adress(ip);
+  IPAddress gateway_adress(gateway);
+  IPAddress subnet_adress(subnet);
+  IPAddress dns_adress(dns);
   WiFi.begin(wifi_ssid, wifi_password);
-
+  WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
+  trc("OpenMQTTGateway ip adress: ");   
+  Serial.println(WiFi.localIP());
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
   }
   trc(F("WiFi connected"));
+}
+#else
+void setup_ethernet() {
+
+  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
+  //Ethernet.begin(mac, ip, dns, gateway, subnet);
+  trc("My IP address is: ");   
+  trc(String(Ethernet.localIP()));
+  
+  trc(F("Ethernet connected"));
 }
 #endif
 

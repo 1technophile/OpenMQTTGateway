@@ -11,10 +11,6 @@
  - publish MQTT data to a different topic related to received IR signal
  
   Copyright: (c)1technophile
-
-  Contributors:
-  - crankyoldgit
-  - Spudtater
   
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -48,8 +44,13 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
   #define wifi_password "wifi password"
 #else // for arduino + W5100
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
-  const byte ip[] = { 192, 168, 1, 95 }; //W5100 ethernet shield ip adress
 #endif
+
+const byte ip[] = { 192, 168, 1, 99 }; //ip adress
+// Advanced network config (optional) if you want to use these parameters uncomment line 158 and 172 of OpenMQTTGateway.ino
+const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
+const byte dns[] = { 192, 168, 1, 1 }; //ip adress
+const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 //Addons management, comment the line if you don't use
 //#define ZaddonDHT true
