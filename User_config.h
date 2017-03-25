@@ -47,9 +47,9 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #endif
 
 const byte ip[] = { 192, 168, 1, 99 }; //ip adress
-// Advanced network config (optional) if you want to use these parameters uncomment line 158 and 172 of OpenMQTTGateway.ino
+// Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
 const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
-const byte dns[] = { 192, 168, 1, 1 }; //ip adress
+const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 //Addons management, comment the line if you don't use

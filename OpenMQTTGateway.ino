@@ -155,7 +155,7 @@ void setup_wifi() {
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
   IPAddress subnet_adress(subnet);
-  IPAddress dns_adress(dns);
+  IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
   WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
   trc("OpenMQTTGateway ip adress: ");   
@@ -169,12 +169,10 @@ void setup_wifi() {
 }
 #else
 void setup_ethernet() {
-
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
-  //Ethernet.begin(mac, ip, dns, gateway, subnet);
-  trc("My IP address is: ");   
-  trc(String(Ethernet.localIP()));
-  
+  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  trc("OpenMQTTGateway ip adress: ");   
+  Serial.println(Ethernet.localIP());
   trc(F("Ethernet connected"));
 }
 #endif
