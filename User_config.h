@@ -75,6 +75,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectGTWIRtoMQTT "home/sensors/ir"
 #define subjectIRtoMQTT "home/sensors/ir"
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
+#define subjectIRtoMQTTAdvanced "home/IRtoMQTTAdvanced"
 /*
 RF supported protocols
 433_1

@@ -214,22 +214,24 @@ unsigned long MQTTvalue = 0;
   if (mySwitch.available()||irrecv.decode(&results)){
       trc(F("Signal detected"));
       String subject;
-      String valueAdvanced ="";
+      String valueAdvanced;
+      String subjectAdvanced;
       if (mySwitch.available()){
         MQTTvalue = mySwitch.getReceivedValue();
         valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(mySwitch.getReceivedBitlength()) + " Delay " + String(mySwitch.getReceivedDelay()) + " Protocol " + String(mySwitch.getReceivedProtocol());
         mySwitch.resetAvailable();
         subject = subject433toMQTT;
+        subjectAdvanced = subject433toMQTTAdvanced;
       }else if (irrecv.decode(&results)){
         MQTTvalue=results.value;
+        valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(results.bits) + " Protocol " + String(results.decode_type);
         irrecv.resume(); // Receive the next value
         subject = subjectIRtoMQTT;
+        subjectAdvanced = subjectIRtoMQTTAdvanced;
       }
       if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-          if (valueAdvanced != ""){
-            trc(F("Sending advanced signal to MQTT"));
-            client.publish(subject433toMQTTAdvanced,(char *)valueAdvanced.c_str());
-          }
+          trc(F("Sending advanced signal to MQTT"));
+          client.publish((char *)subjectAdvanced.c_str(),(char *)valueAdvanced.c_str());
           trc(F("Sending signal to MQTT"));
           String value = String(MQTTvalue);
           trc(value);
@@ -386,6 +388,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   }
    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
 }
+
+
 
 //trace
 void trc(String msg){
