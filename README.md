@@ -31,3 +31,5 @@ Functions:
 * Multi platforms compatibility, the gateway has been currently tested ok with ESP8266 12F, NodeMCU V1, NodeMCU V2, Wemos D1 mini, Arduino Uno, Arduino Mega 
 * Multi protocols handling, the gateway is based on RCSwitch and IRRemote libraries, you can define the protocol you want to use by specifying it inside the topic.
 
+-examples_with_gpio_usage/433toMQTTto433nFan_ESP8266 - ESP8266 gateway between 433mhz and a fan's remote control, from MQTT to the fan only.
+ -Tutorial is here https://github.com/rickybrent/433toMQTTto433_ESP8266/wiki/Flower-Angel-18R-ST6
