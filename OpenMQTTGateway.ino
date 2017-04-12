@@ -82,9 +82,10 @@ boolean reconnect() {
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg);
       //Subscribing to topic
-      if (client.subscribe(subjectMQTTtoX)) {
+      if (client.subscribe(subjectMQTTtoX) && client.subscribe(subject433toMQTT)) {
         trc(F("subscription OK to"));
         trc(subjectMQTTtoX);
+        trc(subject433toMQTT);
       }
       } else {
       trc(F("failed, rc="));
@@ -236,7 +237,6 @@ unsigned long MQTTvalue = 0;
           String value = String(MQTTvalue);
           trc(value);
           boolean result = client.publish((char *)subject.c_str(),(char *)value.c_str());
-          if (result)storeValue(MQTTvalue);
           return result;
       } 
   return false;
@@ -252,7 +252,7 @@ void storeValue(long MQTTvalue){
     // replace it by the new one
     ReceivedSignal[o][0] = MQTTvalue;
     ReceivedSignal[o][1] = now;
-    trc(F("send this code :"));
+    trc(F("store this code :"));
     trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
     trc(F("Col: value/timestamp"));
     for (int i = 0; i < 10; i++)
@@ -299,6 +299,13 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
   trc(F("Converted value to unsigned long"));
   trc(String(data));
+
+  // Storing data received
+  if ((topic == subject433toMQTT)){
+    trc(F("Storing signal"));
+    storeValue(data);
+    trc(F("Data stored"));
+  }
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined 
