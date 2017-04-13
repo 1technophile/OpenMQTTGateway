@@ -63,6 +63,10 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //MQTT definitions
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #define subjectMQTTtoX "home/commands/#"
+// subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
+#define subjectMultiGTWRF "+/433toMQTT"
+#define subjectMultiGTWIR "+/IRtoMQTT"
+#define subjectMultiGTWKey "toMQTT"
 
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTto433 "home/commands/MQTTto433"
@@ -72,8 +76,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 //IR MQTT Subjects
-#define subjectGTWIRtoMQTT "home/sensors/ir"
-#define subjectIRtoMQTT "home/sensors/ir"
+#define subjectGTWIRtoMQTT "home/IRtoMQTT"
+#define subjectIRtoMQTT "home/IRtoMQTT"
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
 #define subjectIRtoMQTTAdvanced "home/IRtoMQTTAdvanced"
 /*

@@ -74,18 +74,15 @@ boolean reconnect() {
     trc(F("Attempting MQTT connection...")); //F function enable to decrease sram usage
     #ifdef mqtt_user
       if (client.connect(Gateway_Name, mqtt_user, mqtt_password, will_Topic, will_QoS, will_Retain, will_Message)) { // if an mqtt user is defined we connect to the broker with authentication
-      trc(F("connected with authentication"));
     #else
       if (client.connect(Gateway_Name, will_Topic, will_QoS, will_Retain, will_Message)) {
-      trc(F("connected without authentication"));
     #endif
+      trc(F("connected to MQTT broker"));
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg);
       //Subscribing to topic
-      if (client.subscribe(subjectMQTTtoX) && client.subscribe(subject433toMQTT)) {
-        trc(F("subscription OK to"));
-        trc(subjectMQTTtoX);
-        trc(subject433toMQTT);
+      if (client.subscribe(subjectMQTTtoX) && client.subscribe(subjectMultiGTWRF)&& client.subscribe(subjectMultiGTWIR)) {
+        trc(F("subscription OK to the subjects defined"));
       }
       } else {
       trc(F("failed, rc="));
@@ -281,7 +278,7 @@ for (int i=0; i<10;i++){
  if (ReceivedSignal[i][0] == value){
       long now = millis();
       if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
-      trc(F("don't send the received code"));
+      trc(F("--------------don't send the received code--------------"));
       return true;
     }
   }
@@ -301,7 +298,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   trc(String(data));
 
   // Storing data received
-  if ((topic == subject433toMQTT)){
+  int pos0 = topic.lastIndexOf(subjectMultiGTWKey);
+  if (pos0 != -1){
     trc(F("Storing signal"));
     storeValue(data);
     trc(F("Data stored"));
