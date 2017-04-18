@@ -130,17 +130,8 @@ void setup()
   
   lastReconnectAttempt = 0;
 
-  //IR init parameters
-#ifdef ESP8266
-  irsend.begin();
-#endif
-
-  irrecv.enableIRIn(); // Start the receiver
-
-  //RF init parameters
-  mySwitch.enableTransmit(RF_EMITTER_PIN);
-  mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); 
-  mySwitch.enableReceive(RF_RECEIVER_PIN); 
+  setupIR();
+  setupRF();
 
 }
 
@@ -191,7 +182,7 @@ void loop()
   } else { //connected
     // MQTT loop
     client.loop();
-    #ifdef ZaddonDHT
+    #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
