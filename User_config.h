@@ -28,7 +28,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 /*-------------DEFINE YOUR MQTT & NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
-#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
+//#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
@@ -43,14 +43,14 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
-  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
+  const byte mac[] PROGMEM = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
 
-const byte ip[] = { 192, 168, 1, 99 }; //ip adress
+const byte ip[] PROGMEM = { 192, 168, 1, 99 }; //ip adress
 // Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
-const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
-const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
-const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
+const byte gateway[] PROGMEM = { 192, 168, 1, 1 }; //ip adress
+const byte Dns[] PROGMEM = { 192, 168, 1, 1 }; //ip adress
+const byte subnet[] PROGMEM = { 255, 255, 255, 0 }; //ip adress
 
 //Addons and module management, comment the line if you don't use
 //#define ZsensorDHT
@@ -70,17 +70,20 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMultiGTWKey "toMQTT"
 
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTto433 "home/commands/MQTTto433"
-#define subject433toMQTT "home/433toMQTT"
+#define subjectMQTTtoRF "home/commands/MQTTto433"
+#define subjectRFtoMQTT "home/433toMQTT"
 #define subjectGTWRFtoMQTT "home/433toMQTT"
-#define subject433toMQTTAdvanced "home/433toMQTTAdvanced"
+#define subjectRFtoMQTTport "home/433toMQTT/port"
+#define subjectRFtoMQTTbits "home/433toMQTT/bits"
+#define subjectRFtoMQTTlength "home/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 //IR MQTT Subjects
 #define subjectGTWIRtoMQTT "home/IRtoMQTT"
 #define subjectIRtoMQTT "home/IRtoMQTT"
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
-#define subjectIRtoMQTTAdvanced "home/IRtoMQTTAdvanced"
+#define subjectIRtoMQTTport "home/IRtoMQTT/port"
+#define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
 /*
 RF supported protocols
 433_1
@@ -118,3 +121,4 @@ IR_Whynter
 
 //Do we want to see trace for debugging purposes
 #define TRACE 1  // 0= trace off 1 = trace on
+

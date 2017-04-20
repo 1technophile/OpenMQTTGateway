@@ -35,6 +35,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 */
 #include "User_config.h"
 #include <PubSubClient.h>
+#include <avr/pgmspace.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
 unsigned long ReceivedSignal[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
@@ -55,7 +56,7 @@ void callback(char*topic, byte* payload,unsigned int length);
 PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 
 //MQTT last attemps reconnection date
-int lastReconnectAttempt = 0;
+unsigned int lastReconnectAttempt = 0;
 
 boolean reconnect() {
   // Loop until we're reconnected
@@ -175,20 +176,22 @@ void loop()
   } else { //connected
     // MQTT loop
     client.loop();
+    
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
-      // Receive loop, if data received by RF433 or IR send it by MQTT
-      #ifdef ZgatewayRF
-        boolean resultRF = RFtoMQTT();
-        if(resultRF)
-        trc(F("RF  successfully sent by MQTT"));
-      #endif
-      #ifdef ZgatewayIR
-        boolean resultIR = IRtoMQTT();
-        if(resultIR)
-        trc(F("IR successfully sent by MQTT"));
-      #endif
+    // Receive loop, if data received by RF433 or IR send it by MQTT
+    #ifdef ZgatewayRF
+      boolean resultRF = RFtoMQTT();
+      if(resultRF)
+      trc(F("RF  successfully sent by MQTT"));
+    #endif
+    #ifdef ZgatewayIR
+      boolean resultIR = IRtoMQTT();
+      if(resultIR)
+      trc(F("IR successfully sent by MQTT"));
+    #endif
+    
   }
   delay(100);
 }
@@ -240,23 +243,22 @@ return false;
 }
 
 void receivingMQTT(char * topicOri, char * datacallback) {
-  String topic = topicOri;
 
   trc(F("Receiving data by MQTT"));
-  trc(topic);  
+  trc(String(topicOri));
   trc(F("Callback value"));
   trc(String(datacallback));
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
   trc(F("Converted value to unsigned long"));
   trc(String(data));
 
-  // Storing data received
-  int pos0 = topic.lastIndexOf(subjectMultiGTWKey);
-  if (pos0 != -1){
-    trc(F("Storing signal"));
-    storeValue(data);
-    trc(F("Data stored"));
-  }
+   if (strstr(topicOri, subjectMultiGTWKey) != NULL)
+   {
+      trc(F("Storing signal"));
+      storeValue(data);
+      trc(F("Data stored"));
+   }
+
   
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);

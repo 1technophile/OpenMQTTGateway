@@ -50,20 +50,27 @@ void setupRF()
 }
 
 boolean RFtoMQTT(){
-  unsigned long MQTTvalue = 0;
-  String valueAdvanced;
+
   if (mySwitch.available()){
     trc(F("Receiving 433Mhz signal"));
+    unsigned long MQTTvalue = 0;
+    int MQTTport = 0;
+    int MQTTbits = 0;
+    int MQTTlength = 0;
     MQTTvalue = mySwitch.getReceivedValue();
-    valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(mySwitch.getReceivedBitlength()) + " Delay " + String(mySwitch.getReceivedDelay()) + " Protocol " + String(mySwitch.getReceivedProtocol());
+    MQTTport = mySwitch.getReceivedProtocol();
+    MQTTbits = mySwitch.getReceivedBitlength();
+    MQTTlength = mySwitch.getReceivedDelay();
     mySwitch.resetAvailable();
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Sending advanced signal to MQTT"));
-        client.publish(subject433toMQTTAdvanced,(char *)valueAdvanced.c_str());
+        client.publish(subjectRFtoMQTTport,(char *)MQTTport);
+        client.publish(subjectRFtoMQTTbits,(char *)MQTTbits);    
+        client.publish(subjectRFtoMQTTlength,(char *)MQTTlength);    
         trc(F("Sending RF to MQTT"));
         String value = String(MQTTvalue);
         trc(value);
-        boolean result = client.publish(subject433toMQTT,(char *)value.c_str());
+        boolean result = client.publish(subjectRFtoMQTT,(char *)value.c_str());
         return result;
     } 
   }
@@ -109,7 +116,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     trc(String(valuePLSL));
   }
   
-  if ((topic == subjectMQTTto433) && (valuePRT == 0) && (valuePLSL  == 0)){
+  if ((topic == subjectMQTTtoRF) && (valuePRT == 0) && (valuePLSL  == 0)){
     trc(F("Sending data by RF, default parameters"));
     mySwitch.setProtocol(1,350);
     mySwitch.send(data, 24);

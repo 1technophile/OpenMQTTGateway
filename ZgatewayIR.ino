@@ -37,15 +37,13 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 
 #ifdef ESP8266
   #include <IRremoteESP8266.h>
-   IRrecv irrecv(IR_RECEIVER_PIN);
+  IRrecv irrecv(IR_RECEIVER_PIN);
   IRsend irsend(IR_EMITTER_PIN);
 #else
   #include <IRremote.h>
   IRrecv irrecv(IR_RECEIVER_PIN);
   IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
 #endif
-
-decode_results results;
 
 void setupIR()
 {
@@ -58,16 +56,21 @@ void setupIR()
   
 }
 boolean IRtoMQTT(){
-  unsigned long MQTTvalue = 0;
-  String valueAdvanced;
+  decode_results results;
+  
   if (irrecv.decode(&results)){
   trc(F("Receiving IR signal"));
-    MQTTvalue=results.value;
-    valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(results.bits) + " Protocol " + String(results.decode_type);
+    unsigned long MQTTvalue = 0;
+    int MQTTport = 0;
+    int MQTTbits = 0;
+    MQTTvalue = results.value;
+    MQTTport = results.decode_type;
+    MQTTbits = results.bits;
     irrecv.resume(); // Receive the next value
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Sending advanced signal to MQTT"));
-        client.publish(subjectIRtoMQTTAdvanced,(char *)valueAdvanced.c_str());
+        trc(F("Sending advanced data to MQTT"));
+        client.publish(subjectIRtoMQTTport,(char *)MQTTport);
+        client.publish(subjectIRtoMQTTbits,(char *)MQTTbits);        
         trc(F("Sending IR to MQTT"));
         String value = String(MQTTvalue);
         trc(value);
@@ -79,10 +82,8 @@ boolean IRtoMQTT(){
 }
 
 void MQTTtoIR(char * topicOri, char * datacallback) {
-  String topic = topicOri;
 
   trc(F("Receiving data by MQTT"));
-  trc(topic);  
   trc(F("Callback value"));
   trc(String(datacallback));
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
@@ -93,40 +94,40 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   //send received MQTT value by IR signal (example of signal sent data = 1086296175)
   boolean signalSent = false;
   #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-  if (topic.lastIndexOf("IR_COOLIX") != -1 ){
+    if (strstr(topicOri, "IR_COOLIX") != NULL){
     irsend.sendCOOLIX(data, 24);
     signalSent = true;
   }
   #endif
-  if (topic.lastIndexOf("IR_NEC")!= -1 || topic == subjectMQTTtoIR){
+  if (strstr(topicOri, "IR_NEC") != NULL || strstr(topicOri, subjectMQTTtoIR) != NULL ){
     irsend.sendNEC(data, 32);
     signalSent = true;
   }
-  if (topic.lastIndexOf("IR_Whynter")!=-1){
+  if (strstr(topicOri, "IR_Whynter") != NULL){
     irsend.sendWhynter(data, 32);
     signalSent = true;
   }
-  if (topic.lastIndexOf("IR_LG")!=-1){
+  if (strstr(topicOri, "IR_LG") != NULL){
     irsend.sendLG(data, 28);
     signalSent = true;
   }
-  if (topic.lastIndexOf("IR_Sony")!=-1){
+  if (strstr(topicOri, "IR_Sony") != NULL){
     irsend.sendSony(data, 12);
     signalSent = true;
   }
-  if (topic.lastIndexOf("IR_DISH")!=-1){
+  if (strstr(topicOri, "IR_DISH") != NULL){
     irsend.sendDISH(data, 16);
     signalSent = true;
   }
-  if (topic.lastIndexOf("IR_RC5")!=-1){
+  if (strstr(topicOri, "IR_RC5") != NULL){
     irsend.sendRC5(data, 12);
     signalSent = true;
   }
-  if (topic.lastIndexOf("IR_Sharp")!=-1){
+  if (strstr(topicOri, "IR_Sharp") != NULL){
     irsend.sendSharpRaw(data, 15);
     signalSent = true;
   }
-   if (topic.lastIndexOf("IR_SAMSUNG")!=-1){
+  if (strstr(topicOri, "IR_SAMSUNG") != NULL){
    irsend.sendSAMSUNG(data, 32);
     signalSent = true;
   }
