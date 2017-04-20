@@ -52,9 +52,10 @@ const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
 const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
-//Addons management, comment the line if you don't use
-//#define ZaddonDHT true
-
+//Addons and module management, comment the line if you don't use
+//#define ZsensorDHT
+#define ZgatewayRF
+#define ZgatewayIR
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
