@@ -43,14 +43,14 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
-  const byte mac[] PROGMEM = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
+  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
 
-const byte ip[] PROGMEM = { 192, 168, 1, 99 }; //ip adress
+const byte ip[] = { 192, 168, 1, 99 }; //ip adress
 // Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
-const byte gateway[] PROGMEM = { 192, 168, 1, 1 }; //ip adress
-const byte Dns[] PROGMEM = { 192, 168, 1, 1 }; //ip adress
-const byte subnet[] PROGMEM = { 255, 255, 255, 0 }; //ip adress
+const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
+const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
+const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 //Addons and module management, comment the line if you don't use
 //#define ZsensorDHT
@@ -73,7 +73,7 @@ const byte subnet[] PROGMEM = { 255, 255, 255, 0 }; //ip adress
 #define subjectMQTTtoRF "home/commands/MQTTto433"
 #define subjectRFtoMQTT "home/433toMQTT"
 #define subjectGTWRFtoMQTT "home/433toMQTT"
-#define subjectRFtoMQTTport "home/433toMQTT/port"
+#define subjectRFtoMQTTprotocol "home/433toMQTT/protocol"
 #define subjectRFtoMQTTbits "home/433toMQTT/bits"
 #define subjectRFtoMQTTlength "home/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
@@ -82,7 +82,7 @@ const byte subnet[] PROGMEM = { 255, 255, 255, 0 }; //ip adress
 #define subjectGTWIRtoMQTT "home/IRtoMQTT"
 #define subjectIRtoMQTT "home/IRtoMQTT"
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
-#define subjectIRtoMQTTport "home/IRtoMQTT/port"
+#define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
 #define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
 /*
 RF supported protocols

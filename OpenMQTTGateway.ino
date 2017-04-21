@@ -35,7 +35,6 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 */
 #include "User_config.h"
 #include <PubSubClient.h>
-#include <avr/pgmspace.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
 unsigned long ReceivedSignal[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
@@ -244,21 +243,13 @@ return false;
 
 void receivingMQTT(char * topicOri, char * datacallback) {
 
-  trc(F("Receiving data by MQTT"));
-  trc(String(topicOri));
-  trc(F("Callback value"));
-  trc(String(datacallback));
-  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-  trc(F("Converted value to unsigned long"));
-  trc(String(data));
-
    if (strstr(topicOri, subjectMultiGTWKey) != NULL)
    {
       trc(F("Storing signal"));
+      unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
       storeValue(data);
       trc(F("Data stored"));
    }
-
   
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);

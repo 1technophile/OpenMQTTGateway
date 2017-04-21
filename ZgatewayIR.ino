@@ -61,16 +61,16 @@ boolean IRtoMQTT(){
   if (irrecv.decode(&results)){
   trc(F("Receiving IR signal"));
     unsigned long MQTTvalue = 0;
-    int MQTTport = 0;
-    int MQTTbits = 0;
+    String MQTTprotocol;
+    String MQTTbits;
     MQTTvalue = results.value;
-    MQTTport = results.decode_type;
-    MQTTbits = results.bits;
+    MQTTprotocol = String(results.decode_type);
+    MQTTbits = String(results.bits);
     irrecv.resume(); // Receive the next value
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Sending advanced data to MQTT"));
-        client.publish(subjectIRtoMQTTport,(char *)MQTTport);
-        client.publish(subjectIRtoMQTTbits,(char *)MQTTbits);        
+        client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
+        client.publish(subjectIRtoMQTTbits,(char *)MQTTbits.c_str());        
         trc(F("Sending IR to MQTT"));
         String value = String(MQTTvalue);
         trc(value);
@@ -83,12 +83,7 @@ boolean IRtoMQTT(){
 
 void MQTTtoIR(char * topicOri, char * datacallback) {
 
-  trc(F("Receiving data by MQTT"));
-  trc(F("Callback value"));
-  trc(String(datacallback));
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-  trc(F("Converted value to unsigned long"));
-  trc(String(data));
   
   // IR DATA ANALYSIS    
   //send received MQTT value by IR signal (example of signal sent data = 1086296175)
@@ -133,7 +128,10 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   }
   if (signalSent){
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
-    if (result)trc(F("Acknowedgement of reception published"));
+    if (result){
+      trc(F("Signal below sent by IR and acknowledgment published"));
+      trc(String(data));
+      };
   }
    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
 }

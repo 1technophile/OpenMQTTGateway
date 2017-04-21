@@ -54,19 +54,19 @@ boolean RFtoMQTT(){
   if (mySwitch.available()){
     trc(F("Receiving 433Mhz signal"));
     unsigned long MQTTvalue = 0;
-    int MQTTport = 0;
-    int MQTTbits = 0;
-    int MQTTlength = 0;
+    String MQTTprotocol;
+    String MQTTbits;
+    String MQTTlength;
     MQTTvalue = mySwitch.getReceivedValue();
-    MQTTport = mySwitch.getReceivedProtocol();
-    MQTTbits = mySwitch.getReceivedBitlength();
-    MQTTlength = mySwitch.getReceivedDelay();
+    MQTTprotocol = String(mySwitch.getReceivedProtocol());
+    MQTTbits = String(mySwitch.getReceivedBitlength());
+    MQTTlength = String(mySwitch.getReceivedDelay());
     mySwitch.resetAvailable();
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Sending advanced signal to MQTT"));
-        client.publish(subjectRFtoMQTTport,(char *)MQTTport);
-        client.publish(subjectRFtoMQTTbits,(char *)MQTTbits);    
-        client.publish(subjectRFtoMQTTlength,(char *)MQTTlength);    
+        client.publish(subjectRFtoMQTTprotocol,(char *)MQTTprotocol.c_str());
+        client.publish(subjectRFtoMQTTbits,(char *)MQTTbits.c_str());    
+        client.publish(subjectRFtoMQTTlength,(char *)MQTTlength.c_str());    
         trc(F("Sending RF to MQTT"));
         String value = String(MQTTvalue);
         trc(value);
@@ -78,26 +78,12 @@ boolean RFtoMQTT(){
 }
 
 void MQTTtoRF(char * topicOri, char * datacallback) {
-  String topic = topicOri;
 
-  trc(F("Receiving data by MQTT"));
-  trc(topic);  
-  trc(F("Callback value"));
-  trc(String(datacallback));
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-  trc(F("Converted value to unsigned long"));
-  trc(String(data));
-
-  // Storing data received
-  int pos0 = topic.lastIndexOf(subjectMultiGTWKey);
-  if (pos0 != -1){
-    trc(F("Storing signal"));
-    storeValue(data);
-    trc(F("Data stored"));
-  }
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined 
+  String topic = topicOri;
   int valuePRT = 0;
   int valuePLSL  = 0;
   int pos = topic.lastIndexOf(RFprotocolKey);       
@@ -134,7 +120,10 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     mySwitch.send(data, 24);
     // Acknowledgement to the GTWRF topic
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
-    if (result)trc(F("Acknowedgement of reception published"));
+    if (result){
+      trc(F("Signal below sent by RF and acknowledgment published"));
+      trc(String(data));
+      };
   }
   
 }
