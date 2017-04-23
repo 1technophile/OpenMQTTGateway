@@ -84,6 +84,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
 #define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
 #define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
+
+#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 /*
 RF supported protocols
 433_1

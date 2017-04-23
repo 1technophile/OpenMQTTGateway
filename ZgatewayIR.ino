@@ -5,20 +5,10 @@
    Send and receiving command by MQTT
  
   This program enables to:
- - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received 433Mhz signal
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
 
   Copyright: (c)1technophile
-
-  Contributors:
-  - 1technophile
-  - crankyoldgit
-  - Spudtater
-  - rickybrent
-  - ekim from Home assistant forum
-  - ronvl from Home assistant forum
 
 IMPORTANT NOTE: On arduino connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
   
@@ -67,7 +57,9 @@ boolean IRtoMQTT(){
     MQTTprotocol = String(results.decode_type);
     MQTTbits = String(results.bits);
     irrecv.resume(); // Receive the next value
-    if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
+    if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
+      trc(F("--------------don't publish the received code unknown protocol--------------"));
+    } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Sending advanced data to MQTT"));
         client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
         client.publish(subjectIRtoMQTTbits,(char *)MQTTbits.c_str());        
@@ -89,7 +81,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   //send received MQTT value by IR signal (example of signal sent data = 1086296175)
   boolean signalSent = false;
   #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-    if (strstr(topicOri, "IR_COOLIX") != NULL){
+  if (strstr(topicOri, "IR_COOLIX") != NULL){
     irsend.sendCOOLIX(data, 24);
     signalSent = true;
   }
