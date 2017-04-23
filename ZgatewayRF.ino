@@ -7,21 +7,9 @@
   This program enables to:
  - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received 433Mhz signal
- - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received IR signal
 
   Copyright: (c)1technophile
 
-  Contributors:
-  - 1technophile
-  - crankyoldgit
-  - Spudtater
-  - rickybrent
-  - ekim from Home assistant forum
-  - ronvl from Home assistant forum
-
-IMPORTANT NOTE: On arduino connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
-  
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
