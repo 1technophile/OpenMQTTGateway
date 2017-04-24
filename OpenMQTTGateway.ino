@@ -16,6 +16,7 @@
   - 1technophile
   - crankyoldgit
   - Spudtater
+  - prahjister
   - rickybrent
   - ekim from Home assistant forum
   - ronvl from Home assistant forum
@@ -35,38 +36,27 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 */
 #include "User_config.h"
 #include <PubSubClient.h>
-#include <RCSwitch.h> // library for controling Radio frequency switch
 
 // array to store previous received RFs, IRs codes and their timestamps
-unsigned long ReceivedSignal[10][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+unsigned long ReceivedSignal[8][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 /*------------------------------------------------------------------------*/
 
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
-RCSwitch mySwitch = RCSwitch();
-
 #ifdef ESP8266
-  #include <IRremoteESP8266.h>
   #include <ESP8266WiFi.h>
-  IRrecv irrecv(IR_RECEIVER_PIN);
-  IRsend irsend(IR_EMITTER_PIN);
   WiFiClient eClient;
 #else
-  #include <IRremote.h>
   #include <Ethernet.h>
   EthernetClient eClient;
-  IRrecv irrecv(IR_RECEIVER_PIN);
-  IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
 #endif
-
-decode_results results;
 
 // client parameters
 PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 
 //MQTT last attemps reconnection date
-int lastReconnectAttempt = 0;
+unsigned int lastReconnectAttempt = 0;
 
 boolean reconnect() {
   // Loop until we're reconnected
@@ -129,18 +119,13 @@ void setup()
   delay(1500);
   
   lastReconnectAttempt = 0;
-
-  //IR init parameters
-#ifdef ESP8266
-  irsend.begin();
-#endif
-
-  irrecv.enableIRIn(); // Start the receiver
-
-  //RF init parameters
-  mySwitch.enableTransmit(RF_EMITTER_PIN);
-  mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); 
-  mySwitch.enableReceive(RF_RECEIVER_PIN); 
+  
+  #ifdef ZgatewayIR
+    setupIR();
+  #endif
+  #ifdef ZgatewayRF
+    setupRF();
+  #endif
 
 }
 
@@ -156,7 +141,7 @@ void setup_wifi() {
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
   WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
-  trc("OpenMQTTGateway ip adress: ");   
+  trc(F("OpenMQTTGateway ip adress: "));   
   Serial.println(WiFi.localIP());
   
   while (WiFi.status() != WL_CONNECTED) {
@@ -169,7 +154,7 @@ void setup_wifi() {
 void setup_ethernet() {
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
   //Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  trc("OpenMQTTGateway ip adress: ");   
+  trc(F("OpenMQTTGateway ip adress: "));   
   Serial.println(Ethernet.localIP());
   trc(F("Ethernet connected"));
 }
@@ -179,7 +164,7 @@ void loop()
 {
   //MQTT client connexion management
   if (!client.connected()) { // not connected
-    long now = millis();
+    unsigned long now = millis();
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       trc(F("client mqtt not connected, trying to connect"));
@@ -191,57 +176,28 @@ void loop()
   } else { //connected
     // MQTT loop
     client.loop();
-    #ifdef ZaddonDHT
+    
+    #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
-    if (mySwitch.available() || irrecv.decode(&results)) {
-      boolean result = sendValuebyMQTT();
-      if(result)
-        trc(F("value successfully sent by MQTT"));
-    }
+    #ifdef ZgatewayRF
+      boolean resultRF = RFtoMQTT();
+      if(resultRF)
+      trc(F("RF successfully sent by MQTT"));
+    #endif
+    #ifdef ZgatewayIR
+      boolean resultIR = IRtoMQTT();
+      if(resultIR)
+      trc(F("IR successfully sent by MQTT"));
+    #endif
+    
   }
-
   delay(100);
 }
 
-boolean sendValuebyMQTT(){
-// Topic on which we will send data
-trc(F("Receiving 433Mhz or IR signal"));
-unsigned long MQTTvalue = 0;
-  if (mySwitch.available()||irrecv.decode(&results)){
-      trc(F("Signal detected"));
-      String subject;
-      String valueAdvanced;
-      String subjectAdvanced;
-      if (mySwitch.available()){
-        MQTTvalue = mySwitch.getReceivedValue();
-        valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(mySwitch.getReceivedBitlength()) + " Delay " + String(mySwitch.getReceivedDelay()) + " Protocol " + String(mySwitch.getReceivedProtocol());
-        mySwitch.resetAvailable();
-        subject = subject433toMQTT;
-        subjectAdvanced = subject433toMQTTAdvanced;
-      }else if (irrecv.decode(&results)){
-        MQTTvalue=results.value;
-        valueAdvanced = "Value " + String(MQTTvalue)+" Bit " + String(results.bits) + " Protocol " + String(results.decode_type);
-        irrecv.resume(); // Receive the next value
-        subject = subjectIRtoMQTT;
-        subjectAdvanced = subjectIRtoMQTTAdvanced;
-      }
-      if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-          trc(F("Sending advanced signal to MQTT"));
-          client.publish((char *)subjectAdvanced.c_str(),(char *)valueAdvanced.c_str());
-          trc(F("Sending signal to MQTT"));
-          String value = String(MQTTvalue);
-          trc(value);
-          boolean result = client.publish((char *)subject.c_str(),(char *)value.c_str());
-          return result;
-      } 
-  return false;
-  }      
-}
-
 void storeValue(long MQTTvalue){
-    long now = millis();
+    unsigned long now = millis();
     // find oldest value of the buffer
     int o = getMin();
     trc(F("Minimum index: "));
@@ -252,7 +208,7 @@ void storeValue(long MQTTvalue){
     trc(F("store this code :"));
     trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
     trc(F("Col: value/timestamp"));
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 8; i++)
     {
       trc(String(i) + ":" + String(ReceivedSignal[i][0])+"/"+String(ReceivedSignal[i][1]));
     }
@@ -261,7 +217,7 @@ void storeValue(long MQTTvalue){
 int getMin(){
   int minimum = ReceivedSignal[0][1];
   int minindex=0;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 8; i++)
   {
     if (ReceivedSignal[i][1] < minimum) {
       minimum = ReceivedSignal[i][1];
@@ -274,11 +230,11 @@ int getMin(){
 boolean isAduplicate(long value){
 trc(F("isAduplicate"));
 // check if the value has been already sent during the last time_avoid_duplicate
-for (int i=0; i<10;i++){
+for (int i=0; i<8;i++){
  if (ReceivedSignal[i][0] == value){
-      long now = millis();
+      unsigned long now = millis();
       if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
-      trc(F("--------------don't send the received code--------------"));
+      trc(F("--------------don't publish the received code duplicate--------------"));
       return true;
     }
   }
@@ -287,114 +243,22 @@ return false;
 }
 
 void receivingMQTT(char * topicOri, char * datacallback) {
-  String topic = topicOri;
 
-  trc(F("Receiving data by MQTT"));
-  trc(topic);  
-  trc(F("Callback value"));
-  trc(String(datacallback));
-  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-  trc(F("Converted value to unsigned long"));
-  trc(String(data));
-
-  // Storing data received
-  int pos0 = topic.lastIndexOf(subjectMultiGTWKey);
-  if (pos0 != -1){
-    trc(F("Storing signal"));
-    storeValue(data);
-    trc(F("Data stored"));
-  }
-
-  // RF DATA ANALYSIS
-  //We look into the subject to see if a special RF protocol is defined 
-  int valuePRT = 0;
-  int valuePLSL  = 0;
-  int pos = topic.lastIndexOf(RFprotocolKey);       
-  if (pos != -1){
-    pos = pos + +strlen(RFprotocolKey);
-    valuePRT = (topic.substring(pos,pos + 1)).toInt();
-    trc(F("RF Protocol number:"));
-    trc(String(valuePRT));
-  }
-  //We look into the subject to see if a special RF pulselength is defined 
-  int pos2 = topic.lastIndexOf(RFpulselengthKey);
-  if (pos2 != -1) {
-    pos2 = pos2 + strlen(RFpulselengthKey);
-    valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
-    trc(F("RF Pulse Length:"));
-    trc(String(valuePLSL));
-  }
+   if (strstr(topicOri, subjectMultiGTWKey) != NULL)
+   {
+      trc(F("Storing signal"));
+      unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+      storeValue(data);
+      trc(F("Data stored"));
+   }
   
-  if ((topic == subjectMQTTto433) && (valuePRT == 0) && (valuePLSL  == 0)){
-    trc(F("Sending data by RF, default parameters"));
-    mySwitch.setProtocol(1,350);
-    mySwitch.send(data, 24);
-    // Acknowledgement to the GTWRF topic
-    boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
-    if (result)trc(F("Acknowedgement of reception published"));
-    
-  } else if ((valuePRT != 0) || (valuePLSL  != 0)){
-    trc(F("Sending data by RF, user defined parameters"));
-    if (valuePRT == 0) valuePRT = 1;
-    if (valuePLSL == 0) valuePLSL = 350;
-    trc(String(valuePRT));
-    trc(String(valuePLSL));
-    mySwitch.setProtocol(valuePRT,valuePLSL);
-    mySwitch.send(data, 24);
-    // Acknowledgement to the GTWRF topic
-    boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
-    if (result)trc(F("Acknowedgement of reception published"));
-  }
-  
-  // IR DATA ANALYSIS    
-  //send received MQTT value by IR signal (example of signal sent data = 1086296175)
-  boolean signalSent = false;
-  #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-  if (topic.lastIndexOf("IR_COOLIX") != -1 ){
-    irsend.sendCOOLIX(data, 24);
-    signalSent = true;
-  }
-  #endif
-  if (topic.lastIndexOf("IR_NEC")!= -1 || topic == subjectMQTTtoIR){
-    irsend.sendNEC(data, 32);
-    signalSent = true;
-  }
-  if (topic.lastIndexOf("IR_Whynter")!=-1){
-    irsend.sendWhynter(data, 32);
-    signalSent = true;
-  }
-  if (topic.lastIndexOf("IR_LG")!=-1){
-    irsend.sendLG(data, 28);
-    signalSent = true;
-  }
-  if (topic.lastIndexOf("IR_Sony")!=-1){
-    irsend.sendSony(data, 12);
-    signalSent = true;
-  }
-  if (topic.lastIndexOf("IR_DISH")!=-1){
-    irsend.sendDISH(data, 16);
-    signalSent = true;
-  }
-  if (topic.lastIndexOf("IR_RC5")!=-1){
-    irsend.sendRC5(data, 12);
-    signalSent = true;
-  }
-  if (topic.lastIndexOf("IR_Sharp")!=-1){
-    irsend.sendSharpRaw(data, 15);
-    signalSent = true;
-  }
-   if (topic.lastIndexOf("IR_SAMSUNG")!=-1){
-   irsend.sendSAMSUNG(data, 32);
-    signalSent = true;
-  }
-  if (signalSent){
-    boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
-    if (result)trc(F("Acknowedgement of reception published"));
-  }
-   irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
+#ifdef ZgatewayRF
+  MQTTtoRF(topicOri, datacallback);
+#endif
+#ifdef ZgatewayIR
+  MQTTtoIR(topicOri, datacallback);
+#endif
 }
-
-
 
 //trace
 void trc(String msg){

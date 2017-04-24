@@ -28,7 +28,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 /*-------------DEFINE YOUR MQTT & NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
-#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
+//#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
@@ -52,9 +52,10 @@ const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
 const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
-//Addons management, comment the line if you don't use
-//#define ZaddonDHT true
-
+//Addons and module management, comment the line if you don't use
+//#define ZsensorDHT
+#define ZgatewayRF
+#define ZgatewayIR
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
@@ -69,17 +70,22 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMultiGTWKey "toMQTT"
 
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTto433 "home/commands/MQTTto433"
-#define subject433toMQTT "home/433toMQTT"
+#define subjectMQTTtoRF "home/commands/MQTTto433"
+#define subjectRFtoMQTT "home/433toMQTT"
 #define subjectGTWRFtoMQTT "home/433toMQTT"
-#define subject433toMQTTAdvanced "home/433toMQTTAdvanced"
+#define subjectRFtoMQTTprotocol "home/433toMQTT/protocol"
+#define subjectRFtoMQTTbits "home/433toMQTT/bits"
+#define subjectRFtoMQTTlength "home/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 //IR MQTT Subjects
 #define subjectGTWIRtoMQTT "home/IRtoMQTT"
 #define subjectIRtoMQTT "home/IRtoMQTT"
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
-#define subjectIRtoMQTTAdvanced "home/IRtoMQTTAdvanced"
+#define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
+#define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
+
+#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 /*
 RF supported protocols
 433_1
@@ -117,3 +123,4 @@ IR_Whynter
 
 //Do we want to see trace for debugging purposes
 #define TRACE 1  // 0= trace off 1 = trace on
+
