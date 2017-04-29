@@ -1,4 +1,5 @@
 language: c
+dist: trusty
 env:
   - BD=arduino:avr:uno
   - BD=arduino:avr:mega:cpu=atmega2560
