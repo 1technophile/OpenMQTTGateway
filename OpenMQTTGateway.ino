@@ -126,6 +126,9 @@ void setup()
   #ifdef ZgatewayRF
     setupRF();
   #endif
+  #ifdef ZgatewayBT
+    setupBT();
+  #endif
 
 }
 
@@ -191,9 +194,14 @@ void loop()
       if(resultIR)
       trc(F("IR successfully sent by MQTT"));
     #endif
+    #ifdef ZgatewayBT
+      boolean resultBT = BTtoMQTT();
+      if(resultBT)
+      trc(F("BT successfully sent by MQTT"));
+    #endif
     
   }
-  delay(100);
+  //delay(100);
 }
 
 void storeValue(long MQTTvalue){
