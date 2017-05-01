@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-  This program enables to:
+  This gateway enables to:
  - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received 433Mhz signal
 
