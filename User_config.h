@@ -9,7 +9,8 @@
  - publish MQTT data to a different topic related to received 433Mhz signal
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
- 
+ - publish MQTT data to a different topic related to BLE devices rssi signal
+  
   Copyright: (c)1technophile
   
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
@@ -25,7 +26,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 */
 
 /*----------------------------USER PARAMETERS-----------------------------*/
-/*-------------DEFINE YOUR MQTT & NETWORK PARAMETERS BELOW----------------*/
+/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
 //#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
@@ -38,6 +39,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #define will_Message "Offline"
 #define Gateway_AnnouncementMsg "Online"
 
+/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   #define wifi_ssid "wifi ssid"
@@ -52,23 +54,23 @@ const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
 const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
+/*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
 //#define ZsensorDHT
 #define ZgatewayRF
 #define ZgatewayIR
+#define ZgatewayBT
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
-//MQTT definitions
+/*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #define subjectMQTTtoX "home/commands/#"
-// subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
-#define subjectMultiGTWRF "+/433toMQTT"
-#define subjectMultiGTWIR "+/IRtoMQTT"
 #define subjectMultiGTWKey "toMQTT"
 
+/*-------------------RF topics----------------------*/
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTtoRF "home/commands/MQTTto433"
 #define subjectRFtoMQTT "home/433toMQTT"
@@ -77,15 +79,6 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectRFtoMQTTbits "home/433toMQTT/bits"
 #define subjectRFtoMQTTlength "home/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
-#define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
-//IR MQTT Subjects
-#define subjectGTWIRtoMQTT "home/IRtoMQTT"
-#define subjectIRtoMQTT "home/IRtoMQTT"
-#define subjectMQTTtoIR "home/commands/MQTTtoIR"
-#define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
-#define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
-
-#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 /*
 RF supported protocols
 433_1
@@ -94,18 +87,36 @@ RF supported protocols
 433_4
 433_5
 433_6
-IR supported protocols
-IR_NEC
-IR_LG
-IR_Sony
-IR_DISH
-IR_Sharp
-IR_SAMSUNG
-IR_COOLIX
-IR_Whynter
 */
+#define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
+// subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
+#define subjectMultiGTWRF "+/433toMQTT"
 
-//IR PIN definition
+/*-------------------IR topics----------------------*/
+//IR MQTT Subjects
+#define subjectGTWIRtoMQTT "home/IRtoMQTT"
+#define subjectIRtoMQTT "home/IRtoMQTT"
+#define subjectMQTTtoIR "home/commands/MQTTtoIR"
+#define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
+#define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
+// subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
+#define subjectMultiGTWIR "+/IRtoMQTT"
+
+#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
+//IR supported protocols uncomment if you want to send with this protocol, NEC protocol is available per default
+#define IR_COOLIX
+#define IR_Whynter
+#define IR_LG
+#define IR_Sony
+#define IR_DISH
+#define IR_RC5
+#define IR_Sharp
+#define IR_SAMSUNG
+
+/*----------------------BT topics-------------------------*/
+#define subjectBTtoMQTT "home/BTtoMQTT/"
+
+/*-------------------PIN DEFINITIONS----------------------*/
 #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
 #define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
 
@@ -113,14 +124,18 @@ IR_Whynter
   #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
   //RF PIN definition
   #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
+  #define BT_RX D7 //ESP8266 RX connect HM-10 TX
+  #define BT_TX D6 //ESP8266 TX connect HM-10 RX
 #else
   //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
   //RF PIN definition
   #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
+  #define BT_RX 10
+  #define BT_TX 11
 #endif
 //RF number of signal repetition
 #define RF_EMITTER_REPEAT 20
 
-//Do we want to see trace for debugging purposes
+/*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
 

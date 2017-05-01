@@ -9,7 +9,8 @@
  - publish MQTT data to a different topic related to received 433Mhz signal
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
-
+ - publish MQTT data to a different topic related to BLE devices rssi signal
+ 
   Copyright: (c)1technophile
 
   Contributors:
@@ -201,7 +202,7 @@ void loop()
     #endif
     
   }
-  //delay(100);
+  delay(100);
 }
 
 void storeValue(long MQTTvalue){
