@@ -103,15 +103,26 @@ RF supported protocols
 #define subjectMultiGTWIR "+/IRtoMQTT"
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
-//IR supported protocols uncomment if you want to send with this protocol, NEC protocol is available per default
-#define IR_COOLIX
-#define IR_Whynter
-#define IR_LG
-#define IR_Sony
-#define IR_DISH
-#define IR_RC5
-#define IR_Sharp
-#define IR_SAMSUNG
+
+#ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
+  #define IR_COOLIX
+  #define IR_Whynter
+  #define IR_LG
+  #define IR_Sony
+  #define IR_DISH
+  #define IR_RC5
+  #define IR_Sharp
+  #define IR_SAMSUNG
+#else //IR supported protocols on arduino uncomment if you want to send with this protocol, NEC protocol is available per default
+  //#define IR_COOLIX
+  //#define IR_Whynter
+  //#define IR_LG
+  //#define IR_Sony
+  //#define IR_DISH
+  //#define IR_RC5
+  //#define IR_Sharp
+  #define IR_SAMSUNG
+#endif
 
 /*----------------------BT topics-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"

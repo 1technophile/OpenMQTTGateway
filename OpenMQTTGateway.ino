@@ -39,7 +39,13 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #include <PubSubClient.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
-unsigned long ReceivedSignal[8][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+#ifdef ESP8266
+#define array_size 12
+unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+#else
+#define array_size 4
+unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
+#endif
 /*------------------------------------------------------------------------*/
 
 //adding this to bypass the problem of the arduino builder issue 50
@@ -217,7 +223,7 @@ void storeValue(long MQTTvalue){
     trc(F("store this code :"));
     trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
     trc(F("Col: value/timestamp"));
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < array_size; i++)
     {
       trc(String(i) + ":" + String(ReceivedSignal[i][0])+"/"+String(ReceivedSignal[i][1]));
     }
@@ -226,7 +232,7 @@ void storeValue(long MQTTvalue){
 int getMin(){
   int minimum = ReceivedSignal[0][1];
   int minindex=0;
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < array_size; i++)
   {
     if (ReceivedSignal[i][1] < minimum) {
       minimum = ReceivedSignal[i][1];
@@ -239,7 +245,7 @@ int getMin(){
 boolean isAduplicate(long value){
 trc(F("isAduplicate"));
 // check if the value has been already sent during the last time_avoid_duplicate
-for (int i=0; i<8;i++){
+for (int i = 0; i < array_size;i++){
  if (ReceivedSignal[i][0] == value){
       unsigned long now = millis();
       if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
