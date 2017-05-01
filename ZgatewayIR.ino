@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-  This program enables to:
+  This gateway enables to:
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
 
@@ -81,43 +81,59 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   //send received MQTT value by IR signal (example of signal sent data = 1086296175)
   boolean signalSent = false;
   #ifdef ESP8266 // send coolix not available for arduino IRRemote library
+  #ifdef IR_COOLIX
   if (strstr(topicOri, "IR_COOLIX") != NULL){
     irsend.sendCOOLIX(data, 24);
     signalSent = true;
   }
   #endif
+  #endif
   if (strstr(topicOri, "IR_NEC") != NULL || strstr(topicOri, subjectMQTTtoIR) != NULL ){
     irsend.sendNEC(data, 32);
     signalSent = true;
   }
+  #ifdef IR_Whynter
   if (strstr(topicOri, "IR_Whynter") != NULL){
     irsend.sendWhynter(data, 32);
     signalSent = true;
   }
+  #endif
+  #ifdef IR_LG
   if (strstr(topicOri, "IR_LG") != NULL){
     irsend.sendLG(data, 28);
     signalSent = true;
   }
+  #endif
+  #ifdef IR_Sony
   if (strstr(topicOri, "IR_Sony") != NULL){
     irsend.sendSony(data, 12);
     signalSent = true;
   }
+  #endif
+  #ifdef IR_DISH
   if (strstr(topicOri, "IR_DISH") != NULL){
     irsend.sendDISH(data, 16);
     signalSent = true;
   }
+  #endif
+  #ifdef IR_RC5
   if (strstr(topicOri, "IR_RC5") != NULL){
     irsend.sendRC5(data, 12);
     signalSent = true;
   }
+  #endif
+  #ifdef IR_Sharp
   if (strstr(topicOri, "IR_Sharp") != NULL){
     irsend.sendSharpRaw(data, 15);
     signalSent = true;
   }
+  #endif
+  #ifdef IR_SAMSUNG
   if (strstr(topicOri, "IR_SAMSUNG") != NULL){
    irsend.sendSAMSUNG(data, 32);
     signalSent = true;
   }
+  #endif
   if (signalSent){
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
