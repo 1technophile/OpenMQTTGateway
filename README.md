@@ -1,8 +1,5 @@
 [![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway)
 
-See wiki for more info
-https://github.com/1technophile/OpenMQTTGateway/wiki
-
 ![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)
 
 A list of supported 433mhz devices is available here:
@@ -32,6 +29,9 @@ Functions:
 * Acknowledgement, to be sure that the gateway received the payload from MQTT it sends an acknowledgement on a user_defined topic "subjectGTWRFtoMQTT" for RF or "subjectGTWIRtoMQTT" for IR enabling to update the state of your switch or other component into your home automation
 * Multi boards compatibility, the gateway has been currently tested ok with ESP8266 12F, NodeMCU V1, NodeMCU V2, Wemos D1 mini, Arduino Uno, Arduino Mega 
 * Multi protocols handling, the gateway is based on RCSwitch and IRRemote libraries, you can define the protocol you want to use by specifying it inside the topic.
+
+See wiki for more info
+https://github.com/1technophile/OpenMQTTGateway/wiki
 
 -examples_with_gpio_usage/433toMQTTto433nFan_ESP8266 - ESP8266 gateway between 433mhz and a fan's remote control, from MQTT to the fan only.
  -Tutorial is here https://github.com/rickybrent/433toMQTTto433_ESP8266/wiki/Flower-Angel-18R-ST6
