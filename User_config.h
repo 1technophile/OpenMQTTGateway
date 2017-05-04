@@ -105,6 +105,7 @@ RF supported protocols
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 
 #ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
+  #define IR_Raw
   #define IR_COOLIX
   #define IR_Whynter
   #define IR_LG
@@ -114,6 +115,7 @@ RF supported protocols
   #define IR_Sharp
   #define IR_SAMSUNG
 #else //IR supported protocols on arduino uncomment if you want to send with this protocol, NEC protocol is available per default
+  //#define IR_Raw
   //#define IR_COOLIX
   //#define IR_Whynter
   //#define IR_LG

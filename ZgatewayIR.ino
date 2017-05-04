@@ -74,12 +74,49 @@ boolean IRtoMQTT(){
 }
 
 void MQTTtoIR(char * topicOri, char * datacallback) {
-
-  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
   
   // IR DATA ANALYSIS    
-  //send received MQTT value by IR signal (example of signal sent data = 1086296175)
+  //send received MQTT value by IR signal
   boolean signalSent = false;
+  unsigned long data = 0;
+  String strcallback = String(datacallback);
+  trc(String(datacallback));
+  int s = strcallback.length();
+  //number of "," value count
+  int count = 0;
+  for(int i = 0; i < s; i++)
+  {
+   if (datacallback[i] == ',') {
+    count++;
+    }
+  }
+  if(count == 0){
+    data = strtoul(datacallback, NULL, 10); // standard sending with unsigned long, we will not be able to pass values > 4294967295
+  }
+  else if(strstr(topicOri, "IR_Raw") != NULL){ // sending raw data from https://irdb.globalcache.com
+    trc("IR_Raw");
+    //buffer allocation from char datacallback
+    unsigned int GC[count+1];
+    String value = "";
+    int j = 0;
+    for(int i = 0; i < s; i++)
+    {
+     if (datacallback[i] != ',') {
+        value = value + String(datacallback[i]);
+      }
+      if ((datacallback[i] == ',') || (i == s - 1))
+      {
+        GC[j]= value.toInt();
+        value = "";
+        j++;
+      }
+    }
+    #ifdef IR_Raw
+      irsend.sendGC(GC, j);
+      signalSent = true;
+    #endif
+  }
+  
   #ifdef ESP8266 // send coolix not available for arduino IRRemote library
   #ifdef IR_COOLIX
   if (strstr(topicOri, "IR_COOLIX") != NULL){
