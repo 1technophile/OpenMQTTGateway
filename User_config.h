@@ -101,6 +101,8 @@ RF supported protocols
 #define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/IRtoMQTT"
+#define IRbitsKey "BITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
+#define IRRptKey "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 

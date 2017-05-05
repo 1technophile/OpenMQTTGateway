@@ -116,58 +116,88 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
       signalSent = true;
     #endif
   }
+
+    //We look into the subject to see if a special Bits number is defined 
+  String topic = topicOri;
+  int valueRPT = 0;
+  int valueBITS  = 0;
+  int pos = topic.lastIndexOf(IRbitsKey);       
+  if (pos != -1){
+    pos = pos + +strlen(IRbitsKey);
+    valueBITS = (topic.substring(pos,pos + 2)).toInt();
+    trc(F("Bits number:"));
+    trc(String(valueBITS));
+  }
+  //We look into the subject to see if a special repeat number is defined 
+  int pos2 = topic.lastIndexOf(IRRptKey);
+  if (pos2 != -1) {
+    pos2 = pos2 + strlen(IRRptKey);
+    valueRPT = (topic.substring(pos2,pos2 + 1)).toInt();
+    trc(F("IR repeat:"));
+    trc(String(valueRPT));
+  }
   
   #ifdef ESP8266 // send coolix not available for arduino IRRemote library
   #ifdef IR_COOLIX
   if (strstr(topicOri, "IR_COOLIX") != NULL){
-    irsend.sendCOOLIX(data, 24);
+    if (valueBITS == 0) valueBITS = 24;
+    irsend.sendCOOLIX(data, valueBITS);
     signalSent = true;
   }
   #endif
   #endif
   if (strstr(topicOri, "IR_NEC") != NULL || strstr(topicOri, subjectMQTTtoIR) != NULL ){
-    irsend.sendNEC(data, 32);
+    if (valueBITS == 0) valueBITS = 32;
+    irsend.sendNEC(data, valueBITS);
     signalSent = true;
   }
   #ifdef IR_Whynter
   if (strstr(topicOri, "IR_Whynter") != NULL){
-    irsend.sendWhynter(data, 32);
+    if (valueBITS == 0) valueBITS = 32;
+    irsend.sendWhynter(data, valueBITS);
     signalSent = true;
   }
   #endif
   #ifdef IR_LG
   if (strstr(topicOri, "IR_LG") != NULL){
-    irsend.sendLG(data, 28);
+    if (valueBITS == 0) valueBITS = 28;
+    irsend.sendLG(data, valueBITS);
     signalSent = true;
   }
   #endif
   #ifdef IR_Sony
   if (strstr(topicOri, "IR_Sony") != NULL){
-    irsend.sendSony(data, 12);
+    if (valueBITS == 0) valueBITS = 12;
+    if (valueRPT == 0) valueRPT = 2;
+    irsend.sendSony(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #ifdef IR_DISH
   if (strstr(topicOri, "IR_DISH") != NULL){
-    irsend.sendDISH(data, 16);
+    if (valueBITS == 0) valueBITS = 16;
+    irsend.sendDISH(data, valueBITS);
     signalSent = true;
   }
   #endif
   #ifdef IR_RC5
   if (strstr(topicOri, "IR_RC5") != NULL){
-    irsend.sendRC5(data, 12);
+    if (valueBITS == 0) valueBITS = 12;
+    irsend.sendRC5(data, valueBITS);
     signalSent = true;
   }
   #endif
   #ifdef IR_Sharp
   if (strstr(topicOri, "IR_Sharp") != NULL){
-    irsend.sendSharpRaw(data, 15);
+    if (valueBITS == 0) valueBITS = 15;
+    irsend.sendSharpRaw(data, valueBITS);
     signalSent = true;
   }
   #endif
   #ifdef IR_SAMSUNG
   if (strstr(topicOri, "IR_SAMSUNG") != NULL){
-   irsend.sendSAMSUNG(data, 32);
+    if (valueBITS == 0) valueBITS = 32;
+   irsend.sendSAMSUNG(data, valueBITS);
     signalSent = true;
   }
   #endif
