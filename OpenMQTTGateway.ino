@@ -76,7 +76,7 @@ boolean reconnect() {
     #endif
       trc(F("connected to MQTT broker"));
     // Once connected, publish an announcement...
-      client.publish(will_Topic,Gateway_AnnouncementMsg);
+      client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX) && client.subscribe(subjectMultiGTWRF)&& client.subscribe(subjectMultiGTWIR)) {
         trc(F("subscription OK to the subjects defined"));
