@@ -93,8 +93,9 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   if(count == 0){
     data = strtoul(datacallback, NULL, 10); // standard sending with unsigned long, we will not be able to pass values > 4294967295
   }
-  else if(strstr(topicOri, "IR_Raw") != NULL){ // sending raw data from https://irdb.globalcache.com
-    trc("IR_Raw");
+  #ifdef IR_GC
+  else if(strstr(topicOri, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
+    trc("IR_GC");
     //buffer allocation from char datacallback
     unsigned int GC[count+1];
     String value = "";
@@ -111,12 +112,11 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
         j++;
       }
     }
-    #ifdef IR_Raw
       irsend.sendGC(GC, j);
       signalSent = true;
-    #endif
   }
-
+#endif
+    
     //We look into the subject to see if a special Bits number is defined 
   String topic = topicOri;
   int valueRPT = 0;
