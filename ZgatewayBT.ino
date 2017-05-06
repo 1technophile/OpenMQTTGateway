@@ -19,6 +19,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
 THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd https://github.com/dinosd/BLE_PROXIMITY for inspiring me how to implement the gateway
 */
 #ifdef ZgatewayBT
 #include <SoftwareSerial.h>
@@ -26,6 +28,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #define STRING_MSG "OK+DISC:"
 #define QUESTION_MSG "AT+DISI?"
 #define RESPONSE_MSG "OK+DISIS"
+#define SETUP_MSG "OK+RESET"
 #define TimeBtw_Read 10000
 
 SoftwareSerial softserial(BT_RX, BT_TX);
@@ -56,9 +59,9 @@ boolean BTtoMQTT() {
       for (int i=0;i<device_number;i++){
            String onedevice = discResult.substring(0,78);
            onedevice.replace(STRING_MSG,"");
-           String company = onedevice.substring(0,8);
+           /*String company = onedevice.substring(0,8);
            String uuid = onedevice.substring(9,41);
-           String others = onedevice.substring(42,52);
+           String others = onedevice.substring(42,52);*/
            String mac = onedevice.substring(53,65);
            String rssi = onedevice.substring(66,70);
            String mactopic = subjectBTtoMQTT + mac;
@@ -71,6 +74,10 @@ boolean BTtoMQTT() {
         }
         return true;
       }
+    if (discResult.indexOf(SETUP_MSG)>=0)
+    {
+      trc(F("Connection OK to HM-10"));
+    }
   }
   if (millis() > (time1 + TimeBtw_Read)) {//retriving value of adresses and rssi
        time1 = millis();
