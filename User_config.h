@@ -126,7 +126,7 @@ RF supported protocols
   //#define IR_RC5
   //#define IR_Sharp
   //#define IR_SAMSUNG
-    #define IR_Raw
+  //#define IR_Raw
 #endif
 
 /*----------------------BT topics-------------------------*/
