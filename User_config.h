@@ -108,6 +108,7 @@ RF supported protocols
 
 #ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
+  #define IR_Raw
   #define IR_COOLIX
   #define IR_Whynter
   #define IR_LG
@@ -125,6 +126,7 @@ RF supported protocols
   //#define IR_RC5
   //#define IR_Sharp
   //#define IR_SAMSUNG
+    #define IR_Raw
 #endif
 
 /*----------------------BT topics-------------------------*/
@@ -144,8 +146,8 @@ RF supported protocols
   //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
   //RF PIN definition
   #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-  #define BT_RX 5
-  #define BT_TX 6
+  #define BT_RX 5 //arduino RX connect HM-10 TX
+  #define BT_TX 6 //arduino TX connect HM-10 RX
 #endif
 //RF number of signal repetition
 #define RF_EMITTER_REPEAT 20

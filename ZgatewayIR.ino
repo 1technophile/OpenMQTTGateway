@@ -115,6 +115,29 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
       irsend.sendGC(GC, j);
       signalSent = true;
   }
+  #endif
+  #ifdef IR_Raw
+  else if(strstr(topicOri, "IR_Raw") != NULL){ // sending GC data from https://irdb.globalcache.com
+    trc("IR_Raw");
+    //buffer allocation from char datacallback
+    unsigned int GC[count+1];
+    String value = "";
+    int j = 0;
+    for(int i = 0; i < s; i++)
+    {
+     if (datacallback[i] != ',') {
+        value = value + String(datacallback[i]);
+      }
+      if ((datacallback[i] == ',') || (i == s - 1))
+      {
+        GC[j]= value.toInt();
+        value = "";
+        j++;
+      }
+    }
+      irsend.sendRaw(GC, j, 38); // frequency hardcoded as a first approach for test puroposes
+      signalSent = true;
+  }
 #endif
     
     //We look into the subject to see if a special Bits number is defined 
