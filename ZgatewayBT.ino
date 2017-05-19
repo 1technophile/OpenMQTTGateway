@@ -28,6 +28,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #define STRING_MSG "OK+DISC:"
 #define QUESTION_MSG "AT+DISI?"
 #define RESPONSE_MSG "OK+DISIS"
+#define RESP_END_MSG "OK+DISCE"
 #define SETUP_MSG "OK+RESET"
 #define TimeBtw_Read 10000
 
@@ -47,32 +48,34 @@ void setupBT() {
 
 boolean BTtoMQTT() {
   while (softserial.available() > 0) {
-    #ifdef ESP8266
-      yield();
-    #endif
-
     String discResult = softserial.readString();
     if (discResult.indexOf(STRING_MSG)>=0){
-      trc(F("Sending BT data to MQTT"));
       discResult.replace(RESPONSE_MSG,"");
-      int device_number = discResult.length()/78;     
-      for (int i=0;i<device_number;i++){
-           String onedevice = discResult.substring(0,78);
-           onedevice.replace(STRING_MSG,"");
-           /*String company = onedevice.substring(0,8);
-           String uuid = onedevice.substring(9,41);
-           String others = onedevice.substring(42,52);*/
-           String mac = onedevice.substring(53,65);
-           String rssi = onedevice.substring(66,70);
-           String mactopic = subjectBTtoMQTT + mac;
-           trc(mactopic + " " + rssi);
-           client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
-           discResult = discResult.substring(78);
-           #ifdef ESP8266
-            yield();
-           #endif
+      discResult.replace(RESP_END_MSG,"");
+      float device_number = discResult.length()/78.0;
+      if (device_number == (int)device_number){ // to avoid publishing partial values we detect if the serial data as been fully read = a multiple of 78
+        trc(F("Sending BT data to MQTT"));
+        #ifdef ESP8266
+          yield();
+        #endif
+        for (int i=0;i<(int)device_number;i++){
+             String onedevice = discResult.substring(0,78);
+             onedevice.replace(STRING_MSG,"");
+             /*String company = onedevice.substring(0,8);
+             String uuid = onedevice.substring(9,41);
+             String others = onedevice.substring(42,52);*/
+             String mac = onedevice.substring(53,65);
+             String rssi = onedevice.substring(66,70);
+             String mactopic = subjectBTtoMQTT + mac;
+             trc(mactopic + " " + rssi);
+             client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+             discResult = discResult.substring(78);
+             #ifdef ESP8266
+              yield();
+             #endif
+          }
+          return true;
         }
-        return true;
       }
     if (discResult.indexOf(SETUP_MSG)>=0)
     {
