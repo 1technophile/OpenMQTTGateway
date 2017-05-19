@@ -33,7 +33,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 SoftwareSerial softserial(BT_RX, BT_TX);
 
-unsigned long time1 = 0;
+unsigned long timebt = 0;
 
 void setupBT() {
   softserial.begin(9600);
@@ -79,8 +79,8 @@ boolean BTtoMQTT() {
       trc(F("Connection OK to HM-10"));
     }
   }
-  if (millis() > (time1 + TimeBtw_Read)) {//retriving value of adresses and rssi
-       time1 = millis();
+  if (millis() > (timebt + TimeBtw_Read)) {//retriving value of adresses and rssi
+       timebt = millis();
        softserial.print(F(QUESTION_MSG));
   }
   return false;

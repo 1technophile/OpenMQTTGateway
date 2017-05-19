@@ -26,8 +26,8 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #ifdef ZsensorDHT
 #include <DHT.h>
 #include <DHT_U.h>
-#define TimeBetweenReading 60000
-DHT dht(6,DHT11);
+#define TimeBetweenReading 30000
+DHT dht(10,DHT22); //on nodeMCU this is SD3
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
@@ -35,11 +35,11 @@ DHT dht(6,DHT11);
 #define TEMP1  "home/433toMQTT/dht1/temp"
 
 //Time used to wait for an interval before resending temp and hum
-unsigned long time1 = 0;
+unsigned long timedht = 0;
 
 void MeasureTempAndHum(){
-  if (millis() > (time1 + TimeBetweenReading)) {//retriving value of temperature and humidity of the box from DHT every xUL
-    time1 = millis();
+  if (millis() > (timedht + TimeBetweenReading)) {//retriving value of temperature and humidity of the box from DHT every xUL
+    timedht = millis();
     float h = dht.readHumidity();
     // Read temperature as Celsius (the default)
     float t = dht.readTemperature(); 
@@ -47,12 +47,16 @@ void MeasureTempAndHum(){
     if (isnan(h) || isnan(t)) {
       trc(F("Failed to read from DHT sensor!"));
     }else{
-      char temp[5];
-      char hum[5];
+      char temp[6];
+      char hum[6];
       dtostrf(t,4,2,temp);
       dtostrf(h,4,2,hum);
-      client.publish(HUM1,hum);
+      trc(F("Sending Temp and Hum to MQTT"));
+      trc(String(hum));
+      trc(String(temp));
       client.publish(TEMP1,temp);
+      client.publish(HUM1,hum);
+      
     }
   }
 }
