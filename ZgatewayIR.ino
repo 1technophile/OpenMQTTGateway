@@ -117,10 +117,10 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   }
   #endif
   #ifdef IR_Raw
-  else if(strstr(topicOri, "IR_Raw") != NULL){ // sending GC data from https://irdb.globalcache.com
+  else if(strstr(topicOri, "IR_Raw") != NULL){ // sending Raw data
     trc("IR_Raw");
     //buffer allocation from char datacallback
-    unsigned int GC[count+1];
+    unsigned int Raw[count+1];
     String value = "";
     int j = 0;
     for(int i = 0; i < s; i++)
@@ -130,12 +130,12 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
       }
       if ((datacallback[i] == ',') || (i == s - 1))
       {
-        GC[j]= value.toInt();
+        Raw[j]= value.toInt();
         value = "";
         j++;
       }
     }
-      irsend.sendRaw(GC, j, 38); // frequency hardcoded as a first approach for test puroposes
+      irsend.sendRaw(Raw, j, 38); // frequency hardcoded as a first approach for test purposes
       signalSent = true;
   }
 #endif
