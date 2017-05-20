@@ -67,6 +67,10 @@ boolean IRtoMQTT(){
         String value = String(MQTTvalue);
         trc(value);
         boolean result = client.publish(subjectIRtoMQTT,(char *)value.c_str());
+        if (repeatIRwMQTT){
+            trc(F("Publishing IR signal so as to make the gateway(s) repeat it"));
+            client.publish(subjectMQTTtoIR,(char *)value.c_str());
+        }
         return result;
     }
   }
@@ -224,7 +228,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     signalSent = true;
   }
   #endif
-  if (signalSent){
+  if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
       trc(F("Signal below sent by IR and acknowledgment published"));

@@ -27,8 +27,7 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 
 RCSwitch mySwitch = RCSwitch();
 
-void setupRF()
-{
+void setupRF(){
 
   //RF init parameters
   mySwitch.enableTransmit(RF_EMITTER_PIN);
@@ -59,6 +58,10 @@ boolean RFtoMQTT(){
         String value = String(MQTTvalue);
         trc(value);
         boolean result = client.publish(subjectRFtoMQTT,(char *)value.c_str());
+        if (repeatRFwMQTT){
+            trc(F("Publishing IR signal so as to make the gateway(s) repeat it"));
+            client.publish(subjectMQTTtoRF,(char *)value.c_str());
+        }
         return result;
     } 
   }
@@ -106,8 +109,8 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     trc(String(valuePLSL));
     mySwitch.setProtocol(valuePRT,valuePLSL);
     mySwitch.send(data, 24);
-    // Acknowledgement to the GTWRF topic
-    boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
+    // Acknowledgement to the GTWRF topic 
+    boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     if (result){
       trc(F("Signal below sent by RF and acknowledgment published"));
       trc(String(data));
