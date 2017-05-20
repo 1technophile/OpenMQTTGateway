@@ -79,7 +79,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectRFtoMQTTbits "home/433toMQTT/bits"
 #define subjectRFtoMQTTlength "home/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
-#define repeatRFwMQTT true // do we repeat a received signal by using mqtt
+#define repeatRFwMQTT false // do we repeat a received signal by using mqtt
 /*
 RF supported protocols
 433_1
@@ -104,7 +104,7 @@ RF supported protocols
 #define subjectMultiGTWIR "+/IRtoMQTT"
 #define IRbitsKey "BITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
-#define repeatIRwMQTT true // do we repeat a received signal by using mqtt
+#define repeatIRwMQTT false // do we repeat a received signal by using mqtt
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 

@@ -60,7 +60,7 @@ boolean IRtoMQTT(){
     if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
       trc(F("--------------don't publish the received code unknown protocol--------------"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Sending advanced data to MQTT"));
+        trc(F("Sending adv data to MQTT"));
         client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
         client.publish(subjectIRtoMQTTbits,(char *)MQTTbits.c_str());        
         trc(F("Sending IR to MQTT"));
@@ -68,7 +68,7 @@ boolean IRtoMQTT(){
         trc(value);
         boolean result = client.publish(subjectIRtoMQTT,(char *)value.c_str());
         if (repeatIRwMQTT){
-            trc(F("Publishing IR signal so as to make the gateway(s) repeat it"));
+            trc(F("Publishing IR signal so as to repeat it"));
             client.publish(subjectMQTTtoIR,(char *)value.c_str());
         }
         return result;
@@ -231,7 +231,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
-      trc(F("Signal below sent by IR and acknowledgment published"));
+      trc(F("Signal sent by IR and ack published"));
       trc(String(data));
       };
   }

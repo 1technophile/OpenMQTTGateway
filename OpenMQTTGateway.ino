@@ -191,18 +191,18 @@ void loop()
     #ifdef ZgatewayRF
       boolean resultRF = RFtoMQTT();
       if(resultRF)
-      trc(F("RF successfully sent by MQTT"));
+      trc(F("RF sent by MQTT"));
     #endif
     #ifdef ZgatewayIR
       boolean resultIR = IRtoMQTT();
       if(resultIR)
-      trc(F("IR successfully sent by MQTT"));
+      trc(F("IR sent by MQTT"));
       delay(100);
     #endif
     #ifdef ZgatewayBT
       boolean resultBT = BTtoMQTT();
       if(resultBT)
-      trc(F("BT successfully sent by MQTT"));
+      trc(F("BT sent by MQTT"));
     #endif
     
   }

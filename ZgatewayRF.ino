@@ -59,7 +59,7 @@ boolean RFtoMQTT(){
         trc(value);
         boolean result = client.publish(subjectRFtoMQTT,(char *)value.c_str());
         if (repeatRFwMQTT){
-            trc(F("Publishing IR signal so as to make the gateway(s) repeat it"));
+            trc(F("Publishing IR signal so as to repeat it"));
             client.publish(subjectMQTTtoRF,(char *)value.c_str());
         }
         return result;
@@ -99,10 +99,10 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     mySwitch.send(data, 24);
     // Acknowledgement to the GTWRF topic
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
-    if (result)trc(F("Acknowedgement of reception published"));
+    if (result)trc(F("Ack of reception published"));
     
   } else if ((valuePRT != 0) || (valuePLSL  != 0)){
-    trc(F("Sending data by RF, user defined parameters"));
+    trc(F("Sending data by RF, MQTT parameters"));
     if (valuePRT == 0) valuePRT = 1;
     if (valuePLSL == 0) valuePLSL = 350;
     trc(String(valuePRT));
@@ -112,7 +112,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     // Acknowledgement to the GTWRF topic 
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     if (result){
-      trc(F("Signal below sent by RF and acknowledgment published"));
+      trc(F("Signal sent by RF and ack published"));
       trc(String(data));
       };
   }
