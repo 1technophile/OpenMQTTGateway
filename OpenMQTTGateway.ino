@@ -61,7 +61,7 @@ void callback(char*topic, byte* payload,unsigned int length);
 PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 
 //MQTT last attemps reconnection date
-unsigned int lastReconnectAttempt = 0;
+unsigned long lastReconnectAttempt = 0;
 
 boolean reconnect() {
   // Loop until we're reconnected
@@ -175,7 +175,6 @@ void loop()
     unsigned long now = millis();
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
-      trc(F("client mqtt not connected, trying to connect"));
       // Attempt to reconnect
       if (reconnect()) {
         lastReconnectAttempt = 0;
