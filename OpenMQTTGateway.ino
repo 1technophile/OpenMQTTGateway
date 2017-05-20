@@ -197,6 +197,7 @@ void loop()
       boolean resultIR = IRtoMQTT();
       if(resultIR)
       trc(F("IR successfully sent by MQTT"));
+      delay(100);
     #endif
     #ifdef ZgatewayBT
       boolean resultBT = BTtoMQTT();
@@ -205,7 +206,7 @@ void loop()
     #endif
     
   }
-  delay(100);
+
 }
 
 void storeValue(long MQTTvalue){
@@ -256,7 +257,7 @@ return false;
 
 void receivingMQTT(char * topicOri, char * datacallback) {
 
-   if (strstr(topicOri, subjectMultiGTWKey) != NULL)
+   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
    {
       trc(F("Storing signal"));
       unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
