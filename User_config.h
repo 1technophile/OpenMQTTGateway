@@ -79,6 +79,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectRFtoMQTTbits "home/433toMQTT/bits"
 #define subjectRFtoMQTTlength "home/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
+#define RFbitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
 #define repeatRFwMQTT false // do we repeat a received signal by using mqtt
 /*
 RF supported protocols
@@ -102,7 +103,7 @@ RF supported protocols
 #define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/IRtoMQTT"
-#define IRbitsKey "BITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
+#define IRbitsKey "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
 #define repeatIRwMQTT false // do we repeat a received signal by using mqtt
 
