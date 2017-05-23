@@ -77,6 +77,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
   String topic = topicOri;
   int valuePRT = 0;
   int valuePLSL  = 0;
+  int valueBITS  = 0;
   int pos = topic.lastIndexOf(RFprotocolKey);       
   if (pos != -1){
     pos = pos + +strlen(RFprotocolKey);
@@ -92,8 +93,15 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     trc(F("RF Pulse Length:"));
     trc(String(valuePLSL));
   }
+  int pos3 = topic.lastIndexOf(RFbitsKey);       
+  if (pos3 != -1){
+    pos3 = pos3 + strlen(RFbitsKey);
+    valueBITS = (topic.substring(pos3,pos3 + 2)).toInt();
+    trc(F("Bits number:"));
+    trc(String(valueBITS));
+  }
   
-  if ((topic == subjectMQTTtoRF) && (valuePRT == 0) && (valuePLSL  == 0)){
+  if ((topic == subjectMQTTtoRF) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
     trc(F("Sending data by RF, default parameters"));
     mySwitch.setProtocol(1,350);
     mySwitch.send(data, 24);
@@ -101,14 +109,16 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
     if (result)trc(F("Ack of reception published"));
     
-  } else if ((valuePRT != 0) || (valuePLSL  != 0)){
+  } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
     trc(F("Sending data by RF, MQTT parameters"));
     if (valuePRT == 0) valuePRT = 1;
     if (valuePLSL == 0) valuePLSL = 350;
+    if (valueBITS == 0) valueBITS = 24;
     trc(String(valuePRT));
     trc(String(valuePLSL));
+    trc(String(valueBITS));
     mySwitch.setProtocol(valuePRT,valuePLSL);
-    mySwitch.send(data, 24);
+    mySwitch.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic 
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     if (result){
