@@ -26,8 +26,9 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 #ifdef ZsensorDHT
 #include <DHT.h>
 #include <DHT_U.h>
+#define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReading 30000
-DHT dht(10,DHT22); //on nodeMCU this is SD3
+DHT dht(D3,DHT22); //on nodeMCU this is D3 GPIO0
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
@@ -40,6 +41,8 @@ unsigned long timedht = 0;
 void MeasureTempAndHum(){
   if (millis() > (timedht + TimeBetweenReading)) {//retriving value of temperature and humidity of the box from DHT every xUL
     timedht = millis();
+    static float persistedh;
+    static float persistedt;
     float h = dht.readHumidity();
     // Read temperature as Celsius (the default)
     float t = dht.readTemperature(); 
@@ -47,17 +50,27 @@ void MeasureTempAndHum(){
     if (isnan(h) || isnan(t)) {
       trc(F("Failed to read from DHT sensor!"));
     }else{
-      char temp[6];
-      char hum[6];
-      dtostrf(t,4,2,temp);
-      dtostrf(h,4,2,hum);
-      trc(F("Sending Temp and Hum to MQTT"));
-      trc(String(hum));
-      trc(String(temp));
-      client.publish(TEMP1,temp);
-      client.publish(HUM1,hum);
-      
+      if(h != persistedh || dht_always){
+        char hum[6];
+        dtostrf(h,4,2,hum);
+        trc(F("Sending Hum to MQTT"));
+        trc(String(hum));
+        client.publish(HUM1,hum);
+       }else{
+        trc(F("Same hum don't send it"));
+       }
+      if(t != persistedt || dht_always){
+        char temp[6];
+        dtostrf(t,4,2,temp);
+        trc(F("Sending Temp to MQTT"));
+        trc(String(temp));
+        client.publish(TEMP1,temp);
+      }else{
+        trc(F("Same temp don't send it"));
+      }
     }
+    persistedh = h;
+    persistedt = t;
   }
 }
 #endif
