@@ -23,7 +23,7 @@ You can add extra sensors directly to the gateway if you like!
 
 Functions:
 * Bidirectional, the gateway can send and receive signals, for example if you have RF wall plug you can either control them with your home automation software (MQTT-->RF) or the physical remote control. When you press a button on the physical remote the wall plug will switch ON and the button in your home automation software (RF-->MQTT) will be updated.
-* Signal duplicate removal, with RF of IR we get a lot of duplication, to avoid this the gateway is able to filter the number of code sent to the MQTT borker during a defined time “time_avoid_duplicate”
+* Signal duplicate removal, with RF of IR we get a lot of duplication, to avoid this the gateway is able to filter the number of code sent to the MQTT broker during a defined time “time_avoid_duplicate”
 * BLE beacons detection, the gateway publish the beacons detected thanks to an HM 10 module and publish the signal strength of each module adress. By this way you can easily adress presence detection of people, things or others...
 * Addons possibility, you could add directly to the gateway any sensor you want, just create a new Z<addon> .ino file into the gateway folder with your code and call it after client.loop(); into OpenMQTTGateway.ino. The program is provided with a DHT sensor addon implementation (ZaddonDHT.ino)
 * Advanced signal details publication, so as to know the details of what the gateway receive it publish by MQTT to subject433toMQTTAdvanced for RF and subjectIRtoMQTTAdvanced for IR the details of the signal received (this signal has to be compatible with RCSwitch and IRRemote libraries to be read).
