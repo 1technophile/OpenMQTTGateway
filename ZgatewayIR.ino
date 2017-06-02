@@ -67,13 +67,13 @@ boolean IRtoMQTT(){
     trc(rawCode);
     irrecv.resume(); // Receive the next value
     if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
-      trc(F("---don't publish the received code unknown protocol---"));
+      trc(F("---don't publish the code unknown protocol---"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Sending adv data to MQTT"));
         client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
         client.publish(subjectIRtoMQTTbits,(char *)MQTTbits.c_str());
         client.publish(subjectIRtoMQTTRaw,(char *)rawCode.c_str());          
-        trc(F("Sending IR to MQTT"));
+        trc(F("Sending IRtoMQTT"));
         String value = String(MQTTvalue);
         trc(value);
         boolean result = client.publish(subjectIRtoMQTT,(char *)value.c_str());

@@ -76,7 +76,7 @@ boolean reconnect() {
     #else
       if (client.connect(Gateway_Name, will_Topic, will_QoS, will_Retain, will_Message)) {
     #endif
-      trc(F("connected to MQTT broker"));
+      trc(F("connected to broker"));
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       //Subscribing to topic
@@ -86,7 +86,7 @@ boolean reconnect() {
       } else {
       trc(F("failed, rc="));
       trc(String(client.state()));
-      trc(F(" try again in 5 seconds"));
+      trc(F("try again in 5s"));
       // Wait 5 seconds before retrying
       delay(5000);
     }
@@ -217,14 +217,14 @@ void storeValue(long MQTTvalue){
     unsigned long now = millis();
     // find oldest value of the buffer
     int o = getMin();
-    trc(F("Minimum index: "));
+    trc(F("Min index: "));
     trc(String(o));
     // replace it by the new one
     ReceivedSignal[o][0] = MQTTvalue;
     ReceivedSignal[o][1] = now;
-    trc(F("store this code :"));
+    trc(F("store code :"));
     trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
-    trc(F("Col: value/timestamp"));
+    trc(F("Col: val/timestamp"));
     for (int i = 0; i < array_size; i++)
     {
       trc(String(i) + ":" + String(ReceivedSignal[i][0])+"/"+String(ReceivedSignal[i][1]));
@@ -251,7 +251,7 @@ for (int i = 0; i < array_size;i++){
  if (ReceivedSignal[i][0] == value){
       unsigned long now = millis();
       if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
-      trc(F("--------------don't publish the received code duplicate--------------"));
+      trc(F("---don't publish the code duplicate---"));
       return true;
     }
   }
