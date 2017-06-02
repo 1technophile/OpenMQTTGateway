@@ -43,7 +43,7 @@ void setupRF(){
 boolean RFtoMQTT(){
 
   if (mySwitch.available()){
-    trc(F("Receiving 433Mhz signal"));
+    trc(F("Receiving 433Mhz"));
     unsigned long MQTTvalue = 0;
     String MQTTprotocol;
     String MQTTbits;
