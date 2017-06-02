@@ -105,6 +105,7 @@ RF supported protocols
 #define subjectMQTTtoIR "home/commands/MQTTtoIR"
 #define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
 #define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
+#define subjectIRtoMQTTRaw "home/IRtoMQTT/raw"
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/IRtoMQTT"
 #define IRbitsKey "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
