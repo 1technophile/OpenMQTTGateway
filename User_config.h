@@ -33,7 +33,7 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
-#define mqtt_user "dein_username" // not compulsory only if your broker needs authentication
+#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
@@ -60,10 +60,11 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
-//#define ZsensorDHT
+#define ZsensorDHT
 #define ZgatewayRF
 #define ZgatewayIR
 #define ZgatewayBT
+#define ZsensorBH1750
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
@@ -142,12 +143,22 @@ RF supported protocols
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
-#define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
+// #define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
+#define RF_EMITTER_PIN 15 //put 15 = D8 on nodemcu
+
+  // D1 - GPIO5 # as SCL (I2C Bus) for BH1750 Light Sensor
+  // D2 - GPIO4 # as SDA (I2C Bus) for BH1750 Light Sensor
+  // D3 - GPIO00 # as Receive Pin for 433mhz !!!!!!
+  // D8 - GPIO15 # as Send Pin for 433mhz !!!!!!
+  // D5 - GPIO14  # as Receive Pin for DHT22 !!!!!!
+  // D0 - GPIO16  # as Send Pin for IR (because IR need no interrupt) !!!!!!
 
 #ifdef ESP8266
-  #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
+  // #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
+  #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
   //RF PIN definition
-  #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
+  // #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
+  #define RF_RECEIVER_PIN 0 //  5 = D1 on nodemcu
   #define BT_RX D7 //ESP8266 RX connect HM-10 TX
   #define BT_TX D6 //ESP8266 TX connect HM-10 RX
 #else
