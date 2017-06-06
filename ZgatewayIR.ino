@@ -67,9 +67,9 @@ boolean IRtoMQTT(){
     trc(rawCode);
     irrecv.resume(); // Receive the next value
     if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
-      trc(F("---don't publish the code unknown protocol---"));
+      trc(F("---no publish unknown protocol---"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Sending adv data to MQTT"));
+        trc(F("Adv data IRtoMQTT"));
         client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
         client.publish(subjectIRtoMQTTbits,(char *)MQTTbits.c_str());
         client.publish(subjectIRtoMQTTRaw,(char *)rawCode.c_str());          
@@ -78,7 +78,7 @@ boolean IRtoMQTT(){
         trc(value);
         boolean result = client.publish(subjectIRtoMQTT,(char *)value.c_str());
         if (repeatIRwMQTT){
-            trc(F("Publishing IR so as to repeat it"));
+            trc(F("Publishing IR for repeat"));
             client.publish(subjectMQTTtoIR,(char *)value.c_str());
         }
         return result;
@@ -238,10 +238,23 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     signalSent = true;
   }
   #endif
+  #ifdef IR_PANASONIC
+  if (strstr(topicOri, "IR_PANASONIC") != NULL){
+    irsend.sendPanasonic(PanasonicAddress, data);
+    signalSent = true;
+  }
+  #endif
+  #ifdef IR_RCMM
+  if (strstr(topicOri, "IR_RCMM") != NULL){
+    if (valueBITS == 0) valueBITS = 32;
+    irsend.sendRCMM(data, valueBITS);
+    signalSent = true;
+  }
+  #endif
   if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
-      trc(F("Signal sent by IR ack published"));
+      trc(F("MQTTtoIR OK ack published"));
       trc(String(data));
       };
   }

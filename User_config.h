@@ -113,6 +113,7 @@ RF supported protocols
 #define repeatIRwMQTT false // do we repeat a received signal by using mqtt
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
+#define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
 
 #ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
@@ -125,6 +126,8 @@ RF supported protocols
   #define IR_RC5
   #define IR_Sharp
   #define IR_SAMSUNG
+  #define IR_PANASONIC
+  #define IR_RCMM
 #else //IR supported protocols on arduino uncomment if you want to send with this protocol, NEC protocol is available per default
   //#define IR_COOLIX
   //#define IR_Whynter
@@ -135,6 +138,7 @@ RF supported protocols
   //#define IR_Sharp
   //#define IR_SAMSUNG
   //#define IR_Raw
+  //#define IR_PANASONIC
 #endif
 
 /*----------------------BT topics-------------------------*/
