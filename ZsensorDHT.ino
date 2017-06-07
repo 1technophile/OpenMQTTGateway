@@ -32,8 +32,7 @@
 #include <DHT_U.h>
 #define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReading 30000
-// DHT dht(D3,DHT22); //on nodeMCU this is D3 GPIO0
-DHT dht(14,DHT22); //on nodeMCU this is RX GPIO3
+DHT dht(14,DHT22); //on nodeMCU this is D5
 
 
 /*----------------------------USER PARAMETERS-----------------------------*/

@@ -115,8 +115,8 @@ void MeasureLightIntensity()
         trc(F("Sending Lux to MQTT"));
         trc(String(lux));
         client.publish(LUX,lux);
-        Serial.print(Lux,DEC);     
-        Serial.println("[lx]"); 
+        // Serial.print(Lux,DEC);     
+        // Serial.println("[lx]"); 
        }else{
         trc(F("Same lux don't send it"));
        }
@@ -128,8 +128,8 @@ void MeasureLightIntensity()
         trc(F("Sending FtCd to MQTT"));
         trc(String(ftcd));
         client.publish(FTCD,ftcd);
-        Serial.print(FtCd,2);     
-        Serial.println("[FC]");
+        // Serial.print(FtCd,2);     
+        // Serial.println("[FC]");
       }else{
         trc(F("Same ftcd don't send it"));
       }
@@ -141,8 +141,8 @@ void MeasureLightIntensity()
         trc(F("Sending Wattsm2 to MQTT"));
         trc(String(wattsm2));
         client.publish(WATTSM2,wattsm2);
-        Serial.print(Wattsm2,4);     
-        Serial.println("[Watts/m^2]"); 
+        // Serial.print(Wattsm2,4);     
+        // Serial.println("[Watts/m^2]"); 
       }else{
         trc(F("Same wattsm2 don't send it"));
       }    
