@@ -145,6 +145,7 @@ void setup()
 #ifdef ESP8266
 void setup_wifi() {
   delay(10);
+  WiFi.mode(WIFI_STA);
   // We start by connecting to a WiFi network
   trc(F("Connecting to "));
   trc(wifi_ssid);
