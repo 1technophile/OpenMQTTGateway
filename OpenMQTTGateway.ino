@@ -1,16 +1,16 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This program enables to:
  - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received 433Mhz signal
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
  - publish MQTT data to a different topic related to BLE devices rssi signal
- 
+
   Copyright: (c)Florian ROBERT
 
   Contributors:
@@ -24,7 +24,7 @@
   - ronvl from Home assistant forum
 
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -125,11 +125,11 @@ void setup()
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
   #endif
-  
+
   delay(1500);
-  
+
   lastReconnectAttempt = 0;
-  
+
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -154,10 +154,10 @@ void setup_wifi() {
   IPAddress subnet_adress(subnet);
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
-  WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
-  trc(F("OpenMQTTGateway ip adress: "));   
+  //WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
+  trc(F("OpenMQTTGateway ip adress: "));
   Serial.println(WiFi.localIP());
-  
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
@@ -168,7 +168,7 @@ void setup_wifi() {
 void setup_ethernet() {
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
   //Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  trc(F("OpenMQTTGateway ip adress: "));   
+  trc(F("OpenMQTTGateway ip adress: "));
   Serial.println(Ethernet.localIP());
   trc(F("Ethernet connected"));
 }
@@ -189,7 +189,7 @@ void loop()
   } else { //connected
     // MQTT loop
     client.loop();
-    
+
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
@@ -210,7 +210,7 @@ void loop()
       if(resultBT)
       trc(F("BT sent by MQTT"));
     #endif
-    
+
   }
 
 }
@@ -270,7 +270,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       storeValue(data);
       trc(F("Data stored"));
    }
-  
+
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
