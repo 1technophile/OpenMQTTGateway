@@ -21,6 +21,8 @@ install:
   - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
   - git clone https://github.com/knolleary/pubsubclient /usr/local/share/arduino/libraries/pubsubclient
   - git clone https://github.com/sui77/rc-switch /usr/local/share/arduino/libraries/rc-switch
+  - git clone https://github.com/arduino/arduinoOTA.git /us/usr/local/share/arduino/libraries/ArduinoOTA
+  - git clone https://github.com/mrdunk/esp8266_mdns.git /us/usr/local/share/arduino/libraries/ESP8266mDNS
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266
   - arduino --board $BD --save-prefs
