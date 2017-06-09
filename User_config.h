@@ -33,7 +33,7 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
-#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
+//#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
@@ -65,19 +65,10 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
-#ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZsensorDHT
-  #define ZgatewayRF
-  #define ZgatewayIR
-  #define ZgatewayBT
-  #define ZsensorBH1750
-#else // for arduino + W5100
-  #define ZgatewayRF
-  #define ZgatewayIR
-  #define ZgatewayBT
-  //#define ZsensorDHT
-  //#define ZsensorBH1750
-#endif
+//#define ZsensorDHT
+#define ZgatewayRF
+#define ZgatewayIR
+#define ZgatewayBT
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
@@ -160,12 +151,12 @@ RF supported protocols
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
-#define RF_EMITTER_PIN 15 //put 15 = D8 on nodemcu
+#define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
 
 #ifdef ESP8266
-  #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
+  #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
   //RF PIN definition
-  #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
+  #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
   #define BT_RX D7 //ESP8266 RX connect HM-10 TX
   #define BT_TX D6 //ESP8266 TX connect HM-10 RX
 #else
