@@ -58,6 +58,11 @@ const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
 const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
+/*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
+#define ota_hostname "OTAHOSTNAME"
+#define ota_password "OTAPASSWORD"
+#define ota_port 8266
+
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
 #define ZsensorDHT

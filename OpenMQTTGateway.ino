@@ -1,16 +1,16 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This program enables to:
  - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received 433Mhz signal
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
  - publish MQTT data to a different topic related to BLE devices rssi signal
- 
+
   Copyright: (c)Florian ROBERT
 
   Contributors:
@@ -24,7 +24,7 @@
   - ronvl from Home assistant forum
 
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -56,6 +56,9 @@ void callback(char*topic, byte* payload,unsigned int length);
 
 #ifdef ESP8266
   #include <ESP8266WiFi.h>
+  #include <ESP8266mDNS.h>
+  #include <WiFiUdp.h>
+  #include <ArduinoOTA.h>
   WiFiClient eClient;
 #else
   #include <Ethernet.h>
@@ -121,18 +124,46 @@ void setup()
   #ifdef ESP8266
     //Begining wifi connection in case of ESP8266
     setup_wifi();
+    // Port defaults to 8266
+    ArduinoOTA.setPort(ota_port);
+
+    // Hostname defaults to esp8266-[ChipID]
+    ArduinoOTA.setHostname(ota_hostname);
+
+    // No authentication by default
+    ArduinoOTA.setPassword(ota_password);
+
+    ArduinoOTA.onStart([]() {
+      Serial.println("Start");
+    });
+    ArduinoOTA.onEnd([]() {
+      Serial.println("\nEnd");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+    ArduinoOTA.begin();
   #else
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
   #endif
-  
+
   delay(1500);
-  
+
   lastReconnectAttempt = 0;
-  
+
   #ifdef ZsensorBH1750
     setupZsensorBH1750();
   #endif
+
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -157,10 +188,10 @@ void setup_wifi() {
   IPAddress subnet_adress(subnet);
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
-  WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
-  trc(F("OpenMQTTGateway ip adress: "));   
+  //WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
+  trc(F("OpenMQTTGateway ip adress: "));
   Serial.println(WiFi.localIP());
-  
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
@@ -171,7 +202,7 @@ void setup_wifi() {
 void setup_ethernet() {
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
   //Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  trc(F("OpenMQTTGateway ip adress: "));   
+  trc(F("OpenMQTTGateway ip adress: "));
   Serial.println(Ethernet.localIP());
   trc(F("Ethernet connected"));
 }
@@ -192,6 +223,10 @@ void loop()
   } else { //connected
     // MQTT loop
     client.loop();
+
+    #ifdef ESP8266
+      ArduinoOTA.handle();
+    #endif
     
     #ifdef ZsensorBH1750
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
@@ -216,7 +251,7 @@ void loop()
       if(resultBT)
       trc(F("BT sent by MQTT"));
     #endif
-    
+
   }
 
 }
@@ -276,7 +311,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       storeValue(data);
       trc(F("Data stored"));
    }
-  
+
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
