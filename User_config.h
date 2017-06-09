@@ -65,11 +65,19 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
-#define ZsensorDHT
-#define ZgatewayRF
-#define ZgatewayIR
-#define ZgatewayBT
-#define ZsensorBH1750
+#ifdef ESP8266 // for nodemcu, weemos and esp8266
+  #define ZsensorDHT
+  #define ZgatewayRF
+  #define ZgatewayIR
+  #define ZgatewayBT
+  #define ZsensorBH1750
+#else // for arduino + W5100
+  #define ZgatewayRF
+  #define ZgatewayIR
+  #define ZgatewayBT
+  //#define ZsensorDHT
+  //#define ZsensorBH1750
+#endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
