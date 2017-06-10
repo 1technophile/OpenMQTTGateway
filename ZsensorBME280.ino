@@ -150,9 +150,6 @@ void MeasureTempHumAndPressure()
         trc(F("Sending Degrees C to MQTT"));
         trc(String(bmetempc));
         client.publish(TEMPBMEC,bmetempc);
-        // Serial.print("Temperature: ");
-        // Serial.print(BmeTempC, 2);
-        // Serial.println(" degrees C");
       }else{
         trc(F("Same Degrees C don't send it"));
       }
@@ -164,9 +161,6 @@ void MeasureTempHumAndPressure()
         trc(F("Sending Degrees F to MQTT"));
         trc(String(bmetempf));
         client.publish(TEMPBMEF,bmetempf);
-        // Serial.print("Temperature: ");
-        // Serial.print(BmeTempF, 2);
-        // Serial.println(" degrees F");
       }else{
         trc(F("Same Degrees F don't send it"));
       }
@@ -178,9 +172,6 @@ void MeasureTempHumAndPressure()
         trc(F("Sending Humidity to MQTT"));
         trc(String(bmehum));
         client.publish(HUMBME,bmehum);
-        // Serial.print("%RH: ");
-        // Serial.print(BmeHum, 2);
-        // Serial.println(" %");
       }else{
         trc(F("Same Humidity don't send it"));
       }
@@ -192,9 +183,6 @@ void MeasureTempHumAndPressure()
         trc(F("Sending Pressure to MQTT"));
         trc(String(bmepa));
         client.publish(PRESSBME,bmepa);
-        // Serial.print("Pressure: ");
-        // Serial.print(BmePa, 2);
-        // Serial.println(" Pa");
       }else{
         trc(F("Same Pressure don't send it"));
       }
@@ -206,9 +194,6 @@ void MeasureTempHumAndPressure()
         trc(F("Sending Altitude Meter to MQTT"));
         trc(String(bmealtim));
         client.publish(ALTIBMEM,bmealtim);
-        // Serial.print("Altitude: ");
-        // Serial.print(BmeAltiM, 2);
-        // Serial.println("m");
       }else{
         trc(F("Same Altitude Meter don't send it"));
       }
@@ -220,9 +205,6 @@ void MeasureTempHumAndPressure()
         trc(F("Sending Altitude Feet to MQTT"));
         trc(String(bmealtift));
         client.publish(ALTIBMEFT,bmealtift);
-        // Serial.print("Altitude: ");
-        // Serial.print(BmeAltiFt, 2);
-        // Serial.println("ft"); 
       }else{
         trc(F("Same Altitude Feet don't send it"));
       }
@@ -236,9 +218,6 @@ void MeasureTempHumAndPressure()
     persisted_bme_altift = BmeAltiFt;
 
   }
-
-  delay(16000);
-
 }
 
 #endif

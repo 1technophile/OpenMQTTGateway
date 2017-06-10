@@ -32,12 +32,12 @@
 #include <DHT_U.h>
 #define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReading 30000
-DHT dht(D3,DHT22); //on nodeMCU this is D3 GPIO0
+DHT dht(DHT_RECEIVER_PIN,DHT22); // Defined in User_config.h
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define HUM1   "home/433toMQTT/dht1/hum"
-#define TEMP1  "home/433toMQTT/dht1/temp"
+#define HUM1   "home/DHTtoMQTT/dht1/hum"
+#define TEMP1  "home/DHTtoMQTT/dht1/temp"
 
 //Time used to wait for an interval before resending temp and hum
 unsigned long timedht = 0;

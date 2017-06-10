@@ -50,7 +50,7 @@
 #define WATTSM2  "home/LIGHTtoMQTT/wattsm2"
 
 /*
-Some Values ;-)
+Useful Information ;-)
 lux (lx)                            # 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
 meter-candle (m-cd)                 # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
 centimeter-candle (cm-sd)           # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
@@ -110,13 +110,10 @@ void MeasureLightIntensity()
       // Generate Lux
       if(Lux != persistedll || bh1750_always){
         char lux[7];
-        // dtostrf(Lux,5,1,lux);
         sprintf(lux,"%d",Lux);
         trc(F("Sending Lux to MQTT"));
         trc(String(lux));
         client.publish(LUX,lux);
-        // Serial.print(Lux,DEC);     
-        // Serial.println("[lx]"); 
        }else{
         trc(F("Same lux don't send it"));
        }
@@ -128,8 +125,6 @@ void MeasureLightIntensity()
         trc(F("Sending FtCd to MQTT"));
         trc(String(ftcd));
         client.publish(FTCD,ftcd);
-        // Serial.print(FtCd,2);     
-        // Serial.println("[FC]");
       }else{
         trc(F("Same ftcd don't send it"));
       }
@@ -141,8 +136,6 @@ void MeasureLightIntensity()
         trc(F("Sending Wattsm2 to MQTT"));
         trc(String(wattsm2));
         client.publish(WATTSM2,wattsm2);
-        // Serial.print(Wattsm2,4);     
-        // Serial.println("[Watts/m^2]"); 
       }else{
         trc(F("Same wattsm2 don't send it"));
       }    
