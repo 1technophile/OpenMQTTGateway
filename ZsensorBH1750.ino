@@ -49,22 +49,6 @@
 #define FTCD  "home/LIGHTtoMQTT/ftcd"
 #define WATTSM2  "home/LIGHTtoMQTT/wattsm2"
 
-/*
-Useful Information ;-)
-lux (lx)                            # 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
-meter-candle (m-cd)                 # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
-centimeter-candle (cm-sd)           # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
-foot-candle (ft-c)                  # 
-phot (ph)                           # 1 ph = 1 lm/cm² = 10,000 lm/m² - 10,000 lx = 10 klx
-nox (nx)                            # 1 nox = 1 millilux
-candela steradin/meter2(cd·sr·m⁻²)  # 1 lx = 1 lm/m² = 1 cd·sr·m⁻²
-lumen/meter2 (lm·m⁻²)               # 1 lx = 1 lm/m² = 1 cd·sr·m⁻²
-lumen/centimeter2 (lm·cm⁻²)         # 1 lm/cm² = 10,000 lx = 10,000 cd·sr·m⁻²
-lumen/foot2 (lm·ft⁻²)               # (lm·ft⁻²)
-watt/centimeter2 at 555nm  (W·cm⁻²) # 
-*/
-
-
 //Time used to wait for an interval before resending measured values
 unsigned long timebh1750 = 0;
 int BH1750_i2c_addr = 0x23; // Light Sensor I2C Address
@@ -87,26 +71,42 @@ void MeasureLightIntensity()
     static float persistedll;
     static float persistedlf;
     static float persistedlw;
-  
-   
+    unsigned int Lux;
+    float FtCd;
+    float Wattsm2;
+
+    // Check if reads failed and exit early (to try again).
     Wire.beginTransmission(BH1750_i2c_addr);
     Wire.requestFrom(BH1750_i2c_addr, 2);
     while(Wire.available()) //
     {
       i <<=8;
       i|= Wire.read();  
-    }
-    Wire.endTransmission();  
-
-    // Calculate the Values
-    unsigned int Lux = i/1.2;  // Convert to Lux
-    float FtCd = Lux/10.764;
-    float Wattsm2 = Lux/683.0;
-
-    // Check if reads failed and exit early (to try again).
-    if (isnan(Lux)) {
+    }    
+    if (Wire.endTransmission() != 0 ) {
       trc(F("Failed to read from LightSensor BH1750!"));
     }else{
+
+      // Calculate the Values
+      Lux = i/1.2;  // Convert to Lux
+      FtCd = Lux/10.764;
+      Wattsm2 = Lux/683.0;
+
+      /*
+      Useful Information ;-)
+      lux (lx)                            # 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
+      meter-candle (m-cd)                 # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
+      centimeter-candle (cm-sd)           # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
+      foot-candle (ft-c)                  # 
+      phot (ph)                           # 1 ph = 1 lm/cm² = 10,000 lm/m² - 10,000 lx = 10 klx
+      nox (nx)                            # 1 nox = 1 millilux
+      candela steradin/meter2(cd·sr·m⁻²)  # 1 lx = 1 lm/m² = 1 cd·sr·m⁻²
+      lumen/meter2 (lm·m⁻²)               # 1 lx = 1 lm/m² = 1 cd·sr·m⁻²
+      lumen/centimeter2 (lm·cm⁻²)         # 1 lm/cm² = 10,000 lx = 10,000 cd·sr·m⁻²
+      lumen/foot2 (lm·ft⁻²)               # (lm·ft⁻²)
+      watt/centimeter2 at 555nm  (W·cm⁻²) # 
+      */
+
       // Generate Lux
       if(Lux != persistedll || bh1750_always){
         char lux[7];
