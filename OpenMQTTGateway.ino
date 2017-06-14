@@ -160,6 +160,12 @@ void setup()
 
   lastReconnectAttempt = 0;
 
+  #ifdef ZsensorBME280
+    setupZsensorBME280();
+  #endif
+  #ifdef ZsensorBH1750
+    setupZsensorBH1750();
+  #endif
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -223,7 +229,13 @@ void loop()
     #ifdef ESP8266
       ArduinoOTA.handle();
     #endif
-    
+
+    #ifdef ZsensorBME280
+      MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
+    #endif
+    #ifdef ZsensorBH1750
+      MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
+    #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
