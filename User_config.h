@@ -32,9 +32,9 @@
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR WIRING TYPE BELOW----------------*/
 // Choose between "I2C_Wiring" OR "Classic_Wiring"
-// Please Note: I2C Wiring and Classic Wiring uses two complette different Pins for all Modules
-#define I2C_Wiring // With Support for I2C Modules
-// #define Classic_Wiring // Without Support for I2C Modules
+// Please Note: I2C Wiring and Classic Wiring uses two complete different Pins for all Modules, see PIN definitions at the end of this file
+//#define I2C_Wiring // With Support for I2C Modules and the associated libraries BH1750 and BME280
+#define Classic_Wiring // Without Support for I2C Modules, legacy wiring V0.3.1 and below
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -72,12 +72,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZsensorDHT
+  //#define ZsensorDHT
   #define ZgatewayRF
   #define ZgatewayIR
   #define ZgatewayBT
-  #define ZsensorBH1750
-  #define ZsensorBME280
+  #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
+    #define ZsensorBH1750
+    #define ZsensorBME280
+  #endif
 #else // for arduino + W5100
   #define ZgatewayRF
   #define ZgatewayIR

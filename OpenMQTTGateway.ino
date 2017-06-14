@@ -17,6 +17,7 @@
   - 1technophile
   - crankyoldgit
   - glasruit
+  - HannesDi
   - Spudtater
   - prahjister
   - rickybrent
