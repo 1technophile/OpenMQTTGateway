@@ -16,11 +16,15 @@ before_install:
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
 install:
   - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
-  - git clone https://github.com/z3t0/Arduino-IRremote/tree/2.1.0 /usr/local/share/arduino/libraries/IRremote
-  - git clone https://github.com/markszabo/IRremoteESP8266/tree/v1.2.0 /usr/local/share/arduino/libraries/IRremoteESP8266
+  - wget https://github.com/z3t0/Arduino-IRremote/archive/2.1.0.zip -O /tmp/IRremote.zip
+  - unzip /tmp/IRremote.zip -d /usr/local/share/arduino/libraries
+  - wget https://github.com/markszabo/IRremoteESP8266/archive/v1.2.0.zip -O /tmp/IRremoteESP8266.zip 
+  - unzip /tmp/IRremoteESP8266.zip -d /usr/local/share/arduino/libraries
   - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
-  - git clone https://github.com/knolleary/pubsubclient/tree/v2.6 /usr/local/share/arduino/libraries/pubsubclient
-  - git clone https://github.com/sui77/rc-switch/releases/tag/2.6.2 /usr/local/share/arduino/libraries/rc-switch
+  - wget https://github.com/knolleary/pubsubclient/archive/v2.6.zip -O /tmp/pubsubclient.zip
+  - unzip /tmp/pubsubclient.zip -d /usr/local/share/arduino/libraries
+  - wget https://github.com/sui77/rc-switch/archive/2.6.2.zip -O /tmp/rcswitch.zip
+  - unzip /tmp/rcswitch.zip -d /usr/local/share/arduino/libraries
   - git clone https://github.com/arduino/arduinoOTA.git /usr/local/share/arduino/libraries/ArduinoOTA
   - git clone https://github.com/mrdunk/esp8266_mdns.git /usr/local/share/arduino/libraries/ESP8266mDNS
   - git clone https://github.com/adafruit/DHT-sensor-library /usr/local/share/arduino/libraries/DHT_sensor_library
