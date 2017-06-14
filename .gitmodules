@@ -10,3 +10,12 @@
 [submodule "libraries/IRremote"]
 	path = libraries/IRremote
 	url = git://github.com/z3t0/Arduino-IRremote.git
+[submodule "libraries/SparkFun_BME280_Arduino_Library"]
+	path = libraries/SparkFun_BME280_Arduino_Library
+	url = https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+[submodule "libraries/Adafruit_Sensor"]
+	path = libraries/Adafruit_Sensor
+	url = https://github.com/adafruit/Adafruit_Sensor
+[submodule "libraries/DHT-sensor-library"]
+	path = libraries/DHT-sensor-library
+	url = https://github.com/adafruit/DHT-sensor-library

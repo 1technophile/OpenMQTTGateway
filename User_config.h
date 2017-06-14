@@ -30,6 +30,12 @@
 */
 
 /*----------------------------USER PARAMETERS-----------------------------*/
+/*-------------DEFINE YOUR WIRING TYPE BELOW----------------*/
+// Choose between "I2C_Wiring" OR "Classic_Wiring"
+// Please Note: I2C Wiring and Classic Wiring uses two complete different Pins for all Modules, see PIN definitions at the end of this file
+//#define I2C_Wiring // With Support for I2C Modules and the associated libraries BH1750 and BME280
+#define Classic_Wiring // Without Support for I2C Modules, legacy wiring V0.3.1 and below
+
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -65,11 +71,23 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the line if you don't use
-//#define ZsensorDHT
-#define ZgatewayRF
-#define ZgatewayIR
-#define ZgatewayBT
-/*----------------------------OTHER PARAMETERS-----------------------------*/
+#ifdef ESP8266 // for nodemcu, weemos and esp8266
+  //#define ZsensorDHT
+  #define ZgatewayRF
+  #define ZgatewayIR
+  #define ZgatewayBT
+  #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
+    #define ZsensorBH1750
+    #define ZsensorBME280
+  #endif
+#else // for arduino + W5100
+  #define ZgatewayRF
+  #define ZgatewayIR
+  #define ZgatewayBT
+  //#define ZsensorDHT
+  //#define ZsensorBH1750
+  //#define ZsensorBME280
+#endif/*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 //variables to avoid duplicates for RF
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
@@ -150,22 +168,46 @@ RF supported protocols
 #define subjectBTtoMQTT "home/BTtoMQTT/"
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
-#define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
-
-#ifdef ESP8266
-  #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
-  //RF PIN definition
-  #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
-  #define BT_RX D7 //ESP8266 RX connect HM-10 TX
-  #define BT_TX D6 //ESP8266 TX connect HM-10 RX
-#else
-  //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
-  //RF PIN definition
-  #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-  #define BT_RX 5 //arduino RX connect HM-10 TX
-  #define BT_TX 6 //arduino TX connect HM-10 RX
+#ifdef I2C_Wiring // With Support for I2C Modules
+  #define DHT_RECEIVER_PIN 14 //on nodeMCU this is D5 GPIO14
+  #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
+  #define RF_EMITTER_PIN 15 //put 15 = D8 on nodemcu
+  
+  #ifdef ESP8266
+    #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
+    //RF PIN definition
+    #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
+    #define BT_RX D7 //ESP8266 RX connect HM-10 TX
+    #define BT_TX D6 //ESP8266 TX connect HM-10 RX
+  #else
+    //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
+    //RF PIN definition
+    #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
+    #define BT_RX 5 //arduino RX connect HM-10 TX
+    #define BT_TX 6 //arduino TX connect HM-10 RX
+  #endif
 #endif
+
+#ifdef Classic_Wiring // Without Support for I2C Modules
+  #define DHT_RECEIVER_PIN 0 //on nodeMCU this is D3 GPIO0
+  #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
+  #define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
+  
+  #ifdef ESP8266
+    #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
+    //RF PIN definition
+    #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
+    #define BT_RX D7 //ESP8266 RX connect HM-10 TX
+    #define BT_TX D6 //ESP8266 TX connect HM-10 RX
+  #else
+    //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
+    //RF PIN definition
+    #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
+    #define BT_RX 5 //arduino RX connect HM-10 TX
+    #define BT_TX 6 //arduino TX connect HM-10 RX
+  #endif
+#endif
+
 //RF number of signal repetition
 #define RF_EMITTER_REPEAT 20
 
