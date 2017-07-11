@@ -29,6 +29,8 @@
 
 #ifdef ESP8266
   #include <IRremoteESP8266.h>
+  #include <IRsend.h>  // Needed if you want to send IR commands.
+  #include <IRrecv.h>  // Needed if you want to receive IR commands.
   IRrecv irrecv(IR_RECEIVER_PIN);
   IRsend irsend(IR_EMITTER_PIN);
 #else
@@ -92,7 +94,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   // IR DATA ANALYSIS    
   //send received MQTT value by IR signal
   boolean signalSent = false;
-  unsigned long data = 0;
+  uint64_t data = 0;
   String strcallback = String(datacallback);
   trc(String(datacallback));
   int s = strcallback.length();
@@ -111,7 +113,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   else if(strstr(topicOri, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
     trc("IR_GC");
     //buffer allocation from char datacallback
-    unsigned int GC[count+1];
+    uint16_t  GC[count+1];
     String value = "";
     int j = 0;
     for(int i = 0; i < s; i++)
@@ -134,7 +136,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   else if(strstr(topicOri, "IR_Raw") != NULL){ // sending Raw data
     trc("IR_Raw");
     //buffer allocation from char datacallback
-    unsigned int Raw[count+1];
+    uint16_t  Raw[count+1];
     String value = "";
     int j = 0;
     for(int i = 0; i < s; i++)
@@ -157,7 +159,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     //We look into the subject to see if a special Bits number is defined 
   String topic = topicOri;
   int valueRPT = 0;
-  int valueBITS  = 0;
+  unsigned int valueBITS  = 0;
   int pos = topic.lastIndexOf(IRbitsKey);       
   if (pos != -1){
     pos = pos + +strlen(IRbitsKey);
@@ -255,7 +257,6 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
       trc(F("MQTTtoIR OK ack published"));
-      trc(String(data));
       };
   }
    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)

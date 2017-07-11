@@ -19,7 +19,7 @@ install:
   - wget https://github.com/z3t0/Arduino-IRremote/archive/2.1.0.zip -O /tmp/IRremote.zip
   - unzip /tmp/IRremote.zip -d /usr/local/share/arduino/libraries
   - rm -rf /usr/local/share/arduino/libraries/RobotIRremote
-  - wget https://github.com/markszabo/IRremoteESP8266/archive/v1.2.0.zip -O /tmp/IRremoteESP8266.zip 
+  - wget https://github.com/markszabo/IRremoteESP8266/archive/v2.1.1.zip -O /tmp/IRremoteESP8266.zip 
   - unzip /tmp/IRremoteESP8266.zip -d /usr/local/share/arduino/libraries
   - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
   - wget https://github.com/knolleary/pubsubclient/archive/v2.6.zip -O /tmp/pubsubclient.zip
