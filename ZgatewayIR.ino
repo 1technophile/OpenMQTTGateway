@@ -158,7 +158,6 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     
     //We look into the subject to see if a special Bits number is defined 
   String topic = topicOri;
-  int valueRPT = 0;
   unsigned int valueBITS  = 0;
   int pos = topic.lastIndexOf(IRbitsKey);       
   if (pos != -1){
@@ -168,6 +167,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     trc(String(valueBITS));
   }
   //We look into the subject to see if a special repeat number is defined 
+  int valueRPT = 0;
   int pos2 = topic.lastIndexOf(IRRptKey);
   if (pos2 != -1) {
     pos2 = pos2 + strlen(IRRptKey);

@@ -124,7 +124,6 @@ void MeasureTempHumAndPressure()
 
   if (millis() > (timebme280 + TimeBetweenReadingbme280)) {
     timebme280 = millis();
-    unsigned int i=0;
     static float persisted_bme_tempc;
     static float persisted_bme_tempf;
     static float persisted_bme_hum;
