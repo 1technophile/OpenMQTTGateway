@@ -30,6 +30,7 @@
 */
 
 /*----------------------------USER PARAMETERS-----------------------------*/
+#define SERIAL_BAUD   115200
 /*-------------DEFINE YOUR WIRING TYPE BELOW----------------*/
 // Choose between "I2C_Wiring" OR "Classic_Wiring"
 // Please Note: I2C Wiring and Classic Wiring uses two complete different Pins for all Modules, see PIN definitions at the end of this file
