@@ -176,6 +176,9 @@ void setup()
   #ifdef ZgatewayBT
     setupBT();
   #endif
+  #ifdef ZgatewayRFM69
+    setupRFM69();
+  #endif
 
 }
 
@@ -257,6 +260,12 @@ void loop()
       if(resultBT)
       trc(F("BT sent by MQTT"));
     #endif
+    #ifdef ZgatewayRFM69
+      boolean resultRFM69 = RFM69toMQTT();
+      if(resultRFM69)
+      trc(F("RFM69 data sent by MQTT"));
+    #endif
+    
 
   }
 
@@ -324,6 +333,10 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
 #endif
+#ifdef ZgatewayRFM69
+  MQTTtoRFM69(topicOri, datacallback);
+#endif
+
 }
 
 //trace

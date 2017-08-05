@@ -75,6 +75,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   //#define ZsensorDHT
   #define ZgatewayRF
+  #define ZgatewayRFM69
   #define ZgatewayIR
   #define ZgatewayBT
   #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
@@ -83,6 +84,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #endif
 #else // for arduino + W5100
   #define ZgatewayRF
+  #define ZgatewayRFM69
   #define ZgatewayIR
   #define ZgatewayBT
   //#define ZsensorDHT
@@ -168,6 +170,13 @@ RF supported protocols
 /*----------------------BT topics-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
 
+/*----------------------RFM69 topics-------------------------*/
+#define subjectRFM69toMQTT "home/RFM69toMQTT"
+#define subjectRFM69toMQTTrssi "home/RFM69toMQTT/rssi"
+#define subjectRFM69toMQTTsender "home/RFM69toMQTT/sender"
+#define subjectMQTTtoRFM69 "home/commands/MQTTtoRFM69"
+#define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
+#define subjectGTWRFM69toMQTT "home/RFM69toMQTT"
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef I2C_Wiring // With Support for I2C Modules
   #define DHT_RECEIVER_PIN 14 //on nodeMCU this is D5 GPIO14
