@@ -84,7 +84,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #endif
 #else // for arduino + W5100
   #define ZgatewayRF
-  #define ZgatewayRFM69
+  //#define ZgatewayRFM69 //not tested
   #define ZgatewayIR
   #define ZgatewayBT
   //#define ZsensorDHT
@@ -170,13 +170,30 @@ RF supported protocols
 /*----------------------BT topics-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
 
-/*----------------------RFM69 topics-------------------------*/
+/*----------------------RFM69 topics & parameters -------------------------*/
 #define subjectRFM69toMQTT "home/RFM69toMQTT"
 #define subjectRFM69toMQTTrssi "home/RFM69toMQTT/rssi"
 #define subjectRFM69toMQTTsender "home/RFM69toMQTT/sender"
 #define subjectMQTTtoRFM69 "home/commands/MQTTtoRFM69"
 #define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
 #define subjectGTWRFM69toMQTT "home/RFM69toMQTT"
+#define defaultRFM69ReceiverId 99
+
+// Default values
+const char PROGMEM ENCRYPTKEY[] = "sampleEncryptKey";
+const char PROGMEM MDNS_NAME[] = "rfm69gw1";
+const char PROGMEM MQTT_BROKER[] = "raspi2";
+const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
+#define NETWORKID     200  //the same on all nodes that talk to each other
+#define NODEID        10
+
+//Match frequency to the hardware version of the radio
+#define FREQUENCY     RF69_433MHZ
+//#define FREQUENCY     RF69_868MHZ
+//#define FREQUENCY      RF69_915MHZ
+#define IS_RFM69HCW    true // set to 'true' if you are using an RFM69HCW module
+#define POWER_LEVEL    31
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef I2C_Wiring // With Support for I2C Modules
   #define DHT_RECEIVER_PIN 14 //on nodeMCU this is D5 GPIO14
@@ -216,6 +233,35 @@ RF supported protocols
     #define BT_RX 5 //arduino RX connect HM-10 TX
     #define BT_TX 6 //arduino TX connect HM-10 RX
   #endif
+#endif
+
+/*-------------------PIN DEFINITIONS RFM69----------------------*/
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega88) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__)
+#define RFM69_CS      10
+#define RFM69_IRQ     2
+#define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+#define RFM69_RST     9
+#define LED           13  // onboard blinky
+#elif defined(__arm__)//Use pin 10 or any pin you want
+// Arduino Zero works
+#define RFM69_CS      10
+#define RFM69_IRQ     5
+#define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+#define RFM69_RST     6
+#define LED           13  // onboard blinky
+#elif defined(ESP8266)
+// ESP8266
+#define RFM69_CS      D0  // GPIO15/HCS/D8
+#define RFM69_IRQ     D8   // GPIO04/D2
+#define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+#define RFM69_RST     D4   // GPIO02/D4
+#define LED           0   // GPIO00/D3, onboard blinky for Adafruit Huzzah
+#else
+#define RFM69_CS      10
+#define RFM69_IRQ     2
+#define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+#define RFM69_RST     9
+#define LED           13  // onboard blinky
 #endif
 
 //RF number of signal repetition
