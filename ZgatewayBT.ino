@@ -30,7 +30,12 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #include <SoftwareSerial.h>
 
 #define STRING_MSG "OK+DISC:"
-#define QUESTION_MSG "AT+DISI?"
+#ifdef HM-10
+  #define QUESTION_MSG "AT+DISI?"
+#endif
+#ifdef HM-11
+  #define QUESTION_MSG "AT+DISC?"
+#endif
 #define RESPONSE_MSG "OK+DISIS"
 #define RESP_END_MSG "OK+DISCE"
 #define SETUP_MSG "OK+RESET"
@@ -83,7 +88,7 @@ boolean BTtoMQTT() {
       }
     if (discResult.indexOf(SETUP_MSG)>=0)
     {
-      trc(F("Connection OK to HM-10"));
+      trc(F("Connection OK to HM-10 or 11"));
     }
   }
   if (millis() > (timebt + TimeBtw_Read)) {//retriving value of adresses and rssi

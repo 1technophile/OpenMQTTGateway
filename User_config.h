@@ -171,8 +171,10 @@ RF supported protocols
   //#define IR_PANASONIC
 #endif
 
-/*----------------------BT topics-------------------------*/
+/*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
+#define HM-10
+//#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 
 /*----------------------RFM69 topics & parameters -------------------------*/
 #define subjectRFM69toMQTT "home/RFM69toMQTT"
@@ -208,14 +210,14 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
     #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
     //RF PIN definition
     #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
-    #define BT_RX D7 //ESP8266 RX connect HM-10 TX
-    #define BT_TX D6 //ESP8266 TX connect HM-10 RX
+    #define BT_RX D7 //ESP8266 RX connect HM-10 or 11 TX
+    #define BT_TX D6 //ESP8266 TX connect HM-10 or 11 RX
   #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-    #define BT_RX 5 //arduino RX connect HM-10 TX
-    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
   #endif
 #endif
 
@@ -228,18 +230,18 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
     #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
     //RF PIN definition
     #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
-    #define BT_RX D7 //ESP8266 RX connect HM-10 TX
-    #define BT_TX D6 //ESP8266 TX connect HM-10 RX
+    #define BT_RX D7 //ESP8266 RX connect HM-10 or 11 TX
+    #define BT_TX D6 //ESP8266 TX connect HM-10 or 11 RX
   #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-    #define BT_RX 5 //arduino RX connect HM-10 TX
-    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
   #endif
 #endif
 
-#ifdef RFM69_Wiring // Without Support for I2C Modules
+#ifdef RFM69_Wiring // Without Support for I2C Modules and HM10 or 11
   #define DHT_RECEIVER_PIN 0 //on nodeMCU this is D3 GPIO0
   #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
   #define RF_EMITTER_PIN 10 //put 4 = D2 on nodemcu, 4 = D4 on arduino
@@ -256,8 +258,8 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-    #define BT_RX 5 //arduino RX connect HM-10 TX
-    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
     #define RFM69_CS      10
     #define RFM69_IRQ     2
     #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
