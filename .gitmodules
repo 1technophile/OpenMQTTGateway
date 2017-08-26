@@ -22,3 +22,6 @@
 [submodule "libraries/RFM69"]
 	path = libraries/RFM69
 	url = https://github.com/LowPowerLab/RFM69
+[submodule "libraries/NewRemoteSwitch"]
+	path = libraries/NewRemoteSwitch
+	url = https://github.com/1technophile/NewRemoteSwitch
