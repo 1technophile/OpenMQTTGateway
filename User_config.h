@@ -75,6 +75,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   //#define ZsensorDHT
   #define ZgatewayRF
+  #define ZgatewayRF2
   #ifdef RFM69_Wiring
     #define ZgatewayRFM69
   #endif
@@ -86,6 +87,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #endif
 #else // for arduino + W5100
   #define ZgatewayRF
+  #define ZgatewayRF2
   #ifdef RFM69_Wiring
     //#define ZgatewayRFM69 not tested
   #endif
@@ -104,7 +106,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMQTTtoX "home/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 
-/*-------------------RF topics----------------------*/
+/*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTtoRF "home/commands/MQTTto433"
 #define subjectRFtoMQTT "home/433toMQTT"
@@ -127,8 +129,17 @@ RF supported protocols
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWRF "+/433toMQTT"
+//RF number of signal repetition
+#define RF_EMITTER_REPEAT 20
 
-/*-------------------IR topics----------------------*/
+/*-------------------RF2 topics & parameters----------------------*/
+//433Mhz newremoteswitch MQTT Subjects and keys
+#define subjectMQTTtoRF2 "home/commands/MQTTtoRF2"
+#define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKeyrotocolKey followed by a value of 7 digits
+#define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
+#define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1 digit
+
+/*-------------------IR topics & parameters----------------------*/
 //IR MQTT Subjects
 #define subjectGTWIRtoMQTT "home/IRtoMQTT"
 #define subjectIRtoMQTT "home/IRtoMQTT"
@@ -171,8 +182,10 @@ RF supported protocols
   //#define IR_PANASONIC
 #endif
 
-/*----------------------BT topics-------------------------*/
+/*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
+#define HM-10 
+//#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 
 /*----------------------RFM69 topics & parameters -------------------------*/
 #define subjectRFM69toMQTT "home/RFM69toMQTT"
@@ -208,14 +221,14 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
     #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
     //RF PIN definition
     #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
-    #define BT_RX D7 //ESP8266 RX connect HM-10 TX
-    #define BT_TX D6 //ESP8266 TX connect HM-10 RX
+    #define BT_RX D7 //ESP8266 RX connect HM-10 or 11 TX
+    #define BT_TX D6 //ESP8266 TX connect HM-10 or 11 RX
   #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-    #define BT_RX 5 //arduino RX connect HM-10 TX
-    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
   #endif
 #endif
 
@@ -228,45 +241,44 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
     #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
     //RF PIN definition
     #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
-    #define BT_RX D7 //ESP8266 RX connect HM-10 TX
-    #define BT_TX D6 //ESP8266 TX connect HM-10 RX
+    #define BT_RX D7 //ESP8266 RX connect HM-10 or 11 TX
+    #define BT_TX D6 //ESP8266 TX connect HM-10 or 11 RX
   #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-    #define BT_RX 5 //arduino RX connect HM-10 TX
-    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
   #endif
 #endif
 
-#ifdef RFM69_Wiring // Without Support for I2C Modules
+#ifdef RFM69_Wiring // Without Support for I2C Modules and HM10 or 11
   #define DHT_RECEIVER_PIN 0 //on nodeMCU this is D3 GPIO0
   #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
-  #define RF_EMITTER_PIN 10 //put 4 = D2 on nodemcu, 4 = D4 on arduino
   
   #ifdef ESP8266
-    #define IR_EMITTER_PIN 16 // 14 = D5 on nodemcu #define only usefull for ESP8266
+    #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu 
     //RF PIN definition
-    #define RF_RECEIVER_PIN 0 //  5 = D1 on nodemcu
-    #define RFM69_CS      D1  // GPIO15/HCS/D8
-    #define RFM69_IRQ     D8   // GPIO04/D2
+    #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
+    #define RF_EMITTER_PIN D2 //put D2 on nodemcu
+    #define RFM69_CS      D1  // GPIO5/HCS/D1
+    #define RFM69_IRQ     D8   // GPIO15/D8
     #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
     #define RFM69_RST     D4   // GPIO02/D4
   #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-    #define BT_RX 5 //arduino RX connect HM-10 TX
-    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define RF_EMITTER_PIN 4 //4 = D4 on arduino
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
+    //RFM69 not tested with arduino
     #define RFM69_CS      10
     #define RFM69_IRQ     2
     #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
     #define RFM69_RST     9
   #endif
 #endif
-
-//RF number of signal repetition
-#define RF_EMITTER_REPEAT 20
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on

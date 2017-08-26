@@ -330,13 +330,15 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
+#ifdef ZgatewayRF2
+  MQTTtoRF2(topicOri, datacallback);
+#endif
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
 #endif
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
 #endif
-
 }
 
 //trace
