@@ -92,7 +92,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   }
 }
 
-bool to_bool(std::string const& s) { // thanks Chris Jester-Young from stackoverflow
+bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
      return s != "0";
 }
 #endif
