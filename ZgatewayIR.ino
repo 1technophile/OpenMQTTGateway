@@ -53,7 +53,7 @@ boolean IRtoMQTT(){
   decode_results results;
   
   if (irrecv.decode(&results)){
-  trc(F("Receiving IR"));
+  trc(F("Rcv. IR"));
     unsigned long MQTTvalue = 0;
     String MQTTprotocol;
     String MQTTbits;
@@ -69,7 +69,7 @@ boolean IRtoMQTT(){
     trc(rawCode);
     irrecv.resume(); // Receive the next value
     if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
-      trc(F("---no publish unknown protocol---"));
+      trc(F("--no pub. unknown protocol--"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data IRtoMQTT"));
         client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
@@ -80,7 +80,7 @@ boolean IRtoMQTT(){
         trc(value);
         boolean result = client.publish(subjectIRtoMQTT,(char *)value.c_str());
         if (repeatIRwMQTT){
-            trc(F("Publishing IR for repeat"));
+            trc(F("Pub. IR for repeat"));
             client.publish(subjectMQTTtoIR,(char *)value.c_str());
         }
         return result;
@@ -163,7 +163,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   if (pos != -1){
     pos = pos + +strlen(IRbitsKey);
     valueBITS = (topic.substring(pos,pos + 2)).toInt();
-    trc(F("Bits number:"));
+    trc(F("Bits nb:"));
     trc(String(valueBITS));
   }
   //We look into the subject to see if a special repeat number is defined 
@@ -256,7 +256,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
-      trc(F("MQTTtoIR OK ack published"));
+      trc(F("MQTTtoIR ack pub."));
       };
   }
    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)

@@ -43,7 +43,7 @@ void setupRF(){
 boolean RFtoMQTT(){
 
   if (mySwitch.available()){
-    trc(F("Receiving RF"));
+    trc(F("Rcv. RF"));
     unsigned long MQTTvalue = 0;
     String MQTTprotocol;
     String MQTTbits;
@@ -63,7 +63,7 @@ boolean RFtoMQTT(){
         trc(value);
         boolean result = client.publish(subjectRFtoMQTT,(char *)value.c_str());
         if (repeatRFwMQTT){
-            trc(F("Publishing RF for repeat"));
+            trc(F("Publish RF for repeat"));
             client.publish(subjectMQTTtoRF,(char *)value.c_str());
         }
         return result;
@@ -94,7 +94,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
   if (pos2 != -1) {
     pos2 = pos2 + strlen(RFpulselengthKey);
     valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
-    trc(F("RF Pulse Length:"));
+    trc(F("RF Pulse Lgth:"));
     trc(String(valuePLSL));
   }
   int pos3 = topic.lastIndexOf(RFbitsKey);       
@@ -106,15 +106,15 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
   }
   
   if ((topic == subjectMQTTtoRF) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
-    trc(F("MQTTtoRF default"));
+    trc(F("MQTTtoRF dflt"));
     mySwitch.setProtocol(1,350);
     mySwitch.send(data, 24);
     // Acknowledgement to the GTWRF topic
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);
-    if (result)trc(F("Ack published"));
+    if (result)trc(F("Ack pub."));
     
   } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
-    trc(F("MQTTtoRF user parameters"));
+    trc(F("MQTTtoRF usr par."));
     if (valuePRT == 0) valuePRT = 1;
     if (valuePLSL == 0) valuePLSL = 350;
     if (valueBITS == 0) valueBITS = 24;
@@ -126,7 +126,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     // Acknowledgement to the GTWRF topic 
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     if (result){
-      trc(F("MQTTtoRF OK ack published"));
+      trc(F("MQTTtoRF ack pub."));
       trc(String(data));
       };
   }

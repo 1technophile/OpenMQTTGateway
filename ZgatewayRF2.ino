@@ -48,7 +48,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   bool boolSWITCHTYPE;
   boolSWITCHTYPE = to_bool(datacallback);
   
-  int valueCODE  = 0;
+  long valueCODE  = 0;
   int valueUNIT = -1;
   int valuePERIOD = 0;
   int valueBIT  = 0;
@@ -76,7 +76,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   }
   
   if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
-    trc(F("MQTTtoRF2 user parameters"));
+    trc(F("MQTTtoRF2"));
     if (valueCODE == 0) valueCODE = 8233378;
     if (valueUNIT == -1) valueUNIT = 0;
     if (valuePERIOD == 0) valuePERIOD = 272;
@@ -86,7 +86,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(String(boolSWITCHTYPE));
     trc(F("Creating transmitter"));
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
-    trc(F("Sending data "));
+    trc(F("Sending data"));
     transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
     trc(F("Data sent"));
   }
