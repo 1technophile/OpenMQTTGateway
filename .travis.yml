@@ -3,7 +3,6 @@ dist: trusty
 env:
   - BD=arduino:avr:uno
   - BD=arduino:avr:mega:cpu=atmega2560
-  - BD=arduino:avr:nano:cpu=atmega328
   - BD=esp8266:esp8266:nodemcuv2:CpuFrequency=80,FlashSize=4M3M
   - BD=esp8266:esp8266:d1_mini:CpuFrequency=80,FlashSize=4M3M
 before_install:
