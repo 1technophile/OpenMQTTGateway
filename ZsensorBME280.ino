@@ -43,21 +43,6 @@
 #include <stdint.h>
 #include "SparkFunBME280.h"
 
-#define bme280_always true // if false when the current value for light Level (Lux) is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingbme280 30000
-
-/*----------------------------USER PARAMETERS-----------------------------*/
-/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define TEMPBMEC  "home/CLIMAtoMQTT/bme/tempc"
-#define TEMPBMEF  "home/CLIMAtoMQTT/bme/tempf"
-#define HUMBME   "home/CLIMAtoMQTT/bme/hum"
-#define PRESSBME   "home/CLIMAtoMQTT/bme/pa"
-#define ALTIBMEM   "home/CLIMAtoMQTT/bme/altim"
-#define ALTIBMEFT   "home/CLIMAtoMQTT/bme/altift"
-
-//Time used to wait for an interval before resending measured values
-unsigned long timebme280 = 0;
-
 //Global sensor object
 BME280 mySensor;
 
