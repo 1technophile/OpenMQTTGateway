@@ -264,9 +264,7 @@ void loop()
       boolean resultRFM69 = RFM69toMQTT();
       if(resultRFM69)
       trc(F("RFM69toMQTT OK"));
-    #endif
-    
-
+    #endif  
   }
 
 }
