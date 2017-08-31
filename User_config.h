@@ -30,12 +30,13 @@
 */
 
 /*----------------------------USER PARAMETERS-----------------------------*/
+#define SERIAL_BAUD   115200
 /*-------------DEFINE YOUR WIRING TYPE BELOW----------------*/
 // Choose between "I2C_Wiring" OR "Classic_Wiring"
 // Please Note: I2C Wiring and Classic Wiring uses two complete different Pins for all Modules, see PIN definitions at the end of this file
 //#define I2C_Wiring // With Support for I2C Modules and the associated libraries BH1750 and BME280
-#define Classic_Wiring // Without Support for I2C Modules, legacy wiring V0.3.1 and below
-
+//#define RFM69_Wiring // following file img/OpenMQTTGateway_IR_RF_RFM69.png
+#define Classic_Wiring // following file img/OpenMQTTGateway_IR_RF_BT.png
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -74,14 +75,20 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   //#define ZsensorDHT
   #define ZgatewayRF
+  #ifdef RFM69_Wiring
+    #define ZgatewayRFM69
+  #endif
   #define ZgatewayIR
-  #define ZgatewayBT
+  //#define ZgatewayBT
   #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
     #define ZsensorBH1750
     #define ZsensorBME280
   #endif
 #else // for arduino + W5100
   #define ZgatewayRF
+  #ifdef RFM69_Wiring
+    //#define ZgatewayRFM69 not tested
+  #endif
   #define ZgatewayIR
   #define ZgatewayBT
   //#define ZsensorDHT
@@ -167,6 +174,30 @@ RF supported protocols
 /*----------------------BT topics-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
 
+/*----------------------RFM69 topics & parameters -------------------------*/
+#define subjectRFM69toMQTT "home/RFM69toMQTT"
+#define subjectRFM69toMQTTrssi "home/RFM69toMQTT/rssi"
+#define subjectRFM69toMQTTsender "home/RFM69toMQTT/sender"
+#define subjectMQTTtoRFM69 "home/commands/MQTTtoRFM69"
+#define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
+#define subjectGTWRFM69toMQTT "home/RFM69toMQTT"
+#define defaultRFM69ReceiverId 99
+
+// Default values
+const char PROGMEM ENCRYPTKEY[] = "sampleEncryptKey";
+const char PROGMEM MDNS_NAME[] = "rfm69gw1";
+const char PROGMEM MQTT_BROKER[] = "raspi2";
+const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
+#define NETWORKID     200  //the same on all nodes that talk to each other
+#define NODEID        10
+
+//Match frequency to the hardware version of the radio
+#define FREQUENCY     RF69_433MHZ
+//#define FREQUENCY     RF69_868MHZ
+//#define FREQUENCY      RF69_915MHZ
+#define IS_RFM69HCW    true // set to 'true' if you are using an RFM69HCW module
+#define POWER_LEVEL    31
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef I2C_Wiring // With Support for I2C Modules
   #define DHT_RECEIVER_PIN 14 //on nodeMCU this is D5 GPIO14
@@ -205,6 +236,32 @@ RF supported protocols
     #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
     #define BT_RX 5 //arduino RX connect HM-10 TX
     #define BT_TX 6 //arduino TX connect HM-10 RX
+  #endif
+#endif
+
+#ifdef RFM69_Wiring // Without Support for I2C Modules
+  #define DHT_RECEIVER_PIN 0 //on nodeMCU this is D3 GPIO0
+  #define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
+  #define RF_EMITTER_PIN 10 //put 4 = D2 on nodemcu, 4 = D4 on arduino
+  
+  #ifdef ESP8266
+    #define IR_EMITTER_PIN 16 // 14 = D5 on nodemcu #define only usefull for ESP8266
+    //RF PIN definition
+    #define RF_RECEIVER_PIN 0 //  5 = D1 on nodemcu
+    #define RFM69_CS      D1  // GPIO15/HCS/D8
+    #define RFM69_IRQ     D8   // GPIO04/D2
+    #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+    #define RFM69_RST     D4   // GPIO02/D4
+  #else
+    //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
+    //RF PIN definition
+    #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
+    #define BT_RX 5 //arduino RX connect HM-10 TX
+    #define BT_TX 6 //arduino TX connect HM-10 RX
+    #define RFM69_CS      10
+    #define RFM69_IRQ     2
+    #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+    #define RFM69_RST     9
   #endif
 #endif
 

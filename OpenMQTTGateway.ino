@@ -120,7 +120,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void setup()
 {
   //Launch serial for debugging purposes
-  Serial.begin(115200);
+  Serial.begin(SERIAL_BAUD);
 
   #ifdef ESP8266
     //Begining wifi connection in case of ESP8266
@@ -175,6 +175,9 @@ void setup()
   #endif
   #ifdef ZgatewayBT
     setupBT();
+  #endif
+  #ifdef ZgatewayRFM69
+    setupRFM69();
   #endif
 
 }
@@ -257,6 +260,12 @@ void loop()
       if(resultBT)
       trc(F("BT sent by MQTT"));
     #endif
+    #ifdef ZgatewayRFM69
+      boolean resultRFM69 = RFM69toMQTT();
+      if(resultRFM69)
+      trc(F("RFM69 data sent by MQTT"));
+    #endif
+    
 
   }
 
@@ -324,6 +333,10 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
 #endif
+#ifdef ZgatewayRFM69
+  MQTTtoRFM69(topicOri, datacallback);
+#endif
+
 }
 
 //trace

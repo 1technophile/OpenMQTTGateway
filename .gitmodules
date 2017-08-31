@@ -19,3 +19,6 @@
 [submodule "libraries/DHT-sensor-library"]
 	path = libraries/DHT-sensor-library
 	url = https://github.com/adafruit/DHT-sensor-library
+[submodule "libraries/RFM69"]
+	path = libraries/RFM69
+	url = https://github.com/LowPowerLab/RFM69
