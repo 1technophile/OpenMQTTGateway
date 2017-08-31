@@ -3,7 +3,6 @@ dist: trusty
 env:
   - BD=arduino:avr:uno
   - BD=arduino:avr:mega:cpu=atmega2560
-  - BD=arduino:avr:nano:cpu=atmega328
   - BD=esp8266:esp8266:nodemcuv2:CpuFrequency=80,FlashSize=4M3M
   - BD=esp8266:esp8266:d1_mini:CpuFrequency=80,FlashSize=4M3M
 before_install:
@@ -22,6 +21,7 @@ install:
   - wget https://github.com/markszabo/IRremoteESP8266/archive/v2.1.1.zip -O /tmp/IRremoteESP8266.zip 
   - unzip /tmp/IRremoteESP8266.zip -d /usr/local/share/arduino/libraries
   - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
+  - git clone https://github.com/1technophile/NewRemoteSwitch /usr/local/share/arduino/libraries/NewRemoteSwitch
   - wget https://github.com/knolleary/pubsubclient/archive/v2.6.zip -O /tmp/pubsubclient.zip
   - unzip /tmp/pubsubclient.zip -d /usr/local/share/arduino/libraries
   - wget https://github.com/sui77/rc-switch/archive/2.6.2.zip -O /tmp/rcswitch.zip

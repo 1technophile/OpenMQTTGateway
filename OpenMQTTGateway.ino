@@ -75,18 +75,18 @@ unsigned long lastReconnectAttempt = 0;
 boolean reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    trc(F("Attempting MQTT connection...")); //F function enable to decrease sram usage
+    trc(F("MQTT connection...")); //F function enable to decrease sram usage
     #ifdef mqtt_user
       if (client.connect(Gateway_Name, mqtt_user, mqtt_password, will_Topic, will_QoS, will_Retain, will_Message)) { // if an mqtt user is defined we connect to the broker with authentication
     #else
       if (client.connect(Gateway_Name, will_Topic, will_QoS, will_Retain, will_Message)) {
     #endif
-      trc(F("connected to broker"));
+      trc(F("Connected to broker"));
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX) && client.subscribe(subjectMultiGTWRF)&& client.subscribe(subjectMultiGTWIR)) {
-        trc(F("subscription OK to the subjects defined"));
+        trc(F("Subscription OK to the subjects"));
       }
       } else {
       trc(F("failed, rc="));
@@ -195,22 +195,22 @@ void setup_wifi() {
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
   //WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
-  trc(F("OpenMQTTGateway ip adress: "));
+  trc(F("OpenMQTTGateway ip: "));
   Serial.println(WiFi.localIP());
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
   }
-  trc(F("WiFi connected"));
+  trc(F("WiFi ok"));
 }
 #else
 void setup_ethernet() {
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
   //Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  trc(F("OpenMQTTGateway ip adress: "));
+  trc(F("OpenMQTTGateway ip: "));
   Serial.println(Ethernet.localIP());
-  trc(F("Ethernet connected"));
+  trc(F("Ethernet ok"));
 }
 #endif
 
@@ -247,26 +247,24 @@ void loop()
     #ifdef ZgatewayRF
       boolean resultRF = RFtoMQTT();
       if(resultRF)
-      trc(F("RF sent by MQTT"));
+      trc(F("RFtoMQTT OK"));
     #endif
     #ifdef ZgatewayIR
       boolean resultIR = IRtoMQTT();
       if(resultIR)
-      trc(F("IR sent by MQTT"));
+      trc(F("IRtoMQTT OK"));
       delay(100);
     #endif
     #ifdef ZgatewayBT
       boolean resultBT = BTtoMQTT();
       if(resultBT)
-      trc(F("BT sent by MQTT"));
+      trc(F("BTtoMQTT OK"));
     #endif
     #ifdef ZgatewayRFM69
       boolean resultRFM69 = RFM69toMQTT();
       if(resultRFM69)
-      trc(F("RFM69 data sent by MQTT"));
-    #endif
-    
-
+      trc(F("RFM69toMQTT OK"));
+    #endif  
   }
 
 }
@@ -275,7 +273,7 @@ void storeValue(long MQTTvalue){
     unsigned long now = millis();
     // find oldest value of the buffer
     int o = getMin();
-    trc(F("Min index: "));
+    trc(F("Min ind: "));
     trc(String(o));
     // replace it by the new one
     ReceivedSignal[o][0] = MQTTvalue;
@@ -309,7 +307,7 @@ for (int i = 0; i < array_size;i++){
  if (ReceivedSignal[i][0] == value){
       unsigned long now = millis();
       if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
-      trc(F("---don't publish the code duplicate---"));
+      trc(F("--don't pub. duplicate--"));
       return true;
     }
   }
@@ -330,13 +328,15 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
+#ifdef ZgatewayRF2
+  MQTTtoRF2(topicOri, datacallback);
+#endif
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
 #endif
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
 #endif
-
 }
 
 //trace
