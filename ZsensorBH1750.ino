@@ -40,18 +40,6 @@
 #ifdef ZsensorBH1750
 #include "math.h" // Library for trig and exponential functions
 #include "Wire.h" // Library for communication with I2C / TWI devices
-#define bh1750_always true // if false when the current value for light Level (Lux) is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingBH1750 30000
-
-/*----------------------------USER PARAMETERS-----------------------------*/
-/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define LUX   "home/LIGHTtoMQTT/lux"
-#define FTCD  "home/LIGHTtoMQTT/ftcd"
-#define WATTSM2  "home/LIGHTtoMQTT/wattsm2"
-
-//Time used to wait for an interval before resending measured values
-unsigned long timebh1750 = 0;
-int BH1750_i2c_addr = 0x23; // Light Sensor I2C Address
 
 void setupZsensorBH1750()
 {
