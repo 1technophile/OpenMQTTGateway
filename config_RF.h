@@ -56,7 +56,7 @@ RF supported protocols
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
 #define subjectMQTTtoRF2 "home/commands/MQTTtoRF2"
-#define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKeyrotocolKey followed by a value of 7 digits
+#define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
 #define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1 digit
 
@@ -88,7 +88,7 @@ RF supported protocols
 #ifdef RFM69_Wiring // Without Support for I2C Modules and HM10 or 11
   #ifdef ESP8266
     #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
-    #define RF_EMITTER_PIN D2 //put D2 on nodemcu
+    #define RF_EMITTER_PIN 10 //put SD3 on nodemcu
   #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
