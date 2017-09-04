@@ -16,6 +16,8 @@ ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1.
   It enables to:
 * Send RF signals corresponding to received MQTT data (MQTT->RF)
 * Publish MQTT data related to a received 433Mhz signal (RF-->MQTT)
+* Send RFM69 signals corresponding to received MQTT data (MQTT->RFM69)
+* Publish MQTT data related to a received RFM69 signal (RFM69-->MQTT)
 * Send IR signal corresponding to received MQTT data (MQTT->IR)
 * Publish MQTT data related to received IR signal (IR-->MQTT)
 * Publish MQTT data related to BLE beacons (BT-->MQTT)
