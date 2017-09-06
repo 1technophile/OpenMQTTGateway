@@ -34,7 +34,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #define RESPONSE_MSG "OK+DISIS"
 #define RESP_END_MSG "OK+DISCE"
 #define SETUP_MSG "OK+RESET"
-#define TimeBtw_Read 10000
 
 SoftwareSerial softserial(BT_RX, BT_TX);
 

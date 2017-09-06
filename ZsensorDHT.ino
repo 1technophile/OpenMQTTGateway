@@ -30,20 +30,14 @@
 #ifdef ZsensorDHT
 #include <DHT.h>
 #include <DHT_U.h>
-#define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
-#define TimeBetweenReading 30000
-DHT dht(DHT_RECEIVER_PIN,DHT22); // Defined in User_config.h
 
-/*----------------------------USER PARAMETERS-----------------------------*/
-/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define HUM1   "home/DHTtoMQTT/dht1/hum"
-#define TEMP1  "home/DHTtoMQTT/dht1/temp"
+DHT dht(DHT_RECEIVER_PIN,DHT22); 
 
 //Time used to wait for an interval before resending temp and hum
 unsigned long timedht = 0;
 
 void MeasureTempAndHum(){
-  if (millis() > (timedht + TimeBetweenReading)) {//retriving value of temperature and humidity of the box from DHT every xUL
+  if (millis() > (timedht + TimeBetweenReadingDHT)) {//retriving value of temperature and humidity of the box from DHT every xUL
     timedht = millis();
     static float persistedh;
     static float persistedt;

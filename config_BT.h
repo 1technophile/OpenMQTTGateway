@@ -25,6 +25,7 @@
 */
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
+#define TimeBtw_Read 10000 //define the time between 2 scans
 #define HM-10 
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 

@@ -24,6 +24,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*----------------------------USER PARAMETERS-----------------------------*/
+/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
+#define HUM1   "home/DHTtoMQTT/dht1/hum"
+#define TEMP1  "home/DHTtoMQTT/dht1/temp"
+#define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
+#define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef I2C_Wiring // With Support for I2C Modules
   #define DHT_RECEIVER_PIN 14 //on nodeMCU this is D5 GPIO14
