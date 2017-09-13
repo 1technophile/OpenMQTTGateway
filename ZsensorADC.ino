@@ -27,7 +27,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifdef ZsensorADC
-ADC_MODE(ADC_TOUT);
+
+#ifdef ESP8266
+  ADC_MODE(ADC_TOUT);
+#endif
 
 //Time used to wait for an interval before resending adc value
 unsigned long timeadc = 0;
@@ -41,7 +44,7 @@ void MeasureADC(){
     if (isnan(val)) {
       trc(F("Failed to read from ADC !"));
     }else{
-      if(val != persistedadc || dht_always){
+      if(val != persistedadc || adc_always){
         char value[4];
         sprintf(value, "%d", val);
         trc(F("Sending analog value to MQTT"));
