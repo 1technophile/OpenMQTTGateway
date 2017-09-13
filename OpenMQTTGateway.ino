@@ -243,6 +243,9 @@ void loop()
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
+    #ifdef ZsensorADC
+      MeasureADC(); //Addon to measure the analog value of analog pin
+    #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
       boolean resultRF = RFtoMQTT();
