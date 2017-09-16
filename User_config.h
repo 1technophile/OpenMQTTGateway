@@ -86,6 +86,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_IR.h"
   #define ZgatewayBT
   #include "config_BT.h"
+  #define ZsensorHCSR501
+  #include "config_HCSR501.h"
   #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
     #define ZsensorBH1750
     #include "config_BH1750.h"
@@ -110,7 +112,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BH1750.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
-  
+  //#define ZsensorHCSR501
+  //#include "config_HCSR501.h"
 #endif/*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 /*--------------MQTT general topics-----------------*/
