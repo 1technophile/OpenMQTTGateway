@@ -219,8 +219,7 @@ if ((topic == subjectMQTTtoRFM69) && (valueRCV == defaultRFM69ReceiverId)){
       // Acknowledgement to the GTWRF topic
     boolean result = client.publish(subjectGTWRFM69toMQTT, datacallback);
     if (result)trc(F("Ack published"));
-    return true;
-      break;
+      return true;
     }
     else {
       Serial.print("!");
