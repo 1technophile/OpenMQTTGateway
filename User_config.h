@@ -112,8 +112,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BH1750.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
-  #define ZsensorADC
-  #include "config_ADC.h"
+  //#define ZsensorADC
+  //#include "config_ADC.h"
 #endif/*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 /*--------------MQTT general topics-----------------*/
