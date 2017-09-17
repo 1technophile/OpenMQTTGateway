@@ -120,7 +120,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void setup()
 {
   //Launch serial for debugging purposes
-  Serial.begin(SERIAL_BAUD);
+  Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
 
   #ifdef ESP8266
     //Begining wifi connection in case of ESP8266
