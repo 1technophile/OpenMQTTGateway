@@ -119,10 +119,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
-  //Launch serial for debugging purposes
-  Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
-
   #ifdef ESP8266
+    //Launch serial for debugging purposes
+    Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     //Begining wifi connection in case of ESP8266
     setup_wifi();
     // Port defaults to 8266
@@ -153,6 +152,8 @@ void setup()
     });
     ArduinoOTA.begin();
   #else
+    //Launch serial for debugging purposes
+    Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
   #endif
