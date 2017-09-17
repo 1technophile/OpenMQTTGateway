@@ -78,9 +78,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_BH1750.h"
   #define ZsensorBME280
   #include "config_BME280.h"
-  //#define ZsensorDHT
+  //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
   //#include "config_DHT.h"
-  //#define ZgatewayRFM69
+  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   //#include "config_RFM69.h"
 #else // for arduino + W5100
   #define ZgatewayRF
