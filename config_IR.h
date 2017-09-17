@@ -68,19 +68,11 @@
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#define IR_RECEIVER_PIN 2 // put 2 = D4 on nodemcu, 2 = D2 on arduino
-  
-#ifdef I2C_Wiring // With Support for I2C Modules
-  #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
+#ifdef ESP8266
+  #define IR_RECEIVER_PIN 2
+  #define IR_EMITTER_PIN 16
+#else
+  #define IR_RECEIVER_PIN D3
+  #define IR_EMITTER_PIN D9
 #endif
-
-#ifdef RFM69_Wiring // With Support for I2C Modules
-  #define IR_EMITTER_PIN 16 // 16 = D0 on nodemcu #define only usefull for ESP8266
-#endif
-
-#ifdef Classic_Wiring // Without Support for I2C Modules
-    #define IR_EMITTER_PIN 14 // 14 = D5 on nodemcu #define only usefull for ESP8266
-#endif
-
-
 

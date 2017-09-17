@@ -61,42 +61,14 @@ RF supported protocols
 #define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1 digit
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef I2C_Wiring // With Support for I2C Modules
-  #define RF_EMITTER_PIN 15 //put 15 = D8 on nodemcu
-  #ifdef ESP8266
-    //RF PIN definition
-    #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
-  #else
+#ifdef ESP8266
+    #define RF_RECEIVER_PIN 3 //  RX on nodemcu
+    #define RF_EMITTER_PIN 15 // D8 on nodemcu
+#else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
-    #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-  #endif
-#endif
-
-#ifdef Classic_Wiring // Without Support for I2C Modules
-  #define RF_EMITTER_PIN 4 //put 4 = D2 on nodemcu, 4 = D4 on arduino
-  #ifdef ESP8266
-    //RF PIN definition
-    #define RF_RECEIVER_PIN 5 //  5 = D1 on nodemcu
-  #else
-    //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
-    //RF PIN definition
-    #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
-  #endif
-#endif
-
-#ifdef RFM69_Wiring // Without Support for I2C Modules and HM10 or 11
-  #ifdef ESP8266
-    #define RF_RECEIVER_PIN 0 //  0 = D3 on nodemcu
-    #define RF_EMITTER_PIN 10 //put SD3 on nodemcu
-  #else
-    //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
-    //RF PIN definition
-    #define RF_RECEIVER_PIN 1 //  1 = D3 on arduino
+    #define RF_RECEIVER_PIN D2
     #define RF_EMITTER_PIN 4 //4 = D4 on arduino
-  #endif
 #endif
-
-
 
 
