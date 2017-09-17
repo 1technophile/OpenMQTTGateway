@@ -51,7 +51,6 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   long valueCODE  = 0;
   int valueUNIT = -1;
   int valuePERIOD = 0;
-  int valueBIT  = 0;
   
   int pos = topic.lastIndexOf(RF2codeKey);       
   if (pos != -1){
