@@ -67,7 +67,7 @@ RF supported protocols
 #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
-    #define RF_RECEIVER_PIN D2
+    #define RF_RECEIVER_PIN 0 //0 = D2 on arduino
     #define RF_EMITTER_PIN 4 //4 = D4 on arduino
 #endif
 

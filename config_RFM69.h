@@ -57,7 +57,7 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 #else
   //RFM69 not tested with arduino
   #define RFM69_CS      10
-  #define RFM69_IRQ     2
+  #define RFM69_IRQ     0
   #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
   #define RFM69_RST     9
 #endif
