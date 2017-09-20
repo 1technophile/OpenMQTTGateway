@@ -173,6 +173,9 @@ void setup()
   #ifdef ZgatewayRF
     setupRF();
   #endif
+  #ifdef ZgatewayRF2
+    setupRF2();
+  #endif
   #ifdef ZgatewayBT
     setupBT();
   #endif
@@ -248,6 +251,11 @@ void loop()
       boolean resultRF = RFtoMQTT();
       if(resultRF)
       trc(F("RFtoMQTT OK"));
+    #endif
+    #ifdef ZgatewayRF2
+      boolean resultRF2 = RF2toMQTT();
+      if(resultRF2)
+      trc(F("RF2toMQTT OK"));
     #endif
     #ifdef ZgatewayIR
       boolean resultIR = IRtoMQTT();

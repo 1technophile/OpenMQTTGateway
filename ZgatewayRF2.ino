@@ -39,6 +39,68 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m 
 #ifdef ZgatewayRF2
 
 #include <NewRemoteTransmitter.h>
+#include <NewRemoteReceiver.h>
+
+struct RF2rxd
+{
+  unsigned int period;
+  unsigned long address;
+  unsigned long groupBit;
+  unsigned long unit;
+  unsigned long switchType;
+  bool hasNewData;
+};
+
+RF2rxd rf2rd;
+
+void setupRF2(){
+    #ifdef ESP8266
+      NewRemoteReceiver::init(5, 2, rf2Callback);
+    #else
+      NewRemoteReceiver::init(0, 2, rf2Callback);
+    #endif
+    Serial.println("Receiver RF2 initialized");    
+    pinMode(RF_EMITTER_PIN, OUTPUT);
+    digitalWrite(RF_EMITTER_PIN, LOW);
+    Serial.println("Transmitter RF2 initialized");    
+}
+
+boolean RF2toMQTT(){
+//Serial.println("entra rf2tomqtt");
+  if(rf2rd.hasNewData){
+      rf2rd.hasNewData=false;
+
+    trc(F("Rcv. RF2"));
+    String MQTTAddress;
+    String MQTTperiod;
+    String MQTTunit;
+    String MQTTgroupBit;
+    String MQTTswitchType;
+
+    MQTTAddress = String(rf2rd.address);
+    MQTTperiod = String(rf2rd.period);
+    MQTTunit = String(rf2rd.unit);
+    MQTTgroupBit = String(rf2rd.groupBit);
+    MQTTswitchType = String(rf2rd.switchType);
+    String MQTTRF2string;
+    MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2periodKey+MQTTperiod;
+        trc(F("Adv data RF2toMQTT"));
+        client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+      return true;
+  }
+  return false;
+}
+
+void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
+
+  rf2rd.period=period;
+  rf2rd.address=address;
+  rf2rd.groupBit=groupBit;
+  rf2rd.unit=unit;
+  rf2rd.switchType=switchType;
+  rf2rd.hasNewData=true;
+
+}
 
 void MQTTtoRF2(char * topicOri, char * datacallback) {
 
@@ -51,11 +113,12 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   long valueCODE  = 0;
   int valueUNIT = -1;
   int valuePERIOD = 0;
+  int valueBIT  = 0;
   
   int pos = topic.lastIndexOf(RF2codeKey);       
   if (pos != -1){
     pos = pos + +strlen(RF2codeKey);
-    valueCODE = (topic.substring(pos,pos + 7)).toInt();
+    valueCODE = (topic.substring(pos,pos + 8)).toInt();
     trc(F("RF2 code:"));
     trc(String(valueCODE));
   }
@@ -69,7 +132,8 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   int pos3 = topic.lastIndexOf(RF2unitKey);       
   if (pos3 != -1){
     pos3 = pos3 + strlen(RF2unitKey);
-    valueUNIT = (topic.substring(pos3,pos3 + 1)).toInt();
+    int pos4 = topic.indexOf("/", pos3);
+    valueUNIT = (topic.substring(pos3,pos4)).toInt();
     trc(F("Unit:"));
     trc(String(valueUNIT));
   }
@@ -83,11 +147,13 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(String(valueUNIT));
     trc(String(valuePERIOD));
     trc(String(boolSWITCHTYPE));
+    NewRemoteReceiver::disable();
     trc(F("Creating transmitter"));
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
     trc(F("Sending data"));
     transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
     trc(F("Data sent"));
+    NewRemoteReceiver::enable();
   }
 }
 
