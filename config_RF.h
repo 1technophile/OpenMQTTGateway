@@ -59,7 +59,8 @@ RF supported protocols
 #define subjectRF2toMQTT "home/RF2toMQTT"
 #define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
-#define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1 digit
+#define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
+#define RF2groupKey "GROUP_"  // number of your group value  will be defined if a subject contains RF2groupKey followed by a value of 1 digit
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef I2C_Wiring // With Support for I2C Modules

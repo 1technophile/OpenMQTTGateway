@@ -83,7 +83,7 @@ boolean RF2toMQTT(){
     MQTTgroupBit = String(rf2rd.groupBit);
     MQTTswitchType = String(rf2rd.switchType);
     String MQTTRF2string;
-    MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2periodKey+MQTTperiod;
+    MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
         trc(F("Adv data RF2toMQTT"));
         client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
       return true;
@@ -113,7 +113,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   long valueCODE  = 0;
   int valueUNIT = -1;
   int valuePERIOD = 0;
-  int valueBIT  = 0;
+  int valueGROUP  = 0;
   
   int pos = topic.lastIndexOf(RF2codeKey);       
   if (pos != -1){
@@ -137,6 +137,13 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(F("Unit:"));
     trc(String(valueUNIT));
   }
+  int pos5 = topic.lastIndexOf(RF2groupKey);
+  if (pos5 != -1) {
+    pos5 = pos5 + strlen(RF2groupKey);
+    valueGROUP = (topic.substring(pos5,pos5 + 1)).toInt();
+    trc(F("RF2 Group:"));
+    trc(String(valueGROUP));
+  }
   
   if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
     trc(F("MQTTtoRF2"));
@@ -146,14 +153,37 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(String(valueCODE));
     trc(String(valueUNIT));
     trc(String(valuePERIOD));
+    trc(String(valueGROUP));
     trc(String(boolSWITCHTYPE));
     NewRemoteReceiver::disable();
     trc(F("Creating transmitter"));
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
     trc(F("Sending data"));
-    transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
+    if (valueGROUP) {
+      transmitter.sendGroup(boolSWITCHTYPE); 
+    }
+    else {
+      transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
+    }
     trc(F("Data sent"));
     NewRemoteReceiver::enable();
+
+    // Publish state change back to MQTT
+    String MQTTAddress;
+    String MQTTperiod;
+    String MQTTunit;
+    String MQTTgroupBit;
+    String MQTTswitchType;
+
+    MQTTAddress = String(valueCODE);
+    MQTTperiod = String(valuePERIOD);
+    MQTTunit = String(valueUNIT);
+    MQTTgroupBit = String(rf2rd.groupBit);
+    MQTTswitchType = String(boolSWITCHTYPE);
+    String MQTTRF2string;
+    MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
+        trc(F("Adv data RF2toMQTT"));
+        client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
   }
 }
 
