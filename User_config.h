@@ -39,7 +39,7 @@
 #define Classic_Wiring // following file img/OpenMQTTGateway_IR_RF_BT.png
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
-#define mqtt_server "192.168.1.17"
+#define mqtt_server "192.168.1.52"
 //#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
@@ -53,8 +53,8 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define wifi_ssid "wifi ssid"
-  #define wifi_password "wifi password"
+  #define wifi_ssid "Huset"
+  #define wifi_password "huzethuzet"
 #else // for arduino + W5100
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
@@ -73,19 +73,19 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZsensorDHT
-  #include "config_DHT.h"
-  #define ZgatewayRF
+  //#define ZsensorDHT
+  //#include "config_DHT.h"
+  //#define ZgatewayRF
   #include "config_RF.h"
   #define ZgatewayRF2
   #ifdef RFM69_Wiring
     #define ZgatewayRFM69
   #include "config_RFM69.h"
   #endif
-  #define ZgatewayIR
+  //#define ZgatewayIR
   #include "config_IR.h"
-  #define ZgatewayBT
-  #include "config_BT.h"
+  //#define ZgatewayBT
+  //#include "config_BT.h"
   #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
     #define ZsensorBH1750
     #include "config_BH1750.h"
@@ -95,7 +95,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #else // for arduino + W5100
   #define ZgatewayRF
   #include "config_RF.h"
-  //#define ZgatewayRF2 // too big for UNO
+  //#define ZgatewayRF2
   #ifdef RFM69_Wiring
     //#define ZgatewayRFM69 not tested
     //#include "config_RFM69.h"
