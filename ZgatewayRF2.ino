@@ -117,8 +117,8 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   
   int pos = topic.lastIndexOf(RF2codeKey);       
   if (pos != -1){
-    pos = pos + +strlen(RF2codeKey);
-    valueCODE = (topic.substring(pos,pos + 8)).toInt();
+    pos = pos + strlen(RF2codeKey);
+    valueCODE = (topic.substring(pos, topic.indexOf("/", pos))).toInt();
     trc(F("RF2 code:"));
     trc(String(valueCODE));
   }
