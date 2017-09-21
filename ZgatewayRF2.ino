@@ -109,6 +109,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   String topic = topicOri;
   bool boolSWITCHTYPE;
   boolSWITCHTYPE = to_bool(datacallback);
+  bool isDimCommand = false;
   
   long valueCODE  = 0;
   int valueUNIT = -1;
@@ -146,8 +147,12 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   }
   int pos5 = topic.lastIndexOf(RF2dimKey);
   if (pos5 != -1) {
-    pos5 = pos5 + strlen(RF2dimKey);
-    valueDIM = (topic.substring(pos5, topic.indexOf("/", pos5))).toInt();
+    isDimCommand = true;
+    //pos5 = pos5 + strlen(RF2dimKey);
+    //valueDIM = (topic.substring(pos5, topic.indexOf("/", pos5))).toInt();
+    valueDIM = atoi(datacallback);
+    //if (valueDIM < 0) valueDIM = 0;
+    //if (valueDIM >= 16) valueDIM = 15;
     trc(F("RF2 Dim:"));
     trc(String(valueDIM));
   }
@@ -168,7 +173,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
     trc(F("Sending data"));
     if (valueGROUP) {
-      if (valueDIM >= 0) {
+      if (isDimCommand) {
         transmitter.sendGroupDim(valueDIM); 
       }
       else {
@@ -176,7 +181,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
       }
     }
     else {
-      if (valueDIM >= 0) {
+      if (isDimCommand) {
         transmitter.sendDim(valueUNIT, valueDIM); 
       }
       else {    
@@ -192,16 +197,24 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     String MQTTunit;
     String MQTTgroupBit;
     String MQTTswitchType;
+    String MQTTdimLevel;
 
     MQTTAddress = String(valueCODE);
     MQTTperiod = String(valuePERIOD);
     MQTTunit = String(valueUNIT);
     MQTTgroupBit = String(rf2rd.groupBit);
     MQTTswitchType = String(boolSWITCHTYPE);
+    MQTTdimLevel = String(valueDIM);
     String MQTTRF2string;
-    MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
     trc(F("Adv data MQTTtoRF2 push state via RF2toMQTT"));
-    client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+    if (isDimCommand) {
+      MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2dimKey+String("/")+RF2periodKey+MQTTperiod;
+      client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTdimLevel.c_str());  
+    }
+    else {
+      MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
+      client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+    }
   }
 }
 
