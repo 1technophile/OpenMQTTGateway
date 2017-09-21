@@ -62,8 +62,8 @@ RF supported protocols
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-    #define RF_RECEIVER_PIN 3 //  RX on nodemcu
-    #define RF_EMITTER_PIN 15 // D8 on nodemcu
+    #define RF_RECEIVER_PIN 0 // D3 on nodemcu
+    #define RF_EMITTER_PIN 3 // RX on nodemcu
 #else
     //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/IRremoteInt.h so as to free pin D3 for RF RECEIVER PIN
     //RF PIN definition
