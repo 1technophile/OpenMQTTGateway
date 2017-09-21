@@ -95,7 +95,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #else // for arduino + W5100
   #define ZgatewayRF
   #include "config_RF.h"
-  #define ZgatewayRF2
+  //#define ZgatewayRF2 // too big for UNO
   #ifdef RFM69_Wiring
     //#define ZgatewayRFM69 not tested
     //#include "config_RFM69.h"

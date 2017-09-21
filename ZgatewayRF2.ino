@@ -59,10 +59,10 @@ void setupRF2(){
     #else
       NewRemoteReceiver::init(0, 2, rf2Callback);
     #endif
-    Serial.println("Receiver RF2 initialized");    
+    trc(F("Receiver RF2 initialized"));    
     pinMode(RF_EMITTER_PIN, OUTPUT);
     digitalWrite(RF_EMITTER_PIN, LOW);
-    Serial.println("Transmitter RF2 initialized");    
+    trc(F("Transmitter RF2 initialized"));    
 }
 
 boolean RF2toMQTT(){
@@ -84,9 +84,9 @@ boolean RF2toMQTT(){
     MQTTswitchType = String(rf2rd.switchType);
     String MQTTRF2string;
     MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
-        trc(F("Adv data RF2toMQTT"));
-        client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
-      return true;
+    trc(F("Adv data RF2toMQTT"));
+    client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+    return true;
   }
   return false;
 }
@@ -114,6 +114,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   int valueUNIT = -1;
   int valuePERIOD = 0;
   int valueGROUP  = 0;
+  int valueDIM  = -1;
   
   int pos = topic.lastIndexOf(RF2codeKey);       
   if (pos != -1){
@@ -132,17 +133,23 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   int pos3 = topic.lastIndexOf(RF2unitKey);       
   if (pos3 != -1){
     pos3 = pos3 + strlen(RF2unitKey);
-    int pos4 = topic.indexOf("/", pos3);
-    valueUNIT = (topic.substring(pos3,pos4)).toInt();
+    valueUNIT = (topic.substring(pos3, topic.indexOf("/", pos3))).toInt();
     trc(F("Unit:"));
     trc(String(valueUNIT));
   }
-  int pos5 = topic.lastIndexOf(RF2groupKey);
-  if (pos5 != -1) {
-    pos5 = pos5 + strlen(RF2groupKey);
-    valueGROUP = (topic.substring(pos5,pos5 + 1)).toInt();
+  int pos4 = topic.lastIndexOf(RF2groupKey);
+  if (pos4 != -1) {
+    pos4 = pos4 + strlen(RF2groupKey);
+    valueGROUP = (topic.substring(pos4,pos4 + 1)).toInt();
     trc(F("RF2 Group:"));
     trc(String(valueGROUP));
+  }
+  int pos5 = topic.lastIndexOf(RF2dimKey);
+  if (pos5 != -1) {
+    pos5 = pos5 + strlen(RF2dimKey);
+    valueDIM = (topic.substring(pos5, topic.indexOf("/", pos5))).toInt();
+    trc(F("RF2 Dim:"));
+    trc(String(valueDIM));
   }
   
   if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
@@ -155,15 +162,26 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(String(valuePERIOD));
     trc(String(valueGROUP));
     trc(String(boolSWITCHTYPE));
+    trc(String(valueDIM));
     NewRemoteReceiver::disable();
     trc(F("Creating transmitter"));
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
     trc(F("Sending data"));
     if (valueGROUP) {
-      transmitter.sendGroup(boolSWITCHTYPE); 
+      if (valueDIM >= 0) {
+        transmitter.sendGroupDim(valueDIM); 
+      }
+      else {
+        transmitter.sendGroup(boolSWITCHTYPE); 
+      }
     }
     else {
-      transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
+      if (valueDIM >= 0) {
+        transmitter.sendDim(valueUNIT, valueDIM); 
+      }
+      else {    
+        transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
+      }
     }
     trc(F("Data sent"));
     NewRemoteReceiver::enable();
