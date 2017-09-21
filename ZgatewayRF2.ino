@@ -54,15 +54,11 @@ struct RF2rxd
 RF2rxd rf2rd;
 
 void setupRF2(){
-    #ifdef ESP8266
-      NewRemoteReceiver::init(5, 2, rf2Callback);
-    #else
-      NewRemoteReceiver::init(0, 2, rf2Callback);
-    #endif
-    Serial.println("Receiver RF2 initialized");    
+    NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
+    trc(F("Receiver RF2 initialized"));    
     pinMode(RF_EMITTER_PIN, OUTPUT);
     digitalWrite(RF_EMITTER_PIN, LOW);
-    Serial.println("Transmitter RF2 initialized");    
+    trc(F("Transmitter RF2 initialized"));    
 }
 
 boolean RF2toMQTT(){
@@ -84,9 +80,9 @@ boolean RF2toMQTT(){
     MQTTswitchType = String(rf2rd.switchType);
     String MQTTRF2string;
     MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
-        trc(F("Adv data RF2toMQTT"));
-        client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
-      return true;
+    trc(F("Adv data RF2toMQTT"));
+    client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+    return true;
   }
   return false;
 }
@@ -117,8 +113,8 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   
   int pos = topic.lastIndexOf(RF2codeKey);       
   if (pos != -1){
-    pos = pos + strlen(RF2codeKey);
-    valueCODE = (topic.substring(pos, topic.indexOf("/", pos))).toInt();
+    pos = pos + +strlen(RF2codeKey);
+    valueCODE = (topic.substring(pos,pos + 8)).toInt();
     trc(F("RF2 code:"));
     trc(String(valueCODE));
   }
