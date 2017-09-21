@@ -200,8 +200,8 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     MQTTswitchType = String(boolSWITCHTYPE);
     String MQTTRF2string;
     MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
-        trc(F("Adv data RF2toMQTT"));
-        client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+    trc(F("Adv data MQTTtoRF2 push state via RF2toMQTT"));
+    client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
   }
 }
 
