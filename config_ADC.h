@@ -27,8 +27,8 @@
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define ADC   "home/ADCtoMQTT"
-#define adc_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingADC 30000 // time between 2 ADC readings
+#define TimeBetweenReadingADC 0 // time between 2 ADC readings, can be 0 if you want only the threshold to trigger sending
+#define ThresholdReadingADC 50  //  following the comparison between the previous value and the current one +- the threshold the value will be published or not
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #define ADC_PIN A0 //on nodeMCU this is D3 GPIO0

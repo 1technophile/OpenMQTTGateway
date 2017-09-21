@@ -44,17 +44,15 @@ void MeasureADC(){
     if (isnan(val)) {
       trc(F("Failed to read from ADC !"));
     }else{
-      if(val != persistedadc || adc_always){
+      if(val  >= persistedadc + ThresholdReadingADC || val  <= persistedadc - ThresholdReadingADC){
         char value[4];
         sprintf(value, "%d", val);
         trc(F("Sending analog value to MQTT"));
         trc(String(val));
         client.publish(ADC,value);
-       }else{
-        trc(F("Same value don't send it"));
-      }
+        persistedadc = val;
+       }
     }
-    persistedadc = val;
   }
 }
 #endif
