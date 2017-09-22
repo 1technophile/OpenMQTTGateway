@@ -54,11 +54,7 @@ struct RF2rxd
 RF2rxd rf2rd;
 
 void setupRF2(){
-    #ifdef ESP8266
-      NewRemoteReceiver::init(5, 2, rf2Callback);
-    #else
-      NewRemoteReceiver::init(0, 2, rf2Callback);
-    #endif
+    NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
     trc(F("Receiver RF2 initialized"));    
     pinMode(RF_EMITTER_PIN, OUTPUT);
     digitalWrite(RF_EMITTER_PIN, LOW);
@@ -66,10 +62,10 @@ void setupRF2(){
 }
 
 boolean RF2toMQTT(){
-//Serial.println("entra rf2tomqtt");
-  if(rf2rd.hasNewData){
-      rf2rd.hasNewData=false;
 
+  if(rf2rd.hasNewData){
+    
+    rf2rd.hasNewData=false;
     trc(F("Rcv. RF2"));
     String MQTTAddress;
     String MQTTperiod;
@@ -87,6 +83,7 @@ boolean RF2toMQTT(){
     trc(F("Adv data RF2toMQTT"));
     client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
     return true;
+    
   }
   return false;
 }
