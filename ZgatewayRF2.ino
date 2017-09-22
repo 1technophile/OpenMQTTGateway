@@ -148,11 +148,7 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
   int pos5 = topic.lastIndexOf(RF2dimKey);
   if (pos5 != -1) {
     isDimCommand = true;
-    //pos5 = pos5 + strlen(RF2dimKey);
-    //valueDIM = (topic.substring(pos5, topic.indexOf("/", pos5))).toInt();
     valueDIM = atoi(datacallback);
-    //if (valueDIM < 0) valueDIM = 0;
-    //if (valueDIM >= 16) valueDIM = 15;
     trc(F("RF2 Dim:"));
     trc(String(valueDIM));
   }
