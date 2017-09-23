@@ -32,7 +32,7 @@
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-  #define DHT_RECEIVER_PIN D1
+  #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
 #else
   #define DHT_RECEIVER_PIN D8
 #endif

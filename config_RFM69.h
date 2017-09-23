@@ -50,7 +50,7 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 
 /*-------------------PIN DEFINITIONS----------------------*/ 
 #ifdef ESP8266
-  #define RFM69_CS      D3  
+  #define RFM69_CS      D1  
   #define RFM69_IRQ     D8   // GPIO15/D8
   #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
   #define RFM69_RST     D4   // GPIO02/D4
