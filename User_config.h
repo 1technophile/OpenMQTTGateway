@@ -31,12 +31,6 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 #define SERIAL_BAUD   115200
-/*-------------DEFINE YOUR WIRING TYPE BELOW----------------*/
-// Choose between "I2C_Wiring" OR "Classic_Wiring" OR "RFM69_Wiring"
-// Please Note: I2C Wiring,Classic Wiring and RFM69_Wiring uses different Pins for all Modules, see PIN definitions into the wiki
-//#define I2C_Wiring // With Support for I2C Modules and the associated libraries BH1750 and BME280
-//#define RFM69_Wiring // following file img/OpenMQTTGateway_IR_RF_RFM69.png
-#define Classic_Wiring // following file img/OpenMQTTGateway_IR_RF_BT.png
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -73,33 +67,33 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZsensorDHT
-  #include "config_DHT.h"
   #define ZgatewayRF
   #include "config_RF.h"
   #define ZgatewayRF2
-  #ifdef RFM69_Wiring
-    #define ZgatewayRFM69
-  #include "config_RFM69.h"
-  #endif
   #define ZgatewayIR
   #include "config_IR.h"
   #define ZgatewayBT
   #include "config_BT.h"
-  #ifdef I2C_Wiring // to use the sensor below the gateway should wired with I2CWiring, see PIN DEFINITIONS below
-    #define ZsensorBH1750
-    #include "config_BH1750.h"
-    #define ZsensorBME280
-    #include "config_BME280.h"
-  #endif
+  #define ZsensorBH1750
+  #include "config_BH1750.h"
+  #define ZsensorBME280
+  #include "config_BME280.h"
+  //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  //#include "config_DHT.h"
+  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
+  //#include "config_RFM69.h"
 #else // for arduino + W5100
   #define ZgatewayRF
   #include "config_RF.h"
+<<<<<<< HEAD
   //#define ZgatewayRF2 // too big for UNO
   #ifdef RFM69_Wiring
     //#define ZgatewayRFM69 not tested
     //#include "config_RFM69.h"
   #endif
+=======
+  #define ZgatewayRF2
+>>>>>>> New-wiring
   #define ZgatewayIR
   #include "config_IR.h"
   #define ZgatewayBT
@@ -110,8 +104,10 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BH1750.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
-  
-#endif/*----------------------------OTHER PARAMETERS-----------------------------*/
+  //#define ZgatewayRFM69 not tested
+  //#include "config_RFM69.h"  
+#endif
+/*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)

@@ -48,21 +48,18 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 #define IS_RFM69HCW    true // set to 'true' if you are using an RFM69HCW module
 #define POWER_LEVEL    31
 
-/*-------------------PIN DEFINITIONS----------------------*/
-
-#ifdef RFM69_Wiring // Without Support for I2C Modules and HM10 or 11
-  
-  #ifdef ESP8266
-    #define RFM69_CS      D1  // GPIO5/HCS/D1
-    #define RFM69_IRQ     D8   // GPIO15/D8
-    #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
-    #define RFM69_RST     D4   // GPIO02/D4
-  #else
-    //RFM69 not tested with arduino
-    #define RFM69_CS      10
-    #define RFM69_IRQ     2
-    #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
-    #define RFM69_RST     9
-  #endif
+/*-------------------PIN DEFINITIONS----------------------*/ 
+#ifdef ESP8266
+  #define RFM69_CS      D1  
+  #define RFM69_IRQ     D8   // GPIO15/D8
+  #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+  #define RFM69_RST     D4   // GPIO02/D4
+#else
+  //RFM69 not tested with arduino
+  #define RFM69_CS      10
+  #define RFM69_IRQ     0
+  #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+  #define RFM69_RST     9
 #endif
+
 
