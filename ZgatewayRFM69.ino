@@ -188,6 +188,11 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
     return false;
   }
   trc(F("MQTTtoRFM69"));
+
+  char data[RF69_MAX_DATA_LEN+1];
+  memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
+  data[RF69_MAX_DATA_LEN] = '\0';
+
   //We look into the subject to see if a special RF protocol is defined
   String topic = topicOri;
   int valueRCV = defaultRFM69ReceiverId; //default receiver id value
@@ -201,13 +206,13 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
   loops = 10;
   startMillis = millis();
   while (loops--) {
-    if(radio.sendWithRetry(valueRCV, datacallback, strlen(datacallback)+1)) {
+    if(radio.sendWithRetry(valueRCV, data, strlen(data))) {
       deltaMillis = millis() - startMillis;
       Serial.print(" OK ");
       Serial.println(deltaMillis);
       // Acknowledgement to the GTWRF topic
-    boolean result = client.publish(subjectGTWRFM69toMQTT, datacallback);
-    if (result)trc(F("Ack published"));
+      boolean result = client.publish(subjectGTWRFM69toMQTT, datacallback);
+      if (result)trc(F("Ack published"));
       return true;
     }
     else {
