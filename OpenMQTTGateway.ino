@@ -119,10 +119,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
-  //Launch serial for debugging purposes
-  Serial.begin(SERIAL_BAUD);
-
   #ifdef ESP8266
+    //Launch serial for debugging purposes
+    Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     //Begining wifi connection in case of ESP8266
     setup_wifi();
     // Port defaults to 8266
@@ -135,24 +134,26 @@ void setup()
     ArduinoOTA.setPassword(ota_password);
 
     ArduinoOTA.onStart([]() {
-      Serial.println("Start");
+      trc(F("Start"));
     });
     ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
+      trc(F("\nEnd"));
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      if (error == OTA_AUTH_ERROR) trc(F("Auth Failed"));
+      else if (error == OTA_BEGIN_ERROR) trc(F("Begin Failed"));
+      else if (error == OTA_CONNECT_ERROR) trc(F("Connect Failed"));
+      else if (error == OTA_RECEIVE_ERROR) trc(F("Receive Failed"));
+      else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
   #else
+    //Launch serial for debugging purposes
+    Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
   #endif
@@ -172,6 +173,9 @@ void setup()
   #endif
   #ifdef ZgatewayRF
     setupRF();
+  #endif
+  #ifdef ZgatewayRF2
+    setupRF2();
   #endif
   #ifdef ZgatewayBT
     setupBT();
@@ -248,11 +252,19 @@ void loop()
     #ifdef ZsensorHCSR501
       MeasureHCSR501();
     #endif
+    #ifdef ZsensorADC
+      MeasureADC(); //Addon to measure the analog value of analog pin
+    #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
       boolean resultRF = RFtoMQTT();
       if(resultRF)
       trc(F("RFtoMQTT OK"));
+    #endif
+    #ifdef ZgatewayRF2
+      boolean resultRF2 = RF2toMQTT();
+      if(resultRF2)
+      trc(F("RF2toMQTT OK"));
     #endif
     #ifdef ZgatewayIR
       boolean resultIR = IRtoMQTT();
