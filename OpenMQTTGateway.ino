@@ -183,7 +183,9 @@ void setup()
   #ifdef ZgatewayRFM69
     setupRFM69();
   #endif
-
+  #ifdef ZsensorHCSR501
+    setupHCSR501();
+  #endif
 }
 
 #ifdef ESP8266
@@ -246,6 +248,9 @@ void loop()
     #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+    #endif
+    #ifdef ZsensorHCSR501
+      MeasureHCSR501();
     #endif
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin

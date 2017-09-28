@@ -74,6 +74,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_IR.h"
   #define ZgatewayBT
   #include "config_BT.h"
+  #define ZsensorHCSR501
+  #include "config_HCSR501.h"
   #define ZsensorADC
   #include "config_ADC.h"
   #define ZsensorBH1750
@@ -100,6 +102,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BH1750.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
+  //#define ZsensorHCSR501
+  //#include "config_HCSR501.h"
   //#define ZsensorADC
   //#include "config_ADC.h"
   //#define ZgatewayRFM69 not tested
