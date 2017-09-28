@@ -7,10 +7,6 @@
   This gateway enables to:
  - publish MQTT data to a different topic related to received 433Mhz signal DIO/new kaku protocol
 
-    Receiving cannot be used with this gateway as it is not currently compatible with pubsubclient, emitting can be used with both RF gateway on the same program.
-    Note that repeater and acknowledgement are not available with this gateway.
-    -->So as to know the code of your devices use ShowReceivedCode from https://github.com/1technophile/NewRemoteSwitch
-    
     Copyright: (c)Florian ROBERT
     Copyright: (c)Randy Simons http://randysimons.nl/
   
