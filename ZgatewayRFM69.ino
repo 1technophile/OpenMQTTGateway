@@ -210,8 +210,11 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
       deltaMillis = millis() - startMillis;
       Serial.print(" OK ");
       Serial.println(deltaMillis);
+
       // Acknowledgement to the GTWRF topic
-      boolean result = client.publish(subjectGTWRFM69toMQTT, datacallback);
+      char buff[sizeof(subjectGTWRFM69toMQTT)+4];
+      sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
+      boolean result = client.publish(buff, data);
       if (result)trc(F("Ack published"));
       return true;
     }
