@@ -78,6 +78,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_BH1750.h"
   #define ZsensorBME280
   #include "config_BME280.h"
+  #define ZsensorINA226
+  #include "config_INA226.h"
   //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
   //#include "config_DHT.h"
   //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
@@ -99,7 +101,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZsensorBME280
   //#include "config_BME280.h"
   //#define ZgatewayRFM69 not tested
-  //#include "config_RFM69.h"  
+  //#include "config_RFM69.h" 
+  //#define ZsensorINA226
+  //#include "config_INA226.h" 
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
