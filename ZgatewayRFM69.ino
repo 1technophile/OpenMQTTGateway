@@ -1,9 +1,9 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your RF/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your RF/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This gateway enables to:
  - receive MQTT data from a topic and send RF signal corresponding to the received MQTT data with an RFM69 module
  - publish MQTT data to a different topic related to received signal from an RFM69 module
@@ -12,9 +12,9 @@
     Library and code by Felix Rusu - felix@lowpowerlab.com
     Modification of the code nanohab from bbx10 https://github.com/bbx10/nanohab
     Copyright: (c)Florian ROBERT
-    
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -103,7 +103,7 @@ void setupRFM69(void) {
   {
     trc(F("RFM69 initialization failed"));
     }
-    
+
   if (GC_IS_RFM69HCW) {
     radio.setHighPower();    // Only for RFM69HCW & HW!
   }
@@ -161,7 +161,7 @@ boolean RFM69toMQTT(void) {
     //updateClients(senderId, rssi, (const char *)data);
 
     return true;
-    
+
   } else {
     radio.receiveDone(); //put radio in RX mode
     return false;
@@ -173,10 +173,10 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
   uint32_t startMillis;
   static uint32_t deltaMillis = 0;
   // RF DATA ANALYSIS
-  //We look into the subject to see if a special RF protocol is defined 
+  //We look into the subject to see if a special RF protocol is defined
   String topic = topicOri;
   int valueRCV = defaultRFM69ReceiverId; //default receiver id value
-  int pos = topic.lastIndexOf(RFM69receiverKey);       
+  int pos = topic.lastIndexOf(RFM69receiverKey);
   if (pos != -1){
     pos = pos + +strlen(RFM69receiverKey);
     valueRCV = (topic.substring(pos,pos + 3)).toInt();
