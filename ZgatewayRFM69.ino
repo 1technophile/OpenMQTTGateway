@@ -142,28 +142,33 @@ boolean RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone())
   {
-
-    uint8_t data[RF69_MAX_DATA_LEN];
+    uint8_t data[RF69_MAX_DATA_LEN+1]; // For the null character
+    uint8_t SENDERID = radio.SENDERID;
+    uint8_t DATALEN = radio.DATALEN;
+    uint16_t RSSI = radio.RSSI;
 
     //save packet because it may be overwritten
-    memcpy(data, (void *)radio.DATA, radio.DATALEN);
-    client.publish(subjectRFM69toMQTT,(char *)data);
+    memcpy(data, (void *)radio.DATA, DATALEN);
+    data[DATALEN] = '\0';  // Terminate the string
 
-    trc(F("Data received"));
-    trc((const char *)data);
-
+    // Ack as soon as possible
     //check if sender wanted an ACK
     if (radio.ACKRequested())
     {
       radio.sendACK();
     }
-    radio.receiveDone(); //put radio in RX mode
     //updateClients(senderId, rssi, (const char *)data);
+
+    trc(F("Data received"));
+    trc((const char *)data);
+
+    char buff[sizeof(subjectRFM69toMQTT)+4];
+    sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
+    client.publish(buff,(char *)data);
 
     return true;
 
   } else {
-    radio.receiveDone(); //put radio in RX mode
     return false;
   }
 }
