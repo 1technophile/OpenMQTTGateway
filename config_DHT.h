@@ -34,6 +34,6 @@
 #ifdef ESP8266
   #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
 #else
-  #define DHT_RECEIVER_PIN D8
+  #define DHT_RECEIVER_PIN 8
 #endif
 
