@@ -31,15 +31,9 @@
 #define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef I2C_Wiring // With Support for I2C Modules
-  #define DHT_RECEIVER_PIN 14 //on nodeMCU this is D5 GPIO14
-#endif
-
-#ifdef Classic_Wiring // Without Support for I2C Modules
-  #define DHT_RECEIVER_PIN 0 //on nodeMCU this is D3 GPIO0
-#endif
-
-#ifdef RFM69_Wiring // Without Support for I2C Modules and HM10 or 11
-  #define DHT_RECEIVER_PIN 0 //on nodeMCU this is D3 GPIO0
+#ifdef ESP8266
+  #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
+#else
+  #define DHT_RECEIVER_PIN 8
 #endif
 

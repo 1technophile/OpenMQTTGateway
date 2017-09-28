@@ -9,8 +9,8 @@ Questions, support please don't open an issue and [click here](https://gitter.im
 
 ## Overview
 
-OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433MHz/Infrared signal and a MQTT broker. It is compatible with:
-Arduino boards + W5100  
+OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Infrared signal and a MQTT broker. It is compatible with:
+Arduino uno(limited)/mega(advised) + W5100
 ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1.
  
   It enables to:
@@ -32,7 +32,7 @@ Functions:
 * Advanced signal details publication, so as to know the details of what the gateway receive it publish by MQTT to subject433toMQTTAdvanced for RF and subjectIRtoMQTTAdvanced for IR the details of the signal received (this signal has to be compatible with RCSwitch and IRRemote libraries to be read).
 * Acknowledgement, to be sure that the gateway received the payload from MQTT it sends an acknowledgement on a user_defined topic, "subjectGTWRFtoMQTT" for RF or "subjectGTWIRtoMQTT" for IR enabling to update the state of your switch or other component into your home automation.
 * Multi boards compatibility, the gateway has been currently tested with ESP8266 12F, NodeMCU V1, NodeMCU V2, Wemos D1 mini, Arduino Uno and the Arduino Mega.
-* Multi protocols handling, the gateway is based on RCSwitch and IRRemote libraries, you can define the protocol you want to use by specifying it inside the topic.
+* Multi protocols handling, the gateway is based on RCSwitch, newremoteswitch, rfm69 and IRRemote libraries, you can define the protocol you want to use by specifying it inside the topic.
 
 See the [wiki](https://github.com/1technophile/OpenMQTTGateway/wiki) for more information:  
 https://github.com/1technophile/OpenMQTTGateway/wiki
