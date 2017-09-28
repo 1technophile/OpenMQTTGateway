@@ -30,7 +30,7 @@
 #define subjectRFM69toMQTT "home/RFM69toMQTT"
 // Upon reception of a packed, the RSSI of that packet will be publish to this topic,
 // appended with the nodeID of the sender
-#define subjectRFM69toMQTTrssi "home/RFM69toMQTT/rssi"
+#define subjectRFM69toMQTTrssi "home/RFM69toMQTT/rssi"  // Comment this if you don't want the RSSI to be published.
 #define subjectRFM69toMQTTsender "home/RFM69toMQTT/sender"
 // Topic subscribed by the gateway. Messages received will be sent to RFM69
 #define subjectMQTTtoRFM69 "home/commands/MQTTtoRFM69"
