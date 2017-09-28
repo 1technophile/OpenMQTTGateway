@@ -138,6 +138,15 @@ void setupRFM69(void) {
   }
 }
 
+void publishRSSI(int16_t rssi) {
+  // Send the value of the rssi to MQTT
+  char buff[sizeof(subjectRFM69toMQTTrssi)+4];
+  sprintf(buff, "%s/%d", subjectRFM69toMQTTrssi, radio.SENDERID);
+  char buff_rssi[5];
+  sprintf(buff_rssi, "%d", radio.RSSI);
+  boolean result = client.publish(buff, buff_rssi);
+}
+
 boolean RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone())
@@ -165,6 +174,8 @@ boolean RFM69toMQTT(void) {
     char buff[sizeof(subjectRFM69toMQTT)+4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
     client.publish(buff,(char *)data);
+
+    publishRSSI(RSSI);
 
     return true;
 
@@ -216,6 +227,9 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
       sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
       boolean result = client.publish(buff, data);
       if (result)trc(F("Ack published"));
+
+      publishRSSI(radio.RSSI);
+
       return true;
     }
     else {
