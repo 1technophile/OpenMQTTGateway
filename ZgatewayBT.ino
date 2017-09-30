@@ -51,6 +51,9 @@ void setupBT() {
 
 boolean BTtoMQTT() {
   while (softserial.available() > 0) {
+     #ifdef ESP8266
+      yield();
+     #endif
     String discResult = softserial.readString();
     if (discResult.indexOf(STRING_MSG)>=0){
       discResult.replace(RESPONSE_MSG,"");
@@ -73,9 +76,6 @@ boolean BTtoMQTT() {
              trc(mactopic + " " + rssi);
              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
              discResult = discResult.substring(78);
-             #ifdef ESP8266
-              yield();
-             #endif
           }
           return true;
         }
@@ -87,7 +87,11 @@ boolean BTtoMQTT() {
   }
   if (millis() > (timebt + TimeBtw_Read)) {//retriving value of adresses and rssi
        timebt = millis();
+       #ifdef ESP8266
+        yield();
+       #endif
        softserial.print(F(QUESTION_MSG));
+       
   }
   return false;
 }
