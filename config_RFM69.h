@@ -1,15 +1,15 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
    This files enables to set your parameter for the radiofrequency gateways (ZgatewayRF and ZgatewayRF2) with RCswitch and newremoteswitch library
-  
+
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -48,9 +48,9 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 #define IS_RFM69HCW    true // set to 'true' if you are using an RFM69HCW module
 #define POWER_LEVEL    31
 
-/*-------------------PIN DEFINITIONS----------------------*/ 
+/*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-  #define RFM69_CS      D1  
+  #define RFM69_CS      D1
   #define RFM69_IRQ     D8   // GPIO15/D8
   #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
   #define RFM69_RST     D4   // GPIO02/D4
@@ -61,5 +61,3 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
   #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
   #define RFM69_RST     9
 #endif
-
-
