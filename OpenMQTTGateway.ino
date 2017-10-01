@@ -201,13 +201,18 @@ void setup_wifi() {
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
   //WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
-  trc(F("OpenMQTTGateway ip: "));
-  Serial.println(WiFi.localIP());
-
+    
+  trc(F("OpenMQTTGateway mac: "));
+  Serial.println(WiFi.macAddress()); 
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
   }
+  
+  trc(F("OpenMQTTGateway ip: "));
+  Serial.println(WiFi.localIP());
+  
   trc(F("WiFi ok"));
 }
 #else
