@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway)
 [![Gitter chat](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/OpenMQTTGateway/Questions_support)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/943c9b639b68441dae8e29ee39977ab2)](https://www.codacy.com/app/1technophile/OpenMQTTGateway?utm_source=github.com&utm_medium=referral&utm_content=1technophile/OpenMQTTGateway&utm_campaign=badger)
+[![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
 
 Questions, support please don't open an issue and [click here](https://gitter.im/OpenMQTTGateway/Questions_support)
 
