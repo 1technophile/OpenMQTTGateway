@@ -62,8 +62,13 @@ boolean IRtoMQTT(){
     MQTTbits = String(results.bits);
     String rawCode = "";
     // Dump data
-    for (int i = 1;  i < results.rawlen;  i++) {
-      rawCode = rawCode + (results.rawbuf[i] * USECPERTICK);
+    for (uint16_t i = 1;  i < results.rawlen;  i++) {
+       #ifdef ESP8266
+          if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
+          rawCode = rawCode + (results.rawbuf[i] * RAWTICK);
+       #else
+          rawCode = rawCode + (results.rawbuf[i] * USECPERTICK);
+       #endif
       if ( i < results.rawlen-1 ) rawCode = rawCode + ","; // ',' not needed on last one
     }
     trc(rawCode);
