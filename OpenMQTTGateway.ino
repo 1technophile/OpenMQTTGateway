@@ -85,7 +85,13 @@ boolean reconnect() {
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       //Subscribing to topic
-      if (client.subscribe(subjectMQTTtoX) && client.subscribe(subjectMultiGTWRF)&& client.subscribe(subjectMultiGTWIR)) {
+      if (client.subscribe(subjectMQTTtoX)) {
+        #ifdef ZgatewayRF
+          client.subscribe(subjectMultiGTWRF);
+        #endif
+        #ifdef ZgatewayIR
+          client.subscribe(subjectMultiGTWIR);
+        #endif
         trc(F("Subscription OK to the subjects"));
       }
       } else {
