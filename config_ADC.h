@@ -27,7 +27,7 @@
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define ADC   "home/ADCtoMQTT"
-#define TimeBetweenReadingADC 0 // time between 2 ADC readings, can be 0 if you want only the threshold to trigger sending
+#define TimeBetweenReadingADC 100 // time between 2 ADC readings, minimum 100 to let the time of the ESP to keep the connection
 #define ThresholdReadingADC 50  //  following the comparison between the previous value and the current one +- the threshold the value will be published or not
 
 /*-------------------PIN DEFINITIONS----------------------*/
