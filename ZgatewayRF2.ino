@@ -50,8 +50,10 @@ struct RF2rxd
 RF2rxd rf2rd;
 
 void setupRF2(){
-    NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
-    trc(F("Receiver RF2 initialized"));    
+    #ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
+      NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
+      trc(F("Receiver RF2 initialized"));   
+    #endif 
     pinMode(RF_EMITTER_PIN, OUTPUT);
     digitalWrite(RF_EMITTER_PIN, LOW);
     trc(F("Transmitter RF2 initialized"));    
