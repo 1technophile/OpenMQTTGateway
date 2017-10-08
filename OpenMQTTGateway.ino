@@ -18,6 +18,13 @@
   - crankyoldgit
   - glasruit
   - HannesDi
+  - Landrash
+  - larsenglund
+  - ChiefZ
+  - PatteWi
+  - jumpalottahigh
+  - zerinrc
+  - philfifi
   - Spudtater
   - prahjister
   - rickybrent
