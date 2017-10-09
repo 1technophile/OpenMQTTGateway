@@ -28,6 +28,7 @@
   - Spudtater
   - prahjister
   - rickybrent
+  - petricaM
   - ekim from Home assistant forum
   - ronvl from Home assistant forum
 
