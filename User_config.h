@@ -116,5 +116,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMQTTtoX "home/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 
+//variables to avoid duplicates
+#define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
