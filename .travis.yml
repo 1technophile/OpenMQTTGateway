@@ -34,6 +34,8 @@ install:
   - git clone https://github.com/adafruit/Adafruit_Sensor /usr/local/share/arduino/libraries/Adafruit_Sensor
   - git clone https://github.com/sparkfun/SparkFun_BME280_Arduino_Library /usr/local/share/arduino/libraries/SparkFun_BME280
   - git clone https://github.com/LowPowerLab/RFM69 /usr/local/share/arduino/libraries/RFM69
+  - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.h
+  - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.cpp
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266
   - arduino --board $BD --save-prefs
