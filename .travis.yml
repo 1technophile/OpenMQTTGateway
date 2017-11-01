@@ -15,6 +15,8 @@ before_install:
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
 install:
   - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
+  - rm /usr/local/share/arduino/OpenMQTTGateway/User_config.h
+  - cp /usr/local/share/arduino/OpenMQTTGateway/tests/Test_config.h /usr/local/share/arduino/OpenMQTTGateway/User_config.h
   - wget https://github.com/z3t0/Arduino-IRremote/archive/2.1.0.zip -O /tmp/IRremote.zip
   - unzip /tmp/IRremote.zip -d /usr/local/share/arduino/libraries
   - rm -rf /usr/local/share/arduino/libraries/RobotIRremote
