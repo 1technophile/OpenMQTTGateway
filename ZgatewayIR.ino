@@ -247,7 +247,9 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #endif
   #ifdef IR_PANASONIC
   if (strstr(topicOri, "IR_PANASONIC") != NULL){
-    irsend.sendPanasonic(PanasonicAddress, data);
+    if (valueBITS == 0) valueBITS = 16;
+    if (valueRPT == 0) valueRPT = 2;
+    irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
