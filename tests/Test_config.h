@@ -69,25 +69,23 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   #define ZgatewayRF
   #include "config_RF.h"
-  //#define ZgatewayRF2
+  #define ZgatewayRF2
   #define ZgatewayIR
   #include "config_IR.h"
   #define ZgatewayBT
   #include "config_BT.h"
-  //#define ZsensorINA226
-  //#include "config_INA226.h"
-  //#define ZsensorHCSR501
-  //#include "config_HCSR501.h"
-  //#define ZsensorADC
-  //#include "config_ADC.h"
-  //#define ZsensorBH1750
-  //#include "config_BH1750.h"
-  //#define ZsensorBME280
-  //#include "config_BME280.h"
-  //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  //#include "config_DHT.h"
-  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  //#include "config_RFM69.h"
+  #define ZsensorHCSR501
+  #include "config_HCSR501.h"
+  #define ZsensorADC
+  #include "config_ADC.h"
+  #define ZsensorBH1750
+  #include "config_BH1750.h"
+  #define ZsensorBME280
+  #include "config_BME280.h"
+  #define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  #include "config_DHT.h"
+  #define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
+  #include "config_RFM69.h"
 #else // for arduino + W5100
   #define ZgatewayRF
   #include "config_RF.h"
@@ -98,8 +96,6 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_IR.h"
   #define ZgatewayBT
   #include "config_BT.h"
-  //#define ZsensorINA226
-  //#include "config_INA226.h"
   //#define ZsensorDHT
   //#include "config_DHT.h"
   //#define ZsensorBH1750
@@ -111,9 +107,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZsensorADC
   //#include "config_ADC.h"
   //#define ZgatewayRFM69 not tested
-  //#include "config_RFM69.h" 
-  //#define ZsensorINA226
-  //#include "config_INA226.h" 
+  //#include "config_RFM69.h"  
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/

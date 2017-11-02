@@ -7,10 +7,6 @@
   This gateway enables to:
  - publish MQTT data to a different topic related to received 433Mhz signal DIO/new kaku protocol
 
-    Receiving cannot be used with this gateway as it is not currently compatible with pubsubclient, emitting can be used with both RF gateway on the same program.
-    Note that repeater and acknowledgement are not available with this gateway.
-    -->So as to know the code of your devices use ShowReceivedCode from https://github.com/1technophile/NewRemoteSwitch
-    
     Copyright: (c)Florian ROBERT
     Copyright: (c)Randy Simons http://randysimons.nl/
   
@@ -54,8 +50,10 @@ struct RF2rxd
 RF2rxd rf2rd;
 
 void setupRF2(){
-    NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
-    trc(F("Receiver RF2 initialized"));    
+    #ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
+      NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
+      trc(F("Receiver RF2 initialized"));   
+    #endif 
     pinMode(RF_EMITTER_PIN, OUTPUT);
     digitalWrite(RF_EMITTER_PIN, LOW);
     trc(F("Transmitter RF2 initialized"));    

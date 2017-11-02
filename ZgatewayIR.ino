@@ -62,8 +62,13 @@ boolean IRtoMQTT(){
     MQTTbits = String(results.bits);
     String rawCode = "";
     // Dump data
-    for (int i = 1;  i < results.rawlen;  i++) {
-      rawCode = rawCode + (results.rawbuf[i] * USECPERTICK);
+    for (uint16_t i = 1;  i < results.rawlen;  i++) {
+       #ifdef ESP8266
+          if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
+          rawCode = rawCode + (results.rawbuf[i] * RAWTICK);
+       #else
+          rawCode = rawCode + (results.rawbuf[i] * USECPERTICK);
+       #endif
       if ( i < results.rawlen-1 ) rawCode = rawCode + ","; // ',' not needed on last one
     }
     trc(rawCode);
@@ -242,7 +247,9 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #endif
   #ifdef IR_PANASONIC
   if (strstr(topicOri, "IR_PANASONIC") != NULL){
-    irsend.sendPanasonic(PanasonicAddress, data);
+    if (valueBITS == 0) valueBITS = PanasonicBits;
+    if (valueRPT == 0) valueRPT = 2;
+    irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif

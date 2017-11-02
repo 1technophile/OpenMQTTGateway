@@ -40,6 +40,7 @@
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
+#define PanasonicBits 48U // Panasonic nr of bits (Pre data)
 
 #ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
   #define IR_GC

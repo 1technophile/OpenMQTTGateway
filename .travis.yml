@@ -15,10 +15,12 @@ before_install:
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
 install:
   - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
+  - rm /usr/local/share/arduino/OpenMQTTGateway/User_config.h
+  - cp /usr/local/share/arduino/OpenMQTTGateway/tests/Test_config.h /usr/local/share/arduino/OpenMQTTGateway/User_config.h
   - wget https://github.com/z3t0/Arduino-IRremote/archive/2.1.0.zip -O /tmp/IRremote.zip
   - unzip /tmp/IRremote.zip -d /usr/local/share/arduino/libraries
   - rm -rf /usr/local/share/arduino/libraries/RobotIRremote
-  - wget https://github.com/markszabo/IRremoteESP8266/archive/v2.1.1.zip -O /tmp/IRremoteESP8266.zip 
+  - wget https://github.com/markszabo/IRremoteESP8266/archive/v2.2.0.zip -O /tmp/IRremoteESP8266.zip 
   - unzip /tmp/IRremoteESP8266.zip -d /usr/local/share/arduino/libraries
   - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
   - git clone https://github.com/1technophile/NewRemoteSwitch /usr/local/share/arduino/libraries/NewRemoteSwitch
@@ -32,6 +34,8 @@ install:
   - git clone https://github.com/adafruit/Adafruit_Sensor /usr/local/share/arduino/libraries/Adafruit_Sensor
   - git clone https://github.com/sparkfun/SparkFun_BME280_Arduino_Library /usr/local/share/arduino/libraries/SparkFun_BME280
   - git clone https://github.com/LowPowerLab/RFM69 /usr/local/share/arduino/libraries/RFM69
+  - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.h
+  - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.cpp
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266
   - arduino --board $BD --save-prefs

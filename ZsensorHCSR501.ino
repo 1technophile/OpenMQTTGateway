@@ -1,12 +1,15 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
 
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-   This files enables to set your parameter for the DHT11/22 sensor
+    HC SR-501 reading Addon
   
     Copyright: (c)Florian ROBERT
+    
+    Contributors:
+    - 1technophile
   
     This file is part of OpenMQTTGateway.
     
@@ -23,17 +26,34 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifdef ZsensorHCSR501
 
-/*----------------------------USER PARAMETERS-----------------------------*/
-/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define HUM1   "home/DHTtoMQTT/dht1/hum"
-#define TEMP1  "home/DHTtoMQTT/dht1/temp"
-#define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
-/*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
-  #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
-#else
-  #define DHT_RECEIVER_PIN 8
+void setupHCSR501() {
+  pinMode(HCSR501_PIN, INPUT);     // declare HC SR-501 pin as input
+}
+
+void MeasureHCSR501(){
+  if (millis() > TimeBeforeStartHCSR501) {//let time to init the PIR sensor
+  static int pirState = LOW;
+  int PresenceValue = digitalRead(HCSR501_PIN);
+  #ifdef ESP8266
+    yield();
+  #endif
+  if (PresenceValue == HIGH) { 
+    if (pirState == LOW) {
+     // turned on
+     client.publish(subjectHCSR501toMQTT,"true");
+      trc(F("HC SR501 Motion detected"));
+      pirState = HIGH;
+    }
+    } else {
+      if (pirState == HIGH){
+        // turned off
+        client.publish(subjectHCSR501toMQTT,"false");
+        trc(F("HC SR501 Motion ended"));
+        pirState = LOW;
+      }
+    }
+  }
+}
 #endif
-

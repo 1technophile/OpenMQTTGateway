@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-   This files enables to set your parameter for the DHT11/22 sensor
+   This files enables to set your parameter for the HC SR-501 sensor
   
     Copyright: (c)Florian ROBERT
   
@@ -26,14 +26,13 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define HUM1   "home/DHTtoMQTT/dht1/hum"
-#define TEMP1  "home/DHTtoMQTT/dht1/temp"
-#define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
+#define subjectHCSR501toMQTT   "home/HCSR501toMQTT"
+#define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-  #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
+  #define HCSR501_PIN D5
 #else
-  #define DHT_RECEIVER_PIN 8
+  #define HCSR501_PIN D7
 #endif
 

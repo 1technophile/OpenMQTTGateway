@@ -18,9 +18,17 @@
   - crankyoldgit
   - glasruit
   - HannesDi
+  - Landrash
+  - larsenglund
+  - ChiefZ
+  - PatteWi
+  - jumpalottahigh
+  - zerinrc
+  - philfifi
   - Spudtater
   - prahjister
   - rickybrent
+  - petricaM
   - ekim from Home assistant forum
   - ronvl from Home assistant forum
 
@@ -85,7 +93,13 @@ boolean reconnect() {
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       //Subscribing to topic
-      if (client.subscribe(subjectMQTTtoX) && client.subscribe(subjectMultiGTWRF)&& client.subscribe(subjectMultiGTWIR)) {
+      if (client.subscribe(subjectMQTTtoX)) {
+        #ifdef ZgatewayRF
+          client.subscribe(subjectMultiGTWRF);
+        #endif
+        #ifdef ZgatewayIR
+          client.subscribe(subjectMultiGTWIR);
+        #endif
         trc(F("Subscription OK to the subjects"));
       }
       } else {
@@ -134,21 +148,21 @@ void setup()
     ArduinoOTA.setPassword(ota_password);
 
     ArduinoOTA.onStart([]() {
-      Serial.println("Start");
+      trc(F("Start"));
     });
     ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
+      trc(F("\nEnd"));
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      if (error == OTA_AUTH_ERROR) trc(F("Auth Failed"));
+      else if (error == OTA_BEGIN_ERROR) trc(F("Begin Failed"));
+      else if (error == OTA_CONNECT_ERROR) trc(F("Connect Failed"));
+      else if (error == OTA_RECEIVE_ERROR) trc(F("Receive Failed"));
+      else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
   #else
@@ -186,6 +200,9 @@ void setup()
   #ifdef ZsensorINA226
     setupINA226();
   #endif
+  #ifdef ZsensorHCSR501
+    setupHCSR501();
+  #endif
 }
 
 #ifdef ESP8266
@@ -201,13 +218,18 @@ void setup_wifi() {
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
   //WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
-  trc(F("OpenMQTTGateway ip: "));
-  Serial.println(WiFi.localIP());
-
+    
+  trc(F("OpenMQTTGateway mac: "));
+  Serial.println(WiFi.macAddress()); 
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
   }
+  
+  trc(F("OpenMQTTGateway ip: "));
+  Serial.println(WiFi.localIP());
+  
   trc(F("WiFi ok"));
 }
 #else
@@ -251,6 +273,12 @@ void loop()
     #endif
     #ifdef ZsensorINA226
       MeasureINA226(); //Addon to measure the temperature with a DHT
+    #endif
+    #ifdef ZsensorHCSR501
+      MeasureHCSR501();
+    #endif
+    #ifdef ZsensorADC
+      MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF

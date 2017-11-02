@@ -50,9 +50,6 @@ RF supported protocols
 //RF number of signal repetition
 #define RF_EMITTER_REPEAT 20
 
-//variables to avoid duplicates for RF
-#define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
-
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
 #define subjectMQTTtoRF2 "home/commands/MQTTtoRF2"
