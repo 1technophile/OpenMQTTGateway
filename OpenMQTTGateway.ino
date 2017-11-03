@@ -197,6 +197,9 @@ void setup()
   #ifdef ZgatewayRFM69
     setupRFM69();
   #endif
+  #ifdef ZsensorINA226
+    setupINA226();
+  #endif
   #ifdef ZsensorHCSR501
     setupHCSR501();
   #endif
@@ -267,6 +270,9 @@ void loop()
     #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+    #endif
+    #ifdef ZsensorINA226
+      MeasureINA226(); //Addon to measure the temperature with a DHT
     #endif
     #ifdef ZsensorHCSR501
       MeasureHCSR501();
