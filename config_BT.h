@@ -31,6 +31,15 @@
 #define ZgatewayBT_stable true //comment this line to test mi flora integration
 #define delimiter "4f4b2b444953413a"
 #define delimiter_length 16
+
+struct decompose
+{
+  char subject[4];
+  int start;
+  int len;
+  boolean reverse;
+  char extract[60];
+};
      
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266

@@ -39,6 +39,9 @@ SoftwareSerial softserial(BT_RX, BT_TX);
 String returnedString = "";
 unsigned long timebt = 0;
 
+// this struct define which parts of the hexadecimal chain we extract and what to do with these parts
+struct decompose d[6] = {{"mac",16,12,true},{"typ",28,2,false},{"rsi",30,2,false},{"rdl",32,2,false},{"sty",44,4,true},{"rda",34,60,false}};
+
 void setupBT() {
   softserial.begin(9600);
   softserial.print(F("AT+ROLE1"));
@@ -78,48 +81,45 @@ boolean BTtoMQTT() {
           char token_char[token.length()+1];
           token.toCharArray(token_char, token.length()+1);
 
-          char mac_adress[13];
-          trc(F("mac_adress "));
-          extract_char(token_char, mac_adress, delimiter_length ,12,true);
-          
-          char device_type[3];
-          trc(F("device_type "));
-          extract_char(token_char, device_type, delimiter_length+12 ,2,false);
+          for(int i =0; i<6;i++)
+          {
+            extract_char(token_char,d[i].extract,d[i].start, d[i].len ,d[i].reverse);
+            if (i == 3) d[5].len = (int)strtol(d[i].extract, NULL, 16) * 2; // extracting the length of the rest data
+          }
 
-          int rssi;
-          trc(F("rssi "));
-          extract_int(token_char, rssi, delimiter_length +12+2 ,2,false);
-
-          char val[12];
-          sprintf(val, "%d", rssi);
-          String mactopic(mac_adress);
-          mactopic = subjectBTtoMQTT + mactopic;
-          client.publish((char *)mactopic.c_str(),val);
-          
-          int rest_data_length;
-          trc(F("rest_data_length "));
-          extract_int(token_char, rest_data_length, delimiter_length+12+2+2 ,2,false);   
-          
-          char rest_data[rest_data_length*2];
-          trc(F("rest_data "));
-          extract_char(token_char, rest_data, delimiter_length+12+2+2+2 ,rest_data_length*2,false);
-
-          char sensor_type[5];
-          trc(F("sensor_type "));
-          extract_char(rest_data, sensor_type, 10 ,4,true);
-
-          if (strcmp(sensor_type, "fe95") == 0) process_miflora_data(rest_data,mac_adress);
+          if((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
+          {
+              strupp(d[0].extract);
+              String mactopic(d[0].extract);
+              trc(mactopic);
+              mactopic = subjectBTtoMQTT + mactopic;
+              int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
+              char val[12];
+              sprintf(val, "%d", rssi);
+              client.publish((char *)mactopic.c_str(),val);
+              if (strcmp(d[4].extract, "fe95") == 0) 
+              boolean result = process_miflora_data(d[5].extract,d[0].extract);
+              
+              return true;
+          }
         }
         returnedString = ""; //init data string
+        return false;
       }
       softserial.print(F(QUESTION_MSG));
-      return true;
+      return false;
   }else{   
     return false;
   }
 }
 
-void process_miflora_data(char * rest_data, char * mac_adress){
+void strupp(char* beg)
+{
+    while (*beg = std::toupper(*beg))
+       ++beg;
+}
+
+boolean process_miflora_data(char * rest_data, char * mac_adress){
   
   char tmp_rest_data_length[1];
   memcpy( tmp_rest_data_length, &rest_data[51], 1 );
@@ -132,32 +132,34 @@ void process_miflora_data(char * rest_data, char * mac_adress){
   // reverse data order
   revert_hex_data(rev_data, data, data_length);
   int value = strtol(data, NULL, 16);
-  trc(String(value));
   char val[12];
   sprintf(val, "%d", value);
-  
   String mactopic(mac_adress);
   mactopic = subjectBTtoMQTT + mactopic;
-  
+
+          
   // following the value of digit 47 we determine the type of data we get from the sensor
   switch (rest_data[47]) {
     case '9' :
-          mactopic = mactopic + "/" + "fertilisation";
+          mactopic = mactopic + "/" + "fer";
     break;
     case '4' :
-          mactopic = mactopic + "/" + "temperature_Cx10";
+          mactopic = mactopic + "/" + "tem";
+          dtostrf(value/10,4,1,val); // override temperature value in case we have, indeed temp has to be divided by 10
     break;
     case '7' :
           mactopic = mactopic + "/" + "lux";
      break;
     case '8' :
-          mactopic = mactopic + "/" + "humidity";
+          mactopic = mactopic + "/" + "hum";
      break;
     default:
     trc("can't read values");
+    return false;
     }
     client.publish((char *)mactopic.c_str(),val);;
     trc(String(val));
+    return true;
   }
 
 void revert_hex_data(char * in, char * out, int l){
@@ -178,18 +180,6 @@ void extract_char(char * token_char, char * subset, int start ,int l, boolean re
     tmp_subset[l] = '\0';
     if (reverse) revert_hex_data(tmp_subset, subset, l+1);
     else strncpy( subset, tmp_subset , l+1);
-    Serial.println(subset);
-}
-
-void extract_int(char * token_char, int & subsetint, int start ,int l, boolean reverse ){
-    char tmp_subset[l+1];
-    char subset[l+1];
-    memcpy( tmp_subset, &token_char[start], l );
-    tmp_subset[l] = '\0';
-    if (reverse) revert_hex_data(tmp_subset, subset, l+1);
-    else strncpy( subset, tmp_subset, l+1 );
-    subsetint = (int)strtol(subset, NULL, 16);
-    Serial.println(subsetint);
 }
 #endif
 
