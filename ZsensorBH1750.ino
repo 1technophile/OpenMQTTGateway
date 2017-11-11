@@ -64,16 +64,13 @@ void MeasureLightIntensity()
     float Wattsm2;
 
     // Check if reads failed and exit early (to try again).
-    Wire.beginTransmission(BH1750_i2c_addr);
     Wire.requestFrom(BH1750_i2c_addr, 2);
-    while(Wire.available()) //
-    {
-      i <<=8;
-      i|= Wire.read();  
-    }    
-    if (Wire.endTransmission() != 0 ) {
+    if(Wire.available() != 2) {
       trc(F("Failed to read from LightSensor BH1750!"));
     }else{
+      i = Wire.read();
+      i <<=8;
+      i |= Wire.read(); 
 
       // Calculate the Values
       Lux = i/1.2;  // Convert to Lux
