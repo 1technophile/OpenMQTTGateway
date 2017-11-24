@@ -40,7 +40,9 @@ void MeasureADC(){
     timeadc = millis();
     static int persistedadc;
     int val = analogRead(ADC_PIN);
- 
+    #ifdef ESP8266
+      yield();
+    #endif
     if (isnan(val)) {
       trc(F("Failed to read from ADC !"));
     }else{
