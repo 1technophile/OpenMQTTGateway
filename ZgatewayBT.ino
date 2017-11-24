@@ -83,7 +83,7 @@ boolean BTtoMQTT() {
 
           for(int i =0; i<6;i++)
           {
-            extract_char(token_char,d[i].extract,d[i].start, d[i].len ,d[i].reverse);
+            extract_char(token_char,d[i].extract,d[i].start, d[i].len ,d[i].reverse, false);
             if (i == 3) d[5].len = (int)strtol(d[i].extract, NULL, 16) * 2; // extracting the length of the rest data
           }
 
