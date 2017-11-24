@@ -29,8 +29,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*----------------------------USER PARAMETERS-----------------------------*/
-#define SERIAL_BAUD   115200
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -70,6 +68,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF
   #include "config_RF.h"
   //#define ZgatewayRF2
+  //#define ZgatewaySRFB
+  //#include "config_SRFB.h"
   #define ZgatewayIR
   #include "config_IR.h"
   #define ZgatewayBT
@@ -117,6 +117,12 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
+/*----------------------------USER PARAMETERS-----------------------------*/
+#ifdef ZgatewaySRFB
+  #define SERIAL_BAUD 19200
+#else
+  #define SERIAL_BAUD 115200
+#endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #define subjectMQTTtoX "home/commands/#"

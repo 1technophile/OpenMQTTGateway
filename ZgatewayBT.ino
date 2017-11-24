@@ -162,25 +162,6 @@ boolean process_miflora_data(char * rest_data, char * mac_adress){
     return true;
   }
 
-void revert_hex_data(char * in, char * out, int l){
-  //reverting array 2 by 2 to get the data in good order
-  int i = l-2 , j = 0; 
-  while ( i != -2 ) {
-    if (i%2 == 0) out[j] = in[i+1];
-    else  out[j] = in[i-1];
-    j++;
-    i--;
-  }
-  out[l-1] = '\0';
-}
-
-void extract_char(char * token_char, char * subset, int start ,int l, boolean reverse){
-    char tmp_subset[l+1];
-    memcpy( tmp_subset, &token_char[start], l );
-    tmp_subset[l] = '\0';
-    if (reverse) revert_hex_data(tmp_subset, subset, l+1);
-    else strncpy( subset, tmp_subset , l+1);
-}
 #endif
 
 #ifdef ZgatewayBT_stable
