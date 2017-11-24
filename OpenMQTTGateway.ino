@@ -135,7 +135,12 @@ void setup()
 {
   #ifdef ESP8266
     //Launch serial for debugging purposes
-    Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
+    #ifdef ZgatewaySRFB
+      Serial.begin(SERIAL_BAUD); // in the case of sonoff RF Bridge the link to the RF emitter/receiver is made by serial and need TX/RX
+    #else
+      Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
+    #endif
+
     //Begining wifi connection in case of ESP8266
     setup_wifi();
     // Port defaults to 8266
@@ -282,29 +287,28 @@ void loop()
     #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
-      boolean resultRF = RFtoMQTT();
-      if(resultRF)
+      if(RFtoMQTT())
       trc(F("RFtoMQTT OK"));
     #endif
     #ifdef ZgatewayRF2
-      boolean resultRF2 = RF2toMQTT();
-      if(resultRF2)
+      if(RF2toMQTT())
       trc(F("RF2toMQTT OK"));
     #endif
+    #ifdef ZgatewaySRFB
+      if(SRFBtoMQTT())
+      trc(F("SRFBtoMQTT OK"));
+    #endif
     #ifdef ZgatewayIR
-      boolean resultIR = IRtoMQTT();
-      if(resultIR)
+      if(IRtoMQTT())
       trc(F("IRtoMQTT OK"));
       delay(100);
     #endif
     #ifdef ZgatewayBT
-      boolean resultBT = BTtoMQTT();
-      if(resultBT)
+      if(BTtoMQTT())
       trc(F("BTtoMQTT OK"));
     #endif
     #ifdef ZgatewayRFM69
-      boolean resultRFM69 = RFM69toMQTT();
-      if(resultRFM69)
+      if(RFM69toMQTT())
       trc(F("RFM69toMQTT OK"));
     #endif
   }
@@ -373,12 +377,44 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayRF2
   MQTTtoRF2(topicOri, datacallback);
 #endif
+#ifdef ZgatewaySRFB
+  MQTTtoSRFB(topicOri, datacallback);
+#endif
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
 #endif
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
 #endif
+}
+
+void extract_char(char * token_char, char * subset, int start ,int l, boolean reverse, boolean isNumber){
+    char tmp_subset[l+1];
+    memcpy( tmp_subset, &token_char[start], l );
+    tmp_subset[l] = '\0';
+    if (isNumber){
+      char tmp_subset2[l+1];
+      if (reverse) revert_hex_data(tmp_subset, tmp_subset2, l+1);
+      else strncpy( tmp_subset2, tmp_subset , l+1);
+      long long_value = strtoul(tmp_subset2, NULL, 16);
+      sprintf(tmp_subset2, "%d", long_value);
+      strncpy( subset, tmp_subset2 , l+1);
+    }else{
+      if (reverse) revert_hex_data(tmp_subset, subset, l+1);
+      else strncpy( subset, tmp_subset , l+1);
+    }
+}
+
+void revert_hex_data(char * in, char * out, int l){
+  //reverting array 2 by 2 to get the data in good order
+  int i = l-2 , j = 0; 
+  while ( i != -2 ) {
+    if (i%2 == 0) out[j] = in[i+1];
+    else  out[j] = in[i-1];
+    j++;
+    i--;
+  }
+  out[l-1] = '\0';
 }
 
 //trace

@@ -69,6 +69,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   #define ZgatewayRF
   #include "config_RF.h"
+  #define ZgatewaySRFB
+  #include "config_SRFB.h"
   #define ZgatewayRF2
   #define ZgatewayIR
   #include "config_IR.h"
