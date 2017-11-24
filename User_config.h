@@ -133,3 +133,5 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
+/*-------------------VERSION----------------------*/
+#define VERSION 0.5
