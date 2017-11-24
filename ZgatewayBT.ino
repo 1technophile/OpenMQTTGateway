@@ -52,7 +52,7 @@ void setupBT() {
   delay(100);
 }
 
-#ifndef ZgatewayBT_stable // published for test only, if you want to test mi flora integration uncomment ZgatewayBT_stable in config_BT
+#ifdef ZgatewayBT_v6xx
 #define QUESTION_MSG "AT+DISA?"
 boolean BTtoMQTT() {
 
@@ -164,7 +164,7 @@ boolean process_miflora_data(char * rest_data, char * mac_adress){
 
 #endif
 
-#ifdef ZgatewayBT_stable
+#ifndef ZgatewayBT_v6xx
 #define QUESTION_MSG "AT+DISI?"
 boolean BTtoMQTT() {
   while (softserial.available() > 0) {

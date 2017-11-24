@@ -28,7 +28,7 @@
 #define TimeBtw_Read 10000 //define the time between 2 scans
 #define HM-10 
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
-#define ZgatewayBT_stable true //comment this line to test mi flora integration
+#define ZgatewayBT_v6xx // comment if you don't have a firmware version of HM10/11 >= v601
 #define delimiter "4f4b2b444953413a"
 #define delimiter_length 16
 
