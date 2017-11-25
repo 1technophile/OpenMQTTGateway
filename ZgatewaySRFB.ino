@@ -38,10 +38,10 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
 
   // RF DATA ANALYSIS
   String topic = topicOri;
-
+  int valueRPT = 0;
+  
   if (topic == subjectMQTTtoSRFB){
 
-    int valueRPT = 0;
     int valueMiniPLSL  = 0;
     int valueMaxiPLSL  = 0;
     int valueSYNC  = 0;
@@ -78,7 +78,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       trc(String(valueSYNC));
     }
 
-      trc(F("MQTTtoSRFB default prts"));
+      trc(F("MQTTtoSRFB prts"));
       if (valueRPT == 0) valueRPT = 1;
       if (valueMiniPLSL == 0) valueMiniPLSL = 320;
       if (valueMaxiPLSL == 0) valueMaxiPLSL = 900;
@@ -113,6 +113,24 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       // Acknowledgement to the GTWRF topic 
       boolean result = client.publish(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       if (result) trc(F("MQTTtoSRFB ack pub."));
+  }
+  if (topic == subjectMQTTtoSRFBRaw){
+
+      int pos = topic.lastIndexOf(SRFBRptKey);       
+      if (pos != -1){
+        pos = pos + +strlen(SRFBRptKey);
+        valueRPT = (topic.substring(pos,pos + 1)).toInt();
+        trc(F("SRFB Repeat:"));
+        trc(String(valueRPT));
+      }
+      if (valueRPT == 0) valueRPT = 1;
+      
+      byte message_b[RF_MESSAGE_SIZE];
+      _rfbToArray(datacallback,message_b);
+      _rfbSend(message_b, valueRPT);
+      // Acknowledgement to the GTWRF topic 
+      boolean result = client.publish(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      if (result) trc(F("MQTTtoSRFBRaw ack pub."));
   }
 }
 
