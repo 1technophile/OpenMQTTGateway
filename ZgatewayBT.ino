@@ -72,7 +72,7 @@ boolean BTtoMQTT() {
       #endif
       if (returnedString != "") {
         size_t pos = 0;
-        while ((pos = returnedString.lastIndexOf(delimiter)) != std::string::npos) {
+        while ((pos = returnedString.lastIndexOf(delimiter)) != -1) {
           #ifdef ESP8266
             yield();
           #endif
@@ -115,7 +115,7 @@ boolean BTtoMQTT() {
 
 void strupp(char* beg)
 {
-    while (*beg = std::toupper(*beg))
+    while (*beg = toupper(*beg))
        ++beg;
 }
 

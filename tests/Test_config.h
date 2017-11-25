@@ -98,8 +98,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_RFM69.h"
   #define ZgatewayIR
   #include "config_IR.h"
-  #define ZgatewayBT
-  #include "config_BT.h"
+  //#define ZgatewayBT
+  //#include "config_BT.h"
   //#define ZsensorINA226
   //#include "config_INA226.h"
   //#define ZsensorDHT
