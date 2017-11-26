@@ -21,7 +21,7 @@ ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1.
 * Publish MQTT data related to a received RFM69 signal (RFM69-->MQTT)
 * Send IR signal corresponding to received MQTT data (MQTT->IR)
 * Publish MQTT data related to received IR signal (IR-->MQTT)
-* Publish MQTT data related to BLE beacons (BT-->MQTT)
+* Publish MQTT data related to BLE beacons or Mi flora(BT-->MQTT)
 
 You can add extra sensors directly to the gateway if you like!
 
