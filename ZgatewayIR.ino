@@ -72,7 +72,20 @@ boolean IRtoMQTT(){
       if ( i < results.rawlen-1 ) rawCode = rawCode + ","; // ',' not needed on last one
     }
     trc(rawCode);
+    // if needed we directly resend the raw code
+    if (RawDirectForward){
+      uint16_t rawsend[results.rawlen];
+      for (uint16_t i = 1;  i < results.rawlen;  i++) {
+         #ifdef ESP8266
+            if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
+         #endif
+            rawsend[i] = results.rawbuf[i];
+      }
+      irsend.sendRaw(rawsend, results.rawlen, RawFrequency); 
+      trc(F("raw signal redirected"));
+    }
     irrecv.resume(); // Receive the next value
+
     if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
       trc(F("--no pub. unknown protocol--"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
@@ -156,7 +169,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
         j++;
       }
     }
-      irsend.sendRaw(Raw, j, 38); // frequency hardcoded as a first approach for test purposes
+      irsend.sendRaw(Raw, j, RawFrequency);
       signalSent = true;
   }
 #endif

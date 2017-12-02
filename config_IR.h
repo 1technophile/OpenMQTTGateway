@@ -37,6 +37,8 @@
 #define IRbitsKey "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
 #define repeatIRwMQTT false // do we repeat a received signal by using mqtt
+#define RawDirectForward false // direct repeat of IR signal with raw data
+#define RawFrequency 38 // raw frequency sending
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
