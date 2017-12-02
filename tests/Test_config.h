@@ -28,9 +28,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-/*----------------------------USER PARAMETERS-----------------------------*/
-#define SERIAL_BAUD   115200
+/*-------------------VERSION----------------------*/
+#define OMG_VERSION "0.5"
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -38,7 +37,8 @@
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
-#define will_Topic "home/OpenMQTTGateway/LWT"
+#define version_Topic "home/" Gateway_Name "/version"
+#define will_Topic "home/" Gateway_Name "/LWT"
 #define will_QoS 0
 #define will_Retain true
 #define will_Message "Offline"
@@ -116,6 +116,11 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_RFM69.h"  
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
+#ifdef ZgatewaySRFB
+  #define SERIAL_BAUD 19200
+#else
+  #define SERIAL_BAUD 115200
+#endif
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
