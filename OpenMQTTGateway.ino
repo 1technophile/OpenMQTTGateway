@@ -92,6 +92,8 @@ boolean reconnect() {
       trc(F("Connected to broker"));
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
+      // publish version
+      client.publish(version_Topic,VERSION,will_Retain);
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
         #ifdef ZgatewayRF
