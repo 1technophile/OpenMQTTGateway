@@ -1,11 +1,10 @@
 # OpenMQTTGateway
-[![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)](https://github.com/1technophile/OpenMQTTGateway/wiki)
 
 ## Overview
 
 OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Infrared signal and a MQTT broker. It is compatible with:
 Arduino uno(limited)/mega(advised) + W5100
-ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1.
+ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F, Sonoff RF and Wemos D1.
  
   It enables to:
 * Send RF signals corresponding to received MQTT data (MQTT->RF)
@@ -17,8 +16,6 @@ ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1.
 * Publish MQTT data related to BLE beacons or Mi flora(BT-->MQTT)
 
 It supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226
-
-You can also upload the code to a Sonoff RF Bridge for 433mhz applications
 
 ## Functions:
 * Bidirectional, the gateway can send and receive signals, for example if you have RF wall plug you can either control them with your home automation software (MQTT-->RF) or the physical remote control. When you press a button on the physical remote the wall plug will switch ON and the button in your home automation software (RF-->MQTT) will be updated.
