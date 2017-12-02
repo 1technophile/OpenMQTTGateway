@@ -67,13 +67,13 @@ boolean BTtoMQTT() {
 
   if (millis() > (timebt + TimeBtw_Read)) {//retriving data
       timebt = millis();
-      #ifdef ESP8266
+      #if defined(ESP8266) || defined(ESP32)
         yield();
       #endif
       if (returnedString != "") {
         size_t pos = 0;
         while ((pos = returnedString.lastIndexOf(delimiter)) != -1) {
-          #ifdef ESP8266
+          #if defined(ESP8266) || defined(ESP32)
             yield();
           #endif
           String token = returnedString.substring(pos);
@@ -168,7 +168,7 @@ boolean process_miflora_data(char * rest_data, char * mac_adress){
 #define QUESTION_MSG "AT+DISI?"
 boolean BTtoMQTT() {
   while (softserial.available() > 0) {
-     #ifdef ESP8266
+     #if defined(ESP8266) || defined(ESP32)
       yield();
      #endif
     String discResult = softserial.readString();
@@ -178,7 +178,7 @@ boolean BTtoMQTT() {
       float device_number = discResult.length()/78.0;
       if (device_number == (int)device_number){ // to avoid publishing partial values we detect if the serial data has been fully read = a multiple of 78
         trc(F("Sending BT data to MQTT"));
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
           yield();
         #endif
         for (int i=0;i<(int)device_number;i++){
@@ -201,7 +201,7 @@ boolean BTtoMQTT() {
   }
   if (millis() > (timebt + TimeBtw_Read)) {//retriving value of adresses and rssi
        timebt = millis();
-       #ifdef ESP8266
+       #if defined(ESP8266) || defined(ESP32)
         yield();
        #endif
        softserial.print(F(QUESTION_MSG));

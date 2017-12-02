@@ -55,7 +55,7 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 #define POWER_LEVEL    31
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #define RFM69_CS      D1
   #define RFM69_IRQ     D8   // GPIO15/D8
   #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)

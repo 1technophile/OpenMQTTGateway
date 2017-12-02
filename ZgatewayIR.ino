@@ -27,7 +27,7 @@
 */
 #ifdef ZgatewayIR
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #include <IRremoteESP8266.h>
   #include <IRsend.h>  // Needed if you want to send IR commands.
   #include <IRrecv.h>  // Needed if you want to receive IR commands.
@@ -42,7 +42,7 @@
 void setupIR()
 {
   //IR init parameters
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   irsend.begin();
 #endif
 
@@ -63,7 +63,7 @@ boolean IRtoMQTT(){
     String rawCode = "";
     // Dump data
     for (uint16_t i = 1;  i < results.rawlen;  i++) {
-       #ifdef ESP8266
+       #if defined(ESP8266) || defined(ESP32)
           if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
           rawCode = rawCode + (results.rawbuf[i] * RAWTICK);
        #else
@@ -76,7 +76,7 @@ boolean IRtoMQTT(){
     if (RawDirectForward){
       uint16_t rawsend[results.rawlen];
       for (uint16_t i = 1;  i < results.rawlen;  i++) {
-         #ifdef ESP8266
+         #if defined(ESP8266) || defined(ESP32)
             if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
          #endif
             rawsend[i] = results.rawbuf[i];
@@ -194,7 +194,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     trc(String(valueRPT));
   }
   
-  #ifdef ESP8266 // send coolix not available for arduino IRRemote library
+  #if defined(ESP8266) || defined(ESP32) // send coolix not available for arduino IRRemote library
   #ifdef IR_COOLIX
   if (strstr(topicOri, "IR_COOLIX") != NULL){
     if (valueBITS == 0) valueBITS = 24;

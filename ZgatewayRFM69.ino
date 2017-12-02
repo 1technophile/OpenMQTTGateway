@@ -65,7 +65,7 @@ uint32_t gc_checksum() {
   return checksum;
 }
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 void eeprom_setup() {
   EEPROM.begin(4096);
   pGC = (struct _GLOBAL_CONFIG *)EEPROM.getDataPtr();
@@ -88,7 +88,7 @@ void eeprom_setup() {
 RFM69 radio;
 
 void setupRFM69(void) {
-  #ifdef ESP8266
+  #if defined(ESP8266) || defined(ESP32)
     eeprom_setup();
   #endif
   int freq;

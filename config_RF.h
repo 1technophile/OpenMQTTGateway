@@ -61,7 +61,7 @@ RF supported protocols
 #define RF2dimKey "DIM"  // number of your dim value will be defined if a subject contains RF2dimKey and the payload contains the dim value as digits
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
     #define RF_RECEIVER_PIN 0 // D3 on nodemcu
     #define RF_EMITTER_PIN 3 // RX on nodemcu
 #else

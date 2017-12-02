@@ -44,7 +44,7 @@
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
 #define PanasonicBits 48U // Panasonic nr of bits (Pre data)
 
-#ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
+#if defined(ESP8266) || defined(ESP32) //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
   #define IR_Raw
   #define IR_COOLIX
@@ -71,7 +71,7 @@
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #define IR_RECEIVER_PIN 2
   #define IR_EMITTER_PIN 16
 #else

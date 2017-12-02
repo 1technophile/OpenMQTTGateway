@@ -42,7 +42,7 @@ struct decompose
 };
      
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
   #define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
 #else

@@ -51,7 +51,7 @@
 #include <PubSubClient.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 #define array_size 12
 unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else
@@ -63,10 +63,8 @@ unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
-#ifdef ESP8266
-  #include <ESP8266WiFi.h>
-  #include <ESP8266mDNS.h>
-  #include <WiFiUdp.h>
+#if defined(ESP8266) || defined(ESP32)
+  #include <WiFi.h>
   #include <ArduinoOTA.h>
   WiFiClient eClient;
 #else
@@ -135,9 +133,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
-  #ifdef ESP8266
+  #if defined(ESP8266) || defined(ESP32)
     //Launch serial for debugging purposes
-    #ifdef ZgatewaySRFB
+    #if defined(ZgatewaySRFB) || defined(ESP32)
       Serial.begin(SERIAL_BAUD); // in the case of sonoff RF Bridge the link to the RF emitter/receiver is made by serial and need TX/RX
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
@@ -212,7 +210,7 @@ void setup()
   #endif
 }
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -265,7 +263,7 @@ void loop()
     // MQTT loop
     client.loop();
 
-    #ifdef ESP8266
+    #if defined(ESP8266) || defined(ESP32)
       ArduinoOTA.handle();
     #endif
 

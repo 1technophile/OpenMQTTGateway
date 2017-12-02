@@ -28,7 +28,7 @@
 */
 #ifdef ZsensorADC
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   ADC_MODE(ADC_TOUT);
 #endif
 
@@ -40,7 +40,7 @@ void MeasureADC(){
     timeadc = millis();
     static int persistedadc;
     int val = analogRead(ADC_PIN);
-    #ifdef ESP8266
+    #if defined(ESP8266) || defined(ESP32)
       yield();
     #endif
     if (isnan(val)) {
