@@ -71,9 +71,12 @@
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || defined(ESP32)
+#ifdef ESP8266
   #define IR_RECEIVER_PIN 2
   #define IR_EMITTER_PIN 16
+#elif defined(ESP32)
+  #define IR_RECEIVER_PIN 5
+  #define IR_EMITTER_PIN 21
 #else
   #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino
   #define IR_EMITTER_PIN D9

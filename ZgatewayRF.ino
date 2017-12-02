@@ -35,9 +35,12 @@ void setupRF(){
 
   //RF init parameters
   mySwitch.enableTransmit(RF_EMITTER_PIN);
+  trc(F("RF_EMITTER_PIN "));
+  trc(String(RF_EMITTER_PIN));
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); 
   mySwitch.enableReceive(RF_RECEIVER_PIN); 
-  
+  trc(F("RF_RECEIVER_PIN "));
+  trc(String(RF_RECEIVER_PIN));
 }
 
 boolean RFtoMQTT(){

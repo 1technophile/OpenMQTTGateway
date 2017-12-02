@@ -63,8 +63,12 @@ unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
-#if defined(ESP8266) || defined(ESP32)
+#ifdef ESP32
   #include <WiFi.h>
+  #include <ArduinoOTA.h>
+  WiFiClient eClient;
+#elif defined(ESP8266)
+  #include <ESP8266WiFi.h>
   #include <ArduinoOTA.h>
   WiFiClient eClient;
 #else

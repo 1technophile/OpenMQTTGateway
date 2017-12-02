@@ -27,7 +27,7 @@
 */
 #ifdef ZgatewayIR
 
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266)
   #include <IRremoteESP8266.h>
   #include <IRsend.h>  // Needed if you want to send IR commands.
   #include <IRrecv.h>  // Needed if you want to receive IR commands.
@@ -42,7 +42,7 @@
 void setupIR()
 {
   //IR init parameters
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266)
   irsend.begin();
 #endif
 
@@ -63,7 +63,7 @@ boolean IRtoMQTT(){
     String rawCode = "";
     // Dump data
     for (uint16_t i = 1;  i < results.rawlen;  i++) {
-       #if defined(ESP8266) || defined(ESP32)
+       #if defined(ESP8266)
           if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
           rawCode = rawCode + (results.rawbuf[i] * RAWTICK);
        #else

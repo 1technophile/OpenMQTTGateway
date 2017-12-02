@@ -42,9 +42,12 @@ struct decompose
 };
      
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || defined(ESP32)
+#ifdef ESP8266
   #define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
   #define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
+#elif defined(ESP32)
+  #define BT_RX 18 // not tested
+  #define BT_TX 19 // not tested
 #else
   #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
   #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
