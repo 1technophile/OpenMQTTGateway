@@ -2,9 +2,13 @@
 
 ## Overview
 
-OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Infrared signal and a MQTT broker. It is compatible with:
-Arduino uno(limited)/mega(advised) + W5100
-ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F, Sonoff RF and Wemos D1.
+OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Infrared devices and a MQTT broker. 
+The MQTT broker can connected to your favorite home automation controller (Home Assistant, Openhab, Domoticz) or NodeRED, as long as it supports MQTT the system can talk to the gateway and by the way your different devices on both directions.
+
+It can be installed on:
+* Arduino uno(limited)/mega(advised) + W5100
+* ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1
+* Sonoff RF.
  
   It enables to:
 * Send RF signals corresponding to received MQTT data (MQTT->RF)
