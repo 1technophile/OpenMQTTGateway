@@ -69,10 +69,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ledY 42
 #define ledR 44
 
-
-// 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
-//                            LED       Resistor 270-510R
+//                        LED       Resistor 270-510R
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use

@@ -182,7 +182,7 @@ void setup()
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
-    //setup LED status, turn all ON for short ammount then leave only the RED one ON
+    //setup LED status, turn all ON for short amount then leave only the RED LED ON
     pinMode(ledG, OUTPUT);
     pinMode(ledY, OUTPUT);
     pinMode(ledR, OUTPUT);
