@@ -90,6 +90,28 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_DHT.h"
   #define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #include "config_RFM69.h"
+#elif ESP32
+  #define ZgatewayRF
+  #include "config_RF.h"
+  #define ZgatewayRF2
+  #define ZgatewayIR
+  #include "config_IR.h"
+  //#define ZgatewayBT
+  //#include "config_BT.h"
+  //#define ZsensorINA226
+  //#include "config_INA226.h"
+  //#define ZsensorHCSR501
+  //#include "config_HCSR501.h"
+  //#define ZsensorADC
+  //#include "config_ADC.h"
+  //#define ZsensorBH1750
+  //#include "config_BH1750.h"
+  //#define ZsensorBME280
+  //#include "config_BME280.h"
+  //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  //#include "config_DHT.h"
+  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
+  //#include "config_RFM69.h"
 #else // for arduino + W5100
   #define ZgatewayRF
   #include "config_RF.h"
