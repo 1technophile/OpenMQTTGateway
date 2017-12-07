@@ -74,12 +74,15 @@ boolean IRtoMQTT(){
     trc(rawCode);
     // if needed we directly resend the raw code
     if (RawDirectForward){
-      unsigned int rawsend[results.rawlen];
-      for (int i = 1;  i < results.rawlen;  i++) {
-         #ifdef ESP8266
-            if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
-         #endif
-            rawsend[i] = results.rawbuf[i];
+      #ifdef ESP8266
+        uint16_t rawsend[results.rawlen];
+        for (uint16_t i = 1;  i < results.rawlen;  i++) {
+          if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
+      #else
+        unsigned int rawsend[results.rawlen];
+        for (int i = 1;  i < results.rawlen;  i++) {
+      #endif
+          rawsend[i] = results.rawbuf[i];
       }
       irsend.sendRaw(rawsend, results.rawlen, RawFrequency); 
       trc(F("raw signal redirected"));
@@ -154,7 +157,11 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   else if(strstr(topicOri, "IR_Raw") != NULL){ // sending Raw data
     trc("IR_Raw");
     //buffer allocation from char datacallback
-    unsigned int Raw[count+1];
+    #ifdef ESP8266
+      uint16_t  Raw[count+1];
+    #else
+      unsigned int Raw[count+1];
+    #endif
     String value = "";
     int j = 0;
     for(int i = 0; i < s; i++)
