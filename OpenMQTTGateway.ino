@@ -184,6 +184,11 @@ void setup()
     #ifdef MDNS_SD
       connectMQTTmdns();
     #else
+      #ifdef mqtt_server_name
+        IPAddress mqtt_server_ip;
+        WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
+        client.setServer(mqtt_server_ip, mqtt_port);
+      #endif
       client.setServer(mqtt_server, mqtt_port);
     #endif
     
