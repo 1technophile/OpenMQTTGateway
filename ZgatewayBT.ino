@@ -27,6 +27,67 @@
 Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd https://github.com/dinosd/BLE_PROXIMITY for inspiring me how to implement the gateway
 */
 #ifdef ZgatewayBT
+
+  #ifdef ESP32
+    /*
+       Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
+       Ported to Arduino ESP32 by Evandro Copercini
+    */
+    
+    #include <BLEDevice.h>
+    #include <BLEUtils.h>
+    #include <BLEScan.h>
+    #include <BLEAdvertisedDevice.h>
+    
+    //Time used to wait for an interval before scanning BLE devices
+    unsigned long timeBLE = 0;
+      
+    class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+          void onResult(BLEAdvertisedDevice advertisedDevice) {
+            String mac = advertisedDevice.getAddress().toString().c_str();
+            mac.replace(":","");
+            mac.toUpperCase();
+            String mactopic = subjectBTtoMQTT + mac;
+            if (advertisedDevice.haveName()){
+                String nameBLE = advertisedDevice.getName().c_str();
+                trc(mactopic + " " + nameBLE);
+                client.publish((char *)(mactopic + "/name").c_str(),(char *)nameBLE.c_str());
+              }
+            if (advertisedDevice.haveManufacturerData()){
+                String ManufacturerDataBLE = advertisedDevice.getManufacturerData().c_str();
+                trc(mactopic + " " + ManufacturerDataBLE);
+                client.publish((char *)(mactopic + "/ManufacturerData").c_str(),(char *)ManufacturerDataBLE.c_str());
+              }
+            String rssi = String(advertisedDevice.getRSSI());
+            trc(mactopic + " " + rssi);
+            client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+          }
+      };
+
+    void setupBT(){
+      
+    }
+    
+    boolean BTtoMQTT() {
+
+      if (millis() > (timeBLE + TimeBtw_Read)) {//retriving BLE devices every xUL
+        timeBLE = millis();
+        BLEDevice::init("");
+        BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+        pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+        pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+        BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+        trc(F("Devices found: "));
+        trc(String(foundDevices.getCount()));
+        trc(F("Scan done!"));
+        if (foundDevices.getCount() >= 1) return true;
+        else return false;
+      }
+      return false;
+    }
+  
+  #else // arduino or ESP8266 working with HM10/11
+
 #include <SoftwareSerial.h>
 
 #define STRING_MSG "OK+DISC:"
@@ -209,5 +270,6 @@ boolean BTtoMQTT() {
   }
   return false;
 }
+#endif
 #endif
 #endif
