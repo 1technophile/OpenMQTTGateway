@@ -51,7 +51,7 @@
 #include <PubSubClient.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 #define array_size 12
 unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else
@@ -63,19 +63,27 @@ unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
-#ifdef ESP8266
-  #include <ESP8266WiFi.h>
-  #include <ESP8266mDNS.h>
-  #include <WiFiUdp.h>
+#ifdef ESP32
+  #include <WiFi.h>
   #include <ArduinoOTA.h>
+  #ifdef MDNS_SD
+    #include <ESPmDNS.h>
+  #endif
+  WiFiClient eClient;
+#elif defined(ESP8266)
+  #include <ESP8266WiFi.h>
+  #include <ArduinoOTA.h>
+  #ifdef MDNS_SD
+    #include <ESP8266mDNS.h>
+  #endif
   WiFiClient eClient;
 #else
   #include <Ethernet.h>
   EthernetClient eClient;
 #endif
 
-// client parameters
-PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
+// client link to pubsub mqtt
+PubSubClient client(eClient);
 
 //MQTT last attemps reconnection date
 unsigned long lastReconnectAttempt = 0;
@@ -135,9 +143,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
-  #ifdef ESP8266
+  #if defined(ESP8266) || defined(ESP32)
     //Launch serial for debugging purposes
-    #ifdef ZgatewaySRFB
+    #if defined(ZgatewaySRFB) || defined(ESP32)
       Serial.begin(SERIAL_BAUD); // in the case of sonoff RF Bridge the link to the RF emitter/receiver is made by serial and need TX/RX
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
@@ -172,13 +180,27 @@ void setup()
       else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
+
+    #ifdef MDNS_SD
+      connectMQTTmdns();
+    #else
+      #ifdef mqtt_server_name
+        IPAddress mqtt_server_ip;
+        WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
+        client.setServer(mqtt_server_ip, mqtt_port);
+      #endif
+      client.setServer(mqtt_server, mqtt_port);
+    #endif
+    
   #else
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
   #endif
-
+  
+  client.setCallback(callback);
+  
   delay(1500);
 
   lastReconnectAttempt = 0;
@@ -212,7 +234,7 @@ void setup()
   #endif
 }
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -265,7 +287,7 @@ void loop()
     // MQTT loop
     client.loop();
 
-    #ifdef ESP8266
+    #if defined(ESP8266) || defined(ESP32)
       ArduinoOTA.handle();
     #endif
 
@@ -417,6 +439,36 @@ void revert_hex_data(char * in, char * out, int l){
     i--;
   }
   out[l-1] = '\0';
+}
+
+void connectMQTTmdns(){
+    if (!MDNS.begin("ESP_MQTT")) {
+        trc(F("Error setting up MDNS responder!"));
+        while(1){
+            delay(1000);
+        }
+    }
+    trc(F("Browsing for service MQTT "));
+    int n = MDNS.queryService("mqtt", "tcp");
+    if (n == 0) {
+        trc(F("no services found"));
+    } else {
+        trc(String(n));
+        trc(" service(s) found");
+        for (int i=0; i < n; ++i) {
+            // Print details for each service found
+            trc(String(i + 1));
+            trc(String(MDNS.hostname(i)));
+            trc(String(MDNS.IP(i)));
+            trc(String(MDNS.port(i)));
+        }
+        if (n==1) {
+          trc(F("One MQTT server found setting parameters"));
+          client.setServer(MDNS.IP(0), int(MDNS.port(0)));
+        }else{
+          trc(F("Several MQTT servers found, please deactivate mDNS and set your default server"));
+        }
+    }
 }
 
 //trace
