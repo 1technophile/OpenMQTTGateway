@@ -81,9 +81,9 @@ PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 unsigned long lastReconnectAttempt = 0;
 
 //timers for LED indicators
-unsigned long timerG = 0;
-unsigned long timerY = 0;
-unsigned long timerR = 0;
+unsigned long timer_led_receive = 0;
+unsigned long timer_led_send = 0;
+unsigned long timer_led_error = 0;
 
 boolean reconnect() {
   // Loop until we're reconnected
@@ -183,15 +183,15 @@ void setup()
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
     //setup LED status, turn all ON for short amount then leave only the RED LED ON
-    pinMode(ledG, OUTPUT);
-    pinMode(ledY, OUTPUT);
-    pinMode(ledR, OUTPUT);
-    digitalWrite(ledG, LOW);
-    digitalWrite(ledY, LOW);
-    digitalWrite(ledR, LOW);
+    pinMode(led_receive, OUTPUT);
+    pinMode(led_send, OUTPUT);
+    pinMode(led_error, OUTPUT);
+    digitalWrite(led_receive, LOW);
+    digitalWrite(led_send, LOW);
+    digitalWrite(led_error, LOW);
     delay(500);
-    digitalWrite(ledG, HIGH);
-    digitalWrite(ledY, HIGH);
+    digitalWrite(led_receive, HIGH);
+    digitalWrite(led_send, HIGH);
   #endif
 
   delay(1500);
@@ -270,7 +270,7 @@ void loop()
   //MQTT client connexion management
   if (!client.connected()) { // not connected
     //RED ON
-    digitalWrite(ledR, LOW);
+    digitalWrite(led_error, LOW);
 
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
@@ -282,11 +282,11 @@ void loop()
   } else { //connected
     // MQTT loop
     //RED OFF
-    if (now - timerG > 300) {
-      timerG = now;
-      digitalWrite(ledG, HIGH);
+    if (now - timer_led_receive > 300) {
+      timer_led_receive = now;
+      digitalWrite(led_receive, HIGH);
     }
-    digitalWrite(ledR, HIGH);
+    digitalWrite(led_error, HIGH);
     
     client.loop();
 
@@ -317,15 +317,15 @@ void loop()
       if(RFtoMQTT()){
       trc(F("RFtoMQTT OK"));
       //GREEN ON
-      digitalWrite(ledG, LOW);
-      timerG = millis();
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
       }
     #endif
     #ifdef ZgatewayRF2
       if(RF2toMQTT()){
       trc(F("RF2toMQTT OK"));
-      digitalWrite(ledG, LOW);
-      timerG = millis();
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
       }
     #endif
     #ifdef ZgatewaySRFB
@@ -335,8 +335,8 @@ void loop()
     #ifdef ZgatewayIR
       if(IRtoMQTT())      {
       trc(F("IRtoMQTT OK"));
-      digitalWrite(ledG, LOW);
-      timerG = millis();
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
       delay(100);
       }
     #endif
@@ -408,7 +408,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       trc(F("Data stored"));
    }
 //YELLOW ON
-digitalWrite(ledY, LOW);
+digitalWrite(led_send, LOW);
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
@@ -425,7 +425,7 @@ digitalWrite(ledY, LOW);
   MQTTtoRFM69(topicOri, datacallback);
 #endif
 //YELLOW OFF
-digitalWrite(ledY, HIGH);
+digitalWrite(led_send, HIGH);
 }
 
 void extract_char(char * token_char, char * subset, int start ,int l, boolean reverse, boolean isNumber){
