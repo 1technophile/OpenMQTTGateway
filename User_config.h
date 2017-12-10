@@ -65,9 +65,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ota_port 8266
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#define ledG 40
-#define ledY 42
-#define ledR 44
+#define led_receive 40
+#define led_send 42
+#define led_error 44
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
