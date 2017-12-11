@@ -308,8 +308,10 @@ void loop()
       delay(100);
     #endif
     #ifdef ZgatewayBT
-      if(BTtoMQTT())
-      trc(F("BTtoMQTT OK"));
+      #ifndef ESP32
+        if(BTtoMQTT())
+        trc(F("BTtoMQTT OK"));
+      #endif
     #endif
     #ifdef ZgatewayRFM69
       if(RFM69toMQTT())

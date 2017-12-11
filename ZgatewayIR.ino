@@ -54,6 +54,11 @@ boolean IRtoMQTT(){
   
   if (irrecv.decode(&results)){
   trc(F("Rcv. IR"));
+    #ifdef ESP32
+      String taskMessage = "Task running on core ";
+      taskMessage = taskMessage + xPortGetCoreID();
+      trc(taskMessage);
+    #endif
     unsigned long MQTTvalue = 0;
     String MQTTprotocol;
     String MQTTbits;

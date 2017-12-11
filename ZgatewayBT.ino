@@ -33,14 +33,15 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
        Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
        Ported to Arduino ESP32 by Evandro Copercini
     */
+    // core task implementation thanks to https://techtutorialsx.com/2017/05/09/esp32-running-code-on-a-specific-core/
     
     #include <BLEDevice.h>
     #include <BLEUtils.h>
     #include <BLEScan.h>
     #include <BLEAdvertisedDevice.h>
-    
-    //Time used to wait for an interval before scanning BLE devices
-    unsigned long timeBLE = 0;
+
+    //core on which the BLE detection task will run
+    static int taskCore = 1;
       
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           void onResult(BLEAdvertisedDevice advertisedDevice) {
@@ -53,11 +54,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 trc(mactopic + " " + nameBLE);
                 client.publish((char *)(mactopic + "/name").c_str(),(char *)nameBLE.c_str());
               }
-            if (advertisedDevice.haveManufacturerData()){
-                String ManufacturerDataBLE = advertisedDevice.getManufacturerData().c_str();
-                trc(mactopic + " " + ManufacturerDataBLE);
-                client.publish((char *)(mactopic + "/ManufacturerData").c_str(),(char *)ManufacturerDataBLE.c_str());
-              }
             String rssi = String(advertisedDevice.getRSSI());
             trc(mactopic + " " + rssi);
             client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
@@ -65,25 +61,31 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
       };
 
     void setupBT(){
-      
+        // we setup a task with priority one to avoid conflict with other gateways
+        xTaskCreatePinnedToCore(
+                          coreTask,   /* Function to implement the task */
+                          "coreTask", /* Name of the task */
+                          10000,      /* Stack size in words */
+                          NULL,       /* Task input parameter */
+                          1,          /* Priority of the task */
+                          NULL,       /* Task handle. */
+                          taskCore);  /* Core where the task should run */
     }
-    
-    boolean BTtoMQTT() {
 
-      if (millis() > (timeBLE + TimeBtw_Read)) {//retriving BLE devices every xUL
-        timeBLE = millis();
-        BLEDevice::init("");
-        BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-        pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-        pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-        BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
-        trc(F("Devices found: "));
-        trc(String(foundDevices.getCount()));
-        trc(F("Scan done!"));
-        if (foundDevices.getCount() >= 1) return true;
-        else return false;
-      }
-      return false;
+    void coreTask( void * pvParameters ){
+     
+        String taskMessage = "Task running on core ";
+        taskMessage = taskMessage + xPortGetCoreID();
+     
+        while(true){
+            trc(taskMessage);
+            delay(TimeBtw_Read);
+            BLEDevice::init("");
+            BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+            pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+            pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+            BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+        }
     }
   
   #else // arduino or ESP8266 working with HM10/11
