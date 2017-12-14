@@ -48,7 +48,7 @@ boolean RFtoMQTT(){
   if (mySwitch.available()){
     trc(F("Rcv. RF"));
     #ifdef ESP32
-      String taskMessage = "Task running on core ";
+      String taskMessage = "RF Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif

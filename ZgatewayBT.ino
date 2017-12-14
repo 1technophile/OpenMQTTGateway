@@ -41,7 +41,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     #include <BLEAdvertisedDevice.h>
 
     //core on which the BLE detection task will run
-    static int taskCore = 1;
+    static int taskCore = 0;
       
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           void onResult(BLEAdvertisedDevice advertisedDevice) {
@@ -74,7 +74,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
     void coreTask( void * pvParameters ){
      
-        String taskMessage = "Task running on core ";
+        String taskMessage = "BT Task running on core ";
         taskMessage = taskMessage + xPortGetCoreID();
      
         while(true){
