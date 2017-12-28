@@ -84,6 +84,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_ADC.h"
   //#define ZsensorBH1750
   //#include "config_BH1750.h"
+  //#define ZsensorTSL2561
+  //#include "config_TSL2561.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
   //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
@@ -106,6 +108,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_DHT.h"
   //#define ZsensorBH1750
   //#include "config_BH1750.h"
+  //#define ZsensorTSL2561
+  //#include "config_TSL2561.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
   //#define ZsensorHCSR501
