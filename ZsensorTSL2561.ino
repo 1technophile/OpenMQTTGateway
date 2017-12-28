@@ -46,31 +46,30 @@
 
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
 
-
 void displaySensorDetails(void)
 {
   sensor_t sensor;
   tsl.getSensor(&sensor);
-  Serial.println("------------------------------------");
-  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" lux");
-  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" lux");
-  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" lux");  
-  Serial.println("------------------------------------");
-  Serial.println("");
+  trc("------------------------------------");
+  trc("Sensor:       " + String(sensor.name));
+  trc("Driver Ver:   " + String(sensor.version));
+  trc("Unique ID:    " + String(sensor.sensor_id));
+  trc("Max Value:    " + String(sensor.max_value) + " lux");
+  trc("Min Value:    " + String(sensor.min_value) + " lux");
+  trc("Resolution:   " + String(sensor.resolution) + " lux");
+  trc("------------------------------------");
+  trc("");
   delay(500);
 }
 
 void setupZsensorTSL2561()
 {
   Wire.begin();
-  Wire.beginTransmission(TSL2561_i2c_addr);
+  Wire.beginTransmission(TSL2561_ADDR_FLOAT);
 
   if (!tsl.begin())
   {
-    Serial.println("No TSL2561 detected\n");
+    trc("No TSL2561 detected");
   }
   
   // enable auto ranging
@@ -82,7 +81,7 @@ void setupZsensorTSL2561()
   // tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);  /* medium resolution and speed   */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);
 
-  Serial.println("TSL2561 Initialized. Printing detials now.");
+  trc("TSL2561 Initialized. Printing detials now.");
   displaySensorDetails();  
 }
 
@@ -107,20 +106,17 @@ void MeasureLightIntensity()
 	  sprintf(ftcd, "%s", String(event.light/10.764).c_str());
 	  sprintf(wattsm2, "%s", String(event.light/683.0).c_str());
 	  	  
-	  trc(F("Sending Lux to MQTT"));
-	  trc(String(event.light));
+	  trc("Sending Light Intensity in Lux to MQTT " + (event.light) + " lux");
 	  client.publish(LUX, lux);
 	  client.publish(FTCD, ftcd);
 	  client.publish(WATTSM2, wattsm2);
 	} else {
-	  trc(F("Same lux value, do not send"));
+	  trc("Same lux value, do not send");
 	}
       } else {
-        trc(F("Failed to read from TSL2561"));
-      }
+      trc("Failed to read from TSL2561");
+    }
   }
 }
+#endif
 
-
-
-#endif 
