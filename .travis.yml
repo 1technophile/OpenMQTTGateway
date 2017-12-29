@@ -32,6 +32,7 @@ install:
   - git clone https://github.com/mrdunk/esp8266_mdns.git /usr/local/share/arduino/libraries/ESP8266mDNS
   - git clone https://github.com/adafruit/DHT-sensor-library /usr/local/share/arduino/libraries/DHT_sensor_library
   - git clone https://github.com/adafruit/Adafruit_Sensor /usr/local/share/arduino/libraries/Adafruit_Sensor
+  - git clone https://github.com/adafruit/Adafruit_TSL2561.git /usr/local/share/arduino/libraries/Adafruit_TSL2561
   - git clone https://github.com/sparkfun/SparkFun_BME280_Arduino_Library /usr/local/share/arduino/libraries/SparkFun_BME280
   - git clone https://github.com/LowPowerLab/RFM69 /usr/local/share/arduino/libraries/RFM69
   - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.h
