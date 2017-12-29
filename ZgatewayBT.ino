@@ -84,7 +84,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   service_data[returnedString.length()] = '\0';
                   char mac[mac_adress.length()+1];
                   mac_adress.toCharArray(mac,mac_adress.length()+1);
-                  boolean result = process_miflora_data(-22,service_data,mac); // TO DO add offset
+                  boolean result = process_miflora_data(-22,service_data,mac); 
                 }
             } 
           }

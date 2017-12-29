@@ -41,13 +41,20 @@
 
 void setupIR()
 {
+ 
   //IR init parameters
 #ifdef ESP8266
   irsend.begin();
 #endif
 
-  irrecv.enableIRIn(); // Start the receiver
+irrecv.enableIRIn(); // Start the receiver
   
+trc(F("IR_EMITTER_PIN "));
+trc(String(IR_EMITTER_PIN));
+trc(F("IR_RECEIVER_PIN "));
+trc(String(IR_RECEIVER_PIN));
+trc(F("ZgatewayIR setup done "));
+
 }
 boolean IRtoMQTT(){
   decode_results results;

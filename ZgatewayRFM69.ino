@@ -101,7 +101,7 @@ void setupRFM69(void) {
   // Initialize radio
   if (!radio.initialize(pGC->rfmfrequency, pGC->nodeid, pGC->networkid))
   {
-    trc(F("RFM69 initialization failed"));
+    trc(F("ZgatewayRFM69 initialization failed"));
     }
 
   if (GC_IS_RFM69HCW) {
@@ -111,7 +111,7 @@ void setupRFM69(void) {
 
   if (pGC->encryptkey[0] != '\0') radio.encrypt(pGC->encryptkey);
 
-  trc(F("RFM69 Listening and transmitting at"));
+  trc(F("ZgatewayRFM69 Listening and transmitting at"));
   switch (pGC->rfmfrequency) {
     case RF69_433MHZ:
       freq = 433;

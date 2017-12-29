@@ -41,6 +41,7 @@ void setupRF(){
   mySwitch.enableReceive(RF_RECEIVER_PIN); 
   trc(F("RF_RECEIVER_PIN "));
   trc(String(RF_RECEIVER_PIN));
+  trc(F("ZgatewayRF setup done "));
 }
 
 boolean RFtoMQTT(){
