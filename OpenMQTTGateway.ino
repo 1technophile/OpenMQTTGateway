@@ -279,7 +279,7 @@ void loop()
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
     #endif
     #ifdef ZsensorTSL2561
-      MeasureLightIntensity(); // Addon to measure Light Intensity with a TSL2561
+      MeasureLightIntensityTSL2561(); // Addon to measure Light Intensity with a TSL2561
     #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT

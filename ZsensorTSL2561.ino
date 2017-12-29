@@ -85,11 +85,10 @@ void setupZsensorTSL2561()
   displaySensorDetails();  
 }
 
-void MeasureLightIntensity()
+void MeasureLightIntensityTSL2561()
 {
-  static uint32_t persisted_lux = 0;
-  
   if (millis() > (timetsl2561 + TimeBetweenReadingtsl2561)) {
+    static uint32_t persisted_lux;
     timetsl2561 = millis();
     
     sensors_event_t event;
@@ -106,7 +105,7 @@ void MeasureLightIntensity()
 	  sprintf(ftcd, "%s", String(event.light/10.764).c_str());
 	  sprintf(wattsm2, "%s", String(event.light/683.0).c_str());
 	  	  
-	  trc("Sending Light Intensity in Lux to MQTT " + (event.light) + " lux");
+	  trc("Sending Light Intensity in Lux to MQTT " + String(event.light) + " lux");
 	  client.publish(LUX, lux);
 	  client.publish(FTCD, ftcd);
 	  client.publish(WATTSM2, wattsm2);
