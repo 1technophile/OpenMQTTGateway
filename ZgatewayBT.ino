@@ -45,10 +45,10 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
       
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           void onResult(BLEAdvertisedDevice advertisedDevice) {
-            String mac = advertisedDevice.getAddress().toString().c_str();
-            mac.replace(":","");
-            mac.toUpperCase();
-            String mactopic = subjectBTtoMQTT + mac;
+            String mac_adress = advertisedDevice.getAddress().toString().c_str();
+            mac_adress.replace(":","");
+            mac_adress.toUpperCase();
+            String mactopic = subjectBTtoMQTT + mac_adress;
             if (advertisedDevice.haveName()){
                 String nameBLE = advertisedDevice.getName().c_str();
                 trc(mactopic + " " + nameBLE);
@@ -57,6 +57,36 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             String rssi = String(advertisedDevice.getRSSI());
             trc(mactopic + " " + rssi);
             client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+
+            if (advertisedDevice.haveServiceData()){
+                trc(F("Get service data "));
+                std::string serviceData = advertisedDevice.getServiceData();
+                int serviceDataLength = serviceData.length();
+                String returnedString = "";
+                for (int i=0; i<serviceDataLength; i++)
+                {
+                  int a = serviceData[i];
+                  if (a < 16) {
+                    returnedString = returnedString + "0";
+                  } 
+                  returnedString = returnedString + String(a,HEX);  
+                }
+                trc(returnedString);
+                                
+                trc(F("Get service data UUID"));
+                BLEUUID serviceDataUUID = advertisedDevice.getServiceDataUUID();
+                trc(serviceDataUUID.toString().c_str());
+
+                if (strstr(serviceDataUUID.toString().c_str(),"fe95") != NULL){
+                  trc("Processing mi flora data");
+                  char service_data[returnedString.length()+1];
+                  returnedString.toCharArray(service_data,returnedString.length()+1);
+                  service_data[returnedString.length()] = '\0';
+                  char mac[mac_adress.length()+1];
+                  mac_adress.toCharArray(mac,mac_adress.length()+1);
+                  boolean result = process_miflora_data(-22,service_data,mac); // TO DO add offset
+                }
+            } 
           }
       };
 
@@ -87,7 +117,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
         }
     }
-  
+      
   #else // arduino or ESP8266 working with HM10/11
 
 #include <SoftwareSerial.h>
@@ -161,7 +191,7 @@ boolean BTtoMQTT() {
               sprintf(val, "%d", rssi);
               client.publish((char *)mactopic.c_str(),val);
               if (strcmp(d[4].extract, "fe95") == 0) 
-              boolean result = process_miflora_data(d[5].extract,d[0].extract);
+              boolean result = process_miflora_data(0,d[5].extract,d[0].extract);
               
               return true;
           }
@@ -181,49 +211,6 @@ void strupp(char* beg)
     while (*beg = toupper(*beg))
        ++beg;
 }
-
-boolean process_miflora_data(char * rest_data, char * mac_adress){
-  
-  char tmp_rest_data_length[1];
-  memcpy( tmp_rest_data_length, &rest_data[51], 1 );
-  int data_length = ((int)strtol(tmp_rest_data_length, NULL, 16)*2)+1;
-  char rev_data[data_length];
-  char data[data_length];
-  memcpy( rev_data, &rest_data[52], data_length );
-  rev_data[data_length] = '\0';
-  
-  // reverse data order
-  revert_hex_data(rev_data, data, data_length);
-  int value = strtol(data, NULL, 16);
-  char val[12];
-  sprintf(val, "%d", value);
-  String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
-
-          
-  // following the value of digit 47 we determine the type of data we get from the sensor
-  switch (rest_data[47]) {
-    case '9' :
-          mactopic = mactopic + "/" + "fer";
-    break;
-    case '4' :
-          mactopic = mactopic + "/" + "tem";
-          dtostrf(value/10,4,1,val); // override temperature value in case we have, indeed temp has to be divided by 10
-    break;
-    case '7' :
-          mactopic = mactopic + "/" + "lux";
-     break;
-    case '8' :
-          mactopic = mactopic + "/" + "hum";
-     break;
-    default:
-    trc("can't read values");
-    return false;
-    }
-    client.publish((char *)mactopic.c_str(),val);;
-    trc(String(val));
-    return true;
-  }
 
 #endif
 
@@ -274,4 +261,59 @@ boolean BTtoMQTT() {
 }
 #endif
 #endif
+
+boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
+  
+  int data_length = 0;
+  switch (rest_data[51 + offset]) {
+    case '1' :
+    case '2' :
+    case '3' :
+    case '4' :
+        data_length = ((rest_data[51 + offset] - '0') * 2)+1;
+        Serial.println(String(data_length));
+    break;
+    default:
+        Serial.println("can't read data_length");
+    return false;
+    }
+    
+  char rev_data[data_length];
+  char data[data_length];
+  memcpy( rev_data, &rest_data[52 + offset], data_length );
+  rev_data[data_length] = '\0';
+  
+  // reverse data order
+  revert_hex_data(rev_data, data, data_length);
+  int value = strtol(data, NULL, 16);
+  char val[12];
+  sprintf(val, "%d", value);
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+
+          
+  // following the value of digit 47 we determine the type of data we get from the sensor
+  switch (rest_data[47 + offset]) {
+    case '9' :
+          mactopic = mactopic + "/" + "fer";
+    break;
+    case '4' :
+          mactopic = mactopic + "/" + "tem";
+          dtostrf(value/10,4,1,val); // override temperature value in case we have, indeed temp has to be divided by 10
+    break;
+    case '7' :
+          mactopic = mactopic + "/" + "lux";
+     break;
+    case '8' :
+          mactopic = mactopic + "/" + "hum";
+     break;
+    default:
+    trc("can't read values");
+    return false;
+    }
+    client.publish((char *)mactopic.c_str(),val);;
+    trc(String(val));
+    return true;
+  }
+
 #endif
