@@ -88,6 +88,6 @@
   #define IR_EMITTER_PIN 14
 #else
   #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino
-  #define IR_EMITTER_PIN D9
+  #define IR_EMITTER_PIN 9
 #endif
 
