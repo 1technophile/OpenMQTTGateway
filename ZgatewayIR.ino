@@ -198,27 +198,27 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #ifdef IR_COOLIX
   if (strstr(topicOri, "IR_COOLIX") != NULL){
     if (valueBITS == 0) valueBITS = 24;
-    irsend.sendCOOLIX(data, valueBITS);
+    irsend.sendCOOLIX(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #endif
   if (strstr(topicOri, "IR_NEC") != NULL || strstr(topicOri, subjectMQTTtoIR) != NULL ){
     if (valueBITS == 0) valueBITS = 32;
-    irsend.sendNEC(data, valueBITS);
+    irsend.sendNEC(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #ifdef IR_Whynter
   if (strstr(topicOri, "IR_Whynter") != NULL){
     if (valueBITS == 0) valueBITS = 32;
-    irsend.sendWhynter(data, valueBITS);
+    irsend.sendWhynter(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #ifdef IR_LG
   if (strstr(topicOri, "IR_LG") != NULL){
     if (valueBITS == 0) valueBITS = 28;
-    irsend.sendLG(data, valueBITS);
+    irsend.sendLG(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
@@ -233,28 +233,28 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #ifdef IR_DISH
   if (strstr(topicOri, "IR_DISH") != NULL){
     if (valueBITS == 0) valueBITS = 16;
-    irsend.sendDISH(data, valueBITS);
+    irsend.sendDISH(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #ifdef IR_RC5
   if (strstr(topicOri, "IR_RC5") != NULL){
     if (valueBITS == 0) valueBITS = 12;
-    irsend.sendRC5(data, valueBITS);
+    irsend.sendRC5(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #ifdef IR_Sharp
   if (strstr(topicOri, "IR_Sharp") != NULL){
     if (valueBITS == 0) valueBITS = 15;
-    irsend.sendSharpRaw(data, valueBITS);
+    irsend.sendSharpRaw(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #ifdef IR_SAMSUNG
   if (strstr(topicOri, "IR_SAMSUNG") != NULL){
     if (valueBITS == 0) valueBITS = 32;
-   irsend.sendSAMSUNG(data, valueBITS);
+    irsend.sendSAMSUNG(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
@@ -269,7 +269,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #ifdef IR_RCMM
   if (strstr(topicOri, "IR_RCMM") != NULL){
     if (valueBITS == 0) valueBITS = 32;
-    irsend.sendRCMM(data, valueBITS);
+    irsend.sendRCMM(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
