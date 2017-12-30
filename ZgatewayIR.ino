@@ -198,27 +198,39 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #ifdef IR_COOLIX
   if (strstr(topicOri, "IR_COOLIX") != NULL){
     if (valueBITS == 0) valueBITS = 24;
-    irsend.sendCOOLIX(data, valueBITS);
+    irsend.sendCOOLIX(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
   #endif
   if (strstr(topicOri, "IR_NEC") != NULL || strstr(topicOri, subjectMQTTtoIR) != NULL ){
     if (valueBITS == 0) valueBITS = 32;
-    irsend.sendNEC(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendNEC(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
+#endif
     signalSent = true;
   }
   #ifdef IR_Whynter
   if (strstr(topicOri, "IR_Whynter") != NULL){
     if (valueBITS == 0) valueBITS = 32;
-    irsend.sendWhynter(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendWhynter(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
   #ifdef IR_LG
   if (strstr(topicOri, "IR_LG") != NULL){
     if (valueBITS == 0) valueBITS = 28;
-    irsend.sendLG(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendLG(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
@@ -226,35 +238,55 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   if (strstr(topicOri, "IR_Sony") != NULL){
     if (valueBITS == 0) valueBITS = 12;
     if (valueRPT == 0) valueRPT = 2;
+#ifdef ESP8266
     irsend.sendSony(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
   #ifdef IR_DISH
   if (strstr(topicOri, "IR_DISH") != NULL){
     if (valueBITS == 0) valueBITS = 16;
-    irsend.sendDISH(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendDISH(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
   #ifdef IR_RC5
   if (strstr(topicOri, "IR_RC5") != NULL){
     if (valueBITS == 0) valueBITS = 12;
-    irsend.sendRC5(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendRC5(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
   #ifdef IR_Sharp
   if (strstr(topicOri, "IR_Sharp") != NULL){
     if (valueBITS == 0) valueBITS = 15;
-    irsend.sendSharpRaw(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendSharpRaw(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
   #ifdef IR_SAMSUNG
   if (strstr(topicOri, "IR_SAMSUNG") != NULL){
     if (valueBITS == 0) valueBITS = 32;
-   irsend.sendSAMSUNG(data, valueBITS);
+#ifdef ESP8266
+    irsend.sendSAMSUNG(data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
+#endif
     signalSent = true;
   }
   #endif
@@ -262,17 +294,25 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   if (strstr(topicOri, "IR_PANASONIC") != NULL){
     if (valueBITS == 0) valueBITS = PanasonicBits;
     if (valueRPT == 0) valueRPT = 2;
+#ifdef ESP8266
     irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
+#else
+    for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
+#endif
     signalSent = true;
   }
   #endif
+
+#ifdef ESP8266  // IR_RCMM not available on arduino
   #ifdef IR_RCMM
   if (strstr(topicOri, "IR_RCMM") != NULL){
     if (valueBITS == 0) valueBITS = 32;
-    irsend.sendRCMM(data, valueBITS);
+    irsend.sendRCMM(data, valueBITS, valueRPT);
     signalSent = true;
   }
   #endif
+#endif
+
   if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
     if (result){
