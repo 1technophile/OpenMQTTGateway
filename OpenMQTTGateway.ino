@@ -82,6 +82,11 @@ PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 //MQTT last attemps reconnection date
 unsigned long lastReconnectAttempt = 0;
 
+//timers for LED indicators
+unsigned long timer_led_receive = 0;
+unsigned long timer_led_send = 0;
+unsigned long timer_led_error = 0;
+
 boolean reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -179,6 +184,16 @@ void setup()
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
+    //setup LED status, turn all ON for short amount then leave only the RED LED ON
+    pinMode(led_receive, OUTPUT);
+    pinMode(led_send, OUTPUT);
+    pinMode(led_error, OUTPUT);
+    digitalWrite(led_receive, LOW);
+    digitalWrite(led_send, LOW);
+    digitalWrite(led_error, LOW);
+    delay(500);
+    digitalWrite(led_receive, HIGH);
+    digitalWrite(led_send, HIGH);
   #endif
 
   delay(1500);
@@ -253,9 +268,12 @@ void setup_ethernet() {
 
 void loop()
 {
+    unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
-    unsigned long now = millis();
+    //RED ON
+    digitalWrite(led_error, LOW);
+
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       // Attempt to reconnect
@@ -265,6 +283,13 @@ void loop()
     }
   } else { //connected
     // MQTT loop
+    //RED OFF
+    if (now - timer_led_receive > 300) {
+      timer_led_receive = now;
+      digitalWrite(led_receive, HIGH);
+    }
+    digitalWrite(led_error, HIGH);
+    
     client.loop();
 
     #if defined(ESP8266) || defined(ESP32)
@@ -291,21 +316,31 @@ void loop()
     #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
-      if(RFtoMQTT())
+      if(RFtoMQTT()){
       trc(F("RFtoMQTT OK"));
+      //GREEN ON
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
     #endif
     #ifdef ZgatewayRF2
-      if(RF2toMQTT())
+      if(RF2toMQTT()){
       trc(F("RF2toMQTT OK"));
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
     #endif
     #ifdef ZgatewaySRFB
       if(SRFBtoMQTT())
       trc(F("SRFBtoMQTT OK"));
     #endif
     #ifdef ZgatewayIR
-      if(IRtoMQTT())
+      if(IRtoMQTT())      {
       trc(F("IRtoMQTT OK"));
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
       delay(100);
+      }
     #endif
     #ifdef ZgatewayBT
       #ifndef ESP32
@@ -376,7 +411,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       storeValue(data);
       trc(F("Data stored"));
    }
-
+//YELLOW ON
+digitalWrite(led_send, LOW);
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
@@ -392,6 +428,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
 #endif
+//YELLOW OFF
+digitalWrite(led_send, HIGH);
 }
 
 void extract_char(char * token_char, char * subset, int start ,int l, boolean reverse, boolean isNumber){

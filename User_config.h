@@ -64,6 +64,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ota_password "OTAPASSWORD"
 #define ota_port 8266
 
+/*-------------DEFINE PINs FOR STATUS LEDs----------------*/
+#define led_receive 40
+#define led_send 42
+#define led_error 44
+
+//      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
+//                        LED       Resistor 270-510R
+
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
