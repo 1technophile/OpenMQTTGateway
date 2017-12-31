@@ -403,7 +403,7 @@ void extract_char(char * token_char, char * subset, int start ,int l, boolean re
       if (reverse) revert_hex_data(tmp_subset, tmp_subset2, l+1);
       else strncpy( tmp_subset2, tmp_subset , l+1);
       long long_value = strtoul(tmp_subset2, NULL, 16);
-      sprintf(tmp_subset2, "%d", long_value);
+      sprintf(tmp_subset2, "%ld", long_value);
       strncpy( subset, tmp_subset2 , l+1);
     }else{
       if (reverse) revert_hex_data(tmp_subset, subset, l+1);
