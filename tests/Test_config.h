@@ -46,7 +46,7 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
-#ifdef ESP8266 // for nodemcu, weemos and esp8266
+#ifdef ESP8266 || defined(ESP32) // for nodemcu, weemos and esp8266
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
@@ -96,8 +96,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF2
   //#define ZgatewayIR
   //#include "config_IR.h"
-  //#define ZgatewayBT
-  //#include "config_BT.h"
+  #define ZgatewayBT
+  #include "config_BT.h"
   //#define ZsensorINA226
   //#include "config_INA226.h"
   //#define ZsensorHCSR501
