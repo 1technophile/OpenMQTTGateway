@@ -94,8 +94,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF
   #include "config_RF.h"
   #define ZgatewayRF2
-  #define ZgatewayIR
-  #include "config_IR.h"
+  //#define ZgatewayIR
+  //#include "config_IR.h"
   //#define ZgatewayBT
   //#include "config_BT.h"
   //#define ZsensorINA226
