@@ -46,7 +46,7 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
-#ifdef ESP8266 || defined(ESP32) // for nodemcu, weemos and esp8266
+#if defined(ESP8266) || defined(ESP32) // for nodemcu, wemos, esp32 and esp8266
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
