@@ -65,7 +65,7 @@ uint32_t gc_checksum() {
   return checksum;
 }
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 void eeprom_setup() {
   EEPROM.begin(4096);
   pGC = (struct _GLOBAL_CONFIG *)EEPROM.getDataPtr();
@@ -88,7 +88,7 @@ void eeprom_setup() {
 RFM69 radio;
 
 void setupRFM69(void) {
-  #ifdef ESP8266
+  #if defined(ESP8266) || defined(ESP32)
     eeprom_setup();
   #endif
   int freq;
@@ -101,7 +101,7 @@ void setupRFM69(void) {
   // Initialize radio
   if (!radio.initialize(pGC->rfmfrequency, pGC->nodeid, pGC->networkid))
   {
-    trc(F("RFM69 initialization failed"));
+    trc(F("ZgatewayRFM69 initialization failed"));
     }
 
   if (GC_IS_RFM69HCW) {
@@ -111,7 +111,7 @@ void setupRFM69(void) {
 
   if (pGC->encryptkey[0] != '\0') radio.encrypt(pGC->encryptkey);
 
-  trc(F("RFM69 Listening and transmitting at"));
+  trc(F("ZgatewayRFM69 Listening and transmitting at"));
   switch (pGC->rfmfrequency) {
     case RF69_433MHZ:
       freq = 433;

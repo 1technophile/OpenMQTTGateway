@@ -41,19 +41,31 @@
 
 void setupIR()
 {
+ 
   //IR init parameters
 #ifdef ESP8266
   irsend.begin();
 #endif
 
-  irrecv.enableIRIn(); // Start the receiver
+irrecv.enableIRIn(); // Start the receiver
   
+trc(F("IR_EMITTER_PIN "));
+trc(String(IR_EMITTER_PIN));
+trc(F("IR_RECEIVER_PIN "));
+trc(String(IR_RECEIVER_PIN));
+trc(F("ZgatewayIR setup done "));
+
 }
 boolean IRtoMQTT(){
   decode_results results;
   
   if (irrecv.decode(&results)){
   trc(F("Rcv. IR"));
+    #ifdef ESP32
+      String taskMessage = "Task running on core ";
+      taskMessage = taskMessage + xPortGetCoreID();
+      trc(taskMessage);
+    #endif
     unsigned long MQTTvalue = 0;
     String MQTTprotocol;
     String MQTTbits;
@@ -74,12 +86,15 @@ boolean IRtoMQTT(){
     trc(rawCode);
     // if needed we directly resend the raw code
     if (RawDirectForward){
-      uint16_t rawsend[results.rawlen];
-      for (uint16_t i = 1;  i < results.rawlen;  i++) {
-         #ifdef ESP8266
-            if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
-         #endif
-            rawsend[i] = results.rawbuf[i];
+      #ifdef ESP8266
+        uint16_t rawsend[results.rawlen];
+        for (uint16_t i = 1;  i < results.rawlen;  i++) {
+          if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
+      #else
+        unsigned int rawsend[results.rawlen];
+        for (int i = 1;  i < results.rawlen;  i++) {
+      #endif
+          rawsend[i] = results.rawbuf[i];
       }
       irsend.sendRaw(rawsend, results.rawlen, RawFrequency); 
       trc(F("raw signal redirected"));
@@ -154,7 +169,11 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   else if(strstr(topicOri, "IR_Raw") != NULL){ // sending Raw data
     trc("IR_Raw");
     //buffer allocation from char datacallback
-    uint16_t  Raw[count+1];
+    #ifdef ESP8266
+      uint16_t  Raw[count+1];
+    #else
+      unsigned int Raw[count+1];
+    #endif
     String value = "";
     int j = 0;
     for(int i = 0; i < s; i++)

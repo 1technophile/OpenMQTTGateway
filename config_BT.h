@@ -25,7 +25,8 @@
 */
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT "home/BTtoMQTT/"
-#define TimeBtw_Read 10000 //define the time between 2 scans
+#define TimeBtw_Read 20000 //define the time between 2 scans
+#define Scan_duration 10 //define the time for a scan
 #define HM-10 
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 #define ZgatewayBT_v6xx // comment if you don't have a firmware version of HM10/11 >= v601
@@ -45,6 +46,9 @@ struct decompose
 #ifdef ESP8266
   #define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
   #define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
+#elif defined(ESP32)
+  #define BT_RX 18 // not tested
+  #define BT_TX 19 // not tested
 #else
   #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
   #define BT_TX 6 //arduino TX connect HM-10 or 11 RX

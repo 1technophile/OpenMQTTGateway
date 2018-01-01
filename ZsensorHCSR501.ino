@@ -36,7 +36,7 @@ void MeasureHCSR501(){
   if (millis() > TimeBeforeStartHCSR501) {//let time to init the PIR sensor
   static int pirState = LOW;
   int PresenceValue = digitalRead(HCSR501_PIN);
-  #ifdef ESP8266
+  #if defined(ESP8266) || defined(ESP32)
     yield();
   #endif
   if (PresenceValue == HIGH) { 
