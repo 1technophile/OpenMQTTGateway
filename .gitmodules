@@ -25,3 +25,6 @@
 [submodule "libraries/NewRemoteSwitch"]
 	path = libraries/NewRemoteSwitch
 	url = https://github.com/1technophile/NewRemoteSwitch
+[submodule "libraries/ESP32_BLE_Arduino"]
+	path = libraries/ESP32_BLE_Arduino
+	url = git://github.com/nkolban/ESP32_BLE_Arduino.git

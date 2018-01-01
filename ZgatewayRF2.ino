@@ -52,11 +52,14 @@ RF2rxd rf2rd;
 void setupRF2(){
     #ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
       NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
-      trc(F("Receiver RF2 initialized"));   
+        trc(F("RF_EMITTER_PIN "));
+        trc(String(RF_EMITTER_PIN));
+        trc(F("RF_RECEIVER_PIN "));
+        trc(String(RF_RECEIVER_PIN));
+        trc(F("ZgatewayRF2 setup done "));   
     #endif 
     pinMode(RF_EMITTER_PIN, OUTPUT);
-    digitalWrite(RF_EMITTER_PIN, LOW);
-    trc(F("Transmitter RF2 initialized"));    
+    digitalWrite(RF_EMITTER_PIN, LOW); 
 }
 
 boolean RF2toMQTT(){

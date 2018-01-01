@@ -35,15 +35,24 @@ void setupRF(){
 
   //RF init parameters
   mySwitch.enableTransmit(RF_EMITTER_PIN);
+  trc(F("RF_EMITTER_PIN "));
+  trc(String(RF_EMITTER_PIN));
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); 
   mySwitch.enableReceive(RF_RECEIVER_PIN); 
-  
+  trc(F("RF_RECEIVER_PIN "));
+  trc(String(RF_RECEIVER_PIN));
+  trc(F("ZgatewayRF setup done "));
 }
 
 boolean RFtoMQTT(){
 
   if (mySwitch.available()){
     trc(F("Rcv. RF"));
+    #ifdef ESP32
+      String taskMessage = "RF Task running on core ";
+      taskMessage = taskMessage + xPortGetCoreID();
+      trc(taskMessage);
+    #endif
     unsigned long MQTTvalue = 0;
     String MQTTprotocol;
     String MQTTbits;
