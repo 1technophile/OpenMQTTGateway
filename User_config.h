@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.5"
+#define OMG_VERSION "0.6"
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -104,10 +104,10 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF
   #include "config_RF.h"
   #define ZgatewayRF2
-  #define ZgatewayIR
-  #include "config_IR.h"
-  //#define ZgatewayBT
-  //#include "config_BT.h"
+  //#define ZgatewayIR
+  //#include "config_IR.h"
+  #define ZgatewayBT
+  #include "config_BT.h"
   //#define ZsensorINA226
   //#include "config_INA226.h"
   //#define ZsensorHCSR501
@@ -169,5 +169,4 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
-/*-------------------VERSION----------------------*/
-#define VERSION 0.5
+
