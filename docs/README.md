@@ -8,7 +8,8 @@ The MQTT broker can connected to your favorite home automation controller (Home 
 It can be installed on:
 * Arduino uno(limited)/mega(advised) + W5100
 * ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1
-* Sonoff RF.
+* ESP32
+* Sonoff RF bridge.
  
   It enables to:
 * Send RF signals corresponding to received MQTT data (MQTT->RF)
@@ -19,7 +20,7 @@ It can be installed on:
 * Publish MQTT data related to received IR signal (IR-->MQTT)
 * Publish MQTT data related to BLE beacons or Mi flora(BT-->MQTT)
 
-It supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226
+It supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561
 
 ## Functions:
 * Bidirectional, the gateway can send and receive signals, for example if you have RF wall plug you can either control them with your home automation software (MQTT-->RF) or the physical remote control. When you press a button on the physical remote the wall plug will switch ON and the button in your home automation software (RF-->MQTT) will be updated.
