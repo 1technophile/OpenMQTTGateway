@@ -215,6 +215,9 @@ void setup()
   #ifdef ZgatewayRF2
     setupRF2();
   #endif
+  #ifdef ZgatewaySRFB
+    setupSRFB();
+  #endif
   #ifdef ZgatewayBT
     setupBT();
   #endif

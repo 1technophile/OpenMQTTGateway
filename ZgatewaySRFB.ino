@@ -34,6 +34,11 @@
 unsigned char _uartbuf[RF_MESSAGE_SIZE+3] = {0};
 unsigned char _uartpos = 0;
 
+void setupSRFB(){
+  trc(F("ZgatewaySRFB setup done "));
+  trc("Serial Baud" + SERIAL_BAUD);
+}
+
 void MQTTtoSRFB(char * topicOri, char * datacallback) {
 
   // RF DATA ANALYSIS
