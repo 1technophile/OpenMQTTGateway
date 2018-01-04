@@ -31,6 +31,15 @@
   - petricaM
   - ekim from Home assistant forum
   - ronvl from Home assistant forum
+  - Chris Broekema
+  - Lars Englund
+  - Fredrik Lindqvist
+  - Philippe LUC
+  - Patrick Wilhelm
+  - Georgi Yanev
+  - zerinrc
+  - ChiefZ
+  - 8666
 
     This file is part of OpenMQTTGateway.
 
