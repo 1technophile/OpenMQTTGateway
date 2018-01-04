@@ -30,7 +30,7 @@
 #define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #define HCSR501_PIN D5
 #else
   #define HCSR501_PIN D7

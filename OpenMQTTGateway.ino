@@ -51,7 +51,7 @@
 #include <PubSubClient.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 #define array_size 12
 unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else
@@ -63,10 +63,12 @@ unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
-#ifdef ESP8266
+#ifdef ESP32
+  #include <WiFi.h>
+  #include <ArduinoOTA.h>
+  WiFiClient eClient;
+#elif defined(ESP8266)
   #include <ESP8266WiFi.h>
-  #include <ESP8266mDNS.h>
-  #include <WiFiUdp.h>
   #include <ArduinoOTA.h>
   WiFiClient eClient;
 #else
@@ -79,6 +81,11 @@ PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
 
 //MQTT last attemps reconnection date
 unsigned long lastReconnectAttempt = 0;
+
+//timers for LED indicators
+unsigned long timer_led_receive = 0;
+unsigned long timer_led_send = 0;
+unsigned long timer_led_error = 0;
 
 boolean reconnect() {
   // Loop until we're reconnected
@@ -135,9 +142,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
-  #ifdef ESP8266
+  #if defined(ESP8266) || defined(ESP32)
     //Launch serial for debugging purposes
-    #ifdef ZgatewaySRFB
+    #if defined(ZgatewaySRFB) || defined(ESP32)
       Serial.begin(SERIAL_BAUD); // in the case of sonoff RF Bridge the link to the RF emitter/receiver is made by serial and need TX/RX
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
@@ -177,6 +184,16 @@ void setup()
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
+    //setup LED status, turn all ON for short amount then leave only the RED LED ON
+    pinMode(led_receive, OUTPUT);
+    pinMode(led_send, OUTPUT);
+    pinMode(led_error, OUTPUT);
+    digitalWrite(led_receive, LOW);
+    digitalWrite(led_send, LOW);
+    digitalWrite(led_error, LOW);
+    delay(500);
+    digitalWrite(led_receive, HIGH);
+    digitalWrite(led_send, HIGH);
   #endif
 
   delay(1500);
@@ -189,9 +206,6 @@ void setup()
   #ifdef ZsensorBH1750
     setupZsensorBH1750();
   #endif
-  #ifdef ZsensorTSL2561
-    setupZsensorTSL2561();
-  #endif
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -200,6 +214,9 @@ void setup()
   #endif
   #ifdef ZgatewayRF2
     setupRF2();
+  #endif
+  #ifdef ZgatewaySRFB
+    setupSRFB();
   #endif
   #ifdef ZgatewayBT
     setupBT();
@@ -215,7 +232,7 @@ void setup()
   #endif
 }
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -254,9 +271,12 @@ void setup_ethernet() {
 
 void loop()
 {
+    unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
-    unsigned long now = millis();
+    //RED ON
+    digitalWrite(led_error, LOW);
+
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       // Attempt to reconnect
@@ -266,9 +286,16 @@ void loop()
     }
   } else { //connected
     // MQTT loop
+    //RED OFF
+    if (now - timer_led_receive > 300) {
+      timer_led_receive = now;
+      digitalWrite(led_receive, HIGH);
+    }
+    digitalWrite(led_error, HIGH);
+    
     client.loop();
 
-    #ifdef ESP8266
+    #if defined(ESP8266) || defined(ESP32)
       ArduinoOTA.handle();
     #endif
 
@@ -277,9 +304,6 @@ void loop()
     #endif
     #ifdef ZsensorBH1750
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
-    #endif
-    #ifdef ZsensorTSL2561
-      MeasureLightIntensityTSL2561(); // Addon to measure Light Intensity with a TSL2561
     #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
@@ -295,25 +319,37 @@ void loop()
     #endif
     // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
-      if(RFtoMQTT())
+      if(RFtoMQTT()){
       trc(F("RFtoMQTT OK"));
+      //GREEN ON
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
     #endif
     #ifdef ZgatewayRF2
-      if(RF2toMQTT())
+      if(RF2toMQTT()){
       trc(F("RF2toMQTT OK"));
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
     #endif
     #ifdef ZgatewaySRFB
       if(SRFBtoMQTT())
       trc(F("SRFBtoMQTT OK"));
     #endif
     #ifdef ZgatewayIR
-      if(IRtoMQTT())
+      if(IRtoMQTT())      {
       trc(F("IRtoMQTT OK"));
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
       delay(100);
+      }
     #endif
     #ifdef ZgatewayBT
-      if(BTtoMQTT())
-      trc(F("BTtoMQTT OK"));
+      #ifndef ESP32
+        if(BTtoMQTT())
+        trc(F("BTtoMQTT OK"));
+      #endif
     #endif
     #ifdef ZgatewayRFM69
       if(RFM69toMQTT())
@@ -378,7 +414,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       storeValue(data);
       trc(F("Data stored"));
    }
-
+//YELLOW ON
+digitalWrite(led_send, LOW);
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
@@ -394,6 +431,8 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
 #endif
+//YELLOW OFF
+digitalWrite(led_send, HIGH);
 }
 
 void extract_char(char * token_char, char * subset, int start ,int l, boolean reverse, boolean isNumber){
@@ -405,12 +444,13 @@ void extract_char(char * token_char, char * subset, int start ,int l, boolean re
       if (reverse) revert_hex_data(tmp_subset, tmp_subset2, l+1);
       else strncpy( tmp_subset2, tmp_subset , l+1);
       long long_value = strtoul(tmp_subset2, NULL, 16);
-      sprintf(tmp_subset2, "%d", long_value);
+      sprintf(tmp_subset2, "%ld", long_value);
       strncpy( subset, tmp_subset2 , l+1);
     }else{
       if (reverse) revert_hex_data(tmp_subset, subset, l+1);
       else strncpy( subset, tmp_subset , l+1);
     }
+    subset[l] = '\0';
 }
 
 void revert_hex_data(char * in, char * out, int l){

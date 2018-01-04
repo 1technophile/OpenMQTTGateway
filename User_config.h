@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.5"
+#define OMG_VERSION "0.6"
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -46,7 +46,7 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
-#ifdef ESP8266 // for nodemcu, weemos and esp8266
+#if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
@@ -63,6 +63,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ota_hostname "OTAHOSTNAME"
 #define ota_password "OTAPASSWORD"
 #define ota_port 8266
+
+/*-------------DEFINE PINs FOR STATUS LEDs----------------*/
+#define led_receive 40
+#define led_send 42
+#define led_error 44
+
+//      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
+//                        LED       Resistor 270-510R
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
@@ -86,6 +94,28 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BH1750.h"
   //#define ZsensorTSL2561
   //#include "config_TSL2561.h"
+  //#define ZsensorBME280
+  //#include "config_BME280.h"
+  //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  //#include "config_DHT.h"
+  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
+  //#include "config_RFM69.h"
+#elif ESP32
+  #define ZgatewayRF
+  #include "config_RF.h"
+  #define ZgatewayRF2
+  //#define ZgatewayIR
+  //#include "config_IR.h"
+  #define ZgatewayBT
+  #include "config_BT.h"
+  //#define ZsensorINA226
+  //#include "config_INA226.h"
+  //#define ZsensorHCSR501
+  //#include "config_HCSR501.h"
+  //#define ZsensorADC
+  //#include "config_ADC.h"
+  //#define ZsensorBH1750
+  //#include "config_BH1750.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
   //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
@@ -139,5 +169,4 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
-/*-------------------VERSION----------------------*/
-#define VERSION 0.5
+

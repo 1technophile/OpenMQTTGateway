@@ -31,7 +31,7 @@
 #define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
 #else
   #define DHT_RECEIVER_PIN 8
