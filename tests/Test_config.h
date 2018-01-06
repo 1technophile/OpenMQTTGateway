@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.5"
+#define OMG_VERSION "0.6.1"
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #define mqtt_server "192.168.1.17"
@@ -43,6 +43,7 @@
 #define will_Retain true
 #define will_Message "Offline"
 #define Gateway_AnnouncementMsg "Online"
+#define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
@@ -117,8 +118,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BH1750.h"
   //#define ZsensorBME280
   //#include "config_BME280.h"
-  //#define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  //#include "config_DHT.h"
+  #define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  #include "config_DHT.h"
   //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   //#include "config_RFM69.h"
 #else // for arduino + W5100
