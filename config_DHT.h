@@ -35,8 +35,10 @@
 //#define DHT_SENSOR_TYPE DHT21 //uncomment for DHT21 Sensor
 #define DHT_SENSOR_TYPE DHT22 //uncomment for DHT22 Sensor (default for backwards compatibility)
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266)
   #define DHT_RECEIVER_PIN D1 // you can put D5 if you don't use HCSR501 sensor and the RFM69
+#elif defined(ESP32)
+  #define DHT_RECEIVER_PIN 35
 #else
   #define DHT_RECEIVER_PIN 8
 #endif

@@ -29,9 +29,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.6"
+#define OMG_VERSION "0.6.1"
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
+//#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 #define mqtt_server "192.168.1.17"
 //#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
@@ -43,6 +44,7 @@
 #define will_Retain true
 #define will_Message "Offline"
 #define Gateway_AnnouncementMsg "Online"
+//#define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.

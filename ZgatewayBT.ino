@@ -100,6 +100,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
+        trc(F("ZgatewayBT ESP32 setup done "));                 
     }
 
     void coreTask( void * pvParameters ){
@@ -143,6 +144,7 @@ void setupBT() {
   delay(100);
   softserial.print(F("AT+RESET"));
   delay(100);
+  trc(F("ZgatewayBT HM1X setup done "));
 }
 
 #ifdef ZgatewayBT_v6xx
