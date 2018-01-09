@@ -28,7 +28,7 @@
 */
 #ifdef ZsensorADC
 
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266)
   ADC_MODE(ADC_TOUT);
 #endif
 
@@ -47,11 +47,9 @@ void MeasureADC(){
       trc(F("Failed to read from ADC !"));
     }else{
       if(val  >= persistedadc + ThresholdReadingADC || val  <= persistedadc - ThresholdReadingADC){
-        char value[4];
-        sprintf(value, "%d", val);
         trc(F("Sending analog value to MQTT"));
         trc(String(val));
-        client.publish(ADC,value);
+        client.publish(ADC,String(val).c_str());
         persistedadc = val;
        }
     }
