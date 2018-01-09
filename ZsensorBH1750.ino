@@ -104,7 +104,7 @@ void MeasureLightIntensity()
       // Generate FtCd
       if(FtCd != persistedlf || bh1750_always){
         trc(F("Sending FtCd to MQTT"));
-        trc(String(ftcd));
+        trc(String(FtCd));
         client.publish(FTCD,String(FtCd).c_str());
       }else{
         trc(F("Same ftcd don't send it"));
