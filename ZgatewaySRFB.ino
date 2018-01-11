@@ -203,8 +203,8 @@ void _rfbDecode() {
         _rfbToChar(&_uartbuf[1], buffer);
         client.publish(subjectSRFBtoMQTTRaw,buffer);
         
-        char val[7]= {0};
-        extract_char(buffer, val, 12 ,7, false,true); 
+        char val[8]= {0};
+        extract_char(buffer, val, 12 ,8, false,true); 
         client.publish(subjectSRFBtoMQTT,val); 
 
         char val_Tsyn[4]= {0};
