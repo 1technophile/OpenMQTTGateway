@@ -58,6 +58,7 @@
 */
 #include "User_config.h"
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
@@ -80,8 +81,12 @@ void callback(char*topic, byte* payload,unsigned int length);
     #include <ESPmDNS.h>
   #endif
 #elif defined(ESP8266)
+  #include <FS.h> 
   #include <ESP8266WiFi.h>
   #include <ArduinoOTA.h>
+  #include <DNSServer.h>
+  #include <ESP8266WebServer.h>
+  #include <WiFiManager.h>  
   WiFiClient eClient;
   #ifdef MDNS_SD
     #include <ESP8266mDNS.h>
@@ -101,6 +106,15 @@ unsigned long lastReconnectAttempt = 0;
 unsigned long timer_led_receive = 0;
 unsigned long timer_led_send = 0;
 unsigned long timer_led_error = 0;
+
+//flag for saving data
+bool shouldSaveConfig = false;
+
+//callback notifying us of the need to save config
+void saveConfigCallback () {
+  Serial.println("Should save config");
+  shouldSaveConfig = true;
+}
 
 boolean reconnect() {
   // Loop until we're reconnected
@@ -164,9 +178,114 @@ void setup()
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
-
-    //Begining wifi connection in case of ESP8266
-    setup_wifi();
+    #ifndef ESP32
+    //clean FS, for testing
+    //SPIFFS.format();
+  
+    //read configuration from FS json
+    trc("mounting FS...");
+  
+    if (SPIFFS.begin()) {
+      trc("mounted file system");
+      if (SPIFFS.exists("/config.json")) {
+        //file exists, reading and loading
+        trc("reading config file");
+        File configFile = SPIFFS.open("/config.json", "r");
+        if (configFile) {
+          trc("opened config file");
+          size_t size = configFile.size();
+          // Allocate a buffer to store contents of the file.
+          std::unique_ptr<char[]> buf(new char[size]);
+  
+          configFile.readBytes(buf.get(), size);
+          DynamicJsonBuffer jsonBuffer;
+          JsonObject& json = jsonBuffer.parseObject(buf.get());
+          json.printTo(Serial);
+          if (json.success()) {
+            trc("\nparsed json");
+  
+            strcpy(mqtt_server, json["mqtt_server"]);
+            strcpy(mqtt_port, json["mqtt_port"]);
+  
+          } else {
+            trc("failed to load json config");
+          }
+        }
+      }
+    } else {
+      trc("failed to mount FS");
+    }
+  
+    // The extra parameters to be configured (can be either global or just in the setup)
+    // After connecting, parameter.getValue() will get you the configured value
+    // id/name placeholder/prompt default length
+    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
+    WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
+  
+   //WiFiManager
+    //Local intialization. Once its business is done, there is no need to keep it around
+    WiFiManager wifiManager;
+  
+    //set config save notify callback
+    wifiManager.setSaveConfigCallback(saveConfigCallback);
+  
+    //set static ip
+    //wifiManager.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+    
+    //add all your parameters here
+    wifiManager.addParameter(&custom_mqtt_server);
+    wifiManager.addParameter(&custom_mqtt_port);
+  
+    //reset settings - for testing
+    //wifiManager.resetSettings();
+  
+    //fetches ssid and pass and tries to connect
+    //if it does not connect it starts an access point with the specified name
+    //here  "AutoConnectAP"
+    //and goes into a blocking loop awaiting configuration
+    if (!wifiManager.autoConnect(Gateway_Name, WifiManager_password)) {
+      trc("failed to connect and hit timeout");
+      delay(3000);
+      //reset and try again, or maybe put it to deep sleep
+      ESP.reset();
+      delay(5000);
+    }
+  
+    //if you get here you have connected to the WiFi
+    trc("connected...yeey :)");
+  
+    //read updated parameters
+    strcpy(mqtt_server, custom_mqtt_server.getValue());
+    strcpy(mqtt_port, custom_mqtt_port.getValue());
+  
+    //save the custom parameters to FS
+    if (shouldSaveConfig) {
+      trc("saving config");
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& json = jsonBuffer.createObject();
+      json["mqtt_server"] = mqtt_server;
+      json["mqtt_port"] = mqtt_port;
+  
+      File configFile = SPIFFS.open("/config.json", "w");
+      if (!configFile) {
+        trc("failed to open config file for writing");
+      }
+  
+      json.printTo(Serial);
+      json.printTo(configFile);
+      configFile.close();
+      //end save
+    }
+    #else // ESP32 case
+      setup_wifi();
+    #endif
+    
+    trc(F("OpenMQTTGateway mac: "));
+    Serial.println(WiFi.macAddress()); 
+    
+    trc(F("OpenMQTTGateway ip: "));
+    Serial.println(WiFi.localIP());
+  
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
 
@@ -207,11 +326,12 @@ void setup()
        trc(mqtt_server_ip.toString());
      #else // if not by its IP adress
        trc(F("Connecting to MQTT by IP adress"));
-       client.setServer(mqtt_server, mqtt_port);
+       uint16_t port = atoi(mqtt_port);
+       client.setServer(mqtt_server, port);
        trc(String(mqtt_server));
      #endif
    #endif
-  #else
+  #else // In case of arduino
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
