@@ -240,6 +240,9 @@ void setup()
   #ifdef ZsensorBH1750
     setupZsensorBH1750();
   #endif
+  #ifdef ZsensorTSL2561
+    setupZsensorTSL2561();
+  #endif
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -371,6 +374,9 @@ void loop()
     #endif
     #ifdef ZsensorBH1750
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
+    #endif
+    #ifdef ZsensorTSL2561
+      MeasureLightIntensityTSL2561();
     #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
