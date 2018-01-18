@@ -38,7 +38,7 @@ install:
   - git clone https://github.com/LowPowerLab/RFM69 /usr/local/share/arduino/libraries/RFM69
   - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.h
   - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.cpp
-  - git clone https://github.com/nkolban/ESP32_BLE_Arduino /usr/local/share/arduino/libraries/ESP32_BLE_Arduino
+  - git clone https://github.com/nkolban/ESP32_BLE_Arduino/tree/f8fe9d7cdfb20caa54b70849826d1ac6e375ff78 /usr/local/share/arduino/libraries/ESP32_BLE_Arduino
   - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.cpp -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino/src/BLEAdvertisedDevice.cpp
   - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.h -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino/src/BLEAdvertisedDevice.h
   - mkdir -p /usr/local/share/arduino/hardware/espressif
