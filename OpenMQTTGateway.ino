@@ -212,7 +212,7 @@ void setup()
     digitalWrite(led_send, HIGH);
   #endif
 
- #ifdef MDNS_SD
+ #if defined(MDNS_SD) && defined(ESP8266)
      trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
      connectMQTTmdns();
  #else
@@ -295,7 +295,7 @@ void setup_wifi() {
   trc(F("WiFi ok"));
 }
 
-#ifdef MDNS_SD
+#ifdef defined(MDNS_SD) && defined(ESP8266)
   void connectMQTTmdns(){
     if (!MDNS.begin("ESP_MQTT")) {
         trc(F("Error setting up MDNS responder!"));
