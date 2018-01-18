@@ -28,3 +28,6 @@
 [submodule "libraries/ESP32_BLE_Arduino"]
 	path = libraries/ESP32_BLE_Arduino
 	url = git://github.com/nkolban/ESP32_BLE_Arduino.git
+[submodule "libraries/ArduinoJson"]
+	path = libraries/ArduinoJson
+	url = git://github.com/bblanchon/ArduinoJson.git
