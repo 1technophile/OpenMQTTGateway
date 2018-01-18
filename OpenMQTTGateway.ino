@@ -194,24 +194,8 @@ void setup()
       else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
-
-   #ifdef MDNS_SD
-       trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
-       connectMQTTmdns();
-   #else
-     #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
-       trc(F("Connecting to MQTT with mqtt hostname"));
-       IPAddress mqtt_server_ip;
-       WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
-       client.setServer(mqtt_server_ip, mqtt_port);
-       trc(mqtt_server_ip.toString());
-     #else // if not by its IP adress
-       trc(F("Connecting to MQTT by IP adress"));
-       client.setServer(mqtt_server, mqtt_port);
-       trc(String(mqtt_server));
-     #endif
-   #endif
-  #else
+    
+  #else // arduino case
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
@@ -227,6 +211,23 @@ void setup()
     digitalWrite(led_receive, HIGH);
     digitalWrite(led_send, HIGH);
   #endif
+
+ #ifdef MDNS_SD
+     trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
+     connectMQTTmdns();
+ #else
+   #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
+     trc(F("Connecting to MQTT with mqtt hostname"));
+     IPAddress mqtt_server_ip;
+     WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
+     client.setServer(mqtt_server_ip, mqtt_port);
+     trc(mqtt_server_ip.toString());
+   #else // if not by its IP adress
+     trc(F("Connecting to MQTT by IP adress"));
+     client.setServer(mqtt_server, mqtt_port);
+     trc(String(mqtt_server));
+   #endif
+ #endif
 
   client.setCallback(callback);
   
