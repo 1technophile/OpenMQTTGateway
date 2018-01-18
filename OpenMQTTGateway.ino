@@ -110,6 +110,9 @@ unsigned long timer_led_error = 0;
 //flag for saving data
 bool shouldSaveConfig = false;
 
+//do we have been connected once to mqtt
+boolean connected_once = false;
+
 //callback notifying us of the need to save config
 void saveConfigCallback () {
   Serial.println("Should save config");
@@ -117,6 +120,8 @@ void saveConfigCallback () {
 }
 
 boolean reconnect() {
+  
+  int failure_number = 0;
   // Loop until we're reconnected
   while (!client.connected()) {
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
@@ -126,6 +131,7 @@ boolean reconnect() {
       if (client.connect(Gateway_Name, will_Topic, will_QoS, will_Retain, will_Message)) {
     #endif
       trc(F("Connected to broker"));
+      connected_once = true;
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
@@ -141,11 +147,21 @@ boolean reconnect() {
         trc(F("Subscription OK to the subjects"));
       }
       } else {
+        if (!connected_once)  failure_number ++; // if we never connected to broker we count the failure
       trc(F("failed, rc="));
       trc(String(client.state()));
       trc(F("try again in 5s"));
       // Wait 5 seconds before retrying
       delay(5000);
+
+      if (failure_number > 3){
+        trc(F("failed connecting to mqtt at start reinit setup"));
+        #ifdef ESP8266
+          setup_wifimanager(true);
+        #elif defined(ESP32) // ESP32 case we don't use Wifi manager yet
+          setup_wifi();
+        #endif
+      }
     }
   }
   return client.connected();
@@ -178,105 +194,9 @@ void setup()
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
-    #ifndef ESP32
-    //clean FS, for testing
-    //SPIFFS.format();
-  
-    //read configuration from FS json
-    trc("mounting FS...");
-  
-    if (SPIFFS.begin()) {
-      trc("mounted file system");
-      if (SPIFFS.exists("/config.json")) {
-        //file exists, reading and loading
-        trc("reading config file");
-        File configFile = SPIFFS.open("/config.json", "r");
-        if (configFile) {
-          trc("opened config file");
-          size_t size = configFile.size();
-          // Allocate a buffer to store contents of the file.
-          std::unique_ptr<char[]> buf(new char[size]);
-  
-          configFile.readBytes(buf.get(), size);
-          DynamicJsonBuffer jsonBuffer;
-          JsonObject& json = jsonBuffer.parseObject(buf.get());
-          json.printTo(Serial);
-          if (json.success()) {
-            trc("\nparsed json");
-  
-            strcpy(mqtt_server, json["mqtt_server"]);
-            strcpy(mqtt_port, json["mqtt_port"]);
-  
-          } else {
-            trc("failed to load json config");
-          }
-        }
-      }
-    } else {
-      trc("failed to mount FS");
-    }
-  
-    // The extra parameters to be configured (can be either global or just in the setup)
-    // After connecting, parameter.getValue() will get you the configured value
-    // id/name placeholder/prompt default length
-    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
-    WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
-  
-   //WiFiManager
-    //Local intialization. Once its business is done, there is no need to keep it around
-    WiFiManager wifiManager;
-  
-    //set config save notify callback
-    wifiManager.setSaveConfigCallback(saveConfigCallback);
-  
-    //set static ip
-    //wifiManager.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
-    
-    //add all your parameters here
-    wifiManager.addParameter(&custom_mqtt_server);
-    wifiManager.addParameter(&custom_mqtt_port);
-  
-    //reset settings - for testing
-    //wifiManager.resetSettings();
-  
-    //fetches ssid and pass and tries to connect
-    //if it does not connect it starts an access point with the specified name
-    //here  "AutoConnectAP"
-    //and goes into a blocking loop awaiting configuration
-    if (!wifiManager.autoConnect(Gateway_Name, WifiManager_password)) {
-      trc("failed to connect and hit timeout");
-      delay(3000);
-      //reset and try again, or maybe put it to deep sleep
-      ESP.reset();
-      delay(5000);
-    }
-  
-    //if you get here you have connected to the WiFi
-    trc("connected...yeey :)");
-  
-    //read updated parameters
-    strcpy(mqtt_server, custom_mqtt_server.getValue());
-    strcpy(mqtt_port, custom_mqtt_port.getValue());
-  
-    //save the custom parameters to FS
-    if (shouldSaveConfig) {
-      trc("saving config");
-      DynamicJsonBuffer jsonBuffer;
-      JsonObject& json = jsonBuffer.createObject();
-      json["mqtt_server"] = mqtt_server;
-      json["mqtt_port"] = mqtt_port;
-  
-      File configFile = SPIFFS.open("/config.json", "w");
-      if (!configFile) {
-        trc("failed to open config file for writing");
-      }
-  
-      json.printTo(Serial);
-      json.printTo(configFile);
-      configFile.close();
-      //end save
-    }
-    #else // ESP32 case
+    #ifdef ESP8266
+      setup_wifimanager(false);
+    #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
     #endif
     
@@ -386,7 +306,7 @@ void setup()
   #endif
 }
 
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP32)
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -400,19 +320,124 @@ void setup_wifi() {
   WiFi.begin(wifi_ssid, wifi_password);
   //WiFi.config(ip_adress,gateway_adress,subnet_adress,dns_adress); //Uncomment this line if you want to use advanced network config
     
-  trc(F("OpenMQTTGateway mac: "));
-  Serial.println(WiFi.macAddress()); 
-  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
   }
   
-  trc(F("OpenMQTTGateway ip: "));
-  Serial.println(WiFi.localIP());
-  
-  trc(F("WiFi ok"));
+  trc(F("WiFi ok with config credentials"));
 }
+
+#elif defined(ESP8266)
+void setup_wifimanager(boolean reset_settings){
+      //clean FS, for testing
+    //SPIFFS.format();
+  
+    //read configuration from FS json
+    trc("mounting FS...");
+  
+    if (SPIFFS.begin()) {
+      trc("mounted file system");
+      if (SPIFFS.exists("/config.json")) {
+        //file exists, reading and loading
+        trc("reading config file");
+        File configFile = SPIFFS.open("/config.json", "r");
+        if (configFile) {
+          trc("opened config file");
+          size_t size = configFile.size();
+          // Allocate a buffer to store contents of the file.
+          std::unique_ptr<char[]> buf(new char[size]);
+  
+          configFile.readBytes(buf.get(), size);
+          DynamicJsonBuffer jsonBuffer;
+          JsonObject& json = jsonBuffer.parseObject(buf.get());
+          json.printTo(Serial);
+          if (json.success()) {
+            trc("\nparsed json");
+  
+            strcpy(mqtt_server, json["mqtt_server"]);
+            strcpy(mqtt_port, json["mqtt_port"]);
+  
+          } else {
+            trc("failed to load json config");
+          }
+        }
+      }
+    } else {
+      trc("failed to mount FS");
+    }
+  
+    // The extra parameters to be configured (can be either global or just in the setup)
+    // After connecting, parameter.getValue() will get you the configured value
+    // id/name placeholder/prompt default length
+    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
+    WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
+  
+   //WiFiManager
+    //Local intialization. Once its business is done, there is no need to keep it around
+    WiFiManager wifiManager;
+  
+    //set config save notify callback
+    wifiManager.setSaveConfigCallback(saveConfigCallback);
+  
+    //set static ip
+    //wifiManager.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+    
+    //add all your parameters here
+    wifiManager.addParameter(&custom_mqtt_server);
+    wifiManager.addParameter(&custom_mqtt_port);
+  
+    //reset settings - for testing
+    if (reset_settings) wifiManager.resetSettings();
+  
+    //fetches ssid and pass and tries to connect
+    //if it does not connect it starts an access point with the specified name
+    //and goes into a blocking loop awaiting configuration
+    if (!wifiManager.autoConnect(Gateway_Name, WifiManager_password)) {
+      trc("failed to connect and hit timeout");
+      delay(3000);
+      //reset and try again, or maybe put it to deep sleep
+      ESP.reset();
+      delay(5000);
+    }
+  
+    //if you get here you have connected to the WiFi
+    trc("connected...yeey :)");
+  
+    //read updated parameters
+    strcpy(mqtt_server, custom_mqtt_server.getValue());
+    strcpy(mqtt_port, custom_mqtt_port.getValue());
+  
+    //save the custom parameters to FS
+    if (shouldSaveConfig) {
+      trc("saving config");
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& json = jsonBuffer.createObject();
+      json["mqtt_server"] = mqtt_server;
+      json["mqtt_port"] = mqtt_port;
+  
+      File configFile = SPIFFS.open("/config.json", "w");
+      if (!configFile) {
+        trc("failed to open config file for writing");
+      }
+  
+      json.printTo(Serial);
+      json.printTo(configFile);
+      configFile.close();
+      //end save
+    }
+}
+
+
+#else // Arduino case
+void setup_ethernet() {
+  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
+  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  trc(F("OpenMQTTGateway ip: "));
+  Serial.println(Ethernet.localIP());
+  trc(F("Ethernet ok"));
+}
+#endif
 
 #ifdef MDNS_SD
   void connectMQTTmdns(){
@@ -444,16 +469,6 @@ void setup_wifi() {
         }
     }
   }
-#endif
-
-#else
-void setup_ethernet() {
-  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
-  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  trc(F("OpenMQTTGateway ip: "));
-  Serial.println(Ethernet.localIP());
-  trc(F("Ethernet ok"));
-}
 #endif
 
 void loop()
