@@ -439,7 +439,7 @@ void setup_ethernet() {
 }
 #endif
 
-#ifdef MDNS_SD
+#if defined(MDNS_SD) && defined(ESP8266)
   void connectMQTTmdns(){
     if (!MDNS.begin("ESP_MQTT")) {
         trc(F("Error setting up MDNS responder!"));

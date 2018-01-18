@@ -32,9 +32,9 @@
 #define OMG_VERSION "0.7"
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
+//#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 //#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
 #define mqtt_password "your_password" // not compulsory only if your broker needs authentication
-#define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
 #define WifiManager_password "your_password"
 #define version_Topic "home/" Gateway_Name "/version"
