@@ -234,23 +234,6 @@ void setup()
     });
     ArduinoOTA.begin();
 
-   #ifdef MDNS_SD
-       trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
-       connectMQTTmdns();
-   #else
-     #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
-       trc(F("Connecting to MQTT with mqtt hostname"));
-       IPAddress mqtt_server_ip;
-       WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
-       client.setServer(mqtt_server_ip, mqtt_port);
-       trc(mqtt_server_ip.toString());
-     #else // if not by its IP adress
-       trc(F("Connecting to MQTT by IP adress"));
-       uint16_t port = atoi(mqtt_port);
-       client.setServer(mqtt_server, port);
-       trc(String(mqtt_server));
-     #endif
-   #endif
   #else // In case of arduino
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
@@ -266,6 +249,23 @@ void setup()
     delay(500);
     digitalWrite(led_receive, HIGH);
     digitalWrite(led_send, HIGH);
+  #endif
+
+  #if defined(MDNS_SD) && defined(ESP8266)
+     trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
+     connectMQTTmdns();
+  #else
+   #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
+     trc(F("Connecting to MQTT with mqtt hostname"));
+     IPAddress mqtt_server_ip;
+     WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
+     client.setServer(mqtt_server_ip, mqtt_port);
+     trc(mqtt_server_ip.toString());
+   #else // if not by its IP adress
+     trc(F("Connecting to MQTT by IP adress"));
+     client.setServer(mqtt_server, mqtt_port);
+     trc(String(mqtt_server));
+   #endif
   #endif
 
   client.setCallback(callback);
