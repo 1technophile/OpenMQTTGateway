@@ -295,7 +295,7 @@ void setup_wifi() {
   trc(F("WiFi ok"));
 }
 
-#ifdef defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && defined(ESP8266)
   void connectMQTTmdns(){
     if (!MDNS.begin("ESP_MQTT")) {
         trc(F("Error setting up MDNS responder!"));
