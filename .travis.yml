@@ -40,8 +40,8 @@ install:
   - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.cpp
   - wget https://github.com/nkolban/ESP32_BLE_Arduino/archive/f8fe9d7cdfb20caa54b70849826d1ac6e375ff78.zip -O /tmp/ESP32_BLE_Arduino.zip
   - unzip /tmp/ESP32_BLE_Arduino.zip -d /usr/local/share/arduino/libraries
-  - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.cpp -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino/src/BLEAdvertisedDevice.cpp
-  - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.h -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino/src/BLEAdvertisedDevice.h
+  - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.cpp -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino-f8fe9d7cdfb20caa54b70849826d1ac6e375ff78/src/BLEAdvertisedDevice.cpp
+  - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.h -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino-f8fe9d7cdfb20caa54b70849826d1ac6e375ff78/src/BLEAdvertisedDevice.h
   - mkdir -p /usr/local/share/arduino/hardware/espressif
   - cd /usr/local/share/arduino/hardware/espressif
   - git clone https://github.com/espressif/arduino-esp32.git esp32
