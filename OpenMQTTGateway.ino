@@ -107,9 +107,9 @@ unsigned long timer_led_receive = 0;
 unsigned long timer_led_send = 0;
 unsigned long timer_led_error = 0;
 
+//Wifi manager parameters
 //flag for saving data
-bool shouldSaveConfig = false;
-
+bool shouldSaveConfig = true;
 //do we have been connected once to mqtt
 boolean connected_once = false;
 
@@ -156,9 +156,9 @@ boolean reconnect() {
 
       if (failure_number > 3){
         trc(F("failed connecting to mqtt at start reinit setup"));
-        #ifdef ESP8266
+        #if defined(ESP8266) && !defined(ESPWifiManualSetup)
           setup_wifimanager(true);
-        #elif defined(ESP32) // ESP32 case we don't use Wifi manager yet
+        #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
           setup_wifi();
         #endif
       }
@@ -194,7 +194,7 @@ void setup()
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
-    #ifdef ESP8266
+    #if defined(ESP8266) && !defined(ESPWifiManualSetup)
       setup_wifimanager(false);
     #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
@@ -255,15 +255,18 @@ void setup()
      trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
      connectMQTTmdns();
   #else
+     long port;
+     port = strtol(mqtt_port,NULL,10);
+     trc(String(port));
    #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
      trc(F("Connecting to MQTT with mqtt hostname"));
      IPAddress mqtt_server_ip;
      WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
-     client.setServer(mqtt_server_ip, mqtt_port);
+     client.setServer(mqtt_server_ip, port);
      trc(mqtt_server_ip.toString());
    #else // if not by its IP adress
      trc(F("Connecting to MQTT by IP adress"));
-     client.setServer(mqtt_server, mqtt_port);
+     client.setServer(mqtt_server, port);
      trc(String(mqtt_server));
    #endif
   #endif
@@ -306,7 +309,7 @@ void setup()
   #endif
 }
 
-#if defined(ESP32)
+#if defined(ESP32) || defined(ESPWifiManualSetup)
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -325,12 +328,12 @@ void setup_wifi() {
     trc(F("."));
   }
   
-  trc(F("WiFi ok with config credentials"));
+  trc(F("WiFi ok with manual config credentials"));
 }
 
-#elif defined(ESP8266)
+#elif defined(ESP8266) && !defined(ESPWifiManualSetup)
 void setup_wifimanager(boolean reset_settings){
-      //clean FS, for testing
+    //clean FS, for testing
     //SPIFFS.format();
   
     //read configuration from FS json
@@ -386,7 +389,7 @@ void setup_wifimanager(boolean reset_settings){
     //add all your parameters here
     wifiManager.addParameter(&custom_mqtt_server);
     wifiManager.addParameter(&custom_mqtt_port);
-  
+
     //reset settings - for testing
     if (reset_settings) wifiManager.resetSettings();
   
@@ -407,7 +410,7 @@ void setup_wifimanager(boolean reset_settings){
     //read updated parameters
     strcpy(mqtt_server, custom_mqtt_server.getValue());
     strcpy(mqtt_port, custom_mqtt_port.getValue());
-  
+
     //save the custom parameters to FS
     if (shouldSaveConfig) {
       trc("saving config");
@@ -558,7 +561,6 @@ void loop()
       trc(F("RFM69toMQTT OK"));
     #endif
   }
-
 }
 
 void storeValue(long MQTTvalue){
