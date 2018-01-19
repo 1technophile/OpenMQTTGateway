@@ -30,6 +30,7 @@
 */
 /*-------------------VERSION----------------------*/
 #define OMG_VERSION "0.7"
+
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
@@ -64,7 +65,7 @@ const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
-#define ota_hostname "OTAHOSTNAME"
+#define ota_hostname Gateway_Name
 #define ota_password "OTAPASSWORD"
 #define ota_port 8266
 

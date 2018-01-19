@@ -235,6 +235,7 @@ void setup()
     ArduinoOTA.begin();
 
   #else // In case of arduino
+
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
@@ -430,7 +431,6 @@ void setup_wifimanager(boolean reset_settings){
       //end save
     }
 }
-
 
 #else // Arduino case
 void setup_ethernet() {
