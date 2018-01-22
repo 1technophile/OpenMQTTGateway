@@ -98,17 +98,11 @@ void MeasureLightIntensityTSL2561()
       {
 	if (persisted_lux != event.light || tsl2561_always ) {
 	  persisted_lux = event.light;
-	  char lux[7];
-	  char ftcd[7];
-	  char wattsm2[7];
-	  sprintf(lux, "%s", String(event.light).c_str());
-	  sprintf(ftcd, "%s", String(event.light/10.764).c_str());
-	  sprintf(wattsm2, "%s", String(event.light/683.0).c_str());
 	  	  
 	  trc("Sending Light Intensity in Lux to MQTT " + String(event.light) + " lux");
-	  client.publish(LUX, lux);
-	  client.publish(FTCD, ftcd);
-	  client.publish(WATTSM2, wattsm2);
+	  client.publish(LUX, String(event.light).c_str());
+	  client.publish(FTCD, String((event.light)/10.764).c_str());
+	  client.publish(WATTSM2, String((event.light)/683.0).c_str());
 	} else {
 	  trc("Same lux value, do not send");
 	}

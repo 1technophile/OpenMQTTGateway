@@ -94,33 +94,27 @@ void MeasureLightIntensity()
 
       // Generate Lux
       if(Lux != persistedll || bh1750_always){
-        char lux[7];
-        sprintf(lux,"%u",Lux);
         trc(F("Sending Lux to MQTT"));
-        trc(String(lux));
-        client.publish(LUX,lux);
+        trc(String(Lux));
+        client.publish(LUX,String(Lux).c_str());
        }else{
         trc(F("Same lux don't send it"));
        }
 
       // Generate FtCd
       if(FtCd != persistedlf || bh1750_always){
-        char ftcd[7];
-        dtostrf(FtCd,4,2,ftcd);
         trc(F("Sending FtCd to MQTT"));
-        trc(String(ftcd));
-        client.publish(FTCD,ftcd);
+        trc(String(FtCd));
+        client.publish(FTCD,String(FtCd).c_str());
       }else{
         trc(F("Same ftcd don't send it"));
       }
 
       // Generate Watts/m2
       if(Wattsm2 != persistedlw || bh1750_always){
-        char wattsm2[7];
-        dtostrf(Wattsm2,6,4,wattsm2);
         trc(F("Sending Wattsm2 to MQTT"));
-        trc(String(wattsm2));
-        client.publish(WATTSM2,wattsm2);
+        trc(String(Wattsm2));
+        client.publish(WATTSM2,String(Wattsm2).c_str());
       }else{
         trc(F("Same wattsm2 don't send it"));
       }    
