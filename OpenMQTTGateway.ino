@@ -31,6 +31,15 @@
   - petricaM
   - ekim from Home assistant forum
   - ronvl from Home assistant forum
+  - Chris Broekema
+  - Lars Englund
+  - Fredrik Lindqvist
+  - Philippe LUC
+  - Patrick Wilhelm
+  - Georgi Yanev
+  - zerinrc
+  - ChiefZ
+  - 8666
 
     This file is part of OpenMQTTGateway.
 
@@ -67,17 +76,23 @@ void callback(char*topic, byte* payload,unsigned int length);
   #include <WiFi.h>
   #include <ArduinoOTA.h>
   WiFiClient eClient;
+  #ifdef MDNS_SD
+    #include <ESPmDNS.h>
+  #endif
 #elif defined(ESP8266)
   #include <ESP8266WiFi.h>
   #include <ArduinoOTA.h>
   WiFiClient eClient;
+  #ifdef MDNS_SD
+    #include <ESP8266mDNS.h>
+  #endif
 #else
   #include <Ethernet.h>
   EthernetClient eClient;
 #endif
 
-// client parameters
-PubSubClient client(mqtt_server, mqtt_port, callback, eClient);
+// client link to pubsub mqtt
+PubSubClient client(eClient);
 
 //MQTT last attemps reconnection date
 unsigned long lastReconnectAttempt = 0;
@@ -179,7 +194,8 @@ void setup()
       else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
-  #else
+    
+  #else // arduino case
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
@@ -196,6 +212,25 @@ void setup()
     digitalWrite(led_send, HIGH);
   #endif
 
+ #if defined(MDNS_SD) && defined(ESP8266)
+     trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
+     connectMQTTmdns();
+ #else
+   #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
+     trc(F("Connecting to MQTT with mqtt hostname"));
+     IPAddress mqtt_server_ip;
+     WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
+     client.setServer(mqtt_server_ip, mqtt_port);
+     trc(mqtt_server_ip.toString());
+   #else // if not by its IP adress
+     trc(F("Connecting to MQTT by IP adress"));
+     client.setServer(mqtt_server, mqtt_port);
+     trc(String(mqtt_server));
+   #endif
+ #endif
+
+  client.setCallback(callback);
+  
   delay(1500);
 
   lastReconnectAttempt = 0;
@@ -244,7 +279,7 @@ void setup_wifi() {
   IPAddress subnet_adress(subnet);
   IPAddress dns_adress(Dns);
   WiFi.begin(wifi_ssid, wifi_password);
-  //WiFi.config(ip_adress,gateway_adress,subnet_adress); //Uncomment this line if you want to use advanced network config
+  //WiFi.config(ip_adress,gateway_adress,subnet_adress,dns_adress); //Uncomment this line if you want to use advanced network config
     
   trc(F("OpenMQTTGateway mac: "));
   Serial.println(WiFi.macAddress()); 
@@ -259,6 +294,39 @@ void setup_wifi() {
   
   trc(F("WiFi ok"));
 }
+
+#if defined(MDNS_SD) && defined(ESP8266)
+  void connectMQTTmdns(){
+    if (!MDNS.begin("ESP_MQTT")) {
+        trc(F("Error setting up MDNS responder!"));
+        while(1){
+            delay(1000);
+        }
+    }
+    trc(F("Browsing for service MQTT "));
+    int n = MDNS.queryService("mqtt", "tcp");
+    if (n == 0) {
+        trc(F("no services found"));
+    }else {
+        trc(String(n));
+        trc(" service(s) found");
+        for (int i=0; i < n; ++i) {
+            // Print details for each service found
+            trc(String(i + 1));
+            trc(String(MDNS.hostname(i)));
+            trc(MDNS.IP(i).toString());
+            trc(String(MDNS.port(i)));
+        }
+        if (n==1) {
+          trc(F("One MQTT server found setting parameters"));
+          client.setServer(MDNS.IP(0), int(MDNS.port(0)));
+        }else{
+          trc(F("Several MQTT servers found, please deactivate mDNS and set your default server"));
+        }
+    }
+  }
+#endif
+
 #else
 void setup_ethernet() {
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config

@@ -50,14 +50,31 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             mac_adress.toUpperCase();
             String mactopic = subjectBTtoMQTT + mac_adress;
             if (advertisedDevice.haveName()){
+                trc(F("Get Name "));
                 String nameBLE = advertisedDevice.getName().c_str();
-                trc(mactopic + " " + nameBLE);
+                trc(nameBLE);
                 client.publish((char *)(mactopic + "/name").c_str(),(char *)nameBLE.c_str());
-              }
-            String rssi = String(advertisedDevice.getRSSI());
-            trc(mactopic + " " + rssi);
-            client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
-
+            }
+            if (advertisedDevice.haveManufacturerData()){
+                trc(F("Get ManufacturerData "));
+                String ManufacturerData = advertisedDevice.getManufacturerData().c_str();
+                trc(ManufacturerData);
+                client.publish((char *)(mactopic + "/ManufacturerData").c_str(),(char *)ManufacturerData.c_str());
+            }
+            if (advertisedDevice.haveRSSI()){
+              trc(F("Get RSSI "));       
+              String rssi = String(advertisedDevice.getRSSI());
+              trc(mactopic + " " + rssi);
+              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+            }
+            if (advertisedDevice.haveTXPower()){
+              trc(F("Get TXPower "));       
+              int8_t TXPower = advertisedDevice.getTXPower();
+              trc(String(TXPower));
+              char cTXPower[5];
+              sprintf(cTXPower, "%d", TXPower);
+              client.publish((char *)(mactopic + "/tx").c_str(),cTXPower);
+            }
             if (advertisedDevice.haveServiceData()){
                 trc(F("Get service data "));
                 std::string serviceData = advertisedDevice.getServiceData();
@@ -100,6 +117,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
+        trc(F("ZgatewayBT ESP32 setup done "));                 
     }
 
     void coreTask( void * pvParameters ){
@@ -143,6 +161,7 @@ void setupBT() {
   delay(100);
   softserial.print(F("AT+RESET"));
   delay(100);
+  trc(F("ZgatewayBT HM1X setup done "));
 }
 
 #ifdef ZgatewayBT_v6xx

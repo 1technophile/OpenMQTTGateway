@@ -29,7 +29,7 @@ It supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561
 * Addons possibility, you could add directly to the gateway any sensor you want, just create a new `Z<addon> .ino` file into the gateway folder with your code and call it after `client.loop();` into `OpenMQTTGateway.ino`. The program is provided with a DHT sensor addon implementation (`ZaddonDHT.ino`)
 * Advanced signal details publication, so as to know the details of what the gateway receive it publish by MQTT to `subject433toMQTTAdvanced` for RF and `subjectIRtoMQTTAdvanced `for IR the details of the signal received (this signal has to be compatible with RCSwitch and IRRemote libraries to be read).
 * Acknowledgement, to be sure that the gateway received the payload from MQTT it sends an acknowledgement on a `user_defined` topic, `subjectGTWRFtoMQTT` for RF or `subjectGTWIRtoMQTT` for IR enabling to update the state of your switch or other component into your home automation.
-* Multi boards compatibility, the gateway has been currently tested with **ESP8266 12F**, **NodeMCU V1**, **NodeMCU V2**, **Wemos D1 mini**, **Arduino Uno** and the **Arduino Mega**.
+* Multi boards compatibility, the gateway has been currently tested with **ESP8266 12F**, **NodeMCU V1**, **NodeMCU V2**, **Wemos D1 mini**, **Arduino Uno**, **ESP32** (RF and BLE gateways) and the **Arduino Mega**.
 * Multi protocols handling, the gateway is based on RCSwitch, NewRemoteSwitch, RFM69 and IRRemote libraries, you can define the protocol you want to use by specifying it inside the topic.
 
 See the [wiki](https://github.com/1technophile/OpenMQTTGateway/wiki) for more information:  

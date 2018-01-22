@@ -31,7 +31,7 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-DHT dht(DHT_RECEIVER_PIN,DHT22); 
+DHT dht(DHT_RECEIVER_PIN,DHT_SENSOR_TYPE); 
 
 //Time used to wait for an interval before resending temp and hum
 unsigned long timedht = 0;
