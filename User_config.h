@@ -33,9 +33,9 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-#define mqtt_server "192.168.1.17"
+#define mqtt_server "192.168.1.123"
 //#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
-#define mqtt_password "your_password" // not compulsory only if your broker needs authentication
+//#define mqtt_password "your_password" // not compulsory only if your broker needs authentication
 #define mqtt_port 1883
 #define Gateway_Name "OpenMQTTGateway"
 #define version_Topic "home/" Gateway_Name "/version"
@@ -49,13 +49,13 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
-  #define wifi_ssid "wifi ssid"
-  #define wifi_password "wifi password"
+  #define wifi_ssid "ssid"
+  #define wifi_password "passwd"
 #else // for arduino + W5100
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
 
-const byte ip[] = { 192, 168, 1, 99 }; //ip adress
+const byte ip[] = { 192, 168, 1, 2 }; //ip adress
 // Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
 const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
 const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
@@ -63,7 +63,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #define ota_hostname Gateway_Name
-#define ota_password "OTAPASSWORD"
+#define ota_password "otapasswd"
 #define ota_port 8266
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
@@ -77,15 +77,18 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZgatewayRF
+  //#define ZgatewayRF
   #include "config_RF.h"
-  //#define ZgatewayRF2
+  #define ZgatewayRF2
+  //#include "config_FASTLED.h"
+  #define ZgatewayFASTLED
+  #include "config_FASTLED.h"
   //#define ZgatewaySRFB
   //#include "config_SRFB.h"
-  #define ZgatewayIR
-  #include "config_IR.h"
-  #define ZgatewayBT
-  #include "config_BT.h"
+  //#define ZgatewayIR
+  //#include "config_IR.h"
+  //#define ZgatewayBT
+  //#include "config_BT.h"
   //#define ZsensorINA226
   //#include "config_INA226.h"
   //#define ZsensorHCSR501
