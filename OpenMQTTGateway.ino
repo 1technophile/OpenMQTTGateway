@@ -244,6 +244,9 @@ void setup()
   #ifdef ZgatewayIR
     setupIR();
   #endif
+   #ifdef ZgatewayFASTLED
+    setupFASTLED();
+  #endif
   #ifdef ZgatewayRF
     setupRF();
   #endif
@@ -495,6 +498,9 @@ digitalWrite(led_send, LOW);
 #endif
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
+#endif
+#ifdef ZgatewayFASTLED
+  MQTTtoFASTLED(topicOri, datacallback);
 #endif
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
