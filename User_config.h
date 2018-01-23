@@ -80,7 +80,6 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZgatewayRF
   #include "config_RF.h"
   #define ZgatewayRF2
-  //#include "config_FASTLED.h"
   #define ZgatewayFASTLED
   #include "config_FASTLED.h"
   //#define ZgatewaySRFB
