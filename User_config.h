@@ -34,8 +34,8 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-//#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
-#define mqtt_password "your_password" // not compulsory only if your broker needs authentication
+#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
+#define mqtt_pass "your_password" // not compulsory only if your broker needs authentication
 #define Gateway_Name "OpenMQTTGateway"
 #define WifiManager_password "your_password"
 #define version_Topic "home/" Gateway_Name "/version"
@@ -108,7 +108,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #elif ESP32
   #define ZgatewayRF
   #include "config_RF.h"
-  #define ZgatewayRF2
+  //#define ZgatewayRF2
   //#define ZgatewayIR
   //#include "config_IR.h"
   #define ZgatewayBT

@@ -125,11 +125,7 @@ boolean reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
-    #ifdef mqtt_user
-      if (client.connect(Gateway_Name, mqtt_user, mqtt_password, will_Topic, will_QoS, will_Retain, will_Message)) { // if an mqtt user is defined we connect to the broker with authentication
-    #else
-      if (client.connect(Gateway_Name, will_Topic, will_QoS, will_Retain, will_Message)) {
-    #endif
+      if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) { 
       trc(F("Connected to broker"));
       connected_once = true;
     // Once connected, publish an announcement...
@@ -361,6 +357,8 @@ void setup_wifimanager(boolean reset_settings){
   
             strcpy(mqtt_server, json["mqtt_server"]);
             strcpy(mqtt_port, json["mqtt_port"]);
+            strcpy(mqtt_user, json["mqtt_user"]);
+            strcpy(mqtt_pass, json["mqtt_pass"]);
   
           } else {
             trc("failed to load json config");
@@ -376,6 +374,8 @@ void setup_wifimanager(boolean reset_settings){
     // id/name placeholder/prompt default length
     WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
     WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
+    WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, 20);
+    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 20);
   
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
@@ -390,8 +390,11 @@ void setup_wifimanager(boolean reset_settings){
     //add all your parameters here
     wifiManager.addParameter(&custom_mqtt_server);
     wifiManager.addParameter(&custom_mqtt_port);
-
+    wifiManager.addParameter(&custom_mqtt_user);
+    wifiManager.addParameter(&custom_mqtt_pass);
+  
     //reset settings - for testing
+    //reset_settings = true;
     if (reset_settings) wifiManager.resetSettings();
   
     //fetches ssid and pass and tries to connect
@@ -411,7 +414,9 @@ void setup_wifimanager(boolean reset_settings){
     //read updated parameters
     strcpy(mqtt_server, custom_mqtt_server.getValue());
     strcpy(mqtt_port, custom_mqtt_port.getValue());
-
+    strcpy(mqtt_user, custom_mqtt_user.getValue());
+    strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+  
     //save the custom parameters to FS
     if (shouldSaveConfig) {
       trc("saving config");
@@ -419,7 +424,9 @@ void setup_wifimanager(boolean reset_settings){
       JsonObject& json = jsonBuffer.createObject();
       json["mqtt_server"] = mqtt_server;
       json["mqtt_port"] = mqtt_port;
-  
+      json["mqtt_user"] = mqtt_user;
+      json["mqtt_pass"] = mqtt_pass;
+    
       File configFile = SPIFFS.open("/config.json", "w");
       if (!configFile) {
         trc("failed to open config file for writing");
