@@ -137,8 +137,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BT.h"
   //#define ZsensorINA226
   //#include "config_INA226.h"
-  #define ZsensorDHT
-  #include "config_DHT.h"
+  //#define ZsensorDHT
+  //#include "config_DHT.h"
   //#define ZsensorBH1750
   //#include "config_BH1750.h"
   //#define ZsensorBME280
