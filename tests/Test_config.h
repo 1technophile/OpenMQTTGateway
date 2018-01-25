@@ -33,8 +33,8 @@
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-//#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
-#define mqtt_password "your_password" // not compulsory only if your broker needs authentication
+#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
+#define mqtt_pass "your_password" // not compulsory only if your broker needs authentication
 #define Gateway_Name "OpenMQTTGateway"
 #define WifiManager_password "your_password"
 #define version_Topic "home/" Gateway_Name "/version"
@@ -46,6 +46,7 @@
 #define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
+//#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 // Update these with values suitable for your network.
@@ -136,8 +137,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#include "config_BT.h"
   //#define ZsensorINA226
   //#include "config_INA226.h"
-  //#define ZsensorDHT
-  //#include "config_DHT.h"
+  #define ZsensorDHT
+  #include "config_DHT.h"
   //#define ZsensorBH1750
   //#include "config_BH1750.h"
   //#define ZsensorBME280
