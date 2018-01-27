@@ -46,6 +46,9 @@
 #define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
+
+//set minimu quality of signal so it ignores AP's under that quality
+#define MinimumWifiSignalQuality 8
 //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
