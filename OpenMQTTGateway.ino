@@ -58,6 +58,7 @@
 */
 #include "User_config.h"
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
@@ -80,8 +81,12 @@ void callback(char*topic, byte* payload,unsigned int length);
     #include <ESPmDNS.h>
   #endif
 #elif defined(ESP8266)
+  #include <FS.h> 
   #include <ESP8266WiFi.h>
   #include <ArduinoOTA.h>
+  #include <DNSServer.h>
+  #include <ESP8266WebServer.h>
+  #include <WiFiManager.h>  
   WiFiClient eClient;
   #ifdef MDNS_SD
     #include <ESP8266mDNS.h>
@@ -102,16 +107,27 @@ unsigned long timer_led_receive = 0;
 unsigned long timer_led_send = 0;
 unsigned long timer_led_error = 0;
 
+//Wifi manager parameters
+//flag for saving data
+bool shouldSaveConfig = true;
+//do we have been connected once to mqtt
+boolean connected_once = false;
+
+//callback notifying us of the need to save config
+void saveConfigCallback () {
+  Serial.println("Should save config");
+  shouldSaveConfig = true;
+}
+
 boolean reconnect() {
+  
+  int failure_number = 0;
   // Loop until we're reconnected
   while (!client.connected()) {
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
-    #ifdef mqtt_user
-      if (client.connect(Gateway_Name, mqtt_user, mqtt_password, will_Topic, will_QoS, will_Retain, will_Message)) { // if an mqtt user is defined we connect to the broker with authentication
-    #else
-      if (client.connect(Gateway_Name, will_Topic, will_QoS, will_Retain, will_Message)) {
-    #endif
+      if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) { 
       trc(F("Connected to broker"));
+      connected_once = true;
     // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
@@ -127,11 +143,21 @@ boolean reconnect() {
         trc(F("Subscription OK to the subjects"));
       }
       } else {
+        if (!connected_once)  failure_number ++; // if we never connected to broker we count the failure
       trc(F("failed, rc="));
       trc(String(client.state()));
       trc(F("try again in 5s"));
       // Wait 5 seconds before retrying
       delay(5000);
+
+      if (failure_number > 3){
+        trc(F("failed connecting to mqtt at start reinit setup"));
+        #if defined(ESP8266) && !defined(ESPWifiManualSetup)
+          setup_wifimanager(true);
+        #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
+          setup_wifi();
+        #endif
+      }
     }
   }
   return client.connected();
@@ -164,9 +190,18 @@ void setup()
     #else
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
-
-    //Begining wifi connection in case of ESP8266
-    setup_wifi();
+    #if defined(ESP8266) && !defined(ESPWifiManualSetup)
+      setup_wifimanager(false);
+    #else // ESP32 case we don't use Wifi manager yet
+      setup_wifi();
+    #endif
+    
+    trc(F("OpenMQTTGateway mac: "));
+    Serial.println(WiFi.macAddress()); 
+    
+    trc(F("OpenMQTTGateway ip: "));
+    Serial.println(WiFi.localIP());
+  
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
 
@@ -194,8 +229,9 @@ void setup()
       else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
-    
-  #else // arduino case
+
+  #else // In case of arduino
+
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
@@ -212,22 +248,25 @@ void setup()
     digitalWrite(led_send, HIGH);
   #endif
 
- #if defined(MDNS_SD) && defined(ESP8266)
+  #if defined(MDNS_SD) && defined(ESP8266)
      trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
      connectMQTTmdns();
- #else
+  #else
+     long port;
+     port = strtol(mqtt_port,NULL,10);
+     trc(String(port));
    #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
      trc(F("Connecting to MQTT with mqtt hostname"));
      IPAddress mqtt_server_ip;
      WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
-     client.setServer(mqtt_server_ip, mqtt_port);
+     client.setServer(mqtt_server_ip, port);
      trc(mqtt_server_ip.toString());
    #else // if not by its IP adress
      trc(F("Connecting to MQTT by IP adress"));
-     client.setServer(mqtt_server, mqtt_port);
+     client.setServer(mqtt_server, port);
      trc(String(mqtt_server));
    #endif
- #endif
+  #endif
 
   client.setCallback(callback);
   
@@ -270,7 +309,7 @@ void setup()
   #endif
 }
 
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP32) || defined(ESPWifiManualSetup)
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -284,19 +323,137 @@ void setup_wifi() {
   WiFi.begin(wifi_ssid, wifi_password);
   //WiFi.config(ip_adress,gateway_adress,subnet_adress,dns_adress); //Uncomment this line if you want to use advanced network config
     
-  trc(F("OpenMQTTGateway mac: "));
-  Serial.println(WiFi.macAddress()); 
-  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
   }
   
-  trc(F("OpenMQTTGateway ip: "));
-  Serial.println(WiFi.localIP());
-  
-  trc(F("WiFi ok"));
+  trc(F("WiFi ok with manual config credentials"));
 }
+
+#elif defined(ESP8266) && !defined(ESPWifiManualSetup)
+void setup_wifimanager(boolean reset_settings){
+    //clean FS, for testing
+    //SPIFFS.format();
+  
+    //read configuration from FS json
+    trc("mounting FS...");
+  
+    if (SPIFFS.begin()) {
+      trc("mounted file system");
+      if (SPIFFS.exists("/config.json")) {
+        //file exists, reading and loading
+        trc("reading config file");
+        File configFile = SPIFFS.open("/config.json", "r");
+        if (configFile) {
+          trc("opened config file");
+          size_t size = configFile.size();
+          // Allocate a buffer to store contents of the file.
+          std::unique_ptr<char[]> buf(new char[size]);
+  
+          configFile.readBytes(buf.get(), size);
+          DynamicJsonBuffer jsonBuffer;
+          JsonObject& json = jsonBuffer.parseObject(buf.get());
+          json.printTo(Serial);
+          if (json.success()) {
+            trc("\nparsed json");
+  
+            strcpy(mqtt_server, json["mqtt_server"]);
+            strcpy(mqtt_port, json["mqtt_port"]);
+            strcpy(mqtt_user, json["mqtt_user"]);
+            strcpy(mqtt_pass, json["mqtt_pass"]);
+  
+          } else {
+            trc("failed to load json config");
+          }
+        }
+      }
+    } else {
+      trc("failed to mount FS");
+    }
+  
+    // The extra parameters to be configured (can be either global or just in the setup)
+    // After connecting, parameter.getValue() will get you the configured value
+    // id/name placeholder/prompt default length
+    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
+    WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
+    WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, 20);
+    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 20);
+  
+   //WiFiManager
+    //Local intialization. Once its business is done, there is no need to keep it around
+    WiFiManager wifiManager;
+  
+    //set config save notify callback
+    wifiManager.setSaveConfigCallback(saveConfigCallback);
+  
+    //set static ip
+    //wifiManager.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+    
+    //add all your parameters here
+    wifiManager.addParameter(&custom_mqtt_server);
+    wifiManager.addParameter(&custom_mqtt_port);
+    wifiManager.addParameter(&custom_mqtt_user);
+    wifiManager.addParameter(&custom_mqtt_pass);
+  
+    //reset settings - for testing
+    //reset_settings = true;
+    if (reset_settings) wifiManager.resetSettings();
+
+    //set minimu quality of signal so it ignores AP's under that quality
+    wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
+  
+    //fetches ssid and pass and tries to connect
+    //if it does not connect it starts an access point with the specified name
+    //and goes into a blocking loop awaiting configuration
+    if (!wifiManager.autoConnect(Gateway_Name, WifiManager_password)) {
+      trc("failed to connect and hit timeout");
+      delay(3000);
+      //reset and try again, or maybe put it to deep sleep
+      ESP.reset();
+      delay(5000);
+    }
+  
+    //if you get here you have connected to the WiFi
+    trc("connected...yeey :)");
+  
+    //read updated parameters
+    strcpy(mqtt_server, custom_mqtt_server.getValue());
+    strcpy(mqtt_port, custom_mqtt_port.getValue());
+    strcpy(mqtt_user, custom_mqtt_user.getValue());
+    strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+  
+    //save the custom parameters to FS
+    if (shouldSaveConfig) {
+      trc("saving config");
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& json = jsonBuffer.createObject();
+      json["mqtt_server"] = mqtt_server;
+      json["mqtt_port"] = mqtt_port;
+      json["mqtt_user"] = mqtt_user;
+      json["mqtt_pass"] = mqtt_pass;
+    
+      File configFile = SPIFFS.open("/config.json", "w");
+      if (!configFile) {
+        trc("failed to open config file for writing");
+      }
+  
+      json.printTo(Serial);
+      json.printTo(configFile);
+      configFile.close();
+      //end save
+    }
+}
+
+#else // Arduino case
+void setup_ethernet() {
+  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
+  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  trc(F("OpenMQTTGateway ip: "));
+  Serial.println(Ethernet.localIP());
+  trc(F("Ethernet ok"));
+}
+#endif
 
 #if defined(MDNS_SD) && defined(ESP8266)
   void connectMQTTmdns(){
@@ -328,16 +485,6 @@ void setup_wifi() {
         }
     }
   }
-#endif
-
-#else
-void setup_ethernet() {
-  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
-  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  trc(F("OpenMQTTGateway ip: "));
-  Serial.println(Ethernet.localIP());
-  trc(F("Ethernet ok"));
-}
 #endif
 
 void loop()
@@ -430,7 +577,6 @@ void loop()
       trc(F("RFM69toMQTT OK"));
     #endif
   }
-
 }
 
 void storeValue(long MQTTvalue){

@@ -31,6 +31,8 @@ install:
   - unzip /tmp/rcswitch.zip -d /usr/local/share/arduino/libraries
   - git clone https://github.com/arduino/arduinoOTA.git /usr/local/share/arduino/libraries/ArduinoOTA
   - git clone https://github.com/mrdunk/esp8266_mdns.git /usr/local/share/arduino/libraries/ESP8266mDNS
+  - git clone https://github.com/bblanchon/ArduinoJson.git /usr/local/share/arduino/libraries/ArduinoJson
+  - git clone https://github.com/tzapu/WiFiManager.git /usr/local/share/arduino/libraries/WiFiManager
   - git clone https://github.com/adafruit/DHT-sensor-library /usr/local/share/arduino/libraries/DHT_sensor_library
   - git clone https://github.com/adafruit/Adafruit_Sensor /usr/local/share/arduino/libraries/Adafruit_Sensor
   - git clone https://github.com/adafruit/Adafruit_TSL2561.git /usr/local/share/arduino/libraries/Adafruit_TSL2561
