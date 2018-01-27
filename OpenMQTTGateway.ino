@@ -396,6 +396,9 @@ void setup_wifimanager(boolean reset_settings){
     //reset settings - for testing
     //reset_settings = true;
     if (reset_settings) wifiManager.resetSettings();
+
+    //set minimu quality of signal so it ignores AP's under that quality
+    wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
   
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
