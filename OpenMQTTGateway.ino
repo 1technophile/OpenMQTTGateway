@@ -99,6 +99,10 @@ void callback(char*topic, byte* payload,unsigned int length);
 // client link to pubsub mqtt
 PubSubClient client(eClient);
 
+#ifdef ZSENSOR_INA219_H
+ZsensorINA219 INA219;
+#endif
+
 //MQTT last attemps reconnection date
 unsigned long lastReconnectAttempt = 0;
 
@@ -300,6 +304,9 @@ void setup()
   #endif
   #ifdef ZgatewayRFM69
     setupRFM69();
+  #endif
+  #ifdef ZSENSOR_INA219_H
+    INA219.init();
   #endif
   #ifdef ZsensorINA226
     setupINA226();
@@ -528,6 +535,9 @@ void loop()
     #endif
     #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+    #endif
+    #ifdef ZSENSOR_INA219_H
+      INA219.measure(client);
     #endif
     #ifdef ZsensorINA226
       MeasureINA226(); //Addon to measure the temperature with a DHT
