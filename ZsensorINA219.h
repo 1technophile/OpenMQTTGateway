@@ -28,10 +28,12 @@
 #define ZSENSOR_INA219_H
 
 #include "Zsensor.h"
-#include "User_config.h"
 
 #include <Wire.h>
 #include <Adafruit_INA219.h>
+
+#define MQTT_ROOT ""
+#define Gateway_Name ""
 
 #define subjectVoltINA219    MQTT_ROOT Gateway_Name "/INA219/Volt_V"
 #define subjectCurrentINA219 MQTT_ROOT Gateway_Name "/INA219/Current_mA"        
