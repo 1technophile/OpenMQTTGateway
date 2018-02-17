@@ -103,7 +103,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   mac_adress.toCharArray(mac,mac_adress.length()+1);
                   boolean result = process_miflora_data(-22,service_data,mac); 
                 }
-            } 
+            }
           }
       };
 
@@ -117,7 +117,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
-        trc(F("ZgatewayBT ESP32 setup done "));                 
+        trc(F("ZgatewayBT ESP32 setup done "));    
+        BLEDevice::init("");             
     }
 
     void coreTask( void * pvParameters ){
@@ -128,9 +129,9 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
         while(true){
             trc(taskMessage);
             delay(TimeBtw_Read);
-            BLEDevice::init("");
             BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-            pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+            MyAdvertisedDeviceCallbacks myCallbacks;
+            pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
             pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
             BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
         }
