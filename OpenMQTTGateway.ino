@@ -107,6 +107,9 @@ unsigned long timer_led_receive = 0;
 unsigned long timer_led_send = 0;
 unsigned long timer_led_error = 0;
 
+//Time used to wait for an interval before checking system measures
+unsigned long timer_sys_measures = 0;
+
 //Wifi manager parameters
 //flag for saving data
 bool shouldSaveConfig = true;
@@ -115,9 +118,18 @@ boolean connected_once = false;
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {
-  Serial.println("Should save config");
+  trc("Should save config");
   shouldSaveConfig = true;
 }
+
+#if defined(ESP32)
+void WiFiEvent(WiFiEvent_t event){
+    if(event == SYSTEM_EVENT_STA_DISCONNECTED){
+      trc("Event: SYSTEM_EVENT_STA_DISCONNECTED, reconnecting");
+      WiFi.reconnect();
+    }
+}
+#endif
 
 boolean reconnect() {
   
@@ -201,7 +213,7 @@ void setup()
     
     trc(F("OpenMQTTGateway ip: "));
     Serial.println(WiFi.localIP());
-  
+    
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
 
@@ -308,6 +320,7 @@ void setup()
     setupHCSR501();
   #endif
 }
+
 
 #if defined(ESP32) || defined(ESPWifiManualSetup)
 void setup_wifi() {
@@ -445,6 +458,7 @@ void setup_wifimanager(boolean reset_settings){
     }
 }
 
+
 #else // Arduino case
 void setup_ethernet() {
   Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
@@ -489,9 +503,15 @@ void setup_ethernet() {
 
 void loop()
 {
+ 
     unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
+
+    #if defined(ESP32) // if wifi disconnected on ESP32 we reconnect
+      if(WiFi.getAutoReconnect()) WiFi.onEvent(WiFiEvent);
+    #endif
+
     //RED ON
     digitalWrite(led_error, LOW);
 
@@ -576,6 +596,14 @@ void loop()
       if(RFM69toMQTT())
       trc(F("RFM69toMQTT OK"));
     #endif
+    unsigned long now = millis();
+    if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
+      timer_sys_measures = millis();
+      trc("Remaining memory");
+      uint32_t freeMem;
+      freeMem = ESP.getFreeHeap();
+      trc(String(freeMem));
+    }
   }
 }
 
