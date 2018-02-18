@@ -596,6 +596,7 @@ void loop()
       if(RFM69toMQTT())
       trc(F("RFM69toMQTT OK"));
     #endif
+    #if defined(ESP8266) || defined(ESP32)
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
       timer_sys_measures = millis();
@@ -604,6 +605,7 @@ void loop()
       freeMem = ESP.getFreeHeap();
       trc(String(freeMem));
     }
+    #endif
   }
 }
 
