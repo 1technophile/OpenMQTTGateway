@@ -117,8 +117,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
-        trc(F("ZgatewayBT ESP32 setup done "));    
-        BLEDevice::init("");             
+        trc(F("ZgatewayBT ESP32 setup done "));
+        BLEDevice::init("");
     }
 
     void coreTask( void * pvParameters ){
@@ -322,6 +322,7 @@ boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
     break;
     case '4' :
           mactopic = mactopic + "/" + "tem";
+          if (value > 65000) value = value - 65535;
           dtostrf(value/10,3,1,val); // temp has to be divided by 10
     break;
     case '7' :
