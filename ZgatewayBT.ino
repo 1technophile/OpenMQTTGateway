@@ -118,7 +118,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
         trc(F("ZgatewayBT ESP32 setup done "));
-        BLEDevice::init("");
     }
 
     void coreTask( void * pvParameters ){
@@ -129,6 +128,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
         while(true){
             trc(taskMessage);
             delay(TimeBtw_Read);
+            BLEDevice::init("");
             BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
             MyAdvertisedDeviceCallbacks myCallbacks;
             pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
