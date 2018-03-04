@@ -1,0 +1,19 @@
+{
+  "name": "RFM69",
+  "keywords": "rf, radio, wireless, spi",
+  "description": "RFM69 library for RFM69W, RFM69HW, RFM69CW, RFM69HCW (semtech SX1231, SX1231H)",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/LowPowerLab/RFM69.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "atmelavr",
+  "dependencies":
+  [
+    {
+      "name": "SPIFlash",
+      "authors": "Felix Rusu"
+    }
+  ]
+}
