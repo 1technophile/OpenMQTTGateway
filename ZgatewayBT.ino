@@ -40,6 +40,9 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     #include <BLEScan.h>
     #include <BLEAdvertisedDevice.h>
 
+    //Time used to wait for an interval before resending BLE infos
+    unsigned long timeBLE= 0;
+    
     //core on which the BLE detection task will run
     static int taskCore = 0;
       
@@ -108,6 +111,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
       };
 
     void setupBT(){
+        #ifdef multiCore
         // we setup a task with priority one to avoid conflict with other gateways
         xTaskCreatePinnedToCore(
                           coreTask,   /* Function to implement the task */
@@ -117,9 +121,13 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
-        trc(F("ZgatewayBT ESP32 setup done "));
+          trc(F("ZgatewayBT multicore ESP32 setup done "));
+        #elif
+          trc(F("ZgatewayBT singlecore ESP32 setup done "));
+        #endif
     }
-
+    
+    #ifdef multiCore
     void coreTask( void * pvParameters ){
      
         String taskMessage = "BT Task running on core ";
@@ -136,6 +144,22 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
         }
     }
+    #elif
+    boolean BTtoMQTT(){
+      unsigned long now = millis();
+      if (now > (timeBLE + TimeBtw_Read)) {//retriving value of temperature and humidity of the box from DHT every xUL
+              timeBLE = now;
+              BLEDevice::init("");
+              BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+              MyAdvertisedDeviceCallbacks myCallbacks;
+              pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+              pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+              BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+              return true;
+      }
+      return false;
+    }
+    #endif
       
   #else // arduino or ESP8266 working with HM10/11
 

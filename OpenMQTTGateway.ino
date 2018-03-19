@@ -587,10 +587,10 @@ void loop()
       }
     #endif
     #ifdef ZgatewayBT
-      #ifndef ESP32
-        if(BTtoMQTT())
-        trc(F("BTtoMQTT OK"));
-      #endif
+        #ifndef multiCore
+          if(BTtoMQTT())
+          trc(F("BTtoMQTT OK"));
+        #endif
     #endif
     #ifdef ZgatewayRFM69
       if(RFM69toMQTT())
