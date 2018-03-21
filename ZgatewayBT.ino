@@ -122,7 +122,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
           trc(F("ZgatewayBT multicore ESP32 setup done "));
-        #elif
+        #else
           trc(F("ZgatewayBT singlecore ESP32 setup done "));
         #endif
     }
@@ -144,7 +144,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
         }
     }
-    #elif
+    #else
     boolean BTtoMQTT(){
       unsigned long now = millis();
       if (now > (timeBLE + TimeBtw_Read)) {//retriving value of temperature and humidity of the box from DHT every xUL
