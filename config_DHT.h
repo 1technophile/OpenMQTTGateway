@@ -26,8 +26,8 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define HUM1   "home/DHTtoMQTT/dht1/hum"
-#define TEMP1  "home/DHTtoMQTT/dht1/temp"
+#define HUM1    Base_Topic Gateway_Name "/DHTtoMQTT/dht1/hum"
+#define TEMP1   Base_Topic Gateway_Name "/DHTtoMQTT/dht1/temp"
 #define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------DHT SENSOR TYPE-------------*/

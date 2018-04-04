@@ -26,12 +26,12 @@
 
 /*-------------------IR topics & parameters----------------------*/
 //IR MQTT Subjects
-#define subjectGTWIRtoMQTT "home/IRtoMQTT"
-#define subjectIRtoMQTT "home/IRtoMQTT"
-#define subjectMQTTtoIR "home/commands/MQTTtoIR"
-#define subjectIRtoMQTTprotocol "home/IRtoMQTT/protocol"
-#define subjectIRtoMQTTbits "home/IRtoMQTT/bits"
-#define subjectIRtoMQTTRaw "home/IRtoMQTT/raw"
+#define subjectGTWIRtoMQTT  Base_Topic Gateway_Name "/IRtoMQTT"
+#define subjectIRtoMQTT  Base_Topic Gateway_Name "/IRtoMQTT"
+#define subjectMQTTtoIR  Base_Topic Gateway_Name "/commands/MQTTtoIR"
+#define subjectIRtoMQTTprotocol  Base_Topic Gateway_Name "/IRtoMQTT/protocol"
+#define subjectIRtoMQTTbits  Base_Topic Gateway_Name "/IRtoMQTT/bits"
+#define subjectIRtoMQTTRaw  Base_Topic Gateway_Name "/IRtoMQTT/raw"
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/IRtoMQTT"
 #define IRbitsKey "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits

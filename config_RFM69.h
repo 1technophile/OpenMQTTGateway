@@ -27,16 +27,16 @@
 /*----------------------RFM69 topics & parameters -------------------------*/
 // Topic where the message from RFM69 will be published by the gateway,
 // appended with the nodeID of the sender
-#define subjectRFM69toMQTT "home/RFM69toMQTT"
+#define subjectRFM69toMQTT  Base_Topic Gateway_Name "/RFM69toMQTT"
 // Upon reception of a packed, the RSSI of that packet will be publish to this topic,
 // appended with the nodeID of the sender
-#define subjectRFM69toMQTTrssi "home/RFM69toMQTT/rssi"  // Comment this if you don't want the RSSI to be published.
-#define subjectRFM69toMQTTsender "home/RFM69toMQTT/sender"
+#define subjectRFM69toMQTTrssi  Base_Topic Gateway_Name "/RFM69toMQTT/rssi"  // Comment this if you don't want the RSSI to be published.
+#define subjectRFM69toMQTTsender  Base_Topic Gateway_Name "/RFM69toMQTT/sender"
 // Topic subscribed by the gateway. Messages received will be sent to RFM69
-#define subjectMQTTtoRFM69 "home/commands/MQTTtoRFM69"
+#define subjectMQTTtoRFM69  Base_Topic Gateway_Name "/commands/MQTTtoRFM69"
 #define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
 // On reception of an ack from RFM69, the message that has been sent is published here
-#define subjectGTWRFM69toMQTT "home/RFM69toMQTT/acked"
+#define subjectGTWRFM69toMQTT  Base_Topic Gateway_Name "/RFM69toMQTT/acked"
 #define defaultRFM69ReceiverId 99
 
 // Default values

@@ -38,10 +38,11 @@ char mqtt_user[20] = "your_username"; // not compulsory only if your broker need
 char mqtt_pass[20] = "your_password"; // not compulsory only if your broker needs authentication
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
-#define Gateway_Name "OpenMQTTGateway"
+#define Gateway_Name "/OpenMQTTGateway"
+#define Base_Topic "home"
 #define WifiManager_password "your_password"
-#define version_Topic "home/" Gateway_Name "/version"
-#define will_Topic "home/" Gateway_Name "/LWT"
+#define version_Topic  Base_Topic Gateway_Name "/version"
+#define will_Topic  Base_Topic Gateway_Name "/LWT"
 #define will_QoS 0
 #define will_Retain true
 #define will_Message "Offline"
@@ -169,7 +170,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
-#define subjectMQTTtoX "home/commands/#"
+#define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 
 //variables to avoid duplicates
