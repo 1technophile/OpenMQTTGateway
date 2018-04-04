@@ -628,7 +628,7 @@ void storeValue(long MQTTvalue){
 }
 
 int getMin(){
-  int minimum = ReceivedSignal[0][1];
+  unsigned int minimum = ReceivedSignal[0][1];
   int minindex=0;
   for (int i = 0; i < array_size; i++)
   {
@@ -640,7 +640,7 @@ int getMin(){
   return minindex;
 }
 
-boolean isAduplicate(long value){
+boolean isAduplicate(unsigned long value){
 trc(F("isAduplicate"));
 // check if the value has been already sent during the last time_avoid_duplicate
 for (int i = 0; i < array_size;i++){

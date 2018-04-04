@@ -36,7 +36,7 @@ unsigned char _uartpos = 0;
 
 void setupSRFB(){
   trc(F("ZgatewaySRFB setup done "));
-  trc("Serial Baud" + SERIAL_BAUD);
+  trc("Serial Baud" + String(SERIAL_BAUD));
 }
 
 void MQTTtoSRFB(char * topicOri, char * datacallback) {
