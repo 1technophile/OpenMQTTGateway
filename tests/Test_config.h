@@ -129,14 +129,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #include "config_DHT.h"
   //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   //#include "config_RFM69.h"
-#else // for arduino + W5100
+#else // for arduino mega + W5100
   #define ZgatewayRF
   #include "config_RF.h"
   //#define ZgatewayRF2 // too big for UNO
   //#define ZgatewayRFM69 not tested
   //#include "config_RFM69.h"
-  #define ZgatewayIR
-  #include "config_IR.h"
+  //#define ZgatewayIR
+  //#include "config_IR.h"
   //#define ZgatewayBT
   //#include "config_BT.h"
   //#define ZsensorINA226
