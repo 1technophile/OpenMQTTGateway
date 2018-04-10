@@ -295,6 +295,9 @@ void setup()
   #ifdef ZsensorTSL2561
     setupZsensorTSL2561();
   #endif
+  #ifdef ZactuatorONOFF
+    setupONOFF();
+  #endif
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -681,6 +684,9 @@ digitalWrite(led_send, LOW);
 #ifdef ZgatewayRFM69
   MQTTtoRFM69(topicOri, datacallback);
 #endif
+#ifdef ZactuatorONOFF
+  MQTTtoONOFF(topicOri, datacallback);
+#endif
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
 }
@@ -713,6 +719,10 @@ void revert_hex_data(char * in, char * out, int l){
     i--;
   }
   out[l-1] = '\0';
+}
+
+bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
+     return s != "0";
 }
 
 //trace
