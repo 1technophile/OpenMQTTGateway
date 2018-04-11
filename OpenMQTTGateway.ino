@@ -64,6 +64,9 @@
 #if defined(ZgatewayRF) || defined(ZgatewayRF2)
   #include "config_RF.h"
 #endif
+#ifdef ZgatewaySRFB
+  #include "config_SRFB.h"
+#endif
 #ifdef ZgatewayBT
   #include "config_BT.h"
 #endif
