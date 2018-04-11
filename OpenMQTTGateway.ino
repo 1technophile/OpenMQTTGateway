@@ -152,7 +152,6 @@ unsigned long timer_sys_measures = 0;
 //flag for saving data
 bool shouldSaveConfig = true;
 //do we have been connected once to mqtt
-boolean connected_once = false;
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {
@@ -160,25 +159,16 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
-#if defined(ESP32)
-void WiFiEvent(WiFiEvent_t event){
-    if(event == SYSTEM_EVENT_STA_DISCONNECTED){
-      trc("Event: SYSTEM_EVENT_STA_DISCONNECTED, reconnecting");
-      WiFi.reconnect();
-    }
-}
-#endif
-
 boolean reconnect() {
   
   int failure_number = 0;
   // Loop until we're reconnected
   while (!client.connected()) {
-    trc(F("MQTT connection...")); //F function enable to decrease sram usage
-      if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) { 
+      trc(F("MQTT connection...")); //F function enable to decrease sram usage
+      if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
       trc(F("Connected to broker"));
-      connected_once = true;
-    // Once connected, publish an announcement...
+      failure_number = 0;
+      // Once connected, publish an announcement...
       client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
       client.publish(version_Topic,OMG_VERSION,will_Retain);
@@ -193,7 +183,7 @@ boolean reconnect() {
         trc(F("Subscription OK to the subjects"));
       }
       } else {
-        if (!connected_once)  failure_number ++; // if we never connected to broker we count the failure
+      failure_number ++; // we count the failure
       trc(F("failed, rc="));
       trc(String(client.state()));
       trc(F("try again in 5s"));
@@ -366,6 +356,7 @@ void setup()
 #if defined(ESP32) || defined(ESPWifiManualSetup)
 void setup_wifi() {
   delay(10);
+  int failureAttempt = 0; //DIRTY FIX ESP32 waiting for https://github.com/espressif/arduino-esp32/issues/653
   WiFi.mode(WIFI_STA);
   // We start by connecting to a WiFi network
   trc(F("Connecting to "));
@@ -380,6 +371,8 @@ void setup_wifi() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     trc(F("."));
+    failureAttempt++; //DIRTY FIX ESP32
+    if (failureAttempt > 30) setup_wifi(); //DIRTY FIX ESP32
   }
   
   trc(F("WiFi ok with manual config credentials"));
@@ -548,10 +541,6 @@ void loop()
     unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
-
-    #if defined(ESP32) // if wifi disconnected on ESP32 we reconnect
-      if(WiFi.getAutoReconnect()) WiFi.onEvent(WiFiEvent);
-    #endif
 
     //RED ON
     digitalWrite(led_error, LOW);
