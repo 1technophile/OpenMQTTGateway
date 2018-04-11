@@ -82,48 +82,22 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //                        LED       Resistor 270-510R
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
-//Addons and module management, comment the Z line and the config file if you don't use
+//Addons and module management, comment the Z line
 
-#define ZgatewayRF //ESP8266, Arduino, ESP32
-#include "config_RF.h"
-
-//#define ZgatewayRF2 //ESP8266, Arduino, ESP32
-
-//#define ZgatewaySRFB //Sonoff RF Bridge
-//#include "config_SRFB.h"
-
-#define ZgatewayIR //ESP8266, Arduino, Sonoff RF Bridge
-#include "config_IR.h"
-
-#define ZgatewayBT //ESP8266, Arduino, ESP32
-#include "config_BT.h"
-
-//#define ZactuatorONOFF //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#include "config_ONOFF.h"
-
-//#define ZsensorINA226 //ESP8266, Arduino, ESP32
-//#include "config_INA226.h"
-
-//#define ZsensorHCSR501 //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#include "config_HCSR501.h"
-
-//#define ZsensorADC //ESP8266, Arduino, ESP32
-//#include "config_ADC.h"
-
-//#define ZsensorBH1750 //ESP8266, Arduino, ESP32
-//#include "config_BH1750.h"
-
-//#define ZsensorTSL2561 //ESP8266, Arduino, ESP32
-//#include "config_TSL2561.h"
-
-//#define ZsensorBME280 //ESP8266, Arduino, ESP32
-//#include "config_BME280.h"
-
-//#define ZsensorDHT //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#include "config_DHT.h"
-
-//#define ZgatewayRFM69 //ESP8266, Arduino, ESP32
-//#include "config_RFM69.h"
+#define ZgatewayRF          //ESP8266, Arduino, ESP32
+#define ZgatewayIR          //ESP8266, Arduino,         Sonoff RF Bridge
+#define ZgatewayBT          //ESP8266, Arduino, ESP32
+//#define ZgatewayRF2       //ESP8266, Arduino, ESP32
+//#define ZgatewaySRFB      //                          Sonoff RF Bridge
+//#define ZactuatorONOFF    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZsensorINA226     //ESP8266, Arduino, ESP32
+//#define ZsensorHCSR501    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZsensorADC        //ESP8266, Arduino, ESP32
+//#define ZsensorBH1750     //ESP8266, Arduino, ESP32
+//#define ZsensorTSL2561    //ESP8266, Arduino, ESP32
+//#define ZsensorBME280     //ESP8266, Arduino, ESP32
+//#define ZsensorDHT        //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZgatewayRFM69     //ESP8266, Arduino, ESP32
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/

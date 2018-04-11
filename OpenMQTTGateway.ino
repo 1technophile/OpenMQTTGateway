@@ -60,6 +60,44 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
+// Modules config inclusion
+#if defined(ZgatewayRF) || defined(ZgatewayRF2)
+  #include "config_RF.h"
+#endif
+#ifdef ZgatewayBT
+  #include "config_BT.h"
+#endif
+#ifdef ZgatewayIR
+  #include "config_IR.h"
+#endif
+#ifdef ZactuatorONOFF
+  #include "config_ONOFF.h"
+#endif
+#ifdef ZsensorINA226
+  #include "config_INA226.h"
+#endif
+#ifdef ZsensorHCSR501
+  #include "config_HCSR501.h"
+#endif
+#ifdef ZsensorADC
+  #include "config_ADC.h"
+#endif
+#ifdef ZsensorBH1750
+  #include "config_BH1750.h"
+#endif
+#ifdef ZsensorTSL2561
+  #include "config_TSL2561.h"
+#endif
+#ifdef ZsensorBME280
+  #include "config_BME280.h"
+#endif
+#ifdef ZsensorDHT
+  #include "config_DHT.h"
+#endif
+#ifdef ZgatewayRFM69
+  #include "config_RFM69.h"
+#endif
+
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
 #define array_size 12
