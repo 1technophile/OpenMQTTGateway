@@ -31,7 +31,7 @@
 /*-------------------VERSION----------------------*/
 #define OMG_VERSION "0.7"
 
-/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
+/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
