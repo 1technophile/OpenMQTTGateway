@@ -73,6 +73,9 @@
 #ifdef ZgatewayIR
   #include "config_IR.h"
 #endif
+#ifdef Zgateway2G
+  #include "config_2G.h"
+#endif
 #ifdef ZactuatorONOFF
   #include "config_ONOFF.h"
 #endif
@@ -757,6 +760,25 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 
 //trace
 void trc(String msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+
+void trc(int msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+void trc(uint32_t msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+void trc(float msg){
   if (TRACE) {
   Serial.println(msg);
   }

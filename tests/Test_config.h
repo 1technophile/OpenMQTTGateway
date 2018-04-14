@@ -90,6 +90,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF2
   #define ZgatewayIR
   #define ZgatewayBT
+  #define Zgateway2G
   #define ZactuatorONOFF
   #define ZsensorINA226
   #define ZsensorHCSR501
@@ -102,6 +103,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #elif ESP32
   #define ZgatewayRF
   #define ZgatewayRF2
+  //#define Zgateway2G (not tested yet)
   //#define ZgatewayIR
   #define ZgatewayBT
   #define ZactuatorONOFF
@@ -114,6 +116,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
 #else // for arduino mega + W5100
   #define ZgatewayRF
+  //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
   //#define ZgatewayRFM69 not tested
   //#define ZgatewayIR
