@@ -27,6 +27,7 @@
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectMQTTtoONOFF  Base_Topic Gateway_Name "/commands/MQTTtoONOFF"
+#define subjectGTWONOFFtoMQTT  Base_Topic Gateway_Name "/ONOFFtoMQTT"
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #define ACTUATOR_ONOFF_PIN 4 

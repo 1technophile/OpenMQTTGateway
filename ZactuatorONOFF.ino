@@ -48,6 +48,11 @@ void MQTTtoONOFF(char * topicOri, char * datacallback){
     trc(F("MQTTtoONOFF"));
     trc(String(boolSWITCHTYPE));
     digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
+    boolean result = client.publish(subjectGTWONOFFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic
+    if (result){
+      trc(F("MQTTtoONOFF ack pub."));
+      trc(String(datacallback));
+    }
   }
 }
 #endif
