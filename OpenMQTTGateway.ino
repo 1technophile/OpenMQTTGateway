@@ -73,6 +73,9 @@
 #ifdef ZgatewayIR
   #include "config_IR.h"
 #endif
+#ifdef Zgateway2G
+  #include "config_2G.h"
+#endif
 #ifdef ZactuatorONOFF
   #include "config_ONOFF.h"
 #endif
@@ -328,6 +331,9 @@ void setup()
   #endif
   #ifdef ZactuatorONOFF
     setupONOFF();
+  #endif
+  #ifdef Zgateway2G
+    setup2G();
   #endif
   #ifdef ZgatewayIR
     setupIR();
@@ -625,6 +631,11 @@ void loop()
           trc(F("BTtoMQTT OK"));
         #endif
     #endif
+    #ifdef Zgateway2G
+      if(_2GtoMQTT()){
+      trc(F("2GtoMQTT OK"));
+      }
+    #endif
     #ifdef ZgatewayRFM69
       if(RFM69toMQTT())
       trc(F("RFM69toMQTT OK"));
@@ -705,6 +716,9 @@ digitalWrite(led_send, LOW);
 #ifdef ZgatewayRF2
   MQTTtoRF2(topicOri, datacallback);
 #endif
+#ifdef Zgateway2G
+  MQTTto2G(topicOri, datacallback);
+#endif
 #ifdef ZgatewaySRFB
   MQTTtoSRFB(topicOri, datacallback);
 #endif
@@ -757,6 +771,25 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 
 //trace
 void trc(String msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+
+void trc(int msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+void trc(uint32_t msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+void trc(float msg){
   if (TRACE) {
   Serial.println(msg);
   }
