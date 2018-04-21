@@ -78,7 +78,7 @@ void signalStrengthAnalysis(){
     }
 }
 
-void _2GtoMQTT(){
+boolean _2GtoMQTT(){
     // Get the memory locations of unread SMS messages.
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
     for (int i = 0; i < unreadSMSNum; i++) {
@@ -89,21 +89,23 @@ void _2GtoMQTT(){
         trc(sms.date);
         trc(sms.message);
         A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
-        trc(F("Adv data RFtoMQTT"));
+        trc(F("data 2GtoMQTT"));
         client.publish(subject2GtoMQTTphone,(char *)sms.number.c_str());
         client.publish(subject2GtoMQTTdate,(char *)sms.date.c_str());    
-        client.publish(subject2GtoMQTTmessage,(char *)sms.message.c_str());    
+        client.publish(subject2GtoMQTTmessage,(char *)sms.message.c_str()); 
+        return true;   
     }
+    return false;
 }
 
 void MQTTto2G(char * topicOri, char * datacallback) {
 
-  String data = String(datacallback); // we will not be able to pass values > 4294967295
+  String data = datacallback; // we will not be able to pass values > 4294967295
 
   // 2G DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined 
   String topic = topicOri;
-  String phone_number;
+  String phone_number = "";
   int pos0 = topic.lastIndexOf(_2GPhoneKey);
   if (pos0 != -1) {
     pos0 = pos0 + strlen(_2GPhoneKey);
@@ -111,9 +113,9 @@ void MQTTto2G(char * topicOri, char * datacallback) {
     trc(F("Phone number to send SMS:"));
     trc(phone_number);
   }
-  
-  if ((topic == subjectMQTTto2G) && (pos0 != 0)){
+    if((strstr(topicOri, subjectMQTTto2G) != NULL) && (pos0 != -1)){
     trc(F("MQTTto2G"));
+    trc(data);
     if (A6l.sendSMS(phone_number,data) == A6_OK ) {
       trc("SMS OK");
     }else{

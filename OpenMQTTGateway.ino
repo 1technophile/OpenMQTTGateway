@@ -332,6 +332,9 @@ void setup()
   #ifdef ZactuatorONOFF
     setupONOFF();
   #endif
+  #ifdef Zgateway2G
+    setup2G();
+  #endif
   #ifdef ZgatewayIR
     setupIR();
   #endif
@@ -628,6 +631,11 @@ void loop()
           trc(F("BTtoMQTT OK"));
         #endif
     #endif
+    #ifdef Zgateway2G
+      if(_2GtoMQTT()){
+      trc(F("2GtoMQTT OK"));
+      }
+    #endif
     #ifdef ZgatewayRFM69
       if(RFM69toMQTT())
       trc(F("RFM69toMQTT OK"));
@@ -707,6 +715,9 @@ digitalWrite(led_send, LOW);
 #endif
 #ifdef ZgatewayRF2
   MQTTtoRF2(topicOri, datacallback);
+#endif
+#ifdef Zgateway2G
+  MQTTto2G(topicOri, datacallback);
 #endif
 #ifdef ZgatewaySRFB
   MQTTtoSRFB(topicOri, datacallback);
