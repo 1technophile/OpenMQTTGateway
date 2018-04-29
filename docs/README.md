@@ -2,8 +2,9 @@
 
 ## Overview
 
-OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Infrared devices and a MQTT broker. 
-The MQTT broker can connected to your favorite home automation controller (Home Assistant, Openhab, Domoticz) or NodeRED, as long as it supports MQTT the system can talk to the gateway and by the way your different devices on both directions.
+OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Infrared/BLE/GSM/GPRS devices and a MQTT broker.
+
+The MQTT broker can be connected to your favorite home automation controller (Home Assistant, Openhab, Domoticz) or NodeRED, as long as it supports MQTT, the system can talk to the gateway and by the way your different devices on both directions.
 
 It can be installed on:
 * Arduino uno(limited)/mega(advised) + W5100
@@ -23,7 +24,7 @@ It can be installed on:
 * Send SMS corresponding to received MQTT data (MQTT->2G)
 
 It supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561
-Or can act relays.
+Or can actutate a relay.
 
 ## Functions:
 * Bidirectional, the gateway can send and receive signals, for example if you have RF wall plug you can either control them with your home automation software (MQTT-->RF) or the physical remote control. When you press a button on the physical remote the wall plug will switch ON and the button in your home automation software (RF-->MQTT) will be updated.
@@ -34,6 +35,7 @@ Or can act relays.
 * Acknowledgement, to be sure that the gateway received the payload from MQTT it sends an acknowledgement on a `user_defined` topic, `subjectGTWRFtoMQTT` for RF or `subjectGTWIRtoMQTT` for IR enabling to update the state of your switch or other component into your home automation.
 * Multi boards compatibility, the gateway has been currently tested with **ESP8266 12F**, **NodeMCU V1**, **NodeMCU V2**, **Wemos D1 mini**, **Arduino Uno**, **ESP32** (RF and BLE gateways) and the **Arduino Mega**.
 * Multi protocols handling, the gateway is based on RCSwitch, NewRemoteSwitch, RFM69, A6lib and IRRemote libraries, you can define the protocol you want to use.
+* Configuration by web portal with **ESP8266** based boards
 
 See the [wiki](https://github.com/1technophile/OpenMQTTGateway/wiki) for more information:  
 https://github.com/1technophile/OpenMQTTGateway/wiki
