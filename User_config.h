@@ -39,8 +39,8 @@ char mqtt_pass[20] = "your_password"; // not compulsory only if your broker need
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
-#define Gateway_Name "/OpenMQTTGateway"
-#define Base_Topic "home"
+#define Gateway_Name "OpenMQTTGateway"
+#define Base_Topic "home/"
 #define version_Topic  Base_Topic Gateway_Name "/version"
 #define will_Topic  Base_Topic Gateway_Name "/LWT"
 #define will_QoS 0
