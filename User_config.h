@@ -119,7 +119,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
 //uncomment to use multicore function of ESP32 for BLE
-//#define multiCore
+#ifdef ESP32
+  //#define multiCore //uncomment to use multicore function of ESP32 for BLE
+#endif
 
 #define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
 /*-------------------ACTIVATE TRACES----------------------*/
