@@ -38,8 +38,8 @@ char mqtt_pass[20] = "your_password"; // not compulsory only if your broker need
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
-#define Gateway_Name "/OpenMQTTGateway"
-#define Base_Topic "home"
+#define Gateway_Name "OpenMQTTGateway"
+#define Base_Topic "home/"
 #define version_Topic  Base_Topic Gateway_Name "/version"
 #define will_Topic  Base_Topic Gateway_Name "/LWT"
 #define will_QoS 0
@@ -145,8 +145,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //variables to avoid duplicates
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
-//uncomment to use multicore function of ESP32 for BLE
-#define multiCore
+#ifdef ESP32
+  //#define multiCore //uncomment to use multicore function of ESP32 for BLE
+#endif
 
 #define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
 /*-------------------ACTIVATE TRACES----------------------*/
