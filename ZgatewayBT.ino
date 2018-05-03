@@ -98,13 +98,20 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 trc(serviceDataUUID.toString().c_str());
 
                 if (strstr(serviceDataUUID.toString().c_str(),"fe95") != NULL){
-                  trc("Processing mi flora data");
+                  trc("Processing BLE device data");
                   char service_data[returnedString.length()+1];
                   returnedString.toCharArray(service_data,returnedString.length()+1);
                   service_data[returnedString.length()] = '\0';
                   char mac[mac_adress.length()+1];
                   mac_adress.toCharArray(mac,mac_adress.length()+1);
-                  boolean result = process_miflora_data(-22,service_data,mac); 
+                  if (strstr(service_data,"209800") != NULL) {
+                    trc("mi flora data reading");
+                    boolean result = process_data(-22,service_data,mac);
+                  }
+                  if (strstr(service_data,"20aa01") != NULL){
+                    trc("mi jia data reading");
+                    boolean result = process_data(-24,service_data,mac);
+                  }
                 }
             }
           }
@@ -237,8 +244,14 @@ boolean BTtoMQTT() {
                 sprintf(val, "%d", rssi);
                 client.publish((char *)mactopic.c_str(),val);
                 if (strcmp(d[4].extract, "fe95") == 0) 
-                boolean result = process_miflora_data(0,d[5].extract,d[0].extract);
-                
+                  if (strstr(d[5].extract,"209800") != NULL) {
+                    trc("mi flora data reading");
+                    boolean result = process_data(0,d[5].extract,d[0].extract);
+                  }
+                  if (strstr(d[5].extract,"20aa01") != NULL){
+                    trc("mi jia data reading");
+                    boolean result = process_data(-2,d[5].extract,d[0].extract);
+                  }
                 return true;
             }
           }
@@ -309,7 +322,7 @@ boolean BTtoMQTT() {
 #endif
 #endif
 
-boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
+boolean process_data(int offset, char * rest_data, char * mac_adress){
   
   int data_length = 0;
   switch (rest_data[51 + offset]) {
@@ -349,12 +362,17 @@ boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
           if (value > 65000) value = value - 65535;
           dtostrf(value/10,3,1,val); // temp has to be divided by 10
     break;
+    case '6' :
+          mactopic = mactopic + "/" + "hum";
+          if (value > 65000) value = value - 65535;
+          dtostrf(value/10,3,1,val); // hum has to be divided by 10
+    break;
     case '7' :
           mactopic = mactopic + "/" + "lux";
           dtostrf(value,0,0,val);
      break;
     case '8' :
-          mactopic = mactopic + "/" + "hum";
+          mactopic = mactopic + "/" + "moi";
           dtostrf(value,0,0,val);
      break;
     default:
