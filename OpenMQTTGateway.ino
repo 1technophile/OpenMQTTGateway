@@ -166,7 +166,21 @@ void saveConfigCallback () {
 }
 
 //Wi-fi Hostname to display in router
-char wiFiHostName[30] = {0};
+String wiFiHostName;
+
+#if defined(ESP8266) || defined(ESP32)
+  //Generate unique suffix for hostname from MAC addr
+  String macToStr(const uint8_t* mac){
+    String result;
+    for (int i = 0; i < 6; ++i) {
+      result += String(mac[i], 16);
+      if (i < 5){
+        result += ':';
+      }
+    }
+    return result;
+  }
+#endif
 
 boolean reconnect() {
   
@@ -242,7 +256,10 @@ void setup()
     
     // Set the Hostname, Combining User config ota_hostname with 6 chars ChipID for uniqueness
     // E.g: Sensors-17F3C2
-    sprintf(wiFiHostName, "%s-%06X", ota_hostname, ESP.getChipId());
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    String macAddr = macToStr(mac);
+    wiFiHostName = wiFiHostName+"-"+macAddr;
   
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
       setup_wifimanager(false);
@@ -382,7 +399,7 @@ void setup_wifi() {
   IPAddress gateway_adress(gateway);
   IPAddress subnet_adress(subnet);
   IPAddress dns_adress(Dns);
-  WiFi.hostname(String(wiFiHostName));
+  WiFi.hostname(wiFiHostName);
   WiFi.begin(wifi_ssid, wifi_password);
   //WiFi.config(ip_adress,gateway_adress,subnet_adress,dns_adress); //Uncomment this line if you want to use advanced network config
     
@@ -469,7 +486,7 @@ void setup_wifimanager(boolean reset_settings){
     wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
     
     //Set Hostname
-    wifi_station_set_hostname (wiFiHostName);
+    wifi_station_set_hostname (wiFiHostName.c_str());
     WiFi.hostname(wiFiHostName);
   
     //fetches ssid and pass and tries to connect
