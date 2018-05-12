@@ -6,6 +6,8 @@
  
   This gateway enables to:
  - publish MQTT data to a different topic related to BLE devices rssi signal
+ - publish MQTT data related to mi flora temperature, moisture, fertility and lux
+ - publish MQTT data related to mi jia indoor temperature & humidity sensor
 
     Copyright: (c)Florian ROBERT
   
@@ -67,8 +69,9 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             if (advertisedDevice.haveRSSI()){
               trc(F("Get RSSI "));       
               String rssi = String(advertisedDevice.getRSSI());
-              trc(mactopic + " " + rssi);
-              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+              String rssitopic = mactopic + subjectBTtoMQTTrssi;
+              trc(rssitopic + " " + rssi);
+              client.publish((char *)rssitopic.c_str(),(char *)rssi.c_str());
             }
             if (advertisedDevice.haveTXPower()){
               trc(F("Get TXPower "));       
@@ -238,7 +241,7 @@ boolean BTtoMQTT() {
                 strupp(d[0].extract);
                 String mactopic(d[0].extract);
                 trc(mactopic);
-                mactopic = subjectBTtoMQTT + mactopic;
+                mactopic = subjectBTtoMQTT + mactopic + subjectBTtoMQTTrssi;
                 int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
                 char val[12];
                 sprintf(val, "%d", rssi);
@@ -296,7 +299,7 @@ boolean BTtoMQTT() {
              onedevice.replace(STRING_MSG,"");
              String mac = onedevice.substring(53,65);
              String rssi = onedevice.substring(66,70);
-             String mactopic = subjectBTtoMQTT + mac;
+             String mactopic = subjectBTtoMQTT + mac + subjectBTtoMQTTRSSI;
              trc(mactopic + " " + rssi);
              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
              discResult = discResult.substring(78);
@@ -354,25 +357,25 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
   // following the value of digit 47 we determine the type of data we get from the sensor
   switch (rest_data[47 + offset]) {
     case '9' :
-          mactopic = mactopic + "/" + "fer";
+          mactopic = mactopic + subjectBTtoMQTTfer;
           dtostrf(value,0,0,val);
     break;
     case '4' :
-          mactopic = mactopic + "/" + "tem";
+          mactopic = mactopic + subjectBTtoMQTTtem;
           if (value > 65000) value = value - 65535;
           dtostrf(value/10,3,1,val); // temp has to be divided by 10
     break;
     case '6' :
-          mactopic = mactopic + "/" + "hum";
+          mactopic = mactopic + subjectBTtoMQTThum;
           if (value > 65000) value = value - 65535;
           dtostrf(value/10,3,1,val); // hum has to be divided by 10
     break;
     case '7' :
-          mactopic = mactopic + "/" + "lux";
+          mactopic = mactopic + subjectBTtoMQTTlux;
           dtostrf(value,0,0,val);
      break;
     case '8' :
-          mactopic = mactopic + "/" + "moi";
+          mactopic = mactopic + subjectBTtoMQTTmoi;
           dtostrf(value,0,0,val);
      break;
     default:

@@ -25,6 +25,12 @@
 */
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
+#define subjectBTtoMQTTrssi "/rssi"
+#define subjectBTtoMQTTtem "/tem"
+#define subjectBTtoMQTThum "/hum"
+#define subjectBTtoMQTTmoi "/moi"
+#define subjectBTtoMQTTfer "/fer"
+#define subjectBTtoMQTTlux "/lux"
 #define TimeBtw_Read 55555 //define the time between 2 scans
 #define Scan_duration 10 //define the time for a scan
 #define HM-10 
