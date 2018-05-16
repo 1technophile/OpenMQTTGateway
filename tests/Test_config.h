@@ -150,5 +150,6 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 
 #define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
+#define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on

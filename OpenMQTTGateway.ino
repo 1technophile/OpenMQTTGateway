@@ -641,17 +641,37 @@ void loop()
       trc(F("RFM69toMQTT OK"));
     #endif
     #if defined(ESP8266) || defined(ESP32)
+      stateMeasures();
+    #endif
+  }
+}
+
+#if defined(ESP8266) || defined(ESP32)
+void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
+      StaticJsonBuffer<200> jsonBuffer;
+      JsonObject& SYSdata = jsonBuffer.createObject();
       timer_sys_measures = millis();
       trc("Remaining memory");
       uint32_t freeMem;
       freeMem = ESP.getFreeHeap();
+      SYSdata["freeMem"] = freeMem;
       trc(freeMem);
+      trc("RSSI");
+      long rssi = WiFi.RSSI();
+      SYSdata["rssi"] = rssi;
+      trc(rssi);
+      trc("SSID");
+      String SSID = WiFi.SSID();
+      SYSdata["SSID"] = SSID;
+      trc(SSID);
+      char JSONmessageBuffer[100];
+      SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+      client.publish(subjectSYStoMQTT,JSONmessageBuffer);
     }
-    #endif
-  }
 }
+#endif
 
 void storeValue(long MQTTvalue){
     unsigned long now = millis();
