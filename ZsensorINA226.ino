@@ -56,7 +56,7 @@ void MeasureINA226(){
         // Bus Spannung, read-only, 16Bit, 0...40.96V max., LSB 1.25mV
         trc(F(" Volt: "));
         float volt = readRegister(0x02) * 0.00125; 
-        trc(String(volt));
+        trc(volt);
         trc(F(" V, Current: "));
         // Seite 24: Shunt Spannung +- 81,92mV mit 16 Bit, LSB 2,5uV
         int shuntvolt = readRegister(0x01);
@@ -66,10 +66,10 @@ void MeasureINA226(){
           shuntvolt *= -1 ;       // negativ machen
         }
         float current = shuntvolt * 0.0000025 / rShunt; // * LSB / R
-        trc(String(current));
+        trc(current);
         trc(F(" A, Power: "));
         float power=abs(volt*current);
-        trc(String(power));
+        trc(power);
         trc(F(" W"));
       
         char volt_c[7];

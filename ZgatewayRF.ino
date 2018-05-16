@@ -36,11 +36,11 @@ void setupRF(){
   //RF init parameters
   mySwitch.enableTransmit(RF_EMITTER_PIN);
   trc(F("RF_EMITTER_PIN "));
-  trc(String(RF_EMITTER_PIN));
+  trc(RF_EMITTER_PIN);
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); 
   mySwitch.enableReceive(RF_RECEIVER_PIN); 
   trc(F("RF_RECEIVER_PIN "));
-  trc(String(RF_RECEIVER_PIN));
+  trc(RF_RECEIVER_PIN);
   trc(F("ZgatewayRF setup done "));
 }
 
@@ -96,7 +96,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     pos = pos + +strlen(RFprotocolKey);
     valuePRT = (topic.substring(pos,pos + 1)).toInt();
     trc(F("RF Protocol:"));
-    trc(String(valuePRT));
+    trc(valuePRT);
   }
   //We look into the subject to see if a special RF pulselength is defined 
   int pos2 = topic.lastIndexOf(RFpulselengthKey);
@@ -104,14 +104,14 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     pos2 = pos2 + strlen(RFpulselengthKey);
     valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
     trc(F("RF Pulse Lgth:"));
-    trc(String(valuePLSL));
+    trc(valuePLSL);
   }
   int pos3 = topic.lastIndexOf(RFbitsKey);       
   if (pos3 != -1){
     pos3 = pos3 + strlen(RFbitsKey);
     valueBITS = (topic.substring(pos3,pos3 + 2)).toInt();
     trc(F("Bits nb:"));
-    trc(String(valueBITS));
+    trc(valueBITS);
   }
   
   if ((topic == subjectMQTTtoRF) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
@@ -127,17 +127,17 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     if (valuePRT == 0) valuePRT = 1;
     if (valuePLSL == 0) valuePLSL = 350;
     if (valueBITS == 0) valueBITS = 24;
-    trc(String(valuePRT));
-    trc(String(valuePLSL));
-    trc(String(valueBITS));
+    trc(valuePRT);
+    trc(valuePLSL);
+    trc(valueBITS);
     mySwitch.setProtocol(valuePRT,valuePLSL);
     mySwitch.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic 
     boolean result = client.publish(subjectGTWRFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     if (result){
       trc(F("MQTTtoRF ack pub."));
-      trc(String(data));
-      };
+      trc(data);
+    }
   }
   
 }

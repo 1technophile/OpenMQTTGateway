@@ -39,9 +39,9 @@ SMSmessage sms;
 void setup2G(){
 
   trc(F("_2G_TX_PIN "));
-  trc(String(_2G_TX_PIN));
+  trc(_2G_TX_PIN);
   trc(F("_2G_RX_PIN "));
-  trc(String(_2G_RX_PIN));
+  trc(_2G_RX_PIN);
   setupGSM(false);
   trc(F("Zgateway2G setup done "));
 }
@@ -125,7 +125,7 @@ void MQTTto2G(char * topicOri, char * datacallback) {
     boolean result = client.publish(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     if (result){
       trc(F("MQTTto2G ack pub."));
-      trc(String(data));
+      trc(data);
     }
   }
   

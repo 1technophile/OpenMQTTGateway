@@ -48,7 +48,7 @@ void MeasureADC(){
     }else{
       if(val  >= persistedadc + ThresholdReadingADC || val  <= persistedadc - ThresholdReadingADC){
         trc(F("Sending analog value to MQTT"));
-        trc(String(val));
+        trc(val);
         client.publish(ADC,String(val).c_str());
         persistedadc = val;
        }

@@ -53,9 +53,9 @@ void setupRF2(){
     #ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
       NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
         trc(F("RF_EMITTER_PIN "));
-        trc(String(RF_EMITTER_PIN));
+        trc(RF_EMITTER_PIN);
         trc(F("RF_RECEIVER_PIN "));
-        trc(String(RF_RECEIVER_PIN));
+        trc(RF_RECEIVER_PIN);
         trc(F("ZgatewayRF2 setup done "));   
     #endif 
     pinMode(RF_EMITTER_PIN, OUTPUT);
@@ -120,35 +120,35 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     pos = pos + +strlen(RF2codeKey);
     valueCODE = (topic.substring(pos,pos + 8)).toInt();
     trc(F("RF2 code:"));
-    trc(String(valueCODE));
+    trc(valueCODE);
   }
   int pos2 = topic.lastIndexOf(RF2periodKey);
   if (pos2 != -1) {
     pos2 = pos2 + strlen(RF2periodKey);
     valuePERIOD = (topic.substring(pos2,pos2 + 3)).toInt();
     trc(F("RF2 Period:"));
-    trc(String(valuePERIOD));
+    trc(valuePERIOD);
   }
   int pos3 = topic.lastIndexOf(RF2unitKey);       
   if (pos3 != -1){
     pos3 = pos3 + strlen(RF2unitKey);
     valueUNIT = (topic.substring(pos3, topic.indexOf("/", pos3))).toInt();
     trc(F("Unit:"));
-    trc(String(valueUNIT));
+    trc(valueUNIT);
   }
   int pos4 = topic.lastIndexOf(RF2groupKey);
   if (pos4 != -1) {
     pos4 = pos4 + strlen(RF2groupKey);
     valueGROUP = (topic.substring(pos4,pos4 + 1)).toInt();
     trc(F("RF2 Group:"));
-    trc(String(valueGROUP));
+    trc(valueGROUP);
   }
   int pos5 = topic.lastIndexOf(RF2dimKey);
   if (pos5 != -1) {
     isDimCommand = true;
     valueDIM = atoi(datacallback);
     trc(F("RF2 Dim:"));
-    trc(String(valueDIM));
+    trc(valueDIM);
   }
   
   if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
@@ -156,12 +156,12 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     if (valueCODE == 0) valueCODE = 8233378;
     if (valueUNIT == -1) valueUNIT = 0;
     if (valuePERIOD == 0) valuePERIOD = 272;
-    trc(String(valueCODE));
-    trc(String(valueUNIT));
-    trc(String(valuePERIOD));
-    trc(String(valueGROUP));
-    trc(String(boolSWITCHTYPE));
-    trc(String(valueDIM));
+    trc(valueCODE);
+    trc(valueUNIT);
+    trc(valuePERIOD);
+    trc(valueGROUP);
+    trc(boolSWITCHTYPE);
+    trc(valueDIM);
     NewRemoteReceiver::disable();
     trc(F("Creating transmitter"));
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);

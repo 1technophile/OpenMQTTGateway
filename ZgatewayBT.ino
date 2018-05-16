@@ -76,7 +76,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             if (advertisedDevice.haveTXPower()){
               trc(F("Get TXPower "));       
               int8_t TXPower = advertisedDevice.getTXPower();
-              trc(String(TXPower));
+              trc(TXPower);
               char cTXPower[5];
               sprintf(cTXPower, "%d", TXPower);
               client.publish((char *)(mactopic + "/tx").c_str(),cTXPower);
@@ -334,7 +334,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
     case '3' :
     case '4' :
         data_length = ((rest_data[51 + offset] - '0') * 2)+1;
-        trc(String(data_length));
+        trc(data_length);
     break;
     default:
         trc("can't read data_length");
@@ -349,7 +349,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
   // reverse data order
   revert_hex_data(rev_data, data, data_length);
   double value = strtol(data, NULL, 16);
-  trc(String(value));
+  trc(value);
   char val[12];
   String mactopic(mac_adress);
   mactopic = subjectBTtoMQTT + mactopic;
@@ -383,7 +383,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
     return false;
     }
     client.publish((char *)mactopic.c_str(),val);;
-    trc(String(val));
+    trc(val);
     return true;
   }
 

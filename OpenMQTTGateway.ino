@@ -191,7 +191,7 @@ boolean reconnect() {
       } else {
       failure_number ++; // we count the failure
       trc(F("failed, rc="));
-      trc(String(client.state()));
+      trc(client.state());
       trc(F("try again in 5s"));
       // Wait 5 seconds before retrying
       delay(5000);
@@ -300,7 +300,7 @@ void setup()
   #else
      long port;
      port = strtol(mqtt_port,NULL,10);
-     trc(String(port));
+     trc(port);
    #ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
      trc(F("Connecting to MQTT with mqtt hostname"));
      IPAddress mqtt_server_ip;
@@ -310,7 +310,7 @@ void setup()
    #else // if not by its IP adress
      trc(F("Connecting to MQTT by IP adress"));
      client.setServer(mqtt_server, port);
-     trc(String(mqtt_server));
+     trc(mqtt_server);
    #endif
   #endif
 
@@ -525,14 +525,14 @@ void setup_ethernet() {
     if (n == 0) {
         trc(F("no services found"));
     }else {
-        trc(String(n));
+        trc(n);
         trc(" service(s) found");
         for (int i=0; i < n; ++i) {
             // Print details for each service found
-            trc(String(i + 1));
-            trc(String(MDNS.hostname(i)));
+            trc(i + 1);
+            trc(MDNS.hostname(i));
             trc(MDNS.IP(i).toString());
-            trc(String(MDNS.port(i)));
+            trc(MDNS.port(i));
         }
         if (n==1) {
           trc(F("One MQTT server found setting parameters"));
@@ -647,7 +647,7 @@ void loop()
       trc("Remaining memory");
       uint32_t freeMem;
       freeMem = ESP.getFreeHeap();
-      trc(String(freeMem));
+      trc(freeMem);
     }
     #endif
   }
@@ -658,12 +658,12 @@ void storeValue(long MQTTvalue){
     // find oldest value of the buffer
     int o = getMin();
     trc(F("Min ind: "));
-    trc(String(o));
+    trc(o);
     // replace it by the new one
     ReceivedSignal[o][0] = MQTTvalue;
     ReceivedSignal[o][1] = now;
     trc(F("store code :"));
-    trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
+    trc(ReceivedSignal[o][0]+"/"+ReceivedSignal[o][1]);
     trc(F("Col: val/timestamp"));
     for (int i = 0; i < array_size; i++)
     {
@@ -783,7 +783,26 @@ void trc(int msg){
   }
 }
 
-void trc(uint32_t msg){
+void trc(unsigned int msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+
+void trc(long msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+void trc(unsigned long msg){
+  if (TRACE) {
+  Serial.println(msg);
+  }
+}
+
+void trc(double msg){
   if (TRACE) {
   Serial.println(msg);
   }

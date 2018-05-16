@@ -33,6 +33,6 @@
 #if defined(ESP8266) || defined(ESP32)
   #define HCSR501_PIN D5
 #else
-  #define HCSR501_PIN D7
+  #define HCSR501_PIN 7
 #endif
 
