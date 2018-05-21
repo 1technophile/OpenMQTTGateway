@@ -15,5 +15,7 @@ https://1technophile.github.io/OpenMQTTGateway/
 See the [wiki](https://github.com/1technophile/OpenMQTTGateway/wiki) for more detailed information:  
 https://github.com/1technophile/OpenMQTTGateway/wiki
 
+Download OpenMQTTGateway from [here](https://github.com/1technophile/OpenMQTTGateway/releases/download/v0.7/OpenMQTTGateway_V07.zip) or from the [releases page](https://github.com/1technophile/OpenMQTTGateway/releases)
+
 A list of supported 433mhz devices is available [here](https://community.home-assistant.io/t/433tomqttto433-gateway-device-list/7819):  
 https://community.home-assistant.io/t/433tomqttto433-gateway-device-list/7819
