@@ -121,7 +121,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 //uncomment to use multicore function of ESP32 for BLE
 #ifdef ESP32
-  //#define multiCore //uncomment to use multicore function of ESP32 for BLE
+  #define multiCore //comment to don't use multicore function of ESP32 for BLE
 #endif
 
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
