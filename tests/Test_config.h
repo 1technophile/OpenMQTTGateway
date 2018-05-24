@@ -85,37 +85,37 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZgatewayRF
-  #define ZgatewaySRFB
-  #define ZgatewayRF2
-  #define ZgatewayIR
-  #define ZgatewayBT
-  #define Zgateway2G
-  #define ZactuatorONOFF
-  #define ZsensorINA226
-  #define ZsensorHCSR501
-  #define ZsensorADC
-  #define ZsensorBH1750
-  #define ZsensorBME280
-  #define ZsensorTSL2561
-  #define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  #define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
+  #define ZgatewayRF "RF"
+  #define ZgatewaySRFB "SRFB"
+  #define ZgatewayRF2 "RF2"
+  #define ZgatewayIR "IR"
+  #define ZgatewayBT "BT"
+  #define Zgateway2G "2G"
+  #define ZactuatorONOFF "ONOFF"
+  #define ZsensorINA226 "INA226"
+  #define ZsensorHCSR501 "HCSR501"
+  #define ZsensorADC "ADC"
+  #define ZsensorBH1750 "BH1750"
+  #define ZsensorBME280 "BME280"
+  #define ZsensorTSL2561 "TSL2561"
+  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
 #elif ESP32
-  #define ZgatewayRF
-  #define ZgatewayRF2
+  #define ZgatewayRF "RF"
+  #define ZgatewayRF2 "RF2"
   //#define Zgateway2G (not tested yet)
   //#define ZgatewayIR
-  #define ZgatewayBT
-  #define ZactuatorONOFF
+  #define ZgatewayBT "BT"
+  #define ZactuatorONOFF "ONOFF"
   //#define ZsensorINA226
   //#define ZsensorHCSR501
   //#define ZsensorADC
   //#define ZsensorBH1750
   //#define ZsensorBME280
-  #define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
   //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
 #else // for arduino mega + W5100
-  #define ZgatewayRF
+  #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
   //#define ZgatewayRFM69 not tested
