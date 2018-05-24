@@ -87,20 +87,21 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line
 
-#define ZgatewayRF          //ESP8266, Arduino, ESP32
-#define ZgatewayIR          //ESP8266, Arduino,         Sonoff RF Bridge
-#define ZgatewayBT          //ESP8266, Arduino, ESP32
-//#define ZgatewayRF2       //ESP8266, Arduino, ESP32
-//#define ZgatewaySRFB      //                          Sonoff RF Bridge
-//#define ZactuatorONOFF    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZsensorINA226     //ESP8266, Arduino, ESP32
-//#define ZsensorHCSR501    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZsensorADC        //ESP8266, Arduino, ESP32
-//#define ZsensorBH1750     //ESP8266, Arduino, ESP32
-//#define ZsensorTSL2561    //ESP8266, Arduino, ESP32
-//#define ZsensorBME280     //ESP8266, Arduino, ESP32
-//#define ZsensorDHT        //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZgatewayRFM69     //ESP8266, Arduino, ESP32
+#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
+#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+#define ZgatewayBT     "BT"       //ESP8266, Arduino, ESP32
+//#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
+//#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
+//#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
+//#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
+//#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
+//#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+//#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
+//#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
+//#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/

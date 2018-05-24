@@ -650,9 +650,13 @@ void loop()
 void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
+      timer_sys_measures = millis();
       StaticJsonBuffer<200> jsonBuffer;
       JsonObject& SYSdata = jsonBuffer.createObject();
-      timer_sys_measures = millis();
+      trc("Uptime (s)");    
+      unsigned long uptime = millis()/1000;
+      trc(uptime);
+      SYSdata["uptime"] = uptime;
       trc("Remaining memory");
       uint32_t freeMem;
       freeMem = ESP.getFreeHeap();
@@ -666,6 +670,49 @@ void stateMeasures(){
       String SSID = WiFi.SSID();
       SYSdata["SSID"] = SSID;
       trc(SSID);
+      trc("Activated modules");
+      String modules = "";
+      #ifdef ZgatewayRF
+          modules = modules + ZgatewayRF;
+      #endif
+      #ifdef ZsensorBME280
+          modules = modules + "," + ZsensorBME280;
+      #endif
+      #ifdef ZsensorBH1750
+          modules = modules + "," + ZsensorBH1750;
+      #endif
+      #ifdef ZsensorTSL2561
+          modules = modules + "," + ZsensorTSL2561;
+      #endif
+      #ifdef ZactuatorONOFF
+          modules = modules + "," + ZactuatorONOFF;
+      #endif
+      #ifdef Zgateway2G
+          modules = modules + "," + Zgateway2G;
+      #endif
+      #ifdef ZgatewayIR
+          modules = modules + "," + ZgatewayIR;
+      #endif
+      #ifdef ZgatewayRF2
+          modules = modules + "," + ZgatewayRF2;
+      #endif
+      #ifdef ZgatewaySRFB
+          modules = modules + "," + ZgatewaySRFB;
+      #endif
+      #ifdef ZgatewayBT
+          modules = modules + "," + ZgatewayBT;
+      #endif
+      #ifdef ZgatewayRFM69
+          modules = modules + "," + ZgatewayRFM69;
+      #endif
+      #ifdef ZsensorINA226
+          modules = modules + "," + ZsensorINA226;
+      #endif
+      #ifdef ZsensorHCSR501
+          modules = modules + "," + ZsensorHCSR501;
+      #endif
+      SYSdata["modules"] = modules;
+      trc(modules);
       char JSONmessageBuffer[100];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
       client.publish(subjectSYStoMQTT,JSONmessageBuffer);
