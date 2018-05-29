@@ -26,7 +26,11 @@
 
 /*-------------------FASTLED topics & parameters----------------------*/
 //FASTLED MQTT Subjects
-#define subjectFASTLEDtoMQTT "home/FASTLEDtoMQTT"
+#define subjectMQTTtoFASTLED  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED"
+#define subjectMQTTtoFASTLEDscan  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/scan"
+#define subjectMQTTtoFASTLEDalarm  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/alarm"
+#define subjectMQTTtoFASTLEDrainbow  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/rainbow"
+#define subjectGTWFASTLEDtoMQTT  Base_Topic Gateway_Name "/FASTLEDtoMQTT"
 
 // How many leds in your strip?
 #define FASTLED_NUM_LEDS 1

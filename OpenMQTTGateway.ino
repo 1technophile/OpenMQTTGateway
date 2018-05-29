@@ -80,6 +80,9 @@
 #ifdef ZactuatorONOFF
   #include "config_ONOFF.h"
 #endif
+#ifdef ZactuatorFASTLED
+  #include "config_FASTLED.h"
+#endif
 #ifdef ZsensorINA226
   #include "config_INA226.h"
 #endif
@@ -691,6 +694,9 @@ void stateMeasures(){
       #endif
       #ifdef ZactuatorONOFF
           modules = modules + "," + ZactuatorONOFF;
+      #endif
+      #ifdef ZactuatorFASTLED
+          modules = modules + "," + ZactuatorFASTLED;
       #endif
       #ifdef Zgateway2G
           modules = modules + "," + Zgateway2G;

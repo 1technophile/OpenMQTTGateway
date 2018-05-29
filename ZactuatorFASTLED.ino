@@ -38,7 +38,7 @@ void setupFASTLED() {
   trc(String(FASTLED_DATA_PIN));
   trc(F("FASTLED_NUM_LEDS "));
   trc(String(FASTLED_NUM_LEDS));
-  trc(F("ZgatewayIR setup done "));
+  trc(F("ZactuatorFASTLED setup done "));
 
   FastLED.addLeds<NEOPIXEL, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
 }
@@ -48,14 +48,15 @@ boolean FASTLEDtoMQTT() {
 }
 
 void MQTTtoFASTLED(char * topicOri, char * datacallback) {
-  trc(String(topicOri));
+  trc(F("MQTTtoFASTLED"));
+  String topic = topicOri;
   long number = (long) strtol( &datacallback[1], NULL, 16);
-  if (String(topicOri) == "home/commands/MQTTtoFASTLED") {
+  if ((topic == subjectMQTTtoFASTLED)){
     for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
       leds[i] = number;
     }
     FastLED.show();
-  } else if (String(topicOri) == "home/commands/MQTTtoFASTLED/scan") {
+  } else if (topic == subjectMQTTtoFASTLEDscan){
     for (int j = 10; j > 0; j--) {
       for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
         leds[i] = number;
@@ -75,21 +76,8 @@ void MQTTtoFASTLED(char * topicOri, char * datacallback) {
       leds[i] = number;
     }
     FastLED.show();
-//  } else if (String(topicOri) == "home/commands/MQTTtoFASTLED/breath") {
-//    for (int j = 8200; j > 0; j--) {
-//      float breath = (exp(sin(j / 2000.0 * PI)) - 0.36787944) * 108.0;
-//      for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
-//        FastLED.setBrightness(breath);
-//        leds[i] = number;
-//      }
-//      FastLED.show();
-//      delay(1);
-//    }
-//    for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
-//      leds[i] = number;
-//    }
-//    FastLED.show();
-  } else if (String(topicOri) == "home/commands/MQTTtoFASTLED/alarm") {
+
+  } else if (topic == subjectMQTTtoFASTLEDalarm){
     for (int j = 100; j > 0; j--) {
       for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
         leds[i] = number;
@@ -106,7 +94,7 @@ void MQTTtoFASTLED(char * topicOri, char * datacallback) {
       leds[i] = number;
     }
     FastLED.show();
-  } else if (String(topicOri) == "home/commands/MQTTtoFASTLED/rainbow") {
+  } else if (topic == subjectMQTTtoFASTLEDrainbow){
     for (int j = 0; j < 255; j++) {
       int ihue = j; //some microcontrollers use HSV from 0-255 vs the normal 0-360
       if (ihue > 255) {
