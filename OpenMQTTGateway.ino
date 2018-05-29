@@ -60,6 +60,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
+
 // Modules config inclusion
 #if defined(ZgatewayRF) || defined(ZgatewayRF2)
   #include "config_RF.h"
@@ -130,7 +131,8 @@ void callback(char*topic, byte* payload,unsigned int length);
   #include <ArduinoOTA.h>
   #include <DNSServer.h>
   #include <ESP8266WebServer.h>
-  #include <WiFiManager.h>  
+  #include <WiFiManager.h>
+  
   WiFiClient eClient;
   #ifdef MDNS_SD
     #include <ESP8266mDNS.h>
@@ -338,7 +340,7 @@ void setup()
   #ifdef ZgatewayIR
     setupIR();
   #endif
-   #ifdef ZgatewayFASTLED
+   #ifdef ZactuatorFASTLED
     setupFASTLED();
   #endif
   #ifdef ZgatewayRF
@@ -795,7 +797,7 @@ digitalWrite(led_send, LOW);
 #ifdef ZgatewayIR
   MQTTtoIR(topicOri, datacallback);
 #endif
-#ifdef ZgatewayFASTLED
+#ifdef ZactuatorFASTLED
   MQTTtoFASTLED(topicOri, datacallback);
 #endif
 #ifdef ZgatewayRFM69
