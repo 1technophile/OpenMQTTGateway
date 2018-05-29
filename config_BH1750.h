@@ -41,9 +41,9 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define LUX   "home/LIGHTtoMQTT/lux"
-#define FTCD  "home/LIGHTtoMQTT/ftcd"
-#define WATTSM2  "home/LIGHTtoMQTT/wattsm2"
+#define LUX    Base_Topic Gateway_Name "/LIGHTtoMQTT/lux"
+#define FTCD   Base_Topic Gateway_Name "/LIGHTtoMQTT/ftcd"
+#define WATTSM2   Base_Topic Gateway_Name "/LIGHTtoMQTT/wattsm2"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timebh1750 = 0;

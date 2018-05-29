@@ -70,7 +70,7 @@ void setupZsensorBME280()
   //  5, 1000ms
   //  6, 10ms
   //  7, 20ms
-  mySensor.settings.tStandby = 0;
+  mySensor.settings.tStandby = 1;
   
   // Filter can be off or number of FIR coefficients - Values:
   // ---------------------------------------------------------
@@ -79,7 +79,7 @@ void setupZsensorBME280()
   //  2, coefficients = 4
   //  3, coefficients = 8
   //  4, coefficients = 16
-  mySensor.settings.filter = 0;
+  mySensor.settings.filter = 4;
   
   // tempOverSample - Values:
   // ------------------------
@@ -129,66 +129,54 @@ void MeasureTempHumAndPressure()
     }else{
       // Generate Temperature in degrees C
       if(BmeTempC != persisted_bme_tempc || bme280_always){
-        char bmetempc[7];
-        dtostrf(BmeTempC,4,2,bmetempc);
         trc(F("Sending Degrees C to MQTT"));
-        trc(String(bmetempc));
-        client.publish(TEMPBMEC,bmetempc);
+        trc(BmeTempC);
+        client.publish(TEMPBMEC, String(BmeTempC).c_str());
       }else{
         trc(F("Same Degrees C don't send it"));
       }
       
       // Generate Temperature in degrees F
       if(BmeTempF != persisted_bme_tempf || bme280_always){
-        char bmetempf[7];
-        dtostrf(BmeTempF,4,2,bmetempf);
         trc(F("Sending Degrees F to MQTT"));
-        trc(String(bmetempf));
-        client.publish(TEMPBMEF,bmetempf);
+        trc(BmeTempF);
+        client.publish(TEMPBMEF,String(BmeTempF).c_str());
       }else{
         trc(F("Same Degrees F don't send it"));
       }
       
       // Generate Humidity in percent
       if(BmeHum != persisted_bme_hum || bme280_always){
-        char bmehum[7];
-        dtostrf(BmeHum,4,2,bmehum);
         trc(F("Sending Humidity to MQTT"));
-        trc(String(bmehum));
-        client.publish(HUMBME,bmehum);
+        trc(BmeHum);
+        client.publish(HUMBME, String(BmeHum).c_str());
       }else{
         trc(F("Same Humidity don't send it"));
       }
 
       // Generate Pressure in Pa
       if(BmePa != persisted_bme_pa || bme280_always){
-        char bmepa[7];
-        dtostrf(BmePa,4,2,bmepa);
         trc(F("Sending Pressure to MQTT"));
-        trc(String(bmepa));
-        client.publish(PRESSBME,bmepa);
+        trc(BmePa);
+        client.publish(PRESSBME, String(BmePa).c_str());
       }else{
         trc(F("Same Pressure don't send it"));
       }
 
       // Generate Altitude in Meter
       if(BmeAltiM != persisted_bme_altim || bme280_always){
-        char bmealtim[7];
-        dtostrf(BmeAltiM,4,2,bmealtim);
         trc(F("Sending Altitude Meter to MQTT"));
-        trc(String(bmealtim));
-        client.publish(ALTIBMEM,bmealtim);
+        trc(BmeAltiM);
+        client.publish(ALTIBMEM, String(BmeAltiM).c_str());
       }else{
         trc(F("Same Altitude Meter don't send it"));
       }
 
       // Generate Altitude in Feet
       if(BmeAltiFt != persisted_bme_altift || bme280_always){
-        char bmealtift[7];
-        dtostrf(BmeAltiFt,4,2,bmealtift);
         trc(F("Sending Altitude Feet to MQTT"));
-        trc(String(bmealtift));
-        client.publish(ALTIBMEFT,bmealtift);
+        trc(BmeAltiFt);
+        client.publish(ALTIBMEFT, String(BmeAltiFt).c_str());
       }else{
         trc(F("Same Altitude Feet don't send it"));
       }

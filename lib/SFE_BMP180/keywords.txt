@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map for SFE_BMP180
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SFE_BMP180	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+startTemperature	KEYWORD2
+getTemperature	KEYWORD2
+startPressure	KEYWORD2
+getPressure	KEYWORD2
+sealevel	KEYWORD2
+altitude	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+BMP180_ADDR	LITERAL1

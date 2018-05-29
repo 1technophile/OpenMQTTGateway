@@ -1,0 +1,79 @@
+#######################################
+# Syntax Coloring Map for RFM69
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+RFM69	KEYWORD2
+RFM69_ATC	KEYWORD2
+RFM69_OTA	KEYWORD2
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+initialize	KEYWORD2
+setAddress	KEYWORD2
+canSend	KEYWORD2
+send	KEYWORD2
+sendWithRetry	KEYWORD2
+receiveDone	KEYWORD2
+ACKReceived	KEYWORD2
+sendACK	KEYWORD2
+setFrequency	KEYWORD2
+getFrequency	KEYWORD2
+encrypt	KEYWORD2
+setCS	KEYWORD2
+readRSSI	KEYWORD2
+promiscuous	KEYWORD2
+setHighPower	KEYWORD2
+sleep	KEYWORD2
+readReg	KEYWORD2
+writeReg	KEYWORD2
+setNetwork	KEYWORD2
+ACKRequested	KEYWORD2
+setPowerLevel	KEYWORD2
+readTemperature	KEYWORD2
+rcCalibration	KEYWORD2
+readAllRegs	KEYWORD2
+enableAutoPower	KEYWORD2
+
+CheckForSerialHEX	KEYWORD2
+CheckForWirelessHEX	KEYWORD2
+HandleHandshakeACK	KEYWORD2
+HandleWirelessHEXData	KEYWORD2
+readSerialLine	KEYWORD2
+BYTEfromHEX	KEYWORD2
+waitForAck	KEYWORD2
+PrintHex83	KEYWORD2
+resetUsingWatchdog	KEYWORD2
+
+listenModeStart	KEYWORD2
+listenModeEnd	KEYWORD2
+listenModeHighSpeed	KEYWORD2
+listenModeSetDurations	KEYWORD2
+listenModeGetDurations	KEYWORD2
+listenModeSendBurst	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+RF69_315MHZ	LITERAL1
+RF69_433MHZ	LITERAL1
+RF69_868MHZ	LITERAL1
+RF69_915MHZ	LITERAL1
+#######################################
+# Variables/Volatiles (LITERAL2)
+#######################################
+DATA	LITERAL2
+DATALEN	LITERAL2
+SENDERID	LITERAL2
+TARGETID	LITERAL2
+PAYLOADLEN	LITERAL2
+ACK_REQUESTED	LITERAL2
+ACK_RECEIVED	LITERAL2
+RSSI	LITERAL2

@@ -26,12 +26,12 @@
 
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTtoRF "home/commands/MQTTto433"
-#define subjectRFtoMQTT "home/433toMQTT"
-#define subjectGTWRFtoMQTT "home/433toMQTT"
-#define subjectRFtoMQTTprotocol "home/433toMQTT/protocol"
-#define subjectRFtoMQTTbits "home/433toMQTT/bits"
-#define subjectRFtoMQTTlength "home/433toMQTT/length"
+#define subjectMQTTtoRF  Base_Topic Gateway_Name "/commands/MQTTto433"
+#define subjectRFtoMQTT  Base_Topic Gateway_Name "/433toMQTT"
+#define subjectGTWRFtoMQTT  Base_Topic Gateway_Name "/433toMQTT"
+#define subjectRFtoMQTTprotocol  Base_Topic Gateway_Name "/433toMQTT/protocol"
+#define subjectRFtoMQTTbits  Base_Topic Gateway_Name "/433toMQTT/bits"
+#define subjectRFtoMQTTlength  Base_Topic Gateway_Name "/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFbitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
 #define repeatRFwMQTT false // do we repeat a received signal by using mqtt
@@ -52,8 +52,8 @@ RF supported protocols
 
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
-#define subjectMQTTtoRF2 "home/commands/MQTTtoRF2"
-#define subjectRF2toMQTT "home/RF2toMQTT"
+#define subjectMQTTtoRF2  Base_Topic Gateway_Name "/commands/MQTTtoRF2"
+#define subjectRF2toMQTT  Base_Topic Gateway_Name "/RF2toMQTT"
 #define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
 #define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits

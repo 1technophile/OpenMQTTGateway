@@ -49,20 +49,16 @@ void MeasureTempAndHum(){
       trc(F("Failed to read from DHT sensor!"));
     }else{
       if(h != persistedh || dht_always){
-        char hum[6];
-        dtostrf(h,4,2,hum);
         trc(F("Sending Hum to MQTT"));
-        trc(String(hum));
-        client.publish(HUM1,hum);
+        trc(h);
+        client.publish(HUM1,String(h).c_str());
        }else{
         trc(F("Same hum don't send it"));
        }
       if(t != persistedt || dht_always){
-        char temp[6];
-        dtostrf(t,4,2,temp);
         trc(F("Sending Temp to MQTT"));
-        trc(String(temp));
-        client.publish(TEMP1,temp);
+        trc(t);
+        client.publish(TEMP1, String(t).c_str());
       }else{
         trc(F("Same temp don't send it"));
       }

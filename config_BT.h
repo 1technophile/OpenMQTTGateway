@@ -24,8 +24,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*----------------------BT topics & parameters-------------------------*/
-#define subjectBTtoMQTT "home/BTtoMQTT/"
-#define TimeBtw_Read 20000 //define the time between 2 scans
+#define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
+#define subjectBTtoMQTTrssi "/rssi"
+#define subjectBTtoMQTTtem "/tem"
+#define subjectBTtoMQTThum "/hum"
+#define subjectBTtoMQTTmoi "/moi"
+#define subjectBTtoMQTTfer "/fer"
+#define subjectBTtoMQTTlux "/lux"
+#define TimeBtw_Read 55555 //define the time between 2 scans
 #define Scan_duration 10 //define the time for a scan
 #define HM-10 
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above

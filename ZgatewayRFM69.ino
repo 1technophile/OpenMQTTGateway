@@ -129,7 +129,7 @@ void setupRFM69(void) {
       freq = -1;
       break;
   }
-  trc(String(freq));
+  trc(freq);
 
   size_t len = snprintf_P(RadioConfig, sizeof(RadioConfig), JSONtemplate,
       freq, GC_IS_RFM69HCW, pGC->networkid, GC_POWER_LEVEL);
@@ -216,7 +216,7 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
     pos = pos + +strlen(RFM69receiverKey);
     valueRCV = (topic.substring(pos,pos + 3)).toInt();
     trc(F("RFM69 receiver ID:"));
-    trc(String(valueRCV));
+    trc(valueRCV);
   }
   loops = 10;
   startMillis = millis();

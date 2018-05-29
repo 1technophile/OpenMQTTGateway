@@ -18,33 +18,13 @@ install:
   - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
   - rm /usr/local/share/arduino/OpenMQTTGateway/User_config.h
   - cp /usr/local/share/arduino/OpenMQTTGateway/tests/Test_config.h /usr/local/share/arduino/OpenMQTTGateway/User_config.h
-  - wget https://github.com/z3t0/Arduino-IRremote/archive/v2.4.0.zip -O /tmp/IRremote.zip
-  - unzip /tmp/IRremote.zip -d /usr/local/share/arduino/libraries
   - rm -rf /usr/local/share/arduino/libraries/RobotIRremote
-  - wget https://github.com/markszabo/IRremoteESP8266/archive/v2.2.0.zip -O /tmp/IRremoteESP8266.zip 
-  - unzip /tmp/IRremoteESP8266.zip -d /usr/local/share/arduino/libraries
-  - git clone https://github.com/ekstrand/ESP8266wifi /usr/local/share/arduino/libraries/ESP8266wifi
-  - git clone https://github.com/1technophile/NewRemoteSwitch /usr/local/share/arduino/libraries/NewRemoteSwitch
-  - wget https://github.com/knolleary/pubsubclient/archive/v2.6.zip -O /tmp/pubsubclient.zip
-  - unzip /tmp/pubsubclient.zip -d /usr/local/share/arduino/libraries
-  - wget https://github.com/sui77/rc-switch/archive/2.6.2.zip -O /tmp/rcswitch.zip
-  - unzip /tmp/rcswitch.zip -d /usr/local/share/arduino/libraries
-  - git clone https://github.com/arduino/arduinoOTA.git /usr/local/share/arduino/libraries/ArduinoOTA
-  - git clone https://github.com/mrdunk/esp8266_mdns.git /usr/local/share/arduino/libraries/ESP8266mDNS
-  - git clone https://github.com/adafruit/DHT-sensor-library /usr/local/share/arduino/libraries/DHT_sensor_library
-  - git clone https://github.com/adafruit/Adafruit_Sensor /usr/local/share/arduino/libraries/Adafruit_Sensor
-  - git clone https://github.com/adafruit/Adafruit_TSL2561.git /usr/local/share/arduino/libraries/Adafruit_TSL2561
-  - git clone https://github.com/sparkfun/SparkFun_BME280_Arduino_Library /usr/local/share/arduino/libraries/SparkFun_BME280
-  - git clone https://github.com/LowPowerLab/RFM69 /usr/local/share/arduino/libraries/RFM69
-  - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.h
-  - rm /usr/local/share/arduino/libraries/RFM69/RFM69_OTA.cpp
-  - wget https://github.com/nkolban/ESP32_BLE_Arduino/archive/f8fe9d7cdfb20caa54b70849826d1ac6e375ff78.zip -O /tmp/ESP32_BLE_Arduino.zip
-  - unzip /tmp/ESP32_BLE_Arduino.zip -d /usr/local/share/arduino/libraries
-  - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.cpp -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino-f8fe9d7cdfb20caa54b70849826d1ac6e375ff78/src/BLEAdvertisedDevice.cpp
-  - wget -q https://raw.githubusercontent.com/nkolban/esp32-snippets/master/cpp_utils/BLEAdvertisedDevice.h -O /usr/local/share/arduino/libraries/ESP32_BLE_Arduino-f8fe9d7cdfb20caa54b70849826d1ac6e375ff78/src/BLEAdvertisedDevice.h
+  - cp -R /usr/local/share/arduino/OpenMQTTGateway/lib/. /usr/local/share/arduino/libraries
   - mkdir -p /usr/local/share/arduino/hardware/espressif
   - cd /usr/local/share/arduino/hardware/espressif
-  - git clone https://github.com/espressif/arduino-esp32.git esp32
+  - wget https://github.com/espressif/arduino-esp32/archive/a153f6ad280e5932be9c80341556348ff505d586.zip -O /tmp/esp32.zip
+  - unzip /tmp/esp32.zip -d /usr/local/share/arduino/hardware/espressif
+  - mv arduino-esp32* esp32
   - cd esp32/tools/
   - python get.py
   - cd /usr/local/share/arduino/OpenMQTTGateway
@@ -58,3 +38,4 @@ notifications:
   email:
     on_success: change
     on_failure: change
+    

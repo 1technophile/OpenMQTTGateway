@@ -50,9 +50,9 @@ void setupIR()
 irrecv.enableIRIn(); // Start the receiver
   
 trc(F("IR_EMITTER_PIN "));
-trc(String(IR_EMITTER_PIN));
+trc(IR_EMITTER_PIN);
 trc(F("IR_RECEIVER_PIN "));
-trc(String(IR_RECEIVER_PIN));
+trc(IR_RECEIVER_PIN);
 trc(F("ZgatewayIR setup done "));
 
 }
@@ -129,7 +129,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   boolean signalSent = false;
   uint64_t data = 0;
   String strcallback = String(datacallback);
-  trc(String(datacallback));
+  trc(datacallback);
   int s = strcallback.length();
   //number of "," value count
   int count = 0;
@@ -201,7 +201,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     pos = pos + +strlen(IRbitsKey);
     valueBITS = (topic.substring(pos,pos + 2)).toInt();
     trc(F("Bits nb:"));
-    trc(String(valueBITS));
+    trc(valueBITS);
   }
   //We look into the subject to see if a special repeat number is defined 
   int valueRPT = 0;
@@ -210,7 +210,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
     pos2 = pos2 + strlen(IRRptKey);
     valueRPT = (topic.substring(pos2,pos2 + 1)).toInt();
     trc(F("IR repeat:"));
-    trc(String(valueRPT));
+    trc(valueRPT);
   }
   
   #ifdef ESP8266 // send coolix not available for arduino IRRemote library

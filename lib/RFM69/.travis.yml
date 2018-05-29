@@ -1,0 +1,63 @@
+language: python
+python:
+    - "2.7"
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    - PLATFORMIO_CI_SRC=Examples/DeepSleep
+    - PLATFORMIO_CI_SRC=Examples/DeepSleep_usingLowPowerLibrary
+    - PLATFORMIO_CI_SRC=Examples/DoorBellMote
+    - PLATFORMIO_CI_SRC=Examples/GarageMote
+    - PLATFORMIO_CI_SRC=Examples/Gateway
+    - PLATFORMIO_CI_SRC=Examples/IOShield
+    - PLATFORMIO_CI_SRC=Examples/MailboxNotifier
+    - PLATFORMIO_CI_SRC=Examples/MightyBoostControl
+    - PLATFORMIO_CI_SRC=Examples/MightyHat
+    - PLATFORMIO_CI_SRC=Examples/MotionMote/MotionMote.ino
+    - PLATFORMIO_CI_SRC=Examples/Node
+    - PLATFORMIO_CI_SRC=Examples/OLEDMote
+    - PLATFORMIO_CI_SRC=Examples/PiGateway/PiGateway.ino
+    # - PLATFORMIO_CI_SRC=Examples/PiGateway/PiGateway_withLCD.ino
+    - PLATFORMIO_CI_SRC=Examples/PulseMeter
+    - PLATFORMIO_CI_SRC=Examples/RandomNumbers
+    - PLATFORMIO_CI_SRC=Examples/SonarMote/SonarMote_DistanceReader/SonarMote_DistanceReader.ino
+    - PLATFORMIO_CI_SRC=Examples/SonarMote/SonarMote_DistanceTracker/SonarMote_DistanceTracker.ino
+    - PLATFORMIO_CI_SRC=Examples/SonarMote/SonarMote_Parking/SonarMote_Parking.ino
+    - PLATFORMIO_CI_SRC=Examples/SonarMote/SonarMote_Parking_Sound_OLED/SonarMote_Parking_Sound_OLED.ino
+    - PLATFORMIO_CI_SRC=Examples/Struct_receive
+    - PLATFORMIO_CI_SRC=Examples/Struct_send
+    - PLATFORMIO_CI_SRC=Examples/TxRxBlinky
+    - PLATFORMIO_CI_SRC=Examples/WeatherNode
+    - PLATFORMIO_CI_SRC=Examples/WirelessProgramming_OTA/Target
+    - PLATFORMIO_CI_SRC=Examples/WirelessProgramming_OTA/Programmer
+
+install:
+    - pip install -U platformio
+
+    #
+    # Libraries from PlatformIO Library Registry:
+    #
+    # http://platformio.org/#!/lib/show/7/U8glib
+    # http://platformio.org/#!/lib/show/38/LowPower
+    # http://platformio.org/#!/lib/show/125/SPIFlash
+    # http://platformio.org/#!/lib/show/131/TimerOne
+    # http://platformio.org/#!/lib/show/136/LiquidCrystal
+    # http://platformio.org/#!/lib/show/176/NewPing
+    # http://platformio.org/#!/lib/show/531/WirelessHEX69
+    # http://platformio.org/#!/lib/show/532/BMP180
+    # http://platformio.org/#!/lib/show/536/Si7021
+    # http://platformio.org/#!/lib/show/684/Sparkfun BME280
+
+    - platformio lib install 7 38 125 131 136 176 531 532 536 684
+
+    #- wget https://bitbucket.org/fmalpartida/st7036-display-driver/downloads/LCD_%20ST7036_v1.2.0.zip -O /tmp/st7036_source.zip
+    #- unzip /tmp/st7036_source.zip -d /tmp/
+
+script:
+    #- platformio ci --board=moteino --lib=. --lib="/tmp/LCD_C0220BIZ"
+    - platformio ci --board=moteino --lib=.

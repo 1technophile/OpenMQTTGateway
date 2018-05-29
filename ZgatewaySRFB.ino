@@ -36,7 +36,7 @@ unsigned char _uartpos = 0;
 
 void setupSRFB(){
   trc(F("ZgatewaySRFB setup done "));
-  trc("Serial Baud" + SERIAL_BAUD);
+  trc("Serial Baud" + String(SERIAL_BAUD));
 }
 
 void MQTTtoSRFB(char * topicOri, char * datacallback) {
@@ -56,7 +56,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       pos = pos + +strlen(SRFBRptKey);
       valueRPT = (topic.substring(pos,pos + 1)).toInt();
       trc(F("SRFB Repeat:"));
-      trc(String(valueRPT));
+      trc(valueRPT);
     }
 
     int pos2 = topic.lastIndexOf(SRFBminipulselengthKey);
@@ -64,7 +64,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       pos2 = pos2 + strlen(SRFBminipulselengthKey);
       valueMiniPLSL = (topic.substring(pos2,pos2 + 3)).toInt();
       trc(F("RF Mini Pulse Lgth:"));
-      trc(String(valueMiniPLSL));
+      trc(valueMiniPLSL);
     }
 
     int pos3 = topic.lastIndexOf(SRFBmaxipulselengthKey);       
@@ -72,7 +72,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       pos3 = pos3 + strlen(SRFBmaxipulselengthKey);
       valueMaxiPLSL = (topic.substring(pos3,pos3 + 2)).toInt();
       trc(F("RF Maxi Pulse Lgth:"));
-      trc(String(valueMaxiPLSL));
+      trc(valueMaxiPLSL);
     }
 
     int pos4 = topic.lastIndexOf(SRFBsyncKey);       
@@ -80,7 +80,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       pos4 = pos4 + strlen(SRFBsyncKey);
       valueSYNC = (topic.substring(pos4,pos4 + 2)).toInt();
       trc(F("RF sync:"));
-      trc(String(valueSYNC));
+      trc(valueSYNC);
     }
 
       trc(F("MQTTtoSRFB prts"));
@@ -126,7 +126,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
         pos = pos + +strlen(SRFBRptKey);
         valueRPT = (topic.substring(pos,pos + 1)).toInt();
         trc(F("SRFB Repeat:"));
-        trc(String(valueRPT));
+        trc(valueRPT);
       }
       if (valueRPT == 0) valueRPT = 1;
       

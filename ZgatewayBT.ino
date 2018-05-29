@@ -6,6 +6,8 @@
  
   This gateway enables to:
  - publish MQTT data to a different topic related to BLE devices rssi signal
+ - publish MQTT data related to mi flora temperature, moisture, fertility and lux
+ - publish MQTT data related to mi jia indoor temperature & humidity sensor
 
     Copyright: (c)Florian ROBERT
   
@@ -40,6 +42,9 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     #include <BLEScan.h>
     #include <BLEAdvertisedDevice.h>
 
+    //Time used to wait for an interval before resending BLE infos
+    unsigned long timeBLE= 0;
+    
     //core on which the BLE detection task will run
     static int taskCore = 0;
       
@@ -64,13 +69,14 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             if (advertisedDevice.haveRSSI()){
               trc(F("Get RSSI "));       
               String rssi = String(advertisedDevice.getRSSI());
-              trc(mactopic + " " + rssi);
-              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+              String rssitopic = mactopic + subjectBTtoMQTTrssi;
+              trc(rssitopic + " " + rssi);
+              client.publish((char *)rssitopic.c_str(),(char *)rssi.c_str());
             }
             if (advertisedDevice.haveTXPower()){
               trc(F("Get TXPower "));       
               int8_t TXPower = advertisedDevice.getTXPower();
-              trc(String(TXPower));
+              trc(TXPower);
               char cTXPower[5];
               sprintf(cTXPower, "%d", TXPower);
               client.publish((char *)(mactopic + "/tx").c_str(),cTXPower);
@@ -95,19 +101,27 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 trc(serviceDataUUID.toString().c_str());
 
                 if (strstr(serviceDataUUID.toString().c_str(),"fe95") != NULL){
-                  trc("Processing mi flora data");
+                  trc("Processing BLE device data");
                   char service_data[returnedString.length()+1];
                   returnedString.toCharArray(service_data,returnedString.length()+1);
                   service_data[returnedString.length()] = '\0';
                   char mac[mac_adress.length()+1];
                   mac_adress.toCharArray(mac,mac_adress.length()+1);
-                  boolean result = process_miflora_data(-22,service_data,mac); 
+                  if (strstr(service_data,"209800") != NULL) {
+                    trc("mi flora data reading");
+                    boolean result = process_data(-22,service_data,mac);
+                  }
+                  if (strstr(service_data,"20aa01") != NULL){
+                    trc("mi jia data reading");
+                    boolean result = process_data(-24,service_data,mac);
+                  }
                 }
-            } 
+            }
           }
       };
 
     void setupBT(){
+        #ifdef multiCore
         // we setup a task with priority one to avoid conflict with other gateways
         xTaskCreatePinnedToCore(
                           coreTask,   /* Function to implement the task */
@@ -117,9 +131,13 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
-        trc(F("ZgatewayBT ESP32 setup done "));                 
+          trc(F("ZgatewayBT multicore ESP32 setup done "));
+        #else
+          trc(F("ZgatewayBT singlecore ESP32 setup done "));
+        #endif
     }
-
+    
+    #ifdef multiCore
     void coreTask( void * pvParameters ){
      
         String taskMessage = "BT Task running on core ";
@@ -130,11 +148,28 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             delay(TimeBtw_Read);
             BLEDevice::init("");
             BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-            pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+            MyAdvertisedDeviceCallbacks myCallbacks;
+            pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
             pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
             BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
         }
     }
+    #else
+    boolean BTtoMQTT(){
+      unsigned long now = millis();
+      if (now > (timeBLE + TimeBtw_Read)) {//retriving value of temperature and humidity of the box from DHT every xUL
+              timeBLE = now;
+              BLEDevice::init("");
+              BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+              MyAdvertisedDeviceCallbacks myCallbacks;
+              pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+              pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+              BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+              return true;
+      }
+      return false;
+    }
+    #endif
       
   #else // arduino or ESP8266 working with HM10/11
 
@@ -206,14 +241,20 @@ boolean BTtoMQTT() {
                 strupp(d[0].extract);
                 String mactopic(d[0].extract);
                 trc(mactopic);
-                mactopic = subjectBTtoMQTT + mactopic;
+                mactopic = subjectBTtoMQTT + mactopic + subjectBTtoMQTTrssi;
                 int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
                 char val[12];
                 sprintf(val, "%d", rssi);
                 client.publish((char *)mactopic.c_str(),val);
                 if (strcmp(d[4].extract, "fe95") == 0) 
-                boolean result = process_miflora_data(0,d[5].extract,d[0].extract);
-                
+                  if (strstr(d[5].extract,"209800") != NULL) {
+                    trc("mi flora data reading");
+                    boolean result = process_data(0,d[5].extract,d[0].extract);
+                  }
+                  if (strstr(d[5].extract,"20aa01") != NULL){
+                    trc("mi jia data reading");
+                    boolean result = process_data(-2,d[5].extract,d[0].extract);
+                  }
                 return true;
             }
           }
@@ -258,7 +299,7 @@ boolean BTtoMQTT() {
              onedevice.replace(STRING_MSG,"");
              String mac = onedevice.substring(53,65);
              String rssi = onedevice.substring(66,70);
-             String mactopic = subjectBTtoMQTT + mac;
+             String mactopic = subjectBTtoMQTT + mac + subjectBTtoMQTTRSSI;
              trc(mactopic + " " + rssi);
              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
              discResult = discResult.substring(78);
@@ -284,7 +325,7 @@ boolean BTtoMQTT() {
 #endif
 #endif
 
-boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
+boolean process_data(int offset, char * rest_data, char * mac_adress){
   
   int data_length = 0;
   switch (rest_data[51 + offset]) {
@@ -293,7 +334,7 @@ boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
     case '3' :
     case '4' :
         data_length = ((rest_data[51 + offset] - '0') * 2)+1;
-        trc(String(data_length));
+        trc(data_length);
     break;
     default:
         trc("can't read data_length");
@@ -308,7 +349,7 @@ boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
   // reverse data order
   revert_hex_data(rev_data, data, data_length);
   double value = strtol(data, NULL, 16);
-  trc(String(value));
+  trc(value);
   char val[12];
   String mactopic(mac_adress);
   mactopic = subjectBTtoMQTT + mactopic;
@@ -316,19 +357,25 @@ boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
   // following the value of digit 47 we determine the type of data we get from the sensor
   switch (rest_data[47 + offset]) {
     case '9' :
-          mactopic = mactopic + "/" + "fer";
+          mactopic = mactopic + subjectBTtoMQTTfer;
           dtostrf(value,0,0,val);
     break;
     case '4' :
-          mactopic = mactopic + "/" + "tem";
+          mactopic = mactopic + subjectBTtoMQTTtem;
+          if (value > 65000) value = value - 65535;
           dtostrf(value/10,3,1,val); // temp has to be divided by 10
     break;
+    case '6' :
+          mactopic = mactopic + subjectBTtoMQTThum;
+          if (value > 65000) value = value - 65535;
+          dtostrf(value/10,3,1,val); // hum has to be divided by 10
+    break;
     case '7' :
-          mactopic = mactopic + "/" + "lux";
+          mactopic = mactopic + subjectBTtoMQTTlux;
           dtostrf(value,0,0,val);
      break;
     case '8' :
-          mactopic = mactopic + "/" + "hum";
+          mactopic = mactopic + subjectBTtoMQTTmoi;
           dtostrf(value,0,0,val);
      break;
     default:
@@ -336,7 +383,7 @@ boolean process_miflora_data(int offset, char * rest_data, char * mac_adress){
     return false;
     }
     client.publish((char *)mactopic.c_str(),val);;
-    trc(String(val));
+    trc(val);
     return true;
   }
 

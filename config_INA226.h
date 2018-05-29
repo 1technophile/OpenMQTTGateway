@@ -26,9 +26,9 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectVolttoMQTT "home/INA226toMQTT/Volt"
-#define subjectCurrenttoMQTT "home/INA226toMQTT/Current"        
-#define subjectPowertoMQTT "home/INA226toMQTT/Power" 
+#define subjectVolttoMQTT  Base_Topic Gateway_Name "/INA226toMQTT/Volt"
+#define subjectCurrenttoMQTT  Base_Topic Gateway_Name "/INA226toMQTT/Current"        
+#define subjectPowertoMQTT  Base_Topic Gateway_Name "/INA226toMQTT/Power" 
 #define TimeBetweenReadingINA226 30000 // time between 2 INA226 readings
 
 

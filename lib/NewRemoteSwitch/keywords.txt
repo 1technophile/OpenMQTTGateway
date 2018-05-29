@@ -1,0 +1,12 @@
+NewRemoteReceiver	KEYWORD1
+NewRemoteCode	KEYWORD1
+isReceiving	KEYWORD2
+init	KEYWORD2
+enable	KEYWORD2
+disable	KEYWORD2
+deinit	KEYWORD2
+NewRemoteTransmitter	KEYWORD1
+sendGroup	KEYWORD2
+sendUnit	KEYWORD2
+sendDim	KEYWORD2
+sendGroupDim	KEYWORD2

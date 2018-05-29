@@ -29,25 +29,35 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.6.1"
-/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
+#define OMG_VERSION "0.7"
+/*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
-#define mqtt_server "192.168.1.17"
-//#define mqtt_user "your_username" // not compulsory only if your broker needs authentication
-#define mqtt_password "your_password" // not compulsory only if your broker needs authentication
-#define mqtt_port 1883
+//#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
+char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
+char mqtt_pass[20] = "your_password"; // not compulsory only if your broker needs authentication
+char mqtt_server[40] = "192.168.1.17";
+char mqtt_port[6] = "1883";
+
 #define Gateway_Name "OpenMQTTGateway"
-#define version_Topic "home/" Gateway_Name "/version"
-#define will_Topic "home/" Gateway_Name "/LWT"
+#define Base_Topic "home/"
+#define version_Topic  Base_Topic Gateway_Name "/version"
+#define will_Topic  Base_Topic Gateway_Name "/LWT"
 #define will_QoS 0
 #define will_Retain true
 #define will_Message "Offline"
 #define Gateway_AnnouncementMsg "Online"
-#define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
+
+//#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#define WifiManager_password "your_password"
+//#define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+
+//set minimum quality of signal so it ignores AP's under that quality
+#define MinimumWifiSignalQuality 8
+
 // Update these with values suitable for your network.
-#if defined(ESP8266) || defined(ESP32) // for nodemcu, wemos, esp32 and esp8266
+#if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
@@ -75,77 +85,50 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
-  #define ZgatewayRF
-  #include "config_RF.h"
-  #define ZgatewaySRFB
-  #include "config_SRFB.h"
-  #define ZgatewayRF2
-  #define ZgatewayIR
-  #include "config_IR.h"
-  #define ZgatewayBT
-  #include "config_BT.h"
-  #define ZsensorINA226
-  #include "config_INA226.h"
-  #define ZsensorHCSR501
-  #include "config_HCSR501.h"
-  #define ZsensorADC
-  #include "config_ADC.h"
-  #define ZsensorBH1750
-  #include "config_BH1750.h"
-  #define ZsensorBME280
-  #include "config_TSL2561.h"
-  #define ZsensorTSL2561
-  #include "config_BME280.h"
-  #define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  #include "config_DHT.h"
-  #define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  #include "config_RFM69.h"
+  #define ZgatewayRF "RF"
+  #define ZgatewaySRFB "SRFB"
+  #define ZgatewayRF2 "RF2"
+  #define ZgatewayIR "IR"
+  #define ZgatewayBT "BT"
+  #define Zgateway2G "2G"
+  #define ZactuatorONOFF "ONOFF"
+  #define ZsensorINA226 "INA226"
+  #define ZsensorHCSR501 "HCSR501"
+  #define ZsensorADC "ADC"
+  #define ZsensorBH1750 "BH1750"
+  #define ZsensorBME280 "BME280"
+  #define ZsensorTSL2561 "TSL2561"
+  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
 #elif ESP32
-  #define ZgatewayRF
-  #include "config_RF.h"
-  #define ZgatewayRF2
+  #define ZgatewayRF "RF"
+  #define ZgatewayRF2 "RF2"
+  //#define Zgateway2G (not tested yet)
   //#define ZgatewayIR
-  //#include "config_IR.h"
-  #define ZgatewayBT
-  #include "config_BT.h"
+  #define ZgatewayBT "BT"
+  #define ZactuatorONOFF "ONOFF"
   //#define ZsensorINA226
-  //#include "config_INA226.h"
   //#define ZsensorHCSR501
-  //#include "config_HCSR501.h"
   //#define ZsensorADC
-  //#include "config_ADC.h"
   //#define ZsensorBH1750
-  //#include "config_BH1750.h"
   //#define ZsensorBME280
-  //#include "config_BME280.h"
-  #define ZsensorDHT // If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  #include "config_DHT.h"
+  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
   //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  //#include "config_RFM69.h"
-#else // for arduino + W5100
-  #define ZgatewayRF
-  #include "config_RF.h"
+#else // for arduino mega + W5100
+  #define ZgatewayRF "RF"
+  //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
   //#define ZgatewayRFM69 not tested
-  //#include "config_RFM69.h"
-  #define ZgatewayIR
-  #include "config_IR.h"
+  //#define ZgatewayIR
   //#define ZgatewayBT
-  //#include "config_BT.h"
+  //#define ZactuatorONOFF
   //#define ZsensorINA226
-  //#include "config_INA226.h"
   //#define ZsensorDHT
-  //#include "config_DHT.h"
   //#define ZsensorBH1750
-  //#include "config_BH1750.h"
   //#define ZsensorBME280
-  //#include "config_BME280.h"
   //#define ZsensorHCSR501
-  //#include "config_HCSR501.h"
   //#define ZsensorADC
-  //#include "config_ADC.h"
   //#define ZgatewayRFM69 not tested
-  //#include "config_RFM69.h"  
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
@@ -156,11 +139,17 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
-#define subjectMQTTtoX "home/commands/#"
+#define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 
 //variables to avoid duplicates
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
+#ifdef ESP32
+  //#define multiCore //uncomment to use multicore function of ESP32 for BLE
+#endif
+
+#define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
+#define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
