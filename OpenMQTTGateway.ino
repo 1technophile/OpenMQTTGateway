@@ -64,6 +64,9 @@
 #if defined(ZgatewayRF) || defined(ZgatewayRF2)
   #include "config_RF.h"
 #endif
+#ifdef ZgatewayRF315
+  #include "config_RF315.h"
+#endif
 #ifdef ZgatewaySRFB
   #include "config_SRFB.h"
 #endif
@@ -341,6 +344,9 @@ void setup()
   #ifdef ZgatewayRF
     setupRF();
   #endif
+  #ifdef ZgatewayRF315
+    setupRF315();
+  #endif
   #ifdef ZgatewayRF2
     setupRF2();
   #endif
@@ -597,10 +603,17 @@ void loop()
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
-    // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
       if(RFtoMQTT()){
       trc(F("RFtoMQTT OK"));
+      //GREEN ON
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
+    #endif
+    #ifdef ZgatewayRF315
+      if(RF315toMQTT()){
+      trc(F("RF315toMQTT OK"));
       //GREEN ON
       digitalWrite(led_receive, LOW);
       timer_led_receive = millis();
@@ -675,41 +688,44 @@ void stateMeasures(){
       #ifdef ZgatewayRF
           modules = modules + ZgatewayRF;
       #endif
+      #ifdef ZgatewayRF315
+          modules = modules + ZgatewayRF315;
+      #endif
       #ifdef ZsensorBME280
-          modules = modules + "," + ZsensorBME280;
+          modules = modules  + ZsensorBME280;
       #endif
       #ifdef ZsensorBH1750
-          modules = modules + "," + ZsensorBH1750;
+          modules = modules  + ZsensorBH1750;
       #endif
       #ifdef ZsensorTSL2561
-          modules = modules + "," + ZsensorTSL2561;
+          modules = modules  + ZsensorTSL2561;
       #endif
       #ifdef ZactuatorONOFF
-          modules = modules + "," + ZactuatorONOFF;
+          modules = modules  + ZactuatorONOFF;
       #endif
       #ifdef Zgateway2G
-          modules = modules + "," + Zgateway2G;
+          modules = modules  + Zgateway2G;
       #endif
       #ifdef ZgatewayIR
-          modules = modules + "," + ZgatewayIR;
+          modules = modules  + ZgatewayIR;
       #endif
       #ifdef ZgatewayRF2
-          modules = modules + "," + ZgatewayRF2;
+          modules = modules  + ZgatewayRF2;
       #endif
       #ifdef ZgatewaySRFB
-          modules = modules + "," + ZgatewaySRFB;
+          modules = modules  + ZgatewaySRFB;
       #endif
       #ifdef ZgatewayBT
-          modules = modules + "," + ZgatewayBT;
+          modules = modules  + ZgatewayBT;
       #endif
       #ifdef ZgatewayRFM69
-          modules = modules + "," + ZgatewayRFM69;
+          modules = modules  + ZgatewayRFM69;
       #endif
       #ifdef ZsensorINA226
-          modules = modules + "," + ZsensorINA226;
+          modules = modules  + ZsensorINA226;
       #endif
       #ifdef ZsensorHCSR501
-          modules = modules + "," + ZsensorHCSR501;
+          modules = modules  + ZsensorHCSR501;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);

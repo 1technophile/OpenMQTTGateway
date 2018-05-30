@@ -86,6 +86,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //Addons and module management, comment the Z line and the config file if you don't use
 #ifdef ESP8266 // for nodemcu, weemos and esp8266
   #define ZgatewayRF "RF"
+  #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
   #define ZgatewayRF2 "RF2"
   #define ZgatewayIR "IR"
@@ -102,6 +103,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
 #elif ESP32
   #define ZgatewayRF "RF"
+  #define ZgatewayRF "RF315"
   #define ZgatewayRF2 "RF2"
   //#define Zgateway2G (not tested yet)
   //#define ZgatewayIR
