@@ -6,6 +6,9 @@
 
 Questions, support please don't open an issue and [click here](https://gitter.im/OpenMQTTGateway/Questions_support)
 
+For the next evolutions of OpenMQTTGateway I would like to have your advices, here is a poll that will take 30 seconds to fill and that will give us usefull insights:
+https://docs.google.com/forms/d/e/1FAIpQLScbuAudrH8zANwBWA0_VtZgzdzpaa12oDc3sjqYYXWW0oi51A/viewform?usp=sf_link
+
 # OpenMQTTGateway
 [![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)](https://github.com/1technophile/OpenMQTTGateway/wiki)
 
