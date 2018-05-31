@@ -1,12 +1,9 @@
 /*
   OpenMQTTGateway - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker
-   Send and receiving command by MQTT
+  This gateway enables to use RGBLED strips like WS2812
 
-  This gateway enables to:
-
-    Copyright: (c)Florian ROBERT
+    Copyright: (c)
 
     This file is part of OpenMQTTGateway.
 
@@ -39,7 +36,6 @@ void setupFASTLED() {
   trc(F("FASTLED_NUM_LEDS "));
   trc(String(FASTLED_NUM_LEDS));
   trc(F("ZactuatorFASTLED setup done "));
-
   FastLED.addLeds<NEOPIXEL, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
 }
 
@@ -48,7 +44,6 @@ boolean FASTLEDtoMQTT() {
 }
 
 void MQTTtoFASTLED(char * topicOri, char * datacallback) {
-  trc(F("MQTTtoFASTLED"));
   String topic = topicOri;
   long number = (long) strtol( &datacallback[1], NULL, 16);
   if ((topic == subjectMQTTtoFASTLED)){
@@ -76,7 +71,6 @@ void MQTTtoFASTLED(char * topicOri, char * datacallback) {
       leds[i] = number;
     }
     FastLED.show();
-
   } else if (topic == subjectMQTTtoFASTLEDalarm){
     for (int j = 100; j > 0; j--) {
       for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
@@ -90,6 +84,24 @@ void MQTTtoFASTLED(char * topicOri, char * datacallback) {
       FastLED.show();
       delay(200);
     }
+    for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
+      leds[i] = number;
+    }
+    FastLED.show();
+} else if (topic == subjectMQTTtoFASTLEDbreath){
+  int initialbrightness = FastLED.getBrightness();
+  FastLED.setBrightness(200);
+    for (int j = 8000; j > 0; j--) {
+      float breath = (exp(sin(millis()/2000.0*PI)) - 0.36787944)*108.0;    
+      for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
+        leds[i] = number;
+        FastLED.setBrightness(breath);
+      }
+      FastLED.show();
+      delay(1);
+    }
+    delay(200);
+    FastLED.setBrightness(initialbrightness);
     for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
       leds[i] = number;
     }

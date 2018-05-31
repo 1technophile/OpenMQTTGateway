@@ -1,12 +1,9 @@
 /*  
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared FASTLED signal  and a MQTT broker 
-   Send and receiving command by MQTT
- 
-   This files enables to set your parameter for the infrared gateway 
+   This files enables you to set your parameters for the FASTLED actuator 
   
-    Copyright: (c)Florian ROBERT
+    Copyright: (c)
   
     This file is part of OpenMQTTGateway.
     
@@ -27,10 +24,11 @@
 /*-------------------FASTLED topics & parameters----------------------*/
 //FASTLED MQTT Subjects
 #define subjectMQTTtoFASTLED  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED"
-#define subjectMQTTtoFASTLEDscan  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/scan"
-#define subjectMQTTtoFASTLEDalarm  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/alarm"
-#define subjectMQTTtoFASTLEDrainbow  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/rainbow"
-#define subjectGTWFASTLEDtoMQTT  Base_Topic Gateway_Name "/FASTLEDtoMQTT"
+#define subjectMQTTtoFASTLEDscan  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/scan" //for multiple LEDs, scanner like effect
+#define subjectMQTTtoFASTLEDalarm  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/alarm" //fast alarm blinking on all LEDss in in #RRGGBB
+#define subjectMQTTtoFASTLEDrainbow  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/rainbow" //rainbow fade on all LEDs, reset to in #RRGGBB
+#define subjectMQTTtoFASTLEDbreath  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/breath" //breathing effect on all LEDs in in #RRGGBB
+#define subjectGTWFASTLEDtoMQTT  Base_Topic Gateway_Name "/FASTLEDtoMQTT" //same color on all LEDs in #RRGGBB
 
 // How many leds in your strip?
 #define FASTLED_NUM_LEDS 1
@@ -76,11 +74,6 @@
 #else
 
 #endif
-
-/*-------------------PIN DEFINITIONS----------------------*/
-// For led chips like Neopixels, which have a data line, ground, and power, you just
-// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
-// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
 
 #ifdef ESP8266
   #define FASTLED_ESP8266_RAW_PIN_ORDER
