@@ -186,6 +186,9 @@ boolean reconnect() {
         #ifdef ZgatewayRF
           client.subscribe(subjectMultiGTWRF);
         #endif
+        #ifdef ZgatewayRF315
+          client.subscribe(subjectMultiGTWRF315);
+        #endif
         #ifdef ZgatewayIR
           client.subscribe(subjectMultiGTWIR);
         #endif
@@ -395,9 +398,10 @@ void setup_wifi() {
 
 #elif defined(ESP8266) && !defined(ESPWifiManualSetup)
 void setup_wifimanager(boolean reset_settings){
+    #ifdef cleanFS
     //clean FS, for testing
     //SPIFFS.format();
-  
+    #endif
     //read configuration from FS json
     trc("mounting FS...");
   
@@ -736,7 +740,7 @@ void stateMeasures(){
 }
 #endif
 
-void storeValue(long MQTTvalue){
+void storeValue(unsigned long MQTTvalue){
     unsigned long now = millis();
     // find oldest value of the buffer
     int o = getMin();
@@ -768,7 +772,7 @@ int getMin(){
 }
 
 boolean isAduplicate(unsigned long value){
-trc(F("isAduplicate"));
+trc(F("isAduplicate?"));
 // check if the value has been already sent during the last time_avoid_duplicate
 for (int i = 0; i < array_size;i++){
  if (ReceivedSignal[i][0] == value){
