@@ -46,7 +46,7 @@ RF supported protocols
 */
 #define RFpulselengthKey "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
-#define subjectMultiGTWRF "+/433toMQTT"
+#define subjectMultiGTWRF "+/+/433toMQTT"
 //RF number of signal repetition
 #define RF_EMITTER_REPEAT 20
 
