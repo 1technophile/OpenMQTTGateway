@@ -750,7 +750,7 @@ void storeValue(unsigned long MQTTvalue){
     ReceivedSignal[o][0] = MQTTvalue;
     ReceivedSignal[o][1] = now;
     trc(F("store code :"));
-    trc(ReceivedSignal[o][0]+"/"+ReceivedSignal[o][1]);
+    trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
     trc(F("Col: val/timestamp"));
     for (int i = 0; i < array_size; i++)
     {
