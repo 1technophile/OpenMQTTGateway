@@ -72,17 +72,17 @@ void MQTTtoFASTLED(char * topicOri, char * datacallback) {
     }
     FastLED.show();
   } else if (topic == subjectMQTTtoFASTLEDalarm){
-    for (int j = 100; j > 0; j--) {
+    for (int j = 60; j > 0; j--) {
       for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
         leds[i] = number;
       }
       FastLED.show();
-      delay(200);
+      delay(180);
       for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
         leds[i] = CRGB::Black;
       }
       FastLED.show();
-      delay(200);
+      delay(120);
     }
     for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
       leds[i] = number;
