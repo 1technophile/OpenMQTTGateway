@@ -1,13 +1,10 @@
 [![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway)
-[![Gitter chat](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/OpenMQTTGateway/Questions_support)
+[![Discourse forum](https://img.shields.io/badge/discourse-forum-brightgreen.svg)](https://community.openmqttgateway.com)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/943c9b639b68441dae8e29ee39977ab2)](https://www.codacy.com/app/1technophile/OpenMQTTGateway?utm_source=github.com&utm_medium=referral&utm_content=1technophile/OpenMQTTGateway&utm_campaign=badger)
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
 [![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
 
-Questions, support please don't open an issue and [click here](https://gitter.im/OpenMQTTGateway/Questions_support)
-
-For the next evolutions of OpenMQTTGateway I would like to have your advices, here is a poll that will take 30 seconds to fill and that will give us usefull insights:
-https://docs.google.com/forms/d/e/1FAIpQLScbuAudrH8zANwBWA0_VtZgzdzpaa12oDc3sjqYYXWW0oi51A/viewform?usp=sf_link
+Questions, support please don't open an issue and go to the community forum [click here](https://community.openmqttgateway.com)
 
 # OpenMQTTGateway
 [![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)](https://github.com/1technophile/OpenMQTTGateway/wiki)
