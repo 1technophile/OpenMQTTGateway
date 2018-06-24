@@ -53,7 +53,8 @@ char mqtt_port[6] = "1883";
 //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #define WifiManager_password "your_password"
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-//#define cleanFS //uncomment if you want to clean the ESP memory and reenter your credentials
+//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
+#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
