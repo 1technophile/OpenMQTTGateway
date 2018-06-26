@@ -120,6 +120,8 @@ unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
+boolean connectedOnce = false; //indicate if we have been connected once to MQTT
+
 #ifdef ESP32
   #include <WiFi.h>
   #include <ArduinoOTA.h>
@@ -202,10 +204,10 @@ boolean reconnect() {
       // Wait 5 seconds before retrying
       delay(5000);
 
-      if (failure_number > 3){
-        trc(F("failed connecting to mqtt at start reinit setup"));
+      if (failure_number > maxMQTTretry){
+        trc(F("failed connecting to mqtt"));
         #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-          setup_wifimanager(true);
+          if (!connectedOnce) setup_wifimanager(); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
         #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
           setup_wifi();
         #endif
@@ -243,7 +245,7 @@ void setup()
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-      setup_wifimanager(false);
+      setup_wifimanager();
     #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
     #endif
@@ -397,10 +399,10 @@ void setup_wifi() {
 }
 
 #elif defined(ESP8266) && !defined(ESPWifiManualSetup)
-void setup_wifimanager(boolean reset_settings){
+void setup_wifimanager(){
     #ifdef cleanFS
     //clean FS, for testing
-    //SPIFFS.format();
+      SPIFFS.format();
     #endif
     //read configuration from FS json
     trc("mounting FS...");
@@ -461,11 +463,11 @@ void setup_wifimanager(boolean reset_settings){
     wifiManager.addParameter(&custom_mqtt_port);
     wifiManager.addParameter(&custom_mqtt_user);
     wifiManager.addParameter(&custom_mqtt_pass);
-  
-    //reset settings - for testing
-    //reset_settings = true;
-    if (reset_settings) wifiManager.resetSettings();
 
+    #ifdef cleanFS
+      //reset settings - for testing
+      wifiManager.resetSettings();
+    #endif
     //set minimu quality of signal so it ignores AP's under that quality
     wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
   
@@ -579,7 +581,7 @@ void loop()
       digitalWrite(led_receive, HIGH);
     }
     digitalWrite(led_error, HIGH);
-    
+    connectedOnce = true;
     client.loop();
 
     #if defined(ESP8266) || defined(ESP32)
@@ -863,7 +865,6 @@ void trc(String msg){
   }
 }
 
-
 void trc(int msg){
   if (TRACE) {
   Serial.println(msg);
@@ -875,7 +876,6 @@ void trc(unsigned int msg){
   Serial.println(msg);
   }
 }
-
 
 void trc(long msg){
   if (TRACE) {
