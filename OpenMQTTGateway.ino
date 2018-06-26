@@ -802,6 +802,9 @@ digitalWrite(led_send, LOW);
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
+#ifdef ZgatewayRF315
+  MQTTtoRF315(topicOri, datacallback);
+#endif
 #ifdef ZgatewayRF2
   MQTTtoRF2(topicOri, datacallback);
 #endif
