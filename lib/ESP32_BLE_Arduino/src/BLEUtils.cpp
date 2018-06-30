@@ -14,7 +14,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
-#include <bt.h>              // ESP32 BLE
+#include <esp_bt.h>              // ESP32 BLE
 #include <esp_bt_main.h>     // ESP32 BLE
 #include <esp_gap_ble_api.h> // ESP32 BLE
 #include <esp_gattc_api.h>   // ESP32 BLE
@@ -838,28 +838,52 @@ std::string BLEUtils::buildPrintData(uint8_t* source, size_t length) {
 } // buildPrintData
 
 
+/**
+ * @brief Convert a close/disconnect reason to a string.
+ * @param [in] reason The close reason.
+ * @return A string representation of the reason.
+ */
 std::string BLEUtils::gattCloseReasonToString(esp_gatt_conn_reason_t reason) {
 	switch(reason) {
-		case ESP_GATT_CONN_UNKNOWN:
+		case ESP_GATT_CONN_UNKNOWN: {
 			return "ESP_GATT_CONN_UNKNOWN";
-		case ESP_GATT_CONN_L2C_FAILURE:
+		}
+
+		case ESP_GATT_CONN_L2C_FAILURE: {
 			return "ESP_GATT_CONN_L2C_FAILURE";
-		case ESP_GATT_CONN_TIMEOUT:
+		}
+
+		case ESP_GATT_CONN_TIMEOUT: {
 			return "ESP_GATT_CONN_TIMEOUT";
-		case ESP_GATT_CONN_TERMINATE_PEER_USER:
+		}
+
+		case ESP_GATT_CONN_TERMINATE_PEER_USER: {
 			return "ESP_GATT_CONN_TERMINATE_PEER_USER";
-		case ESP_GATT_CONN_TERMINATE_LOCAL_HOST:
+		}
+
+		case ESP_GATT_CONN_TERMINATE_LOCAL_HOST: {
 			return "ESP_GATT_CONN_TERMINATE_LOCAL_HOST";
-		case ESP_GATT_CONN_FAIL_ESTABLISH:
+		}
+
+		case ESP_GATT_CONN_FAIL_ESTABLISH: {
 			return "ESP_GATT_CONN_FAIL_ESTABLISH";
-		case ESP_GATT_CONN_LMP_TIMEOUT:
+		}
+
+		case ESP_GATT_CONN_LMP_TIMEOUT: {
 			return "ESP_GATT_CONN_LMP_TIMEOUT";
-		case ESP_GATT_CONN_CONN_CANCEL:
+		}
+
+		case ESP_GATT_CONN_CONN_CANCEL: {
 			return "ESP_GATT_CONN_CONN_CANCEL";
-		case ESP_GATT_CONN_NONE:
+		}
+
+		case ESP_GATT_CONN_NONE: {
 			return "ESP_GATT_CONN_NONE";
-		default:
+		}
+
+		default: {
 			return "Unknown";
+		}
 	}
 } // gattCloseReasonToString
 
@@ -1264,6 +1288,15 @@ void BLEUtils::dumpGapEvent(
 
 
 		//
+		// ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT
+		//
+		case ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT: {
+			ESP_LOGD(LOG_TAG, "[status: %d]",	param->scan_rsp_data_raw_cmpl.status);
+			break;
+		} // ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT
+
+
+		//
 		// ESP_GAP_BLE_SCAN_START_COMPLETE_EVT
 		//
 		// scan_start_cmpl
@@ -1379,11 +1412,12 @@ void BLEUtils::dumpGattClientEvent(
 		// ESP_GATTC_DISCONNECT_EVT
 		//
 		// disconnect:
-		// - esp_gatt_status_t status
-		// - uint16_t          conn_id
-		// - esp_bd_addr_t     remote_bda
+		// - esp_gatt_conn_reason_t reason
+		// - uint16_t               conn_id
+		// - esp_bd_addr_t          remote_bda
 		case ESP_GATTC_DISCONNECT_EVT: {
-			ESP_LOGD(LOG_TAG, "[conn_id: %d, remote_bda: %s]",
+			ESP_LOGD(LOG_TAG, "[reason: %s, conn_id: %d, remote_bda: %s]",
+				BLEUtils::gattCloseReasonToString(evtParam->disconnect.reason).c_str(),
 				evtParam->disconnect.conn_id,
 				BLEAddress(evtParam->disconnect.remote_bda).toString().c_str()
 			);
@@ -1577,13 +1611,15 @@ void BLEUtils::dumpGattClientEvent(
 		// - esp_gatt_status_t status
 		// - uint16_t          conn_id
 		// - uint16_t          handle
+		// - uint16_t          offset
 		//
 		case ESP_GATTC_WRITE_CHAR_EVT: {
-			ESP_LOGD(LOG_TAG, "[status: %s, conn_id: %d, handle: %d 0x%.2x]",
+			ESP_LOGD(LOG_TAG, "[status: %s, conn_id: %d, handle: %d 0x%.2x, offset: %d]",
 				BLEUtils::gattStatusToString(evtParam->write.status).c_str(),
 				evtParam->write.conn_id,
 				evtParam->write.handle,
-				evtParam->write.handle
+				evtParam->write.handle,
+				evtParam->write.offset
 			);
 			break;
 		} // ESP_GATTC_WRITE_CHAR_EVT
@@ -1618,7 +1654,7 @@ void BLEUtils::dumpGattServerEvent(
 				evtParam->add_char_descr.attr_handle,
 				evtParam->add_char_descr.service_handle,
 				evtParam->add_char_descr.service_handle,
-				BLEUUID(evtParam->add_char_descr.char_uuid).toString().c_str());
+				BLEUUID(evtParam->add_char_descr.descr_uuid).toString().c_str());
 			break;
 		} // ESP_GATTS_ADD_CHAR_DESCR_EVT
 

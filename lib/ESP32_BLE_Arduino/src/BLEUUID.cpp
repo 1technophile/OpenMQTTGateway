@@ -11,6 +11,8 @@
 #include <sstream>
 #include <iomanip>
 #include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
 #include "BLEUUID.h"
 static const char* LOG_TAG = "BLEUUID";
 
@@ -189,6 +191,32 @@ BLEUUID::BLEUUID() {
 
 
 /**
+ * @brief Get the number of bits in this uuid.
+ * @return The number of bits in the UUID.  One of 16, 32 or 128.
+ */
+int BLEUUID::bitSize() {
+	if (m_valueSet == false) {
+		return 0;
+	}
+	switch(m_uuid.len) {
+		case ESP_UUID_LEN_16: {
+			return 16;
+		}
+		case ESP_UUID_LEN_32: {
+			return 32;
+		}
+		case ESP_UUID_LEN_128: {
+			return 128;
+		}
+		default: {
+			ESP_LOGE(LOG_TAG, "Unknown UUID length: %d", m_uuid.len);
+			return 0;
+		}
+	} // End of switch
+} // bitSize
+
+
+/**
  * @brief Compare a UUID against this UUID.
  *
  * @param [in] uuid The UUID to compare against.
@@ -214,6 +242,35 @@ bool BLEUUID::equals(BLEUUID uuid) {
 
 	return memcmp(uuid.m_uuid.uuid.uuid128, m_uuid.uuid.uuid128, 16) == 0;
 } // equals
+
+
+/**
+ * Create a BLEUUID from a string of the form:
+ * 0xNNNN
+ * 0xNNNNNNNN
+ * 0x<UUID>
+ * NNNN
+ * NNNNNNNN
+ * <UUID>
+ */
+BLEUUID BLEUUID::fromString(std::string _uuid){
+	uint8_t start = 0;
+	if (strstr(_uuid.c_str(), "0x") != nullptr) { // If the string starts with 0x, skip those characters.
+		start = 2;
+	}
+	uint8_t len = _uuid.length() - start; // Calculate the length of the string we are going to use.
+
+	if( len == 4) {
+		uint16_t x = strtoul(_uuid.substr(start, len).c_str(), NULL, 16);
+		return BLEUUID(x);
+	} else if (len == 8) {
+		uint32_t x = strtoul(_uuid.substr(start, len).c_str(), NULL, 16);
+		return BLEUUID(x);
+	} else if (len == 36) {
+		return BLEUUID(_uuid);
+	}
+	return BLEUUID();
+} // fromString
 
 
 /**
@@ -350,21 +407,4 @@ std::string BLEUUID::toString() {
 	return ss.str();
 } // toString
 
-BLEUUID BLEUUID::fromString(std::string _uuid){
-	uint8_t start = 0;
-	if(strstr(_uuid.c_str(), "0x") != nullptr){
-		start = 2;
-	}
-	uint8_t len = _uuid.length() - start;
-	if(len == 4 ){
-		uint16_t x = strtoul(_uuid.substr(start, len).c_str(), NULL, 16);
-		return BLEUUID(x);
-	}else if(len == 8){
-		uint32_t x = strtoul(_uuid.substr(start, len).c_str(), NULL, 16);
-		return BLEUUID(x);
-	}else if (len == 36){
-		return BLEUUID(_uuid);
-	}
-	return BLEUUID();
-}
 #endif /* CONFIG_BT_ENABLED */

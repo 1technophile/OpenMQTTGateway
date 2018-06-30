@@ -15,6 +15,7 @@
 #include <esp_err.h>
 
 #include <sstream>
+#include "BLEExceptions.h"
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include "BLERemoteDescriptor.h"
@@ -432,6 +433,12 @@ uint8_t BLERemoteCharacteristic::readUInt8(void) {
 std::string BLERemoteCharacteristic::readValue() {
 	ESP_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
+	// Check to see that we are connected.
+	if (!getRemoteService()->getClient()->isConnected()) {
+		ESP_LOGE(LOG_TAG, "Disconnected");
+		throw BLEDisconnectedException();
+	}
+
 	m_semaphoreReadCharEvt.take("readValue");
 
 	// Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
@@ -542,6 +549,12 @@ std::string BLERemoteCharacteristic::toString() {
  */
 void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
 	ESP_LOGD(LOG_TAG, ">> writeValue(), length: %d", newValue.length());
+
+	// Check to see that we are connected.
+	if (!getRemoteService()->getClient()->isConnected()) {
+		ESP_LOGE(LOG_TAG, "Disconnected");
+		throw BLEDisconnectedException();
+	}
 
 	m_semaphoreWriteCharEvt.take("writeValue");
 

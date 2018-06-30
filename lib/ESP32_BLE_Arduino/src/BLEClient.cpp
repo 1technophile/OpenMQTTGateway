@@ -7,7 +7,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 #include <esp_log.h>
-#include <bt.h>
+#include <esp_bt.h>
 #include <esp_bt_main.h>
 #include <esp_gap_ble_api.h>
 #include <esp_gattc_api.h>
@@ -67,6 +67,22 @@ BLEClient::~BLEClient() {
 
 
 /**
+ * @brief Clear any existing services.
+ *
+ */
+void BLEClient::clearServices() {
+	ESP_LOGD(LOG_TAG, ">> clearServices");
+	// Delete all the services.
+	for (auto &myPair : m_servicesMap) {
+	   delete myPair.second;
+	}
+	m_servicesMap.clear();
+	m_haveServices = false;
+	ESP_LOGD(LOG_TAG, "<< clearServices");
+} // clearServices
+
+
+/**
  * @brief Connect to the partner (BLE Server).
  * @param [in] address The address of the partner.
  * @return True on success.
@@ -77,6 +93,8 @@ bool BLEClient::connect(BLEAddress address) {
 // We need the connection handle that we get from registering the application.  We register the app
 // and then block on its completion.  When the event has arrived, we will have the handle.
 	m_semaphoreRegEvt.take("connect");
+
+	clearServices(); // Delete any services that may exist.
 
 	esp_err_t errRc = ::esp_ble_gattc_app_register(0);
 	if (errRc != ESP_OK) {
@@ -93,6 +111,7 @@ bool BLEClient::connect(BLEAddress address) {
 	errRc = ::esp_ble_gattc_open(
 		getGattcIf(),
 		*getPeerAddress().getNative(), // address
+		BLE_ADDR_TYPE_PUBLIC,          // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
 		1                              // direct connection
 	);
 	if (errRc != ESP_OK) {
@@ -100,7 +119,7 @@ bool BLEClient::connect(BLEAddress address) {
 		return false;
 	}
 
-	uint32_t rc = m_semaphoreOpenEvt.wait("connect");
+	uint32_t rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
 	ESP_LOGD(LOG_TAG, "<< connect(), rc=%d", rc==ESP_GATT_OK);
 	return rc == ESP_GATT_OK;
 } // connect
@@ -144,10 +163,14 @@ void BLEClient::gattClientEventHandler(
 		case ESP_GATTC_DISCONNECT_EVT: {
 				// If we receive a disconnect event, set the class flag that indicates that we are
 				// no longer connected.
+				if (m_pClientCallbacks != nullptr) {
+					m_pClientCallbacks->onDisconnect(this);
+				}
 				m_isConnected = false;
+				m_semaphoreRssiCmplEvt.give();
+				m_semaphoreSearchCmplEvt.give(1);
 				break;
 		} // ESP_GATTC_DISCONNECT_EVT
-
 
 		//
 		// ESP_GATTC_OPEN_EVT
@@ -193,7 +216,7 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		//
 		case ESP_GATTC_SEARCH_CMPL_EVT: {
-			m_semaphoreSearchCmplEvt.give();
+			m_semaphoreSearchCmplEvt.give(0);
 			break;
 		} // ESP_GATTC_SEARCH_CMPL_EVT
 
@@ -293,6 +316,7 @@ BLERemoteService* BLEClient::getService(const char* uuid) {
  * @brief Get the service object corresponding to the uuid.
  * @param [in] uuid The UUID of the service being sought.
  * @return A reference to the Service or nullptr if don't know about it.
+ * @throws BLEUuidNotFound
  */
 BLERemoteService* BLEClient::getService(BLEUUID uuid) {
 	ESP_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
@@ -313,7 +337,7 @@ BLERemoteService* BLEClient::getService(BLEUUID uuid) {
 		}
 	} // End of each of the services.
 	ESP_LOGD(LOG_TAG, "<< getService: not found");
-	return nullptr;
+	throw new BLEUuidNotFoundException;
 } // getService
 
 
@@ -332,7 +356,9 @@ std::map<std::string, BLERemoteService*>* BLEClient::getServices() {
  * and will culminate with an ESP_GATTC_SEARCH_CMPL_EVT when all have been received.
  */
 	ESP_LOGD(LOG_TAG, ">> getServices");
-	m_servicesMap.clear();
+
+	clearServices(); // Clear any services that may exist.
+
 	esp_err_t errRc = esp_ble_gattc_search_service(
 		getGattcIf(),
 		getConnId(),
@@ -343,11 +369,26 @@ std::map<std::string, BLERemoteService*>* BLEClient::getServices() {
 		ESP_LOGE(LOG_TAG, "esp_ble_gattc_search_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return &m_servicesMap;
 	}
-	m_semaphoreSearchCmplEvt.wait("getServices");
-	m_haveServices = true; // Remember that we now have services.
+	// If sucessfull, remember that we now have services.
+	m_haveServices = (m_semaphoreSearchCmplEvt.wait("getServices") == 0);
 	ESP_LOGD(LOG_TAG, "<< getServices");
 	return &m_servicesMap;
 } // getServices
+
+
+/**
+ * @brief Get the value of a specific characteristic associated with a specific service.
+ * @param [in] serviceUUID The service that owns the characteristic.
+ * @param [in] characteristicUUID The characteristic whose value we wish to read.
+ * @throws BLEUuidNotFound
+ */
+std::string BLEClient::getValue(BLEUUID serviceUUID, BLEUUID characteristicUUID) {
+	ESP_LOGD(LOG_TAG, ">> getValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
+	std::string ret = getService(serviceUUID)->getCharacteristic(characteristicUUID)->readValue();
+	ESP_LOGD(LOG_TAG, "<<getValue");
+	return ret;
+} // getValue
+
 
 /**
  * @brief Handle a received GAP event.
@@ -388,12 +429,27 @@ bool BLEClient::isConnected() {
 } // isConnected
 
 
+
+
 /**
  * @brief Set the callbacks that will be invoked.
  */
 void BLEClient::setClientCallbacks(BLEClientCallbacks* pClientCallbacks) {
 	m_pClientCallbacks = pClientCallbacks;
 } // setClientCallbacks
+
+
+/**
+ * @brief Set the value of a specific characteristic associated with a specific service.
+ * @param [in] serviceUUID The service that owns the characteristic.
+ * @param [in] characteristicUUID The characteristic whose value we wish to write.
+ * @throws BLEUuidNotFound
+ */
+void BLEClient::setValue(BLEUUID serviceUUID, BLEUUID characteristicUUID, std::string value) {
+	ESP_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
+	getService(serviceUUID)->getCharacteristic(characteristicUUID)->writeValue(value);
+	ESP_LOGD(LOG_TAG, "<< setValue");
+} // setValue
 
 
 /**
@@ -410,5 +466,6 @@ std::string BLEClient::toString() {
 	}
 	return ss.str();
 } // toString
+
 
 #endif // CONFIG_BT_ENABLED

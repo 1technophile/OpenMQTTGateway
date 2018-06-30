@@ -33,6 +33,7 @@ BLEScan::BLEScan() {
 	m_scan_params.scan_filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
 	m_pAdvertisedDeviceCallbacks     = nullptr;
 	m_stopped                        = true;
+	m_wantDuplicates                 = false;
 	setInterval(100);
 	setWindow(100);
 } // BLEScan
@@ -73,6 +74,9 @@ void BLEScan::handleGAPEvent(
 				// asked to stop.
 				case ESP_GAP_SEARCH_INQ_CMPL_EVT: {
 					m_stopped = true;
+					if (m_scanCompleteCB != nullptr) {
+						m_scanCompleteCB(m_scanResults);
+					}
 					m_semaphoreScanEnd.give();
 					break;
 				} // ESP_GAP_SEARCH_INQ_CMPL_EVT
@@ -97,7 +101,7 @@ void BLEScan::handleGAPEvent(
 							break;
 						}
 					}
-					if (found) {
+					if (found && !m_wantDuplicates) {  // If we found a previous entry AND we don't want duplicates, then we are done.
 						ESP_LOGD(LOG_TAG, "Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
 						break;
 					}
@@ -115,7 +119,9 @@ void BLEScan::handleGAPEvent(
 						m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
 					}
 
-					m_scanResults.m_vectorAdvertisedDevices.push_back(advertisedDevice);
+					if (!found) {   // If we have previously seen this device, don't record it again.
+						m_scanResults.m_vectorAdvertisedDevices.push_back(advertisedDevice);
+					}
 
 					break;
 				} // ESP_GAP_SEARCH_INQ_RES_EVT
@@ -154,8 +160,10 @@ void BLEScan::setActiveScan(bool active) {
 /**
  * @brief Set the call backs to be invoked.
  * @param [in] pAdvertisedDeviceCallbacks Call backs to be invoked.
+ * @param [in] wantDuplicates  True if we wish to be called back with duplicates.  Default is false.
  */
-void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks) {
+void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates) {
+	m_wantDuplicates = wantDuplicates;
 	m_pAdvertisedDeviceCallbacks = pAdvertisedDeviceCallbacks;
 } // setAdvertisedDeviceCallbacks
 
@@ -181,12 +189,14 @@ void BLEScan::setWindow(uint16_t windowMSecs) {
 /**
  * @brief Start scanning.
  * @param [in] duration The duration in seconds for which to scan.
- * @return N/A.
+ * @param [in] scanCompleteCB A function to be called when scanning has completed.
+ * @return True if scan started or false if there was an error.
  */
-BLEScanResults BLEScan::start(uint32_t duration) {
+bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults)) {
 	ESP_LOGD(LOG_TAG, ">> start(duration=%d)", duration);
 
 	m_semaphoreScanEnd.take(std::string("start"));
+	m_scanCompleteCB = scanCompleteCB;                  // Save the callback to be invoked when the scan completes.
 
 	m_scanResults.m_vectorAdvertisedDevices.clear();
 
@@ -195,7 +205,7 @@ BLEScanResults BLEScan::start(uint32_t duration) {
 	if (errRc != ESP_OK) {
 		ESP_LOGE(LOG_TAG, "esp_ble_gap_set_scan_params: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
 		m_semaphoreScanEnd.give();
-		return m_scanResults;
+		return false;
 	}
 
 	errRc = ::esp_ble_gap_start_scanning(duration);
@@ -203,14 +213,25 @@ BLEScanResults BLEScan::start(uint32_t duration) {
 	if (errRc != ESP_OK) {
 		ESP_LOGE(LOG_TAG, "esp_ble_gap_start_scanning: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
 		m_semaphoreScanEnd.give();
-		return m_scanResults;
+		return false;
 	}
 
 	m_stopped = false;
 
-	m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
-
 	ESP_LOGD(LOG_TAG, "<< start()");
+	return true;
+} // start
+
+
+/**
+ * @brief Start scanning and block until scanning has been completed.
+ * @param [in] duration The duration in seconds for which to scan.
+ * @return The BLEScanResults.
+ */
+BLEScanResults BLEScan::start(uint32_t duration) {
+	if(start(duration, nullptr)) {
+		m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
+	}
 	return m_scanResults;
 } // start
 

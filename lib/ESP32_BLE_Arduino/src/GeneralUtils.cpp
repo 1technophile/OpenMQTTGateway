@@ -17,6 +17,8 @@
 #include <esp_err.h>
 #include <nvs.h>
 #include <esp_wifi.h>
+#include <esp_heap_caps.h>
+#include <esp_system.h>
 
 static const char* LOG_TAG = "GeneralUtils";
 
@@ -96,6 +98,23 @@ bool GeneralUtils::base64Encode(const std::string &in, std::string *out) {
 
 	return (enc_len == out->size());
 } // base64Encode
+
+
+/**
+ * @brief Dump general info to the log.
+ * Data includes:
+ * * Amount of free RAM
+ */
+void GeneralUtils::dumpInfo() {
+	size_t freeHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	esp_chip_info_t chipInfo;
+	esp_chip_info(&chipInfo);
+	ESP_LOGD(LOG_TAG, "--- dumpInfo ---");
+	ESP_LOGD(LOG_TAG, "Free heap: %d", freeHeap);
+	ESP_LOGD(LOG_TAG, "Chip Info: Model: %d, cores: %d, revision: %d", chipInfo.model, chipInfo.cores, chipInfo.revision);
+	ESP_LOGD(LOG_TAG, "ESP-IDF version: %s", esp_get_idf_version());
+	ESP_LOGD(LOG_TAG, "---");
+} // dumpInfo
 
 
 /**
@@ -321,6 +340,24 @@ std::string GeneralUtils::ipToString(uint8_t *ip) {
 
 
 /**
+ * @brief Split a string into parts based on a delimiter.
+ * @param [in] source The source string to split.
+ * @param [in] delimiter The delimiter characters.
+ * @return A vector of strings that are the split of the input.
+ */
+std::vector<std::string> GeneralUtils::split(std::string source, char delimiter) {
+	// See also: https://stackoverflow.com/questions/5167625/splitting-a-c-stdstring-using-tokens-e-g
+	std::vector<std::string> strings;
+	std::istringstream iss(source);
+	std::string s;
+	while(std::getline(iss, s, delimiter)) {
+		strings.push_back(trim(s));
+	}
+	return strings;
+} // split
+
+
+/**
  * @brief Convert an ESP error code to a string.
  * @param [in] errCode The errCode to be converted.
  * @return A string representation of the error code.
@@ -399,8 +436,30 @@ const char* GeneralUtils::errorToString(esp_err_t errCode) {
 
 
 /**
- * @brief Restart the ESP32.
+ * @brief Convert a string to lower case.
+ * @param [in] value The string to convert to lower case.
+ * @return A lower case representation of the string.
  */
-void GeneralUtils::restart() {
-	esp_restart();
-} // restart
+std::string GeneralUtils::toLower(std::string& value) {
+	// Question: Could this be improved with a signature of:
+	// std::string& GeneralUtils::toLower(std::string& value)
+	std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+	return value;
+} // toLower
+
+
+/**
+ * @brief Remove white space from a string.
+ */
+std::string GeneralUtils::trim(const std::string& str)
+{
+    size_t first = str.find_first_not_of(' ');
+    if (std::string::npos == first)
+    {
+        return str;
+    }
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last - first + 1));
+} // trim
+
+

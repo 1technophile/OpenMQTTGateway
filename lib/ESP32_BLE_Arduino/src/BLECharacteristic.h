@@ -13,6 +13,7 @@
 #include <map>
 #include "BLEUUID.h"
 #include <esp_gatts_api.h>
+#include <esp_gap_ble_api.h>
 #include "BLEDescriptor.h"
 #include "BLEValue.h"
 #include "FreeRTOS.h"
@@ -74,11 +75,16 @@ public:
 	void setReadProperty(bool value);
 	void setValue(uint8_t* data, size_t size);
 	void setValue(std::string value);
+	void setValue(uint16_t& data16);
+	void setValue(uint32_t& data32);
+	void setValue(int& data32);
+	void setValue(float& data32);
+	void setValue(double& data64); 
 	void setWriteProperty(bool value);
 	void setWriteNoResponseProperty(bool value);
 	std::string toString();
 	uint16_t getHandle();
-
+	void setAccessPermissions(esp_gatt_perm_t perm);
 
 	static const uint32_t PROPERTY_READ      = 1<<0;
 	static const uint32_t PROPERTY_WRITE     = 1<<1;
@@ -88,6 +94,7 @@ public:
 	static const uint32_t PROPERTY_WRITE_NR  = 1<<5;
 
 private:
+
 	friend class BLEServer;
 	friend class BLEService;
 	friend class BLEDescriptor;
@@ -100,6 +107,7 @@ private:
 	BLECharacteristicCallbacks* m_pCallbacks;
 	BLEService*                 m_pService;
 	BLEValue                    m_value;
+	esp_gatt_perm_t             m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
 
 	void handleGATTServerEvent(
 			esp_gatts_cb_event_t      event,

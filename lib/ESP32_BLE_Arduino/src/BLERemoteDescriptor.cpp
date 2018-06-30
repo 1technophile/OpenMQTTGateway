@@ -27,6 +27,7 @@ BLERemoteDescriptor::BLERemoteDescriptor(
 	m_pRemoteCharacteristic = pRemoteCharacteristic;
 }
 
+
 /**
  * @brief Retrieve the handle associated with this remote descriptor.
  * @return The handle associated with this remote descriptor.
@@ -34,6 +35,15 @@ BLERemoteDescriptor::BLERemoteDescriptor(
 uint16_t BLERemoteDescriptor::getHandle() {
 	return m_handle;
 } // getHandle
+
+
+/**
+ * @brief Get the characteristic that owns this descriptor.
+ * @return The characteristic that owns this descriptor.
+ */
+BLERemoteCharacteristic* BLERemoteDescriptor::getRemoteCharacteristic() {
+	return m_pRemoteCharacteristic;
+} // getRemoteCharacteristic
 
 
 /**
@@ -46,6 +56,14 @@ BLEUUID BLERemoteDescriptor::getUUID() {
 
 
 std::string BLERemoteDescriptor::readValue(void) {
+	ESP_LOGD(LOG_TAG, ">> readValue: %s", toString().c_str());
+
+	// Check to see that we are connected.
+	if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
+		ESP_LOGE(LOG_TAG, "Disconnected");
+		throw BLEDisconnectedException();
+	}
+
 	m_semaphoreReadDescrEvt.take("readValue");
 
 	// Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
@@ -66,7 +84,6 @@ std::string BLERemoteDescriptor::readValue(void) {
 
 	ESP_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
 	return m_value;
-	return "";
 } // readValue
 
 
@@ -119,6 +136,12 @@ void BLERemoteDescriptor::writeValue(
 		size_t   length,
 		bool     response) {
 	ESP_LOGD(LOG_TAG, ">> writeValue: %s", toString().c_str());
+	// Check to see that we are connected.
+	if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
+		ESP_LOGE(LOG_TAG, "Disconnected");
+		throw BLEDisconnectedException();
+	}
+
 	esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),
