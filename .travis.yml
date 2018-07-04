@@ -5,7 +5,7 @@ env:
   - BD=arduino:avr:mega:cpu=atmega2560
   - BD=esp8266:esp8266:nodemcuv2:CpuFrequency=80,FlashSize=4M3M
   - BD=esp8266:esp8266:d1_mini:CpuFrequency=80,FlashSize=4M3M
-  - BD=espressif:esp32:esp32:PartitionScheme=min_spiffs,FlashFreq=80
+  - BD=espressif:esp32:esp32doit-devkit-v1:FlashFreq=80
 before_install:
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
@@ -22,7 +22,7 @@ install:
   - cp -R /usr/local/share/arduino/OpenMQTTGateway/lib/. /usr/local/share/arduino/libraries
   - mkdir -p /usr/local/share/arduino/hardware/espressif
   - cd /usr/local/share/arduino/hardware/espressif
-  - wget https://github.com/espressif/arduino-esp32/archive/master.zip -O /tmp/esp32.zip
+  - wget https://github.com/espressif/arduino-esp32/archive/a153f6ad280e5932be9c80341556348ff505d586.zip -O /tmp/esp32.zip
   - unzip /tmp/esp32.zip -d /usr/local/share/arduino/hardware/espressif
   - mv arduino-esp32* esp32
   - cd esp32/tools/
