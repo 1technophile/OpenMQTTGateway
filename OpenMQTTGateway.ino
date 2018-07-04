@@ -207,7 +207,7 @@ boolean reconnect() {
       if (failure_number > maxMQTTretry){
         trc(F("failed connecting to mqtt"));
         #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-          if (!connectedOnce) setup_wifimanager(); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
+          if (!connectedOnce) setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
         #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
           setup_wifi();
         #endif
@@ -245,7 +245,7 @@ void setup()
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-      setup_wifimanager();
+      setup_wifimanager(false);
     #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
     #endif
@@ -399,10 +399,12 @@ void setup_wifi() {
 }
 
 #elif defined(ESP8266) && !defined(ESPWifiManualSetup)
-void setup_wifimanager(){
+void setup_wifimanager(boolean initWM){
     #ifdef cleanFS
     //clean FS, for testing
       SPIFFS.format();
+    #else
+      if(initWM) SPIFFS.format();
     #endif
     //read configuration from FS json
     trc("mounting FS...");
@@ -467,6 +469,8 @@ void setup_wifimanager(){
     #ifdef cleanFS
       //reset settings - for testing
       wifiManager.resetSettings();
+    #else
+      if(initWM) wifiManager.resetSettings();
     #endif
     //set minimu quality of signal so it ignores AP's under that quality
     wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
@@ -483,7 +487,7 @@ void setup_wifimanager(){
     }
   
     //if you get here you have connected to the WiFi
-    trc("connected...yeey :)");
+    trc("connected to wifi");
   
     //read updated parameters
     strcpy(mqtt_server, custom_mqtt_server.getValue());
