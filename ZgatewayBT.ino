@@ -224,7 +224,6 @@ boolean BTtoMQTT() {
             yield();
           #endif
           String token = returnedString.substring(pos);
-          trc(token);
           returnedString.remove(pos,returnedString.length() );
           char token_char[token.length()+1];
           token.toCharArray(token_char, token.length()+1);
@@ -290,7 +289,7 @@ boolean BTtoMQTT() {
       discResult.replace(RESP_END_MSG,"");
       float device_number = discResult.length()/78.0;
       if (device_number == (int)device_number){ // to avoid publishing partial values we detect if the serial data has been fully read = a multiple of 78
-        trc(F("Sending BT data to MQTT"));
+        trc(F("Sending BT data to MQTT HM1X Version<v6xx"));
         #if defined(ESP8266)
           yield();
         #endif
@@ -299,7 +298,7 @@ boolean BTtoMQTT() {
              onedevice.replace(STRING_MSG,"");
              String mac = onedevice.substring(53,65);
              String rssi = onedevice.substring(66,70);
-             String mactopic = subjectBTtoMQTT + mac + subjectBTtoMQTTRSSI;
+             String mactopic = subjectBTtoMQTT + mac + subjectBTtoMQTTrssi;
              trc(mactopic + " " + rssi);
              client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
              discResult = discResult.substring(78);
@@ -326,7 +325,8 @@ boolean BTtoMQTT() {
 #endif
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){
-  
+  trc(F("rest_data"));
+  trc(rest_data);
   int data_length = 0;
   switch (rest_data[51 + offset]) {
     case '1' :
