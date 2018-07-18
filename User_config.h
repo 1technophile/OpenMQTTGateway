@@ -29,18 +29,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.8beta"
+#define OMG_VERSION "0.7"
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[20] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[40] = "192.168.1.17";
+char mqtt_user[20] = "ken"; // not compulsory only if your broker needs authentication
+char mqtt_pass[20] = "Home1242ab!"; // not compulsory only if your broker needs authentication
+char mqtt_server[40] = "192.168.1.10";
 char mqtt_port[6] = "1883";
 
-#define Gateway_Name "OpenMQTTGateway"
-#define Base_Topic "home/"
+#define Gateway_Name "/OpenMQTTGateway"
+#define Base_Topic "loungeroom"
 #define version_Topic  Base_Topic Gateway_Name "/version"
 #define will_Topic  Base_Topic Gateway_Name "/LWT"
 #define will_QoS 0
@@ -52,17 +52,15 @@ char mqtt_port[6] = "1883";
 
 //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #define WifiManager_password "your_password"
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
-#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
+//#define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
 
 // Update these with values suitable for your network.
 #if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-  #define wifi_ssid "wifi ssid"
-  #define wifi_password "wifi password"
+  #define wifi_ssid "StripeyWIFI"
+  #define wifi_password "home1242ab"
 #else // for arduino + W5100
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
@@ -75,7 +73,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #define ota_hostname Gateway_Name
-#define ota_password "OTAPASSWORD"
+#define ota_password "Home1242ab!"
 #define ota_port 8266
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
@@ -89,22 +87,23 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line
 
-#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
-//#define ZgatewayRF315  "RF315"    //ESP8266, Arduino, ESP32
-#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
-#define ZgatewayBT     "BT"       //ESP8266, Arduino, ESP32
-//#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
-//#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
-//#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
-//#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
-//#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
-//#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
-//#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
-//#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
-//#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
+//#define ZgatewayRF          //ESP8266, Arduino, ESP32
+//#define ZgatewayIR          //ESP8266, Arduino,         Sonoff RF Bridge
+#define ZgatewayBT          //ESP8266, Arduino, ESP32
+//#define ZgatewayRF2       //ESP8266, Arduino, ESP32
+//#define ZgatewaySRFB      //                          Sonoff RF Bridge
+//#define ZactuatorONOFF    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZsensorINA226     //ESP8266, Arduino, ESP32
+//#define ZsensorHCSR501    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZsensorADC        //ESP8266, Arduino, ESP32
+//#define ZsensorBH1750     //ESP8266, Arduino, ESP32
+//#define ZsensorTSL2561    //ESP8266, Arduino, ESP32
+//#define ZsensorBME280     //ESP8266, Arduino, ESP32
+//#define ZsensorDHT        //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZgatewayRFM69     //ESP8266, Arduino, ESP32
+#define ZsensorSHT3x
+#define m5stack
+//#define ZsensorCCS811
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
@@ -123,13 +122,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
 //uncomment to use multicore function of ESP32 for BLE
-#ifdef ESP32
-  #define multiCore //comment to don't use multicore function of ESP32 for BLE
-#endif
+//#define multiCore
 
-#define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
-#define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
-
+#define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
-
