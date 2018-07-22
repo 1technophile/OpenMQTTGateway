@@ -334,9 +334,9 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #endif
   #ifdef IR_PANASONIC
   if (strstr(topicOri, "IR_PANASONIC") != NULL){
-    if (valueBITS == 0) valueBITS = PANASONIC_BITS;
     if (valueRPT == 0) valueRPT = 2;
       #ifdef ESP8266
+          if (valueBITS == 0) valueBITS = PANASONIC_BITS;
           irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
       #else
           for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
