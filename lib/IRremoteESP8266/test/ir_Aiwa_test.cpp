@@ -20,8 +20,8 @@ TEST(TestSendAiwa, SendDataOnly) {
       "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s1680m560s1680"
       "m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s108080"
-      "m8960s2240m560s108080", irsend.outputStr());
+      "m560s1680m560s1680m560s23520"
+      "m8960s2240m560s96320", irsend.outputStr());
 }
 
 // Test sending oversized data.
@@ -48,7 +48,7 @@ TEST(TestSendAiwa, SendWithRepeats) {
       "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s1680m560s1680"
       "m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s108080", irsend.outputStr());
+      "m560s1680m560s1680m560s23520", irsend.outputStr());
   irsend.reset();
   irsend.sendAiwaRCT501(0x7F, AIWA_RC_T501_BITS, 1);  // 1 repeat.
   EXPECT_EQ(
@@ -58,8 +58,8 @@ TEST(TestSendAiwa, SendWithRepeats) {
       "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s1680m560s1680"
       "m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s108080"
-      "m8960s2240m560s108080", irsend.outputStr());
+      "m560s1680m560s1680m560s23520"
+      "m8960s2240m560s96320", irsend.outputStr());
   irsend.reset();
   irsend.sendAiwaRCT501(0x7F, AIWA_RC_T501_BITS, 2);  // 2 repeats.
   EXPECT_EQ(
@@ -69,13 +69,13 @@ TEST(TestSendAiwa, SendWithRepeats) {
       "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s1680m560s1680"
       "m560s1680m560s1680m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
-      "m560s1680m560s1680m560s108080"
-      "m8960s2240m560s108080"
-      "m8960s2240m560s108080", irsend.outputStr());
+      "m560s1680m560s1680m560s23520"
+      "m8960s2240m560s96320"
+      "m8960s2240m560s96320", irsend.outputStr());
 }
 
 // Test sending an atypical data size.
-TEST(TestSendAiwa, SendUsualSize) {
+TEST(TestSendAiwa, SendUnusualSize) {
   IRsendTest irsend(4);
   irsend.begin();
 
@@ -87,8 +87,8 @@ TEST(TestSendAiwa, SendUsualSize) {
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
       "m560s560m560s1680m560s560m560s560m560s1680m560s1680m560s1680m560s1680"
       "m560s1680m560s1680m560s560m560s560m560s560m560s1680m560s560m560s560"
-      "m560s1680m560s560m560s1680m560s108080"
-      "m8960s2240m560s108080", irsend.outputStr());
+      "m560s1680m560s560m560s1680m560s36960"
+      "m8960s2240m560s96320", irsend.outputStr());
 
   irsend.reset();
   irsend.sendAiwaRCT501(0x1234567890, 37);
@@ -102,8 +102,8 @@ TEST(TestSendAiwa, SendUsualSize) {
       "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s560m560s560"
       "m560s1680m560s1680m560s1680m560s1680m560s560m560s560m560s560m560s1680"
       "m560s560m560s560m560s1680m560s560m560s560m560s560m560s560m560s1680"
-      "m560s108080"
-      "m8960s2240m560s108080", irsend.outputStr());
+      "m560s22400"
+      "m8960s2240m560s96320", irsend.outputStr());
 }
 
 // Tests for decodeAiwaRCT501().

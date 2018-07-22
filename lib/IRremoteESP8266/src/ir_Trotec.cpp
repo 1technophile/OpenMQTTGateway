@@ -21,25 +21,20 @@ void IRsend::sendTrotec(unsigned char data[], uint16_t nbytes,
   if (nbytes < TROTEC_COMMAND_LENGTH)
     return;
 
-  enableIROut(36);
-
   for (uint16_t r = 0; r <= repeat; r++) {
-    // Header
-    mark(TROTEC_HDR_MARK);
-    space(TROTEC_HDR_SPACE);
-
-    // Data
-    for (uint16_t i = 0; i < nbytes; i++)
-      sendData(TROTEC_ONE_MARK, TROTEC_ONE_SPACE, TROTEC_ZERO_MARK,
-               TROTEC_ZERO_SPACE, data[i], 8, false);
-
-    // Footer
-    mark(TROTEC_ONE_MARK);
-    space(TROTEC_GAP);
+    sendGeneric(TROTEC_HDR_MARK, TROTEC_HDR_SPACE,
+                TROTEC_ONE_MARK, TROTEC_ONE_SPACE,
+                TROTEC_ZERO_MARK, TROTEC_ZERO_SPACE,
+                TROTEC_ONE_MARK, TROTEC_GAP,
+                data, nbytes, 36, false, 0,  // Repeats handled elsewhere
+                50);
+    // More footer
+    enableIROut(36);
     mark(TROTEC_ONE_MARK);
     space(TROTEC_GAP_END);
   }
 }
+#endif  // SEND_TROTEC
 
 IRTrotecESP::IRTrotecESP(uint16_t pin) : _irsend(pin) {
   stateReset();
@@ -49,10 +44,12 @@ void IRTrotecESP::begin() {
   _irsend.begin();
 }
 
+#if SEND_TROTEC
 void IRTrotecESP::send() {
   checksum();
   _irsend.sendTrotec(trotec);
 }
+#endif  // SEND_TROTEC
 
 void IRTrotecESP::checksum() {
   uint8_t sum = 0;
@@ -147,5 +144,3 @@ void IRTrotecESP::setTimer(uint8_t timer) {
 uint8_t IRTrotecESP::getTimer() {
   return trotec[6];
 }
-
-#endif  // SEND_TROTEC

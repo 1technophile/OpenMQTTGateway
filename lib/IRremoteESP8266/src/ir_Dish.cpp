@@ -3,7 +3,6 @@
 
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 #include "IRutils.h"
 
 //                       DDDD   IIIII   SSSS  H   H
@@ -56,20 +55,16 @@
 // Ref:
 //   http://www.hifi-remote.com/wiki/index.php?title=Dish
 void IRsend::sendDISH(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  // Set 57.6kHz IR carrier frequency, duty cycle is unknown.
-  enableIROut(57600);
-  // Header
+  enableIROut(57600);  // Set modulation freq. to 57.6kHz.
+  // Header is only ever sent once.
   mark(DISH_HDR_MARK);
   space(DISH_HDR_SPACE);
-  // We always send a command, even for repeat=0, hence '<= repeat'.
-  for (uint16_t i = 0; i <= repeat; i++) {
-    // Data
-    sendData(DISH_BIT_MARK, DISH_ONE_SPACE, DISH_BIT_MARK, DISH_ZERO_SPACE,
-             data, nbits, true);
-    // Footer
-    mark(DISH_BIT_MARK);
-    space(DISH_RPT_SPACE);
-  }
+
+  sendGeneric(0, 0,  // No headers from here on in.
+              DISH_BIT_MARK, DISH_ONE_SPACE,
+              DISH_BIT_MARK, DISH_ZERO_SPACE,
+              DISH_BIT_MARK, DISH_RPT_SPACE,
+              data, nbits, 57600, true, repeat, 50);
 }
 #endif
 

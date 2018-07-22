@@ -101,7 +101,7 @@ TEST(TestSendCoolix, SendWithRepeats) {
 }
 
 // Test sending an atypical data size.
-TEST(TestSendCoolix, SendUsualSize) {
+TEST(TestSendCoolix, SendUnusualSize) {
   IRsendTest irsend(4);
   irsend.begin();
 

@@ -4,7 +4,8 @@
  * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009,
  * Copyright 2009 Ken Shirriff, http://arcfn.com
  *
- * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+ * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * as specified by IR_LED below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -33,7 +34,9 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
-IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+
+IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
 
 // Example of data captured by IRrecvDumpV2.ino
 uint16_t rawData[67] = {9000, 4500, 650, 550, 650, 1650, 600, 550, 650, 550,
@@ -50,13 +53,19 @@ void setup() {
 }
 
 void loop() {
+#if SEND_NEC
   Serial.println("NEC");
   irsend.sendNEC(0x00FFE01FUL, 32);
+#endif  // SEND_NEC
   delay(2000);
+#if SEND_SONY
   Serial.println("Sony");
   irsend.sendSony(0xa90, 12, 2);
+#endif  // SEND_SONY
   delay(2000);
+#if SEND_RAW
   Serial.println("a rawData capture from IRrecvDumpV2");
   irsend.sendRaw(rawData, 67, 38);  // Send a raw data capture at 38kHz.
+#endif  // SEND_RAW
   delay(2000);
 }

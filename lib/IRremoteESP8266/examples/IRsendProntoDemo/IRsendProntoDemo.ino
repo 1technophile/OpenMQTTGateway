@@ -6,7 +6,7 @@
  * Version 1.0 June, 2017
  *
  * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2), unless you
- * change the irsend() value below.
+ * change the IR_LED value below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -35,7 +35,9 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
-IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+
+IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
 
 // Panasonic Plasma TV Descrete code (Power On).
 // Acquired from:
@@ -96,10 +98,15 @@ void setup() {
 }
 
 void loop() {
+#if SEND_PRONTO
   Serial.println("Sending a Samsung TV 'on' command.");
   irsend.sendPronto(samsungProntoCode, 72);
   delay(2000);
   Serial.println("Sending a Panasonic Plasma TV 'on' command.");
   irsend.sendPronto(panasonicProntoCode, 104);
   delay(2000);
+#else  // SEND_PRONTO
+  Serial.println("Can't send because SEND_PRONTO has been disabled.");
+  delay(10000);
+#endif  // SEND_PRONTO
 }

@@ -16,13 +16,13 @@ TEST(TestSendRCMM, SendDataOnly) {
   EXPECT_EQ("m416s277"
             "m166s777m166s611m166s277m166s277"
             "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s27778", irsend.outputStr());
+            "m166s19600", irsend.outputStr());
   irsend.reset();
   irsend.sendRCMM(0x28e0a600UL, 32);
   EXPECT_EQ("m416s277"
             "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
             "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s27778", irsend.outputStr());
+            "m166s17160", irsend.outputStr());
 }
 
 // Test sending with different repeats.
@@ -35,19 +35,19 @@ TEST(TestSendRCMM, SendWithRepeats) {
   EXPECT_EQ("m416s277"
             "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
             "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s27778"
+            "m166s17160"
             "m416s277"
             "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
             "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s27778"
+            "m166s17160"
             "m416s277"
             "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
             "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s27778", irsend.outputStr());
+            "m166s17160", irsend.outputStr());
 }
 
 // Test sending an atypical data size.
-TEST(TestSendRCMM, SendUsualSize) {
+TEST(TestSendRCMM, SendUnusualSize) {
   IRsendTest irsend(4);
   irsend.begin();
 
@@ -55,13 +55,13 @@ TEST(TestSendRCMM, SendUsualSize) {
   irsend.sendRCMM(0xE0, 8);
   EXPECT_EQ("m416s277"
             "m166s777m166s611m166s277m166s277"
-            "m166s27778", irsend.outputStr());
+            "m166s24313", irsend.outputStr());
   irsend.reset();
   irsend.sendRCMM(0x28e0a60000UL, 40);
   EXPECT_EQ("m416s277"
             "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
             "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s277m166s277m166s277m166s277m166s27778", irsend.outputStr());
+            "m166s277m166s277m166s277m166s277m166s15388", irsend.outputStr());
 }
 
 // Tests for decodeRCMM().

@@ -3,7 +3,6 @@
 
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 #include "IRutils.h"
 
 //             CCCCC   OOOOO   OOOOO  LL      IIIII XX    XX
@@ -99,7 +98,7 @@ bool IRrecv::decodeCOOLIX(decode_results *results, uint16_t nbits,
   if (results->rawlen < 2 * 2 * nbits + HEADER + FOOTER - 1)
     return false;  // Can't possibly be a valid COOLIX message.
   if (strict && nbits != COOLIX_BITS)
-    return false;  // Not strictly an COOLIX message.
+    return false;  // Not strictly a COOLIX message.
   if (nbits % 8 != 0)  // nbits has to be a multiple of nr. of bits in a byte.
     return false;
 

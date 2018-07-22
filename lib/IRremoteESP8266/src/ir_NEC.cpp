@@ -6,7 +6,6 @@
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 #include "IRutils.h"
 
 //                           N   N  EEEEE   CCCC
@@ -57,29 +56,20 @@
 // Ref:
 //  http://www.sbprojects.com/knowledge/ir/nec.php
 void IRsend::sendNEC(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  // Set 38kHz IR carrier frequency & a 1/3 (33%) duty cycle.
-  enableIROut(38, 33);
-  IRtimer usecs = IRtimer();
-  // Header
-  mark(NEC_HDR_MARK);
-  space(NEC_HDR_SPACE);
-  // Data
-  sendData(NEC_BIT_MARK, NEC_ONE_SPACE, NEC_BIT_MARK, NEC_ZERO_SPACE,
-           data, nbits, true);
-  // Footer
-  mark(NEC_BIT_MARK);
-  // Gap to next command.
-  space(std::max(NEC_MIN_GAP, NEC_MIN_COMMAND_LENGTH - usecs.elapsed()));
-
+  sendGeneric(NEC_HDR_MARK, NEC_HDR_SPACE,
+              NEC_BIT_MARK, NEC_ONE_SPACE,
+              NEC_BIT_MARK, NEC_ZERO_SPACE,
+              NEC_BIT_MARK, NEC_MIN_GAP, NEC_MIN_COMMAND_LENGTH,
+              data, nbits, 38, true, 0,  // Repeats are handled later.
+              33);
   // Optional command repeat sequence.
-  for (uint16_t i = 0; i < repeat; i++) {
-    usecs.reset();
-    mark(NEC_HDR_MARK);
-    space(NEC_RPT_SPACE);
-    mark(NEC_BIT_MARK);
-    // Gap till next command.
-    space(std::max(NEC_MIN_GAP, NEC_MIN_COMMAND_LENGTH - usecs.elapsed()));
-  }
+  if (repeat)
+    sendGeneric(NEC_HDR_MARK, NEC_RPT_SPACE,
+                0, 0, 0, 0,  // No actual data sent.
+                NEC_BIT_MARK, NEC_MIN_GAP, NEC_MIN_COMMAND_LENGTH,
+                0, 0,  // No data to be sent.
+                38, true, repeat - 1,  // We've already sent a one message.
+                33);
 }
 
 // Calculate the raw NEC data based on address and command.
@@ -176,7 +166,7 @@ bool IRrecv::decodeNEC(decode_results *results, uint16_t nbits, bool strict) {
   // Footer
   if (!matchMark(results->rawbuf[offset++], NEC_BIT_MARK_TICKS * mark_tick))
       return false;
-  if (offset <= results->rawlen &&
+  if (offset < results->rawlen &&
       !matchAtLeast(results->rawbuf[offset], NEC_MIN_GAP_TICKS * space_tick))
     return false;
 

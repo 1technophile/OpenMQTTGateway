@@ -22,18 +22,18 @@ TEST(TestSendGlobalCache, NonRepeatingCode) {
                           21, 22, 21, 65, 21, 1519};
   irsend.sendGC(gc_test, 71);
   irsend.makeDecodeResult();
-  EXPECT_EQ("m8892s4472m546s572m546s546m546s1690m546s546m546s572m546s572"
-            "m546s546m546s572m546s1690m546s1690m546s572m546s1690m546s1690"
-            "m546s1690m546s1690m546s1690m546s1690m546s572m546s572m546s546"
-            "m546s572m546s572m546s1690m546s572m546s546m546s1690m546s1690"
-            "m546s1690m546s1664m572s1690m546s572m546s1690m546s39494",
-            irsend.outputStr());
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
   EXPECT_EQ(NEC_BITS, irsend.capture.bits);
   EXPECT_EQ(0x20DF827D, irsend.capture.value);
   EXPECT_EQ(0x4, irsend.capture.address);
   EXPECT_EQ(0x41, irsend.capture.command);
+  EXPECT_EQ("m8892s4472m546s572m546s546m546s1690m546s546m546s572m546s572"
+            "m546s546m546s572m546s1690m546s1690m546s572m546s1690m546s1690"
+            "m546s1690m546s1690m546s1690m546s1690m546s572m546s572m546s546"
+            "m546s572m546s572m546s1690m546s572m546s546m546s1690m546s1690"
+            "m546s1690m546s1664m572s1690m546s572m546s1690m546s39494",
+            irsend.outputStr());
 }
 
 // Test sending typical command with repeats.
@@ -52,6 +52,12 @@ TEST(TestSendGlobalCache, RepeatCode) {
                           64, 21, 64, 21, 64, 21, 1600, 341, 85, 21, 3647};
   irsend.sendGC(gc_test, 75);
   irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
+  EXPECT_EQ(NEC, irsend.capture.decode_type);
+  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(0xC1A28877, irsend.capture.value);
+  EXPECT_EQ(0x4583, irsend.capture.address);
+  EXPECT_EQ(0x11, irsend.capture.command);
   EXPECT_EQ("m8866s4446m546s1664m546s1664m546s546m546s546m546s546m546s546"
             "m546s546m546s1664m546s1664m546s546m546s1664m546s546m546s546"
             "m546s546m546s1664m546s546m546s1664m546s546m546s546m546s546"
@@ -59,10 +65,4 @@ TEST(TestSendGlobalCache, RepeatCode) {
             "m546s1664m546s546m546s1664m546s1664m546s1664m546s41600"
             "m8866s2210m546s94822"
             "m8866s2210m546s94822", irsend.outputStr());
-  EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
-  EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
-  EXPECT_EQ(0xC1A28877, irsend.capture.value);
-  EXPECT_EQ(0x4583, irsend.capture.address);
-  EXPECT_EQ(0x11, irsend.capture.command);
 }

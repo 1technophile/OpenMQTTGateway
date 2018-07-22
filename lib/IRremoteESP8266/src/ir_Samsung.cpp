@@ -4,7 +4,6 @@
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 #include "IRutils.h"
 
 //              SSSS   AAA    MMM    SSSS  U   U  N   N   GGGG
@@ -57,24 +56,12 @@
 //
 // Ref: http://elektrolab.wz.cz/katalog/samsung_protocol.pdf
 void IRsend::sendSAMSUNG(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  // Set 38kHz IR carrier frequency & a 1/3 (33%) duty cycle.
-  enableIROut(38, 33);
-  IRtimer usecTimer = IRtimer();
-  // We always send a message, even for repeat=0, hence '<= repeat'.
-  for (uint16_t i=0; i <= repeat; i++) {
-    usecTimer.reset();
-    // Header
-    mark(SAMSUNG_HDR_MARK);
-    space(SAMSUNG_HDR_SPACE);
-    // Data
-    sendData(SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_BIT_MARK,
-             SAMSUNG_ZERO_SPACE, data, nbits, true);
-    // Footer
-    mark(SAMSUNG_BIT_MARK);
-    space(std::max((uint32_t) SAMSUNG_MIN_GAP,
-                   (uint32_t) (SAMSUNG_MIN_MESSAGE_LENGTH -
-                               usecTimer.elapsed())));
-  }
+  sendGeneric(SAMSUNG_HDR_MARK, SAMSUNG_HDR_SPACE,
+              SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE,
+              SAMSUNG_BIT_MARK, SAMSUNG_ZERO_SPACE,
+              SAMSUNG_BIT_MARK,
+              SAMSUNG_MIN_GAP, SAMSUNG_MIN_MESSAGE_LENGTH,
+              data, nbits, 38, true, repeat, 33);
 }
 
 // Construct a raw Samsung message from the supplied customer(address) &

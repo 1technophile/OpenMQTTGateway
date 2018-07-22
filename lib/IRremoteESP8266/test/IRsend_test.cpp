@@ -101,6 +101,10 @@ TEST(TestSendRaw, GeneralUse) {
   irsend.reset();
   irsend.sendRaw(rawData, 67, 38);
   irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decodeNEC(&irsend.capture, NEC_BITS, false));
+  EXPECT_EQ(NEC, irsend.capture.decode_type);
+  EXPECT_EQ(32, irsend.capture.bits);
+  EXPECT_EQ(0xC3E0E0E8, irsend.capture.value);
   EXPECT_EQ(
       "m8950s4500"
       "m550s1650m600s1650m550s550m600s500m600s550m550s550m600s1650m550s1650"
@@ -108,10 +112,6 @@ TEST(TestSendRaw, GeneralUse) {
       "m550s1650m600s1650m600s1650m550s550m600s500m600s500m600s550m550s550"
       "m600s1650m550s1650m600s1650m600s500m650s1600m600s500m600s550m550s550"
       "m600", irsend.outputStr());
-  ASSERT_TRUE(irrecv.decodeNEC(&irsend.capture, NEC_BITS, false));
-  EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(32, irsend.capture.bits);
-  EXPECT_EQ(0xC3E0E0E8, irsend.capture.value);
 }
 
 // Incorrect handling of decodes from Raw. i.e. There is no gap recorded at
@@ -136,4 +136,151 @@ TEST(TestSendRaw, NoTrailingGap) {
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
   EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+}
+
+TEST(TestLowLevelSend, MarkFrequencyModulationAt38kHz) {
+  IRsendLowLevelTest irsend(0);
+
+  irsend.begin();
+
+  irsend.reset();
+  irsend.enableIROut(38000, 50);
+  EXPECT_EQ(5, irsend.mark(100));
+  EXPECT_EQ(
+      "[On]10usecs[Off]11usecs[On]10usecs[Off]11usecs[On]10usecs[Off]11usecs"
+      "[On]10usecs[Off]11usecs[On]10usecs[Off]6usecs",
+      irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(38000, 33);
+  EXPECT_EQ(5, irsend.mark(100));
+  EXPECT_EQ(
+      "[On]6usecs[Off]15usecs[On]6usecs[Off]15usecs[On]6usecs[Off]15usecs"
+      "[On]6usecs[Off]15usecs[On]6usecs[Off]10usecs",
+      irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(38000, 100);
+  EXPECT_EQ(1, irsend.mark(1000));
+  EXPECT_EQ("[On]1000usecs[Off]", irsend.low_level_sequence);
+}
+
+TEST(TestLowLevelSend, MarkFrequencyModulationAt36_7kHz) {
+  IRsendLowLevelTest irsend(0);
+
+  irsend.begin();
+
+  irsend.reset();
+  irsend.enableIROut(36700, 50);
+  EXPECT_EQ(5, irsend.mark(100));
+  EXPECT_EQ(
+      "[On]11usecs[Off]11usecs[On]11usecs[Off]11usecs[On]11usecs[Off]11usecs"
+      "[On]11usecs[Off]11usecs[On]11usecs[Off]1usecs",
+      irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(36700, 33);
+  EXPECT_EQ(5, irsend.mark(100));
+  EXPECT_EQ(
+      "[On]7usecs[Off]15usecs[On]7usecs[Off]15usecs[On]7usecs[Off]15usecs"
+      "[On]7usecs[Off]15usecs[On]7usecs[Off]5usecs",
+      irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(36700, 100);
+  EXPECT_EQ(1, irsend.mark(1000));
+  EXPECT_EQ("[On]1000usecs[Off]", irsend.low_level_sequence);
+}
+
+TEST(TestLowLevelSend, MarkFrequencyModulationAt40kHz) {
+  IRsendLowLevelTest irsend(0);
+
+  irsend.begin();
+
+  irsend.reset();
+  irsend.enableIROut(40000, 50);
+  EXPECT_EQ(5, irsend.mark(100));
+  EXPECT_EQ(
+      "[On]10usecs[Off]10usecs[On]10usecs[Off]10usecs[On]10usecs[Off]10usecs"
+      "[On]10usecs[Off]10usecs[On]10usecs[Off]10usecs",
+      irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(40000, 33);
+  EXPECT_EQ(5, irsend.mark(100));
+  EXPECT_EQ(
+      "[On]6usecs[Off]14usecs[On]6usecs[Off]14usecs[On]6usecs[Off]14usecs"
+      "[On]6usecs[Off]14usecs[On]6usecs[Off]14usecs",
+      irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(40000, 100);
+  EXPECT_EQ(1, irsend.mark(1000));
+  EXPECT_EQ("[On]1000usecs[Off]", irsend.low_level_sequence);
+}
+
+TEST(TestLowLevelSend, MarkNoModulation) {
+  IRsendLowLevelTest irsend(0, false, false);
+
+  irsend.begin();
+
+  irsend.reset();
+  irsend.enableIROut(38000, 50);
+  EXPECT_EQ(1, irsend.mark(1000));
+  EXPECT_EQ("[On]1000usecs[Off]", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(36700, 25);
+  EXPECT_EQ(1, irsend.mark(1000));
+  EXPECT_EQ("[On]1000usecs[Off]", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(40000, 75);
+  EXPECT_EQ(1, irsend.mark(1000));
+  EXPECT_EQ("[On]1000usecs[Off]", irsend.low_level_sequence);
+}
+
+TEST(TestLowLevelSend, SpaceFrequencyModulation) {
+  IRsendLowLevelTest irsend(0);
+
+  irsend.reset();
+  irsend.enableIROut(38000);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(40000, 75);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(38000, 100);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(38000, 33);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
+}
+
+TEST(TestLowLevelSend, SpaceNoModulation) {
+  IRsendLowLevelTest irsend(0, false, false);
+
+  irsend.begin();
+
+  irsend.reset();
+  irsend.enableIROut(38000, 50);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(36700, 25);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
+
+  irsend.reset();
+  irsend.enableIROut(40000, 75);
+  irsend.space(1000);
+  EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
 }

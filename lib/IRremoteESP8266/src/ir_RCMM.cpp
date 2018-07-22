@@ -107,7 +107,7 @@ bool IRrecv::decodeRCMM(decode_results *results, uint16_t nbits, bool strict) {
     return false;  // Not enough entries to ever be RCMM.
 
   // Calc the maximum size in bits, the message can be, or that we can accept.
-  int16_t maxBitSize = std::min((uint16_t) results->rawlen - 4,
+  int16_t maxBitSize = std::min((uint16_t) results->rawlen - 5,
                                 (uint16_t) sizeof(data) * 8);
   // Compliance
   if (strict) {

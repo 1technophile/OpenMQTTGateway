@@ -17,8 +17,8 @@ TEST(TestSendSherwood, SendDataOnly) {
             "m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
             "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560"
             "m560s1680m560s560m560s560m560s560m560s560m560s1680m560s1680"
-            "m560s1680m560s560m560s1680m560s1680m560s1680m560s108080"
-            "m8960s2240m560s108080", irsend.outputStr());
+            "m560s1680m560s560m560s1680m560s1680m560s1680m560s42560"
+            "m8960s2240m560s96320", irsend.outputStr());
 }
 
 // Test sending typical data with extra repeats.
@@ -32,9 +32,9 @@ TEST(TestSendSherwood, SendDataWithRepeats) {
             "m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
             "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560"
             "m560s1680m560s560m560s560m560s560m560s560m560s1680m560s1680"
-            "m560s1680m560s560m560s1680m560s1680m560s1680m560s108080"
-            "m8960s2240m560s108080"
-            "m8960s2240m560s108080", irsend.outputStr());
+            "m560s1680m560s560m560s1680m560s1680m560s1680m560s42560"
+            "m8960s2240m560s96320"
+            "m8960s2240m560s96320", irsend.outputStr());
 }
 
 // Test sending typical data with explicit no repeats.
@@ -49,8 +49,8 @@ TEST(TestSendSherwood, SendDataWithZeroRepeats) {
             "m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
             "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560"
             "m560s1680m560s560m560s560m560s560m560s560m560s1680m560s1680"
-            "m560s1680m560s560m560s1680m560s1680m560s1680m560s108080"
-            "m8960s2240m560s108080", irsend.outputStr());
+            "m560s1680m560s560m560s1680m560s1680m560s1680m560s42560"
+            "m8960s2240m560s96320", irsend.outputStr());
 }
 
 // Test that a typical Sherwood send decodes as the appropriate NEC value.
