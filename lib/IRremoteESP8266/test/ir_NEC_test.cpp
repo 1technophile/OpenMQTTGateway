@@ -15,13 +15,13 @@ TEST(TestSendNEC, SendDataOnly) {
             "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
             "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
             "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s108080", irsend.outputStr());
+            "m560s560m560s58240", irsend.outputStr());
   irsend.sendNEC(0xAA00FF55);
   EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
             "m560s1680m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
             "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680"
             "m560s1680m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
-            "m560s560m560s1680m560s560m560s1680m560s108080",
+            "m560s560m560s1680m560s560m560s1680m560s40320",
             irsend.outputStr());
 }
 
@@ -30,11 +30,11 @@ TEST(TestSendNEC, SendSmallData) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendNEC(0xA, 4);  // Send only 4 data bits.
-  EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s108080",
+  EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s87360",
             irsend.outputStr());
   irsend.sendNEC(0, 8);  // Send only 8 data bits.
   EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s108080", irsend.outputStr());
+            "m560s560m560s85120", irsend.outputStr());
   irsend.sendNEC(0x1234567890ABCDEF, 64);  // Send 64 data bits.
   EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s1680m560s560m560s560"
             "m560s1680m560s560m560s560m560s560m560s1680m560s1680m560s560"
@@ -45,7 +45,7 @@ TEST(TestSendNEC, SendSmallData) {
             "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s1680"
             "m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
             "m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s1680"
-            "m560s1680m560s108080", irsend.outputStr());
+            "m560s1680m560s22400", irsend.outputStr());
 }
 
 // Test sending with repeats.
@@ -54,18 +54,18 @@ TEST(TestSendNEC, SendWithRepeats) {
   irsend.begin();
   irsend.sendNEC(0, 8, 0);  // Send a command with 0 repeats.
   EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s108080", irsend.outputStr());
+            "m560s560m560s85120", irsend.outputStr());
   irsend.sendNEC(0xAA, 8, 1);  // Send a command with 1 repeat.
   EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
-            "m560s1680m560s560m560s108080"
-            "m8960s2240m560s108080",
+            "m560s1680m560s560m560s80640"
+            "m8960s2240m560s96320",
             irsend.outputStr());
   irsend.sendNEC(0xAA, 8, 3);  // Send a command with 3 repeats.
   EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
-            "m560s1680m560s560m560s108080"
-            "m8960s2240m560s108080"
-            "m8960s2240m560s108080"
-            "m8960s2240m560s108080",
+            "m560s1680m560s560m560s80640"
+            "m8960s2240m560s96320"
+            "m8960s2240m560s96320"
+            "m8960s2240m560s96320",
             irsend.outputStr());
 }
 
@@ -250,7 +250,7 @@ TEST(TestDecodeNEC, NoTrailingGap_Issue243) {
   EXPECT_EQ(0x4BB640BF, irsend.capture.value);
 
   // Add a zero length space to the message to test how it handles that as
-  // a end of command gap.
+  // an end of command gap.
   irsend.addGap(0);
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));

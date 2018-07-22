@@ -42,9 +42,8 @@
 #define RC6_36_TOGGLE_MASK     0x8000U  // (The 16th bit)
 
 // Common (getRClevel())
-#define MARK  0U
-#define SPACE 1U
-
+const int16_t kMARK = 0;
+const int16_t kSPACE = 1;
 
 #if SEND_RC5
 // Send a Philips RC-5/RC-5X packet.
@@ -282,7 +281,7 @@ void IRsend::sendRC6(uint64_t data, uint16_t nbits, uint16_t repeat) {
 }
 #endif  // SEND_RC6
 
-#if (DECODE_RC5 || DECODE_RC6)
+#if (DECODE_RC5 || DECODE_RC6 || DECODE_LASERTAG)
 // Gets one undecoded level at a time from the raw buffer.
 // The RC5/6 decoding is easier if the data is broken into time intervals.
 // E.g. if the buffer has MARK for 2 time intervals and SPACE for 1,
@@ -300,30 +299,39 @@ void IRsend::sendRC6(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Ref:
 //   https://en.wikipedia.org/wiki/Manchester_code
 int16_t IRrecv::getRClevel(decode_results *results,  uint16_t *offset,
-                           uint16_t *used, uint16_t bitTime) {
-  if (*offset >= results->rawlen)
-    return SPACE;  // After end of recorded buffer, assume SPACE.
+                           uint16_t *used, uint16_t bitTime,
+                           uint8_t tolerance, int16_t excess, uint16_t delta) {
+  DPRINT("DEBUG: getRClevel: offset = ");
+  DPRINTLN(uint64ToString(*offset));
+  if (*offset >= results->rawlen) {
+    DPRINTLN("DEBUG: getRClevel: SPACE, past end of rawbuf");
+    return kSPACE;  // After end of recorded buffer, assume SPACE.
+  }
   uint16_t width = results->rawbuf[*offset];
   //  If the value of offset is odd, it's a MARK. Even, it's a SPACE.
-  uint16_t val = ((*offset) % 2) ? MARK : SPACE;
+  uint16_t val = ((*offset) % 2) ? kMARK : kSPACE;
   // Check to see if we have hit an inter-message gap (> 20ms).
-  if (val == SPACE && width > 20000)
-    return SPACE;
-  int16_t correction = (val == MARK) ? MARK_EXCESS : -MARK_EXCESS;
+  if (val == kSPACE && width > 20000 - delta) {
+    DPRINTLN("DEBUG: getRClevel: SPACE, hit end of mesg gap.");
+    return kSPACE;
+  }
+  int16_t correction = (val == kMARK) ? excess : -excess;
 
   // Calculate the look-ahead for our current position in the buffer.
   uint16_t avail;
   // Note: We want to match in greedy order as the other way leads to
   //       mismatches due to overlaps induced by the correction and tolerance
   //       values.
-  if (match(width, 3 * bitTime + correction))
+  if (match(width, 3 * bitTime + correction, tolerance, delta)) {
     avail = 3;
-  else if (match(width, 2 * bitTime + correction))
+  } else if (match(width, 2 * bitTime + correction, tolerance, delta)) {
     avail = 2;
-  else if (match(width, bitTime + correction))
+  } else if (match(width, bitTime + correction, tolerance, delta)) {
     avail = 1;
-  else
+  } else {
+    DPRINTLN("DEBUG: getRClevel: Unexpected width. Exiting.");
     return -1;  // The width is not what we expected.
+  }
 
   (*used)++;  // Count another one of the avail slots as used.
   if (*used >= avail) {  // Are we out of look-ahead/avail slots?
@@ -331,10 +339,15 @@ int16_t IRrecv::getRClevel(decode_results *results,  uint16_t *offset,
     *used = 0;
     (*offset)++;
   }
+  if (val == kMARK) {
+    DPRINTLN("DEBUG: getRClevel: MARK");
+  } else {
+    DPRINTLN("DEBUG: getRClevel: SPACE");
+  }
 
   return val;
 }
-#endif  // (DECODE_RC5 || DECODE_RC6)
+#endif  // (DECODE_RC5 || DECODE_RC6 || DECODE_LASERTAG)
 
 #if DECODE_RC5
 // Decode the supplied RC-5/RC5X message.
@@ -371,14 +384,14 @@ bool IRrecv::decodeRC5(decode_results *results, uint16_t nbits, bool strict) {
 
   // Header
   // Get start bit #1.
-  if (getRClevel(results, &offset, &used, RC5_T1) != MARK) return false;
+  if (getRClevel(results, &offset, &used, RC5_T1) != kMARK) return false;
   // Get field/start bit #2 (inverted bit-7 of the command if RC-5X protocol)
   uint16_t actual_bits = 1;
   int16_t levelA = getRClevel(results, &offset, &used, RC5_T1);
   int16_t levelB = getRClevel(results, &offset, &used, RC5_T1);
-  if (levelA == SPACE && levelB == MARK) {  // Matched a 1.
+  if (levelA == kSPACE && levelB == kMARK) {  // Matched a 1.
     is_rc5x = false;
-  } else if (levelA == MARK && levelB == SPACE) {  // Matched a 0.
+  } else if (levelA == kMARK && levelB == kSPACE) {  // Matched a 0.
     if (nbits <= RC5_BITS) return false;  // Field bit must be '1' for RC5.
     is_rc5x = true;
     data = 1;
@@ -390,9 +403,9 @@ bool IRrecv::decodeRC5(decode_results *results, uint16_t nbits, bool strict) {
   for (; offset < results->rawlen; actual_bits++) {
     int16_t levelA = getRClevel(results, &offset, &used, RC5_T1);
     int16_t levelB = getRClevel(results, &offset, &used, RC5_T1);
-    if (levelA == SPACE && levelB == MARK)
+    if (levelA == kSPACE && levelB == kMARK)
       data = (data << 1) | 1;  // 1
-    else if (levelA == MARK && levelB == SPACE)
+    else if (levelA == kMARK && levelB == kSPACE)
       data <<= 1;  // 0
     else
       break;
@@ -472,8 +485,8 @@ bool IRrecv::decodeRC6(decode_results *results, uint16_t nbits, bool strict) {
   uint16_t used = 0;
 
   // Get the start bit. e.g. 1.
-  if (getRClevel(results, &offset, &used, tick) != MARK) return false;
-  if (getRClevel(results, &offset, &used, tick) != SPACE) return false;
+  if (getRClevel(results, &offset, &used, tick) != kMARK) return false;
+  if (getRClevel(results, &offset, &used, tick) != kSPACE) return false;
 
   uint16_t actual_bits;
   uint64_t data = 0;
@@ -491,9 +504,9 @@ bool IRrecv::decodeRC6(decode_results *results, uint16_t nbits, bool strict) {
     if (actual_bits == 3 &&
         levelB != getRClevel(results, &offset, &used, tick))
       return false;
-    if (levelA == MARK && levelB == SPACE)  // reversed compared to RC5
+    if (levelA == kMARK && levelB == kSPACE)  // reversed compared to RC5
       data = (data << 1) | 1;  // 1
-    else if (levelA == SPACE && levelB == MARK)
+    else if (levelA == kSPACE && levelB == kMARK)
       data <<= 1;  // 0
     else
       break;

@@ -42,7 +42,6 @@
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
-#define PanasonicBits 48U // Panasonic nr of bits (Pre data)
 
 #ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
@@ -53,19 +52,33 @@
   #define IR_Sony
   #define IR_DISH
   #define IR_RC5
+  #define IR_RC6
   #define IR_Sharp
   #define IR_SAMSUNG
   #define IR_PANASONIC
   #define IR_RCMM
+  #define IR_MITSUBISHI
+  #define IR_GICABLE
+  #define IR_MITSUBISHI2
+  #define IR_LASERTAG
+  #define IR_CARRIER_AC
+  #define IR_MIDEA
+  #define IR_NIKAI
+  #define IR_SHERWOOD
+  #define IR_DENON
+  #define IR_AIWA_RC_T501
+  #define IR_JVC
 #elif ESP32
   #define IR_Raw
   #define IR_COOLIX
   #define IR_Whynter
+  #define IR_Sony
   #define IR_LG
   #define IR_DISH
   #define IR_RC5
   #define IR_Sharp
   #define IR_SAMSUNG
+  #define IR_PANASONIC
 #else //IR supported protocols on arduino uncomment if you want to send with this protocol, NEC protocol is available per default
   //#define IR_COOLIX
   //#define IR_Whynter

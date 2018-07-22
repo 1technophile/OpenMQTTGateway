@@ -35,7 +35,7 @@ TEST(TestSendLG, SendDataOnly) {
       "m550s1600m550s550m550s1600m550s1600m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s550m550s1600m550s1600m550s1600m550s550"
       "m550s550m550s1600m550s550m550s1600m550s550m550s550m550s550m550s1600"
-      "m550s108050", irsend.outputStr());
+      "m550s51050", irsend.outputStr());
 
   irsend.reset();
   irsend.sendLG(0xB4B4AE51, LG32_BITS);
@@ -45,8 +45,8 @@ TEST(TestSendLG, SendDataOnly) {
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s1680m560s560"
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560m560s1680"
-      "m560s108080"
-      "m8950s2250m550s108050", irsend.outputStr());
+      "m560s44800"
+      "m8950s2250m550s96300", irsend.outputStr());
 }
 
 // Test sending with different repeats.
@@ -62,8 +62,8 @@ TEST(TestSendLG, SendWithRepeats) {
       "m550s1600m550s550m550s1600m550s1600m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s550m550s1600m550s1600m550s1600m550s550"
       "m550s550m550s1600m550s550m550s1600m550s550m550s550m550s550m550s1600"
-      "m550s108050"
-      "m8000s2250m550s108050", irsend.outputStr());
+      "m550s51050"
+      "m8000s2250m550s97250", irsend.outputStr());
 
   irsend.reset();
   irsend.sendLG(0xB4B4AE51, LG32_BITS, 1);
@@ -73,13 +73,13 @@ TEST(TestSendLG, SendWithRepeats) {
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s1680m560s560"
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560m560s1680"
-      "m560s108080"
-      "m8950s2250m550s108050"
-      "m8950s2250m550s108050", irsend.outputStr());
+      "m560s44800"
+      "m8950s2250m550s96300"
+      "m8950s2250m550s96300", irsend.outputStr());
 }
 
 // Test sending an atypical data size.
-TEST(TestSendLG, SendUsualSize) {
+TEST(TestSendLG, SendUnusualSize) {
   IRsendTest irsend(4);
   irsend.begin();
 
@@ -91,7 +91,7 @@ TEST(TestSendLG, SendUsualSize) {
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
-      "m550s108050", irsend.outputStr());
+      "m550s61400", irsend.outputStr());
 
   irsend.reset();
   irsend.sendLG(0x0, 64);
@@ -105,8 +105,8 @@ TEST(TestSendLG, SendUsualSize) {
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-      "m560s108080"
-      "m8950s2250m550s108050", irsend.outputStr());
+      "m560s26880"
+      "m8950s2250m550s96300", irsend.outputStr());
 }
 
 // Tests for encodeLG().

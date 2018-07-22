@@ -5,7 +5,6 @@
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 #include "IRutils.h"
 
 //                           SSSS   OOO   N   N  Y   Y
@@ -51,24 +50,12 @@
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/sirc.php
 void IRsend::sendSony(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  // Sony devices use a 40kHz IR carrier frequency & a 1/3 (33%) duty cycle.
-  enableIROut(40, 33);
-  IRtimer usecs = IRtimer();
-
-  for (uint16_t i = 0; i <= repeat; i++) {  // Typically loop 3 or more times.
-    usecs.reset();
-    // Header
-    mark(SONY_HDR_MARK);
-    space(SONY_SPACE);
-    // Data
-    sendData(SONY_ONE_MARK, SONY_SPACE, SONY_ZERO_MARK, SONY_SPACE,
-             data, nbits, true);
-    // Footer
-    // The Sony protocol requires us to wait 45ms from start of a code to the
-    // start of the next one. A 10ms minimum gap is also required.
-    space(std::max(SONY_MIN_GAP, SONY_RPT_LENGTH - usecs.elapsed()));
-  }
-  // A space() is always performed last, so no need to turn off the LED.
+  sendGeneric(SONY_HDR_MARK, SONY_SPACE,
+              SONY_ONE_MARK, SONY_SPACE,
+              SONY_ZERO_MARK, SONY_SPACE,
+              0,  // No Footer mark.
+              SONY_MIN_GAP, SONY_RPT_LENGTH,
+              data, nbits, 40, true, repeat, 33);
 }
 
 // Convert Sony/SIRC command, address, & extended bits into sendSony format.

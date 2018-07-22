@@ -3,7 +3,8 @@
  * Version 0.2 June, 2017
  * Copyright 2015 Mark Szabo
  *
- * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+ * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * as specified by IR_LED below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -41,7 +42,9 @@ MDNSResponder mdns;
 
 ESP8266WebServer server(80);
 
-IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+
+IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
 
 void handleRoot() {
   server.send(200, "text/html",
@@ -61,7 +64,9 @@ void handleIr() {
   for (uint8_t i = 0; i < server.args(); i++) {
     if (server.argName(i) == "code") {
       uint32_t code = strtoul(server.arg(i).c_str(), NULL, 10);
+#if SEND_NEC
       irsend.sendNEC(code, 32);
+#endif  // SEND_NEC
     }
   }
   handleRoot();
@@ -97,7 +102,7 @@ void setup(void) {
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.localIP().toString());
 
   if (mdns.begin("esp8266", WiFi.localIP())) {
     Serial.println("MDNS responder started");

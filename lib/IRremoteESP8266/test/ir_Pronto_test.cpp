@@ -129,6 +129,12 @@ TEST(TestSendPronto, NonRepeatingCode) {
   irsend.reset();
   irsend.sendPronto(pronto_test, 108);
   irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(SONY, irsend.capture.decode_type);
+  EXPECT_EQ(SONY_12_BITS, irsend.capture.bits);
+  EXPECT_EQ(0x10, irsend.capture.value);
+  EXPECT_EQ(0x1, irsend.capture.address);
+  EXPECT_EQ(0x0, irsend.capture.command);
   EXPECT_EQ(
       "m2400s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
@@ -142,18 +148,18 @@ TEST(TestSendPronto, NonRepeatingCode) {
       "m2400s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m600s600m600s600", irsend.outputStr());
-  EXPECT_TRUE(irrecv.decode(&irsend.capture));
-  EXPECT_EQ(SONY, irsend.capture.decode_type);
-  EXPECT_EQ(SONY_12_BITS, irsend.capture.bits);
-  EXPECT_EQ(0x10, irsend.capture.value);
-  EXPECT_EQ(0x1, irsend.capture.address);
-  EXPECT_EQ(0x0, irsend.capture.command);
 
   // Now try repeating it.
   // As it has no repeat sequence, we shouldn't repeat it. (I think)
   irsend.reset();
   irsend.sendPronto(pronto_test, 108, 3);
   irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(SONY, irsend.capture.decode_type);
+  EXPECT_EQ(SONY_12_BITS, irsend.capture.bits);
+  EXPECT_EQ(0x10, irsend.capture.value);
+  EXPECT_EQ(0x1, irsend.capture.address);
+  EXPECT_EQ(0x0, irsend.capture.command);
   EXPECT_EQ(
       "m2400s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
@@ -167,12 +173,6 @@ TEST(TestSendPronto, NonRepeatingCode) {
       "m2400s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m600s600m600s600", irsend.outputStr());
-  EXPECT_TRUE(irrecv.decode(&irsend.capture));
-  EXPECT_EQ(SONY, irsend.capture.decode_type);
-  EXPECT_EQ(SONY_12_BITS, irsend.capture.bits);
-  EXPECT_EQ(0x10, irsend.capture.value);
-  EXPECT_EQ(0x1, irsend.capture.address);
-  EXPECT_EQ(0x0, irsend.capture.command);
 }
 
 // Test sending a Pronto code that only has a repeat sequence (Sony).
@@ -195,22 +195,28 @@ TEST(TestSendPronto, RepeatSequenceOnlyForSony) {
   irsend.reset();
   irsend.sendPronto(pronto_test, 46);
   irsend.makeDecodeResult();
-  EXPECT_EQ(
-      "m2400s600"
-      "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
-      "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
-      "m600s600m600s600m1200s600m600s25350", irsend.outputStr());
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(SONY, irsend.capture.decode_type);
   EXPECT_EQ(SONY_20_BITS, irsend.capture.bits);
   EXPECT_EQ(0x74B92, irsend.capture.value);
   EXPECT_EQ(0x1A, irsend.capture.address);
   EXPECT_EQ(0x24AE, irsend.capture.command);
+  EXPECT_EQ(
+      "m2400s600"
+      "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
+      "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
+      "m600s600m600s600m1200s600m600s25350", irsend.outputStr());
 
   // Send the Pronto code with 2 repeats.
   irsend.reset();
   irsend.sendPronto(pronto_test, 46, SONY_MIN_REPEAT);
   irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(SONY, irsend.capture.decode_type);
+  EXPECT_EQ(SONY_20_BITS, irsend.capture.bits);
+  EXPECT_EQ(0x74B92, irsend.capture.value);
+  EXPECT_EQ(0x1A, irsend.capture.address);
+  EXPECT_EQ(0x24AE, irsend.capture.command);
   EXPECT_EQ(
       "m2400s600"
       "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
@@ -224,13 +230,6 @@ TEST(TestSendPronto, RepeatSequenceOnlyForSony) {
       "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
       "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
       "m600s600m600s600m1200s600m600s25350", irsend.outputStr());
-
-  EXPECT_TRUE(irrecv.decode(&irsend.capture));
-  EXPECT_EQ(SONY, irsend.capture.decode_type);
-  EXPECT_EQ(SONY_20_BITS, irsend.capture.bits);
-  EXPECT_EQ(0x74B92, irsend.capture.value);
-  EXPECT_EQ(0x1A, irsend.capture.address);
-  EXPECT_EQ(0x24AE, irsend.capture.command);
 }
 
 // Test sending a Pronto code that only has a repeat sequence (Panasonic).
@@ -260,6 +259,12 @@ TEST(TestSendPronto, RepeatSequenceOnlyForPanasonic) {
   irsend.reset();
   irsend.sendPronto(pronto_test, 104);
   irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(PANASONIC, irsend.capture.decode_type);
+  EXPECT_EQ(PANASONIC_BITS, irsend.capture.bits);
+  EXPECT_EQ(0x400401007C7D, irsend.capture.value);
+  EXPECT_EQ(0x4004, irsend.capture.address);
+  EXPECT_EQ(0x1007C7D, irsend.capture.command);
   EXPECT_EQ(
       "m3456s1701"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
@@ -269,13 +274,6 @@ TEST(TestSendPronto, RepeatSequenceOnlyForPanasonic) {
       "m432s432m432s1296m432s1296m432s1296m432s1296m432s1296m432s432m432s432"
       "m432s432m432s1296m432s1296m432s1296m432s1296m432s1296m432s432m432s1296"
       "m432s73224", irsend.outputStr());
-
-  EXPECT_TRUE(irrecv.decode(&irsend.capture));
-  EXPECT_EQ(PANASONIC, irsend.capture.decode_type);
-  EXPECT_EQ(PANASONIC_BITS, irsend.capture.bits);
-  EXPECT_EQ(0x400401007C7D, irsend.capture.value);
-  EXPECT_EQ(0x4004, irsend.capture.address);
-  EXPECT_EQ(0x1007C7D, irsend.capture.command);
 }
 
 
@@ -303,6 +301,12 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   irsend.reset();
   irsend.sendPronto(pronto_test, 76);
   irsend.makeDecodeResult();
+  EXPECT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(NEC, irsend.capture.decode_type);
+  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(0x18E710EF, irsend.capture.value);
+  EXPECT_EQ(0x18, irsend.capture.address);
+  EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
       "m8892s4446"
       "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
@@ -310,17 +314,17 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
       "m546s546m546s546m546s546m546s1664m546s546m546s546m546s546m546s546"
       "m546s1664m546s1664m546s1664m546s546m546s1664m546s1664m546s1664m546s1664"
       "m546s39858", irsend.outputStr());
+
+  // Send it again with a single repeat.
+  irsend.reset();
+  irsend.sendPronto(pronto_test, 76, 1);
+  irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
   EXPECT_EQ(NEC_BITS, irsend.capture.bits);
   EXPECT_EQ(0x18E710EF, irsend.capture.value);
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
-
-  // Send it again with a single repeat.
-  irsend.reset();
-  irsend.sendPronto(pronto_test, 76, 1);
-  irsend.makeDecodeResult();
   EXPECT_EQ(
       "m8892s4446"
       "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
@@ -329,17 +333,17 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
       "m546s1664m546s1664m546s1664m546s546m546s1664m546s1664m546s1664m546s1664"
       "m546s39858"
       "m8892s2210m546s95212", irsend.outputStr());
+
+  // Send it again with a two repeats.
+  irsend.reset();
+  irsend.sendPronto(pronto_test, 76, 2);
+  irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
   EXPECT_EQ(NEC_BITS, irsend.capture.bits);
   EXPECT_EQ(0x18E710EF, irsend.capture.value);
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
-
-  // Send it again with a two repeats.
-  irsend.reset();
-  irsend.sendPronto(pronto_test, 76, 2);
-  irsend.makeDecodeResult();
   EXPECT_EQ(
       "m8892s4446"
       "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
@@ -349,10 +353,4 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
       "m546s39858"
       "m8892s2210m546s95212"
       "m8892s2210m546s95212", irsend.outputStr());
-  EXPECT_TRUE(irrecv.decode(&irsend.capture));
-  EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
-  EXPECT_EQ(0x18E710EF, irsend.capture.value);
-  EXPECT_EQ(0x18, irsend.capture.address);
-  EXPECT_EQ(0x8, irsend.capture.command);
 }

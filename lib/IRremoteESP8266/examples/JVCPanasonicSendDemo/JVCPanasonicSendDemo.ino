@@ -4,7 +4,8 @@
  * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009, Copyright 2009 Ken Shirriff, http://arcfn.com
  * JVC and Panasonic protocol added by Kristian Lauszus (Thanks to zenwheel and other people at the original blog post)
  *
- * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+ * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * as specified by IR_LED below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -38,7 +39,9 @@
 
 #define JVCPower              0xC5E8
 
-IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+
+IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
 
 void setup() {
   irsend.begin();
@@ -46,11 +49,19 @@ void setup() {
 
 void loop() {
   // This should turn your TV on and off
+#if SEND_PANASONIC
   irsend.sendPanasonic(PanasonicAddress, PanasonicPower);
+#else  // SEND_PANASONIC
+  Serial.println("Can't send because SEND_PANASONIC has been disabled.");
+#endif  // SEND_PANASONIC
 
+#if SEND_JVC
   irsend.sendJVC(JVCPower, 16, 0);  // hex value, 16 bits, no repeat
   // see http://www.sbprojects.com/knowledge/ir/jvc.php for information
   delayMicroseconds(50);
   irsend.sendJVC(JVCPower, 16, 1);  // hex value, 16 bits, repeat
   delayMicroseconds(50);
+#else  // SEND_JVC
+  Serial.println("Can't send because SEND_JVC has been disabled.");
+#endif  // SEND_JVC
 }

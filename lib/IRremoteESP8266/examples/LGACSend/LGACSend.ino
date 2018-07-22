@@ -45,7 +45,11 @@ void Ac_Send_Code(uint32_t code) {
   Serial.print(" : ");
   Serial.println(code, HEX);
 
+#if SEND_LG
   irsend.sendLG(code, 28);
+#else  // SEND_LG
+  Serial.println("Can't send because SEND_LG has been disabled.");
+#endif  // SEND_LG
 }
 
 void Ac_Activate(unsigned int temperature, unsigned int air_flow,
@@ -171,8 +175,8 @@ void loop() {
      # 4 : air_flow        0 ~ 3 : flow
      # + : temp + 1
      # - : temp - 1
-     # c : cooling         
-     # h : heating         
+     # c : cooling
+     # h : heating
      # m : change cooling to air clean, air clean to cooling
   */
   Serial.print("a : ");

@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include "IRsend.h"
-#include "IRtimer.h"
 
 //                PPPPPP                        tt
 //                PP   PP rr rr   oooo  nn nnn  tt     oooo

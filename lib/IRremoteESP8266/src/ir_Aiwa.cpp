@@ -2,7 +2,6 @@
 
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 
 //                         AAA   IIIII  W   W   AAA
 //                        A   A    I    W   W  A   A
@@ -22,7 +21,7 @@
 #define AIWA_RC_T501_POST_DATA          1ULL
 
 #if SEND_AIWA_RC_T501
-// Send a Aiwa RC T501 formatted message.
+// Send an Aiwa RC T501 formatted message.
 //
 // Args:
 //   data:   The message to be sent.
