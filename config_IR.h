@@ -40,7 +40,7 @@
 #define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
 
-#define pubIRunknownPrtcl true // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
+#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
 
 #ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
@@ -52,6 +52,7 @@
   #define IR_Sony
   #define IR_DISH
   #define IR_RC5
+  #define IR_RC6
   #define IR_Sharp
   #define IR_SAMSUNG
   #define IR_PANASONIC
