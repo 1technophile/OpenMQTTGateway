@@ -61,7 +61,7 @@
 #include <ArduinoJson.h>
 
 // Modules config inclusion
-#if defined(ZgatewayRF) || defined(ZgatewayRF2)
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
   #include "config_RF.h"
 #endif
 #ifdef ZgatewayRF315
@@ -355,6 +355,9 @@ void setup()
   #ifdef ZgatewayRF2
     setupRF2();
   #endif
+  #ifdef ZgatewayPilight
+    setupPilight();
+  #endif
   #ifdef ZgatewaySRFB
     setupSRFB();
   #endif
@@ -632,6 +635,13 @@ void loop()
       timer_led_receive = millis();
       }
     #endif
+    #ifdef ZgatewayPilight
+      if(PilighttoMQTT()){
+      trc(F("PilighttoMQTT OK"));
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
+    #endif
     #ifdef ZgatewaySRFB
       if(SRFBtoMQTT())
       trc(F("SRFBtoMQTT OK"));
@@ -717,6 +727,9 @@ void stateMeasures(){
       #endif
       #ifdef ZgatewayRF2
           modules = modules  + ZgatewayRF2;
+      #endif
+      #ifdef ZgatewayPilight
+          modules = modules  + ZgatewayPilight;
       #endif
       #ifdef ZgatewaySRFB
           modules = modules  + ZgatewaySRFB;
@@ -807,6 +820,9 @@ digitalWrite(led_send, LOW);
 #endif
 #ifdef ZgatewayRF2
   MQTTtoRF2(topicOri, datacallback);
+#endif
+#ifdef ZgatewayPilight
+  MQTTtoPilight(topicOri, datacallback);
 #endif
 #ifdef Zgateway2G
   MQTTto2G(topicOri, datacallback);
