@@ -64,6 +64,7 @@ RF supported protocols
 //433Mhz Pilight MQTT Subjects and keys
 #define subjectMQTTtoPilight  Base_Topic Gateway_Name "/commands/MQTTtoPilight"
 #define subjectPilighttoMQTT  Base_Topic Gateway_Name "/PilighttoMQTT"
+#define PilightRAW "RAW"
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
