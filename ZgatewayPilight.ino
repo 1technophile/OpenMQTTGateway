@@ -32,17 +32,6 @@
 
 ESPiLight rf(RF_EMITTER_PIN);  // use -1 to disable transmitter
 
-struct Pilightrxd
-{
-  String protocol;
-  String deviceID;
-  String status;
-  String message;
-  bool hasNewData;
-};
-
-Pilightrxd pilightrd;
-
 void setupPilight(){
     #ifndef ZgatewayRF && ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 as far as I can tell 
         rf.setCallback(pilightCallback);
@@ -57,39 +46,27 @@ void setupPilight(){
 
 boolean PilighttoMQTT(){
   rf.loop();
-
-  if(pilightrd.hasNewData){
-    
-    pilightrd.hasNewData=false;
-    trc(F("Rcv. Pilight"));
-    String MQTTprotocol;
-    String MQTTdeviceID;
-    String MQTTmessage;
-
-    MQTTprotocol = String(pilightrd.protocol);
-    MQTTdeviceID = String(pilightrd.deviceID);
-    MQTTmessage = String(pilightrd.message);
-    String MQTTPilightstring;
-    MQTTPilightstring = subjectPilighttoMQTT+String("/")+MQTTprotocol+String("/")+MQTTdeviceID;
-    trc(F("Adv data PilighttoMQTT"));
-    client.publish((char *)MQTTPilightstring.c_str(),(char *)MQTTmessage.c_str());  
-    return true;
-    
-  }
-  return false;
 }
 
 void pilightCallback(const String &protocol, const String &message, int status,
                 size_t repeats, const String &deviceID) {
 
   if (status == VALID) {
-    pilightrd.protocol=protocol;
-    pilightrd.deviceID=deviceID;
-    pilightrd.status=status;
-    pilightrd.message=message;
-    pilightrd.hasNewData=true;
-  }
 
+    trc(F("Rcv. Pilight"));
+    String MQTTprotocol;
+    String MQTTdeviceID;
+    String MQTTmessage;
+
+    MQTTprotocol = String(protocol);
+    MQTTdeviceID = String(deviceID);
+    MQTTmessage = String(message);
+    String MQTTPilightstring;
+    MQTTPilightstring = subjectPilighttoMQTT+String("/")+MQTTprotocol+String("/")+MQTTdeviceID;
+    trc(F("Adv data PilighttoMQTT"));
+    client.publish((char *)MQTTPilightstring.c_str(),(char *)MQTTmessage.c_str());      
+
+  }
 }
 
 void MQTTtoPilight(char * topicOri, char * datacallback) {
