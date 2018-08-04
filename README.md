@@ -20,3 +20,7 @@ Download OpenMQTTGateway from [here](https://github.com/1technophile/OpenMQTTGat
 
 A list of supported 433mhz devices is available [here](https://community.home-assistant.io/t/433tomqttto433-gateway-device-list/7819):  
 https://community.home-assistant.io/t/433tomqttto433-gateway-device-list/7819
+
+If you want to buy a coffee or other beverage so as to give me some support, here is a way to do it : 
+
+<a href="https://www.buymeacoffee.com/1technophile" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
