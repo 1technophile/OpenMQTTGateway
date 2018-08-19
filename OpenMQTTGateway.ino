@@ -254,7 +254,7 @@ void setup()
     trc(WiFi.macAddress()); 
     
     trc(F("OpenMQTTGateway ip: "));
-    trc(WiFi.localIP());
+    trc(WiFi.localIP().toString());
     
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
