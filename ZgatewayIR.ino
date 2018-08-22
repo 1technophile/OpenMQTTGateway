@@ -31,7 +31,11 @@
   #include <IRremoteESP8266.h>
   #include <IRsend.h>  // Needed if you want to send IR commands.
   #include <IRrecv.h>  // Needed if you want to receive IR commands.
-  IRrecv irrecv(IR_RECEIVER_PIN);
+  #ifdef DumpMode // in dump mode we increase the size of the buffer to catch big codes
+    IRrecv irrecv(IR_RECEIVER_PIN, 1024, 15U, true);
+  #else
+    IRrecv irrecv(IR_RECEIVER_PIN);
+  #endif
   IRsend irsend(IR_EMITTER_PIN);
 #else
   #include <IRremote.h>
