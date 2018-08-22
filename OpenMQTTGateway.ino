@@ -88,6 +88,9 @@
 #ifdef ZsensorHCSR501
   #include "config_HCSR501.h"
 #endif
+#ifdef ZsensorGPIOInput
+  #include "config_GPIOInput.h"
+#endif
 #ifdef ZsensorADC
   #include "config_ADC.h"
 #endif
@@ -106,7 +109,9 @@
 #ifdef ZgatewayRFM69
   #include "config_RFM69.h"
 #endif
-
+#ifdef ZsensorGPIOInput
+  #include "config_RFM69.h"
+#endif
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
 #define array_size 12
@@ -370,6 +375,9 @@ void setup()
   #ifdef ZsensorHCSR501
     setupHCSR501();
   #endif
+  #ifdef ZsensorGPIOInput
+    setupGPIOInput();
+  #endif
 }
 
 
@@ -606,6 +614,9 @@ void loop()
     #ifdef ZsensorHCSR501
       MeasureHCSR501();
     #endif
+    #ifdef ZsensorGPIOInput
+      MeasureGPIOInput();
+    #endif
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
@@ -732,6 +743,9 @@ void stateMeasures(){
       #endif
       #ifdef ZsensorHCSR501
           modules = modules  + ZsensorHCSR501;
+      #endif
+      #ifdef ZsensorGPIOInput
+          modules = modules  + ZsensorGPIOInput;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
