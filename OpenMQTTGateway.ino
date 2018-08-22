@@ -109,9 +109,6 @@
 #ifdef ZgatewayRFM69
   #include "config_RFM69.h"
 #endif
-#ifdef ZsensorGPIOInput
-  #include "config_RFM69.h"
-#endif
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
 #define array_size 12
