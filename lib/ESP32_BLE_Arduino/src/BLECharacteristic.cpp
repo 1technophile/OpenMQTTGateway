@@ -683,6 +683,43 @@ void BLECharacteristic::setValue(std::string value) {
 	setValue((uint8_t*)(value.data()), value.length());
 } // setValue
 
+void BLECharacteristic::setValue(uint16_t& data16) {
+	uint8_t temp[2];
+	temp[0]=data16;
+	temp[1]=data16>>8;
+	setValue(temp, 2);
+} // setValue
+
+void BLECharacteristic::setValue(uint32_t& data32) {
+	uint8_t temp[4];
+	temp[0]=data32;
+	temp[1]=data32>>8;
+	temp[2]=data32>>16;
+	temp[3]=data32>>24;
+	setValue(temp, 4);
+} // setValue
+
+void BLECharacteristic::setValue(int& data32) {
+	uint8_t temp[4];
+	temp[0]=data32;
+	temp[1]=data32>>8;
+	temp[2]=data32>>16;
+	temp[3]=data32>>24;
+	setValue(temp, 4);
+} // setValue
+
+void BLECharacteristic::setValue(float& data32) {
+	uint8_t temp[4];
+	*((float *)temp) = data32;
+	setValue(temp, 4);
+} // setValue
+
+void BLECharacteristic::setValue(double& data64) {
+	uint8_t temp[8];
+	*((double *)temp) = data64;
+	setValue(temp, 8);
+} // setValue
+
 
 /**
  * @brief Set the Write No Response property value.

@@ -91,6 +91,16 @@ void BLEAdvertising::setAppearance(uint16_t appearance) {
 	m_advData.appearance = appearance;
 } // setAppearance
 
+void BLEAdvertising::setMinInterval(uint16_t mininterval) {
+	m_advData.min_interval = mininterval;
+	m_advParams.adv_int_min = mininterval;
+} // setMinInterval
+
+void BLEAdvertising::setMaxInterval(uint16_t maxinterval) {
+	m_advData.max_interval = maxinterval;
+	m_advParams.adv_int_max = maxinterval;
+} // setMaxInterval
+
 
 /**
  * @brief Set the filtering for the scan filter.

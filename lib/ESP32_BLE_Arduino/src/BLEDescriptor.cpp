@@ -155,7 +155,7 @@ void BLEDescriptor::handleGATTServerEvent(
 					(uint32_t)m_pCharacteristic->getService()->getLastCreatedCharacteristic());
 					*/
 			if (m_pCharacteristic != nullptr &&
-					m_bleUUID.equals(BLEUUID(param->add_char_descr.char_uuid)) &&
+					m_bleUUID.equals(BLEUUID(param->add_char_descr.descr_uuid)) &&
 					m_pCharacteristic->getService()->getHandle() == param->add_char_descr.service_handle &&
 					m_pCharacteristic == m_pCharacteristic->getService()->getLastCreatedCharacteristic()) {
 				setHandle(param->add_char_descr.attr_handle);

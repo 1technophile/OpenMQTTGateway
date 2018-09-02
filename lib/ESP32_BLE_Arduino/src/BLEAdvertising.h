@@ -29,13 +29,12 @@ public:
 	void setPartialServices(BLEUUID uuid);
 	void setServiceData(BLEUUID uuid, std::string data);
 	void setShortName(std::string name);
+	void        addData(std::string data);  // Add data to the payload.
+	std::string getPayload();               // Retrieve the current advert payload.
 
 private:
 	friend class BLEAdvertising;
 	std::string m_payload;   // The payload of the advertisement.
-
-	void        addData(std::string data);  // Add data to the payload.
-	std::string getPayload();               // Retrieve the current advert payload.
 };   // BLEAdvertisementData
 
 
@@ -52,6 +51,8 @@ public:
 	void start();
 	void stop();
 	void setAppearance(uint16_t appearance);
+	void setMaxInterval(uint16_t maxinterval);
+	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(BLEAdvertisementData& advertisementData);
 	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
 	void setScanResponseData(BLEAdvertisementData& advertisementData);

@@ -39,9 +39,10 @@ public:
 	BLEUUID     getServiceDataUUID();
 	BLEUUID     getServiceUUID();
 	int8_t      getTXPower();
+	uint8_t* 	getPayload();
 
 
-	bool		    isAdvertisingService(BLEUUID uuid);
+	bool		isAdvertisingService(BLEUUID uuid);
 	bool        haveAppearance();
 	bool        haveManufacturerData();
 	bool        haveName();
@@ -69,6 +70,7 @@ private:
 	void setServiceUUID(const char* serviceUUID);
 	void setServiceUUID(BLEUUID serviceUUID);
 	void setTXPower(int8_t txPower);
+	void setPayload(uint8_t* payload);
 
 
 	bool m_haveAppearance;
@@ -92,6 +94,7 @@ private:
 	int8_t      m_txPower;
 	std::string m_serviceData;
 	BLEUUID     m_serviceDataUUID;
+	uint8_t*	m_payload;
 };
 
 /**

@@ -30,6 +30,7 @@
 #include "GeneralUtils.h"
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
+#include "esp32-hal-bt.h"
 #endif
 
 static const char* LOG_TAG = "BLEDevice";
@@ -99,9 +100,11 @@ uint16_t   BLEDevice::m_localMTU = 23;
 	switch(event) {
 		case ESP_GATTS_CONNECT_EVT: {
 			BLEDevice::m_localMTU = 23;
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			if(BLEDevice::m_securityLevel){
 				esp_ble_set_encryption(param->connect.remote_bda, BLEDevice::m_securityLevel);
 			}
+#endif	// CONFIG_BLE_SMP_ENABLE
 			break;
 		} // ESP_GATTS_CONNECT_EVT
 
@@ -148,9 +151,11 @@ uint16_t   BLEDevice::m_localMTU = 23;
 					ESP_LOGE(LOG_TAG, "esp_ble_gattc_send_mtu_req: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 				}
 			}
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			if(BLEDevice::m_securityLevel){
 				esp_ble_set_encryption(param->connect.remote_bda, BLEDevice::m_securityLevel);
 			}
+#endif	// CONFIG_BLE_SMP_ENABLE
 			break;
 		} // ESP_GATTC_CONNECT_EVT
 
@@ -190,16 +195,20 @@ uint16_t   BLEDevice::m_localMTU = 23;
 			 break;
 		 case ESP_GAP_BLE_NC_REQ_EVT:
 			 ESP_LOGI(LOG_TAG, "ESP_GAP_BLE_NC_REQ_EVT");
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			if(BLEDevice::m_securityCallbacks!=nullptr){
 			 	 esp_ble_confirm_reply(param->ble_security.ble_req.bd_addr, BLEDevice::m_securityCallbacks->onConfirmPIN(param->ble_security.key_notif.passkey));
 			}
+#endif	// CONFIG_BLE_SMP_ENABLE
 			 break;
 		 case ESP_GAP_BLE_PASSKEY_REQ_EVT:                           /* passkey request event */
 			ESP_LOGI(LOG_TAG, "ESP_GAP_BLE_PASSKEY_REQ_EVT: ");
 			// esp_log_buffer_hex(LOG_TAG, m_remote_bda, sizeof(m_remote_bda));
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			if(BLEDevice::m_securityCallbacks!=nullptr){
 				esp_ble_passkey_reply(param->ble_security.ble_req.bd_addr, true, BLEDevice::m_securityCallbacks->onPassKeyRequest());
 			}
+#endif	// CONFIG_BLE_SMP_ENABLE
 			break;
 			/*
 			 * TODO should we add white/black list comparison?
@@ -208,12 +217,14 @@ uint16_t   BLEDevice::m_localMTU = 23;
 			 /* send the positive(true) security response to the peer device to accept the security request.
 			 If not accept the security request, should sent the security response with negative(false) accept value*/
 			 ESP_LOGI(LOG_TAG, "ESP_GAP_BLE_SEC_REQ_EVT");
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			if(BLEDevice::m_securityCallbacks!=nullptr){
 				esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, BLEDevice::m_securityCallbacks->onSecurityRequest());
 			}
 			else{
 				esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
 			}
+#endif	// CONFIG_BLE_SMP_ENABLE
 			break;
 			 /*
 			  *
@@ -221,19 +232,27 @@ uint16_t   BLEDevice::m_localMTU = 23;
 		 case ESP_GAP_BLE_PASSKEY_NOTIF_EVT:  ///the app will receive this evt when the IO  has Output capability and the peer device IO has Input capability.
 			 ///show the passkey number to the user to input it in the peer deivce.
 			 ESP_LOGI(LOG_TAG, "ESP_GAP_BLE_PASSKEY_NOTIF_EVT");
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			if(BLEDevice::m_securityCallbacks!=nullptr){
 				ESP_LOGI(LOG_TAG, "passKey = %d", param->ble_security.key_notif.passkey);
 				BLEDevice::m_securityCallbacks->onPassKeyNotify(param->ble_security.key_notif.passkey);
 			}
+#endif	// CONFIG_BLE_SMP_ENABLE
 			 break;
 		 case ESP_GAP_BLE_KEY_EVT:
 			 //shows the ble key type info share with peer device to the user.
+			 ESP_LOGI(LOG_TAG, "ESP_GAP_BLE_KEY_EVT");
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			 ESP_LOGI(LOG_TAG, "key type = %s", BLESecurity::esp_key_type_to_str(param->ble_security.ble_key.key_type));
+#endif	// CONFIG_BLE_SMP_ENABLE
 			 break;
 		 case ESP_GAP_BLE_AUTH_CMPL_EVT:
+			 ESP_LOGI(LOG_TAG, "ESP_GAP_BLE_AUTH_CMPL_EVT");
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			 if(BLEDevice::m_securityCallbacks!=nullptr){
 				 BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
 			 }
+#endif	// CONFIG_BLE_SMP_ENABLE
 			 break;
 		default: {
 			break;
@@ -313,14 +332,21 @@ uint16_t   BLEDevice::m_localMTU = 23;
 	if(!initialized){
 		initialized = true;   // Set the initialization flag to ensure we are only initialized once.
 
-		esp_err_t errRc = ::nvs_flash_init();
+		esp_err_t errRc = ESP_OK;
+#ifdef ARDUINO_ARCH_ESP32
+		if (!btStart()) {
+			errRc = ESP_FAIL;
+			return;
+		}
+#else
+		errRc = ::nvs_flash_init();
 		if (errRc != ESP_OK) {
 			ESP_LOGE(LOG_TAG, "nvs_flash_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 			return;
 		}
 
-	  esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-	  errRc = esp_bt_controller_init(&bt_cfg);
+		esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+		errRc = esp_bt_controller_init(&bt_cfg);
 		if (errRc != ESP_OK) {
 			ESP_LOGE(LOG_TAG, "esp_bt_controller_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 			return;
@@ -341,17 +367,23 @@ uint16_t   BLEDevice::m_localMTU = 23;
 			return;
 		}
 #endif
+#endif
 
-		errRc = esp_bluedroid_init();
-		if (errRc != ESP_OK) {
-			ESP_LOGE(LOG_TAG, "esp_bluedroid_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+		esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
+		if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
+			errRc = esp_bluedroid_init();
+			if (errRc != ESP_OK) {
+				ESP_LOGE(LOG_TAG, "esp_bluedroid_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				return;
+			}
 		}
 
-		errRc = esp_bluedroid_enable();
-		if (errRc != ESP_OK) {
-			ESP_LOGE(LOG_TAG, "esp_bluedroid_enable: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+		if (bt_state != ESP_BLUEDROID_STATUS_ENABLED){
+			errRc = esp_bluedroid_enable();
+			if (errRc != ESP_OK) {
+				ESP_LOGE(LOG_TAG, "esp_bluedroid_enable: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				return;
+			}
 		}
 
 		errRc = esp_ble_gap_register_callback(BLEDevice::gapEventHandler);
@@ -382,12 +414,14 @@ uint16_t   BLEDevice::m_localMTU = 23;
 			return;
 		};
 
+#ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 		esp_ble_io_cap_t iocap = ESP_IO_CAP_NONE;
 		errRc = ::esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
 		if (errRc != ESP_OK) {
 			ESP_LOGE(LOG_TAG, "esp_ble_gap_set_security_param: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 			return;
 		};
+#endif // CONFIG_BLE_SMP_ENABLE
 	}
 	vTaskDelay(200/portTICK_PERIOD_MS); // Delay for 200 msecs as a workaround to an apparent Arduino environment issue.
 } // init
@@ -506,5 +540,9 @@ esp_err_t BLEDevice::setMTU(uint16_t mtu) {
  */
 uint16_t BLEDevice::getMTU() {
 	return m_localMTU;
+}
+
+bool BLEDevice::getInitialized() {
+	return initialized;
 }
 #endif // CONFIG_BT_ENABLED

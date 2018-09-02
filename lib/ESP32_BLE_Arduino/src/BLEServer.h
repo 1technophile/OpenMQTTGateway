@@ -40,10 +40,14 @@ public:
 	void        setByUUID(const char* uuid, BLEService* service);
 	void        setByUUID(BLEUUID uuid, BLEService* service);
 	std::string toString();
+	BLEService* getFirst();
+	BLEService* getNext();
+	void 		removeService(BLEService *service);
 
 private:
-	std::map<std::string, BLEService*> m_uuidMap;
 	std::map<uint16_t, BLEService*>    m_handleMap;
+	std::map<BLEService*, std::string> m_uuidMap;
+	std::map<BLEService*, std::string>::iterator m_iterator;
 };
 
 
@@ -54,10 +58,11 @@ class BLEServer {
 public:
 	uint32_t        getConnectedCount();
 	BLEService*     createService(const char* uuid);	
-	BLEService*     createService(BLEUUID uuid, uint32_t numHandles=15);
+	BLEService*     createService(BLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
 	BLEAdvertising* getAdvertising();
 	void            setCallbacks(BLEServerCallbacks* pCallbacks);
 	void            startAdvertising();
+	void 			removeService(BLEService *service);
 
 
 private:

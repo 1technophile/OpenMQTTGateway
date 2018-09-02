@@ -42,6 +42,7 @@ public:
 	static void		   setSecurityCallbacks(BLESecurityCallbacks* pCallbacks);
 	static esp_err_t   setMTU(uint16_t mtu);
 	static uint16_t	   getMTU();
+	static bool        getInitialized(); // Returns the state of the device, is it initialized or not?
 
 private:
 	static BLEServer *m_pServer;
