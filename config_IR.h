@@ -96,7 +96,7 @@
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
   #define IR_RECEIVER_PIN 2
-  #define IR_EMITTER_PIN 16
+  #define IR_EMITTER_PIN 16 // replace by 0 if you use IR LOLIN controller shield
 #elif ESP32
   #define IR_RECEIVER_PIN 27
   #define IR_EMITTER_PIN 14
@@ -104,4 +104,3 @@
   #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino
   #define IR_EMITTER_PIN 9
 #endif
-
