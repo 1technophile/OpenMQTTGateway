@@ -353,6 +353,12 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
   char val[12];
   String mactopic(mac_adress);
   mactopic = subjectBTtoMQTT + mactopic;
+
+  // second value
+  char val2[12];
+  String mactopic2(mac_adress);
+  mactopic2 = subjectBTtoMQTT + mactopic2;
+  bool hasTopic2 = false;
   
  
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
@@ -381,11 +387,40 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
           mactopic = mactopic + subjectBTtoMQTTmoi;
           dtostrf(value,0,0,val);
      break;
+     
+    case 'a' : // batteryLevel
+          mactopic = mactopic + subjectBTtoMQTTbatt;
+          dtostrf(value,0,0,val);
+     break;
+
+     case 'd' : // temp+hum
+          char tempAr[8];
+          // humidity
+          memcpy(tempAr, data, 4);
+          tempAr[4] = '\0';
+          value = strtol(tempAr, NULL, 16);
+          if (value > 65000) value = value - 65535;
+          dtostrf(value/10,3,1,val); // hum has to be divided by 10
+          trc(val);
+          // temperature
+          memcpy(tempAr, &data[4], 4);
+          tempAr[4] = '\0';
+          value = strtol(tempAr, NULL, 16);
+          if (value > 65000) value = value - 65535;
+          dtostrf(value/10,3,1,val2); // hum has to be divided by 10
+          trc(val2);
+          mactopic = mactopic + subjectBTtoMQTThum;
+          mactopic2 = mactopic2 + subjectBTtoMQTTtem;
+          hasTopic2 = true;
+     break;
     default:
     trc("can't read values");
     return false;
     }
     client.publish((char *)mactopic.c_str(),val);;
+    if (hasTopic2){
+      client.publish((char *)mactopic2.c_str(),val2);
+    }
     trc(val);
     return true;
   }
