@@ -82,6 +82,10 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
               client.publish((char *)(mactopic + "/tx").c_str(),cTXPower);
             }
             if (advertisedDevice.haveServiceData()){
+                trc(F("Process mac adress"));
+                char mac[mac_adress.length()+1];
+                mac_adress.toCharArray(mac,mac_adress.length()+1);
+              
                 trc(F("Get service data "));
                 std::string serviceData = advertisedDevice.getServiceData();
                 int serviceDataLength = serviceData.length();
@@ -94,19 +98,22 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   } 
                   returnedString = returnedString + String(a,HEX);  
                 }
-                trc(returnedString);
-                                
+                
+                char service_data[returnedString.length()+1];
+                returnedString.toCharArray(service_data,returnedString.length()+1);
+                service_data[returnedString.length()] = '\0';
+                trc(F("service_data"));
+                trc(service_data);
+                String mactopic(mac);
+                mactopic = subjectBTtoMQTT + mactopic + subjectBTtoMQTTservicedata;
+                client.publish((char *)mactopic.c_str(),service_data);
+                
                 trc(F("Get service data UUID"));
                 BLEUUID serviceDataUUID = advertisedDevice.getServiceDataUUID();
                 trc(serviceDataUUID.toString().c_str());
 
                 if (strstr(serviceDataUUID.toString().c_str(),"fe95") != NULL){
                   trc("Processing BLE device data");
-                  char service_data[returnedString.length()+1];
-                  returnedString.toCharArray(service_data,returnedString.length()+1);
-                  service_data[returnedString.length()] = '\0';
-                  char mac[mac_adress.length()+1];
-                  mac_adress.toCharArray(mac,mac_adress.length()+1);
                   if (strstr(service_data,"209800") != NULL) {
                     trc("mi flora data reading");
                     boolean result = process_data(-22,service_data,mac);
@@ -325,8 +332,6 @@ boolean BTtoMQTT() {
 #endif
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){
-  trc(F("rest_data"));
-  trc(rest_data);
   int data_length = 0;
   switch (rest_data[51 + offset]) {
     case '1' :
@@ -385,7 +390,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
     trc("can't read values");
     return false;
     }
-    client.publish((char *)mactopic.c_str(),val);;
+    client.publish((char *)mactopic.c_str(),val);
     trc(val);
     return true;
   }
