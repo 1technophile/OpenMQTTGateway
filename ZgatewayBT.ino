@@ -204,7 +204,6 @@ void setupBT() {
   trc(F("ZgatewayBT HM1X setup done "));
 }
 
-#ifdef ZgatewayBT_v6xx
 #define QUESTION_MSG "AT+DISA?"
 boolean BTtoMQTT() {
 
@@ -286,54 +285,6 @@ void strupp(char* beg)
        ++beg;
 }
 
-#endif
-
-#ifndef ZgatewayBT_v6xx
-#define QUESTION_MSG "AT+DISI?"
-boolean BTtoMQTT() {
-  while (softserial.available() > 0) {
-     #if defined(ESP8266)
-      yield();
-     #endif
-    String discResult = softserial.readString();
-    if (discResult.indexOf(STRING_MSG)>=0){
-      discResult.replace(RESPONSE_MSG,"");
-      discResult.replace(RESP_END_MSG,"");
-      float device_number = discResult.length()/78.0;
-      if (device_number == (int)device_number){ // to avoid publishing partial values we detect if the serial data has been fully read = a multiple of 78
-        trc(F("Sending BT data to MQTT HM1X Version<v6xx"));
-        #if defined(ESP8266)
-          yield();
-        #endif
-        for (int i=0;i<(int)device_number;i++){
-             String onedevice = discResult.substring(0,78);
-             onedevice.replace(STRING_MSG,"");
-             String mac = onedevice.substring(53,65);
-             String rssi = onedevice.substring(66,70);
-             String mactopic = subjectBTtoMQTT + mac + subjectBTtoMQTTrssi;
-             trc(mactopic + " " + rssi);
-             client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
-             discResult = discResult.substring(78);
-          }
-          return true;
-        }
-      }
-    if (discResult.indexOf(SETUP_MSG)>=0)
-    {
-      trc(F("Connection OK to HM-10"));
-    }
-  }
-  if (millis() > (timebt + TimeBtw_Read)) {//retriving value of adresses and rssi
-       timebt = millis();
-       #if defined(ESP8266)
-        yield();
-       #endif
-       softserial.print(F(QUESTION_MSG));
-       
-  }
-  return false;
-}
-#endif
 #endif
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){
