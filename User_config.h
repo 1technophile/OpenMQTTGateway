@@ -62,8 +62,8 @@ char mqtt_port[6] = "1883";
 
 // Update these with values suitable for your network.
 #if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-  #define wifi_ssid "vierzehn"
-  #define wifi_password "B8899EBDA"
+  #define wifi_ssid ""
+  #define wifi_password ""
 #else // for arduino + W5100
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
