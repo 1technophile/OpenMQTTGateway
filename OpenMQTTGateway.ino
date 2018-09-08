@@ -726,16 +726,13 @@ void stateMeasures(){
           modules = modules  + ZactuatorONOFF;
       #endif
       #ifdef ZactuatorFASTLED
-          modules = modules + "," + ZactuatorFASTLED;
+          modules = modules  + ZactuatorFASTLED;
       #endif
       #ifdef Zgateway2G
           modules = modules  + Zgateway2G;
       #endif
       #ifdef ZgatewayIR
           modules = modules  + ZgatewayIR;
-      #endif
-      #ifdef ZgatewayRF2
-          modules = modules  + ZgatewayRF2;
       #endif
       #ifdef ZgatewaySRFB
           modules = modules  + ZgatewaySRFB;

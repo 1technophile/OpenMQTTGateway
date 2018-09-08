@@ -46,6 +46,9 @@ boolean FASTLEDtoMQTT() {
 void MQTTtoFASTLED(char * topicOri, char * datacallback) {
   String topic = topicOri;
   long number = (long) strtol( &datacallback[1], NULL, 16);
+  trc(F("MQTTtoFASTLED: "));
+  trc(topic);
+  trc(number);
   if ((topic == subjectMQTTtoFASTLED)){
     for (int i = 0 ; i < FASTLED_NUM_LEDS; i++ ) {
       leds[i] = number;

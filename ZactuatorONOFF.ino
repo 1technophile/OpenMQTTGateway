@@ -10,12 +10,12 @@
     
     Contributors:
     - 1technophile
-  
-    This file is part of OpenMQTTGateway.
-    
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
+  
+    This file is part of OpenMQTTGateway.
+    
     (at your option) any later version.
 
     OpenMQTTGateway is distributed in the hope that it will be useful,
