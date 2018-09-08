@@ -57,12 +57,13 @@
 #define ARGO_FLAP_FULL            7U  // 0b111
 
 
-#if SEND_ARGO
 class IRArgoAC {
  public:
   explicit IRArgoAC(uint16_t pin);
 
+#if SEND_ARGO
   void send();
+#endif  // SEND_ARGO
   void begin();
   void on();
   void off();
@@ -119,6 +120,5 @@ class IRArgoAC {
   uint8_t max_mode;  // on/off
   uint8_t ifeel_mode;  // on/off
 };
-#endif  // SEND_ARGO
 
 #endif  // IR_ARGO_H_

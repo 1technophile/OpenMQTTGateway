@@ -59,7 +59,9 @@ char mqtt_port[6] = "1883";
 
 //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #define WifiManager_password "your_password"
-//#define MDNS_SD //comment if you don't want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
+#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
@@ -183,6 +185,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //Addons and module management, comment the Z line
 
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
+//#define ZgatewayRF315  "RF315"    //ESP8266, Arduino, ESP32
 #define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
 #define ZgatewayBT     "BT"       //ESP8266, Arduino, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32

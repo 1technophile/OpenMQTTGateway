@@ -6,7 +6,6 @@
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
-#include "IRtimer.h"
 #include "IRutils.h"
 
 //                               L       GGGG
@@ -69,11 +68,7 @@ uint8_t calcLGChecksum(uint16_t data) {
 // Notes:
 //   LG has a separate message to indicate a repeat, like NEC does.
 void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  // Set IR carrier frequency
-  enableIROut(38);
-
   uint16_t repeatHeaderMark = 0;
-  IRtimer usecTimer = IRtimer();
 
   if (nbits >= LG32_BITS) {
     // LG 32bit protocol is near identical to Samsung except for repeats.
@@ -83,29 +78,23 @@ void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
   } else {
     // LG (28-bit) protocol.
     repeatHeaderMark = LG_HDR_MARK;
-    // Header
-    usecTimer.reset();
-    mark(LG_HDR_MARK);
-    space(LG_HDR_SPACE);
-    // Data
-    sendData(LG_BIT_MARK, LG_ONE_SPACE, LG_BIT_MARK, LG_ZERO_SPACE,
-             data, nbits, true);
-    // Footer
-    mark(LG_BIT_MARK);
-    space(std::max((uint32_t) (LG_MIN_MESSAGE_LENGTH - usecTimer.elapsed()),
-                   (uint32_t) LG_MIN_GAP));
+    sendGeneric(LG_HDR_MARK, LG_HDR_SPACE,
+                LG_BIT_MARK, LG_ONE_SPACE,
+                LG_BIT_MARK, LG_ZERO_SPACE,
+                LG_BIT_MARK,
+                LG_MIN_GAP, LG_MIN_MESSAGE_LENGTH,
+                data, nbits, 38, true, 0,  // Repeats are handled later.
+                50);
   }
 
   // Repeat
   // Protocol has a mandatory repeat-specific code sent after every command.
-  for (uint16_t i = 0; i < repeat; i++) {
-    usecTimer.reset();
-    mark(repeatHeaderMark);
-    space(LG_RPT_SPACE);
-    mark(LG_BIT_MARK);
-    space(std::max((uint32_t) LG_MIN_MESSAGE_LENGTH - usecTimer.elapsed(),
-                   (uint32_t) LG_MIN_GAP));
-  }
+  if (repeat)
+    sendGeneric(repeatHeaderMark, LG_RPT_SPACE,
+                0, 0, 0, 0,  // No data is sent.
+                LG_BIT_MARK, LG_MIN_GAP, LG_MIN_MESSAGE_LENGTH,
+                0, 0,  // No data.
+                38, true, repeat - 1, 50);
 }
 
 // Construct a raw 28-bit LG message from the supplied address & command.
@@ -150,8 +139,13 @@ uint32_t IRsend::encodeLG(uint16_t address, uint16_t command) {
 // Ref:
 //   https://funembedded.wordpress.com/2014/11/08/ir-remote-control-for-lg-conditioner-using-stm32f302-mcu-on-mbed-platform/
 bool IRrecv::decodeLG(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + HEADER + FOOTER - 1 && results->rawlen != 4)
-    return false;  // Can't possibly be a valid LG message.
+  if (nbits >= LG32_BITS) {
+    if (results->rawlen < 2 * nbits + 2 * (HEADER + FOOTER) - 1)
+      return false;  // Can't possibly be a valid LG32 message.
+  } else {
+    if (results->rawlen < 2 * nbits + HEADER + FOOTER - 1)
+      return false;  // Can't possibly be a valid LG message.
+  }
   if (strict && nbits != LG_BITS && nbits != LG32_BITS)
     return false;  // Doesn't comply with expected LG protocol.
 
@@ -195,15 +189,6 @@ bool IRrecv::decodeLG(decode_results *results, uint16_t nbits, bool strict) {
   if (nbits >= LG32_BITS) {
     // If we are expecting the LG 32-bit protocol, there is always
     // a repeat message. So, check for it.
-#ifndef UNIT_TEST
-    if (!matchSpace(results->rawbuf[offset], LG_MIN_GAP_TICKS * s_tick))
-#else
-    if (!(matchSpace(results->rawbuf[offset],
-                     LG_MIN_MESSAGE_LENGTH_TICKS * s_tick) ||
-          matchSpace(results->rawbuf[offset], 65500) ||
-          matchSpace(results->rawbuf[offset], LG_MIN_GAP_TICKS * s_tick)))
-#endif  // UNIT_TEST
-      return false;
     offset++;
     if (!matchMark(results->rawbuf[offset++], LG32_RPT_HDR_MARK_TICKS * m_tick))
       return false;

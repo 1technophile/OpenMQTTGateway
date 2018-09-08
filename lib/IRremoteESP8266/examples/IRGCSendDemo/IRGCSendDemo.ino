@@ -11,7 +11,8 @@
  *   Based on Ken Shirriff's IrsendDemo
  *   Version 0.1 July, 2009
  *
- * An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+ * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * as specified by IR_LED below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -49,7 +50,10 @@ uint16_t Samsung_power_toggle[71] = {
     20, 20, 20, 63, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 63, 20,
     20, 20, 63, 20, 63, 20, 63, 20, 63, 20, 63, 20, 63, 20, 1798};
 
-IRsend irsend(4);  // An IR LED is controlled by GPIO pin 4 (D2)
+
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+
+IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
 
 void setup() {
   irsend.begin();
@@ -58,6 +62,10 @@ void setup() {
 
 void loop() {
   Serial.println("Toggling power");
+#if SEND_GLOBALCACHE
   irsend.sendGC(Samsung_power_toggle, 71);
+#else  // SEND_GLOBALCACHE
+  Serial.println("Can't send because SEND_GLOBALCACHE has been disabled.");
+#endif  // SEND_GLOBALCACHE
   delay(10000);
 }

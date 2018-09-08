@@ -11,39 +11,31 @@ Copyright 2017 Schmolders
 
 // Constants
 // using SPACE modulation. MARK is always const 400u
-#define ARGO_PREAMBLE_1           6400U  // Mark
-#define ARGO_PREAMBLE_2           3300U  // Space
-#define ARGO_MARK                  400U
+#define ARGO_HDR_MARK             6400U  // Mark
+#define ARGO_HDR_SPACE            3300U  // Space
+#define ARGO_BIT_MARK              400U
 #define ARGO_ONE_SPACE            2200U
 #define ARGO_ZERO_SPACE            900U
 
 #if SEND_ARGO
-// Send a Argo A/C message.
+// Send an Argo A/C message.
 //
 // Args:
 //   data: An array of ARGO_COMMAND_LENGTH bytes containing the IR command.
 //
 // Status: ALPHA / Untested.
-//
-// Overloading the IRSend Function
 
 void IRsend::sendArgo(unsigned char data[], uint16_t nbytes, uint16_t repeat) {
   // Check if we have enough bytes to send a proper message.
   if (nbytes < ARGO_COMMAND_LENGTH) return;
-  // Set IR carrier frequency
-  enableIROut(38);
-  for (uint16_t r = 0; r <= repeat; r++) {
-    // Header
-    // TODO(kaschmo): validate
-    mark(ARGO_PREAMBLE_1);
-    space(ARGO_PREAMBLE_2);
-    // send data, defined in IRSend.cpp
-    for (uint16_t i = 0; i < nbytes; i++)
-      sendData(ARGO_MARK, ARGO_ONE_SPACE, ARGO_MARK,
-               ARGO_ZERO_SPACE, data[i], 8, false);
-               // send LSB first reverses the bit order in array for sending.
-  }
+  // TODO(kaschmo): validate
+  sendGeneric(ARGO_HDR_MARK, ARGO_HDR_SPACE,
+              ARGO_BIT_MARK, ARGO_ONE_SPACE,
+              ARGO_BIT_MARK, ARGO_ZERO_SPACE,
+              0, 0,  // No Footer.
+              data, nbytes, 38, false, repeat, 50);
 }
+#endif  // SEND_ARGO
 
 IRArgoAC::IRArgoAC(uint16_t pin) : _irsend(pin) {
   stateReset();
@@ -53,11 +45,12 @@ void IRArgoAC::begin() {
   _irsend.begin();
 }
 
+#if SEND_ARGO
 void IRArgoAC::send() {
-  // Serial.println("Sending IR code"); // Only for Debug
   checksum();  // Create valid checksum before sending
   _irsend.sendArgo(argo);
 }
+#endif  // SEND_ARGO
 
 void IRArgoAC::checksum() {
   uint8_t sum = 2;  // Corresponds to byte 11 being constant 0b01
@@ -261,4 +254,3 @@ void IRArgoAC::setRoomTemp(uint8_t temp) {
   argo[3] += temp << 5;  // Append to bit 5,6,7
   argo[4] += temp >> 3;  // Remove lowest 3 bits and append in 0,1
 }
-#endif  // SEND_ARGO

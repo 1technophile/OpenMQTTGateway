@@ -7,6 +7,11 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+#ifndef UNIT_TEST
+#include <Arduino.h>
+#else
+#include <string>
+#endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 
@@ -23,6 +28,7 @@
 #define KELVINATOR_FAN                         3U
 #define KELVINATOR_HEAT                        4U
 #define KELVINATOR_BASIC_FAN_MAX               3U
+#define KELVINATOR_FAN_AUTO                    0U
 #define KELVINATOR_FAN_MAX                     5U
 #define KELVINATOR_MIN_TEMP                   16U  // 16C
 #define KELVINATOR_MAX_TEMP                   30U  // 30C
@@ -104,15 +110,15 @@
     b7-4 = checksum of the previous bytes (8-14)
 */
 
-#if SEND_KELVINATOR
-
 // Classes
 class IRKelvinatorAC {
  public:
   explicit IRKelvinatorAC(uint16_t pin);
 
   void stateReset();
+#if SEND_KELVINATOR
   void send();
+#endif  // SEND_KELVINATOR
   void begin();
   void on();
   void off();
@@ -139,14 +145,24 @@ class IRKelvinatorAC {
   void setTurbo(bool state);
   bool getTurbo();
   uint8_t* getRaw();
+  void setRaw(uint8_t new_code[]);
+  static uint8_t calcBlockChecksum(
+      const uint8_t *block,
+      const uint16_t length = KELVINATOR_STATE_LENGTH / 2);
+  static bool validChecksum(const uint8_t state[],
+                            const uint16_t length = KELVINATOR_STATE_LENGTH);
+#ifdef ARDUINO
+  String toString();
+#else
+  std::string toString();
+#endif
 
  private:
   // The state of the IR remote in IR code form.
   uint8_t remote_state[KELVINATOR_STATE_LENGTH];
-  void checksum();
+  void checksum(const uint16_t length = KELVINATOR_STATE_LENGTH);
   void fixup();
   IRsend _irsend;
 };
-#endif
 
 #endif  // IR_KELVINATOR_H_

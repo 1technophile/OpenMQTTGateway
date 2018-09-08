@@ -234,6 +234,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload) {
 	uint8_t ad_type;
 	uint8_t sizeConsumed = 0;
 	bool finished = false;
+	setPayload(payload);
 
 	while(!finished) {
 		length = *payload;          // Retrieve the length of the record.
@@ -506,7 +507,13 @@ std::string BLEAdvertisedDevice::toString() {
 	return ss.str();
 } // toString
 
+uint8_t* BLEAdvertisedDevice::getPayload() {
+	return m_payload;
+}
 
+void BLEAdvertisedDevice::setPayload(uint8_t* payload) {
+	m_payload = payload;
+}
 
 
 #endif /* CONFIG_BT_ENABLED */

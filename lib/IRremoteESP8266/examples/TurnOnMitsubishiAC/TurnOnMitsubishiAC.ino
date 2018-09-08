@@ -1,6 +1,7 @@
 /* Copyright 2017 David Conran
 *
-* An IR LED circuit *MUST* be connected to ESP8266 pin 4 (D2).
+* An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+* as specified by IR_LED below.
 *
 * TL;DR: The IR LED needs to be driven by a transistor for a good result.
 *
@@ -29,7 +30,8 @@
 #include <IRsend.h>
 #include <ir_Mitsubishi.h>
 
-IRMitsubishiAC mitsubir(D2);  // An IR LED is controlled by GPIO pin 4 (D2)
+#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+IRMitsubishiAC mitsubir(IR_LED);  // Set the GPIO used for sending messages.
 
 void printState() {
   // Display the settings.
@@ -64,8 +66,10 @@ void setup() {
 
 void loop() {
   // Now send the IR signal.
+#if SEND_MITSUBISHI_AC
   Serial.println("Sending IR command to A/C ...");
   mitsubir.send();
+#endif  // SEND_MITSUBISHI_AC
   printState();
   delay(5000);
 }

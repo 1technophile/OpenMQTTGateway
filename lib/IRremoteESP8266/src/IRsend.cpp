@@ -29,10 +29,14 @@
 //               Setting this to something other than the default could
 //               easily destroy your IR LED if you are overdriving it.
 //               Unless you *REALLY* know what you are doing, don't change this.
+//   use_modulation: Do we do frequency modulation during transmission?
+//                   i.e. If not, assume a 100% duty cycle. Ignore attempts
+//                        to change the duty cycle etc.
 // Returns:
 //   An IRsend object.
-IRsend::IRsend(uint16_t IRsendPin, bool inverted) : IRpin(IRsendPin),
-    periodOffset(PERIOD_OFFSET) {
+IRsend::IRsend(uint16_t IRsendPin, bool inverted,
+               bool use_modulation) : IRpin(IRsendPin),
+                                      periodOffset(PERIOD_OFFSET) {
   if (inverted) {
     outputOn = LOW;
     outputOff = HIGH;
@@ -40,6 +44,11 @@ IRsend::IRsend(uint16_t IRsendPin, bool inverted) : IRpin(IRsendPin),
     outputOn = HIGH;
     outputOff = LOW;
   }
+  modulation = use_modulation;
+  if (modulation)
+    _dutycycle = DUTY_DEFAULT;
+  else
+    _dutycycle = DUTY_MAX;
 }
 
 // Enable the pin for output.
@@ -47,12 +56,20 @@ void IRsend::begin() {
 #ifndef UNIT_TEST
   pinMode(IRpin, OUTPUT);
 #endif
+  ledOff();  // Ensure the LED is in a known safe state when we start.
 }
 
 // Turn off the IR LED.
 void IRsend::ledOff() {
 #ifndef UNIT_TEST
   digitalWrite(IRpin, outputOff);
+#endif
+}
+
+// Turn on the IR LED.
+void IRsend::ledOn() {
+#ifndef UNIT_TEST
+  digitalWrite(IRpin, outputOn);
 #endif
 }
 
@@ -78,22 +95,64 @@ uint32_t IRsend::calcUSecPeriod(uint32_t hz, bool use_offset) {
 // Args:
 //   freq: The freq we want to modulate at. Assumes < 1000 means kHz else Hz.
 //   duty: Percentage duty cycle of the LED. e.g. 25 = 25% = 1/4 on, 3/4 off.
+//         This is ignored if modulation is disabled at object instantiation.
 //
 // Note:
 //   Integer timing functions & math mean we can't do fractions of
 //   microseconds timing. Thus minor changes to the freq & duty values may have
 //   limited effect. You've been warned.
 void IRsend::enableIROut(uint32_t freq, uint8_t duty) {
-  // Can't have more than 100% duty cycle.
-  duty = std::min(duty, (uint8_t) 100);
+  // Set the duty cycle to use if we want freq. modulation.
+  if (modulation) {
+    _dutycycle = std::min(duty, (uint8_t) DUTY_MAX);
+  } else {
+    _dutycycle = DUTY_MAX;
+  }
   if (freq < 1000)  // Were we given kHz? Supports the old call usage.
     freq *= 1000;
   uint32_t period = calcUSecPeriod(freq);
   // Nr. of uSeconds the LED will be on per pulse.
-  onTimePeriod = (period * duty) / 100;
+  onTimePeriod = (period * _dutycycle) / DUTY_MAX;
   // Nr. of uSeconds the LED will be off per pulse.
   offTimePeriod = period - onTimePeriod;
 }
+
+#if ALLOW_DELAY_CALLS
+// An ESP8266 RTOS watch-dog timer friendly version of delayMicroseconds().
+// Args:
+//   usec: Nr. of uSeconds to delay for.
+void IRsend::_delayMicroseconds(uint32_t usec) {
+  // delayMicroseconds() is only accurate to 16383us.
+  // Ref: https://www.arduino.cc/en/Reference/delayMicroseconds
+  if (usec <= MAX_ACCURATE_USEC_DELAY) {
+#ifndef UNIT_TEST
+    delayMicroseconds(usec);
+#endif
+  } else {
+#ifndef UNIT_TEST
+    // Invoke a delay(), where possible, to avoid triggering the WDT.
+    delay(usec / 1000UL);  // Delay for as many whole milliseconds as we can.
+    // Delay the remaining sub-millisecond.
+    delayMicroseconds(static_cast<uint16_t>(usec % 1000UL));
+#endif
+  }
+}
+#else  // ALLOW_DELAY_CALLS
+// A version of delayMicroseconds() that handles large values and does NOT use
+// the watch-dog friendly delay() calls where appropriate.
+// Args:
+//   usec: Nr. of uSeconds to delay for.
+//
+// NOTE: Use this only if you know what you are doing as it may cause the WDT
+//       to reset the ESP8266.
+void IRsend::_delayMicroseconds(uint32_t usec) {
+  for (; usec > MAX_ACCURATE_USEC_DELAY; usec -= MAX_ACCURATE_USEC_DELAY)
+#ifndef UNIT_TEST
+    delayMicroseconds(MAX_ACCURATE_USEC_DELAY);
+  delayMicroseconds(static_cast<uint16_t>(usec));
+#endif  // UNIT_TEST
+}
+#endif  // ALLOW_DELAY_CALLS
 
 // Modulate the IR LED for the given period (usec) and at the duty cycle set.
 //
@@ -112,6 +171,15 @@ void IRsend::enableIROut(uint32_t freq, uint8_t duty) {
 // Ref:
 //   https://www.analysir.com/blog/2017/01/29/updated-esp8266-nodemcu-backdoor-upwm-hack-for-ir-signals/
 uint16_t IRsend::mark(uint16_t usec) {
+  // Handle the simple case of no required frequency modulation.
+  if (!modulation || _dutycycle >= 100) {
+    ledOn();
+    _delayMicroseconds(usec);
+    ledOff();
+    return 1;
+  }
+
+  // Not simple, so do it assuming frequency modulation.
   uint16_t counter = 0;
   IRtimer usecTimer = IRtimer();
   // Cache the time taken so far. This saves us calling time, and we can be
@@ -119,21 +187,17 @@ uint16_t IRsend::mark(uint16_t usec) {
   uint32_t elapsed = usecTimer.elapsed();
 
   while (elapsed < usec) {  // Loop until we've met/exceeded our required time.
-#ifndef UNIT_TEST
-    digitalWrite(IRpin, outputOn);  // Turn the LED on.
+    ledOn();
     // Calculate how long we should pulse on for.
     // e.g. Are we to close to the end of our requested mark time (usec)?
-    delayMicroseconds(std::min((uint32_t) onTimePeriod, usec - elapsed));
-    digitalWrite(IRpin, outputOff);  // Turn the LED off.
-#endif
+    _delayMicroseconds(std::min((uint32_t) onTimePeriod, usec - elapsed));
+    ledOff();
     counter++;
     if (elapsed + onTimePeriod >= usec)
       return counter;  // LED is now off & we've passed our allotted time.
     // Wait for the lesser of the rest of the duty cycle, or the time remaining.
-#ifndef UNIT_TEST
-    delayMicroseconds(std::min(usec - elapsed - onTimePeriod,
-                               (uint32_t) offTimePeriod));
-#endif
+    _delayMicroseconds(std::min(usec - elapsed - onTimePeriod,
+                                (uint32_t) offTimePeriod));
     elapsed = usecTimer.elapsed();  // Update & recache the actual elapsed time.
   }
   return counter;
@@ -148,18 +212,7 @@ uint16_t IRsend::mark(uint16_t usec) {
 void IRsend::space(uint32_t time) {
   ledOff();
   if (time == 0) return;
-#ifndef UNIT_TEST
-  // delayMicroseconds is only accurate to 16383us.
-  // Ref: https://www.arduino.cc/en/Reference/delayMicroseconds
-  if (time <= 16383) {
-    delayMicroseconds(time);
-  } else {
-    // Invoke a delay(), where possible, to avoid triggering the WDT.
-    delay(time / 1000UL);  // Delay for as many whole milliseconds as we can.
-    // Delay the remaining sub-millisecond.
-    delayMicroseconds(static_cast<uint16_t>(time % 1000UL));
-  }
-#endif
+  _delayMicroseconds(time);
 }
 
 // Calculate & set any offsets to account for execution times.
@@ -167,12 +220,15 @@ void IRsend::space(uint32_t time) {
 // Args:
 //   hz: The frequency to calibrate at >= 1000Hz. Default is 38000Hz.
 //
-// Status:  ALPHA / Untested.
+// Returns:
+//   The calculated period offset (in uSeconds) which is now in use. e.g. -5.
+//
+// Status:  Stable / Working.
 //
 // NOTE:
 //   This will generate an 65535us mark() IR LED signal.
 //   This only needs to be called once, if at all.
-void IRsend::calibrate(uint16_t hz) {
+int8_t IRsend::calibrate(uint16_t hz) {
   if (hz < 1000)  // Were we given kHz? Supports the old call usage.
     hz *= 1000;
   periodOffset = 0;  // Turn off any existing offset while we calibrate.
@@ -197,6 +253,7 @@ void IRsend::calibrate(uint16_t hz) {
   double_t actualPeriod = (double_t) timeTaken / (double_t) pulses;
   // Store the difference between the actual time per period vs. calculated.
   periodOffset = (int8_t) ((double_t) calcPeriod - actualPeriod);
+  return periodOffset;
 }
 
 // Generic method for sending data that is common to most protocols.
@@ -244,6 +301,165 @@ void IRsend::sendData(uint16_t onemark, uint32_t onespace,
   }
 }
 
+// Generic method for sending simple protocol messages.
+// Will send leading or trailing 0's if the nbits is larger than the number
+// of bits in data.
+//
+// Args:
+//   headermark:  Nr. of usecs for the led to be pulsed for the header mark.
+//                A value of 0 means no header mark.
+//   headerspace: Nr. of usecs for the led to be off after the header mark.
+//                A value of 0 means no header space.
+//   onemark:     Nr. of usecs for the led to be pulsed for a '1' bit.
+//   onespace:    Nr. of usecs for the led to be fully off for a '1' bit.
+//   zeromark:    Nr. of usecs for the led to be pulsed for a '0' bit.
+//   zerospace:   Nr. of usecs for the led to be fully off for a '0' bit.
+//   footermark:  Nr. of usecs for the led to be pulsed for the footer mark.
+//                A value of 0 means no footer mark.
+//   gap:         Nr. of usecs for the led to be off after the footer mark.
+//                This is effectively the gap between messages.
+//                A value of 0 means no gap space.
+//   data:        The data to be transmitted.
+//   nbits:       Nr. of bits of data to be sent.
+//   frequency:   The frequency we want to modulate at.
+//                Assumes < 1000 means kHz otherwise it is in Hz.
+//                Most common value is 38000 or 38, for 38kHz.
+//   MSBfirst:    Flag for bit transmission order. Defaults to MSB->LSB order.
+//   repeat:      Nr. of extra times the message will be sent.
+//                e.g. 0 = 1 message sent, 1 = 1 initial + 1 repeat = 2 messages
+//   dutycycle:   Percentage duty cycle of the LED.
+//                e.g. 25 = 25% = 1/4 on, 3/4 off.
+//                If you are not sure, try 50 percent.
+void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
+                         const uint16_t onemark, const uint32_t onespace,
+                         const uint16_t zeromark, const uint32_t zerospace,
+                         const uint16_t footermark, const uint32_t gap,
+                         const uint64_t data, const uint16_t nbits,
+                         const uint16_t frequency, const bool MSBfirst,
+                         const uint16_t repeat, const uint8_t dutycycle) {
+  sendGeneric(headermark, headerspace, onemark, onespace, zeromark, zerospace,
+              footermark, gap, 0U, data, nbits, frequency, MSBfirst, repeat,
+              dutycycle);
+}
+
+// Generic method for sending simple protocol messages.
+// Will send leading or trailing 0's if the nbits is larger than the number
+// of bits in data.
+//
+// Args:
+//   headermark:  Nr. of usecs for the led to be pulsed for the header mark.
+//                A value of 0 means no header mark.
+//   headerspace: Nr. of usecs for the led to be off after the header mark.
+//                A value of 0 means no header space.
+//   onemark:     Nr. of usecs for the led to be pulsed for a '1' bit.
+//   onespace:    Nr. of usecs for the led to be fully off for a '1' bit.
+//   zeromark:    Nr. of usecs for the led to be pulsed for a '0' bit.
+//   zerospace:   Nr. of usecs for the led to be fully off for a '0' bit.
+//   footermark:  Nr. of usecs for the led to be pulsed for the footer mark.
+//                A value of 0 means no footer mark.
+//   gap:         Min. nr. of usecs for the led to be off after the footer mark.
+//                This is effectively the absolute minimum gap between messages.
+//   mesgtime:    Min. nr. of usecs a single message needs to be.
+//                This is effectively the min. total length of a single message.
+//   data:        The data to be transmitted.
+//   nbits:       Nr. of bits of data to be sent.
+//   frequency:   The frequency we want to modulate at.
+//                Assumes < 1000 means kHz otherwise it is in Hz.
+//                Most common value is 38000 or 38, for 38kHz.
+//   MSBfirst:    Flag for bit transmission order. Defaults to MSB->LSB order.
+//   repeat:      Nr. of extra times the message will be sent.
+//                e.g. 0 = 1 message sent, 1 = 1 initial + 1 repeat = 2 messages
+//   dutycycle:   Percentage duty cycle of the LED.
+//                e.g. 25 = 25% = 1/4 on, 3/4 off.
+//                If you are not sure, try 50 percent.
+void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
+                         const uint16_t onemark, const uint32_t onespace,
+                         const uint16_t zeromark, const uint32_t zerospace,
+                         const uint16_t footermark, const uint32_t gap,
+                         const uint32_t mesgtime,
+                         const uint64_t data, const uint16_t nbits,
+                         const uint16_t frequency, const bool MSBfirst,
+                         const uint16_t repeat, const uint8_t dutycycle) {
+  // Setup
+  enableIROut(frequency, dutycycle);
+  IRtimer usecs = IRtimer();
+
+  // We always send a message, even for repeat=0, hence '<= repeat'.
+  for (uint16_t r = 0; r <= repeat; r++) {
+    usecs.reset();
+
+    // Header
+    if (headermark)  mark(headermark);
+    if (headerspace)  space(headerspace);
+
+    // Data
+    sendData(onemark, onespace, zeromark, zerospace, data, nbits, MSBfirst);
+
+    // Footer
+    if (footermark)  mark(footermark);
+    uint32_t elapsed = usecs.elapsed();
+    // Avoid potential unsigned integer underflow. e.g. when mesgtime is 0.
+    if (elapsed >= mesgtime)
+      space(gap);
+    else
+      space(std::max(gap, mesgtime - elapsed));
+  }
+}
+
+// Generic method for sending simple protocol messages.
+//
+// Args:
+//   headermark:  Nr. of usecs for the led to be pulsed for the header mark.
+//                A value of 0 means no header mark.
+//   headerspace: Nr. of usecs for the led to be off after the header mark.
+//                A value of 0 means no header space.
+//   onemark:     Nr. of usecs for the led to be pulsed for a '1' bit.
+//   onespace:    Nr. of usecs for the led to be fully off for a '1' bit.
+//   zeromark:    Nr. of usecs for the led to be pulsed for a '0' bit.
+//   zerospace:   Nr. of usecs for the led to be fully off for a '0' bit.
+//   footermark:  Nr. of usecs for the led to be pulsed for the footer mark.
+//                A value of 0 means no footer mark.
+//   gap:         Nr. of usecs for the led to be off after the footer mark.
+//                This is effectively the gap between messages.
+//                A value of 0 means no gap space.
+//   dataptr:     Pointer to the data to be transmitted.
+//   nbytes:      Nr. of bytes of data to be sent.
+//   frequency:   The frequency we want to modulate at.
+//                Assumes < 1000 means kHz otherwise it is in Hz.
+//                Most common value is 38000 or 38, for 38kHz.
+//   MSBfirst:    Flag for bit transmission order. Defaults to MSB->LSB order.
+//   repeat:      Nr. of extra times the message will be sent.
+//                e.g. 0 = 1 message sent, 1 = 1 initial + 1 repeat = 2 messages
+//   dutycycle:   Percentage duty cycle of the LED.
+//                e.g. 25 = 25% = 1/4 on, 3/4 off.
+//                If you are not sure, try 50 percent.
+void IRsend::sendGeneric(const uint16_t headermark, const uint32_t headerspace,
+                         const uint16_t onemark, const uint32_t onespace,
+                         const uint16_t zeromark, const uint32_t zerospace,
+                         const uint16_t footermark, const uint32_t gap,
+                         const uint8_t *dataptr, const uint16_t nbytes,
+                         const uint16_t frequency, const bool MSBfirst,
+                         const uint16_t repeat, const uint8_t dutycycle) {
+  // Setup
+  enableIROut(frequency, dutycycle);
+  // We always send a message, even for repeat=0, hence '<= repeat'.
+  for (uint16_t r = 0; r <= repeat; r++) {
+    // Header
+    if (headermark)  mark(headermark);
+    if (headerspace)  space(headerspace);
+
+    // Data
+    for (uint16_t i = 0; i < nbytes; i++)
+      sendData(onemark, onespace, zeromark, zerospace,
+               *(dataptr + i), 8, MSBfirst);
+
+    // Footer
+    if (footermark)  mark(footermark);
+    space(gap);
+  }
+}
+
+#if SEND_RAW
 // Send a raw IRremote message.
 //
 // Args:
@@ -270,6 +486,7 @@ void IRsend::sendRaw(uint16_t buf[], uint16_t len, uint16_t hz) {
   }
   ledOff();  // We potentially have ended with a mark(), so turn of the LED.
 }
+#endif  // SEND_RAW
 
 #ifndef UNIT_TEST
 void IRsend::send(uint16_t type, uint64_t data, uint16_t nbits) {
@@ -316,11 +533,20 @@ void IRsend::send(uint16_t type, uint64_t data, uint16_t nbits) {
 #if SEND_MITSUBISHI
     case MITSUBISHI: sendMitsubishi(data, nbits); break;
 #endif
+#if SEND_MITSUBISHI2
+    case MITSUBISHI2: sendMitsubishi2(data, nbits); break;
+#endif
 #if SEND_SHARP
     case SHARP: sendSharpRaw(data, nbits); break;
 #endif
 #if SEND_AIWA_RC_T501
     case AIWA_RC_T501: sendAiwaRCT501(data, nbits); break;
+#endif
+#if SEND_MIDEA
+    case MIDEA: sendMidea(data, nbits); break;
+#endif
+#if SEND_GICABLE
+    case GICABLE: sendGICable(data, nbits); break;
 #endif
   }
 }

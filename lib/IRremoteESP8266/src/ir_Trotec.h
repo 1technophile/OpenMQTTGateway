@@ -40,13 +40,14 @@
 #define TROTEC_MIN_TIMER      0
 #define TROTEC_MAX_TIMER     23
 
-#if SEND_TROTEC
 
 class IRTrotecESP {
  public:
   explicit IRTrotecESP(uint16_t pin);
 
+#if SEND_TROTEC
   void send();
+#endif  // SEND_TROTEC
   void begin();
 
   void setPower(bool state);
@@ -75,6 +76,5 @@ class IRTrotecESP {
   void checksum();
   IRsend _irsend;
 };
-#endif
 
 #endif  // IR_TROTEC_H_

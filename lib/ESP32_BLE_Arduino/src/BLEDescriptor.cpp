@@ -37,12 +37,12 @@ BLEDescriptor::BLEDescriptor(const char* uuid) : BLEDescriptor(BLEUUID(uuid)) {
  */
 BLEDescriptor::BLEDescriptor(BLEUUID uuid) {
 	m_bleUUID            = uuid;
-	m_value.attr_value   = (uint8_t *)malloc(ESP_GATT_MAX_ATTR_LEN); // Allocate storage for the value.
-	m_value.attr_len     = 0;
-	m_value.attr_max_len = ESP_GATT_MAX_ATTR_LEN;
-	m_handle             = NULL_HANDLE;
-	m_pCharacteristic    = nullptr;   // No initial characteristic.
-	m_pCallback          = nullptr;   // No initial callback.
+	m_value.attr_value   = (uint8_t *)malloc(ESP_GATT_MAX_ATTR_LEN);  // Allocate storage for the value.
+	m_value.attr_len     = 0;                                         // Initial length is 0.
+	m_value.attr_max_len = ESP_GATT_MAX_ATTR_LEN;                     // Maximum length of the data.
+	m_handle             = NULL_HANDLE;                               // Handle is initially unknown.
+	m_pCharacteristic    = nullptr;                                   // No initial characteristic.
+	m_pCallback          = nullptr;                                   // No initial callback.
 
 } // BLEDescriptor
 
@@ -51,7 +51,7 @@ BLEDescriptor::BLEDescriptor(BLEUUID uuid) {
  * @brief BLEDescriptor destructor.
  */
 BLEDescriptor::~BLEDescriptor() {
-	free(m_value.attr_value);
+	free(m_value.attr_value);   // Release the storage we created in the constructor.
 } // ~BLEDescriptor
 
 
@@ -155,7 +155,7 @@ void BLEDescriptor::handleGATTServerEvent(
 					(uint32_t)m_pCharacteristic->getService()->getLastCreatedCharacteristic());
 					*/
 			if (m_pCharacteristic != nullptr &&
-					m_bleUUID.equals(BLEUUID(param->add_char_descr.char_uuid)) &&
+					m_bleUUID.equals(BLEUUID(param->add_char_descr.descr_uuid)) &&
 					m_pCharacteristic->getService()->getHandle() == param->add_char_descr.service_handle &&
 					m_pCharacteristic == m_pCharacteristic->getService()->getLastCreatedCharacteristic()) {
 				setHandle(param->add_char_descr.attr_handle);
@@ -301,6 +301,9 @@ void BLEDescriptor::setValue(std::string value) {
 	setValue((uint8_t *)value.data(), value.length());
 } // setValue
 
+void BLEDescriptor::setAccessPermissions(esp_gatt_perm_t perm) {
+	m_permissions = perm;
+}
 
 /**
  * @brief Return a string representation of the descriptor.

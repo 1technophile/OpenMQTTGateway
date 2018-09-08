@@ -65,6 +65,9 @@
 #if defined(ZgatewayRF) || defined(ZgatewayRF2)
   #include "config_RF.h"
 #endif
+#ifdef ZgatewayRF315
+  #include "config_RF315.h"
+#endif
 #ifdef ZgatewaySRFB
   #include "config_SRFB.h"
 #endif
@@ -107,7 +110,9 @@
 #ifdef ZgatewayRFM69
   #include "config_RFM69.h"
 #endif
-
+#ifdef ZsensorGPIOInput
+  #include "config_GPIOInput.h"
+#endif
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
 #define array_size 12
@@ -120,6 +125,8 @@ unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
+
+boolean connectedOnce = false; //indicate if we have been connected once to MQTT
 
 #ifdef ESP32
   #include <WiFi.h>
@@ -188,6 +195,9 @@ boolean reconnect() {
         #ifdef ZgatewayRF
           client.subscribe(subjectMultiGTWRF);
         #endif
+        #ifdef ZgatewayRF315
+          client.subscribe(subjectMultiGTWRF315);
+        #endif
         #ifdef ZgatewayIR
           client.subscribe(subjectMultiGTWIR);
         #endif
@@ -201,10 +211,10 @@ boolean reconnect() {
       // Wait 5 seconds before retrying
       delay(5000);
 
-      if (failure_number > 3){
-        trc(F("failed connecting to mqtt at start reinit setup"));
+      if (failure_number > maxMQTTretry){
+        trc(F("failed connecting to mqtt"));
         #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-          setup_wifimanager(true);
+          if (!connectedOnce) setup_wifimanager(); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
         #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
           setup_wifi();
         #endif
@@ -242,7 +252,7 @@ void setup()
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-      setup_wifimanager(false);
+      setup_wifimanager();
     #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
     #endif
@@ -251,7 +261,7 @@ void setup()
     trc(WiFi.macAddress()); 
     
     trc(F("OpenMQTTGateway ip: "));
-    trc(WiFi.localIP());
+    trc(WiFi.localIP().toString());
     
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
@@ -349,6 +359,9 @@ void setup()
   #ifdef ZgatewayRF
     setupRF();
   #endif
+  #ifdef ZgatewayRF315
+    setupRF315();
+  #endif
   #ifdef ZgatewayRF2
     setupRF2();
   #endif
@@ -366,6 +379,9 @@ void setup()
   #endif
   #ifdef ZsensorHCSR501
     setupHCSR501();
+  #endif
+  #ifdef ZsensorGPIOInput
+    setupGPIOInput();
   #endif
 }
 
@@ -396,10 +412,11 @@ void setup_wifi() {
 }
 
 #elif defined(ESP8266) && !defined(ESPWifiManualSetup)
-void setup_wifimanager(boolean reset_settings){
+void setup_wifimanager(){
+    #ifdef cleanFS
     //clean FS, for testing
-    //SPIFFS.format();
-  
+      SPIFFS.format();
+    #endif
     //read configuration from FS json
     trc("mounting FS...");
   
@@ -459,11 +476,11 @@ void setup_wifimanager(boolean reset_settings){
     wifiManager.addParameter(&custom_mqtt_port);
     wifiManager.addParameter(&custom_mqtt_user);
     wifiManager.addParameter(&custom_mqtt_pass);
-  
-    //reset settings - for testing
-    //reset_settings = true;
-    if (reset_settings) wifiManager.resetSettings();
 
+    #ifdef cleanFS
+      //reset settings - for testing
+      wifiManager.resetSettings();
+    #endif
     //set minimu quality of signal so it ignores AP's under that quality
     wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
   
@@ -577,7 +594,7 @@ void loop()
       digitalWrite(led_receive, HIGH);
     }
     digitalWrite(led_error, HIGH);
-    
+    connectedOnce = true;
     client.loop();
 
     #if defined(ESP8266) || defined(ESP32)
@@ -602,13 +619,23 @@ void loop()
     #ifdef ZsensorHCSR501
       MeasureHCSR501();
     #endif
+    #ifdef ZsensorGPIOInput
+      MeasureGPIOInput();
+    #endif
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
-    // Receive loop, if data received by RF433 or IR send it by MQTT
     #ifdef ZgatewayRF
       if(RFtoMQTT()){
       trc(F("RFtoMQTT OK"));
+      //GREEN ON
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
+    #endif
+    #ifdef ZgatewayRF315
+      if(RF315toMQTT()){
+      trc(F("RF315toMQTT OK"));
       //GREEN ON
       digitalWrite(led_receive, LOW);
       timer_led_receive = millis();
@@ -683,44 +710,50 @@ void stateMeasures(){
       #ifdef ZgatewayRF
           modules = modules + ZgatewayRF;
       #endif
+      #ifdef ZgatewayRF315
+          modules = modules + ZgatewayRF315;
+      #endif
       #ifdef ZsensorBME280
-          modules = modules + "," + ZsensorBME280;
+          modules = modules  + ZsensorBME280;
       #endif
       #ifdef ZsensorBH1750
-          modules = modules + "," + ZsensorBH1750;
+          modules = modules  + ZsensorBH1750;
       #endif
       #ifdef ZsensorTSL2561
-          modules = modules + "," + ZsensorTSL2561;
+          modules = modules  + ZsensorTSL2561;
       #endif
       #ifdef ZactuatorONOFF
-          modules = modules + "," + ZactuatorONOFF;
+          modules = modules  + ZactuatorONOFF;
       #endif
       #ifdef ZactuatorFASTLED
           modules = modules + "," + ZactuatorFASTLED;
       #endif
       #ifdef Zgateway2G
-          modules = modules + "," + Zgateway2G;
+          modules = modules  + Zgateway2G;
       #endif
       #ifdef ZgatewayIR
-          modules = modules + "," + ZgatewayIR;
+          modules = modules  + ZgatewayIR;
       #endif
       #ifdef ZgatewayRF2
-          modules = modules + "," + ZgatewayRF2;
+          modules = modules  + ZgatewayRF2;
       #endif
       #ifdef ZgatewaySRFB
-          modules = modules + "," + ZgatewaySRFB;
+          modules = modules  + ZgatewaySRFB;
       #endif
       #ifdef ZgatewayBT
-          modules = modules + "," + ZgatewayBT;
+          modules = modules  + ZgatewayBT;
       #endif
       #ifdef ZgatewayRFM69
-          modules = modules + "," + ZgatewayRFM69;
+          modules = modules  + ZgatewayRFM69;
       #endif
       #ifdef ZsensorINA226
-          modules = modules + "," + ZsensorINA226;
+          modules = modules  + ZsensorINA226;
       #endif
       #ifdef ZsensorHCSR501
-          modules = modules + "," + ZsensorHCSR501;
+          modules = modules  + ZsensorHCSR501;
+      #endif
+      #ifdef ZsensorGPIOInput
+          modules = modules  + ZsensorGPIOInput;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
@@ -731,7 +764,7 @@ void stateMeasures(){
 }
 #endif
 
-void storeValue(long MQTTvalue){
+void storeValue(unsigned long MQTTvalue){
     unsigned long now = millis();
     // find oldest value of the buffer
     int o = getMin();
@@ -741,7 +774,7 @@ void storeValue(long MQTTvalue){
     ReceivedSignal[o][0] = MQTTvalue;
     ReceivedSignal[o][1] = now;
     trc(F("store code :"));
-    trc(ReceivedSignal[o][0]+"/"+ReceivedSignal[o][1]);
+    trc(String(ReceivedSignal[o][0])+"/"+String(ReceivedSignal[o][1]));
     trc(F("Col: val/timestamp"));
     for (int i = 0; i < array_size; i++)
     {
@@ -763,7 +796,7 @@ int getMin(){
 }
 
 boolean isAduplicate(unsigned long value){
-trc(F("isAduplicate"));
+trc(F("isAduplicate?"));
 // check if the value has been already sent during the last time_avoid_duplicate
 for (int i = 0; i < array_size;i++){
  if (ReceivedSignal[i][0] == value){
@@ -790,6 +823,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
 digitalWrite(led_send, LOW);
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
+#endif
+#ifdef ZgatewayRF315
+  MQTTtoRF315(topicOri, datacallback);
 #endif
 #ifdef ZgatewayRF2
   MQTTtoRF2(topicOri, datacallback);
@@ -857,7 +893,6 @@ void trc(String msg){
   }
 }
 
-
 void trc(int msg){
   if (TRACE) {
   Serial.println(msg);
@@ -869,7 +904,6 @@ void trc(unsigned int msg){
   Serial.println(msg);
   }
 }
-
 
 void trc(long msg){
   if (TRACE) {

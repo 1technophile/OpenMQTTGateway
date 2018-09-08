@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include "IRsend.h"
-#include "IRtimer.h"
 
 //   GGG  L       OOOO  BBBB     AA   L       CCCC    AA    CCCC  H    H EEEEEE
 //  G   G L      O    O B   B   AAAA  L      C    C  AAAA  C    C H    H E

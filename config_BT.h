@@ -25,7 +25,8 @@
 */
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
-#define subjectBTtoMQTTrssi "/rssi"
+//#define subjectBTtoMQTTrssi "/rssi" // will be the default parameter on the next release, for the moment rssi is published on mac topic
+#define subjectBTtoMQTTrssi ""
 #define subjectBTtoMQTTtem "/tem"
 #define subjectBTtoMQTThum "/hum"
 #define subjectBTtoMQTTmoi "/moi"

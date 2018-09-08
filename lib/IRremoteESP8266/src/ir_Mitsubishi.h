@@ -32,13 +32,14 @@
 #define MITSUBISHI_AC_VANE_AUTO         0U
 #define MITSUBISHI_AC_VANE_AUTO_MOVE    7U
 
-#if SEND_MITSUBISHI_AC
 class IRMitsubishiAC {
  public:
   explicit IRMitsubishiAC(uint16_t pin);
 
   void stateReset();
+#if SEND_MITSUBISHI_AC
   void send();
+#endif  // SEND_MITSUBISHI_AC
   void begin();
   void on();
   void off();
@@ -60,6 +61,5 @@ class IRMitsubishiAC {
   IRsend _irsend;
 };
 
-#endif
 
 #endif  // IR_MITSUBISHI_H_

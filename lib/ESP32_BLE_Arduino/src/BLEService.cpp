@@ -72,7 +72,8 @@ void BLEService::executeCreate(BLEServer *pServer) {
 	m_semaphoreCreateEvt.take("executeCreate"); // Take the mutex and release at event ESP_GATTS_CREATE_EVT
 
 	esp_gatt_srvc_id_t srvc_id;
-	srvc_id.id.inst_id = 0;
+	srvc_id.is_primary = true;
+	srvc_id.id.inst_id = m_id;
 	srvc_id.id.uuid    = *m_uuid.getNative();
 	esp_err_t errRc = ::esp_ble_gatts_create_service(
 		getServer()->getGattsIf(),
@@ -88,6 +89,28 @@ void BLEService::executeCreate(BLEServer *pServer) {
 	m_semaphoreCreateEvt.wait("executeCreate");
 	ESP_LOGD(LOG_TAG, "<< executeCreate");
 } // executeCreate
+
+
+/**
+ * @brief Delete the service.
+ * Delete the service.
+ * @return N/A.
+ */
+
+void BLEService::executeDelete() {
+	ESP_LOGD(LOG_TAG, ">> executeDelete()");
+	m_semaphoreDeleteEvt.take("executeDelete"); // Take the mutex and release at event ESP_GATTS_DELETE_EVT
+
+	esp_err_t errRc = ::esp_ble_gatts_delete_service( getHandle() );
+
+	if (errRc != ESP_OK) {
+		ESP_LOGE(LOG_TAG, "esp_ble_gatts_delete_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		return;
+	}
+
+	m_semaphoreDeleteEvt.wait("executeDelete");
+	ESP_LOGD(LOG_TAG, "<< executeDelete");
+} // executeDelete
 
 
 /**
@@ -153,6 +176,34 @@ void BLEService::start() {
 
 
 /**
+ * @brief Stop the service.
+ * @return Stop the service.
+ */
+void BLEService::stop() {
+// We ask the BLE runtime to start the service and then create each of the characteristics.
+// We start the service through its local handle which was returned in the ESP_GATTS_CREATE_EVT event
+// obtained as a result of calling esp_ble_gatts_create_service().
+//
+	ESP_LOGD(LOG_TAG, ">> stop(): Stopping service (esp_ble_gatts_stop_service): %s", toString().c_str());
+	if (m_handle == NULL_HANDLE) {
+		ESP_LOGE(LOG_TAG, "<< !!! We attempted to stop a service but don't know its handle!");
+		return;
+	}
+
+	m_semaphoreStopEvt.take("stop");
+	esp_err_t errRc = ::esp_ble_gatts_stop_service(m_handle);
+
+	if (errRc != ESP_OK) {
+		ESP_LOGE(LOG_TAG, "<< esp_ble_gatts_stop_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		return;
+	}
+	m_semaphoreStopEvt.wait("stop");
+
+	ESP_LOGD(LOG_TAG, "<< stop()");
+} // start
+
+
+/**
  * @brief Set the handle associated with this service.
  * @param [in] handle The handle associated with the service.
  */
@@ -192,7 +243,7 @@ void BLEService::addCharacteristic(BLECharacteristic* pCharacteristic) {
 
 	// Check that we don't add the same characteristic twice.
 	if (m_characteristicMap.getByUUID(pCharacteristic->getUUID()) != nullptr) {
-		ESP_LOGE(LOG_TAG, "<< Attempt to add a characteristic but we already have one with this UUID");
+		ESP_LOGW(LOG_TAG, "<< Adding a new characteristic with the same UUID as a previous one");
 		//return;
 	}
 
@@ -277,6 +328,19 @@ void BLEService::handleGATTServerEvent(
 			break;
 		} // ESP_GATTS_START_EVT
 
+		// ESP_GATTS_STOP_EVT
+		//
+		// stop:
+		// esp_gatt_status_t status
+		// uint16_t service_handle
+		//
+		case ESP_GATTS_STOP_EVT: {
+			if (param->stop.service_handle == getHandle()) {
+				m_semaphoreStopEvt.give();
+			}
+			break;
+		} // ESP_GATTS_STOP_EVT
+
 
 		// ESP_GATTS_CREATE_EVT
 		// Called when a new service is registered as having been created.
@@ -291,12 +355,27 @@ void BLEService::handleGATTServerEvent(
 		// * - bool is_primary
 		//
 		case ESP_GATTS_CREATE_EVT: {
-			if (getUUID().equals(BLEUUID(param->create.service_id.id.uuid))) {
+			if (getUUID().equals(BLEUUID(param->create.service_id.id.uuid)) && m_id == param->create.service_id.id.inst_id) {
 				setHandle(param->create.service_handle);
 				m_semaphoreCreateEvt.give();
 			}
 			break;
 		} // ESP_GATTS_CREATE_EVT
+
+
+		// ESP_GATTS_DELETE_EVT
+		// Called when a service is deleted.
+		//
+		// delete:
+		// * esp_gatt_status_t status
+		// * uint16_t service_handle
+		//
+		case ESP_GATTS_DELETE_EVT: {
+			if (param->del.service_handle == getHandle()) {
+				m_semaphoreDeleteEvt.give();
+			}
+			break;
+		} // ESP_GATTS_DELETE_EVT
 
 		default: {
 			break;

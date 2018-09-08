@@ -52,23 +52,25 @@ private:
  */
 class BLEService {
 public:
-	BLEService(const char* uuid, uint32_t numHandles=10);
-	BLEService(BLEUUID uuid, uint32_t numHandles=10);
-
 	void               addCharacteristic(BLECharacteristic* pCharacteristic);
 	BLECharacteristic* createCharacteristic(const char* uuid, uint32_t properties);
 	BLECharacteristic* createCharacteristic(BLEUUID uuid, uint32_t properties);
 	void               dump();
 	void               executeCreate(BLEServer* pServer);
+	void			   executeDelete();
 	BLECharacteristic* getCharacteristic(const char* uuid);
 	BLECharacteristic* getCharacteristic(BLEUUID uuid);
 	BLEUUID            getUUID();
 	BLEServer*         getServer();
 	void               start();
+	void			   stop();
 	std::string        toString();
 	uint16_t           getHandle();
+	uint8_t			   m_id = 0;
 
 private:
+	BLEService(const char* uuid, uint32_t numHandles);
+	BLEService(BLEUUID uuid, uint32_t numHandles);
 	friend class BLEServer;
 	friend class BLEServiceMap;
 	friend class BLEDescriptor;
@@ -80,10 +82,11 @@ private:
 	BLECharacteristic*   m_lastCreatedCharacteristic;
 	BLEServer*           m_pServer;
 	BLEUUID              m_uuid;
-	char                 deleteMe[10];
-	//FreeRTOS::Semaphore  m_serializeMutex;
+
 	FreeRTOS::Semaphore  m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
+	FreeRTOS::Semaphore  m_semaphoreDeleteEvt = FreeRTOS::Semaphore("DeleteEvt");
 	FreeRTOS::Semaphore  m_semaphoreStartEvt  = FreeRTOS::Semaphore("StartEvt");
+	FreeRTOS::Semaphore  m_semaphoreStopEvt   = FreeRTOS::Semaphore("StopEvt");
 
 	uint32_t             m_numHandles;
 

@@ -1,5 +1,8 @@
 /*
  * IRremoteESP8266: IRrecvDemo - demonstrates receiving IR codes with IRrecv
+ * This is very simple teaching code to show you how to use the library.
+ * If you are trying to decode your Infra-Red remote(s) for later replay,
+ * use the IRrecvDumpV2.ino example code instead of this.
  * An IR detector/demodulator must be connected to the input RECV_PIN.
  * Copyright 2009 Ken Shirriff, http://arcfn.com
  * Example circuit diagram:
@@ -31,6 +34,11 @@ decode_results results;
 void setup() {
   Serial.begin(115200);
   irrecv.enableIRIn();  // Start the receiver
+  while (!Serial)  // Wait for the serial connection to be establised.
+    delay(50);
+  Serial.println();
+  Serial.print("IRrecvDemo is now running and waiting for IR message on Pin ");
+  Serial.println(RECV_PIN);
 }
 
 void loop() {
