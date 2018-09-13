@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.8beta"
+#define OMG_VERSION "0.8"
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -132,4 +132,3 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
-

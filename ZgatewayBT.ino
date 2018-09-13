@@ -372,7 +372,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
   
  
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
-  // Mi Jia provides tem(perature) and hum(idity)
+  // Mi Jia provides tem(perature), batt(erry) and hum(idity)
   // following the value of digit 47 we determine the type of data we get from the sensor
   switch (rest_data[47 + offset]) {
     case '9' :
