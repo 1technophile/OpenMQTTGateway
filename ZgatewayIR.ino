@@ -43,6 +43,35 @@
   IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
 #endif
 
+// IR protocol bits definition for Arduino (for ESP9266 they are defined in IRRemoteESP8266.h)
+#ifndef NEC_BITS
+  #define NEC_BITS                    32U
+#endif
+#ifndef SAMSUNG_BITS
+  #define SAMSUNG_BITS                32U
+#endif
+#ifndef SHARP_BITS
+  #define SHARP_ADDRESS_BITS           5U
+  #define SHARP_COMMAND_BITS           8U
+  #define SHARP_BITS (SHARP_ADDRESS_BITS + SHARP_COMMAND_BITS + 2)  // 15U
+#endif
+#ifndef RC5_BITS
+  #define RC5_RAW_BITS                14U
+  #define RC5_BITS      RC5_RAW_BITS - 2U
+#endif
+#ifndef DISH_BITS
+  #define DISH_BITS                   16U
+#endif
+#ifndef SONY_12_BITS
+  #define SONY_12_BITS                12U
+#endif
+#ifndef LG_BITS
+  #define LG_BITS                     28U
+#endif
+#ifndef WHYNTER_BITS
+  #define WHYNTER_BITS                32U
+#endif
+
 void setupIR()
 {
  
