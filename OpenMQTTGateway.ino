@@ -527,8 +527,14 @@ void setup_wifimanager(){
 
 #else // Arduino case
 void setup_ethernet() {
-  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
-  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  if (gateway[0] != 0 || Dns[0]!=0)
+  {
+    trc(F("Advanced ethernet config"));
+    Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  }else{
+    trc(F("Simple ethernet config"));
+    Ethernet.begin(mac, ip); 
+  }
   trc(F("OpenMQTTGateway ip: "));
   Serial.println(Ethernet.localIP());
   trc(F("Ethernet ok"));
