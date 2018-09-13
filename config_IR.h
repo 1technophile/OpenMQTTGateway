@@ -39,7 +39,7 @@
 #define repeatIRwMQTT false // do we repeat a received signal by using mqtt
 #define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
-//#define DumpMode true // uncomment so as to see big dumps of IR codes, put also #define MQTT_MAX_PACKET_SIZE 1024 into the library pubsubclient.h by instead of #define MQTT_MAX_PACKET_SIZE 128  
+//#define DumpMode true // uncomment so as to see big dumps of IR codes
 
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 

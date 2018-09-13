@@ -111,6 +111,7 @@
 #endif
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
+#define MQTT_MAX_PACKET_SIZE 1024
 #define array_size 12
 unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else
@@ -239,11 +240,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
+  //Launch serial for debugging purposes
+  Serial.begin(SERIAL_BAUD);
+  
   #if defined(ESP8266) || defined(ESP32)
-    //Launch serial for debugging purposes
-    #if defined(ZgatewaySRFB) || defined(ESP32)
-      Serial.begin(SERIAL_BAUD); // in the case of sonoff RF Bridge the link to the RF emitter/receiver is made by serial and need TX/RX
-    #else
+    #ifdef ESP8266
+      Serial.end();
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
@@ -251,13 +253,13 @@ void setup()
     #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
     #endif
-    
+
     trc(F("OpenMQTTGateway mac: "));
     trc(WiFi.macAddress()); 
-    
+
     trc(F("OpenMQTTGateway ip: "));
     trc(WiFi.localIP().toString());
-    
+
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
 
@@ -375,6 +377,10 @@ void setup()
   #ifdef ZsensorGPIOInput
     setupGPIOInput();
   #endif
+  
+  trc(F("MQTT_MAX_PACKET_SIZE"));
+  trc(MQTT_MAX_PACKET_SIZE);
+  trc(F("Setup OpenMQTTGateway end"));
 }
 
 
