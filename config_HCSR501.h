@@ -27,11 +27,14 @@
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectHCSR501toMQTT    Base_Topic Gateway_Name "/HCSR501toMQTT"
+
 #define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) 
   #define HCSR501_PIN D5
+#elif defined(ESP32)
+  #define HCSR501_PIN 5
 #else
   #define HCSR501_PIN 7
 #endif

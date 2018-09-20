@@ -116,8 +116,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
 
       _rfbSend(message_b, valueRPT);
       // Acknowledgement to the GTWRF topic 
-      boolean result = client.publish(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      if (result) trc(F("MQTTtoSRFB ack pub."));
+      pub(subjectGTWSRFBtoMQTT, datacallback, false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   if (topic == subjectMQTTtoSRFBRaw){
 
@@ -134,7 +133,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       _rfbToArray(datacallback,message_b);
       _rfbSend(message_b, valueRPT);
       // Acknowledgement to the GTWRF topic 
-      boolean result = client.publish(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      pub(subjectGTWSRFBtoMQTT, datacallback, false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       if (result) trc(F("MQTTtoSRFBRaw ack pub."));
   }
 }
@@ -201,23 +200,23 @@ void _rfbDecode() {
 
     if (action == RF_CODE_RFIN) {
         _rfbToChar(&_uartbuf[1], buffer);
-        client.publish(subjectSRFBtoMQTTRaw,buffer);
+        pub(subjectSRFBtoMQTTRaw, buffer, false);
         
         char val[8]= {0};
         extract_char(buffer, val, 12 ,8, false,true); 
-        client.publish(subjectSRFBtoMQTT,val); 
+        pub(subjectSRFBtoMQTT, val, false); 
 
         char val_Tsyn[4]= {0};
         extract_char(buffer, val_Tsyn, 0 ,4, false, true);       
-        client.publish(subjectSRFBtoMQTTTsyn,val_Tsyn);
+        pub(subjectSRFBtoMQTTTsyn, val_Tsyn, false);
         
         char val_Thigh[4]= {0};
         extract_char(buffer, val_Thigh, 4 ,4, false, true);   
-        client.publish(subjectSRFBtoMQTTThigh,val_Thigh);
+        pub(subjectSRFBtoMQTTThigh, val_Thigh, false);
 
         char val_Tlow[4]= {0};
         extract_char(buffer, val_Tlow, 8 ,4, false, true);
-        client.publish(subjectSRFBtoMQTTTlow,val_Tlow);
+        pub(subjectSRFBtoMQTTTlow, val_Tlow, false);
         
         _rfbAck();
     }

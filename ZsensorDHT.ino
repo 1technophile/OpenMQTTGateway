@@ -51,14 +51,14 @@ void MeasureTempAndHum(){
       if(h != persistedh || dht_always){
         trc(F("Sending Hum to MQTT"));
         trc(h);
-        client.publish(HUM1,String(h).c_str());
+        pub(HUM1,h, false);
        }else{
         trc(F("Same hum don't send it"));
        }
       if(t != persistedt || dht_always){
         trc(F("Sending Temp to MQTT"));
         trc(t);
-        client.publish(TEMP1, String(t).c_str());
+        pub(TEMP1, t, false);
       }else{
         trc(F("Same temp don't send it"));
       }

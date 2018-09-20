@@ -90,9 +90,9 @@ boolean _2GtoMQTT(){
         trc(sms.message);
         A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
         trc(F("data 2GtoMQTT"));
-        client.publish(subject2GtoMQTTphone,(char *)sms.number.c_str());
-        client.publish(subject2GtoMQTTdate,(char *)sms.date.c_str());    
-        client.publish(subject2GtoMQTTmessage,(char *)sms.message.c_str()); 
+        pub(subject2GtoMQTTphone,sms.number,false);
+        pub(subject2GtoMQTTdate,sms.date,false);
+        pub(subject2GtoMQTTmessage,sms.message,false); 
         return true;   
     }
     return false;
@@ -122,11 +122,7 @@ void MQTTto2G(char * topicOri, char * datacallback) {
       trc("SMS KO");
     }
     // Acknowledgement to the GTW2G topic
-    boolean result = client.publish(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    if (result){
-      trc(F("MQTTto2G ack pub."));
-      trc(data);
-    }
+    pub(subjectGTW2GtoMQTT, datacallback,false))// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   
 }

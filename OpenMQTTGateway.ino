@@ -184,9 +184,9 @@ boolean reconnect() {
       trc(F("Connected to broker"));
       failure_number = 0;
       // Once connected, publish an announcement...
-      client.publish(will_Topic,Gateway_AnnouncementMsg,will_Retain);
+      pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
-      client.publish(version_Topic,OMG_VERSION,will_Retain);
+      pub(version_Topic,OMG_VERSION,will_Retain);
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
         #ifdef ZgatewayRF
@@ -631,39 +631,19 @@ void loop()
       MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
     #ifdef ZgatewayRF
-      if(RFtoMQTT()){
-      trc(F("RFtoMQTT OK"));
-      //GREEN ON
-      digitalWrite(led_receive, LOW);
-      timer_led_receive = millis();
-      }
+      RFtoMQTT();
     #endif
     #ifdef ZgatewayRF315
-      if(RF315toMQTT()){
-      trc(F("RF315toMQTT OK"));
-      //GREEN ON
-      digitalWrite(led_receive, LOW);
-      timer_led_receive = millis();
-      }
+      RF315toMQTT();
     #endif
     #ifdef ZgatewayRF2
-      if(RF2toMQTT()){
-      trc(F("RF2toMQTT OK"));
-      digitalWrite(led_receive, LOW);
-      timer_led_receive = millis();
-      }
+      RF2toMQTT();
     #endif
     #ifdef ZgatewaySRFB
-      if(SRFBtoMQTT())
-      trc(F("SRFBtoMQTT OK"));
+      SRFBtoMQTT();
     #endif
     #ifdef ZgatewayIR
-      if(IRtoMQTT())      {
-      trc(F("IRtoMQTT OK"));
-      digitalWrite(led_receive, LOW);
-      timer_led_receive = millis();
-      delay(100);
-      }
+      IRtoMQTT();
     #endif
     #ifdef ZgatewayBT
         #ifndef multiCore
@@ -761,7 +741,7 @@ void stateMeasures(){
       trc(modules);
       char JSONmessageBuffer[100];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      client.publish(subjectSYStoMQTT,JSONmessageBuffer);
+      pub(subjectSYStoMQTT,JSONmessageBuffer,false);
     }
 }
 #endif
@@ -927,3 +907,28 @@ void trc(float msg){
   Serial.println(msg);
   #endif
 }
+
+void pub(char * topic, char * payload, boolean retainFlag){
+    client.publish(topic, payload, retainFlag);
+}
+
+void pub(char * topic, String payload, boolean retainFlag){
+    client.publish(topic,(char *)payload.c_str(),retainFlag);
+}
+
+void pub(String topic, String payload, boolean retainFlag){
+    client.publish((char *)topic.c_str(),(char *)payload.c_str(),retainFlag);
+}
+
+void pub(String topic, char *  payload, boolean retainFlag){
+    client.publish((char *)topic.c_str(),payload,retainFlag);
+}
+
+void pub(String topic, int payload, boolean retainFlag){
+    char val[12];
+    sprintf(val, "%d", payload);
+    client.publish((char *)topic.c_str(),val,retainFlag);
+}
+
+
+

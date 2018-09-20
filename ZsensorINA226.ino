@@ -79,9 +79,9 @@ void MeasureINA226(){
         dtostrf(current,6,3,current_c);
         dtostrf(power,6,3,power_c);
       
-        client.publish(subjectVolttoMQTT,volt_c);
-        client.publish(subjectCurrenttoMQTT,current_c);          
-        client.publish(subjectPowertoMQTT,power_c);  
+        pub(subjectVolttoMQTT,volt_c, false);
+        pub(subjectCurrenttoMQTT,current_c, false);          
+        pub(subjectPowertoMQTT,power_c, false);  
         
     }
 }

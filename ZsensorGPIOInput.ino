@@ -63,11 +63,11 @@ void MeasureGPIOInput(){
             
       if (InputState == HIGH) {
         trc(F("GPIO HIGH"));
-        client.publish(subjectGPIOInputtoMQTT,"HIGH");
+        pub(subjectGPIOInputtoMQTT,"HIGH", false);
       }
       if (InputState == LOW) {
         trc(F("GPIO LOW"));
-        client.publish(subjectGPIOInputtoMQTT,"LOW");
+        pub(subjectGPIOInputtoMQTT,"LOW", false);
       }
     }
   }

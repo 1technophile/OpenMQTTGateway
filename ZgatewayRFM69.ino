@@ -139,16 +139,16 @@ void setupRFM69(void) {
 }
 
 #ifdef subjectRFM69toMQTTrssi
-void publishRSSI(int16_t rssi) {
-  // Send the value of the rssi to MQTT
-  char buff[sizeof(subjectRFM69toMQTTrssi)+4];
-  sprintf(buff, "%s/%d", subjectRFM69toMQTTrssi, radio.SENDERID);
-  char buff_rssi[5];
-  sprintf(buff_rssi, "%d", radio.RSSI);
-  boolean result = client.publish(buff, buff_rssi);
-}
+  void publishRSSI(int16_t rssi) {
+    // Send the value of the rssi to MQTT
+    char buff[sizeof(subjectRFM69toMQTTrssi)+4];
+    sprintf(buff, "%s/%d", subjectRFM69toMQTTrssi, radio.SENDERID);
+    char buff_rssi[5];
+    sprintf(buff_rssi, "%d", radio.RSSI);
+    pub(buff, buff_rssi,false);
+  }
 #else
-#define publishRSSI(input)
+  #define publishRSSI(input)
 #endif
 
 boolean RFM69toMQTT(void) {
@@ -177,7 +177,7 @@ boolean RFM69toMQTT(void) {
 
     char buff[sizeof(subjectRFM69toMQTT)+4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
-    client.publish(buff,(char *)data);
+    pub(buff,(char *)data,false);
 
     publishRSSI(RSSI);
 
@@ -229,11 +229,8 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
       // Acknowledgement to the GTWRF topic
       char buff[sizeof(subjectGTWRFM69toMQTT)+4];
       sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
-      boolean result = client.publish(buff, data);
-      if (result)trc(F("Ack published"));
-
+      pub(buff, data, false);
       publishRSSI(radio.RSSI);
-
       return true;
     }
     else {

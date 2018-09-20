@@ -79,14 +79,16 @@ boolean RF2toMQTT(){
     MQTTunit = String(rf2rd.unit);
     MQTTgroupBit = String(rf2rd.groupBit);
     MQTTswitchType = String(rf2rd.switchType);
+
+    trc(F("LED MNG"));
+    digitalWrite(led_receive, LOW);
+    timer_led_receive = millis();
+    
     String MQTTRF2string;
     MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
     trc(F("Adv data RF2toMQTT"));
-    client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
-    return true;
-    
+    pub(MQTTRF2string,MQTTswitchType,false);  
   }
-  return false;
 }
 
 void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
@@ -203,11 +205,11 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(F("Adv data MQTTtoRF2 push state via RF2toMQTT"));
     if (isDimCommand) {
       MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2dimKey+String("/")+RF2periodKey+MQTTperiod;
-      client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTdimLevel.c_str());  
+      pub(MQTTRF2string,MQTTdimLevel,false);  
     }
     else {
       MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
-      client.publish((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());  
+      pub(MQTTRF2string,MQTTswitchType,false);  
     }
   }
 }

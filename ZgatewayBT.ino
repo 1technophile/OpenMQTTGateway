@@ -58,20 +58,20 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 trc(F("Get Name "));
                 String nameBLE = advertisedDevice.getName().c_str();
                 trc(nameBLE);
-                client.publish((char *)(mactopic + "/name").c_str(),(char *)nameBLE.c_str());
+                pub(mactopic + "/name"),nameBLE,false);
             }
             if (advertisedDevice.haveManufacturerData()){
                 trc(F("Get ManufacturerData "));
                 String ManufacturerData = advertisedDevice.getManufacturerData().c_str();
                 trc(ManufacturerData);
-                client.publish((char *)(mactopic + "/ManufacturerData").c_str(),(char *)ManufacturerData.c_str());
+                pub(mactopic + "/ManufacturerData"),ManufacturerData,false);
             }
             if (advertisedDevice.haveRSSI()){
               trc(F("Get RSSI "));       
               String rssi = String(advertisedDevice.getRSSI());
               String rssitopic = mactopic + subjectBTtoMQTTrssi;
               trc(rssitopic + " " + rssi);
-              client.publish((char *)rssitopic.c_str(),(char *)rssi.c_str());
+              pub(rssitopic,rssi,false);
             }
             if (advertisedDevice.haveTXPower()){
               trc(F("Get TXPower "));       
@@ -79,7 +79,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
               trc(TXPower);
               char cTXPower[5];
               sprintf(cTXPower, "%d", TXPower);
-              client.publish((char *)(mactopic + "/tx").c_str(),cTXPower);
+              pub(mactopic + "/tx"),cTXPower,false);
             }
             if (advertisedDevice.haveServiceData()){
                 char mac[mac_adress.length()+1];
@@ -104,8 +104,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 trc(service_data);
                 String mactopic(mac);
                 mactopic = subjectBTtoMQTT + mactopic + subjectBTtoMQTTservicedata;
-                client.publish((char *)mactopic.c_str(),service_data);
-                
+                pub(mactopic,service_data,false);
                 trc(F("Get service data UUID"));
                 BLEUUID serviceDataUUID = advertisedDevice.getServiceDataUUID();
                 trc(serviceDataUUID.toString().c_str());
@@ -248,15 +247,13 @@ boolean BTtoMQTT() {
                 trc(d[0].extract);
                 mactopic = subjectBTtoMQTT + String(d[0].extract) + subjectBTtoMQTTrssi;
                 int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
-                char val[12];
-                sprintf(val, "%d", rssi);
-                client.publish((char *)mactopic.c_str(),val);
+                pub(mactopic,rssi,false);
                 trc(F("service_data"));
                 String Service_data(d[5].extract);
                 Service_data = Service_data.substring(14);
                 trc(Service_data);
                 mactopic = subjectBTtoMQTT + String(d[0].extract) + subjectBTtoMQTTservicedata;
-                client.publish((char *)mactopic.c_str(),(char *)(Service_data).c_str());
+                pub(mactopic,Service_data,false);
                 if (strcmp(d[4].extract, "fe95") == 0) 
                   if (strstr(d[5].extract,"209800") != NULL) {
                     trc("mi flora data reading");
@@ -309,10 +306,8 @@ boolean BTtoMQTT() {
              String onedevice = discResult.substring(0,78);
              onedevice.replace(STRING_MSG,"");
              String mac = onedevice.substring(53,65);
-             String rssi = onedevice.substring(66,70);
-             String mactopic = subjectBTtoMQTT + mac + subjectBTtoMQTTrssi;
              trc(mactopic + " " + rssi);
-             client.publish((char *)mactopic.c_str(),(char *)rssi.c_str());
+             pub(subjectBTtoMQTT + mac + subjectBTtoMQTTrssi,onedevice.substring(66,70),false);
              discResult = discResult.substring(78);
           }
           return true;
@@ -427,9 +422,9 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
     trc("can't read values");
     return false;
     }
-    client.publish((char *)mactopic.c_str(),val);
+    pub(mactopic,val,false);
     if (hasTopic2){
-      client.publish((char *)mactopic2.c_str(),val2);
+      pub(mactopic2,val2,false);
     }
     trc(val);
     return true;

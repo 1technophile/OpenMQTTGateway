@@ -131,7 +131,7 @@ void MeasureTempHumAndPressure()
       if(BmeTempC != persisted_bme_tempc || bme280_always){
         trc(F("Sending Degrees C to MQTT"));
         trc(BmeTempC);
-        client.publish(TEMPBMEC, String(BmeTempC).c_str());
+        pub(TEMPBMEC, BmeTempC, false);
       }else{
         trc(F("Same Degrees C don't send it"));
       }
@@ -140,7 +140,7 @@ void MeasureTempHumAndPressure()
       if(BmeTempF != persisted_bme_tempf || bme280_always){
         trc(F("Sending Degrees F to MQTT"));
         trc(BmeTempF);
-        client.publish(TEMPBMEF,String(BmeTempF).c_str());
+        pub(TEMPBMEF, BmeTempF, false);
       }else{
         trc(F("Same Degrees F don't send it"));
       }
@@ -149,7 +149,7 @@ void MeasureTempHumAndPressure()
       if(BmeHum != persisted_bme_hum || bme280_always){
         trc(F("Sending Humidity to MQTT"));
         trc(BmeHum);
-        client.publish(HUMBME, String(BmeHum).c_str());
+        pub(HUMBME, BmeHum, false);
       }else{
         trc(F("Same Humidity don't send it"));
       }
@@ -158,7 +158,7 @@ void MeasureTempHumAndPressure()
       if(BmePa != persisted_bme_pa || bme280_always){
         trc(F("Sending Pressure to MQTT"));
         trc(BmePa);
-        client.publish(PRESSBME, String(BmePa).c_str());
+        pub(PRESSBME, BmePa, false);
       }else{
         trc(F("Same Pressure don't send it"));
       }
@@ -167,7 +167,7 @@ void MeasureTempHumAndPressure()
       if(BmeAltiM != persisted_bme_altim || bme280_always){
         trc(F("Sending Altitude Meter to MQTT"));
         trc(BmeAltiM);
-        client.publish(ALTIBMEM, String(BmeAltiM).c_str());
+        pub(ALTIBMEM, BmeAltiM, false);
       }else{
         trc(F("Same Altitude Meter don't send it"));
       }
@@ -176,7 +176,7 @@ void MeasureTempHumAndPressure()
       if(BmeAltiFt != persisted_bme_altift || bme280_always){
         trc(F("Sending Altitude Feet to MQTT"));
         trc(BmeAltiFt);
-        client.publish(ALTIBMEFT, String(BmeAltiFt).c_str());
+        pub(ALTIBMEFT, BmeAltiFt, false);
       }else{
         trc(F("Same Altitude Feet don't send it"));
       }

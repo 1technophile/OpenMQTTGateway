@@ -62,23 +62,22 @@ boolean RF315toMQTT(){
     MQTTbits = String(mySwitch315.getReceivedBitlength());
     MQTTlength = String(mySwitch315.getReceivedDelay());
     mySwitch315.resetAvailable();
+
+    trc(F("LED MNG"));
+    digitalWrite(led_receive, LOW);
+    timer_led_receive = millis();
+    
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RF315toMQTT"));
-        client.publish(subjectRF315toMQTTprotocol,(char *)MQTTprotocol.c_str());
-        client.publish(subjectRF315toMQTTbits,(char *)MQTTbits.c_str());    
-        client.publish(subjectRF315toMQTTlength,(char *)MQTTlength.c_str());    
-        trc(F("Sending RF315toMQTT"));
-        String value = String(MQTTvalue);
-        trc(value);
-        boolean result = client.publish(subjectRF315toMQTT,(char *)value.c_str());
+        pub(subjectRF315toMQTTprotocol,MQTTprotocol,false);
+        pub(subjectRF315toMQTTbits,MQTTbits,false);    
+        pub(subjectRF315toMQTTlength,MQTTlength,false);    
+        pub(subjectRF315toMQTT,MQTTvalue,false);
         if (repeatRF315wMQTT){
             trc(F("Publish RF315 for repeat"));
-            client.publish(subjectMQTTtoRF315,(char *)value.c_str());
+            pub(subjectMQTTtoRF315,MQTTvalue,false);
         }
-        return result;
     } 
   }
-  return false;
 }
 
 void MQTTtoRF315(char * topicOri, char * datacallback) {
@@ -119,9 +118,7 @@ void MQTTtoRF315(char * topicOri, char * datacallback) {
     mySwitch315.setProtocol(1,350);
     mySwitch315.send(data, 24);
     // Acknowledgement to the GTWRF topic
-    boolean result = client.publish(subjectGTWRF315toMQTT, datacallback);
-    if (result)trc(F("Ack pub."));
-    
+    pub(subjectGTWRF315toMQTT, datacallback,false);    
   } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
     trc(F("MQTTtoRF315 usr par."));
     if (valuePRT == 0) valuePRT = 1;
@@ -133,11 +130,7 @@ void MQTTtoRF315(char * topicOri, char * datacallback) {
     mySwitch315.setProtocol(valuePRT,valuePLSL);
     mySwitch315.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic 
-    boolean result = client.publish(subjectGTWRF315toMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    if (result){
-      trc(F("MQTTtoRF315 ack pub."));
-      trc(data);
-    }
+    pub(subjectGTWRF315toMQTT, datacallback,false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   
 }

@@ -109,17 +109,18 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF "RF315"
   #define ZgatewayRF2 "RF2"
   //#define Zgateway2G (not tested yet)
-  //#define ZgatewayIR
+  #define ZgatewayIR
   #define ZgatewayBT "BT"
   #define ZactuatorONOFF "ONOFF"
   //#define ZsensorINA226
-  //#define ZsensorHCSR501
+  #define ZsensorHCSR501
   //#define ZsensorADC
   //#define ZsensorBH1750
   //#define ZsensorBME280
-  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  //#define ZsensorGPIOInput "GPIOInput" //untested
+  //#define ZsensorTSL2561 "TSL2561"
+  #define ZsensorDHT "DHT"
+  #define ZgatewayRFM69 "RFM69"
+  #define ZsensorGPIOInput "GPIOInput"
 #else // for arduino mega + W5100
   #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)

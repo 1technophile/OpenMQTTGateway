@@ -89,7 +89,7 @@ trc(IR_RECEIVER_PIN);
 trc(F("ZgatewayIR setup done "));
 
 }
-boolean IRtoMQTT(){
+void IRtoMQTT(){
   decode_results results;
   
   if (irrecv.decode(&results)){
@@ -105,6 +105,11 @@ boolean IRtoMQTT(){
     MQTTvalue = results.value;
     MQTTprotocol = String(results.decode_type);
     MQTTbits = String(results.bits);
+
+    trc(F("LED MNG"));
+    digitalWrite(led_receive, LOW);
+    timer_led_receive = millis();
+    
     String rawCode = "";
     // Dump data
     for (uint16_t i = 1;  i < results.rawlen;  i++) {
@@ -138,21 +143,16 @@ boolean IRtoMQTT(){
       trc(F("--no pub. unknown protocol--"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data IRtoMQTT"));
-        client.publish(subjectIRtoMQTTprotocol,(char *)MQTTprotocol.c_str());
-        client.publish(subjectIRtoMQTTbits,(char *)MQTTbits.c_str());
-        client.publish(subjectIRtoMQTTRaw,(char *)rawCode.c_str());          
-        trc(F("Sending IRtoMQTT"));
-        String value = String(MQTTvalue);
-        trc(value);
-        boolean result = client.publish(subjectIRtoMQTT,(char *)value.c_str());
+        pub(subjectIRtoMQTTprotocol,MQTTprotocol,false);
+        pub(subjectIRtoMQTTbits,MQTTbits,false);
+        pub(subjectIRtoMQTTRaw,rawCode,false);          
+        pub(subjectIRtoMQTT,MQTTvalue,false);
         if (repeatIRwMQTT){
             trc(F("Pub. IR for repeat"));
-            client.publish(subjectMQTTtoIR,(char *)value.c_str());
+            pub(subjectMQTTtoIR,MQTTvalue,false);
         }
-        return result;
     }
-  }
-  return false;  
+  } 
 }
 
 void MQTTtoIR(char * topicOri, char * datacallback) {
@@ -471,10 +471,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
 #endif
 
   if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    boolean result = client.publish(subjectGTWIRtoMQTT, datacallback);
-    if (result){
-      trc(F("MQTTtoIR ack pub."));
-      };
+    pub(subjectGTWIRtoMQTT, datacallback,false);
   }
    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
 }

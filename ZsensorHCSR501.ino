@@ -49,7 +49,7 @@ void MeasureHCSR501(){
     } else {
       if (pirState == HIGH){
         // turned off
-        client.publish(subjectHCSR501toMQTT,"false");
+        pub(subjectHCSR501toMQTT,"false", false);
         trc(F("HC SR501 Motion ended"));
         pirState = LOW;
       }
