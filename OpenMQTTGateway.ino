@@ -887,43 +887,43 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 
 //trace
 void trc(String msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
 
 void trc(int msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
 
 void trc(unsigned int msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
 
 void trc(long msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
 
 void trc(unsigned long msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
 
 void trc(double msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
 
 void trc(float msg){
-  if (TRACE) {
+  #ifdef TRACE
   Serial.println(msg);
-  }
+  #endif
 }
