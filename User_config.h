@@ -130,4 +130,4 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 
 /*-------------------ACTIVATE TRACES----------------------*/
-#define TRACE 1  // 0= trace off 1 = trace on
+#define TRACE 1  // commented =  trace off, uncommented = trace on
