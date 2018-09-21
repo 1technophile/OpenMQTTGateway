@@ -32,6 +32,8 @@
 #define subjectBTtoMQTTmoi "/moi"
 #define subjectBTtoMQTTfer "/fer"
 #define subjectBTtoMQTTlux "/lux"
+#define subjectBTtoMQTTbatt "/batt"
+#define subjectBTtoMQTTservicedata "/servicedata"
 #define TimeBtw_Read 55555 //define the time between 2 scans
 #define Scan_duration 10 //define the time for a scan
 #define HM-10 

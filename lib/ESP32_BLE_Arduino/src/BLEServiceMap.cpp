@@ -27,8 +27,8 @@ BLEService* BLEServiceMap::getByUUID(const char* uuid) {
  */
 BLEService* BLEServiceMap::getByUUID(BLEUUID uuid) {
 	for (auto &myPair : m_uuidMap) {
-		if (myPair.second->getUUID().equals(uuid)) {
-			return myPair.second;
+		if (myPair.first->getUUID().equals(uuid)) {
+			return myPair.first;
 		}
 	}
 	//return m_uuidMap.at(uuid.toString());
@@ -54,7 +54,7 @@ BLEService* BLEServiceMap::getByHandle(uint16_t handle) {
  */
 void BLEServiceMap::setByUUID(BLEUUID uuid,
 		BLEService *service) {
-	m_uuidMap.insert(std::pair<std::string, BLEService *>(uuid.toString(), service));
+	m_uuidMap.insert(std::pair<BLEService *, std::string>(service, uuid.toString()));
 } // setByUUID
 
 
@@ -89,7 +89,44 @@ void BLEServiceMap::handleGATTServerEvent(
 		esp_ble_gatts_cb_param_t *param) {
 	// Invoke the handler for every Service we have.
 	for (auto &myPair : m_uuidMap) {
-		myPair.second->handleGATTServerEvent(event, gatts_if, param);
+		myPair.first->handleGATTServerEvent(event, gatts_if, param);
 	}
 }
+
+/**
+ * @brief Get the first service in the map.
+ * @return The first service in the map.
+ */
+BLEService* BLEServiceMap::getFirst() {
+	m_iterator = m_uuidMap.begin();
+	if (m_iterator == m_uuidMap.end()) {
+		return nullptr;
+	}
+	BLEService* pRet = m_iterator->first;
+	m_iterator++;
+	return pRet;
+} // getFirst
+
+/**
+ * @brief Get the next service in the map.
+ * @return The next service in the map.
+ */
+BLEService* BLEServiceMap::getNext() {
+	if (m_iterator == m_uuidMap.end()) {
+		return nullptr;
+	}
+	BLEService* pRet = m_iterator->first;
+	m_iterator++;
+	return pRet;
+} // getNext
+
+/**
+ * @brief Removes service from maps.
+ * @return N/A.
+ */
+void BLEServiceMap::removeService(BLEService *service){
+	m_handleMap.erase(service->getHandle());
+	m_uuidMap.erase(service);
+} // removeService
+
 #endif /* CONFIG_BT_ENABLED */

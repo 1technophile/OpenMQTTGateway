@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.8beta"
+#define OMG_VERSION "0.8"
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -68,9 +68,8 @@ char mqtt_port[6] = "1883";
 #endif
 
 const byte ip[] = { 192, 168, 1, 99 }; //ip adress
-// Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
-const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
-const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
+const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
@@ -133,4 +132,3 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // 0= trace off 1 = trace on
-

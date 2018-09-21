@@ -1654,7 +1654,7 @@ void BLEUtils::dumpGattServerEvent(
 				evtParam->add_char_descr.attr_handle,
 				evtParam->add_char_descr.service_handle,
 				evtParam->add_char_descr.service_handle,
-				BLEUUID(evtParam->add_char_descr.char_uuid).toString().c_str());
+				BLEUUID(evtParam->add_char_descr.descr_uuid).toString().c_str());
 			break;
 		} // ESP_GATTS_ADD_CHAR_DESCR_EVT
 

@@ -106,9 +106,12 @@
 #ifdef ZgatewayRFM69
   #include "config_RFM69.h"
 #endif
-
+#ifdef ZsensorGPIOInput
+  #include "config_GPIOInput.h"
+#endif
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32)
+#define MQTT_MAX_PACKET_SIZE 1024
 #define array_size 12
 unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else
@@ -237,11 +240,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void setup()
 {
+  //Launch serial for debugging purposes
+  Serial.begin(SERIAL_BAUD);
+  
   #if defined(ESP8266) || defined(ESP32)
-    //Launch serial for debugging purposes
-    #if defined(ZgatewaySRFB) || defined(ESP32)
-      Serial.begin(SERIAL_BAUD); // in the case of sonoff RF Bridge the link to the RF emitter/receiver is made by serial and need TX/RX
-    #else
+    #ifdef ESP8266
+      Serial.end();
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
@@ -249,13 +253,13 @@ void setup()
     #else // ESP32 case we don't use Wifi manager yet
       setup_wifi();
     #endif
-    
+
     trc(F("OpenMQTTGateway mac: "));
     trc(WiFi.macAddress()); 
-    
+
     trc(F("OpenMQTTGateway ip: "));
-    trc(WiFi.localIP());
-    
+    trc(WiFi.localIP().toString());
+
     // Port defaults to 8266
     ArduinoOTA.setPort(ota_port);
 
@@ -373,6 +377,13 @@ void setup()
   #ifdef ZsensorHCSR501
     setupHCSR501();
   #endif
+  #ifdef ZsensorGPIOInput
+    setupGPIOInput();
+  #endif
+  
+  trc(F("MQTT_MAX_PACKET_SIZE"));
+  trc(MQTT_MAX_PACKET_SIZE);
+  trc(F("Setup OpenMQTTGateway end"));
 }
 
 
@@ -519,8 +530,14 @@ void setup_wifimanager(){
 
 #else // Arduino case
 void setup_ethernet() {
-  Ethernet.begin(mac, ip); //Comment and uncomment the following line if you want to use advanced network config
-  //Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  if (gateway[0] != 0 || Dns[0]!=0)
+  {
+    trc(F("Advanced ethernet config"));
+    Ethernet.begin(mac, ip, Dns, gateway, subnet);
+  }else{
+    trc(F("Simple ethernet config"));
+    Ethernet.begin(mac, ip); 
+  }
   trc(F("OpenMQTTGateway ip: "));
   Serial.println(Ethernet.localIP());
   trc(F("Ethernet ok"));
@@ -608,6 +625,9 @@ void loop()
     #endif
     #ifdef ZsensorHCSR501
       MeasureHCSR501();
+    #endif
+    #ifdef ZsensorGPIOInput
+      MeasureGPIOInput();
     #endif
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
@@ -745,6 +765,9 @@ void stateMeasures(){
       #endif
       #ifdef ZsensorHCSR501
           modules = modules  + ZsensorHCSR501;
+      #endif
+      #ifdef ZsensorGPIOInput
+          modules = modules  + ZsensorGPIOInput;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);

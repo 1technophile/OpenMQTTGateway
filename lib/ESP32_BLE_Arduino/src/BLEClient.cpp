@@ -77,6 +77,7 @@ void BLEClient::clearServices() {
 	   delete myPair.second;
 	}
 	m_servicesMap.clear();
+	m_haveServices = false;
 	ESP_LOGD(LOG_TAG, "<< clearServices");
 } // clearServices
 
@@ -110,6 +111,7 @@ bool BLEClient::connect(BLEAddress address) {
 	errRc = ::esp_ble_gattc_open(
 		getGattcIf(),
 		*getPeerAddress().getNative(), // address
+		BLE_ADDR_TYPE_PUBLIC,          // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
 		1                              // direct connection
 	);
 	if (errRc != ESP_OK) {
@@ -165,6 +167,8 @@ void BLEClient::gattClientEventHandler(
 					m_pClientCallbacks->onDisconnect(this);
 				}
 				m_isConnected = false;
+				m_semaphoreRssiCmplEvt.give();
+				m_semaphoreSearchCmplEvt.give(1);
 				break;
 		} // ESP_GATTC_DISCONNECT_EVT
 
@@ -212,7 +216,7 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		//
 		case ESP_GATTC_SEARCH_CMPL_EVT: {
-			m_semaphoreSearchCmplEvt.give();
+			m_semaphoreSearchCmplEvt.give(0);
 			break;
 		} // ESP_GATTC_SEARCH_CMPL_EVT
 
@@ -365,8 +369,8 @@ std::map<std::string, BLERemoteService*>* BLEClient::getServices() {
 		ESP_LOGE(LOG_TAG, "esp_ble_gattc_search_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return &m_servicesMap;
 	}
-	m_semaphoreSearchCmplEvt.wait("getServices");
-	m_haveServices = true; // Remember that we now have services.
+	// If sucessfull, remember that we now have services.
+	m_haveServices = (m_semaphoreSearchCmplEvt.wait("getServices") == 0);
 	ESP_LOGD(LOG_TAG, "<< getServices");
 	return &m_servicesMap;
 } // getServices

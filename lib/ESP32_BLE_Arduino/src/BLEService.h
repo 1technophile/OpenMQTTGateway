@@ -57,13 +57,16 @@ public:
 	BLECharacteristic* createCharacteristic(BLEUUID uuid, uint32_t properties);
 	void               dump();
 	void               executeCreate(BLEServer* pServer);
+	void			   executeDelete();
 	BLECharacteristic* getCharacteristic(const char* uuid);
 	BLECharacteristic* getCharacteristic(BLEUUID uuid);
 	BLEUUID            getUUID();
 	BLEServer*         getServer();
 	void               start();
+	void			   stop();
 	std::string        toString();
 	uint16_t           getHandle();
+	uint8_t			   m_id = 0;
 
 private:
 	BLEService(const char* uuid, uint32_t numHandles);
@@ -81,7 +84,9 @@ private:
 	BLEUUID              m_uuid;
 
 	FreeRTOS::Semaphore  m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
+	FreeRTOS::Semaphore  m_semaphoreDeleteEvt = FreeRTOS::Semaphore("DeleteEvt");
 	FreeRTOS::Semaphore  m_semaphoreStartEvt  = FreeRTOS::Semaphore("StartEvt");
+	FreeRTOS::Semaphore  m_semaphoreStopEvt   = FreeRTOS::Semaphore("StopEvt");
 
 	uint32_t             m_numHandles;
 
