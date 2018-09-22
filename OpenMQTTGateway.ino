@@ -190,13 +190,13 @@ boolean reconnect() {
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
         #ifdef ZgatewayRF
-          client.subscribe(subjectMultiGTWRF);
+          client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
         #endif
         #ifdef ZgatewayRF315
-          client.subscribe(subjectMultiGTWRF315);
+          client.subscribe(subjectMultiGTWRF315);// subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
         #endif
         #ifdef ZgatewayIR
-          client.subscribe(subjectMultiGTWIR);
+          client.subscribe(subjectMultiGTWIR);// subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
         #endif
         trc(F("Subscription OK to the subjects"));
       }
@@ -247,7 +247,7 @@ void setup()
   #if defined(ESP8266) || defined(ESP32)
     #ifdef ESP8266
       Serial.end();
-      Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
+      Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);// enable on ESP8266 to free some pin
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
       setup_wifimanager();
@@ -289,7 +289,7 @@ void setup()
     });
     ArduinoOTA.begin();
 
-  #else // In case of arduino
+  #else // In case of arduino platform
 
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
