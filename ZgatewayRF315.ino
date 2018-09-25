@@ -45,38 +45,35 @@ void setupRF315(){
 }
 
 boolean RF315toMQTT(){
-
   if (mySwitch315.available()){
+    trc(F("Creating RF315 buffer"));
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& RF315data = jsonBuffer.createObject();
     trc(F("Rcv. RF315"));
     #ifdef ESP32
       String taskMessage = "RF Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-    unsigned long MQTTvalue = 0;
-    String MQTTprotocol;
-    String MQTTbits;
-    String MQTTlength;
-    MQTTvalue = mySwitch315.getReceivedValue();
-    MQTTprotocol = String(mySwitch315.getReceivedProtocol());
-    MQTTbits = String(mySwitch315.getReceivedBitlength());
-    MQTTlength = String(mySwitch315.getReceivedDelay());
+    RF315data[listOfParameters[0]] = mySwitch315.getReceivedValue();
+    RF315data[listOfParameters[1]] = mySwitch315.getReceivedProtocol();
+    RF315data[listOfParameters[2]] = mySwitch315.getReceivedBitlength();
+    RF315data[listOfParameters[3]] = mySwitch315.getReceivedDelay();
     mySwitch315.resetAvailable();
-
+    
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
     timer_led_receive = millis();
     
+    unsigned long MQTTvalue = RF315data[listOfParameters[0]];
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        pub(subjectRF315toMQTTprotocol,MQTTprotocol,false);
-        pub(subjectRF315toMQTTbits,MQTTbits,false);    
-        pub(subjectRF315toMQTTlength,MQTTlength,false);    
-        pub(subjectRF315toMQTT,MQTTvalue,false);
+        trc(F("Adv data RF315toMQTT")); 
+        pub(subjectRF315toMQTT,RF315data);
         if (repeatRF315wMQTT){
             trc(F("Publish RF315 for repeat"));
-            pub(subjectMQTTtoRF315,MQTTvalue,false);
+            pub(subjectMQTTtoRF315,RF315data);
         }
-    } 
+    }
   }
 }
 
@@ -118,7 +115,7 @@ void MQTTtoRF315(char * topicOri, char * datacallback) {
     mySwitch315.setProtocol(1,350);
     mySwitch315.send(data, 24);
     // Acknowledgement to the GTWRF topic
-    pub(subjectGTWRF315toMQTT, datacallback,false);    
+    pub(subjectGTWRF315toMQTT, datacallback);    
   } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
     trc(F("MQTTtoRF315 usr par."));
     if (valuePRT == 0) valuePRT = 1;
@@ -130,7 +127,7 @@ void MQTTtoRF315(char * topicOri, char * datacallback) {
     mySwitch315.setProtocol(valuePRT,valuePLSL);
     mySwitch315.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic 
-    pub(subjectGTWRF315toMQTT, datacallback,false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    pub(subjectGTWRF315toMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   
 }

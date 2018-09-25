@@ -81,18 +81,19 @@ void signalStrengthAnalysis(){
 boolean _2GtoMQTT(){
     // Get the memory locations of unread SMS messages.
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
+    trc(F("Creating SMS  buffer"));
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& SMSdata = jsonBuffer.createObject();
     for (int i = 0; i < unreadSMSNum; i++) {
         trc("New  message at index: ");
         trc(unreadSMSNum);
         sms = A6l.readSMS(unreadSMSLocs[i]);
-        trc(sms.number);
-        trc(sms.date);
-        trc(sms.message);
+        SMSdata[listOfParameters[0]] = sms.message;
+        SMSdata[listOfParameters[10]] = sms.date;
+        SMSdata[listOfParameters[9]] = sms.number;
         A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
-        trc(F("data 2GtoMQTT"));
-        pub(subject2GtoMQTTphone,sms.number,false);
-        pub(subject2GtoMQTTdate,sms.date,false);
-        pub(subject2GtoMQTTmessage,sms.message,false); 
+        trc(F("Adv data 2GtoMQTT"));
+        pub(subject2GtoMQTT,SMSdata);
         return true;   
     }
     return false;
@@ -122,7 +123,7 @@ void MQTTto2G(char * topicOri, char * datacallback) {
       trc("SMS KO");
     }
     // Acknowledgement to the GTW2G topic
-    pub(subjectGTW2GtoMQTT, datacallback,false))// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    pub(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   
 }

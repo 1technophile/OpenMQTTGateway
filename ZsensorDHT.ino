@@ -51,14 +51,14 @@ void MeasureTempAndHum(){
       if(h != persistedh || dht_always){
         trc(F("Sending Hum to MQTT"));
         trc(h);
-        pub(HUM1,h, false);
+        pub(HUM1,h);
        }else{
         trc(F("Same hum don't send it"));
        }
       if(t != persistedt || dht_always){
         trc(F("Sending Temp to MQTT"));
         trc(t);
-        pub(TEMP1, t, false);
+        pub(TEMP1, t);
       }else{
         trc(F("Same temp don't send it"));
       }

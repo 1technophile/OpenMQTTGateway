@@ -116,7 +116,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
 
       _rfbSend(message_b, valueRPT);
       // Acknowledgement to the GTWRF topic 
-      pub(subjectGTWSRFBtoMQTT, datacallback, false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      pub(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   if (topic == subjectMQTTtoSRFBRaw){
 
@@ -133,8 +133,7 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
       _rfbToArray(datacallback,message_b);
       _rfbSend(message_b, valueRPT);
       // Acknowledgement to the GTWRF topic 
-      pub(subjectGTWSRFBtoMQTT, datacallback, false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      if (result) trc(F("MQTTtoSRFBRaw ack pub."));
+      pub(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
 }
 
@@ -200,24 +199,37 @@ void _rfbDecode() {
 
     if (action == RF_CODE_RFIN) {
         _rfbToChar(&_uartbuf[1], buffer);
-        pub(subjectSRFBtoMQTTRaw, buffer, false);
-        
+
+        trc(F("Creating RF buffer"));
+        StaticJsonBuffer<200> jsonBuffer;
+        JsonObject& SRFBdata = jsonBuffer.createObject();
+        SRFBdata[listOfParameters[4]] = buffer;
+
         char val[8]= {0};
-        extract_char(buffer, val, 12 ,8, false,true); 
-        pub(subjectSRFBtoMQTT, val, false); 
+        extract_char(buffer, val, 12 ,8, false,true);
+        SRFBdata[listOfParameters[0]] = val;
 
         char val_Tsyn[4]= {0};
-        extract_char(buffer, val_Tsyn, 0 ,4, false, true);       
-        pub(subjectSRFBtoMQTTTsyn, val_Tsyn, false);
-        
+        extract_char(buffer, val_Tsyn , 0 ,4, false, true);   
+        SRFBdata[listOfParameters[3]] = val_Tsyn;
+
         char val_Thigh[4]= {0};
-        extract_char(buffer, val_Thigh, 4 ,4, false, true);   
-        pub(subjectSRFBtoMQTTThigh, val_Thigh, false);
+        extract_char(buffer, val_Thigh , 4 ,4, false, true);
+        SRFBdata[listOfParameters[7]]=val_Thigh;
 
         char val_Tlow[4]= {0};
-        extract_char(buffer, val_Tlow, 8 ,4, false, true);
-        pub(subjectSRFBtoMQTTTlow, val_Tlow, false);
+        extract_char(buffer,val_Tlow , 8 ,4, false, true);
+        SRFBdata[listOfParameters[8]] = val_Tlow;
         
+        unsigned long MQTTvalue = SRFBdata[listOfParameters[0]];
+        if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
+            trc(F("Adv data SRFBtoMQTT")); 
+            pub(subjectSRFBtoMQTT,SRFBdata);
+            if (repeatSRFBwMQTT){
+                trc(F("Publish SRFB for repeat"));
+                pub(subjectMQTTtoSRFB,SRFBdata);
+            }
+        } 
         _rfbAck();
     }
 }

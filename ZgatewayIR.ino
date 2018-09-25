@@ -93,18 +93,20 @@ void IRtoMQTT(){
   decode_results results;
   
   if (irrecv.decode(&results)){
+  trc(F("Creating IR buffer"));
+  StaticJsonBuffer<2000> jsonBuffer;
+  JsonObject& IRdata = jsonBuffer.createObject();
+  
   trc(F("Rcv. IR"));
     #ifdef ESP32
       String taskMessage = "Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-    unsigned long MQTTvalue = 0;
-    String MQTTprotocol;
-    String MQTTbits;
-    MQTTvalue = results.value;
-    MQTTprotocol = String(results.decode_type);
-    MQTTbits = String(results.bits);
+
+    IRdata[listOfParameters[0]] = results.value;
+    IRdata[listOfParameters[1]] = results.decode_type;
+    IRdata[listOfParameters[2]] = results.bits;
 
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
@@ -122,6 +124,7 @@ void IRtoMQTT(){
       if ( i < results.rawlen-1 ) rawCode = rawCode + ","; // ',' not needed on last one
     }
     trc(rawCode);
+    IRdata[listOfParameters[4]] = rawCode;
     // if needed we directly resend the raw code
     if (RawDirectForward){
       #ifdef ESP8266
@@ -138,18 +141,15 @@ void IRtoMQTT(){
       trc(F("raw signal redirected"));
     }
     irrecv.resume(); // Receive the next value
-
-    if (pubIRunknownPrtcl == false && MQTTprotocol == "-1"){ // don't publish unknown IR protocol
+    unsigned long MQTTvalue = IRdata[listOfParameters[0]];
+    if (pubIRunknownPrtcl == false && listOfParameters[1] == "-1"){ // don't publish unknown IR protocol
       trc(F("--no pub. unknown protocol--"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data IRtoMQTT"));
-        pub(subjectIRtoMQTTprotocol,MQTTprotocol,false);
-        pub(subjectIRtoMQTTbits,MQTTbits,false);
-        pub(subjectIRtoMQTTRaw,rawCode,false);          
-        pub(subjectIRtoMQTT,MQTTvalue,false);
+        trc(F("Adv data IRtoMQTT"));         
+        pub(subjectIRtoMQTT,IRdata);
         if (repeatIRwMQTT){
             trc(F("Pub. IR for repeat"));
-            pub(subjectMQTTtoIR,MQTTvalue,false);
+            pub(subjectMQTTtoIR,MQTTvalue);
         }
     }
   } 
@@ -471,7 +471,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
 #endif
 
   if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    pub(subjectGTWIRtoMQTT, datacallback,false);
+    pub(subjectGTWIRtoMQTT, datacallback);
   }
    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
 }

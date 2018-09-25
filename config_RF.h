@@ -29,12 +29,10 @@
 #define subjectMQTTtoRF  Base_Topic Gateway_Name "/commands/MQTTto433"
 #define subjectRFtoMQTT  Base_Topic Gateway_Name "/433toMQTT"
 #define subjectGTWRFtoMQTT  Base_Topic Gateway_Name "/433toMQTT"
-#define subjectRFtoMQTTprotocol  Base_Topic Gateway_Name "/433toMQTT/protocol"
-#define subjectRFtoMQTTbits  Base_Topic Gateway_Name "/433toMQTT/bits"
-#define subjectRFtoMQTTlength  Base_Topic Gateway_Name "/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFbitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
-#define repeatRFwMQTT false // do we repeat a received signal by using mqtt
+#define repeatRFwMQTT false // do we repeat a received signal by using mqtt with RF gateway
+#define repeatSRFBwMQTT false // do we repeat a received signal by using mqtt with Sonoff RF Bridge
 /*
 RF supported protocols
 433_1

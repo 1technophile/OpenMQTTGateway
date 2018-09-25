@@ -96,7 +96,7 @@ void MeasureLightIntensity()
       if(Lux != persistedll || bh1750_always){
         trc(F("Sending Lux to MQTT"));
         trc(Lux);
-        pub(LUX,Lux,false);
+        pub(LUX,Lux);
        }else{
         trc(F("Same lux don't send it"));
        }
@@ -105,7 +105,7 @@ void MeasureLightIntensity()
       if(FtCd != persistedlf || bh1750_always){
         trc(F("Sending FtCd to MQTT"));
         trc(FtCd);
-        pub(FTCD,FtCd,false);
+        pub(FTCD,FtCd);
       }else{
         trc(F("Same ftcd don't send it"));
       }
@@ -114,7 +114,7 @@ void MeasureLightIntensity()
       if(Wattsm2 != persistedlw || bh1750_always){
         trc(F("Sending Wattsm2 to MQTT"));
         trc(Wattsm2);
-        pub(WATTSM2, Wattsm2, false);
+        pub(WATTSM2, Wattsm2);
       }else{
         trc(F("Same wattsm2 don't send it"));
       }    

@@ -65,29 +65,25 @@ void setupRF2(){
 boolean RF2toMQTT(){
 
   if(rf2rd.hasNewData){
+    trc(F("Creating RF2 buffer"));
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& RF2data = jsonBuffer.createObject();
     
-    rf2rd.hasNewData=false;
+    rf2rd.hasNewData = false;
+    
     trc(F("Rcv. RF2"));
-    String MQTTAddress;
-    String MQTTperiod;
-    String MQTTunit;
-    String MQTTgroupBit;
-    String MQTTswitchType;
-
-    MQTTAddress = String(rf2rd.address);
-    MQTTperiod = String(rf2rd.period);
-    MQTTunit = String(rf2rd.unit);
-    MQTTgroupBit = String(rf2rd.groupBit);
-    MQTTswitchType = String(rf2rd.switchType);
-
+    RF2data[listOfParameters[0]] = rf2rd.unit;
+    RF2data[listOfParameters[2]] = rf2rd.groupBit;
+    RF2data[listOfParameters[3]] = rf2rd.period;
+    RF2data[listOfParameters[5]] = rf2rd.address;
+    RF2data[listOfParameters[6]] = rf2rd.switchType;
+    
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
     timer_led_receive = millis();
     
-    String MQTTRF2string;
-    MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
     trc(F("Adv data RF2toMQTT"));
-    pub(MQTTRF2string,MQTTswitchType,false);  
+    pub(subjectRF2toMQTT,RF2data);  
   }
 }
 
@@ -205,11 +201,11 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     trc(F("Adv data MQTTtoRF2 push state via RF2toMQTT"));
     if (isDimCommand) {
       MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2dimKey+String("/")+RF2periodKey+MQTTperiod;
-      pub(MQTTRF2string,MQTTdimLevel,false);  
+      pub(MQTTRF2string,MQTTdimLevel);  
     }
     else {
       MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
-      pub(MQTTRF2string,MQTTswitchType,false);  
+      pub(MQTTRF2string,MQTTswitchType);  
     }
   }
 }

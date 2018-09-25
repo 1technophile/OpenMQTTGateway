@@ -39,7 +39,17 @@
 #define _2G_MAX_SIGNAL 1000
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#define _2G_TX_PIN D6 //D6 to A6 RX, 
-#define _2G_RX_PIN D7 //D7 to A6 TX
-#define _2G_PWR_PIN D5 // connect a MOSFET to power on and off your A6/7 module
+#ifdef ESP8266
+  #define _2G_TX_PIN D6 //D6 to A6 RX, 
+  #define _2G_RX_PIN D7 //D7 to A6 TX
+  #define _2G_PWR_PIN D5 // connect a MOSFET to power on and off your A6/7 module
+#elif defined(ESP32)
+  #define _2G_TX_PIN D6 //D6 to A6 RX, 
+  #define _2G_RX_PIN D7 //D7 to A6 TX
+  #define _2G_PWR_PIN D5 // connect a MOSFET to power on and off your A6/7 module
+#else
+  #define _2G_TX_PIN 6 //D6 to A6 RX, 
+  #define _2G_RX_PIN 7 //D7 to A6 TX
+  #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
+#endif
 

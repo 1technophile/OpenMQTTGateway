@@ -131,7 +131,7 @@ void MeasureTempHumAndPressure()
       if(BmeTempC != persisted_bme_tempc || bme280_always){
         trc(F("Sending Degrees C to MQTT"));
         trc(BmeTempC);
-        pub(TEMPBMEC, BmeTempC, false);
+        pub(TEMPBMEC, BmeTempC);
       }else{
         trc(F("Same Degrees C don't send it"));
       }
@@ -140,7 +140,7 @@ void MeasureTempHumAndPressure()
       if(BmeTempF != persisted_bme_tempf || bme280_always){
         trc(F("Sending Degrees F to MQTT"));
         trc(BmeTempF);
-        pub(TEMPBMEF, BmeTempF, false);
+        pub(TEMPBMEF, BmeTempF);
       }else{
         trc(F("Same Degrees F don't send it"));
       }
@@ -149,7 +149,7 @@ void MeasureTempHumAndPressure()
       if(BmeHum != persisted_bme_hum || bme280_always){
         trc(F("Sending Humidity to MQTT"));
         trc(BmeHum);
-        pub(HUMBME, BmeHum, false);
+        pub(HUMBME, BmeHum);
       }else{
         trc(F("Same Humidity don't send it"));
       }
@@ -158,7 +158,7 @@ void MeasureTempHumAndPressure()
       if(BmePa != persisted_bme_pa || bme280_always){
         trc(F("Sending Pressure to MQTT"));
         trc(BmePa);
-        pub(PRESSBME, BmePa, false);
+        pub(PRESSBME, BmePa);
       }else{
         trc(F("Same Pressure don't send it"));
       }
@@ -167,7 +167,7 @@ void MeasureTempHumAndPressure()
       if(BmeAltiM != persisted_bme_altim || bme280_always){
         trc(F("Sending Altitude Meter to MQTT"));
         trc(BmeAltiM);
-        pub(ALTIBMEM, BmeAltiM, false);
+        pub(ALTIBMEM, BmeAltiM);
       }else{
         trc(F("Same Altitude Meter don't send it"));
       }
@@ -176,7 +176,7 @@ void MeasureTempHumAndPressure()
       if(BmeAltiFt != persisted_bme_altift || bme280_always){
         trc(F("Sending Altitude Feet to MQTT"));
         trc(BmeAltiFt);
-        pub(ALTIBMEFT, BmeAltiFt, false);
+        pub(ALTIBMEFT, BmeAltiFt);
       }else{
         trc(F("Same Altitude Feet don't send it"));
       }

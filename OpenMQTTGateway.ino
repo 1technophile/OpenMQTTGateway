@@ -119,6 +119,11 @@
   #define array_size 4
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 #endif
+
+#define listOfParameters_size 11
+#define Parameters_length 11
+const char listOfParameters[listOfParameters_size][Parameters_length] = {'value','protocol','bits','length','rawCode','adress','switchType','high','low','tel','date'};
+
 /*------------------------------------------------------------------------*/
 
 //adding this to bypass the problem of the arduino builder issue 50
@@ -406,7 +411,6 @@ void setup_wifi() {
     failureAttempt++; //DIRTY FIX ESP32
     if (failureAttempt > 30) setup_wifi(); //DIRTY FIX ESP32
   }
-  
   trc(F("WiFi ok with manual config credentials"));
 }
 
@@ -741,7 +745,7 @@ void stateMeasures(){
       trc(modules);
       char JSONmessageBuffer[100];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      pub(subjectSYStoMQTT,JSONmessageBuffer,false);
+      pub(subjectSYStoMQTT,JSONmessageBuffer);
     }
 }
 #endif
@@ -912,23 +916,43 @@ void pub(char * topic, char * payload, boolean retainFlag){
     client.publish(topic, payload, retainFlag);
 }
 
-void pub(char * topic, String payload, boolean retainFlag){
-    client.publish(topic,(char *)payload.c_str(),retainFlag);
+void pub(char * topic, JsonObject& data){
+    char JSONmessageBuffer[1000];
+    data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    client.publish(topic, JSONmessageBuffer);
+    trc(F("Pub data per topic"));
+
+    // Loop through all the key-value pairs in obj
+    for (JsonPair& p : data) {
+      if (p.value.is<char*>()) {
+        client.publish(strcat(strcat(topic,"/"), p.key),p.value.as<const char*>());
+      }
+    }
+   /* for(int i=0; i < listOfParameters_size;i++)
+    {
+      if (data.get<const char*>(listOfParameters[i]) != NULL) client.publish(strcat(strcat(topic,"/"), listOfParameters[i]),data[listOfParameters[i]].as<const char*>());
+    }*/
 }
 
-void pub(String topic, String payload, boolean retainFlag){
-    client.publish((char *)topic.c_str(),(char *)payload.c_str(),retainFlag);
+void pub(char * topic, char * payload){
+    client.publish(topic, payload);
 }
 
-void pub(String topic, char *  payload, boolean retainFlag){
-    client.publish((char *)topic.c_str(),payload,retainFlag);
+void pub(char * topic, String payload){
+    client.publish(topic,(char *)payload.c_str());
 }
 
-void pub(String topic, int payload, boolean retainFlag){
+void pub(String topic, String payload){
+    client.publish((char *)topic.c_str(),(char *)payload.c_str());
+}
+
+void pub(String topic, char *  payload){
+    client.publish((char *)topic.c_str(),payload);
+}
+
+void pub(String topic, int payload){
     char val[12];
     sprintf(val, "%d", payload);
-    client.publish((char *)topic.c_str(),val,retainFlag);
+    client.publish((char *)topic.c_str(),val);
 }
-
-
 

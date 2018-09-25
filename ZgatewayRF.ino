@@ -47,35 +47,31 @@ void setupRF(){
 void RFtoMQTT(){
 
   if (mySwitch.available()){
+    trc(F("Creating RF buffer"));
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& RFdata = jsonBuffer.createObject();
     trc(F("Rcv. RF"));
     #ifdef ESP32
       String taskMessage = "RF Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-    unsigned long MQTTvalue = 0;
-    String MQTTprotocol;
-    String MQTTbits;
-    String MQTTlength;
-    MQTTvalue = mySwitch.getReceivedValue();
-    MQTTprotocol = String(mySwitch.getReceivedProtocol());
-    MQTTbits = String(mySwitch.getReceivedBitlength());
-    MQTTlength = String(mySwitch.getReceivedDelay());
+    RFdata[listOfParameters[0]] = mySwitch.getReceivedValue();
+    RFdata[listOfParameters[1]] = mySwitch.getReceivedProtocol();
+    RFdata[listOfParameters[2]] = mySwitch.getReceivedBitlength();
+    RFdata[listOfParameters[3]] = mySwitch.getReceivedDelay();
     mySwitch.resetAvailable();
     
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
     timer_led_receive = millis();
-    
+    unsigned long MQTTvalue = RFdata[listOfParameters[0]];
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RFtoMQTT"));
-        pub(subjectRFtoMQTTprotocol,MQTTprotocol,false);
-        pub(subjectRFtoMQTTbits,MQTTbits,false);    
-        pub(subjectRFtoMQTTlength,MQTTlength,false);    
-        pub(subjectRFtoMQTT,MQTTvalue,false);
+        trc(F("Adv data RFtoMQTT")); 
+        pub(subjectRFtoMQTT,RFdata);
         if (repeatRFwMQTT){
             trc(F("Publish RF for repeat"));
-            pub(subjectMQTTtoRF,MQTTvalue,false);
+            pub(subjectMQTTtoRF,RFdata);
         }
     } 
   }
@@ -119,7 +115,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     mySwitch.setProtocol(1,350);
     mySwitch.send(data, 24);
     // Acknowledgement to the GTWRF topic
-    pub(subjectGTWRFtoMQTT, datacallback,false);  
+    pub(subjectGTWRFtoMQTT, datacallback);  
   } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
     trc(F("MQTTtoRF usr par."));
     if (valuePRT == 0) valuePRT = 1;
@@ -131,7 +127,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     mySwitch.setProtocol(valuePRT,valuePLSL);
     mySwitch.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic 
-    pub(subjectGTWRFtoMQTT, datacallback,false);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    pub(subjectGTWRFtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   } 
 }
 #endif

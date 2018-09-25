@@ -145,7 +145,7 @@ void setupRFM69(void) {
     sprintf(buff, "%s/%d", subjectRFM69toMQTTrssi, radio.SENDERID);
     char buff_rssi[5];
     sprintf(buff_rssi, "%d", radio.RSSI);
-    pub(buff, buff_rssi,false);
+    pub(buff, buff_rssi);
   }
 #else
   #define publishRSSI(input)
@@ -177,7 +177,7 @@ boolean RFM69toMQTT(void) {
 
     char buff[sizeof(subjectRFM69toMQTT)+4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
-    pub(buff,(char *)data,false);
+    pub(buff,(char *)data);
 
     publishRSSI(RSSI);
 
@@ -229,7 +229,7 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
       // Acknowledgement to the GTWRF topic
       char buff[sizeof(subjectGTWRFM69toMQTT)+4];
       sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
-      pub(buff, data, false);
+      pub(buff, data);
       publishRSSI(radio.RSSI);
       return true;
     }

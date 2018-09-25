@@ -49,7 +49,7 @@ void MQTTtoONOFF(char * topicOri, char * datacallback){
     trc(boolSWITCHTYPE);
     digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
     // we acknowledge the sending by publishing the value to an acknowledgement topic
-    pub(subjectGTWONOFFtoMQTT, datacallback,false);
+    pub(subjectGTWONOFFtoMQTT, datacallback);
   }
 }
 #endif
