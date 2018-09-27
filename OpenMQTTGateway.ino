@@ -580,7 +580,7 @@ void setup_ethernet() {
 
 void loop()
 {
- 
+
     unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
@@ -923,9 +923,13 @@ void pub(char * topic, JsonObject& data){
     trc(F("Pub data per topic"));
 
     // Loop through all the key-value pairs in obj
+        
     for (JsonPair& p : data) {
       if (p.value.is<char*>()) {
-        client.publish(strcat(strcat(topic,"/"), p.key),p.value.as<const char*>());
+        size_t total_size = sizeof (topic) +sizeof (p.key) + 2;
+        char parameter_topic[total_size];
+        strncpy(parameter_topic, topic, total_size);
+        client.publish(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
       }
     }
    /* for(int i=0; i < listOfParameters_size;i++)
@@ -955,4 +959,3 @@ void pub(String topic, int payload){
     sprintf(val, "%d", payload);
     client.publish((char *)topic.c_str(),val);
 }
-
