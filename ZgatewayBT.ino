@@ -58,13 +58,13 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 trc(F("Get Name "));
                 String nameBLE = advertisedDevice.getName().c_str();
                 trc(nameBLE);
-                pub(mactopic + "/name"),nameBLE);
+                pub((mactopic + "/name"),nameBLE);
             }
             if (advertisedDevice.haveManufacturerData()){
                 trc(F("Get ManufacturerData "));
                 String ManufacturerData = advertisedDevice.getManufacturerData().c_str();
                 trc(ManufacturerData);
-                pub(mactopic + "/ManufacturerData"),ManufacturerData);
+                pub((mactopic + "/ManufacturerData"),ManufacturerData);
             }
             if (advertisedDevice.haveRSSI()){
               trc(F("Get RSSI "));       
@@ -79,7 +79,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
               trc(TXPower);
               char cTXPower[5];
               sprintf(cTXPower, "%d", TXPower);
-              pub(mactopic + "/tx"),cTXPower);
+              pub((mactopic + "/tx"),cTXPower);
             }
             if (advertisedDevice.haveServiceData()){
                 char mac[mac_adress.length()+1];
