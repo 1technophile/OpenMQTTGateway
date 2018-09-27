@@ -86,7 +86,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
-#ifdef ESP8266 // for nodemcu, weemos and esp8266
+#if defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // for nodemcu, weemos, esp8266, and Arduino mega
   #define ZgatewayRF "RF"
   #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
@@ -112,16 +112,16 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayIR
   #define ZgatewayBT "BT"
   #define ZactuatorONOFF "ONOFF"
-  //#define ZsensorINA226
+  #define ZsensorINA226
   #define ZsensorHCSR501
-  //#define ZsensorADC
-  //#define ZsensorBH1750
-  //#define ZsensorBME280
+  #define ZsensorADC
+  #define ZsensorBH1750
+  #define ZsensorBME280
   //#define ZsensorTSL2561 "TSL2561"
   #define ZsensorDHT "DHT"
   #define ZgatewayRFM69 "RFM69"
   #define ZsensorGPIOInput "GPIOInput"
-#else // for arduino mega + W5100
+#else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
