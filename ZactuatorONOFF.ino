@@ -44,7 +44,7 @@ void MQTTtoONOFF(char * topicOri, char * datacallback){
   boolSWITCHTYPE = to_bool(datacallback);
   String topic = topicOri;
  
-  if ((topic == subjectMQTTtoONOFF)){
+  if (topic == subjectMQTTtoONOFF){
     trc(F("MQTTtoONOFF"));
     trc(boolSWITCHTYPE);
     digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
@@ -53,4 +53,3 @@ void MQTTtoONOFF(char * topicOri, char * datacallback){
   }
 }
 #endif
-
