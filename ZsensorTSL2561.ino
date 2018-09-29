@@ -101,8 +101,8 @@ void MeasureLightIntensityTSL2561()
 	  	  
 	  trc("Sending Light Intensity in Lux to MQTT " + String(event.light) + " lux");
 	  pub(LUX, event.light);
-	  pub(FTCD, (event.light)/10.764));
-	  pub(WATTSM2, (event.light)/683.0));
+	  pub(FTCD, (event.light)/10.764);
+	  pub(WATTSM2, (event.light)/683.0);
 	} else {
 	  trc("Same lux value, do not send");
 	}
@@ -112,4 +112,3 @@ void MeasureLightIntensityTSL2561()
   }
 }
 #endif
-
