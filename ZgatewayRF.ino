@@ -56,16 +56,17 @@ void RFtoMQTT(){
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-    RFdata[listOfParameters[0]] = mySwitch.getReceivedValue();
-    RFdata[listOfParameters[1]] = mySwitch.getReceivedProtocol();
-    RFdata[listOfParameters[2]] = mySwitch.getReceivedBitlength();
-    RFdata[listOfParameters[3]] = mySwitch.getReceivedDelay();
+    RFdata.set("value", (unsigned long)mySwitch.getReceivedValue());
+    RFdata.set("protocol",(int)mySwitch.getReceivedProtocol());
+    RFdata.set("length", (int)mySwitch.getReceivedBitlength());
+    RFdata.set("delay", (int)mySwitch.getReceivedDelay());
     mySwitch.resetAvailable();
     
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
     timer_led_receive = millis();
-    unsigned long MQTTvalue = RFdata[listOfParameters[0]];
+    
+    unsigned long MQTTvalue = RFdata.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data RFtoMQTT")); 
         pub(subjectRFtoMQTT,RFdata);
