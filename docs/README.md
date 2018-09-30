@@ -6,6 +6,8 @@ OpenMQTTGateway act as a WIFI or Ethernet gateway between your 433mhz/315mhz/Inf
 
 The MQTT broker can be connected to your favorite home automation controller (Home Assistant, Openhab, Domoticz) or NodeRED, as long as it supports MQTT, the system can talk to the gateway and by the way your different devices on both directions.
 
+[![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)](https://github.com/1technophile/OpenMQTTGateway/wiki)
+
 It can be installed on:
 * Arduino uno(limited)/mega(advised) + W5100
 * ESP8266: NodeMCU V1.0 NodeMCU V2.0, NodeMCU V3.0, ESP8266 12F and Wemos D1
