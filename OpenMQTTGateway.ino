@@ -917,25 +917,32 @@ void pub(char * topic, char * payload, boolean retainFlag){
 }
 
 void pub(char * topic, JsonObject& data){
-    char JSONmessageBuffer[1000];
+    char JSONmessageBuffer[MQTT_MAX_PACKET_SIZE];
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     client.publish(topic, JSONmessageBuffer);
     trc(F("Pub data per topic"));
 
-    // Loop through all the key-value pairs in obj
-        
+    // Loop through all the key-value pairs in obj 
     for (JsonPair& p : data) {
       if (p.value.is<char*>()) {
-        size_t total_size = sizeof (topic) +sizeof (p.key) + 2;
+        size_t total_size = strlen(topic) +strlen(p.key) + 1;
         char parameter_topic[total_size];
         strncpy(parameter_topic, topic, total_size);
-        client.publish(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
+        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
+      }
+      if (p.value.is<int>()) {
+        size_t total_size = strlen(topic) +strlen(p.key) + 1;
+        char parameter_topic[total_size];
+        strncpy(parameter_topic, topic, total_size);
+        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<int>());
+      }
+      if (p.value.is<unsigned long>()) {
+        size_t total_size = strlen(topic) +strlen(p.key) + 1;
+        char parameter_topic[total_size];
+        strncpy(parameter_topic, topic, total_size);
+        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<unsigned long>());
       }
     }
-   /* for(int i=0; i < listOfParameters_size;i++)
-    {
-      if (data.get<const char*>(listOfParameters[i]) != NULL) client.publish(strcat(strcat(topic,"/"), listOfParameters[i]),data[listOfParameters[i]].as<const char*>());
-    }*/
 }
 
 void pub(char * topic, char * payload){
@@ -958,4 +965,16 @@ void pub(String topic, int payload){
     char val[12];
     sprintf(val, "%d", payload);
     client.publish((char *)topic.c_str(),val);
+}
+
+void pub(char * topic, int payload){
+    char val[6];
+    sprintf(val, "%d", payload);
+    client.publish(topic,val);
+}
+
+void pub(char * topic, unsigned long payload){
+    char val[11];
+    sprintf(val, "%d", payload);
+    client.publish(topic,val);
 }

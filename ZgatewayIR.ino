@@ -94,7 +94,7 @@ void IRtoMQTT(){
   
   if (irrecv.decode(&results)){
   trc(F("Creating IR buffer"));
-  StaticJsonBuffer<2000> jsonBuffer;
+  StaticJsonBuffer<MQTT_MAX_PACKET_SIZE> jsonBuffer;
   JsonObject& IRdata = jsonBuffer.createObject();
   
   trc(F("Rcv. IR"));
@@ -103,11 +103,10 @@ void IRtoMQTT(){
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-
-    IRdata[listOfParameters[0]] = results.value;
-    IRdata[listOfParameters[1]] = results.decode_type;
-    IRdata[listOfParameters[2]] = results.bits;
-
+    IRdata.set("value", (unsigned long)(results.value));
+    IRdata.set("protocol", (int)(results.decode_type));
+    IRdata.set("bits",(int)(results.bits));
+  
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
     timer_led_receive = millis();
@@ -124,7 +123,7 @@ void IRtoMQTT(){
       if ( i < results.rawlen-1 ) rawCode = rawCode + ","; // ',' not needed on last one
     }
     trc(rawCode);
-    IRdata[listOfParameters[4]] = rawCode;
+    IRdata.set("raw", rawCode);
     // if needed we directly resend the raw code
     if (RawDirectForward){
       #ifdef ESP8266
@@ -141,8 +140,8 @@ void IRtoMQTT(){
       trc(F("raw signal redirected"));
     }
     irrecv.resume(); // Receive the next value
-    unsigned long MQTTvalue = IRdata[listOfParameters[0]];
-    if (pubIRunknownPrtcl == false && listOfParameters[1] == "-1"){ // don't publish unknown IR protocol
+    unsigned long MQTTvalue = IRdata.get<unsigned long>("value");
+    if (pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1){ // don't publish unknown IR protocol
       trc(F("--no pub. unknown protocol--"));
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data IRtoMQTT"));         
