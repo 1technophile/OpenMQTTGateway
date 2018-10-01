@@ -5,7 +5,8 @@
  
     GPIO KeyCode derived from  GPIO Input
 
-    This reads a high (open) or low (closed) through a circuit (switch, float sensor, etc.) connected to ground.
+    This reads up to 4 gpio with latch signal (gpio line) and combines the bits as KeyKode - can be connected
+    to EV1527 receiver.
 
     Copyright: (c)Grzegorz Rajtar
     
