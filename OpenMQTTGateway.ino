@@ -918,28 +918,21 @@ void pub(char * topic, char * payload, boolean retainFlag){
 
 void pub(char * topic, JsonObject& data){
     char JSONmessageBuffer[MQTT_MAX_PACKET_SIZE];
+    
+    trc(F("Pub json"));
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     client.publish(topic, JSONmessageBuffer);
+    
     trc(F("Pub data per topic"));
-
     // Loop through all the key-value pairs in obj 
     for (JsonPair& p : data) {
+      size_t total_size = strlen(topic) +strlen(p.key) + 1;
+      char parameter_topic[total_size];
+      strncpy(parameter_topic, topic, total_size);
       if (p.value.is<char*>()) {
-        size_t total_size = strlen(topic) +strlen(p.key) + 1;
-        char parameter_topic[total_size];
-        strncpy(parameter_topic, topic, total_size);
         pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
       }
-      if (p.value.is<int>()) {
-        size_t total_size = strlen(topic) +strlen(p.key) + 1;
-        char parameter_topic[total_size];
-        strncpy(parameter_topic, topic, total_size);
-        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<int>());
-      }
-      if (p.value.is<unsigned long>()) {
-        size_t total_size = strlen(topic) +strlen(p.key) + 1;
-        char parameter_topic[total_size];
-        strncpy(parameter_topic, topic, total_size);
+      if (p.value.is<unsigned long>() || p.value.is<int>()) {
         pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<unsigned long>());
       }
     }
