@@ -919,7 +919,8 @@ void pub(char * topic, char * payload, boolean retainFlag){
 void pub(char * topic, JsonObject& data){
     char JSONmessageBuffer[MQTT_MAX_PACKET_SIZE];
     
-    trc(F("Pub json"));
+    trc(F("Pub json into:"));
+    trc(topic);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     client.publish(topic, JSONmessageBuffer);
     
@@ -930,9 +931,13 @@ void pub(char * topic, JsonObject& data){
       char parameter_topic[total_size];
       strncpy(parameter_topic, topic, total_size);
       if (p.value.is<char*>()) {
+        trc(p.key);
+        trc(p.value);
         pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
       }
       if (p.value.is<unsigned long>() || p.value.is<int>()) {
+        trc(p.key);
+        trc(p.value);
         pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<unsigned long>());
       }
     }
