@@ -204,24 +204,25 @@ void _rfbDecode() {
         StaticJsonBuffer<200> jsonBuffer;
         JsonObject& SRFBdata = jsonBuffer.createObject();
         SRFBdata[listOfParameters[4]] = buffer;
-
+        SRFBdata.set("buffer", (char *)buffer);
+        
         char val[8]= {0};
         extract_char(buffer, val, 12 ,8, false,true);
-        SRFBdata[listOfParameters[0]] = val;
+        SRFBdata.set("value", (char *)val);
 
         char val_Tsyn[4]= {0};
         extract_char(buffer, val_Tsyn , 0 ,4, false, true);   
-        SRFBdata[listOfParameters[3]] = val_Tsyn;
+        SRFBdata.set("delay", (char *)val_Tsyn);
 
         char val_Thigh[4]= {0};
         extract_char(buffer, val_Thigh , 4 ,4, false, true);
-        SRFBdata[listOfParameters[7]]=val_Thigh;
+        SRFBdata.set("val_Thigh", (char *)val_Thigh);
 
         char val_Tlow[4]= {0};
         extract_char(buffer,val_Tlow , 8 ,4, false, true);
-        SRFBdata[listOfParameters[8]] = val_Tlow;
+        SRFBdata.set("val_Tlow", (char *)val_Tlow);
         
-        unsigned long MQTTvalue = SRFBdata[listOfParameters[0]];
+        unsigned long MQTTvalue = SRFBdata.get<unsigned long>("value");
         if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
             trc(F("Adv data SRFBtoMQTT")); 
             pub(subjectSRFBtoMQTT,SRFBdata);

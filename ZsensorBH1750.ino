@@ -54,6 +54,10 @@ void setupZsensorBH1750()
 void MeasureLightIntensity()
 {
   if (millis() > (timebh1750 + TimeBetweenReadingBH1750)) {//retriving value of Lux, FtCd and Wattsm2 from BH1750
+    trc(F("Creating bh1750 buffer"));
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& BH1750data = jsonBuffer.createObject();
+    
     timebh1750 = millis();
     unsigned int i=0;
     static float persistedll;
@@ -94,31 +98,25 @@ void MeasureLightIntensity()
 
       // Generate Lux
       if(Lux != persistedll || bh1750_always){
-        trc(F("Sending Lux to MQTT"));
-        trc(Lux);
-        pub(LUX,Lux);
+        BH1750data.set("lux", (unsigned int)Lux);
        }else{
         trc(F("Same lux don't send it"));
        }
 
       // Generate FtCd
       if(FtCd != persistedlf || bh1750_always){
-        trc(F("Sending FtCd to MQTT"));
-        trc(FtCd);
-        pub(FTCD,FtCd);
+        BH1750data.set("ftCd", (unsigned int)FtCd);
       }else{
         trc(F("Same ftcd don't send it"));
       }
 
       // Generate Watts/m2
       if(Wattsm2 != persistedlw || bh1750_always){
-        trc(F("Sending Wattsm2 to MQTT"));
-        trc(Wattsm2);
-        pub(WATTSM2, Wattsm2);
+        BH1750data.set("wattsm2", (unsigned int)Wattsm2);
       }else{
         trc(F("Same wattsm2 don't send it"));
       }    
-
+      pub(subjectBH1750toMQTT,BH1750data);
     }
     persistedll = Lux;
     persistedlf = FtCd;

@@ -55,17 +55,17 @@ boolean RF315toMQTT(){
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-    RF315data[listOfParameters[0]] = mySwitch315.getReceivedValue();
-    RF315data[listOfParameters[1]] = mySwitch315.getReceivedProtocol();
-    RF315data[listOfParameters[2]] = mySwitch315.getReceivedBitlength();
-    RF315data[listOfParameters[3]] = mySwitch315.getReceivedDelay();
+    RF315data.set("value", (unsigned long)mySwitch315.getReceivedValue());
+    RF315data.set("protocol",(int)mySwitch315.getReceivedProtocol());
+    RF315data.set("length", (int)mySwitch315.getReceivedBitlength());
+    RF315data.set("delay", (int)mySwitch315.getReceivedDelay());
     mySwitch315.resetAvailable();
     
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
     timer_led_receive = millis();
     
-    unsigned long MQTTvalue = RF315data[listOfParameters[0]];
+    unsigned long MQTTvalue = RF315data.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data RF315toMQTT")); 
         pub(subjectRF315toMQTT,RF315data);

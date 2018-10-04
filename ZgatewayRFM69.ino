@@ -138,23 +138,13 @@ void setupRFM69(void) {
   }
 }
 
-#ifdef subjectRFM69toMQTTrssi
-  void publishRSSI(int16_t rssi) {
-    // Send the value of the rssi to MQTT
-    char buff[sizeof(subjectRFM69toMQTTrssi)+4];
-    sprintf(buff, "%s/%d", subjectRFM69toMQTTrssi, radio.SENDERID);
-    char buff_rssi[5];
-    sprintf(buff_rssi, "%d", radio.RSSI);
-    pub(buff, buff_rssi);
-  }
-#else
-  #define publishRSSI(input)
-#endif
-
 boolean RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone())
   {
+    trc(F("Creating RFM69 buffer"));
+    StaticJsonBuffer<200> jsonBuffer;
+    JsonObject& RFM69data = jsonBuffer.createObject();
     uint8_t data[RF69_MAX_DATA_LEN+1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;
     uint8_t DATALEN = radio.DATALEN;
@@ -177,9 +167,10 @@ boolean RFM69toMQTT(void) {
 
     char buff[sizeof(subjectRFM69toMQTT)+4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
-    pub(buff,(char *)data);
-
-    publishRSSI(RSSI);
+    RFM69data.set("data", (char *)data);
+    RFM69data.set("rssi", (int)radio.RSSI); 
+    RFM69data.set("senderid", (int)radio.SENDERID);
+    pub(buff,RFM69data);
 
     return true;
 

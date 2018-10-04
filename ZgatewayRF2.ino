@@ -72,11 +72,11 @@ boolean RF2toMQTT(){
     rf2rd.hasNewData = false;
     
     trc(F("Rcv. RF2"));
-    RF2data[listOfParameters[0]] = rf2rd.unit;
-    RF2data[listOfParameters[2]] = rf2rd.groupBit;
-    RF2data[listOfParameters[3]] = rf2rd.period;
-    RF2data[listOfParameters[5]] = rf2rd.address;
-    RF2data[listOfParameters[6]] = rf2rd.switchType;
+    RF2data.set("unit", (int)rf2rd.unit);
+    RF2data.set("groupBit", (int)rf2rd.groupBit);
+    RF2data.set("period", (int)rf2rd.period);
+    RF2data.set("address", (unsigned long)rf2rd.address);
+    RF2data.set("switchType", (int)rf2rd.switchType);
     
     trc(F("LED MNG"));
     digitalWrite(led_receive, LOW);
