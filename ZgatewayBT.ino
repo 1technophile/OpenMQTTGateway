@@ -98,15 +98,20 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 strcat(topic, mac);
                 pub(topic,BLEdata);
                 
-                if (strstr(BLEdata["servicedatauuid"],"fe95") != NULL){
+                if (strstr(serviceDataUUID.toString().c_str(),"fe95") != NULL){
                   trc("Processing BLE device data");
+                  int pos = -1;
+                  pos = strpos(service_data,"209800");
                   if (strstr(service_data,"209800") != NULL) {
                     trc("mi flora data reading");
-                    boolean result = process_data(-22,service_data,mac);
+                    
+                    boolean result = process_data(pos - 24,service_data,mac);
                   }
+                  pos = -1;
+                  pos = strpos(service_data,"20aa01");
                   if (strstr(service_data,"20aa01") != NULL){
                     trc("mi jia data reading");
-                    boolean result = process_data(-24,service_data,mac);
+                    boolean result = process_data(pos - 26,service_data,mac);
                   }
                 }
             }
@@ -243,17 +248,21 @@ boolean BTtoMQTT() {
                 Service_data = Service_data.substring(14);
                 BLEdata.set("servicedata", (char *)Service_data.c_str());
                 pub((char *)topic.c_str(),BLEdata);
-                if (strcmp(d[4].extract, "fe95") == 0) 
-                  if (strstr(d[5].extract,"209800") != NULL) {
-                    trc("mi flora data reading");
-                    boolean result = process_data(0,d[5].extract,d[0].extract);
-                  }
-                  if (strstr(d[5].extract,"20aa01") != NULL){
-                    trc("mi jia data reading");
-                    boolean result = process_data(-10,d[5].extract,d[0].extract);
-                  }
-                return true;
-            }
+               if (strcmp(d[4].extract, "fe95") == 0) {
+                    int pos = -1;
+                    pos = strpos(d[5].extract,"209800");
+                    if (pos != -1) {
+                      trc("mi flora data reading");
+                      boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"20aa01");
+                    if (pos != -1){
+                      trc("mi jia data reading");
+                      boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                    }
+                  return true;
+                }
           }
         }
         returnedString = ""; //init data string
