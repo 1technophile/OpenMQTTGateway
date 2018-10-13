@@ -134,6 +134,7 @@ boolean connectedOnce = false; //indicate if we have been connected once to MQTT
 #ifdef ESP32
   #include <WiFi.h>
   #include <ArduinoOTA.h>
+  #include <WiFiUdp.h>
   WiFiClient eClient;
   #ifdef MDNS_SD
     #include <ESPmDNS.h>
@@ -932,12 +933,12 @@ void pub(char * topic, JsonObject& data){
       strncpy(parameter_topic, topic, total_size);
       if (p.value.is<char*>()) {
         trc(p.key);
-        trc(p.value);
+        trc(p.value.as<const char*>());
         pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
       }
       if (p.value.is<unsigned long>() || p.value.is<int>()) {
         trc(p.key);
-        trc(p.value);
+        trc(p.value.as<unsigned long>());
         pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<unsigned long>());
       }
     }
