@@ -881,6 +881,14 @@ void revert_hex_data(char * in, char * out, int l){
   out[l-1] = '\0';
 }
 
+int strpos(char *haystack, char *needle) //from @miere https://stackoverflow.com/users/548685/miere
+{
+   char *p = strstr(haystack, needle);
+   if (p)
+      return p - haystack;
+   return -1;
+}
+
 bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
      return s != "0";
 }
