@@ -93,6 +93,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
 #define ZgatewayBT     "BT"       //ESP8266, Arduino, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
+//#define ZgatewayPilight  "Pilight" //ESP8266
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
 //#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
