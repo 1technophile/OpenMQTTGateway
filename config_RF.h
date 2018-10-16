@@ -58,6 +58,12 @@ RF supported protocols
 #define RF2groupKey "GROUP_"  // number of your group value  will be defined if a subject contains RF2groupKey followed by a value of 1 digit
 #define RF2dimKey "DIM"  // number of your dim value will be defined if a subject contains RF2dimKey and the payload contains the dim value as digits
 
+/*-------------------ESPPiLight topics & parameters----------------------*/
+//433Mhz Pilight MQTT Subjects and keys
+#define subjectMQTTtoPilight  Base_Topic Gateway_Name "/commands/MQTTtoPilight"
+#define subjectPilighttoMQTT  Base_Topic Gateway_Name "/PilighttoMQTT"
+#define PilightRAW "RAW"
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
     #define RF_RECEIVER_PIN 0 // D3 on nodemcu
