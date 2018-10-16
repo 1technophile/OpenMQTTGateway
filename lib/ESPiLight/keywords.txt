@@ -1,0 +1,44 @@
+#######################################
+# Syntax Coloring Map For ESPiLight
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESPiLight	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+send	KEYWORD2
+loop	KEYWORD2
+
+initReceiver		KEYWORD2
+setCallback		KEYWORD2
+setPulseTrainCallBack	KEYWORD2
+enableReceiver		KEYWORD2
+disableReceiver		KEYWORD2
+
+pulseTrainToString	KEYWORD2
+stringToPulseTrain	KEYWORD2
+createPulseTrain	KEYWORD2
+sendPulseTrain		KEYWORD2
+parsePulseTrain		KEYWORD2
+receivePulseTrain	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+MAXPULSESTREAMLENGTH	LITERAL1
+
+FIRST	LITERAL1
+INVALID	LITERAL1
+VALID	LITERAL1
+KNOWN	LITERAL1

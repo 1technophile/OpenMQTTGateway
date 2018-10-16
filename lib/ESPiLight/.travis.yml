@@ -1,0 +1,26 @@
+language: python
+python:
+  - "2.7"
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+  directories:
+    - "~/.platformio"
+
+env:
+  - PLATFORMIO_CI_SRC=tests/test_parse
+  - PLATFORMIO_CI_SRC=tests/test_proto_limit
+  - PLATFORMIO_CI_SRC=tests/test_echo
+  - PLATFORMIO_CI_SRC=examples/Receive
+  - PLATFORMIO_CI_SRC=examples/Receive_Raw
+  - PLATFORMIO_CI_SRC=examples/Transmit
+  - PLATFORMIO_CI_SRC=examples/Transmit_Raw
+
+install:
+  # PlatformIO
+  - pip install -U platformio
+
+script:
+  - platformio ci --lib="." --board=huzzah --board=d1_mini --board=esp32dev
+  - make stylecheck
