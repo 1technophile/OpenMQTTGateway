@@ -51,7 +51,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           void onResult(BLEAdvertisedDevice advertisedDevice) {
             trc(F("Creating BLE buffer"));
-            StaticJsonBuffer<MQTT_MAX_PACKET_SIZE> jsonBuffer;
+            StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject& BLEdata = jsonBuffer.createObject();
             String mac_adress = advertisedDevice.getAddress().toString().c_str();
             mac_adress.replace(":","");
@@ -102,14 +102,14 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   trc("Processing BLE device data");
                   int pos = -1;
                   pos = strpos(service_data,"209800");
-                  if (strstr(service_data,"209800") != NULL) {
+                  if (pos != -1){
                     trc("mi flora data reading");
                     
                     boolean result = process_data(pos - 24,service_data,mac);
                   }
                   pos = -1;
                   pos = strpos(service_data,"20aa01");
-                  if (strstr(service_data,"20aa01") != NULL){
+                  if (pos != -1){
                     trc("mi jia data reading");
                     boolean result = process_data(pos - 26,service_data,mac);
                   }
@@ -235,34 +235,35 @@ boolean BTtoMQTT() {
   
             if((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
             {
-                trc(F("Creating BLE buffer"));
-                StaticJsonBuffer<MQTT_MAX_PACKET_SIZE> jsonBuffer;
-                JsonObject& BLEdata = jsonBuffer.createObject();
-                strupp(d[0].extract);
-                String topic = subjectBTtoMQTT + String(d[0].extract);
-
-                int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
-                BLEdata.set("rssi", (int)rssi);
-
-                String Service_data(d[5].extract);
-                Service_data = Service_data.substring(14);
-                BLEdata.set("servicedata", (char *)Service_data.c_str());
-                pub((char *)topic.c_str(),BLEdata);
-               if (strcmp(d[4].extract, "fe95") == 0) {
-                    int pos = -1;
-                    pos = strpos(d[5].extract,"209800");
-                    if (pos != -1) {
-                      trc("mi flora data reading");
-                      boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
-                    }
-                    pos = -1;
-                    pos = strpos(d[5].extract,"20aa01");
-                    if (pos != -1){
-                      trc("mi jia data reading");
-                      boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
-                    }
+              trc(F("Creating BLE buffer"));
+              StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+              JsonObject& BLEdata = jsonBuffer.createObject();
+              strupp(d[0].extract);
+              String topic = subjectBTtoMQTT + String(d[0].extract);
+              
+              int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
+              BLEdata.set("rssi", (int)rssi);
+              
+              String Service_data(d[5].extract);
+              Service_data = Service_data.substring(14);
+              BLEdata.set("servicedata", (char *)Service_data.c_str());
+              pub((char *)topic.c_str(),BLEdata);
+              if (strcmp(d[4].extract, "fe95") == 0) {
+                  int pos = -1;
+                  pos = strpos(d[5].extract,"209800");
+                  if (pos != -1) {
+                    trc("mi flora data reading");
+                    boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                  }
+                  pos = -1;
+                  pos = strpos(d[5].extract,"20aa01");
+                  if (pos != -1){
+                    trc("mi jia data reading");
+                    boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                  }
                   return true;
-                }
+               }
+            }
           }
         }
         returnedString = ""; //init data string
@@ -331,7 +332,7 @@ boolean BTtoMQTT() {
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){
   trc(F("Creating BLE buffer"));
-  StaticJsonBuffer<MQTT_MAX_PACKET_SIZE> jsonBuffer;
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& BLEdata = jsonBuffer.createObject();
   trc("rest_data");
   trc(rest_data);

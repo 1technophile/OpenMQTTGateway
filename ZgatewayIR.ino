@@ -94,7 +94,7 @@ void IRtoMQTT(){
   
   if (irrecv.decode(&results)){
   trc(F("Creating IR buffer"));
-  StaticJsonBuffer<MQTT_MAX_PACKET_SIZE> jsonBuffer;
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& IRdata = jsonBuffer.createObject();
   
   trc(F("Rcv. IR"));

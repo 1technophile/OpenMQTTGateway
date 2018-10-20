@@ -126,6 +126,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define multiCore //comment to don't use multicore function of ESP32 for BLE
 #endif
 
+#define JSON_MSG_BUFFER 256 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 

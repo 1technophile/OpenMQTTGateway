@@ -55,7 +55,7 @@ void MeasureLightIntensity()
 {
   if (millis() > (timebh1750 + TimeBetweenReadingBH1750)) {//retriving value of Lux, FtCd and Wattsm2 from BH1750
     trc(F("Creating bh1750 buffer"));
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& BH1750data = jsonBuffer.createObject();
     
     timebh1750 = millis();

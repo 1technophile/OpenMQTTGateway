@@ -143,7 +143,7 @@ boolean RFM69toMQTT(void) {
   if (radio.receiveDone())
   {
     trc(F("Creating RFM69 buffer"));
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RFM69data = jsonBuffer.createObject();
     uint8_t data[RF69_MAX_DATA_LEN+1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;

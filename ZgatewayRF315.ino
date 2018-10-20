@@ -47,7 +47,7 @@ void setupRF315(){
 boolean RF315toMQTT(){
   if (mySwitch315.available()){
     trc(F("Creating RF315 buffer"));
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RF315data = jsonBuffer.createObject();
     trc(F("Rcv. RF315"));
     #ifdef ESP32

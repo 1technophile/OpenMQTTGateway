@@ -66,7 +66,7 @@ boolean RF2toMQTT(){
 
   if(rf2rd.hasNewData){
     trc(F("Creating RF2 buffer"));
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RF2data = jsonBuffer.createObject();
     
     rf2rd.hasNewData = false;

@@ -201,7 +201,7 @@ void _rfbDecode() {
         _rfbToChar(&_uartbuf[1], buffer);
 
         trc(F("Creating RF buffer"));
-        StaticJsonBuffer<200> jsonBuffer;
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject& SRFBdata = jsonBuffer.createObject();
         SRFBdata[listOfParameters[4]] = buffer;
         SRFBdata.set("buffer", (char *)buffer);

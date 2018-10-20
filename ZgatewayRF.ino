@@ -48,7 +48,7 @@ void RFtoMQTT(){
 
   if (mySwitch.available()){
     trc(F("Creating RF buffer"));
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RFdata = jsonBuffer.createObject();
     trc(F("Rcv. RF"));
     #ifdef ESP32

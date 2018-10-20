@@ -584,7 +584,6 @@ void setup_ethernet() {
 
 void loop()
 {
-
     unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
@@ -682,7 +681,7 @@ void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
       timer_sys_measures = millis();
-      StaticJsonBuffer<200> jsonBuffer;
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject& SYSdata = jsonBuffer.createObject();
       trc("Uptime (s)");    
       unsigned long uptime = millis()/1000;
@@ -939,19 +938,28 @@ void pub(char * topic, char * payload, boolean retainFlag){
 }
 
 void pub(char * topic, JsonObject& data){
-    char JSONmessageBuffer[MQTT_MAX_PACKET_SIZE];
+    char JSONmessageBuffer[JSON_MSG_BUFFER];
     
     trc(F("Pub json into:"));
     trc(topic);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    trc(JSONmessageBuffer);
     client.publish(topic, JSONmessageBuffer);
     
     trc(F("Pub data per topic"));
     // Loop through all the key-value pairs in obj 
     for (JsonPair& p : data) {
+      #if defined(ESP8266)
+        yield();
+      #endif
       size_t total_size = strlen(topic) +strlen(p.key) + 1;
       char parameter_topic[total_size];
       strncpy(parameter_topic, topic, total_size);
+      if (p.value.is<float>()) {
+        trc(p.key);
+        trc(p.value.as<float>());
+        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<float>());
+      }
       if (p.value.is<char*>()) {
         trc(p.key);
         trc(p.value.as<const char*>());
@@ -987,6 +995,18 @@ void pub(String topic, int payload){
     client.publish((char *)topic.c_str(),val);
 }
 
+void pub(String topic, float payload){
+    char val[12];
+    dtostrf(payload,3,1,val);
+    client.publish((char *)topic.c_str(),val);
+}
+
+void pub(char * topic, float payload){
+    char val[12];
+    dtostrf(payload,3,1,val);
+    client.publish(topic,val);
+}
+
 void pub(char * topic, int payload){
     char val[6];
     sprintf(val, "%d", payload);
@@ -997,4 +1017,10 @@ void pub(char * topic, unsigned long payload){
     char val[11];
     sprintf(val, "%d", payload);
     client.publish(topic,val);
+}
+
+void pub(String topic, unsigned long payload){
+    char val[11];
+    sprintf(val, "%d", payload);
+    client.publish((char *)topic.c_str(),val);
 }
