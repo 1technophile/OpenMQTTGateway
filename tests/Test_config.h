@@ -94,6 +94,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayIR "IR"
   #define ZgatewayBT "BT"
   #define Zgateway2G "2G"
+  #define ZgatewayPilight "Pilight"
   #define ZactuatorONOFF "ONOFF"
   #define ZsensorINA226 "INA226"
   #define ZsensorHCSR501 "HCSR501"
@@ -156,6 +157,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP32
   //#define multiCore //uncomment to use multicore function of ESP32 for BLE
 #endif
+#define JSON_MSG_BUFFER 256 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 
 #define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
