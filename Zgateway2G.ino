@@ -82,7 +82,7 @@ boolean _2GtoMQTT(){
     // Get the memory locations of unread SMS messages.
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
     trc(F("Creating SMS  buffer"));
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& SMSdata = jsonBuffer.createObject();
     for (int i = 0; i < unreadSMSNum; i++) {
         trc("New  message at index: ");
