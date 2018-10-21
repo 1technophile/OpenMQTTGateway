@@ -98,7 +98,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 strcat(topic, mac);
                 pub(topic,BLEdata);
                 
-                if (strstr(serviceDataUUID.toString().c_str(),"fe95") != NULL){
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
                   trc("Processing BLE device data");
                   int pos = -1;
                   pos = strpos(service_data,"209800");
