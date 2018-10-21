@@ -938,39 +938,41 @@ void pub(char * topic, char * payload, boolean retainFlag){
 }
 
 void pub(char * topic, JsonObject& data){
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
     
-    trc(F("Pub json into:"));
-    trc(topic);
-    data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-    trc(JSONmessageBuffer);
-    client.publish(topic, JSONmessageBuffer);
-    
-    trc(F("Pub data per topic"));
-    // Loop through all the key-value pairs in obj 
-    for (JsonPair& p : data) {
-      #if defined(ESP8266)
-        yield();
-      #endif
-      size_t total_size = strlen(topic) +strlen(p.key) + 1;
-      char parameter_topic[total_size];
-      strncpy(parameter_topic, topic, total_size);
-      if (p.value.is<float>()) {
-        trc(p.key);
-        trc(p.value.as<float>());
-        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<float>());
+    #ifdef jsonPublishing
+      char JSONmessageBuffer[JSON_MSG_BUFFER];
+      trc(F("Pub json into:"));
+      trc(topic);
+      data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+      trc(JSONmessageBuffer);
+      client.publish(topic, JSONmessageBuffer);
+    #endif
+
+    #ifdef simplePublishing
+      trc(F("Pub data per topic"));
+      // Loop through all the key-value pairs in obj 
+      for (JsonPair& p : data) {
+        #if defined(ESP8266)
+          yield();
+        #endif
+        size_t total_size = strlen(topic) +strlen(p.key) + 1;
+        char parameter_topic[total_size];
+        strncpy(parameter_topic, topic, total_size);
+        if (p.value.is<float>()) {
+          trc(p.key);
+          trc(p.value.as<float>());
+          pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<float>());
+        } else if (p.value.is<unsigned long>() || p.value.is<int>()) {
+          trc(p.key);
+          trc(p.value.as<unsigned long>());
+          pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<unsigned long>());
+        } else if (p.value.is<char*>()) {
+          trc(p.key);
+          trc(p.value.as<const char*>());
+          pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
+        }
       }
-      if (p.value.is<char*>()) {
-        trc(p.key);
-        trc(p.value.as<const char*>());
-        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<const char*>());
-      }
-      if (p.value.is<unsigned long>() || p.value.is<int>()) {
-        trc(p.key);
-        trc(p.value.as<unsigned long>());
-        pub(strcat(strcat(parameter_topic,"/"), p.key),p.value.as<unsigned long>());
-      }
-    }
+    #endif
 }
 
 void pub(char * topic, char * payload){

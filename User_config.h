@@ -5,11 +5,8 @@
    Send and receiving command by MQTT
  
   This program enables to:
- - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received 433Mhz signal
- - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received IR signal
- - publish MQTT data to a different topic related to BLE devices rssi signal
+ - receive MQTT data from a topic and send signals corresponding to the received MQTT data
+ - publish MQTT data to a different topic related to received signals
   
     Copyright: (c)Florian ROBERT
   
@@ -29,7 +26,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.8"
+#define OMG_VERSION "0.9beta"
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -55,6 +52,14 @@ char mqtt_port[6] = "1883";
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 //#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
+
+#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+//example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
+
+#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+//example 
+// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
+// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8

@@ -55,6 +55,14 @@ char mqtt_port[6] = "1883";
 //#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
 
+#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+//example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
+
+#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+//example 
+// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
+// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
+
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
 
