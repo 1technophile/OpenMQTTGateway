@@ -45,11 +45,12 @@
  * If you do so, please don't forget to set these variables before compiling
  * 
  * Otherwise you can provide these credentials on the web interface after connecting 
- * to the access point with your password (password: WifiManager_password)
+ * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
 
 //#define ESPWifiManualSetup true //uncomment to disable WifiManager
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
+#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
