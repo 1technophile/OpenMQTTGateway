@@ -461,7 +461,7 @@ void setup_wifimanager(){
     WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
     WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
     WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, 20);
-    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 20);
+    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 30);
   
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
