@@ -34,6 +34,9 @@ void setupHCSR501() {
 
 void MeasureHCSR501(){
   if (millis() > TimeBeforeStartHCSR501) {//let time to init the PIR sensor
+  trc(F("Creating HCSR501 buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& HCSR501data = jsonBuffer.createObject();
   static int pirState = LOW;
   int PresenceValue = digitalRead(HCSR501_PIN);
   #if defined(ESP8266) || defined(ESP32)
@@ -41,19 +44,19 @@ void MeasureHCSR501(){
   #endif
   if (PresenceValue == HIGH) { 
     if (pirState == LOW) {
-     // turned on
-     client.publish(subjectHCSR501toMQTT,"true");
-      trc(F("HC SR501 Motion detected"));
+      //turned on
+      HCSR501data.set("hcsr501", "true");
       pirState = HIGH;
     }
     } else {
       if (pirState == HIGH){
-        // turned off
-        pub(subjectHCSR501toMQTT,"false");
-        trc(F("HC SR501 Motion ended"));
-        pirState = LOW;
+      // turned off
+      HCSR501data.set("hcsr501", "false");
+      trc(F("HC SR501 Motion ended"));
+      pirState = LOW;
       }
     }
+    if(HCSR501data.size()>0) pub(subjectHCSR501toMQTT,HCSR501data);
   }
 }
 #endif

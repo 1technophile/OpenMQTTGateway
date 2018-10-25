@@ -28,10 +28,7 @@
 // Topic where the message from RFM69 will be published by the gateway,
 // appended with the nodeID of the sender
 #define subjectRFM69toMQTT  Base_Topic Gateway_Name "/RFM69toMQTT"
-// Upon reception of a packed, the RSSI of that packet will be publish to this topic,
-// appended with the nodeID of the sender
-#define subjectRFM69toMQTTrssi  Base_Topic Gateway_Name "/RFM69toMQTT/rssi"  // Comment this if you don't want the RSSI to be published.
-#define subjectRFM69toMQTTsender  Base_Topic Gateway_Name "/RFM69toMQTT/sender"
+
 // Topic subscribed by the gateway. Messages received will be sent to RFM69
 #define subjectMQTTtoRFM69  Base_Topic Gateway_Name "/commands/MQTTtoRFM69"
 #define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits

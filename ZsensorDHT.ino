@@ -48,20 +48,20 @@ void MeasureTempAndHum(){
     if (isnan(h) || isnan(t)) {
       trc(F("Failed to read from DHT sensor!"));
     }else{
+      trc(F("Creating DHT buffer"));
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject& DHTdata = jsonBuffer.createObject();
       if(h != persistedh || dht_always){
-        trc(F("Sending Hum to MQTT"));
-        trc(h);
-        pub(HUM1,h);
+        DHTdata.set("hum", (float)h);
        }else{
         trc(F("Same hum don't send it"));
        }
       if(t != persistedt || dht_always){
-        trc(F("Sending Temp to MQTT"));
-        trc(t);
-        pub(TEMP1, t);
+        DHTdata.set("temp", (float)t);
       }else{
         trc(F("Same temp don't send it"));
       }
+      if(DHTdata.size()>0) pub(DHTTOPIC,DHTdata);
     }
     persistedh = h;
     persistedt = t;

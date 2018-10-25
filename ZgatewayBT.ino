@@ -397,7 +397,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
      
     case 'a' : // batteryLevel
           dtostrf(value,0,0,val);
-          BLEdata.set("bat", val);
+          BLEdata.set("batt", val);
      break;
 
      case 'd' : // temp+hum

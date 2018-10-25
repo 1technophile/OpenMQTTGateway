@@ -49,7 +49,9 @@ char mqtt_port[6] = "1883";
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#endif
 #define WifiManager_password "your_password"
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 //#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
@@ -94,7 +96,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
-#if defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // for nodemcu, weemos, esp8266, and Arduino mega
+#if defined(ESP8266) || defined(__AVR_ATmega2560__) // for nodemcu, weemos, esp8266, and Arduino mega
   #define ZgatewayRF "RF"
   #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
@@ -126,15 +128,33 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorADC
   #define ZsensorBH1750
   #define ZsensorBME280
-  //#define ZsensorTSL2561 "TSL2561"
+  #define ZsensorTSL2561 "TSL2561"
   #define ZsensorDHT "DHT"
   #define ZgatewayRFM69 "RFM69"
+  #define ZsensorGPIOInput "GPIOInput"
+#elif defined(__AVR_ATmega1280__)
+  #define ZgatewayRF "RF"
+  #define ZgatewayRF315 "RF315"
+  #define ZgatewaySRFB "SRFB"
+  #define ZgatewayRF2 "RF2"
+  #define ZgatewayIR "IR"
+  #define ZgatewayBT "BT"
+  #define Zgateway2G "2G"
+  //#define ZgatewayPilight "Pilight"
+  #define ZactuatorONOFF "ONOFF"
+  #define ZsensorINA226 "INA226"
+  #define ZsensorHCSR501 "HCSR501"
+  #define ZsensorADC "ADC"
+  #define ZsensorBH1750 "BH1750"
+  #define ZsensorBME280 "BME280"
+  #define ZsensorTSL2561 "TSL2561"
+  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
+  #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
 #else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
-  //#define ZgatewayRFM69 not tested
   //#define ZgatewayIR
   //#define ZgatewayBT
   //#define ZactuatorONOFF
@@ -144,7 +164,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZsensorBME280
   //#define ZsensorHCSR501
   //#define ZsensorADC
-  //#define ZgatewayRFM69 not tested
+  //#define ZgatewayRFM69 //not tested
   //#define ZsensorGPIOInput //not tested
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/

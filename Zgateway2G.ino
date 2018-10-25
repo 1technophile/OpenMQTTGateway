@@ -90,7 +90,7 @@ boolean _2GtoMQTT(){
         sms = A6l.readSMS(unreadSMSLocs[i]);
         SMSdata.set("message", (char *)sms.message.c_str());
         SMSdata.set("date", (char *)sms.date.c_str());
-        SMSdata.set("number", (char *)sms.number.c_str());
+        SMSdata.set("phone", (char *)sms.number.c_str());
         A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
         trc(F("Adv data 2GtoMQTT"));
         pub(subject2GtoMQTT,SMSdata);

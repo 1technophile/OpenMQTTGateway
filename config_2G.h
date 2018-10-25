@@ -29,9 +29,6 @@
 #define subjectMQTTto2G  Base_Topic Gateway_Name "/commands/MQTTto2G"
 #define subject2GtoMQTT  Base_Topic Gateway_Name "/2GtoMQTT"
 #define subjectGTW2GtoMQTT  Base_Topic Gateway_Name "/2GtoMQTT"
-#define subject2GtoMQTTphone  Base_Topic Gateway_Name "/2GtoMQTT/phone"
-#define subject2GtoMQTTdate  Base_Topic Gateway_Name "/2GtoMQTT/date"
-#define subject2GtoMQTTmessage  Base_Topic Gateway_Name "/2GtoMQTT/message"
 #define _2GPhoneKey "PHO_" // phone number define the phone number to send the SMS MQTT->2G
 
 #define _2G_MODULE_BAUDRATE 9600
@@ -52,4 +49,3 @@
   #define _2G_RX_PIN 7 //D7 to A6 TX
   #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
 #endif
-

@@ -29,9 +29,6 @@
 #define subjectMQTTtoRF315  Base_Topic Gateway_Name "/commands/MQTTto315"
 #define subjectRF315toMQTT  Base_Topic Gateway_Name "/315toMQTT"
 #define subjectGTWRF315toMQTT  Base_Topic Gateway_Name "/315toMQTT"
-#define subjectRF315toMQTTprotocol  Base_Topic Gateway_Name "/315toMQTT/protocol"
-#define subjectRF315toMQTTbits  Base_Topic Gateway_Name "/315toMQTT/bits"
-#define subjectRF315toMQTTlength  Base_Topic Gateway_Name "/315toMQTT/length"
 #define RF315protocolKey "315_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RF315bitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
 #define repeatRF315wMQTT false // do we repeat a received signal by using mqtt
@@ -63,4 +60,3 @@ RF supported protocols
     #define RF315_RECEIVER_PIN 1 //1 = D3 on arduino
     #define RF315_EMITTER_PIN 4 //4 = D4 on arduino
 #endif
-

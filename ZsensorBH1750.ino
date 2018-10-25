@@ -54,7 +54,7 @@ void setupZsensorBH1750()
 void MeasureLightIntensity()
 {
   if (millis() > (timebh1750 + TimeBetweenReadingBH1750)) {//retriving value of Lux, FtCd and Wattsm2 from BH1750
-    trc(F("Creating bh1750 buffer"));
+    trc(F("Creating BH1750 buffer"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& BH1750data = jsonBuffer.createObject();
     
@@ -115,8 +115,8 @@ void MeasureLightIntensity()
         BH1750data.set("wattsm2", (unsigned int)Wattsm2);
       }else{
         trc(F("Same wattsm2 don't send it"));
-      }    
-      pub(subjectBH1750toMQTT,BH1750data);
+      }
+      if(BH1750data.size()>0) pub(subjectBH1750toMQTT,BH1750data);
     }
     persistedll = Lux;
     persistedlf = FtCd;

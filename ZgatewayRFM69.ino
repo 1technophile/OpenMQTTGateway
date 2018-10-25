@@ -221,7 +221,6 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
       char buff[sizeof(subjectGTWRFM69toMQTT)+4];
       sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
       pub(buff, data);
-      publishRSSI(radio.RSSI);
       return true;
     }
     else {

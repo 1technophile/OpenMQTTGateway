@@ -29,12 +29,8 @@
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTtoSRFB  Base_Topic Gateway_Name "/commands/MQTTtoSRFB"
 #define subjectMQTTtoSRFBRaw  Base_Topic Gateway_Name "/commands/MQTTtoSRFB/Raw"
-#define subjectSRFBtoMQTTTsyn  Base_Topic Gateway_Name "/SRFBtoMQTT/Tsyn"
-#define subjectSRFBtoMQTTTlow  Base_Topic Gateway_Name "/SRFBtoMQTT/Tlow"
-#define subjectSRFBtoMQTTThigh  Base_Topic Gateway_Name "/SRFBtoMQTT/Thigh"
 #define subjectSRFBtoMQTT  Base_Topic Gateway_Name "/SRFBtoMQTT"
 #define subjectGTWSRFBtoMQTT  Base_Topic Gateway_Name "/SRFBtoMQTT"
-#define subjectSRFBtoMQTTRaw  Base_Topic Gateway_Name "/SRFBtoMQTT/Raw"
 #define SRFBRptKey "RPT_"
 #define SRFBmaxipulselengthKey "Thigh_"
 #define SRFBminipulselengthKey "Tlow_"
@@ -57,6 +53,3 @@
 #define RF_CODE_RFIN        0xA4
 #define RF_CODE_RFOUT       0xA5
 #define RF_CODE_STOP        0x55
-
-
-

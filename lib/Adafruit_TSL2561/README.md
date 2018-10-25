@@ -1,6 +1,9 @@
-#Adafruit TSL2561 Light Sensor Driver #
+# Adafruit TSL2561 Light Sensor Driver  [![Build Status](https://travis-ci.org/adafruit/Adafruit_TSL2561.svg?branch=master)](https://travis-ci.org/adafruit/Adafruit_TSL2561)
 
 This driver is for the Adafruit TSL2561 Breakout, and is based on Adafruit's Unified Sensor Library (Adafruit_Sensor).
+
+<img src="https://cdn-shop.adafruit.com/970x728/439-00.jpg" height="300"/>
+
 
 The driver supports manual or 'auto' gain. Adjusting the gain allows you to make the sensor more or less 'sensitive' to light (depending on if you are indoors or outdoors, for example):
 ```
@@ -9,7 +12,7 @@ tsl.setGain(TSL2561_GAIN_16X);     /* 16x gain ... use in low light to boost sen
 tsl.enableAutoGain(true);          /* Auto-gain ... switches automatically between 1x and 16x */
 ```
 
-The driver also supports as automatic clipping detection, and will return '0' lux when the sensor is saturated and data is unreliable.
+The driver also supports as automatic clipping detection, and will return '65536' lux when the sensor is saturated and data is unreliable. tsl.getEvent will return false in case of saturation and true in case of valid light data.
 
 ## About the TSL2561 ##
 

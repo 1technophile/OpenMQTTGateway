@@ -108,6 +108,7 @@ void MeasureTempHumAndPressure()
 {
 
   if (millis() > (timebme280 + TimeBetweenReadingbme280)) {
+
     timebme280 = millis();
     static float persisted_bme_tempc;
     static float persisted_bme_tempf;
@@ -127,38 +128,33 @@ void MeasureTempHumAndPressure()
     if (isnan(BmeTempC) || isnan(BmeTempF) || isnan(BmeHum) || isnan(BmePa) || isnan(BmeAltiM) || isnan(BmeAltiFt)) {
       trc(F("Failed to read from Weather Sensor BME280!"));
     }else{
+        trc(F("Creating BME280 buffer"));
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& BME280data = jsonBuffer.createObject();
       // Generate Temperature in degrees C
       if(BmeTempC != persisted_bme_tempc || bme280_always){
-        trc(F("Sending Degrees C to MQTT"));
-        trc(BmeTempC);
-        pub(TEMPBMEC, BmeTempC);
+        BME280data.set("tempc", (float)BmeTempC);
       }else{
         trc(F("Same Degrees C don't send it"));
       }
       
       // Generate Temperature in degrees F
       if(BmeTempF != persisted_bme_tempf || bme280_always){
-        trc(F("Sending Degrees F to MQTT"));
-        trc(BmeTempF);
-        pub(TEMPBMEF, BmeTempF);
+        BME280data.set("tempf", (float)BmeTempF);
       }else{
         trc(F("Same Degrees F don't send it"));
       }
       
       // Generate Humidity in percent
       if(BmeHum != persisted_bme_hum || bme280_always){
-        trc(F("Sending Humidity to MQTT"));
-        trc(BmeHum);
-        pub(HUMBME, BmeHum);
+        BME280data.set("hum", (float)BmeHum);
       }else{
         trc(F("Same Humidity don't send it"));
       }
 
       // Generate Pressure in Pa
       if(BmePa != persisted_bme_pa || bme280_always){
-        trc(F("Sending Pressure to MQTT"));
-        trc(BmePa);
-        pub(PRESSBME, BmePa);
+        BME280data.set("pa", (float)BmePa);
       }else{
         trc(F("Same Pressure don't send it"));
       }
@@ -166,21 +162,18 @@ void MeasureTempHumAndPressure()
       // Generate Altitude in Meter
       if(BmeAltiM != persisted_bme_altim || bme280_always){
         trc(F("Sending Altitude Meter to MQTT"));
-        trc(BmeAltiM);
-        pub(ALTIBMEM, BmeAltiM);
+        BME280data.set("altim", (float)BmeAltiM);
       }else{
         trc(F("Same Altitude Meter don't send it"));
       }
 
       // Generate Altitude in Feet
       if(BmeAltiFt != persisted_bme_altift || bme280_always){
-        trc(F("Sending Altitude Feet to MQTT"));
-        trc(BmeAltiFt);
-        pub(ALTIBMEFT, BmeAltiFt);
+        BME280data.set("altift", (float)BmeAltiFt);
       }else{
         trc(F("Same Altitude Feet don't send it"));
       }
-      
+      if(BME280data.size()>0) pub(BME,BME280data);
     }
     persisted_bme_tempc = BmeTempC;
     persisted_bme_tempf = BmeTempF;

@@ -57,6 +57,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
+
+// array to store previous received RFs, IRs codes and their timestamps
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  #define MQTT_MAX_PACKET_SIZE 1024
+  #define array_size 12
+  unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+#else // boards with smaller memory
+  #define MQTT_MAX_PACKET_SIZE 256
+  #define array_size 4
+  unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
+#endif
+
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
@@ -108,16 +120,6 @@
 #endif
 #ifdef ZsensorGPIOInput
   #include "config_GPIOInput.h"
-#endif
-// array to store previous received RFs, IRs codes and their timestamps
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  #define MQTT_MAX_PACKET_SIZE 1024
-  #define array_size 12
-  unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
-#else // boards with smaller memory
-  #define MQTT_MAX_PACKET_SIZE 256
-  #define array_size 4
-  unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 #endif
 
 #define listOfParameters_size 11
@@ -255,6 +257,7 @@ void setup()
       Serial.end();
       Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);// enable on ESP8266 to free some pin
     #endif
+    
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
       setup_wifimanager();
     #else // ESP32 case we don't use Wifi manager yet
@@ -311,6 +314,7 @@ void setup()
     delay(500);
     digitalWrite(led_receive, HIGH);
     digitalWrite(led_send, HIGH);
+    
   #endif
 
   #if defined(MDNS_SD) && defined(ESP8266)
@@ -533,8 +537,8 @@ void setup_wifimanager(){
     }
 }
 
-
 #else // Arduino case
+
 void setup_ethernet() {
   if (gateway[0] != 0 || Dns[0]!=0)
   {

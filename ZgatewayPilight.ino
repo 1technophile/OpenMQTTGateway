@@ -41,17 +41,16 @@
  void pilightCallback(const String &protocol, const String &message, int status,
                 size_t repeats, const String &deviceID) {
    if (status == VALID) {
-     trc(F("Rcv. Pilight"));
-    String MQTTprotocol;
-    String MQTTdeviceID;
-    String MQTTmessage;
-     MQTTprotocol = String(protocol);
-    MQTTdeviceID = String(deviceID);
-    MQTTmessage = String(message);
-    String MQTTPilightstring;
-    MQTTPilightstring = subjectPilighttoMQTT+String("/")+MQTTprotocol+String("/")+MQTTdeviceID;
-    trc(F("Adv data PilighttoMQTT"));
-    client.publish((char *)MQTTPilightstring.c_str(),(char *)MQTTmessage.c_str());      
+    trc(F("Creating RF PiLight buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& RFPiLightdata = jsonBuffer.createObject();
+    trc(F("Rcv. Pilight"));
+    RFPiLightdata.set("message", (char *)message.c_str());
+    RFPiLightdata.set("protocol",(char *)protocol.c_str());
+    RFPiLightdata.set("length", (char *)deviceID.c_str());
+    RFPiLightdata.set("repeats", (int)repeats);
+    RFPiLightdata.set("status", (int)status);
+    pub(subjectPilighttoMQTT,RFPiLightdata);      
    }
 }
  void MQTTtoPilight(char * topicOri, char * datacallback) {
