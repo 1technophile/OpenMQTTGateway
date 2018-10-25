@@ -34,7 +34,7 @@
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[20] = "your_password"; // not compulsory only if your broker needs authentication
+char mqtt_pass[30] = "your_password"; // not compulsory only if your broker needs authentication
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 

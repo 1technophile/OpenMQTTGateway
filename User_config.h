@@ -32,7 +32,7 @@
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[20] = "your_password"; // not compulsory only if your broker needs authentication
+char mqtt_pass[30] = "your_password"; // not compulsory only if your broker needs authentication
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
@@ -47,7 +47,9 @@ char mqtt_port[6] = "1883";
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#endif
 #define WifiManager_password "your_password"
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 //#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
