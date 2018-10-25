@@ -122,10 +122,6 @@
   #include "config_GPIOInput.h"
 #endif
 
-#define listOfParameters_size 11
-#define Parameters_length 11
-const char listOfParameters[listOfParameters_size][Parameters_length] = {'value','protocol','bits','length','rawCode','adress','switchType','high','low','tel','date'};
-
 /*------------------------------------------------------------------------*/
 
 //adding this to bypass the problem of the arduino builder issue 50

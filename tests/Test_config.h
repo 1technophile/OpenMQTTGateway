@@ -114,7 +114,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
-#if defined(ESP8266) || defined(__AVR_ATmega2560__) // for nodemcu, weemos, esp8266, and Arduino mega
+#if defined(ESP8266) // for nodemcu, weemos, esp8266, and Arduino mega
   #define ZgatewayRF "RF"
   #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
