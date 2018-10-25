@@ -29,7 +29,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.7"
+#define OMG_VERSION "0.9beta"
+/*-------------CONFIGURE WIFIMANAGER-------------*/
+/*
+ * The following parameters are set during the WifiManager setup process:
+ * - wifi_ssid
+ * - wifi_password
+ * - mqtt_user
+ * - mqtt_pass
+ * - mqtt_server
+ * - mqtt_port
+ * 
+ * To completely disable WifiManager, define ESPWifiManualSetup.
+ * If you do so, please don't forget to set these variables before compiling
+ * 
+ * Otherwise you can provide these credentials on the web interface after connecting 
+ * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
+ */
+#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#endif
+#define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
+#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
@@ -48,11 +70,6 @@ char mqtt_port[6] = "1883";
 #define Gateway_AnnouncementMsg "Online"
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
-
-#if defined(ESP8266)  // for nodemcu, weemos and esp8266
-  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
-#endif
-#define WifiManager_password "your_password"
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 //#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
@@ -76,6 +93,7 @@ char mqtt_port[6] = "1883";
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
 
+// these values are only used if no dhcp configuration is available
 const byte ip[] = { 192, 168, 1, 99 }; //ip adress
 // Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
 const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
