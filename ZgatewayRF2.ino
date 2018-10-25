@@ -62,7 +62,7 @@ void setupRF2(){
     digitalWrite(RF_EMITTER_PIN, LOW); 
 }
 
-boolean RF2toMQTT(){
+void RF2toMQTT(){
 
   if(rf2rd.hasNewData){
     trc(F("Creating RF2 buffer"));
