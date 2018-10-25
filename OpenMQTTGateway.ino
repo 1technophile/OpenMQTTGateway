@@ -489,7 +489,7 @@ void setup_wifimanager(){
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
-    if (!wifiManager.autoConnect(Gateway_Name, WifiManager_password)) {
+    if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
       trc("failed to connect and hit timeout");
       delay(3000);
       //reset and try again, or maybe put it to deep sleep
