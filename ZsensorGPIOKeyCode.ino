@@ -40,9 +40,9 @@ void setupGPIOKeyCode() {
 }
 
 void MeasureGPIOKeyCode(){
-  char hex[3];
+
   int latch = digitalRead(GPIOKeyCode_LATCH_PIN);
-  
+
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
   // since the last press to ignore any noise:
@@ -60,13 +60,15 @@ void MeasureGPIOKeyCode(){
             | (digitalRead(GPIOKeyCode_D1_PIN) << 1) 
             | (digitalRead(GPIOKeyCode_D2_PIN) << 2);
             //| digitalRead(GPIOKeyCode_D3_PIN) << 3;
-      
+
+      char hex[3];
+
       InputState = reading;
-	  	sprintf(hex, "%02x", InputState);
-	   	hex[2] = 0;            
-        Serial.printf("GPIOKeyCode %s\n", hex);
-        client.publish(subjectGPIOKeyCodetoMQTT,hex);
-        lastLatchState = latch;
+      sprintf(hex, "%02x", InputState);
+      hex[2] = 0;
+      Serial.printf("GPIOKeyCode %s\n", hex);
+      client.publish(subjectGPIOKeyCodetoMQTT,hex);
+      lastLatchState = latch;
     }
    
     if (latch != lastLatchState) {
