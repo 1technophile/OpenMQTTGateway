@@ -121,6 +121,9 @@
 #ifdef ZsensorGPIOInput
   #include "config_GPIOInput.h"
 #endif
+#ifdef ZsensorGPIOKeyCode
+  #include "config_GPIOKeyCode.h"
+#endif
 
 /*------------------------------------------------------------------------*/
 
@@ -387,6 +390,9 @@ void setup()
   #ifdef ZsensorGPIOInput
     setupGPIOInput();
   #endif
+  #ifdef ZsensorGPIOKeyCode
+   setupGPIOKeyCode();
+  #endif
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
@@ -634,6 +640,9 @@ void loop()
     #ifdef ZsensorGPIOInput
       MeasureGPIOInput();
     #endif
+    #ifdef ZsensorGPIOKeyCode
+      MeasureGPIOKeyCode();
+    #endif
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
@@ -749,6 +758,9 @@ void stateMeasures(){
       #endif
       #ifdef ZsensorGPIOInput
           modules = modules  + ZsensorGPIOInput;
+      #endif
+      #ifdef ZsensorGPIOKeyCode
+          modules = modules  + ZsensorGPIOKeyCode;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
