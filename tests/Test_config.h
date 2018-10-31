@@ -133,6 +133,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
+  #define ZsensorGPIOKeyCode "GPIOKeyCode"
 #elif ESP32
   #define ZgatewayRF "RF"
   #define ZgatewayRF "RF315"
@@ -150,6 +151,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorDHT "DHT"
   #define ZgatewayRFM69 "RFM69"
   #define ZsensorGPIOInput "GPIOInput"
+  #define ZsensorGPIOKeyCode "GPIOKeyCode"
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
   #define ZgatewayRF315 "RF315"
@@ -169,6 +171,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
+  #define ZsensorGPIOKeyCode "GPIOKeyCode"
 #else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)
@@ -184,6 +187,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZsensorADC
   //#define ZgatewayRFM69 //not tested
   //#define ZsensorGPIOInput //not tested
+  //#define ZsensorGPIOKeyCode "GPIOKeyCode" //not tested
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB

@@ -129,6 +129,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
 //#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
+//#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
+//#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
