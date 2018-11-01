@@ -231,7 +231,7 @@ boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
   if (loops <= 0) {
     deltaMillis = 0;
     trc(F("RFM69 sending failed"));
-    return false;
   }
+  return false;
 }
 #endif
