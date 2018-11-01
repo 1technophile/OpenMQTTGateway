@@ -209,5 +209,57 @@ void MQTTtoRF2(char * topicOri, char * datacallback) {
     }
   }
 }
+void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
 
+  String topic = topicOri;
+
+  if (topic == subjectMQTTtoRF2) {
+    int boolSWITCHTYPE = RF2data["switchType"] | 99;
+    if (boolSWITCHTYPE != 99) {
+      bool isDimCommand = false;
+      unsigned long valueCODE = RF2data["adress"];
+      int valueUNIT = RF2data["unit"] | -1;
+      int valuePERIOD = RF2data["period"];
+      int valueGROUP  = RF2data["groupBit"];
+      int valueDIM  = RF2data["dim"] | -1;
+      if ((valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
+        trc(F("MQTTtoRF2"));
+        if (valueCODE == 0) valueCODE = 8233378;
+        if (valueUNIT == -1) valueUNIT = 0;
+        if (valuePERIOD == 0) valuePERIOD = 272;
+        trc(valueCODE);
+        trc(valueUNIT);
+        trc(valuePERIOD);
+        trc(valueGROUP);
+        trc(boolSWITCHTYPE);
+        trc(valueDIM);
+        NewRemoteReceiver::disable();
+        trc(F("Creating transmitter"));
+        NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
+        trc(F("Sending data"));
+        if (valueGROUP) {
+          if (isDimCommand) {
+            transmitter.sendGroupDim(valueDIM); 
+          }
+          else {
+            transmitter.sendGroup(boolSWITCHTYPE); 
+          }
+        }
+        else {
+          if (isDimCommand) {
+            transmitter.sendDim(valueUNIT, valueDIM); 
+          }
+          else {    
+            transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
+          }
+        }
+        trc(F("Data sent"));
+        NewRemoteReceiver::enable();
+    
+        // Publish state change back to MQTT
+        pub(subjectGTWRF2toMQTT,RF2data);
+      }
+    }
+  }
+}
 #endif

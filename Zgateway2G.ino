@@ -127,4 +127,25 @@ void MQTTto2G(char * topicOri, char * datacallback) {
   }
   
 }
+
+void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
+  
+  String topic = topicOri;
+  if (topic == subjectMQTTto2G) {
+    const char * sms = SMSdata["message"];
+    const char * phone = SMSdata["phone"];
+    if (sms && phone) {
+      trc(F("MQTTto2G"));
+      trc(sms);
+      if (A6l.sendSMS(String(phone),String(sms)) == A6_OK ) {
+        trc("SMS OK");
+      }else{
+        trc("SMS KO");
+      }
+    }
+    // Acknowledgement to the GTW2G topic
+    pub(subjectGTW2GtoMQTT, SMSdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+  }
+  
+}
 #endif

@@ -131,4 +131,36 @@ void MQTTtoRF315(char * topicOri, char * datacallback) {
   }
   
 }
+void MQTTtoRF315(char * topicOri, JsonObject& RF315data) { // json object decoding
+
+  String topic = topicOri;
+
+  if (topic == subjectMQTTtoRF) {
+    unsigned long data = RF315data["value"];
+    if (data != 0) {
+      int valuePRT =  RF315data["protocol"];
+      int valuePLSL = RF315data["delay"];
+      int valueBITS = RF315data["length"];
+      if ((valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
+        trc(F("MQTTtoRF315 dflt"));
+        mySwitch315.setProtocol(1,350);
+        mySwitch315.send(data, 24);
+        // Acknowledgement to the GTWRF topic
+        pub(subjectGTWRF315toMQTT, RF315data);  
+      } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
+        trc(F("MQTTtoRF315 usr par."));
+        if (valuePRT == 0) valuePRT = 1;
+        if (valuePLSL == 0) valuePLSL = 350;
+        if (valueBITS == 0) valueBITS = 24;
+        trc(valuePRT);
+        trc(valuePLSL);
+        trc(valueBITS);
+        mySwitch315.setProtocol(valuePRT,valuePLSL);
+        mySwitch315.send(data, valueBITS);
+        // Acknowledgement to the GTWRF topic 
+        pub(subjectGTWRF315toMQTT, RF315data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      } 
+    }
+  }
+}
 #endif

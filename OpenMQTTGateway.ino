@@ -828,6 +828,69 @@ void receivingMQTT(char * topicOri, char * datacallback) {
    }
 //YELLOW ON
 digitalWrite(led_send, LOW);
+
+  trc(F("Creating Json buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
+
+  if (jsondata.success()) { // json object ok -> json decoding
+    #ifdef ZgatewayRF
+      MQTTtoRF(topicOri, jsondata);
+    #endif
+    #ifdef ZgatewayRF315
+      MQTTtoRF315(topicOri, jsondata);
+    #endif
+    #ifdef ZgatewayRF2
+      MQTTtoRF2(topicOri, jsondata);
+    #endif
+    #ifdef ZgatewayPilight
+      MQTTtoPilight(topicOri, jsondata);
+    #endif
+    #ifdef Zgateway2G
+      MQTTto2G(topicOri, jsondata);
+    #endif
+    #ifdef ZgatewaySRFB
+      MQTTtoSRFB(topicOri, jsondata);
+    #endif
+    #ifdef ZgatewayIR
+      MQTTtoIR(topicOri, jsondata);
+    #endif
+    #ifdef ZgatewayRFM69
+      MQTTtoRFM69(topicOri, jsondata);
+    #endif
+    #ifdef ZactuatorONOFF
+      MQTTtoONOFF(topicOri, jsondata);
+    #endif
+  } else { // not a json object --> simple decoding
+    #ifdef ZgatewayRF
+      MQTTtoRF(topicOri, datacallback);
+    #endif
+    #ifdef ZgatewayRF315
+      MQTTtoRF315(topicOri, datacallback);
+    #endif
+    #ifdef ZgatewayRF2
+      MQTTtoRF2(topicOri, datacallback);
+    #endif
+    #ifdef ZgatewayPilight
+      MQTTtoPilight(topicOri, datacallback);
+    #endif
+    #ifdef Zgateway2G
+      MQTTto2G(topicOri, datacallback);
+    #endif
+    #ifdef ZgatewaySRFB
+      MQTTtoSRFB(topicOri, datacallback);
+    #endif
+    #ifdef ZgatewayIR
+      MQTTtoIR(topicOri, datacallback);
+    #endif
+    #ifdef ZgatewayRFM69
+      MQTTtoRFM69(topicOri, datacallback);
+    #endif
+    #ifdef ZactuatorONOFF
+      MQTTtoONOFF(topicOri, datacallback);
+    #endif
+  }
+
 #ifdef ZgatewayRF
   MQTTtoRF(topicOri, datacallback);
 #endif
