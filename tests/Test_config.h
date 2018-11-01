@@ -139,14 +139,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRF "RF315"
   #define ZgatewayRF2 "RF2"
   //#define Zgateway2G (not tested yet)
-  #define ZgatewayIR
+  #define ZgatewayIR "IR"
   #define ZgatewayBT "BT"
   #define ZactuatorONOFF "ONOFF"
-  #define ZsensorINA226
-  #define ZsensorHCSR501
-  #define ZsensorADC
-  #define ZsensorBH1750
-  #define ZsensorBME280
+  #define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
+  #define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+  #define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
+  #define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+  #define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
   #define ZsensorTSL2561 "TSL2561"
   #define ZsensorDHT "DHT"
   #define ZgatewayRFM69 "RFM69"

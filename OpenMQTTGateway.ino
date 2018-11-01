@@ -718,49 +718,49 @@ void stateMeasures(){
           modules = modules + ZgatewayRF315;
       #endif
       #ifdef ZsensorBME280
-          modules = modules  + ZsensorBME280;
+          modules = modules + ZsensorBME280;
       #endif
       #ifdef ZsensorBH1750
-          modules = modules  + ZsensorBH1750;
+          modules = modules + ZsensorBH1750;
       #endif
       #ifdef ZsensorTSL2561
-          modules = modules  + ZsensorTSL2561;
+          modules = modules + ZsensorTSL2561;
       #endif
       #ifdef ZactuatorONOFF
-          modules = modules  + ZactuatorONOFF;
+          modules = modules + ZactuatorONOFF;
       #endif
       #ifdef Zgateway2G
-          modules = modules  + Zgateway2G;
+          modules = modules + Zgateway2G;
       #endif
       #ifdef ZgatewayIR
-          modules = modules  + ZgatewayIR;
+          modules = modules + ZgatewayIR;
       #endif
       #ifdef ZgatewayRF2
-          modules = modules  + ZgatewayRF2;
+          modules = modules + ZgatewayRF2;
       #endif
       #ifdef ZgatewayPilight
-          modules = modules  + ZgatewayPilight;
+          modules = modules + ZgatewayPilight;
       #endif
       #ifdef ZgatewaySRFB
-          modules = modules  + ZgatewaySRFB;
+          modules = modules + ZgatewaySRFB;
       #endif
       #ifdef ZgatewayBT
-          modules = modules  + ZgatewayBT;
+          modules = modules + ZgatewayBT;
       #endif
       #ifdef ZgatewayRFM69
-          modules = modules  + ZgatewayRFM69;
+          modules = modules + ZgatewayRFM69;
       #endif
       #ifdef ZsensorINA226
-          modules = modules  + ZsensorINA226;
+          modules = modules + ZsensorINA226;
       #endif
       #ifdef ZsensorHCSR501
-          modules = modules  + ZsensorHCSR501;
+          modules = modules + ZsensorHCSR501;
       #endif
       #ifdef ZsensorGPIOInput
-          modules = modules  + ZsensorGPIOInput;
+          modules = modules + ZsensorGPIOInput;
       #endif
       #ifdef ZsensorGPIOKeyCode
-          modules = modules  + ZsensorGPIOKeyCode;
+          modules = modules + ZsensorGPIOKeyCode;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
