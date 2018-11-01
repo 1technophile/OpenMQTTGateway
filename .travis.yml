@@ -31,7 +31,6 @@ install:
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266
   - arduino --board $BD --save-prefs
-  - arduino --pref "compiler.warning_level=all" --save-prefs
 script:
   - arduino --verify --board $BD $PWD/OpenMQTTGateway.ino
 notifications:
