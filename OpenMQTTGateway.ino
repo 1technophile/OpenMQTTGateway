@@ -1035,12 +1035,12 @@ void pub(char * topic, unsigned int payload){
 
 void pub(char * topic, unsigned long payload){
     char val[11];
-    sprintf(val, "%Lu", payload);
+    sprintf(val, "%lu", payload);
     client.publish(topic,val);
 }
 
 void pub(String topic, unsigned long payload){
     char val[11];
-    sprintf(val, "%Lu", payload);
+    sprintf(val, "%lu", payload);
     client.publish((char *)topic.c_str(),val);
 }
