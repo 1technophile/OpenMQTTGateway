@@ -74,14 +74,6 @@ char mqtt_port[6] = "1883";
 //#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
 
-#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
-//example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
-
-#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
-//example 
-// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
-// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
 
@@ -134,6 +126,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define jsonPublishing true
+  #define simplePublishing true
 #elif ESP32
   #define ZgatewayRF "RF"
   #define ZgatewayRF "RF315"
@@ -152,6 +146,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define jsonPublishing true
+  #define simplePublishing true
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
   #define ZgatewayRF315 "RF315"
@@ -172,6 +168,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define jsonPublishing true
+  #define simplePublishing true
 #else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)
@@ -188,6 +186,8 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZgatewayRFM69 //not tested
   //#define ZsensorGPIOInput //not tested
   //#define ZsensorGPIOKeyCode "GPIOKeyCode" //not tested
+  #define jsonPublishing true
+  //#define simplePublishing true
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB

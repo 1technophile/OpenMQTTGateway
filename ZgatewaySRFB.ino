@@ -169,88 +169,19 @@ bool _rfbToChar(byte * in, char * out) {
     return true;
 }
 
-
-void MQTTtoSRFB(char * topicOri, char * datacallback) {
-
-  // RF DATA ANALYSIS
-  String topic = topicOri;
-  int valueRPT = 0;
+#ifdef simplePublishing
+  void MQTTtoSRFB(char * topicOri, char * datacallback) {
   
-  if (topic == subjectMQTTtoSRFB){
-
-    int valueMiniPLSL  = 0;
-    int valueMaxiPLSL  = 0;
-    int valueSYNC  = 0;
-
-    int pos = topic.lastIndexOf(SRFBRptKey);       
-    if (pos != -1){
-      pos = pos + +strlen(SRFBRptKey);
-      valueRPT = (topic.substring(pos,pos + 1)).toInt();
-      trc(F("SRFB Repeat:"));
-      trc(valueRPT);
-    }
-
-    int pos2 = topic.lastIndexOf(SRFBminipulselengthKey);
-    if (pos2 != -1) {
-      pos2 = pos2 + strlen(SRFBminipulselengthKey);
-      valueMiniPLSL = (topic.substring(pos2,pos2 + 3)).toInt();
-      trc(F("RF Mini Pulse Lgth:"));
-      trc(valueMiniPLSL);
-    }
-
-    int pos3 = topic.lastIndexOf(SRFBmaxipulselengthKey);       
-    if (pos3 != -1){
-      pos3 = pos3 + strlen(SRFBmaxipulselengthKey);
-      valueMaxiPLSL = (topic.substring(pos3,pos3 + 2)).toInt();
-      trc(F("RF Maxi Pulse Lgth:"));
-      trc(valueMaxiPLSL);
-    }
-
-    int pos4 = topic.lastIndexOf(SRFBsyncKey);       
-    if (pos4 != -1){
-      pos4 = pos4 + strlen(SRFBsyncKey);
-      valueSYNC = (topic.substring(pos4,pos4 + 2)).toInt();
-      trc(F("RF sync:"));
-      trc(valueSYNC);
-    }
-
-      trc(F("MQTTtoSRFB prts"));
-      if (valueRPT == 0) valueRPT = 1;
-      if (valueMiniPLSL == 0) valueMiniPLSL = 320;
-      if (valueMaxiPLSL == 0) valueMaxiPLSL = 900;
-      if (valueSYNC == 0) valueSYNC = 9500;
-      
-      byte hex_valueMiniPLSL[2];
-      hex_valueMiniPLSL[0] = (int)((valueMiniPLSL >> 8) & 0xFF) ;
-      hex_valueMiniPLSL[1] = (int)(valueMiniPLSL & 0xFF) ;
-      
-      byte hex_valueMaxiPLSL[2];
-      hex_valueMaxiPLSL[0] = (int)((valueMaxiPLSL >> 8) & 0xFF) ;
-      hex_valueMaxiPLSL[1] = (int)(valueMaxiPLSL & 0xFF) ;
-      
-      byte hex_valueSYNC[2];
-      hex_valueSYNC[0] = (int)((valueSYNC >> 8) & 0xFF) ;
-      hex_valueSYNC[1] = (int)(valueSYNC & 0xFF) ;
-
-      unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-      byte hex_data[3];
-      hex_data[0] = (unsigned long)((data >> 16) & 0xFF) ;
-      hex_data[1] = (unsigned long)((data >> 8) & 0xFF) ;
-      hex_data[2] = (unsigned long)(data & 0xFF) ;   
+    // RF DATA ANALYSIS
+    String topic = topicOri;
+    int valueRPT = 0;
+    
+    if (topic == subjectMQTTtoSRFB){
   
-      byte message_b[RF_MESSAGE_SIZE];
+      int valueMiniPLSL  = 0;
+      int valueMaxiPLSL  = 0;
+      int valueSYNC  = 0;
   
-      memcpy(message_b, hex_valueSYNC, 2);
-      memcpy(message_b + 2, hex_valueMiniPLSL, 2);
-      memcpy(message_b + 4, hex_valueMaxiPLSL, 2);
-      memcpy(message_b + 6, hex_data, 3);
-
-      _rfbSend(message_b, valueRPT);
-      // Acknowledgement to the GTWRF topic 
-      pub(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-  }
-  if (topic == subjectMQTTtoSRFBRaw){
-
       int pos = topic.lastIndexOf(SRFBRptKey);       
       if (pos != -1){
         pos = pos + +strlen(SRFBRptKey);
@@ -258,37 +189,32 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
         trc(F("SRFB Repeat:"));
         trc(valueRPT);
       }
-      if (valueRPT == 0) valueRPT = 1;
-      
-      byte message_b[RF_MESSAGE_SIZE];
-      _rfbToArray(datacallback,message_b);
-      _rfbSend(message_b, valueRPT);
-      // Acknowledgement to the GTWRF topic 
-      pub(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-  }
-}
-
-void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
-
-  // RF DATA ANALYSIS
-  String topic = topicOri;
-  const char * raw = SRFBdata["raw"];
-  int valueRPT =  SRFBdata["repeat"]|1;
-  if (topic == subjectMQTTtoSRFB){
-    trc(F("MQTTtoSRFB json data analysis"));
-    if (raw){ // send raw in priority when defined in the json
-      trc(F("MQTTtoSRFB raw ok"));
-      byte message_b[RF_MESSAGE_SIZE];
-      _rfbToArray(raw,message_b);
-      _rfbSend(message_b, valueRPT);
-    }else{
-      unsigned long data = SRFBdata["value"];
-      if (data != 0) {
-        trc(F("MQTTtoSRFB data ok"));
-        int valueMiniPLSL  = SRFBdata["val_Tlow"];
-        int valueMaxiPLSL  =SRFBdata["val_Thigh"];
-        int valueSYNC  = SRFBdata["delay"];
-    
+  
+      int pos2 = topic.lastIndexOf(SRFBminipulselengthKey);
+      if (pos2 != -1) {
+        pos2 = pos2 + strlen(SRFBminipulselengthKey);
+        valueMiniPLSL = (topic.substring(pos2,pos2 + 3)).toInt();
+        trc(F("RF Mini Pulse Lgth:"));
+        trc(valueMiniPLSL);
+      }
+  
+      int pos3 = topic.lastIndexOf(SRFBmaxipulselengthKey);       
+      if (pos3 != -1){
+        pos3 = pos3 + strlen(SRFBmaxipulselengthKey);
+        valueMaxiPLSL = (topic.substring(pos3,pos3 + 2)).toInt();
+        trc(F("RF Maxi Pulse Lgth:"));
+        trc(valueMaxiPLSL);
+      }
+  
+      int pos4 = topic.lastIndexOf(SRFBsyncKey);       
+      if (pos4 != -1){
+        pos4 = pos4 + strlen(SRFBsyncKey);
+        valueSYNC = (topic.substring(pos4,pos4 + 2)).toInt();
+        trc(F("RF sync:"));
+        trc(valueSYNC);
+      }
+  
+        trc(F("MQTTtoSRFB prts"));
         if (valueRPT == 0) valueRPT = 1;
         if (valueMiniPLSL == 0) valueMiniPLSL = 320;
         if (valueMaxiPLSL == 0) valueMaxiPLSL = 900;
@@ -305,7 +231,8 @@ void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
         byte hex_valueSYNC[2];
         hex_valueSYNC[0] = (int)((valueSYNC >> 8) & 0xFF) ;
         hex_valueSYNC[1] = (int)(valueSYNC & 0xFF) ;
-    
+  
+        unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
         byte hex_data[3];
         hex_data[0] = (unsigned long)((data >> 16) & 0xFF) ;
         hex_data[1] = (unsigned long)((data >> 8) & 0xFF) ;
@@ -317,16 +244,90 @@ void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
         memcpy(message_b + 2, hex_valueMiniPLSL, 2);
         memcpy(message_b + 4, hex_valueMaxiPLSL, 2);
         memcpy(message_b + 6, hex_data, 3);
-        
-        trc(F("MQTTtoSRFB send"));
+  
         _rfbSend(message_b, valueRPT);
         // Acknowledgement to the GTWRF topic 
-        pub(subjectGTWSRFBtoMQTT, SRFBdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        pub(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    }
+    if (topic == subjectMQTTtoSRFBRaw){
+  
+        int pos = topic.lastIndexOf(SRFBRptKey);       
+        if (pos != -1){
+          pos = pos + +strlen(SRFBRptKey);
+          valueRPT = (topic.substring(pos,pos + 1)).toInt();
+          trc(F("SRFB Repeat:"));
+          trc(valueRPT);
+        }
+        if (valueRPT == 0) valueRPT = 1;
+        
+        byte message_b[RF_MESSAGE_SIZE];
+        _rfbToArray(datacallback,message_b);
+        _rfbSend(message_b, valueRPT);
+        // Acknowledgement to the GTWRF topic 
+        pub(subjectGTWSRFBtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    }
+  }
+#endif
+#ifdef jsonPublishing
+  void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
+  
+    // RF DATA ANALYSIS
+    String topic = topicOri;
+    const char * raw = SRFBdata["raw"];
+    int valueRPT =  SRFBdata["repeat"]|1;
+    if (topic == subjectMQTTtoSRFB){
+      trc(F("MQTTtoSRFB json data analysis"));
+      if (raw){ // send raw in priority when defined in the json
+        trc(F("MQTTtoSRFB raw ok"));
+        byte message_b[RF_MESSAGE_SIZE];
+        _rfbToArray(raw,message_b);
+        _rfbSend(message_b, valueRPT);
       }else{
-        trc(F("MQTTtoSRFB error decoding value"));
+        unsigned long data = SRFBdata["value"];
+        if (data != 0) {
+          trc(F("MQTTtoSRFB data ok"));
+          int valueMiniPLSL  = SRFBdata["val_Tlow"];
+          int valueMaxiPLSL  =SRFBdata["val_Thigh"];
+          int valueSYNC  = SRFBdata["delay"];
+      
+          if (valueRPT == 0) valueRPT = 1;
+          if (valueMiniPLSL == 0) valueMiniPLSL = 320;
+          if (valueMaxiPLSL == 0) valueMaxiPLSL = 900;
+          if (valueSYNC == 0) valueSYNC = 9500;
+          
+          byte hex_valueMiniPLSL[2];
+          hex_valueMiniPLSL[0] = (int)((valueMiniPLSL >> 8) & 0xFF) ;
+          hex_valueMiniPLSL[1] = (int)(valueMiniPLSL & 0xFF) ;
+          
+          byte hex_valueMaxiPLSL[2];
+          hex_valueMaxiPLSL[0] = (int)((valueMaxiPLSL >> 8) & 0xFF) ;
+          hex_valueMaxiPLSL[1] = (int)(valueMaxiPLSL & 0xFF) ;
+          
+          byte hex_valueSYNC[2];
+          hex_valueSYNC[0] = (int)((valueSYNC >> 8) & 0xFF) ;
+          hex_valueSYNC[1] = (int)(valueSYNC & 0xFF) ;
+      
+          byte hex_data[3];
+          hex_data[0] = (unsigned long)((data >> 16) & 0xFF) ;
+          hex_data[1] = (unsigned long)((data >> 8) & 0xFF) ;
+          hex_data[2] = (unsigned long)(data & 0xFF) ;   
+      
+          byte message_b[RF_MESSAGE_SIZE];
+      
+          memcpy(message_b, hex_valueSYNC, 2);
+          memcpy(message_b + 2, hex_valueMiniPLSL, 2);
+          memcpy(message_b + 4, hex_valueMaxiPLSL, 2);
+          memcpy(message_b + 6, hex_data, 3);
+          
+          trc(F("MQTTtoSRFB send"));
+          _rfbSend(message_b, valueRPT);
+          // Acknowledgement to the GTWRF topic 
+          pub(subjectGTWSRFBtoMQTT, SRFBdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        }else{
+          trc(F("MQTTtoSRFB error decoding value"));
+        }
       }
     }
   }
-}
-
+#endif
 #endif

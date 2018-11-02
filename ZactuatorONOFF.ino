@@ -38,37 +38,41 @@ void setupONOFF(){
   trc(F("ZactuatorONOFF setup done "));
 }
 
-void MQTTtoONOFF(char * topicOri, char * datacallback){
-
-  bool boolSWITCHTYPE;
-  boolSWITCHTYPE = to_bool(datacallback);
-  String topic = topicOri;
- 
-  if (topic == subjectMQTTtoONOFF){
-    trc(F("MQTTtoONOFF data analysis"));
-    trc(boolSWITCHTYPE);
-    digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
-    // we acknowledge the sending by publishing the value to an acknowledgement topic
-    pub(subjectGTWONOFFtoMQTT, datacallback);
-  }
-}
-
-void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
- 
-  String topic = topicOri;
- 
-  if (topic == subjectMQTTtoONOFF){
-    trc(F("MQTTtoONOFF json data analysis"));
-    int boolSWITCHTYPE = ONOFFdata["switchType"] | 99;
-    if (boolSWITCHTYPE != 99) {
-      trc(F("MQTTtoONOFF boolSWITCHTYPE ok"));
+#ifdef simplePublishing
+  void MQTTtoONOFF(char * topicOri, char * datacallback){
+  
+    bool boolSWITCHTYPE;
+    boolSWITCHTYPE = to_bool(datacallback);
+    String topic = topicOri;
+   
+    if (topic == subjectMQTTtoONOFF){
+      trc(F("MQTTtoONOFF data analysis"));
       trc(boolSWITCHTYPE);
       digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
       // we acknowledge the sending by publishing the value to an acknowledgement topic
-      pub(subjectGTWONOFFtoMQTT, ONOFFdata);
-    }else{
-      trc(F("MQTTtoONOFF Fail reading from json"));
+      pub(subjectGTWONOFFtoMQTT, datacallback);
     }
   }
-}
+#endif
+
+#ifdef jsonPublishing
+  void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
+   
+    String topic = topicOri;
+   
+    if (topic == subjectMQTTtoONOFF){
+      trc(F("MQTTtoONOFF json data analysis"));
+      int boolSWITCHTYPE = ONOFFdata["switchType"] | 99;
+      if (boolSWITCHTYPE != 99) {
+        trc(F("MQTTtoONOFF boolSWITCHTYPE ok"));
+        trc(boolSWITCHTYPE);
+        digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
+        // we acknowledge the sending by publishing the value to an acknowledgement topic
+        pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+      }else{
+        trc(F("MQTTtoONOFF Fail reading from json"));
+      }
+    }
+  }
+#endif
 #endif
