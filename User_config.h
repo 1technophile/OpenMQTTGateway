@@ -46,15 +46,15 @@
  */
 
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
+#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#endif
+
 #if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
-#endif
- 
-#if defined(ESP8266)  // for nodemcu, weemos and esp8266
-  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #endif
 
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
@@ -69,51 +69,9 @@ char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
 #define Gateway_Name "OpenMQTTGateway"
-#define Base_Topic "home/"
-#define version_Topic  Base_Topic Gateway_Name "/version"
-#define will_Topic  Base_Topic Gateway_Name "/LWT"
-#define will_QoS 0
-#define will_Retain true
-#define will_Message "Offline"
-#define Gateway_AnnouncementMsg "Online"
-
-#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
-//example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
-
-#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
-//example 
-// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
-// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
 
 //uncomment the line below to integrate msg value into the subject when receiving
-#define valueAsASubject true
-
-/*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
-#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
-
-//set minimum quality of signal so it ignores AP's under that quality
-#define MinimumWifiSignalQuality 8
-
-// these values are only used if no dhcp configuration is available
-const byte ip[] = { 192, 168, 1, 99 }; //ip adress
-const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
-const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
-const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
-
-/*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
-#define ota_hostname Gateway_Name
-#define ota_password "OTAPASSWORD"
-#define ota_port 8266
-
-/*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#define led_receive 40
-#define led_send 42
-#define led_error 44
-
-//      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
-//                        LED       Resistor 270-510R
+//#define valueAsASubject true
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line
@@ -137,6 +95,50 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
+
+/*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
+//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
+#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
+
+//set minimum quality of signal so it ignores AP's under that quality
+#define MinimumWifiSignalQuality 8
+
+// these values are only used if no dhcp configuration is available
+const byte ip[] = { 192, 168, 1, 99 }; //ip adress
+const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
+
+/*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
+#define Base_Topic "home/"
+#define version_Topic  Base_Topic Gateway_Name "/version"
+#define will_Topic  Base_Topic Gateway_Name "/LWT"
+#define will_QoS 0
+#define will_Retain true
+#define will_Message "Offline"
+#define Gateway_AnnouncementMsg "Online"
+
+#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+//example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
+
+#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+//example 
+// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
+// home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
+
+/*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
+#define ota_hostname Gateway_Name
+#define ota_password "OTAPASSWORD"
+#define ota_port 8266
+
+/*-------------DEFINE PINs FOR STATUS LEDs----------------*/
+#define led_receive 40
+#define led_send 42
+#define led_error 44
+
+//      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
+//                        LED       Resistor 270-510R
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
