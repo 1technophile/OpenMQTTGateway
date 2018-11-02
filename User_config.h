@@ -44,9 +44,19 @@
  * Otherwise you can provide these credentials on the web interface after connecting 
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
+
+/*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
+#if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
+  #define wifi_ssid "wifi ssid"
+  #define wifi_password "wifi password"
+#else // for arduino + W5100
+  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
+#endif
+ 
 #if defined(ESP8266)  // for nodemcu, weemos and esp8266
   //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #endif
+
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
 
@@ -67,11 +77,6 @@ char mqtt_port[6] = "1883";
 #define will_Message "Offline"
 #define Gateway_AnnouncementMsg "Online"
 
-/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
-#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
-
 #define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
 
@@ -80,16 +85,16 @@ char mqtt_port[6] = "1883";
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
 
+//uncomment the line below to integrate msg value into the subject when receiving
+#define valueAsASubject true
+
+/*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
+//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
+#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
+
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
-
-// Update these with values suitable for your network.
-#if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-  #define wifi_ssid "wifi ssid"
-  #define wifi_password "wifi password"
-#else // for arduino + W5100
-  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
-#endif
 
 // these values are only used if no dhcp configuration is available
 const byte ip[] = { 192, 168, 1, 99 }; //ip adress
@@ -116,6 +121,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
 //#define ZgatewayRF315  "RF315"    //ESP8266, Arduino, ESP32
 #define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+//#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 #define ZgatewayBT     "BT"       //ESP8266, Arduino, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
