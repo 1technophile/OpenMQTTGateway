@@ -42,6 +42,13 @@
 #define delimiter "4f4b2b444953413a"
 #define delimiter_length 16
 
+/*-------------------HOME ASSISTANT ROOM PRESENCE !!! ESP32 only !!!!----------------------*/
+#define roomPresence //Uncomment to enable 
+#ifdef roomPresence
+  #define subjectHomePresence "/homePresence/salon" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
+#endif
+
+
 struct decompose
 {
   char subject[4];
