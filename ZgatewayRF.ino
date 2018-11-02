@@ -137,8 +137,10 @@ void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
   String topic = topicOri;
 
   if (topic == subjectMQTTtoRF) {
+    trc(F("MQTTtoRF json data analysis"));
     unsigned long data = RFdata["value"];
     if (data != 0) {
+      trc(F("MQTTtoRF data ok"));
       int valuePRT =  RFdata["protocol"];
       int valuePLSL = RFdata["delay"];
       int valueBITS = RFdata["length"];
@@ -161,6 +163,8 @@ void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
         // Acknowledgement to the GTWRF topic 
         pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       } 
+    }else{
+      trc(F("MQTTtoRF Fail reading from json"));
     }
   }
 }

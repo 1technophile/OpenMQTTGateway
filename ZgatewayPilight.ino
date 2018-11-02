@@ -24,8 +24,8 @@
  #ifdef ZgatewayPilight
  #include <ESPiLight.h>
  ESPiLight rf(RF_EMITTER_PIN);  // use -1 to disable transmitter
- void setupPilight(){
-    #ifndef ZgatewayRF && ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 as far as I can tell 
+void setupPilight(){
+    #ifndef ZgatewayRF && ZgatewayRF2 && ZgatewayRF315 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell 
         rf.setCallback(pilightCallback);
         rf.initReceiver(RF_RECEIVER_PIN);
         trc(F("RF_EMITTER_PIN "));
@@ -33,12 +33,16 @@
         trc(F("RF_RECEIVER_PIN "));
         trc(String(RF_RECEIVER_PIN));
         trc(F("ZgatewayPilight setup done "));
-    #endif 
+    #else
+        trc(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2"));
+    #endif
 }
- boolean PilighttoMQTT(){
+
+void PilighttoMQTT(){
   rf.loop();
 }
- void pilightCallback(const String &protocol, const String &message, int status,
+
+void pilightCallback(const String &protocol, const String &message, int status,
                 size_t repeats, const String &deviceID) {
    if (status == VALID) {
     trc(F("Creating RF PiLight buffer"));
@@ -53,72 +57,61 @@
     pub(subjectPilighttoMQTT,RFPiLightdata);      
    }
 }
- void MQTTtoPilight(char * topicOri, char * datacallback) {
-   String topic = topicOri;
-   int pos = topic.lastIndexOf(subjectMQTTtoPilight);
-  if (pos == -1){
-    return;
-  }
-   trc(F("Adv data PilighttoMQTT"));
-   char *last = strrchr(topicOri, '/');
-  String protocol = "";
-   if (last+1 != NULL) {
-    protocol = last+1;
-  }
-   int result = 0;
-   if (protocol == PilightRAW){
-    trc(F("RAW:"));
-    trc(String(datacallback));
-     uint16_t rawpulses[MAXPULSESTREAMLENGTH];
-    int rawlen =
-        rf.stringToPulseTrain(datacallback, rawpulses, MAXPULSESTREAMLENGTH);
-    if (rawlen > 0) {
-      rf.sendPulseTrain(rawpulses, rawlen);
-      result = rawlen;
-    } else {
-      result = -9999;
-    }
-  } else {
-    trc(F("PROTO:"));
-    trc(protocol);
-    result = rf.send(protocol, datacallback);
-  }
-   String MQTTmessage;
-  String MQTTprotocol = String(protocol);
-  String MQTTPilightstring = subjectPilighttoMQTT+String("/")+MQTTprotocol+String("/");
-   if (result > 0) {
-      trc(F("Adv data MQTTtoPilight push state via PilighttoMQTT"));
-       MQTTmessage = String(datacallback);
-       char *deviceID = "0";
-       DynamicJsonBuffer jb;
-      JsonObject& rjson = jb.parseObject(MQTTmessage);
-      if (rjson.success()) {
-        strcpy(deviceID, rjson["id"]);
+
+void MQTTtoPilight(char * topicOri, JsonObject& Pilightdata) {
+  String topic = topicOri;
+  int result = 0;
+   
+  if (topic == subjectMQTTtoPilight) {
+      trc(F("MQTTtoPilight json data analysis"));
+      const char * message = Pilightdata["message"];
+      const char * protocol = Pilightdata["protocol"];
+      if (message && protocol) {
+        trc(F("MQTTtoPilight msg & protocol ok"));
+        result = rf.send(protocol, message);
+      }else{
+      trc(F("MQTTtoPilight fail reading from json"));
       }
-       MQTTmessage = String(datacallback);
-      MQTTPilightstring += String(deviceID);
-   } else {
-    switch (result) {
-      case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
-        MQTTmessage = "protocol is not avaiable";
-        break;
-      case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
-        MQTTmessage = "message is invalid";
-        break;
-      case ESPiLight::ERROR_INVALID_JSON:
-        MQTTmessage = "message is not a proper json object";
-        break;
-      case ESPiLight::ERROR_NO_OUTPUT_PIN:
-        MQTTmessage = "no transmitter pin";
-        break;
-      case -9999:
-        MQTTmessage = "invalid pulse train message";
-        break;
-    }
-    trc(F("ESPiLight Error: "));
-    trc(String(MQTTmessage));
-    MQTTPilightstring += String("error");
+      int msgLength = 0;
+      uint16_t codes[MAXPULSESTREAMLENGTH];
+      msgLength = rf.stringToPulseTrain(
+          message,
+          codes, MAXPULSESTREAMLENGTH);
+      if (msgLength > 0) {
+        trc(F("MQTTtoPilight raw ok"));
+        rf.sendPulseTrain(codes, msgLength);
+        result = msgLength;
+      }else{
+        trc(F("MQTTtoPilight raw KO"));
+        result = -9999;
+      }
+      
+     String MQTTmessage;
+     if (result > 0) {
+        trc(F("Adv data MQTTtoPilight push state via PilighttoMQTT"));
+        pub(subjectGTWPilighttoMQTT, Pilightdata);
+     } else {
+      switch (result) {
+        case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
+          MQTTmessage = "protocol is not avaiable";
+          break;
+        case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
+          MQTTmessage = "message is invalid";
+          break;
+        case ESPiLight::ERROR_INVALID_JSON:
+          MQTTmessage = "message is not a proper json object";
+          break;
+        case ESPiLight::ERROR_NO_OUTPUT_PIN:
+          MQTTmessage = "no transmitter pin";
+          break;
+        case -9999:
+          MQTTmessage = "invalid pulse train message";
+          break;
+      }
+      trc(F("ESPiLight Error: "));
+      trc(String(MQTTmessage));
+      pub(subjectGTWPilighttoMQTT, MQTTmessage);
+     }
    }
-   client.publish((char *)MQTTPilightstring.c_str(),(char *)MQTTmessage.c_str());
  }
  #endif

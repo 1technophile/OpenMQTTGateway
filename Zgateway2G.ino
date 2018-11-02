@@ -101,31 +101,34 @@ boolean _2GtoMQTT(){
 
 void MQTTto2G(char * topicOri, char * datacallback) {
 
-  String data = datacallback; // we will not be able to pass values > 4294967295
-
-  // 2G DATA ANALYSIS
-  //We look into the subject to see if a special RF protocol is defined 
+  String data = datacallback;
   String topic = topicOri;
-  String phone_number = "";
-  int pos0 = topic.lastIndexOf(_2GPhoneKey);
-  if (pos0 != -1) {
-    pos0 = pos0 + strlen(_2GPhoneKey);
-    phone_number = topic.substring(pos0);
-    trc(F("Phone number to send SMS:"));
-    trc(phone_number);
-  }
-    if((strstr(topicOri, subjectMQTTto2G) != NULL) && (pos0 != -1)){
-    trc(F("MQTTto2G"));
-    trc(data);
-    if (A6l.sendSMS(phone_number,data) == A6_OK ) {
-      trc("SMS OK");
-    }else{
-      trc("SMS KO");
-    }
-    // Acknowledgement to the GTW2G topic
-    pub(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-  }
   
+  if (topic == subjectMQTTto2G) {
+    trc(F("MQTTto2G data analysis"));
+    // 2G DATA ANALYSIS
+    String phone_number = "";
+    int pos0 = topic.lastIndexOf(_2GPhoneKey);
+    if (pos0 != -1) {
+      pos0 = pos0 + strlen(_2GPhoneKey);
+      phone_number = topic.substring(pos0);
+      trc(F("MQTTto2G phone ok"));
+      trc(phone_number);
+      trc(F("MQTTto2G sms"));
+      trc(data);
+      if (A6l.sendSMS(phone_number,data) == A6_OK ) {
+        trc("SMS OK");
+        // Acknowledgement to the GTW2G topic
+        pub(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      }else{
+        trc("SMS KO");
+        // Acknowledgement to the GTW2G topic
+        pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      }
+   }else{
+      trc(F("MQTTto2G Fail reading phone number"));
+   }
+  }
 }
 
 void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
@@ -134,17 +137,21 @@ void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
   if (topic == subjectMQTTto2G) {
     const char * sms = SMSdata["message"];
     const char * phone = SMSdata["phone"];
+    trc(F("MQTTto2G json data analysis"));
     if (sms && phone) {
-      trc(F("MQTTto2G"));
+      trc(F("MQTTto2G sms & phone ok"));
       trc(sms);
       if (A6l.sendSMS(String(phone),String(sms)) == A6_OK ) {
         trc("SMS OK");
+        // Acknowledgement to the GTW2G topic
+        pub(subjectGTW2GtoMQTT, SMSdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       }else{
         trc("SMS KO");
+        pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       }
+    }else{
+      trc(F("MQTTto2G Fail reading from json"));
     }
-    // Acknowledgement to the GTW2G topic
-    pub(subjectGTW2GtoMQTT, SMSdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   
 }

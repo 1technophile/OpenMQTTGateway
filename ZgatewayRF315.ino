@@ -135,9 +135,11 @@ void MQTTtoRF315(char * topicOri, JsonObject& RF315data) { // json object decodi
 
   String topic = topicOri;
 
-  if (topic == subjectMQTTtoRF) {
+  if (topic == subjectMQTTtoRF315) {
+    trc(F("MQTTtoRF315 json data analysis"));
     unsigned long data = RF315data["value"];
     if (data != 0) {
+      trc(F("MQTTtoRF315 data ok"));
       int valuePRT =  RF315data["protocol"];
       int valuePLSL = RF315data["delay"];
       int valueBITS = RF315data["length"];

@@ -214,8 +214,10 @@ void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
   String topic = topicOri;
 
   if (topic == subjectMQTTtoRF2) {
+    trc(F("MQTTtoRF2 json data analysis"));
     int boolSWITCHTYPE = RF2data["switchType"] | 99;
     if (boolSWITCHTYPE != 99) {
+      trc(F("MQTTtoRF2 switch type ok"));
       bool isDimCommand = false;
       unsigned long valueCODE = RF2data["adress"];
       int valueUNIT = RF2data["unit"] | -1;
@@ -259,6 +261,8 @@ void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
         // Publish state change back to MQTT
         pub(subjectGTWRF2toMQTT,RF2data);
       }
+    }else{
+      trc(F("MQTTto2G Fail reading from json"));
     }
   }
 }

@@ -39,6 +39,137 @@ void setupSRFB(){
   trc("Serial Baud" + String(SERIAL_BAUD));
 }
 
+void _rfbSend(byte * message) {
+    Serial.println();
+    Serial.write(RF_CODE_START);
+    Serial.write(RF_CODE_RFOUT);
+    for (unsigned char j=0; j<RF_MESSAGE_SIZE; j++) {
+        Serial.write(message[j]);
+    }
+    Serial.write(RF_CODE_STOP);
+    Serial.flush();
+    Serial.println();
+}
+
+void _rfbSend(byte * message, int times) {
+
+    char buffer[RF_MESSAGE_SIZE];
+    _rfbToChar(message, buffer);
+    trc("[RFBRIDGE] Sending MESSAGE '%s' %d time(s)\n");
+
+    for (int i=0; i<times; i++) {
+        if (i>0) {
+            unsigned long start = millis();
+            while (millis() - start < RF_SEND_DELAY) delay(1);
+        }
+        _rfbSend(message);
+    }
+}
+
+boolean SRFBtoMQTT() {
+  
+    static bool receiving = false;
+
+    while (Serial.available()) {
+        yield();
+        byte c = Serial.read();
+
+        if (receiving) {
+            if (c == RF_CODE_STOP) {
+                _rfbDecode();
+                receiving = false;
+            } else {
+                _uartbuf[_uartpos++] = c;
+            }
+        } else if (c == RF_CODE_START) {
+            _uartpos = 0;
+            receiving = true;
+        }
+
+    }
+    return receiving;    
+}
+
+void _rfbDecode() {
+
+    static unsigned long last = 0;
+    if (millis() - last < RF_RECEIVE_DELAY) return;
+    last = millis();
+
+    byte action = _uartbuf[0];
+    char buffer[RF_MESSAGE_SIZE * 2 + 1] = {0};
+
+    if (action == RF_CODE_RFIN) {
+        _rfbToChar(&_uartbuf[1], buffer);
+
+        trc(F("Creating SRFB buffer"));
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& SRFBdata = jsonBuffer.createObject();
+        SRFBdata.set("raw", (char *)buffer);
+        
+        char val[8]= {0};
+        extract_char(buffer, val, 12 ,8, false,true);
+        SRFBdata.set("value", (char *)val);
+
+        char val_Tsyn[4]= {0};
+        extract_char(buffer, val_Tsyn , 0 ,4, false, true);   
+        SRFBdata.set("delay", (char *)val_Tsyn);
+
+        char val_Thigh[4]= {0};
+        extract_char(buffer, val_Thigh , 4 ,4, false, true);
+        SRFBdata.set("val_Thigh", (char *)val_Thigh);
+
+        char val_Tlow[4]= {0};
+        extract_char(buffer,val_Tlow , 8 ,4, false, true);
+        SRFBdata.set("val_Tlow", (char *)val_Tlow);
+        
+        unsigned long MQTTvalue = SRFBdata.get<unsigned long>("value");
+        if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
+            trc(F("Adv data SRFBtoMQTT")); 
+            pub(subjectSRFBtoMQTT,SRFBdata);
+            if (repeatSRFBwMQTT){
+                trc(F("Publish SRFB for repeat"));
+                pub(subjectMQTTtoSRFB,SRFBdata);
+            }
+        } 
+        _rfbAck();
+    }
+}
+
+void _rfbAck() {
+    trc("[RFBRIDGE] Sending ACK\n");
+    Serial.println();
+    Serial.write(RF_CODE_START);
+    Serial.write(RF_CODE_ACK);
+    Serial.write(RF_CODE_STOP);
+    Serial.flush();
+    Serial.println();
+}
+
+/*
+From an hexa char array ("A220EE...") to a byte array (half the size)
+ */
+bool _rfbToArray(const char * in, byte * out) {
+    if (strlen(in) != RF_MESSAGE_SIZE * 2) return false;
+    char tmp[3] = {0};
+    for (unsigned char p = 0; p<RF_MESSAGE_SIZE; p++) {
+        memcpy(tmp, &in[p*2], 2);
+        out[p] = strtol(tmp, NULL, 16);
+    }
+    return true;
+}
+
+/*
+From a byte array to an hexa char array ("A220EE...", double the size)
+ */
+bool _rfbToChar(byte * in, char * out) {
+    for (unsigned char p = 0; p<RF_MESSAGE_SIZE; p++) {
+        sprintf_P(&out[p*2], PSTR("%02X"), in[p]);
+    }
+    return true;
+}
+
+
 void MQTTtoSRFB(char * topicOri, char * datacallback) {
 
   // RF DATA ANALYSIS
@@ -137,134 +268,65 @@ void MQTTtoSRFB(char * topicOri, char * datacallback) {
   }
 }
 
-void _rfbSend(byte * message) {
-    Serial.println();
-    Serial.write(RF_CODE_START);
-    Serial.write(RF_CODE_RFOUT);
-    for (unsigned char j=0; j<RF_MESSAGE_SIZE; j++) {
-        Serial.write(message[j]);
-    }
-    Serial.write(RF_CODE_STOP);
-    Serial.flush();
-    Serial.println();
-}
+void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
 
-void _rfbSend(byte * message, int times) {
-
-    char buffer[RF_MESSAGE_SIZE];
-    _rfbToChar(message, buffer);
-    trc("[RFBRIDGE] Sending MESSAGE '%s' %d time(s)\n");
-
-    for (int i=0; i<times; i++) {
-        if (i>0) {
-            unsigned long start = millis();
-            while (millis() - start < RF_SEND_DELAY) delay(1);
-        }
-        _rfbSend(message);
-    }
-}
-
-boolean SRFBtoMQTT() {
-  
-    static bool receiving = false;
-
-    while (Serial.available()) {
-        yield();
-        byte c = Serial.read();
-
-        if (receiving) {
-            if (c == RF_CODE_STOP) {
-                _rfbDecode();
-                receiving = false;
-            } else {
-                _uartbuf[_uartpos++] = c;
-            }
-        } else if (c == RF_CODE_START) {
-            _uartpos = 0;
-            receiving = true;
-        }
-
-    }
-    return receiving;    
-}
-
-void _rfbDecode() {
-
-    static unsigned long last = 0;
-    if (millis() - last < RF_RECEIVE_DELAY) return;
-    last = millis();
-
-    byte action = _uartbuf[0];
-    char buffer[RF_MESSAGE_SIZE * 2 + 1] = {0};
-
-    if (action == RF_CODE_RFIN) {
-        _rfbToChar(&_uartbuf[1], buffer);
-
-        trc(F("Creating SRFB buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-        JsonObject& SRFBdata = jsonBuffer.createObject();
-        SRFBdata.set("buffer", (char *)buffer);
+  // RF DATA ANALYSIS
+  String topic = topicOri;
+  const char * raw = SRFBdata["raw"];
+  int valueRPT =  SRFBdata["repeat"]|1;
+  if (topic == subjectMQTTtoSRFB){
+    trc(F("MQTTtoSRFB json data analysis"));
+    if (raw){ // send raw in priority when defined in the json
+      trc(F("MQTTtoSRFB raw ok"));
+      byte message_b[RF_MESSAGE_SIZE];
+      _rfbToArray(raw,message_b);
+      _rfbSend(message_b, valueRPT);
+    }else{
+      unsigned long data = SRFBdata["value"];
+      if (data != 0) {
+        trc(F("MQTTtoSRFB data ok"));
+        int valueMiniPLSL  = SRFBdata["val_Tlow"];
+        int valueMaxiPLSL  =SRFBdata["val_Thigh"];
+        int valueSYNC  = SRFBdata["delay"];
+    
+        if (valueRPT == 0) valueRPT = 1;
+        if (valueMiniPLSL == 0) valueMiniPLSL = 320;
+        if (valueMaxiPLSL == 0) valueMaxiPLSL = 900;
+        if (valueSYNC == 0) valueSYNC = 9500;
         
-        char val[8]= {0};
-        extract_char(buffer, val, 12 ,8, false,true);
-        SRFBdata.set("value", (char *)val);
-
-        char val_Tsyn[4]= {0};
-        extract_char(buffer, val_Tsyn , 0 ,4, false, true);   
-        SRFBdata.set("delay", (char *)val_Tsyn);
-
-        char val_Thigh[4]= {0};
-        extract_char(buffer, val_Thigh , 4 ,4, false, true);
-        SRFBdata.set("val_Thigh", (char *)val_Thigh);
-
-        char val_Tlow[4]= {0};
-        extract_char(buffer,val_Tlow , 8 ,4, false, true);
-        SRFBdata.set("val_Tlow", (char *)val_Tlow);
+        byte hex_valueMiniPLSL[2];
+        hex_valueMiniPLSL[0] = (int)((valueMiniPLSL >> 8) & 0xFF) ;
+        hex_valueMiniPLSL[1] = (int)(valueMiniPLSL & 0xFF) ;
         
-        unsigned long MQTTvalue = SRFBdata.get<unsigned long>("value");
-        if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-            trc(F("Adv data SRFBtoMQTT")); 
-            pub(subjectSRFBtoMQTT,SRFBdata);
-            if (repeatSRFBwMQTT){
-                trc(F("Publish SRFB for repeat"));
-                pub(subjectMQTTtoSRFB,SRFBdata);
-            }
-        } 
-        _rfbAck();
+        byte hex_valueMaxiPLSL[2];
+        hex_valueMaxiPLSL[0] = (int)((valueMaxiPLSL >> 8) & 0xFF) ;
+        hex_valueMaxiPLSL[1] = (int)(valueMaxiPLSL & 0xFF) ;
+        
+        byte hex_valueSYNC[2];
+        hex_valueSYNC[0] = (int)((valueSYNC >> 8) & 0xFF) ;
+        hex_valueSYNC[1] = (int)(valueSYNC & 0xFF) ;
+    
+        byte hex_data[3];
+        hex_data[0] = (unsigned long)((data >> 16) & 0xFF) ;
+        hex_data[1] = (unsigned long)((data >> 8) & 0xFF) ;
+        hex_data[2] = (unsigned long)(data & 0xFF) ;   
+    
+        byte message_b[RF_MESSAGE_SIZE];
+    
+        memcpy(message_b, hex_valueSYNC, 2);
+        memcpy(message_b + 2, hex_valueMiniPLSL, 2);
+        memcpy(message_b + 4, hex_valueMaxiPLSL, 2);
+        memcpy(message_b + 6, hex_data, 3);
+        
+        trc(F("MQTTtoSRFB send"));
+        _rfbSend(message_b, valueRPT);
+        // Acknowledgement to the GTWRF topic 
+        pub(subjectGTWSRFBtoMQTT, SRFBdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      }else{
+        trc(F("MQTTtoSRFB error decoding value"));
+      }
     }
-}
-
-void _rfbAck() {
-    trc("[RFBRIDGE] Sending ACK\n");
-    Serial.println();
-    Serial.write(RF_CODE_START);
-    Serial.write(RF_CODE_ACK);
-    Serial.write(RF_CODE_STOP);
-    Serial.flush();
-    Serial.println();
-}
-
-/*
-From an hexa char array ("A220EE...") to a byte array (half the size)
- */
-bool _rfbToArray(const char * in, byte * out) {
-    if (strlen(in) != RF_MESSAGE_SIZE * 2) return false;
-    char tmp[3] = {0};
-    for (unsigned char p = 0; p<RF_MESSAGE_SIZE; p++) {
-        memcpy(tmp, &in[p*2], 2);
-        out[p] = strtol(tmp, NULL, 16);
-    }
-    return true;
-}
-
-/*
-From a byte array to an hexa char array ("A220EE...", double the size)
- */
-bool _rfbToChar(byte * in, char * out) {
-    for (unsigned char p = 0; p<RF_MESSAGE_SIZE; p++) {
-        sprintf_P(&out[p*2], PSTR("%02X"), in[p]);
-    }
-    return true;
+  }
 }
 
 #endif
