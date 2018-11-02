@@ -52,6 +52,7 @@ RF supported protocols
 //433Mhz newremoteswitch MQTT Subjects and keys
 #define subjectMQTTtoRF2  Base_Topic Gateway_Name "/commands/MQTTtoRF2"
 #define subjectRF2toMQTT  Base_Topic Gateway_Name "/RF2toMQTT"
+#define subjectGTWRF2toMQTT  Base_Topic Gateway_Name "/433toMQTT"
 #define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
 #define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
@@ -62,6 +63,7 @@ RF supported protocols
 //433Mhz Pilight MQTT Subjects and keys
 #define subjectMQTTtoPilight  Base_Topic Gateway_Name "/commands/MQTTtoPilight"
 #define subjectPilighttoMQTT  Base_Topic Gateway_Name "/PilighttoMQTT"
+#define subjectGTWPilighttoMQTT  Base_Topic Gateway_Name "/PilighttoMQTT"
 #define PilightRAW "RAW"
 
 /*-------------------PIN DEFINITIONS----------------------*/
