@@ -132,6 +132,8 @@ void callback(char*topic, byte* payload,unsigned int length);
 
 boolean connectedOnce = false; //indicate if we have been connected once to MQTT
 
+int failure_number = 0; // number of failure connecting to MQTT
+
 #ifdef ESP32
   #include <WiFi.h>
   #include <ArduinoOTA.h>
@@ -183,7 +185,6 @@ void saveConfigCallback () {
 
 boolean reconnect() {
   
-  int failure_number = 0;
   // Loop until we're reconnected
   while (!client.connected()) {
       trc(F("MQTT connection...")); //F function enable to decrease sram usage
@@ -209,6 +210,8 @@ boolean reconnect() {
       }
       } else {
       failure_number ++; // we count the failure
+      trc(F("failure_number"));
+      trc(failure_number);
       trc(F("failed, rc="));
       trc(client.state());
       trc(F("try again in 5s"));
@@ -1007,19 +1010,22 @@ void pub(char * topicori, JsonObject& data){
         #if defined(ESP8266)
           yield();
         #endif
-        topic = topic + String(p.key);
-        if (p.value.is<float>()) {
-          trc(p.key);
-          trc(p.value.as<float>());
-          pub(topic,p.value.as<float>());
-        } else if (p.value.is<unsigned long>() || p.value.is<int>()) {
+        if (p.value.is<unsigned long>() || p.value.is<int>()) {
           trc(p.key);
           trc(p.value.as<unsigned long>());
-          pub(topic,p.value.as<unsigned long>());
+          if (strcmp(p.key, "value") == 0){ // if data is a value we don't integrate the name into the topic
+            pub(topic,p.value.as<unsigned long>());
+          }else{ // if data is not a value we integrate the name into the topic
+            pub(topic + "/" + String(p.key),p.value.as<unsigned long>());
+          }
+        } else if (p.value.is<float>()) {
+          trc(p.key);
+          trc(p.value.as<float>());
+          pub(topic + "/" + String(p.key),p.value.as<float>());
         } else if (p.value.is<char*>()) {
           trc(p.key);
           trc(p.value.as<const char*>());
-          pub(topic,p.value.as<const char*>());
+          pub(topic + "/" + String(p.key),p.value.as<const char*>());
         }
       }
     #endif
