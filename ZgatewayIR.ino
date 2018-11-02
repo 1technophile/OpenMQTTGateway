@@ -288,7 +288,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #ifdef IR_Sony
   if (strstr(topicOri, "IR_Sony") != NULL){
     if (valueBITS == 0) valueBITS = SONY_12_BITS;
-    if (valueRPT == 0) valueRPT = 2;
+    if (valueRPT == 0) valueRPT = repeatIRwNumber;
       #ifdef ESP8266
           irsend.sendSony(data, valueBITS, valueRPT);
       #else
@@ -355,7 +355,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #ifdef IR_JVC
   if (strstr(topicOri, "IR_JVC") != NULL){
     if (valueBITS == 0) valueBITS = JVC_BITS;
-    if (valueRPT == 0) valueRPT = 2;
+    if (valueRPT == 0) valueRPT = repeatIRwNumber;
       #ifdef ESP8266
           irsend.sendJVC(data, valueBITS, valueRPT);
       #else
@@ -366,7 +366,7 @@ void MQTTtoIR(char * topicOri, char * datacallback) {
   #endif
   #ifdef IR_PANASONIC
   if (strstr(topicOri, "IR_PANASONIC") != NULL){
-    if (valueRPT == 0) valueRPT = 2;
+    if (valueRPT == 0) valueRPT = repeatIRwNumber;
       #ifdef ESP8266
           if (valueBITS == 0) valueBITS = PANASONIC_BITS;
           irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);

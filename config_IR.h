@@ -35,6 +35,7 @@
 #define IRbitsKey "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
 #define repeatIRwMQTT false // do we repeat a received signal by using mqtt
+#define repeatIRwNumber 3 // default repeat of the signal
 #define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
 //#define DumpMode true // uncomment so as to see big dumps of IR codes
