@@ -54,6 +54,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject& BLEdata = jsonBuffer.createObject();
             String mac_adress = advertisedDevice.getAddress().toString().c_str();
+            BLEdata.set("id", mac_adress);
             mac_adress.replace(":","");
             mac_adress.toUpperCase();
             String mactopic = subjectBTtoMQTT + mac_adress;
@@ -65,6 +66,9 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             }
             if (advertisedDevice.haveRSSI()){
                 BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
+                #ifdef subjectHomePresence
+                  haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
+                #endif
             }
             if (advertisedDevice.haveTXPower()){
                 BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
@@ -238,12 +242,23 @@ boolean BTtoMQTT() {
               trc(F("Creating BLE buffer"));
               StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
               JsonObject& BLEdata = jsonBuffer.createObject();
+              #ifdef subjectHomePresence
+                String HomePresenceId;
+                for (int i = 0; i++; i<13){
+                  String HomePresenceId = HomePresenceId + String(d[0].extract[i]);
+                  if(i % 2 == 0) HomePresenceId += ":";
+                }
+                trc(F("HomePresenceId"));      
+                trc(HomePresenceId);
+                BLEdata.set("id", HomePresenceId);
+              #endif
               strupp(d[0].extract);
               String topic = subjectBTtoMQTT + String(d[0].extract);
-              
               int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
               BLEdata.set("rssi", (int)rssi);
-              
+              #ifdef subjectHomePresence
+                haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
+              #endif
               String Service_data(d[5].extract);
               Service_data = Service_data.substring(14);
               BLEdata.set("servicedata", (char *)Service_data.c_str());
@@ -423,6 +438,16 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
     }
     pub((char *)mactopic.c_str(),BLEdata);
     return true;
-  }
+}
+
+void haRoomPresence(JsonObject& HomePresence){
+  trc("BLE DISTANCE :");
+  double BLErssi = HomePresence["rssi"];
+  double ratio = BLErssi/-59;
+  double distance = (0.89)* pow(ratio,7.7095) + 0.11;  
+  HomePresence["distance"] = distance;
+  trc(distance);
+  pub(subjectHomePresence,HomePresence);
+}
 
 #endif
