@@ -30,5 +30,6 @@
 #define subjectGTWONOFFtoMQTT  Base_Topic Gateway_Name "/ONOFFtoMQTT"
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#define ACTUATOR_ONOFF_PIN 4 
-
+#define ACTUATOR_ONOFF_PIN 4
+#define MQTTtoONOFFDelimiter ','
+const byte ACTUATOR_ONOFF_PINS[] = { 4, 5 };
