@@ -37,7 +37,7 @@
 */
 
 #define bme280_always true // if false when the current value for light Level (Lux) is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingbme280 30000
+#define TimeBetweenReadingbme280 300000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
@@ -50,5 +50,3 @@
 
 //Time used to wait for an interval before resending measured values
 unsigned long timebme280 = 0;
-
-

@@ -34,7 +34,7 @@
 #define subjectRFtoMQTTlength  Base_Topic Gateway_Name "/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFbitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
-#define repeatRFwMQTT false // do we repeat a received signal by using mqtt
+#define repeatRFwMQTT true // do we repeat a received signal by using mqtt
 /*
 RF supported protocols
 433_1
