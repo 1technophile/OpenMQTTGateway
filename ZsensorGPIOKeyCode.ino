@@ -28,7 +28,7 @@
 int InputStateGPIOKeyCode = 0x0f;             // Set to 3 so that it reads on startup
 int lastInputStateGPIOKeyCode = 0x0f; 
 int lastLatchStateGPIOKeyCode = 0;
-
+unsigned long lastDebounceTime = 0;
 
 void setupGPIOKeyCode() {
   pinMode(GPIOKeyCode_LATCH_PIN, INPUT_PULLUP);  //
@@ -54,7 +54,6 @@ void MeasureGPIOKeyCode(){
   #endif
     // if the Input state has changed:
     if (latch > 0 && lastLatchStateGPIOKeyCode != latch) {
-
       int reading = digitalRead(GPIOKeyCode_D0_PIN)
             | (digitalRead(GPIOKeyCode_D1_PIN) << 1) 
             | (digitalRead(GPIOKeyCode_D2_PIN) << 2);

@@ -60,6 +60,27 @@
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
 
+/*-------------CONFIGURE WIFIMANAGER-------------*/
+/*
+ * The following parameters are set during the WifiManager setup process:
+ * - wifi_ssid
+ * - wifi_password
+ * - mqtt_user
+ * - mqtt_pass
+ * - mqtt_server
+ * - mqtt_port
+ * 
+ * To completely disable WifiManager, define ESPWifiManualSetup.
+ * If you do so, please don't forget to set these variables before compiling
+ * 
+ * Otherwise you can provide these credentials on the web interface after connecting 
+ * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
+ */
+
+//#define ESPWifiManualSetup true //uncomment to disable WifiManager
+#define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
+#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name

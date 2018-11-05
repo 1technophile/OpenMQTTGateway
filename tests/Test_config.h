@@ -30,6 +30,7 @@
 */
 /*-------------------VERSION----------------------*/
 #define OMG_VERSION "0.9beta"
+
 /*-------------CONFIGURE WIFIMANAGER-------------*/
 /*
  * The following parameters are set during the WifiManager setup process:
@@ -46,9 +47,11 @@
  * Otherwise you can provide these credentials on the web interface after connecting 
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
+
 #if defined(ESP8266)  // for nodemcu, weemos and esp8266
   //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #endif
+
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
 

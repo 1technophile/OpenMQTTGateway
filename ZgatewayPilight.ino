@@ -1,11 +1,13 @@
 /*  
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
-    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
   This gateway enables to:
  - publish MQTT data to a different topic related to received 433Mhz signal using ESPiLight
-     Copyright: (c)Florian ROBERT
+
+    Copyright: (c)Florian ROBERT
     Copyright: (c)Randy Simons http://randysimons.nl/
   
     This file is part of OpenMQTTGateway.
@@ -14,6 +16,7 @@
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
+
      OpenMQTTGateway is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,7 +37,7 @@ void setupPilight(){
         trc(String(RF_RECEIVER_PIN));
         trc(F("ZgatewayPilight setup done "));
     #else
-        trc(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2"));
+        trc(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2 && ZgatewayRF315"));
     #endif
 }
 

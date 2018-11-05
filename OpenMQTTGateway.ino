@@ -661,6 +661,13 @@ void loop()
     #ifdef ZgatewayPilight
       PilighttoMQTT();
     #endif
+    #ifdef ZgatewayPilight
+      if(PilighttoMQTT()){
+      trc(F("PilighttoMQTT OK"));
+      digitalWrite(led_receive, LOW);
+      timer_led_receive = millis();
+      }
+    #endif
     #ifdef ZgatewaySRFB
       SRFBtoMQTT();
     #endif
@@ -744,6 +751,9 @@ void stateMeasures(){
       #ifdef ZgatewayPilight
           modules = modules + ZgatewayPilight;
       #endif
+      #ifdef ZgatewayPilight
+          modules = modules  + ZgatewayPilight;
+      #endif
       #ifdef ZgatewaySRFB
           modules = modules + ZgatewaySRFB;
       #endif
@@ -764,6 +774,9 @@ void stateMeasures(){
       #endif
       #ifdef ZsensorGPIOKeyCode
           modules = modules + ZsensorGPIOKeyCode;
+      #endif
+      #ifdef ZsensorGPIOKeyCode
+          modules = modules  + ZsensorGPIOKeyCode;
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
@@ -821,7 +834,6 @@ return false;
 }
 
 void receivingMQTT(char * topicOri, char * datacallback) {
-
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
     trc(F("Storing signal"));
@@ -935,7 +947,6 @@ int strpos(char *haystack, char *needle) //from @miere https://stackoverflow.com
       return p - haystack;
    return -1;
 }
-
 
 bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
      return s != "0";

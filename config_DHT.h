@@ -37,7 +37,7 @@
 #if defined(ESP8266)
   #define DHT_RECEIVER_PIN 5 //5 = D1 you can put 14 = D5 if you don't use HCSR501 sensor and the RFM69
 #elif defined(ESP32)
-  #define DHT_RECEIVER_PIN 35
+  #define DHT_RECEIVER_PIN 16
 #else
   #define DHT_RECEIVER_PIN 8
 #endif
