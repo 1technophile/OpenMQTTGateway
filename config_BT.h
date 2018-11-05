@@ -25,15 +25,6 @@
 */
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
-//#define subjectBTtoMQTTrssi "/rssi" // will be the default parameter on the next release, for the moment rssi is published on mac topic
-#define subjectBTtoMQTTrssi ""
-#define subjectBTtoMQTTtem "/tem"
-#define subjectBTtoMQTThum "/hum"
-#define subjectBTtoMQTTmoi "/moi"
-#define subjectBTtoMQTTfer "/fer"
-#define subjectBTtoMQTTlux "/lux"
-#define subjectBTtoMQTTbatt "/batt"
-#define subjectBTtoMQTTservicedata "/servicedata"
 #define TimeBtw_Read 55555 //define the time between 2 scans
 #define Scan_duration 10 //define the time for a scan
 #define HM-10 
@@ -42,11 +33,9 @@
 #define delimiter "4f4b2b444953413a"
 #define delimiter_length 16
 
-/*-------------------HOME ASSISTANT ROOM PRESENCE !!! ESP32 only !!!!----------------------*/
-#define roomPresence //Uncomment to enable 
-#ifdef roomPresence
-  #define subjectHomePresence "/homePresence/salon" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
-#endif
+/*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
+// if not commented Home presence integration with HOME ASSISTANT is activated
+#define subjectHomePresence  Base_Topic "/salon" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 
 struct decompose

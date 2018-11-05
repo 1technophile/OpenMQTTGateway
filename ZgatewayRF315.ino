@@ -45,100 +45,128 @@ void setupRF315(){
 }
 
 boolean RF315toMQTT(){
-
   if (mySwitch315.available()){
+    trc(F("Creating RF315 buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& RF315data = jsonBuffer.createObject();
     trc(F("Rcv. RF315"));
     #ifdef ESP32
       String taskMessage = "RF Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
-    unsigned long MQTTvalue = 0;
-    String MQTTprotocol;
-    String MQTTbits;
-    String MQTTlength;
-    MQTTvalue = mySwitch315.getReceivedValue();
-    MQTTprotocol = String(mySwitch315.getReceivedProtocol());
-    MQTTbits = String(mySwitch315.getReceivedBitlength());
-    MQTTlength = String(mySwitch315.getReceivedDelay());
+    RF315data.set("value", (unsigned long)mySwitch315.getReceivedValue());
+    RF315data.set("protocol",(int)mySwitch315.getReceivedProtocol());
+    RF315data.set("length", (int)mySwitch315.getReceivedBitlength());
+    RF315data.set("delay", (int)mySwitch315.getReceivedDelay());
     mySwitch315.resetAvailable();
+    
+    trc(F("LED MNG"));
+    digitalWrite(led_receive, LOW);
+    timer_led_receive = millis();
+    
+    unsigned long MQTTvalue = RF315data.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RF315toMQTT"));
-        client.publish(subjectRF315toMQTTprotocol,(char *)MQTTprotocol.c_str());
-        client.publish(subjectRF315toMQTTbits,(char *)MQTTbits.c_str());    
-        client.publish(subjectRF315toMQTTlength,(char *)MQTTlength.c_str());    
-        trc(F("Sending RF315toMQTT"));
-        String value = String(MQTTvalue);
-        trc(value);
-        boolean result = client.publish(subjectRF315toMQTT,(char *)value.c_str());
+        trc(F("Adv data RF315toMQTT")); 
+        pub(subjectRF315toMQTT,RF315data);
         if (repeatRF315wMQTT){
             trc(F("Publish RF315 for repeat"));
-            client.publish(subjectMQTTtoRF315,(char *)value.c_str());
+            pub(subjectMQTTtoRF315,RF315data);
         }
-        return result;
-    } 
-  }
-  return false;
-}
-
-void MQTTtoRF315(char * topicOri, char * datacallback) {
-
-  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-
-  // RF315 DATA ANALYSIS
-  //We look into the subject to see if a special RF protocol is defined 
-  String topic = topicOri;
-  int valuePRT = 0;
-  int valuePLSL  = 0;
-  int valueBITS  = 0;
-  int pos = topic.lastIndexOf(RF315protocolKey);       
-  if (pos != -1){
-    pos = pos + +strlen(RF315protocolKey);
-    valuePRT = (topic.substring(pos,pos + 1)).toInt();
-    trc(F("RF315 Protocol:"));
-    trc(valuePRT);
-  }
-  //We look into the subject to see if a special RF pulselength is defined 
-  int pos2 = topic.lastIndexOf(RF315pulselengthKey);
-  if (pos2 != -1) {
-    pos2 = pos2 + strlen(RF315pulselengthKey);
-    valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
-    trc(F("RF315 Pulse Lgth:"));
-    trc(valuePLSL);
-  }
-  int pos3 = topic.lastIndexOf(RF315bitsKey);       
-  if (pos3 != -1){
-    pos3 = pos3 + strlen(RF315bitsKey);
-    valueBITS = (topic.substring(pos3,pos3 + 2)).toInt();
-    trc(F("Bits nb:"));
-    trc(valueBITS);
-  }
-  
-  if ((topic == subjectMQTTtoRF315) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
-    trc(F("MQTTtoRF315 dflt"));
-    mySwitch315.setProtocol(1,350);
-    mySwitch315.send(data, 24);
-    // Acknowledgement to the GTWRF topic
-    boolean result = client.publish(subjectGTWRF315toMQTT, datacallback);
-    if (result)trc(F("Ack pub."));
-    
-  } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
-    trc(F("MQTTtoRF315 usr par."));
-    if (valuePRT == 0) valuePRT = 1;
-    if (valuePLSL == 0) valuePLSL = 350;
-    if (valueBITS == 0) valueBITS = 24;
-    trc(valuePRT);
-    trc(valuePLSL);
-    trc(valueBITS);
-    mySwitch315.setProtocol(valuePRT,valuePLSL);
-    mySwitch315.send(data, valueBITS);
-    // Acknowledgement to the GTWRF topic 
-    boolean result = client.publish(subjectGTWRF315toMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    if (result){
-      trc(F("MQTTtoRF315 ack pub."));
-      trc(data);
     }
   }
-  
 }
+
+#ifdef simplePublishing
+  void MQTTtoRF315(char * topicOri, char * datacallback) {
+  
+    unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+  
+    // RF315 DATA ANALYSIS
+    //We look into the subject to see if a special RF protocol is defined 
+    String topic = topicOri;
+    int valuePRT = 0;
+    int valuePLSL  = 0;
+    int valueBITS  = 0;
+    int pos = topic.lastIndexOf(RF315protocolKey);       
+    if (pos != -1){
+      pos = pos + +strlen(RF315protocolKey);
+      valuePRT = (topic.substring(pos,pos + 1)).toInt();
+      trc(F("RF315 Protocol:"));
+      trc(valuePRT);
+    }
+    //We look into the subject to see if a special RF pulselength is defined 
+    int pos2 = topic.lastIndexOf(RF315pulselengthKey);
+    if (pos2 != -1) {
+      pos2 = pos2 + strlen(RF315pulselengthKey);
+      valuePLSL = (topic.substring(pos2,pos2 + 3)).toInt();
+      trc(F("RF315 Pulse Lgth:"));
+      trc(valuePLSL);
+    }
+    int pos3 = topic.lastIndexOf(RF315bitsKey);       
+    if (pos3 != -1){
+      pos3 = pos3 + strlen(RF315bitsKey);
+      valueBITS = (topic.substring(pos3,pos3 + 2)).toInt();
+      trc(F("Bits nb:"));
+      trc(valueBITS);
+    }
+    
+    if ((topic == subjectMQTTtoRF315) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
+      trc(F("MQTTtoRF315 dflt"));
+      mySwitch315.setProtocol(1,350);
+      mySwitch315.send(data, 24);
+      // Acknowledgement to the GTWRF topic
+      pub(subjectGTWRF315toMQTT, datacallback);    
+    } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
+      trc(F("MQTTtoRF315 usr par."));
+      if (valuePRT == 0) valuePRT = 1;
+      if (valuePLSL == 0) valuePLSL = 350;
+      if (valueBITS == 0) valueBITS = 24;
+      trc(valuePRT);
+      trc(valuePLSL);
+      trc(valueBITS);
+      mySwitch315.setProtocol(valuePRT,valuePLSL);
+      mySwitch315.send(data, valueBITS);
+      // Acknowledgement to the GTWRF topic 
+      pub(subjectGTWRF315toMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    }
+  }
+#endif
+
+#ifdef jsonPublishing
+  void MQTTtoRF315(char * topicOri, JsonObject& RF315data) { // json object decoding
+  
+    String topic = topicOri;
+  
+    if (topic == subjectMQTTtoRF315) {
+      trc(F("MQTTtoRF315 json data analysis"));
+      unsigned long data = RF315data["value"];
+      if (data != 0) {
+        trc(F("MQTTtoRF315 data ok"));
+        int valuePRT =  RF315data["protocol"];
+        int valuePLSL = RF315data["delay"];
+        int valueBITS = RF315data["length"];
+        if ((valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
+          trc(F("MQTTtoRF315 dflt"));
+          mySwitch315.setProtocol(1,350);
+          mySwitch315.send(data, 24);
+          // Acknowledgement to the GTWRF topic
+          pub(subjectGTWRF315toMQTT, RF315data);  
+        } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
+          trc(F("MQTTtoRF315 usr par."));
+          if (valuePRT == 0) valuePRT = 1;
+          if (valuePLSL == 0) valuePLSL = 350;
+          if (valueBITS == 0) valueBITS = 24;
+          trc(valuePRT);
+          trc(valuePLSL);
+          trc(valueBITS);
+          mySwitch315.setProtocol(valuePRT,valuePLSL);
+          mySwitch315.send(data, valueBITS);
+          // Acknowledgement to the GTWRF topic 
+          pub(subjectGTWRF315toMQTT, RF315data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        } 
+      }
+    }
+  }
+#endif
 #endif

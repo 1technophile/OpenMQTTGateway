@@ -90,6 +90,10 @@ void MeasureLightIntensityTSL2561()
   if (millis() > (timetsl2561 + TimeBetweenReadingtsl2561)) {
     static uint32_t persisted_lux;
     timetsl2561 = millis();
+
+    trc(F("Creating TSL2561 buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& TSL2561data = jsonBuffer.createObject();
     
     sensors_event_t event;
     tsl.getEvent(&event);
@@ -98,11 +102,12 @@ void MeasureLightIntensityTSL2561()
       {
 	if (persisted_lux != event.light || tsl2561_always ) {
 	  persisted_lux = event.light;
-	  	  
-	  trc("Sending Light Intensity in Lux to MQTT " + String(event.light) + " lux");
-	  client.publish(LUX, String(event.light).c_str());
-	  client.publish(FTCD, String((event.light)/10.764).c_str());
-	  client.publish(WATTSM2, String((event.light)/683.0).c_str());
+
+    TSL2561data.set("lux", (float)event.light);
+    TSL2561data.set("ftcd", (float)(event.light)/10.764);
+    TSL2561data.set("wattsm2", (float)(event.light)/683.0);
+
+    pub(subjectTSL12561toMQTT,TSL2561data);
 	} else {
 	  trc("Same lux value, do not send");
 	}
@@ -112,4 +117,3 @@ void MeasureLightIntensityTSL2561()
   }
 }
 #endif
-

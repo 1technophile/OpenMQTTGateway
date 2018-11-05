@@ -81,53 +81,81 @@ void signalStrengthAnalysis(){
 boolean _2GtoMQTT(){
     // Get the memory locations of unread SMS messages.
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
+    trc(F("Creating SMS  buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& SMSdata = jsonBuffer.createObject();
     for (int i = 0; i < unreadSMSNum; i++) {
         trc("New  message at index: ");
         trc(unreadSMSNum);
         sms = A6l.readSMS(unreadSMSLocs[i]);
-        trc(sms.number);
-        trc(sms.date);
-        trc(sms.message);
+        SMSdata.set("message", (char *)sms.message.c_str());
+        SMSdata.set("date", (char *)sms.date.c_str());
+        SMSdata.set("phone", (char *)sms.number.c_str());
         A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
-        trc(F("data 2GtoMQTT"));
-        client.publish(subject2GtoMQTTphone,(char *)sms.number.c_str());
-        client.publish(subject2GtoMQTTdate,(char *)sms.date.c_str());    
-        client.publish(subject2GtoMQTTmessage,(char *)sms.message.c_str()); 
+        trc(F("Adv data 2GtoMQTT"));
+        pub(subject2GtoMQTT,SMSdata);
         return true;   
     }
     return false;
 }
-
-void MQTTto2G(char * topicOri, char * datacallback) {
-
-  String data = datacallback; // we will not be able to pass values > 4294967295
-
-  // 2G DATA ANALYSIS
-  //We look into the subject to see if a special RF protocol is defined 
-  String topic = topicOri;
-  String phone_number = "";
-  int pos0 = topic.lastIndexOf(_2GPhoneKey);
-  if (pos0 != -1) {
-    pos0 = pos0 + strlen(_2GPhoneKey);
-    phone_number = topic.substring(pos0);
-    trc(F("Phone number to send SMS:"));
-    trc(phone_number);
-  }
-    if((strstr(topicOri, subjectMQTTto2G) != NULL) && (pos0 != -1)){
-    trc(F("MQTTto2G"));
-    trc(data);
-    if (A6l.sendSMS(phone_number,data) == A6_OK ) {
-      trc("SMS OK");
-    }else{
-      trc("SMS KO");
-    }
-    // Acknowledgement to the GTW2G topic
-    boolean result = client.publish(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    if (result){
-      trc(F("MQTTto2G ack pub."));
-      trc(data);
-    }
-  }
+#ifdef simplePublishing
+  void MQTTto2G(char * topicOri, char * datacallback) {
   
-}
+    String data = datacallback;
+    String topic = topicOri;
+    
+    if (topic == subjectMQTTto2G) {
+      trc(F("MQTTto2G data analysis"));
+      // 2G DATA ANALYSIS
+      String phone_number = "";
+      int pos0 = topic.lastIndexOf(_2GPhoneKey);
+      if (pos0 != -1) {
+        pos0 = pos0 + strlen(_2GPhoneKey);
+        phone_number = topic.substring(pos0);
+        trc(F("MQTTto2G phone ok"));
+        trc(phone_number);
+        trc(F("MQTTto2G sms"));
+        trc(data);
+        if (A6l.sendSMS(phone_number,data) == A6_OK ) {
+          trc("SMS OK");
+          // Acknowledgement to the GTW2G topic
+          pub(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        }else{
+          trc("SMS KO");
+          // Acknowledgement to the GTW2G topic
+          pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        }
+     }else{
+        trc(F("MQTTto2G Fail reading phone number"));
+     }
+    }
+  }
+#endif
+
+#ifdef jsonPublishing
+  void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
+    
+    String topic = topicOri;
+    if (topic == subjectMQTTto2G) {
+      const char * sms = SMSdata["message"];
+      const char * phone = SMSdata["phone"];
+      trc(F("MQTTto2G json data analysis"));
+      if (sms && phone) {
+        trc(F("MQTTto2G sms & phone ok"));
+        trc(sms);
+        if (A6l.sendSMS(String(phone),String(sms)) == A6_OK ) {
+          trc("SMS OK");
+          // Acknowledgement to the GTW2G topic
+          pub(subjectGTW2GtoMQTT, SMSdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        }else{
+          trc("SMS KO");
+          pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        }
+      }else{
+        trc(F("MQTTto2G Fail reading from json"));
+      }
+    }
+    
+  }
+#endif
 #endif

@@ -138,23 +138,13 @@ void setupRFM69(void) {
   }
 }
 
-#ifdef subjectRFM69toMQTTrssi
-void publishRSSI(int16_t rssi) {
-  // Send the value of the rssi to MQTT
-  char buff[sizeof(subjectRFM69toMQTTrssi)+4];
-  sprintf(buff, "%s/%d", subjectRFM69toMQTTrssi, radio.SENDERID);
-  char buff_rssi[5];
-  sprintf(buff_rssi, "%d", radio.RSSI);
-  boolean result = client.publish(buff, buff_rssi);
-}
-#else
-#define publishRSSI(input)
-#endif
-
 boolean RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone())
   {
+    trc(F("Creating RFM69 buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& RFM69data = jsonBuffer.createObject();
     uint8_t data[RF69_MAX_DATA_LEN+1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;
     uint8_t DATALEN = radio.DATALEN;
@@ -177,9 +167,10 @@ boolean RFM69toMQTT(void) {
 
     char buff[sizeof(subjectRFM69toMQTT)+4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
-    client.publish(buff,(char *)data);
-
-    publishRSSI(RSSI);
+    RFM69data.set("data", (char *)data);
+    RFM69data.set("rssi", (int)radio.RSSI); 
+    RFM69data.set("senderid", (int)radio.SENDERID);
+    pub(buff,RFM69data);
 
     return true;
 
@@ -188,63 +179,95 @@ boolean RFM69toMQTT(void) {
   }
 }
 
-boolean MQTTtoRFM69(char * topicOri, char * datacallback) {
-  int loops;
-  uint32_t startMillis;
-  static uint32_t deltaMillis = 0;
-
-  bool good_topic = true;
-  for (int i=0; i<strlen(subjectMQTTtoRFM69); i++) {
-    if (topicOri[i] != subjectMQTTtoRFM69[i])
-      good_topic = false;
-  }
-  if (!good_topic) {
-     Serial.println("Wrong topic");
-    return false;
-  }
-  trc(F("MQTTtoRFM69"));
-
-  char data[RF69_MAX_DATA_LEN+1];
-  memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
-  data[RF69_MAX_DATA_LEN] = '\0';
-
-  //We look into the subject to see if a special RF protocol is defined
-  String topic = topicOri;
-  int valueRCV = defaultRFM69ReceiverId; //default receiver id value
-  int pos = topic.lastIndexOf(RFM69receiverKey);
-  if (pos != -1){
-    pos = pos + +strlen(RFM69receiverKey);
-    valueRCV = (topic.substring(pos,pos + 3)).toInt();
-    trc(F("RFM69 receiver ID:"));
-    trc(valueRCV);
-  }
-  loops = 10;
-  startMillis = millis();
-  while (loops--) {
-    if(radio.sendWithRetry(valueRCV, data, strlen(data))) {
-      deltaMillis = millis() - startMillis;
-      Serial.print(" OK ");
-      Serial.println(deltaMillis);
-
-      // Acknowledgement to the GTWRF topic
-      char buff[sizeof(subjectGTWRFM69toMQTT)+4];
-      sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
-      boolean result = client.publish(buff, data);
-      if (result)trc(F("Ack published"));
-
-      publishRSSI(radio.RSSI);
-
-      return true;
+#ifdef simplePublishing
+  void MQTTtoRFM69(char * topicOri, char * datacallback) {
+    int loops;
+    uint32_t startMillis;
+    static uint32_t deltaMillis = 0;
+  
+    String topic = topicOri;
+  
+    if (topic == subjectMQTTtoRFM69) {
+      trc(F("MQTTtoRFM69 data analysis"));
+      char data[RF69_MAX_DATA_LEN+1];
+      memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
+      data[RF69_MAX_DATA_LEN] = '\0';
+    
+      //We look into the subject to see if a special RF protocol is defined
+      String topic = topicOri;
+      int valueRCV = defaultRFM69ReceiverId; //default receiver id value
+      int pos = topic.lastIndexOf(RFM69receiverKey);
+      if (pos != -1){
+        pos = pos + +strlen(RFM69receiverKey);
+        valueRCV = (topic.substring(pos,pos + 3)).toInt();
+        trc(F("RFM69 receiver ID:"));
+        trc(valueRCV);
+      }
+      loops = 10;
+      startMillis = millis();
+      while (loops--) {
+        if(radio.sendWithRetry(valueRCV, data, strlen(data))) {
+          deltaMillis = millis() - startMillis;
+          trc(F(" OK "));
+          trc(deltaMillis);
+    
+          // Acknowledgement to the GTWRF topic
+          char buff[sizeof(subjectGTWRFM69toMQTT)+4];
+          sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
+          pub(buff, data);
+        }
+        else {
+          trc(F("!"));
+        }
+        delay(50);
+      }
+      if (loops <= 0) {
+        deltaMillis = 0;
+        trc(F("RFM69 sending failed"));
+      }
     }
-    else {
-      Serial.print("!");
+  }
+#endif
+#ifdef jsonPublishing
+  void MQTTtoRFM69(char * topicOri, JsonObject& RFM69data) {
+  
+    String topic = topicOri;
+  
+    if (topic == subjectMQTTtoRFM69) {
+      const char * data = RFM69data["data"];
+      trc(F("MQTTtoRFM69 json data analysis"));
+      if(data){
+        trc(F("MQTTtoRFM69 data ok"));
+        int loops;
+        uint32_t startMillis;
+        static uint32_t deltaMillis = 0;
+        int valueRCV = RFM69data["receiverid"]| defaultRFM69ReceiverId; //default receiver id value
+        trc(F("RFM69 receiver ID:"));
+        trc(valueRCV);
+      
+        loops = 10;
+        startMillis = millis();
+        while (loops--) {
+          if(radio.sendWithRetry(valueRCV, data, strlen(data))) {
+            deltaMillis = millis() - startMillis;
+            trc(F(" OK "));
+            trc(deltaMillis);
+            // Acknowledgement to the GTWRF topic
+            pub(subjectGTWRFM69toMQTT, RFM69data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+          }
+          else {
+            trc(F("!"));
+          }
+          delay(50);
+        }
+        if (loops <= 0) {
+          deltaMillis = 0;
+          trc(F("MQTTtoRFM69 sending failed"));
+        }
+      }else{
+        trc(F("MQTTtoRFM69 Fail reading from json"));
+      }
     }
-    delay(50);
   }
-  if (loops <= 0) {
-    deltaMillis = 0;
-    trc(F("RFM69 sending failed"));
-    return false;
-  }
-}
+#endif
 #endif

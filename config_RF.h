@@ -29,12 +29,10 @@
 #define subjectMQTTtoRF  Base_Topic Gateway_Name "/commands/MQTTto433"
 #define subjectRFtoMQTT  Base_Topic Gateway_Name "/433toMQTT"
 #define subjectGTWRFtoMQTT  Base_Topic Gateway_Name "/433toMQTT"
-#define subjectRFtoMQTTprotocol  Base_Topic Gateway_Name "/433toMQTT/protocol"
-#define subjectRFtoMQTTbits  Base_Topic Gateway_Name "/433toMQTT/bits"
-#define subjectRFtoMQTTlength  Base_Topic Gateway_Name "/433toMQTT/length"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFbitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
-#define repeatRFwMQTT false // do we repeat a received signal by using mqtt
+#define repeatRFwMQTT false // do we repeat a received signal by using mqtt with RF gateway
+#define repeatSRFBwMQTT false // do we repeat a received signal by using mqtt with Sonoff RF Bridge
 /*
 RF supported protocols
 433_1
@@ -54,6 +52,7 @@ RF supported protocols
 //433Mhz newremoteswitch MQTT Subjects and keys
 #define subjectMQTTtoRF2  Base_Topic Gateway_Name "/commands/MQTTtoRF2"
 #define subjectRF2toMQTT  Base_Topic Gateway_Name "/RF2toMQTT"
+#define subjectGTWRF2toMQTT  Base_Topic Gateway_Name "/433toMQTT"
 #define RF2codeKey "CODE_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
 #define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
@@ -64,12 +63,13 @@ RF supported protocols
 //433Mhz Pilight MQTT Subjects and keys
 #define subjectMQTTtoPilight  Base_Topic Gateway_Name "/commands/MQTTtoPilight"
 #define subjectPilighttoMQTT  Base_Topic Gateway_Name "/PilighttoMQTT"
+#define subjectGTWPilighttoMQTT  Base_Topic Gateway_Name "/PilighttoMQTT"
 #define PilightRAW "RAW"
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
     #define RF_RECEIVER_PIN 0 // D3 on nodemcu
-    #define RF_EMITTER_PIN 3 // RX on nodemcu
+    #define RF_EMITTER_PIN 4 // RX on nodemcu if it doesn't work with 3, try with 4 (D2)
 #elif defined(ESP32)
     #define RF_RECEIVER_PIN 13 // D13 on DOIT ESP32
     #define RF_EMITTER_PIN 12 // D12 on DOIT ESP32

@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.8"
+#define OMG_VERSION "0.9beta"
 
 /*-------------CONFIGURE WIFIMANAGER-------------*/
 /*
@@ -48,7 +48,10 @@
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
 
-//#define ESPWifiManualSetup true //uncomment to disable WifiManager
+#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#endif
+
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
 
@@ -106,7 +109,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, comment the Z line and the config file if you don't use
-#ifdef ESP8266 // for nodemcu, weemos and esp8266
+#if defined(ESP8266) // for nodemcu, weemos, esp8266, and Arduino mega
   #define ZgatewayRF "RF"
   #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
@@ -114,6 +117,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayIR "IR"
   #define ZgatewayBT "BT"
   #define Zgateway2G "2G"
+  #define ZgatewayPilight "Pilight"
   #define ZactuatorONOFF "ONOFF"
   #define ZsensorINA226 "INA226"
   #define ZsensorHCSR501 "HCSR501"
@@ -124,28 +128,55 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
-  #define ZgatewayPilight "Pilight"
+  #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define jsonPublishing true
+  #define simplePublishing true
 #elif ESP32
   #define ZgatewayRF "RF"
   #define ZgatewayRF "RF315"
   #define ZgatewayRF2 "RF2"
   //#define Zgateway2G (not tested yet)
-  //#define ZgatewayIR
+  #define ZgatewayIR "IR"
   #define ZgatewayBT "BT"
   #define ZactuatorONOFF "ONOFF"
-  //#define ZsensorINA226
-  //#define ZsensorHCSR501
-  //#define ZsensorADC
-  //#define ZsensorBH1750
-  //#define ZsensorBME280
+  #define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
+  #define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+  #define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
+  #define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+  #define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
+  #define ZsensorTSL2561 "TSL2561"
+  #define ZsensorDHT "DHT"
+  #define ZgatewayRFM69 "RFM69"
+  #define ZsensorGPIOInput "GPIOInput"
+  #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define jsonPublishing true
+  #define simplePublishing true
+#elif defined(__AVR_ATmega1280__)
+  #define ZgatewayRF "RF"
+  #define ZgatewayRF315 "RF315"
+  #define ZgatewaySRFB "SRFB"
+  #define ZgatewayRF2 "RF2"
+  #define ZgatewayIR "IR"
+  #define ZgatewayBT "BT"
+  #define Zgateway2G "2G"
+  //#define ZgatewayPilight "Pilight"
+  #define ZactuatorONOFF "ONOFF"
+  #define ZsensorINA226 "INA226"
+  #define ZsensorHCSR501 "HCSR501"
+  #define ZsensorADC "ADC"
+  #define ZsensorBH1750 "BH1750"
+  #define ZsensorBME280 "BME280"
+  #define ZsensorTSL2561 "TSL2561"
   #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  //#define ZgatewayRFM69 // If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  //#define ZsensorGPIOInput "GPIOInput" //untested
-#else // for arduino mega + W5100
+  #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
+  #define ZsensorGPIOInput "GPIOInput"
+  #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define jsonPublishing true
+  #define simplePublishing true
+#else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
-  //#define ZgatewayRFM69 not tested
   //#define ZgatewayIR
   //#define ZgatewayBT
   //#define ZactuatorONOFF
@@ -155,8 +186,11 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZsensorBME280
   //#define ZsensorHCSR501
   //#define ZsensorADC
-  //#define ZgatewayRFM69 not tested
+  //#define ZgatewayRFM69 //not tested
   //#define ZsensorGPIOInput //not tested
+  //#define ZsensorGPIOKeyCode "GPIOKeyCode" //not tested
+  #define jsonPublishing true
+  //#define simplePublishing true
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
@@ -170,14 +204,17 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 
+#define valueAsASubject true
+
 //variables to avoid duplicates
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
 #ifdef ESP32
   //#define multiCore //uncomment to use multicore function of ESP32 for BLE
 #endif
+#define JSON_MSG_BUFFER 256 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 
 #define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 /*-------------------ACTIVATE TRACES----------------------*/
-#define TRACE 1  // 0= trace off 1 = trace on
+#define TRACE 0  // 0= trace off 1 = trace on

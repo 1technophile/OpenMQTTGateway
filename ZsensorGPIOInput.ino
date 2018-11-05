@@ -60,15 +60,19 @@ void MeasureGPIOInput(){
     // if the Input state has changed:
     if (reading != InputState) {
       InputState = reading;
-            
+      trc(F("Creating GPIOInput buffer"));
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject& GPIOdata = jsonBuffer.createObject();
       if (InputState == HIGH) {
         trc(F("GPIO HIGH"));
-        client.publish(subjectGPIOInputtoMQTT,"HIGH");
+        pub(subjectGPIOInputtoMQTT,"HIGH");
+        GPIOdata.set("gpio", "HIGH");
       }
       if (InputState == LOW) {
         trc(F("GPIO LOW"));
-        client.publish(subjectGPIOInputtoMQTT,"LOW");
+        GPIOdata.set("gpio","LOW");
       }
+      if(GPIOdata.size()>0) pub(subjectGPIOInputtoMQTT,GPIOdata);
     }
   }
 

@@ -16,9 +16,9 @@
    
    Connections
    ===========
-   Connect SCL to analog 5
-   Connect SDA to analog 4
-   Connect VDD to 3.3V DC
+   Connect SCL to I2C SCL Clock
+   Connect SDA to I2C SDA Data
+   Connect VDD to 3.3V or 5V (whatever your logic level is)
    Connect GROUND to common ground
 
    I2C Address
@@ -94,9 +94,11 @@ void setup(void)
   Serial.println("Light Sensor Test"); Serial.println("");
   
   /* Initialise the sensor */
+  //use tsl.begin() to default to Wire, 
+  //tsl.begin(&Wire2) directs api to use Wire2, etc.
   if(!tsl.begin())
   {
-    /* There was a problem detecting the ADXL345 ... check your connections */
+    /* There was a problem detecting the TSL2561 ... check your connections */
     Serial.print("Ooops, no TSL2561 detected ... Check your wiring or I2C ADDR!");
     while(1);
   }

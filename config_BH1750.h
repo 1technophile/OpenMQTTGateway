@@ -41,10 +41,7 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define LUX    Base_Topic Gateway_Name "/LIGHTtoMQTT/lux"
-#define FTCD   Base_Topic Gateway_Name "/LIGHTtoMQTT/ftcd"
-#define WATTSM2   Base_Topic Gateway_Name "/LIGHTtoMQTT/wattsm2"
-
+#define subjectBH1750toMQTT  Base_Topic Gateway_Name "/BH1750toMQTT"
 //Time used to wait for an interval before resending measured values
 unsigned long timebh1750 = 0;
 int BH1750_i2c_addr = 0x23; // Light Sensor I2C Address

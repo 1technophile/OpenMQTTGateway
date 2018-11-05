@@ -47,13 +47,14 @@ void MeasureADC(){
       trc(F("Failed to read from ADC !"));
     }else{
       if(val  >= persistedadc + ThresholdReadingADC || val  <= persistedadc - ThresholdReadingADC){
-        trc(F("Sending analog value to MQTT"));
-        trc(val);
-        client.publish(ADC,String(val).c_str());
+        trc(F("Creating ADC buffer"));
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& ADCdata = jsonBuffer.createObject();
+        ADCdata.set("adc", (int)val);
+        pub(ADC,ADCdata);
         persistedadc = val;
        }
     }
   }
 }
 #endif
-

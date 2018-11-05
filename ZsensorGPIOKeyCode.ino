@@ -25,11 +25,10 @@
 */
 #ifdef ZsensorGPIOKeyCode
 
+int InputStateGPIOKeyCode = 0x0f;             // Set to 3 so that it reads on startup
+int lastInputStateGPIOKeyCode = 0x0f; 
+int lastLatchStateGPIOKeyCode = 0;
 unsigned long lastDebounceTime = 0;
-int InputState = 0x0f;             // Set to 3 so that it reads on startup
-int lastInputState = 0x0f; 
-int lastLatchState = 0;
-
 
 void setupGPIOKeyCode() {
   pinMode(GPIOKeyCode_LATCH_PIN, INPUT_PULLUP);  //
@@ -54,8 +53,7 @@ void MeasureGPIOKeyCode(){
     yield();
   #endif
     // if the Input state has changed:
-    if (latch > 0 && lastLatchState != latch) {
-
+    if (latch > 0 && lastLatchStateGPIOKeyCode != latch) {
       int reading = digitalRead(GPIOKeyCode_D0_PIN)
             | (digitalRead(GPIOKeyCode_D1_PIN) << 1) 
             | (digitalRead(GPIOKeyCode_D2_PIN) << 2);
@@ -63,23 +61,23 @@ void MeasureGPIOKeyCode(){
 
       char hex[3];
 
-      InputState = reading;
-      sprintf(hex, "%02x", InputState);
+      InputStateGPIOKeyCode = reading;
+      sprintf(hex, "%02x", InputStateGPIOKeyCode);
       hex[2] = 0;
       Serial.printf("GPIOKeyCode %s\n", hex);
       client.publish(subjectGPIOKeyCodetoMQTT,hex);
-      lastLatchState = latch;
+      lastLatchStateGPIOKeyCode = latch;
     }
    
-    if (latch != lastLatchState) {
-      lastLatchState = latch;
+    if (latch != lastLatchStateGPIOKeyCode) {
+      lastLatchStateGPIOKeyCode = latch;
        Serial.printf("GPIOKeyCode latch %d\n", latch);
       if (latch == 0)
           client.publish(subjectGPIOKeyCodeStatetoMQTT, "done");
     }
 
   // save the reading. Next time through the loop, it'll be the lastInputState:
-  lastInputState = InputState;
+  lastInputStateGPIOKeyCode = InputStateGPIOKeyCode;
   }
 }
 #endif

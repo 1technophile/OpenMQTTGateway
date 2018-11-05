@@ -28,10 +28,7 @@
 // Topic where the message from RFM69 will be published by the gateway,
 // appended with the nodeID of the sender
 #define subjectRFM69toMQTT  Base_Topic Gateway_Name "/RFM69toMQTT"
-// Upon reception of a packed, the RSSI of that packet will be publish to this topic,
-// appended with the nodeID of the sender
-#define subjectRFM69toMQTTrssi  Base_Topic Gateway_Name "/RFM69toMQTT/rssi"  // Comment this if you don't want the RSSI to be published.
-#define subjectRFM69toMQTTsender  Base_Topic Gateway_Name "/RFM69toMQTT/sender"
+
 // Topic subscribed by the gateway. Messages received will be sent to RFM69
 #define subjectMQTTtoRFM69  Base_Topic Gateway_Name "/commands/MQTTtoRFM69"
 #define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
@@ -55,11 +52,16 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 #define POWER_LEVEL    31
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266)
   #define RFM69_CS      D1
   #define RFM69_IRQ     D8   // GPIO15/D8
   #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
   #define RFM69_RST     D4   // GPIO02/D4
+#elif defined(ESP32)
+  #define RFM69_CS      1
+  #define RFM69_IRQ     8   // GPIO15/D8
+  #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
+  #define RFM69_RST     4   // GPIO02/D4
 #else
   //RFM69 not tested with arduino
   #define RFM69_CS      10
