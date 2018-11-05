@@ -837,6 +837,10 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
   if (jsondata.success()) { // json object ok -> json decoding
+   #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing
+     MQTTtoPilight(topicOri, jsondata);
+   #endif
+   #ifdef jsonPublishing
     #ifdef ZgatewayRF
       MQTTtoRF(topicOri, jsondata);
     #endif
@@ -845,9 +849,6 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #endif
     #ifdef ZgatewayRF2
       MQTTtoRF2(topicOri, jsondata);
-    #endif
-    #ifdef ZgatewayPilight
-      MQTTtoPilight(topicOri, jsondata);
     #endif
     #ifdef Zgateway2G
       MQTTto2G(topicOri, jsondata);
@@ -864,7 +865,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZactuatorONOFF
       MQTTtoONOFF(topicOri, jsondata);
     #endif
+   #endif
   } else { // not a json object --> simple decoding
+   #ifdef simplePublishing
     #ifdef ZgatewayRF
       MQTTtoRF(topicOri, datacallback);
     #endif
@@ -889,6 +892,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZactuatorONOFF
       MQTTtoONOFF(topicOri, datacallback);
     #endif
+   #endif
   }
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
