@@ -28,7 +28,6 @@
 int InputStateGPIOKeyCode = 0x0f;             // Set to 3 so that it reads on startup
 int lastInputStateGPIOKeyCode = 0x0f; 
 int lastLatchStateGPIOKeyCode = 0;
-unsigned long lastDebounceTime = 0;
 
 void setupGPIOKeyCode() {
   pinMode(GPIOKeyCode_LATCH_PIN, INPUT_PULLUP);  //

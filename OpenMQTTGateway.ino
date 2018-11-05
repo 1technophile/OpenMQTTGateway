@@ -661,13 +661,6 @@ void loop()
     #ifdef ZgatewayPilight
       PilighttoMQTT();
     #endif
-    #ifdef ZgatewayPilight
-      if(PilighttoMQTT()){
-      trc(F("PilighttoMQTT OK"));
-      digitalWrite(led_receive, LOW);
-      timer_led_receive = millis();
-      }
-    #endif
     #ifdef ZgatewaySRFB
       SRFBtoMQTT();
     #endif
