@@ -117,28 +117,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                     boolean result = process_data(pos - 26,service_data,mac);
                   }
                 }
-            #ifdef roomPresence
-              StaticJsonBuffer<200> jsonBuffer;
-              JsonObject& HomePresence = jsonBuffer.createObject();
-              trc("BLE id :");    
-              String id = advertisedDevice.getAddress().toString().c_str();
-              trc(id);
-              HomePresence["id"] = id;
-              trc("BLE Name :");
-              String name = advertisedDevice.getName().c_str();
-              trc(name);
-              HomePresence["name"] = name;
-              trc("BLE DISTANCE :");
-              double BLErssi = advertisedDevice.getRSSI();
-              double ratio = BLErssi/-59;
-              double distance = (0.89)* pow(ratio,7.7095) + 0.11;  
-              HomePresence["distance"] = distance;
-              HomePresence["rssi"] = BLErssi;
-              trc(distance);
-             char JSONmessageBuffer[100];
-             HomePresence.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-             client.publish(subjectHomePresence,JSONmessageBuffer);
-           #endif
             }
           }
       };
