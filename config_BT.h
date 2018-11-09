@@ -35,7 +35,7 @@
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 // if not commented Home presence integration with HOME ASSISTANT is activated
-#define subjectHomePresence  Base_Topic "/salon" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
+#define subjectHomePresence Base_Topic "home_presence/" Gateway_Name // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 
 struct decompose
