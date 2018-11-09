@@ -117,9 +117,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   }
 
                 }
-
-             }
-            
+            }
           }
       };
 
