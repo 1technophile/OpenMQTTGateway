@@ -28,7 +28,7 @@
 /*-------------------VERSION----------------------*/
 #define OMG_VERSION "0.9beta"
 
-/*-------------CONFIGURE WIFIMANAGER-------------*/
+/*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
  * The following parameters are set during the WifiManager setup process:
  * - wifi_ssid
@@ -57,27 +57,6 @@
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
 
-#define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
-#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
-
-/*-------------CONFIGURE WIFIMANAGER-------------*/
-/*
- * The following parameters are set during the WifiManager setup process:
- * - wifi_ssid
- * - wifi_password
- * - mqtt_user
- * - mqtt_pass
- * - mqtt_server
- * - mqtt_port
- * 
- * To completely disable WifiManager, define ESPWifiManualSetup.
- * If you do so, please don't forget to set these variables before compiling
- * 
- * Otherwise you can provide these credentials on the web interface after connecting 
- * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
- */
-
-//#define ESPWifiManualSetup true //uncomment to disable WifiManager
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
 
