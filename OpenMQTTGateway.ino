@@ -830,9 +830,22 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
     trc(F("Storing signal"));
+    #ifdef jsonPublishing
+    trc(F("Creating Json buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
+    unsigned long data = strtoul(jsondata["value"], NULL, 10); // we will not be able to pass values > 4294967295
+    storeValue(data);
+    trc(F("Data from JSON stored"));
+    #endif
+
+   
+    #ifdef simplePublishing
     unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
     storeValue(data);
     trc(F("Data stored"));
+    #endif
+    
   }
   //YELLOW ON
   digitalWrite(led_send, LOW);
