@@ -74,11 +74,12 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
             }
             if (advertisedDevice.haveServiceData()){
-              
+
                 char mac[mac_adress.length()+1];
                 mac_adress.toCharArray(mac,mac_adress.length()+1);
                 
                 trc(F("Get service data "));
+
                 std::string serviceData = advertisedDevice.getServiceData();
                 int serviceDataLength = serviceData.length();
                 String returnedString = "";
@@ -98,9 +99,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 
                 BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID().toString().c_str());
                 
-                char topic[] = subjectBTtoMQTT;
-                strcat(topic, mac);
-                pub(topic,BLEdata);
+                pub((char *)mactopic.c_str(),BLEdata);
                 
                 if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
                   trc("Processing BLE device data");
@@ -116,8 +115,11 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                     trc("mi jia data reading");
                     boolean result = process_data(pos - 26,service_data,mac);
                   }
+
                 }
-            }
+
+             }
+            
           }
       };
 
@@ -129,7 +131,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           "coreTask", /* Name of the task */
                           10000,      /* Stack size in words */
                           NULL,       /* Task input parameter */
-                          0,          /* Priority of the task */
+                          1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
           trc(F("ZgatewayBT multicore ESP32 setup done "));
