@@ -74,11 +74,12 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
             }
             if (advertisedDevice.haveServiceData()){
-              
+
                 char mac[mac_adress.length()+1];
                 mac_adress.toCharArray(mac,mac_adress.length()+1);
                 
                 trc(F("Get service data "));
+
                 std::string serviceData = advertisedDevice.getServiceData();
                 int serviceDataLength = serviceData.length();
                 String returnedString = "";
@@ -98,9 +99,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 
                 BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID().toString().c_str());
                 
-                char topic[] = subjectBTtoMQTT;
-                strcat(topic, mac);
-                pub(topic,BLEdata);
+                pub((char *)mactopic.c_str(),BLEdata);
                 
                 if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
                   trc("Processing BLE device data");
@@ -116,29 +115,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                     trc("mi jia data reading");
                     boolean result = process_data(pos - 26,service_data,mac);
                   }
+
                 }
-            #ifdef roomPresence
-              StaticJsonBuffer<200> jsonBuffer;
-              JsonObject& HomePresence = jsonBuffer.createObject();
-              trc("BLE id :");    
-              String id = advertisedDevice.getAddress().toString().c_str();
-              trc(id);
-              HomePresence["id"] = id;
-              trc("BLE Name :");
-              String name = advertisedDevice.getName().c_str();
-              trc(name);
-              HomePresence["name"] = name;
-              trc("BLE DISTANCE :");
-              double BLErssi = advertisedDevice.getRSSI();
-              double ratio = BLErssi/-59;
-              double distance = (0.89)* pow(ratio,7.7095) + 0.11;  
-              HomePresence["distance"] = distance;
-              HomePresence["rssi"] = BLErssi;
-              trc(distance);
-             char JSONmessageBuffer[100];
-             HomePresence.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-             client.publish(subjectHomePresence,JSONmessageBuffer);
-           #endif
             }
           }
       };
@@ -151,7 +129,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                           "coreTask", /* Name of the task */
                           10000,      /* Stack size in words */
                           NULL,       /* Task input parameter */
-                          0,          /* Priority of the task */
+                          1,          /* Priority of the task */
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
           trc(F("ZgatewayBT multicore ESP32 setup done "));
