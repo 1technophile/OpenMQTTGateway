@@ -30,6 +30,8 @@
 sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m 0
 Command example for switching on:
 sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m 1
+Command example for dimming:
+sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/DIM 8
 */
 
 #ifdef ZgatewayRF2
@@ -222,7 +224,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
       int boolSWITCHTYPE = RF2data["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {
         trc(F("MQTTtoRF2 switch type ok"));
-        bool isDimCommand = false;
+        bool isDimCommand = boolSWITCHTYPE == 2;
         unsigned long valueCODE = RF2data["adress"];
         int valueUNIT = RF2data["unit"] | -1;
         int valuePERIOD = RF2data["period"];
@@ -266,7 +268,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
           pub(subjectGTWRF2toMQTT,RF2data);
         }
       }else{
-        trc(F("MQTTto2G Fail reading from json"));
+        trc(F("MQTTtoRF2 Fail reading from json"));
       }
     }
   }
