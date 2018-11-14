@@ -124,6 +124,9 @@
 #ifdef ZsensorGPIOKeyCode
   #include "config_GPIOKeyCode.h"
 #endif
+#ifdef ZmqttDiscovery
+  #include "config_mqttDiscovery.h"
+#endif
 
 /*------------------------------------------------------------------------*/
 
@@ -184,7 +187,7 @@ void saveConfigCallback () {
 }
 
 boolean reconnect() {
-  
+
   // Loop until we're reconnected
   while (!client.connected()) {
       trc(F("MQTT connection...")); //F function enable to decrease sram usage
@@ -195,6 +198,11 @@ boolean reconnect() {
       pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
       pub(version_Topic,OMG_VERSION,will_Retain);
+      //home assistant discovery
+      #ifdef ZmqttDiscovery
+      pubMqttDiscovery();
+      #endif
+
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
         #ifdef ZgatewayRF
