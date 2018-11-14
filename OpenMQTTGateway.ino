@@ -244,9 +244,10 @@ void setup()
   Serial.begin(SERIAL_BAUD);
   
   #if defined(ESP8266) || defined(ESP32)
-    #ifdef ESP8266
-      Serial.end();
-      Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);
+      #ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 pin optimization
+        Serial.end();
+        Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY);// enable on ESP8266 to free some pin
+      #endif
     #endif
     #if defined(ESP8266) && !defined(ESPWifiManualSetup)
       setup_wifimanager();
