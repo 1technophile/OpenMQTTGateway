@@ -779,6 +779,9 @@ void stateMeasures(){
       #ifdef ZsensorGPIOKeyCode
           modules = modules  + ZsensorGPIOKeyCode;
       #endif
+      #ifdef ZmqttDiscovery
+          modules = modules  + ZmqttDiscovery;
+      #endif
       SYSdata["modules"] = modules;
       trc(modules);
       char JSONmessageBuffer[100];

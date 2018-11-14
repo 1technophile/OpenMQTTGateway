@@ -32,6 +32,7 @@ void pubMqttDiscovery() {
   trc(F("omgStatusDiscovery"));
   createBinarySensorDiscovery(will_Topic, "", DEVICENAME, getUniqueId("omg", "status"), "connectivity", "", Gateway_AnnouncementMsg, will_Message, false, false, 0);
 #endif
+#ifdef ZsensorBME280
 #ifdef discBme280
   trc(F("bme280Discovery"));
 #ifdef bmeTempC
@@ -51,6 +52,7 @@ void pubMqttDiscovery() {
 #endif
 #ifdef bmeAltFt
   createSensorDiscovery(BME, will_Topic, "altift", getUniqueId("bme", "altift"), "ft", "", "{{ value_json.altift }}");
+#endif
 #endif
 #endif
 }
