@@ -38,8 +38,17 @@
   - Patrick Wilhelm
   - Georgi Yanev
   - zerinrc
-  - ChiefZ
   - 8666
+  - animavitis
+  - belidzs
+  - alibahba
+  - HosfordDotMe
+  - torwag
+  - intractve
+  - QuagmireMan
+  - f-reiling
+  - McGr3g0r
+  - steadramon
 
     This file is part of OpenMQTTGateway.
 
