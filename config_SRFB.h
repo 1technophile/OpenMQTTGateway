@@ -35,6 +35,9 @@
 #define SRFBmaxipulselengthKey "Thigh_"
 #define SRFBminipulselengthKey "Tlow_"
 #define SRFBsyncKey "Tsyn_"
+
+#define repeatSRFBwMQTT false // do we repeat a received signal by using mqtt with Sonoff RF Bridge
+
 // -----------------------------------------------------------------------------
 // RFBRIDGE
 // -----------------------------------------------------------------------------
