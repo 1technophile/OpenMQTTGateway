@@ -47,10 +47,9 @@ void setupRF(){
 void RFtoMQTT(){
 
   if (mySwitch.available()){
-    trc(F("Creating RF buffer"));
+    trc(F("Rcv RF433"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RFdata = jsonBuffer.createObject();
-    trc(F("Rcv. RF"));
     #ifdef ESP32
       String taskMessage = "RF Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
@@ -68,10 +67,9 @@ void RFtoMQTT(){
     
     unsigned long MQTTvalue = RFdata.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RFtoMQTT")); 
         pub(subjectRFtoMQTT,RFdata);
         if (repeatRFwMQTT){
-            trc(F("Publish RF for repeat"));
+            trc(F("Pub for repeat"));
             pub(subjectMQTTtoRF,RFdata);
         }
     } 
@@ -140,10 +138,10 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     String topic = topicOri;
   
     if (topic == subjectMQTTtoRF) {
-      trc(F("MQTTtoRF json data analysis"));
+      trc(F("MQTTtoRF json analysis"));
       unsigned long data = RFdata["value"];
       if (data != 0) {
-        trc(F("MQTTtoRF data ok"));
+        trc(F("MQTTtoRF val ok"));
         int valuePRT =  RFdata["protocol"];
         int valuePLSL = RFdata["delay"];
         int valueBITS = RFdata["length"];
@@ -167,7 +165,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
           pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         } 
       }else{
-        trc(F("MQTTtoRF Fail reading from json"));
+        trc(F("MQTTtoRF Fail read json"));
       }
     }
   }

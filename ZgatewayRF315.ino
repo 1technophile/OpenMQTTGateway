@@ -46,10 +46,9 @@ void setupRF315(){
 
 boolean RF315toMQTT(){
   if (mySwitch315.available()){
-    trc(F("Creating RF315 buffer"));
+    trc(F("Rcv RF315"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RF315data = jsonBuffer.createObject();
-    trc(F("Rcv. RF315"));
     #ifdef ESP32
       String taskMessage = "RF Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
@@ -67,10 +66,9 @@ boolean RF315toMQTT(){
     
     unsigned long MQTTvalue = RF315data.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RF315toMQTT")); 
         pub(subjectRF315toMQTT,RF315data);
         if (repeatRF315wMQTT){
-            trc(F("Publish RF315 for repeat"));
+            trc(F("Pub for repeat"));
             pub(subjectMQTTtoRF315,RF315data);
         }
     }
@@ -139,10 +137,10 @@ boolean RF315toMQTT(){
     String topic = topicOri;
   
     if (topic == subjectMQTTtoRF315) {
-      trc(F("MQTTtoRF315 json data analysis"));
+      trc(F("MQTTtoRF315 json analysis"));
       unsigned long data = RF315data["value"];
       if (data != 0) {
-        trc(F("MQTTtoRF315 data ok"));
+        trc(F("MQTTtoRF315 val ok"));
         int valuePRT =  RF315data["protocol"];
         int valuePLSL = RF315data["delay"];
         int valueBITS = RF315data["length"];
@@ -165,6 +163,8 @@ boolean RF315toMQTT(){
           // Acknowledgement to the GTWRF topic 
           pub(subjectGTWRF315toMQTT, RF315data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         } 
+      }else{
+        trc(F("MQTTtoRF315 Fail read json"));
       }
     }
   }

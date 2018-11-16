@@ -266,13 +266,13 @@ boolean BTtoMQTT() {
                   int pos = -1;
                   pos = strpos(d[5].extract,"209800");
                   if (pos != -1) {
-                    trc("mi flora data reading");
+                    trc(F("mi flora reading"));
                     boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"20aa01");
                   if (pos != -1){
-                    trc("mi jia data reading");
+                    trc(F("mi jia reading"));
                     boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                   }
                   return true;
@@ -311,7 +311,7 @@ boolean BTtoMQTT() {
       discResult.replace(RESP_END_MSG,"");
       float device_number = discResult.length()/78.0;
       if (device_number == (int)device_number){ // to avoid publishing partial values we detect if the serial data has been fully read = a multiple of 78
-        trc(F("Sending BT data to MQTT HM1X Version<v6xx"));
+        trc(F("Send BTtoMQTT HM1X V<v6xx"));
         #if defined(ESP8266)
           yield();
         #endif
@@ -345,10 +345,9 @@ boolean BTtoMQTT() {
 #endif
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){
-  trc(F("Creating BLE buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& BLEdata = jsonBuffer.createObject();
-  trc("rest_data");
+  trc(F("rest_data"));
   trc(rest_data);
   int data_length = 0;
   switch (rest_data[51 + offset]) {
@@ -380,7 +379,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
 
   // second value
   char val2[12];
-  trc("rest_data");
+  trc(F("rest_data"));
   trc(rest_data);
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
   // Mi Jia provides tem(perature), batt(erry) and hum(idity)
@@ -445,7 +444,6 @@ void haRoomPresence(JsonObject& HomePresence){
   double ratio = BLErssi/-59;
   double distance = (0.89)* pow(ratio,7.7095) + 0.11;  
   HomePresence["distance"] = distance;
-  trc(distance);
   pub(subjectHomePresence,HomePresence);
 }
 

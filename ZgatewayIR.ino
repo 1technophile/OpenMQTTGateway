@@ -93,11 +93,10 @@ void IRtoMQTT(){
   decode_results results;
   
   if (irrecv.decode(&results)){
-  trc(F("Creating IR buffer"));
+  trc(F("Rcv IR"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& IRdata = jsonBuffer.createObject();
   
-  trc(F("Rcv. IR"));
     #ifdef ESP32
       String taskMessage = "Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
@@ -137,17 +136,16 @@ void IRtoMQTT(){
           rawsend[i] = results.rawbuf[i];
       }
       irsend.sendRaw(rawsend, results.rawlen, RawFrequency);
-      trc(F("raw signal redirected"));
+      trc(F("raw redirected"));
     }
     irrecv.resume(); // Receive the next value
     unsigned long MQTTvalue = IRdata.get<unsigned long>("value");
     if (pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1){ // don't publish unknown IR protocol
       trc(F("--no pub. unknown protocol--"));
-    } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data IRtoMQTT"));         
+    } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT         
         pub(subjectIRtoMQTT,IRdata);
         if (repeatIRwMQTT){
-            trc(F("Pub. IR for repeat"));
+            trc(F("Pub for repeat"));
             pub(subjectMQTTtoIR,MQTTvalue);
         }
     }
@@ -483,7 +481,7 @@ void IRtoMQTT(){
     String topic = topicOri;
   
     if (topic == subjectMQTTtoIR) {
-      trc(F("MQTTtoIR json data analysis"));
+      trc(F("MQTTtoIR json analysis"));
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];
       if (data != 0||raw) {   
@@ -786,10 +784,10 @@ void IRtoMQTT(){
           }
           irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
           }else{
-            trc(F("MQTTtoIR Fail reading protocol name from json"));
+            trc(F("MQTTtoIR Fail read protocol json"));
           }
         }else{
-          trc(F("MQTTtoIR Fail reading from json"));
+          trc(F("MQTTtoIR Fail read json"));
         }
      }
   }
