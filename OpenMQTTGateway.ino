@@ -314,8 +314,6 @@ void setup()
 
   #else // In case of arduino platform
 
-    //Launch serial for debugging purposes
-    Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
     setup_ethernet();
     //setup LED status, turn all ON for short amount then leave only the RED LED ON
@@ -559,15 +557,15 @@ void setup_wifimanager(){
 void setup_ethernet() {
   if (gateway[0] != 0 || Dns[0]!=0)
   {
-    trc(F("Advanced ethernet config"));
+    trc(F("Adv eth"));
     Ethernet.begin(mac, ip, Dns, gateway, subnet);
   }else{
-    trc(F("Simple ethernet config"));
+    trc(F("Simple eth"));
     Ethernet.begin(mac, ip); 
   }
-  trc(F("OpenMQTTGateway ip: "));
+  trc(F("OMG ip: "));
   Serial.println(Ethernet.localIP());
-  trc(F("Ethernet ok"));
+  trc(F("Eth ok"));
 }
 #endif
 
@@ -844,7 +842,6 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     trc(F("Storing signal"));
     unsigned long data = 0;
     #ifdef jsonPublishing
-      trc(F("Creating Json buffer"));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
       if (jsondata.success())  data =  jsondata["value"];
@@ -856,13 +853,12 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     
     if (data != 0) {
       storeValue(data);
-      trc(F("Data from JSON stored"));
+      trc(F("Data JSON stored"));
     }
   }
   //YELLOW ON
   digitalWrite(led_send, LOW);
 
-  trc(F("Creating Json buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
@@ -1043,8 +1039,8 @@ void pub(char * topicori, JsonObject& data){
         #if defined(ESP8266)
           yield();
         #endif
+        trc(p.key);
         if (p.value.is<unsigned long>() || p.value.is<int>()) {
-          trc(p.key);
           trc(p.value.as<unsigned long>());
           if (strcmp(p.key, "value") == 0){ // if data is a value we don't integrate the name into the topic
             pub(topic,p.value.as<unsigned long>());
@@ -1052,11 +1048,9 @@ void pub(char * topicori, JsonObject& data){
             pub(topic + "/" + String(p.key),p.value.as<unsigned long>());
           }
         } else if (p.value.is<float>()) {
-          trc(p.key);
           trc(p.value.as<float>());
           pub(topic + "/" + String(p.key),p.value.as<float>());
         } else if (p.value.is<char*>()) {
-          trc(p.key);
           trc(p.value.as<const char*>());
           pub(topic + "/" + String(p.key),p.value.as<const char*>());
         }
