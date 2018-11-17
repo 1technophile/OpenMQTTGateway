@@ -128,11 +128,14 @@ void createSensorDiscovery(String state_topic, String availability_topic, String
   pubDiscovery(topic, sensor);
 }
 
-
 String getMacAddress() {
   uint8_t baseMac[6];
   // Get MAC address for WiFi station
+  #ifdef ESP8266
+  WiFi.macAddress(baseMac);
+  #else
   esp_read_mac(baseMac, ESP_MAC_WIFI_STA);
+  #endif
   char baseMacChr[13] = {0};
   sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
   return String(baseMacChr);
@@ -140,11 +143,7 @@ String getMacAddress() {
 
 String getUniqueId(String name, String sufix)
 {
-  #ifdef ESP8266
-  String uniqueId = WiFi.getMacAddress() + name + sufix;
-  #else
   String uniqueId = (String)getMacAddress() + name + sufix;
-  #endif
   return String(uniqueId);
 }
 
