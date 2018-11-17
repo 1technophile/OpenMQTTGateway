@@ -138,8 +138,13 @@ String getMacAddress() {
   return String(baseMacChr);
 }
 
-String getUniqueId(String name, String sufix) {
+String getUniqueId(String name, String sufix)
+{
+  #ifdef ESP8266
+  String uniqueId = WiFi.getMacAddress() + name + sufix;
+  #else
   String uniqueId = (String)getMacAddress() + name + sufix;
+  #endif
   return String(uniqueId);
 }
 
