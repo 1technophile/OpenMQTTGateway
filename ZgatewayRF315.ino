@@ -108,7 +108,6 @@ boolean RF315toMQTT(){
       trc(F("Bits nb:"));
       trc(valueBITS);
     }
-    
     if ((topic == subjectMQTTtoRF315) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
       trc(F("MQTTtoRF315 dflt"));
       mySwitch315.setProtocol(1,350);
@@ -133,10 +132,7 @@ boolean RF315toMQTT(){
 
 #ifdef jsonPublishing
   void MQTTtoRF315(char * topicOri, JsonObject& RF315data) { // json object decoding
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF315) {
+    if (strcmp(topicOri, subjectMQTTtoRF315) == 0) {
       trc(F("MQTTtoRF315 json analysis"));
       unsigned long data = RF315data["value"];
       if (data != 0) {
@@ -148,10 +144,10 @@ boolean RF315toMQTT(){
         mySwitch315.send(data, valueBITS);
         // Acknowledgement to the GTWRF topic 
         pub(subjectGTWRF315toMQTT, RF315data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-        } 
       }else{
         trc(F("MQTTtoRF315 Fail read json"));
       }
+    }
   }
 #endif
 #endif

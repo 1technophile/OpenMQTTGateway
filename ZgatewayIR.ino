@@ -76,32 +76,33 @@ void setupIR()
 {
  
   //IR init parameters
-#ifdef ESP8266
-  irsend.begin();
-#endif
-
-irrecv.enableIRIn(); // Start the receiver
+  #ifdef ESP8266
+    irsend.begin();
+  #endif
   
-trc(F("IR_EMITTER_PIN "));
-trc(IR_EMITTER_PIN);
-trc(F("IR_RECEIVER_PIN "));
-trc(IR_RECEIVER_PIN);
-trc(F("ZgatewayIR setup done "));
+  irrecv.enableIRIn(); // Start the receiver
+    
+  trc(F("IR_EMITTER_PIN "));
+  trc(IR_EMITTER_PIN);
+  trc(F("IR_RECEIVER_PIN "));
+  trc(IR_RECEIVER_PIN);
+  trc(F("ZgatewayIR setup done "));
 
 }
 void IRtoMQTT(){
   decode_results results;
   
   if (irrecv.decode(&results)){
-  trc(F("Rcv IR"));
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& IRdata = jsonBuffer.createObject();
+    trc(F("Rcv IR"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& IRdata = jsonBuffer.createObject();
   
     #ifdef ESP32
       String taskMessage = "Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
       trc(taskMessage);
     #endif
+    
     IRdata.set("value", (unsigned long)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
     IRdata.set("bits",(int)(results.bits));
@@ -139,6 +140,7 @@ void IRtoMQTT(){
       trc(F("raw redirected"));
     }
     irrecv.resume(); // Receive the next value
+    
     unsigned long MQTTvalue = IRdata.get<unsigned long>("value");
     if (pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1){ // don't publish unknown IR protocol
       trc(F("--no pub. unknown protocol--"));
@@ -157,7 +159,6 @@ void IRtoMQTT(){
     
     // IR DATA ANALYSIS    
     //send received MQTT value by IR signal
-    boolean signalSent = false;
     uint64_t data = 0;
     String strcallback = String(datacallback);
     trc(datacallback);
@@ -193,7 +194,6 @@ void IRtoMQTT(){
         }
       }
         irsend.sendGC(GC, j);
-        signalSent = true;
     }
     #endif
     #ifdef IR_Raw
@@ -220,7 +220,6 @@ void IRtoMQTT(){
         }
       }
         irsend.sendRaw(Raw, j, RawFrequency);
-        signalSent = true;
     }
     #endif
       
@@ -249,7 +248,6 @@ void IRtoMQTT(){
       if (strstr(topicOri, "IR_COOLIX") != NULL){
         if (valueBITS == 0) valueBITS = COOLIX_BITS;
         irsend.sendCOOLIX(data, valueBITS, valueRPT);
-        signalSent = true;
       }
       #endif
     #endif
@@ -260,7 +258,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #ifdef IR_Whynter
     if (strstr(topicOri, "IR_Whynter") != NULL){
@@ -270,7 +267,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_LG
@@ -281,7 +277,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_Sony
@@ -293,7 +288,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_DISH
@@ -304,7 +298,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_RC5
@@ -315,7 +308,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_RC6
@@ -326,7 +318,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendRC6(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_Sharp
@@ -337,7 +328,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_SAMSUNG
@@ -348,7 +338,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_JVC
@@ -360,7 +349,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendJVC(data, valueBITS);
         #endif
-      signalSent = true;
     }
     #endif
     #ifdef IR_PANASONIC
@@ -372,7 +360,6 @@ void IRtoMQTT(){
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
         #endif
-      signalSent = true;
     }
     #endif
   
@@ -381,14 +368,12 @@ void IRtoMQTT(){
     if (strstr(topicOri, "IR_RCMM") != NULL){
       if (valueBITS == 0) valueBITS = RCMM_BITS;
       irsend.sendRCMM(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_DENON
     if (strstr(topicOri, "IR_DENON") != NULL){
       if (valueBITS == 0) valueBITS = DENON_BITS;
       irsend.sendDenon(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_GICABLE
@@ -396,7 +381,6 @@ void IRtoMQTT(){
       if (valueBITS == 0) valueBITS = GICABLE_BITS;
       if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) GICABLE_MIN_REPEAT);
       irsend.sendGICable(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_SHERWOOD
@@ -404,7 +388,6 @@ void IRtoMQTT(){
       if (valueBITS == 0) valueBITS = SHERWOOD_BITS;
       if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) SHERWOOD_MIN_REPEAT);
       irsend.sendSherwood(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_MITSUBISHI
@@ -412,42 +395,36 @@ void IRtoMQTT(){
       if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
       if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
       irsend.sendMitsubishi(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_NIKAI
     if (strstr(topicOri, "IR_NIKAI") != NULL){
       if (valueBITS == 0) valueBITS = NIKAI_BITS;
       irsend.sendNikai(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_MIDEA
     if (strstr(topicOri, "IR_MIDEA") != NULL){
       if (valueBITS == 0) valueBITS = MIDEA_BITS;
       irsend.sendMidea(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_MAGIQUEST
     if (strstr(topicOri, "IR_MAGIQUEST") != NULL){
       if (valueBITS == 0) valueBITS = MAGIQUEST_BITS;
       irsend.sendMagiQuest(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_LASERTAG
     if (strstr(topicOri, "IR_LASERTAG") != NULL){
       if (valueBITS == 0) valueBITS = LASERTAG_BITS;
       irsend.sendLasertag(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_CARRIER_AC
     if (strstr(topicOri, "IR_CARRIER_AC") != NULL){
       if (valueBITS == 0) valueBITS = CARRIER_AC_BITS;
       irsend.sendCarrierAC(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_MITSUBISHI2
@@ -455,7 +432,6 @@ void IRtoMQTT(){
       if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
       if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
       irsend.sendMitsubishi2(data, valueBITS, valueRPT);
-      signalSent = true;
     }
     #endif
     #ifdef IR_AIWA_RC_T501
@@ -463,93 +439,91 @@ void IRtoMQTT(){
       if (valueBITS == 0) valueBITS = AIWA_RC_T501_BITS;
       if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) AIWA_RC_T501_MIN_REPEAT);
       irsend.sendAiwaRCT501(data, valueBITS, valueRPT);
-      signalSent = true;
+
     }
     #endif
   #endif
   
-    if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      pub(subjectGTWIRtoMQTT, datacallback);
-    }
-     irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
+    // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    pub(subjectGTWIRtoMQTT, datacallback);
+    
+    irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
   }
 #endif
 
 #ifdef jsonPublishing
   void MQTTtoIR(char * topicOri, JsonObject& IRdata) {
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoIR) {
+    if (strcmp(topicOri, subjectMQTTtoIR) == 0) {
       trc(F("MQTTtoIR json analysis"));
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];
-      if (data != 0||raw) {   
-        trc(F("MQTTtoIR data || raw ok"));
-        boolean signalSent = false;
+      if (data != 0||raw) {
+        trc(F("data"));
         trc(data);
+        trc(F("raw"));
+        trc(raw);
         const char * protocol_name = IRdata["protocol_name"];
         if(raw){
-            unsigned int s = strlen(raw);
-            //number of "," value count
-            int count = 0;
-            for(int i = 0; i < s; i++)
-            {
-             if (raw[i] == ',') {
-              count++;
-              }
-            }
-            #ifdef IR_GC
-             if(strstr(protocol_name, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
-              trc("IR_GC");
-              //buffer allocation from char datacallback
-              uint16_t  GC[count+1];
-              String value = "";
-              int j = 0;
+            #if defined(IR_GC) || defined(IR_RAW)
+              unsigned int s = strlen(raw);
+              //number of "," value count
+              int count = 0;
               for(int i = 0; i < s; i++)
               {
-               if (raw[i] != ',') {
-                  value = value + String(raw[i]);
+               if (raw[i] == ',') {
+                count++;
                 }
-                if ((raw[i] == ',') || (i == s - 1))
+              }
+              #ifdef IR_GC
+               if(strstr(protocol_name, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
+                trc("IR_GC");
+                //buffer allocation from char datacallback
+                uint16_t  GC[count+1];
+                String value = "";
+                int j = 0;
+                for(int i = 0; i < s; i++)
                 {
-                  GC[j]= value.toInt();
-                  value = "";
-                  j++;
+                 if (raw[i] != ',') {
+                    value = value + String(raw[i]);
+                  }
+                  if ((raw[i] == ',') || (i == s - 1))
+                  {
+                    GC[j]= value.toInt();
+                    value = "";
+                    j++;
+                  }
                 }
+                  irsend.sendGC(GC, j);
               }
-                irsend.sendGC(GC, j);
-                signalSent = true;
-            }
-            #endif
-            #ifdef IR_Raw
-            if(strstr(protocol_name, "IR_Raw") != NULL){ // sending Raw data
-              trc("IR_Raw");
-              //buffer allocation from char datacallback
-              #ifdef ESP8266
-              uint16_t  Raw[count+1];
-            #else
-              unsigned int Raw[count+1];
-            #endif
-            String value = "";
-            int j = 0;
-            for(int i = 0; i < s; i++)
-            {
-             if (raw[i] != ',') {
-                value = value + String(raw[i]);
+              #endif
+              #ifdef IR_Raw
+              if(strstr(protocol_name, "IR_Raw") != NULL){ // sending Raw data
+                trc("IR_Raw");
+                //buffer allocation from char datacallback
+                #ifdef ESP8266
+                  uint16_t  Raw[count+1];
+                #else
+                  unsigned int Raw[count+1];
+                #endif
+                String value = "";
+                int j = 0;
+                for(int i = 0; i < s; i++)
+                {
+                 if (raw[i] != ',') {
+                    value = value + String(raw[i]);
+                  }
+                  if ((raw[i] == ',') || (i == s - 1))
+                  {
+                    Raw[j]= value.toInt();
+                    value = "";
+                    j++;
+                  }
+                }
+                irsend.sendRaw(Raw, j, RawFrequency);
               }
-              if ((raw[i] == ',') || (i == s - 1))
-              {
-                Raw[j]= value.toInt();
-                value = "";
-                j++;
-              }
-            }
-              irsend.sendRaw(Raw, j, RawFrequency);
-              signalSent = true;
-            }
-            #endif
-        }else if(protocol_name){
+              #endif
+            #endif 
+        }else{// if we don't have raw data we send following a protocol
           unsigned int valueBITS  = IRdata["bits"];
           trc(F("Bits nb:"));
           trc(valueBITS);
@@ -557,16 +531,8 @@ void IRtoMQTT(){
           uint16_t  valueRPT = IRdata["repeat"]|repeatIRwNumber;
           trc(F("IR repeat:"));
           trc(valueRPT);
-          
-          #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-          #ifdef IR_COOLIX
-          if (strstr(protocol_name, "IR_COOLIX") != NULL){
-            if (valueBITS == 0) valueBITS = COOLIX_BITS;
-            irsend.sendCOOLIX(data, valueBITS, valueRPT);
-            signalSent = true;
-          }
-          #endif
-          #endif
+
+          // NEC protocol is the only one available by default for arduino uno, it is also choosen if the protocol is not specified
           if (strstr(protocol_name, "IR_NEC") != NULL || !protocol_name ){
           if (valueBITS == 0) valueBITS = NEC_BITS;
             #ifdef ESP8266
@@ -574,8 +540,16 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
             #endif
-          signalSent = true;
           }
+          
+          #ifdef ESP8266 // send coolix not available for arduino IRRemote library
+          #ifdef IR_COOLIX
+          if (strstr(protocol_name, "IR_COOLIX") != NULL){
+            if (valueBITS == 0) valueBITS = COOLIX_BITS;
+            irsend.sendCOOLIX(data, valueBITS, valueRPT);
+          }
+          #endif
+          #endif
           #ifdef IR_Whynter
           if (strstr(protocol_name, "IR_Whynter") != NULL){
           if (valueBITS == 0) valueBITS = WHYNTER_BITS;
@@ -584,7 +558,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_LG
@@ -595,7 +568,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_Sony
@@ -606,7 +578,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_DISH
@@ -617,7 +588,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_RC5
@@ -628,7 +598,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_RC6
@@ -639,7 +608,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendRC6(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_Sharp
@@ -650,7 +618,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_SAMSUNG
@@ -661,7 +628,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_JVC
@@ -672,7 +638,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendJVC(data, valueBITS);
             #endif
-          signalSent = true;
           }
           #endif
           #ifdef IR_PANASONIC
@@ -683,7 +648,6 @@ void IRtoMQTT(){
             #else
                 for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
             #endif
-          signalSent = true;
           }
           #endif
           
@@ -692,14 +656,12 @@ void IRtoMQTT(){
           if (strstr(protocol_name, "IR_RCMM") != NULL){
           if (valueBITS == 0) valueBITS = RCMM_BITS;
           irsend.sendRCMM(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_DENON
           if (strstr(protocol_name, "IR_DENON") != NULL){
           if (valueBITS == 0) valueBITS = DENON_BITS;
           irsend.sendDenon(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_GICABLE
@@ -707,7 +669,6 @@ void IRtoMQTT(){
           if (valueBITS == 0) valueBITS = GICABLE_BITS;
           if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) GICABLE_MIN_REPEAT);
           irsend.sendGICable(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_SHERWOOD
@@ -715,7 +676,6 @@ void IRtoMQTT(){
           if (valueBITS == 0) valueBITS = SHERWOOD_BITS;
           if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) SHERWOOD_MIN_REPEAT);
           irsend.sendSherwood(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_MITSUBISHI
@@ -723,42 +683,36 @@ void IRtoMQTT(){
           if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
           if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
           irsend.sendMitsubishi(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_NIKAI
           if (strstr(protocol_name, "IR_NIKAI") != NULL){
           if (valueBITS == 0) valueBITS = NIKAI_BITS;
           irsend.sendNikai(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_MIDEA
           if (strstr(protocol_name, "IR_MIDEA") != NULL){
           if (valueBITS == 0) valueBITS = MIDEA_BITS;
           irsend.sendMidea(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_MAGIQUEST
           if (strstr(protocol_name, "IR_MAGIQUEST") != NULL){
           if (valueBITS == 0) valueBITS = MAGIQUEST_BITS;
           irsend.sendMagiQuest(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_LASERTAG
           if (strstr(protocol_name, "IR_LASERTAG") != NULL){
           if (valueBITS == 0) valueBITS = LASERTAG_BITS;
           irsend.sendLasertag(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_CARRIER_AC
           if (strstr(protocol_name, "IR_CARRIER_AC") != NULL){
           if (valueBITS == 0) valueBITS = CARRIER_AC_BITS;
           irsend.sendCarrierAC(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_MITSUBISHI2
@@ -766,7 +720,6 @@ void IRtoMQTT(){
           if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
           if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
           irsend.sendMitsubishi2(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #ifdef IR_AIWA_RC_T501
@@ -774,17 +727,15 @@ void IRtoMQTT(){
           if (valueBITS == 0) valueBITS = AIWA_RC_T501_BITS;
           if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) AIWA_RC_T501_MIN_REPEAT);
           irsend.sendAiwaRCT501(data, valueBITS, valueRPT);
-          signalSent = true;
           }
           #endif
           #endif
           
-          if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+          // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
           pub(subjectGTWIRtoMQTT, IRdata);
-          }
+
           irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
-          }else{
-            trc(F("MQTTtoIR Fail read protocol json"));
+          
           }
         }else{
           trc(F("MQTTtoIR Fail read json"));

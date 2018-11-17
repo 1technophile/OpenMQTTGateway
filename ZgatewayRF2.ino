@@ -216,25 +216,19 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 
 #ifdef jsonPublishing
   void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF2) {
+    if (strcmp(topicOri, subjectMQTTtoRF2) == 0) {
       trc(F("MQTTtoRF2 json data analysis"));
       int boolSWITCHTYPE = RF2data["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {
-        trc(F("MQTTtoRF2 switch type ok"));
+        trc(F("MQTTtoRF2 switch ok"));
         bool isDimCommand = boolSWITCHTYPE == 2;
         unsigned long valueCODE = RF2data["adress"];
-        int valueUNIT = RF2data["unit"] | -1;
-        int valuePERIOD = RF2data["period"];
+        int valueUNIT = RF2data["unit"] | 0;
+        int valuePERIOD = RF2data["period"]|272;
         int valueGROUP  = RF2data["groupBit"];
         int valueDIM  = RF2data["dim"] | -1;
-        if ((valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
+        if (valueCODE != 0){
           trc(F("MQTTtoRF2"));
-          if (valueCODE == 0) valueCODE = 8233378;
-          if (valueUNIT == -1) valueUNIT = 0;
-          if (valuePERIOD == 0) valuePERIOD = 272;
           trc(valueCODE);
           trc(valueUNIT);
           trc(valuePERIOD);
@@ -242,7 +236,6 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
           trc(boolSWITCHTYPE);
           trc(valueDIM);
           NewRemoteReceiver::disable();
-          trc(F("Creating transmitter"));
           NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
           trc(F("Sending data"));
           if (valueGROUP) {
@@ -268,7 +261,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
           pub(subjectGTWRF2toMQTT,RF2data);
         }
       }else{
-        trc(F("MQTTtoRF2 Fail reading from json"));
+        trc(F("MQTTtoRF2 Fail read json"));
       }
     }
   }

@@ -45,7 +45,6 @@ void setupRF(){
 }
 
 void RFtoMQTT(){
-
   if (mySwitch.available()){
     trc(F("Rcv RF433"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
@@ -134,10 +133,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
 
 #ifdef jsonPublishing
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF) {
+    if (strcmp(topicOri, subjectMQTTtoRF) == 0) {
       trc(F("MQTTtoRF json analysis"));
       unsigned long data = RFdata["value"];
       if (data != 0) {
@@ -149,9 +145,9 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
         mySwitch.send(data, valueBITS);
         // Acknowledgement to the GTWRF topic 
         pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-        } 
-    }else{
+      }else{
         trc(F("MQTTtoRF Fail read json"));
+      }
     }
   }
 #endif
