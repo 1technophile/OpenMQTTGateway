@@ -149,6 +149,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define ZmqttDiscovery "HADiscovery"//EPS32
   #define jsonPublishing true
   #define simplePublishing true
 #elif defined(__AVR_ATmega1280__)
