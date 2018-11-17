@@ -129,6 +129,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
   #define jsonPublishing true
   #define simplePublishing true
 #elif ESP32
@@ -149,7 +150,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
-  #define ZmqttDiscovery "HADiscovery"//EPS32
+  #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
   #define jsonPublishing true
   #define simplePublishing true
 #elif defined(__AVR_ATmega1280__)
@@ -172,6 +173,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
   #define ZsensorGPIOInput "GPIOInput"
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
+  #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
   #define jsonPublishing true
   #define simplePublishing true
 #else // for arduino Uno
