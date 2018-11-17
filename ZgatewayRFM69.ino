@@ -230,10 +230,7 @@ boolean RFM69toMQTT(void) {
 #endif
 #ifdef jsonPublishing
   void MQTTtoRFM69(char * topicOri, JsonObject& RFM69data) {
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRFM69) {
+    if (strcmp(topicOri, subjectMQTTtoRFM69) == 0) {
       const char * data = RFM69data["data"];
       trc(F("MQTTtoRFM69 json data analysis"));
       if(data){
@@ -265,7 +262,7 @@ boolean RFM69toMQTT(void) {
           trc(F("MQTTtoRFM69 sending failed"));
         }
       }else{
-        trc(F("MQTTtoRFM69 Fail reading from json"));
+        trc(F("MQTTtoRFM69 Fail read json"));
       }
     }
   }

@@ -270,13 +270,10 @@ bool _rfbToChar(byte * in, char * out) {
 #endif
 #ifdef jsonPublishing
   void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
-  
-    // RF DATA ANALYSIS
-    String topic = topicOri;
-    const char * raw = SRFBdata["raw"];
-    int valueRPT =  SRFBdata["repeat"]|1;
-    if (topic == subjectMQTTtoSRFB){
-      trc(F("MQTTtoSRFB json data analysis"));
+    if (strcmp(topicOri, subjectMQTTtoSRFB) == 0) {
+      trc(F("MQTTtoSRFB json analysis"));
+      const char * raw = SRFBdata["raw"];
+      int valueRPT =  SRFBdata["repeat"]|1;
       if (raw){ // send raw in priority when defined in the json
         trc(F("MQTTtoSRFB raw ok"));
         byte message_b[RF_MESSAGE_SIZE];

@@ -126,7 +126,7 @@ boolean _2GtoMQTT(){
           pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }
      }else{
-        trc(F("MQTTto2G Fail reading phone number"));
+        trc(F("MQTTto2G Fail read phone"));
      }
     }
   }
@@ -134,9 +134,7 @@ boolean _2GtoMQTT(){
 
 #ifdef jsonPublishing
   void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
-    
-    String topic = topicOri;
-    if (topic == subjectMQTTto2G) {
+    if (strcmp(topicOri, subjectMQTTto2G) == 0) {
       const char * sms = SMSdata["message"];
       const char * phone = SMSdata["phone"];
       trc(F("MQTTto2G json data analysis"));
@@ -152,7 +150,7 @@ boolean _2GtoMQTT(){
           pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }
       }else{
-        trc(F("MQTTto2G Fail reading from json"));
+        trc(F("MQTTto2G Fail read json"));
       }
     }
     

@@ -40,13 +40,11 @@ void setupONOFF(){
 
 #ifdef simplePublishing
   void MQTTtoONOFF(char * topicOri, char * datacallback){
-  
-    bool boolSWITCHTYPE;
-    boolSWITCHTYPE = to_bool(datacallback);
-    String topic = topicOri;
    
-    if (topic == subjectMQTTtoONOFF){
+    if (strcmp(topicOri, subjectMQTTtoONOFF) == 0) {
       trc(F("MQTTtoONOFF data analysis"));
+      bool boolSWITCHTYPE;
+      boolSWITCHTYPE = to_bool(datacallback);
       trc(boolSWITCHTYPE);
       digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
       // we acknowledge the sending by publishing the value to an acknowledgement topic
@@ -57,10 +55,7 @@ void setupONOFF(){
 
 #ifdef jsonPublishing
   void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
-   
-    String topic = topicOri;
-   
-    if (topic == subjectMQTTtoONOFF){
+    if (strcmp(topicOri, subjectMQTTtoONOFF) == 0) {
       trc(F("MQTTtoONOFF json data analysis"));
       int boolSWITCHTYPE = ONOFFdata["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {
