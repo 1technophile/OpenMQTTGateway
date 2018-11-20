@@ -28,15 +28,5 @@
 #define omgStatus //uncomment to create OMG status sensor
 #define discBme280 //uncomment to enable bme280 sensors
 
-#ifdef discBme280
-#define bmeTempC //create temp c
-#define bmeTempF //create temp f
-#define bmePreMbar //create pressure mbar
-#define bmeHum //create hum %
-#define bmeAltM //create altitude m
-#define bmeAltFt //create altitude ft
-#endif
-
-
 #define DEVICENAME "OpenMQTTGateway " Gateway_Name
 #define DEVICEMANUFACTURER "AnimaVitis"

@@ -36,52 +36,38 @@ void pubMqttDiscovery()
                   Gateway_AnnouncementMsg, will_Message, "",            //set,payload_on,payload_off,unit_of_meas,
                   true, false, 0);                                      //set optimistic,retain, off_delay
 #endif
-#ifdef ZsensorBME280
 #ifdef discBme280
   trc(F("bme280Discovery"));
-#ifdef bmeTempC
   createDiscovery("sensor",
                   BME, "tempc", getUniqueId("bme", "tempc"),
                   will_Topic, "temperature", "{{ value_json.tempc }}",
                   "", "", "°C",
                   true, false, 0);
-#endif
-#ifdef bmeTempF
   createDiscovery("sensor",
                   BME, "tempf", getUniqueId("bme", "tempf"),
                   will_Topic, "temperature", "{{ value_json.tempf }}",
                   "", "", "°F",
                   true, false, 0);
-#endif
-#ifdef bmePreMbar
   createDiscovery("sensor",
                   BME, "pa", getUniqueId("bme", "pa"),
                   will_Topic, "pressure", "{{ float(value_json.pa) * 0.01 }}",
                   "", "", "hPa",
                   true, false, 0);
-#endif
-#ifdef bmeHum
   createDiscovery("sensor",
                   BME, "hum", getUniqueId("bme", "hum"),
                   will_Topic, "humidity", "{{ value_json.hum }}",
                   "", "", "%",
                   true, false, 0);
-#endif
-#ifdef bmeAltM
   createDiscovery("sensor",
                   BME, "altim", getUniqueId("bme", "altim"),
                   will_Topic, "", "{{ value_json.altim }}",
                   "", "", "m",
                   true, false, 0);
-#endif
-#ifdef bmeAltFt
   createDiscovery("sensor",
                   BME, "altift", getUniqueId("bme", "altift"),
                   will_Topic, "", "{{ value_json.altift }}",
                   "", "", "ft",
                   true, false, 0);
-#endif
-#endif
 #endif
 }
 
