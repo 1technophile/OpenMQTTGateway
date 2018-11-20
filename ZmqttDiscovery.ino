@@ -26,167 +26,111 @@
 
 #ifdef ZmqttDiscovery
 
-String State_topic = "";
-String Name = "";
-String Unique_Id = "";
-String Availability_topic = "";
-String Device_class = "";
-String Value_template = "";
-String Payload_on = "";
-String Payload_off = "";
-String Unit_of_meas = "";
-bool Optimistic = true;
-bool Retain = false;
-int Off_delay = 0;
-
 void pubMqttDiscovery()
 {
-
 #ifdef omgStatus
   trc(F("omgStatusDiscovery"));
-  cleanAllAttributes();                                                    //clean all atributes
-  createBasicAttrib(will_Topic, DEVICENAME, getUniqueId("omg", "status")); //set state_topic,name,uniqueId
-  createDiscoveryAttrib("", "connectivity", "",                            //set availability_topic,device_class,value_template,
-                        Gateway_AnnouncementMsg, will_Message, "",         //set,payload_on,payload_off,unit_of_meas,
-                        true, false, 0);                                   //set optimistic,retain, off_delay
-  createDiscovery("binary_sensor");                                        //set sensor_Type & send mqtt
-
+  createDiscovery("binary_sensor",                                      //set sensorType
+                  will_Topic, DEVICENAME, getUniqueId("omg", "status"), //set state_topic,name,uniqueId
+                  "", "connectivity", "",                               //set availability_topic,device_class,value_template,
+                  Gateway_AnnouncementMsg, will_Message, "",            //set,payload_on,payload_off,unit_of_meas,
+                  true, false, 0);                                      //set optimistic,retain, off_delay
 #endif
 #ifdef ZsensorBME280
 #ifdef discBme280
   trc(F("bme280Discovery"));
 #ifdef bmeTempC
-  cleanAllAttributes();
-  createBasicAttrib(BME, "tempc", getUniqueId("bme", "tempc"));
-  createDiscoveryAttrib(will_Topic, "temperature", "{{ value_json.tempc }}",
-                        "", "", "°C",
-                        true, false, 0);
-  createDiscovery("sensor");
+  createDiscovery("sensor",
+                  BME, "tempc", getUniqueId("bme", "tempc"),
+                  will_Topic, "temperature", "{{ value_json.tempc }}",
+                  "", "", "°C",
+                  true, false, 0);
 #endif
 #ifdef bmeTempF
-  cleanAllAttributes();
-  createBasicAttrib(BME, "tempf", getUniqueId("bme", "tempf"));
-  createDiscoveryAttrib(will_Topic, "temperature", "{{ value_json.tempf }}",
-                        "", "", "°F",
-                        true, false, 0);
-  createDiscovery("sensor");
+  createDiscovery("sensor",
+                  BME, "tempf", getUniqueId("bme", "tempf"),
+                  will_Topic, "temperature", "{{ value_json.tempf }}",
+                  "", "", "°F",
+                  true, false, 0);
 #endif
 #ifdef bmePreMbar
-  cleanAllAttributes();
-  createBasicAttrib(BME, "pa", getUniqueId("bme", "pa"));
-  createDiscoveryAttrib(will_Topic, "pressure", "{{ float(value_json.pa) * 0.01 }}",
-                        "", "", "hPa",
-                        true, false, 0);
-  createDiscovery("sensor");
+  createDiscovery("sensor",
+                  BME, "pa", getUniqueId("bme", "pa"),
+                  will_Topic, "pressure", "{{ float(value_json.pa) * 0.01 }}",
+                  "", "", "hPa",
+                  true, false, 0);
 #endif
 #ifdef bmeHum
-  cleanAllAttributes();
-  createBasicAttrib(BME, "hum", getUniqueId("bme", "hum"));
-  createDiscoveryAttrib(will_Topic, "humidity", "{{ value_json.hum }}",
-                        "", "", "%",
-                        true, false, 0);
-  createDiscovery("sensor");
+  createDiscovery("sensor",
+                  BME, "hum", getUniqueId("bme", "hum"),
+                  will_Topic, "humidity", "{{ value_json.hum }}",
+                  "", "", "%",
+                  true, false, 0);
 #endif
 #ifdef bmeAltM
- cleanAllAttributes();
- createBasicAttrib(BME, "altim", getUniqueId("bme", "altim"));
- createDiscoveryAttrib(will_Topic, "", "{{ value_json.altim }}",
-                       "", "", "m",
-                       true, false, 0);
- createDiscovery("sensor");
+  createDiscovery("sensor",
+                  BME, "altim", getUniqueId("bme", "altim"),
+                  will_Topic, "", "{{ value_json.altim }}",
+                  "", "", "m",
+                  true, false, 0);
 #endif
 #ifdef bmeAltFt
- cleanAllAttributes();
- createBasicAttrib(BME, "altift", getUniqueId("bme", "altift"));
- createDiscoveryAttrib(will_Topic, "", "{{ value_json.altift }}",
-                       "", "", "ft",
-                       true, false, 0);
- createDiscovery("sensor");
+  createDiscovery("sensor",
+                  BME, "altift", getUniqueId("bme", "altift"),
+                  will_Topic, "", "{{ value_json.altift }}",
+                  "", "", "ft",
+                  true, false, 0);
 #endif
 #endif
 #endif
 }
 
-void createDiscoveryAttrib(String availability_topic, String device_class, String value_template,
-                           String payload_on, String payload_off, String unit_of_meas,
-                           bool optimistic, bool retain, int off_delay)
-{
-  Availability_topic = availability_topic;
-  Device_class = device_class;
-  Value_template = value_template;
-  Payload_on = payload_on;
-  Payload_off = payload_off;
-  Unit_of_meas = unit_of_meas;
-  Optimistic = optimistic;
-  Retain = retain;
-  Off_delay = off_delay;
-}
-
-void createBasicAttrib(String stateTopic, String name, String uniqueId)
-{
-  State_topic = stateTopic;
-  Name = name;
-  Unique_Id = uniqueId;
-}
-
-void cleanAllAttributes()
-{
-  State_topic = "";
-  Name = "";
-  Unique_Id = "";
-  Availability_topic = "";
-  Device_class = "";
-  Value_template = "";
-  Payload_on = "";
-  Payload_off = "";
-  Unit_of_meas = "";
-  Optimistic = true;
-  Retain = false;
-  Off_delay = 0;
-}
-
-void createDiscovery(String sensor_Type)
+void createDiscovery(String sensor_type,
+                     String state_topic, String name, String unique_id,
+                     String availability_topic, String device_class, String value_template,
+                     String payload_on, String payload_off, String unit_of_meas,
+                     bool optimistic, bool retain, int off_delay)
 {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer3;
   JsonObject &sensor = jsonBuffer3.createObject();
-  sensor.set("stat_t", State_topic); //state_topic
-  sensor.set("name", Name);          //name
-  sensor.set("uniq_id", Unique_Id);  //unique_id
-  if (Availability_topic != "")
+  sensor.set("stat_t", state_topic); //state_topic
+  sensor.set("name", name);          //name
+  sensor.set("uniq_id", unique_id);  //unique_id
+  if (availability_topic != "")
   {
-    sensor.set("avty_t", Availability_topic); //availability_topic
+    sensor.set("avty_t", availability_topic); //availability_topic
   }
-  if (Device_class != "")
+  if (device_class != "")
   {
-    sensor.set("dev_cla", Device_class); //device_class
+    sensor.set("dev_cla", device_class); //device_class
   }
-  if (Value_template != "")
+  if (value_template != "")
   {
-    sensor.set("val_tpl", Value_template); //value_template
+    sensor.set("val_tpl", value_template); //value_template
   }
-  if (Payload_on != "")
+  if (payload_on != "")
   {
-    sensor.set("pl_on", Payload_on); // payload_on
+    sensor.set("pl_on", payload_on); // payload_on
   }
-  if (Payload_off != "")
+  if (payload_off != "")
   {
-    sensor.set("pl_off", Payload_off); //payload_off
+    sensor.set("pl_off", payload_off); //payload_off
   }
-  if (Unit_of_meas != "")
+  if (unit_of_meas != "")
   {
-    sensor.set("unit_of_meas", Unit_of_meas); //unit_of_measurement
+    sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement
   }
-  if (Optimistic != true)
+  if (optimistic != true)
   {
-    sensor.set("opt", Optimistic); //optimistic
+    sensor.set("opt", optimistic); //optimistic
   }
-  if (Retain != false)
+  if (retain != false)
   {
-    sensor.set("ret", Retain); //retain
+    sensor.set("ret", retain); //retain
   }
-  if (Off_delay > 0)
+  if (off_delay > 0)
   {
-    sensor.set("off_delay", Off_delay); //off_delay
+    sensor.set("off_delay", off_delay); //off_delay
   }
 
   char JSONmessageBuffer[JSON_MSG_BUFFER];
@@ -197,9 +141,10 @@ void createDiscovery(String sensor_Type)
   device.set("sw_version", OMG_VERSION);
   JsonArray &identifiers = device.createNestedArray("identifiers");
   identifiers.add(getMacAddress());
+
   sensor.set("device", device); //device sensor is connected to
 
-  String topic = (String)discovery_Topic + "/" + sensor_Type + "/" + Unique_Id + "/config";
+  String topic = (String)discovery_Topic + "/" + sensor_type + "/" + unique_id + "/config";
   pubDiscovery(topic, sensor);
 }
 
