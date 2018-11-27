@@ -152,6 +152,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
+#define subjectGTWSendKey "MQTTto"
 
 //variables to avoid duplicates
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates

@@ -203,6 +203,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
+#define subjectGTWSendKey "MQTTto"
 
 #define valueAsASubject true
 
