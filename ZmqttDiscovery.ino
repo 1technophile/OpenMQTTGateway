@@ -31,50 +31,39 @@ void pubMqttDiscovery()
 #ifdef omgStatus
   trc(F("omgStatusDiscovery"));
   createDiscovery("binary_sensor",                                      //set sensorType
-                  will_Topic, DEVICENAME, getUniqueId("omg", "status"), //set state_topic,name,uniqueId
+                  will_Topic, DEVICENAME, (char *)getUniqueId("omg", "status").c_str(), //set state_topic,name,uniqueId
                   "", "connectivity", "",                               //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "",            //set,payload_on,payload_off,unit_of_meas,
                   true, false, 0);                                      //set optimistic,retain, off_delay
 #endif
 #ifdef discBme280
   trc(F("bme280Discovery"));
-  createDiscovery("sensor",
-                  BME, "tempc", getUniqueId("bme", "tempc"),
-                  will_Topic, "temperature", "{{ value_json.tempc }}",
-                  "", "", "°C",
-                  true, false, 0);
-  createDiscovery("sensor",
-                  BME, "tempf", getUniqueId("bme", "tempf"),
-                  will_Topic, "temperature", "{{ value_json.tempf }}",
-                  "", "", "°F",
-                  true, false, 0);
-  createDiscovery("sensor",
-                  BME, "pa", getUniqueId("bme", "pa"),
-                  will_Topic, "pressure", "{{ float(value_json.pa) * 0.01 }}",
-                  "", "", "hPa",
-                  true, false, 0);
-  createDiscovery("sensor",
-                  BME, "hum", getUniqueId("bme", "hum"),
-                  will_Topic, "humidity", "{{ value_json.hum }}",
-                  "", "", "%",
-                  true, false, 0);
-  createDiscovery("sensor",
-                  BME, "altim", getUniqueId("bme", "altim"),
-                  will_Topic, "", "{{ value_json.altim }}",
-                  "", "", "m",
-                  true, false, 0);
-  createDiscovery("sensor",
-                  BME, "altift", getUniqueId("bme", "altift"),
-                  will_Topic, "", "{{ value_json.altift }}",
-                  "", "", "ft",
-                  true, false, 0);
+  char * BMEsensor[6][9] = {
+     {"sensor", "tempc", "bme", "tempc","temperature","{{ value_json.tempc }}","", "", "°C"} ,
+     {"sensor", "tempf", "bme", "tempf","temperature","{{ value_json.tempf }}","", "", "°F"} ,
+     {"sensor", "pa", "bme", "pa","pressure","{{ float(value_json.pa) * 0.01 }}","", "", "hPa"} ,
+     {"sensor", "hum", "bme", "hum","humidity","{{ value_json.hum }}","", "", "%"} ,
+     {"sensor", "altim", "bme", "altim","","{{ value_json.altim }}","", "", "m"} ,
+     {"sensor", "altift", "bme", "altift","","{{ value_json.altift }}","", "", "ft"}
+  };
+  
+  for (int i=0;i<6;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(BMEsensor[i][1]);
+    createDiscovery(BMEsensor[i][0],
+                    BME, BMEsensor[i][1], (char *)getUniqueId(BMEsensor[i][2], BMEsensor[i][3]).c_str(),
+                    will_Topic, BMEsensor[i][4], BMEsensor[i][5],
+                    BMEsensor[i][6], BMEsensor[i][7], BMEsensor[i][8],
+                    true, false, 0);
+  }
+
 #endif
 }
 
-void createDiscovery(String sensor_type,
-                     String state_topic, String name, String unique_id,
-                     String availability_topic, String device_class, String value_template,
-                     String payload_on, String payload_off, String unit_of_meas,
+void createDiscovery(char * sensor_type,
+                     char * state_topic, char * name, char * unique_id,
+                     char * availability_topic, char * device_class, char * value_template,
+                     char * payload_on, char * payload_off, char * unit_of_meas,
                      bool optimistic, bool retain, int off_delay)
 {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer3;
@@ -82,42 +71,16 @@ void createDiscovery(String sensor_type,
   sensor.set("stat_t", state_topic); //state_topic
   sensor.set("name", name);          //name
   sensor.set("uniq_id", unique_id);  //unique_id
-  if (availability_topic != "")
-  {
-    sensor.set("avty_t", availability_topic); //availability_topic
-  }
-  if (device_class != "")
-  {
-    sensor.set("dev_cla", device_class); //device_class
-  }
-  if (value_template != "")
-  {
-    sensor.set("val_tpl", value_template); //value_template
-  }
-  if (payload_on != "")
-  {
-    sensor.set("pl_on", payload_on); // payload_on
-  }
-  if (payload_off != "")
-  {
-    sensor.set("pl_off", payload_off); //payload_off
-  }
-  if (unit_of_meas != "")
-  {
-    sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement
-  }
-  if (optimistic != true)
-  {
-    sensor.set("opt", optimistic); //optimistic
-  }
-  if (retain != false)
-  {
-    sensor.set("ret", retain); //retain
-  }
-  if (off_delay > 0)
-  {
-    sensor.set("off_delay", off_delay); //off_delay
-  }
+  
+  if (strstr(availability_topic, "") != NULL)      sensor.set("avty_t", availability_topic); //availability_topic
+  if (strstr(device_class, "") != NULL)            sensor.set("dev_cla", device_class); //device_class
+  if (strstr(value_template, "") != NULL)          sensor.set("val_tpl", value_template); //value_template
+  if (strstr(payload_on, "") != NULL)              sensor.set("pl_on", payload_on); // payload_on
+  if (strstr(payload_off, "") != NULL)             sensor.set("pl_off", payload_off); //payload_off
+  if (strstr(unit_of_meas, "") != NULL)            sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement
+  if (optimistic != true)                          sensor.set("opt", optimistic); //optimistic
+  if (retain != false)                             sensor.set("ret", retain); //retain
+  if (off_delay > 0)                               sensor.set("off_delay", off_delay); //off_delay
 
   char JSONmessageBuffer[JSON_MSG_BUFFER];
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
@@ -130,18 +93,8 @@ void createDiscovery(String sensor_type,
 
   sensor.set("device", device); //device sensor is connected to
 
-  String topic = (String)discovery_Topic + "/" + sensor_type + "/" + unique_id + "/config";
-  pubDiscovery(topic, sensor);
-}
-
-void pubDiscovery(String topicori, JsonObject &data)
-{
-  char JSONmessageBuffer[JSON_MSG_BUFFER];
-  trc(F("Pub json into:"));
-  trc(topicori);
-  data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-  trc(JSONmessageBuffer);
-  client.publish((char *)topicori.c_str(), JSONmessageBuffer, true);
+  String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
+  pub((char *)topic.c_str(), sensor);
 }
 
 String getMacAddress()
