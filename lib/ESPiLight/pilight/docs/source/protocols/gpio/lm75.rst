@@ -1,4 +1,0 @@
-I2C-bus LM75
-============
-
-.. include:: _lm75.rst

@@ -1,6 +1,0 @@
-#ifndef PROTOCOL_HEADERS
-#define PROTOCOL_HEADERS
-
-@PROTOCOL_HEADERS@
-
-#endif
