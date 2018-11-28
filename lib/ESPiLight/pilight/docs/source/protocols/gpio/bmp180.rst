@@ -1,0 +1,4 @@
+BMP180
+======
+
+.. include:: _bmp180.rst

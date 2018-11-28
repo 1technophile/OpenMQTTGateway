@@ -47,7 +47,7 @@ $(DST_DIR)/libs/pilight/core/json.c: $(SRC_DIR)/libs/pilight/core/json.c
 	@mkdir -p $(@D)
 	cp $< $@
 #	ESP8266 Android, sprintf not working with float. Patch:
-	sed 's/sprintf(buf, "%.*f", decimals, num);/dtostrf(num, 0, decimals, buf);/' -i $@
+	sed 's/\(^[ \t]*\)\(sprintf(buf, "%.*f", decimals, num);\)/#ifdef ESP8266\n\1dtostrf(num, 0, decimals, buf);\n#else\n\1\2\n#endif/' -i $@
 #	Arduino did not provide printf, fprintf
 	sed 's!#include <stdio.h>!#include <stdio.h>\n#include "../../../../tools/aprintf.h"!' -i $@
 

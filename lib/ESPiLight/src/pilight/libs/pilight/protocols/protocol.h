@@ -108,7 +108,7 @@ typedef struct protocols_t {
   struct protocols_t *next;
 } protocols_;
 
-extern struct protocols_t *protocols;
+extern struct protocols_t *pilight_protocols;
 
 void protocol_init(void);
 void protocol_set_id(protocol_t *proto, char *id);

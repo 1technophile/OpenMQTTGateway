@@ -1,0 +1,6 @@
+#ifndef PROTOCOL_INIT
+#define PROTOCOL_INIT
+
+@PROTOCOL_INIT@
+
+#endif

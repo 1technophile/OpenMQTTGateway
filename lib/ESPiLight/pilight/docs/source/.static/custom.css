@@ -1,0 +1,212 @@
+body,
+h1, h2, h3,
+h4, h5, h6,
+dt, dl, dd,
+blockquote,
+td, th, div,
+ul, li, ol,
+a, p, input,
+table, table td,
+div.sphinxsidebar .sidebar-toc a,
+.sidebar-block h2,
+.text-logo,
+.admonition-title {
+	font-family:'Roboto Condensed', sans-serif;
+}
+
+blockquote {
+	padding: 0px;
+}
+
+.underline {
+	text-decoration: underline;
+}
+
+h1 {
+	background-color: #fafafa;
+}
+
+img {
+	display: block;
+	width: 100%;
+}
+
+div.sphinxsidebar {
+	margin-top: 5px;
+	padding-top: 80px;
+	background: url('pilight.png') no-repeat top center;
+}
+
+.text-logo {
+	opacity: 0;
+	height: 102px;
+	margin-top: -100px;
+}
+
+blockquote {
+	background: transparent;
+	border: 0px;
+}
+
+table.footnote * {
+	font-size: 12px;
+}
+
+table.footnote .label {
+	color: #428bca;
+}
+
+table.docutils:not(.footnote) {
+	border: 0px solid transparent;
+	min-width: 100%;
+	margin-bottom: 10px;
+	display: block;
+	overflow: auto;
+}
+
+table.docutils:not(.footnote).alt {
+	display: table;
+}
+
+table.docutils:not(.footnote) img {
+	display: inline-block;
+	width: auto;
+}
+
+table.docutils:not(.footnote).alt img {
+	display: block;
+	width: 100%;
+}
+
+table.docutils:not(.footnote) td {
+	border: 0px solid transparent;
+	white-space: nowrap;
+	padding: 5px;
+	vertical-align: middle;
+}
+
+table.docutils:not(.footnote) tr.row-odd td {
+	background: #fbfbfb;
+}
+
+table.docutils:not(.footnote) tr:first-child td {
+	background: #fafafa;
+	font-weight: 800;
+	border-bottom: 1px solid #aaaaaa;
+}
+
+div[class^='highlight'] {
+	overflow-x: auto;
+	margin: 1px 0 24px 0
+}
+
+div[class^='highlight'] div[class^='highlight'] {
+	margin: 0;
+	padding: 0;
+}
+
+table {
+	border-collapse: collapse;
+	margin: 0px;
+	padding: 0px;
+}
+
+pre {
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+}
+
+.highlighttable pre {
+	margin: -5px 0px 0px 0px;
+	padding: 0px;
+	border-left: 1px solid #eeeeee;
+}
+
+.event-success,
+.event-fail {
+	position: relative;
+	float: right;
+	font-size: 16px; 
+	padding: 0px; 
+	margin-top: -1px;
+	width: 60px;
+	display: block;
+}
+
+.event-success {
+	color: green;
+}
+
+.event-fail {
+	color: red;
+}
+
+.text-logo {
+	background: #fafafa;
+}
+
+.sidebar-toc ul li a:hover {
+  background-color: white;
+  color: red;
+}
+
+.sidebar-toc ul li.current > a,
+.sidebar-toc ul li.current > a:hover {
+  background-color: #ffcc00;
+  color: #fff;
+}
+
+/* .sidebar-toc .toctree-l1.current > a, */
+/* .sidebar-toc .toctree-l1.current > a:hover { */
+	/* background-color: #dedede; */
+/* } */
+
+h1:hover > a.headerlink,
+h2:hover > a.headerlink,
+h3:hover > a.headerlink,
+h4:hover > a.headerlink,
+h5:hover > a.headerlink,
+h6:hover > a.headerlink,
+dt:hover > a.headerlink {
+  visibility: hidden;
+}
+
+.footnote-reference {
+	vertical-align: super;
+	font-size: 10px;
+}
+
+table.field-list {
+  display: none!important;
+}
+
+.versionchanged {
+	border-bottom: 1px solid #ffcc00;
+}
+
+.deprecated {
+	border-bottom: 1px solid #ff0000;
+}
+
+.versionadded {
+	border-bottom: 1px solid #aaffaa;
+}
+
+.versionchanged,
+.versionmodified,
+.versionadded,
+.deprecated {
+	color: black;
+	margin-bottom: 15px;
+	margin-top: 15px;
+}
+
+.versionmodified *,
+.versionchanged *,
+.versionadded *,
+.deprecated * {
+	font-style: normal;
+	padding: 0px;
+	margin: 0px;
+}

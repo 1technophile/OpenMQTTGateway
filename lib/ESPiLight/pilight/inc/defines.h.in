@@ -1,0 +1,98 @@
+/*
+	Copyright (C) 2013 - 2014 CurlyMo
+
+	This file is part of pilight.
+
+	pilight is free software: you can redistribute it and/or modify it under the
+	terms of the GNU General Public License as published by the Free Software
+	Foundation, either version 3 of the License, or (at your option) any later
+	version.
+
+	pilight is distributed in the hope that it will be useful, but WITHOUT ANY
+	WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+	A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with pilight. If not, see	<http://www.gnu.org/licenses/>
+*/
+
+#ifndef _DEFINES_H_
+#define _DEFINES_H_
+
+#cmakedefine WEBSERVER
+#cmakedefine EVENTS
+
+#define PILIGHT_VERSION					"7.0"
+#define PULSE_DIV								34
+#define MAXPULSESTREAMLENGTH		512
+#define EPSILON									0.00001
+#define SHA256_ITERATIONS				25000
+
+#ifdef WEBSERVER
+	#define WEBSERVER_HTTP_PORT				5001
+	#define WEBSERVER_HTTPS_PORT			5002
+	#ifdef _WIN32
+		#define WEBSERVER_ROOT				"c:/pilight/web/"
+	#else
+		#define WEBSERVER_ROOT				"/usr/local/pilight/webgui/"
+	#endif
+	#define WEBSERVER_ENABLE			1
+	#define WEBSERVER_CACHE				1
+	#define MAX_UPLOAD_FILESIZE 	5242880
+	#define MAX_CACHE_FILESIZE 		1048576
+	#define WEBSERVER_WORKERS			1
+	#define WEBSERVER_CHUNK_SIZE 	4096
+	#define WEBGUI_WEBSOCKETS			1
+	#cmakedefine WEBSERVER_HTTPS	1	
+#endif
+
+#define MAX_CLIENTS							30
+#define BUFFER_SIZE							1025
+#define MEMBUFFER								128
+#define EOSS										"\n\n" // End Of Socket Stream
+
+#ifdef _WIN32
+	#define PROTOCOL_ROOT						"c:/pilight/protocols/"
+	#define HARDWARE_ROOT						"c:/pilight/hardware/"
+	#define OPERATOR_ROOT						"c:/pilight/operators/"
+	#define FUNCTION_ROOT						"c:/pilight/functions/"
+	#define ACTION_ROOT							"c:/pilight/actions/"
+
+	#define CONFIG_FILE							"c:/pilight/config.json"
+	#define LOG_FILE								"c:/pilight/pilight.log"
+	#define PEM_FILE								"c:/pilight/pilight.pem"
+#else
+	#define PROTOCOL_ROOT						"/usr/local/lib/pilight/protocols/"
+	#define HARDWARE_ROOT						"/usr/local/lib/pilight/hardware/"
+	#define OPERATOR_ROOT						"/usr/local/lib/pilight/operators/"
+	#define FUNCTION_ROOT						"/usr/local/lib/pilight/functions/"
+	#define ACTION_ROOT							"/usr/local/lib/pilight/actions/"
+
+	#define PID_FILE								"/var/run/pilight.pid"
+	#define CONFIG_FILE							"/etc/pilight/config.json"
+	#define LOG_FILE								"/var/log/pilight.log"
+	#define PEM_FILE								"/etc/pilight/pilight.pem"
+#endif	
+#define LOG_MAX_SIZE 						1048576 // 1024*1024
+
+#define UUID_LENGTH							21
+
+#define FIRMWARE_PATH				"c:/pilight/"
+#define FIRMWARE_GPIO_RESET	10
+#define FIRMWARE_GPIO_SCK		14
+#define FIRMWARE_GPIO_MOSI	12
+#define FIRMWARE_GPIO_MISO	13
+
+#define PILIGHT_V						7
+
+#define GPIO_PLATFORM				"none"
+
+#if !defined(PATH_MAX)
+	#if defined(_POSIX_PATH_MAX)
+		#define PATH_MAX _POSIX_PATH_MAX
+	#else
+		#define PATH_MAX 1024
+	#endif
+#endif
+
+#endif

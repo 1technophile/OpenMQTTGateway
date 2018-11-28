@@ -1,1 +1,10 @@
 *~
+src/pilight/libs/pilight/core/binary.c
+src/pilight/libs/pilight/core/binary.h
+src/pilight/libs/pilight/core/dso.h
+src/pilight/libs/pilight/core/json.c
+src/pilight/libs/pilight/core/json.h
+src/pilight/libs/pilight/core/mem.h
+src/pilight/libs/pilight/protocols/433.92/*
+src/pilight/libs/pilight/protocols/protocol_header.h
+src/pilight/libs/pilight/protocols/protocol_init.h

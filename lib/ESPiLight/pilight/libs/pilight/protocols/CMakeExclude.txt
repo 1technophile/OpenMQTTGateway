@@ -1,0 +1,12 @@
+include(../../../CMakeConfig.txt)
+
+if(${ZWAVE} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers_includes "${PROJECT_SOURCE_DIR}/zwave/protocol_header.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_init_includes "${PROJECT_SOURCE_DIR}/zwave/protocol_init.h")
+endif()
+
+if(${IR} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers_includes "${PROJECT_SOURCE_DIR}/IR/protocol_header.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_init_includes "${PROJECT_SOURCE_DIR}/IR/protocol_init.h")
+endif()
+	

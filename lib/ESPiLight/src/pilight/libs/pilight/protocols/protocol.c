@@ -26,7 +26,7 @@
 
 #include "protocol_header.h"
 
-struct protocols_t *protocols;
+struct protocols_t *pilight_protocols = NULL;
 
 void protocol_init(void) {
   #include "protocol_init.h"
@@ -76,8 +76,8 @@ void protocol_register(protocol_t **proto) {
     exit(EXIT_FAILURE);
   }
   pnode->listener = *proto;
-  pnode->next = protocols;
-  protocols = pnode;
+  pnode->next = pilight_protocols;
+  pilight_protocols = pnode;
 }
 
 void protocol_set_id(protocol_t *proto, char *id) {

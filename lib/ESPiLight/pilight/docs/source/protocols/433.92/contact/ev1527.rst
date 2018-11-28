@@ -1,0 +1,129 @@
+.. |yes| image:: ../../../images/yes.png
+.. |no| image:: ../../../images/no.png
+
+.. role:: underline
+   :class: underline
+
+EV1527 Contact
+==============
+
++------------------+-------------+
+| **Feature**      | **Support** |
++------------------+-------------+
+| Sending          | |no|        |
++------------------+-------------+
+| Receiving        | |yes|       |
++------------------+-------------+
+| Config           | |yes|       |
++------------------+-------------+
+
+.. rubric:: Supported Brands
+
++------------------+--------------+
+| **Brand**        | **Protocol** |
++------------------+--------------+
+| EV1527           | ev1527       |
++------------------+--------------+
+
+.. rubric:: Sender Arguments
+
+*None*
+
+.. rubric:: Config
+
+.. code-block:: json
+   :linenos:
+
+   {
+     "devices": {
+       "contact": {
+         "protocol": [ "ev1527" ],
+         "id": [{
+           "unitcode": 0
+         }],
+         "state": "closed"
+        }
+     }
+   }
+
++------------------+-----------------+
+| **Option**       | **Value**       |
++------------------+-----------------+
+| id               | 0 - 31          |
++------------------+-----------------+
+| code             | 0 - 31          |
++------------------+-----------------+
+| state            | opened / closed |
++------------------+-----------------+
+
+.. rubric:: Optional Settings
+
+*None*
+
+.. rubric:: Protocol
+
+This protocol sends 50 pulses like this
+
+.. code-block:: guess
+
+   253 759 759 253 759 253 253 759 253 759 253 759 253 759 253 759 253 759 759 253 253 759 253 759 759 253 759 253 759 253 253 759 253 759 759 253 253 759 759 253 253 759 253 759 759 253 253 8602
+
+It has no ``header`` and the last 2 pulses are the ``footer``. These are meant to identify the pulses as genuine, and the protocol also has some bit checks to filter false positives. We don't use them for further processing. The next step is to transform this output into 12 groups of 4 pulses (and thereby dropping the ``footer`` pulses).
+
+The first six pulses are the address bits, followed by upto another 6 Address/Data Bits. Address Bits can have three states: 0, 1, F (tri-state). Data Bits have only two states: 0 or 1.
+
+.. code-block:: guess
+
+   253 759
+   759 253
+   759 253
+   253 759
+   253 759
+   253 759
+   253 759
+   253 759
+   253 759
+   759 253
+   253 759
+   253 759
+   759 253
+   759 253
+   759 253
+   253 759
+   253 759
+   759 253
+   253 759
+   759 253
+   253 759
+   253 759
+   759 253
+
+If we now take a careful look at these groups you can distinguish three types of groups:
+
+#. ``253 759``
+#. ``759 253``
+
+So the first group is defined by a high second pulse, the second group has a low second pulse. We then get the following output:
+
+.. code-block:: guess
+
+   10001111110110001101 0110
+
+Each (group) of numbers has a specific meaning:
+
+- UnitCode: 0 till 20
+- State: 20
+
+Bits 21-24 are not used.
+
+.. code-block:: guess
+
+   10001111110110001101 0
+
+- The ``UnitCode`` is defined as a binary number
+- The ``State`` defines whether a sensor state is opened or closed
+
+So this code represents:
+
+- UnitCode: 589197
+- State: opened

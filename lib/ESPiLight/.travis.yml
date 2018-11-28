@@ -20,6 +20,8 @@ env:
 install:
   # PlatformIO
   - pip install -U platformio
+  # integrate pilight
+  - make
 
 script:
   - platformio ci --lib="." --board=huzzah --board=d1_mini --board=esp32dev

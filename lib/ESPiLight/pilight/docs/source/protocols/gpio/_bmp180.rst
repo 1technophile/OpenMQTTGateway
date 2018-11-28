@@ -1,0 +1,115 @@
+.. |yes| image:: ../../images/yes.png
+.. |no| image:: ../../images/no.png
+
+.. role:: underline
+   :class: underline
+
++------------------+-------------+
+| **Feature**      | **Support** |
++------------------+-------------+
+| Sending          | |no|        |
++------------------+-------------+
+| Receiving        | |yes|       |
++------------------+-------------+
+| Config           | |yes|       |
++------------------+-------------+
+
+.. rubric:: Supported Brands
+
++------------------+--------------+
+| **Brand**        | **Protocol** |
++------------------+--------------+
+| BMP180           | bmp180       |
++------------------+--------------+
+| BMP085           | bmp085       |
++------------------+--------------+
+
+.. rubric:: Sender Arguments
+
+*None*
+
+.. rubric:: Config
+
+.. code-block:: json
+   :linenos:
+
+   {
+     "devices": {
+       "bmp180": {
+         "protocol": [ "bmp180" ],
+         "id": [{
+           "id": "0x77"
+         }],
+         "temperature": 19.1,
+         "pressure": 1006.8,
+         "oversampling": 1
+       }
+     },
+     "gui": {
+       "temperature": {
+         "name": "Temperature Sensor",
+         "group": [ "Misc" ],
+         "media": [ "all" ]
+       }
+     }
+   }
+
++------------------+------------------+
+| **Option**       | **Value**        |
++------------------+------------------+
+| id               | *valid i2c path* |
++------------------+------------------+
+| temperature      | -40 - 85         |
++------------------+------------------+
+| pressure         | 300 - 1100       |
++------------------+------------------+
+| oversampling     | 0 - 3            |
++------------------+------------------+
+
+.. rubric:: Optional Settings
+
+:underline:`Device Settings`
+
++--------------------+-------------+------------+-------------------------------------------------+
+| **Setting**        | **Default** | **Format** | **Description**                                 |
++--------------------+-------------+------------+-------------------------------------------------+
+| poll-interval      | 10          | seconds    | What should be the poll interval of the sensors |
++--------------------+-------------+------------+-------------------------------------------------+
+| humidity-offset    | 0           | number     | Correct humidity value                          |
++--------------------+-------------+------------+-------------------------------------------------+
+| temperature-offset | 0           | number     | Correct temperature value                       |
++--------------------+-------------+------------+-------------------------------------------------+
+
+:underline:`GUI Settings`
+
++----------------------+-------------+------------+-----------------------------------------------------------+
+| **Setting**          | **Default** | **Format** | **Description**                                           |
++----------------------+-------------+------------+-----------------------------------------------------------+
+| temperature-decimals | 2           | number     | How many decimals the GUIs should display for temperature |
++----------------------+-------------+------------+-----------------------------------------------------------+
+| pressure-decimals    | 2           | number     | How many decimals the GUIs should display for pressure    |
++----------------------+-------------+------------+-----------------------------------------------------------+
+| show-temperature     | 1           | 1 or 0     | Don't display the temperature value                       |
++----------------------+-------------+------------+-----------------------------------------------------------+
+| show-pressure        | 1           | 1 or 0     | Don't display the pressure value                          |
++----------------------+-------------+------------+-----------------------------------------------------------+
+
+.. rubric:: Comments
+
+Pressure is provided in hectopascal (hPa) and temperature in degrees Celsius (°C).
+
+Option ``oversampling`` sets the BMP180 hardware accuracy mode which is relevant for pressure readings only.
+
++-----------------------+--------------+-------------------------+------------------------------------+
+| Mode                  | oversampling | Internal no. of samples | Conversion time pressure max. [ms] |
++-----------------------+--------------+-------------------------+------------------------------------+
+| ultra low power       | 0            | 1                       | 4.5                                |
++-----------------------+--------------+-------------------------+------------------------------------+
+| standard              | 1            | 2                       | 7.5                                |
++-----------------------+--------------+-------------------------+------------------------------------+
+| high resolution       | 2            | 4                       | 13.5                               |
++-----------------------+--------------+-------------------------+------------------------------------+
+| ultra high resolution | 3            | 8                       | 25.5                               |
++-----------------------+--------------+-------------------------+------------------------------------+
+
+The algorithm for pressure and temperature measurement is based on the specification in the `official datasheet <https://ae-bst.resource.bosch.com/media/products/dokumente/bmp180/BST-BMP180-DS000-12~1.pdf>`_.

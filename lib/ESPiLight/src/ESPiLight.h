@@ -22,11 +22,15 @@
 #include <Arduino.h>
 #include <functional>
 
+#ifndef RECEIVER_BUFFER_SIZE
 #define RECEIVER_BUFFER_SIZE 10
+#endif
 
 #define MIN_PULSELENGTH 80
 #define MAX_PULSELENGTH 16000
+#ifndef MAXPULSESTREAMLENGTH
 #define MAXPULSESTREAMLENGTH 255
+#endif
 
 #define MAX_PULSE_TYPES 16
 

@@ -1,0 +1,166 @@
+.. |yes| image:: ../../../images/yes.png
+.. |no| image:: ../../../images/no.png
+
+.. role:: underline
+   :class: underline
+
++------------------+-------------+
+| **Feature**      | **Support** |
++------------------+-------------+
+| Sending          | |yes|       |
++------------------+-------------+
+| Receiving        | |yes|       |
++------------------+-------------+
+| Config           | |yes|       |
++------------------+-------------+
+
+.. rubric:: Supported Brands
+
++----------------------+------------------+
+| **Brand**            | **Protocol**     |
++----------------------+------------------+
+| Rising Sun RSL366    | rsl366           |
++----------------------+------------------+
+| Brennenstuhl         | brennenstuhl     |
++----------------------+------------------+
+
+.. rubric:: Sender Arguments
+
+.. code-block:: console
+   :linenos:
+
+   -s --systemcode=systemcode    control a device with this systemcode
+   -u --programcode=programcode  control a device with this programcode
+   -t --on                       send an on signal
+   -f --off                      send an off signal
+
+.. rubric:: Config
+
+.. code-block:: json
+   :linenos:
+
+   {
+     "devices": {
+       "switch": {
+         "protocol": [ "promax" ],
+         "id": [{
+           "systemcode": 4,
+           "programcode": 1
+         }],
+         "state": "off"
+       }
+     },
+     "gui": {
+       "Lamp": {
+         "name": "TV Backlit",
+         "group": [ "Living" ],
+         "media": [ "all" ]
+       }
+     }
+   }
+
++------------------+-----------------+
+| **Option**       | **Value**       |
++------------------+-----------------+
+| systemcode       | 0 - 4           |
++------------------+-----------------+
+| unitcode         | 0 - 4           |
++------------------+-----------------+
+| state            | on / off        |
++------------------+-----------------+
+
+.. rubric:: Optional Settings
+
+:underline:`GUI Settings`
+
++----------------------+-------------+------------+-----------------------------------------------------------+
+| **Setting**          | **Default** | **Format** | **Description**                                           |
++----------------------+-------------+------------+-----------------------------------------------------------+
+| readonly             | 1           | 1 or 0     | Disable controlling this device from the GUIs             |
++----------------------+-------------+------------+-----------------------------------------------------------+
+| confirm              | 1           | 1 or 0     | Ask for confirmation when switching device                |
++----------------------+-------------+------------+-----------------------------------------------------------+
+
+.. note:: **RSL366**
+
+   The RSL366 switches come with two dials, one selecting the Systemcode (1 to 4) and the Programcode (1 to 4). The systemcode allows one remote to control up to 16 switches. The systemcode parameter designates the dial on top of the back side of the switch, and the small lever on the back of the remote. The programcode parameter designates the lower dial on the back of the switch, and the individual buttons on the face of the remote. So if your switch has the higher dial set to 4, and the lower one set to 1, you should use:
+
+   .. code-block:: console
+
+      systemcode: 4
+      programcode: 1
+
+.. rubric:: Protocol
+
+This protocol sends 50 pulses like this
+
+.. code-block:: console
+
+   390 1170 1170 390 390 1170 1170 390 390 1170 1170 390 390 1170 390 1170 390 1170 390 1170 390 1170 1170 390 390 1170 1170 390 390 1170 1170 390 390 1170 1170 390 390 1170 1170 390 390 1170 1170 390 390 1170 1170 390 390 13260
+
+It has no ``header`` and the last 2 pulses are the ``footer``. These are meant to identify the pulses as genuine, and the protocol also has some bit checks to filter false positives. We don't use them for further processing. The next step is to transform this output into 12 groups of 4 pulses (and thereby dropping the ``footer`` pulses).
+
+.. code-block:: console
+
+   390 1170 1170 390
+   390 1170 1170 390
+   390 1170 1170 390
+   390 1170 390 1170
+
+   390 1170 390 1170
+   390 1170 1170 390
+   390 1170 1170 390
+   390 1170 1170 390
+
+   390 1170 1170 390
+   390 1170 1170 390
+   390 1170 1170 390
+
+   390 1170 1170 390
+
+If we now look at carefully at these groups you can distinguish three types of groups:
+
+- ``390 1170 1170 390``
+- ``390 1170 390 1170``
+
+#. The first group is defined by a low 1st and low 4th pulse, and we call it low.
+#. The second group has a high 2nd and 4th pulse, and we call it high.
+
+We then get the following output:
+
+.. code-block:: console
+
+   LLLH HLLL LL LL
+
+All H's can be translated to 1. All L's can be translated to 0.
+
+Each (group) of numbers has a specific meaning:
+
+- Systemcode: 1 till 4
+- Programcode: 5 till 8
+- 9 to 11 are always low and don't convey any information
+- State: 12 (state)
+
+.. code-block:: console
+
+   0001 1000 000 0
+
+- The ``SystemCode`` is defined as position of the pulse group that bears the **high** signal in the first grouping (i.e. if the third pulse group is high then systemcode is 3)
+- The ``ProgramCode`` is defined as the position of the pulse group that bears the **high** signal in the second grouping (i.e. if the second pulse group is high then systemcode is 2)
+- The ``State`` defines whether a devices needs to be turned On or Off. If it bears the **high** pulse group - the device must be turned off, if it bears the **low** pulse group it must be turned on
+
+So this code represents:
+
+- SystemCode: 4
+- ProgramCode: 1
+- State: On
+
+Another example:
+
+- Unit: 1
+- ID: 3
+- State: Off
+
+.. code-block:: console
+
+   1000 0010 000 1

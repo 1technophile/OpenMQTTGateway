@@ -1,0 +1,158 @@
+.. |yes| image:: ../../../images/yes.png
+.. |no| image:: ../../../images/no.png
+
+.. role:: underline
+   :class: underline
+
+SC2262 Contact
+==============
+
++------------------+-------------+
+| **Feature**      | **Support** |
++------------------+-------------+
+| Sending          | |no|        |
++------------------+-------------+
+| Receiving        | |yes|       |
++------------------+-------------+
+| Config           | |yes|       |
++------------------+-------------+
+
+.. rubric:: Supported Brands
+
++------------------+--------------+
+| **Brand**        | **Protocol** |
++------------------+--------------+
+| SC2262           | sc2262       |
++------------------+--------------+
+
+.. rubric:: Sender Arguments
+
+*None*
+
+.. rubric:: Config
+
+.. code-block:: json
+   :linenos:
+
+   {
+     "devices": {
+       "contact": {
+         "protocol": [ "sc2262" ],
+         "id": [{
+           "systemcode": 31,
+           "unitcode": 0
+         }],
+         "state": "closed"
+        }
+     }
+   }
+
+
++------------------+-----------------+
+| **Option**       | **Value**       |
++------------------+-----------------+
+| id               | 0 - 31          |
++------------------+-----------------+
+| code             | 0 - 31          |
++------------------+-----------------+
+| state            | opened / closed |
++------------------+-----------------+
+
+.. rubric:: Optional Settings
+
+*None*
+
+.. rubric:: Protocol
+
+This protocol sends 50 pulses like this
+
+.. code-block:: guess
+
+   432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1728 1296 432 432 1296 432 1296 432 1296 1296 432 1296 432 1296 432 1296 432 1296 432 432 13392
+
+It has no ``header`` and the last 2 pulses are the ``footer``. These are meant to identify the pulses as genuine, and the protocol also has some bit checks to filter false positives. We don't use them for further processing. The next step is to transform this output into 12 groups of 4 pulses (and thereby dropping the ``footer`` pulses).
+
+The first six pulses are the address bits, followed by upto another 6 Address/Data Bits. Address Bits can have three states: 0, 1, F (tri-state). Data Bits have only two states: 0 or 1.
+
+.. code-block:: guess
+
+   432 1296 1296 432
+   432 1296 1296 432
+   432 1296 1296 432
+   432 1296 1296 432
+   432 1296 1296 432
+   432 1296 1296 432
+   432 1296 1296 432
+   432 1728 1296 432
+   432 1296 432 1296
+   432 1296 1296 432
+   1296 432 1296 432
+   1296 432 1296 432
+   432 14688
+
+If we now take a careful look at these groups you can distinguish three types of groups:
+
+#. ``432 1296 432 1296`` - Logical Zero
+#. ``1296 432 1296 432`` - Logical One
+#. ``432 1296 1296 432`` - Logical Tri-State
+
+
+.. code-block:: guess
+
+   FFFFFF FF0F11
+
+Each (group) of numbers has a specific meaning:
+
+- SystemCode: 0 till 5
+- UnitCode: 6 till 10
+- State: 11
+
+Depending on the device the Unit Code my be shorter in order to provide more bits for state / data value conditions.
+
+.. code-block:: guess
+
+   FFFFFF FF0F11
+
+- The SystemCode is defined as a binary number
+- The UnitCode is defined as a binary number
+- The State defines whether a devices state is considered to be opened or closed
+
+So this code represents:
+
+- SystemCode: 0
+- UnitCode: 2
+- State: Closed
+
+.. code-block:: json
+
+   {
+     "devices": {
+       "window": {
+         "protocol": [ "sc2262" ],
+         "id": [{
+           "systemcode": 0,
+           "unitcode": 8
+         }],
+         "state": "closed"
+       }
+     },
+     "gui": {
+       "window": {
+         "name": "Bedroom",
+         "group": [ "Windows" ],
+         "media": [ "all" ]
+       }
+     }
+   }
+
+This code sets the state to opened:
+
+.. code-block:: console
+
+   pilight-send -p raw -c "432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1728 1296 432 432 1296 432 1296 432 1296 1296 432 1296 432 1296 432 1296 432 1296 432 432 14680"
+
+This code sets the state to closed:
+
+.. code-block:: console
+
+   pilight-send -p raw -c "432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1296 1296 432 432 1728 1296 432 432 1296 432 1296 432 1296 1296 432 1296 432 1296 432 432 1296 432 1296 432 14681"

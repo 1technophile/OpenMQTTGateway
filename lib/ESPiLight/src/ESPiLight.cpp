@@ -35,8 +35,7 @@
 extern "C" {
 #include "pilight/libs/pilight/protocols/protocol.h"
 }
-protocols_t *protocols = nullptr;
-protocols_t *used_protocols = nullptr;
+static protocols_t *used_protocols = nullptr;
 
 volatile PulseTrain_t ESPiLight::_pulseTrains[RECEIVER_BUFFER_SIZE];
 bool ESPiLight::_enabledReceiver;
@@ -55,11 +54,11 @@ uint16_t ESPiLight::maxgaplen = 10000;
 static void fire_callback(protocol_t *protocol, ESPiLightCallBack callback);
 
 static protocols_t *get_protocols() {
-  if (protocols == nullptr) {
+  if (pilight_protocols == nullptr) {
     ESPiLight::setErrorOutput(Serial);
     protocol_init();
   }
-  return protocols;
+  return pilight_protocols;
 }
 
 static protocols_t *get_used_protocols() {
@@ -512,7 +511,7 @@ void ESPiLight::limitProtocols(const String &protos) {
   unsigned int proto_count = 0;
 
   while (curr != nullptr) {
-    if (!curr->tag == JSON_STRING) {
+    if (curr->tag != JSON_STRING) {
       DebugLn("Element is not a String");
       curr = curr->next;
       continue;

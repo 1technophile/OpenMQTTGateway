@@ -1,0 +1,6 @@
+file(GLOB operators "${PROJECT_SOURCE_DIR}/operators/*.lua")
+if(WIN32)
+	install(FILES ${operators} DESTINATION operators/ COMPONENT pilight)
+else()
+	install(FILES ${operators} DESTINATION lib/pilight/operators/ COMPONENT pilight)
+endif()

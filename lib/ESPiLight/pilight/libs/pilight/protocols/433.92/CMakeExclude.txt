@@ -1,0 +1,257 @@
+include(../../../../CMakeConfig.txt)
+
+if(${PROTOCOL_ALECTO_WSD17} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/alecto_wsd17.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/alecto_wsd17.h")
+endif()
+
+if(${PROTOCOL_ALECTO_WX500} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/alecto_wx500.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/alecto_wx500.h")
+endif()
+
+if(${PROTOCOL_COGEX_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_KAKU_SWITCH_OLD} MATCHES "OFF"
+	AND ${PROTOCOL_BYEBYESTANDBY_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_DUWI_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_PROMAX_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_INTERTECHNO_OLD} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_switch_old.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_switch_old.h")
+endif()
+
+if(${PROTOCOL_RSL366} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/rsl366.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/rsl366.h")
+endif()
+
+if(${PROTOCOL_DAYCOM} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/daycom.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/daycom.h")
+endif()
+
+if(${PROTOCOL_KAKU_SCREEN_OLD} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_screen_old.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_screen_old.h")
+endif()
+
+if(${PROTOCOL_KAKU_DUSK} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_dusk.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_dusk.h")
+endif()
+
+if(${PROTOCOL_KAKU_MOTION} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_motion.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_motion.h")
+endif()
+
+if(${PROTOCOL_KAKU_DIMMER} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_dimmer.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_dimmer.h")
+endif()
+
+if(${PROTOCOL_KAKU_SCREEN} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_screen.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_screen.h")
+endif()
+
+if(${PROTOCOL_KAKU_CONTACT} MATCHES "OFF")
+  list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_contact.c")
+  list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_contact.h")
+endif()
+
+if(${PROTOCOL_COCO_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_DIO_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_NEXA_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_KAKU_SWITCH} MATCHES "OFF"
+	AND ${PROTOCOL_INTERTECHNO_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/arctech_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/arctech_switch.h")
+endif()
+
+if(${PROTOCOL_ELRO_SWITCH} MATCHES "OFF" AND ${PROTOCOL_BRENNENSTUHL_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/elro_300_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/elro_400_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/elro_800_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/elro_300_switch.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/elro_400_switch.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/elro_800_switch.h")
+endif()
+
+if(${PROTOCOL_ELRO_CONTACT} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/elro_800_contact.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/elro_800_contact.h")
+endif()
+
+if(${PROTOCOL_EURODOMEST_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/eurodomest_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/eurodomest_switch.h")
+endif()
+
+if(${PROTOCOL_IMPULS} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/impuls.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/impuls.h")
+endif()
+
+if(${PROTOCOL_SELECTREMOTE} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/selectremote.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/selectremote.h")
+endif()
+
+if(${PROTOCOL_EHOME} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/ehome.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/ehome.h")
+endif()
+
+if(${PROTOCOL_RAW} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/raw.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/raw.h")
+endif()
+
+if(${PROTOCOL_REV} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/rev_v1.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/rev_v2.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/rev_v3.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/rev_v1.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/rev_v2.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/rev_v3.h")
+endif()
+
+if(${PROTOCOL_CLARUS} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/clarus.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/clarus.h")
+endif()
+
+if(${PROTOCOL_CONRAD_RSL_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/conrad_rsl_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/conrad_rsl_switch.h")
+endif()
+
+if(${PROTOCOL_CONRAD_WEATHER} MATCHES "OFF"
+   AND ${PROTOCOL_TFA} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/tfa.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/tfa30.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/tfa.h")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/tfa30.h")
+endif()
+
+if(${PROTOCOL_CONRAD_RSL_CONTACT} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/conrad_rsl_contact.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/conrad_rsl_contact.h")
+endif()
+
+if(${PROTOCOL_POLLIN_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/pollin.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/pollin.h")
+endif()
+
+if(${PROTOCOL_QUIGG_GT7000} MATCHES "OFF")
+    list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/quigg_gt7000.c")
+    list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/quigg_gt7000.h")
+endif()
+
+if(${PROTOCOL_MUMBI_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/mumbi.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/mumbi.h")
+endif()
+
+if(${PROTOCOL_SILVERCREST} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/silvercrest.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/silvercrest.h")
+endif()
+
+if(${PROTOCOL_CLEVERWATTS} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/cleverwatts.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/cleverwatts.h")
+endif()
+
+if(${PROTOCOL_ALECTO_WS1700} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/alecto_ws1700.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/alecto_ws1700.h")
+endif()
+
+if(${PROTOCOL_AURIOL} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/auriol.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/auriol.h")
+endif()
+
+if(${PROTOCOL_TEKNIHALL} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/teknihall.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/teknihall.h")
+endif()
+
+if(${PROTOCOL_X10} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/x10.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/x10.h")
+endif()
+
+if(${PROTOCOL_EV1527} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/ev1527.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/ev1527.h")
+endif()
+
+if(${PROTOCOL_BEAMISH_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/beamish_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/beamish_switch.h")
+endif()
+
+if(${PROTOCOL_QUIGG_SCREEN} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/quigg_screen.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/quigg_screen.h")
+endif()
+
+if(${PROTOCOL_NINJABLOCKS_WEATHER} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/ninjablocks_weather.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/ninjablocks_weather.h")
+endif()
+
+if(${PROTOCOL_TECHLICO} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/techlico_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/techlico_switch.h")
+endif()
+
+if(${PROTOCOL_SC2262} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/sc2262.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/sc2262.h")
+endif()
+
+if(${PROTOCOL_RC101} MATCHES "OFF" AND
+   ${PROTOCOL_RC102} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/rc101.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/rc101.h")
+endif()
+
+if(${PROTOCOL_QUIGG_GT1000} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/quigg_gt1000.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/quigg_gt1000.h")
+endif()
+
+if(${PROTOCOL_LOGILINK_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/logilink_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/logilink_switch.h")
+endif()
+
+if(${PROTOCOL_HEITECH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/heitech.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/heitech.h")
+endif()
+
+if(${PROTOCOL_HEITECH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/heitech.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/heitech.h")
+endif()
+
+if(${PROTOCOL_SECUDO_SMOKE} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/secudo_smoke.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/secudo_smoke.h")
+endif()
+
+if(${PROTOCOL_TCM} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/tcm.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/tcm.h")
+endif()
+
+if(${PROTOCOL_LIVOLO_SWITCH} MATCHES "OFF")
+	list(REMOVE_ITEM ${PROJECT_NAME}_sources "${PROJECT_SOURCE_DIR}/livolo_switch.c")
+	list(REMOVE_ITEM ${PROJECT_NAME}_headers "${PROJECT_SOURCE_DIR}/livolo_switch.h")
+endif()
