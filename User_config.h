@@ -95,6 +95,7 @@ char mqtt_port[6] = "1883";
 //#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
+#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
@@ -116,13 +117,13 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define will_Topic  Base_Topic Gateway_Name "/LWT"
 #define will_QoS 0
 #define will_Retain true
-#define will_Message "Offline"
-#define Gateway_AnnouncementMsg "Online"
+#define will_Message "offline"
+#define Gateway_AnnouncementMsg "online"
 
 #define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
 
-#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+//#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
 //example 
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
@@ -162,7 +163,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define multiCore //comment to don't use multicore function of ESP32 for BLE
 #endif
 
-#define JSON_MSG_BUFFER 256 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
