@@ -61,15 +61,15 @@ void pubMqttDiscovery()
 }
 
 void createDiscovery(char * sensor_type,
-                     char * state_topic, char * name, char * unique_id,
+                     char * state_topic, char * s_name, char * unique_id,
                      char * availability_topic, char * device_class, char * value_template,
                      char * payload_on, char * payload_off, char * unit_of_meas,
                      bool optimistic, bool retain, int off_delay)
 {
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer3;
-  JsonObject &sensor = jsonBuffer3.createObject();
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject &sensor = jsonBuffer.createObject();
   sensor.set("stat_t", state_topic); //state_topic
-  sensor.set("name", name);          //name
+  sensor.set("name", s_name);          //name
   sensor.set("uniq_id", unique_id);  //unique_id
   
   if (strstr(availability_topic, "") != NULL)      sensor.set("avty_t", availability_topic); //availability_topic
@@ -78,9 +78,9 @@ void createDiscovery(char * sensor_type,
   if (strstr(payload_on, "") != NULL)              sensor.set("pl_on", payload_on); // payload_on
   if (strstr(payload_off, "") != NULL)             sensor.set("pl_off", payload_off); //payload_off
   if (strstr(unit_of_meas, "") != NULL)            sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement
-  if (optimistic != true)                          sensor.set("opt", optimistic); //optimistic
-  if (retain != false)                             sensor.set("ret", retain); //retain
-  if (off_delay > 0)                               sensor.set("off_delay", off_delay); //off_delay
+  sensor.set("opt", optimistic)|false; //optimistic
+  sensor.set("ret", retain)|false; //retain
+  sensor.set("off_delay", off_delay)|0; //off_delay
 
   char JSONmessageBuffer[JSON_MSG_BUFFER];
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
