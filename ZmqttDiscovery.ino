@@ -71,18 +71,15 @@ void createDiscovery(char * sensor_type,
   sensor.set("stat_t", state_topic); //state_topic
   sensor.set("name", s_name);          //name
   sensor.set("uniq_id", unique_id);  //unique_id
-  
-  if (strstr(availability_topic, "") != NULL)      sensor.set("avty_t", availability_topic); //availability_topic
-  if (strstr(device_class, "") != NULL)            sensor.set("dev_cla", device_class); //device_class
-  if (strstr(value_template, "") != NULL)          sensor.set("val_tpl", value_template); //value_template
-  if (strstr(payload_on, "") != NULL)              sensor.set("pl_on", payload_on); // payload_on
-  if (strstr(payload_off, "") != NULL)             sensor.set("pl_off", payload_off); //payload_off
-  if (strstr(unit_of_meas, "") != NULL)            sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement
+  if (device_class[0])     sensor.set("dev_cla", device_class); //device_class
+  if (value_template[0])   sensor.set("val_tpl", value_template); //value_template
+  if (payload_on[0])       sensor.set("pl_on", payload_on); // payload_on
+  if (payload_off[0])      sensor.set("pl_off", payload_off); //payload_off
+  if (unit_of_meas[0])     sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement*/
   sensor.set("opt", optimistic)|false; //optimistic
   sensor.set("ret", retain)|false; //retain
   sensor.set("off_delay", off_delay)|0; //off_delay
 
-  char JSONmessageBuffer[JSON_MSG_BUFFER];
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
   JsonObject &device = jsonDeviceBuffer.createObject();
   device.set("name", DEVICENAME);
