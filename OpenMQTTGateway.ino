@@ -69,11 +69,9 @@
 
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  #define MQTT_MAX_PACKET_SIZE 1024
   #define array_size 12
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else // boards with smaller memory
-  #define MQTT_MAX_PACKET_SIZE 256
   #define array_size 4
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 #endif
@@ -207,10 +205,6 @@ boolean reconnect() {
       pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
       pub(version_Topic,OMG_VERSION,will_Retain);
-      //home assistant discovery
-      #ifdef ZmqttDiscovery
-      pubMqttDiscovery();
-      #endif
 
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
@@ -419,6 +413,8 @@ void setup()
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
+  trc(F("JSON_MSG_BUFFER"));
+  trc(JSON_MSG_BUFFER);
   trc(F("Setup OpenMQTTGateway end"));
 }
 
@@ -793,13 +789,14 @@ void stateMeasures(){
       #endif
       #ifdef ZmqttDiscovery
           modules = modules  + ZmqttDiscovery;
+          pubMqttDiscovery();
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
       char JSONmessageBuffer[100];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
       pub(subjectSYStoMQTT,JSONmessageBuffer);
-    }
+
 }
 #endif
 
