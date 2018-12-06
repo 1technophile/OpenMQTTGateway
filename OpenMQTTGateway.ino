@@ -796,7 +796,7 @@ void stateMeasures(){
       char JSONmessageBuffer[100];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
       pub(subjectSYStoMQTT,JSONmessageBuffer);
-
+    }
 }
 #endif
 
