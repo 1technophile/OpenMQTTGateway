@@ -41,6 +41,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     #include <BLEUtils.h>
     #include <BLEScan.h>
     #include <BLEAdvertisedDevice.h>
+    #include "soc/timer_group_struct.h"
+    #include "soc/timer_group_reg.h"
 
     //Time used to wait for an interval before resending BLE infos
     unsigned long timeBLE= 0;
@@ -54,25 +56,17 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
             StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject& BLEdata = jsonBuffer.createObject();
             String mac_adress = advertisedDevice.getAddress().toString().c_str();
-            BLEdata.set("id", mac_adress);
+            BLEdata.set("id", (char *)mac_adress.c_str());
             mac_adress.replace(":","");
             mac_adress.toUpperCase();
             String mactopic = subjectBTtoMQTT + mac_adress;
-            if (advertisedDevice.haveName()){
-                BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
-            }
-            if (advertisedDevice.haveManufacturerData()){
-                BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
-            }
-            if (advertisedDevice.haveRSSI()){
-                BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
-                #ifdef subjectHomePresence
-                  haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
-                #endif
-            }
-            if (advertisedDevice.haveTXPower()){
-                BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
-            }
+            if (advertisedDevice.haveName())              BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
+            if (advertisedDevice.haveManufacturerData())  BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
+            if (advertisedDevice.haveRSSI())              BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
+            if (advertisedDevice.haveTXPower())           BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
+            #ifdef subjectHomePresence
+              if (advertisedDevice.haveRSSI()) haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
+            #endif
             if (advertisedDevice.haveServiceData()){
 
                 char mac[mac_adress.length()+1];
@@ -147,6 +141,11 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
         while(true){
             trc(taskMessage);
             delay(TimeBtw_Read);
+            
+            TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
+            TIMERG0.wdt_feed=1;
+            TIMERG0.wdt_wprotect=0;
+            
             BLEDevice::init("");
             BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
             MyAdvertisedDeviceCallbacks myCallbacks;
@@ -243,13 +242,13 @@ boolean BTtoMQTT() {
               JsonObject& BLEdata = jsonBuffer.createObject();
               #ifdef subjectHomePresence
                 String HomePresenceId;
-                for (int i = 0; i++; i<13){
-                  String HomePresenceId = HomePresenceId + String(d[0].extract[i]);
-                  if(i % 2 == 0) HomePresenceId += ":";
+                for (int i = 0; i<12; i++){
+                  HomePresenceId += String(d[0].extract[i]);
+                  if(((i-1) % 2 == 0) && (i!=11)) HomePresenceId += ":";
                 }
                 trc(F("HomePresenceId"));      
                 trc(HomePresenceId);
-                BLEdata.set("id", HomePresenceId);
+                BLEdata.set("id", (char *)HomePresenceId.c_str());
               #endif
               strupp(d[0].extract);
               String topic = subjectBTtoMQTT + String(d[0].extract);
@@ -319,8 +318,7 @@ boolean BTtoMQTT() {
              String onedevice = discResult.substring(0,78);
              onedevice.replace(STRING_MSG,"");
              String mac = onedevice.substring(53,65);
-             trc(mactopic + " " + rssi);
-             pub(subjectBTtoMQTT + mac + subjectBTtoMQTTrssi,onedevice.substring(66,70));
+             pub(subjectBTtoMQTT + mac,onedevice.substring(66,70));
              discResult = discResult.substring(78);
           }
           return true;
@@ -439,14 +437,27 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
     return true;
 }
 
+#ifdef subjectHomePresence
 void haRoomPresence(JsonObject& HomePresence){
-  trc("BLE DISTANCE :");
-  double BLErssi = HomePresence["rssi"];
-  double ratio = BLErssi/-59;
-  double distance = (0.89)* pow(ratio,7.7095) + 0.11;  
+  int BLErssi = HomePresence["rssi"];
+  trc(F("BLErssi"));
+  trc(BLErssi);
+  int txPower = HomePresence["txpower"]|0;
+  if (txPower == 0)   txPower = -59; //if tx power is not found we set a default calibration value
+  trc(F("txPower"));
+  trc(txPower);
+  double ratio = BLErssi*1.0/txPower;
+  double distance;
+  if (ratio < 1.0) {
+    distance = pow(ratio,10);
+  }else{
+    distance = (0.89976)* pow(ratio,7.7095) + 0.111;  
+  }
   HomePresence["distance"] = distance;
+  trc(F("BLE DISTANCE :"));
   trc(distance);
   pub(subjectHomePresence,HomePresence);
 }
+#endif
 
 #endif
