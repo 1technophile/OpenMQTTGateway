@@ -41,7 +41,7 @@
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define BME   Base_Topic Gateway_Name "/CLIMAtoMQTT/bme"
+#define BMETOPIC   Base_Topic Gateway_Name "/CLIMAtoMQTT/bme"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timebme280 = 0;
