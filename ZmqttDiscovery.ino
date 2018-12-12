@@ -40,22 +40,23 @@ void pubMqttDiscovery()
 #ifdef ZsensorBME280
   #define BMEparametersCount 6
   trc(F("bme280Discovery"));
-  char * BMEsensor[BMEparametersCount][9] = {
-     {"sensor", "tempc", "bme", "tempc","temperature","{{ value_json.tempc }}","", "", "°C"} ,
-     {"sensor", "tempf", "bme", "tempf","temperature","{{ value_json.tempf }}","", "", "°F"} ,
-     {"sensor", "pa", "bme", "pa","pressure","{{ float(value_json.pa) * 0.01 }}","", "", "hPa"} ,
-     {"sensor", "hum", "bme", "hum","humidity","{{ value_json.hum }}","", "", "%"} ,
-     {"sensor", "altim", "bme", "altim","","{{ value_json.altim }}","", "", "m"} ,
-     {"sensor", "altift", "bme", "altift","","{{ value_json.altift }}","", "", "ft"}
+  char * BMEsensor[BMEparametersCount][8] = {
+     {"sensor", "tempc", "bme","temperature","{{ value_json.tempc }}","", "", "°C"} ,
+     {"sensor", "tempf", "bme","temperature","{{ value_json.tempf }}","", "", "°F"} ,
+     {"sensor", "pa", "bme","","{{ float(value_json.pa) * 0.01 }}","", "", "hPa"} ,
+     {"sensor", "hum", "bme","humidity","{{ value_json.hum }}","", "", "%"} ,
+     {"sensor", "altim", "bme","","{{ value_json.altim }}","", "", "m"} ,
+     {"sensor", "altift", "bme","","{{ value_json.altift }}","", "", "ft"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
   
   for (int i=0;i<BMEparametersCount;i++){
    trc(F("CreateDiscoverySensor"));
    trc(BMEsensor[i][1]);
     createDiscovery(BMEsensor[i][0],
-                    BMETOPIC, BMEsensor[i][1], (char *)getUniqueId(BMEsensor[i][2], BMEsensor[i][3]).c_str(),
-                    will_Topic, BMEsensor[i][4], BMEsensor[i][5],
-                    BMEsensor[i][6], BMEsensor[i][7], BMEsensor[i][8],
+                    BMETOPIC, BMEsensor[i][1], (char *)getUniqueId(BMEsensor[i][1], BMEsensor[i][2]).c_str(),
+                    will_Topic, BMEsensor[i][3], BMEsensor[i][4],
+                    BMEsensor[i][5], BMEsensor[i][6], BMEsensor[i][7],
                     true, false, 0,"","",true);
   }
 #endif
@@ -63,21 +64,127 @@ void pubMqttDiscovery()
 #ifdef ZsensorDHT
   #define DHTparametersCount 2
   trc(F("DHTDiscovery"));
-  char * DHTsensor[DHTparametersCount][9] = {
-     {"sensor", "tempc", "dht", "tempc","temperature","{{ value_json.temp }}","", "", "°C"} ,
-     {"sensor", "hum", "dht", "hum","humidity","{{ value_json.hum }}","", "", "%"}
+  char * DHTsensor[DHTparametersCount][8] = {
+     {"sensor", "tempc", "dht", "temperature","{{ value_json.temp }}","", "", "°C"} ,
+     {"sensor", "hum", "dht", "humidity","{{ value_json.hum }}","", "", "%"}
   };
   
   for (int i=0;i<DHTparametersCount;i++){
    trc(F("CreateDiscoverySensor"));
    trc(DHTsensor[i][1]);
     createDiscovery(DHTsensor[i][0],
-                    DHTTOPIC, DHTsensor[i][1], (char *)getUniqueId(DHTsensor[i][2], DHTsensor[i][3]).c_str(),
-                    will_Topic, DHTsensor[i][4], DHTsensor[i][5],
-                    DHTsensor[i][6], DHTsensor[i][7], DHTsensor[i][8],
+                    DHTTOPIC, DHTsensor[i][1], (char *)getUniqueId(DHTsensor[i][1], DHTsensor[i][2]).c_str(),
+                    will_Topic, DHTsensor[i][3], DHTsensor[i][4],
+                    DHTsensor[i][5], DHTsensor[i][6], DHTsensor[i][7],
                     true, false, 0,"","",true);
   }
 #endif
+
+#ifdef ZsensorADC
+  trc(F("ADCDiscovery"));
+  char * ADCsensor[8] = {"sensor", "adc", "adc", "","{{ value_json.adc }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(ADCsensor[1]);
+    createDiscovery(ADCsensor[0],
+                    ADCTOPIC, ADCsensor[1], (char *)getUniqueId(ADCsensor[1], ADCsensor[2]).c_str(),
+                    will_Topic, ADCsensor[3], ADCsensor[4],
+                    ADCsensor[5], ADCsensor[6], ADCsensor[7],
+                    true, false, 0,"","",true);
+#endif
+
+#ifdef ZsensorBH1750
+  #define BH1750parametersCount 3
+  trc(F("BH1750Discovery"));
+  char * BH1750sensor[BH1750parametersCount][8] = {
+     {"sensor", "lux", "BH1750", "illuminance","{{ value_json.lux }}","", "", "lu"} ,
+     {"sensor", "ftCd", "BH1750","","{{ value_json.ftCd }}","", "", ""} ,
+     {"sensor", "wattsm2", "BH1750","","{{ value_json.wattsm2 }}","", "", "wm²"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<BH1750parametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(BH1750sensor[i][1]);
+    createDiscovery(BH1750sensor[i][0],
+                    subjectBH1750toMQTT, BH1750sensor[i][1], (char *)getUniqueId(BH1750sensor[i][1], BH1750sensor[i][2]).c_str(),
+                    will_Topic, BH1750sensor[i][3], BH1750sensor[i][4],
+                    BH1750sensor[i][5], BH1750sensor[i][6], BH1750sensor[i][7],
+                    true, false, 0,"","",true);
+  }
+#endif
+
+#ifdef ZsensorTSL2561
+  #define TSL2561parametersCount 3
+  trc(F("TSL2561Discovery"));
+  char * TSL2561sensor[TSL2561parametersCount][8] = {
+     {"sensor", "lux", "TSL2561", "illuminance","{{ value_json.lux }}","", "", "lu"} ,
+     {"sensor", "ftcd", "TSL2561","","{{ value_json.ftcd }}","", "", ""} ,
+     {"sensor", "wattsm2", "TSL2561","","{{ value_json.wattsm2 }}","", "", "wm²"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<TSL2561parametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(TSL2561sensor[i][1]);
+    createDiscovery(TSL2561sensor[i][0],
+                    subjectTSL12561toMQTT, TSL2561sensor[i][1], (char *)getUniqueId(TSL2561sensor[i][1], TSL2561sensor[i][2]).c_str(),
+                    will_Topic, TSL2561sensor[i][3], TSL2561sensor[i][4],
+                    TSL2561sensor[i][5], TSL2561sensor[i][6], TSL2561sensor[i][7],
+                    true, false, 0,"","",true);
+  }
+#endif
+
+#ifdef ZsensorHCSR501
+  trc(F("HCSR501Discovery"));
+  char * HCSR501sensor[8] = {"binary_sensor", "hcsr501", "hcsr501", "","","true", "false", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(HCSR501sensor[1]);
+    createDiscovery(HCSR501sensor[0],
+                    subjectHCSR501toMQTT, HCSR501sensor[1], (char *)getUniqueId(HCSR501sensor[1], HCSR501sensor[2]).c_str(),
+                    will_Topic, HCSR501sensor[3], HCSR501sensor[4],
+                    HCSR501sensor[5], HCSR501sensor[6], HCSR501sensor[7],
+                    true, false, 0,"","",true);
+#endif
+
+#ifdef ZsensorGPIOInput
+  trc(F("GPIOInputDiscovery"));
+  char * GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "GPIOInput", "","","true", "false", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(GPIOInputsensor[1]);
+    createDiscovery(GPIOInputsensor[0],
+                    subjectGPIOInputtoMQTT, GPIOInputsensor[1], (char *)getUniqueId(GPIOInputsensor[1], GPIOInputsensor[2]).c_str(),
+                    will_Topic, GPIOInputsensor[3], GPIOInputsensor[4],
+                    GPIOInputsensor[5], GPIOInputsensor[6], GPIOInputsensor[7],
+                    true, false, 0,"","",true);
+#endif
+
+#ifdef ZsensorINA226
+  #define INA226parametersCount 3
+  trc(F("INA226Discovery"));
+  char * INA226sensor[INA226parametersCount][8] = {
+     {"sensor", "volt", "INA226", "","{{ value_json.volt }}","", "", "V"} ,
+     {"sensor", "current", "INA226","","{{ value_json.current }}","", "", "A"} ,
+     {"sensor", "power", "INA226","","{{ value_json.power }}","", "", "W"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<INA226parametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(INA226sensor[i][1]);
+    createDiscovery(INA226sensor[i][0],
+                    subjectINA226toMQTT, INA226sensor[i][1], (char *)getUniqueId(INA226sensor[i][1], INA226sensor[i][2]).c_str(),
+                    will_Topic, INA226sensor[i][3], INA226sensor[i][4],
+                    INA226sensor[i][5], INA226sensor[i][6], INA226sensor[i][7],
+                    true, false, 0,"","",true);
+  }
+#endif
+
 
 }
 
@@ -119,7 +226,8 @@ void createDiscovery(char * sensor_type,
     device.set("name", Gateway_Name);
     device.set("manufacturer", DEVICEMANUFACTURER);
     device.set("sw_version", OMG_VERSION);
-    device.set("identifiers",getMacAddress());
+    JsonArray &identifiers = device.createNestedArray("identifiers");
+    identifiers.add(getMacAddress());
     sensor.set("device", device); //device sensor is connected to
   }
   String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
