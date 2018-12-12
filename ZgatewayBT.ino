@@ -95,10 +95,10 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 char service_data[returnedString.length()+1];
                 returnedString.toCharArray(service_data,returnedString.length()+1);
                 service_data[returnedString.length()] = '\0';
-                BLEdata.set("servicedata", service_data);
-                
-                BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID().toString().c_str());
-                
+                #ifdef pubBLEServiceData
+                  BLEdata.set("servicedata", service_data);  
+                  BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID().toString().c_str());
+                #endif
                 pub((char *)mactopic.c_str(),BLEdata);
                 
                 if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
@@ -260,7 +260,9 @@ boolean BTtoMQTT() {
               #endif
               String Service_data(d[5].extract);
               Service_data = Service_data.substring(14);
-              BLEdata.set("servicedata", (char *)Service_data.c_str());
+              #ifdef pubBLEServiceData
+                BLEdata.set("servicedata", (char *)Service_data.c_str());
+              #endif
               pub((char *)topic.c_str(),BLEdata);
               if (strcmp(d[4].extract, "fe95") == 0) {
                   int pos = -1;

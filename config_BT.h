@@ -32,6 +32,7 @@
 #define ZgatewayBT_v6xx // comment if you don't have a firmware version of HM10/11 >= v601
 #define delimiter "4f4b2b444953413a"
 #define delimiter_length 16
+#define pubBLEServiceData true // comment if you don't want to publish service data (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 // if not commented Home presence integration with HOME ASSISTANT is activated
