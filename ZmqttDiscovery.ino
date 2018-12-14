@@ -34,7 +34,7 @@ void pubMqttDiscovery()
                   will_Topic, "connectivity", "",                               //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "",                    //set,payload_on,payload_off,unit_of_meas,
                   false, true, 0,                                               //set optimistic,retain, off_delay
-                  Gateway_AnnouncementMsg, will_Message,false                  //set,payload_avalaible,payload_not avalaible   ,is a child device
+                  Gateway_AnnouncementMsg, will_Message,false,""                //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic, state on, state off
   );                       
 
 #ifdef ZsensorBME280
@@ -57,7 +57,7 @@ void pubMqttDiscovery()
                     BMETOPIC, BMEsensor[i][1], (char *)getUniqueId(BMEsensor[i][1], BMEsensor[i][2]).c_str(),
                     will_Topic, BMEsensor[i][3], BMEsensor[i][4],
                     BMEsensor[i][5], BMEsensor[i][6], BMEsensor[i][7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
   }
 #endif
 
@@ -76,7 +76,7 @@ void pubMqttDiscovery()
                     DHTTOPIC, DHTsensor[i][1], (char *)getUniqueId(DHTsensor[i][1], DHTsensor[i][2]).c_str(),
                     will_Topic, DHTsensor[i][3], DHTsensor[i][4],
                     DHTsensor[i][5], DHTsensor[i][6], DHTsensor[i][7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
   }
 #endif
 
@@ -91,7 +91,7 @@ void pubMqttDiscovery()
                     ADCTOPIC, ADCsensor[1], (char *)getUniqueId(ADCsensor[1], ADCsensor[2]).c_str(),
                     will_Topic, ADCsensor[3], ADCsensor[4],
                     ADCsensor[5], ADCsensor[6], ADCsensor[7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
 #endif
 
 #ifdef ZsensorBH1750
@@ -111,7 +111,7 @@ void pubMqttDiscovery()
                     subjectBH1750toMQTT, BH1750sensor[i][1], (char *)getUniqueId(BH1750sensor[i][1], BH1750sensor[i][2]).c_str(),
                     will_Topic, BH1750sensor[i][3], BH1750sensor[i][4],
                     BH1750sensor[i][5], BH1750sensor[i][6], BH1750sensor[i][7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
   }
 #endif
 
@@ -132,7 +132,7 @@ void pubMqttDiscovery()
                     subjectTSL12561toMQTT, TSL2561sensor[i][1], (char *)getUniqueId(TSL2561sensor[i][1], TSL2561sensor[i][2]).c_str(),
                     will_Topic, TSL2561sensor[i][3], TSL2561sensor[i][4],
                     TSL2561sensor[i][5], TSL2561sensor[i][6], TSL2561sensor[i][7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
   }
 #endif
 
@@ -147,7 +147,7 @@ void pubMqttDiscovery()
                     subjectHCSR501toMQTT, HCSR501sensor[1], (char *)getUniqueId(HCSR501sensor[1], HCSR501sensor[2]).c_str(),
                     will_Topic, HCSR501sensor[3], HCSR501sensor[4],
                     HCSR501sensor[5], HCSR501sensor[6], HCSR501sensor[7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
 #endif
 
 #ifdef ZsensorGPIOInput
@@ -161,7 +161,7 @@ void pubMqttDiscovery()
                     subjectGPIOInputtoMQTT, GPIOInputsensor[1], (char *)getUniqueId(GPIOInputsensor[1], GPIOInputsensor[2]).c_str(),
                     will_Topic, GPIOInputsensor[3], GPIOInputsensor[4],
                     GPIOInputsensor[5], GPIOInputsensor[6], GPIOInputsensor[7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
 #endif
 
 #ifdef ZsensorINA226
@@ -181,11 +181,23 @@ void pubMqttDiscovery()
                     subjectINA226toMQTT, INA226sensor[i][1], (char *)getUniqueId(INA226sensor[i][1], INA226sensor[i][2]).c_str(),
                     will_Topic, INA226sensor[i][3], INA226sensor[i][4],
                     INA226sensor[i][5], INA226sensor[i][6], INA226sensor[i][7],
-                    true, false, 0,"","",true);
+                    true, false, 0,"","",true,"");
   }
 #endif
 
+#ifdef ZactuatorONOFF
+  trc(F("actuatorONOFFDiscovery"));
+  char * actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "","","ON", "OFF", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
+   trc(F("CreateDiscoverySensor"));
+   trc(actuatorONOFF[1]);
+    createDiscovery(actuatorONOFF[0],
+                    subjectGTWONOFFtoMQTT, actuatorONOFF[1], (char *)getUniqueId(actuatorONOFF[1], actuatorONOFF[2]).c_str(),
+                    will_Topic, actuatorONOFF[3], actuatorONOFF[4],
+                    actuatorONOFF[5], actuatorONOFF[6], actuatorONOFF[7],
+                    false, true, 0,"","",true,subjectMQTTtoONOFF);
+#endif
 }
 
 void createDiscovery(char * sensor_type,
@@ -193,7 +205,7 @@ void createDiscovery(char * sensor_type,
                      char * availability_topic, char * device_class, char * value_template,
                      char * payload_on, char * payload_off, char * unit_of_meas,
                      bool optimistic, bool retain, int off_delay,
-                     char * payload_available, char * payload_not_avalaible, boolean child_device )
+                     char * payload_available, char * payload_not_avalaible, boolean child_device , char * command_topic)
 {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &sensor = jsonBuffer.createObject();
@@ -210,6 +222,7 @@ void createDiscovery(char * sensor_type,
   if (off_delay != 0)             sensor.set("off_delay", off_delay); //off_delay
   if (payload_available[0])       sensor.set("pl_avail", payload_available); // payload_on
   if (payload_not_avalaible[0])   sensor.set("pl_not_avail", payload_not_avalaible); //payload_off
+  if (command_topic[0])           sensor.set("cmd_t", command_topic); //command_topic
 
 /*if (strcmp(s_name, Gateway_Name) == 0){
   JsonArray &json_attributes = sensor.createNestedArray("json_attributes");

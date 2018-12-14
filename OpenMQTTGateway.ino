@@ -870,7 +870,6 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   //YELLOW ON
   digitalWrite(led_send, LOW);
 
-  trc(F("Creating Json buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
@@ -900,37 +899,35 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZgatewayRFM69
       MQTTtoRFM69(topicOri, jsondata);
     #endif
-    #ifdef ZactuatorONOFF
+   #endif
+    #ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
       MQTTtoONOFF(topicOri, jsondata);
     #endif
-   #endif
   } else { // not a json object --> simple decoding
-   #ifdef simplePublishing
-    #ifdef ZgatewayRF
-      MQTTtoRF(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayRF315
-      MQTTtoRF315(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayRF2
-      MQTTtoRF2(topicOri, datacallback);
-    #endif
-    #ifdef Zgateway2G
-      MQTTto2G(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewaySRFB
-      MQTTtoSRFB(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayIR
-      MQTTtoIR(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayRFM69
-      MQTTtoRFM69(topicOri, datacallback);
-    #endif
-    #ifdef ZactuatorONOFF
-      MQTTtoONOFF(topicOri, datacallback);
-    #endif
-   #endif
+  #ifdef ZgatewayRF
+    MQTTtoRF(topicOri, datacallback);
+  #endif
+  #ifdef ZgatewayRF315
+    MQTTtoRF315(topicOri, datacallback);
+  #endif
+  #ifdef ZgatewayRF2
+    MQTTtoRF2(topicOri, datacallback);
+  #endif
+  #ifdef Zgateway2G
+    MQTTto2G(topicOri, datacallback);
+  #endif
+  #ifdef ZgatewaySRFB
+    MQTTtoSRFB(topicOri, datacallback);
+  #endif
+  #ifdef ZgatewayIR
+    MQTTtoIR(topicOri, datacallback);
+  #endif
+  #ifdef ZgatewayRFM69
+    MQTTtoRFM69(topicOri, datacallback);
+  #endif
+  #ifdef ZactuatorONOFF
+    MQTTtoONOFF(topicOri, datacallback);
+  #endif
   }
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
