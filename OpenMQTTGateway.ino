@@ -1051,7 +1051,7 @@ void pub(char * topicori, JsonObject& data){
         #if defined(ESP8266)
           yield();
         #endif
-        if (p.value.is<unsigned long>() || p.value.is<int>()) {
+        if (p.value.is<unsigned long>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an unsigned long
           trc(p.key);
           trc(p.value.as<unsigned long>());
           if (strcmp(p.key, "value") == 0){ // if data is a value we don't integrate the name into the topic
@@ -1059,6 +1059,10 @@ void pub(char * topicori, JsonObject& data){
           }else{ // if data is not a value we integrate the name into the topic
             pub(topic + "/" + String(p.key),p.value.as<unsigned long>());
           }
+        }else if (p.value.is<int>()) {
+          trc(p.key);
+          trc(p.value.as<int>());
+          pub(topic + "/" + String(p.key),p.value.as<int>());
         } else if (p.value.is<float>()) {
           trc(p.key);
           trc(p.value.as<float>());
