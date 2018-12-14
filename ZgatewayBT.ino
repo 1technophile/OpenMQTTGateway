@@ -443,7 +443,7 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
 
 void haRoomPresence(JsonObject& HomePresence){
   trc("BLE DISTANCE :");
-  int BLErssi = HomePresence["rssi"];
+  double BLErssi = HomePresence["rssi"];
   double ratio = BLErssi/-59;
   double distance = (0.89)* pow(ratio,7.7095) + 0.11;  
   HomePresence["distance"] = distance;
