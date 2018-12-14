@@ -136,9 +136,7 @@ boolean RF315toMQTT(){
 #ifdef jsonPublishing
   void MQTTtoRF315(char * topicOri, JsonObject& RF315data) { // json object decoding
   
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF315) {
+   if (strcmp(topicOri,subjectMQTTtoRF315) == 0){
       trc(F("MQTTtoRF315 json data analysis"));
       unsigned long data = RF315data["value"];
       if (data != 0) {

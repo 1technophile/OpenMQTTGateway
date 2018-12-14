@@ -137,9 +137,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
 #ifdef jsonPublishing
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
   
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF) {
+   if (strcmp(topicOri,subjectMQTTtoRF) == 0){
       trc(F("MQTTtoRF json data analysis"));
       unsigned long data = RFdata["value"];
       if (data != 0) {
