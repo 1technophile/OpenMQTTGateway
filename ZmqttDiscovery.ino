@@ -214,6 +214,126 @@ void pubMqttDiscovery()
                     gatewayRF[5], gatewayRF[6], gatewayRF[7],
                     false, false, 0,"","",true,"");
 #endif
+
+#ifdef ZgatewayRF2
+  // Sensor to display RF received value 
+  trc(F("gatewayRF2Discovery"));
+  char * gatewayRF2[8] = {"sensor", "gatewayRF2", "", "","{{ value_json.value }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayRF2[1]);
+    createDiscovery(gatewayRF2[0],
+                    subjectRF2toMQTT, gatewayRF2[1], (char *)getUniqueId(gatewayRF2[1], gatewayRF2[2]).c_str(),
+                    will_Topic, gatewayRF2[3], gatewayRF2[4],
+                    gatewayRF2[5], gatewayRF2[6], gatewayRF2[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef ZgatewayRF315
+  // Sensor to display RF received value 
+  trc(F("gatewayRF315Discovery"));
+  char * gatewayRF315[8] = {"sensor", "gatewayRF315", "", "","{{ value_json.value }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayRF315[1]);
+    createDiscovery(gatewayRF315[0],
+                    subjectRF315toMQTT, gatewayRF315[1], (char *)getUniqueId(gatewayRF315[1], gatewayRF315[2]).c_str(),
+                    will_Topic, gatewayRF315[3], gatewayRF315[4],
+                    gatewayRF315[5], gatewayRF315[6], gatewayRF315[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef ZgatewayRFM69
+  // Sensor to display RF received value 
+  trc(F("gatewayRFM69Discovery"));
+  char * gatewayRFM69[8] = {"sensor", "gatewayRFM69", "", "","{{ value_json.value }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayRFM69[1]);
+    createDiscovery(gatewayRFM69[0],
+                    subjectRFM69toMQTT, gatewayRFM69[1], (char *)getUniqueId(gatewayRFM69[1], gatewayRFM69[2]).c_str(),
+                    will_Topic, gatewayRFM69[3], gatewayRFM69[4],
+                    gatewayRFM69[5], gatewayRFM69[6], gatewayRFM69[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef ZgatewaySRFB
+  // Sensor to display RF received value 
+  trc(F("gatewaySRFBDiscovery"));
+  char * gatewaySRFB[8] = {"sensor", "gatewaySRFB", "", "","{{ value_json.value }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewaySRFB[1]);
+    createDiscovery(gatewaySRFB[0],
+                    subjectSRFBtoMQTT, gatewaySRFB[1], (char *)getUniqueId(gatewaySRFB[1], gatewaySRFB[2]).c_str(),
+                    will_Topic, gatewaySRFB[3], gatewaySRFB[4],
+                    gatewaySRFB[5], gatewaySRFB[6], gatewaySRFB[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef ZgatewayPilight
+  // Sensor to display RF received value 
+  trc(F("gatewayPilightDiscovery"));
+  char * gatewayPilight[8] = {"sensor", "gatewayPilight", "", "","{{ value_json.message }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayPilight[1]);
+    createDiscovery(gatewayPilight[0],
+                    subjectPilighttoMQTT, gatewayPilight[1], (char *)getUniqueId(gatewayPilight[1], gatewayPilight[2]).c_str(),
+                    will_Topic, gatewayPilight[3], gatewayPilight[4],
+                    gatewayPilight[5], gatewayPilight[6], gatewayPilight[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef ZgatewayIR
+  // Sensor to display RF received value 
+  trc(F("gatewayIRDiscovery"));
+  char * gatewayIR[8] = {"sensor", "gatewayIR", "", "","{{ value_json.value }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayIR[1]);
+    createDiscovery(gatewayIR[0],
+                    subjectIRtoMQTT, gatewayIR[1], (char *)getUniqueId(gatewayIR[1], gatewayIR[2]).c_str(),
+                    will_Topic, gatewayIR[3], gatewayIR[4],
+                    gatewayIR[5], gatewayIR[6], gatewayIR[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef Zgateway2G
+  // Sensor to display RF received value 
+  trc(F("gateway2GDiscovery"));
+  char * gateway2G[8] = {"sensor", "gateway2G", "", "","{{ value_json.message }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gateway2G[1]);
+    createDiscovery(gateway2G[0],
+                    subject2GtoMQTT, gateway2G[1], (char *)getUniqueId(gateway2G[1], gateway2G[2]).c_str(),
+                    will_Topic, gateway2G[3], gateway2G[4],
+                    gateway2G[5], gateway2G[6], gateway2G[7],
+                    false, false, 0,"","",true,"");
+#endif
+
+#ifdef ZgatewayBT
+  // Sensor to display RF received value 
+  trc(F("gatewayBTDiscovery"));
+  char * gatewayBT[8] = {"sensor", "gatewayBT", "", "","{{ value_json.message }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayBT[1]);
+    createDiscovery(gatewayBT[0],
+                    subjectBTtoMQTT, gatewayBT[1], (char *)getUniqueId(gatewayBT[1], gatewayBT[2]).c_str(),
+                    will_Topic, gatewayBT[3], gatewayBT[4],
+                    gatewayBT[5], gatewayBT[6], gatewayBT[7],
+                    false, false, 0,"","",true,"");
+#endif
 }
 
 void createDiscovery(char * sensor_type,
