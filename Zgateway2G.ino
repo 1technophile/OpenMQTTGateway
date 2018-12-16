@@ -102,8 +102,9 @@ boolean _2GtoMQTT(){
   void MQTTto2G(char * topicOri, char * datacallback) {
   
     String data = datacallback;
+    String topic = topicOri;
     
-   if (strcmp(topicOri,subjectMQTTto2G) == 0){
+    if (topic == subjectMQTTto2G) {
       trc(F("MQTTto2G data analysis"));
       // 2G DATA ANALYSIS
       String phone_number = "";
