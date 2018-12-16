@@ -231,9 +231,7 @@ boolean RFM69toMQTT(void) {
 #ifdef jsonPublishing
   void MQTTtoRFM69(char * topicOri, JsonObject& RFM69data) {
   
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRFM69) {
+   if (strcmp(topicOri,subjectMQTTtoRFM69) == 0){
       const char * data = RFM69data["data"];
       trc(F("MQTTtoRFM69 json data analysis"));
       if(data){

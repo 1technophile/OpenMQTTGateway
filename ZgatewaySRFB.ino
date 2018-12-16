@@ -272,10 +272,9 @@ bool _rfbToChar(byte * in, char * out) {
   void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
   
     // RF DATA ANALYSIS
-    String topic = topicOri;
     const char * raw = SRFBdata["raw"];
     int valueRPT =  SRFBdata["repeat"]|1;
-    if (topic == subjectMQTTtoSRFB){
+   if (strcmp(topicOri,subjectMQTTtoSRFB) == 0){
       trc(F("MQTTtoSRFB json data analysis"));
       if (raw){ // send raw in priority when defined in the json
         trc(F("MQTTtoSRFB raw ok"));

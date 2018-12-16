@@ -69,11 +69,9 @@
 
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  #define MQTT_MAX_PACKET_SIZE 1024
   #define array_size 12
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
 #else // boards with smaller memory
-  #define MQTT_MAX_PACKET_SIZE 256
   #define array_size 4
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
 #endif
@@ -207,10 +205,6 @@ boolean reconnect() {
       pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
       pub(version_Topic,OMG_VERSION,will_Retain);
-      //home assistant discovery
-      #ifdef ZmqttDiscovery
-      pubMqttDiscovery();
-      #endif
 
       //Subscribing to topic
       if (client.subscribe(subjectMQTTtoX)) {
@@ -419,6 +413,8 @@ void setup()
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
+  trc(F("JSON_MSG_BUFFER"));
+  trc(JSON_MSG_BUFFER);
   trc(F("Setup OpenMQTTGateway end"));
 }
 
@@ -793,6 +789,7 @@ void stateMeasures(){
       #endif
       #ifdef ZmqttDiscovery
           modules = modules  + ZmqttDiscovery;
+          pubMqttDiscovery();
       #endif
       SYSdata["modules"] = modules;
       trc(modules);
@@ -873,7 +870,6 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   //YELLOW ON
   digitalWrite(led_send, LOW);
 
-  trc(F("Creating Json buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
@@ -903,37 +899,37 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZgatewayRFM69
       MQTTtoRFM69(topicOri, jsondata);
     #endif
-    #ifdef ZactuatorONOFF
+   #endif
+    #ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
       MQTTtoONOFF(topicOri, jsondata);
     #endif
-   #endif
   } else { // not a json object --> simple decoding
-   #ifdef simplePublishing
-    #ifdef ZgatewayRF
-      MQTTtoRF(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayRF315
-      MQTTtoRF315(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayRF2
-      MQTTtoRF2(topicOri, datacallback);
-    #endif
-    #ifdef Zgateway2G
-      MQTTto2G(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewaySRFB
-      MQTTtoSRFB(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayIR
-      MQTTtoIR(topicOri, datacallback);
-    #endif
-    #ifdef ZgatewayRFM69
-      MQTTtoRFM69(topicOri, datacallback);
-    #endif
-    #ifdef ZactuatorONOFF
-      MQTTtoONOFF(topicOri, datacallback);
-    #endif
-   #endif
+   #ifdef simplepublishing
+      #ifdef ZgatewayRF
+        MQTTtoRF(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayRF315
+        MQTTtoRF315(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayRF2
+        MQTTtoRF2(topicOri, datacallback);
+      #endif
+      #ifdef Zgateway2G
+        MQTTto2G(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewaySRFB
+        MQTTtoSRFB(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayIR
+        MQTTtoIR(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayRFM69
+        MQTTtoRFM69(topicOri, datacallback);
+      #endif
+  #endif
+  #ifdef ZactuatorONOFF
+    MQTTtoONOFF(topicOri, datacallback);
+  #endif
   }
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
@@ -1054,7 +1050,7 @@ void pub(char * topicori, JsonObject& data){
         #if defined(ESP8266)
           yield();
         #endif
-        if (p.value.is<unsigned long>() || p.value.is<int>()) {
+        if (p.value.is<unsigned long>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an unsigned long
           trc(p.key);
           trc(p.value.as<unsigned long>());
           if (strcmp(p.key, "value") == 0){ // if data is a value we don't integrate the name into the topic
@@ -1062,6 +1058,10 @@ void pub(char * topicori, JsonObject& data){
           }else{ // if data is not a value we integrate the name into the topic
             pub(topic + "/" + String(p.key),p.value.as<unsigned long>());
           }
+        }else if (p.value.is<int>()) {
+          trc(p.key);
+          trc(p.value.as<int>());
+          pub(topic + "/" + String(p.key),p.value.as<int>());
         } else if (p.value.is<float>()) {
           trc(p.key);
           trc(p.value.as<float>());

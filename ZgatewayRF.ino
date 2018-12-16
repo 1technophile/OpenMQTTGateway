@@ -68,7 +68,10 @@ void RFtoMQTT(){
     
     unsigned long MQTTvalue = RFdata.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RFtoMQTT")); 
+        trc(F("Adv data RFtoMQTT"));
+        #ifdef ZmqttDiscovery //component creation for HA
+            RFtoMQTTdiscovery(MQTTvalue);
+        #endif
         pub(subjectRFtoMQTT,RFdata);
         if (repeatRFwMQTT){
             trc(F("Publish RF for repeat"));
@@ -77,6 +80,24 @@ void RFtoMQTT(){
     } 
   }
 }
+
+#ifdef ZmqttDiscovery
+void RFtoMQTTdiscovery(unsigned long MQTTvalue){//on the fly switch creation from received RF values
+  char val[11];
+  sprintf(val, "%lu", MQTTvalue);
+  trc(F("switchRFDiscovery"));
+  char * switchRF[8] = {"switch", val, "", "","",val, "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySwitch"));
+   trc(switchRF[1]);
+    createDiscovery(switchRF[0],
+                    subjectRFtoMQTT, switchRF[1], (char *)getUniqueId(switchRF[1], switchRF[2]).c_str(),
+                    will_Topic, switchRF[3], switchRF[4],
+                    switchRF[5], switchRF[6], switchRF[7],
+                    true, false, 0,"","",true,subjectMQTTtoRF);
+}
+#endif
 
 #ifdef simplePublishing
 void MQTTtoRF(char * topicOri, char * datacallback) {
@@ -137,9 +158,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
 #ifdef jsonPublishing
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
   
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF) {
+   if (strcmp(topicOri,subjectMQTTtoRF) == 0){
       trc(F("MQTTtoRF json data analysis"));
       unsigned long data = RFdata["value"];
       if (data != 0) {

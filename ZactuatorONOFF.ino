@@ -38,14 +38,13 @@ void setupONOFF(){
   trc(F("ZactuatorONOFF setup done "));
 }
 
-#ifdef simplePublishing
   void MQTTtoONOFF(char * topicOri, char * datacallback){
   
-    bool boolSWITCHTYPE;
-    boolSWITCHTYPE = to_bool(datacallback);
-    String topic = topicOri;
-   
-    if (topic == subjectMQTTtoONOFF){
+    int boolSWITCHTYPE;
+    if (strcmp(datacallback, "ON") == 0) boolSWITCHTYPE = 1;
+    if (strcmp(datacallback, "OFF") == 0) boolSWITCHTYPE = 0; 
+
+   if (strcmp(topicOri,subjectMQTTtoONOFF) == 0){
       trc(F("MQTTtoONOFF data analysis"));
       trc(boolSWITCHTYPE);
       digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
@@ -53,14 +52,9 @@ void setupONOFF(){
       pub(subjectGTWONOFFtoMQTT, datacallback);
     }
   }
-#endif
-
-#ifdef jsonPublishing
   void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
    
-    String topic = topicOri;
-   
-    if (topic == subjectMQTTtoONOFF){
+   if (strcmp(topicOri,subjectMQTTtoONOFF) == 0){
       trc(F("MQTTtoONOFF json data analysis"));
       int boolSWITCHTYPE = ONOFFdata["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {
@@ -74,5 +68,4 @@ void setupONOFF(){
       }
     }
   }
-#endif
 #endif

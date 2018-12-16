@@ -62,10 +62,10 @@ void pilightCallback(const String &protocol, const String &message, int status,
 }
 
 void MQTTtoPilight(char * topicOri, JsonObject& Pilightdata) {
-String topic = topicOri;
+
 int result = 0;
- 
-if (topic == subjectMQTTtoPilight) {
+
+   if (strcmp(topicOri,subjectMQTTtoPilight) == 0){
     trc(F("MQTTtoPilight json data analysis"));
     const char * message = Pilightdata["message"];
     const char * protocol = Pilightdata["protocol"];
