@@ -904,7 +904,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       MQTTtoONOFF(topicOri, jsondata);
     #endif
   } else { // not a json object --> simple decoding
-   #ifdef simplepublishing
+   #ifdef simplePublishing
       #ifdef ZgatewayRF
         MQTTtoRF(topicOri, datacallback);
       #endif
