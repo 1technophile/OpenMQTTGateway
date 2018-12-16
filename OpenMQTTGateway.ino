@@ -904,26 +904,28 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       MQTTtoONOFF(topicOri, jsondata);
     #endif
   } else { // not a json object --> simple decoding
-  #ifdef ZgatewayRF
-    MQTTtoRF(topicOri, datacallback);
-  #endif
-  #ifdef ZgatewayRF315
-    MQTTtoRF315(topicOri, datacallback);
-  #endif
-  #ifdef ZgatewayRF2
-    MQTTtoRF2(topicOri, datacallback);
-  #endif
-  #ifdef Zgateway2G
-    MQTTto2G(topicOri, datacallback);
-  #endif
-  #ifdef ZgatewaySRFB
-    MQTTtoSRFB(topicOri, datacallback);
-  #endif
-  #ifdef ZgatewayIR
-    MQTTtoIR(topicOri, datacallback);
-  #endif
-  #ifdef ZgatewayRFM69
-    MQTTtoRFM69(topicOri, datacallback);
+   #ifdef simplepublishing
+      #ifdef ZgatewayRF
+        MQTTtoRF(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayRF315
+        MQTTtoRF315(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayRF2
+        MQTTtoRF2(topicOri, datacallback);
+      #endif
+      #ifdef Zgateway2G
+        MQTTto2G(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewaySRFB
+        MQTTtoSRFB(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayIR
+        MQTTtoIR(topicOri, datacallback);
+      #endif
+      #ifdef ZgatewayRFM69
+        MQTTtoRFM69(topicOri, datacallback);
+      #endif
   #endif
   #ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, datacallback);
