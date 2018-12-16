@@ -29,7 +29,7 @@ install:
   - python get.py
   - cd /usr/local/share/arduino/OpenMQTTGateway
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
-  - arduino --install-boards esp8266:esp8266
+  - arduino --install-boards esp8266:esp8266@2.4.2
   - arduino --board $BD --save-prefs
 script:
   - arduino --verify --board $BD $PWD/OpenMQTTGateway.ino
