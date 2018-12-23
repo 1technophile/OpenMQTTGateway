@@ -386,13 +386,18 @@ void createDiscovery(char * sensor_type,
 String getMacAddress()
 {
   uint8_t baseMac[6];
-#ifdef ESP8266
-  WiFi.macAddress(baseMac);
-#else
-  esp_read_mac(baseMac, ESP_MAC_WIFI_STA);
-#endif
   char baseMacChr[13] = {0};
+#if defined(ESP8266)
+  WiFi.macAddress(baseMac);
   sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
+#elif defined(ESP32)
+  esp_read_mac(baseMac, ESP_MAC_WIFI_STA);
+  sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
+#else
+  sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+#endif
+
+
   return String(baseMacChr);
 }
 
