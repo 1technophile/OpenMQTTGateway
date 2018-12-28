@@ -832,7 +832,7 @@ void RECEIVE_ATTR RCSwitch::handleInterrupt() {
   }
 
   // заносим в массив длительность очередного принятого импульса
-  if (changeCount > 0 & duration < 100) { // игнорируем шумовые всплески менее 100 мкс
+  if (changeCount > 0 && duration < 100) { // игнорируем шумовые всплески менее 100 мкс
     RCSwitch::timings[changeCount-1] += duration;   
   } else {
     RCSwitch::timings[changeCount++] = duration;

@@ -25,8 +25,6 @@
 
 */
 #define discovery_Topic "homeassistant"
-#define omgStatus //uncomment to create OMG status sensor
-#define discBme280 //uncomment to enable bme280 sensors
 
 #define DEVICENAME "OpenMQTTGateway " Gateway_Name
-#define DEVICEMANUFACTURER "AnimaVitis"
+#define DEVICEMANUFACTURER "OMG_community"

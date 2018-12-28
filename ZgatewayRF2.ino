@@ -217,9 +217,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 #ifdef jsonPublishing
   void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
   
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRF2) {
+   if (strcmp(topicOri,subjectMQTTtoRF2) == 0){
       trc(F("MQTTtoRF2 json data analysis"));
       int boolSWITCHTYPE = RF2data["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {

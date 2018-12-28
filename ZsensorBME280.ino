@@ -173,7 +173,7 @@ void MeasureTempHumAndPressure()
       }else{
         trc(F("Same Altitude Feet don't send it"));
       }
-      if(BME280data.size()>0) pub(BME,BME280data);
+      if(BME280data.size()>0) pub(BMETOPIC,BME280data);
     }
     persisted_bme_tempc = BmeTempC;
     persisted_bme_tempf = BmeTempF;

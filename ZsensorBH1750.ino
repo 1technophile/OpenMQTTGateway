@@ -64,7 +64,7 @@ void MeasureLightIntensity()
     static float persistedlf;
     static float persistedlw;
     unsigned int Lux;
-    float FtCd;
+    float ftcd;
     float Wattsm2;
 
     // Check if reads failed and exit early (to try again).
@@ -78,7 +78,7 @@ void MeasureLightIntensity()
 
       // Calculate the Values
       Lux = i/1.2;  // Convert to Lux
-      FtCd = Lux/10.764;
+      ftcd = Lux/10.764;
       Wattsm2 = Lux/683.0;
 
       /*
@@ -104,8 +104,8 @@ void MeasureLightIntensity()
        }
 
       // Generate FtCd
-      if(FtCd != persistedlf || bh1750_always){
-        BH1750data.set("ftCd", (unsigned int)FtCd);
+      if(ftcd != persistedlf || bh1750_always){
+        BH1750data.set("ftcd", (unsigned int)ftcd);
       }else{
         trc(F("Same ftcd don't send it"));
       }
@@ -119,7 +119,7 @@ void MeasureLightIntensity()
       if(BH1750data.size()>0) pub(subjectBH1750toMQTT,BH1750data);
     }
     persistedll = Lux;
-    persistedlf = FtCd;
+    persistedlf = ftcd;
     persistedlw = Wattsm2;
   }
 }

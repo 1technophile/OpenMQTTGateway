@@ -81,9 +81,9 @@ void MeasureINA226(){
         dtostrf(volt,6,3,volt_c);
         dtostrf(current,6,3,current_c);
         dtostrf(power,6,3,power_c);
-        INA226data.set("Volt", (char *)volt_c);
-        INA226data.set("Current", (char *)current_c);
-        INA226data.set("Power", (char *)power_c);
+        INA226data.set("volt", (char *)volt_c);
+        INA226data.set("current", (char *)current_c);
+        INA226data.set("power", (char *)power_c);
         pub(subjectINA226toMQTT,INA226data);
     }
 }
