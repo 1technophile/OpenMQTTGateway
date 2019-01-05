@@ -173,175 +173,129 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
       
   #else // arduino or ESP8266 working with HM10/11
 
-#include <SoftwareSerial.h>
-
-#define STRING_MSG "OK+DISC:"
-#define RESPONSE_MSG "OK+DISIS"
-#define RESP_END_MSG "OK+DISCE"
-#define SETUP_MSG "OK+RESET"
-
-SoftwareSerial softserial(BT_RX, BT_TX);
-
-String returnedString = "";
-unsigned long timebt = 0;
-
-// this struct define which parts of the hexadecimal chain we extract and what to do with these parts
-struct decompose d[6] = {{"mac",16,12,true},{"typ",28,2,false},{"rsi",30,2,false},{"rdl",32,2,false},{"sty",44,4,true},{"rda",34,60,false}};
-
-void setupBT() {
-  softserial.begin(9600);
-  softserial.print(F("AT+ROLE1"));
-  delay(100);
-  softserial.print(F("AT+IMME1"));
-  delay(100);
-  softserial.print(F("AT+RESET"));
-  delay(100);
-  trc(F("ZgatewayBT HM1X setup done "));
-}
-
-#ifdef ZgatewayBT_v6xx
-#define QUESTION_MSG "AT+DISA?"
-boolean BTtoMQTT() {
-
-  //extract serial data from module in hexa format
-  while (softserial.available() > 0) {
-      int a = softserial.read();
-      if (a < 16) {
-        returnedString = returnedString + "0";
-      } 
-        returnedString = returnedString + String(a,HEX);  
-  }
-
-  if (millis() > (timebt + TimeBtw_Read)) {//retriving data
-      timebt = millis();
-      #if defined(ESP8266)
-        yield();
-      #endif
-      if (returnedString != "") {
-        size_t pos = 0;
-        while ((pos = returnedString.lastIndexOf(delimiter)) != -1) {
+    #include <SoftwareSerial.h>
+    
+    #define STRING_MSG "OK+DISC:"
+    #define QUESTION_MSG "AT+DISA?"
+    #define RESPONSE_MSG "OK+DISIS"
+    #define RESP_END_MSG "OK+DISCE"
+    #define SETUP_MSG "OK+RESET"
+    
+    SoftwareSerial softserial(BT_RX, BT_TX);
+    
+    String returnedString = "";
+    unsigned long timebt = 0;
+    
+    // this struct define which parts of the hexadecimal chain we extract and what to do with these parts
+    struct decompose d[6] = {{"mac",16,12,true},{"typ",28,2,false},{"rsi",30,2,false},{"rdl",32,2,false},{"sty",44,4,true},{"rda",34,60,false}};
+    
+    void setupBT() {
+      softserial.begin(9600);
+      softserial.print(F("AT+ROLE1"));
+      delay(100);
+      softserial.print(F("AT+IMME1"));
+      delay(100);
+      softserial.print(F("AT+RESET"));
+      delay(100);
+      trc(F("ZgatewayBT HM1X setup done "));
+    }
+    
+    boolean BTtoMQTT() {
+    
+      //extract serial data from module in hexa format
+      while (softserial.available() > 0) {
+          int a = softserial.read();
+          if (a < 16) {
+            returnedString = returnedString + "0";
+          } 
+            returnedString = returnedString + String(a,HEX);  
+      }
+    
+      if (millis() > (timebt + TimeBtw_Read)) {//retriving data
+          timebt = millis();
           #if defined(ESP8266)
             yield();
           #endif
-          String token = returnedString.substring(pos);
-          returnedString.remove(pos,returnedString.length() );
-          char token_char[token.length()+1];
-          token.toCharArray(token_char, token.length()+1);
-          trc(token);
-          if ( token.length() > 60){// we extract data only if we have detailled infos
-            for(int i =0; i<6;i++)
-            {
-              extract_char(token_char,d[i].extract,d[i].start, d[i].len ,d[i].reverse, false);
-              if (i == 3) d[5].len = (int)strtol(d[i].extract, NULL, 16) * 2; // extracting the length of the rest data
-            }
-  
-            if((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
-            {
-              trc(F("Creating BLE buffer"));
-              StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-              JsonObject& BLEdata = jsonBuffer.createObject();
-              #ifdef subjectHomePresence
-                String HomePresenceId;
-                for (int i = 0; i<12; i++){
-                  HomePresenceId += String(d[0].extract[i]);
-                  if(((i-1) % 2 == 0) && (i!=11)) HomePresenceId += ":";
+          if (returnedString != "") {
+            size_t pos = 0;
+            while ((pos = returnedString.lastIndexOf(delimiter)) != -1) {
+              #if defined(ESP8266)
+                yield();
+              #endif
+              String token = returnedString.substring(pos);
+              returnedString.remove(pos,returnedString.length() );
+              char token_char[token.length()+1];
+              token.toCharArray(token_char, token.length()+1);
+              trc(token);
+              if ( token.length() > 60){// we extract data only if we have detailled infos
+                for(int i =0; i<6;i++)
+                {
+                  extract_char(token_char,d[i].extract,d[i].start, d[i].len ,d[i].reverse, false);
+                  if (i == 3) d[5].len = (int)strtol(d[i].extract, NULL, 16) * 2; // extracting the length of the rest data
                 }
-                trc(F("HomePresenceId"));      
-                trc(HomePresenceId);
-                BLEdata.set("id", (char *)HomePresenceId.c_str());
-              #endif
-              strupp(d[0].extract);
-              String topic = subjectBTtoMQTT + String(d[0].extract);
-              int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
-              BLEdata.set("rssi", (int)rssi);
-              #ifdef subjectHomePresence
-                haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
-              #endif
-              String Service_data(d[5].extract);
-              Service_data = Service_data.substring(14);
-              #ifdef pubBLEServiceData
-                BLEdata.set("servicedata", (char *)Service_data.c_str());
-              #endif
-              pub((char *)topic.c_str(),BLEdata);
-              if (strcmp(d[4].extract, "fe95") == 0) {
-                  int pos = -1;
-                  pos = strpos(d[5].extract,"209800");
-                  if (pos != -1) {
-                    trc("mi flora data reading");
-                    boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"20aa01");
-                  if (pos != -1){
-                    trc("mi jia data reading");
-                    boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
-                  }
-                  return true;
-               }
+      
+                if((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
+                {
+                  trc(F("Creating BLE buffer"));
+                  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+                  JsonObject& BLEdata = jsonBuffer.createObject();
+                  #ifdef subjectHomePresence
+                    String HomePresenceId;
+                    for (int i = 0; i<12; i++){
+                      HomePresenceId += String(d[0].extract[i]);
+                      if(((i-1) % 2 == 0) && (i!=11)) HomePresenceId += ":";
+                    }
+                    trc(F("HomePresenceId"));      
+                    trc(HomePresenceId);
+                    BLEdata.set("id", (char *)HomePresenceId.c_str());
+                  #endif
+                  strupp(d[0].extract);
+                  String topic = subjectBTtoMQTT + String(d[0].extract);
+                  int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
+                  BLEdata.set("rssi", (int)rssi);
+                  #ifdef subjectHomePresence
+                    haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
+                  #endif
+                  String Service_data(d[5].extract);
+                  Service_data = Service_data.substring(14);
+                  #ifdef pubBLEServiceData
+                    BLEdata.set("servicedata", (char *)Service_data.c_str());
+                  #endif
+                  pub((char *)topic.c_str(),BLEdata);
+                  if (strcmp(d[4].extract, "fe95") == 0) {
+                      int pos = -1;
+                      pos = strpos(d[5].extract,"209800");
+                      if (pos != -1) {
+                        trc("mi flora data reading");
+                        boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                      }
+                      pos = -1;
+                      pos = strpos(d[5].extract,"20aa01");
+                      if (pos != -1){
+                        trc("mi jia data reading");
+                        boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                      }
+                      return true;
+                   }
+                }
+              }
             }
+            returnedString = ""; //init data string
+            return false;
           }
-        }
-        returnedString = ""; //init data string
+          softserial.print(F(QUESTION_MSG));
+          return false;
+      }else{   
         return false;
       }
-      softserial.print(F(QUESTION_MSG));
-      return false;
-  }else{   
-    return false;
-  }
-}
-
-void strupp(char* beg)
-{
-    while (*beg = toupper(*beg))
-       ++beg;
-}
-
-#endif
-
-#ifndef ZgatewayBT_v6xx
-#define QUESTION_MSG "AT+DISI?"
-boolean BTtoMQTT() {
-  while (softserial.available() > 0) {
-     #if defined(ESP8266)
-      yield();
-     #endif
-    String discResult = softserial.readString();
-    if (discResult.indexOf(STRING_MSG)>=0){
-      discResult.replace(RESPONSE_MSG,"");
-      discResult.replace(RESP_END_MSG,"");
-      float device_number = discResult.length()/78.0;
-      if (device_number == (int)device_number){ // to avoid publishing partial values we detect if the serial data has been fully read = a multiple of 78
-        trc(F("Sending BT data to MQTT HM1X Version<v6xx"));
-        #if defined(ESP8266)
-          yield();
-        #endif
-        for (int i=0;i<(int)device_number;i++){
-             String onedevice = discResult.substring(0,78);
-             onedevice.replace(STRING_MSG,"");
-             String mac = onedevice.substring(53,65);
-             pub(subjectBTtoMQTT + mac,onedevice.substring(66,70));
-             discResult = discResult.substring(78);
-          }
-          return true;
-        }
-      }
-    if (discResult.indexOf(SETUP_MSG)>=0)
-    {
-      trc(F("Connection OK to HM-10"));
     }
-  }
-  if (millis() > (timebt + TimeBtw_Read)) {//retriving value of adresses and rssi
-       timebt = millis();
-       #if defined(ESP8266)
-        yield();
-       #endif
-       softserial.print(F(QUESTION_MSG));
-       
-  }
-  return false;
-}
-#endif
+    
+    void strupp(char* beg)
+    {
+        while (*beg = toupper(*beg))
+           ++beg;
+    }
+
 #endif
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){

@@ -41,13 +41,12 @@ void setupRF(){
   mySwitch.enableReceive(RF_RECEIVER_PIN); 
   trc(F("RF_RECEIVER_PIN "));
   trc(RF_RECEIVER_PIN);
-  trc(F("ZgatewayRF setup done "));
+  trc(F("RF setup ok"));
 }
 
 void RFtoMQTT(){
 
   if (mySwitch.available()){
-    trc(F("Creating RF buffer"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RFdata = jsonBuffer.createObject();
     trc(F("Rcv. RF"));
@@ -68,13 +67,12 @@ void RFtoMQTT(){
     
     unsigned long MQTTvalue = RFdata.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data RFtoMQTT"));
         #ifdef ZmqttDiscovery //component creation for HA
             RFtoMQTTdiscovery(MQTTvalue);
         #endif
         pub(subjectRFtoMQTT,RFdata);
         if (repeatRFwMQTT){
-            trc(F("Publish RF for repeat"));
+            trc(F("Pub RF for rpt"));
             pub(subjectMQTTtoRF,RFdata);
         }
     } 
@@ -159,34 +157,17 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
   
    if (strcmp(topicOri,subjectMQTTtoRF) == 0){
-      trc(F("MQTTtoRF json data analysis"));
+      trc(F("MQTTtoRF json analysis"));
       unsigned long data = RFdata["value"];
       if (data != 0) {
-        trc(F("MQTTtoRF data ok"));
-        int valuePRT =  RFdata["protocol"];
-        int valuePLSL = RFdata["delay"];
-        int valueBITS = RFdata["length"];
-        if ((valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
-          trc(F("MQTTtoRF dflt"));
-          mySwitch.setProtocol(1,350);
-          mySwitch.send(data, 24);
-          // Acknowledgement to the GTWRF topic
-          pub(subjectGTWRFtoMQTT, RFdata);  
-        } else if ((valuePRT != 0) || (valuePLSL  != 0)|| (valueBITS  != 0)){
-          trc(F("MQTTtoRF usr par."));
-          if (valuePRT == 0) valuePRT = 1;
-          if (valuePLSL == 0) valuePLSL = 350;
-          if (valueBITS == 0) valueBITS = 24;
-          trc(valuePRT);
-          trc(valuePLSL);
-          trc(valueBITS);
-          mySwitch.setProtocol(valuePRT,valuePLSL);
-          mySwitch.send(data, valueBITS);
-          // Acknowledgement to the GTWRF topic 
-          pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-        } 
+        int valuePRT =  RFdata["protocol"]|1;
+        int valuePLSL = RFdata["delay"]|350;
+        int valueBITS = RFdata["length"]|24;
+        mySwitch.setProtocol(valuePRT,valuePLSL);
+        mySwitch.send(data, valueBITS); 
+        pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       }else{
-        trc(F("MQTTtoRF Fail reading from json"));
+        trc(F("MQTTtoRF Fail read json"));
       }
     }
   }

@@ -479,10 +479,8 @@ void IRtoMQTT(){
 
 #ifdef jsonPublishing
   void MQTTtoIR(char * topicOri, JsonObject& IRdata) {
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoIR) {
+
+     if (strcmp(topicOri,subjectMQTTtoIR) == 0){ 
       trc(F("MQTTtoIR json data analysis"));
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];

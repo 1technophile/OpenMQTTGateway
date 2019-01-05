@@ -71,6 +71,8 @@
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   #define array_size 12
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}};
+  //Time used to wait for an interval before checking system measures
+  unsigned long timer_sys_measures = 0;
 #else // boards with smaller memory
   #define array_size 4
   unsigned long ReceivedSignal[array_size][2] ={{0,0},{0,0},{0,0},{0,0}};
@@ -178,20 +180,6 @@ unsigned long lastReconnectAttempt = 0;
 unsigned long timer_led_receive = 0;
 unsigned long timer_led_send = 0;
 unsigned long timer_led_error = 0;
-
-//Time used to wait for an interval before checking system measures
-unsigned long timer_sys_measures = 0;
-
-//Wifi manager parameters
-//flag for saving data
-bool shouldSaveConfig = true;
-//do we have been connected once to mqtt
-
-//callback notifying us of the need to save config
-void saveConfigCallback () {
-  trc("Should save config");
-  shouldSaveConfig = true;
-}
 
 boolean reconnect() {
 
@@ -444,6 +432,17 @@ void setup_wifi() {
 }
 
 #elif defined(ESP8266) && !defined(ESPWifiManualSetup)
+//Wifi manager parameters
+//flag for saving data
+bool shouldSaveConfig = true;
+//do we have been connected once to mqtt
+
+//callback notifying us of the need to save config
+void saveConfigCallback () {
+  trc("Should save config");
+  shouldSaveConfig = true;
+}
+
 void setup_wifimanager(){
     #ifdef cleanFS
     //clean FS, for testing
@@ -704,7 +703,7 @@ void loop()
   }
 }
 
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
@@ -715,19 +714,21 @@ void stateMeasures(){
       unsigned long uptime = millis()/1000;
       trc(uptime);
       SYSdata["uptime"] = uptime;
-      trc("Remaining memory");
-      uint32_t freeMem;
-      freeMem = ESP.getFreeHeap();
-      SYSdata["freeMem"] = freeMem;
-      trc(freeMem);
-      trc("RSSI");
-      long rssi = WiFi.RSSI();
-      SYSdata["rssi"] = rssi;
-      trc(rssi);
-      trc("SSID");
-      String SSID = WiFi.SSID();
-      SYSdata["SSID"] = SSID;
-      trc(SSID);
+      #if defined(ESP8266) || defined(ESP32)
+        trc("Remaining memory");
+        uint32_t freeMem;
+        freeMem = ESP.getFreeHeap();
+        SYSdata["freeMem"] = freeMem;
+        trc(freeMem);
+        trc("RSSI");
+        long rssi = WiFi.RSSI();
+        SYSdata["rssi"] = rssi;
+        trc(rssi);
+        trc("SSID");
+        String SSID = WiFi.SSID();
+        SYSdata["SSID"] = SSID;
+        trc(SSID);
+      #endif
       trc("Activated modules");
       String modules = "";
       #ifdef ZgatewayRF
