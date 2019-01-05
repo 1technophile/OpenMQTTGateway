@@ -69,7 +69,7 @@ RF supported protocols
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
     #define RF_RECEIVER_PIN 0 // D3 on nodemcu
-    #define RF_EMITTER_PIN 4 // RX on nodemcu if it doesn't work with 3, try with 4 (D2)
+    #define RF_EMITTER_PIN 3 // RX on nodemcu if it doesn't work with 3, try with 4 (D2)
 #elif defined(ESP32)
     #define RF_RECEIVER_PIN 13 // D13 on DOIT ESP32
     #define RF_EMITTER_PIN 12 // D12 on DOIT ESP32
