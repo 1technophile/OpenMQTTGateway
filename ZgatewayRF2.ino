@@ -100,7 +100,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 
 }
 
-#ifdef simplePublishing
+#ifdef simpleReceiving
   void MQTTtoRF2(char * topicOri, char * datacallback) {
   
     // RF DATA ANALYSIS
@@ -214,7 +214,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
   }
 #endif
 
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
   
    if (strcmp(topicOri,subjectMQTTtoRF2) == 0){

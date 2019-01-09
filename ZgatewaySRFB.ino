@@ -169,7 +169,7 @@ bool _rfbToChar(byte * in, char * out) {
     return true;
 }
 
-#ifdef simplePublishing
+#ifdef simpleReceiving
   void MQTTtoSRFB(char * topicOri, char * datacallback) {
   
     // RF DATA ANALYSIS
@@ -268,7 +268,7 @@ bool _rfbToChar(byte * in, char * out) {
     }
   }
 #endif
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTtoSRFB(char * topicOri, JsonObject& SRFBdata) {
   
     // RF DATA ANALYSIS

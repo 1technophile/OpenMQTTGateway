@@ -179,7 +179,7 @@ boolean RFM69toMQTT(void) {
   }
 }
 
-#ifdef simplePublishing
+#ifdef simpleReceiving
   void MQTTtoRFM69(char * topicOri, char * datacallback) {
     int loops;
     uint32_t startMillis;
@@ -228,7 +228,7 @@ boolean RFM69toMQTT(void) {
     }
   }
 #endif
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTtoRFM69(char * topicOri, JsonObject& RFM69data) {
   
    if (strcmp(topicOri,subjectMQTTtoRFM69) == 0){

@@ -77,7 +77,7 @@ boolean RF315toMQTT(){
   }
 }
 
-#ifdef simplePublishing
+#ifdef simpleReceiving
   void MQTTtoRF315(char * topicOri, char * datacallback) {
   
     unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
@@ -133,7 +133,7 @@ boolean RF315toMQTT(){
   }
 #endif
 
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTtoRF315(char * topicOri, JsonObject& RF315data) { // json object decoding
   
    if (strcmp(topicOri,subjectMQTTtoRF315) == 0){

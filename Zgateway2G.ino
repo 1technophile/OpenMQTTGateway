@@ -98,7 +98,7 @@ boolean _2GtoMQTT(){
     }
     return false;
 }
-#ifdef simplePublishing
+#ifdef simpleReceiving
   void MQTTto2G(char * topicOri, char * datacallback) {
   
     String data = datacallback;
@@ -132,7 +132,7 @@ boolean _2GtoMQTT(){
   }
 #endif
 
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
     
    if (strcmp(topicOri,subjectMQTTto2G) == 0){

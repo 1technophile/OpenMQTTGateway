@@ -97,7 +97,7 @@ void RFtoMQTTdiscovery(unsigned long MQTTvalue){//on the fly switch creation fro
 }
 #endif
 
-#ifdef simplePublishing
+#ifdef simpleReceiving
 void MQTTtoRF(char * topicOri, char * datacallback) {
 
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
@@ -153,7 +153,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
 }
 #endif
 
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
   
    if (strcmp(topicOri,subjectMQTTtoRF) == 0){

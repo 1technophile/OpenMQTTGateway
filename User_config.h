@@ -122,11 +122,13 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 #define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
+#define jsonReceiving true //comment if you don't want to use Json  reception analysis
 
 //#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
 //example 
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
+#define simpleReceiving true //comment if you don't want to use old way reception analysis
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #define ota_hostname Gateway_Name

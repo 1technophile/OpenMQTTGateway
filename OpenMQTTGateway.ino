@@ -878,7 +878,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
    #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing
      MQTTtoPilight(topicOri, jsondata);
    #endif
-   #ifdef jsonPublishing
+   #ifdef jsonReceiving
     #ifdef ZgatewayRF
       MQTTtoRF(topicOri, jsondata);
     #endif
@@ -905,7 +905,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       MQTTtoONOFF(topicOri, jsondata);
     #endif
   } else { // not a json object --> simple decoding
-   #ifdef simplePublishing
+   #ifdef simpleReceiving
       #ifdef ZgatewayRF
         MQTTtoRF(topicOri, datacallback);
       #endif

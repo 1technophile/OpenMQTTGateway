@@ -154,7 +154,7 @@ void IRtoMQTT(){
   } 
 }
 
-#ifdef simplePublishing
+#ifdef simpleReceiving
   void MQTTtoIR(char * topicOri, char * datacallback) {
     
     // IR DATA ANALYSIS    
@@ -477,7 +477,7 @@ void IRtoMQTT(){
   }
 #endif
 
-#ifdef jsonPublishing
+#ifdef jsonReceiving
   void MQTTtoIR(char * topicOri, JsonObject& IRdata) {
 
      if (strcmp(topicOri,subjectMQTTtoIR) == 0){ 
