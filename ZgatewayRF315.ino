@@ -69,6 +69,8 @@ boolean RF315toMQTT(){
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data RF315toMQTT")); 
         pub(subjectRF315toMQTT,RF315data);
+        trc(F("Store to avoid duplicate"));
+        storeValue(MQTTvalue);
         if (repeatRF315wMQTT){
             trc(F("Publish RF315 for repeat"));
             pub(subjectMQTTtoRF315,RF315data);

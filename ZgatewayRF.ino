@@ -71,6 +71,8 @@ void RFtoMQTT(){
             RFtoMQTTdiscovery(MQTTvalue);
         #endif
         pub(subjectRFtoMQTT,RFdata);
+        trc(F("Store to avoid duplicate"));
+        storeValue(MQTTvalue);
         if (repeatRFwMQTT){
             trc(F("Pub RF for rpt"));
             pub(subjectMQTTtoRF,RFdata);

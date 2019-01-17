@@ -146,6 +146,8 @@ void IRtoMQTT(){
     } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
         trc(F("Adv data IRtoMQTT"));         
         pub(subjectIRtoMQTT,IRdata);
+        trc(F("Store to avoid duplicate"));
+        storeValue(MQTTvalue);
         if (repeatIRwMQTT){
             trc(F("Pub. IR for repeat"));
             pub(subjectMQTTtoIR,MQTTvalue);
