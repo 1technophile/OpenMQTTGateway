@@ -489,8 +489,14 @@ void IRtoMQTT(){
       if (data != 0||raw) {   
         trc(F("MQTTtoIR data || raw ok"));
         boolean signalSent = false;
+        trc("value");
         trc(data);
+        trc("raw");
+        trc(raw);
         const char * protocol_name = IRdata["protocol_name"];
+        unsigned int valueBITS  = IRdata["bits"];
+        uint16_t  valueRPT = IRdata["repeat"]|repeatIRwNumber;
+
         if(raw){
             unsigned int s = strlen(raw);
             //number of "," value count
@@ -529,10 +535,10 @@ void IRtoMQTT(){
               trc("IR_Raw");
               //buffer allocation from char datacallback
               #ifdef ESP8266
-              uint16_t  Raw[count+1];
-            #else
-              unsigned int Raw[count+1];
-            #endif
+                uint16_t  Raw[count+1];
+              #else
+                unsigned int Raw[count+1];
+              #endif
             String value = "";
             int j = 0;
             for(int i = 0; i < s; i++)
@@ -551,15 +557,7 @@ void IRtoMQTT(){
               signalSent = true;
             }
             #endif
-        }else if(protocol_name){
-          unsigned int valueBITS  = IRdata["bits"];
-          trc(F("Bits nb:"));
-          trc(valueBITS);
-          
-          uint16_t  valueRPT = IRdata["repeat"]|repeatIRwNumber;
-          trc(F("IR repeat:"));
-          trc(valueRPT);
-          
+        }else if(protocol_name && (strstr(protocol_name, "IR_NEC") == NULL)){         
           #ifdef ESP8266 // send coolix not available for arduino IRRemote library
           #ifdef IR_COOLIX
           if (strstr(protocol_name, "IR_COOLIX") != NULL){
@@ -569,15 +567,6 @@ void IRtoMQTT(){
           }
           #endif
           #endif
-          if (strstr(protocol_name, "IR_NEC") != NULL || !protocol_name ){
-          if (valueBITS == 0) valueBITS = NEC_BITS;
-            #ifdef ESP8266
-                irsend.sendNEC(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
           #ifdef IR_Whynter
           if (strstr(protocol_name, "IR_Whynter") != NULL){
           if (valueBITS == 0) valueBITS = WHYNTER_BITS;
@@ -781,13 +770,20 @@ void IRtoMQTT(){
           #endif
           #endif
           
+          }else{
+            trc(F("Using NEC protocol"));
+            if (valueBITS == 0) valueBITS = NEC_BITS;
+              #ifdef ESP8266
+                  irsend.sendNEC(data, valueBITS, valueRPT);
+              #else
+                  for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
+              #endif
+            signalSent = true;
+          }
           if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-          pub(subjectGTWIRtoMQTT, IRdata);
+            pub(subjectGTWIRtoMQTT, IRdata);
           }
           irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
-          }else{
-            trc(F("MQTTtoIR Fail reading protocol name from json"));
-          }
         }else{
           trc(F("MQTTtoIR Fail reading from json"));
         }
