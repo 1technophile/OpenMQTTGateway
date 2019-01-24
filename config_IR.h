@@ -79,6 +79,17 @@
   #define IR_Sharp
   #define IR_SAMSUNG
   #define IR_PANASONIC
+#elif __AVR_ATmega2560__
+  #define IR_COOLIX
+  #define IR_Whynter
+  #define IR_LG
+  #define IR_Sony
+  #define IR_DISH
+  #define IR_RC5
+  #define IR_Sharp
+  #define IR_SAMSUNG
+  #define IR_Raw
+  #define IR_PANASONIC
 #else //IR supported protocols on arduino uncomment if you want to send with this protocol, NEC protocol is available per default
   //#define IR_COOLIX
   //#define IR_Whynter
@@ -95,10 +106,13 @@
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
   #define IR_RECEIVER_PIN 2
-  #define IR_EMITTER_PIN 16 // replace by 0 if you use IR LOLIN controller shield
+  #define IR_EMITTER_PIN 16 // replace by 0 (D3) if you use IR LOLIN controller shield
 #elif ESP32
   #define IR_RECEIVER_PIN 27
   #define IR_EMITTER_PIN 14
+#elif __AVR_ATmega2560__
+  #define IR_RECEIVER_PIN 2 // 2 = D2 on mega
+  #define IR_EMITTER_PIN 7
 #else
   #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino
   #define IR_EMITTER_PIN 9
