@@ -496,6 +496,8 @@ void setup_wifimanager(boolean reset_settings){
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
+    //Set timeout before going to portal
+    wifiManager.setConfigPortalTimeout(WifiManager_ConfigPortalTimeOut)
   
     //set config save notify callback
     wifiManager.setSaveConfigCallback(saveConfigCallback);
@@ -695,7 +697,7 @@ void loop()
       if(RFM69toMQTT())
       trc(F("RFM69toMQTT OK"));
     #endif
-    #if defined(ESP8266) || defined(ESP32)
+    #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       stateMeasures();
     #endif
   }

@@ -54,6 +54,7 @@
 
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+#define WifiManager_ConfigPortalTimeOut 120
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -74,7 +75,6 @@ char mqtt_port[6] = "1883";
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
 
 //set minimum quality of signal so it ignores AP's under that quality

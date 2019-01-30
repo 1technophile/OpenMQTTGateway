@@ -26,7 +26,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.9beta"
+#define OMG_VERSION "0.9"
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
@@ -59,6 +59,7 @@
 
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
 #define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+#define WifiManager_ConfigPortalTimeOut 120
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -84,6 +85,7 @@ char mqtt_port[6] = "1883";
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
+//#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
 //#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
@@ -92,14 +94,12 @@ char mqtt_port[6] = "1883";
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
 //#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
-//#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
+//#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-//#define cleanFS true //uncomment if you want to clean the ESP memory and reenter your credentials
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
 
 //set minimum quality of signal so it ignores AP's under that quality
