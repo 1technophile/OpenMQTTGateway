@@ -34,7 +34,7 @@ void pubMqttDiscovery()
                   will_Topic, "connectivity", "",                               //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "",                    //set,payload_on,payload_off,unit_of_meas,
                   false, true, 0,                                               //set optimistic,retain, off_delay
-                  Gateway_AnnouncementMsg, will_Message,false,""                //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic, state on, state off
+                  Gateway_AnnouncementMsg, will_Message,true,""                //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic, state on, state off
   );                       
 
 #ifdef ZsensorBME280
