@@ -497,7 +497,7 @@ void setup_wifimanager(boolean reset_settings){
     //Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
     //Set timeout before going to portal
-    wifiManager.setConfigPortalTimeout(WifiManager_ConfigPortalTimeOut)
+    wifiManager.setConfigPortalTimeout(WifiManager_ConfigPortalTimeOut);
   
     //set config save notify callback
     wifiManager.setSaveConfigCallback(saveConfigCallback);
