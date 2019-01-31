@@ -483,7 +483,7 @@ void IRtoMQTT(){
   void MQTTtoIR(char * topicOri, JsonObject& IRdata) {
 
      if (strcmp(topicOri,subjectMQTTtoIR) == 0){ 
-      trc(F("MQTTtoIR json data analysis"));
+      trc(F("MQTTtoIR json"));
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];
       if (data != 0||raw) {   
@@ -781,6 +781,7 @@ void IRtoMQTT(){
             signalSent = true;
           }
           if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+            trc(F("MQTTtoIR OK"));
             pub(subjectGTWIRtoMQTT, IRdata);
           }
           irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)

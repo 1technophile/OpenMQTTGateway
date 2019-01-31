@@ -159,17 +159,18 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
   
    if (strcmp(topicOri,subjectMQTTtoRF) == 0){
-      trc(F("MQTTtoRF json analysis"));
+      trc(F("MQTTtoRF json"));
       unsigned long data = RFdata["value"];
       if (data != 0) {
         int valuePRT =  RFdata["protocol"]|1;
         int valuePLSL = RFdata["delay"]|350;
         int valueBITS = RFdata["length"]|24;
         mySwitch.setProtocol(valuePRT,valuePLSL);
-        mySwitch.send(data, valueBITS); 
+        mySwitch.send(data, valueBITS);
+        trc(F("MQTTtoRF OK"));
         pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       }else{
-        trc(F("MQTTtoRF Fail read json"));
+        trc(F("MQTTtoRF Fail json"));
       }
     }
   }

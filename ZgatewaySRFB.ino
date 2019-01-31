@@ -277,7 +277,7 @@ bool _rfbToChar(byte * in, char * out) {
     const char * raw = SRFBdata["raw"];
     int valueRPT =  SRFBdata["repeat"]|1;
    if (strcmp(topicOri,subjectMQTTtoSRFB) == 0){
-      trc(F("MQTTtoSRFB json data analysis"));
+      trc(F("MQTTtoSRFB json"));
       if (raw){ // send raw in priority when defined in the json
         trc(F("MQTTtoSRFB raw ok"));
         byte message_b[RF_MESSAGE_SIZE];
@@ -320,7 +320,7 @@ bool _rfbToChar(byte * in, char * out) {
           memcpy(message_b + 4, hex_valueMaxiPLSL, 2);
           memcpy(message_b + 6, hex_data, 3);
           
-          trc(F("MQTTtoSRFB send"));
+          trc(F("MQTTtoSRFB OK"));
           _rfbSend(message_b, valueRPT);
           // Acknowledgement to the GTWRF topic 
           pub(subjectGTWSRFBtoMQTT, SRFBdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also

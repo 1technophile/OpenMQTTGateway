@@ -218,7 +218,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
   void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
   
    if (strcmp(topicOri,subjectMQTTtoRF2) == 0){
-      trc(F("MQTTtoRF2 json data analysis"));
+      trc(F("MQTTtoRF2 json"));
       int boolSWITCHTYPE = RF2data["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {
         trc(F("MQTTtoRF2 switch type ok"));
@@ -240,9 +240,8 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
           trc(boolSWITCHTYPE);
           trc(valueDIM);
           NewRemoteReceiver::disable();
-          trc(F("Creating transmitter"));
           NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
-          trc(F("Sending data"));
+          trc(F("Sending"));
           if (valueGROUP) {
             if (isDimCommand) {
               transmitter.sendGroupDim(valueDIM); 
@@ -259,7 +258,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
               transmitter.sendUnit(valueUNIT, boolSWITCHTYPE); 
             }
           }
-          trc(F("Data sent"));
+          trc(F("MQTTtoRF2 OK"));
           NewRemoteReceiver::enable();
       
           // Publish state change back to MQTT
