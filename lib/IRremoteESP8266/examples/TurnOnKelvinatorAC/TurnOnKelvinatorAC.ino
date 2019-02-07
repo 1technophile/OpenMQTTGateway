@@ -1,7 +1,7 @@
-/* Copyright 2016 David Conran
+/* Copyright 2016, 2018 David Conran
 *
 * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
-* as specified by IR_LED below.
+* as specified by kIrLed below.
 *
 * TL;DR: The IR LED needs to be driven by a transistor for a good result.
 *
@@ -30,30 +30,23 @@
 #include <IRsend.h>
 #include <ir_Kelvinator.h>
 
-#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
-IRKelvinatorAC kelvir(IR_LED);  // Set the GPIO to be used for sending messages.
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+IRKelvinatorAC ac(kIrLed);  // Set the GPIO to be used for sending messages.
 
 void printState() {
   // Display the settings.
   Serial.println("Kelvinator A/C remote is in the following state:");
-  Serial.printf("  Basic\n  Power: %d,  Mode: %d, Temp: %dC, Fan Speed: %d\n",
-                kelvir.getPower(), kelvir.getMode(), kelvir.getTemp(),
-                kelvir.getFan());
-  Serial.printf("  Options\n  X-Fan: %d,  Light: %d, Ion Filter: %d\n",
-                kelvir.getXFan(), kelvir.getLight(), kelvir.getIonFilter());
-  Serial.printf("  Swing (V): %d, Swing (H): %d, Turbo: %d, Quiet: %d\n",
-                kelvir.getSwingVertical(), kelvir.getSwingHorizontal(),
-                kelvir.getTurbo(), kelvir.getQuiet());
+  Serial.printf("  %s\n", ac.toString().c_str());
   // Display the encoded IR sequence.
-  unsigned char* ir_code = kelvir.getRaw();
+  unsigned char* ir_code = ac.getRaw();
   Serial.print("IR Code: 0x");
-  for (uint8_t i = 0; i < KELVINATOR_STATE_LENGTH; i++)
+  for (uint8_t i = 0; i < kKelvinatorStateLength; i++)
     Serial.printf("%02X", ir_code[i]);
   Serial.println();
 }
 
 void setup() {
-  kelvir.begin();
+  ac.begin();
   Serial.begin(115200);
   delay(200);
 
@@ -62,22 +55,22 @@ void setup() {
   Serial.println("Default state of the remote.");
   printState();
   Serial.println("Setting desired state for A/C.");
-  kelvir.on();
-  kelvir.setFan(1);
-  kelvir.setMode(KELVINATOR_COOL);
-  kelvir.setTemp(26);
-  kelvir.setSwingVertical(false);
-  kelvir.setSwingHorizontal(true);
-  kelvir.setXFan(true);
-  kelvir.setIonFilter(false);
-  kelvir.setLight(true);
+  ac.on();
+  ac.setFan(1);
+  ac.setMode(kKelvinatorCool);
+  ac.setTemp(26);
+  ac.setSwingVertical(false);
+  ac.setSwingHorizontal(true);
+  ac.setXFan(true);
+  ac.setIonFilter(false);
+  ac.setLight(true);
 }
 
 void loop() {
   // Now send the IR signal.
 #if SEND_KELVINATOR
   Serial.println("Sending IR command to A/C ...");
-  kelvir.send();
+  ac.send();
 #endif  // SEND_KELVINATOR
   printState();
   delay(5000);

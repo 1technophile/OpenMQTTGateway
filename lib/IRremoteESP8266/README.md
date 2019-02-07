@@ -1,17 +1,33 @@
 # IRremote ESP8266 Library
 
 [![Build Status](https://travis-ci.org/markszabo/IRremoteESP8266.svg?branch=master)](https://travis-ci.org/markszabo/IRremoteESP8266)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/IRremoteESP8266.svg?)](https://www.ardu-badge.com/IRremoteESP8266)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/markszabo/IRremoteESP8266.svg)](http://isitmaintained.com/project/markszabo/IRremoteESP8266 "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/markszabo/IRremoteESP8266.svg)](http://isitmaintained.com/project/markszabo/IRremoteESP8266 "Percentage of issues still open")
 [![GitLicense](https://gitlicense.com/badge/markszabo/IRremoteESP8266)](https://gitlicense.com/license/markszabo/IRremoteESP8266)
 
 This library enables you to **send _and_ receive** infra-red signals on an [ESP8266 using the Arduino framework](https://github.com/esp8266/Arduino) using common 940nm IR LEDs and common IR receiver modules. e.g. TSOP{17,22,24,36,38,44,48}* etc.
 
-## v2.4.2 Now Available
-Version 2.4.2 of the library is now [available](https://github.com/markszabo/IRremoteESP8266/releases/latest). You can view the [Release Notes](ReleaseNotes.md) for all the significant changes.
+## v2.5.5 Now Available
+Version 2.5.5 of the library is now [available](https://github.com/markszabo/IRremoteESP8266/releases/latest). You can view the [Release Notes](ReleaseNotes.md) for all the significant changes.
 
 #### Upgrading from pre-v2.0
-Usage of the library slight changed at v2.0. You will need to change your usage to work with v2.0 and beyond. You can read more about the changes required on our [Upgrade to v2.0](https://github.com/markszabo/IRremoteESP8266/wiki/Upgrading-to-v2.0) page.
+Usage of the library has been slightly changed in v2.0. You will need to change your usage to work with v2.0 and beyond. You can read more about the changes required on our [Upgrade to v2.0](https://github.com/markszabo/IRremoteESP8266/wiki/Upgrading-to-v2.0) page.
+
+#### Upgrading from pre-v2.5
+The library has changed from using constants declared as `#define` to
+[const](https://google.github.io/styleguide/cppguide.html#Constant_Names) with
+the appropriate naming per the
+[C++ style guide](https://google.github.io/styleguide/cppguide.html).
+This may potentially cause old programs to not compile.
+The most likely externally used `#define`s have been _aliased_ for limited
+backward compatibility for projects using the old style. Going forward, only the
+new `kConstantName` style will be supported for new protocol additions.
+
+In the unlikely case it does break your code, then you may have been referencing
+something you likely should not have. You should be able to quickly determine
+the new name from the old. e.g. `CONSTANT_NAME` to `kConstantName`.
+Use common sense or examining the library's code if this does affect code.
 
 ## Troubleshooting
 Before reporting an issue or asking for help, please try to follow our [Troubleshooting Guide](https://github.com/markszabo/IRremoteESP8266/wiki/Troubleshooting-Guide) first.

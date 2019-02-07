@@ -5,49 +5,43 @@
 #include "IRutils.h"
 
 // Constants
-#define TROTEC_HDR_MARK   5952U
-#define TROTEC_HDR_SPACE  7364U
-#define TROTEC_ONE_MARK    592U
-#define TROTEC_ONE_SPACE  1560U
-#define TROTEC_ZERO_MARK   592U
-#define TROTEC_ZERO_SPACE  592U
-#define TROTEC_GAP        6184U
-#define TROTEC_GAP_END    1500U  // made up value
+const uint16_t kTrotecHdrMark = 5952;
+const uint16_t kTrotecHdrSpace = 7364;
+const uint16_t kTrotecOneMark = 592;
+const uint16_t kTrotecOneSpace = 1560;
+const uint16_t kTrotecZeroMark = 592;
+const uint16_t kTrotecZeroSpace = 592;
+const uint16_t kTrotecGap = 6184;
+const uint16_t kTrotecGapEnd = 1500;  // made up value
 
 #if SEND_TROTEC
 
 void IRsend::sendTrotec(unsigned char data[], uint16_t nbytes,
                         uint16_t repeat) {
-  if (nbytes < TROTEC_COMMAND_LENGTH)
-    return;
+  if (nbytes < kTrotecStateLength) return;
 
   for (uint16_t r = 0; r <= repeat; r++) {
-    sendGeneric(TROTEC_HDR_MARK, TROTEC_HDR_SPACE,
-                TROTEC_ONE_MARK, TROTEC_ONE_SPACE,
-                TROTEC_ZERO_MARK, TROTEC_ZERO_SPACE,
-                TROTEC_ONE_MARK, TROTEC_GAP,
-                data, nbytes, 36, false, 0,  // Repeats handled elsewhere
+    sendGeneric(kTrotecHdrMark, kTrotecHdrSpace, kTrotecOneMark,
+                kTrotecOneSpace, kTrotecZeroMark, kTrotecZeroSpace,
+                kTrotecOneMark, kTrotecGap, data, nbytes, 36, false,
+                0,  // Repeats handled elsewhere
                 50);
     // More footer
     enableIROut(36);
-    mark(TROTEC_ONE_MARK);
-    space(TROTEC_GAP_END);
+    mark(kTrotecOneMark);
+    space(kTrotecGapEnd);
   }
 }
 #endif  // SEND_TROTEC
 
-IRTrotecESP::IRTrotecESP(uint16_t pin) : _irsend(pin) {
-  stateReset();
-}
+IRTrotecESP::IRTrotecESP(uint16_t pin) : _irsend(pin) { stateReset(); }
 
-void IRTrotecESP::begin() {
-  _irsend.begin();
-}
+void IRTrotecESP::begin() { _irsend.begin(); }
 
 #if SEND_TROTEC
-void IRTrotecESP::send() {
+void IRTrotecESP::send(const uint16_t repeat) {
   checksum();
-  _irsend.sendTrotec(trotec);
+  _irsend.sendTrotec(trotec, kTrotecStateLength, repeat);
 }
 #endif  // SEND_TROTEC
 
@@ -61,16 +55,15 @@ void IRTrotecESP::checksum() {
 }
 
 void IRTrotecESP::stateReset() {
-  for (uint8_t i = 2; i < TROTEC_COMMAND_LENGTH; i++)
-    trotec[i] = 0x0;
+  for (uint8_t i = 2; i < kTrotecStateLength; i++) trotec[i] = 0x0;
 
-  trotec[0] = TROTEC_INTRO1;
-  trotec[1] = TROTEC_INTRO2;
+  trotec[0] = kTrotecIntro1;
+  trotec[1] = kTrotecIntro2;
 
   setPower(false);
-  setTemp(TROTEC_DEF_TEMP);
-  setSpeed(TROTEC_FAN_MED);
-  setMode(TROTEC_AUTO);
+  setTemp(kTrotecDefTemp);
+  setSpeed(kTrotecFanMed);
+  setMode(kTrotecAuto);
 }
 
 uint8_t* IRTrotecESP::getRaw() {
@@ -80,67 +73,55 @@ uint8_t* IRTrotecESP::getRaw() {
 
 void IRTrotecESP::setPower(bool state) {
   if (state)
-    trotec[2] |= (TROTEC_ON << 3);
+    trotec[2] |= (kTrotecOn << 3);
   else
-    trotec[2] &= ~(TROTEC_ON << 3);
+    trotec[2] &= ~(kTrotecOn << 3);
 }
 
-uint8_t IRTrotecESP::getPower() {
-  return trotec[2] & (TROTEC_ON << 3);
-}
+uint8_t IRTrotecESP::getPower() { return trotec[2] & (kTrotecOn << 3); }
 
 void IRTrotecESP::setSpeed(uint8_t speed) {
   trotec[2] = (trotec[2] & 0xcf) | (speed << 4);
 }
 
-uint8_t IRTrotecESP::getSpeed() {
-  return trotec[2] & 0x30;
-}
+uint8_t IRTrotecESP::getSpeed() { return trotec[2] & 0x30; }
 
 void IRTrotecESP::setMode(uint8_t mode) {
   trotec[2] = (trotec[2] & 0xfc) | mode;
 }
 
-uint8_t IRTrotecESP::getMode() {
-  return trotec[2] & 0x03;
-}
+uint8_t IRTrotecESP::getMode() { return trotec[2] & 0x03; }
 
 void IRTrotecESP::setTemp(uint8_t temp) {
-  if (temp < TROTEC_MIN_TEMP)
-    temp = TROTEC_MIN_TEMP;
-  else if (temp > TROTEC_MAX_TEMP)
-    temp = TROTEC_MAX_TEMP;
+  if (temp < kTrotecMinTemp)
+    temp = kTrotecMinTemp;
+  else if (temp > kTrotecMaxTemp)
+    temp = kTrotecMaxTemp;
 
-  trotec[3] = (trotec[3] & 0x80) | (temp - TROTEC_MIN_TEMP);
+  trotec[3] = (trotec[3] & 0x80) | (temp - kTrotecMinTemp);
 }
 
-uint8_t IRTrotecESP::getTemp() {
-  return trotec[3] & 0x7f;
-}
+uint8_t IRTrotecESP::getTemp() { return trotec[3] & 0x7f; }
 
 void IRTrotecESP::setSleep(bool sleep) {
   if (sleep)
-    trotec[3] |= (TROTEC_SLEEP_ON << 7);
+    trotec[3] |= (kTrotecSleepOn << 7);
   else
-    trotec[3] &= ~(TROTEC_SLEEP_ON << 7);
+    trotec[3] &= ~(kTrotecSleepOn << 7);
 }
 
-bool IRTrotecESP::getSleep(void) {
-  return trotec[3] & (TROTEC_SLEEP_ON << 7);
-}
+bool IRTrotecESP::getSleep(void) { return trotec[3] & (kTrotecSleepOn << 7); }
 
 void IRTrotecESP::setTimer(uint8_t timer) {
-  if (timer > TROTEC_MAX_TIMER) timer = TROTEC_MAX_TIMER;
+  if (timer > kTrotecMaxTimer) timer = kTrotecMaxTimer;
 
   if (timer) {
-    trotec[5] |= (TROTEC_TIMER_ON << 6);
+    trotec[5] |= (kTrotecTimerOn << 6);
     trotec[6] = timer;
   } else {
-    trotec[5] &= ~(TROTEC_TIMER_ON << 6);
+    trotec[5] &= ~(kTrotecTimerOn << 6);
     trotec[6] = 0;
   }
 }
 
-uint8_t IRTrotecESP::getTimer() {
-  return trotec[6];
-}
+uint8_t IRTrotecESP::getTimer() { return trotec[6]; }

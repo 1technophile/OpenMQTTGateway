@@ -8,45 +8,57 @@
 
 // Constants
 // Byte 0
-#define TROTEC_INTRO1      0x12
+const uint8_t kTrotecIntro1 = 0x12;
 
 // Byte 1
-#define TROTEC_INTRO2      0x34
+const uint8_t kTrotecIntro2 = 0x34;
 
 // Byte 2
-#define TROTEC_AUTO           0
-#define TROTEC_COOL           1
-#define TROTEC_DRY            2
-#define TROTEC_FAN            3
+const uint8_t kTrotecAuto = 0;
+const uint8_t kTrotecCool = 1;
+const uint8_t kTrotecDry = 2;
+const uint8_t kTrotecFan = 3;
 
-#define TROTEC_ON             1
-#define TROTEC_OFF            0
+const uint8_t kTrotecOn = 1;
+const uint8_t kTrotecOff = 0;
 
-#define TROTEC_FAN_LOW        1
-#define TROTEC_FAN_MED        2
-#define TROTEC_FAN_HIGH       3
+const uint8_t kTrotecFanLow = 1;
+const uint8_t kTrotecFanMed = 2;
+const uint8_t kTrotecFanHigh = 3;
 
 // Byte 3
-#define TROTEC_MIN_TEMP      18
-#define TROTEC_MAX_TEMP      32
-#define TROTEC_DEF_TEMP      25
+const uint8_t kTrotecMinTemp = 18;
+const uint8_t kTrotecDefTemp = 25;
+const uint8_t kTrotecMaxTemp = 32;
 
-#define TROTEC_SLEEP_ON       1
+const uint8_t kTrotecSleepOn = 1;
 
 // Byte 5
-#define TROTEC_TIMER_ON       1
+const uint8_t kTrotecTimerOn = 1;
 
 // Byte 6
-#define TROTEC_MIN_TIMER      0
-#define TROTEC_MAX_TIMER     23
+const uint8_t kTrotecMinTimer = 0;
+const uint8_t kTrotecMaxTimer = 23;
 
+// Legacy defines. (Deperecated)
+#define TROTEC_AUTO kTrotecAuto
+#define TROTEC_COOL kTrotecCool
+#define TROTEC_DRY kTrotecDry
+#define TROTEC_FAN kTrotecFan
+#define TROTEC_FAN_LOW kTrotecFanLow
+#define TROTEC_FAN_MED kTrotecFanMed
+#define TROTEC_FAN_HIGH kTrotecFanHigh
+#define TROTEC_MIN_TEMP kTrotecMinTemp
+#define TROTEC_MAX_TEMP kTrotecMaxTemp
+#define TROTEC_MIN_TIMER kTrotecMinTimer
+#define TROTEC_MAX_TIMER kTrotecMaxTimer
 
 class IRTrotecESP {
  public:
   explicit IRTrotecESP(uint16_t pin);
 
 #if SEND_TROTEC
-  void send();
+  void send(const uint16_t repeat = kTrotecDefaultRepeat);
 #endif  // SEND_TROTEC
   void begin();
 
@@ -71,7 +83,7 @@ class IRTrotecESP {
   uint8_t* getRaw();
 
  private:
-  uint8_t trotec[TROTEC_COMMAND_LENGTH];
+  uint8_t trotec[kTrotecStateLength];
   void stateReset();
   void checksum();
   IRsend _irsend;

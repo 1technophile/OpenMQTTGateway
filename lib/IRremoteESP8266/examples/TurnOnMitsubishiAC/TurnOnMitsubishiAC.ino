@@ -1,7 +1,7 @@
-/* Copyright 2017 David Conran
+/* Copyright 2017, 2018 David Conran
 *
 * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
-* as specified by IR_LED below.
+* as specified by kIrLed below.
 *
 * TL;DR: The IR LED needs to be driven by a transistor for a good result.
 *
@@ -30,26 +30,23 @@
 #include <IRsend.h>
 #include <ir_Mitsubishi.h>
 
-#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
-IRMitsubishiAC mitsubir(IR_LED);  // Set the GPIO used for sending messages.
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+IRMitsubishiAC ac(kIrLed);  // Set the GPIO used for sending messages.
 
 void printState() {
   // Display the settings.
   Serial.println("Mitsubishi A/C remote is in the following state:");
-  Serial.printf("  Power: %d,  Mode: %d, Temp: %dC, Fan Speed: %d," \
-                    " Vane Mode: %d\n",
-                mitsubir.getPower(), mitsubir.getMode(), mitsubir.getTemp(),
-                mitsubir.getFan(), mitsubir.getVane());
+  Serial.printf("  %s\n", ac.toString().c_str());
   // Display the encoded IR sequence.
-  unsigned char* ir_code = mitsubir.getRaw();
+  unsigned char* ir_code = ac.getRaw();
   Serial.print("IR Code: 0x");
-  for (uint8_t i = 0; i < MITSUBISHI_AC_STATE_LENGTH; i++)
+  for (uint8_t i = 0; i < kMitsubishiACStateLength; i++)
     Serial.printf("%02X", ir_code[i]);
   Serial.println();
 }
 
 void setup() {
-  mitsubir.begin();
+  ac.begin();
   Serial.begin(115200);
   delay(200);
 
@@ -57,18 +54,18 @@ void setup() {
   Serial.println("Default state of the remote.");
   printState();
   Serial.println("Setting desired state for A/C.");
-  mitsubir.on();
-  mitsubir.setFan(1);
-  mitsubir.setMode(MITSUBISHI_AC_COOL);
-  mitsubir.setTemp(26);
-  mitsubir.setVane(MITSUBISHI_AC_VANE_AUTO);
+  ac.on();
+  ac.setFan(1);
+  ac.setMode(kMitsubishiAcCool);
+  ac.setTemp(26);
+  ac.setVane(kMitsubishiAcVaneAuto);
 }
 
 void loop() {
   // Now send the IR signal.
 #if SEND_MITSUBISHI_AC
   Serial.println("Sending IR command to A/C ...");
-  mitsubir.send();
+  ac.send();
 #endif  // SEND_MITSUBISHI_AC
   printState();
   delay(5000);

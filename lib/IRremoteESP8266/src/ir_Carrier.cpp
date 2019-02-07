@@ -18,19 +18,19 @@
 // Constants
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/385
-#define CARRIER_AC_HDR_MARK           8532U
-#define CARRIER_AC_HDR_SPACE          4228U
-#define CARRIER_AC_BIT_MARK            628U
-#define CARRIER_AC_ONE_SPACE          1320U
-#define CARRIER_AC_ZERO_SPACE          532U
-#define CARRIER_AC_GAP               20000U
+const uint16_t kCarrierAcHdrMark = 8532;
+const uint16_t kCarrierAcHdrSpace = 4228;
+const uint16_t kCarrierAcBitMark = 628;
+const uint16_t kCarrierAcOneSpace = 1320;
+const uint16_t kCarrierAcZeroSpace = 532;
+const uint16_t kCarrierAcGap = 20000;
 
 #if SEND_CARRIER_AC
 // Send a Carrier HVAC formatted message.
 //
 // Args:
 //   data:   The message to be sent.
-//   nbits:  The bit size of the message being sent. typically CARRIER_AC_BITS.
+//   nbits:  The bit size of the message being sent. typically kCarrierAcBits.
 //   repeat: The number of times the message is to be repeated.
 //
 // Status: BETA / Appears to work on real devices.
@@ -40,11 +40,10 @@ void IRsend::sendCarrierAC(uint64_t data, uint16_t nbits, uint16_t repeat) {
     uint64_t temp_data = data;
     // Carrier sends the data block three times. normal + inverted + normal.
     for (uint16_t i = 0; i < 3; i++) {
-      sendGeneric(CARRIER_AC_HDR_MARK, CARRIER_AC_HDR_SPACE,
-        CARRIER_AC_BIT_MARK, CARRIER_AC_ONE_SPACE,
-        CARRIER_AC_BIT_MARK, CARRIER_AC_ZERO_SPACE,
-        CARRIER_AC_BIT_MARK, CARRIER_AC_GAP,
-        temp_data, nbits, 38, true, 0, 50);
+      sendGeneric(kCarrierAcHdrMark, kCarrierAcHdrSpace, kCarrierAcBitMark,
+                  kCarrierAcOneSpace, kCarrierAcBitMark, kCarrierAcZeroSpace,
+                  kCarrierAcBitMark, kCarrierAcGap, temp_data, nbits, 38, true,
+                  0, kDutyDefault);
       temp_data = invertBits(temp_data, nbits);
     }
   }
@@ -58,7 +57,7 @@ void IRsend::sendCarrierAC(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
 //   nbits:   Nr. of bits to expect in the data portion.
-//            Typically CARRIER_AC_BITS.
+//            Typically kCarrierAcBits.
 //   strict:  Flag to indicate if we strictly adhere to the specification.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
@@ -66,42 +65,38 @@ void IRsend::sendCarrierAC(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Status: ALPHA / Untested.
 //
 bool IRrecv::decodeCarrierAC(decode_results *results, uint16_t nbits,
-                           bool strict) {
-  if (results->rawlen < ((2 * nbits + HEADER + FOOTER) * 3) - 1)
+                             bool strict) {
+  if (results->rawlen < ((2 * nbits + kHeader + kFooter) * 3) - 1)
     return false;  // Can't possibly be a valid Carrier message.
-  if (strict && nbits != CARRIER_AC_BITS)
+  if (strict && nbits != kCarrierAcBits)
     return false;  // We expect Carrier to be 32 bits of message.
 
   uint64_t data = 0;
   uint64_t prev_data = 0;
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
 
   for (uint8_t i = 0; i < 3; i++) {
     prev_data = data;
     // Header
-    if (!matchMark(results->rawbuf[offset++], CARRIER_AC_HDR_MARK))
-      return false;
-    if (!matchSpace(results->rawbuf[offset++], CARRIER_AC_HDR_SPACE))
+    if (!matchMark(results->rawbuf[offset++], kCarrierAcHdrMark)) return false;
+    if (!matchSpace(results->rawbuf[offset++], kCarrierAcHdrSpace))
       return false;
     // Data
-    match_result_t data_result = matchData(&(results->rawbuf[offset]), nbits,
-                                           CARRIER_AC_BIT_MARK,
-                                           CARRIER_AC_ONE_SPACE,
-                                           CARRIER_AC_BIT_MARK,
-                                           CARRIER_AC_ZERO_SPACE);
+    match_result_t data_result =
+        matchData(&(results->rawbuf[offset]), nbits, kCarrierAcBitMark,
+                  kCarrierAcOneSpace, kCarrierAcBitMark, kCarrierAcZeroSpace);
     if (data_result.success == false) return false;
     data = data_result.data;
     offset += data_result.used;
     // Footer
-    if (!matchMark(results->rawbuf[offset++], CARRIER_AC_BIT_MARK))
-      return false;
+    if (!matchMark(results->rawbuf[offset++], kCarrierAcBitMark)) return false;
     if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset++], CARRIER_AC_GAP))
+        !matchAtLeast(results->rawbuf[offset++], kCarrierAcGap))
       return false;
     // Compliance.
     if (strict) {
       // Check if the data is an inverted copy of the previous data.
-      if (i > 0 && prev_data != invertBits(data, nbits))  return false;
+      if (i > 0 && prev_data != invertBits(data, nbits)) return false;
     }
   }
 

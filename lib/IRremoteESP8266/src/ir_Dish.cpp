@@ -18,19 +18,19 @@
 // Ref:
 //   https://github.com/marcosamarinho/IRremoteESP8266/blob/master/ir_Dish.cpp
 //   http://www.hifi-remote.com/wiki/index.php?title=Dish
-#define DISH_TICK             100U
-#define DISH_HDR_MARK_TICKS     4U
-#define DISH_HDR_MARK         (DISH_HDR_MARK_TICKS * DISH_TICK)
-#define DISH_HDR_SPACE_TICKS   61U
-#define DISH_HDR_SPACE        (DISH_HDR_SPACE_TICKS * DISH_TICK)
-#define DISH_BIT_MARK_TICKS     4U
-#define DISH_BIT_MARK         (DISH_BIT_MARK_TICKS * DISH_TICK)
-#define DISH_ONE_SPACE_TICKS   17U
-#define DISH_ONE_SPACE        (DISH_ONE_SPACE_TICKS * DISH_TICK)
-#define DISH_ZERO_SPACE_TICKS  28U
-#define DISH_ZERO_SPACE       (DISH_ZERO_SPACE_TICKS * DISH_TICK)
-#define DISH_RPT_SPACE_TICKS  DISH_HDR_SPACE_TICKS
-#define DISH_RPT_SPACE        (DISH_RPT_SPACE_TICKS * DISH_TICK)
+const uint16_t kDishTick = 100;
+const uint16_t kDishHdrMarkTicks = 4;
+const uint16_t kDishHdrMark = kDishHdrMarkTicks * kDishTick;
+const uint16_t kDishHdrSpaceTicks = 61;
+const uint16_t kDishHdrSpace = kDishHdrSpaceTicks * kDishTick;
+const uint16_t kDishBitMarkTicks = 4;
+const uint16_t kDishBitMark = kDishBitMarkTicks * kDishTick;
+const uint16_t kDishOneSpaceTicks = 17;
+const uint16_t kDishOneSpace = kDishOneSpaceTicks * kDishTick;
+const uint16_t kDishZeroSpaceTicks = 28;
+const uint16_t kDishZeroSpace = kDishZeroSpaceTicks * kDishTick;
+const uint16_t kDishRptSpaceTicks = kDishHdrSpaceTicks;
+const uint16_t kDishRptSpace = kDishRptSpaceTicks * kDishTick;
 
 #if SEND_DISH
 // Send an IR command to a DISH NETWORK device.
@@ -57,14 +57,13 @@
 void IRsend::sendDISH(uint64_t data, uint16_t nbits, uint16_t repeat) {
   enableIROut(57600);  // Set modulation freq. to 57.6kHz.
   // Header is only ever sent once.
-  mark(DISH_HDR_MARK);
-  space(DISH_HDR_SPACE);
+  mark(kDishHdrMark);
+  space(kDishHdrSpace);
 
   sendGeneric(0, 0,  // No headers from here on in.
-              DISH_BIT_MARK, DISH_ONE_SPACE,
-              DISH_BIT_MARK, DISH_ZERO_SPACE,
-              DISH_BIT_MARK, DISH_RPT_SPACE,
-              data, nbits, 57600, true, repeat, 50);
+              kDishBitMark, kDishOneSpace, kDishBitMark, kDishZeroSpace,
+              kDishBitMark, kDishRptSpace, data, nbits, 57600, true, repeat,
+              50);
 }
 #endif
 
@@ -73,7 +72,7 @@ void IRsend::sendDISH(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   Nr. of bits to expect in the data portion. Typically DISH_BITS.
+//   nbits:   Nr. of bits to expect in the data portion. Typically kDishBits.
 //   strict:  Flag to indicate if we strictly adhere to the specification.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
@@ -89,34 +88,32 @@ void IRsend::sendDISH(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   http://lirc.sourceforge.net/remotes/echostar/301_501_3100_5100_58xx_59xx
 //   https://github.com/marcosamarinho/IRremoteESP8266/blob/master/ir_Dish.cpp
 bool IRrecv::decodeDISH(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + HEADER + FOOTER - 1)
+  if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
     return false;  // Not enough entries to be valid.
-  if (strict && nbits != DISH_BITS)
-    return false;  // Not strictly compliant.
+  if (strict && nbits != kDishBits) return false;  // Not strictly compliant.
 
   uint64_t data = 0;
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
 
   // Header
-  if (!match(results->rawbuf[offset], DISH_HDR_MARK)) return false;
+  if (!match(results->rawbuf[offset], kDishHdrMark)) return false;
   // Calculate how long the common tick time is based on the header mark.
-  uint32_t m_tick = results->rawbuf[offset++] * RAWTICK / DISH_HDR_MARK_TICKS;
-  if (!matchSpace(results->rawbuf[offset], DISH_HDR_SPACE)) return false;
+  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kDishHdrMarkTicks;
+  if (!matchSpace(results->rawbuf[offset], kDishHdrSpace)) return false;
   // Calculate how long the common tick time is based on the header space.
-  uint32_t s_tick = results->rawbuf[offset++] * RAWTICK / DISH_HDR_SPACE_TICKS;
+  uint32_t s_tick = results->rawbuf[offset++] * kRawTick / kDishHdrSpaceTicks;
 
   // Data
-  match_result_t data_result = matchData(&(results->rawbuf[offset]), nbits,
-                                         DISH_BIT_MARK_TICKS * m_tick,
-                                         DISH_ONE_SPACE_TICKS * s_tick,
-                                         DISH_BIT_MARK_TICKS * m_tick,
-                                         DISH_ZERO_SPACE_TICKS * s_tick);
+  match_result_t data_result =
+      matchData(&(results->rawbuf[offset]), nbits, kDishBitMarkTicks * m_tick,
+                kDishOneSpaceTicks * s_tick, kDishBitMarkTicks * m_tick,
+                kDishZeroSpaceTicks * s_tick);
   if (data_result.success == false) return false;
   data = data_result.data;
   offset += data_result.used;
 
   // Footer
-  if (!matchMark(results->rawbuf[offset++], DISH_BIT_MARK_TICKS * m_tick))
+  if (!matchMark(results->rawbuf[offset++], kDishBitMarkTicks * m_tick))
     return false;
 
   // Compliance
@@ -124,7 +121,7 @@ bool IRrecv::decodeDISH(decode_results *results, uint16_t nbits, bool strict) {
     // The DISH protocol calls for a repeated message, so strictly speaking
     // there should be a code following this. Only require it if we are set to
     // strict matching.
-    if (!matchSpace(results->rawbuf[offset], DISH_RPT_SPACE_TICKS * s_tick))
+    if (!matchSpace(results->rawbuf[offset], kDishRptSpaceTicks * s_tick))
       return false;
   }
 

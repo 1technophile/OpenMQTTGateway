@@ -22,7 +22,7 @@ CPPFLAGS += -DUNIT_TEST
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -Wall -Wextra -pthread
 
-all : gc_decode
+all : gc_decode mode2_decode
 
 run_tests : all
 	failed=""; \
@@ -37,7 +37,7 @@ run_tests : all
 	fi
 
 clean :
-	rm -f  *.o *.pyc gc_decode
+	rm -f  *.o *.pyc gc_decode mode2_decode
 
 
 # All the IR protocol object files.
@@ -47,7 +47,8 @@ PROTOCOLS = ir_NEC.o ir_Sony.o ir_Samsung.o ir_JVC.o ir_RCMM.o ir_RC5_RC6.o \
             ir_Aiwa.o ir_Sherwood.o ir_Kelvinator.o ir_Daikin.o ir_Gree.o \
             ir_Pronto.o ir_GlobalCache.o ir_Nikai.o ir_Toshiba.o ir_Midea.o \
             ir_Magiquest.o ir_Lasertag.o ir_Carrier.o ir_Haier.o ir_Hitachi.o \
-						ir_GICable.o
+            ir_GICable.o ir_Whirlpool.o ir_Lutron.o ir_Electra.o ir_Pioneer.o \
+            ir_MWM.o ir_Vestel.o
 
 # Common object files
 COMMON_OBJ = IRutils.o IRtimer.o IRsend.o IRrecv.o $(PROTOCOLS)
@@ -64,6 +65,11 @@ gc_decode.o : gc_decode.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
 gc_decode : $(COMMON_OBJ) gc_decode.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
+mode2_decode.o : mode2_decode.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -I$(TEST_DIR) -c mode2_decode.cpp
+
+mode2_decode : $(COMMON_OBJ) mode2_decode.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 IRutils.o : $(USER_DIR)/IRutils.cpp $(USER_DIR)/IRutils.h $(USER_DIR)/IRremoteESP8266.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/IRutils.cpp
@@ -90,7 +96,7 @@ ir_Sherwood.o : $(USER_DIR)/ir_Sherwood.cpp $(COMMON_DEPS)
 ir_Sony.o : $(USER_DIR)/ir_Sony.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Sony.cpp
 
-ir_Samsung.o : $(USER_DIR)/ir_Samsung.cpp $(COMMON_DEPS)
+ir_Samsung.o : $(USER_DIR)/ir_Samsung.cpp $(USER_DIR)/ir_Samsung.h $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Samsung.cpp
 
 ir_Kelvinator.o : $(USER_DIR)/ir_Kelvinator.cpp $(USER_DIR)/ir_Kelvinator.h $(COMMON_DEPS)
@@ -173,3 +179,21 @@ ir_Hitachi.o : $(USER_DIR)/ir_Hitachi.cpp $(GTEST_HEADERS)
 
 ir_GICable.o : $(USER_DIR)/ir_GICable.cpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_GICable.cpp
+
+ir_Whirlpool.o : $(USER_DIR)/ir_Whirlpool.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Whirlpool.cpp
+
+ir_Lutron.o : $(USER_DIR)/ir_Lutron.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Lutron.cpp
+
+ir_Electra.o : $(USER_DIR)/ir_Electra.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Electra.cpp
+
+ir_Pioneer.o : $(USER_DIR)/ir_Pioneer.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Pioneer.cpp
+
+ir_MWM.o : $(USER_DIR)/ir_MWM.cpp $(USER_DIR)/ir_RC5_RC6.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_MWM.cpp
+
+ir_Vestel.o : $(USER_DIR)/ir_Vestel.cpp $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Vestel.cpp

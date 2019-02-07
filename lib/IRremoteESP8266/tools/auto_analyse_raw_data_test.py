@@ -8,6 +8,8 @@ import auto_analyse_raw_data as analyse
 class TestRawIRMessage(unittest.TestCase):
   """Unit tests for the RawIRMessage class."""
 
+  # pylint: disable=too-many-public-methods
+
   def test_display_binary(self):
     """Test the display_binary() method."""
     output = StringIO.StringIO()
@@ -46,6 +48,8 @@ class TestRawIRMessage(unittest.TestCase):
 class TestAutoAnalyseRawData(unittest.TestCase):
   """Unit tests for the functions in AutoAnalyseRawData."""
 
+  # pylint: disable=too-many-public-methods
+
   def test_dump_constants_simple(self):
     """Simple tests for the dump_constants() function."""
     ignore = StringIO.StringIO()
@@ -58,16 +62,16 @@ class TestAutoAnalyseRawData(unittest.TestCase):
     ], ignore)
     analyse.dump_constants(message, defs, output)
     self.assertEqual(defs, [
-        '#define HDR_MARK 7930U', '#define BIT_MARK 520U',
-        '#define HDR_SPACE 3978U', '#define ONE_SPACE 1508U',
-        '#define ZERO_SPACE 520U'
+        'const uint16_t kHdrMark = 7930;', 'const uint16_t kBitMark = 496;',
+        'const uint16_t kHdrSpace = 3965;', 'const uint16_t kOneSpace = 1485;',
+        'const uint16_t kZeroSpace = 520;'
     ])
     self.assertEqual(output.getvalue(), 'Guessing key value:\n'
-                     'HDR_MARK   = 7930\n'
-                     'HDR_SPACE  = 3978\n'
-                     'BIT_MARK   = 520\n'
-                     'ONE_SPACE  = 1508\n'
-                     'ZERO_SPACE = 520\n')
+                     'kHdrMark   = 7930\n'
+                     'kHdrSpace  = 3965\n'
+                     'kBitMark   = 496\n'
+                     'kOneSpace  = 1485\n'
+                     'kZeroSpace = 520\n')
 
   def test_dump_constants_aircon(self):
     """More complex tests for the dump_constants() function."""
@@ -89,17 +93,17 @@ class TestAutoAnalyseRawData(unittest.TestCase):
     ], ignore)
     analyse.dump_constants(message, defs, output)
     self.assertEqual(defs, [
-        '#define HDR_MARK 9008U', '#define BIT_MARK 676U',
-        '#define HDR_SPACE 4496U', '#define ONE_SPACE 1680U',
-        '#define ZERO_SPACE 584U', '#define SPACE_GAP = 19990U'
+        'const uint16_t kHdrMark = 9008;', 'const uint16_t kBitMark = 650;',
+        'const uint16_t kHdrSpace = 4496;', 'const uint16_t kOneSpace = 1657;',
+        'const uint16_t kZeroSpace = 554;', 'const uint16_t kSpaceGap = 19990;'
     ])
     self.assertEqual(output.getvalue(), 'Guessing key value:\n'
-                     'HDR_MARK   = 9008\n'
-                     'HDR_SPACE  = 4496\n'
-                     'BIT_MARK   = 676\n'
-                     'ONE_SPACE  = 1680\n'
-                     'ZERO_SPACE = 584\n'
-                     'SPACE_GAP = 19990\n')
+                     'kHdrMark   = 9008\n'
+                     'kHdrSpace  = 4496\n'
+                     'kBitMark   = 650\n'
+                     'kOneSpace  = 1657\n'
+                     'kZeroSpace = 554\n'
+                     'kSpaceGap = 19990\n')
 
   def test_convert_rawdata(self):
     """Tests for the convert_rawdata() function."""
@@ -177,16 +181,16 @@ class TestAutoAnalyseRawData(unittest.TestCase):
         'Looks like it uses space encoding. Yay!\n'
         '\n'
         'Guessing key value:\n'
-        'HDR_MARK   = 9008\n'
-        'HDR_SPACE  = 4496\n'
-        'BIT_MARK   = 676\n'
-        'ONE_SPACE  = 1680\n'
-        'ZERO_SPACE = 584\n'
-        'SPACE_GAP = 19990\n'
+        'kHdrMark   = 9008\n'
+        'kHdrSpace  = 4496\n'
+        'kBitMark   = 650\n'
+        'kOneSpace  = 1657\n'
+        'kZeroSpace = 554\n'
+        'kSpaceGap = 19990\n'
         '\n'
         'Decoding protocol based on analysis so far:\n'
         '\n'
-        'HDR_MARK+HDR_SPACE+10011000010100000000011000001010010 GAP(19990)\n'
+        'kHdrMark+kHdrSpace+10011000010100000000011000001010010GAP(19990)\n'
         '  Bits: 35\n'
         '  Hex:  0x4C2803052 (MSB first)\n'
         '        0x250600A19 (LSB first)\n'
@@ -194,7 +198,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
         '        9938405913 (LSB first)\n'
         '  Bin:  0b10011000010100000000011000001010010 (MSB first)\n'
         '        0b01001010000011000000000101000011001 (LSB first)\n'
-        'BIT_MARK(UNEXPECTED)01000000110001000000000000001111\n'
+        'kBitMark(UNEXPECTED)01000000110001000000000000001111\n'
         '  Bits: 32\n'
         '  Hex:  0x40C4000F (MSB first)\n'
         '        0xF0002302 (LSB first)\n'
@@ -202,6 +206,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
         '        4026540802 (LSB first)\n'
         '  Bin:  0b01000000110001000000000000001111 (MSB first)\n'
         '        0b11110000000000000010001100000010 (LSB first)\n'
+        '\n'
         'Total Nr. of suspected bits: 67\n')
 
     # With code generation.
@@ -223,15 +228,15 @@ class TestAutoAnalyseRawData(unittest.TestCase):
         'Looks like it uses space encoding. Yay!\n'
         '\n'
         'Guessing key value:\n'
-        'HDR_MARK   = 7930\n'
-        'HDR_SPACE  = 3978\n'
-        'BIT_MARK   = 520\n'
-        'ONE_SPACE  = 1508\n'
-        'ZERO_SPACE = 520\n'
+        'kHdrMark   = 7930\n'
+        'kHdrSpace  = 3965\n'
+        'kBitMark   = 496\n'
+        'kOneSpace  = 1485\n'
+        'kZeroSpace = 520\n'
         '\n'
         'Decoding protocol based on analysis so far:\n'
         '\n'
-        'HDR_MARK+HDR_SPACE+11101011\n'
+        'kHdrMark+kHdrSpace+11101011\n'
         '  Bits: 8\n'
         '  Hex:  0xEB (MSB first)\n'
         '        0xD7 (LSB first)\n'
@@ -239,49 +244,248 @@ class TestAutoAnalyseRawData(unittest.TestCase):
         '        215 (LSB first)\n'
         '  Bin:  0b11101011 (MSB first)\n'
         '        0b11010111 (LSB first)\n'
-        'UNEXPECTED->HDR_SPACE+00000001\n'
-        '  Bits: 8\n  Hex:  0x01 (MSB first)\n'
+        'UNEXPECTED->kHdrSpace+00000001\n'
+        '  Bits: 8\n'
+        '  Hex:  0x01 (MSB first)\n'
         '        0x80 (LSB first)\n'
         '  Dec:  1 (MSB first)\n'
         '        128 (LSB first)\n'
         '  Bin:  0b00000001 (MSB first)\n'
         '        0b10000000 (LSB first)\n'
+        '\n'
         'Total Nr. of suspected bits: 16\n'
         '\n'
         'Generating a VERY rough code outline:\n'
         '\n'
         "// WARNING: This probably isn't directly usable. It's a guide only.\n"
-        '#define HDR_MARK 7930U\n'
-        '#define BIT_MARK 520U\n'
-        '#define HDR_SPACE 3978U\n'
-        '#define ONE_SPACE 1508U\n'
-        '#define ZERO_SPACE 520U\n'
-        '#define XYZ_BITS 16U\n'
+        'const uint16_t kHdrMark = 7930;\n'
+        'const uint16_t kBitMark = 496;\n'
+        'const uint16_t kHdrSpace = 3965;\n'
+        'const uint16_t kOneSpace = 1485;\n'
+        'const uint16_t kZeroSpace = 520;\n'
+        'const uint16_t kXyzBits = 16;\n'
         '// Function should be safe up to 64 bits.\n'
-        'void IRsend::sendXYZ(const uint64_t data, const uint16_t nbits,'
+        'void IRsend::sendXyz(const uint64_t data, const uint16_t nbits,'
         ' const uint16_t repeat) {\n'
         '  enableIROut(38);  // A guess. Most common frequency.\n'
         '  for (uint16_t r = 0; r <= repeat; r++) {\n'
         '    // Header\n'
-        '    mark(HDR_MARK);\n'
-        '    space(HDR_SPACE);\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
         '    // Data\n'
         '    // e.g. data = 0xEB, nbits = 8\n'
-        '    sendData(BIT_MARK, ONE_SPACE, BIT_MARK, ZERO_SPACE, data, nbits,'
+        '    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, nbits,'
         ' true);\n'
         '    // Footer\n'
-        '    mark(BIT_MARK);\n'
-        '    space(HDR_SPACE);\n'
+        '    mark(kBitMark);\n'
+        '    space(kHdrSpace);\n'
         '    // Data\n'
         '    // e.g. data = 0x1, nbits = 8\n'
-        '    sendData(BIT_MARK, ONE_SPACE, BIT_MARK, ZERO_SPACE, data, nbits,'
+        '    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, nbits,'
         ' true);\n'
         '    // Footer\n'
-        '    mark(BIT_MARK);\n'
+        '    mark(kBitMark);\n'
         '    space(100000);  // A 100% made up guess of the gap between'
         ' messages.\n'
         '  }\n'
         '}\n')
+
+  def test_unusual_gaps(self):
+    """Tests for unusual Space Gaps in parse_and_report() function."""
+
+    # Tests for unusual Gaps. (Issue #482)
+    output = StringIO.StringIO()
+    input_str = """
+        uint16_t rawbuf[272] = {3485, 3512, 864, 864, 864, 2620, 864, 864,
+            864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 864,
+            864, 2620, 864, 864, 864, 2620, 864, 2620, 864, 2620, 864, 2620,
+            864, 2620, 864, 864, 864, 2620, 864, 864, 864, 864, 864, 864,
+            864, 864, 864, 864, 864, 864, 864, 864, 864, 2620, 864, 864,
+            864, 864, 864, 864, 864, 864, 864, 864, 864, 864,
+            3485, 3512, 864, 864, 864, 2620, 864, 864, 864, 2620, 864, 2620,
+            864, 2620, 864, 2620, 864, 2620, 864, 864, 864, 2620, 864, 864,
+            864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 864,
+            864, 2620, 864, 864, 864, 864, 864, 864, 864, 864, 864, 864, 864,
+            864, 864, 864, 864, 2620, 864, 864, 864, 864, 864, 864, 864, 864,
+            864, 864, 864, 864,
+            3485, 3512, 864, 13996,
+            3485, 3512, 864, 864, 864, 864, 864, 2620, 864, 864, 864, 2620,
+            864, 2620, 864, 2620, 864, 2620, 864, 864, 864, 864, 864, 2620,
+            864, 864, 864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 864,
+            864, 2620, 864, 2620, 864, 864, 864, 2620, 864, 2620, 864, 864,
+            864, 864, 864, 864, 864, 2620, 864, 2620, 864, 864, 864, 2620,
+            864, 2620, 864, 864, 864, 864,
+            3485, 3512, 864, 864, 864, 864, 864, 2620, 864, 864, 864, 2620,
+            864, 2620, 864, 2620, 864, 2620, 864, 864, 864, 864, 864, 2620,
+            864, 864, 864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 864,
+            864, 2620, 864, 2620, 864, 864, 864, 2620, 864, 2620, 864, 864,
+            864, 864, 864, 864, 864, 2620, 864, 2620, 864, 864, 864, 2620,
+            864, 2620, 864, 864, 864, 864, 3485, 3512, 864, 13996};"""
+    analyse.parse_and_report(input_str, 200, True, output)
+    self.assertEqual(
+        output.getvalue(), 'Found 272 timing entries.\n'
+        'Potential Mark Candidates:\n'
+        '[3485, 864]\n'
+        'Potential Space Candidates:\n'
+        '[13996, 3512, 2620, 864]\n'
+        '\n'
+        'Guessing encoding type:\n'
+        'Looks like it uses space encoding. Yay!\n'
+        '\n'
+        'Guessing key value:\n'
+        'kHdrMark   = 3485\n'
+        'kHdrSpace  = 3512\n'
+        'kBitMark   = 864\n'
+        'kOneSpace  = 2620\n'
+        'kZeroSpace = 864\n'
+        'kSpaceGap = 13996\n'
+        '\n'
+        'Decoding protocol based on analysis so far:\n'
+        '\n'
+        'kHdrMark+kHdrSpace+01011111010111110100000001000000\n'
+        '  Bits: 32\n'
+        '  Hex:  0x5F5F4040 (MSB first)\n'
+        '        0x0202FAFA (LSB first)\n'
+        '  Dec:  1600077888 (MSB first)\n'
+        '        33749754 (LSB first)\n'
+        '  Bin:  0b01011111010111110100000001000000 (MSB first)\n'
+        '        0b00000010000000101111101011111010 (LSB first)\n'
+        'kHdrMark+kHdrSpace+01011111010111110100000001000000\n'
+        '  Bits: 32\n'
+        '  Hex:  0x5F5F4040 (MSB first)\n'
+        '        0x0202FAFA (LSB first)\n'
+        '  Dec:  1600077888 (MSB first)\n'
+        '        33749754 (LSB first)\n'
+        '  Bin:  0b01011111010111110100000001000000 (MSB first)\n'
+        '        0b00000010000000101111101011111010 (LSB first)\n'
+        'kHdrMark+kHdrSpace+GAP(13996)'
+        'kHdrMark+kHdrSpace+00101111001011110110110001101100\n'
+        '  Bits: 32\n'
+        '  Hex:  0x2F2F6C6C (MSB first)\n'
+        '        0x3636F4F4 (LSB first)\n'
+        '  Dec:  791637100 (MSB first)\n'
+        '        909571316 (LSB first)\n'
+        '  Bin:  0b00101111001011110110110001101100 (MSB first)\n'
+        '        0b00110110001101101111010011110100 (LSB first)\n'
+        'kHdrMark+kHdrSpace+00101111001011110110110001101100\n'
+        '  Bits: 32\n'
+        '  Hex:  0x2F2F6C6C (MSB first)\n'
+        '        0x3636F4F4 (LSB first)\n'
+        '  Dec:  791637100 (MSB first)\n'
+        '        909571316 (LSB first)\n'
+        '  Bin:  0b00101111001011110110110001101100 (MSB first)\n'
+        '        0b00110110001101101111010011110100 (LSB first)\n'
+        'kHdrMark+kHdrSpace+GAP(13996)\n'
+        'Total Nr. of suspected bits: 128\n'
+        '\n'
+        'Generating a VERY rough code outline:\n'
+        '\n'
+        "// WARNING: This probably isn't directly usable. It's a guide only.\n"
+        'const uint16_t kHdrMark = 3485;\n'
+        'const uint16_t kBitMark = 864;\n'
+        'const uint16_t kHdrSpace = 3512;\n'
+        'const uint16_t kOneSpace = 2620;\n'
+        'const uint16_t kZeroSpace = 864;\n'
+        'const uint16_t kSpaceGap = 13996;\n'
+        'const uint16_t kXyzBits = 128;\n'
+        'const uint16_t kXyzStateLength = 16;\n'
+        "// DANGER: More than 64 bits detected. A uint64_t for 'data' won't"
+        ' work!\n'
+        '// Function should be safe up to 64 bits.\n'
+        'void IRsend::sendXyz(const uint64_t data, const uint16_t nbits,'
+        ' const uint16_t repeat) {\n'
+        '  enableIROut(38);  // A guess. Most common frequency.\n'
+        '  for (uint16_t r = 0; r <= repeat; r++) {\n'
+        '    // Header\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
+        '    // Data\n'
+        '    // e.g. data = 0x5F5F4040, nbits = 32\n'
+        '    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, nbits,'
+        ' true);\n'
+        '    // Header\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
+        '    // Data\n'
+        '    // e.g. data = 0x5F5F4040, nbits = 32\n'
+        '    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, nbits,'
+        ' true);\n'
+        '    // Header\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
+        '    // Gap\n'
+        '    mark(kBitMark);\n'
+        '    space(kSpaceGap);\n'
+        '    // Header\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
+        '    // Data\n'
+        '    // e.g. data = 0x2F2F6C6C, nbits = 32\n'
+        '    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, nbits,'
+        ' true);\n'
+        '    // Header\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
+        '    // Data\n'
+        '    // e.g. data = 0x2F2F6C6C, nbits = 32\n'
+        '    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, nbits,'
+        ' true);\n'
+        '    // Header\n'
+        '    mark(kHdrMark);\n'
+        '    space(kHdrSpace);\n'
+        '    // Gap\n'
+        '    mark(kBitMark);\n'
+        '    space(kSpaceGap);\n'
+        '    space(100000);  // A 100% made up guess of the gap between'
+        ' messages.\n'
+        '  }\n'
+        '}\n'
+        '\n'
+        '\n'
+        '// Alternative >64 bit Function\n'
+        'void IRsend::sendXyz(uint8_t data[], uint16_t nbytes, uint16_t repeat)'
+        ' {\n'
+        '  // nbytes should typically be kXyzStateLength\n'
+        '  // data should typically be:\n'
+        '  //   uint8_t data[kXyzStateLength] = {0x5F, 0x5F, 0x40, 0x40, 0x5F,'
+        ' 0x5F, 0x40, 0x40, 0x2F, 0x2F, 0x6C, 0x6C, 0x2F, 0x2F, 0x6C, 0x6C};\n'
+        '  // data[] is assumed to be in MSB order for this code.\n'
+        '  for (uint16_t r = 0; r <= repeat; r++) {\n'
+        '    sendGeneric(kHdrMark, kHdrSpace,\n'
+        '                kBitMark, kOneSpace,\n'
+        '                kBitMark, kZeroSpace,\n'
+        '                kBitMark,\n'
+        '                100000, // 100% made-up guess at the message gap.\n'
+        '                data, nbytes,\n'
+        '                38000, // Complete guess of the modulation'
+        ' frequency.\n'
+        '                true, 0, 50);\n'
+        '  }\n'
+        '}\n')
+
+  def test_reduce_list(self):
+    """Tests for the reduce_list method."""
+
+    ignore = StringIO.StringIO()
+    message = analyse.RawIRMessage(200, [
+        7930, 3952, 494, 1482, 520, 1482, 494, 1508, 494, 520, 494, 1482, 494,
+        520, 494, 1482, 494, 1482, 494, 3978, 494, 520, 494, 520, 494, 520, 494,
+        520, 520, 520, 494, 520, 494, 520, 494, 1482, 494
+    ], ignore)
+    test_space_data = [4496, 1660, 530, 558, 1636, 1660, 556]
+    result_list, result_dict = message.reduce_list(test_space_data)
+    self.assertEqual([4496, 1660, 558], result_list)
+    self.assertEqual({
+        558: [558, 556, 530],
+        1660: [1660, 1660, 1636],
+        4496: [4496]
+    }, result_dict)
+
+  def test_avg_list(self):
+    """Tests for the avg_list method."""
+
+    self.assertEqual(0, analyse.avg_list([]))
+    self.assertEqual(23, analyse.avg_list([10, 20, 40]))
 
 
 if __name__ == '__main__':

@@ -11,44 +11,38 @@ Copyright 2017 Schmolders
 
 // Constants
 // using SPACE modulation. MARK is always const 400u
-#define ARGO_HDR_MARK             6400U  // Mark
-#define ARGO_HDR_SPACE            3300U  // Space
-#define ARGO_BIT_MARK              400U
-#define ARGO_ONE_SPACE            2200U
-#define ARGO_ZERO_SPACE            900U
+const uint16_t kArgoHdrMark = 6400;
+const uint16_t kArgoHdrSpace = 3300;
+const uint16_t kArgoBitMark = 400;
+const uint16_t kArgoOneSpace = 2200;
+const uint16_t kArgoZeroSpace = 900;
 
 #if SEND_ARGO
 // Send an Argo A/C message.
 //
 // Args:
-//   data: An array of ARGO_COMMAND_LENGTH bytes containing the IR command.
+//   data: An array of kArgoStateLength bytes containing the IR command.
 //
 // Status: ALPHA / Untested.
 
 void IRsend::sendArgo(unsigned char data[], uint16_t nbytes, uint16_t repeat) {
   // Check if we have enough bytes to send a proper message.
-  if (nbytes < ARGO_COMMAND_LENGTH) return;
+  if (nbytes < kArgoStateLength) return;
   // TODO(kaschmo): validate
-  sendGeneric(ARGO_HDR_MARK, ARGO_HDR_SPACE,
-              ARGO_BIT_MARK, ARGO_ONE_SPACE,
-              ARGO_BIT_MARK, ARGO_ZERO_SPACE,
-              0, 0,  // No Footer.
-              data, nbytes, 38, false, repeat, 50);
+  sendGeneric(kArgoHdrMark, kArgoHdrSpace, kArgoBitMark, kArgoOneSpace,
+              kArgoBitMark, kArgoZeroSpace, 0, 0,  // No Footer.
+              data, nbytes, 38, false, repeat, kDutyDefault);
 }
 #endif  // SEND_ARGO
 
-IRArgoAC::IRArgoAC(uint16_t pin) : _irsend(pin) {
-  stateReset();
-}
+IRArgoAC::IRArgoAC(uint16_t pin) : _irsend(pin) { stateReset(); }
 
-void IRArgoAC::begin() {
-  _irsend.begin();
-}
+void IRArgoAC::begin() { _irsend.begin(); }
 
 #if SEND_ARGO
-void IRArgoAC::send() {
+void IRArgoAC::send(const uint16_t repeat) {
   checksum();  // Create valid checksum before sending
-  _irsend.sendArgo(argo);
+  _irsend.sendArgo(argo, kArgoStateLength, repeat);
 }
 #endif  // SEND_ARGO
 
@@ -58,20 +52,18 @@ void IRArgoAC::checksum() {
 
   // Only add up bytes to 9. byte 10 is 0b01 constant anyway.
   // Assume that argo array is MSB first (left)
-  for (i = 0; i < 10; i++)
-    sum += argo[i];
+  for (i = 0; i < 10; i++) sum += argo[i];
 
   sum = sum % 256;  // modulo 256
   // Append sum to end of array
   // Set const part of checksum bit 10
   argo[10] = 0b00000010;
   argo[10] += sum << 2;  // Shift up 2 bits and append to byte 10
-  argo[11] = sum >> 6;  // Shift down 6 bits and add in two LSBs of bit 11
+  argo[11] = sum >> 6;   // Shift down 6 bits and add in two LSBs of bit 11
 }
 
 void IRArgoAC::stateReset() {
-  for (uint8_t i = 0; i < ARGO_COMMAND_LENGTH; i++)
-    argo[i] = 0x0;
+  for (uint8_t i = 0; i < kArgoStateLength; i++) argo[i] = 0x0;
 
   // Argo Message. Store MSB left.
   // Default message:
@@ -84,8 +76,8 @@ void IRArgoAC::stateReset() {
   this->off();
   this->setTemp(20);
   this->setRoomTemp(25);
-  this->setCoolMode(ARGO_COOL_AUTO);
-  this->setFan(ARGO_FAN_AUTO);
+  this->setCoolMode(kArgoCoolAuto);
+  this->setFan(kArgoFanAuto);
 }
 
 uint8_t* IRArgoAC::getRaw() {
@@ -116,9 +108,7 @@ void IRArgoAC::setPower(bool state) {
     off();
 }
 
-uint8_t IRArgoAC::getPower() {
-  return ac_state;
-}
+uint8_t IRArgoAC::getPower() { return ac_state; }
 
 void IRArgoAC::setMax(bool state) {
   max_mode = state;
@@ -128,17 +118,15 @@ void IRArgoAC::setMax(bool state) {
     argo[9] &= 0b11110111;
 }
 
-bool IRArgoAC::getMax() {
-  return max_mode;
-}
+bool IRArgoAC::getMax() { return max_mode; }
 
 // Set the temp in deg C
 // Sending 0 equals +4
 void IRArgoAC::setTemp(uint8_t temp) {
-  if (temp < ARGO_MIN_TEMP)
-    temp = ARGO_MIN_TEMP;
-  else if (temp > ARGO_MAX_TEMP)
-    temp = ARGO_MAX_TEMP;
+  if (temp < kArgoMinTemp)
+    temp = kArgoMinTemp;
+  else if (temp > kArgoMaxTemp)
+    temp = kArgoMaxTemp;
 
   // Store in attributes
   set_temp = temp;
@@ -154,9 +142,7 @@ void IRArgoAC::setTemp(uint8_t temp) {
   argo[3] += temp >> 2;  // remove lowest to bits and append in 0-2
 }
 
-uint8_t IRArgoAC::getTemp() {
-  return set_temp;
-}
+uint8_t IRArgoAC::getTemp() { return set_temp; }
 
 // Set the speed of the fan
 void IRArgoAC::setFan(uint8_t fan) {
@@ -168,18 +154,14 @@ void IRArgoAC::setFan(uint8_t fan) {
   argo[3] += fan << 3;
 }
 
-uint8_t IRArgoAC::getFan() {
-  return fan_mode;
-}
+uint8_t IRArgoAC::getFan() { return fan_mode; }
 
 void IRArgoAC::setFlap(uint8_t flap) {
   flap_mode = flap;
   // TODO(kaschmo): set correct bits for flap mode
 }
 
-uint8_t IRArgoAC::getFlap() {
-  return flap_mode;
-}
+uint8_t IRArgoAC::getFlap() { return flap_mode; }
 
 uint8_t IRArgoAC::getMode() {
   // return cooling 0, heating 1
@@ -196,9 +178,7 @@ void IRArgoAC::setCoolMode(uint8_t mode) {
   argo[2] += mode << 3;
 }
 
-uint8_t IRArgoAC::getCoolMode() {
-  return cool_mode;
-}
+uint8_t IRArgoAC::getCoolMode() { return cool_mode; }
 
 void IRArgoAC::setHeatMode(uint8_t mode) {
   ac_mode = 1;  // Set ac mode to heating
@@ -211,9 +191,7 @@ void IRArgoAC::setHeatMode(uint8_t mode) {
   argo[2] += mode << 3;
 }
 
-uint8_t IRArgoAC::getHeatMode() {
-  return heat_mode;
-}
+uint8_t IRArgoAC::getHeatMode() { return heat_mode; }
 
 void IRArgoAC::setNight(bool state) {
   night_mode = state;
@@ -224,9 +202,7 @@ void IRArgoAC::setNight(bool state) {
     argo[9] &= 0b11111011;
 }
 
-bool IRArgoAC::getNight() {
-  return night_mode;
-}
+bool IRArgoAC::getNight() { return night_mode; }
 
 void IRArgoAC::setiFeel(bool state) {
   ifeel_mode = state;
@@ -237,9 +213,7 @@ void IRArgoAC::setiFeel(bool state) {
     argo[9] &= 0b01111111;
 }
 
-bool IRArgoAC::getiFeel() {
-  return ifeel_mode;
-}
+bool IRArgoAC::getiFeel() { return ifeel_mode; }
 
 void IRArgoAC::setTime() {
   // TODO(kaschmo): use function call from checksum to set time first

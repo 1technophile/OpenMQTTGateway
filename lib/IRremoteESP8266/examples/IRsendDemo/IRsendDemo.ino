@@ -1,11 +1,11 @@
 /* IRremoteESP8266: IRsendDemo - demonstrates sending IR codes with IRsend.
  *
- * Version 1.0 April, 2017
+ * Version 1.1 January, 2019
  * Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009,
  * Copyright 2009 Ken Shirriff, http://arcfn.com
  *
  * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
- * as specified by IR_LED below.
+ * as specified by kIrLed below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
  *
@@ -34,9 +34,9 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
-#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
 
-IRsend irsend(IR_LED);  // Set the GPIO to be used to sending the message.
+IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
 
 // Example of data captured by IRrecvDumpV2.ino
 uint16_t rawData[67] = {9000, 4500, 650, 550, 650, 1650, 600, 550, 650, 550,
@@ -46,6 +46,10 @@ uint16_t rawData[67] = {9000, 4500, 650, 550, 650, 1650, 600, 550, 650, 550,
                         650, 550, 650, 550, 600, 550, 650, 550, 650, 550,
                         650, 1650, 600, 550, 650, 1650, 650, 1650, 650, 1650,
                         650, 1650, 650, 1650, 650, 1650, 600};
+// Example Samsung A/C state captured from IRrecvDumpV2.ino
+uint8_t samsungState[kSamsungAcStateLength] = {
+    0x02, 0x92, 0x0F, 0x00, 0x00, 0x00, 0xF0,
+    0x01, 0xE2, 0xFE, 0x71, 0x40, 0x11, 0xF0};
 
 void setup() {
   irsend.begin();
@@ -53,19 +57,16 @@ void setup() {
 }
 
 void loop() {
-#if SEND_NEC
   Serial.println("NEC");
-  irsend.sendNEC(0x00FFE01FUL, 32);
-#endif  // SEND_NEC
+  irsend.sendNEC(0x00FFE01FUL);
   delay(2000);
-#if SEND_SONY
   Serial.println("Sony");
-  irsend.sendSony(0xa90, 12, 2);
-#endif  // SEND_SONY
+  irsend.sendSony(0xa90, 12, 2);  // 12 bits & 2 repeats
   delay(2000);
-#if SEND_RAW
   Serial.println("a rawData capture from IRrecvDumpV2");
   irsend.sendRaw(rawData, 67, 38);  // Send a raw data capture at 38kHz.
-#endif  // SEND_RAW
+  delay(2000);
+  Serial.println("a Samsung A/C state from IRrecvDumpV2");
+  irsend.sendSamsungAC(samsungState);
   delay(2000);
 }

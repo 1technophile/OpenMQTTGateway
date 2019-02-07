@@ -1,11 +1,11 @@
 // Copyright 2017 David Conran
 
-#include "IRremoteESP8266.h"
+#include "ir_Kelvinator.h"
 #include "IRrecv.h"
 #include "IRrecv_test.h"
+#include "IRremoteESP8266.h"
 #include "IRsend.h"
 #include "IRsend_test.h"
-#include "ir_Kelvinator.h"
 #include "gtest/gtest.h"
 
 // Tests for sendKelvinator().
@@ -15,7 +15,7 @@ TEST(TestSendKelvinator, SendDataOnly) {
   IRsendTest irsend(4);
   irsend.begin();
 
-  uint8_t kelv_code[KELVINATOR_STATE_LENGTH] = {
+  uint8_t kelv_code[kKelvinatorStateLength] = {
       0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
       0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10, 0xf0};
   irsend.reset();
@@ -44,7 +44,8 @@ TEST(TestSendKelvinator, SendDataOnly) {
       "m680s510m680s510m680s510m680s510m680s510m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s1530m680s1530m680s1530"
-      "m680s39950", irsend.outputStr());
+      "m680s39950",
+      irsend.outputStr());
 }
 
 // Test sending with repeats.
@@ -53,12 +54,12 @@ TEST(TestSendKelvinator, SendWithRepeats) {
   irsend.begin();
 
   irsend.reset();
-  uint8_t kelv_code[KELVINATOR_STATE_LENGTH] = {
+  uint8_t kelv_code[kKelvinatorStateLength] = {
       0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
       0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10, 0xf0};
   irsend.reset();
 
-  irsend.sendKelvinator(kelv_code, KELVINATOR_STATE_LENGTH, 1);
+  irsend.sendKelvinator(kelv_code, kKelvinatorStateLength, 1);
   EXPECT_EQ(
       "m9010s4505"
       "m680s1530m680s510m680s510m680s1530m680s1530m680s510m680s510m680s510"
@@ -107,7 +108,8 @@ TEST(TestSendKelvinator, SendWithRepeats) {
       "m680s510m680s510m680s510m680s510m680s510m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s1530m680s1530m680s1530"
-      "m680s39950", irsend.outputStr());
+      "m680s39950",
+      irsend.outputStr());
 }
 
 // Test sending atypical sizes.
@@ -117,9 +119,9 @@ TEST(TestSendKelvinator, SendUnexpectedSizes) {
 
   uint8_t kelv_short_code[15] = {0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
                                  0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10};
-  uint8_t kelv_long_code[17] = {0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
-                                0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10, 0xf0,
-                                0x00};
+  uint8_t kelv_long_code[17] = {0x19, 0x0B, 0x80, 0x50, 0x00, 0x00,
+                                0x00, 0xE0, 0x19, 0x0B, 0x80, 0x70,
+                                0x00, 0x00, 0x10, 0xf0, 0x00};
   irsend.reset();
   irsend.sendKelvinator(kelv_short_code, 15);
   ASSERT_EQ("", irsend.outputStr());
@@ -152,9 +154,9 @@ TEST(TestSendKelvinator, SendUnexpectedSizes) {
       "m680s510m680s510m680s510m680s510m680s510m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s1530m680s1530m680s1530"
-      "m680s39950", irsend.outputStr());
+      "m680s39950",
+      irsend.outputStr());
 }
-
 
 // Tests for IRKelvinatorAC class.
 
@@ -180,22 +182,22 @@ TEST(TestKelvinatorClass, Temperature) {
   irkelv.begin();
 
   irkelv.setTemp(0);
-  EXPECT_EQ(KELVINATOR_MIN_TEMP, irkelv.getTemp());
+  EXPECT_EQ(kKelvinatorMinTemp, irkelv.getTemp());
 
   irkelv.setTemp(255);
-  EXPECT_EQ(KELVINATOR_MAX_TEMP, irkelv.getTemp());
+  EXPECT_EQ(kKelvinatorMaxTemp, irkelv.getTemp());
 
-  irkelv.setTemp(KELVINATOR_MIN_TEMP);
-  EXPECT_EQ(KELVINATOR_MIN_TEMP, irkelv.getTemp());
+  irkelv.setTemp(kKelvinatorMinTemp);
+  EXPECT_EQ(kKelvinatorMinTemp, irkelv.getTemp());
 
-  irkelv.setTemp(KELVINATOR_MAX_TEMP);
-  EXPECT_EQ(KELVINATOR_MAX_TEMP, irkelv.getTemp());
+  irkelv.setTemp(kKelvinatorMaxTemp);
+  EXPECT_EQ(kKelvinatorMaxTemp, irkelv.getTemp());
 
-  irkelv.setTemp(KELVINATOR_MIN_TEMP - 1);
-  EXPECT_EQ(KELVINATOR_MIN_TEMP, irkelv.getTemp());
+  irkelv.setTemp(kKelvinatorMinTemp - 1);
+  EXPECT_EQ(kKelvinatorMinTemp, irkelv.getTemp());
 
-  irkelv.setTemp(KELVINATOR_MAX_TEMP + 1);
-  EXPECT_EQ(KELVINATOR_MAX_TEMP, irkelv.getTemp());
+  irkelv.setTemp(kKelvinatorMaxTemp + 1);
+  EXPECT_EQ(kKelvinatorMaxTemp, irkelv.getTemp());
 
   irkelv.setTemp(17);
   EXPECT_EQ(17, irkelv.getTemp());
@@ -215,29 +217,29 @@ TEST(TestKelvinatorClass, OperatingMode) {
   irkelv.begin();
 
   irkelv.setTemp(24);
-  irkelv.setMode(KELVINATOR_AUTO);
-  EXPECT_EQ(KELVINATOR_AUTO, irkelv.getMode());
-  EXPECT_EQ(KELVINATOR_AUTO_TEMP, irkelv.getTemp());
+  irkelv.setMode(kKelvinatorAuto);
+  EXPECT_EQ(kKelvinatorAuto, irkelv.getMode());
+  EXPECT_EQ(kKelvinatorAutoTemp, irkelv.getTemp());
 
-  irkelv.setMode(KELVINATOR_COOL);
-  EXPECT_EQ(KELVINATOR_COOL, irkelv.getMode());
+  irkelv.setMode(kKelvinatorCool);
+  EXPECT_EQ(kKelvinatorCool, irkelv.getMode());
 
-  irkelv.setMode(KELVINATOR_HEAT);
-  EXPECT_EQ(KELVINATOR_HEAT, irkelv.getMode());
+  irkelv.setMode(kKelvinatorHeat);
+  EXPECT_EQ(kKelvinatorHeat, irkelv.getMode());
 
   irkelv.setTemp(24);
-  irkelv.setMode(KELVINATOR_DRY);
-  EXPECT_EQ(KELVINATOR_DRY, irkelv.getMode());
-  EXPECT_EQ(KELVINATOR_AUTO_TEMP, irkelv.getTemp());
+  irkelv.setMode(kKelvinatorDry);
+  EXPECT_EQ(kKelvinatorDry, irkelv.getMode());
+  EXPECT_EQ(kKelvinatorAutoTemp, irkelv.getTemp());
 
-  irkelv.setMode(KELVINATOR_FAN);
-  EXPECT_EQ(KELVINATOR_FAN, irkelv.getMode());
+  irkelv.setMode(kKelvinatorFan);
+  EXPECT_EQ(kKelvinatorFan, irkelv.getMode());
 
-  irkelv.setMode(KELVINATOR_HEAT + 1);
-  EXPECT_EQ(KELVINATOR_AUTO, irkelv.getMode());
+  irkelv.setMode(kKelvinatorHeat + 1);
+  EXPECT_EQ(kKelvinatorAuto, irkelv.getMode());
 
   irkelv.setMode(255);
-  EXPECT_EQ(KELVINATOR_AUTO, irkelv.getMode());
+  EXPECT_EQ(kKelvinatorAuto, irkelv.getMode());
 }
 
 TEST(TestKelvinatorClass, VaneSwing) {
@@ -352,16 +354,16 @@ TEST(TestKelvinatorClass, FanSpeed) {
   EXPECT_EQ(0, irkelv.getFan());
 
   irkelv.setFan(255);
-  EXPECT_EQ(KELVINATOR_FAN_MAX, irkelv.getFan());
+  EXPECT_EQ(kKelvinatorFanMax, irkelv.getFan());
 
-  irkelv.setFan(KELVINATOR_FAN_MAX);
-  EXPECT_EQ(KELVINATOR_FAN_MAX, irkelv.getFan());
+  irkelv.setFan(kKelvinatorFanMax);
+  EXPECT_EQ(kKelvinatorFanMax, irkelv.getFan());
 
-  irkelv.setFan(KELVINATOR_FAN_MAX + 1);
-  EXPECT_EQ(KELVINATOR_FAN_MAX, irkelv.getFan());
+  irkelv.setFan(kKelvinatorFanMax + 1);
+  EXPECT_EQ(kKelvinatorFanMax, irkelv.getFan());
 
-  irkelv.setFan(KELVINATOR_FAN_MAX - 1);
-  EXPECT_EQ(KELVINATOR_FAN_MAX - 1, irkelv.getFan());
+  irkelv.setFan(kKelvinatorFanMax - 1);
+  EXPECT_EQ(kKelvinatorFanMax - 1, irkelv.getFan());
 
   irkelv.setFan(1);
   EXPECT_EQ(1, irkelv.getFan());
@@ -374,7 +376,7 @@ TEST(TestKelvinatorClass, FanSpeed) {
 }
 
 TEST(TestKelvinatorClass, Checksums) {
-  uint8_t kelv_code[KELVINATOR_STATE_LENGTH] = {
+  uint8_t kelv_code[kKelvinatorStateLength] = {
       0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
       0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10, 0xf0};
 
@@ -396,42 +398,44 @@ TEST(TestKelvinatorClass, Checksums) {
 
 TEST(TestKelvinatorClass, SetAndGetRaw) {
   IRKelvinatorAC irkelv(0);
-  uint8_t initialState[KELVINATOR_STATE_LENGTH] = {
+  uint8_t initialState[kKelvinatorStateLength] = {
       0x00, 0x00, 0x00, 0x50, 0x00, 0x00, 0x00, 0xA0,
       0x00, 0x00, 0x00, 0x70, 0x00, 0x00, 0x00, 0xA0};
-  uint8_t expectedState[KELVINATOR_STATE_LENGTH] = {
+  uint8_t expectedState[kKelvinatorStateLength] = {
       0x08, 0x05, 0x20, 0x50, 0x00, 0x00, 0x00, 0x70,
       0x08, 0x05, 0x20, 0x70, 0x00, 0x00, 0x00, 0x70};
 
-  EXPECT_STATE_EQ(initialState, irkelv.getRaw(), KELVINATOR_BITS);
+  EXPECT_STATE_EQ(initialState, irkelv.getRaw(), kKelvinatorBits);
   // toggle the power state.
   irkelv.setPower(!irkelv.getPower());
   irkelv.setTemp(21);
   irkelv.setLight(true);
-  EXPECT_STATE_EQ(expectedState, irkelv.getRaw(), KELVINATOR_BITS);
+  EXPECT_STATE_EQ(expectedState, irkelv.getRaw(), kKelvinatorBits);
   irkelv.setRaw(initialState);
-  EXPECT_STATE_EQ(initialState, irkelv.getRaw(), KELVINATOR_BITS);
+  EXPECT_STATE_EQ(initialState, irkelv.getRaw(), kKelvinatorBits);
 }
 
 TEST(TestKelvinatorClass, HumanReadable) {
   IRKelvinatorAC irkelv(0);
 
-  EXPECT_EQ("Power: Off, Mode: 0 (AUTO), Temp: 16C, Fan: 0 (AUTO), Turbo: Off, "
-            "Quiet: Off, XFan: Off, IonFilter: Off, Light: Off, "
-            "Swing (Horizontal): Off, Swing (Vertical): Off",
-            irkelv.toString());
+  EXPECT_EQ(
+      "Power: Off, Mode: 0 (AUTO), Temp: 16C, Fan: 0 (AUTO), Turbo: Off, "
+      "Quiet: Off, XFan: Off, IonFilter: Off, Light: Off, "
+      "Swing (Horizontal): Off, Swing (Vertical): Off",
+      irkelv.toString());
   irkelv.on();
-  irkelv.setMode(KELVINATOR_COOL);
+  irkelv.setMode(kKelvinatorCool);
   irkelv.setTemp(25);
-  irkelv.setFan(KELVINATOR_FAN_MAX);
+  irkelv.setFan(kKelvinatorFanMax);
   irkelv.setXFan(true);
   irkelv.setIonFilter(true);
   irkelv.setLight(true);
   irkelv.setSwingHorizontal(true);
-  EXPECT_EQ("Power: On, Mode: 1 (COOL), Temp: 25C, Fan: 5 (MAX), Turbo: Off, "
-            "Quiet: Off, XFan: On, IonFilter: On, Light: On, "
-            "Swing (Horizontal): On, Swing (Vertical): Off",
-            irkelv.toString());
+  EXPECT_EQ(
+      "Power: On, Mode: 1 (COOL), Temp: 25C, Fan: 5 (MAX), Turbo: Off, "
+      "Quiet: Off, XFan: On, IonFilter: On, Light: On, "
+      "Swing (Horizontal): On, Swing (Vertical): Off",
+      irkelv.toString());
 }
 
 TEST(TestKelvinatorClass, MessageConstuction) {
@@ -441,7 +445,7 @@ TEST(TestKelvinatorClass, MessageConstuction) {
   irsend.begin();
 
   irkelv.setFan(1);
-  irkelv.setMode(KELVINATOR_COOL);
+  irkelv.setMode(kKelvinatorCool);
   irkelv.setTemp(27);
   irkelv.setSwingVertical(false);
   irkelv.setSwingHorizontal(true);
@@ -454,7 +458,7 @@ TEST(TestKelvinatorClass, MessageConstuction) {
 
   // Check everything for kicks.
   EXPECT_EQ(1, irkelv.getFan());
-  EXPECT_EQ(KELVINATOR_COOL, irkelv.getMode());
+  EXPECT_EQ(kKelvinatorCool, irkelv.getMode());
   EXPECT_EQ(27, irkelv.getTemp());
   EXPECT_FALSE(irkelv.getSwingVertical());
   EXPECT_TRUE(irkelv.getSwingHorizontal());
@@ -491,7 +495,8 @@ TEST(TestKelvinatorClass, MessageConstuction) {
       "m680s510m680s510m680s510m680s510m680s510m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s510m680s510m680s510"
       "m680s510m680s510m680s510m680s510m680s1530m680s1530m680s1530m680s1530"
-      "m680s39950", irsend.outputStr());
+      "m680s39950",
+      irsend.outputStr());
 }
 
 // Decode a synthetic Kelvinator message.
@@ -500,7 +505,7 @@ TEST(TestDecodeKelvinator, NormalSynthetic) {
   IRrecv irrecv(4);
   irsend.begin();
 
-  uint8_t kelv_code[KELVINATOR_STATE_LENGTH] = {
+  uint8_t kelv_code[kKelvinatorStateLength] = {
       0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
       0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10, 0xf0};
   irsend.reset();
@@ -508,6 +513,6 @@ TEST(TestDecodeKelvinator, NormalSynthetic) {
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(KELVINATOR, irsend.capture.decode_type);
-  ASSERT_EQ(KELVINATOR_BITS, irsend.capture.bits);
-  EXPECT_STATE_EQ(kelv_code, irsend.capture.state, KELVINATOR_BITS);
+  ASSERT_EQ(kKelvinatorBits, irsend.capture.bits);
+  EXPECT_STATE_EQ(kelv_code, irsend.capture.state, kKelvinatorBits);
 }

@@ -1,5 +1,125 @@
 # Release Notes
 
+## _v2.5.5 (20190207)_
+
+**[Bug Fixes]**
+- Fix decoding of Samsung A/C Extended messages. (#610)
+- Fix IRMQTTServer example to work with GPIO0 as IR_RX (#608)
+- Fix incorrect #define usage. (#597, #596)
+
+**[Features]**
+- Add deep decoding/construction of Daikin2 messages (#600)
+- Added Old Vestel A/C support (56 Bits) with full functions. (#607)
+
+**[Misc]**
+- Add ControlSamsungAC example code. (#599)
+- Add how to send a state/air-con to IRsendDemo.ino (#594)
+
+
+## _v2.5.4 (20190102)_
+
+**[Features]**
+- Experimental basic support for 39 Byte Daikin A/C (#583)
+- Handle send() repeats in A/C classes. Improve Coolix support. (#580)
+- Add optional RX pin pullup and dump raw messages in IRMQTTServer.ino (#589)
+
+**[Misc]**
+- Make auto_analyse_raw_data.py work with Python3 (#581)
+- Update CI/travis config due to esp8266 core 2.5.0 changes (#591)
+
+
+## _v2.5.3 (20181123)_
+
+**[Features]**
+- Add deep support for the Hitachi 28-Byte A/C Protocol (#563)
+- Deep decoding for Whirlpool A/C (#572)
+- Improve security options for IRMQTTServer example. (#575)
+- Require a changed firmware password before upload. (#576)
+
+**[Misc]**
+- Add missing '}' in output of Auto analyse. (#562)
+- Make A/C example code a bit more simple. (#571)
+
+
+## _v2.5.2 (20181021)_
+
+**[Bug Fixes]**
+- Add missing send() method to IRPanasonicAC class. (#545)
+- Add missing sendWhirlpoolAC() to IRMQTTServer.ino (#558)
+
+**[Features]**
+- Add IR receiving support to IRMQTTServer. (#543)
+- Pioneer support (#547)
+- Add support for a second LG protocol variant. (#552)
+- Support for short Panasonic A/C messages. (#553)
+- Add support for Panasonic CKP series A/Cs. (#554)
+- Experimental timer/clock support for Panasonic A/Cs. (#546)
+- Add Made With Magic (MWM) support (#557)
+
+**[Misc]**
+- Grammar and typo fixes (#541, #549)
+- Increase Panasonic A/C message tolerances. (#542)
+- Added command mode2_decode in tools/ (#557)
+- General code style cleanup (#560)
+
+
+## _v2.5.1 (20181002)_
+
+**[Bug Fixes]**
+- Correct the byte used for Samsung AC Swing. (#529)
+- Fix not sending Samsung A/C messages in IRMQTTServer. (#529)
+
+**[Features]**
+- Experimental support for Electra A/C messages. (#528)
+- Experimental support for Panasonic A/C messages. (#535)
+- Samsung A/C fixes & improvements (#529)
+- IRMQTTServer v0.6.0 (#530)
+
+**[Misc]**
+- Change required WifiManager lib version to v0.14
+- Add alias for RAWTICK to kRawTick. (#535)
+- Update sendLutron() status. (#515)
+- Remove leftover debug message in IRrecvDumpV2 (#526)
+
+
+## _v2.5.0 (20180919)_
+
+**[Bug Fixes]**
+- Fix HTML menu error for GICABLE in IRMQTTServer. (#516)
+- Fix Mitsubishi A/C mode setting. (#514)
+- Add missing ',' in auto analyse tool generated code. (#513)
+- Fix Fujitsu checksum validation. (#501)
+- Remove errant Repeat debug statement in IRMQTTServer. (#507)
+
+**[Features]**
+- Mitsubishi A/C decode improvements. (#514)
+- Basic support for Whirlpool A/C messages. (#511)
+- Basic support for Samsung A/C messages. (#512)
+- Experimental support for detailed Samsung A/C messages. (#521)
+- Experimental support for detailed Coolix A/C messages. (#518)
+- Experimental support for Lutron protocol. (#516)
+- Calculate and use average values for timings in analysing tool. (#513)
+
+**[Misc]**
+- Style change from using #define's for constants to `const kConstantName`.
+- Improve the JVC example code.
+
+
+## _v2.4.3 (20180727)_
+
+**[Bug Fixes]**
+- Handle Space Gaps better in auto analyse tool. (#482)
+- Correct min repeat for GICABLE in IRMQTTServer. (#494)
+
+**[Features]**
+- Add static IP config option to IRMQTTServer (#480)
+- Full decoding/encoding support for the Haier YRW02 A/C. (#485 #486 #487)
+
+**[Misc]**
+- Update LG (28-bit) HDR mark and space timings. (#492)
+- Spelling and grammar fixes (#491)
+
+
 ## _v2.4.2 (20180601)_
 
 **[Bug Fixes]**

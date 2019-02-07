@@ -13,25 +13,23 @@
 // MagiQuest packet is both Wand ID and magnitude of swish and flick
 union magiquest {
   uint64_t llword;
-  uint8_t    byte[8];
-//  uint16_t   word[4];
-  uint32_t  lword[2];
+  uint8_t byte[8];
+  //  uint16_t   word[4];
+  uint32_t lword[2];
   struct {
     uint16_t magnitude;
     uint32_t wand_id;
-    uint8_t  padding;
-    uint8_t  scrap;
+    uint8_t padding;
+    uint8_t scrap;
   } cmd;
 };
 
-#define MAGIQUEST_TOTAL_USEC   1150U
-#define MAGIQUEST_ZERO_RATIO     30U  // usually <= ~25%
-#define MAGIQUEST_ONE_RATIO      38U  // usually >= ~50%
-
-#define MAGIQUEST_PERIOD       1150U
-#define MAGIQUEST_MARK_ZERO     280U
-#define MAGIQUEST_SPACE_ZERO    850U
-#define MAGIQUEST_MARK_ONE      580U
-#define MAGIQUEST_SPACE_ONE     600U
-#define MAGIQUEST_GAP        100000UL  // A guess of the gap between messages
-#endif  // IR_MAGIQUEST_H_
+const uint16_t kMagiQuestTotalUsec = 1150;
+const uint8_t kMagiQuestZeroRatio = 30;  // usually <= ~25%
+const uint8_t kMagiQuestOneRatio = 38;   // usually >= ~50%
+const uint16_t kMagiQuestMarkZero = 280;
+const uint16_t kMagiQuestSpaceZero = 850;
+const uint16_t kMagiQuestMarkOne = 580;
+const uint16_t kMagiQuestSpaceOne = 600;
+const uint32_t kMagiQuestGap = 100000;  // A guess of the gap between messages
+#endif                                  // IR_MAGIQUEST_H_

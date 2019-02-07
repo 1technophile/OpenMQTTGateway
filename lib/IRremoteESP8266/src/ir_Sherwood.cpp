@@ -14,16 +14,15 @@
 //
 // Args:
 //   data:   The contents of the command you want to send.
-//   nbits:  The bit size of the command being sent. (SHERWOOD_BITS)
+//   nbits:  The bit size of the command being sent. (kSherwoodBits)
 //   repeat: The nr. of times you want the command to be repeated. (Default: 1)
 //
 // Status: STABLE / Known working.
 //
 // Note:
 //   Sherwood remote codes appear to be NEC codes with a manditory repeat code.
-//   i.e. repeat should be >= SHERWOOD_MIN_REPEAT (1).
-void IRsend::sendSherwood(uint64_t data, uint16_t nbits,
-                                            uint16_t repeat) {
-  sendNEC(data, nbits, std::max((uint16_t) SHERWOOD_MIN_REPEAT, repeat));
+//   i.e. repeat should be >= kSherwoodMinRepeat (1).
+void IRsend::sendSherwood(uint64_t data, uint16_t nbits, uint16_t repeat) {
+  sendNEC(data, nbits, std::max((uint16_t)kSherwoodMinRepeat, repeat));
 }
 #endif

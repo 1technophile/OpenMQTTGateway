@@ -16,27 +16,26 @@
 // Whynter originally added from https://github.com/shirriff/Arduino-IRremote/
 
 // Constants
-#define WHYNTER_TICK                       50U
-#define WHYNTER_HDR_MARK_TICKS             57U
-#define WHYNTER_HDR_MARK                 (WHYNTER_HDR_MARK_TICKS * WHYNTER_TICK)
-#define WHYNTER_HDR_SPACE_TICKS            57U
-#define WHYNTER_HDR_SPACE                (WHYNTER_HDR_SPACE_TICKS * \
-                                          WHYNTER_TICK)
-#define WHYNTER_BIT_MARK_TICKS             15U
-#define WHYNTER_BIT_MARK                 (WHYNTER_BIT_MARK_TICKS * WHYNTER_TICK)
-#define WHYNTER_ONE_SPACE_TICKS            43U
-#define WHYNTER_ONE_SPACE                (WHYNTER_ONE_SPACE_TICKS * \
-                                          WHYNTER_TICK)
-#define WHYNTER_ZERO_SPACE_TICKS           15U
-#define WHYNTER_ZERO_SPACE               (WHYNTER_ZERO_SPACE_TICKS * \
-                                          WHYNTER_TICK)
-#define WHYNTER_MIN_COMMAND_LENGTH_TICKS 2160U  // Completely made up value.
-#define WHYNTER_MIN_COMMAND_LENGTH       (WHYNTER_MIN_COMMAND_LENGTH_TICKS * \
-                                          WHYNTER_TICK)
-#define WHYNTER_MIN_GAP_TICKS            (WHYNTER_MIN_COMMAND_LENGTH_TICKS - \
-    (2 * (WHYNTER_BIT_MARK_TICKS + WHYNTER_ZERO_SPACE_TICKS) + \
-     WHYNTER_BITS * (WHYNTER_BIT_MARK_TICKS + WHYNTER_ONE_SPACE_TICKS)))
-#define WHYNTER_MIN_GAP                  (WHYNTER_MIN_GAP_TICKS * WHYNTER_TICK)
+
+const uint16_t kWhynterTick = 50;
+const uint16_t kWhynterHdrMarkTicks = 57;
+const uint16_t kWhynterHdrMark = kWhynterHdrMarkTicks * kWhynterTick;
+const uint16_t kWhynterHdrSpaceTicks = 57;
+const uint16_t kWhynterHdrSpace = kWhynterHdrSpaceTicks * kWhynterTick;
+const uint16_t kWhynterBitMarkTicks = 15;
+const uint16_t kWhynterBitMark = kWhynterBitMarkTicks * kWhynterTick;
+const uint16_t kWhynterOneSpaceTicks = 43;
+const uint16_t kWhynterOneSpace = kWhynterOneSpaceTicks * kWhynterTick;
+const uint16_t kWhynterZeroSpaceTicks = 15;
+const uint16_t kWhynterZeroSpace = kWhynterZeroSpaceTicks * kWhynterTick;
+const uint16_t kWhynterMinCommandLengthTicks = 2160;  // Totally made up value.
+const uint32_t kWhynterMinCommandLength =
+    kWhynterMinCommandLengthTicks * kWhynterTick;
+const uint16_t kWhynterMinGapTicks =
+    kWhynterMinCommandLengthTicks -
+    (2 * (kWhynterBitMarkTicks + kWhynterZeroSpaceTicks) +
+     kWhynterBits * (kWhynterBitMarkTicks + kWhynterOneSpaceTicks));
+const uint16_t kWhynterMinGap = kWhynterMinGapTicks * kWhynterTick;
 
 #if SEND_WHYNTER
 // Send a Whynter message.
@@ -56,16 +55,14 @@ void IRsend::sendWhynter(uint64_t data, uint16_t nbits, uint16_t repeat) {
 
   for (uint16_t i = 0; i <= repeat; i++) {
     // (Pre-)Header
-    mark(WHYNTER_BIT_MARK);
-    space(WHYNTER_ZERO_SPACE);
-    sendGeneric(WHYNTER_HDR_MARK, WHYNTER_HDR_SPACE,
-                WHYNTER_BIT_MARK, WHYNTER_ONE_SPACE,
-                WHYNTER_BIT_MARK, WHYNTER_ZERO_SPACE,
-                WHYNTER_BIT_MARK, WHYNTER_MIN_GAP,
-                WHYNTER_MIN_COMMAND_LENGTH - (WHYNTER_BIT_MARK +
-                                              WHYNTER_ZERO_SPACE),
-                data, nbits, 38, true, 0,  // Repeats are already handled.
-                50);
+    mark(kWhynterBitMark);
+    space(kWhynterZeroSpace);
+    sendGeneric(
+        kWhynterHdrMark, kWhynterHdrSpace, kWhynterBitMark, kWhynterOneSpace,
+        kWhynterBitMark, kWhynterZeroSpace, kWhynterBitMark, kWhynterMinGap,
+        kWhynterMinCommandLength - (kWhynterBitMark + kWhynterZeroSpace), data,
+        nbits, 38, true, 0,  // Repeats are already handled.
+        50);
   }
 }
 #endif
@@ -86,47 +83,45 @@ void IRsend::sendWhynter(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Whynter.cpp
 bool IRrecv::decodeWhynter(decode_results *results, uint16_t nbits,
                            bool strict) {
-  if (results->rawlen < 2 * nbits + 2 * HEADER + FOOTER - 1)
-     return false;  // We don't have enough entries to possibly match.
+  if (results->rawlen < 2 * nbits + 2 * kHeader + kFooter - 1)
+    return false;  // We don't have enough entries to possibly match.
 
   // Compliance
-  if (strict && nbits != WHYNTER_BITS)
+  if (strict && nbits != kWhynterBits)
     return false;  // Incorrect nr. of bits per spec.
 
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
 
   // Header
   // Sequence begins with a bit mark and a zero space.
   // These are typically small, so we'll prefer to do the calibration
   // on the much larger header mark & space that are next.
-  if (!matchMark(results->rawbuf[offset++], WHYNTER_BIT_MARK)) return false;
-  if (!matchSpace(results->rawbuf[offset++], WHYNTER_ZERO_SPACE)) return false;
+  if (!matchMark(results->rawbuf[offset++], kWhynterBitMark)) return false;
+  if (!matchSpace(results->rawbuf[offset++], kWhynterZeroSpace)) return false;
   // Main header mark and space
-  if (!matchMark(results->rawbuf[offset], WHYNTER_HDR_MARK)) return false;
+  if (!matchMark(results->rawbuf[offset], kWhynterHdrMark)) return false;
   // Calculate how long the common tick time is based on the header mark.
-  uint32_t m_tick = results->rawbuf[offset++] * RAWTICK /
-      WHYNTER_HDR_MARK_TICKS;
-  if (!matchSpace(results->rawbuf[offset], WHYNTER_HDR_SPACE)) return false;
+  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kWhynterHdrMarkTicks;
+  if (!matchSpace(results->rawbuf[offset], kWhynterHdrSpace)) return false;
   // Calculate how long the common tick time is based on the header space.
-  uint32_t s_tick = results->rawbuf[offset++] * RAWTICK /
-      WHYNTER_HDR_SPACE_TICKS;
+  uint32_t s_tick =
+      results->rawbuf[offset++] * kRawTick / kWhynterHdrSpaceTicks;
 
   // Data
   uint64_t data = 0;
-  match_result_t data_result = matchData(&(results->rawbuf[offset]), nbits,
-                                         WHYNTER_BIT_MARK_TICKS * m_tick,
-                                         WHYNTER_ONE_SPACE_TICKS * s_tick,
-                                         WHYNTER_BIT_MARK_TICKS * m_tick,
-                                         WHYNTER_ZERO_SPACE_TICKS * s_tick);
+  match_result_t data_result =
+      matchData(&(results->rawbuf[offset]), nbits,
+                kWhynterBitMarkTicks * m_tick, kWhynterOneSpaceTicks * s_tick,
+                kWhynterBitMarkTicks * m_tick, kWhynterZeroSpaceTicks * s_tick);
   if (data_result.success == false) return false;
   data = data_result.data;
   offset += data_result.used;
 
   // Footer
-  if (!matchMark(results->rawbuf[offset++], WHYNTER_BIT_MARK_TICKS * m_tick))
+  if (!matchMark(results->rawbuf[offset++], kWhynterBitMarkTicks * m_tick))
     return false;
   if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], WHYNTER_MIN_GAP_TICKS * s_tick))
+      !matchAtLeast(results->rawbuf[offset], kWhynterMinGapTicks * s_tick))
     return false;
 
   // Success

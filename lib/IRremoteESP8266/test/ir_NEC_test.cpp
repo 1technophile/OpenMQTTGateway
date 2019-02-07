@@ -11,18 +11,21 @@ TEST(TestSendNEC, SendDataOnly) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendNEC(0);
-  EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s58240", irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s58240",
+      irsend.outputStr());
   irsend.sendNEC(0xAA00FF55);
-  EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
-            "m560s1680m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680"
-            "m560s1680m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
-            "m560s560m560s1680m560s560m560s1680m560s40320",
-            irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
+      "m560s1680m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680"
+      "m560s1680m560s1680m560s1680m560s560m560s1680m560s560m560s1680"
+      "m560s560m560s1680m560s560m560s1680m560s40320",
+      irsend.outputStr());
 }
 
 // Test sending different bit lengths.
@@ -33,19 +36,23 @@ TEST(TestSendNEC, SendSmallData) {
   EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s87360",
             irsend.outputStr());
   irsend.sendNEC(0, 8);  // Send only 8 data bits.
-  EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s85120", irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s85120",
+      irsend.outputStr());
   irsend.sendNEC(0x1234567890ABCDEF, 64);  // Send 64 data bits.
-  EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s1680m560s560m560s560"
-            "m560s1680m560s560m560s560m560s560m560s1680m560s1680m560s560"
-            "m560s1680m560s560m560s560m560s560m560s1680m560s560m560s1680"
-            "m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s1680"
-            "m560s1680m560s1680m560s560m560s560m560s560m560s1680m560s560"
-            "m560s560m560s1680m560s560m560s560m560s560m560s560m560s1680m560s560"
-            "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s1680"
-            "m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
-            "m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s1680"
-            "m560s1680m560s22400", irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s560m560s560m560s560m560s1680m560s560m560s560"
+      "m560s1680m560s560m560s560m560s560m560s1680m560s1680m560s560"
+      "m560s1680m560s560m560s560m560s560m560s1680m560s560m560s1680"
+      "m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s1680"
+      "m560s1680m560s1680m560s560m560s560m560s560m560s1680m560s560"
+      "m560s560m560s1680m560s560m560s560m560s560m560s560m560s1680m560s560"
+      "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s1680"
+      "m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680"
+      "m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s1680"
+      "m560s1680m560s22400",
+      irsend.outputStr());
 }
 
 // Test sending with repeats.
@@ -53,20 +60,24 @@ TEST(TestSendNEC, SendWithRepeats) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendNEC(0, 8, 0);  // Send a command with 0 repeats.
-  EXPECT_EQ("m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
-            "m560s560m560s85120", irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
+      "m560s560m560s85120",
+      irsend.outputStr());
   irsend.sendNEC(0xAA, 8, 1);  // Send a command with 1 repeat.
-  EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
-            "m560s1680m560s560m560s80640"
-            "m8960s2240m560s96320",
-            irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
+      "m560s1680m560s560m560s80640"
+      "m8960s2240m560s96320",
+      irsend.outputStr());
   irsend.sendNEC(0xAA, 8, 3);  // Send a command with 3 repeats.
-  EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
-            "m560s1680m560s560m560s80640"
-            "m8960s2240m560s96320"
-            "m8960s2240m560s96320"
-            "m8960s2240m560s96320",
-            irsend.outputStr());
+  EXPECT_EQ(
+      "m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
+      "m560s1680m560s560m560s80640"
+      "m8960s2240m560s96320"
+      "m8960s2240m560s96320"
+      "m8960s2240m560s96320",
+      irsend.outputStr());
 }
 
 // Tests for encodeNEC().
@@ -101,7 +112,7 @@ TEST(TestDecodeNEC, NormalNECDecodeWithStrict) {
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x807F40BF, irsend.capture.value);
   EXPECT_EQ(0x1, irsend.capture.address);
   EXPECT_EQ(0x2, irsend.capture.command);
@@ -112,7 +123,7 @@ TEST(TestDecodeNEC, NormalNECDecodeWithStrict) {
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0xC1A28877, irsend.capture.value);
   EXPECT_EQ(0x4583, irsend.capture.address);
   EXPECT_EQ(0x11, irsend.capture.command);
@@ -129,7 +140,7 @@ TEST(TestDecodeNEC, NormalNECDecodeWithStrict) {
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x807F40BF, irsend.capture.value);
   EXPECT_EQ(0x1, irsend.capture.address);
   EXPECT_EQ(0x2, irsend.capture.command);
@@ -146,7 +157,7 @@ TEST(TestDecodeNEC, NormalNECDecodeWithoutStrict) {
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture, 32, false));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0, irsend.capture.value);
   EXPECT_EQ(0, irsend.capture.address);
   EXPECT_EQ(0, irsend.capture.command);
@@ -156,7 +167,7 @@ TEST(TestDecodeNEC, NormalNECDecodeWithoutStrict) {
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture, 32, false));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x12345678, irsend.capture.value);
   EXPECT_EQ(0x2C48, irsend.capture.address);
   EXPECT_EQ(0, irsend.capture.command);
@@ -225,18 +236,18 @@ TEST(TestDecodeNEC, NoTrailingGap_Issue243) {
   irsend.begin();
 
   irsend.reset();
-  uint16_t rawData[67] = {9000, 4500, 650, 550, 650, 1650, 600, 550, 650, 550,
-                          600, 1650, 650, 550, 600, 1650, 650, 1650, 650, 1650,
-                          600, 550, 650, 1650, 650, 1650, 650, 550, 600, 1650,
-                          650, 1650, 650, 550, 650, 550, 650, 1650, 650, 550,
-                          650, 550, 650, 550, 600, 550, 650, 550, 650, 550,
-                          650, 1650, 600, 550, 650, 1650, 650, 1650, 650, 1650,
-                          650, 1650, 650, 1650, 650, 1650, 600};
+  uint16_t rawData[67] = {
+      9000, 4500, 650, 550,  650, 1650, 600, 550,  650, 550,  600, 1650,
+      650,  550,  600, 1650, 650, 1650, 650, 1650, 600, 550,  650, 1650,
+      650,  1650, 650, 550,  600, 1650, 650, 1650, 650, 550,  650, 550,
+      650,  1650, 650, 550,  650, 550,  650, 550,  600, 550,  650, 550,
+      650,  550,  650, 1650, 600, 550,  650, 1650, 650, 1650, 650, 1650,
+      650,  1650, 650, 1650, 650, 1650, 600};
   irsend.sendRaw(rawData, 67, 38);
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x4BB640BF, irsend.capture.value);
   EXPECT_EQ(0x6DD2, irsend.capture.address);
   EXPECT_EQ(0x2, irsend.capture.command);
@@ -246,7 +257,7 @@ TEST(TestDecodeNEC, NoTrailingGap_Issue243) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x4BB640BF, irsend.capture.value);
 
   // Add a zero length space to the message to test how it handles that as
@@ -255,7 +266,7 @@ TEST(TestDecodeNEC, NoTrailingGap_Issue243) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x4BB640BF, irsend.capture.value);
 }
 
@@ -270,18 +281,18 @@ TEST(TestDecodeNEC, NonStrictNECDecode_Issue264) {
   irsend.reset();
   // Slightly modified example than reported due to poor timings that are too
   // far out of spec.
-  uint16_t rawData[67] = {9150, 4650, 550, 600, 550, 1800, 600, 1750, 600, 1800,
-                          550, 600, 550, 1800, 550, 1750, 600, 1750, 600, 1750,
-                          600, 1750, 600, 1700, 600, 600, 600, 600, 550, 600,
-                          600, 600, 600, 1750, 600, 1750, 600, 600, 550, 1800,
-                          600, 600, 600, 600, 600, 600, 500, 600, 600, 600,
-                          600, 600, 600, 1750, 600, 600, 600, 550, 600, 600,
-                          600, 600, 600, 600, 600, 550, 600};
+  uint16_t rawData[67] = {
+      9150, 4650, 550, 600,  550, 1800, 600, 1750, 600, 1800, 550, 600,
+      550,  1800, 550, 1750, 600, 1750, 600, 1750, 600, 1750, 600, 1700,
+      600,  600,  600, 600,  550, 600,  600, 600,  600, 1750, 600, 1750,
+      600,  600,  550, 1800, 600, 600,  600, 600,  600, 600,  500, 600,
+      600,  600,  600, 600,  600, 1750, 600, 600,  600, 550,  600, 600,
+      600,  600,  600, 600,  600, 550,  600};
 
   irsend.sendRaw(rawData, 67, 38);
   irsend.makeDecodeResult();
   EXPECT_FALSE(irrecv.decodeNEC(&irsend.capture));  // Not strictly NEC
-  EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture, NEC_BITS, false));
+  EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture, kNECBits, false));
   EXPECT_EQ(0x77E1A040, irsend.capture.value);
 
   // Do it all again, but with a normal decode.
@@ -290,7 +301,7 @@ TEST(TestDecodeNEC, NonStrictNECDecode_Issue264) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NEC_LIKE, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x77E1A040, irsend.capture.value);
 }
 
@@ -303,18 +314,18 @@ TEST(TestDecodeNEC, AutoReceiveCalibration) {
   // Data from Issue #264, for a remote that is slightly off spec.
   // Should be matched as a NEC-like message however without self-calibrating
   // the timings of the short spaces is out.
-  uint16_t rawData[67] = {9150, 4600, 650, 600, 650, 1650, 650, 1700, 650, 1750,
-                          650, 600, 650, 1700, 650, 1750, 650, 1750, 650, 1700,
-                          650, 1700, 650, 1700, 650, 600, 650, 600, 650, 600,
-                          600, 600, 650, 1750, 650, 1750, 650, 600, 650, 1700,
-                          600, 600, 700, 550, 650, 550, 650, 600, 650, 600,
-                          650, 600, 650, 1750, 600, 600, 650, 600, 650, 550,
-                          650, 600, 650, 600, 650, 600, 600};
+  uint16_t rawData[67] = {
+      9150, 4600, 650, 600,  650, 1650, 650, 1700, 650, 1750, 650, 600,
+      650,  1700, 650, 1750, 650, 1750, 650, 1700, 650, 1700, 650, 1700,
+      650,  600,  650, 600,  650, 600,  600, 600,  650, 1750, 650, 1750,
+      650,  600,  650, 1700, 600, 600,  700, 550,  650, 550,  650, 600,
+      650,  600,  650, 600,  650, 1750, 600, 600,  650, 600,  650, 550,
+      650,  600,  650, 600,  650, 600,  600};
 
   irsend.sendRaw(rawData, 67, 38);
   irsend.makeDecodeResult();
-  EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture, NEC_BITS, false));
+  EXPECT_TRUE(irrecv.decodeNEC(&irsend.capture, kNECBits, false));
   EXPECT_EQ(NEC, irsend.capture.decode_type);
-  EXPECT_EQ(NEC_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNECBits, irsend.capture.bits);
   EXPECT_EQ(0x77E1A040, irsend.capture.value);
 }

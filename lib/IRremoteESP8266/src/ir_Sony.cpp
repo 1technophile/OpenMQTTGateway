@@ -19,19 +19,19 @@
 // Constants
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/sirc.php
-#define SONY_TICK               200U
-#define SONY_HDR_MARK_TICKS      12U
-#define SONY_HDR_MARK           (SONY_HDR_MARK_TICKS * SONY_TICK)
-#define SONY_SPACE_TICKS          3U
-#define SONY_SPACE              (SONY_SPACE_TICKS * SONY_TICK)
-#define SONY_ONE_MARK_TICKS       6U
-#define SONY_ONE_MARK           (SONY_ONE_MARK_TICKS * SONY_TICK)
-#define SONY_ZERO_MARK_TICKS      3U
-#define SONY_ZERO_MARK          (SONY_ZERO_MARK_TICKS * SONY_TICK)
-#define SONY_RPT_LENGTH_TICKS   225U
-#define SONY_RPT_LENGTH         (SONY_RPT_LENGTH_TICKS * SONY_TICK)
-#define SONY_MIN_GAP_TICKS       50U
-#define SONY_MIN_GAP            (SONY_MIN_GAP_TICKS * SONY_TICK)
+const uint16_t kSonyTick = 200;
+const uint16_t kSonyHdrMarkTicks = 12;
+const uint16_t kSonyHdrMark = kSonyHdrMarkTicks * kSonyTick;
+const uint16_t kSonySpaceTicks = 3;
+const uint16_t kSonySpace = kSonySpaceTicks * kSonyTick;
+const uint16_t kSonyOneMarkTicks = 6;
+const uint16_t kSonyOneMark = kSonyOneMarkTicks * kSonyTick;
+const uint16_t kSonyZeroMarkTicks = 3;
+const uint16_t kSonyZeroMark = kSonyZeroMarkTicks * kSonyTick;
+const uint16_t kSonyRptLengthTicks = 225;
+const uint16_t kSonyRptLength = kSonyRptLengthTicks * kSonyTick;
+const uint16_t kSonyMinGapTicks = 50;
+const uint16_t kSonyMinGap = kSonyMinGapTicks * kSonyTick;
 
 #if SEND_SONY
 // Send a Sony/SIRC(Serial Infra-Red Control) message.
@@ -50,12 +50,10 @@
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/sirc.php
 void IRsend::sendSony(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  sendGeneric(SONY_HDR_MARK, SONY_SPACE,
-              SONY_ONE_MARK, SONY_SPACE,
-              SONY_ZERO_MARK, SONY_SPACE,
+  sendGeneric(kSonyHdrMark, kSonySpace, kSonyOneMark, kSonySpace, kSonyZeroMark,
+              kSonySpace,
               0,  // No Footer mark.
-              SONY_MIN_GAP, SONY_RPT_LENGTH,
-              data, nbits, 40, true, repeat, 33);
+              kSonyMinGap, kSonyRptLength, data, nbits, 40, true, repeat, 33);
 }
 
 // Convert Sony/SIRC command, address, & extended bits into sendSony format.
@@ -68,8 +66,8 @@ void IRsend::sendSony(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   A sendSony compatible data message.
 //
 // Status: BETA / Should be working.
-uint32_t IRsend::encodeSony(uint16_t nbits, uint16_t command,
-                            uint16_t address, uint16_t extended) {
+uint32_t IRsend::encodeSony(uint16_t nbits, uint16_t command, uint16_t address,
+                            uint16_t extended) {
   uint32_t result = 0;
   switch (nbits) {
     case 12:  // 5 address bits.
@@ -107,7 +105,7 @@ uint32_t IRsend::encodeSony(uint16_t nbits, uint16_t command,
 // Ref:
 // http://www.sbprojects.com/knowledge/ir/sirc.php
 bool IRrecv::decodeSony(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + HEADER - 1)
+  if (results->rawlen < 2 * nbits + kHeader - 1)
     return false;  // Message is smaller than we expected.
 
   // Compliance
@@ -123,31 +121,30 @@ bool IRrecv::decodeSony(decode_results *results, uint16_t nbits, bool strict) {
   }
 
   uint64_t data = 0;
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
   uint16_t actualBits;
   uint32_t timeSoFar = 0;  // Time in uSecs of the message length.
 
   // Header
-  timeSoFar += results->rawbuf[offset] * RAWTICK;
-  if (!matchMark(results->rawbuf[offset], SONY_HDR_MARK))
-    return false;
+  timeSoFar += results->rawbuf[offset] * kRawTick;
+  if (!matchMark(results->rawbuf[offset], kSonyHdrMark)) return false;
   // Calculate how long the common tick time is based on the header mark.
-  uint32_t tick = results->rawbuf[offset++] * RAWTICK / SONY_HDR_MARK_TICKS;
+  uint32_t tick = results->rawbuf[offset++] * kRawTick / kSonyHdrMarkTicks;
 
   // Data
   for (actualBits = 0; offset < results->rawlen - 1; actualBits++, offset++) {
-    // The gap after a Sony packet for a repeat should be SONY_MIN_GAP or
-    //   (SONY_RPT_LENGTH - timeSoFar) according to the spec.
-    if (matchSpace(results->rawbuf[offset], SONY_MIN_GAP_TICKS * tick) ||
-        matchAtLeast(results->rawbuf[offset], SONY_RPT_LENGTH - timeSoFar))
+    // The gap after a Sony packet for a repeat should be kSonyMinGap or
+    //   (kSonyRptLength - timeSoFar) according to the spec.
+    if (matchSpace(results->rawbuf[offset], kSonyMinGapTicks * tick) ||
+        matchAtLeast(results->rawbuf[offset], kSonyRptLength - timeSoFar))
       break;  // Found a repeat space.
-    timeSoFar += results->rawbuf[offset] * RAWTICK;
-    if (!matchSpace(results->rawbuf[offset++], SONY_SPACE_TICKS * tick))
+    timeSoFar += results->rawbuf[offset] * kRawTick;
+    if (!matchSpace(results->rawbuf[offset++], kSonySpaceTicks * tick))
       return false;
-    timeSoFar += results->rawbuf[offset] * RAWTICK;
-    if (matchMark(results->rawbuf[offset], SONY_ONE_MARK_TICKS * tick))
+    timeSoFar += results->rawbuf[offset] * kRawTick;
+    if (matchMark(results->rawbuf[offset], kSonyOneMarkTicks * tick))
       data = (data << 1) | 1;
-    else if (matchMark(results->rawbuf[offset], SONY_ZERO_MARK_TICKS * tick))
+    else if (matchMark(results->rawbuf[offset], kSonyZeroMarkTicks * tick))
       data <<= 1;
     else
       return false;
@@ -166,14 +163,14 @@ bool IRrecv::decodeSony(decode_results *results, uint16_t nbits, bool strict) {
   data = reverseBits(data, actualBits);
   // Decode the address & command from raw decode value.
   switch (actualBits) {
-    case 12:  // 7 command bits, 5 address bits.
-    case 15:  // 7 command bits, 8 address bits.
+    case 12:                           // 7 command bits, 5 address bits.
+    case 15:                           // 7 command bits, 8 address bits.
       results->command = data & 0x7F;  // Bits 0-6
-      results->address = data >> 7;  // Bits 7-14
+      results->address = data >> 7;    // Bits 7-14
       break;
     case 20:  // 7 command bits, 5 address bits, 8 extended (command) bits.
       results->command = (data & 0x7F) + ((data >> 12) << 7);  // Bits 0-6,12-19
-      results->address = (data >> 7) & 0x1F;  // Bits 7-11
+      results->address = (data >> 7) & 0x1F;                   // Bits 7-11
       break;
     default:  // Shouldn't happen, but just in case.
       results->address = 0;

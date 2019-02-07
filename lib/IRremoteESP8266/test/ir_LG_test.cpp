@@ -1,8 +1,8 @@
 // Copyright 2017 David Conran
 
+#include "ir_LG.h"
 #include "IRsend.h"
 #include "IRsend_test.h"
-#include "ir_LG.h"
 #include "gtest/gtest.h"
 
 // Tests for calcLGChecksum()
@@ -30,15 +30,16 @@ TEST(TestSendLG, SendDataOnly) {
   irsend.reset();
   irsend.sendLG(0x4B4AE51);
   EXPECT_EQ(
-      "m8000s4000"
+      "m8500s4250"
       "m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s1600m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s550m550s1600m550s1600m550s1600m550s550"
       "m550s550m550s1600m550s550m550s1600m550s550m550s550m550s550m550s1600"
-      "m550s51050", irsend.outputStr());
+      "m550s50300",
+      irsend.outputStr());
 
   irsend.reset();
-  irsend.sendLG(0xB4B4AE51, LG32_BITS);
+  irsend.sendLG(0xB4B4AE51, kLg32Bits);
   EXPECT_EQ(
       "m4480s4480"
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
@@ -46,7 +47,8 @@ TEST(TestSendLG, SendDataOnly) {
       "m560s1680m560s560m560s1680m560s560m560s1680m560s1680m560s1680m560s560"
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560m560s1680"
       "m560s44800"
-      "m8950s2250m550s96300", irsend.outputStr());
+      "m8950s2250m550s96300",
+      irsend.outputStr());
 }
 
 // Test sending with different repeats.
@@ -55,18 +57,19 @@ TEST(TestSendLG, SendWithRepeats) {
   irsend.begin();
 
   irsend.reset();
-  irsend.sendLG(0x4B4AE51, LG_BITS, 1);
+  irsend.sendLG(0x4B4AE51, kLgBits, 1);
   EXPECT_EQ(
-      "m8000s4000"
+      "m8500s4250"
       "m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s1600m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s550m550s1600m550s1600m550s1600m550s550"
       "m550s550m550s1600m550s550m550s1600m550s550m550s550m550s550m550s1600"
-      "m550s51050"
-      "m8000s2250m550s97250", irsend.outputStr());
+      "m550s50300"
+      "m8500s2250m550s96750",
+      irsend.outputStr());
 
   irsend.reset();
-  irsend.sendLG(0xB4B4AE51, LG32_BITS, 1);
+  irsend.sendLG(0xB4B4AE51, kLg32Bits, 1);
   EXPECT_EQ(
       "m4480s4480"
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
@@ -75,7 +78,8 @@ TEST(TestSendLG, SendWithRepeats) {
       "m560s560m560s1680m560s560m560s1680m560s560m560s560m560s560m560s1680"
       "m560s44800"
       "m8950s2250m550s96300"
-      "m8950s2250m550s96300", irsend.outputStr());
+      "m8950s2250m550s96300",
+      irsend.outputStr());
 }
 
 // Test sending an atypical data size.
@@ -86,12 +90,13 @@ TEST(TestSendLG, SendUnusualSize) {
   irsend.reset();
   irsend.sendLG(0x0, 31);
   EXPECT_EQ(
-      "m8000s4000"
+      "m8500s4250"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
-      "m550s61400", irsend.outputStr());
+      "m550s60650",
+      irsend.outputStr());
 
   irsend.reset();
   irsend.sendLG(0x0, 64);
@@ -106,7 +111,8 @@ TEST(TestSendLG, SendUnusualSize) {
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s26880"
-      "m8950s2250m550s96300", irsend.outputStr());
+      "m8950s2250m550s96300",
+      irsend.outputStr());
 }
 
 // Tests for encodeLG().
@@ -132,11 +138,11 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
 
   // Normal LG 28-bit message.
   irsend.reset();
-  irsend.sendLG(0x4B4AE51, LG_BITS);
+  irsend.sendLG(0x4B4AE51, kLgBits);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x4B4AE51, irsend.capture.value);
   EXPECT_EQ(0x4B, irsend.capture.address);
   EXPECT_EQ(0x4AE5, irsend.capture.command);
@@ -144,11 +150,11 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
 
   // Normal LG 32-bit message.
   irsend.reset();
-  irsend.sendLG(0xB4B4AE51, LG32_BITS);
+  irsend.sendLG(0xB4B4AE51, kLg32Bits);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG32_BITS, false));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLg32Bits, false));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG32_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0xB4B4AE51, irsend.capture.value);
   EXPECT_EQ(0xB4B, irsend.capture.address);
   EXPECT_EQ(0x4AE5, irsend.capture.command);
@@ -158,9 +164,9 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendLG(irsend.encodeLG(0x07, 0x99));
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x700992, irsend.capture.value);
   EXPECT_EQ(0x07, irsend.capture.address);
   EXPECT_EQ(0x99, irsend.capture.command);
@@ -168,11 +174,11 @@ TEST(TestDecodeLG, NormalDecodeWithStrict) {
 
   // Synthesised Normal LG 32-bit message.
   irsend.reset();
-  irsend.sendLG(irsend.encodeLG(0x800, 0x8000), LG32_BITS);
+  irsend.sendLG(irsend.encodeLG(0x800, 0x8000), kLg32Bits);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG32_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0x80080008, irsend.capture.value);
   EXPECT_EQ(0x800, irsend.capture.address);
   EXPECT_EQ(0x8000, irsend.capture.command);
@@ -187,11 +193,11 @@ TEST(TestDecodeLG, NormalDecodeWithRepeatAndStrict) {
 
   // Normal LG 28-bit message with 2 repeats.
   irsend.reset();
-  irsend.sendLG(irsend.encodeLG(0x07, 0x99), LG_BITS, 2);
+  irsend.sendLG(irsend.encodeLG(0x07, 0x99), kLgBits, 2);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x700992, irsend.capture.value);
   EXPECT_EQ(0x07, irsend.capture.address);
   EXPECT_EQ(0x99, irsend.capture.command);
@@ -199,11 +205,11 @@ TEST(TestDecodeLG, NormalDecodeWithRepeatAndStrict) {
 
   // Normal LG 32-bit message with 2 repeats.
   irsend.reset();
-  irsend.sendLG(irsend.encodeLG(0x07, 0x99), LG32_BITS, 2);
+  irsend.sendLG(irsend.encodeLG(0x07, 0x99), kLg32Bits, 2);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG32_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0x700992, irsend.capture.value);
   EXPECT_EQ(0x07, irsend.capture.address);
   EXPECT_EQ(0x99, irsend.capture.command);
@@ -221,30 +227,30 @@ TEST(TestDecodeLG, DecodeWithNonStrictValues) {
   irsend.reset();
   irsend.sendLG(0x1);
   irsend.makeDecodeResult();
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, false));
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG_BITS, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, false));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLgBits, false));
 
   // Illegal LG 32-bit message value.
   irsend.reset();
-  irsend.sendLG(0x1111111, LG32_BITS);
+  irsend.sendLG(0x1111111, kLg32Bits);
   irsend.makeDecodeResult();
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
 
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG32_BITS, false));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLg32Bits, false));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG32_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0x1111111, irsend.capture.value);
   EXPECT_EQ(0x11, irsend.capture.address);
   EXPECT_EQ(0x1111, irsend.capture.command);
   EXPECT_FALSE(irsend.capture.repeat);
 
   irsend.reset();
-  irsend.sendLG(0x1111111, LG32_BITS);
+  irsend.sendLG(0x1111111, kLg32Bits);
   irsend.makeDecodeResult();
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, false));
 }
 
 // Decode unsupported LG message sizes.
@@ -259,10 +265,10 @@ TEST(TestDecodeLG, DecodeWithNonStrictSizes) {
   irsend.sendLG(irsend.encodeLG(0x07, 0x99), 16);
   irsend.makeDecodeResult();
   // Should fail when unexpected against different bit sizes.
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, false));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, false));
 
   // Should pass if strict off.
   ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, 16, false));
@@ -277,10 +283,10 @@ TEST(TestDecodeLG, DecodeWithNonStrictSizes) {
   irsend.sendLG(0x123456789, 36);  // Illegal value LG 36-bit message.
   irsend.makeDecodeResult();
   // Should fail when unexpected against different bit sizes.
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, false));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG32_BITS, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLg32Bits, false));
 
   ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, 36, false));
   EXPECT_EQ(LG, irsend.capture.decode_type);
@@ -317,22 +323,21 @@ TEST(TestDecodeLG, DecodeGlobalCacheExample) {
   IRrecv irrecv(4);
   irsend.begin();
 
-// TODO(anyone): Find a Global Cache example of the LG 28-bit message.
+  // TODO(anyone): Find a Global Cache example of the LG 28-bit message.
   irsend.reset();
   // LG (32-bit) code from Global Cache.
-  uint16_t gc_test[75] = {38000, 1, 69, 341, 170, 21, 64, 21, 21, 21, 64,
-                          21, 64, 21, 21, 21, 64, 21, 21, 21, 21, 21, 64,
-                          21, 21, 21, 64, 21, 64, 21, 21, 21, 64, 21, 21,
-                          21, 21, 21, 64, 21, 21, 21, 64, 21, 21, 21, 64,
-                          21, 64, 21, 64, 21, 21, 21, 21, 21, 64, 21, 21,
-                          21, 64, 21, 21, 21, 21, 21, 21, 21, 64, 21, 1517,
-                          341, 85, 21, 3655};
+  uint16_t gc_test[75] = {
+      38000, 1,  69, 341, 170, 21, 64, 21, 21, 21, 64,   21,  64, 21, 21,
+      21,    64, 21, 21,  21,  21, 21, 64, 21, 21, 21,   64,  21, 64, 21,
+      21,    21, 64, 21,  21,  21, 21, 21, 64, 21, 21,   21,  64, 21, 21,
+      21,    64, 21, 64,  21,  64, 21, 21, 21, 21, 21,   64,  21, 21, 21,
+      64,    21, 21, 21,  21,  21, 21, 21, 64, 21, 1517, 341, 85, 21, 3655};
   irsend.sendGC(gc_test, 75);
   irsend.makeDecodeResult();
 
-  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, LG32_BITS, true));
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture, kLg32Bits, true));
   EXPECT_EQ(LG, irsend.capture.decode_type);
-  EXPECT_EQ(LG32_BITS, irsend.capture.bits);
+  EXPECT_EQ(kLg32Bits, irsend.capture.bits);
   EXPECT_EQ(0xB4B4AE51, irsend.capture.value);
   EXPECT_EQ(0xB4B, irsend.capture.address);
   EXPECT_EQ(0x4AE5, irsend.capture.command);
@@ -347,12 +352,71 @@ TEST(TestDecodeLG, FailToDecodeNonLGExample) {
 
   irsend.reset();
   // Modified a few entries to unexpected values, based on previous test case.
-  uint16_t gc_test[39] = {38000, 1, 1, 322, 162, 20, 61, 20, 61, 20, 20, 20, 20,
-                          20, 20, 20, 127, 20, 61, 9, 20, 20, 61, 20, 20, 20,
-                          61, 20, 61, 20, 61, 20, 20, 20, 20, 20, 20, 20, 884};
+  uint16_t gc_test[39] = {38000, 1,  1,  322, 162, 20, 61,  20, 61, 20,
+                          20,    20, 20, 20,  20,  20, 127, 20, 61, 9,
+                          20,    20, 61, 20,  20,  20, 61,  20, 61, 20,
+                          61,    20, 20, 20,  20,  20, 20,  20, 884};
   irsend.sendGC(gc_test, 39);
   irsend.makeDecodeResult();
 
   ASSERT_FALSE(irrecv.decodeLG(&irsend.capture));
-  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, LG_BITS, false));
+  ASSERT_FALSE(irrecv.decodeLG(&irsend.capture, kLgBits, false));
+}
+
+// Tests for sendLG2().
+
+// Test sending typical data only.
+TEST(TestSendLG2, SendDataOnly) {
+  IRsendTest irsend(0);
+  irsend.begin();
+
+  irsend.reset();
+  irsend.sendLG2(0x880094D);
+  EXPECT_EQ(
+      "m3200s9850"
+      "m550s1600m550s550m550s550m550s550m550s1600m550s550m550s550m550s550"
+      "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
+      "m550s1600m550s550m550s550m550s1600m550s550m550s1600m550s550m550s550"
+      "m550s1600m550s1600m550s550m550s1600"
+      "m550s55250",
+      irsend.outputStr());
+}
+
+TEST(TestDecodeLG2, SyntheticExample) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+
+  irsend.reset();
+  irsend.sendLG2(0x880094D);
+  irsend.makeDecodeResult();
+
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture));
+  ASSERT_EQ(LG2, irsend.capture.decode_type);
+  EXPECT_EQ(kLgBits, irsend.capture.bits);
+  EXPECT_EQ(0x880094D, irsend.capture.value);
+}
+
+// Verify decoding of LG variant 2 messages.
+TEST(TestDecodeLG2, RealLG2Example) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+
+  irsend.reset();
+  // From issue #548
+  uint16_t rawData[59] = {
+      3154, 9834, 520, 1634, 424, 606,  424, 568, 462, 570,  462, 1564,
+      508,  568,  458, 544,  500, 546,  508, 530, 508, 532,  506, 566,
+      464,  568,  460, 578,  464, 568,  464, 532, 506, 552,  474, 1592,
+      506,  568,  460, 570,  462, 1564, 506, 606, 424, 1640, 424, 616,
+      422,  570,  462, 1616, 460, 1584, 500, 544, 506, 1598, 490};  // UNKNOWN
+                                                                    // F6D13AE8
+  irsend.sendRaw(rawData, 59, 38000);
+  irsend.makeDecodeResult();
+
+  ASSERT_TRUE(irrecv.decodeLG(&irsend.capture));
+  ASSERT_EQ(LG2, irsend.capture.decode_type);
+  EXPECT_EQ(kLgBits, irsend.capture.bits);
+  EXPECT_EQ(0x880094D, irsend.capture.value);
 }

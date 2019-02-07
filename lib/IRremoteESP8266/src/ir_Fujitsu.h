@@ -1,4 +1,5 @@
 // Copyright 2017 Jonny Graham
+// Copyright 2018 David Conran
 #ifndef IR_FUJITSU_H_
 #define IR_FUJITSU_H_
 
@@ -9,41 +10,61 @@
 #else
 #include <string>
 #endif
-#include "IRremoteESP8266.h"
 #include "IRrecv.h"
+#include "IRremoteESP8266.h"
 #include "IRsend.h"
-
 
 // FUJITSU A/C support added by Jonny Graham
 
 // Constants
+const uint8_t kFujitsuAcModeAuto = 0x00;
+const uint8_t kFujitsuAcModeCool = 0x01;
+const uint8_t kFujitsuAcModeDry = 0x02;
+const uint8_t kFujitsuAcModeFan = 0x03;
+const uint8_t kFujitsuAcModeHeat = 0x04;
 
-#define FUJITSU_AC_MODE_AUTO      0x00U
-#define FUJITSU_AC_MODE_COOL      0x01U
-#define FUJITSU_AC_MODE_DRY       0x02U
-#define FUJITSU_AC_MODE_FAN       0x03U
-#define FUJITSU_AC_MODE_HEAT      0x04U
+const uint8_t kFujitsuAcCmdStayOn = 0x00;
+const uint8_t kFujitsuAcCmdTurnOn = 0x01;
+const uint8_t kFujitsuAcCmdTurnOff = 0x02;
+const uint8_t kFujitsuAcCmdStepHoriz = 0x79;
+const uint8_t kFujitsuAcCmdStepVert = 0x6C;
 
-#define FUJITSU_AC_CMD_STAY_ON    0x00U
-#define FUJITSU_AC_CMD_TURN_ON    0x01U
-#define FUJITSU_AC_CMD_TURN_OFF   0x02U
-#define FUJITSU_AC_CMD_STEP_HORIZ 0x79U
-#define FUJITSU_AC_CMD_STEP_VERT  0x6CU
+const uint8_t kFujitsuAcFanAuto = 0x00;
+const uint8_t kFujitsuAcFanHigh = 0x01;
+const uint8_t kFujitsuAcFanMed = 0x02;
+const uint8_t kFujitsuAcFanLow = 0x03;
+const uint8_t kFujitsuAcFanQuiet = 0x04;
 
-#define FUJITSU_AC_FAN_AUTO       0x00U
-#define FUJITSU_AC_FAN_HIGH       0x01U
-#define FUJITSU_AC_FAN_MED        0x02U
-#define FUJITSU_AC_FAN_LOW        0x03U
-#define FUJITSU_AC_FAN_QUIET      0x04U
+const uint8_t kFujitsuAcMinTemp = 16;  // 16C
+const uint8_t kFujitsuAcMaxTemp = 30;  // 30C
 
-#define FUJITSU_AC_MIN_TEMP         16U  // 16C
-#define FUJITSU_AC_MAX_TEMP         30U  // 30C
+const uint8_t kFujitsuAcSwingOff = 0x00;
+const uint8_t kFujitsuAcSwingVert = 0x01;
+const uint8_t kFujitsuAcSwingHoriz = 0x02;
+const uint8_t kFujitsuAcSwingBoth = 0x03;
 
-#define FUJITSU_AC_SWING_OFF      0x00U
-#define FUJITSU_AC_SWING_VERT     0x01U
-#define FUJITSU_AC_SWING_HORIZ    0x02U
-#define FUJITSU_AC_SWING_BOTH     0x03U
-
+// Legacy defines.
+#define FUJITSU_AC_MODE_AUTO kFujitsuAcModeAuto
+#define FUJITSU_AC_MODE_COOL kFujitsuAcModeCool
+#define FUJITSU_AC_MODE_DRY kFujitsuAcModeDry
+#define FUJITSU_AC_MODE_FAN kFujitsuAcModeFan
+#define FUJITSU_AC_MODE_HEAT kFujitsuAcModeHeat
+#define FUJITSU_AC_CMD_STAY_ON kFujitsuAcCmdStayOn
+#define FUJITSU_AC_CMD_TURN_ON kFujitsuAcCmdTurnOn
+#define FUJITSU_AC_CMD_TURN_OFF kFujitsuAcCmdTurnOff
+#define FUJITSU_AC_CMD_STEP_HORIZ kFujitsuAcCmdStepHoriz
+#define FUJITSU_AC_CMD_STEP_VERT kFujitsuAcCmdStepVert
+#define FUJITSU_AC_FAN_AUTO kFujitsuAcFanAuto
+#define FUJITSU_AC_FAN_HIGH kFujitsuAcFanHigh
+#define FUJITSU_AC_FAN_MED kFujitsuAcFanMed
+#define FUJITSU_AC_FAN_LOW kFujitsuAcFanLow
+#define FUJITSU_AC_FAN_QUIET kFujitsuAcFanQuiet
+#define FUJITSU_AC_MIN_TEMP kFujitsuAcMinTemp
+#define FUJITSU_AC_MAX_TEMP kFujitsuAcMaxTemp
+#define FUJITSU_AC_SWING_OFF kFujitsuAcSwingOff
+#define FUJITSU_AC_SWING_VERT kFujitsuAcSwingVert
+#define FUJITSU_AC_SWING_HORIZ kFujitsuAcSwingHoriz
+#define FUJITSU_AC_SWING_BOTH kFujitsuAcSwingBoth
 
 enum fujitsu_ac_remote_model_t {
   ARRAH2E = 1,
@@ -57,7 +78,7 @@ class IRFujitsuAC {
   void setModel(fujitsu_ac_remote_model_t model);
   void stateReset();
 #if SEND_FUJITSU_AC
-  void send();
+  void send(const uint16_t repeat = kFujitsuAcMinRepeat);
 #endif  // SEND_FUJITSU_AC
   void begin();
   void off();
@@ -76,16 +97,16 @@ class IRFujitsuAC {
   uint8_t* getRaw();
   bool setRaw(const uint8_t newState[], const uint16_t length);
   uint8_t getStateLength();
-  static bool validChecksum(uint8_t *state, uint16_t length);
+  static bool validChecksum(uint8_t* state, uint16_t length);
   bool getPower();
-  #ifdef ARDUINO
-    String toString();
-  #else
-    std::string toString();
-  #endif
+#ifdef ARDUINO
+  String toString();
+#else
+  std::string toString();
+#endif
 
  private:
-  uint8_t remote_state[FUJITSU_AC_STATE_LENGTH];
+  uint8_t remote_state[kFujitsuAcStateLength];
   IRsend _irsend;
   uint8_t _temp;
   uint8_t _fanSpeed;

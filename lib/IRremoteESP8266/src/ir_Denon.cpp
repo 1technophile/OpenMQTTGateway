@@ -18,25 +18,25 @@
 // Constants
 // Ref:
 //   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
-#define DENON_TICK                     263U
-#define DENON_HDR_MARK_TICKS             1U
-#define DENON_HDR_MARK            (DENON_HDR_MARK_TICKS * DENON_TICK)
-#define DENON_HDR_SPACE_TICKS            3U
-#define DENON_HDR_SPACE           (DENON_HDR_SPACE_TICKS * DENON_TICK)
-#define DENON_BIT_MARK_TICKS             1U
-#define DENON_BIT_MARK            (DENON_BIT_MARK_TICKS * DENON_TICK)
-#define DENON_ONE_SPACE_TICKS            7U
-#define DENON_ONE_SPACE           (DENON_ONE_SPACE_TICKS * DENON_TICK)
-#define DENON_ZERO_SPACE_TICKS           3U
-#define DENON_ZERO_SPACE          (DENON_ZERO_SPACE_TICKS * DENON_TICK)
-#define DENON_MIN_COMMAND_LENGTH_TICKS 510U
-#define DENON_MIN_COMMAND_LENGTH  (DENON_MIN_COMMAND_LENGTH_TICKS * DENON_TICK)
-#define DENON_MIN_GAP_TICKS       (DENON_MIN_COMMAND_LENGTH_TICKS - \
-    (DENON_HDR_MARK_TICKS + DENON_HDR_SPACE_TICKS + \
-     DENON_BITS * (DENON_BIT_MARK_TICKS + DENON_ONE_SPACE_TICKS) + \
-     DENON_BIT_MARK_TICKS))
-#define DENON_MIN_GAP             (DENON_MIN_GAP_TICKS * DENON_TICK)
-#define DENON_MANUFACTURER       0x2A4CULL
+const uint16_t kDenonTick = 263;
+const uint16_t kDenonHdrMarkTicks = 1;
+const uint16_t kDenonHdrMark = kDenonHdrMarkTicks * kDenonTick;
+const uint16_t kDenonHdrSpaceTicks = 3;
+const uint16_t kDenonHdrSpace = kDenonHdrSpaceTicks * kDenonTick;
+const uint16_t kDenonBitMarkTicks = 1;
+const uint16_t kDenonBitMark = kDenonBitMarkTicks * kDenonTick;
+const uint16_t kDenonOneSpaceTicks = 7;
+const uint16_t kDenonOneSpace = kDenonOneSpaceTicks * kDenonTick;
+const uint16_t kDenonZeroSpaceTicks = 3;
+const uint16_t kDenonZeroSpace = kDenonZeroSpaceTicks * kDenonTick;
+const uint16_t kDenonMinCommandLengthTicks = 510;
+const uint16_t kDenonMinGapTicks =
+    kDenonMinCommandLengthTicks -
+    (kDenonHdrMarkTicks + kDenonHdrSpaceTicks +
+     kDenonBits * (kDenonBitMarkTicks + kDenonOneSpaceTicks) +
+     kDenonBitMarkTicks);
+const uint32_t kDenonMinGap = kDenonMinGapTicks * kDenonTick;
+const uint64_t kDenonManufacturer = 0x2A4CULL;
 
 #if SEND_DENON
 // Send a Denon message
@@ -55,9 +55,9 @@
 //   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Denon.cpp
 //   http://assets.denon.com/documentmaster/us/denon%20master%20ir%20hex.xls
 void IRsend::sendDenon(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  if (nbits >= PANASONIC_BITS)  // Is this really Panasonic?
+  if (nbits >= kPanasonicBits)  // Is this really Panasonic?
     sendPanasonic64(data, nbits, repeat);
-  else if (nbits == DENON_LEGACY_BITS)
+  else if (nbits == kDenonLegacyBits)
     // Support legacy (broken) calls of sendDenon().
     sendSharpRaw(data & (~0x2000ULL), nbits + 1, repeat);
   else
@@ -84,7 +84,7 @@ bool IRrecv::decodeDenon(decode_results *results, uint16_t nbits, bool strict) {
     switch (nbits) {
       case DENON_BITS:
       case DENON_48_BITS:
-      case DENON_LEGACY_BITS:
+      case kDenonLegacyBits:
         break;
       default:
         return false;
@@ -99,40 +99,36 @@ bool IRrecv::decodeDenon(decode_results *results, uint16_t nbits, bool strict) {
   // manufacturer code.
 
   if (!decodeSharp(results, nbits, true, false) &&
-      !decodePanasonic(results, nbits, true, DENON_MANUFACTURER)) {
+      !decodePanasonic(results, nbits, true, kDenonManufacturer)) {
     // We couldn't decode it as expected, so try the old legacy method.
     // NOTE: I don't think this following protocol actually exists.
     //       Looks like a partial version of the Sharp protocol.
     // Check we have enough data
-    if (results->rawlen < 2 * nbits + HEADER + FOOTER - 1)
-      return false;
-    if (strict && nbits != DENON_LEGACY_BITS)
-      return false;
+    if (results->rawlen < 2 * nbits + kHeader + kFooter - 1) return false;
+    if (strict && nbits != kDenonLegacyBits) return false;
 
     uint64_t data = 0;
-    uint16_t offset = OFFSET_START;
+    uint16_t offset = kStartOffset;
 
     // Header
-    if (!matchMark(results->rawbuf[offset], DENON_HDR_MARK)) return false;
+    if (!matchMark(results->rawbuf[offset], kDenonHdrMark)) return false;
     // Calculate how long the common tick time is based on the header mark.
-    uint32_t m_tick = results->rawbuf[offset++] * RAWTICK /
-        DENON_HDR_MARK_TICKS;
-    if (!matchSpace(results->rawbuf[offset], DENON_HDR_SPACE)) return false;
-    uint32_t s_tick = results->rawbuf[offset++] * RAWTICK /
-        DENON_HDR_SPACE_TICKS;
+    uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kDenonHdrMarkTicks;
+    if (!matchSpace(results->rawbuf[offset], kDenonHdrSpace)) return false;
+    uint32_t s_tick =
+        results->rawbuf[offset++] * kRawTick / kDenonHdrSpaceTicks;
 
     // Data
-    match_result_t data_result = matchData(&(results->rawbuf[offset]), nbits,
-                                           DENON_BIT_MARK_TICKS * m_tick,
-                                           DENON_ONE_SPACE_TICKS * s_tick,
-                                           DENON_BIT_MARK_TICKS * m_tick,
-                                           DENON_ZERO_SPACE_TICKS * s_tick);
+    match_result_t data_result =
+        matchData(&(results->rawbuf[offset]), nbits,
+                  kDenonBitMarkTicks * m_tick, kDenonOneSpaceTicks * s_tick,
+                  kDenonBitMarkTicks * m_tick, kDenonZeroSpaceTicks * s_tick);
     if (data_result.success == false) return false;
     data = data_result.data;
     offset += data_result.used;
 
     // Footer
-    if (!matchMark(results->rawbuf[offset++], DENON_BIT_MARK_TICKS * m_tick))
+    if (!matchMark(results->rawbuf[offset++], kDenonBitMarkTicks * m_tick))
       return false;
 
     // Success

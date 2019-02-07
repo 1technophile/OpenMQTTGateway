@@ -10,6 +10,8 @@
 - [Jonny Graham](https://github.com/jonnygraham/)
 - [Stu Fisher](https://github.com/stufisher/)
 - [Jorge Cisneros](https://github.com/jorgecis/)
+- [Denes Varga](https://github.com/denxhun/)
+- [Brett T. Warden](https://github.com/bwarden/)
 
 All contributors can be found on the [contributors site](https://github.com/markszabo/IRremoteESP8266/graphs/contributors). 
 

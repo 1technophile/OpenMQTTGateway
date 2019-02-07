@@ -12,12 +12,13 @@ TEST(TestSendNikai, SendDataOnly) {
 
   irsend.reset();
   irsend.sendNikai(0xD5F2A);  // Nikai TV Power Off.
-  EXPECT_EQ("m4000s4000"
-            "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
-            "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
-            "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
-            "m500s2000m500s1000m500s2000m500s8500",
-            irsend.outputStr());
+  EXPECT_EQ(
+      "m4000s4000"
+      "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
+      "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
+      "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
+      "m500s2000m500s1000m500s2000m500s8500",
+      irsend.outputStr());
 
   irsend.reset();
 }
@@ -28,35 +29,37 @@ TEST(TestSendNikai, SendWithRepeats) {
   irsend.begin();
 
   irsend.reset();
-  irsend.sendNikai(0xD5F2A, NIKAI_BITS, 1);  // 1 repeat.
-  EXPECT_EQ("m4000s4000"
-            "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
-            "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
-            "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
-            "m500s2000m500s1000m500s2000m500s8500"
-            "m4000s4000"
-            "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
-            "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
-            "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
-            "m500s2000m500s1000m500s2000m500s8500",
-            irsend.outputStr());
-  irsend.sendNikai(0xD5F2A, NIKAI_BITS, 2);  // 2 repeat.
-  EXPECT_EQ("m4000s4000"
-            "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
-            "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
-            "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
-            "m500s2000m500s1000m500s2000m500s8500"
-            "m4000s4000"
-            "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
-            "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
-            "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
-            "m500s2000m500s1000m500s2000m500s8500"
-            "m4000s4000"
-            "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
-            "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
-            "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
-            "m500s2000m500s1000m500s2000m500s8500",
-            irsend.outputStr());
+  irsend.sendNikai(0xD5F2A, kNikaiBits, 1);  // 1 repeat.
+  EXPECT_EQ(
+      "m4000s4000"
+      "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
+      "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
+      "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
+      "m500s2000m500s1000m500s2000m500s8500"
+      "m4000s4000"
+      "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
+      "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
+      "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
+      "m500s2000m500s1000m500s2000m500s8500",
+      irsend.outputStr());
+  irsend.sendNikai(0xD5F2A, kNikaiBits, 2);  // 2 repeat.
+  EXPECT_EQ(
+      "m4000s4000"
+      "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
+      "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
+      "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
+      "m500s2000m500s1000m500s2000m500s8500"
+      "m4000s4000"
+      "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
+      "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
+      "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
+      "m500s2000m500s1000m500s2000m500s8500"
+      "m4000s4000"
+      "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
+      "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
+      "m500s1000m500s1000m500s2000m500s2000m500s1000m500s2000m500s1000"
+      "m500s2000m500s1000m500s2000m500s8500",
+      irsend.outputStr());
 }
 
 // Tests for decodeNikai().
@@ -71,17 +74,17 @@ TEST(TestDecodeNikai, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendNikai(0x123456);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, true));
+  ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, true));
   EXPECT_EQ(NIKAI, irsend.capture.decode_type);
-  EXPECT_EQ(NIKAI_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNikaiBits, irsend.capture.bits);
   EXPECT_EQ(0x123456, irsend.capture.value);
 
   irsend.reset();
   irsend.sendNikai(0x101);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, true));
+  ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, true));
   EXPECT_EQ(NIKAI, irsend.capture.decode_type);
-  EXPECT_EQ(NIKAI_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNikaiBits, irsend.capture.bits);
   EXPECT_EQ(0x101, irsend.capture.value);
 }
 
@@ -93,11 +96,11 @@ TEST(TestDecodeNikai, NormalDecodeWithRepeatAndStrict) {
 
   // Normal Nikai 24-bit message.
   irsend.reset();
-  irsend.sendNikai(0xD5F2A, NIKAI_BITS, 2);
+  irsend.sendNikai(0xD5F2A, kNikaiBits, 2);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, true));
+  ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, true));
   EXPECT_EQ(NIKAI, irsend.capture.decode_type);
-  EXPECT_EQ(NIKAI_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNikaiBits, irsend.capture.bits);
   EXPECT_EQ(0xD5F2A, irsend.capture.value);
 }
 
@@ -111,9 +114,9 @@ TEST(TestDecodeNikai, NormalDecodeWithNonStrict) {
   irsend.sendNikai(0x0, 16);
   irsend.makeDecodeResult();
   // Should fail with strict on.
-  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, true));
+  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, true));
   // And it should fail when we expect more bits.
-  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, false));
+  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, false));
 
   // Should pass if strict off if we ask for correct nr. of bits sent.
   ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, 16, false));
@@ -136,7 +139,7 @@ TEST(TestDecodeNikai, Decode64BitMessages) {
   // Illegal size Nikai 64-bit message.
   irsend.sendNikai(0xFFFFFFFFFFFFFFFF, 64);
   irsend.makeDecodeResult();
-  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, true));
+  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, true));
   // Should work with a 'normal' match (not strict)
   ASSERT_TRUE(irrecv.decodeNikai(&irsend.capture, 64, false));
   EXPECT_EQ(NIKAI, irsend.capture.decode_type);
@@ -152,32 +155,31 @@ TEST(TestDecodeNikai, DecodeExamples) {
 
   irsend.reset();
   // Nikai TV Power Off from Issue #309
-  uint16_t rawdata_off[100] = {4060, 3918,
-      508, 2004, 508, 2002, 510, 2002, 508, 2004, 506, 1050, 508, 1048,
-      510, 2004, 508, 1048, 508, 2002, 510, 1050, 508, 2004, 510, 1048,
-      508, 1050, 508, 1048, 508, 1050, 508, 1050, 508, 2004, 508, 2002,
-      510, 1048, 508, 2004, 508, 1050, 506, 2004, 508, 1048, 510, 2002,
-      456, 8446,
-      3956, 3998,
-      508, 2004, 508, 2002, 508, 2004, 508, 1978, 532, 1050, 508, 1050,
-      508, 2002, 508, 1050, 508, 2004, 508, 1050, 508, 2002, 510, 1050,
-      508, 1050, 508, 1048, 508, 1050, 508, 1050, 508, 2002, 510, 2002,
-      508, 1050, 508, 2002, 510, 1050, 508, 2002, 508};
+  uint16_t rawdata_off[100] = {
+      4060, 3918, 508,  2004, 508,  2002, 510,  2002, 508,  2004, 506,
+      1050, 508,  1048, 510,  2004, 508,  1048, 508,  2002, 510,  1050,
+      508,  2004, 510,  1048, 508,  1050, 508,  1048, 508,  1050, 508,
+      1050, 508,  2004, 508,  2002, 510,  1048, 508,  2004, 508,  1050,
+      506,  2004, 508,  1048, 510,  2002, 456,  8446, 3956, 3998, 508,
+      2004, 508,  2002, 508,  2004, 508,  1978, 532,  1050, 508,  1050,
+      508,  2002, 508,  1050, 508,  2004, 508,  1050, 508,  2002, 510,
+      1050, 508,  1050, 508,  1048, 508,  1050, 508,  1050, 508,  2002,
+      510,  2002, 508,  1050, 508,  2002, 510,  1050, 508,  2002, 508};
   irsend.sendRaw(rawdata_off, 100, 38);
   irsend.makeDecodeResult();
 
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NIKAI, irsend.capture.decode_type);
-  EXPECT_EQ(NIKAI_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNikaiBits, irsend.capture.bits);
   EXPECT_EQ(0xD5F2A, irsend.capture.value);
 
   // Nikai TV Volume Up from Issue #309
-  uint16_t rawdata_volup[52] = {3972, 4002,
-      504, 1982, 526, 2010, 502, 2010, 502, 2010, 500, 1056, 502, 1056,
-      502, 2010, 500, 1056, 502, 2010, 502, 2010, 500, 2010, 502, 2010,
-      502, 1056, 502, 1056, 502, 1056, 500, 1056, 502, 2010, 502, 2010,
-      500, 1056, 502, 2008, 502, 1054, 504, 1054, 504, 1054, 500, 1056,
-      450};
+  uint16_t rawdata_volup[52] = {
+      3972, 4002, 504,  1982, 526,  2010, 502,  2010, 502,  2010, 500,
+      1056, 502,  1056, 502,  2010, 500,  1056, 502,  2010, 502,  2010,
+      500,  2010, 502,  2010, 502,  1056, 502,  1056, 502,  1056, 500,
+      1056, 502,  2010, 502,  2010, 500,  1056, 502,  2008, 502,  1054,
+      504,  1054, 504,  1054, 500,  1056, 450};
 
   irsend.reset();
   irsend.sendRaw(rawdata_volup, 52, 38);
@@ -185,7 +187,7 @@ TEST(TestDecodeNikai, DecodeExamples) {
 
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(NIKAI, irsend.capture.decode_type);
-  EXPECT_EQ(NIKAI_BITS, irsend.capture.bits);
+  EXPECT_EQ(kNikaiBits, irsend.capture.bits);
   EXPECT_EQ(0xD0F2F, irsend.capture.value);
 }
 
@@ -196,15 +198,15 @@ TEST(TestDecodeNikai, FailToDecodeNonNikaiExample) {
   irsend.begin();
 
   irsend.reset();
-  uint16_t gc_test[71] = {38000, 1, 1, 172, 172, 22, 64, 22, 64, 22, 64, 22, 21,
-                          22, 21, 22, 21, 22, 11, 22, 21, 22, 128, 22, 64, 22,
-                          64, 22, 21, 22, 21, 22, 21, 22, 21, 22, 21, 22, 64,
-                          22, 21, 22, 21, 22, 64, 22, 64, 22, 21, 22, 21, 22,
-                          64, 22, 21, 22, 64, 22, 64, 22, 21, 22, 21, 22, 64,
-                          22, 64, 22, 21, 22, 1820};
+  uint16_t gc_test[71] = {38000, 1,  1,  172, 172, 22, 64, 22, 64, 22, 64,  22,
+                          21,    22, 21, 22,  21,  22, 11, 22, 21, 22, 128, 22,
+                          64,    22, 64, 22,  21,  22, 21, 22, 21, 22, 21,  22,
+                          21,    22, 64, 22,  21,  22, 21, 22, 64, 22, 64,  22,
+                          21,    22, 21, 22,  64,  22, 21, 22, 64, 22, 64,  22,
+                          21,    22, 21, 22,  64,  22, 64, 22, 21, 22, 1820};
   irsend.sendGC(gc_test, 71);
   irsend.makeDecodeResult();
 
   ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture));
-  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, NIKAI_BITS, false));
+  ASSERT_FALSE(irrecv.decodeNikai(&irsend.capture, kNikaiBits, false));
 }

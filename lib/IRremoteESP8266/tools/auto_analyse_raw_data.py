@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """Attempt an automatic analysis of IRremoteESP8266's Raw data output.
    Makes suggestions on key values and tried to break down the message
-   into likely chuncks."""
+   into likely chunks."""
 #
 # Copyright 2018 David Conran
 import argparse
@@ -22,7 +22,9 @@ class RawIRMessage(object):
     self.gaps = []
     self.margin = margin
     self.marks = []
+    self.mark_buckets = {}
     self.spaces = []
+    self.space_buckets = {}
     self.output = output
     self.verbose = verbose
     if len(timings) <= 3:
@@ -40,22 +42,26 @@ class RawIRMessage(object):
         self.marks.append(usecs)
       else:
         self.spaces.append(usecs)
-    self.marks = self._reduce_list(self.marks)
-    self.spaces = self._reduce_list(self.spaces)
+    self.marks, self.mark_buckets = self.reduce_list(self.marks)
+    self.spaces, self.space_buckets = self.reduce_list(self.spaces)
 
-  def _reduce_list(self, items):
-    """Reduce the list of numbers into buckets that are atleast margin apart."""
+  def reduce_list(self, items):
+    """Reduce a list of numbers into buckets that are at least margin apart."""
     result = []
     last = -1
+    buckets = {}
     for item in sorted(items, reverse=True):
       if last == -1 or item < last - self.margin:
         result.append(item)
         last = item
-    return result
+        buckets[last] = [item]
+      else:
+        buckets[last].append(item)
+    return result, buckets
 
   def _usec_compare(self, seen, expected):
     """Compare two usec values and see if they match within a
-       subtrative margin."""
+       subtractive margin."""
     return seen <= expected and seen > expected - self.margin
 
   def _usec_compares(self, usecs, expecteds):
@@ -79,21 +85,22 @@ class RawIRMessage(object):
                       "        %s (LSB first)\n"
                       "  Bin:  0b%s (MSB first)\n"
                       "        0b%s (LSB first)\n" %
-                      (bits, "0x{0:0{1}X}".format(num, bits / 4),
-                       "0x{0:0{1}X}".format(rev_num, bits / 4), num, rev_num,
-                       binary_str, rev_binary_str))
+                      (bits, ("0x{0:0%dX}" % (bits / 4)).format(num),
+                       ("0x{0:0%dX}" % (bits / 4)).format(rev_num), num,
+                       rev_num, binary_str, rev_binary_str))
 
-  def add_data_code(self, bin_str):
+  def add_data_code(self, bin_str, footer=True):
     """Add the common "data" sequence of code to send the bulk of a message."""
     # pylint: disable=no-self-use
     code = []
     code.append("    // Data")
     code.append("    // e.g. data = 0x%X, nbits = %d" % (int(bin_str, 2),
                                                          len(bin_str)))
-    code.append("    sendData(BIT_MARK, ONE_SPACE, BIT_MARK, ZERO_SPACE, data, "
+    code.append("    sendData(kBitMark, kOneSpace, kBitMark, kZeroSpace, data, "
                 "nbits, true);")
-    code.append("    // Footer")
-    code.append("    mark(BIT_MARK);")
+    if footer:
+      code.append("    // Footer")
+      code.append("    mark(kBitMark);")
     return code
 
   def _calc_values(self):
@@ -104,7 +111,7 @@ class RawIRMessage(object):
                         "%s\n"
                         "Potential Space Candidates:\n"
                         "%s\n" % (str(self.marks), str(self.spaces)))
-    # Largest mark is likely the HDR_MARK
+    # Largest mark is likely the kHdrMark
     self.hdr_mark = self.marks[0]
     # The bit mark is likely to be the smallest mark.
     self.bit_mark = self.marks[-1]
@@ -150,8 +157,15 @@ class RawIRMessage(object):
     return self._usec_compares(usec, self.gaps)
 
 
+def avg_list(items):
+  """Return the average of a list of numbers."""
+  if items:
+    return sum(items) / len(items)
+  return 0
+
+
 def add_bit(so_far, bit, output=sys.stdout):
-  """Add a bit to the end of the bits collected so far. """
+  """Add a bit to the end of the bits collected so far."""
   if bit == "reset":
     return ""
   output.write(str(bit))  # This effectively displays in LSB first order.
@@ -179,30 +193,36 @@ def convert_rawdata(data_str):
 
 def dump_constants(message, defines, output=sys.stdout):
   """Dump the key constants and generate the C++ #defines."""
-  output.write("Guessing key value:\n"
-               "HDR_MARK   = %d\n"
-               "HDR_SPACE  = %d\n"
-               "BIT_MARK   = %d\n"
-               "ONE_SPACE  = %d\n"
-               "ZERO_SPACE = %d\n" %
-               (message.hdr_mark, message.hdr_space, message.bit_mark,
-                message.one_space, message.zero_space))
-  defines.append("#define HDR_MARK %dU" % message.hdr_mark)
-  defines.append("#define BIT_MARK %dU" % message.bit_mark)
-  defines.append("#define HDR_SPACE %dU" % message.hdr_space)
-  defines.append("#define ONE_SPACE %dU" % message.one_space)
-  defines.append("#define ZERO_SPACE %dU" % message.zero_space)
+  hdr_mark = avg_list(message.mark_buckets[message.hdr_mark])
+  bit_mark = avg_list(message.mark_buckets[message.bit_mark])
+  hdr_space = avg_list(message.space_buckets[message.hdr_space])
+  one_space = avg_list(message.space_buckets[message.one_space])
+  zero_space = avg_list(message.space_buckets[message.zero_space])
 
+  output.write("Guessing key value:\n"
+               "kHdrMark   = %d\n"
+               "kHdrSpace  = %d\n"
+               "kBitMark   = %d\n"
+               "kOneSpace  = %d\n"
+               "kZeroSpace = %d\n" % (hdr_mark, hdr_space, bit_mark, one_space,
+                                      zero_space))
+  defines.append("const uint16_t kHdrMark = %d;" % hdr_mark)
+  defines.append("const uint16_t kBitMark = %d;" % bit_mark)
+  defines.append("const uint16_t kHdrSpace = %d;" % hdr_space)
+  defines.append("const uint16_t kOneSpace = %d;" % one_space)
+  defines.append("const uint16_t kZeroSpace = %d;" % zero_space)
+
+  avg_gaps = [avg_list(message.space_buckets[x]) for x in message.gaps]
   if len(message.gaps) == 1:
-    output.write("SPACE_GAP = %d\n" % message.gaps[0])
-    defines.append("#define SPACE_GAP = %dU" % message.gaps[0])
+    output.write("kSpaceGap = %d\n" % avg_gaps[0])
+    defines.append("const uint16_t kSpaceGap = %d;" % avg_gaps[0])
   else:
     count = 0
-    for gap in message.gaps:
+    for gap in avg_gaps:
       # We probably (still) have a gap in the protocol.
       count = count + 1
-      output.write("SPACE_GAP%d = %d\n" % (count, gap))
-      defines.append("#define SPACE_GAP%d = %dU" % (count, gap))
+      output.write("kSpaceGap%d = %d\n" % (count, gap))
+      defines.append("const uint16_t kSpaceGap%d = %d;" % (count, gap))
 
 
 def parse_and_report(rawdata_str, margin, gen_code=False, output=sys.stdout):
@@ -244,7 +264,7 @@ def decode_data(message, defines, function_code, output=sys.stdout):
 
   function_code.extend([
       "// Function should be safe up to 64 bits.",
-      "void IRsend::sendXYZ(const uint64_t data, const uint16_t"
+      "void IRsend::sendXyz(const uint64_t data, const uint16_t"
       " nbits, const uint16_t repeat) {",
       "  enableIROut(38);  // A guess. Most common frequency.",
       "  for (uint16_t r = 0; r <= repeat; r++) {"
@@ -256,12 +276,12 @@ def decode_data(message, defines, function_code, output=sys.stdout):
       state = "HM"
       if binary_value:
         message.display_binary(binary_value)
+        function_code.extend(message.add_data_code(binary_value, False))
         total_bits = total_bits + binary_value
-        output.write(state)
       binary_value = add_bit(binary_value, "reset")
-      output.write("HDR_MARK+")
-      function_code.extend(["    // Header", "    mark(HDR_MARK);"])
-    elif (message.is_hdr_space(usec) and not message.is_one_space(usec)):
+      output.write("kHdrMark+")
+      function_code.extend(["    // Header", "    mark(kHdrMark);"])
+    elif message.is_hdr_space(usec) and not message.is_one_space(usec):
       if state != "HM":
         if binary_value:
           message.display_binary(binary_value)
@@ -270,48 +290,53 @@ def decode_data(message, defines, function_code, output=sys.stdout):
         binary_value = add_bit(binary_value, "reset")
         output.write("UNEXPECTED->")
       state = "HS"
-      output.write("HDR_SPACE+")
-      function_code.append("    space(HDR_SPACE);")
+      output.write("kHdrSpace+")
+      function_code.append("    space(kHdrSpace);")
     elif message.is_bit_mark(usec) and count % 2:
       if state != "HS" and state != "BS":
-        output.write("BIT_MARK(UNEXPECTED)")
+        output.write("kBitMark(UNEXPECTED)")
       state = "BM"
     elif message.is_zero_space(usec):
       if state != "BM":
-        output.write("ZERO_SPACE(UNEXPECTED)")
+        output.write("kZeroSpace(UNEXPECTED)")
       state = "BS"
       binary_value = add_bit(binary_value, 0, output)
     elif message.is_one_space(usec):
       if state != "BM":
-        output.write("ONE_SPACE(UNEXPECTED)")
+        output.write("kOneSpace(UNEXPECTED)")
       state = "BS"
       binary_value = add_bit(binary_value, 1, output)
     elif message.is_gap(usec):
       if state != "BM":
         output.write("UNEXPECTED->")
       state = "GS"
-      output.write(" GAP(%d)" % usec)
-      message.display_binary(binary_value)
-      function_code.extend(message.add_data_code(binary_value))
-      function_code.append("    space(SPACE_GAP);")
+      output.write("GAP(%d)" % usec)
+      if binary_value:
+        message.display_binary(binary_value)
+        function_code.extend(message.add_data_code(binary_value))
+      else:
+        function_code.extend(["    // Gap", "    mark(kBitMark);"])
+      function_code.append("    space(kSpaceGap);")
       total_bits = total_bits + binary_value
       binary_value = add_bit(binary_value, "reset")
     else:
       output.write("UNKNOWN(%d)" % usec)
       state = "UNK"
     count = count + 1
-  message.display_binary(binary_value)
-  function_code.extend(message.add_data_code(binary_value))
+  if binary_value:
+    message.display_binary(binary_value)
+    function_code.extend(message.add_data_code(binary_value))
   function_code.extend([
       "    space(100000);  // A 100% made up guess of the gap"
       " between messages.", "  }", "}"
   ])
 
   total_bits = total_bits + binary_value
-  output.write("Total Nr. of suspected bits: %d\n" % len(total_bits))
-  defines.append("#define XYZ_BITS %dU" % len(total_bits))
+  output.write("\nTotal Nr. of suspected bits: %d\n" % len(total_bits))
+  defines.append("const uint16_t kXyzBits = %d;" % len(total_bits))
   if len(total_bits) > 64:
-    defines.append("#define XYZ_STATE_LENGTH %dU" % (len(total_bits) / 8))
+    defines.append("const uint16_t kXyzStateLength = %d;" %
+                   (len(total_bits) / 8))
   return total_bits
 
 
@@ -333,23 +358,24 @@ def generate_irsend_code(defines, normal, bits_str, output=sys.stdout):
 
   if len(bits_str) > 64:  # Will it fit in a uint64_t?
     output.write("\n\n// Alternative >64 bit Function\n"
-                 "void IRsend::sendXYZ(uint8_t data[], uint16_t nbytes,"
+                 "void IRsend::sendXyz(uint8_t data[], uint16_t nbytes,"
                  " uint16_t repeat) {\n"
-                 "  // nbytes should typically be XYZ_STATE_LENGTH\n"
+                 "  // nbytes should typically be kXyzStateLength\n"
                  "  // data should typically be:\n"
-                 "  //   uint8_t data[XYZ_STATE_LENGTH] = {0x%s};\n"
+                 "  //   uint8_t data[kXyzStateLength] = {0x%s};\n"
                  "  // data[] is assumed to be in MSB order for this code.\n"
                  "  for (uint16_t r = 0; r <= repeat; r++) {\n"
-                 "    sendGeneric(HDR_MARK, HDR_SPACE,\n"
-                 "                BIT_MARK, ONE_SPACE,\n"
-                 "                BIT_MARK, ZERO_SPACE,\n"
-                 "                BIT_MARK\n"
+                 "    sendGeneric(kHdrMark, kHdrSpace,\n"
+                 "                kBitMark, kOneSpace,\n"
+                 "                kBitMark, kZeroSpace,\n"
+                 "                kBitMark,\n"
                  "                100000, // 100%% made-up guess at the"
                  " message gap.\n"
                  "                data, nbytes,\n"
                  "                38000, // Complete guess of the modulation"
                  " frequency.\n"
                  "                true, 0, 50);\n"
+                 "  }\n"
                  "}\n" % ", 0x".join("%02X" % int(bits_str[i:i + 8], 2)
                                      for i in range(0, len(bits_str), 8)))
 
