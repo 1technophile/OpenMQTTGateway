@@ -29,32 +29,50 @@
 
 // Constants. Store MSB left.
 
-#define ARGO_COOL_ON              0U  // 0b000
-#define ARGO_COOL_OFF             3U  // 0b110
-#define ARGO_COOL_AUTO            2U  // 0b010
-#define ARGO_COOl_HUM             1U  // 0b100
+const uint8_t kArgoCoolOn = 0;  // 0b000
+const uint8_t kArgoCoolOff = 3;  // 0b110
+const uint8_t kArgoCoolAuto = 2;  // 0b010
+const uint8_t kArgoCoolHum = 1;  // 0b100
+const uint8_t kArgoHeatOn = 0;  // 0b001
+const uint8_t kArgoHeatAuto = 1;  // 0b101
+const uint8_t kArgoHeatBlink = 2;  // 0b011  // ??no idea what mode that is
+const uint8_t kArgoMinTemp = 10;  // Celsius offset +4
+const uint8_t kArgoMaxTemp = 32;  // Celsius
+const uint8_t kArgoFanAuto = 0;  // 0b00
+const uint8_t kArgoFan3 = 3;  // 0b11
+const uint8_t kArgoFan2 = 2;  // 0b01
+const uint8_t kArgoFan1 = 1;  // 0b10
+const uint8_t kArgoFlapAuto = 0;  // 0b000
+const uint8_t kArgoFlap1 = 1;  // 0b100
+const uint8_t kArgoFlap2 = 2;  // 0b010
+const uint8_t kArgoFlap3 = 3;  // 0b110
+const uint8_t kArgoFlap4 = 4;  // 0b001
+const uint8_t kArgoFlap5 = 5;  // 0b101
+const uint8_t kArgoFlap6 = 6;  // 0b011
+const uint8_t kArgoFlapFull = 7;  // 0b111
 
-#define ARGO_HEAT_ON              0U  // 0b001
-#define ARGO_HEAT_AUTO            1U  // 0b101
-#define ARGO_HEAT_BLINK           2U  // 0b011  // ??no idea what mode that is
-
-
-#define ARGO_MIN_TEMP             10U  // Celsius offset +4
-#define ARGO_MAX_TEMP             32U  // Celsius
-
-#define ARGO_FAN_AUTO             0U  // 0b00
-#define ARGO_FAN_3                3U  // 0b11
-#define ARGO_FAN_2                2U  // 0b01
-#define ARGO_FAN_1                1U  // 0b10
-
-#define ARGO_FLAP_AUTO            0U  // 0b000
-#define ARGO_FLAP_1               1U  // 0b100
-#define ARGO_FLAP_2               2U  // 0b010
-#define ARGO_FLAP_3               3U  // 0b110
-#define ARGO_FLAP_4               4U  // 0b001
-#define ARGO_FLAP_5               5U  // 0b101
-#define ARGO_FLAP_6               6U  // 0b011
-#define ARGO_FLAP_FULL            7U  // 0b111
+// Legacy defines. (Deperecated)
+#define ARGO_COOL_ON              kArgoCoolOn
+#define ARGO_COOL_OFF             kArgoCoolOff
+#define ARGO_COOL_AUTO            kArgoCoolAuto
+#define ARGO_COOl_HUM             kArgoCoolHum
+#define ARGO_HEAT_ON              kArgoHeatOn
+#define ARGO_HEAT_AUTO            kArgoHeatAuto
+#define ARGO_HEAT_BLINK           kArgoHeatBlink
+#define ARGO_MIN_TEMP             kArgoMinTemp
+#define ARGO_MAX_TEMP             kArgoMaxTemp
+#define ARGO_FAN_AUTO             kArgoFanAuto
+#define ARGO_FAN_3                kArgoFan3
+#define ARGO_FAN_2                kArgoFan2
+#define ARGO_FAN_1                kArgoFan1
+#define ARGO_FLAP_AUTO            kArgoFlapAuto
+#define ARGO_FLAP_1               kArgoFlap1
+#define ARGO_FLAP_2               kArgoFlap2
+#define ARGO_FLAP_3               kArgoFlap3
+#define ARGO_FLAP_4               kArgoFlap4
+#define ARGO_FLAP_5               kArgoFlap5
+#define ARGO_FLAP_6               kArgoFlap6
+#define ARGO_FLAP_FULL            kArgoFlapFull
 
 
 class IRArgoAC {
@@ -62,7 +80,7 @@ class IRArgoAC {
   explicit IRArgoAC(uint16_t pin);
 
 #if SEND_ARGO
-  void send();
+  void send(const uint16_t repeat = kArgoDefaultRepeat);
 #endif  // SEND_ARGO
   void begin();
   void on();
@@ -103,7 +121,7 @@ class IRArgoAC {
 
  private:
   // # of bytes per command
-  uint8_t argo[ARGO_COMMAND_LENGTH];  // Defined in IRremoteESP8266.h
+  uint8_t argo[kArgoStateLength];  // Defined in IRremoteESP8266.h
   void stateReset();
   void checksum();
   IRsend _irsend;  // instance of the IR send class

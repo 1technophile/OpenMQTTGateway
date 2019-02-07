@@ -86,10 +86,10 @@ void dump(decode_results *results) {
     if (i % 100 == 0)
       yield();  // Preemptive yield every 100th entry to feed the WDT.
     if (i & 1) {
-      Serial.print(results->rawbuf[i] * RAWTICK, DEC);
+      Serial.print(results->rawbuf[i] * kRawTick, DEC);
     } else {
       Serial.print(", ");
-      Serial.print((uint32_t) results->rawbuf[i] * RAWTICK, DEC);
+      Serial.print((uint32_t) results->rawbuf[i] * kRawTick, DEC);
     }
   }
   Serial.println("};");

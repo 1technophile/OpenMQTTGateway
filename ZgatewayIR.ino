@@ -248,229 +248,18 @@ void IRtoMQTT(){
       trc(valueRPT);
     }
     
-    #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-      #ifdef IR_COOLIX
-      if (strstr(topicOri, "IR_COOLIX") != NULL){
-        if (valueBITS == 0) valueBITS = COOLIX_BITS;
-        irsend.sendCOOLIX(data, valueBITS, valueRPT);
+    if(topicOri && (strstr(topicOri, "IR_NEC") == NULL)){
+        signalSent = sendIdentifiedProtocol(topicOri, data, (unsigned char *)datacallback, valueBITS, valueRPT);
+    }else{
+        trc(F("Using NEC protocol"));
+        if (valueBITS == 0) valueBITS = NEC_BITS;
+          #ifdef ESP8266
+              irsend.sendNEC(data, valueBITS, valueRPT);
+          #else
+              for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
+          #endif
         signalSent = true;
-      }
-      #endif
-    #endif
-    if (strstr(topicOri, "IR_NEC") != NULL || strstr(topicOri, subjectMQTTtoIR) != NULL ){
-      if (valueBITS == 0) valueBITS = NEC_BITS;
-        #ifdef ESP8266
-            irsend.sendNEC(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #ifdef IR_Whynter
-    if (strstr(topicOri, "IR_Whynter") != NULL){
-      if (valueBITS == 0) valueBITS = WHYNTER_BITS;
-        #ifdef ESP8266
-            irsend.sendWhynter(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_LG
-    if (strstr(topicOri, "IR_LG") != NULL){
-      if (valueBITS == 0) valueBITS = LG_BITS;
-        #ifdef ESP8266
-            irsend.sendLG(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_Sony
-    if (strstr(topicOri, "IR_Sony") != NULL){
-      if (valueBITS == 0) valueBITS = SONY_12_BITS;
-      if (valueRPT == 0) valueRPT = repeatIRwNumber;
-        #ifdef ESP8266
-            irsend.sendSony(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_DISH
-    if (strstr(topicOri, "IR_DISH") != NULL){
-      if (valueBITS == 0) valueBITS = DISH_BITS;
-        #ifdef ESP8266
-            irsend.sendDISH(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_RC5
-    if (strstr(topicOri, "IR_RC5") != NULL){
-      if (valueBITS == 0) valueBITS = RC5_BITS;
-        #ifdef ESP8266
-            irsend.sendRC5(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_RC6
-    if (strstr(topicOri, "IR_RC6") != NULL){
-      if (valueBITS == 0) valueBITS = RC6_MODE0_BITS;
-        #ifdef ESP8266
-            irsend.sendRC6(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendRC6(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_Sharp
-    if (strstr(topicOri, "IR_Sharp") != NULL){
-      if (valueBITS == 0) valueBITS = SHARP_BITS;
-        #ifdef ESP8266
-            irsend.sendSharpRaw(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_SAMSUNG
-    if (strstr(topicOri, "IR_SAMSUNG") != NULL){
-      if (valueBITS == 0) valueBITS = SAMSUNG_BITS;
-        #ifdef ESP8266
-            irsend.sendSAMSUNG(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_JVC
-    if (strstr(topicOri, "IR_JVC") != NULL){
-      if (valueBITS == 0) valueBITS = JVC_BITS;
-      if (valueRPT == 0) valueRPT = repeatIRwNumber;
-        #ifdef ESP8266
-            irsend.sendJVC(data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendJVC(data, valueBITS);
-        #endif
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_PANASONIC
-    if (strstr(topicOri, "IR_PANASONIC") != NULL){
-      if (valueRPT == 0) valueRPT = repeatIRwNumber;
-        #ifdef ESP8266
-            if (valueBITS == 0) valueBITS = PANASONIC_BITS;
-            irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
-        #else
-            for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
-        #endif
-      signalSent = true;
-    }
-    #endif
-  
-  #ifdef ESP8266  // sendings not available on arduino
-    #ifdef IR_RCMM
-    if (strstr(topicOri, "IR_RCMM") != NULL){
-      if (valueBITS == 0) valueBITS = RCMM_BITS;
-      irsend.sendRCMM(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_DENON
-    if (strstr(topicOri, "IR_DENON") != NULL){
-      if (valueBITS == 0) valueBITS = DENON_BITS;
-      irsend.sendDenon(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_GICABLE
-    if (strstr(topicOri, "IR_GICABLE") != NULL){
-      if (valueBITS == 0) valueBITS = GICABLE_BITS;
-      if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) GICABLE_MIN_REPEAT);
-      irsend.sendGICable(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_SHERWOOD
-    if (strstr(topicOri, "IR_SHERWOOD") != NULL){
-      if (valueBITS == 0) valueBITS = SHERWOOD_BITS;
-      if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) SHERWOOD_MIN_REPEAT);
-      irsend.sendSherwood(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_MITSUBISHI
-    if (strstr(topicOri, "IR_MITSUBISHI") != NULL){
-      if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
-      if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
-      irsend.sendMitsubishi(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_NIKAI
-    if (strstr(topicOri, "IR_NIKAI") != NULL){
-      if (valueBITS == 0) valueBITS = NIKAI_BITS;
-      irsend.sendNikai(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_MIDEA
-    if (strstr(topicOri, "IR_MIDEA") != NULL){
-      if (valueBITS == 0) valueBITS = MIDEA_BITS;
-      irsend.sendMidea(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_MAGIQUEST
-    if (strstr(topicOri, "IR_MAGIQUEST") != NULL){
-      if (valueBITS == 0) valueBITS = MAGIQUEST_BITS;
-      irsend.sendMagiQuest(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_LASERTAG
-    if (strstr(topicOri, "IR_LASERTAG") != NULL){
-      if (valueBITS == 0) valueBITS = LASERTAG_BITS;
-      irsend.sendLasertag(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_CARRIER_AC
-    if (strstr(topicOri, "IR_CARRIER_AC") != NULL){
-      if (valueBITS == 0) valueBITS = CARRIER_AC_BITS;
-      irsend.sendCarrierAC(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_MITSUBISHI2
-    if (strstr(topicOri, "IR_MITSUBISHI2") != NULL){
-      if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
-      if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
-      irsend.sendMitsubishi2(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-    #ifdef IR_AIWA_RC_T501
-    if (strstr(topicOri, "IR_MITSUBISHI") != NULL){
-      if (valueBITS == 0) valueBITS = AIWA_RC_T501_BITS;
-      if (valueRPT == 0) valueRPT = std::max(valueRPT, (uint16_t) AIWA_RC_T501_MIN_REPEAT);
-      irsend.sendAiwaRCT501(data, valueBITS, valueRPT);
-      signalSent = true;
-    }
-    #endif
-  #endif
+     }
   
     if (signalSent){ // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       pub(subjectGTWIRtoMQTT, datacallback);
@@ -486,7 +275,8 @@ void IRtoMQTT(){
       trc(F("MQTTtoIR json"));
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];
-      if (data != 0||raw) {   
+      const char * datastring = IRdata["datastring"];
+      if (data != 0||raw) {
         trc(F("MQTTtoIR data || raw ok"));
         boolean signalSent = false;
         trc("value");
@@ -557,220 +347,9 @@ void IRtoMQTT(){
               signalSent = true;
             }
             #endif
-        }else if(protocol_name && (strstr(protocol_name, "IR_NEC") == NULL)){         
-          #ifdef ESP8266 // send coolix not available for arduino IRRemote library
-          #ifdef IR_COOLIX
-          if (strstr(protocol_name, "IR_COOLIX") != NULL){
-            if (valueBITS == 0) valueBITS = COOLIX_BITS;
-            irsend.sendCOOLIX(data, valueBITS, valueRPT);
-            signalSent = true;
-          }
-          #endif
-          #endif
-          #ifdef IR_Whynter
-          if (strstr(protocol_name, "IR_Whynter") != NULL){
-          if (valueBITS == 0) valueBITS = WHYNTER_BITS;
-            #ifdef ESP8266
-                irsend.sendWhynter(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_LG
-          if (strstr(protocol_name, "IR_LG") != NULL){
-          if (valueBITS == 0) valueBITS = LG_BITS;
-            #ifdef ESP8266
-                irsend.sendLG(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_Sony
-          if (strstr(protocol_name, "IR_Sony") != NULL){
-          if (valueBITS == 0) valueBITS = SONY_12_BITS;
-            #ifdef ESP8266
-                irsend.sendSony(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_DISH
-          if (strstr(protocol_name, "IR_DISH") != NULL){
-          if (valueBITS == 0) valueBITS = DISH_BITS;
-            #ifdef ESP8266
-                irsend.sendDISH(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_RC5
-          if (strstr(protocol_name, "IR_RC5") != NULL){
-          if (valueBITS == 0) valueBITS = RC5_BITS;
-            #ifdef ESP8266
-                irsend.sendRC5(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_RC6
-          if (strstr(protocol_name, "IR_RC6") != NULL){
-          if (valueBITS == 0) valueBITS = RC6_MODE0_BITS;
-            #ifdef ESP8266
-                irsend.sendRC6(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendRC6(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_Sharp
-          if (strstr(protocol_name, "IR_Sharp") != NULL){
-          if (valueBITS == 0) valueBITS = SHARP_BITS;
-            #ifdef ESP8266
-                irsend.sendSharpRaw(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_SAMSUNG
-          if (strstr(protocol_name, "IR_SAMSUNG") != NULL){
-          if (valueBITS == 0) valueBITS = SAMSUNG_BITS;
-            #ifdef ESP8266
-                irsend.sendSAMSUNG(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_JVC
-          if (strstr(protocol_name, "IR_JVC") != NULL){
-          if (valueBITS == 0) valueBITS = JVC_BITS;
-            #ifdef ESP8266
-                irsend.sendJVC(data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendJVC(data, valueBITS);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_PANASONIC
-          if (strstr(protocol_name, "IR_PANASONIC") != NULL){
-            #ifdef ESP8266
-                if (valueBITS == 0) valueBITS = PANASONIC_BITS;
-                irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
-            #else
-                for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
-            #endif
-          signalSent = true;
-          }
-          #endif
-          
-          #ifdef ESP8266  // sendings not available on arduino
-          #ifdef IR_RCMM
-          if (strstr(protocol_name, "IR_RCMM") != NULL){
-          if (valueBITS == 0) valueBITS = RCMM_BITS;
-          irsend.sendRCMM(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_DENON
-          if (strstr(protocol_name, "IR_DENON") != NULL){
-          if (valueBITS == 0) valueBITS = DENON_BITS;
-          irsend.sendDenon(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_GICABLE
-          if (strstr(protocol_name, "IR_GICABLE") != NULL){
-          if (valueBITS == 0) valueBITS = GICABLE_BITS;
-          if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) GICABLE_MIN_REPEAT);
-          irsend.sendGICable(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_SHERWOOD
-          if (strstr(protocol_name, "IR_SHERWOOD") != NULL){
-          if (valueBITS == 0) valueBITS = SHERWOOD_BITS;
-          if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) SHERWOOD_MIN_REPEAT);
-          irsend.sendSherwood(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_MITSUBISHI
-          if (strstr(protocol_name, "IR_MITSUBISHI") != NULL){
-          if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
-          if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
-          irsend.sendMitsubishi(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_NIKAI
-          if (strstr(protocol_name, "IR_NIKAI") != NULL){
-          if (valueBITS == 0) valueBITS = NIKAI_BITS;
-          irsend.sendNikai(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_MIDEA
-          if (strstr(protocol_name, "IR_MIDEA") != NULL){
-          if (valueBITS == 0) valueBITS = MIDEA_BITS;
-          irsend.sendMidea(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_MAGIQUEST
-          if (strstr(protocol_name, "IR_MAGIQUEST") != NULL){
-          if (valueBITS == 0) valueBITS = MAGIQUEST_BITS;
-          irsend.sendMagiQuest(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_LASERTAG
-          if (strstr(protocol_name, "IR_LASERTAG") != NULL){
-          if (valueBITS == 0) valueBITS = LASERTAG_BITS;
-          irsend.sendLasertag(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_CARRIER_AC
-          if (strstr(protocol_name, "IR_CARRIER_AC") != NULL){
-          if (valueBITS == 0) valueBITS = CARRIER_AC_BITS;
-          irsend.sendCarrierAC(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_MITSUBISHI2
-          if (strstr(protocol_name, "IR_MITSUBISHI2") != NULL){
-          if (valueBITS == 0) valueBITS = MITSUBISHI_BITS;
-          if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) MITSUBISHI_MIN_REPEAT);
-          irsend.sendMitsubishi2(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #ifdef IR_AIWA_RC_T501
-          if (strstr(protocol_name, "IR_MITSUBISHI") != NULL){
-          if (valueBITS == 0) valueBITS = AIWA_RC_T501_BITS;
-          if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, (uint16_t) AIWA_RC_T501_MIN_REPEAT);
-          irsend.sendAiwaRCT501(data, valueBITS, valueRPT);
-          signalSent = true;
-          }
-          #endif
-          #endif
-          
-          }else{
+        }else if(protocol_name && (strstr(protocol_name, "IR_NEC") == NULL)){
+            signalSent = sendIdentifiedProtocol(protocol_name, data, (unsigned char*)datastring, valueBITS, valueRPT);
+        }else{
             trc(F("Using NEC protocol"));
             if (valueBITS == 0) valueBITS = NEC_BITS;
               #ifdef ESP8266
@@ -791,4 +370,404 @@ void IRtoMQTT(){
      }
   }
 #endif
+
+boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, unsigned char * datastring, unsigned int valueBITS, uint16_t valueRPT){
+  #ifdef IR_Whynter
+    if (strstr(protocol_name, "IR_Whynter") != NULL){
+      if (valueBITS == 0) valueBITS = WHYNTER_BITS;
+        #ifdef ESP8266
+            irsend.sendWhynter(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_LG
+    if (strstr(protocol_name, "IR_LG") != NULL){
+      if (valueBITS == 0) valueBITS = LG_BITS;
+        #ifdef ESP8266
+            irsend.sendLG(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_Sony
+    if (strstr(protocol_name, "IR_Sony") != NULL){
+      if (valueBITS == 0) valueBITS = SONY_12_BITS;
+        #ifdef ESP8266
+            irsend.sendSony(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_DISH
+    if (strstr(protocol_name, "IR_DISH") != NULL){
+      if (valueBITS == 0) valueBITS = DISH_BITS;
+        #ifdef ESP8266
+            irsend.sendDISH(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_RC5
+    if (strstr(protocol_name, "IR_RC5") != NULL){
+      if (valueBITS == 0) valueBITS = RC5_BITS;
+        #ifdef ESP8266
+            irsend.sendRC5(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_RC6
+    if (strstr(protocol_name, "IR_RC6") != NULL){
+      if (valueBITS == 0) valueBITS = RC6_MODE0_BITS;
+        #ifdef ESP8266
+            irsend.sendRC6(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendRC6(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_Sharp
+    if (strstr(protocol_name, "IR_Sharp") != NULL){
+      if (valueBITS == 0) valueBITS = SHARP_BITS;
+        #ifdef ESP8266
+            irsend.sendSharpRaw(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_SAMSUNG
+    if (strstr(protocol_name, "IR_SAMSUNG") != NULL){
+      if (valueBITS == 0) valueBITS = SAMSUNG_BITS;
+        #ifdef ESP8266
+            irsend.sendSAMSUNG(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_JVC
+    if (strstr(protocol_name, "IR_JVC") != NULL){
+      if (valueBITS == 0) valueBITS = JVC_BITS;
+        #ifdef ESP8266
+            irsend.sendJVC(data, valueBITS, valueRPT);
+        #else
+            for (int i=0; i <= valueRPT; i++) irsend.sendJVC(data, valueBITS);
+        #endif
+      return true;
+    }
+  #endif
+  #ifdef IR_PANASONIC
+    if (strstr(protocol_name, "IR_PANASONIC") != NULL){
+      #ifdef ESP8266
+          if (valueBITS == 0) valueBITS = PANASONIC_BITS;
+          irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
+      #else
+          for (int i=0; i <= valueRPT; i++) irsend.sendPanasonic(PanasonicAddress, data);
+      #endif
+    return true;
+    }
+  #endif
+  
+  #ifdef ESP8266  // sendings not available on arduino
+    #ifdef IR_COOLIX
+      if (strstr(protocol_name, "IR_COOLIX") != NULL){
+        if (valueBITS == 0) valueBITS = kCoolixBits;
+        irsend.sendCOOLIX(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_RCMM
+      if (strstr(protocol_name, "IR_RCMM") != NULL){
+        if (valueBITS == 0) valueBITS = kRCMMBits;
+        irsend.sendRCMM(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_DENON
+      if (strstr(protocol_name, "IR_DENON") != NULL){
+        if (valueBITS == 0) valueBITS = DENON_BITS;
+        irsend.sendDenon(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_GICABLE
+      if (strstr(protocol_name, "IR_GICABLE") != NULL){
+        if (valueBITS == 0) valueBITS = kGicableBits;
+        if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, kGicableMinRepeat);
+        irsend.sendGICable(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_SHERWOOD
+      if (strstr(protocol_name, "IR_SHERWOOD") != NULL){
+        if (valueBITS == 0) valueBITS = kSherwoodBits;
+        if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, kSherwoodMinRepeat);
+        irsend.sendSherwood(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MITSUBISHI
+      if (strstr(protocol_name, "IR_MITSUBISHI") != NULL){
+        if (valueBITS == 0) valueBITS = kMitsubishiBits;
+        if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, kMitsubishiMinRepeat);
+        irsend.sendMitsubishi(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_NIKAI
+      if (strstr(protocol_name, "IR_NIKAI") != NULL){
+        if (valueBITS == 0) valueBITS = kNikaiBits;
+        irsend.sendNikai(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MIDEA
+      if (strstr(protocol_name, "IR_MIDEA") != NULL){
+        if (valueBITS == 0) valueBITS = kMideaBits;
+        irsend.sendMidea(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MAGIQUEST
+      if (strstr(protocol_name, "IR_MAGIQUEST") != NULL){
+        if (valueBITS == 0) valueBITS = kMagiquestBits;
+        irsend.sendMagiQuest(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_LASERTAG
+      if (strstr(protocol_name, "IR_LASERTAG") != NULL){
+        if (valueBITS == 0) valueBITS = kLasertagBits;
+        irsend.sendLasertag(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_CARRIER_AC
+      if (strstr(protocol_name, "IR_CARRIER_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kCarrierAcBits;
+        irsend.sendCarrierAC(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MITSUBISHI2
+      if (strstr(protocol_name, "IR_MITSUBISHI2") != NULL){
+        if (valueBITS == 0) valueBITS = kMitsubishiBits;
+        if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, kMitsubishiMinRepeat);
+        irsend.sendMitsubishi2(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_AIWA_RC_T501
+      if (strstr(protocol_name, "IR_AIWA_RC_T501") != NULL){
+        if (valueBITS == 0) valueBITS = kAiwaRcT501Bits;
+        if (valueRPT == repeatIRwNumber) valueRPT = std::max(valueRPT, kAiwaRcT501MinRepeats);
+        irsend.sendAiwaRCT501(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_SANYO
+      if (strstr(protocol_name, "IR_SANYO") != NULL){
+        if (valueBITS == 0) valueBITS = kSanyoLC7461Bits;
+        irsend.sendSanyoLC7461(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_DAIKIN
+      if (strstr(protocol_name, "IR_DAIKIN") != NULL){
+        if (valueBITS == 0) valueBITS = kDaikinStateLength;
+        irsend.sendDaikin(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_KELVINATOR
+      if (strstr(protocol_name, "IR_KELVINATOR") != NULL){
+        if (valueBITS == 0) valueBITS = kKelvinatorStateLength;
+        irsend.sendKelvinator(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MITSUBISHI_AC
+      if (strstr(protocol_name, "IR_MITSUBISHI_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kMitsubishiACStateLength;
+        irsend.sendMitsubishiAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_SANYO
+      if (strstr(protocol_name, "IR_SANYO") != NULL){
+        if (valueBITS == 0) valueBITS = kSanyoLC7461Bits;
+        irsend.sendSanyoLC7461(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_GREE
+      if (strstr(protocol_name, "IR_GREE") != NULL){
+        if (valueBITS == 0) valueBITS = kGreeStateLength;
+        irsend.sendGree(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_ARGO
+      if (strstr(protocol_name, "IR_ARGO") != NULL){
+        if (valueBITS == 0) valueBITS = kArgoStateLength;
+        irsend.sendArgo(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_TROTEC
+      if (strstr(protocol_name, "IR_TROTEC") != NULL){
+        if (valueBITS == 0) valueBITS = kTrotecStateLength;
+        irsend.sendTrotec(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_TOSHIBA_AC
+      if (strstr(protocol_name, "IR_TOSHIBA_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kToshibaACBits;
+        irsend.sendToshibaAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_FUJITSU_AC
+      if (strstr(protocol_name, "IR_FUJITSU_AC") != NULL){
+        irsend.sendFujitsuAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MAGIQUEST
+      if (strstr(protocol_name, "IR_MAGIQUEST") != NULL){
+        if (valueBITS == 0) valueBITS = kMagiquestBits;
+        irsend.sendMagiQuest(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_HAIER_AC
+      if (strstr(protocol_name, "IR_HAIER_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kHaierACStateLength;
+        irsend.sendHaierAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_HITACHI_AC
+      if (strstr(protocol_name, "IR_HITACHI_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kHitachiAc2StateLength;
+        irsend.sendHitachiAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_HITACHI_AC1
+      if (strstr(protocol_name, "IR_HITACHI_AC1") != NULL){
+        if (valueBITS == 0) valueBITS = kHitachiAc2StateLength;
+        irsend.sendHitachiAC1(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_HITACHI_AC2
+      if (strstr(protocol_name, "IR_HITACHI_AC2") != NULL){
+        if (valueBITS == 0) valueBITS = kHitachiAc2StateLength;
+        irsend.sendHitachiAC2(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_GICABLE
+      if (strstr(protocol_name, "IR_GICABLE") != NULL){
+        if (valueBITS == 0) valueBITS = kGicableBits;
+        irsend.sendGICable(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_HAIER_AC_YRW02
+      if (strstr(protocol_name, "IR_HAIER_AC_YRW02") != NULL){
+        if (valueBITS == 0) valueBITS = kHaierACYRW02StateLength;
+        irsend.sendHaierACYRW02(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_WHIRLPOOL_AC
+      if (strstr(protocol_name, "IR_WHIRLPOOL_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kWhirlpoolAcStateLength;
+        irsend.sendWhirlpoolAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_SAMSUNG_AC
+      if (strstr(protocol_name, "IR_SAMSUNG_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kSamsungAcStateLength;
+        irsend.sendSamsungAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_LUTRON
+      if (strstr(protocol_name, "IR_LUTRON") != NULL){
+        if (valueBITS == 0) valueBITS = kLutronBits;
+        irsend.sendLutron(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_ELECTRA_AC
+      if (strstr(protocol_name, "IR_ELECTRA_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kElectraAcStateLength;
+        irsend.sendElectraAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_PANASONIC_AC
+      if (strstr(protocol_name, "IR_PANASONIC_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kPanasonicAcStateLength;
+        irsend.sendPanasonicAC(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_PIONEER
+      if (strstr(protocol_name, "IR_PIONEER") != NULL){
+        if (valueBITS == 0) valueBITS = kPioneerBits;
+        irsend.sendPioneer(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_LG2
+      if (strstr(protocol_name, "IR_LG2") != NULL){
+        if (valueBITS == 0) valueBITS = kLgBits;
+        irsend.sendLG2(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_MWM
+      if (strstr(protocol_name, "IR_MWM") != NULL){
+        irsend.sendMWM(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_DAIKIN2
+      if (strstr(protocol_name, "IR_DAIKIN2") != NULL){
+        if (valueBITS == 0) valueBITS = kDaikin2StateLength;
+        irsend.sendDaikin2(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_VESTEL_AC
+      if (strstr(protocol_name, "IR_VESTEL_AC") != NULL){
+        if (valueBITS == 0) valueBITS = kVestelACBits;
+        irsend.sendVestelAC(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    return false;
+  #endif
+}
 #endif

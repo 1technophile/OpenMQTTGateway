@@ -13,16 +13,20 @@ TEST(TestSendRCMM, SendDataOnly) {
 
   irsend.reset();
   irsend.sendRCMM(0xe0a600);
-  EXPECT_EQ("m416s277"
-            "m166s777m166s611m166s277m166s277"
-            "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s19600", irsend.outputStr());
+  EXPECT_EQ(
+      "m416s277"
+      "m166s777m166s611m166s277m166s277"
+      "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
+      "m166s19600",
+      irsend.outputStr());
   irsend.reset();
   irsend.sendRCMM(0x28e0a600UL, 32);
-  EXPECT_EQ("m416s277"
-            "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
-            "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s17160", irsend.outputStr());
+  EXPECT_EQ(
+      "m416s277"
+      "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
+      "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
+      "m166s17160",
+      irsend.outputStr());
 }
 
 // Test sending with different repeats.
@@ -32,18 +36,20 @@ TEST(TestSendRCMM, SendWithRepeats) {
 
   irsend.reset();
   irsend.sendRCMM(0x28e0a600, 32, 2);  // 2 repeats.
-  EXPECT_EQ("m416s277"
-            "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
-            "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s17160"
-            "m416s277"
-            "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
-            "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s17160"
-            "m416s277"
-            "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
-            "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s17160", irsend.outputStr());
+  EXPECT_EQ(
+      "m416s277"
+      "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
+      "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
+      "m166s17160"
+      "m416s277"
+      "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
+      "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
+      "m166s17160"
+      "m416s277"
+      "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
+      "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
+      "m166s17160",
+      irsend.outputStr());
 }
 
 // Test sending an atypical data size.
@@ -53,15 +59,19 @@ TEST(TestSendRCMM, SendUnusualSize) {
 
   irsend.reset();
   irsend.sendRCMM(0xE0, 8);
-  EXPECT_EQ("m416s277"
-            "m166s777m166s611m166s277m166s277"
-            "m166s24313", irsend.outputStr());
+  EXPECT_EQ(
+      "m416s277"
+      "m166s777m166s611m166s277m166s277"
+      "m166s24313",
+      irsend.outputStr());
   irsend.reset();
   irsend.sendRCMM(0x28e0a60000UL, 40);
-  EXPECT_EQ("m416s277"
-            "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
-            "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
-            "m166s277m166s277m166s277m166s277m166s15388", irsend.outputStr());
+  EXPECT_EQ(
+      "m416s277"
+      "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
+      "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
+      "m166s277m166s277m166s277m166s277m166s15388",
+      irsend.outputStr());
 }
 
 // Tests for decodeRCMM().
@@ -76,9 +86,9 @@ TEST(TestDecodeRCMM, NormalDecodeWithStrict) {
   irsend.reset();
   irsend.sendRCMM(0xe0a600);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeRCMM(&irsend.capture, RCMM_BITS, true));
+  ASSERT_TRUE(irrecv.decodeRCMM(&irsend.capture, kRCMMBits, true));
   EXPECT_EQ(RCMM, irsend.capture.decode_type);
-  EXPECT_EQ(RCMM_BITS, irsend.capture.bits);
+  EXPECT_EQ(kRCMMBits, irsend.capture.bits);
   EXPECT_EQ(0xe0a600, irsend.capture.value);
   EXPECT_EQ(0x0, irsend.capture.address);
   EXPECT_EQ(0x0, irsend.capture.command);
@@ -203,14 +213,15 @@ TEST(TestDecodeRCMM, FailToDecodeNonRCMMExample) {
 
   irsend.reset();
   // Modified a few entries to unexpected values, based on previous test case.
-  uint16_t gc_test[39] = {38000, 1, 1, 322, 162, 20, 61, 20, 61, 20, 20, 20, 20,
-                          20, 20, 20, 127, 20, 61, 9, 20, 20, 61, 20, 20, 20,
-                          61, 20, 61, 20, 61, 20, 20, 20, 20, 20, 20, 20, 884};
+  uint16_t gc_test[39] = {38000, 1,  1,  322, 162, 20, 61,  20, 61, 20,
+                          20,    20, 20, 20,  20,  20, 127, 20, 61, 9,
+                          20,    20, 61, 20,  20,  20, 61,  20, 61, 20,
+                          61,    20, 20, 20,  20,  20, 20,  20, 884};
   irsend.sendGC(gc_test, 39);
   irsend.makeDecodeResult();
 
   ASSERT_FALSE(irrecv.decodeRCMM(&irsend.capture));
-  ASSERT_FALSE(irrecv.decodeRCMM(&irsend.capture, RCMM_BITS, false));
+  ASSERT_FALSE(irrecv.decodeRCMM(&irsend.capture, kRCMMBits, false));
 }
 
 // Issue 281 Debugging
@@ -220,11 +231,12 @@ TEST(TestDecodeRCMM, DebugIssue281) {
   irsend.begin();
 
   // Data from Issue #281 (shortened version)
-  uint16_t rawData[36] = {448, 276, 150, 285, 164, 613, 163, 447, 162, 613,
-                          164, 445, 164, 776, 167, 278, 163, 280, 163, 280,
-                          162, 611, 168, 444, 163, 612, 164, 277, 168, 447,
-                          157, 282, 165, 276,
-                          165, 65535};  // Last value modified from 89729
+  uint16_t
+      rawData[36] = {448, 276, 150, 285, 164, 613,  163, 447, 162, 613,
+                     164, 445, 164, 776, 167, 278,  163, 280, 163, 280,
+                     162, 611, 168, 444, 163, 612,  164, 277, 168, 447,
+                     157, 282, 165, 276, 165, 65535};  // Last value modified
+                                                       // from 89729
 
   irsend.reset();
   irsend.sendRaw(rawData, 36, 36);

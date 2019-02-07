@@ -5,6 +5,11 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+#ifndef UNIT_TEST
+#include <Arduino.h>
+#else
+#include <string>
+#endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 
@@ -18,27 +23,48 @@
 // Mitsubishi (TV) sending & Mitsubishi A/C support added by David Conran
 
 // Constants
-#define MITSUBISHI_AC_AUTO           0x20U
-#define MITSUBISHI_AC_COOL           0x18U
-#define MITSUBISHI_AC_DRY            0x10U
-#define MITSUBISHI_AC_HEAT           0x08U
-#define MITSUBISHI_AC_POWER          0x20U
-#define MITSUBISHI_AC_FAN_AUTO          0U
-#define MITSUBISHI_AC_FAN_MAX           5U
-#define MITSUBISHI_AC_FAN_REAL_MAX      4U
-#define MITSUBISHI_AC_FAN_SILENT        6U
-#define MITSUBISHI_AC_MIN_TEMP         16U  // 16C
-#define MITSUBISHI_AC_MAX_TEMP         31U  // 31C
-#define MITSUBISHI_AC_VANE_AUTO         0U
-#define MITSUBISHI_AC_VANE_AUTO_MOVE    7U
+const uint8_t kMitsubishiAcAuto = 0x20;
+const uint8_t kMitsubishiAcCool = 0x18;
+const uint8_t kMitsubishiAcDry = 0x10;
+const uint8_t kMitsubishiAcHeat = 0x08;
+const uint8_t kMitsubishiAcPower = 0x20;
+const uint8_t kMitsubishiAcFanAuto = 0;
+const uint8_t kMitsubishiAcFanMax = 5;
+const uint8_t kMitsubishiAcFanRealMax = 4;
+const uint8_t kMitsubishiAcFanSilent = 6;
+const uint8_t kMitsubishiAcMinTemp = 16;  // 16C
+const uint8_t kMitsubishiAcMaxTemp = 31;  // 31C
+const uint8_t kMitsubishiAcVaneAuto = 0;
+const uint8_t kMitsubishiAcVaneAutoMove = 7;
+const uint8_t kMitsubishiAcNoTimer = 0;
+const uint8_t kMitsubishiAcStartTimer = 5;
+const uint8_t kMitsubishiAcStopTimer = 3;
+const uint8_t kMitsubishiAcStartStopTimer = 7;
+
+// Legacy defines (Deprecated)
+#define MITSUBISHI_AC_VANE_AUTO_MOVE kMitsubishiAcVaneAutoMove
+#define MITSUBISHI_AC_VANE_AUTO kMitsubishiAcVaneAuto
+#define MITSUBISHI_AC_POWER kMitsubishiAcPower
+#define MITSUBISHI_AC_MIN_TEMP kMitsubishiAcMinTemp
+#define MITSUBISHI_AC_MAX_TEMP kMitsubishiAcMaxTemp
+#define MITSUBISHI_AC_HEAT kMitsubishiAcHeat
+#define MITSUBISHI_AC_FAN_SILENT kMitsubishiAcFanSilent
+#define MITSUBISHI_AC_FAN_REAL_MAX kMitsubishiAcFanRealMax
+#define MITSUBISHI_AC_FAN_MAX kMitsubishiAcFanMax
+#define MITSUBISHI_AC_FAN_AUTO kMitsubishiAcFanAuto
+#define MITSUBISHI_AC_DRY kMitsubishiAcDry
+#define MITSUBISHI_AC_COOL kMitsubishiAcCool
+#define MITSUBISHI_AC_AUTO kMitsubishiAcAuto
 
 class IRMitsubishiAC {
  public:
   explicit IRMitsubishiAC(uint16_t pin);
 
+  static uint8_t calculateChecksum(uint8_t* data);
+
   void stateReset();
 #if SEND_MITSUBISHI_AC
-  void send();
+  void send(const uint16_t repeat = kMitsubishiACMinRepeat);
 #endif  // SEND_MITSUBISHI_AC
   void begin();
   void on();
@@ -54,12 +80,30 @@ class IRMitsubishiAC {
   void setVane(uint8_t mode);
   uint8_t getVane();
   uint8_t* getRaw();
+  void setRaw(uint8_t* data);
+  uint8_t getClock();
+  void setClock(uint8_t clock);
+  uint8_t getStartClock();
+  void setStartClock(uint8_t clock);
+  uint8_t getStopClock();
+  void setStopClock(uint8_t clock);
+  uint8_t getTimer();
+  void setTimer(uint8_t timer);
+#ifdef ARDUINO
+  String toString();
+#else
+  std::string toString();
+#endif
 
  private:
-  uint8_t remote_state[MITSUBISHI_AC_STATE_LENGTH];
+#ifdef ARDUINO
+  String timeToString(uint64_t time);
+#else
+  std::string timeToString(uint64_t time);
+#endif
+  uint8_t remote_state[kMitsubishiACStateLength];
   void checksum();
   IRsend _irsend;
 };
-
 
 #endif  // IR_MITSUBISHI_H_

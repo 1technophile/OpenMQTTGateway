@@ -15,38 +15,35 @@
 // Constants
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/309
-#define NIKAI_TICK             500U
-#define NIKAI_HDR_MARK_TICKS     8U
-#define NIKAI_HDR_MARK         (NIKAI_HDR_MARK_TICKS * NIKAI_TICK)
-#define NIKAI_HDR_SPACE_TICKS    8U
-#define NIKAI_HDR_SPACE        (NIKAI_HDR_SPACE_TICKS * NIKAI_TICK)
-#define NIKAI_BIT_MARK_TICKS     1U
-#define NIKAI_BIT_MARK         (NIKAI_BIT_MARK_TICKS * NIKAI_TICK)
-#define NIKAI_ONE_SPACE_TICKS    2U
-#define NIKAI_ONE_SPACE        (NIKAI_ONE_SPACE_TICKS * NIKAI_TICK)
-#define NIKAI_ZERO_SPACE_TICKS   4U
-#define NIKAI_ZERO_SPACE       (NIKAI_ZERO_SPACE_TICKS * NIKAI_TICK)
-#define NIKAI_MIN_GAP_TICKS     17U
-#define NIKAI_MIN_GAP          (NIKAI_MIN_GAP_TICKS * NIKAI_TICK)
-
+const uint16_t kNikaiTick = 500;
+const uint16_t kNikaiHdrMarkTicks = 8;
+const uint16_t kNikaiHdrMark = kNikaiHdrMarkTicks * kNikaiTick;
+const uint16_t kNikaiHdrSpaceTicks = 8;
+const uint16_t kNikaiHdrSpace = kNikaiHdrSpaceTicks * kNikaiTick;
+const uint16_t kNikaiBitMarkTicks = 1;
+const uint16_t kNikaiBitMark = kNikaiBitMarkTicks * kNikaiTick;
+const uint16_t kNikaiOneSpaceTicks = 2;
+const uint16_t kNikaiOneSpace = kNikaiOneSpaceTicks * kNikaiTick;
+const uint16_t kNikaiZeroSpaceTicks = 4;
+const uint16_t kNikaiZeroSpace = kNikaiZeroSpaceTicks * kNikaiTick;
+const uint16_t kNikaiMinGapTicks = 17;
+const uint16_t kNikaiMinGap = kNikaiMinGapTicks * kNikaiTick;
 
 #if SEND_NIKAI
 // Send a Nikai TV formatted message.
 //
 // Args:
 //   data:   The message to be sent.
-//   nbits:  The bit size of the message being sent. typically NIKAI_BITS.
+//   nbits:  The bit size of the message being sent. typically kNikaiBits.
 //   repeat: The number of times the message is to be repeated.
 //
 // Status: STABLE / Working.
 //
 // Ref: https://github.com/markszabo/IRremoteESP8266/issues/309
 void IRsend::sendNikai(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  sendGeneric(NIKAI_HDR_MARK, NIKAI_HDR_SPACE,
-              NIKAI_BIT_MARK, NIKAI_ONE_SPACE,
-              NIKAI_BIT_MARK, NIKAI_ZERO_SPACE,
-              NIKAI_BIT_MARK, NIKAI_MIN_GAP,
-              data, nbits, 38, true, repeat, 33);
+  sendGeneric(kNikaiHdrMark, kNikaiHdrSpace, kNikaiBitMark, kNikaiOneSpace,
+              kNikaiBitMark, kNikaiZeroSpace, kNikaiBitMark, kNikaiMinGap, data,
+              nbits, 38, true, repeat, 33);
 }
 #endif
 
@@ -56,7 +53,7 @@ void IRsend::sendNikai(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
 //   nbits:   Nr. of bits to expect in the data portion.
-//            Typically NIKAI_BITS.
+//            Typically kNikaiBits.
 //   strict:  Flag to indicate if we strictly adhere to the specification.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
@@ -64,37 +61,34 @@ void IRsend::sendNikai(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Status: STABLE / Working.
 //
 bool IRrecv::decodeNikai(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + HEADER + FOOTER - 1)
+  if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
     return false;  // Can't possibly be a valid Nikai message.
-  if (strict && nbits != NIKAI_BITS)
+  if (strict && nbits != kNikaiBits)
     return false;  // We expect Nikai to be a certain sized message.
 
   uint64_t data = 0;
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
 
   // Header
-  if (!matchMark(results->rawbuf[offset], NIKAI_HDR_MARK)) return false;
+  if (!matchMark(results->rawbuf[offset], kNikaiHdrMark)) return false;
   // Calculate how long the common tick time is based on the header mark.
-  uint32_t m_tick = results->rawbuf[offset++] * RAWTICK /
-      NIKAI_HDR_MARK_TICKS;
-  if (!matchSpace(results->rawbuf[offset], NIKAI_HDR_SPACE)) return false;
+  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kNikaiHdrMarkTicks;
+  if (!matchSpace(results->rawbuf[offset], kNikaiHdrSpace)) return false;
   // Calculate how long the common tick time is based on the header space.
-  uint32_t s_tick = results->rawbuf[offset++] * RAWTICK /
-      NIKAI_HDR_SPACE_TICKS;
+  uint32_t s_tick = results->rawbuf[offset++] * kRawTick / kNikaiHdrSpaceTicks;
   // Data
-  match_result_t data_result = matchData(&(results->rawbuf[offset]), nbits,
-                                         NIKAI_BIT_MARK_TICKS * m_tick,
-                                         NIKAI_ONE_SPACE_TICKS * s_tick,
-                                         NIKAI_BIT_MARK_TICKS * m_tick,
-                                         NIKAI_ZERO_SPACE_TICKS * s_tick);
+  match_result_t data_result =
+      matchData(&(results->rawbuf[offset]), nbits, kNikaiBitMarkTicks * m_tick,
+                kNikaiOneSpaceTicks * s_tick, kNikaiBitMarkTicks * m_tick,
+                kNikaiZeroSpaceTicks * s_tick);
   if (data_result.success == false) return false;
   data = data_result.data;
   offset += data_result.used;
   // Footer
-  if (!matchMark(results->rawbuf[offset++], NIKAI_BIT_MARK_TICKS * m_tick))
+  if (!matchMark(results->rawbuf[offset++], kNikaiBitMarkTicks * m_tick))
     return false;
   if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], NIKAI_MIN_GAP_TICKS * s_tick))
+      !matchAtLeast(results->rawbuf[offset], kNikaiMinGapTicks * s_tick))
     return false;
 
   // Compliance

@@ -22,20 +22,33 @@
 // KK  KK EEEEEEE LLLLLLL   VVV    IIIII NN   NN AA   AA   TTT    OOOO0  RR   RR
 
 // Constants
-#define KELVINATOR_AUTO                        0U
-#define KELVINATOR_COOL                        1U
-#define KELVINATOR_DRY                         2U
-#define KELVINATOR_FAN                         3U
-#define KELVINATOR_HEAT                        4U
-#define KELVINATOR_BASIC_FAN_MAX               3U
-#define KELVINATOR_FAN_AUTO                    0U
-#define KELVINATOR_FAN_MAX                     5U
-#define KELVINATOR_MIN_TEMP                   16U  // 16C
-#define KELVINATOR_MAX_TEMP                   30U  // 30C
-#define KELVINATOR_AUTO_TEMP                  25U  // 25C
+const uint8_t kKelvinatorAuto = 0;
+const uint8_t kKelvinatorCool = 1;
+const uint8_t kKelvinatorDry = 2;
+const uint8_t kKelvinatorFan = 3;
+const uint8_t kKelvinatorHeat = 4;
+const uint8_t kKelvinatorBasicFanMax = 3;
+const uint8_t kKelvinatorFanAuto = 0;
+const uint8_t kKelvinatorFanMax = 5;
+const uint8_t kKelvinatorMinTemp = 16;   // 16C
+const uint8_t kKelvinatorMaxTemp = 30;   // 30C
+const uint8_t kKelvinatorAutoTemp = 25;  // 25C
+
+// Legacy defines (Deprecated)
+#define KELVINATOR_MIN_TEMP kKelvinatorMinTemp
+#define KELVINATOR_MAX_TEMP kKelvinatorMaxTemp
+#define KELVINATOR_HEAT kKelvinatorHeat
+#define KELVINATOR_FAN_MAX kKelvinatorFanMax
+#define KELVINATOR_FAN_AUTO kKelvinatorFanAuto
+#define KELVINATOR_FAN kKelvinatorFan
+#define KELVINATOR_DRY kKelvinatorDry
+#define KELVINATOR_COOL kKelvinatorCool
+#define KELVINATOR_BASIC_FAN_MAX kKelvinatorBasicFanMax
+#define KELVINATOR_AUTO_TEMP kKelvinatorAutoTemp
+#define KELVINATOR_AUTO kKelvinatorAuto
 
 /*
-	Kelvinator AC map
+        Kelvinator AC map
 
   (header mark and space)
   byte 0 = Basic Modes
@@ -117,7 +130,7 @@ class IRKelvinatorAC {
 
   void stateReset();
 #if SEND_KELVINATOR
-  void send();
+  void send(const uint16_t repeat = kKelvinatorDefaultRepeat);
 #endif  // SEND_KELVINATOR
   void begin();
   void on();
@@ -147,10 +160,9 @@ class IRKelvinatorAC {
   uint8_t* getRaw();
   void setRaw(uint8_t new_code[]);
   static uint8_t calcBlockChecksum(
-      const uint8_t *block,
-      const uint16_t length = KELVINATOR_STATE_LENGTH / 2);
+      const uint8_t* block, const uint16_t length = kKelvinatorStateLength / 2);
   static bool validChecksum(const uint8_t state[],
-                            const uint16_t length = KELVINATOR_STATE_LENGTH);
+                            const uint16_t length = kKelvinatorStateLength);
 #ifdef ARDUINO
   String toString();
 #else
@@ -159,8 +171,8 @@ class IRKelvinatorAC {
 
  private:
   // The state of the IR remote in IR code form.
-  uint8_t remote_state[KELVINATOR_STATE_LENGTH];
-  void checksum(const uint16_t length = KELVINATOR_STATE_LENGTH);
+  uint8_t remote_state[kKelvinatorStateLength];
+  void checksum(const uint16_t length = kKelvinatorStateLength);
   void fixup();
   IRsend _irsend;
 };

@@ -20,31 +20,35 @@
 // Sanyo SA 8650B
 // Ref:
 //   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Sanyo.cpp
-#define SANYO_SA8650B_HDR_MARK          3500U  // seen range 3500
-#define SANYO_SA8650B_HDR_SPACE          950U  // seen 950
-#define SANYO_SA8650B_ONE_MARK          2400U  // seen 2400
-#define SANYO_SA8650B_ZERO_MARK          700U  // seen 700
+
+const uint16_t kSanyoSa8650bHdrMark = 3500;  // seen range 3500
+const uint16_t kSanyoSa8650bHdrSpace = 950;  // seen 950
+const uint16_t kSanyoSa8650bOneMark = 2400;  // seen 2400
+const uint16_t kSanyoSa8650bZeroMark = 700;  // seen 700
 // usually see 713 - not using ticks as get number wrapround
-#define SANYO_SA8650B_DOUBLE_SPACE_USECS 800U
-#define SANYO_SA8650B_RPT_LENGTH       45000U
+const uint16_t kSanyoSa8650bDoubleSpaceUsecs = 800;
+const uint16_t kSanyoSa8650bRptLength = 45000;
 // Sanyo LC7461
 // Ref:
 //   https://github.com/marcosamarinho/IRremoteESP8266/blob/master/ir_Sanyo.cpp
 //   http://slydiman.narod.ru/scr/kb/sanyo.htm
 //   http://pdf.datasheetcatalog.com/datasheet/sanyo/LC7461.pdf
-#define SANYO_LC7461_ADDRESS_MASK ((1 << SANYO_LC7461_ADDRESS_BITS) - 1)
-#define SANYO_LC7461_COMMAND_MASK ((1 << SANYO_LC7461_COMMAND_BITS) - 1)
-#define SANYO_LC7461_HDR_MARK             9000U
-#define SANYO_LC7461_HDR_SPACE            4500U
-#define SANYO_LC7461_BIT_MARK              560U  // 1T
-#define SANYO_LC7461_ONE_SPACE            1690U  // 3T
-#define SANYO_LC7461_ZERO_SPACE            560U  // 1T
-#define SANYO_LC7461_MIN_COMMAND_LENGTH 108000UL
-#define SANYO_LC7461_MIN_GAP SANYO_LC7461_MIN_COMMAND_LENGTH - \
-    (SANYO_LC7461_HDR_MARK + SANYO_LC7461_HDR_SPACE + SANYO_LC7461_BITS * \
-     (SANYO_LC7461_BIT_MARK + (SANYO_LC7461_ONE_SPACE + \
-                               SANYO_LC7461_ZERO_SPACE) / 2) \
-     + SANYO_LC7461_BIT_MARK)
+
+const uint16_t kSanyoLc7461AddressMask = (1 << kSanyoLC7461AddressBits) - 1;
+const uint16_t kSanyoLc7461CommandMask = (1 << kSanyoLC7461CommandBits) - 1;
+const uint16_t kSanyoLc7461HdrMark = 9000;
+const uint16_t kSanyoLc7461HdrSpace = 4500;
+const uint16_t kSanyoLc7461BitMark = 560;    // 1T
+const uint16_t kSanyoLc7461OneSpace = 1690;  // 3T
+const uint16_t kSanyoLc7461ZeroSpace = 560;  // 1T
+const uint32_t kSanyoLc7461MinCommandLength = 108000;
+
+const uint16_t kSanyoLc7461MinGap =
+    kSanyoLc7461MinCommandLength -
+    (kSanyoLc7461HdrMark + kSanyoLc7461HdrSpace +
+     kSanyoLC7461Bits * (kSanyoLc7461BitMark +
+                         (kSanyoLc7461OneSpace + kSanyoLc7461ZeroSpace) / 2) +
+     kSanyoLc7461BitMark);
 
 #if SEND_SANYO
 // Construct a Sanyo LC7461 message.
@@ -61,18 +65,18 @@
 //   According with LIRC, this protocol is used on Sanyo, Aiwa and Chinon
 uint64_t IRsend::encodeSanyoLC7461(uint16_t address, uint8_t command) {
   // Mask our input values to ensure the correct bit sizes.
-  address &= SANYO_LC7461_ADDRESS_MASK;
-  command &= SANYO_LC7461_COMMAND_MASK;
+  address &= kSanyoLc7461AddressMask;
+  command &= kSanyoLc7461CommandMask;
 
   uint64_t data = address;
-  address ^= SANYO_LC7461_ADDRESS_MASK;  // Invert the 13 LSBs.
+  address ^= kSanyoLc7461AddressMask;  // Invert the 13 LSBs.
   // Append the now inverted address.
-  data = (data << SANYO_LC7461_ADDRESS_BITS) | address;
+  data = (data << kSanyoLC7461AddressBits) | address;
   // Append the command.
-  data = (data << SANYO_LC7461_COMMAND_BITS) | command;
-  command ^= SANYO_LC7461_COMMAND_MASK;  // Invert the command.
+  data = (data << kSanyoLC7461CommandBits) | command;
+  command ^= kSanyoLc7461CommandMask;  // Invert the command.
   // Append the now inverted command.
-  data = (data << SANYO_LC7461_COMMAND_BITS) | command;
+  data = (data << kSanyoLC7461CommandBits) | command;
 
   return data;
 }
@@ -127,31 +131,30 @@ void IRsend::sendSanyoLC7461(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   http://pdf.datasheetcatalog.com/datasheet/sanyo/LC7461.pdf
 bool IRrecv::decodeSanyoLC7461(decode_results *results, uint16_t nbits,
                                bool strict) {
-  if (strict && nbits != SANYO_LC7461_BITS)
+  if (strict && nbits != kSanyoLC7461Bits)
     return false;  // Not strictly in spec.
   // This protocol is basically a 42-bit variant of the NEC protocol.
   if (!decodeNEC(results, nbits, false))
     return false;  // Didn't match a NEC format (without strict)
 
   // Bits 30 to 42+.
-  uint16_t address = results->value >> (SANYO_LC7461_BITS -
-                                        SANYO_LC7461_ADDRESS_BITS);
+  uint16_t address =
+      results->value >> (kSanyoLC7461Bits - kSanyoLC7461AddressBits);
   // Bits 9 to 16.
-  uint8_t command = (results->value >> SANYO_LC7461_COMMAND_BITS) &
-      SANYO_LC7461_COMMAND_MASK;
+  uint8_t command =
+      (results->value >> kSanyoLC7461CommandBits) & kSanyoLc7461CommandMask;
   // Compliance
   if (strict) {
-    if (results->bits != nbits)
-      return false;
+    if (results->bits != nbits) return false;
     // Bits 17 to 29.
     uint16_t inverted_address =
-        (results->value >> (SANYO_LC7461_COMMAND_BITS * 2)) &
-        SANYO_LC7461_ADDRESS_MASK;
+        (results->value >> (kSanyoLC7461CommandBits * 2)) &
+        kSanyoLc7461AddressMask;
     // Bits 1-8.
-    uint8_t inverted_command = results->value & SANYO_LC7461_COMMAND_MASK;
-    if ((address ^ SANYO_LC7461_ADDRESS_MASK) != inverted_address)
+    uint8_t inverted_command = results->value & kSanyoLc7461CommandMask;
+    if ((address ^ kSanyoLc7461AddressMask) != inverted_address)
       return false;  // Address integrity check failed.
-    if ((command ^ SANYO_LC7461_COMMAND_MASK) != inverted_command)
+    if ((command ^ kSanyoLc7461CommandMask) != inverted_command)
       return false;  // Command integrity check failed.
   }
 
@@ -182,9 +185,9 @@ bool IRrecv::decodeSanyoLC7461(decode_results *results, uint16_t nbits,
 // Ref:
 //   https://github.com/z3t0/Arduino-IRremote/blob/master/ir_Sanyo.cpp
 bool IRrecv::decodeSanyo(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + HEADER - 1)
+  if (results->rawlen < 2 * nbits + kHeader - 1)
     return false;  // Shorter than shortest possible.
-  if (strict && nbits != SANYO_SA8650B_BITS)
+  if (strict && nbits != kSanyoSA8650BBits)
     return false;  // Doesn't match the spec.
 
   uint16_t offset = 0;
@@ -192,9 +195,9 @@ bool IRrecv::decodeSanyo(decode_results *results, uint16_t nbits, bool strict) {
   // TODO(crankyoldgit): This repeat code looks like garbage, it should never
   //   match or if it does, it won't be reliable. We should probably just
   //   remove it.
-  if (results->rawbuf[offset++] < SANYO_SA8650B_DOUBLE_SPACE_USECS) {
+  if (results->rawbuf[offset++] < kSanyoSa8650bDoubleSpaceUsecs) {
     results->bits = 0;
-    results->value = REPEAT;
+    results->value = kRepeat;
     results->decode_type = SANYO;
     results->address = 0;
     results->command = 0;
@@ -203,27 +206,27 @@ bool IRrecv::decodeSanyo(decode_results *results, uint16_t nbits, bool strict) {
   }
 
   // Header
-  if (!matchMark(results->rawbuf[offset++], SANYO_SA8650B_HDR_MARK))
+  if (!matchMark(results->rawbuf[offset++], kSanyoSa8650bHdrMark))
     return false;
   // NOTE: These next two lines look very wrong. Treat as suspect.
-  if (!matchMark(results->rawbuf[offset++], SANYO_SA8650B_HDR_MARK))
+  if (!matchMark(results->rawbuf[offset++], kSanyoSa8650bHdrMark))
     return false;
   // Data
   uint64_t data = 0;
   while (offset + 1 < results->rawlen) {
-    if (!matchSpace(results->rawbuf[offset], SANYO_SA8650B_HDR_SPACE))
+    if (!matchSpace(results->rawbuf[offset], kSanyoSa8650bHdrSpace))
       break;
     offset++;
-    if (matchMark(results->rawbuf[offset], SANYO_SA8650B_ONE_MARK))
+    if (matchMark(results->rawbuf[offset], kSanyoSa8650bOneMark))
       data = (data << 1) | 1;  // 1
-    else if (matchMark(results->rawbuf[offset], SANYO_SA8650B_ZERO_MARK))
+    else if (matchMark(results->rawbuf[offset], kSanyoSa8650bZeroMark))
       data <<= 1;  // 0
     else
       return false;
     offset++;
   }
 
-  if (strict && SANYO_SA8650B_BITS > (offset - 1U) / 2U)
+  if (strict && kSanyoSA8650BBits > (offset - 1U) / 2U)
     return false;
 
   // Success

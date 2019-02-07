@@ -2,6 +2,7 @@
 // Copyright 2017 David Conran
 
 #define __STDC_LIMIT_MACROS
+#include "ir_NEC.h"
 #include <stdint.h>
 #include <algorithm>
 #include "IRrecv.h"
@@ -16,39 +17,13 @@
 
 // NEC originally added from https://github.com/shirriff/Arduino-IRremote/
 
-// Constants
-// Ref:
-//  http://www.sbprojects.com/knowledge/ir/nec.php
-#define NEC_TICK                     560U
-#define NEC_HDR_MARK_TICKS            16U
-#define NEC_HDR_MARK                 (NEC_HDR_MARK_TICKS * NEC_TICK)
-#define NEC_HDR_SPACE_TICKS            8U
-#define NEC_HDR_SPACE                (NEC_HDR_SPACE_TICKS * NEC_TICK)
-#define NEC_BIT_MARK_TICKS             1U
-#define NEC_BIT_MARK                 (NEC_BIT_MARK_TICKS * NEC_TICK)
-#define NEC_ONE_SPACE_TICKS            3U
-#define NEC_ONE_SPACE                (NEC_TICK * NEC_ONE_SPACE_TICKS)
-#define NEC_ZERO_SPACE_TICKS           1U
-#define NEC_ZERO_SPACE               (NEC_TICK * NEC_ZERO_SPACE_TICKS)
-#define NEC_RPT_SPACE_TICKS            4U
-#define NEC_RPT_SPACE                (NEC_RPT_SPACE_TICKS * NEC_TICK)
-#define NEC_RPT_LENGTH                 4U
-#define NEC_MIN_COMMAND_LENGTH_TICKS 193U
-#define NEC_MIN_COMMAND_LENGTH       (NEC_MIN_COMMAND_LENGTH_TICKS * NEC_TICK)
-#define NEC_MIN_GAP (NEC_MIN_COMMAND_LENGTH - \
-    (NEC_HDR_MARK + NEC_HDR_SPACE + NEC_BITS * (NEC_BIT_MARK + NEC_ONE_SPACE) \
-     + NEC_BIT_MARK))
-#define NEC_MIN_GAP_TICKS (NEC_MIN_COMMAND_LENGTH_TICKS - \
-    (NEC_HDR_MARK_TICKS + NEC_HDR_SPACE_TICKS + \
-     NEC_BITS * (NEC_BIT_MARK_TICKS + NEC_ONE_SPACE_TICKS) + \
-     NEC_BIT_MARK_TICKS))
-
-#if (SEND_NEC || SEND_SHERWOOD || SEND_AIWA_RC_T501 || SEND_SANYO)
+#if (SEND_NEC || SEND_SHERWOOD || SEND_AIWA_RC_T501 || SEND_SANYO || \
+     SEND_PIONEER)
 // Send a raw NEC(Renesas) formatted message.
 //
 // Args:
 //   data:   The message to be sent.
-//   nbits:  The number of bits of the message to be sent. Typically NEC_BITS.
+//   nbits:  The number of bits of the message to be sent. Typically kNECBits.
 //   repeat: The number of times the command is to be repeated.
 //
 // Status: STABLE / Known working.
@@ -56,18 +31,15 @@
 // Ref:
 //  http://www.sbprojects.com/knowledge/ir/nec.php
 void IRsend::sendNEC(uint64_t data, uint16_t nbits, uint16_t repeat) {
-  sendGeneric(NEC_HDR_MARK, NEC_HDR_SPACE,
-              NEC_BIT_MARK, NEC_ONE_SPACE,
-              NEC_BIT_MARK, NEC_ZERO_SPACE,
-              NEC_BIT_MARK, NEC_MIN_GAP, NEC_MIN_COMMAND_LENGTH,
+  sendGeneric(kNecHdrMark, kNecHdrSpace, kNecBitMark, kNecOneSpace, kNecBitMark,
+              kNecZeroSpace, kNecBitMark, kNecMinGap, kNecMinCommandLength,
               data, nbits, 38, true, 0,  // Repeats are handled later.
               33);
   // Optional command repeat sequence.
   if (repeat)
-    sendGeneric(NEC_HDR_MARK, NEC_RPT_SPACE,
-                0, 0, 0, 0,  // No actual data sent.
-                NEC_BIT_MARK, NEC_MIN_GAP, NEC_MIN_COMMAND_LENGTH,
-                0, 0,  // No data to be sent.
+    sendGeneric(kNecHdrMark, kNecRptSpace, 0, 0, 0, 0,  // No actual data sent.
+                kNecBitMark, kNecMinGap, kNecMinCommandLength, 0,
+                0,                     // No data to be sent.
                 38, true, repeat - 1,  // We've already sent a one message.
                 33);
 }
@@ -87,8 +59,8 @@ uint32_t IRsend::encodeNEC(uint16_t address, uint16_t command) {
   command &= 0xFF;  // We only want the least significant byte of command.
   // sendNEC() sends MSB first, but protocol says this is LSB first.
   command = reverseBits(command, 8);
-  command = (command <<  8) + (command ^ 0xFF);  // Calculate the new command.
-  if (address > 0xFF) {  // Is it Extended NEC?
+  command = (command << 8) + (command ^ 0xFF);  // Calculate the new command.
+  if (address > 0xFF) {                         // Is it Extended NEC?
     address = reverseBits(address, 16);
     return ((address << 16) + command);  // Extended.
   } else {
@@ -103,7 +75,7 @@ uint32_t IRsend::encodeNEC(uint16_t address, uint16_t command) {
 //
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   The number of data bits to expect. Typically NEC_BITS.
+//   nbits:   The number of data bits to expect. Typically kNECBits.
 //   strict:  Flag indicating if we should perform strict matching.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
@@ -112,34 +84,33 @@ uint32_t IRsend::encodeNEC(uint16_t address, uint16_t command) {
 //
 // Notes:
 //   NEC protocol has three varients/forms.
-//     Normal:   a 8 bit address & a 8 bit command in 32 bit data form.
+//     Normal:   an 8 bit address & an 8 bit command in 32 bit data form.
 //               i.e. address + inverted(address) + command + inverted(command)
-//     Extended: a 16 bit address & a 8 bit command in 32 bit data form.
+//     Extended: a 16 bit address & an 8 bit command in 32 bit data form.
 //               i.e. address + command + inverted(command)
 //     Repeat:   a 0-bit code. i.e. No data bits. Just the header + footer.
 //
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/nec.php
 bool IRrecv::decodeNEC(decode_results *results, uint16_t nbits, bool strict) {
-  if (results->rawlen < 2 * nbits + HEADER + FOOTER - 1 &&
-      results->rawlen != NEC_RPT_LENGTH)
+  if (results->rawlen < 2 * nbits + kHeader + kFooter - 1 &&
+      results->rawlen != kNecRptLength)
     return false;  // Can't possibly be a valid NEC message.
-  if (strict && nbits != NEC_BITS)
+  if (strict && nbits != kNECBits)
     return false;  // Not strictly an NEC message.
 
   uint64_t data = 0;
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
 
   // Header
-  if (!matchMark(results->rawbuf[offset], NEC_HDR_MARK)) return false;
+  if (!matchMark(results->rawbuf[offset], kNecHdrMark)) return false;
   // Calculate how long the lowest tick time is based on the header mark.
-  uint32_t mark_tick = results->rawbuf[offset++] * RAWTICK /
-      NEC_HDR_MARK_TICKS;
+  uint32_t mark_tick = results->rawbuf[offset++] * kRawTick / kNecHdrMarkTicks;
   // Check if it is a repeat code.
-  if (results->rawlen == NEC_RPT_LENGTH &&
-      matchSpace(results->rawbuf[offset], NEC_RPT_SPACE) &&
-      matchMark(results->rawbuf[offset + 1], NEC_BIT_MARK_TICKS * mark_tick)) {
-    results->value = REPEAT;
+  if (results->rawlen == kNecRptLength &&
+      matchSpace(results->rawbuf[offset], kNecRptSpace) &&
+      matchMark(results->rawbuf[offset + 1], kNecBitMarkTicks * mark_tick)) {
+    results->value = kRepeat;
     results->decode_type = NEC;
     results->bits = 0;
     results->address = 0;
@@ -149,34 +120,32 @@ bool IRrecv::decodeNEC(decode_results *results, uint16_t nbits, bool strict) {
   }
 
   // Header (cont.)
-  if (!matchSpace(results->rawbuf[offset], NEC_HDR_SPACE)) return false;
+  if (!matchSpace(results->rawbuf[offset], kNecHdrSpace)) return false;
   // Calculate how long the common tick time is based on the header space.
-  uint32_t space_tick = results->rawbuf[offset++] * RAWTICK /
-      NEC_HDR_SPACE_TICKS;
+  uint32_t space_tick =
+      results->rawbuf[offset++] * kRawTick / kNecHdrSpaceTicks;
   // Data
-  match_result_t data_result = matchData(&(results->rawbuf[offset]), nbits,
-                                         NEC_BIT_MARK_TICKS * mark_tick,
-                                         NEC_ONE_SPACE_TICKS * space_tick,
-                                         NEC_BIT_MARK_TICKS * mark_tick,
-                                         NEC_ZERO_SPACE_TICKS * space_tick);
+  match_result_t data_result =
+      matchData(&(results->rawbuf[offset]), nbits, kNecBitMarkTicks * mark_tick,
+                kNecOneSpaceTicks * space_tick, kNecBitMarkTicks * mark_tick,
+                kNecZeroSpaceTicks * space_tick);
   if (data_result.success == false) return false;
   data = data_result.data;
   offset += data_result.used;
 
   // Footer
-  if (!matchMark(results->rawbuf[offset++], NEC_BIT_MARK_TICKS * mark_tick))
-      return false;
+  if (!matchMark(results->rawbuf[offset++], kNecBitMarkTicks * mark_tick))
+    return false;
   if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], NEC_MIN_GAP_TICKS * space_tick))
+      !matchAtLeast(results->rawbuf[offset], kNecMinGapTicks * space_tick))
     return false;
 
   // Compliance
   // Calculate command and optionally enforce integrity checking.
-  uint8_t command = (data & 0xFF00) >>  8;
+  uint8_t command = (data & 0xFF00) >> 8;
   // Command is sent twice, once as plain and then inverted.
   if ((command ^ 0xFF) != (data & 0xFF)) {
-    if (strict)
-      return false;  // Command integrity failed.
+    if (strict) return false;  // Command integrity failed.
     command = 0;  // The command value isn't valid, so default to zero.
   }
 

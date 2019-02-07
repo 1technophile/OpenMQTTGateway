@@ -1,14 +1,14 @@
 language: c
 env:
-  - BD=esp8266:esp8266:nodemcuv2:CpuFrequency=80,FlashSize=4M3M
-  - BD=esp8266:esp8266:d1_mini:CpuFrequency=80,FlashSize=4M3M
+  - BD=esp8266:esp8266:nodemcuv2:xtal=80,eesz=4M3M,ip=lm2f,exception=disabled
+  - BD=esp8266:esp8266:d1_mini:xtal=80,eesz=4M3M,ip=lm2f,exception=disabled
 before_install:
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
   - export DISPLAY=:1.0
-  - wget http://downloads.arduino.cc/arduino-1.8.2-linux64.tar.xz
-  - tar xf arduino-1.8.2-linux64.tar.xz
-  - sudo mv arduino-1.8.2 /usr/local/share/arduino
+  - wget http://downloads.arduino.cc/arduino-1.8.8-linux64.tar.xz
+  - tar xf arduino-1.8.8-linux64.tar.xz
+  - sudo mv arduino-1.8.8 /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
   - wget https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py
 install:
@@ -40,6 +40,7 @@ script:
   - arduino --verify --board $BD $PWD/examples/TurnOnArgoAC/TurnOnArgoAC.ino
   - arduino --verify --board $BD $PWD/examples/IRMQTTServer/IRMQTTServer.ino
   - arduino --verify --board $BD $PWD/examples/TurnOnToshibaAC/TurnOnToshibaAC.ino
+  - arduino --verify --board $BD $PWD/examples/ControlSamsungAC/ControlSamsungAC.ino
   # Also check the tools programs compile.
   - (cd tools; make all)
   # Check for lint issues.

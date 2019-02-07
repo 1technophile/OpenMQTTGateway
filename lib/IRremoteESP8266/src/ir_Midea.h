@@ -23,26 +23,43 @@
 //   https://docs.google.com/spreadsheets/d/1TZh4jWrx4h9zzpYUI9aYXMl1fYOiqu-xVuOOMqagxrs/edit?usp=sharing
 
 // Constants
-#define MIDEA_AC_COOL              0U  // 0b000
-#define MIDEA_AC_DRY               1U  // 0b001
-#define MIDEA_AC_AUTO              2U  // 0b010
-#define MIDEA_AC_HEAT              3U  // 0b011
-#define MIDEA_AC_FAN               4U  // 0b100
-#define MIDEA_AC_POWER     1ULL << 39
-#define MIDEA_AC_SLEEP     1ULL << 38
-#define MIDEA_AC_FAN_AUTO          0U  // 0b000
-#define MIDEA_AC_FAN_LOW           1U  // 0b001
-#define MIDEA_AC_FAN_MED           2U  // 0b010
-#define MIDEA_AC_FAN_HI            3U  // 0b011
-#define MIDEA_AC_MIN_TEMP_F       62U  // 62F
-#define MIDEA_AC_MAX_TEMP_F       86U  // 86F
-#define MIDEA_AC_MIN_TEMP_C       16U  // 16C
-#define MIDEA_AC_MAX_TEMP_C       30U  // 30C
-#define MIDEA_AC_STATE_MASK         0x0000FFFFFFFFFFFFULL
-#define MIDEA_AC_TEMP_MASK          0x0000FFFFE0FFFFFFULL
-#define MIDEA_AC_FAN_MASK           0x0000FFC7FFFFFFFFULL
-#define MIDEA_AC_MODE_MASK          0x0000FFF8FFFFFFFFULL
-#define MIDEA_AC_CHECKSUM_MASK      0x0000FFFFFFFFFF00ULL
+const uint8_t kMideaACCool = 0;     // 0b000
+const uint8_t kMideaACDry = 1;      // 0b001
+const uint8_t kMideaACAuto = 2;     // 0b010
+const uint8_t kMideaACHeat = 3;     // 0b011
+const uint8_t kMideaACFan = 4;      // 0b100
+const uint8_t kMideaACFanAuto = 0;  // 0b000
+const uint8_t kMideaACFanLow = 1;   // 0b001
+const uint8_t kMideaACFanMed = 2;   // 0b010
+const uint8_t kMideaACFanHigh = 3;  // 0b011
+const uint64_t kMideaACPower = 1ULL << 39;
+const uint64_t kMideaACSleep = 1ULL << 38;
+const uint8_t kMideaACMinTempF = 62;  // Fahrenheit
+const uint8_t kMideaACMaxTempF = 86;  // Fahrenheit
+const uint8_t kMideaACMinTempC = 16;  // Celsius
+const uint8_t kMideaACMaxTempC = 30;  // Celsius
+const uint64_t kMideaACStateMask = 0x0000FFFFFFFFFFFF;
+const uint64_t kMideaACTempMask = 0x0000FFFFE0FFFFFF;
+const uint64_t kMideaACFanMask = 0x0000FFC7FFFFFFFF;
+const uint64_t kMideaACModeMask = 0x0000FFF8FFFFFFFF;
+const uint64_t kMideaACChecksumMask = 0x0000FFFFFFFFFF00;
+
+// Legacy defines. (Deprecated)
+#define MIDEA_AC_COOL kMideaACCool
+#define MIDEA_AC_DRY kMideaACDry
+#define MIDEA_AC_AUTO kMideaACAuto
+#define MIDEA_AC_HEAT kMideaACHeat
+#define MIDEA_AC_FAN kMideaACFan
+#define MIDEA_AC_FAN_AUTO kMideaACFanAuto
+#define MIDEA_AC_FAN_LOW kMideaACFanLow
+#define MIDEA_AC_FAN_MED kMideaACFanMed
+#define MIDEA_AC_FAN_HI kMideaACFanHigh
+#define MIDEA_AC_POWER kMideaACPower
+#define MIDEA_AC_SLEEP kMideaACSleep
+#define MIDEA_AC_MIN_TEMP_F kMideaACMinTempF
+#define MIDEA_AC_MAX_TEMP_F kMideaACMaxTempF
+#define MIDEA_AC_MIN_TEMP_C kMideaACMinTempC
+#define MIDEA_AC_MAX_TEMP_C kMideaACMaxTempC
 
 class IRMideaAC {
  public:
@@ -50,7 +67,7 @@ class IRMideaAC {
 
   void stateReset();
 #if SEND_MIDEA
-  void send();
+  void send(const uint16_t repeat = kMideaMinRepeat);
 #endif  // SEND_MIDEA
   void begin();
   void on();
@@ -82,6 +99,5 @@ class IRMideaAC {
   static uint8_t calcChecksum(const uint64_t state);
   IRsend _irsend;
 };
-
 
 #endif  // IR_MIDEA_H_

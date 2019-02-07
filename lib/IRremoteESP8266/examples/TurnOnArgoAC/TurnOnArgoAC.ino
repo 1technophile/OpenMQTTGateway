@@ -1,6 +1,6 @@
-/* Copyright 2017 crankyoldgit
+/* Copyright 2017, 2018 crankyoldgit
 * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
-* as specified by IR_LED below.
+* as specified by kIrLed below.
 *
 * TL;DR: The IR LED needs to be driven by a transistor for a good result.
 *
@@ -30,11 +30,11 @@
 #include <IRsend.h>
 #include <ir_Argo.h>
 
-#define IR_LED 4  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
-IRArgoAC argoir(IR_LED);  // Set the GPIO to be used to sending the message.
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+IRArgoAC ac(kIrLed);  // Set the GPIO to be used to sending the message.
 
 void setup() {
-  argoir.begin();
+  ac.begin();
   Serial.begin(115200);
 }
 
@@ -42,14 +42,14 @@ void loop() {
   Serial.println("Sending...");
 
   // Set up what we want to send. See ir_Argo.cpp for all the options.
-  argoir.setPower(true);
-  argoir.setFan(ARGO_FAN_1);
-  argoir.setCoolMode(ARGO_COOL_AUTO);
-  argoir.setTemp(25);
+  ac.setPower(true);
+  ac.setFan(kArgoFan1);
+  ac.setCoolMode(kArgoCoolAuto);
+  ac.setTemp(25);
 
 #if SEND_ARGO
   // Now send the IR signal.
-  argoir.send();
+  ac.send();
 #else  // SEND_ARGO
   Serial.println("Can't send because SEND_ARGO has been disabled.");
 #endif  // SEND_ARGO

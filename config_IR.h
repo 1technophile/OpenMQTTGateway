@@ -68,6 +68,33 @@
   #define IR_DENON
   #define IR_AIWA_RC_T501
   #define IR_JVC
+  #define IR_SANYO
+  #define IR_DAIKIN
+  #define IR_KELVINATOR
+  #define IR_MITSUBISHI_AC
+  #define IR_SANYO_LC7461
+  #define IR_GREE
+  #define IR_ARGO
+  #define IR_TROTEC
+  #define IR_TOSHIBA_AC
+  #define IR_FUJITSU_AC
+  #define IR_MAGIQUEST
+  #define IR_HAIER_AC
+  #define IR_HITACHI_AC
+  #define IR_HITACHI_AC1
+  #define IR_HITACHI_AC2
+  #define IR_GICABLE
+  #define IR_HAIER_AC_YRW02
+  #define IR_WHIRLPOOL_AC
+  #define IR_SAMSUNG_AC
+  #define IR_LUTRON
+  #define IR_ELECTRA_AC
+  #define IR_PANASONIC_AC
+  #define IR_PIONEER
+  #define IR_LG2
+  #define IR_MWM
+  #define IR_DAIKIN2
+  #define IR_VESTEL_AC
 #elif ESP32
   #define IR_Raw
   #define IR_COOLIX
@@ -105,14 +132,14 @@
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-  #define IR_RECEIVER_PIN 2
-  #define IR_EMITTER_PIN 16 // replace by 0 (D3) if you use IR LOLIN controller shield
+  #define IR_RECEIVER_PIN 2 //D4
+  #define IR_EMITTER_PIN 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield
 #elif ESP32
   #define IR_RECEIVER_PIN 27
   #define IR_EMITTER_PIN 14
 #elif __AVR_ATmega2560__
   #define IR_RECEIVER_PIN 2 // 2 = D2 on mega
-  #define IR_EMITTER_PIN 7
+  #define IR_EMITTER_PIN 9
 #else
   #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino
   #define IR_EMITTER_PIN 9

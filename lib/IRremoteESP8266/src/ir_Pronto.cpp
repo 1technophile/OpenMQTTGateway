@@ -10,12 +10,12 @@
 //                PP      rr      oooo  nn   nn  tttt  oooo
 
 // Constants
-#define PRONTO_FREQ_FACTOR      0.241246
-#define PRONTO_TYPE_OFFSET             0U
-#define PRONTO_FREQ_OFFSET             1U
-#define PRONTO_SEQ_1_LEN_OFFSET        2U
-#define PRONTO_SEQ_2_LEN_OFFSET        3U
-#define PRONTO_DATA_OFFSET             4U
+const float kProntoFreqFactor = 0.241246;
+const uint16_t kProntoTypeOffset = 0;
+const uint16_t kProntoFreqOffset = 1;
+const uint16_t kProntoSeq1LenOffset = 2;
+const uint16_t kProntoSeq2LenOffset = 3;
+const uint16_t kProntoDataOffset = 4;
 
 #if SEND_PRONTO
 // Send a Pronto Code formatted message.
@@ -49,29 +49,29 @@
 //           0x0030, 0x0018, 0x0018, 0x0018, 0x0018, 0x0018, 0x0030, 0x0018,
 //           0x0018, 0x03f6};
 //       // Send the Pronto(Sony) code. Repeat twice as Sony's require that.
-//       sendPronto(prontoCode, 46, SONY_MIN_REPEAT);
+//       sendPronto(prontoCode, 46, kSonyMinRepeat);
 //
 // Ref:
 //   http://www.etcwiki.org/wiki/Pronto_Infrared_Format
 //   http://www.remotecentral.com/features/irdisp2.htm
 void IRsend::sendPronto(uint16_t data[], uint16_t len, uint16_t repeat) {
   // Check we have enough data to work out what to send.
-  if (len < PRONTO_MIN_LENGTH) return;
+  if (len < kProntoMinLength) return;
 
   // We only know how to deal with 'raw' pronto codes types. Reject all others.
-  if (data[PRONTO_TYPE_OFFSET] != 0) return;
+  if (data[kProntoTypeOffset] != 0) return;
 
   // Pronto frequency is in Hz.
-  uint16_t hz = (uint16_t) (1000000U / (data[PRONTO_FREQ_OFFSET] *
-                                        PRONTO_FREQ_FACTOR));
+  uint16_t hz =
+      (uint16_t)(1000000U / (data[kProntoFreqOffset] * kProntoFreqFactor));
   enableIROut(hz);
 
   // Grab the length of the two sequences.
-  uint16_t seq_1_len = data[PRONTO_SEQ_1_LEN_OFFSET] * 2;
-  uint16_t seq_2_len = data[PRONTO_SEQ_2_LEN_OFFSET] * 2;
+  uint16_t seq_1_len = data[kProntoSeq1LenOffset] * 2;
+  uint16_t seq_2_len = data[kProntoSeq2LenOffset] * 2;
   // Calculate where each sequence starts in the buffer.
-  uint16_t seq_1_start = PRONTO_DATA_OFFSET;
-  uint16_t seq_2_start = PRONTO_DATA_OFFSET + seq_1_len;
+  uint16_t seq_1_start = kProntoDataOffset;
+  uint16_t seq_2_start = kProntoDataOffset + seq_1_len;
 
   uint32_t periodic_time = calcUSecPeriod(hz, false);
 

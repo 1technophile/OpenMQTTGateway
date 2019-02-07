@@ -21,15 +21,26 @@
 // Toshiba A/C support added by David Conran
 
 // Constants
-#define TOSHIBA_AC_AUTO              0U
-#define TOSHIBA_AC_COOL              1U
-#define TOSHIBA_AC_DRY               2U
-#define TOSHIBA_AC_HEAT              3U
-#define TOSHIBA_AC_POWER             4U
-#define TOSHIBA_AC_FAN_AUTO          0U
-#define TOSHIBA_AC_FAN_MAX           5U
-#define TOSHIBA_AC_MIN_TEMP         17U  // 17C
-#define TOSHIBA_AC_MAX_TEMP         30U  // 30C
+const uint8_t kToshibaAcAuto = 0;
+const uint8_t kToshibaAcCool = 1;
+const uint8_t kToshibaAcDry = 2;
+const uint8_t kToshibaAcHeat = 3;
+const uint8_t kToshibaAcPower = 4;
+const uint8_t kToshibaAcFanAuto = 0;
+const uint8_t kToshibaAcFanMax = 5;
+const uint8_t kToshibaAcMinTemp = 17;  // 17C
+const uint8_t kToshibaAcMaxTemp = 30;  // 30C
+
+// Legacy defines. (Deperecated)
+#define TOSHIBA_AC_AUTO kToshibaAcAuto
+#define TOSHIBA_AC_COOL kToshibaAcCool
+#define TOSHIBA_AC_DRY kToshibaAcDry
+#define TOSHIBA_AC_HEAT kToshibaAcHeat
+#define TOSHIBA_AC_POWER kToshibaAcPower
+#define TOSHIBA_AC_FAN_AUTO kToshibaAcFanAuto
+#define TOSHIBA_AC_FAN_MAX kToshibaAcFanMax
+#define TOSHIBA_AC_MIN_TEMP kToshibaAcMinTemp
+#define TOSHIBA_AC_MAX_TEMP kToshibaAcMaxTemp
 
 class IRToshibaAC {
  public:
@@ -37,7 +48,7 @@ class IRToshibaAC {
 
   void stateReset();
 #if SEND_TOSHIBA_AC
-  void send();
+  void send(const uint16_t repeat = kToshibaACMinRepeat);
 #endif  // SEND_TOSHIBA_AC
   void begin();
   void on();
@@ -53,7 +64,7 @@ class IRToshibaAC {
   void setRaw(uint8_t newState[]);
   uint8_t* getRaw();
   static bool validChecksum(const uint8_t state[],
-                            const uint16_t length = TOSHIBA_AC_STATE_LENGTH);
+                            const uint16_t length = kToshibaACStateLength);
 #ifdef ARDUINO
   String toString();
 #else
@@ -63,10 +74,10 @@ class IRToshibaAC {
 
  private:
 #endif
-  uint8_t remote_state[TOSHIBA_AC_STATE_LENGTH];
-  void checksum(const uint16_t length = TOSHIBA_AC_STATE_LENGTH);
+  uint8_t remote_state[kToshibaACStateLength];
+  void checksum(const uint16_t length = kToshibaACStateLength);
   static uint8_t calcChecksum(const uint8_t state[],
-                              const uint16_t length = TOSHIBA_AC_STATE_LENGTH);
+                              const uint16_t length = kToshibaACStateLength);
   uint8_t mode_state;
   IRsend _irsend;
 };

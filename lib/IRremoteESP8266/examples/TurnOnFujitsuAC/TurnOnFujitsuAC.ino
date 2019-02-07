@@ -1,26 +1,28 @@
-// Copyright 2017 Jonny Graham
+// Copyright 2017 Jonny Graham, 2018 David Conran
+#ifndef UNIT_TEST
+#include <Arduino.h>
+#endif
+#include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_Fujitsu.h>
 
-IRFujitsuAC fujitsu(5);  // IR led controlled by Pin D1.
+const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+IRFujitsuAC ac(kIrLed);
 
 void printState() {
   // Display the settings.
   Serial.println("Fujitsu A/C remote is in the following state:");
-  Serial.printf("  Command:%d,  Mode: %d, Temp: %dC, Fan Speed: %d," \
-                    " Swing Mode: %d\n",
-                fujitsu.getCmd(), fujitsu.getMode(), fujitsu.getTemp(),
-                fujitsu.getFanSpeed(), fujitsu.getSwing());
+  Serial.printf("  %s\n", ac.toString().c_str());
   // Display the encoded IR sequence.
-  unsigned char* ir_code = fujitsu.getRaw();
+  unsigned char* ir_code = ac.getRaw();
   Serial.print("IR Code: 0x");
-  for (uint8_t i = 0; i < fujitsu.getStateLength(); i++)
+  for (uint8_t i = 0; i < ac.getStateLength(); i++)
     Serial.printf("%02X", ir_code[i]);
   Serial.println();
 }
 
 void setup() {
-  fujitsu.begin();
+  ac.begin();
   Serial.begin(115200);
   delay(200);
 
@@ -28,18 +30,18 @@ void setup() {
   Serial.println("Default state of the remote.");
   printState();
   Serial.println("Setting desired state for A/C.");
-  fujitsu.setCmd(FUJITSU_AC_CMD_TURN_ON);
-  fujitsu.setSwing(FUJITSU_AC_SWING_BOTH);
-  fujitsu.setMode(FUJITSU_AC_MODE_COOL);
-  fujitsu.setFanSpeed(FUJITSU_AC_FAN_HIGH);
-  fujitsu.setTemp(24);
+  ac.setCmd(kFujitsuAcCmdTurnOn);
+  ac.setSwing(kFujitsuAcSwingBoth);
+  ac.setMode(kFujitsuAcModeCool);
+  ac.setFanSpeed(kFujitsuAcFanHigh);
+  ac.setTemp(24);  // 24C
 }
 
 void loop() {
   // Now send the IR signal.
   Serial.println("Sending IR command to A/C ...");
 #if SEND_FUJITSU_AC
-  fujitsu.send();
+  ac.send();
 #else  // SEND_FUJITSU_AC
   Serial.println("Can't send because SEND_FUJITSU_AC has been disabled.");
 #endif  // SEND_FUJITSU_AC

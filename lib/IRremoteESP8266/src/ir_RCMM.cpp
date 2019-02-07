@@ -17,28 +17,28 @@
 // Constants
 // Ref:
 //   http://www.sbprojects.com/knowledge/ir/rcmm.php
-#define RCMM_TICK                 28U  // Technically it would be 27.777*
-#define RCMM_HDR_MARK_TICKS       15U
-#define RCMM_HDR_MARK            416U
-#define RCMM_HDR_SPACE_TICKS      10U
-#define RCMM_HDR_SPACE           277U
-#define RCMM_BIT_MARK_TICKS        6U
-#define RCMM_BIT_MARK            166U
-#define RCMM_BIT_SPACE_0_TICKS    10U
-#define RCMM_BIT_SPACE_0         277U
-#define RCMM_BIT_SPACE_1_TICKS    16U
-#define RCMM_BIT_SPACE_1         444U
-#define RCMM_BIT_SPACE_2_TICKS    22U
-#define RCMM_BIT_SPACE_2         611U
-#define RCMM_BIT_SPACE_3_TICKS    28U
-#define RCMM_BIT_SPACE_3         777U
-#define RCMM_RPT_LENGTH_TICKS    992U
-#define RCMM_RPT_LENGTH        27778U
-#define RCMM_MIN_GAP_TICKS       120U
-#define RCMM_MIN_GAP            3360U
+const uint16_t kRcmmTick = 28;  // Technically it would be 27.777*
+const uint16_t kRcmmHdrMarkTicks = 15;
+const uint16_t kRcmmHdrMark = 416;
+const uint16_t kRcmmHdrSpaceTicks = 10;
+const uint16_t kRcmmHdrSpace = 277;
+const uint16_t kRcmmBitMarkTicks = 6;
+const uint16_t kRcmmBitMark = 166;
+const uint16_t kRcmmBitSpace0Ticks = 10;
+const uint16_t kRcmmBitSpace0 = 277;
+const uint16_t kRcmmBitSpace1Ticks = 16;
+const uint16_t kRcmmBitSpace1 = 444;
+const uint16_t kRcmmBitSpace2Ticks = 22;
+const uint16_t kRcmmBitSpace2 = 611;
+const uint16_t kRcmmBitSpace3Ticks = 28;
+const uint16_t kRcmmBitSpace3 = 777;
+const uint16_t kRcmmRptLengthTicks = 992;
+const uint32_t kRcmmRptLength = 27778;
+const uint16_t kRcmmMinGapTicks = 120;
+const uint32_t kRcmmMinGap = 3360;
 // Use a tolerance of +/-10% when matching some data spaces.
-#define RCMM_TOLERANCE      10U
-#define RCMM_EXCESS         50U
+const uint8_t kRcmmTolerance = 10;
+const uint16_t kRcmmExcess = 50;
 
 #if SEND_RCMM
 // Send a Philips RC-MM packet.
@@ -60,27 +60,35 @@ void IRsend::sendRCMM(uint64_t data, uint16_t nbits, uint16_t repeat) {
   for (uint16_t r = 0; r <= repeat; r++) {
     usecs.reset();
     // Header
-    mark(RCMM_HDR_MARK);
-    space(RCMM_HDR_SPACE);
+    mark(kRcmmHdrMark);
+    space(kRcmmHdrSpace);
     // Data
     uint64_t mask = 0b11ULL << (nbits - 2);
     // RC-MM sends data 2 bits at a time.
     for (int32_t i = nbits; i > 0; i -= 2) {
-      mark(RCMM_BIT_MARK);
+      mark(kRcmmBitMark);
       // Grab the next Most Significant Bits to send.
       switch ((data & mask) >> (i - 2)) {
-        case 0b00: space(RCMM_BIT_SPACE_0); break;
-        case 0b01: space(RCMM_BIT_SPACE_1); break;
-        case 0b10: space(RCMM_BIT_SPACE_2); break;
-        case 0b11: space(RCMM_BIT_SPACE_3); break;
+        case 0b00:
+          space(kRcmmBitSpace0);
+          break;
+        case 0b01:
+          space(kRcmmBitSpace1);
+          break;
+        case 0b10:
+          space(kRcmmBitSpace2);
+          break;
+        case 0b11:
+          space(kRcmmBitSpace3);
+          break;
       }
       mask >>= 2;
     }
     // Footer
-    mark(RCMM_BIT_MARK);
-    // Protocol requires us to wait at least RCMM_RPT_LENGTH usecs from the
-    // start or RCMM_MIN_GAP usecs.
-    space(std::max(RCMM_RPT_LENGTH - usecs.elapsed(), RCMM_MIN_GAP));
+    mark(kRcmmBitMark);
+    // Protocol requires us to wait at least kRcmmRptLength usecs from the
+    // start or kRcmmMinGap usecs.
+    space(std::max(kRcmmRptLength - usecs.elapsed(), kRcmmMinGap));
   }
 }
 #endif
@@ -90,7 +98,7 @@ void IRsend::sendRCMM(uint64_t data, uint16_t nbits, uint16_t repeat) {
 // Places successful decode information in the results pointer.
 // Args:
 //   results: Ptr to the data to decode and where to store the decode result.
-//   nbits:   Nr. of bits to expect in the data portion. Typically RCMM_BITS.
+//   nbits:   Nr. of bits to expect in the data portion. Typically kRCMMBits.
 //   strict:  Flag to indicate if we strictly adhere to the specification.
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
@@ -101,67 +109,65 @@ void IRsend::sendRCMM(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   http://www.sbprojects.com/knowledge/ir/rcmm.php
 bool IRrecv::decodeRCMM(decode_results *results, uint16_t nbits, bool strict) {
   uint64_t data = 0;
-  uint16_t offset = OFFSET_START;
+  uint16_t offset = kStartOffset;
 
   if (results->rawlen <= 4)
     return false;  // Not enough entries to ever be RCMM.
 
   // Calc the maximum size in bits, the message can be, or that we can accept.
-  int16_t maxBitSize = std::min((uint16_t) results->rawlen - 5,
-                                (uint16_t) sizeof(data) * 8);
+  int16_t maxBitSize =
+      std::min((uint16_t)results->rawlen - 5, (uint16_t)sizeof(data) * 8);
   // Compliance
   if (strict) {
     // Technically the spec says bit sizes should be 12 xor 24. however
     // 32 bits has been seen from a device. We are going to assume
     // 12 <= bits <= 32 is the 'required' bit length for the spec.
-    if (maxBitSize < 12 || maxBitSize > 32)
-      return false;
+    if (maxBitSize < 12 || maxBitSize > 32) return false;
     if (maxBitSize < nbits)
       return false;  // Short cut, we can never reach the expected nr. of bits.
   }
   // Header decode
-  if (!matchMark(results->rawbuf[offset], RCMM_HDR_MARK)) return false;
+  if (!matchMark(results->rawbuf[offset], kRcmmHdrMark)) return false;
   // Calculate how long the common tick time is based on the header mark.
-  uint32_t m_tick = results->rawbuf[offset++] * RAWTICK / RCMM_HDR_MARK_TICKS;
-  if (!matchSpace(results->rawbuf[offset], RCMM_HDR_SPACE)) return false;
+  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kRcmmHdrMarkTicks;
+  if (!matchSpace(results->rawbuf[offset], kRcmmHdrSpace)) return false;
   // Calculate how long the common tick time is based on the header space.
-  uint32_t s_tick = results->rawbuf[offset++] * RAWTICK / RCMM_HDR_SPACE_TICKS;
+  uint32_t s_tick = results->rawbuf[offset++] * kRawTick / kRcmmHdrSpaceTicks;
 
   // Data decode
   // RC-MM has two bits of data per mark/space pair.
   uint16_t actualBits;
   for (actualBits = 0; actualBits < maxBitSize; actualBits += 2, offset++) {
-    if (!match(results->rawbuf[offset++], RCMM_BIT_MARK_TICKS * m_tick))
+    if (!match(results->rawbuf[offset++], kRcmmBitMarkTicks * m_tick))
       return false;
 
     data <<= 2;
     // Use non-default tolerance & excess for matching some of the spaces as the
     // defaults are too generous and causes mis-matches in some cases.
-    if (match(results->rawbuf[offset], RCMM_BIT_SPACE_0_TICKS * s_tick,
-              TOLERANCE))
+    if (match(results->rawbuf[offset], kRcmmBitSpace0Ticks * s_tick,
+              kTolerance))
       data += 0;
-    else if (match(results->rawbuf[offset], RCMM_BIT_SPACE_1_TICKS * s_tick,
-                   TOLERANCE))
+    else if (match(results->rawbuf[offset], kRcmmBitSpace1Ticks * s_tick,
+                   kTolerance))
       data += 1;
-    else if (match(results->rawbuf[offset], RCMM_BIT_SPACE_2_TICKS * s_tick,
-                   RCMM_TOLERANCE))
+    else if (match(results->rawbuf[offset], kRcmmBitSpace2Ticks * s_tick,
+                   kRcmmTolerance))
       data += 2;
-    else if (match(results->rawbuf[offset], RCMM_BIT_SPACE_3_TICKS * s_tick,
-                   RCMM_TOLERANCE))
+    else if (match(results->rawbuf[offset], kRcmmBitSpace3Ticks * s_tick,
+                   kRcmmTolerance))
       data += 3;
     else
       return false;
   }
   // Footer decode
-  if (!match(results->rawbuf[offset++], RCMM_BIT_MARK_TICKS * m_tick))
+  if (!match(results->rawbuf[offset++], kRcmmBitMarkTicks * m_tick))
     return false;
   if (offset < results->rawlen &&
-      !matchAtLeast(results->rawbuf[offset], RCMM_MIN_GAP_TICKS * s_tick))
+      !matchAtLeast(results->rawbuf[offset], kRcmmMinGapTicks * s_tick))
     return false;
 
   // Compliance
-  if (strict && actualBits != nbits)
-    return false;
+  if (strict && actualBits != nbits) return false;
 
   // Success
   results->value = data;

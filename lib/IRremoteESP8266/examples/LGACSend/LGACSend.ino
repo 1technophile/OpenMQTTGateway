@@ -64,9 +64,9 @@ void Ac_Activate(unsigned int temperature, unsigned int air_flow,
   else
     ac_msbits4 = 0;  // cooling
   unsigned int ac_msbits5 =  (temperature < 15) ? 0 : temperature - 15;
-  unsigned int ac_msbits6;
+  unsigned int ac_msbits6 = 0;
 
-  if (0 <= air_flow && air_flow <= 2) {
+  if (air_flow <= 2) {
     if (kAc_Type == 0)
       ac_msbits6 = kAc_Flow_Tower[air_flow];
     else
@@ -132,7 +132,7 @@ void setup() {
 }
 
 void loop() {
-  char b;
+  char b = ' ';
   Serial.println("# a : mode or temp    b : air_flow, temp, swing, clean,"
                  " cooling/heating");
   Serial.println("# 0 : off             0");
@@ -162,7 +162,7 @@ void loop() {
     default:
       Serial.println("b=");  // Prompt User for input
       while (Serial.available() == 0) {}
-      char b = Serial.read();
+      b = Serial.read();
   }
 
   /*
@@ -198,7 +198,7 @@ void loop() {
         Ac_Change_Air_Swing(1);
       break;
     case '3':  // 1  : clean on, power on
-      if (b == '0' | b == '1')
+      if (b == '0' || b == '1')
         Ac_Air_Clean(b);
       break;
     case '4':
