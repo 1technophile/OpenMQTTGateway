@@ -5,7 +5,7 @@ agree to follow the code of conduct below
 
 [code of conduct]: https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md
 
-Fork, then clone the repo
+Fork the [development branch](https://github.com/1technophile/OpenMQTTGateway/tree/development), then clone the repo
 
 Make your modification,
 * If you want to add a new gateway, name it `ZgatewayXXX`, `XXX` replaced by your gateway communication type, can be more than three letters
