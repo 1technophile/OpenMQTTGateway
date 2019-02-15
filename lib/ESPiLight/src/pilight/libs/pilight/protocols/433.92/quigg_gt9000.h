@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2015 CurlyMoo & dominikkarall 
+	Copyright (C) 2015 CurlyMoo & dominikkarall
 
 	This file is part of pilight.
 

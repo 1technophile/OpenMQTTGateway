@@ -36,10 +36,11 @@
 #define MIN_PULSE_LENGTH	250
 #define MAX_PULSE_LENGTH	320
 #define AVG_PULSE_LENGTH	300
-#define RAW_LENGTH				148
+#define MAX_RAW_LENGTH		148
+#define MIN_RAW_LENGTH		132
 
 static int validate(void) {
-	if(arctech_dimmer->rawlen == RAW_LENGTH) {
+	if(arctech_dimmer->rawlen == MAX_RAW_LENGTH || arctech_dimmer->rawlen == MIN_RAW_LENGTH) {
 		if(arctech_dimmer->raw[arctech_dimmer->rawlen-1] >= (MIN_PULSE_LENGTH*PULSE_DIV) &&
 		   arctech_dimmer->raw[arctech_dimmer->rawlen-1] <= (MAX_PULSE_LENGTH*PULSE_DIV) &&
 			 arctech_dimmer->raw[1] >= AVG_PULSE_LENGTH*(PULSE_MULTIPLIER*2)) {
@@ -60,9 +61,9 @@ static void createMessage(int id, int unit, int state, int all, int dimlevel, in
 		json_append_member(arctech_dimmer->message, "unit", json_mknumber(unit, 0));
 	}
 
-	if(dimlevel == 0) {
+	/*if(dimlevel == 0) {
 		state = 0;
-	} else if(dimlevel > 0) {
+	} else */if(dimlevel >= 0) {
 		state = 1;
 		json_append_member(arctech_dimmer->message, "dimlevel", json_mknumber(dimlevel, 0));
 	}
@@ -81,9 +82,9 @@ static void createMessage(int id, int unit, int state, int all, int dimlevel, in
 }
 
 static void parseCode(void) {
-	int binary[RAW_LENGTH/4], x = 0, i = 0;
+	int binary[MAX_RAW_LENGTH/4], x = 0, i = 0;
 
-	if(arctech_dimmer->rawlen>RAW_LENGTH) {
+	if(arctech_dimmer->rawlen>MAX_RAW_LENGTH) {
 		logprintf(LOG_ERR, "arctech_dimmer: parsecode - invalid parameter passed %d", arctech_dimmer->rawlen);
 		return;
 	}
@@ -96,7 +97,10 @@ static void parseCode(void) {
 		}
 	}
 
-	int dimlevel = binToDecRev(binary, 32, 35);
+	int dimlevel = -1;
+	if(arctech_dimmer->rawlen == MAX_RAW_LENGTH) {
+		dimlevel = binToDecRev(binary, 32, 35);
+	}
 	int unit = binToDecRev(binary, 28, 31);
 	int state = binary[27];
 	int all = binary[26];
@@ -196,7 +200,7 @@ static void createDimlevel(int dimlevel) {
 }
 
 static void createFooter(void) {
-	arctech_dimmer->raw[147]=(PULSE_DIV*AVG_PULSE_LENGTH);
+	arctech_dimmer->raw[arctech_dimmer->rawlen-1]=(PULSE_DIV*AVG_PULSE_LENGTH);
 }
 
 static int checkValues(struct JsonNode *code) {
@@ -292,9 +296,11 @@ static int createCode(struct JsonNode *code) {
 		createUnit(unit);
 		if(dimlevel > -1) {
 			createDimlevel(dimlevel);
+			arctech_dimmer->rawlen = MAX_RAW_LENGTH;
+		} else {
+			arctech_dimmer->rawlen = MIN_RAW_LENGTH;
 		}
 		createFooter();
-		arctech_dimmer->rawlen = RAW_LENGTH;
 	}
 	return EXIT_SUCCESS;
 }
@@ -318,23 +324,23 @@ void arctechDimmerInit(void) {
 	arctech_dimmer->devtype = DIMMER;
 	arctech_dimmer->hwtype = RF433;
 	arctech_dimmer->txrpt = NORMAL_REPEATS;
-	arctech_dimmer->minrawlen = RAW_LENGTH;
-	arctech_dimmer->maxrawlen = RAW_LENGTH;
+	arctech_dimmer->minrawlen = MIN_RAW_LENGTH;
+	arctech_dimmer->maxrawlen = MAX_RAW_LENGTH;
 	arctech_dimmer->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	arctech_dimmer->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&arctech_dimmer->options, 'd', "dimlevel", OPTION_HAS_VALUE, DEVICES_VALUE, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
-	options_add(&arctech_dimmer->options, 'u', "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
-	options_add(&arctech_dimmer->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1,7}|[1-5][0-9]{7}|6([0-6][0-9]{6}|7(0[0-9]{5}|10([0-7][0-9]{3}|8([0-7][0-9]{2}|8([0-5][0-9]|6[0-3]))))))$");
-	options_add(&arctech_dimmer->options, 't', "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&arctech_dimmer->options, 'f', "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&arctech_dimmer->options, 'a', "all", OPTION_OPT_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
-	options_add(&arctech_dimmer->options, 'l', "learn", OPTION_NO_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
+	options_add(&arctech_dimmer->options, "d", "dimlevel", OPTION_HAS_VALUE, DEVICES_VALUE, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
+	options_add(&arctech_dimmer->options, "u", "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
+	options_add(&arctech_dimmer->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1,7}|[1-5][0-9]{7}|6([0-6][0-9]{6}|7(0[0-9]{5}|10([0-7][0-9]{3}|8([0-7][0-9]{2}|8([0-5][0-9]|6[0-3]))))))$");
+	options_add(&arctech_dimmer->options, "t", "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&arctech_dimmer->options, "f", "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&arctech_dimmer->options, "a", "all", OPTION_OPT_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
+	options_add(&arctech_dimmer->options, "l", "learn", OPTION_NO_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
 
-	options_add(&arctech_dimmer->options, 0, "dimlevel-minimum", OPTION_HAS_VALUE, DEVICES_SETTING, JSON_NUMBER, (void *)0, "^([0-9]{1}|[1][0-5])$");
-	options_add(&arctech_dimmer->options, 0, "dimlevel-maximum", OPTION_HAS_VALUE, DEVICES_SETTING, JSON_NUMBER, (void *)15, "^([0-9]{1}|[1][0-5])$");
-	options_add(&arctech_dimmer->options, 0, "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
-	options_add(&arctech_dimmer->options, 0, "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&arctech_dimmer->options, "0", "dimlevel-minimum", OPTION_HAS_VALUE, DEVICES_SETTING, JSON_NUMBER, (void *)0, "^([0-9]{1}|[1][0-5])$");
+	options_add(&arctech_dimmer->options, "0", "dimlevel-maximum", OPTION_HAS_VALUE, DEVICES_SETTING, JSON_NUMBER, (void *)15, "^([0-9]{1}|[1][0-5])$");
+	options_add(&arctech_dimmer->options, "0", "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&arctech_dimmer->options, "0", "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
 
 	arctech_dimmer->parseCode=&parseCode;
 	arctech_dimmer->createCode=&createCode;
@@ -346,7 +352,7 @@ void arctechDimmerInit(void) {
 #if defined(MODULE) && !defined(_WIN32)
 void compatibility(struct module_t *module) {
 	module->name = "arctech_dimmer";
-	module->version = "3.4";
+	module->version = "3.5";
 	module->reqversion = "6.0";
 	module->reqcommit = "84";
 }

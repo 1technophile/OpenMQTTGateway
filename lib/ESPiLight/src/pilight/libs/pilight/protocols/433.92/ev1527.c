@@ -93,9 +93,9 @@ void ev1527Init(void) {
 	ev1527->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	ev1527->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&ev1527->options, 'u', "unitcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(104857[0-5]|10485[0-6][0-9]|1048[0-4][0-9][0-9]|104[0-7][0-9]{3}|10[0-3][0-9]{4}|0?[0-9]{1,6})$");
-	options_add(&ev1527->options, 't', "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&ev1527->options, 'f', "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&ev1527->options, "u", "unitcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(104857[0-5]|10485[0-6][0-9]|1048[0-4][0-9][0-9]|104[0-7][0-9]{3}|10[0-3][0-9]{4}|0?[0-9]{1,6})$");
+	options_add(&ev1527->options, "t", "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&ev1527->options, "f", "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
 	ev1527->parseCode=&parseCode;
 	ev1527->validate=&validate;
