@@ -197,6 +197,10 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
       delay(100);
       softserial.print(F("AT+RESET"));
       delay(100);
+      #ifdef HM_BLUE_LED_STOP
+        softserial.print(F("AT+PIO11")); // When not connected (as in BLE mode) the LED is off. When connected the LED is solid on.
+      #endif
+      delay(100);
       trc(F("ZgatewayBT HM1X setup done "));
     }
     
