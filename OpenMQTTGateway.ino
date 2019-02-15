@@ -981,43 +981,64 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 //trace
 void trc(String msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(int msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(unsigned int msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(long msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(unsigned long msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(double msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(float msg){
   #ifdef TRACE
-  Serial.println(msg);
+    Serial.println(msg);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+    pub(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -1125,6 +1146,18 @@ void pub(char * topic, unsigned int payload){
 void pub(char * topic, unsigned long payload){
     char val[11];
     sprintf(val, "%lu", payload);
+    client.publish(topic,val);
+}
+
+void pub(char * topic, long payload){
+    char val[11];
+    sprintf(val, "%l", payload);
+    client.publish(topic,val);
+}
+
+void pub(char * topic, double payload){
+    char val[16];
+    sprintf(val, "%d", payload);
     client.publish(topic,val);
 }
 
