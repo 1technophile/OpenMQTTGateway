@@ -270,15 +270,15 @@ void quiggGT7000Init(void) {
 	quigg_gt7000->maxgaplen = (int)(PULSE_QUIGG_FOOTER*0.9);
 	quigg_gt7000->mingaplen = (int)(PULSE_QUIGG_FOOTER*1.1);
 
-	options_add(&quigg_gt7000->options, 't', "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&quigg_gt7000->options, 'f', "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&quigg_gt7000->options, 'u', "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-3])$");
-	options_add(&quigg_gt7000->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-3][0-9][0-9][0-9]|40[0-8][0-9]|409[0-5])$");
-	options_add(&quigg_gt7000->options, 'a', "all", OPTION_NO_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
-	options_add(&quigg_gt7000->options, 'l', "learn", OPTION_HAS_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
+	options_add(&quigg_gt7000->options, "t", "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&quigg_gt7000->options, "f", "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&quigg_gt7000->options, "u", "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-3])$");
+	options_add(&quigg_gt7000->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-3][0-9][0-9][0-9]|40[0-8][0-9]|409[0-5])$");
+	options_add(&quigg_gt7000->options, "a", "all", OPTION_NO_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
+	options_add(&quigg_gt7000->options, "l", "learn", OPTION_HAS_VALUE, DEVICES_OPTIONAL, JSON_NUMBER, NULL, NULL);
 
-	options_add(&quigg_gt7000->options, 0, "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
-	options_add(&quigg_gt7000->options, 0, "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&quigg_gt7000->options, "0", "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&quigg_gt7000->options, "0", "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
 
 	quigg_gt7000->parseCode=&parseCode;
 	quigg_gt7000->createCode=&createCode;

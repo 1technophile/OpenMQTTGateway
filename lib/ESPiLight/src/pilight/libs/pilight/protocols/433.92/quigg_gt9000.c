@@ -97,7 +97,7 @@ char gt9000_unit_offon_map2[16][2][4] = {{{1,2,9,10},{3,4,7,11}},  //unit 0
          {{-1,-1,-1,-1},{-1,-1,-1,-1}},
          {{-1,-1,-1,-1},{-1,-1,-1,-1}},
          {{-1,-1,-1,-1},{-1,-1,-1,-1}}};
-         
+
 int gt9000_hash[16] = { 0x0, 0x9, 0xF, 0x4, 0xA, 0xD, 0x5, 0xB,
 			0x3, 0x2, 0x1, 0x7, 0xE, 0x6, 0xC, 0x8 };
 int gt9000_hash2[16] = { 0x0, 0x9, 0x5, 0xF, 0x3, 0x6, 0xC, 0x7,
@@ -106,7 +106,7 @@ int gt9000_hash2[16] = { 0x0, 0x9, 0x5, 0xF, 0x3, 0x6, 0xC, 0x7,
 static int isSyscodeType1(int syscodetype) {
 	if(syscodetype & 0x13)
 		return 1;
-	
+
 	return 0;
 }
 
@@ -148,12 +148,12 @@ static void createMessage(int *binary, int systemcode, int state, int unit) {
 
 static int decodePayload(int payload, int index, int syscodetype) {
 	int ret = -1;
-	
+
 	if(isSyscodeType1(syscodetype))
 		ret = payload^gt9000_hash[index];
 	else
 		ret = payload^gt9000_hash2[index];
-	
+
 	return ret;
 }
 
@@ -206,7 +206,7 @@ static void parseCode(void) {
 			if(statecode == gt9000_unit_offon_map2[unit][1][i]) {
 				state = 1;
 			}
-		}    
+		}
 	}
 
 	createMessage(binary, systemcode, state, unit);
@@ -265,7 +265,7 @@ static void initAllCodes(int systemcode, int allcodes[16]) {
 	int i = 0, syscodetype = 0;
 	int systemcode1enc = 0, systemcode2enc = 0, systemcode3enc = 0, systemcode4enc = 0, systemcode5enc = 0;
 	int systemcode1dec = 0, systemcode3dec = 0, systemcode4dec = 0, systemcode5dec = 0;
-	
+
 	syscodetype = (systemcode >> 16) & 0xF;
 	systemcode1dec = (systemcode >> 16) & 0xF;
 	//systemcode2dec is always 0, therefore it is not needed
@@ -273,10 +273,10 @@ static void initAllCodes(int systemcode, int allcodes[16]) {
 	systemcode3dec = (systemcode >> 8) & 0xF;
 	systemcode4dec = (systemcode >> 4) & 0xF;
 	systemcode5dec = systemcode & 0xF;
-	
+
 	//first 4 bits are not encrypted
 	systemcode1enc = systemcode1dec;
-	
+
 	//encrypt systemcode
 	for(i=0;i<16;i++) {
 		systemcode2enc = i;
@@ -328,14 +328,14 @@ static int createCode(JsonNode *code) {
 			statecode = gt9000_unit_offon_map[unit][state][1];
 		else
 			statecode = gt9000_unit_offon_map2[unit][state][1];
-    
+
 		if(statecode==-1) {
 			logprintf(LOG_ERR, "quigg_gt9000: unit %d not supported, try 0-15.", unit);
 			return EXIT_FAILURE;
 		}
-    
+
 		int encrypteddata = allcodes[statecode];
-		
+
 		clearCode();
 		createEncryptedData(encrypteddata);
 		createUnit(unit);
@@ -376,10 +376,10 @@ void quiggGT9000Init(void) {
 	quigg_gt9000->maxgaplen = (int)(PULSE_QUIGG_FOOTER2*1.1);
 	quigg_gt9000->mingaplen = (int)(PULSE_QUIGG_FOOTER2*0.9);
 
-	options_add(&quigg_gt9000->options, 't', "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&quigg_gt9000->options, 'f', "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&quigg_gt9000->options, 'u', "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, NULL);
-	options_add(&quigg_gt9000->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, NULL);
+	options_add(&quigg_gt9000->options, "t", "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&quigg_gt9000->options, "f", "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&quigg_gt9000->options, "u", "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, NULL);
+	options_add(&quigg_gt9000->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, NULL);
 
 	quigg_gt9000->parseCode=&parseCode;
 	quigg_gt9000->createCode=&createCode;

@@ -62,8 +62,9 @@ class ESPiLight {
 
   /**
    * Transmit Pilight json message
+   * repeats of 0 means repeats as defined in protocol.
    */
-  int send(const String &protocol, const String &json, size_t repeats = 10);
+  int send(const String &protocol, const String &json, size_t repeats = 0);
 
   /**
    * Parse pulse train and fire callback

@@ -102,10 +102,10 @@ void arctechDuskInit(void) {
 	arctech_dusk->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	arctech_dusk->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&arctech_dusk->options, 'u', "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
-	options_add(&arctech_dusk->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1,7}|[1-5][0-9]{7}|6([0-6][0-9]{6}|7(0[0-9]{5}|10([0-7][0-9]{3}|8([0-7][0-9]{2}|8([0-5][0-9]|6[0-3]))))))$");
-	options_add(&arctech_dusk->options, 't', "dusk", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&arctech_dusk->options, 'f', "dawn", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&arctech_dusk->options, "u", "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
+	options_add(&arctech_dusk->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1,7}|[1-5][0-9]{7}|6([0-6][0-9]{6}|7(0[0-9]{5}|10([0-7][0-9]{3}|8([0-7][0-9]{2}|8([0-5][0-9]|6[0-3]))))))$");
+	options_add(&arctech_dusk->options, "t", "dusk", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&arctech_dusk->options, "f", "dawn", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
 	arctech_dusk->parseCode=&parseCode;
 	arctech_dusk->validate=&validate;

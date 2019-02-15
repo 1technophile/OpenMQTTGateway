@@ -89,8 +89,8 @@ void secudoSmokeInit(void) {
 	secudo_smoke->minrawlen = 26;
 	secudo_smoke->maxrawlen = 26;
 
-	options_add(&secudo_smoke->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^[0-9]{1-4}$");
-	options_add(&secudo_smoke->options, 't', "alarm", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&secudo_smoke->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^[0-9]{1-4}$");
+	options_add(&secudo_smoke->options, "t", "alarm", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
 	secudo_smoke->parseCode=&parseCode;
 	secudo_smoke->validate=&validate;

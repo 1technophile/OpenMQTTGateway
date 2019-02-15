@@ -68,6 +68,63 @@ static protocols_t *get_used_protocols() {
   return used_protocols;
 }
 
+static protocols_t *find_protocol_node(const char *name) {
+  protocols_t *pnode = get_protocols();
+  while (pnode != nullptr) {
+    if (strcmp(name, pnode->listener->id) == 0) {
+      return pnode;
+    }
+    pnode = pnode->next;
+  }
+  return nullptr;
+}
+
+static protocol_t *find_protocol(const char *name) {
+  protocols_t *pnode = find_protocol_node(name);
+  if (pnode != nullptr) {
+    return pnode->listener;
+  }
+  return nullptr;
+}
+
+static int create_pulse_train(uint16_t *pulses, protocol_t *protocol,
+                              const String &content) {
+  Debug("piLightCreatePulseTrain: ");
+
+  if (!json_validate(content.c_str())) {
+    Debug("invalid json: ");
+    DebugLn(content);
+    return ESPiLight::ERROR_INVALID_JSON;
+  }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+  if ((protocol != nullptr) && (protocol->createCode != nullptr) &&
+      (protocol->maxrawlen <= MAXPULSESTREAMLENGTH)) {
+#pragma GCC diagnostic pop
+    Debug("protocol: ");
+    Debug(protocol->id);
+
+    protocol->rawlen = 0;
+    protocol->raw = pulses;
+    JsonNode *message = json_decode(content.c_str());
+    int return_value = protocol->createCode(message);
+    json_delete(message);
+    // delete message created by createCode()
+    json_delete(protocol->message);
+    protocol->message = nullptr;
+
+    if (return_value == EXIT_SUCCESS) {
+      DebugLn(" create Code succeded.");
+      return protocol->rawlen;
+    } else {
+      DebugLn(" create Code failed.");
+      return ESPiLight::ERROR_INVALID_PILIGHT_MSG;
+    }
+  }
+  return ESPiLight::ERROR_UNAVAILABLE_PROTOCOL;
+}
+
 void ESPiLight::initReceiver(byte inputPin) {
   int16_t interrupt = digitalPinToInterrupt(inputPin);
   if (_interrupt == interrupt) {
@@ -228,7 +285,8 @@ int ESPiLight::send(const String &protocol, const String &json,
   int length = 0;
   uint16_t pulses[MAXPULSESTREAMLENGTH];
 
-  length = createPulseTrain(pulses, protocol, json);
+  protocol_t *protocol_listener = find_protocol(protocol.c_str());
+  length = create_pulse_train(pulses, protocol_listener, json);
   if (length > 0) {
     /*
     DebugLn();
@@ -240,6 +298,9 @@ int ESPiLight::send(const String &protocol, const String &json,
     Debug(content);
     DebugLn(")");
     */
+    if (repeats == 0) {
+      repeats = protocol_listener->txrpt;
+    }
     sendPulseTrain(pulses, (unsigned)length, repeats);
   }
   return length;
@@ -247,49 +308,8 @@ int ESPiLight::send(const String &protocol, const String &json,
 
 int ESPiLight::createPulseTrain(uint16_t *pulses, const String &protocol_id,
                                 const String &content) {
-  protocol_t *protocol = nullptr;
-  protocols_t *pnode = get_used_protocols();
-  JsonNode *message;
-
-  Debug("piLightCreatePulseTrain: ");
-
-  if (!json_validate(content.c_str())) {
-    Debug("invalid json: ");
-    DebugLn(content);
-    return ERROR_INVALID_JSON;
-  }
-
-  while (pnode != nullptr) {
-    protocol = pnode->listener;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-    if ((protocol->createCode != nullptr) && (protocol_id == protocol->id) &&
-        (protocol->maxrawlen <= MAXPULSESTREAMLENGTH)) {
-#pragma GCC diagnostic pop
-      Debug("protocol: ");
-      Debug(protocol->id);
-
-      protocol->rawlen = 0;
-      protocol->raw = pulses;
-      message = json_decode(content.c_str());
-      int return_value = protocol->createCode(message);
-      json_delete(message);
-      // delete message created by createCode()
-      json_delete(protocol->message);
-      protocol->message = nullptr;
-
-      if (return_value == EXIT_SUCCESS) {
-        DebugLn(" create Code succeded.");
-        return protocol->rawlen;
-      } else {
-        DebugLn(" create Code failed.");
-        return ERROR_INVALID_PILIGHT_MSG;
-      }
-    }
-    pnode = pnode->next;
-  }
-  return ERROR_UNAVAILABLE_PROTOCOL;
+  protocol_t *protocol = find_protocol(protocol_id.c_str());
+  return create_pulse_train(pulses, protocol, content);
 }
 
 size_t ESPiLight::parsePulseTrain(uint16_t *pulses, uint8_t length) {
@@ -359,9 +379,9 @@ static void fire_callback(protocol_t *protocol, ESPiLightCallBack callback) {
     status = FIRST;
     json_free(protocol->old_content);
     protocol->old_content = content;
-  } else if (protocol->repeats < 100) {
+  } else if (!(protocol->repeats & 0x80)) {
     if (strcmp(content, protocol->old_content) == 0) {
-      protocol->repeats += 100;
+      protocol->repeats |= 0x80;
       status = VALID;
     } else {
       status = INVALID;
@@ -378,7 +398,7 @@ static void fire_callback(protocol_t *protocol, ESPiLightCallBack callback) {
     deviceId = String(stmp);
   };
   (callback)(String(protocol->id), String(protocol->old_content), status,
-             protocol->repeats, deviceId);
+             protocol->repeats & 0x7F, deviceId);
 }
 
 String ESPiLight::pulseTrainToString(const uint16_t *codes, size_t length) {
@@ -473,17 +493,6 @@ int ESPiLight::stringToPulseTrain(const String &data, uint16_t *codes,
   return length;
 }
 
-static protocols_t *find_proto(const char *name) {
-  protocols_t *pnode = get_protocols();
-  while (pnode != nullptr) {
-    if (strcmp(name, pnode->listener->id) == 0) {
-      return pnode;
-    }
-    pnode = pnode->next;
-  }
-  return nullptr;
-}
-
 void ESPiLight::limitProtocols(const String &protos) {
   if (!json_validate(protos.c_str())) {
     DebugLn("Protocol limit argument is not a valid json message!");
@@ -517,7 +526,7 @@ void ESPiLight::limitProtocols(const String &protos) {
       continue;
     }
 
-    protocols_t *templ = find_proto(curr->string_);
+    protocols_t *templ = find_protocol_node(curr->string_);
     if (templ == nullptr) {
       Debug("Protocol not found: ");
       DebugLn(curr->string_);

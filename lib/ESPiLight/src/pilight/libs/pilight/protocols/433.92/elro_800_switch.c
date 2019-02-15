@@ -241,13 +241,13 @@ void elro800SwitchInit(void) {
 	elro_800_switch->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	elro_800_switch->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&elro_800_switch->options, 's', "systemcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^102[0-3]|10[01][0-9]|[0-9]{1,3}$");
-	options_add(&elro_800_switch->options, 'u', "unitcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(3[012]?|[012][0-9]|[0-9]{1})$");
-	options_add(&elro_800_switch->options, 't', "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&elro_800_switch->options, 'f', "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&elro_800_switch->options, "s", "systemcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^102[0-3]|10[01][0-9]|[0-9]{1,3}$");
+	options_add(&elro_800_switch->options, "u", "unitcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(3[012]?|[012][0-9]|[0-9]{1})$");
+	options_add(&elro_800_switch->options, "t", "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&elro_800_switch->options, "f", "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
-	options_add(&elro_800_switch->options, 0, "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
-	options_add(&elro_800_switch->options, 0, "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&elro_800_switch->options, "0", "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&elro_800_switch->options, "0", "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
 
 	elro_800_switch->parseCode=&parseCode;
 	elro_800_switch->createCode=&createCode;

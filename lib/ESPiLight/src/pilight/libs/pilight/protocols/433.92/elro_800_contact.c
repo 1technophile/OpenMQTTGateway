@@ -95,10 +95,10 @@ void elro800ContactInit(void) {
 	elro_800_contact->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	elro_800_contact->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&elro_800_contact->options, 's', "systemcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(3[012]?|[012][0-9]|[0-9]{1})$");
-	options_add(&elro_800_contact->options, 'u', "unitcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(3[012]?|[012][0-9]|[0-9]{1})$");
-	options_add(&elro_800_contact->options, 't', "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&elro_800_contact->options, 'f', "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&elro_800_contact->options, "s", "systemcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(3[012]?|[012][0-9]|[0-9]{1})$");
+	options_add(&elro_800_contact->options, "u", "unitcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(3[012]?|[012][0-9]|[0-9]{1})$");
+	options_add(&elro_800_contact->options, "t", "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&elro_800_contact->options, "f", "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
 	elro_800_contact->parseCode=&parseCode;
 	elro_800_contact->validate=&validate;

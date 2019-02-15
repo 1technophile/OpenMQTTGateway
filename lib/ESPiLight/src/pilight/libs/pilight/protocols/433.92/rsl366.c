@@ -81,29 +81,29 @@ static void parseCode(void) {
 	//Check if there is a valid systemcode
 	if((binary[0]+binary[1]+binary[2]+binary[3]) > 1)
                 return;
-        
+
         //Get systemcode: 1000=>1, 0100=>2, 0010=>3, 0001=>4
         int systemcode = 0;
         for(i=0;i<4;i++) {
         	if(binary[i] == 1)
         		systemcode = i+1;
         }
-        
+
         //Check if there is a valid programcode
         if((binary[4]+binary[5]+binary[6]+binary[7]) > 1)
                 return;
-        
+
         //Get programcode: 1000=>1, 0100=>2, 0010=>3, 0001=>4
         int programcode = 0;
         for(i=4;i<8;i++) {
         	if(binary[i] == 1)
         		programcode = i-3;
         }
-        
+
         //Check if a system and programcode was found
         if(systemcode == 0 || programcode == 0)
         	return;
-        
+
 	// There seems to be no check and binary[10] is always a low
 	int state = binary[11]^1;
 
@@ -214,13 +214,13 @@ void rsl366Init(void) {
 	rsl366->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	rsl366->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&rsl366->options, 's', "systemcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([1234]{1})$");
-	options_add(&rsl366->options, 'u', "programcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([1234]{1})$");
-	options_add(&rsl366->options, 't', "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&rsl366->options, 'f', "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&rsl366->options, "s", "systemcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([1234]{1})$");
+	options_add(&rsl366->options, "u", "programcode", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([1234]{1})$");
+	options_add(&rsl366->options, "t", "on", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&rsl366->options, "f", "off", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
-	options_add(&rsl366->options, 0, "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
-	options_add(&rsl366->options, 0, "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&rsl366->options, "0", "readonly", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&rsl366->options, "0", "confirm", OPTION_HAS_VALUE, GUI_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
 
 	rsl366->parseCode=&parseCode;
 	rsl366->createCode=&createCode;

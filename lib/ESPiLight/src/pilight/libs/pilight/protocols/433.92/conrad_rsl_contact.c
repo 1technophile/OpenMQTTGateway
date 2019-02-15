@@ -98,9 +98,9 @@ void conradRSLContactInit(void) {
 	conrad_rsl_contact->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	conrad_rsl_contact->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&conrad_rsl_contact->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(([0-9]|([1-9][0-9])|([1-9][0-9]{2})|([1-9][0-9]{3})|([1-9][0-9]{4})|([1-9][0-9]{5})|([1-9][0-9]{6})|((6710886[0-3])|(671088[0-5][0-9])|(67108[0-7][0-9]{2})|(6710[0-7][0-9]{3})|(671[0--1][0-9]{4})|(670[0-9]{5})|(6[0-6][0-9]{6})|(0[0-5][0-9]{7}))))$");
-	options_add(&conrad_rsl_contact->options, 't', "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&conrad_rsl_contact->options, 'f', "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&conrad_rsl_contact->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^(([0-9]|([1-9][0-9])|([1-9][0-9]{2})|([1-9][0-9]{3})|([1-9][0-9]{4})|([1-9][0-9]{5})|([1-9][0-9]{6})|((6710886[0-3])|(671088[0-5][0-9])|(67108[0-7][0-9]{2})|(6710[0-7][0-9]{3})|(671[0--1][0-9]{4})|(670[0-9]{5})|(6[0-6][0-9]{6})|(0[0-5][0-9]{7}))))$");
+	options_add(&conrad_rsl_contact->options, "t", "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&conrad_rsl_contact->options, "f", "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
 	conrad_rsl_contact->parseCode=&parseCode;
 	conrad_rsl_contact->validate=&validate;

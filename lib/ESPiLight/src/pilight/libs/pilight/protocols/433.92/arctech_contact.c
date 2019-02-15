@@ -107,12 +107,12 @@ void arctechContactInit(void) {
 	arctech_contact->maxgaplen = MAX_PULSE_LENGTH*PULSE_DIV;
 	arctech_contact->mingaplen = MIN_PULSE_LENGTH*PULSE_DIV;
 
-	options_add(&arctech_contact->options, 'u', "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
-	options_add(&arctech_contact->options, 'i', "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1,7}|[1-5][0-9]{7}|6([0-6][0-9]{6}|7(0[0-9]{5}|10([0-7][0-9]{3}|8([0-7][0-9]{2}|8([0-5][0-9]|6[0-3]))))))$");
-	options_add(&arctech_contact->options, 't', "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
-	options_add(&arctech_contact->options, 'f', "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&arctech_contact->options, "u", "unit", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1}|[1][0-5])$");
+	options_add(&arctech_contact->options, "i", "id", OPTION_HAS_VALUE, DEVICES_ID, JSON_NUMBER, NULL, "^([0-9]{1,7}|[1-5][0-9]{7}|6([0-6][0-9]{6}|7(0[0-9]{5}|10([0-7][0-9]{3}|8([0-7][0-9]{2}|8([0-5][0-9]|6[0-3]))))))$");
+	options_add(&arctech_contact->options, "t", "opened", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
+	options_add(&arctech_contact->options, "f", "closed", OPTION_NO_VALUE, DEVICES_STATE, JSON_STRING, NULL, NULL);
 
-	options_add(&arctech_contact->options, 'a', "all", OPTION_HAS_VALUE, DEVICES_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
+	options_add(&arctech_contact->options, "a", "all", OPTION_HAS_VALUE, DEVICES_SETTING, JSON_NUMBER, (void *)0, "^[10]{1}$");
 
 	arctech_contact->parseCode=&parseCode;
 	arctech_contact->validate=&validate;
