@@ -88,6 +88,9 @@
 #ifdef ZgatewayRF315
   #include "config_RF315.h"
 #endif
+#ifdef ZgatewayLORA
+  #include "config_LORA.h"
+#endif
 #ifdef ZgatewaySRFB
   #include "config_SRFB.h"
 #endif
@@ -367,6 +370,9 @@ void setup()
   #endif
   #ifdef ZgatewayIR
     setupIR();
+  #endif
+  #ifdef ZgatewayLORA
+    setupLORA();
   #endif
   #ifdef ZgatewayRF
     setupRF();
@@ -664,6 +670,9 @@ void loop()
     #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
     #endif
+    #ifdef ZgatewayLORA
+      LORAtoMQTT();
+    #endif
     #ifdef ZgatewayRF
       RFtoMQTT();
     #endif
@@ -755,11 +764,11 @@ void stateMeasures(){
       #ifdef ZgatewayIR
           modules = modules + ZgatewayIR;
       #endif
+      #ifdef ZgatewayLORA
+          modules = modules + ZgatewayLORA;
+      #endif
       #ifdef ZgatewayRF2
           modules = modules + ZgatewayRF2;
-      #endif
-      #ifdef ZgatewayPilight
-          modules = modules + ZgatewayPilight;
       #endif
       #ifdef ZgatewayPilight
           modules = modules  + ZgatewayPilight;
@@ -879,6 +888,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
      MQTTtoPilight(topicOri, jsondata);
    #endif
    #ifdef jsonReceiving
+    #ifdef ZgatewayLORA
+      MQTTtoLORA(topicOri, jsondata);
+    #endif
     #ifdef ZgatewayRF
       MQTTtoRF(topicOri, jsondata);
     #endif
@@ -906,6 +918,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #endif
   } else { // not a json object --> simple decoding
    #ifdef simpleReceiving
+      #ifdef ZgatewayLORA
+        MQTTtoLORA(topicOri, datacallback);
+      #endif
       #ifdef ZgatewayRF
         MQTTtoRF(topicOri, datacallback);
       #endif
