@@ -111,6 +111,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //Addons and module management, comment the Z line and the config file if you don't use
 #if defined(ESP8266) // for nodemcu, weemos, esp8266, and Arduino mega
   #define ZgatewayRF "RF"
+  //#define ZgatewayLORA "LORA" (not tested yet)
   #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
   #define ZgatewayRF2 "RF2"
@@ -134,6 +135,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define simplePublishing true
 #elif ESP32
   #define ZgatewayRF "RF"
+  #define ZgatewayLORA "LORA"
   #define ZgatewayRF "RF315"
   #define ZgatewayRF2 "RF2"
   //#define Zgateway2G (not tested yet)
@@ -155,6 +157,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define simplePublishing true
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
+  //#define ZgatewayLORA "LORA" (not tested yet)
   #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
   #define ZgatewayRF2 "RF2"
@@ -178,6 +181,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define simplePublishing true
 #else // for arduino Uno
   #define ZgatewayRF "RF"
+  //#define ZgatewayLORA "LORA" (not tested yet)
   //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
   //#define ZgatewayIR
