@@ -27,7 +27,16 @@
 #define subjectLORAtoMQTT     Base_Topic Gateway_Name "/LORAtoMQTT"
 #define subjectMQTTtoLORA     Base_Topic Gateway_Name "/commands/MQTTtoLORA"
 #define subjectGTWLORAtoMQTT  Base_Topic Gateway_Name "/LORAtoMQTT"
-#define LORA_BAND    868E6
+
+//Default parameters used when the parameters are not set in the json data
+#define LORA_BAND             868E6
+#define LORA_SIGNAL_BANDWIDTH 125E3
+#define LORA_TX_POWER         17
+#define LORA_SPREADING_FACTOR 7
+#define LORA_CODING_RATE      5
+#define LORA_PREAMBLE_LENGTH  8
+#define LORA_SYNC_WORD        0x12
+
 
 /*-------------------PIN DEFINITIONS----------------------*/
 //TTGO LORA BOARD ESP32 PIN DEFINITION

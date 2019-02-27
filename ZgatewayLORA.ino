@@ -71,6 +71,8 @@ void LORAtoMQTT(){
     packet ="";
     for (int i = 0; i < packetSize; i++) { packet += (char) LoRa.read(); }
     LORAdata.set("rssi", (int)LoRa.packetRssi());
+    LORAdata.set("snr",(float)LoRa.packetSnr());
+    LORAdata.set("pferror",(float)LoRa.packetFrequencyError());
     LORAdata.set("packetSize", (int)packetSize);
     LORAdata.set("message", (char *)packet.c_str());
     pub(subjectLORAtoMQTT,LORAdata);
@@ -82,7 +84,23 @@ void LORAtoMQTT(){
    if (strcmp(topicOri,subjectMQTTtoLORA) == 0){
       trc(F("MQTTtoLORA json"));
       const char * message = LORAdata["message"];
+      int txPower = LORAdata["txpower"]|LORA_TX_POWER;
+      int spreadingFactor = LORAdata["spreadingfactor"]|LORA_SPREADING_FACTOR;
+      long int frequency  = LORAdata["frequency "]|LORA_BAND;
+      long int signalBandwidth = LORAdata["signalbandwidth"]|LORA_SIGNAL_BANDWIDTH; 
+      int codingRateDenominator = LORAdata["codingrate"]|LORA_CODING_RATE;
+      int preambleLength = LORAdata["preamblelength"]|LORA_PREAMBLE_LENGTH;
+      byte syncWord = LORAdata["syncword"]|LORA_SYNC_WORD;
+      bool Crc = LORAdata["enablecrc"];
       if (message) {
+        LoRa.setTxPower(txPower);
+        LoRa.setFrequency(frequency);
+        LoRa.setSpreadingFactor(spreadingFactor);
+        LoRa.setSignalBandwidth(signalBandwidth);
+        LoRa.setCodingRate4(codingRateDenominator);
+        LoRa.setPreambleLength(preambleLength);
+        LoRa.setSyncWord(syncWord);
+        if (Crc) LoRa.enableCrc();
         LoRa.beginPacket();
         LoRa.print(message);
         LoRa.endPacket();
