@@ -291,7 +291,7 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZgatewayIR
-  // Sensor to display RF received value 
+  // Sensor to display IR received value 
   trc(F("gatewayIRDiscovery"));
   char * gatewayIR[8] = {"sensor", "gatewayIR", "", "","{{ value_json.value }}","", "", ""};
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -306,7 +306,7 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef Zgateway2G
-  // Sensor to display RF received value 
+  // Sensor to display 2G received value 
   trc(F("gateway2GDiscovery"));
   char * gateway2G[8] = {"sensor", "gateway2G", "", "","{{ value_json.message }}","", "", ""};
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -321,7 +321,7 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZgatewayBT
-  // Sensor to display RF received value 
+  // Sensor to display BT received value 
   trc(F("gatewayBTDiscovery"));
   char * gatewayBT[8] = {"sensor", "gatewayBT", "", "","{{ value_json.message }}","", "", ""};
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement

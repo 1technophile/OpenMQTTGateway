@@ -101,12 +101,18 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   pos = strpos(service_data,"209800");
                   if (pos != -1){
                     trc("mi flora data reading");
+                    #ifdef ZmqttDiscovery
+                      MiFloraDiscovery(mac);
+                    #endif
                     boolean result = process_data(pos - 24,service_data,mac);
                   }
                   pos = -1;
                   pos = strpos(service_data,"20aa01");
                   if (pos != -1){
                     trc("mi jia data reading");
+                    #ifdef ZmqttDiscovery
+                      MiJiaDiscovery(mac);
+                    #endif
                     boolean result = process_data(pos - 26,service_data,mac);
                   }
 
@@ -271,12 +277,18 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                       pos = strpos(d[5].extract,"209800");
                       if (pos != -1) {
                         trc("mi flora data reading");
+                        #ifdef ZmqttDiscovery
+                          MiFloraDiscovery(d[0].extract);
+                        #endif
                         boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
                       }
                       pos = -1;
                       pos = strpos(d[5].extract,"20aa01");
                       if (pos != -1){
                         trc("mi jia data reading");
+                        #ifdef ZmqttDiscovery
+                          MiJiaDiscovery(d[0].extract);
+                        #endif
                         boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                       }
                       return true;
@@ -302,7 +314,57 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #endif
 
+#ifdef ZmqttDiscovery
+void MiFloraDiscovery(char * mac){
+  #define MiFloraparametersCount 4
+  trc(F("MiFloraDiscovery"));
+  char * MiFlorasensor[MiFloraparametersCount][8] = {
+     {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux }}","", "", "lu"} ,
+     {"sensor", "MiFlora-tem", mac,"","{{ value_json.tem }}","", "", "°C"} ,
+     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer }}","", "", ""} ,
+     {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi }}","", "", "%"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiFloraparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiFlorasensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
+   createDiscovery(MiFlorasensor[i][0],
+                    (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
+                    MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
+                    true, false, 0,"","",true,"");
+  }
+}
+
+void MiJiaDiscovery(char * mac){
+  #define MiJiaparametersCount 3
+  trc(F("MiJiaDiscovery"));
+  char * MiJiasensor[MiJiaparametersCount][8] = {
+     {"sensor", "MiJia-batt", mac, "illuminance","{{ value_json.batt }}","", "", "V"} ,
+     {"sensor", "MiJia-tem", mac,"","{{ value_json.tem }}","", "", "°C"} ,
+     {"sensor", "MiJia-hum", mac,"","{{ value_json.hum }}","", "", "%"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiJiaparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiJiasensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiJiasensor[i][1];
+   createDiscovery(MiJiasensor[i][0],
+                    (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
+                    MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
+                    true, false, 0,"","",true,"");
+  }
+}
+#endif
+
 boolean process_data(int offset, char * rest_data, char * mac_adress){
+  
   trc(F("Creating BLE buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& BLEdata = jsonBuffer.createObject();
