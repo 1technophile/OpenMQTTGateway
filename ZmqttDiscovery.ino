@@ -260,6 +260,21 @@ void pubMqttDiscovery()
                     false, false, 0,"","",true,"");
 #endif
 
+#ifdef ZgatewayLORA
+  // Sensor to display RF received value 
+  trc(F("gatewayLORADiscovery"));
+  char * gatewayLORA[8] = {"sensor", "gatewayLORA", "", "","{{ value_json.message }}","", "", ""};
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+   trc(F("CreateDiscoverySensor"));
+   trc(gatewayLORA[1]);
+    createDiscovery(gatewayLORA[0],
+                    subjectLORAtoMQTT, gatewayLORA[1], (char *)getUniqueId(gatewayLORA[1], gatewayLORA[2]).c_str(),
+                    will_Topic, gatewayLORA[3], gatewayLORA[4],
+                    gatewayLORA[5], gatewayLORA[6], gatewayLORA[7],
+                    false, false, 0,"","",true,"");
+#endif
+
 #ifdef ZgatewaySRFB
   // Sensor to display RF received value 
   trc(F("gatewaySRFBDiscovery"));
