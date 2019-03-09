@@ -68,7 +68,8 @@ void RF2toMQTT(){
 
   if(rf2rd.hasNewData){
     trc(F("Creating RF2 buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& RF2data = jsonBuffer.createObject();
     
     rf2rd.hasNewData = false;
@@ -79,10 +80,6 @@ void RF2toMQTT(){
     RF2data.set("period", (int)rf2rd.period);
     RF2data.set("address", (unsigned long)rf2rd.address);
     RF2data.set("switchType", (int)rf2rd.switchType);
-    
-    trc(F("LED MNG"));
-    digitalWrite(led_receive, LOW);
-    timer_led_receive = millis();
     
     trc(F("Adv data RF2toMQTT"));
     pub(subjectRF2toMQTT,RF2data);  

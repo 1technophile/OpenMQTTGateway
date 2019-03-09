@@ -52,7 +52,8 @@ void MeasureINA226(){
     if (millis() > (timeINA226 + TimeBetweenReadingINA226)) {//retriving value of temperature and humidity of the box from DHT every xUL
         timeINA226 = millis();
         trc(F("Creating INA226 buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
+        StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
         JsonObject& INA226data = jsonBuffer.createObject();
         // Topic on which we will send data
         trc(F("Retrieving electrical data"));

@@ -50,15 +50,15 @@ void displaySensorDetails(void)
 {
   sensor_t sensor;
   tsl.getSensor(&sensor);
-  trc("------------------------------------");
+  trc(F("------------------------------------"));
   trc("Sensor:       " + String(sensor.name));
   trc("Driver Ver:   " + String(sensor.version));
   trc("Unique ID:    " + String(sensor.sensor_id));
   trc("Max Value:    " + String(sensor.max_value) + " lux");
   trc("Min Value:    " + String(sensor.min_value) + " lux");
   trc("Resolution:   " + String(sensor.resolution) + " lux");
-  trc("------------------------------------");
-  trc("");
+  trc(F("------------------------------------"));
+  trc(F(""));
   delay(500);
 }
 
@@ -69,7 +69,7 @@ void setupZsensorTSL2561()
 
   if (!tsl.begin())
   {
-    trc("No TSL2561 detected");
+    trc(F("No TSL2561 detected"));
   }
   
   // enable auto ranging
@@ -81,7 +81,7 @@ void setupZsensorTSL2561()
   // tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);  /* medium resolution and speed   */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);
 
-  trc("TSL2561 Initialized. Printing detials now.");
+  trc(F("TSL2561 Initialized. Printing detials now."));
   displaySensorDetails();  
 }
 
@@ -92,7 +92,8 @@ void MeasureLightIntensityTSL2561()
     timetsl2561 = millis();
 
     trc(F("Creating TSL2561 buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& TSL2561data = jsonBuffer.createObject();
     
     sensors_event_t event;
@@ -109,10 +110,10 @@ void MeasureLightIntensityTSL2561()
 
     pub(subjectTSL12561toMQTT,TSL2561data);
 	} else {
-	  trc("Same lux value, do not send");
+	  trc(F("Same lux value, do not send"));
 	}
       } else {
-      trc("Failed to read from TSL2561");
+      trc(F("Failed to read from TSL2561"));
     }
   }
 }

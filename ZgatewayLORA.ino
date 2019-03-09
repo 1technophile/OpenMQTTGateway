@@ -36,7 +36,7 @@ void setupLORA() {
   LoRa.setPins(LORA_SS,LORA_RST,LORA_DI0);  
   
   if (!LoRa.begin(LORA_BAND)) {
-    trc("ZgatewayLORA setup failed!");
+    trc(F("ZgatewayLORA setup failed!"));
     while (1);
   }
   LoRa.receive();
@@ -59,7 +59,8 @@ void setupLORA() {
 void LORAtoMQTT(){
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& LORAdata = jsonBuffer.createObject();
     trc(F("Rcv. LORA"));
     #ifdef ESP32

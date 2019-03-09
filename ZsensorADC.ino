@@ -48,7 +48,8 @@ void MeasureADC(){
     }else{
       if(val  >= persistedadc + ThresholdReadingADC || val  <= persistedadc - ThresholdReadingADC){
         trc(F("Creating ADC buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
+        StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
         JsonObject& ADCdata = jsonBuffer.createObject();
         ADCdata.set("adc", (int)val);
         pub(ADCTOPIC,ADCdata);

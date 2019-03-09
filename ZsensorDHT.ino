@@ -49,7 +49,8 @@ void MeasureTempAndHum(){
       trc(F("Failed to read from DHT sensor!"));
     }else{
       trc(F("Creating DHT buffer"));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(2);
+      StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
       JsonObject& DHTdata = jsonBuffer.createObject();
       if(h != persistedh || dht_always){
         DHTdata.set("hum", (float)h);
