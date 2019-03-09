@@ -53,7 +53,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           void onResult(BLEAdvertisedDevice advertisedDevice) {
             trc(F("Creating BLE buffer"));
-            StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+            const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(6);
+            StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
             JsonObject& BLEdata = jsonBuffer.createObject();
             String mac_adress = advertisedDevice.getAddress().toString().c_str();
             BLEdata.set("id", (char *)mac_adress.c_str());
@@ -247,7 +248,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 if((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
                 {
                   trc(F("Creating BLE buffer"));
-                  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+                  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
+                  StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
                   JsonObject& BLEdata = jsonBuffer.createObject();
                   #ifdef subjectHomePresence
                     String HomePresenceId;

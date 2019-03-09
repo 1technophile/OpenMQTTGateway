@@ -71,7 +71,7 @@ void eeprom_setup() {
   pGC = (struct _GLOBAL_CONFIG *)EEPROM.getDataPtr();
   // if checksum bad init GC else use GC values
   if (gc_checksum() != pGC->checksum) {
-    trc("Factory reset");
+    trc(F("Factory reset"));
     memset(pGC, 0, sizeof(*pGC));
     strcpy_P(pGC->encryptkey, ENCRYPTKEY);
     strcpy_P(pGC->rfmapname, RFM69AP_NAME);
@@ -134,7 +134,7 @@ void setupRFM69(void) {
   size_t len = snprintf_P(RadioConfig, sizeof(RadioConfig), JSONtemplate,
       freq, GC_IS_RFM69HCW, pGC->networkid, GC_POWER_LEVEL);
   if (len >= sizeof(RadioConfig)) {
-    trc("\n\n*** RFM69 config truncated ***\n");
+    trc(F("\n\n*** RFM69 config truncated ***\n"));
   }
 }
 
@@ -143,7 +143,8 @@ boolean RFM69toMQTT(void) {
   if (radio.receiveDone())
   {
     trc(F("Creating RFM69 buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& RFM69data = jsonBuffer.createObject();
     uint8_t data[RF69_MAX_DATA_LEN+1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;

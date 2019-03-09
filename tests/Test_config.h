@@ -100,9 +100,23 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define ota_password "OTAPASSWORD"
 #define ota_port 8266
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#define led_receive 40
-#define led_send 42
-#define led_error 44
+#ifdef ESP8266
+  #define led_receive 40
+  #define led_send 42
+  #define led_info 44
+#elif ESP32
+  #define led_receive 40
+  #define led_send 42
+  #define led_info 44
+#elif __AVR_ATmega2560__ //arduino mega
+  #define led_receive 40
+  #define led_send 42
+  #define led_info 44
+#else //arduino uno/nano
+  #define led_receive 40
+  #define led_send 42
+  #define led_info 44
+#endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
@@ -220,8 +234,11 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #ifdef ESP32
   //#define multiCore //uncomment to use multicore function of ESP32 for BLE
 #endif
-#define JSON_MSG_BUFFER 256 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
-
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  #define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#else // boards with smaller memory
+  #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#endif
 #define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 /*-------------------ACTIVATE TRACES----------------------*/

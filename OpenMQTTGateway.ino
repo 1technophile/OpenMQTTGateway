@@ -179,11 +179,6 @@ PubSubClient client(eClient);
 //MQTT last attemps reconnection date
 unsigned long lastReconnectAttempt = 0;
 
-//timers for LED indicators
-unsigned long timer_led_receive = 0;
-unsigned long timer_led_send = 0;
-unsigned long timer_led_error = 0;
-
 boolean reconnect() {
 
   // Loop until we're reconnected
@@ -313,19 +308,16 @@ void setup()
     //Launch serial for debugging purposes
     Serial.begin(SERIAL_BAUD);
     //Begining ethernet connection in case of Arduino + W5100
-    setup_ethernet();
-    //setup LED status, turn all ON for short amount then leave only the RED LED ON
-    pinMode(led_receive, OUTPUT);
-    pinMode(led_send, OUTPUT);
-    pinMode(led_error, OUTPUT);
-    digitalWrite(led_receive, LOW);
-    digitalWrite(led_send, LOW);
-    digitalWrite(led_error, LOW);
-    delay(500);
-    digitalWrite(led_receive, HIGH);
-    digitalWrite(led_send, HIGH);
-    
+    setup_ethernet();    
   #endif
+
+  //setup LED status
+  pinMode(led_receive, OUTPUT);
+  pinMode(led_send, OUTPUT);
+  pinMode(led_info, OUTPUT);
+  digitalWrite(led_receive, LOW);
+  digitalWrite(led_send, LOW);
+  digitalWrite(led_info, LOW);
 
   #if defined(MDNS_SD) && defined(ESP8266)
      trc(F("Connecting to MQTT by mDNS without mqtt hostname"));
@@ -410,8 +402,6 @@ void setup()
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
-  trc(F("JSON_MSG_BUFFER"));
-  trc(JSON_MSG_BUFFER);
   trc(F("Setup OpenMQTTGateway end"));
 }
 
@@ -448,7 +438,7 @@ bool shouldSaveConfig = true;
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {
-  trc("Should save config");
+  trc(F("Should save config"));
   shouldSaveConfig = true;
 }
 
@@ -456,16 +446,16 @@ void setup_wifimanager(boolean reset_settings){
     if(reset_settings)  SPIFFS.format();
 
     //read configuration from FS json
-    trc("mounting FS...");
+    trc(F("mounting FS..."));
   
     if (SPIFFS.begin()) {
-      trc("mounted file system");
+      trc(F("mounted file system"));
       if (SPIFFS.exists("/config.json")) {
         //file exists, reading and loading
-        trc("reading config file");
+        trc(F("reading config file"));
         File configFile = SPIFFS.open("/config.json", "r");
         if (configFile) {
-          trc("opened config file");
+          trc(F("opened config file"));
           size_t size = configFile.size();
           // Allocate a buffer to store contents of the file.
           std::unique_ptr<char[]> buf(new char[size]);
@@ -475,7 +465,7 @@ void setup_wifimanager(boolean reset_settings){
           JsonObject& json = jsonBuffer.parseObject(buf.get());
           json.printTo(Serial);
           if (json.success()) {
-            trc("\nparsed json");
+            trc(F("\nparsed json"));
   
             strcpy(mqtt_server, json["mqtt_server"]);
             strcpy(mqtt_port, json["mqtt_port"]);
@@ -483,12 +473,12 @@ void setup_wifimanager(boolean reset_settings){
             strcpy(mqtt_pass, json["mqtt_pass"]);
   
           } else {
-            trc("failed to load json config");
+            trc(F("failed to load json config"));
           }
         }
       }
     } else {
-      trc("failed to mount FS");
+      trc(F("failed to mount FS"));
     }
   
     // The extra parameters to be configured (can be either global or just in the setup)
@@ -525,7 +515,7 @@ void setup_wifimanager(boolean reset_settings){
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
     if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
-      trc("failed to connect and hit timeout");
+      trc(F("failed to connect and hit timeout"));
       delay(3000);
       //reset and try again, or maybe put it to deep sleep
       ESP.reset();
@@ -533,7 +523,7 @@ void setup_wifimanager(boolean reset_settings){
     }
   
     //if you get here you have connected to the WiFi
-    trc("connected...yeey :)");
+    trc(F("connected...yeey :)"));
   
     //read updated parameters
     strcpy(mqtt_server, custom_mqtt_server.getValue());
@@ -543,7 +533,7 @@ void setup_wifimanager(boolean reset_settings){
   
     //save the custom parameters to FS
     if (shouldSaveConfig) {
-      trc("saving config");
+      trc(F("saving config"));
       DynamicJsonBuffer jsonBuffer;
       JsonObject& json = jsonBuffer.createObject();
       json["mqtt_server"] = mqtt_server;
@@ -553,7 +543,7 @@ void setup_wifimanager(boolean reset_settings){
     
       File configFile = SPIFFS.open("/config.json", "w");
       if (!configFile) {
-        trc("failed to open config file for writing");
+        trc(F("failed to open config file for writing"));
       }
   
       json.printTo(Serial);
@@ -594,7 +584,7 @@ void setup_ethernet() {
         trc(F("no services found"));
     }else {
         trc(n);
-        trc(" service(s) found");
+        trc(F(" service(s) found"));
         for (int i=0; i < n; ++i) {
             // Print details for each service found
             trc(i + 1);
@@ -614,12 +604,13 @@ void setup_ethernet() {
 
 void loop()
 {
-    unsigned long now = millis();
+  digitalWrite(led_receive, LOW);
+  digitalWrite(led_info, LOW);
+  digitalWrite(led_send, LOW);
+  
+  unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
-
-    //RED ON
-    digitalWrite(led_error, LOW);
 
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
@@ -630,12 +621,6 @@ void loop()
     }
   } else { //connected
     // MQTT loop
-    //RED OFF
-    if (now - timer_led_receive > 300) {
-      timer_led_receive = now;
-      digitalWrite(led_receive, HIGH);
-    }
-    digitalWrite(led_error, HIGH);
     connectedOnce = true;
     client.loop();
 
@@ -717,28 +702,29 @@ void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
       timer_sys_measures = millis();
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+      StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
       JsonObject& SYSdata = jsonBuffer.createObject();
-      trc("Uptime (s)");    
+      trc(F("Uptime (s)"));    
       unsigned long uptime = millis()/1000;
       trc(uptime);
       SYSdata["uptime"] = uptime;
       #if defined(ESP8266) || defined(ESP32)
-        trc("Remaining memory");
+        trc(F("Remaining memory"));
         uint32_t freeMem;
         freeMem = ESP.getFreeHeap();
         SYSdata["freeMem"] = freeMem;
         trc(freeMem);
-        trc("RSSI");
+        trc(F("RSSI"));
         long rssi = WiFi.RSSI();
         SYSdata["rssi"] = rssi;
         trc(rssi);
-        trc("SSID");
+        trc(F("SSID"));
         String SSID = WiFi.SSID();
         SYSdata["SSID"] = SSID;
         trc(SSID);
       #endif
-      trc("Activated modules");
+      trc(F("Activated modules"));
       String modules = "";
       #ifdef ZgatewayRF
           modules = modules + ZgatewayRF;
@@ -859,10 +845,10 @@ return false;
 void receivingMQTT(char * topicOri, char * datacallback) {
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
-    trc(F("Storing signal"));
+    trc(F("Store signal"));
     unsigned long data = 0;
     #ifdef jsonPublishing
-      trc(F("Creating Json buffer"));
+      trc(F("Json buf."));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
       if (jsondata.success())  data =  jsondata["value"];
@@ -874,11 +860,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     
     if (data != 0) {
       storeValue(data);
-      trc(F("Data from JSON stored"));
+      trc(F("Data JSON stored"));
     }
   }
-  //YELLOW ON
-  digitalWrite(led_send, LOW);
 
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
@@ -916,6 +900,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
       MQTTtoONOFF(topicOri, jsondata);
     #endif
+    digitalWrite(led_send, HIGH);
   } else { // not a json object --> simple decoding
    #ifdef simpleReceiving
       #ifdef ZgatewayLORA
@@ -946,6 +931,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   #ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, datacallback);
   #endif
+  digitalWrite(led_send, HIGH);
   }
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
@@ -997,6 +983,7 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 void trc(String msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1006,6 +993,7 @@ void trc(String msg){
 void trc(int msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1015,6 +1003,7 @@ void trc(int msg){
 void trc(unsigned int msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1024,6 +1013,7 @@ void trc(unsigned int msg){
 void trc(long msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1033,6 +1023,7 @@ void trc(long msg){
 void trc(unsigned long msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1042,6 +1033,7 @@ void trc(unsigned long msg){
 void trc(double msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1051,6 +1043,7 @@ void trc(double msg){
 void trc(float msg){
   #ifdef TRACE
     Serial.println(msg);
+    digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
@@ -1062,7 +1055,9 @@ void pub(char * topic, char * payload, boolean retainFlag){
 }
 
 void pub(char * topicori, JsonObject& data){
-
+  
+    digitalWrite(led_receive, HIGH);
+    
     String topic = topicori;
     #ifdef valueAsASubject
       unsigned long value = data["value"];
@@ -1110,6 +1105,7 @@ void pub(char * topicori, JsonObject& data){
         }
       }
     #endif
+
 }
 
 void pub(char * topic, char * payload){

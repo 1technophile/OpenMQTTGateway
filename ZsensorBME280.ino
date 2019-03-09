@@ -129,7 +129,8 @@ void MeasureTempHumAndPressure()
       trc(F("Failed to read from Weather Sensor BME280!"));
     }else{
         trc(F("Creating BME280 buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(6);
+        StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
         JsonObject& BME280data = jsonBuffer.createObject();
       // Generate Temperature in degrees C
       if(BmeTempC != persisted_bme_tempc || bme280_always){

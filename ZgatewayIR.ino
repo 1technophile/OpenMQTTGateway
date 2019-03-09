@@ -94,7 +94,8 @@ void IRtoMQTT(){
   
   if (irrecv.decode(&results)){
   trc(F("Creating IR buffer"));
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+  StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject& IRdata = jsonBuffer.createObject();
   
   trc(F("Rcv. IR"));
@@ -106,10 +107,6 @@ void IRtoMQTT(){
     IRdata.set("value", (unsigned long)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
     IRdata.set("bits",(int)(results.bits));
-  
-    trc(F("LED MNG"));
-    digitalWrite(led_receive, LOW);
-    timer_led_receive = millis();
     
     String rawCode = "";
     // Dump data
@@ -179,7 +176,7 @@ void IRtoMQTT(){
     }
     #ifdef IR_GC
     else if(strstr(topicOri, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
-      trc("IR_GC");
+      trc(F("IR_GC"));
       //buffer allocation from char datacallback
       uint16_t  GC[count+1];
       String value = "";
@@ -202,7 +199,7 @@ void IRtoMQTT(){
     #endif
     #ifdef IR_Raw
     else if(strstr(topicOri, "IR_Raw") != NULL){ // sending Raw data
-      trc("IR_Raw");
+      trc(F("IR_Raw"));
       //buffer allocation from char datacallback
       #ifdef ESP8266
         uint16_t  Raw[count+1];
@@ -279,9 +276,9 @@ void IRtoMQTT(){
       if (data != 0||raw) {
         trc(F("MQTTtoIR data || raw ok"));
         boolean signalSent = false;
-        trc("value");
+        trc(F("value"));
         trc(data);
-        trc("raw");
+        trc(F("raw"));
         trc(raw);
         const char * protocol_name = IRdata["protocol_name"];
         unsigned int valueBITS  = IRdata["bits"];
@@ -299,7 +296,7 @@ void IRtoMQTT(){
             }
             #ifdef IR_GC
              if(strstr(protocol_name, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
-              trc("IR_GC");
+              trc(F("IR_GC"));
               //buffer allocation from char datacallback
               uint16_t  GC[count+1];
               String value = "";
@@ -322,7 +319,7 @@ void IRtoMQTT(){
             #endif
             #ifdef IR_Raw
             if(strstr(protocol_name, "IR_Raw") != NULL){ // sending Raw data
-              trc("IR_Raw");
+              trc(F("IR_Raw"));
               //buffer allocation from char datacallback
               #ifdef ESP8266
                 uint16_t  Raw[count+1];

@@ -55,7 +55,7 @@ void _rfbSend(byte * message, int times) {
 
     char buffer[RF_MESSAGE_SIZE];
     _rfbToChar(message, buffer);
-    trc("[RFBRIDGE] Sending MESSAGE '%s' %d time(s)\n");
+    trc(F("[RFBRIDGE] Sending MESSAGE '%s' %d time(s)\n"));
 
     for (int i=0; i<times; i++) {
         if (i>0) {
@@ -103,7 +103,8 @@ void _rfbDecode() {
         _rfbToChar(&_uartbuf[1], buffer);
 
         trc(F("Creating SRFB buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+        StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
         JsonObject& SRFBdata = jsonBuffer.createObject();
         SRFBdata.set("raw", (char *)buffer);
         
@@ -139,7 +140,7 @@ void _rfbDecode() {
 }
 
 void _rfbAck() {
-    trc("[RFBRIDGE] Sending ACK\n");
+    trc(F("[RFBRIDGE] Sending ACK\n"));
     Serial.println();
     Serial.write(RF_CODE_START);
     Serial.write(RF_CODE_ACK);

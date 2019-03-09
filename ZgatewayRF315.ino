@@ -47,7 +47,8 @@ void setupRF315(){
 boolean RF315toMQTT(){
   if (mySwitch315.available()){
     trc(F("Creating RF315 buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& RF315data = jsonBuffer.createObject();
     trc(F("Rcv. RF315"));
     #ifdef ESP32
@@ -60,10 +61,6 @@ boolean RF315toMQTT(){
     RF315data.set("length", (int)mySwitch315.getReceivedBitlength());
     RF315data.set("delay", (int)mySwitch315.getReceivedDelay());
     mySwitch315.resetAvailable();
-    
-    trc(F("LED MNG"));
-    digitalWrite(led_receive, LOW);
-    timer_led_receive = millis();
     
     unsigned long MQTTvalue = RF315data.get<unsigned long>("value");
     if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT

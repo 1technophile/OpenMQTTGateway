@@ -47,22 +47,22 @@ void setup2G(){
 }
 
 void setupGSM(boolean deleteSMS){
-    trc("Init 2G module: ");
+    trc(F("Init 2G module: "));
     trc(_2G_PWR_PIN);
     delay(1000);
     // Power-cycle the module to reset it.
     A6l.powerCycle(_2G_PWR_PIN);
-    trc("waiting for network connection");
+    trc(F("waiting for network connection"));
     A6l.blockUntilReady(_2G_MODULE_BAUDRATE);
-    trc("A6/A7 gsm ready");
+    trc(F("A6/A7 gsm ready"));
     signalStrengthAnalysis();
     delay(1000);
     // deleting all sms
     if (deleteSMS){
       if (A6l.deleteSMS(1,4) == A6_OK ) {
-        trc("delete SMS OK");
+        trc(F("delete SMS OK"));
       }else{
-        trc("delete SMS KO");
+        trc(F("delete SMS KO"));
       }
     }
 }
@@ -70,10 +70,10 @@ void setupGSM(boolean deleteSMS){
 void signalStrengthAnalysis(){
     int signalStrength = 0;
     signalStrength = A6l.getSignalStrength();
-    trc("Signal strength: ");
+    trc(F("Signal strength: "));
     trc(signalStrength);
     if (signalStrength < _2G_MIN_SIGNAL || signalStrength > _2G_MAX_SIGNAL ) {
-      trc("Signal too low restart the module");
+      trc(F("Signal too low restart the module"));
       setupGSM(false); // if we are below or above a threshold signal we relaunch the setup of GSM module
     }
 }
@@ -82,10 +82,11 @@ boolean _2GtoMQTT(){
     // Get the memory locations of unread SMS messages.
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
     trc(F("Creating SMS  buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& SMSdata = jsonBuffer.createObject();
     for (int i = 0; i < unreadSMSNum; i++) {
-        trc("New  message at index: ");
+        trc(F("New  message at index: "));
         trc(unreadSMSNum);
         sms = A6l.readSMS(unreadSMSLocs[i]);
         SMSdata.set("message", (char *)sms.message.c_str());
@@ -117,11 +118,11 @@ boolean _2GtoMQTT(){
         trc(F("MQTTto2G sms"));
         trc(data);
         if (A6l.sendSMS(phone_number,data) == A6_OK ) {
-          trc("SMS OK");
+          trc(F("SMS OK"));
           // Acknowledgement to the GTW2G topic
           pub(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }else{
-          trc("SMS KO");
+          trc(F("SMS KO"));
           // Acknowledgement to the GTW2G topic
           pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }
@@ -143,11 +144,11 @@ boolean _2GtoMQTT(){
         trc(F("MQTTto2G sms & phone ok"));
         trc(sms);
         if (A6l.sendSMS(String(phone),String(sms)) == A6_OK ) {
-          trc("SMS OK");
+          trc(F("SMS OK"));
           // Acknowledgement to the GTW2G topic
           pub(subjectGTW2GtoMQTT, SMSdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }else{
-          trc("SMS KO");
+          trc(F("SMS KO"));
           pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }
       }else{

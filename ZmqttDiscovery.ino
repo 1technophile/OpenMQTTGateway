@@ -358,7 +358,8 @@ void createDiscovery(char * sensor_type,
                      bool optimistic, bool retain, int off_delay,
                      char * payload_available, char * payload_not_avalaible, boolean child_device , char * command_topic)
 {
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(4);
+  StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject &sensor = jsonBuffer.createObject();
   sensor.set("stat_t", state_topic); //state_topic
   sensor.set("name", s_name);          //name
@@ -385,7 +386,8 @@ void createDiscovery(char * sensor_type,
 
 
   if (child_device){
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(1);
+    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonDeviceBuffer;
     JsonObject &device = jsonDeviceBuffer.createObject();
     device.set("name", Gateway_Name);
     device.set("manufacturer", DEVICEMANUFACTURER);
