@@ -74,7 +74,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if ((char)payload[0] == '1') {
     digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
     // but actually the LED is on; this is because
-    // it is acive low on the ESP-01)
+    // it is active low on the ESP-01)
   } else {
     digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
   }
@@ -124,7 +124,7 @@ void loop() {
   if (now - lastMsg > 2000) {
     lastMsg = now;
     ++value;
-    snprintf (msg, 75, "hello world #%ld", value);
+    snprintf (msg, 50, "hello world #%ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish("outTopic", msg);
