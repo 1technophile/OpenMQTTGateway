@@ -162,10 +162,13 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
         int valuePRT =  RFdata["protocol"]|1;
         int valuePLSL = RFdata["delay"]|350;
         int valueBITS = RFdata["length"]|24;
+        int valueRPT = RFdata["repeat"]|RF_EMITTER_REPEAT;
+        mySwitch.setRepeatTransmit(valueRPT);
         mySwitch.setProtocol(valuePRT,valuePLSL);
         mySwitch.send(data, valueBITS);
         trc(F("MQTTtoRF OK"));
         pub(subjectGTWRFtoMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); // Restore the default value
       }else{
         trc(F("MQTTtoRF Fail json"));
       }
