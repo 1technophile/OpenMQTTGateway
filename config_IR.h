@@ -95,6 +95,9 @@
   #define IR_MWM
   #define IR_DAIKIN2
   #define IR_VESTEL_AC
+  #define IR_SAMSUNG36
+  #define IR_TCL112AC
+  #define IR_TECO
 #elif ESP32
   #define IR_Raw
   #define IR_COOLIX

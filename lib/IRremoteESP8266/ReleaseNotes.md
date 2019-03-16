@@ -1,5 +1,24 @@
 # Release Notes
 
+## _v2.5.6 (20190316)_
+
+**[Bug Fixes]**
+- Fix Coolix A/C Class to handle special states better. (#633, #624)
+
+**[Features]**
+- Fix case style for recent A/C protocols. (#631)
+- Update `IRsend::send()` to include all simple protocols. (#629, #628)
+- Experimental basic support for 112 bit TCL AC messages (#627, #619)
+- Add support for TECO AC (#622)
+- Experimental support for Samsung 36 bit protocol (#625, #621)
+
+**[Misc]**
+- Set Coolix to default to 1 repeat. (#637, #636, #624, #439)
+- Set Daikin2 modulation to 36.7kHz. (#635)
+- Refactor IRVestelAC class to use portable code. (#617)
+- Adjust Daikin2 timings and tolerance. (#616, #582)
+
+
 ## _v2.5.5 (20190207)_
 
 **[Bug Fixes]**

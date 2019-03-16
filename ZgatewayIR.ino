@@ -759,8 +759,29 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #endif
     #ifdef IR_VESTEL_AC
       if (strstr(protocol_name, "IR_VESTEL_AC") != NULL){
-        if (valueBITS == 0) valueBITS = kVestelACBits;
-        irsend.sendVestelAC(data, valueBITS, valueRPT);
+        if (valueBITS == 0) valueBITS = kVestelAcBits;
+        irsend.sendVestelAc(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_SAMSUNG36
+      if (strstr(protocol_name, "IR_SAMSUNG36") != NULL){
+        if (valueBITS == 0) valueBITS = kSamsung36Bits;
+        irsend.sendSamsung36(data, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_TCL112AC
+      if (strstr(protocol_name, "IR_TCL112AC") != NULL){
+        if (valueBITS == 0) valueBITS = kTcl112AcStateLength;
+        irsend.sendTcl112Ac(datastring, valueBITS, valueRPT);
+        return true;
+      }
+    #endif
+    #ifdef IR_TECO
+      if (strstr(protocol_name, "IR_TECO") != NULL){
+        if (valueBITS == 0) valueBITS = kTecoBits;
+        irsend.sendTeco(data, valueBITS, valueRPT);
         return true;
       }
     #endif

@@ -7,15 +7,15 @@
 #include "IRsend_test.h"
 #include "gtest/gtest.h"
 
-// Tests for sendVestelAC()
+// Tests for sendVestelAc()
 
 // Test sending typical data only.
-TEST(TestSendVestelAC, SendDataOnly) {
+TEST(TestSendVestelAc, SendDataOnly) {
   IRsendTest irsend(0);
   irsend.begin();
 
   irsend.reset();
-  irsend.sendVestelAC(0x0F00D9001FEF201ULL);
+  irsend.sendVestelAc(0x0F00D9001FEF201ULL);
   EXPECT_EQ(
       "m3110s9066"
       "m520s1535m520s480m520s480m520s480m520s480m520s480m520s480m520s480"
@@ -30,12 +30,12 @@ TEST(TestSendVestelAC, SendDataOnly) {
 }
 
 // Test sending typical data with repeats.
-TEST(TestSendVestelAC, SendWithRepeats) {
+TEST(TestSendVestelAc, SendWithRepeats) {
   IRsendTest irsend(0);
   irsend.begin();
 
   irsend.reset();
-  irsend.sendVestelAC(0x0F00D9001FEF201ULL, kVestelACBits, 2);  // two repeats.
+  irsend.sendVestelAc(0x0F00D9001FEF201ULL, kVestelAcBits, 2);  // two repeats.
   EXPECT_EQ(
       "m3110s9066"
       "m520s1535m520s480m520s480m520s480m520s480m520s480m520s480m520s480"
@@ -67,10 +67,10 @@ TEST(TestSendVestelAC, SendWithRepeats) {
       irsend.outputStr());
 }
 
-// Tests for IRVestelAC class.
+// Tests for IRVestelAc class.
 
-TEST(TestVestelACClass, Power) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Power) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setPower(true);
@@ -90,91 +90,91 @@ TEST(TestVestelACClass, Power) {
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, OperatingMode) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, OperatingMode) {
+  IRVestelAc ac(0);
   ac.begin();
 
-  ac.setMode(kVestelACAuto);
-  EXPECT_EQ(kVestelACAuto, ac.getMode());
+  ac.setMode(kVestelAcAuto);
+  EXPECT_EQ(kVestelAcAuto, ac.getMode());
 
-  ac.setMode(kVestelACCool);
-  EXPECT_EQ(kVestelACCool, ac.getMode());
+  ac.setMode(kVestelAcCool);
+  EXPECT_EQ(kVestelAcCool, ac.getMode());
 
-  ac.setMode(kVestelACHeat);
-  EXPECT_EQ(kVestelACHeat, ac.getMode());
+  ac.setMode(kVestelAcHeat);
+  EXPECT_EQ(kVestelAcHeat, ac.getMode());
 
-  ac.setMode(kVestelACFan);
-  EXPECT_EQ(kVestelACFan, ac.getMode());
+  ac.setMode(kVestelAcFan);
+  EXPECT_EQ(kVestelAcFan, ac.getMode());
 
-  ac.setMode(kVestelACDry);
-  EXPECT_EQ(kVestelACDry, ac.getMode());
+  ac.setMode(kVestelAcDry);
+  EXPECT_EQ(kVestelAcDry, ac.getMode());
 
-  ac.setMode(kVestelACAuto - 1);
-  EXPECT_EQ(kVestelACAuto, ac.getMode());
+  ac.setMode(kVestelAcAuto - 1);
+  EXPECT_EQ(kVestelAcAuto, ac.getMode());
 
-  ac.setMode(kVestelACCool);
-  EXPECT_EQ(kVestelACCool, ac.getMode());
+  ac.setMode(kVestelAcCool);
+  EXPECT_EQ(kVestelAcCool, ac.getMode());
 
-  ac.setMode(kVestelACHeat + 1);
-  EXPECT_EQ(kVestelACAuto, ac.getMode());
+  ac.setMode(kVestelAcHeat + 1);
+  EXPECT_EQ(kVestelAcAuto, ac.getMode());
 
   ac.setMode(255);
-  EXPECT_EQ(kVestelACAuto, ac.getMode());
+  EXPECT_EQ(kVestelAcAuto, ac.getMode());
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, Temperature) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Temperature) {
+  IRVestelAc ac(0);
   ac.begin();
 
-  ac.setTemp(kVestelACMinTempC);
-  EXPECT_EQ(kVestelACMinTempC, ac.getTemp());
+  ac.setTemp(kVestelAcMinTempC);
+  EXPECT_EQ(kVestelAcMinTempC, ac.getTemp());
 
-  ac.setTemp(kVestelACMinTempC + 1);
-  EXPECT_EQ(kVestelACMinTempC + 1, ac.getTemp());
+  ac.setTemp(kVestelAcMinTempC + 1);
+  EXPECT_EQ(kVestelAcMinTempC + 1, ac.getTemp());
 
-  ac.setTemp(kVestelACMaxTemp);
-  EXPECT_EQ(kVestelACMaxTemp, ac.getTemp());
+  ac.setTemp(kVestelAcMaxTemp);
+  EXPECT_EQ(kVestelAcMaxTemp, ac.getTemp());
 
-  ac.setTemp(kVestelACMinTempC - 1);
-  EXPECT_EQ(kVestelACMinTempC, ac.getTemp());
+  ac.setTemp(kVestelAcMinTempC - 1);
+  EXPECT_EQ(kVestelAcMinTempC, ac.getTemp());
 
-  ac.setTemp(kVestelACMaxTemp + 1);
-  EXPECT_EQ(kVestelACMaxTemp, ac.getTemp());
+  ac.setTemp(kVestelAcMaxTemp + 1);
+  EXPECT_EQ(kVestelAcMaxTemp, ac.getTemp());
 
   ac.setTemp(23);
   EXPECT_EQ(23, ac.getTemp());
 
   ac.setTemp(0);
-  EXPECT_EQ(kVestelACMinTempC, ac.getTemp());
+  EXPECT_EQ(kVestelAcMinTempC, ac.getTemp());
 
   ac.setTemp(255);
-  EXPECT_EQ(kVestelACMaxTemp, ac.getTemp());
+  EXPECT_EQ(kVestelAcMaxTemp, ac.getTemp());
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, FanSpeed) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, FanSpeed) {
+  IRVestelAc ac(0);
   ac.begin();
-  ac.setFan(kVestelACFanLow);
+  ac.setFan(kVestelAcFanLow);
 
-  ac.setFan(kVestelACFanAuto);
-  EXPECT_EQ(kVestelACFanAuto, ac.getFan());
+  ac.setFan(kVestelAcFanAuto);
+  EXPECT_EQ(kVestelAcFanAuto, ac.getFan());
 
-  ac.setFan(kVestelACFanLow);
-  EXPECT_EQ(kVestelACFanLow, ac.getFan());
-  ac.setFan(kVestelACFanMed);
-  EXPECT_EQ(kVestelACFanMed, ac.getFan());
-  ac.setFan(kVestelACFanHigh);
-  EXPECT_EQ(kVestelACFanHigh, ac.getFan());
+  ac.setFan(kVestelAcFanLow);
+  EXPECT_EQ(kVestelAcFanLow, ac.getFan());
+  ac.setFan(kVestelAcFanMed);
+  EXPECT_EQ(kVestelAcFanMed, ac.getFan());
+  ac.setFan(kVestelAcFanHigh);
+  EXPECT_EQ(kVestelAcFanHigh, ac.getFan());
 
-  ac.setFan(kVestelACFanHigh);
-  EXPECT_EQ(kVestelACFanHigh, ac.getFan());
+  ac.setFan(kVestelAcFanHigh);
+  EXPECT_EQ(kVestelAcFanHigh, ac.getFan());
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, Swing) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Swing) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setSwing(true);
@@ -188,8 +188,8 @@ TEST(TestVestelACClass, Swing) {
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, Ion) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Ion) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setIon(true);
@@ -203,8 +203,8 @@ TEST(TestVestelACClass, Ion) {
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, Turbo) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Turbo) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setTurbo(true);
@@ -218,8 +218,8 @@ TEST(TestVestelACClass, Turbo) {
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, Sleep) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Sleep) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setSleep(true);
@@ -233,8 +233,8 @@ TEST(TestVestelACClass, Sleep) {
   EXPECT_FALSE(ac.isTimeCommand());
 }
 
-TEST(TestVestelACClass, Time) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Time) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setTime(0);
@@ -251,8 +251,8 @@ TEST(TestVestelACClass, Time) {
   EXPECT_EQ(23 * 60 + 59, ac.getTime());
 }
 
-TEST(TestVestelACClass, OnTimer) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, OnTimer) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setOnTimer(0);
@@ -272,8 +272,8 @@ TEST(TestVestelACClass, OnTimer) {
   EXPECT_EQ(23 * 60 + 50, ac.getOnTimer());
 }
 
-TEST(TestVestelACClass, OffTimer) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, OffTimer) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setOffTimer(0);
@@ -293,8 +293,8 @@ TEST(TestVestelACClass, OffTimer) {
   EXPECT_EQ(23 * 60 + 50, ac.getOffTimer());
 }
 
-TEST(TestVestelACClass, Timer) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, Timer) {
+  IRVestelAc ac(0);
   ac.begin();
 
   ac.setTimer(0);
@@ -315,16 +315,16 @@ TEST(TestVestelACClass, Timer) {
   EXPECT_EQ(0, ac.getOnTimer());
 }
 
-TEST(TestVestelACClass, MessageConstuction) {
-  IRVestelAC ac(0);
+TEST(TestVestelAcClass, MessageConstuction) {
+  IRVestelAc ac(0);
 
   EXPECT_EQ(
       "Power: On, Mode: 0 (AUTO), Temp: 25C, Fan: 13 (AUTO HOT), Sleep: Off, "
       "Turbo: Off, Ion: Off, Swing: Off",
       ac.toString());
-  ac.setMode(kVestelACCool);
+  ac.setMode(kVestelAcCool);
   ac.setTemp(21);
-  ac.setFan(kVestelACFanHigh);
+  ac.setFan(kVestelAcFanHigh);
   EXPECT_FALSE(ac.isTimeCommand());
   EXPECT_EQ(
       "Power: On, Mode: 1 (COOL), Temp: 21C, Fan: 11 (HIGH), Sleep: Off, "
@@ -341,7 +341,7 @@ TEST(TestVestelACClass, MessageConstuction) {
 
   // Now change a few already set things.
   ac.setSleep(true);
-  ac.setMode(kVestelACHeat);
+  ac.setMode(kVestelAcHeat);
   EXPECT_EQ(
       "Power: On, Mode: 4 (HEAT), Temp: 21C, Fan: 11 (HIGH), Sleep: On, "
       "Turbo: Off, Ion: On, Swing: On",
@@ -357,7 +357,7 @@ TEST(TestVestelACClass, MessageConstuction) {
   EXPECT_FALSE(ac.isTimeCommand());
 
   // Check that the checksum is valid.
-  EXPECT_TRUE(IRVestelAC::validChecksum(ac.getRaw()));
+  EXPECT_TRUE(IRVestelAc::validChecksum(ac.getRaw()));
   ac.setTime(23 * 60 + 59);
   EXPECT_TRUE(ac.isTimeCommand());
   EXPECT_EQ(
@@ -392,10 +392,10 @@ TEST(TestVestelACClass, MessageConstuction) {
       ac.toString());
 }
 
-// Tests for decodeVestelAC().
+// Tests for decodeVestelAc().
 
 // Decode normal "synthetic" messages.
-TEST(TestDecodeVestelAC, NormalDecodeWithStrict) {
+TEST(TestDecodeVestelAc, NormalDecodeWithStrict) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
   irsend.begin();
@@ -403,11 +403,11 @@ TEST(TestDecodeVestelAC, NormalDecodeWithStrict) {
   // With the specific decoder.
   uint64_t expectedState = 0x0F00D9001FEF201ULL;
   irsend.reset();
-  irsend.sendVestelAC(expectedState);
+  irsend.sendVestelAc(expectedState);
   irsend.makeDecodeResult();
-  ASSERT_TRUE(irrecv.decodeVestelAC(&irsend.capture, kVestelACBits, true));
+  ASSERT_TRUE(irrecv.decodeVestelAc(&irsend.capture, kVestelAcBits, true));
   EXPECT_EQ(VESTEL_AC, irsend.capture.decode_type);
-  EXPECT_EQ(kVestelACBits, irsend.capture.bits);
+  EXPECT_EQ(kVestelAcBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
   EXPECT_EQ(expectedState, irsend.capture.value);
   EXPECT_EQ(0, irsend.capture.address);
@@ -415,17 +415,17 @@ TEST(TestDecodeVestelAC, NormalDecodeWithStrict) {
 
   // With the all the decoders.
   irsend.reset();
-  irsend.sendVestelAC(expectedState);
+  irsend.sendVestelAc(expectedState);
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(VESTEL_AC, irsend.capture.decode_type);
-  EXPECT_EQ(kVestelACBits, irsend.capture.bits);
+  EXPECT_EQ(kVestelAcBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
   EXPECT_EQ(expectedState, irsend.capture.value);
   EXPECT_EQ(0, irsend.capture.address);
   EXPECT_EQ(0, irsend.capture.command);
 
-  IRVestelAC ac(0);
+  IRVestelAc ac(0);
   ac.begin();
   ac.setRaw(irsend.capture.value);
   EXPECT_EQ(
@@ -435,10 +435,10 @@ TEST(TestDecodeVestelAC, NormalDecodeWithStrict) {
 }
 
 // Decode a real message from Raw Data.
-TEST(TestDecodeVestelAC, RealNormalExample) {
+TEST(TestDecodeVestelAc, RealNormalExample) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
-  IRVestelAC ac(0);
+  IRVestelAc ac(0);
   irsend.begin();
 
   uint16_t rawData[115] = {
@@ -457,7 +457,7 @@ TEST(TestDecodeVestelAC, RealNormalExample) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(VESTEL_AC, irsend.capture.decode_type);
-  EXPECT_EQ(kVestelACBits, irsend.capture.bits);
+  EXPECT_EQ(kVestelAcBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
   EXPECT_EQ(0xF4410001FF1201ULL, irsend.capture.value);
   EXPECT_EQ(0, irsend.capture.address);
@@ -470,10 +470,10 @@ TEST(TestDecodeVestelAC, RealNormalExample) {
       ac.toString());
 }
 
-TEST(TestDecodeVestelAC, RealTimerExample) {
+TEST(TestDecodeVestelAc, RealTimerExample) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
-  IRVestelAC ac(0);
+  IRVestelAc ac(0);
   irsend.begin();
 
   uint16_t rawData[115] = {
@@ -492,7 +492,7 @@ TEST(TestDecodeVestelAC, RealTimerExample) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(VESTEL_AC, irsend.capture.decode_type);
-  EXPECT_EQ(kVestelACBits, irsend.capture.bits);
+  EXPECT_EQ(kVestelAcBits, irsend.capture.bits);
   EXPECT_FALSE(irsend.capture.repeat);
   EXPECT_EQ(0x2D6570B8EE201ULL, irsend.capture.value);
   EXPECT_EQ(0, irsend.capture.address);
@@ -505,7 +505,7 @@ TEST(TestDecodeVestelAC, RealTimerExample) {
 }
 
 // General housekeeping
-TEST(TestDecodeVestelAC, Housekeeping) {
+TEST(TestDecodeVestelAc, Housekeeping) {
   ASSERT_EQ("VESTEL_AC", typeToString(VESTEL_AC));
   ASSERT_FALSE(hasACState(VESTEL_AC));  // Uses uint64_t, not uint8_t*.
 }
