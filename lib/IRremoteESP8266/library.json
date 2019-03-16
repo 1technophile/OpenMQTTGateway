@@ -1,6 +1,6 @@
 {
   "name": "IRremoteESP8266",
-  "version": "2.5.5",
+  "version": "2.5.6",
   "keywords": "infrared, ir, remote, esp8266",
   "description": "Send and receive infrared signals with multiple protocols (ESP8266)",
   "repository":

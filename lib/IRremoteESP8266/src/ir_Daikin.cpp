@@ -755,18 +755,18 @@ void IRsend::sendDaikin2(unsigned char data[], uint16_t nbytes,
     // Leader
     sendGeneric(kDaikin2LeaderMark, kDaikin2LeaderSpace,
                 0, 0, 0, 0, 0, 0, (uint64_t) 0,  // No data payload.
-                0, 38000, false, 0, 50);
+                0, kDaikin2Freq, false, 0, 50);
     // Section #1
     sendGeneric(kDaikin2HdrMark, kDaikin2HdrSpace, kDaikin2BitMark,
                 kDaikin2OneSpace, kDaikin2BitMark, kDaikin2ZeroSpace,
                 kDaikin2BitMark, kDaikin2Gap, data, kDaikin2Section1Length,
-                38000, false, 0, 50);
+                kDaikin2Freq, false, 0, 50);
     // Section #2
     sendGeneric(kDaikin2HdrMark, kDaikin2HdrSpace, kDaikin2BitMark,
                 kDaikin2OneSpace, kDaikin2BitMark, kDaikin2ZeroSpace,
                 kDaikin2BitMark, kDaikin2Gap, data + kDaikin2Section1Length,
                 nbytes - kDaikin2Section1Length,
-                38000, false, 0, 50);
+                kDaikin2Freq, false, 0, 50);
   }
 }
 #endif  // SEND_DAIKIN2
@@ -1354,9 +1354,10 @@ bool IRrecv::decodeDaikin2(decode_results *results, uint16_t nbits,
                                            kDaikin2Section2Length};
 
   // Leader
-  if (!matchMark(results->rawbuf[offset++], kDaikin2LeaderMark)) return false;
-  if (!matchSpace(results->rawbuf[offset++], kDaikin2LeaderSpace))
-    return false;
+  if (!matchMark(results->rawbuf[offset++], kDaikin2LeaderMark,
+                 kDaikin2Tolerance)) return false;
+  if (!matchSpace(results->rawbuf[offset++], kDaikin2LeaderSpace,
+                  kDaikin2Tolerance)) return false;
 
   // Sections
   // Keep reading bytes until we either run out of section or state to fill.
@@ -1365,8 +1366,10 @@ bool IRrecv::decodeDaikin2(decode_results *results, uint16_t nbits,
     pos += sectionSize[section];
 
     // Section Header
-    if (!matchMark(results->rawbuf[offset++], kDaikin2HdrMark)) return false;
-    if (!matchSpace(results->rawbuf[offset++], kDaikin2HdrSpace)) return false;
+    if (!matchMark(results->rawbuf[offset++], kDaikin2HdrMark,
+                   kDaikin2Tolerance)) return false;
+    if (!matchSpace(results->rawbuf[offset++], kDaikin2HdrSpace,
+                    kDaikin2Tolerance)) return false;
 
     // Section Data
     for (; offset <= results->rawlen - 16 && i < pos;
@@ -1375,18 +1378,21 @@ bool IRrecv::decodeDaikin2(decode_results *results, uint16_t nbits,
       data_result =
           matchData(&(results->rawbuf[offset]), 8, kDaikin2BitMark,
                     kDaikin2OneSpace, kDaikin2BitMark,
-                    kDaikin2ZeroSpace, kTolerance, kMarkExcess, false);
+                    kDaikin2ZeroSpace, kDaikin2Tolerance, kMarkExcess, false);
       if (data_result.success == false) break;  // Fail
       results->state[i] = (uint8_t)data_result.data;
     }
 
     // Section Footer
-    if (!matchMark(results->rawbuf[offset++], kDaikin2BitMark)) return false;
+    if (!matchMark(results->rawbuf[offset++], kDaikin2BitMark,
+                   kDaikin2Tolerance)) return false;
     if (section < kDaikin2Sections - 1) {  // Inter-section gaps.
-      if (!matchSpace(results->rawbuf[offset++], kDaikin2Gap)) return false;
+      if (!matchSpace(results->rawbuf[offset++], kDaikin2Gap,
+                      kDaikin2Tolerance)) return false;
     } else {  // Last section / End of message gap.
       if (offset <= results->rawlen &&
-          !matchAtLeast(results->rawbuf[offset++], kDaikin2Gap)) return false;
+          !matchAtLeast(results->rawbuf[offset++], kDaikin2Gap,
+                        kDaikin2Tolerance)) return false;
     }
   }
 

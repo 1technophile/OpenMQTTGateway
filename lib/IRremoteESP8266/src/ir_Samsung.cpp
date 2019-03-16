@@ -1,5 +1,5 @@
 // Copyright 2009 Ken Shirriff
-// Copyright 2017 David Conran
+// Copyright 2017, 2018, 2019 David Conran
 
 #include "ir_Samsung.h"
 #include <algorithm>
@@ -167,6 +167,127 @@ bool IRrecv::decodeSAMSUNG(decode_results *results, uint16_t nbits,
   return true;
 }
 #endif
+
+#if SEND_SAMSUNG36
+// Send a Samsung 36-bit formatted message.
+//
+// Args:
+//   data:   The message to be sent.
+//   nbits:  The bit size of the message being sent. typically kSamsung36Bits.
+//   repeat: The number of times the message is to be repeated.
+//
+// Status: Alpha / Experimental.
+//
+// Note:
+//   Protocol is used by Samsung Bluray Remote: ak59-00167a
+//
+// Ref:
+//   https://github.com/markszabo/IRremoteESP8266/issues/621
+void IRsend::sendSamsung36(const uint64_t data, const uint16_t nbits,
+                           const uint16_t repeat) {
+  if (nbits < 16) return;  // To small to send.
+  for (uint16_t r = 0; r <= repeat; r++) {
+    // Block #1 (16 bits)
+    sendGeneric(kSamsungHdrMark, kSamsungHdrSpace,
+                kSamsungBitMark, kSamsungOneSpace,
+                kSamsungBitMark, kSamsungZeroSpace,
+                kSamsungBitMark, kSamsungHdrSpace,
+                data >> (nbits - 16), 16, 38, true, 0, kDutyDefault);
+    // Block #2 (The rest, typically 20 bits)
+    sendGeneric(0, 0,  // No header
+                kSamsungBitMark, kSamsungOneSpace,
+                kSamsungBitMark, kSamsungZeroSpace,
+                kSamsungBitMark, kSamsungMinGap,  // Gap is just a guess.
+                // Mask off the rest of the bits.
+                data & ((1ULL << (nbits - 16)) - 1),
+                nbits - 16, 38, true, 0, kDutyDefault);
+  }
+}
+#endif  // SEND_SAMSUNG36
+
+#if DECODE_SAMSUNG36
+// Decode the supplied Samsung36 message.
+//
+// Args:
+//   results: Ptr to the data to decode and where to store the decode result.
+//   nbits:   Nr. of bits to expect in the data portion.
+//            Typically kSamsung36Bits.
+//   strict:  Flag to indicate if we strictly adhere to the specification.
+// Returns:
+//   boolean: True if it can decode it, false if it can't.
+//
+// Status: Alpha / Experimental
+//
+// Note:
+//   Protocol is used by Samsung Bluray Remote: ak59-00167a
+//
+// Ref:
+//   https://github.com/markszabo/IRremoteESP8266/issues/621
+bool IRrecv::decodeSamsung36(decode_results *results, const uint16_t nbits,
+                             const bool strict) {
+  if (results->rawlen < 2 * nbits + kHeader + kFooter * 2 - 1)
+    return false;  // Can't possibly be a valid Samsung message.
+  // We need to be looking for > 16 bits to make sense.
+  if (nbits <= 16) return false;
+  if (strict && nbits != kSamsung36Bits)
+    return false;  // We expect nbits to be 36 bits of message.
+
+  uint64_t data = 0;
+  uint16_t offset = kStartOffset;
+
+  // Header
+  if (!matchMark(results->rawbuf[offset], kSamsungHdrMark)) return false;
+  // Calculate how long the common tick time is based on the header mark.
+  uint32_t m_tick = results->rawbuf[offset++] * kRawTick / kSamsungHdrMarkTicks;
+  if (!matchSpace(results->rawbuf[offset], kSamsungHdrSpace)) return false;
+  // Calculate how long the common tick time is based on the header space.
+  uint32_t s_tick =
+      results->rawbuf[offset++] * kRawTick / kSamsungHdrSpaceTicks;
+  // Data (Block #1)
+  match_result_t data_result =
+      matchData(&(results->rawbuf[offset]), 16,
+                kSamsungBitMarkTicks * m_tick, kSamsungOneSpaceTicks * s_tick,
+                kSamsungBitMarkTicks * m_tick, kSamsungZeroSpaceTicks * s_tick);
+  if (data_result.success == false) return false;
+  data = data_result.data;
+  offset += data_result.used;
+  uint16_t bitsSoFar = data_result.used / 2;
+  // Footer (Block #1)
+  if (!matchMark(results->rawbuf[offset++], kSamsungBitMarkTicks * m_tick))
+    return false;
+  if (!matchSpace(results->rawbuf[offset++], kSamsungHdrSpaceTicks * s_tick))
+    return false;
+  // Data (Block #2)
+  data_result = matchData(&(results->rawbuf[offset]),
+                          nbits - 16,
+                          kSamsungBitMarkTicks * m_tick,
+                          kSamsungOneSpaceTicks * s_tick,
+                          kSamsungBitMarkTicks * m_tick,
+                          kSamsungZeroSpaceTicks * s_tick);
+  if (data_result.success == false) return false;
+  data <<= (nbits - 16);
+  data += data_result.data;
+  offset += data_result.used;
+  bitsSoFar += data_result.used / 2;
+  // Footer (Block #2)
+  if (!matchMark(results->rawbuf[offset++], kSamsungBitMarkTicks * m_tick))
+    return false;
+  if (offset < results->rawlen &&
+      !matchAtLeast(results->rawbuf[offset], kSamsungMinGapTicks * s_tick))
+    return false;
+
+  // Compliance
+  if (nbits != bitsSoFar) return false;
+
+  // Success
+  results->bits = bitsSoFar;
+  results->value = data;
+  results->decode_type = SAMSUNG36;
+  results->command = data & ((1ULL << (nbits - 16)) - 1);
+  results->address = data >> (nbits - 16);
+  return true;
+}
+#endif  // DECODE_SAMSUNG36
 
 #if SEND_SAMSUNG_AC
 // Send a Samsung A/C message.

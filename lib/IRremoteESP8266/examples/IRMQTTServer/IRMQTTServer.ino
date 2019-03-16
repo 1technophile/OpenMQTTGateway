@@ -261,7 +261,7 @@ const uint16_t kMinUnknownSize = 2 * 10;
 // ----------------- End of User Configuration Section -------------------------
 
 // Globals
-#define _MY_VERSION_ "v0.8.3"
+#define _MY_VERSION_ "v0.8.4"
 // HTML arguments we will parse for IR code information.
 #define argType "type"
 #define argData "code"
@@ -467,12 +467,14 @@ void handleRoot() {
         "<option value='2'>RC-6</option>"
         "<option value='21'>RC-MM</option>"
         "<option value='7'>Samsung</option>"
+        "<option value='56'>Samsung36</option>"
         "<option value='11'>Sanyo</option>"
         "<option value='22'>Sanyo LC7461</option>"
         "<option value='14'>Sharp</option>"
         "<option value='19'>Sherwood</option>"
         "<option value='4'>Sony</option>"
         "<option value='54'>Vestel AC</option>"
+        "<option value='55'>Teco AC</option>"
         "<option value='8'>Whynter</option>"
       "</select>"
       " Code: 0x<input type='text' name='code' min='0' value='0' size='16'"
@@ -558,6 +560,7 @@ void handleRoot() {
         "<option value='20'>Mitsubishi</option>"
         "<option value='52'>MWM</option>"
         "<option value='46'>Samsung</option>"
+        "<option value='57'>TCL112</option>"
         "<option value='32'>Toshiba</option>"
         "<option value='28'>Trotec</option>"
         "<option value='45'>Whirlpool</option>"
@@ -723,6 +726,9 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str) {
       // Cap the maximum size.
       stateSize = std::min(stateSize, kStateSizeMax);
       break;
+    case TCL112AC:
+      stateSize = kTcl112AcStateLength;
+      break;
     default:  // Not a protocol we expected. Abort.
       debug("Unexpected AirCon protocol detected. Ignoring.");
       return false;
@@ -851,6 +857,11 @@ bool parseStringAndSendAirCon(const uint16_t irType, const String str) {
 #if SEND_MWM
     case MWM:
       irsend.sendMWM(reinterpret_cast<uint8_t *>(state), stateSize);
+      break;
+#endif
+#if SEND_TCL112AC
+    case TCL112AC:
+      irsend.sendTcl112Ac(reinterpret_cast<uint8_t *>(state));
       break;
 #endif
     default:
@@ -1413,6 +1424,13 @@ bool sendIRCode(int const ir_type, uint64_t const code, char const * code_str,
       irsend.sendSAMSUNG(code, bits, repeat);
       break;
 #endif
+#if SEND_SAMSUNG36
+    case SAMSUNG36:  // 56
+      if (bits == 0)
+        bits = kSamsung36Bits;
+      irsend.sendSamsung36(code, bits, repeat);
+      break;
+#endif
 #if SEND_WHYNTER
     case WHYNTER:  // 8
       if (bits == 0)
@@ -1612,8 +1630,15 @@ bool sendIRCode(int const ir_type, uint64_t const code, char const * code_str,
 #if SEND_VESTEL_AC
     case VESTEL_AC:  // 54
       if (bits == 0)
-        bits = kVestelACBits;
-      irsend.sendVestelAC(code, bits, repeat);
+        bits = kVestelAcBits;
+      irsend.sendVestelAc(code, bits, repeat);
+      break;
+#endif
+#if SEND_TECO
+    case TECO:  // 55
+      if (bits == 0)
+        bits = kTecoBits;
+      irsend.sendTeco(code, bits, repeat);
       break;
 #endif
     default:

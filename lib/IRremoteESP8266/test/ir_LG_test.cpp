@@ -420,3 +420,54 @@ TEST(TestDecodeLG2, RealLG2Example) {
   EXPECT_EQ(kLgBits, irsend.capture.bits);
   EXPECT_EQ(0x880094D, irsend.capture.value);
 }
+
+// Tests for issue reported in
+// https://github.com/markszabo/IRremoteESP8266/issues/620
+TEST(TestDecodeLG, Issue620) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+
+  // Raw data as reported in initial comment of Issue #620
+  uint16_t rawData[59] = {
+      8886, 4152,
+      560, 1538, 532, 502, 532, 504,  530, 484,  558, 1536,
+      508, 516,  558, 502, 532, 484,  558, 502,  532, 500,
+      534, 508,  532, 502, 532, 1518, 558, 510,  532, 484,
+      556, 486,  556, 510, 532, 1518, 558, 1560, 532, 1528,
+      556, 504,  530, 506, 530, 1520, 558, 508,  534, 500,
+      532, 512,  530, 484, 556, 1536, 532};  // LG 8808721
+  irsend.sendRaw(rawData, 59, 38000);
+  irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(LG, irsend.capture.decode_type);
+  EXPECT_EQ(28, irsend.capture.bits);
+  EXPECT_EQ(0x8808721, irsend.capture.value);
+  EXPECT_EQ(0x88, irsend.capture.address);
+  EXPECT_EQ(0x872, irsend.capture.command);
+
+  irsend.reset();
+
+  // Resend the same code as the report is a sent code doesn't decode
+  // to the same message code.
+  irsend.sendLG(0x8808721);
+  irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(LG, irsend.capture.decode_type);
+  EXPECT_EQ(28, irsend.capture.bits);
+  EXPECT_EQ(0x8808721, irsend.capture.value);
+  EXPECT_EQ(0x88, irsend.capture.address);
+  EXPECT_EQ(0x872, irsend.capture.command);
+  // The following seems to match the rawData above.
+  EXPECT_EQ(
+      "m8500s4250"
+      "m550s1600m550s550m550s550m550s550m550s1600"
+      "m550s550m550s550m550s550m550s550m550s550"
+      "m550s550m550s550m550s1600m550s550m550s550"
+      "m550s550m550s550m550s1600m550s1600m550s1600"
+      "m550s550m550s550m550s1600m550s550m550s550"
+      "m550s550m550s550m550s1600m550"
+      "s55550",
+      irsend.outputStr());
+}
+

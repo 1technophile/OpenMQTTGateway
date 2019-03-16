@@ -93,7 +93,7 @@ void IRsend::sendCOOLIX(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //   https://github.com/markszabo/IRremoteESP8266/issues/484
 IRCoolixAC::IRCoolixAC(uint16_t pin) : _irsend(pin) { stateReset(); }
 
-void IRCoolixAC::stateReset() { remote_state = kCoolixDefaultState; }
+void IRCoolixAC::stateReset() { setRaw(kCoolixDefaultState); }
 
 void IRCoolixAC::begin() { _irsend.begin(); }
 
@@ -105,15 +105,50 @@ void IRCoolixAC::send(const uint16_t repeat) {
 
 uint32_t IRCoolixAC::getRaw() { return remote_state; }
 
-void IRCoolixAC::setRaw(const uint32_t new_code) { remote_state = new_code; }
+void IRCoolixAC::setRaw(const uint32_t new_code) {
+  remote_state = new_code;
+  saved_state = new_code;
+}
+
+// Return true if the current state is a special state.
+bool IRCoolixAC::isSpecialState(void) {
+  switch (remote_state) {
+    case kCoolixClean:
+    case kCoolixLed:
+    case kCoolixOff:
+    case kCoolixSwing:
+    case kCoolixSleep:
+    case kCoolixTurbo:
+      return true;
+    default:
+      return false;
+  }
+}
+
+void IRCoolixAC::updateSavedState(void) {
+  if (!isSpecialState()) saved_state = remote_state;
+}
+
+void IRCoolixAC::recoverSavedState(void) {
+  // If the current state is a special one, last known normal one.
+  if (isSpecialState()) remote_state = saved_state;
+  // If the saved_state was also a special state, reset as we expect a normal
+  // state out of all this.
+  if (isSpecialState()) stateReset();
+}
+
+uint32_t IRCoolixAC::getNormalState(void) {
+  return isSpecialState() ? saved_state : remote_state;
+}
 
 void IRCoolixAC::setTempRaw(const uint8_t code) {
+  recoverSavedState();
   remote_state &= ~kCoolixTempMask;  // Clear the old temp.
   remote_state |= (code << 4);
 }
 
 uint8_t IRCoolixAC::getTempRaw() {
-  return (remote_state & kCoolixTempMask) >> 4;
+  return (getNormalState() & kCoolixTempMask) >> 4;
 }
 
 void IRCoolixAC::setTemp(const uint8_t desired) {
@@ -132,6 +167,7 @@ uint8_t IRCoolixAC::getTemp() {
 }
 
 void IRCoolixAC::setSensorTempRaw(const uint8_t code) {
+  recoverSavedState();
   remote_state &= ~kCoolixSensorTempMask;  // Clear previous sensor temp.
   remote_state |= ((code & 0xF) << 8);
 }
@@ -145,7 +181,8 @@ void IRCoolixAC::setSensorTemp(const uint8_t desired) {
 }
 
 uint8_t IRCoolixAC::getSensorTemp() {
-  return ((remote_state & kCoolixSensorTempMask) >> 8) + kCoolixSensorTempMin;
+  return ((getNormalState() & kCoolixSensorTempMask) >> 8) +
+         kCoolixSensorTempMin;
 }
 
 bool IRCoolixAC::getPower() {
@@ -154,25 +191,35 @@ bool IRCoolixAC::getPower() {
 }
 
 void IRCoolixAC::setPower(const bool power) {
-  if (!power) remote_state = kCoolixOff;
-  // There really is no distinct "on" setting, so do nothing.
+  if (power) {
+    // There really is no distinct "on" setting, just ensure it a normal state.
+    recoverSavedState();
+  } else {
+    updateSavedState();
+    remote_state = kCoolixOff;
+  }
 }
 
 bool IRCoolixAC::getSwing() { return remote_state == kCoolixSwing; }
 
 void IRCoolixAC::setSwing() {
   // Assumes that repeated sending "swing" toggles the action on the device.
+  updateSavedState();
   remote_state = kCoolixSwing;
 }
 
 bool IRCoolixAC::getSleep() { return remote_state == kCoolixSleep; }
 
-void IRCoolixAC::setSleep() { remote_state = kCoolixSleep; }
+void IRCoolixAC::setSleep() {
+  updateSavedState();
+  remote_state = kCoolixSleep;
+}
 
 bool IRCoolixAC::getTurbo() { return remote_state == kCoolixTurbo; }
 
 void IRCoolixAC::setTurbo() {
   // Assumes that repeated sending "turbo" toggles the action on the device.
+  updateSavedState();
   remote_state = kCoolixTurbo;
 }
 
@@ -180,19 +227,24 @@ bool IRCoolixAC::getLed() { return remote_state == kCoolixLed; }
 
 void IRCoolixAC::setLed() {
   // Assumes that repeated sending "Led" toggles the action on the device.
+  updateSavedState();
   remote_state = kCoolixLed;
 }
 
 bool IRCoolixAC::getClean() { return remote_state == kCoolixClean; }
 
-void IRCoolixAC::setClean() { remote_state = kCoolixClean; }
+void IRCoolixAC::setClean() {
+  updateSavedState();
+  remote_state = kCoolixClean;
+}
 
 bool IRCoolixAC::getZoneFollow() {
-  return remote_state & kCoolixZoneFollowMask;
+  return getNormalState() & kCoolixZoneFollowMask;
 }
 
 // Internal use only.
 void IRCoolixAC::setZoneFollow(bool state) {
+  recoverSavedState();
   if (state) {
     remote_state |= kCoolixZoneFollowMask;
   } else {
@@ -201,6 +253,7 @@ void IRCoolixAC::setZoneFollow(bool state) {
 }
 
 void IRCoolixAC::clearSensorTemp() {
+  recoverSavedState();
   setZoneFollow(false);
   setSensorTempRaw(kCoolixSensorTempIgnoreCode);
 }
@@ -214,6 +267,7 @@ void IRCoolixAC::setMode(const uint8_t mode) {
     case kCoolixAuto:
     case kCoolixHeat:
     case kCoolixDry:
+      recoverSavedState();
       remote_state = (remote_state & ~kCoolixModeMask) | (actualmode << 2);
       // Force the temp into a known-good state.
       setTemp(getTemp());
@@ -222,15 +276,18 @@ void IRCoolixAC::setMode(const uint8_t mode) {
 }
 
 uint8_t IRCoolixAC::getMode() {
-  uint8_t mode = (remote_state & kCoolixModeMask) >> 2;
+  uint8_t mode = (getNormalState() & kCoolixModeMask) >> 2;
   if (mode == kCoolixDry)
     if (getTempRaw() == kCoolixFanTempCode) return kCoolixFan;
   return mode;
 }
 
-uint8_t IRCoolixAC::getFan() { return (remote_state & kCoolixFanMask) >> 13; }
+uint8_t IRCoolixAC::getFan() {
+  return (getNormalState() & kCoolixFanMask) >> 13;
+}
 
 void IRCoolixAC::setFan(const uint8_t speed) {
+  recoverSavedState();
   uint8_t newspeed = speed;
   switch (speed) {
     case kCoolixFanMin:
@@ -263,6 +320,47 @@ std::string IRCoolixAC::toString() {
     result += "Off";
     return result;  // If it's off, there is no other info.
   }
+  // Special modes.
+  if (getSwing()) {
+    result += ", Swing: Toggle";
+    return result;
+  }
+  if (getSleep()) {
+    result += ", Sleep: Toggle";
+    return result;
+  }
+  if (getTurbo()) {
+    result += ", Turbo: Toggle";
+    return result;
+  }
+  if (getLed()) {
+    result += ", Led: Toggle";
+    return result;
+  }
+  if (getClean()) {
+    result += ", Clean: Toggle";
+    return result;
+  }
+  result += ", Mode: " + uint64ToString(getMode());
+  switch (getMode()) {
+    case kCoolixAuto:
+      result += " (AUTO)";
+      break;
+    case kCoolixCool:
+      result += " (COOL)";
+      break;
+    case kCoolixHeat:
+      result += " (HEAT)";
+      break;
+    case kCoolixDry:
+      result += " (DRY)";
+      break;
+    case kCoolixFan:
+      result += " (FAN)";
+      break;
+    default:
+      result += " (UNKNOWN)";
+  }
   result += ", Fan: " + uint64ToString(getFan());
   switch (getFan()) {
     case kCoolixFanAuto:
@@ -285,47 +383,6 @@ std::string IRCoolixAC::toString() {
       break;
     case kCoolixFanFixed:
       result += " (FIXED)";
-      break;
-    default:
-      result += " (UNKNOWN)";
-  }
-  // Special modes.
-  if (getSwing()) {
-    result += ", Swing: Toggle";
-    return result;
-  }
-  if (getSleep()) {
-    result += ", Sleep: Toggle";
-    return result;
-  }
-  if (getTurbo()) {
-    result += ", Turbo: Toggle";
-    return result;
-  }
-  if (getLed()) {
-    result += ", Led: Toggle";
-    return result;
-  }
-  if (getClean()) {
-    result += ", Mode: Self clean";
-    return result;
-  }
-  result += ", Mode: " + uint64ToString(getMode());
-  switch (getMode()) {
-    case kCoolixAuto:
-      result += " (AUTO)";
-      break;
-    case kCoolixCool:
-      result += " (COOL)";
-      break;
-    case kCoolixHeat:
-      result += " (HEAT)";
-      break;
-    case kCoolixDry:
-      result += " (DRY)";
-      break;
-    case kCoolixFan:
-      result += " (FAN)";
       break;
     default:
       result += " (UNKNOWN)";
