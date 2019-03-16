@@ -30,6 +30,11 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 */
 #ifdef ZgatewayBT
 
+#include <vector>
+using namespace std;
+
+vector<BLEdevice> devices;
+
   #ifdef ESP32
     /*
        Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
@@ -53,8 +58,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
           void onResult(BLEAdvertisedDevice advertisedDevice) {
             trc(F("Creating BLE buffer"));
-            const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(6);
-            StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
+            StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject& BLEdata = jsonBuffer.createObject();
             String mac_adress = advertisedDevice.getAddress().toString().c_str();
             BLEdata.set("id", (char *)mac_adress.c_str());
@@ -86,7 +90,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   } 
                   returnedString = returnedString + String(a,HEX);  
                 }
-                
                 char service_data[returnedString.length()+1];
                 returnedString.toCharArray(service_data,returnedString.length()+1);
                 service_data[returnedString.length()] = '\0';
@@ -94,29 +97,29 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                   BLEdata.set("servicedata", service_data);  
                   BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID().toString().c_str());
                 #endif
-                pub((char *)mactopic.c_str(),BLEdata);
-                
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
-                  trc("Processing BLE device data");
-                  int pos = -1;
-                  pos = strpos(service_data,"209800");
-                  if (pos != -1){
-                    trc("mi flora data reading");
-                    #ifdef ZmqttDiscovery
-                      MiFloraDiscovery(mac);
-                    #endif
-                    boolean result = process_data(pos - 24,service_data,mac);
+                if((!oneWhite() || isWhite(mac)) && !isBlack(mac)){ //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+                  pub((char *)mactopic.c_str(),BLEdata);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
+                    trc("Processing BLE device data");
+                    int pos = -1;
+                    pos = strpos(service_data,"209800");
+                    if (pos != -1){
+                      trc(F("mi flora data reading"));
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiFloraDiscovery(mac);
+                      #endif
+                      process_data(pos - 24,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"20aa01");
+                    if (pos != -1){
+                      trc(F("mi jia data reading"));
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiJiaDiscovery(mac);
+                      #endif
+                      process_data(pos - 26,service_data,mac);
+                    }
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"20aa01");
-                  if (pos != -1){
-                    trc("mi jia data reading");
-                    #ifdef ZmqttDiscovery
-                      MiJiaDiscovery(mac);
-                    #endif
-                    boolean result = process_data(pos - 26,service_data,mac);
-                  }
-
                 }
             }
           }
@@ -248,8 +251,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                 if((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
                 {
                   trc(F("Creating BLE buffer"));
-                  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
-                  StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
+                  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
                   JsonObject& BLEdata = jsonBuffer.createObject();
                   #ifdef subjectHomePresence
                     String HomePresenceId;
@@ -262,6 +264,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                     BLEdata.set("id", (char *)HomePresenceId.c_str());
                   #endif
                   strupp(d[0].extract);
+                  if(isBlack(d[0].extract)) return false; //if black listed mac we go out
+                  if(oneWhite() && !isWhite(d[0].extract));  return false; //if we have at least one white mac and this mac is not white we go out
                   String topic = subjectBTtoMQTT + String(d[0].extract);
                   int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
                   BLEdata.set("rssi", (int)rssi);
@@ -280,7 +284,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                       if (pos != -1) {
                         trc("mi flora data reading");
                         #ifdef ZmqttDiscovery
-                          MiFloraDiscovery(d[0].extract);
+                          if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
                         #endif
                         boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
                       }
@@ -289,7 +293,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
                       if (pos != -1){
                         trc("mi jia data reading");
                         #ifdef ZmqttDiscovery
-                          MiJiaDiscovery(d[0].extract);
+                          if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
                         #endif
                         boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                       }
@@ -339,6 +343,10 @@ void MiFloraDiscovery(char * mac){
                     MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
                     true, false, 0,"","",true,"");
   }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  devices.push_back(device);
 }
 
 void MiJiaDiscovery(char * mac){
@@ -362,6 +370,10 @@ void MiJiaDiscovery(char * mac){
                     MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
                     true, false, 0,"","",true,"");
   }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  devices.push_back(device);
 }
 #endif
 
@@ -483,5 +495,86 @@ void haRoomPresence(JsonObject& HomePresence){
   pub(subjectHomePresence,HomePresence);
 }
 #endif
+void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
+ if (strcmp(topicOri,subjectMQTTtoBTset) == 0){
+    trc(F("MQTTtoBT json set"));
+    int WLsize =  BTdata["white-list"].size();
+    if(WLsize > 0){
+      for (int i = 0; i < WLsize; i++){
+        const char * whiteMac = BTdata["white-list"][i];
+        setWorBMac((char *)whiteMac, true); //TO DO catch mac adress > 12
+      }
+    }
+    int BLsize =  BTdata["black-list"].size();
+    if(BLsize > 0){
+      for (int i = 0; i < BLsize; i++){
+        const char * blackMac = BTdata["black-list"][i];
+        setWorBMac((char *)blackMac,false); //TO DO catch mac adress > 12
+      }
+    }
+    dumpDevices();
+  }
+}
 
+void setWorBMac(char * mac , boolean isWhite){
+  boolean foundMac = false;
+  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+    if((strcmp(p->macAdr,mac) == 0)){
+        p->isWhtL = isWhite;
+        p->isBlkL = !isWhite;
+        foundMac = true;
+    }
+  }
+  if (!foundMac) {
+    BLEdevice device;
+    strcpy( device.macAdr,mac );
+    device.isDisc = false;
+    device.isWhtL = isWhite;
+    device.isBlkL = !isWhite;
+    devices.push_back(device);
+  }
+}
+
+boolean oneWhite(){
+  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+        if(p->isWhtL) return true;
+  }
+  return false;
+}
+
+boolean isWhite(char * mac){
+  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+    if((strcmp(p->macAdr,mac) == 0)){
+        return p->isWhtL;
+    }
+  }
+  return false;
+}
+
+boolean isBlack(char * mac){
+  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+    if((strcmp(p->macAdr,mac) == 0)){
+        return p->isBlkL;
+    }
+  }
+  return false;
+}
+
+boolean isDiscovered(char * mac){
+  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+    if((strcmp(p->macAdr,mac) == 0)){
+        return p->isDisc;
+    }
+  }
+  return false;
+}
+
+void dumpDevices(){
+  for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
+    trc(p->macAdr);
+    trc(p->isDisc);
+    trc(p->isWhtL);
+    trc(p->isBlkL);
+  }
+}
 #endif

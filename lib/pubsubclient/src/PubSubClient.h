@@ -22,8 +22,10 @@
 #endif
 
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
-#ifndef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 128
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  #define MQTT_MAX_PACKET_SIZE 1024
+#else // boards with smaller memory
+  #define MQTT_MAX_PACKET_SIZE 128
 #endif
 
 // MQTT_KEEPALIVE : keepAlive interval in Seconds

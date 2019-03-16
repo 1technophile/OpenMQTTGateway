@@ -896,6 +896,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZgatewayRFM69
       MQTTtoRFM69(topicOri, jsondata);
     #endif
+    #ifdef ZgatewayBT
+      MQTTtoBT(topicOri, jsondata);
+    #endif
    #endif
     #ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
       MQTTtoONOFF(topicOri, jsondata);
