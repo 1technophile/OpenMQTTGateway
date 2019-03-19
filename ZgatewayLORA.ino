@@ -59,8 +59,7 @@ void setupLORA() {
 void LORAtoMQTT(){
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& LORAdata = jsonBuffer.createObject();
     trc(F("Rcv. LORA"));
     #ifdef ESP32

@@ -68,7 +68,7 @@ void RF2toMQTT(){
 
   if(rf2rd.hasNewData){
     trc(F("Creating RF2 buffer"));
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& RF2data = jsonBuffer.createObject();
     

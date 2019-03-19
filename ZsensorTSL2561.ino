@@ -92,7 +92,7 @@ void MeasureLightIntensityTSL2561()
     timetsl2561 = millis();
 
     trc(F("Creating TSL2561 buffer"));
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& TSL2561data = jsonBuffer.createObject();
     

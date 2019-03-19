@@ -103,8 +103,7 @@ void _rfbDecode() {
         _rfbToChar(&_uartbuf[1], buffer);
 
         trc(F("Creating SRFB buffer"));
-        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-        StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject& SRFBdata = jsonBuffer.createObject();
         SRFBdata.set("raw", (char *)buffer);
         

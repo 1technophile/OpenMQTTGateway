@@ -94,8 +94,7 @@ void IRtoMQTT(){
   
   if (irrecv.decode(&results)){
   trc(F("Creating IR buffer"));
-  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-  StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& IRdata = jsonBuffer.createObject();
   
   trc(F("Rcv. IR"));

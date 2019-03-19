@@ -702,8 +702,7 @@ void stateMeasures(){
     unsigned long now = millis();
     if (now > (timer_sys_measures + TimeBetweenReadingSYS)) {//retriving value of memory ram every TimeBetweenReadingSYS
       timer_sys_measures = millis();
-      const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-      StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject& SYSdata = jsonBuffer.createObject();
       trc(F("Uptime (s)"));    
       unsigned long uptime = millis()/1000;

@@ -358,7 +358,7 @@ void createDiscovery(char * sensor_type,
                      int off_delay,
                      char * payload_available, char * payload_not_avalaible, boolean child_device , char * command_topic)
 {
-  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(4);
+  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5)+ JSON_ARRAY_SIZE(1);
   StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject &sensor = jsonBuffer.createObject();
   sensor.set("stat_t", state_topic); //state_topic
