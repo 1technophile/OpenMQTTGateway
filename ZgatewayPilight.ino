@@ -63,58 +63,69 @@ void pilightCallback(const String &protocol, const String &message, int status,
 
 void MQTTtoPilight(char * topicOri, JsonObject& Pilightdata) {
 
-int result = 0;
-
-   if (strcmp(topicOri,subjectMQTTtoPilight) == 0){
+  int result = 0;
+  
+  if (strcmp(topicOri,subjectMQTTtoPilight) == 0){
     trc(F("MQTTtoPilight json data analysis"));
     const char * message = Pilightdata["message"];
     const char * protocol = Pilightdata["protocol"];
-    if (message && protocol) {
+    const char * raw = Pilightdata["raw"];
+    if(raw){
+      int msgLength = 0;
+      uint16_t codes[MAXPULSESTREAMLENGTH];
+      msgLength = rf.stringToPulseTrain(
+          raw,
+          codes, MAXPULSESTREAMLENGTH);
+      if (msgLength > 0) {
+        trc(F("MQTTtoPilight raw ok"));
+        rf.sendPulseTrain(codes, msgLength);
+        result = msgLength;
+      }else{
+        trc(F("MQTTtoPilight raw KO"));
+        switch (result) {
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_C:
+            trc(F("'c' not found in string, or has no data"));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_P:
+            trc(F("'p' not found in string, or has no data"));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
+            trc(F("';' or '@' not found in data string"));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_TYPE:
+            trc(F("pulse type not defined"));
+            break;
+        }
+      }
+    }else if (message && protocol) {
       trc(F("MQTTtoPilight msg & protocol ok"));
       result = rf.send(protocol, message);
     }else{
-    trc(F("MQTTtoPilight fail reading from json"));
+      trc(F("MQTTtoPilight fail reading from json"));
     }
-    int msgLength = 0;
-    uint16_t codes[MAXPULSESTREAMLENGTH];
-    msgLength = rf.stringToPulseTrain(
-        message,
-        codes, MAXPULSESTREAMLENGTH);
-    if (msgLength > 0) {
-      trc(F("MQTTtoPilight raw ok"));
-      rf.sendPulseTrain(codes, msgLength);
-      result = msgLength;
-    }else{
-      trc(F("MQTTtoPilight raw KO"));
-      result = -9999;
-    }
-    
-   String MQTTmessage;
-   if (result > 0) {
+
+    if (result > 0) {
       trc(F("Adv data MQTTtoPilight push state via PilighttoMQTT"));
       pub(subjectGTWPilighttoMQTT, Pilightdata);
-   } else {
-    switch (result) {
-      case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
-        MQTTmessage = "protocol is not avaiable";
-        break;
-      case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
-        MQTTmessage = "message is invalid";
-        break;
-      case ESPiLight::ERROR_INVALID_JSON:
-        MQTTmessage = "message is not a proper json object";
-        break;
-      case ESPiLight::ERROR_NO_OUTPUT_PIN:
-        MQTTmessage = "no transmitter pin";
-        break;
-      case -9999:
-        MQTTmessage = "invalid pulse train message";
-        break;
+    } else {
+      switch (result) {
+        case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
+          trc(F("protocol is not available"));
+          break;
+        case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
+          trc(F("message is invalid"));
+          break;
+        case ESPiLight::ERROR_INVALID_JSON:
+          trc(F("message is not a proper json object"));
+          break;
+        case ESPiLight::ERROR_NO_OUTPUT_PIN:
+          trc(F("no transmitter pin"));
+          break;
+        default:
+          trc(F("invalid json data, can't read raw or message/protocol"));
+          break;   
+      }
     }
-    trc(F("ESPiLight Error: "));
-    trc(String(MQTTmessage));
-    pub(subjectGTWPilighttoMQTT, MQTTmessage);
-   }
- }
+  }
 }
  #endif
