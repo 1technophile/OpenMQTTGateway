@@ -341,7 +341,7 @@ void MiFloraDiscovery(char * mac){
                     (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
                     MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
   BLEdevice device;
   strcpy( device.macAdr, mac );
@@ -368,7 +368,7 @@ void MiJiaDiscovery(char * mac){
                     (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
                     MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
   BLEdevice device;
   strcpy( device.macAdr, mac );

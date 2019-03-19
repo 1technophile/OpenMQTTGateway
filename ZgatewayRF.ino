@@ -92,7 +92,7 @@ void RFtoMQTTdiscovery(unsigned long MQTTvalue){//on the fly switch creation fro
                     subjectRFtoMQTT, switchRF[1], (char *)getUniqueId(switchRF[1], switchRF[2]).c_str(),
                     will_Topic, switchRF[3], switchRF[4],
                     switchRF[5], switchRF[6], switchRF[7],
-                    true, false, 0,"","",true,subjectMQTTtoRF);
+                    0,"","",true,subjectMQTTtoRF);
 }
 #endif
 
