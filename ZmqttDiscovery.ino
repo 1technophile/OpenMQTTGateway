@@ -33,7 +33,7 @@ void pubMqttDiscovery()
                   will_Topic, Gateway_Name, (char *)getUniqueId("", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "connectivity", "",                               //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "",                    //set,payload_on,payload_off,unit_of_meas,
-                  false, true, 0,                                               //set optimistic,retain, off_delay
+                  0,                                               //set optimistic,retain, off_delay
                   Gateway_AnnouncementMsg, will_Message,true,""                //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic, state on, state off
   );                       
 
@@ -57,7 +57,7 @@ void pubMqttDiscovery()
                     BMETOPIC, BMEsensor[i][1], (char *)getUniqueId(BMEsensor[i][1], BMEsensor[i][2]).c_str(),
                     will_Topic, BMEsensor[i][3], BMEsensor[i][4],
                     BMEsensor[i][5], BMEsensor[i][6], BMEsensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
 #endif
 
@@ -76,7 +76,7 @@ void pubMqttDiscovery()
                     DHTTOPIC, DHTsensor[i][1], (char *)getUniqueId(DHTsensor[i][1], DHTsensor[i][2]).c_str(),
                     will_Topic, DHTsensor[i][3], DHTsensor[i][4],
                     DHTsensor[i][5], DHTsensor[i][6], DHTsensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
 #endif
 
@@ -91,7 +91,7 @@ void pubMqttDiscovery()
                     ADCTOPIC, ADCsensor[1], (char *)getUniqueId(ADCsensor[1], ADCsensor[2]).c_str(),
                     will_Topic, ADCsensor[3], ADCsensor[4],
                     ADCsensor[5], ADCsensor[6], ADCsensor[7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZsensorBH1750
@@ -111,7 +111,7 @@ void pubMqttDiscovery()
                     subjectBH1750toMQTT, BH1750sensor[i][1], (char *)getUniqueId(BH1750sensor[i][1], BH1750sensor[i][2]).c_str(),
                     will_Topic, BH1750sensor[i][3], BH1750sensor[i][4],
                     BH1750sensor[i][5], BH1750sensor[i][6], BH1750sensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
 #endif
 
@@ -132,7 +132,7 @@ void pubMqttDiscovery()
                     subjectTSL12561toMQTT, TSL2561sensor[i][1], (char *)getUniqueId(TSL2561sensor[i][1], TSL2561sensor[i][2]).c_str(),
                     will_Topic, TSL2561sensor[i][3], TSL2561sensor[i][4],
                     TSL2561sensor[i][5], TSL2561sensor[i][6], TSL2561sensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
 #endif
 
@@ -147,7 +147,7 @@ void pubMqttDiscovery()
                     subjectHCSR501toMQTT, HCSR501sensor[1], (char *)getUniqueId(HCSR501sensor[1], HCSR501sensor[2]).c_str(),
                     will_Topic, HCSR501sensor[3], HCSR501sensor[4],
                     HCSR501sensor[5], HCSR501sensor[6], HCSR501sensor[7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZsensorGPIOInput
@@ -161,7 +161,7 @@ void pubMqttDiscovery()
                     subjectGPIOInputtoMQTT, GPIOInputsensor[1], (char *)getUniqueId(GPIOInputsensor[1], GPIOInputsensor[2]).c_str(),
                     will_Topic, GPIOInputsensor[3], GPIOInputsensor[4],
                     GPIOInputsensor[5], GPIOInputsensor[6], GPIOInputsensor[7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZsensorINA226
@@ -181,7 +181,7 @@ void pubMqttDiscovery()
                     subjectINA226toMQTT, INA226sensor[i][1], (char *)getUniqueId(INA226sensor[i][1], INA226sensor[i][2]).c_str(),
                     will_Topic, INA226sensor[i][3], INA226sensor[i][4],
                     INA226sensor[i][5], INA226sensor[i][6], INA226sensor[i][7],
-                    true, false, 0,"","",true,"");
+                    0,"","",true,"");
   }
 #endif
 
@@ -196,7 +196,7 @@ void pubMqttDiscovery()
                     subjectGTWONOFFtoMQTT, actuatorONOFF[1], (char *)getUniqueId(actuatorONOFF[1], actuatorONOFF[2]).c_str(),
                     will_Topic, actuatorONOFF[3], actuatorONOFF[4],
                     actuatorONOFF[5], actuatorONOFF[6], actuatorONOFF[7],
-                    false, true, 0,"","",true,subjectMQTTtoONOFF);
+                    0,"","",true,subjectMQTTtoONOFF);
 #endif
 
 
@@ -212,7 +212,7 @@ void pubMqttDiscovery()
                     subjectRFtoMQTT, gatewayRF[1], (char *)getUniqueId(gatewayRF[1], gatewayRF[2]).c_str(),
                     will_Topic, gatewayRF[3], gatewayRF[4],
                     gatewayRF[5], gatewayRF[6], gatewayRF[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayRF2
@@ -227,7 +227,7 @@ void pubMqttDiscovery()
                     subjectRF2toMQTT, gatewayRF2[1], (char *)getUniqueId(gatewayRF2[1], gatewayRF2[2]).c_str(),
                     will_Topic, gatewayRF2[3], gatewayRF2[4],
                     gatewayRF2[5], gatewayRF2[6], gatewayRF2[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayRF315
@@ -242,7 +242,7 @@ void pubMqttDiscovery()
                     subjectRF315toMQTT, gatewayRF315[1], (char *)getUniqueId(gatewayRF315[1], gatewayRF315[2]).c_str(),
                     will_Topic, gatewayRF315[3], gatewayRF315[4],
                     gatewayRF315[5], gatewayRF315[6], gatewayRF315[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayRFM69
@@ -257,7 +257,7 @@ void pubMqttDiscovery()
                     subjectRFM69toMQTT, gatewayRFM69[1], (char *)getUniqueId(gatewayRFM69[1], gatewayRFM69[2]).c_str(),
                     will_Topic, gatewayRFM69[3], gatewayRFM69[4],
                     gatewayRFM69[5], gatewayRFM69[6], gatewayRFM69[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayLORA
@@ -272,7 +272,7 @@ void pubMqttDiscovery()
                     subjectLORAtoMQTT, gatewayLORA[1], (char *)getUniqueId(gatewayLORA[1], gatewayLORA[2]).c_str(),
                     will_Topic, gatewayLORA[3], gatewayLORA[4],
                     gatewayLORA[5], gatewayLORA[6], gatewayLORA[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewaySRFB
@@ -287,7 +287,7 @@ void pubMqttDiscovery()
                     subjectSRFBtoMQTT, gatewaySRFB[1], (char *)getUniqueId(gatewaySRFB[1], gatewaySRFB[2]).c_str(),
                     will_Topic, gatewaySRFB[3], gatewaySRFB[4],
                     gatewaySRFB[5], gatewaySRFB[6], gatewaySRFB[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayPilight
@@ -302,7 +302,7 @@ void pubMqttDiscovery()
                     subjectPilighttoMQTT, gatewayPilight[1], (char *)getUniqueId(gatewayPilight[1], gatewayPilight[2]).c_str(),
                     will_Topic, gatewayPilight[3], gatewayPilight[4],
                     gatewayPilight[5], gatewayPilight[6], gatewayPilight[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayIR
@@ -317,7 +317,7 @@ void pubMqttDiscovery()
                     subjectIRtoMQTT, gatewayIR[1], (char *)getUniqueId(gatewayIR[1], gatewayIR[2]).c_str(),
                     will_Topic, gatewayIR[3], gatewayIR[4],
                     gatewayIR[5], gatewayIR[6], gatewayIR[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef Zgateway2G
@@ -332,7 +332,7 @@ void pubMqttDiscovery()
                     subject2GtoMQTT, gateway2G[1], (char *)getUniqueId(gateway2G[1], gateway2G[2]).c_str(),
                     will_Topic, gateway2G[3], gateway2G[4],
                     gateway2G[5], gateway2G[6], gateway2G[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 
 #ifdef ZgatewayBT
@@ -347,7 +347,7 @@ void pubMqttDiscovery()
                     subjectBTtoMQTT, gatewayBT[1], (char *)getUniqueId(gatewayBT[1], gatewayBT[2]).c_str(),
                     will_Topic, gatewayBT[3], gatewayBT[4],
                     gatewayBT[5], gatewayBT[6], gatewayBT[7],
-                    false, false, 0,"","",true,"");
+                    0,"","",true,"");
 #endif
 }
 
@@ -355,7 +355,7 @@ void createDiscovery(char * sensor_type,
                      char * state_topic, char * s_name, char * unique_id,
                      char * availability_topic, char * device_class, char * value_template,
                      char * payload_on, char * payload_off, char * unit_of_meas,
-                     bool optimistic, bool retain, int off_delay,
+                     int off_delay,
                      char * payload_available, char * payload_not_avalaible, boolean child_device , char * command_topic)
 {
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(4);
@@ -369,8 +369,6 @@ void createDiscovery(char * sensor_type,
   if (payload_on[0])              sensor.set("pl_on", payload_on); // payload_on
   if (payload_off[0])             sensor.set("pl_off", payload_off); //payload_off
   if (unit_of_meas[0])            sensor.set("unit_of_meas", unit_of_meas); //unit_of_measurement*/
-  sensor.set("opt", optimistic)|false; //optimistic
-  sensor.set("ret", retain)|false; //retain
   if (off_delay != 0)             sensor.set("off_delay", off_delay); //off_delay
   if (payload_available[0])       sensor.set("pl_avail", payload_available); // payload_on
   if (payload_not_avalaible[0])   sensor.set("pl_not_avail", payload_not_avalaible); //payload_off
@@ -386,7 +384,7 @@ void createDiscovery(char * sensor_type,
 
 
   if (child_device){
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(1);
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonDeviceBuffer;
     JsonObject &device = jsonDeviceBuffer.createObject();
     device.set("name", Gateway_Name);
@@ -404,17 +402,15 @@ String getMacAddress()
 {
   uint8_t baseMac[6];
   char baseMacChr[13] = {0};
-#if defined(ESP8266)
-  WiFi.macAddress(baseMac);
-  sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
-#elif defined(ESP32)
-  esp_read_mac(baseMac, ESP_MAC_WIFI_STA);
-  sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
-#else
-  sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-#endif
-
-
+  #if defined(ESP8266)
+    WiFi.macAddress(baseMac);
+    sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
+  #elif defined(ESP32)
+    esp_read_mac(baseMac, ESP_MAC_WIFI_STA);
+    sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5]);
+  #else
+    sprintf(baseMacChr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  #endif
   return String(baseMacChr);
 }
 
