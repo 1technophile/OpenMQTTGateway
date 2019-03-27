@@ -135,8 +135,8 @@
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-  #define IR_RECEIVER_PIN 2 //D4
-  #define IR_EMITTER_PIN 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield
+  #define IR_RECEIVER_PIN 2 //D4 /replace by 4 with sonoff rf bridge
+  #define IR_EMITTER_PIN 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield /replace by 5 with sonoff rf bridge
 #elif ESP32
   #define IR_RECEIVER_PIN 27
   #define IR_EMITTER_PIN 14
