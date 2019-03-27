@@ -5,50 +5,10 @@
    Send and receiving command by MQTT
 
   This program enables to:
- - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received 433Mhz signal
- - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
- - publish MQTT data to a different topic related to received IR signal
- - publish MQTT data to a different topic related to BLE devices rssi signal
+ - receive MQTT data from a topic and send signal (RF, IR, BLE, GSM)  corresponding to the received MQTT data
+ - publish MQTT data to a different topic related to received signals (RF, IR, BLE, GSM)
 
   Copyright: (c)Florian ROBERT
-
-  Contributors:
-  - 1technophile
-  - crankyoldgit
-  - glasruit
-  - HannesDi
-  - Landrash
-  - larsenglund
-  - ChiefZ
-  - PatteWi
-  - jumpalottahigh
-  - zerinrc
-  - philfifi
-  - Spudtater
-  - prahjister
-  - rickybrent
-  - petricaM
-  - ekim from Home assistant forum
-  - ronvl from Home assistant forum
-  - Chris Broekema
-  - Lars Englund
-  - Fredrik Lindqvist
-  - Philippe LUC
-  - Patrick Wilhelm
-  - Georgi Yanev
-  - zerinrc
-  - 8666
-  - animavitis
-  - belidzs
-  - alibahba
-  - HosfordDotMe
-  - torwag
-  - intractve
-  - QuagmireMan
-  - f-reiling
-  - McGr3g0r
-  - steadramon
 
     This file is part of OpenMQTTGateway.
 
