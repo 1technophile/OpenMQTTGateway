@@ -1,0 +1,40 @@
+  Contributors:
+  - @@1technophile
+  - @crankyoldgit
+  - @glasruit
+  - @HannesDi
+  - @Landrash
+  - @larsenglund
+  - @ChiefZ
+  - @PatteWi
+  - @jumpalottahigh
+  - @zerinrc
+  - @philfifi
+  - @Spudtater
+  - @prahjister
+  - @rickybrent
+  - @petricaM
+  - @ekim from Home assistant forum
+  - @ronvl from Home assistant forum
+  - @Chris Broekema
+  - @Lars Englund
+  - @Fredrik Lindqvist
+  - @Philippe LUC
+  - @Patrick Wilhelm
+  - @Georgi Yanev
+  - @8666
+  - @animavitis
+  - @belidzs
+  - @alibahba
+  - @HosfordDotMe
+  - @torwag
+  - @intractve
+  - @QuagmireMan
+  - @f-reiling
+  - @McGr3g0r
+  - @steadramon
+  - @puuu
+  - @tjhowse
+  - @StryKaizer
+  - @johnou
+  - @posicat
