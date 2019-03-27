@@ -5,10 +5,11 @@
    Send and receiving command by MQTT
  
   This gateway enables to:
- - publish MQTT data to a different topic related to received 433Mhz signal using ESPiLight
+ - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data based on ESPilight library
+ - publish MQTT data to a different topic related to received 433Mhz signal based on ESPilight library
 
     Copyright: (c)Florian ROBERT
-    Copyright: (c)Randy Simons http://randysimons.nl/
+    Pilight Gateway made by steadramon, improvments with the help of puuu
   
     This file is part of OpenMQTTGateway.
     
@@ -57,7 +58,11 @@ void pilightCallback(const String &protocol, const String &message, int status,
     RFPiLightdata.set("length", (char *)deviceID.c_str());
     RFPiLightdata.set("repeats", (int)repeats);
     RFPiLightdata.set("status", (int)status);
-    pub(subjectPilighttoMQTT,RFPiLightdata);      
+    pub(subjectPilighttoMQTT,RFPiLightdata);
+    if (repeatPilightwMQTT){
+        trc(F("Pub Pilight for rpt"));
+        pub(subjectMQTTtoPilight,RFPiLightdata);
+    }
    }
 }
 
