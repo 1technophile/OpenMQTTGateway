@@ -109,21 +109,24 @@ void _rfbDecode() {
         
         char val[8]= {0};
         extract_char(buffer, val, 12 ,8, false,true);
-        SRFBdata.set("value", (char *)val);
+        unsigned long MQTTvalue = (unsigned long)strtoul(val, NULL, 10);
+        SRFBdata.set("value", (unsigned long)MQTTvalue);
 
-        char val_Tsyn[4]= {0};
-        extract_char(buffer, val_Tsyn , 0 ,4, false, true);   
-        SRFBdata.set("delay", (char *)val_Tsyn);
+        char Tsyn[4]= {0};
+        extract_char(buffer, Tsyn , 0 ,4, false, true); 
+        int val_Tsyn = (int)strtol(Tsyn, NULL, 10);
+        SRFBdata.set("delay", (int)val_Tsyn);
 
-        char val_Thigh[4]= {0};
-        extract_char(buffer, val_Thigh , 4 ,4, false, true);
-        SRFBdata.set("val_Thigh", (char *)val_Thigh);
+        char Thigh[4]= {0};
+        extract_char(buffer, Thigh , 4 ,4, false, true);
+        int val_Thigh = (int)strtol(Thigh, NULL, 10);
+        SRFBdata.set("val_Thigh", (int)val_Thigh);
 
-        char val_Tlow[4]= {0};
-        extract_char(buffer,val_Tlow , 8 ,4, false, true);
-        SRFBdata.set("val_Tlow", (char *)val_Tlow);
+        char Tlow[4]= {0};
+        extract_char(buffer,Tlow , 8 ,4, false, true);
+        int val_Tlow = (int)strtol(Tlow, NULL, 10);
+        SRFBdata.set("val_Tlow", (int)val_Tlow);
         
-        unsigned long MQTTvalue = SRFBdata.get<unsigned long>("value");
         if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
             trc(F("Adv data SRFBtoMQTT")); 
             pub(subjectSRFBtoMQTT,SRFBdata);

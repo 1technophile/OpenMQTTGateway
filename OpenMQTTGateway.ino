@@ -203,8 +203,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   memcpy(p,payload,length);
   // Conversion to a printable string
   p[length] = '\0';
-  //launch the function to treat received data
-  receivingMQTT(topic,(char *) p);
+  //launch the function to treat received data if this data concern OpenMQTTGateway
+  if ((strstr(topic, subjectMultiGTWKey) != NULL) || (strstr(topic, subjectGTWSendKey) != NULL))  receivingMQTT(topic,(char *) p);
   // Free the memory
   free(p);
 }
@@ -802,14 +802,15 @@ return false;
 }
 
 void receivingMQTT(char * topicOri, char * datacallback) {
+
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
+  
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
     trc(F("Store signal"));
     unsigned long data = 0;
     #ifdef jsonPublishing
-      trc(F("Json buf."));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
       if (jsondata.success())  data =  jsondata["value"];
     #endif
 
@@ -822,9 +823,6 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       trc(F("Data JSON stored"));
     }
   }
-
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
   if (jsondata.success()) { // json object ok -> json decoding
    #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing
