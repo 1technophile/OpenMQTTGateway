@@ -265,7 +265,7 @@ vector<BLEdevice> devices;
                   #endif
                   strupp(d[0].extract);
                   if(isBlack(d[0].extract)) return false; //if black listed mac we go out
-                  if(oneWhite() && !isWhite(d[0].extract));  return false; //if we have at least one white mac and this mac is not white we go out
+                  if(oneWhite() && !isWhite(d[0].extract)) return false; //if we have at least one white mac and this mac is not white we go out
                   String topic = subjectBTtoMQTT + String(d[0].extract);
                   int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
                   BLEdata.set("rssi", (int)rssi);
@@ -421,31 +421,25 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
   // following the value of digit 47 we determine the type of data we get from the sensor
   switch (rest_data[47 + offset]) {
     case '9' :
-          dtostrf(value,0,0,val);
-          BLEdata.set("fer", val);
+          BLEdata.set("fer", (double)value);
     break;
     case '4' :
           if (value > 65000) value = value - 65535;
-          dtostrf(value/10,3,1,val); // temp has to be divided by 10
-          BLEdata.set("tem", val);
+          BLEdata.set("tem", (double)value/10);
     break;
     case '6' :
           if (value > 65000) value = value - 65535;
-          dtostrf(value/10,3,1,val); // hum has to be divided by 10
-          BLEdata.set("hum", val);
+          BLEdata.set("hum", (double)value/10);
     break;
     case '7' :
-          dtostrf(value,0,0,val);
-          BLEdata.set("lux", val);
+          BLEdata.set("lux", (double)value);
      break;
     case '8' :
-          dtostrf(value,0,0,val);
-          BLEdata.set("moi", val);
+          BLEdata.set("moi", (double)value);
      break;
      
     case 'a' : // batteryLevel
-          dtostrf(value,0,0,val);
-          BLEdata.set("batt", val);
+          BLEdata.set("batt", (double)value);
      break;
 
      case 'd' : // temp+hum
@@ -455,15 +449,13 @@ boolean process_data(int offset, char * rest_data, char * mac_adress){
           tempAr[4] = '\0';
           value = strtol(tempAr, NULL, 16);
           if (value > 65000) value = value - 65535;
-          dtostrf(value/10,3,1,val); // hum has to be divided by 10
-          BLEdata.set("hum", val);
+          BLEdata.set("hum", (double)value/10);
           // temperature
           memcpy(tempAr, &data[4], 4);
           tempAr[4] = '\0';
           value = strtol(tempAr, NULL, 16);
           if (value > 65000) value = value - 65535;
-          dtostrf(value/10,3,1,val2); // hum has to be divided by 10
-          BLEdata.set("tem", val2);
+          BLEdata.set("tem", (double)value/10);
      break;
     default:
     trc("can't read values");
