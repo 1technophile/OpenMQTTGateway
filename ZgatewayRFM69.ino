@@ -181,13 +181,8 @@ boolean RFM69toMQTT(void) {
 
 #ifdef simpleReceiving
   void MQTTtoRFM69(char * topicOri, char * datacallback) {
-    int loops;
-    uint32_t startMillis;
-    static uint32_t deltaMillis = 0;
-  
-    String topic = topicOri;
-  
-    if (topic == subjectMQTTtoRFM69) {
+
+    if(strstr(topicOri, subjectMQTTtoRFM69) != NULL){
       trc(F("MQTTtoRFM69 data analysis"));
       char data[RF69_MAX_DATA_LEN+1];
       memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
@@ -203,26 +198,13 @@ boolean RFM69toMQTT(void) {
         trc(F("RFM69 receiver ID:"));
         trc(valueRCV);
       }
-      loops = 10;
-      startMillis = millis();
-      while (loops--) {
-        if(radio.sendWithRetry(valueRCV, data, strlen(data))) {
-          deltaMillis = millis() - startMillis;
-          trc(F(" OK "));
-          trc(deltaMillis);
-    
-          // Acknowledgement to the GTWRF topic
-          char buff[sizeof(subjectGTWRFM69toMQTT)+4];
-          sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
-          pub(buff, data);
-        }
-        else {
-          trc(F("!"));
-        }
-        delay(50);
-      }
-      if (loops <= 0) {
-        deltaMillis = 0;
+      if(radio.sendWithRetry(valueRCV, data, strlen(data)),10) {
+        trc(F(" OK "));
+        // Acknowledgement to the GTWRF topic
+        char buff[sizeof(subjectGTWRFM69toMQTT)+4];
+        sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
+        pub(buff, data);
+      } else {
         trc(F("RFM69 sending failed"));
       }
     }
@@ -236,30 +218,14 @@ boolean RFM69toMQTT(void) {
       trc(F("MQTTtoRFM69 json data analysis"));
       if(data){
         trc(F("MQTTtoRFM69 data ok"));
-        int loops;
-        uint32_t startMillis;
-        static uint32_t deltaMillis = 0;
         int valueRCV = RFM69data["receiverid"]| defaultRFM69ReceiverId; //default receiver id value
         trc(F("RFM69 receiver ID:"));
         trc(valueRCV);
-      
-        loops = 10;
-        startMillis = millis();
-        while (loops--) {
-          if(radio.sendWithRetry(valueRCV, data, strlen(data))) {
-            deltaMillis = millis() - startMillis;
-            trc(F(" OK "));
-            trc(deltaMillis);
-            // Acknowledgement to the GTWRF topic
-            pub(subjectGTWRFM69toMQTT, RFM69data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-          }
-          else {
-            trc(F("!"));
-          }
-          delay(50);
-        }
-        if (loops <= 0) {
-          deltaMillis = 0;
+        if(radio.sendWithRetry(valueRCV, data, strlen(data)),10) {
+          trc(F(" OK "));
+          // Acknowledgement to the GTWRF topic
+          pub(subjectGTWRFM69toMQTT, RFM69data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        } else {
           trc(F("MQTTtoRFM69 sending failed"));
         }
       }else{
