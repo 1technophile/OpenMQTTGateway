@@ -362,6 +362,9 @@ void setup()
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
+  #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+    if(MQTT_MAX_PACKET_SIZE == 128) trc(F("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM OMG LIB FOLDER"));
+  #endif
   trc(F("Setup OpenMQTTGateway end"));
 }
 
