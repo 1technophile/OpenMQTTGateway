@@ -106,26 +106,26 @@ void _rfbDecode() {
         StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject& SRFBdata = jsonBuffer.createObject();
         SRFBdata.set("raw", (char *)buffer);
-        
-        char val[8]= {0};
-        extract_char(buffer, val, 12 ,8, false,true);
-        unsigned long MQTTvalue = (unsigned long)strtoul(val, NULL, 10);
-        SRFBdata.set("value", (unsigned long)MQTTvalue);
 
         char Tsyn[4]= {0};
         extract_char(buffer, Tsyn , 0 ,4, false, true); 
         int val_Tsyn = (int)strtol(Tsyn, NULL, 10);
         SRFBdata.set("delay", (int)val_Tsyn);
 
+        char Tlow[4]= {0};
+        extract_char(buffer,Tlow , 4 ,4, false, true);
+        int val_Tlow = (int)strtol(Tlow, NULL, 10);
+        SRFBdata.set("val_Tlow", (int)val_Tlow);
+
         char Thigh[4]= {0};
-        extract_char(buffer, Thigh , 4 ,4, false, true);
+        extract_char(buffer, Thigh , 8 ,4, false, true);
         int val_Thigh = (int)strtol(Thigh, NULL, 10);
         SRFBdata.set("val_Thigh", (int)val_Thigh);
 
-        char Tlow[4]= {0};
-        extract_char(buffer,Tlow , 8 ,4, false, true);
-        int val_Tlow = (int)strtol(Tlow, NULL, 10);
-        SRFBdata.set("val_Tlow", (int)val_Tlow);
+        char val[8]= {0};
+        extract_char(buffer, val, 12 ,8, false,true);
+        unsigned long MQTTvalue = (unsigned long)strtoul(val, NULL, 10);
+        SRFBdata.set("value", (unsigned long)MQTTvalue);
         
         if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
             trc(F("Adv data SRFBtoMQTT")); 
