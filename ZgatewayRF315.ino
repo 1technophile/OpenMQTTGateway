@@ -145,7 +145,7 @@ boolean RF315toMQTT(){
         mySwitch315.setProtocol(valuePRT,valuePLSL);
         mySwitch315.send(data, valueBITS);
         trc(F("MQTTtoRF315 OK"));
-        pub(subjectGTWRF315toMQTT, RFdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        pub(subjectGTWRF315toMQTT, RF315data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       }else{
         trc(F("MQTTtoRF315 Fail json"));
       }
