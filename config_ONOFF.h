@@ -31,7 +31,7 @@
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-    #define ACTUATOR_ONOFF_PIN 15 
+    #define ACTUATOR_ONOFF_PIN 15 //12 for sonoff basic relay
 #elif ESP32
     #define ACTUATOR_ONOFF_PIN 15 
 #else
