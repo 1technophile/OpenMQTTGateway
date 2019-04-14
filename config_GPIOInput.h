@@ -31,7 +31,7 @@
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266) || defined(ESP32)
-  #define GPIOInput_PIN 5 //D5
+  #define GPIOInput_PIN 14
 #else
   #define GPIOInput_PIN 7
 #endif
