@@ -31,9 +31,9 @@
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifdef ESP8266
-    #define ACTUATOR_ONOFF_PIN 4 
+    #define ACTUATOR_ONOFF_PIN 15 
 #elif ESP32
-    #define ACTUATOR_ONOFF_PIN 4 
+    #define ACTUATOR_ONOFF_PIN 15 
 #else
     #define ACTUATOR_ONOFF_PIN 13
 #endif
