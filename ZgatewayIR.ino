@@ -245,7 +245,7 @@ void IRtoMQTT(){
     }
     
     if(topicOri && (strstr(topicOri, "IR_NEC") == NULL)){
-        signalSent = sendIdentifiedProtocol(topicOri, data, (unsigned char *)datacallback, valueBITS, valueRPT);
+        signalSent = sendIdentifiedProtocol(topicOri, data, datacallback, valueBITS, valueRPT);
     }else{
         trc(F("Using NEC protocol"));
         if (valueBITS == 0) valueBITS = NEC_BITS;
@@ -272,13 +272,15 @@ void IRtoMQTT(){
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];
       const char * datastring = IRdata["datastring"];
-      if (data != 0||raw) {
+      if (data != 0||raw||datastring) {
         trc(F("MQTTtoIR data || raw ok"));
         boolean signalSent = false;
         trc(F("value"));
         trc(data);
         trc(F("raw"));
         trc(raw);
+        trc(F("datastring"));
+        trc(datastring);
         const char * protocol_name = IRdata["protocol_name"];
         unsigned int valueBITS  = IRdata["bits"];
         uint16_t  valueRPT = IRdata["repeat"]|repeatIRwNumber;
@@ -344,7 +346,7 @@ void IRtoMQTT(){
             }
             #endif
         }else if(protocol_name && (strstr(protocol_name, "IR_NEC") == NULL)){
-            signalSent = sendIdentifiedProtocol(protocol_name, data, (unsigned char*)datastring, valueBITS, valueRPT);
+            signalSent = sendIdentifiedProtocol(protocol_name, data, datastring, valueBITS, valueRPT);
         }else{
             trc(F("Using NEC protocol"));
             if (valueBITS == 0) valueBITS = NEC_BITS;
@@ -367,7 +369,21 @@ void IRtoMQTT(){
   }
 #endif
 
-boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, unsigned char * datastring, unsigned int valueBITS, uint16_t valueRPT){
+boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, const char * datastring, unsigned int valueBITS, uint16_t valueRPT){
+    unsigned char dataarray[valueBITS];
+    const char* pointer = datastring;
+    int i = 0;
+    while (strlen(pointer) > 0 && i < valueBITS) {
+        if (pointer[0] == ',') {
+            pointer++;
+        }
+        else
+        {
+            dataarray[i] = strtol(pointer, (char**)& pointer, 16);
+            i++;
+        }
+    }
+
   #ifdef IR_Whynter
     if (strstr(protocol_name, "IR_Whynter") != NULL){
       if (valueBITS == 0) valueBITS = WHYNTER_BITS;
@@ -586,21 +602,21 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #ifdef IR_DAIKIN
       if (strstr(protocol_name, "IR_DAIKIN") != NULL){
         if (valueBITS == 0) valueBITS = kDaikinStateLength;
-        irsend.sendDaikin(datastring, valueBITS, valueRPT);
+        irsend.sendDaikin(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_KELVINATOR
       if (strstr(protocol_name, "IR_KELVINATOR") != NULL){
         if (valueBITS == 0) valueBITS = kKelvinatorStateLength;
-        irsend.sendKelvinator(datastring, valueBITS, valueRPT);
+        irsend.sendKelvinator(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_MITSUBISHI_AC
       if (strstr(protocol_name, "IR_MITSUBISHI_AC") != NULL){
         if (valueBITS == 0) valueBITS = kMitsubishiACStateLength;
-        irsend.sendMitsubishiAC(datastring, valueBITS, valueRPT);
+        irsend.sendMitsubishiAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
@@ -621,27 +637,27 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #ifdef IR_ARGO
       if (strstr(protocol_name, "IR_ARGO") != NULL){
         if (valueBITS == 0) valueBITS = kArgoStateLength;
-        irsend.sendArgo(datastring, valueBITS, valueRPT);
+        irsend.sendArgo(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_TROTEC
       if (strstr(protocol_name, "IR_TROTEC") != NULL){
         if (valueBITS == 0) valueBITS = kTrotecStateLength;
-        irsend.sendTrotec(datastring, valueBITS, valueRPT);
+        irsend.sendTrotec(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_TOSHIBA_AC
       if (strstr(protocol_name, "IR_TOSHIBA_AC") != NULL){
         if (valueBITS == 0) valueBITS = kToshibaACBits;
-        irsend.sendToshibaAC(datastring, valueBITS, valueRPT);
+        irsend.sendToshibaAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_FUJITSU_AC
       if (strstr(protocol_name, "IR_FUJITSU_AC") != NULL){
-        irsend.sendFujitsuAC(datastring, valueBITS, valueRPT);
+        irsend.sendFujitsuAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
@@ -655,28 +671,28 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #ifdef IR_HAIER_AC
       if (strstr(protocol_name, "IR_HAIER_AC") != NULL){
         if (valueBITS == 0) valueBITS = kHaierACStateLength;
-        irsend.sendHaierAC(datastring, valueBITS, valueRPT);
+        irsend.sendHaierAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_HITACHI_AC
       if (strstr(protocol_name, "IR_HITACHI_AC") != NULL){
         if (valueBITS == 0) valueBITS = kHitachiAc2StateLength;
-        irsend.sendHitachiAC(datastring, valueBITS, valueRPT);
+        irsend.sendHitachiAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_HITACHI_AC1
       if (strstr(protocol_name, "IR_HITACHI_AC1") != NULL){
         if (valueBITS == 0) valueBITS = kHitachiAc2StateLength;
-        irsend.sendHitachiAC1(datastring, valueBITS, valueRPT);
+        irsend.sendHitachiAC1(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_HITACHI_AC2
       if (strstr(protocol_name, "IR_HITACHI_AC2") != NULL){
         if (valueBITS == 0) valueBITS = kHitachiAc2StateLength;
-        irsend.sendHitachiAC2(datastring, valueBITS, valueRPT);
+        irsend.sendHitachiAC2(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
@@ -690,21 +706,21 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #ifdef IR_HAIER_AC_YRW02
       if (strstr(protocol_name, "IR_HAIER_AC_YRW02") != NULL){
         if (valueBITS == 0) valueBITS = kHaierACYRW02StateLength;
-        irsend.sendHaierACYRW02(datastring, valueBITS, valueRPT);
+        irsend.sendHaierACYRW02(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_WHIRLPOOL_AC
       if (strstr(protocol_name, "IR_WHIRLPOOL_AC") != NULL){
         if (valueBITS == 0) valueBITS = kWhirlpoolAcStateLength;
-        irsend.sendWhirlpoolAC(datastring, valueBITS, valueRPT);
+        irsend.sendWhirlpoolAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_SAMSUNG_AC
       if (strstr(protocol_name, "IR_SAMSUNG_AC") != NULL){
         if (valueBITS == 0) valueBITS = kSamsungAcStateLength;
-        irsend.sendSamsungAC(datastring, valueBITS, valueRPT);
+        irsend.sendSamsungAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
@@ -718,14 +734,14 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #ifdef IR_ELECTRA_AC
       if (strstr(protocol_name, "IR_ELECTRA_AC") != NULL){
         if (valueBITS == 0) valueBITS = kElectraAcStateLength;
-        irsend.sendElectraAC(datastring, valueBITS, valueRPT);
+        irsend.sendElectraAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_PANASONIC_AC
       if (strstr(protocol_name, "IR_PANASONIC_AC") != NULL){
         if (valueBITS == 0) valueBITS = kPanasonicAcStateLength;
-        irsend.sendPanasonicAC(datastring, valueBITS, valueRPT);
+        irsend.sendPanasonicAC(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
@@ -745,14 +761,14 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #endif
     #ifdef IR_MWM
       if (strstr(protocol_name, "IR_MWM") != NULL){
-        irsend.sendMWM(datastring, valueBITS, valueRPT);
+        irsend.sendMWM(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
     #ifdef IR_DAIKIN2
       if (strstr(protocol_name, "IR_DAIKIN2") != NULL){
         if (valueBITS == 0) valueBITS = kDaikin2StateLength;
-        irsend.sendDaikin2(datastring, valueBITS, valueRPT);
+        irsend.sendDaikin2(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
@@ -773,7 +789,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, u
     #ifdef IR_TCL112AC
       if (strstr(protocol_name, "IR_TCL112AC") != NULL){
         if (valueBITS == 0) valueBITS = kTcl112AcStateLength;
-        irsend.sendTcl112Ac(datastring, valueBITS, valueRPT);
+        irsend.sendTcl112Ac(dataarray, valueBITS, valueRPT);
         return true;
       }
     #endif
