@@ -106,7 +106,10 @@ void IRtoMQTT(){
     IRdata.set("value", (unsigned long)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
     IRdata.set("bits",(int)(results.bits));
-    
+    #ifdef ESP8266 //resultToHexidecimal is only available with IRremoteESP8266
+      String hex = resultToHexidecimal(&results);
+      IRdata.set("hex", (char *)hex.c_str());
+    #endif
     String rawCode = "";
     // Dump data
     for (uint16_t i = 1;  i < results.rawlen;  i++) {
