@@ -29,7 +29,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.9beta"
+#define OMG_VERSION "0.9.2beta"
 
 /*-------------CONFIGURE WIFIMANAGER-------------*/
 /*
@@ -146,7 +146,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
   #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
   #define jsonPublishing true
+  #define jsonReceiving true
   #define simplePublishing true
+  #define simpleReceiving true
 #elif ESP32
   #define ZgatewayRF "RF"
   #define ZgatewayLORA "LORA"
@@ -168,7 +170,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
   #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
   #define jsonPublishing true
+  #define jsonReceiving true
   #define simplePublishing true
+  #define simpleReceiving true
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
@@ -192,7 +196,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZsensorGPIOKeyCode "GPIOKeyCode"
   #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
   #define jsonPublishing true
+  #define jsonReceiving true
   #define simplePublishing true
+  #define simpleReceiving true
 #else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
@@ -211,7 +217,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define ZsensorGPIOInput //not tested
   //#define ZsensorGPIOKeyCode "GPIOKeyCode" //not tested
   #define jsonPublishing true
+  #define jsonReceiving true
   //#define simplePublishing true
+  //#define simpleReceiving true
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
