@@ -32,7 +32,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #include <vector>
 using namespace std;
-
 vector<BLEdevice> devices;
 
   #ifdef ESP32
@@ -126,6 +125,9 @@ vector<BLEdevice> devices;
       };
 
     void setupBT(){
+        BLEinterval = TimeBtw_Read;
+        trc(F("BLEinterval btw scans"));
+        trc(BLEinterval);
         #ifdef multiCore
         // we setup a task with priority one to avoid conflict with other gateways
         xTaskCreatePinnedToCore(
@@ -150,37 +152,37 @@ vector<BLEdevice> devices;
      
         while(true){
             trc(taskMessage);
-            delay(TimeBtw_Read);
-            
-            TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
-            TIMERG0.wdt_feed=1;
-            TIMERG0.wdt_wprotect=0;
-            
-            BLEDevice::init("");
-            BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-            MyAdvertisedDeviceCallbacks myCallbacks;
-            pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-            pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-            BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+            delay(BLEinterval);
+            BLEscan();
         }
+    }
+    boolean BTtoMQTT(){ // for on demande BLE scans
+      BLEscan();
     }
     #else
     boolean BTtoMQTT(){
       unsigned long now = millis();
-      if (now > (timeBLE + TimeBtw_Read)) {
+      if (now > (timeBLE + BLEinterval)) {
               timeBLE = now;
-              BLEDevice::init("");
-              BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-              MyAdvertisedDeviceCallbacks myCallbacks;
-              pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-              pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-              BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+              BLEscan();
               return true;
       }
       return false;
     }
     #endif
+    void BLEscan(){
+            
+      TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
+      TIMERG0.wdt_feed=1;
+      TIMERG0.wdt_wprotect=0;
       
+      BLEDevice::init("");
+      BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+      MyAdvertisedDeviceCallbacks myCallbacks;
+      pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+      pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+      BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+    }      
   #else // arduino or ESP8266 working with HM10/11
 
     #include <SoftwareSerial.h>
@@ -200,6 +202,9 @@ vector<BLEdevice> devices;
     struct decompose d[6] = {{"mac",16,12,true},{"typ",28,2,false},{"rsi",30,2,false},{"rdl",32,2,false},{"sty",44,4,true},{"rda",34,60,false}};
     
     void setupBT() {
+      BLEinterval = TimeBtw_Read;
+      trc(F("BLEinterval btw scans"));
+      trc(BLEinterval);
       softserial.begin(9600);
       softserial.print(F("AT+ROLE1"));
       delay(100);
@@ -225,14 +230,14 @@ vector<BLEdevice> devices;
             returnedString = returnedString + String(a,HEX);  
       }
     
-      if (millis() > (timebt + TimeBtw_Read)) {//retriving data
+      if (millis() > (timebt + BLEinterval)) {//retriving data
           timebt = millis();
           #if defined(ESP8266)
             yield();
           #endif
           if (returnedString != "") {
             size_t pos = 0;
-            while ((pos = returnedString.lastIndexOf(delimiter)) != -1) {
+            while ((pos = returnedString.lastIndexOf(BLEdelimiter)) != -1) {
               #if defined(ESP8266)
                 yield();
               #endif
@@ -487,24 +492,44 @@ void haRoomPresence(JsonObject& HomePresence){
   pub(subjectHomePresence,HomePresence);
 }
 #endif
+
 void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
  if (strcmp(topicOri,subjectMQTTtoBTset) == 0){
     trc(F("MQTTtoBT json set"));
+
+    // Black list & white list set
     int WLsize =  BTdata["white-list"].size();
     if(WLsize > 0){
+      trc(F("WL set"));
       for (int i = 0; i < WLsize; i++){
         const char * whiteMac = BTdata["white-list"][i];
-        setWorBMac((char *)whiteMac, true); //TO DO catch mac adress > 12
+        setWorBMac((char *)whiteMac, true);
       }
     }
     int BLsize =  BTdata["black-list"].size();
     if(BLsize > 0){
+      trc(F("BL set"));
       for (int i = 0; i < BLsize; i++){
         const char * blackMac = BTdata["black-list"][i];
-        setWorBMac((char *)blackMac,false); //TO DO catch mac adress > 12
+        setWorBMac((char *)blackMac,false);
       }
     }
-    dumpDevices();
+    if (BLsize > 0 || WLsize > 0) dumpDevices();
+
+    // Scan interval set
+    if (BTdata.containsKey("interval")){
+      trc(F("BLE interval set"));
+      // storing BLE interval for further use if needed
+      unsigned int prevBLEinterval = BLEinterval; 
+      // set BLE interval if present if not setting default value
+      BLEinterval =  (unsigned int)BTdata["interval"]|prevBLEinterval;
+      trc(BLEinterval);
+      if (BLEinterval == 0) {
+        if(BTtoMQTT())// as BLEinterval is = to 0 we can launch the loop and the scan will execute immediately
+        trc(F("Scan done")); 
+        BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
+      }
+    }
   }
 }
 
