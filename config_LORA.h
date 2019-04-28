@@ -37,6 +37,7 @@
 #define LORA_PREAMBLE_LENGTH  8
 #define LORA_SYNC_WORD        0x12
 
+#define repeatLORAwMQTT false // do we repeat a received signal by using mqtt with LORA gateway
 
 /*-------------------PIN DEFINITIONS----------------------*/
 //TTGO LORA BOARD ESP32 PIN DEFINITION

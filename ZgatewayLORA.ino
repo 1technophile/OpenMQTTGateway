@@ -76,7 +76,11 @@ void LORAtoMQTT(){
     LORAdata.set("packetSize", (int)packetSize);
     LORAdata.set("message", (char *)packet.c_str());
     pub(subjectLORAtoMQTT,LORAdata);
+    if (repeatLORAwMQTT){
+        trc(F("Pub LORA for rpt"));
+        pub(subjectMQTTtoLORA,LORAdata);
     }
+  }
 }
 
 #ifdef jsonReceiving
