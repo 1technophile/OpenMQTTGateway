@@ -198,7 +198,7 @@ boolean RFM69toMQTT(void) {
         trc(F("RFM69 receiver ID:"));
         trc(valueRCV);
       }
-      if(radio.sendWithRetry(valueRCV, data, strlen(data)),10) {
+      if(radio.sendWithRetry(valueRCV, data, strlen(data),10)) {
         trc(F(" OK "));
         // Acknowledgement to the GTWRF topic
         char buff[sizeof(subjectGTWRFM69toMQTT)+4];
@@ -221,7 +221,7 @@ boolean RFM69toMQTT(void) {
         int valueRCV = RFM69data["receiverid"]| defaultRFM69ReceiverId; //default receiver id value
         trc(F("RFM69 receiver ID:"));
         trc(valueRCV);
-        if(radio.sendWithRetry(valueRCV, data, strlen(data)),10) {
+        if(radio.sendWithRetry(valueRCV, data, strlen(data),10)) {
           trc(F(" OK "));
           // Acknowledgement to the GTWRF topic
           pub(subjectGTWRFM69toMQTT, RFM69data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
