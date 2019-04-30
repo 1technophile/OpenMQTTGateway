@@ -46,14 +46,15 @@ void PilighttoMQTT(){
   rf.loop();
 }
 
-void pilightCallback(const String &protocol, const String &message, int status,
+void pilightCallback(const String &protocol,const String &message, int status,
                 size_t repeats, const String &deviceID) {
    if (status == VALID) {
     trc(F("Creating RF PiLight buffer"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& RFPiLightdata = jsonBuffer.createObject();
-    trc(F("Rcv. Pilight"));
-    RFPiLightdata.set("message", (char *)message.c_str());
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer2;
+    JsonObject& msg = jsonBuffer2.parseObject(message);
+    RFPiLightdata.set("message", msg);
     RFPiLightdata.set("protocol",(char *)protocol.c_str());
     RFPiLightdata.set("length", (char *)deviceID.c_str());
     RFPiLightdata.set("repeats", (int)repeats);
