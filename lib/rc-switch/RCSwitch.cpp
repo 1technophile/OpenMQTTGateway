@@ -504,6 +504,21 @@ void RCSwitch::sendTriState(const char* sCodeWord) {
 }
 
 /**
+ * @param duration   no. of microseconds to delay
+ */
+static inline void safeDelayMicroseconds(unsigned long duration) {
+#if defined(ESP8266) || defined(ESP32)
+  // uses yield() to avoid wdt reset
+  unsigned long start = micros();
+  while ((micros() - start) < duration) {
+    yield();
+  }
+#else
+  delayMicroseconds(duration);
+#endif
+}
+
+/**
  * @param sCodeWord   a binary code word consisting of the letter 0, 1
  */
 void RCSwitch::send(const char* sCodeWord) {
@@ -569,7 +584,7 @@ void RCSwitch::send(unsigned long long code, unsigned int length) {
     // выдерживаем Защитное время (Guard Time)
     if (protocol.Guard > 0) {
       digitalWrite(this->nTransmitterPin, LOW);
-      delayMicroseconds(this->protocol.pulseLength * protocol.Guard);
+      safeDelayMicroseconds(this->protocol.pulseLength * protocol.Guard);
     }
   }
 
@@ -593,11 +608,11 @@ void RCSwitch::transmit(HighLow pulses) {
   
   if (pulses.high > 0) {
     digitalWrite(this->nTransmitterPin, firstLogicLevel);
-    delayMicroseconds( this->protocol.pulseLength * pulses.high);
+    safeDelayMicroseconds( this->protocol.pulseLength * pulses.high);
   }
   if (pulses.low > 0) {
     digitalWrite(this->nTransmitterPin, secondLogicLevel);
-    delayMicroseconds( this->protocol.pulseLength * pulses.low);
+    safeDelayMicroseconds( this->protocol.pulseLength * pulses.low);
   }
 }
 
