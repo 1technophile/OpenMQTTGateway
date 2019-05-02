@@ -508,10 +508,15 @@ void RCSwitch::sendTriState(const char* sCodeWord) {
  */
 static inline void safeDelayMicroseconds(unsigned long duration) {
 #if defined(ESP8266) || defined(ESP32)
-  // uses yield() to avoid wdt reset
-  unsigned long start = micros();
-  while ((micros() - start) < duration) {
-    yield();
+  if (duration > 10000) {
+    // if delay > 10 milliseconds, use yield() to avoid wdt reset
+    unsigned long start = micros();
+    while ((micros() - start) < duration) {
+      yield();
+    }
+  }
+  else {
+    delayMicroseconds(duration);
   }
 #else
   delayMicroseconds(duration);
@@ -608,11 +613,11 @@ void RCSwitch::transmit(HighLow pulses) {
   
   if (pulses.high > 0) {
     digitalWrite(this->nTransmitterPin, firstLogicLevel);
-    safeDelayMicroseconds( this->protocol.pulseLength * pulses.high);
+    delayMicroseconds( this->protocol.pulseLength * pulses.high);
   }
   if (pulses.low > 0) {
     digitalWrite(this->nTransmitterPin, secondLogicLevel);
-    safeDelayMicroseconds( this->protocol.pulseLength * pulses.low);
+    delayMicroseconds( this->protocol.pulseLength * pulses.low);
   }
 }
 
