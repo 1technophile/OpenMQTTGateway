@@ -330,10 +330,10 @@ void MiFloraDiscovery(char * mac){
   #define MiFloraparametersCount 4
   trc(F("MiFloraDiscovery"));
   char * MiFlorasensor[MiFloraparametersCount][8] = {
-     {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux }}","", "", "lu"} ,
-     {"sensor", "MiFlora-tem", mac,"","{{ value_json.tem }}","", "", "°C"} ,
-     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer }}","", "", ""} ,
-     {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi }}","", "", "%"}
+     {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux | is_defined }}","", "", "lu"} ,
+     {"sensor", "MiFlora-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", ""} ,
+     {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
   
@@ -358,9 +358,9 @@ void MiJiaDiscovery(char * mac){
   #define MiJiaparametersCount 3
   trc(F("MiJiaDiscovery"));
   char * MiJiasensor[MiJiaparametersCount][8] = {
-     {"sensor", "MiJia-batt", mac, "illuminance","{{ value_json.batt }}","", "", "V"} ,
-     {"sensor", "MiJia-tem", mac,"","{{ value_json.tem }}","", "", "°C"} ,
-     {"sensor", "MiJia-hum", mac,"","{{ value_json.hum }}","", "", "%"}
+     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+     {"sensor", "MiJia-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+     {"sensor", "MiJia-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
   
