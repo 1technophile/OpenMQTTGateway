@@ -177,14 +177,7 @@ boolean reconnect() {
 
       if (failure_number > maxMQTTretry){
         trc(F("failed connecting to mqtt"));
-        #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-          if (!connectedOnce) {
-            trc(F("fail connecting to mqtt, reseting wifi manager"));
-            setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
-          }
-        #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
-          setup_wifi();
-        #endif
+        return false;
       }
     }
   }
@@ -574,12 +567,26 @@ void loop()
   unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
-
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       // Attempt to reconnect
       if (reconnect()) {
         lastReconnectAttempt = 0;
+      } else {
+        #if defined(ESP8266) && !defined(ESPWifiManualSetup)
+          if (!connectedOnce) {
+            trc(F("reseting wifi manager"));
+            setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
+          }
+        #elif defined(ESP32) || defined(ESPWifiManualSetup)// ESP32 case we don't use Wifi manager yet
+          trc(F("restarting ESP"));
+          #ifdef ESP32
+            ESP.restart();
+          #endif
+          #ifdef ESP8266
+            ESP.reset();
+          #endif
+        #endif
       }
     }
   } else { //connected
