@@ -220,10 +220,10 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
       if (boolSWITCHTYPE != 99) {
         trc(F("MQTTtoRF2 switch type ok"));
         bool isDimCommand = boolSWITCHTYPE == 2;
-        unsigned long valueCODE = RF2data["adress"];
+        unsigned long valueCODE = RF2data["address"];
         int valueUNIT = RF2data["unit"] | -1;
         int valuePERIOD = RF2data["period"];
-        int valueGROUP  = RF2data["groupBit"];
+        int valueGROUP  = RF2data["group"];
         int valueDIM  = RF2data["dim"] | -1;
         if ((valueCODE != 0) || (valueUNIT  != -1)|| (valuePERIOD  != 0)){
           trc(F("MQTTtoRF2"));
