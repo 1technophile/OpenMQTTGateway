@@ -55,75 +55,86 @@ vector<BLEdevice> devices;
     static int taskCore = 0;
       
     class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-          void onResult(BLEAdvertisedDevice advertisedDevice) {
-            trc(F("Creating BLE buffer"));
-            StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-            JsonObject& BLEdata = jsonBuffer.createObject();
-            String mac_adress = advertisedDevice.getAddress().toString().c_str();
-            BLEdata.set("id", (char *)mac_adress.c_str());
-            mac_adress.replace(":","");
-            mac_adress.toUpperCase();
-            String mactopic = subjectBTtoMQTT + mac_adress;
-            if (advertisedDevice.haveName())              BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
-            if (advertisedDevice.haveManufacturerData())  BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
-            if (advertisedDevice.haveRSSI())              BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
-            if (advertisedDevice.haveTXPower())           BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
-            #ifdef subjectHomePresence
-              if (advertisedDevice.haveRSSI()) haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
-            #endif
-            if (advertisedDevice.haveServiceData()){
-
-                char mac[mac_adress.length()+1];
-                mac_adress.toCharArray(mac,mac_adress.length()+1);
-                
-                trc(F("Get service data "));
-
-                std::string serviceData = advertisedDevice.getServiceData();
-                int serviceDataLength = serviceData.length();
-                String returnedString = "";
-                for (int i=0; i<serviceDataLength; i++)
-                {
-                  int a = serviceData[i];
-                  if (a < 16) {
-                    returnedString = returnedString + "0";
-                  } 
-                  returnedString = returnedString + String(a,HEX);  
-                }
-                char service_data[returnedString.length()+1];
-                returnedString.toCharArray(service_data,returnedString.length()+1);
-                service_data[returnedString.length()] = '\0';
-                #ifdef pubBLEServiceData
-                  BLEdata.set("servicedata", service_data);  
-                  BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID().toString().c_str());
-                #endif
-                if((!oneWhite() || isWhite(mac)) && !isBlack(mac)){ //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
-                  pub((char *)mactopic.c_str(),BLEdata);
-                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
-                    trc("Processing BLE device data");
-                    int pos = -1;
-                    pos = strpos(service_data,"209800");
-                    if (pos != -1){
-                      trc(F("mi flora data reading"));
-                      #ifdef ZmqttDiscovery
-                        if(!isDiscovered(mac)) MiFloraDiscovery(mac);
-                      #endif
-                      process_data(pos - 24,service_data,mac);
-                    }
-                    pos = -1;
-                    pos = strpos(service_data,"20aa01");
-                    if (pos != -1){
-                      trc(F("mi jia data reading"));
-                      #ifdef ZmqttDiscovery
-                        if(!isDiscovered(mac)) MiJiaDiscovery(mac);
-                      #endif
-                      process_data(pos - 26,service_data,mac);
-                    }
+      void onResult(BLEAdvertisedDevice advertisedDevice) {
+        trc(F("Creating BLE buffer"));
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& BLEdata = jsonBuffer.createObject();
+        String mac_adress = advertisedDevice.getAddress().toString().c_str();
+        BLEdata.set("id", (char *)mac_adress.c_str());
+        mac_adress.replace(":","");
+        mac_adress.toUpperCase();
+        String mactopic = subjectBTtoMQTT + mac_adress;
+        if (advertisedDevice.haveName())              BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
+        if (advertisedDevice.haveManufacturerData())  BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
+        if (advertisedDevice.haveRSSI())              BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
+        if (advertisedDevice.haveTXPower())           BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
+        #ifdef subjectHomePresence
+          if (advertisedDevice.haveRSSI()) haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
+        #endif
+        if (advertisedDevice.haveServiceData()){
+            char mac[mac_adress.length()+1];
+            mac_adress.toCharArray(mac,mac_adress.length()+1);
+            trc(F("Get services data :"));
+            int serviceDataCount = advertisedDevice.getServiceDataCount();
+            trc(serviceDataCount);
+            for (int j = 0; j < serviceDataCount;j++){
+              std::string serviceData = advertisedDevice.getServiceData(j);               
+              int serviceDataLength = serviceData.length();
+              String returnedString = "";
+              for (int i=0; i<serviceDataLength; i++)
+              {
+                int a = serviceData[i];
+                if (a < 16) {
+                  returnedString = returnedString + "0";
+                } 
+                returnedString = returnedString + String(a,HEX);  
+              }
+              char service_data[returnedString.length()+1];
+              returnedString.toCharArray(service_data,returnedString.length()+1);
+              service_data[returnedString.length()] = '\0';
+              #ifdef pubBLEServiceData
+                BLEdata.set("servicedata", service_data);  
+                BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
+              #endif
+              if((!oneWhite() || isWhite(mac)) && !isBlack(mac)){ //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+                pub((char *)mactopic.c_str(),BLEdata);
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
+                  trc("Processing BLE device data");
+                  int pos = -1;
+                  pos = strpos(service_data,"209800");
+                  if (pos != -1){
+                    trc(F("mi flora data reading"));
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) MiFloraDiscovery(mac);
+                    #endif
+                    process_data(pos - 24,service_data,mac);
+                  }
+                  pos = -1;
+                  pos = strpos(service_data,"20aa01");
+                  if (pos != -1){
+                    trc(F("mi jia data reading"));
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) MiJiaDiscovery(mac);
+                    #endif
+                    process_data(pos - 26,service_data,mac);
+                  }
+                  pos = -1;
+                  pos = strpos(service_data,"205b04");
+                  if (pos != -1){
+                    trc(F("LYWSD02 data reading"));
+                    //example 70205b04b96ab883c8593f09041002e000
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) LYWSD02Discovery(mac);
+                    #endif
+                    process_data(pos - 24,service_data,mac);
                   }
                 }
+              }
             }
-          }
-      };
-
+        }
+      }
+    };
+  
     void setupBT(){
         BLEinterval = TimeBtw_Read;
         trc(F("BLEinterval btw scans"));
@@ -302,6 +313,15 @@ vector<BLEdevice> devices;
                         #endif
                         boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                       }
+                      pos = -1;
+                      pos = strpos(d[5].extract,"205b04");
+                      if (pos != -1){
+                        trc("LYWSD02 data reading");
+                        #ifdef ZmqttDiscovery
+                          if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
+                        #endif
+                        boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                      }
                       return true;
                    }
                 }
@@ -380,6 +400,34 @@ void MiJiaDiscovery(char * mac){
   device.isDisc = true;
   devices.push_back(device);
 }
+
+void LYWSD02Discovery(char * mac){
+  #define LYWSD02parametersCount 3
+  trc(F("LYWSD02Discovery"));
+  char * LYWSD02sensor[LYWSD02parametersCount][8] = {
+     {"sensor", "LYWSD02-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+     {"sensor", "LYWSD02-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+     {"sensor", "LYWSD02-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<LYWSD02parametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(LYWSD02sensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
+   createDiscovery(LYWSD02sensor[i][0],
+                    (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
+                    LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  devices.push_back(device);
+}
+
 #endif
 
 boolean process_data(int offset, char * rest_data, char * mac_adress){
