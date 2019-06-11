@@ -104,6 +104,7 @@ vector<BLEdevice> devices;
                   pos = strpos(service_data,"209800");
                   if (pos != -1){
                     trc(F("mi flora data reading"));
+                    //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) MiFloraDiscovery(mac);
                     #endif
@@ -122,11 +123,21 @@ vector<BLEdevice> devices;
                   pos = strpos(service_data,"205b04");
                   if (pos != -1){
                     trc(F("LYWSD02 data reading"));
-                    //example 70205b04b96ab883c8593f09041002e000
+                    //example "servicedata":"70205b04b96ab883c8593f09041002e000"
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) LYWSD02Discovery(mac);
                     #endif
                     process_data(pos - 24,service_data,mac);
+                  }
+                  pos = -1;
+                  pos = strpos(service_data,"304703");
+                  if (pos != -1){
+                    trc(F("ClearGrass T RH data reading"));
+                    //example "servicedata":"5030470340743e10342d58041002d6000a100164"
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
+                    #endif
+                    process_data(pos - 26,service_data,mac);
                   }
                 }
               }
@@ -322,6 +333,15 @@ vector<BLEdevice> devices;
                         #endif
                         boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
                       }
+                      pos = -1;
+                      pos = strpos(d[5].extract,"304703");
+                      if (pos != -1){
+                        trc("CLEARGRASSTRH data reading");
+                        #ifdef ZmqttDiscovery
+                          if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
+                        #endif
+                        boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                      }
                       return true;
                    }
                 }
@@ -420,6 +440,33 @@ void LYWSD02Discovery(char * mac){
                     (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
                     LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  devices.push_back(device);
+}
+
+void CLEARGRASSTRHDiscovery(char * mac){
+  #define CLEARGRASSTRHparametersCount 3
+  trc(F("CLEARGRASSTRHDiscovery"));
+  char * CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
+     {"sensor", "CLEARGRASSTRH-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+     {"sensor", "CLEARGRASSTRH-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+     {"sensor", "CLEARGRASSTRH-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<CLEARGRASSTRHparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(CLEARGRASSTRHsensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
+   createDiscovery(CLEARGRASSTRHsensor[i][0],
+                    (char *)discovery_topic.c_str(), CLEARGRASSTRHsensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, CLEARGRASSTRHsensor[i][3], CLEARGRASSTRHsensor[i][4],
+                    CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
                     0,"","",true,"");
   }
   BLEdevice device;
