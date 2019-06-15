@@ -391,6 +391,8 @@ void MiFloraDiscovery(char * mac){
   BLEdevice device;
   strcpy( device.macAdr, mac );
   device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
   devices.push_back(device);
 }
 
@@ -418,6 +420,8 @@ void MiJiaDiscovery(char * mac){
   BLEdevice device;
   strcpy( device.macAdr, mac );
   device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
   devices.push_back(device);
 }
 
@@ -445,6 +449,8 @@ void LYWSD02Discovery(char * mac){
   BLEdevice device;
   strcpy( device.macAdr, mac );
   device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
   devices.push_back(device);
 }
 
@@ -472,6 +478,8 @@ void CLEARGRASSTRHDiscovery(char * mac){
   BLEdevice device;
   strcpy( device.macAdr, mac );
   device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
   devices.push_back(device);
 }
 
