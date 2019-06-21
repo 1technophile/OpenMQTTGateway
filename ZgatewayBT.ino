@@ -309,45 +309,45 @@ vector<BLEdevice> devices;
                     BLEdata.set("servicedata", (char *)Service_data.c_str());
                   #endif
                   pub((char *)topic.c_str(),BLEdata);
-                  if (strcmp(d[4].extract, "fe95") == 0) {
-                      int pos = -1;
-                      pos = strpos(d[5].extract,"209800");
-                      if (pos != -1) {
-                        trc("mi flora data reading");
-                        #ifdef ZmqttDiscovery
-                          if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
-                        #endif
-                        boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
-                      }
-                      pos = -1;
-                      pos = strpos(d[5].extract,"20aa01");
-                      if (pos != -1){
-                        trc("mi jia data reading");
-                        #ifdef ZmqttDiscovery
-                          if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
-                        #endif
-                        boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
-                      }
-                      pos = -1;
-                      pos = strpos(d[5].extract,"205b04");
-                      if (pos != -1){
-                        trc("LYWSD02 data reading");
-                        #ifdef ZmqttDiscovery
-                          if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
-                        #endif
-                        boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
-                      }
-                      pos = -1;
-                      pos = strpos(d[5].extract,"304703");
-                      if (pos != -1){
-                        trc("CLEARGRASSTRH data reading");
-                        #ifdef ZmqttDiscovery
-                          if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
-                        #endif
-                        boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
-                      }
-                      return true;
-                   }
+                  int pos = -1;
+                  pos = strpos(d[5].extract,"209800");
+                  if (pos != -1) {
+                    trc("mi flora data reading");
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
+                    #endif
+                    boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                  }
+                  pos = -1;
+                  pos = strpos(d[5].extract,"20aa01");
+                  //example "servicedata":"5020aa0194dfaa33342d580d1004e3002c02"
+                  if (pos != -1){
+                    trc("mi jia data reading");
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
+                    #endif
+                    boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                  }
+                  pos = -1;
+                  pos = strpos(d[5].extract,"205b04");
+                  //example "servicedata":"141695fe70205b0461298882c8593f09061002d002"
+                  if (pos != -1){
+                    trc("LYWSD02 data reading");
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
+                    #endif
+                    boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                  }
+                  pos = -1;
+                  pos = strpos(d[5].extract,"304703");
+                  if (pos != -1){
+                    trc("CLEARGRASSTRH data reading");
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
+                    #endif
+                    boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                  }
+                  return true;
                 }
               }
             }
