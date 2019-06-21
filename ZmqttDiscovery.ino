@@ -384,7 +384,7 @@ void createDiscovery(char * sensor_type,
 
 
   if (child_device){
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(2);
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonDeviceBuffer;
     JsonObject &device = jsonDeviceBuffer.createObject();
     device.set("name", Gateway_Name);
