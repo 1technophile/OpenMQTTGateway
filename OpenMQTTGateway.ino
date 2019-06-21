@@ -110,10 +110,13 @@ boolean connectedOnce = false; //indicate if we have been connected once to MQTT
 int failure_number = 0; // number of failure connecting to MQTT
 
 #ifdef ESP32
+  #include <FS.h> 
+  #include "SPIFFS.h"
   #include <WiFi.h>
   #include <ArduinoOTA.h>
   #include <WiFiUdp.h>
   WiFiClient eClient;
+  #include <WiFiManager.h>  
   #ifdef MDNS_SD
     #include <ESPmDNS.h>
   #endif
@@ -216,10 +219,10 @@ void setup()
       #endif
     #endif
     
-    #if defined(ESP8266) && !defined(ESPWifiManualSetup)
-      setup_wifimanager(false);
-    #else // ESP32 case we don't use Wifi manager yet
+    #if defined(ESPWifiManualSetup)
       setup_wifi();
+    #else
+      setup_wifimanager(false);
     #endif
 
     trc(F("OpenMQTTGateway mac: "));
@@ -362,7 +365,7 @@ void setup()
 }
 
 
-#if defined(ESP32) || defined(ESPWifiManualSetup)
+#if defined(ESPWifiManualSetup)
 void setup_wifi() {
   delay(10);
   int failureAttempt = 0; //DIRTY FIX ESP32 waiting for https://github.com/espressif/arduino-esp32/issues/653
@@ -386,7 +389,7 @@ void setup_wifi() {
   trc(F("WiFi ok with manual config credentials"));
 }
 
-#elif defined(ESP8266) && !defined(ESPWifiManualSetup)
+#elif defined(ESP8266) || defined(ESP32)
 //Wifi manager parameters
 //flag for saving data
 bool shouldSaveConfig = true;
@@ -474,7 +477,11 @@ void setup_wifimanager(boolean reset_settings){
       trc(F("failed to connect and hit timeout"));
       delay(3000);
       //reset and try again, or maybe put it to deep sleep
-      ESP.reset();
+      #if defined(ESP8266) 
+        ESP.reset();
+      #else
+        ESP.restart();
+      #endif
       delay(5000);
     }
   
