@@ -64,39 +64,41 @@ vector<BLEdevice> devices;
         mac_adress.replace(":","");
         mac_adress.toUpperCase();
         String mactopic = subjectBTtoMQTT + mac_adress;
-        if (advertisedDevice.haveName())              BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
-        if (advertisedDevice.haveManufacturerData())  BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
-        if (advertisedDevice.haveRSSI())              BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
-        if (advertisedDevice.haveTXPower())           BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
-        #ifdef subjectHomePresence
-          if (advertisedDevice.haveRSSI()) haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
-        #endif
-        if (advertisedDevice.haveServiceData()){
-            char mac[mac_adress.length()+1];
-            mac_adress.toCharArray(mac,mac_adress.length()+1);
-            trc(F("Get services data :"));
-            int serviceDataCount = advertisedDevice.getServiceDataCount();
-            trc(serviceDataCount);
-            for (int j = 0; j < serviceDataCount;j++){
-              std::string serviceData = advertisedDevice.getServiceData(j);               
-              int serviceDataLength = serviceData.length();
-              String returnedString = "";
-              for (int i=0; i<serviceDataLength; i++)
-              {
-                int a = serviceData[i];
-                if (a < 16) {
-                  returnedString = returnedString + "0";
-                } 
-                returnedString = returnedString + String(a,HEX);  
-              }
-              char service_data[returnedString.length()+1];
-              returnedString.toCharArray(service_data,returnedString.length()+1);
-              service_data[returnedString.length()] = '\0';
-              #ifdef pubBLEServiceData
-                BLEdata.set("servicedata", service_data);  
-                BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
-              #endif
-              if((!oneWhite() || isWhite(mac)) && !isBlack(mac)){ //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+        char mac[mac_adress.length()+1];
+        mac_adress.toCharArray(mac,mac_adress.length()+1);
+        trc("device detected");
+        trc(mac);
+        if((!oneWhite() || isWhite(mac)) && !isBlack(mac)){ //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+          if (advertisedDevice.haveName())              BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
+          if (advertisedDevice.haveManufacturerData())  BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
+          if (advertisedDevice.haveRSSI())              BLEdata.set("rssi", (int) advertisedDevice.getRSSI());
+          if (advertisedDevice.haveTXPower())           BLEdata.set("txpower", (int8_t) advertisedDevice.getTXPower());
+          #ifdef subjectHomePresence
+            if (advertisedDevice.haveRSSI()) haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
+          #endif
+          if (advertisedDevice.haveServiceData()){
+              trc(F("Get services data :"));
+              int serviceDataCount = advertisedDevice.getServiceDataCount();
+              trc(serviceDataCount);
+              for (int j = 0; j < serviceDataCount;j++){
+                std::string serviceData = advertisedDevice.getServiceData(j);               
+                int serviceDataLength = serviceData.length();
+                String returnedString = "";
+                for (int i=0; i<serviceDataLength; i++)
+                {
+                  int a = serviceData[i];
+                  if (a < 16) {
+                    returnedString = returnedString + "0";
+                  } 
+                  returnedString = returnedString + String(a,HEX);  
+                }
+                char service_data[returnedString.length()+1];
+                returnedString.toCharArray(service_data,returnedString.length()+1);
+                service_data[returnedString.length()] = '\0';
+                #ifdef pubBLEServiceData
+                  BLEdata.set("servicedata", service_data);  
+                  BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
+                #endif
                 pub((char *)mactopic.c_str(),BLEdata);
                 if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
                   trc("Processing BLE device data");
@@ -139,9 +141,11 @@ vector<BLEdevice> devices;
                     #endif
                     process_data(pos - 26,service_data,mac);
                   }
-                }
+                  }
               }
-            }
+          }
+        }else{
+          trc(F("Filtered mac device"));
         }
       }
     };
@@ -280,6 +284,9 @@ vector<BLEdevice> devices;
                   trc(F("Creating BLE buffer"));
                   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
                   JsonObject& BLEdata = jsonBuffer.createObject();
+                  strupp(d[0].extract);
+                  if(isBlack(d[0].extract)) return false; //if black listed mac we go out
+                  if(oneWhite() && !isWhite(d[0].extract)) return false; //if we have at least one white mac and this mac is not white we go out
                   #ifdef subjectHomePresence
                     String HomePresenceId;
                     for (int i = 0; i<12; i++){
@@ -290,9 +297,6 @@ vector<BLEdevice> devices;
                     trc(HomePresenceId);
                     BLEdata.set("id", (char *)HomePresenceId.c_str());
                   #endif
-                  strupp(d[0].extract);
-                  if(isBlack(d[0].extract)) return false; //if black listed mac we go out
-                  if(oneWhite() && !isWhite(d[0].extract)) return false; //if we have at least one white mac and this mac is not white we go out
                   String topic = subjectBTtoMQTT + String(d[0].extract);
                   int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
                   BLEdata.set("rssi", (int)rssi);
