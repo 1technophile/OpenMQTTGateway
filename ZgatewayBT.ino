@@ -154,7 +154,6 @@ vector<BLEdevice> devices;
         BLEinterval = TimeBtw_Read;
         trc(F("BLEinterval btw scans"));
         trc(BLEinterval);
-        #ifdef multiCore
         // we setup a task with priority one to avoid conflict with other gateways
         xTaskCreatePinnedToCore(
                           coreTask,   /* Function to implement the task */
@@ -165,12 +164,8 @@ vector<BLEdevice> devices;
                           NULL,       /* Task handle. */
                           taskCore);  /* Core where the task should run */
           trc(F("ZgatewayBT multicore ESP32 setup done "));
-        #else
-          trc(F("ZgatewayBT singlecore ESP32 setup done "));
-        #endif
     }
     
-    #ifdef multiCore
     void coreTask( void * pvParameters ){
      
         String taskMessage = "BT Task running on core ";
@@ -185,17 +180,6 @@ vector<BLEdevice> devices;
     boolean BTtoMQTT(){ // for on demande BLE scans
       BLEscan();
     }
-    #else
-    boolean BTtoMQTT(){
-      unsigned long now = millis();
-      if (now > (timeBLE + BLEinterval)) {
-              timeBLE = now;
-              BLEscan();
-              return true;
-      }
-      return false;
-    }
-    #endif
     void BLEscan(){
             
       TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;

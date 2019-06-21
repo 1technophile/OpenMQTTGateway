@@ -646,12 +646,6 @@ void loop()
     #ifdef ZgatewayIR
       IRtoMQTT();
     #endif
-    #ifdef ZgatewayBT
-        #ifndef multiCore
-          if(BTtoMQTT())
-          trc(F("BTtoMQTT OK"));
-        #endif
-    #endif
     #ifdef Zgateway2G
       if(_2GtoMQTT()){
       trc(F("2GtoMQTT OK"));
