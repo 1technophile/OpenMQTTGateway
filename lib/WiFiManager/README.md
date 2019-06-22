@@ -3,21 +3,34 @@
 # WiFiManager
 ESP8266 WiFi Connection manager with fallback web configuration portal
 
-[![Build Status](https://travis-ci.org/tzapu/WiFiManager.svg?branch=master)](https://travis-ci.org/tzapu/WiFiManager)
+[![Build Status](https://travis-ci.org/tzapu/WiFiManager.svg?branch=development)](https://travis-ci.org/tzapu/WiFiManager)
+
+![ESP8266](https://img.shields.io/badge/ESP-8266-000000.svg?longCache=true&style=flat&colorA=CC101F)
+![ESP32](https://img.shields.io/badge/ESP-32-000000.svg?longCache=true&style=flat&colorA=CC101F)
 
 The configuration portal is of the captive variety, so on various devices it will present the configuration dialogue as soon as you connect to the created access point.
 
 First attempt at a library. Lots more changes and fixes to do. Contributions are welcome.
 
-#### This works with the ESP8266 Arduino platform with a recent stable release(2.0.0 or newer) https://github.com/esp8266/Arduino
+**This works with the ESP8266 Arduino platform with a recent stable release(2.0.0 or newer)**
+
+[https://github.com/esp8266/Arduino](https://github.com/esp8266/Arduino)
+
+**This works with the ESP32 Arduino platform with staging** 
+
+[https://github.com/espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+
+### Known Issues
+* Documentation needs to be updated, see [https://github.com/tzapu/WiFiManager/issues/500](https://github.com/tzapu/WiFiManager/issues/500)
 
 ## Contents
  - [How it works](#how-it-works)
  - [Wishlist](#wishlist)
  - [Quick start](#quick-start)
    - Installing
-     - [Through Library Manager](#install-through-library-manager)
-     - [From Github](#checkout-from-github)
+     - [Arduino - Through Library Manager](#install-through-library-manager)
+     - [Arduino - From Github](#checkout-from-github)
+     - [PlatformIO]
    - [Using](#using)
  - [Documentation](#documentation)
    - [Access Point Password](#password-protect-the-configuration-access-point)
@@ -34,12 +47,13 @@ First attempt at a library. Lots more changes and fixes to do. Contributions are
 
 
 ## How It Works
-- when your ESP starts up, it sets it up in Station mode and tries to connect to a previously saved Access Point
+- When your ESP starts up, it sets it up in Station mode and tries to connect to a previously saved Access Point
 - if this is unsuccessful (or no previous network saved) it moves the ESP into Access Point mode and spins up a DNS and WebServer (default ip 192.168.4.1)
 - using any wifi enabled device with a browser (computer, phone, tablet) connect to the newly created Access Point
 - because of the Captive Portal and the DNS server you will either get a 'Join to network' type of popup or get any domain you try to access redirected to the configuration portal
 - choose one of the access points scanned, enter password, click save
 - ESP will try to connect. If successful, it relinquishes control back to your app. If not, reconnect to AP and reconfigure.
+- There are options to change this behavior or manually start the configportal and webportal independantly as well as run them in non blocking mode.
 
 ## How It Looks
 ![ESP8266 WiFi Captive Portal Homepage](http://i.imgur.com/YPvW9eql.png) ![ESP8266 WiFi Captive Portal Configuration](http://i.imgur.com/oicWJ4gl.png)
@@ -55,9 +69,35 @@ First attempt at a library. Lots more changes and fixes to do. Contributions are
 - [x] add to PlatformIO
 - [ ] add multiple sets of network credentials
 - [x] allow users to customize CSS
-- [ ] ESP32 support or instructions
 - [ ] rewrite documentation for simplicity, based on scenarios/goals
-- [ ] rely on the SDK's built in auto connect more than forcing a connect
+
+### Development
+- [x] ESP32 support
+- [x] rely on the SDK's built in auto connect more than forcing a connect
+- [x] add non blocking mode
+- [x] easy customization of strings
+- [x] hostname support
+- [x] fix various bugs and workarounds for esp SDK issues
+- [x] additional info page items
+- [x] last status display / faiilure reason
+- [x] customizeable menu
+- [x] seperate custom params page
+- [x] ondemand webportal
+- [x] complete refactor of code to segment functions
+- [x] wiif scan icons or percentage display
+- [x] invert class for dark mode
+- [x] more template tokens
+- [x] progmem for all strings
+- [ ] new callbacks
+- [ ] new callouts / filters
+- [ ] shared web server instance
+- [x] latest esp idf/sdk support
+- [x] wm is now non persistent, will not erase or change stored esp config on esp8266
+- [x] tons of debugging output / levels
+- [ ] disable captiveportal
+- [ ] preload wiifscans, faster page loads
+- [ ] softap stability fixes when sta is not connected
+
 
 ## Quick Start
 
@@ -65,7 +105,7 @@ First attempt at a library. Lots more changes and fixes to do. Contributions are
 You can either install through the Arduino Library Manager or checkout the latest changes or a release from github
 
 #### Install through Library Manager
-__Currently version 0.8+ works with release 2.0.0 or newer of the [ESP8266 core for Arduino](https://github.com/esp8266/Arduino)__
+__Currently version 0.8+ works with release 2.4.0 or newer of the [ESP8266 core for Arduino](https://github.com/esp8266/Arduino)__
  - in Arduino IDE got to Sketch/Include Library/Manage Libraries
   ![Manage Libraries](http://i.imgur.com/9BkEBkR.png)
 
@@ -75,20 +115,16 @@ __Currently version 0.8+ works with release 2.0.0 or newer of the [ESP8266 core 
  - click Install and start [using it](#using)
 
 ####  Checkout from github
-__Github version works with release 2.0.0 or newer of the [ESP8266 core for Arduino](https://github.com/esp8266/Arduino)__
+__Github version works with release 2.4.0 or newer of the [ESP8266 core for Arduino](https://github.com/esp8266/Arduino)__
 - Checkout library to your Arduino libraries folder
 
 ### Using
 - Include in your sketch
 ```cpp
-#include <ESP8266WiFi.h>          //ESP8266 Core WiFi Library (you most likely already have this in your sketch)
-
-#include <DNSServer.h>            //Local DNS Server used for redirecting all requests to the configuration portal
-#include <ESP8266WebServer.h>     //Local WebServer used to serve the configuration portal
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 ```
 
-- Initialize library, in your setup function add
+- Initialize library, in your setup function add, NOTEif you are using non blocking you will make sure you create this in global scope or handle appropriatly , it will not work if in setup and using non blocking mode.
 ```cpp
 WiFiManager wifiManager;
 ```
@@ -184,6 +220,12 @@ void loop() {
 ```
 See example for a more complex version. [OnDemandConfigPortal](https://github.com/tzapu/WiFiManager/tree/master/examples/OnDemandConfigPortal)
 
+#### Exiting from the Configuration Portal
+Normally, once entered, the configuration portal will continue to loop until WiFi credentials have been successfully entered or a timeout is reached.
+If you'd prefer to exit without joining a WiFi network, say becuase you're going to put the ESP into AP mode, then press the "Exit" button
+on the main webpage.
+If started via `autoConnect` or `startConfigPortal` then it will return `false (portalAbortResult)`
+
 #### Custom Parameters
 You can use WiFiManager to collect more parameters than just SSID and password.
 This could be helpful for configuring stuff like MQTT host and port, [blynk](http://www.blynk.cc) or [emoncms](http://emoncms.org) tokens, just to name a few.
@@ -191,18 +233,18 @@ This could be helpful for configuring stuff like MQTT host and port, [blynk](htt
 Usage scenario would be:
 - load values from somewhere (EEPROM/FS) or generate some defaults
 - add the custom parameters to WiFiManager using
- ```cpp
+```cpp
  // id/name, placeholder/prompt, default, length
  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
  wifiManager.addParameter(&custom_mqtt_server);
 
- ```
+```
 - if connection to AP fails, configuration portal starts and you can set /change the values (or use on demand configuration portal)
 - once configuration is done and connection is established [save config callback]() is called
 - once WiFiManager returns control to your application, read and save the new values using the `WiFiManagerParameter` object.
- ```cpp
+```cpp
  mqtt_server = custom_mqtt_server.getValue();
- ```  
+```  
 This feature is a lot more involved than all the others, so here are some examples to fully show how it is done.
 You should also take a look at adding custom HTML to your form.
 
@@ -222,7 +264,7 @@ wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddr
 ##### Custom Station (client) Static IP Configuration
 This will make use the specified IP configuration instead of using DHCP in station mode.
 ```cpp
-wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,99), IPAddress(192,168,0,1), IPAddress(255,255,255,0));
+wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,99), IPAddress(192,168,0,1), IPAddress(255,255,255,0)); // optional DNS 4th argument
 ```
 There are a couple of examples in the examples folder that show you how to set a static IP and even how to configure it through the web configuration portal.
 
@@ -234,7 +276,7 @@ You can use this to any html bit to the head of the configuration portal. If you
 ```cpp
 wifiManager.setCustomHeadElement("<style>html{filter: invert(100%); -webkit-filter: invert(100%);}</style>");
 ```
-- inject a custom bit of html in the configuration form
+- inject a custom bit of html in the configuration/param form
 ```cpp
 WiFiManagerParameter custom_text("<p>This is just a text paragraph</p>");
 wifiManager.addParameter(&custom_text);
@@ -244,6 +286,14 @@ Just add the bit you want added as the last parameter to the custom parameter co
 ```cpp
 WiFiManagerParameter custom_mqtt_server("server", "mqtt server", "iot.eclipse", 40, " readonly");
 ```
+
+#### Theming
+You can customize certain elements of the default template with some builtin classes
+```CPP
+wifiManager.setClass("invert"); // dark theme
+wifiManager.setScanDispPerc(true); // display percentages instead of graphs for RSSI
+```
+There are additional classes in the css you can use in your custom html , see the example template.
 
 #### Filter Networks
 You can filter networks based on signal quality and show/hide duplicate networks.
@@ -261,10 +311,23 @@ wifiManager.setRemoveDuplicateAPs(false);
 ```
 
 #### Debug
-Debug is enabled by default on Serial. To disable add before autoConnect
+Debug is enabled by default on `Serial` in non-stable releases. To disable add before autoConnect/startConfigPortal
 ```cpp
 wifiManager.setDebugOutput(false);
 ```
+
+You can pass in a custom stream via constructor 
+```CPP
+WiFiManager wifiManager(Serial1);
+```
+
+You can customize the debug level by changing `_debugLevel` in source
+options are:
+* DEBUG_ERROR
+* DEBUG_NOTIFY
+* DEBUG_VERBOSE
+* DEBUG_DEV
+* DEBUG_MAX
 
 ## Troubleshooting
 If you get compilation errors, more often than not, you may need to install a newer version of the ESP8266 core for Arduino.
@@ -277,7 +340,122 @@ If you connect to the created configuration Access Point but the configuration p
 
 If trying to connect ends up in an endless loop, try to add `setConnectTimeout(60)` before `autoConnect();`. The parameter is timeout to try connecting in seconds.
 
+I get stuck in ap mode when the power goes out or modem resets, try a setConfigPortalTimeout(seconds). This will cause the configportal to close after no activity, and you can reboot or attempt reconnection in your code.
+
 ## Releases
+### 1.0.1
+
+### Development Overview
+
+#### Added Public Methods
+`setConfigPortalBlocking`
+
+`setShowStaticFields`
+
+`setCaptivePortalEnable`
+
+`setRestorePersistent`
+
+`setCaptivePortalClientCheck`
+
+`setWebPortalClientCheck`
+
+`startWebPortal`
+
+`stopWebPortal`
+
+`process`
+
+`disconnect`
+
+`erase`
+
+` debugSoftAPConfig`
+
+` debugPlatformInfo`
+
+`setScanDispPerc`
+
+`setHostname`
+
+`setMenu(menu_page_t[])`
+
+`setWiFiAutoReconnect`
+
+` setSTAStaticIPConfig(..,dns)`
+
+`setShowDnsFields`
+
+`getLastConxResult`
+
+`getWLStatusString`
+
+`getModeString`
+
+`getWiFiIsSaved`
+
+`setShowInfoErase`
+
+`setEnableConfigPortal`
+
+`setCountry`
+
+`setClass`
+
+`htmleEtities`
+
+
+#### WiFiManagerParameter
+`WiFiManagerParameter(id,label)`
+
+`WiFiManagerParameter.setValue(value,length)`
+
+`getParameters`
+
+`getParametersCount`
+
+
+#### Constructors
+`WiFiManager(Stream& consolePort)`
+
+#### define flags
+❗️  **Defines cannot be set in user sketches**
+`#define WM_MDNS       // use MDNS`
+
+`#define WM_FIXERASECONFIG // use erase flash fix, esp8266 2.4.0`
+
+`#define WM_ERASE_NVS // esp32 erase(true) will erase NVS`
+
+`#include <rom/rtc.h> // esp32 info page will show last reset reasons if this file is included`
+
+#### Changes Overview
+- ESP32 support ( fairly stable )
+- complete refactor of strings `strings_en.h`
+- adds new tokens for wifiscan, and some classes (left , invert icons, MSG color)
+- adds status callout panel default, primary, special colors
+-  adds tons of info on info page, and erase capability
+- adds signal icons, replaces percentage ( has hover titles )
+- adds labels to all inputs (replaces placeholders)
+- all html ( and eventually all strings except debug) moved to `strings_en.h`
+- added additional debugging, compressed debug lines, debuglevels
+- persistent disabled, and restored via de/con-stuctor (uses `setRestorePersistent`)
+- should retain all user modes including AP, should not overwrite or persist user modes or configs,even STA (`storeSTAmode`) (BUGGY)
+- ⚠️ return values may have changed depending on portal abort, or timeout ( `portalTimeoutResult`,`portalAbortResult`)
+- params memory is auto allocated by increment of `WIFI_MANAGER_MAX_PARAMS(5)` when exceeded, user no longer needs to specify this at all.
+- addparameter now returns bool, and it returns false if param ID is not alphanum [0-9,A-Z,a-z,_]
+- param field ids allow {I} token to use param_n instead of string in case someones wants to change this due to i18n or character issues
+- provides `#DEFINE FIXERASECONFIG` to help deal with https://github.com/esp8266/Arduino/pull/3635
+- failure reason reporting on portal
+- set esp8266 sta hostname, esp32 sta+ap hostname ( DHCP client id)
+- pass in debug stream in constructor WiFiManager(Stream& consolePort)
+- you can force ip fields off with showxfields(false) if you set _disableIpFields=true
+- param menu/page (setup) added to separate params from wifi page, handled automatically by setMenu
+- set custom root menu
+- disable configportal on autoconnect
+- wm parameters init is now protected, allowing child classes, example included
+- wifiscans are precached and async for faster page loads, refresh forces rescan
+- adds esp32 gettemperature ( currently commented out, useful for relative measurement only )
+
 #### 0.12
 - removed 204 header response
 - fixed incompatibility with other libs using isnan and other std:: functions without namespace
@@ -296,53 +474,24 @@ If trying to connect ends up in an endless loop, try to add `setConnectTimeout(6
 - added an alternative to waitForConnectResult() for debugging
 - changed `setTimeout(seconds)` to `setConfigPortalTimeout(seconds)`
 
-##### 0.9
- - fixed support for encoded characters in ssid/pass
-
-##### 0.8
- - made it compile on older versions of ESP8266 core as well, tested down to 2.0.0
- - added simple example for Custom IP
-
-##### 0.7
- - added static IP in station mode
- - added example of persisting custom IP to FS config.json
- - more option on portal homepage
- - added on PlatformIO
-
-##### 0.6
- - custom parameters
- - prettier
- - on demand config portal
- - commit #100 :D
-
-##### 0.5
- - Added to Arduino Boards Manager - Thanks Max
- - moved most stuff to PROGMEM
- - added signal quality and a nice little padlock to show which networks are encrypted
-
-##### v0.4 - all of it user contributed changes - Thank you
- - added ability to password protect the configuration Access Point
- - callback for enter configuration mode
- - memory allocation improvements
-
-##### v0.3
- - removed the need for EEPROM and works with the 2.0.0 and above stable release of the ESP8266 for Arduino IDE package
- - removed restart on save of credentials
- - updated examples
-
-##### v0.2
-needs the latest staging version (or at least a recent release of the staging version) to work
-
-##### v0.1
-works with the staging release ver. 1.6.5-1044-g170995a, built on Aug 10, 2015 of the ESP8266 Arduino library.
-
-
 ### Contributions and thanks
 The support and help I got from the community has been nothing short of phenomenal. I can't thank you guys enough. This is my first real attept in developing open source stuff and I must say, now I understand why people are so dedicated to it, it is because of all the wonderful people involved.
 
 __THANK YOU__
 
-[Shawn A](https://github.com/tablatronix)
+The esp8266 and esp32 arduino and idf maintainers!
+
+[Shawn A aka tablatronix](https://github.com/tablatronix)
+
+[liebman](https://github.com/liebman)
+
+[Evgeny Dontsov](https://github.com/dontsovcmc)
+
+[Chris Marrin](https://github.com/cmarrin)
+
+[bbx10](https://github.com/bbx10)
+
+[kentaylor](https://github.com/kentaylor)
 
 [Maximiliano Duarte](https://github.com/domonetic)
 
@@ -368,7 +517,11 @@ __THANK YOU__
 
 [walthercarsten](https://github.com/walthercarsten)
 
-Sorry if i have missed anyone.
+And countless others
 
 #### Inspiration
-- http://www.esp8266.com/viewtopic.php?f=29&t=2520
+ * http://www.esp8266.com/viewtopic.php?f=29&t=2520
+ * https://github.com/chriscook8/esp-arduino-apboot
+ * https://github.com/esp8266/Arduino/tree/master/libraries/DNSServer/examples/CaptivePortalAdvanced
+ * Built by AlexT https://github.com/tzapu
+

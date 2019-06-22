@@ -46,11 +46,11 @@
  */
 
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
-#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+#if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
   //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #endif
 
-#if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
+#if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
   #define wifi_ssid "wifi ssid"
   #define wifi_password "wifi password"
 #else // for arduino + W5100
