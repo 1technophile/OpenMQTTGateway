@@ -10,9 +10,9 @@ before_install:
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
   - export DISPLAY=:1.0
-  - wget http://downloads.arduino.cc/arduino-1.8.6-linux64.tar.xz
-  - tar xf arduino-1.8.6-linux64.tar.xz
-  - sudo mv arduino-1.8.6 /usr/local/share/arduino
+  - wget http://downloads.arduino.cc/arduino-1.8.9-linux64.tar.xz
+  - tar xf arduino-1.8.9-linux64.tar.xz
+  - sudo mv arduino-1.8.9 /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
 install:
   - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
@@ -20,16 +20,10 @@ install:
   - cp /usr/local/share/arduino/OpenMQTTGateway/tests/Test_config.h /usr/local/share/arduino/OpenMQTTGateway/User_config.h
   - rm -rf /usr/local/share/arduino/libraries/RobotIRremote
   - cp -R /usr/local/share/arduino/OpenMQTTGateway/lib/. /usr/local/share/arduino/libraries
-  - mkdir -p /usr/local/share/arduino/hardware/espressif
-  - cd /usr/local/share/arduino/hardware/espressif
-  - wget https://github.com/espressif/arduino-esp32/archive/89859f7f4c07ce3e5d487a4b689dbda78f5d5c3a.zip -O /tmp/esp32.zip
-  - unzip /tmp/esp32.zip -d /usr/local/share/arduino/hardware/espressif
-  - mv arduino-esp32* esp32
-  - cd esp32/tools/
-  - python get.py
   - cd /usr/local/share/arduino/OpenMQTTGateway
-  - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
+  - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json,https://dl.espressif.com/dl/package_esp32_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266:2.4.2
+  - arduino --install-boards esp32:esp32:1.0.2
   - arduino --board $BD --save-prefs
 script:
   - arduino --verify --board $BD $PWD/OpenMQTTGateway.ino
