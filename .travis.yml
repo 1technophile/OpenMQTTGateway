@@ -27,6 +27,7 @@ install:
     fi
   - if [[ "$BD" =~ "esp32:esp32:" ]]; then
       arduino --install-boards esp32:esp32;
+      rm -rf /home/travis/.arduino15/packages/esp32/hardware/esp32/1.0.2/libraries/BLE
     fi
 script:
   - arduino --verify --board $BD $PWD/OpenMQTTGateway.ino
