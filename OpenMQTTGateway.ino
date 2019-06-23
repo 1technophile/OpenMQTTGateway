@@ -647,6 +647,12 @@ void loop()
     #ifdef ZgatewayPilight
       PilighttoMQTT();
     #endif
+    #ifdef ZgatewayBT
+        #if defined(ESP8266) || defined(ESP32)
+          if(BTtoMQTT())
+          trc(F("BTtoMQTT OK"));
+        #endif
+    #endif
     #ifdef ZgatewaySRFB
       SRFBtoMQTT();
     #endif
