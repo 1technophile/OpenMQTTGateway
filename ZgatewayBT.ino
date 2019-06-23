@@ -143,6 +143,8 @@ vector<BLEdevice> devices;
                   }
                   }
               }
+          }else{
+            pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
           }
         }else{
           trc(F("Filtered mac device"));
@@ -177,7 +179,7 @@ vector<BLEdevice> devices;
             BLEscan();
         }
     }
-    boolean BTtoMQTT(){ // for on demande BLE scans
+    boolean BTtoMQTT(){ // for on demand BLE scans
       BLEscan();
     }
     void BLEscan(){
