@@ -2,6 +2,18 @@
 //
 // Copyright 2016 David Conran
 
+// Supports:
+//   Brand: Kelvinator,  Model: YALIF Remote
+//   Brand: Kelvinator,  Model: KSV26CRC A/C
+//   Brand: Kelvinator,  Model: KSV26HRC A/C
+//   Brand: Kelvinator,  Model: KSV35CRC A/C
+//   Brand: Kelvinator,  Model: KSV35HRC A/C
+//   Brand: Kelvinator,  Model: KSV53HRC A/C
+//   Brand: Kelvinator,  Model: KSV62HRC A/C
+//   Brand: Kelvinator,  Model: KSV70CRC A/C
+//   Brand: Kelvinator,  Model: KSV70HRC A/C
+//   Brand: Kelvinator,  Model: KSV80HRC A/C
+
 #ifndef IR_KELVINATOR_H_
 #define IR_KELVINATOR_H_
 
@@ -9,17 +21,12 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-
-// KK  KK EEEEEEE LL     VV     VV IIIII NN   NN   AAA   TTTTTTT  OOOOO  RRRRRR
-// KK KK  EE      LL     VV     VV  III  NNN  NN  AAAAA    TTT   OO   OO RR   RR
-// KKKK   EEEEE   LL      VV   VV   III  NN N NN AA   AA   TTT   OO   OO RRRRRR
-// KK KK  EE      LL       VV VV    III  NN  NNN AAAAAAA   TTT   OO   OO RR  RR
-// KK  KK EEEEEEE LLLLLLL   VVV    IIIII NN   NN AA   AA   TTT    OOOO0  RR   RR
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // Constants
 const uint8_t kKelvinatorAuto = 0;
@@ -128,53 +135,58 @@ class IRKelvinatorAC {
  public:
   explicit IRKelvinatorAC(uint16_t pin);
 
-  void stateReset();
+  void stateReset(void);
 #if SEND_KELVINATOR
   void send(const uint16_t repeat = kKelvinatorDefaultRepeat);
+  uint8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_KELVINATOR
-  void begin();
-  void on();
-  void off();
-  void setPower(bool state);
-  bool getPower();
-  void setTemp(uint8_t temp);
-  uint8_t getTemp();
-  void setFan(uint8_t fan);
-  uint8_t getFan();
-  void setMode(uint8_t mode);
-  uint8_t getMode();
-  void setSwingVertical(bool state);
-  bool getSwingVertical();
-  void setSwingHorizontal(bool state);
-  bool getSwingHorizontal();
-  void setQuiet(bool state);
-  bool getQuiet();
-  void setIonFilter(bool state);
-  bool getIonFilter();
-  void setLight(bool state);
-  bool getLight();
-  void setXFan(bool state);
-  bool getXFan();
-  void setTurbo(bool state);
-  bool getTurbo();
-  uint8_t* getRaw();
-  void setRaw(uint8_t new_code[]);
+  void begin(void);
+  void on(void);
+  void off(void);
+  void setPower(const bool on);
+  bool getPower(void);
+  void setTemp(const uint8_t degrees);
+  uint8_t getTemp(void);
+  void setFan(const uint8_t speed);
+  uint8_t getFan(void);
+  void setMode(const uint8_t mode);
+  uint8_t getMode(void);
+  void setSwingVertical(const bool on);
+  bool getSwingVertical(void);
+  void setSwingHorizontal(const bool on);
+  bool getSwingHorizontal(void);
+  void setQuiet(const bool on);
+  bool getQuiet(void);
+  void setIonFilter(const bool on);
+  bool getIonFilter(void);
+  void setLight(const bool on);
+  bool getLight(void);
+  void setXFan(const bool on);
+  bool getXFan(void);
+  void setTurbo(const bool on);
+  bool getTurbo(void);
+  uint8_t* getRaw(void);
+  void setRaw(const uint8_t new_code[]);
   static uint8_t calcBlockChecksum(
       const uint8_t* block, const uint16_t length = kKelvinatorStateLength / 2);
   static bool validChecksum(const uint8_t state[],
                             const uint16_t length = kKelvinatorStateLength);
-#ifdef ARDUINO
-  String toString();
-#else
-  std::string toString();
-#endif
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
+  String toString(void);
+#ifndef UNIT_TEST
 
  private:
+  IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
   // The state of the IR remote in IR code form.
   uint8_t remote_state[kKelvinatorStateLength];
   void checksum(const uint16_t length = kKelvinatorStateLength);
-  void fixup();
-  IRsend _irsend;
+  void fixup(void);
 };
 
 #endif  // IR_KELVINATOR_H_

@@ -27,6 +27,7 @@ TEST(TestEncodeSanyoLC7461, SendDataOnly) {
   irsend.reset();
   irsend.sendSanyoLC7461(0x1D8113F00FF);
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"
@@ -45,6 +46,7 @@ TEST(TestEncodeSanyoLC7461, SendWithRepeats) {
   irsend.reset();
   irsend.sendSanyoLC7461(0x1D8113F00FF, kSanyoLC7461Bits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s1680m560s560m560s1680m560s1680m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s1680m560s560m560s560"

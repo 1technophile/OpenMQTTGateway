@@ -1,9 +1,11 @@
 /*
  * IRremoteESP8266: IRServer - demonstrates sending IR codes controlled from a webserver
+ * Version 0.3 May, 2019
  * Version 0.2 June, 2017
  * Copyright 2015 Mark Szabo
+ * Copyright 2019 David Conran
  *
- * An IR LED circuit *MUST* be connected to the ESP8266 on a pin
+ * An IR LED circuit *MUST* be connected to the ESP on a pin
  * as specified by kIrLed below.
  *
  * TL;DR: The IR LED needs to be driven by a transistor for a good result.
@@ -26,12 +28,17 @@
  *   * ESP-01 modules are tricky. We suggest you use a module with more GPIOs
  *     for your first time. e.g. ESP-12 etc.
  */
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
+#if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
+#endif  // ESP8266
+#if defined(ESP32)
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#endif  // ESP32
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <WiFiClient.h>
@@ -40,18 +47,27 @@ const char* kSsid = ".....";
 const char* kPassword = ".....";
 MDNSResponder mdns;
 
+#if defined(ESP8266)
 ESP8266WebServer server(80);
+#undef HOSTNAME
+#define HOSTNAME "esp8266"
+#endif  // ESP8266
+#if defined(ESP32)
+WebServer server(80);
+#undef HOSTNAME
+#define HOSTNAME "esp32"
+#endif  // ESP32
 
-const uint16_t kIrLed = 4;  // ESP8266 GPIO pin to use. Recommended: 4 (D2).
+const uint16_t kIrLed = 4;  // ESP GPIO pin to use. Recommended: 4 (D2).
 
 IRsend irsend(kIrLed);  // Set the GPIO to be used to sending the message.
 
 void handleRoot() {
   server.send(200, "text/html",
               "<html>" \
-                "<head><title>ESP8266 Demo</title></head>" \
+                "<head><title>" HOSTNAME " Demo</title></head>" \
                 "<body>" \
-                  "<h1>Hello from ESP8266, you can send NEC encoded IR" \
+                  "<h1>Hello from " HOSTNAME ", you can send NEC encoded IR" \
                       "signals from here!</h1>" \
                   "<p><a href=\"ir?code=16769055\">Send 0xFFE01F</a></p>" \
                   "<p><a href=\"ir?code=16429347\">Send 0xFAB123</a></p>" \
@@ -104,7 +120,11 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP().toString());
 
-  if (mdns.begin("esp8266", WiFi.localIP())) {
+#if defined(ESP8266)
+  if (mdns.begin(HOSTNAME, WiFi.localIP())) {
+#else  // ESP8266
+  if (mdns.begin(HOSTNAME)) {
+#endif  // ESP8266
     Serial.println("MDNS responder started");
   }
 

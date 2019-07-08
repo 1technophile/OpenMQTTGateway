@@ -12,6 +12,8 @@
 // Based off the RC-T501 RCU
 // Added by David Conran. (Inspired by IRremoteESP8266's implementation:
 //                         https://github.com/z3t0/Arduino-IRremote)
+// Supports:
+//   Brand: Aiwa,  Model: RC-T501 RCU
 
 const uint16_t kAiwaRcT501PreBits = 26;
 const uint16_t kAiwaRcT501PostBits = 1;

@@ -1,4 +1,5 @@
 // Copyright 2018 David Conran
+// Lutron
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -6,12 +7,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                LL      UU   UU TTTTTTT RRRRRR   OOOOO  NN   NN
-//                LL      UU   UU   TTT   RR   RR OO   OO NNN  NN
-//                LL      UU   UU   TTT   RRRRRR  OO   OO NN N NN
-//                LL      UU   UU   TTT   RR  RR  OO   OO NN  NNN
-//                LLLLLLL  UUUUU    TTT   RR   RR  OOOO0  NN   NN
 
 // Notes:
 //   The Lutron protocol uses a sort of Run Length encoding to encode

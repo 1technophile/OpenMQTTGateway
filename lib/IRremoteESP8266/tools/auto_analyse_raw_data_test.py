@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """Unit tests for auto_analyse_raw_data.py"""
-import StringIO
+from io import StringIO
 import unittest
 import auto_analyse_raw_data as analyse
 
@@ -12,7 +12,7 @@ class TestRawIRMessage(unittest.TestCase):
 
   def test_display_binary(self):
     """Test the display_binary() method."""
-    output = StringIO.StringIO()
+    output = StringIO()
     message = analyse.RawIRMessage(100, [8000, 4000, 500, 500, 500], output,
                                    False)
     self.assertEqual(output.getvalue(), '')
@@ -52,8 +52,8 @@ class TestAutoAnalyseRawData(unittest.TestCase):
 
   def test_dump_constants_simple(self):
     """Simple tests for the dump_constants() function."""
-    ignore = StringIO.StringIO()
-    output = StringIO.StringIO()
+    ignore = StringIO()
+    output = StringIO()
     defs = []
     message = analyse.RawIRMessage(200, [
         7930, 3952, 494, 1482, 520, 1482, 494, 1508, 494, 520, 494, 1482, 494,
@@ -75,8 +75,8 @@ class TestAutoAnalyseRawData(unittest.TestCase):
 
   def test_dump_constants_aircon(self):
     """More complex tests for the dump_constants() function."""
-    ignore = StringIO.StringIO()
-    output = StringIO.StringIO()
+    ignore = StringIO()
+    output = StringIO()
     defs = []
     message = analyse.RawIRMessage(200, [
         9008, 4496, 644, 1660, 676, 530, 648, 558, 672, 1636, 646, 1660, 644,
@@ -111,7 +111,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
     self.assertEqual(analyse.convert_rawdata("0"), [0])
     with self.assertRaises(ValueError) as context:
       analyse.convert_rawdata("")
-    self.assertEqual(context.exception.message,
+    self.assertEqual(str(context.exception),
                      "Raw Data contains a non-numeric value of ''.")
 
     # Single parenthesis
@@ -132,13 +132,13 @@ class TestAutoAnalyseRawData(unittest.TestCase):
     # Bad parentheses
     with self.assertRaises(ValueError) as context:
       analyse.convert_rawdata("}10{")
-    self.assertEqual(context.exception.message,
+    self.assertEqual(str(context.exception),
                      "Raw Data not parsible due to parentheses placement.")
 
     # Non base-10 values
     with self.assertRaises(ValueError) as context:
       analyse.convert_rawdata("10, 20, foo, bar, 30")
-    self.assertEqual(context.exception.message,
+    self.assertEqual(str(context.exception),
                      "Raw Data contains a non-numeric value of 'foo'.")
 
     # A messy usual "good" case.
@@ -155,7 +155,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
     """Tests for the parse_and_report() function."""
 
     # Without code generation.
-    output = StringIO.StringIO()
+    output = StringIO()
     input_str = """
         uint16_t rawbuf[139] = {9008, 4496, 644, 1660, 676, 530, 648, 558, 672,
             1636, 646, 1660, 644, 556, 650, 584, 626, 560, 644, 580, 628, 1680,
@@ -210,7 +210,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
         'Total Nr. of suspected bits: 67\n')
 
     # With code generation.
-    output = StringIO.StringIO()
+    output = StringIO()
     input_str = """
         uint16_t rawbuf[37] = {7930, 3952, 494, 1482, 520, 1482, 494,
             1508, 494, 520, 494, 1482, 494, 520, 494, 1482, 494, 1482, 494,
@@ -294,7 +294,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
     """Tests for unusual Space Gaps in parse_and_report() function."""
 
     # Tests for unusual Gaps. (Issue #482)
-    output = StringIO.StringIO()
+    output = StringIO()
     input_str = """
         uint16_t rawbuf[272] = {3485, 3512, 864, 864, 864, 2620, 864, 864,
             864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 2620, 864, 864,
@@ -466,7 +466,7 @@ class TestAutoAnalyseRawData(unittest.TestCase):
   def test_reduce_list(self):
     """Tests for the reduce_list method."""
 
-    ignore = StringIO.StringIO()
+    ignore = StringIO()
     message = analyse.RawIRMessage(200, [
         7930, 3952, 494, 1482, 520, 1482, 494, 1508, 494, 520, 494, 1482, 494,
         520, 494, 1482, 494, 1482, 494, 3978, 494, 520, 494, 520, 494, 520, 494,

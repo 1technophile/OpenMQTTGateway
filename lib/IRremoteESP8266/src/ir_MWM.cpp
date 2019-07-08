@@ -1,16 +1,13 @@
 // Copyright 2018 Brett T. Warden
+
+// MWM
+
 // derived from ir_Lasertag.cpp, Copyright 2017 David Conran
 
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                      MM   MM WW   WW MM   MM
-//                      MMM MMM WW   WW MMM MMM
-//                      MM M MM WW W WW MM M MM
-//                      MM   MM WWW WWW MM   MM
-//                      MM   MM WW   WW MM   MM
 
 // Constants
 const uint16_t kMWMMinSamples = 6;  // Msgs are >=3 bytes, bytes have >=2
@@ -37,7 +34,8 @@ const int16_t kMark = 0;
 //
 // Status: Implemented.
 //
-void IRsend::sendMWM(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
+void IRsend::sendMWM(const uint8_t data[], const uint16_t nbytes,
+                     const uint16_t repeat) {
   if (nbytes < 3) return;  // Shortest possible message is 3 bytes
 
   // Set 38kHz IR carrier frequency & a 1/4 (25%) duty cycle.
@@ -105,7 +103,7 @@ bool IRrecv::decodeMWM(decode_results *results, uint16_t nbits, bool strict) {
   for (; offset < results->rawlen && results->bits < 8 * kStateSizeMax;
        frame_bits++) {
     DPRINT("DEBUG: decodeMWM: offset = ");
-    DPRINTLN(uint64ToString(offset));
+    DPRINTLN(offset);
     int16_t level = getRClevel(results, &offset, &used, kMWMTick, kMWMTolerance,
                                kMWMExcess, kMWMDelta, kMWMMaxWidth);
     if (level < 0) {
@@ -129,7 +127,7 @@ bool IRrecv::decodeMWM(decode_results *results, uint16_t nbits, bool strict) {
           DPRINT("DEBUG: decodeMWM: data_bits = ");
           DPRINTLN(data_bits);
           DPRINT("DEBUG: decodeMWM: Finished byte: ");
-          DPRINTLN(data);
+          DPRINTLN(uint64ToString(data));
           results->state[data_bits / 8 - 1] = data & 0xFF;
           results->bits = data_bits;
           data = 0;

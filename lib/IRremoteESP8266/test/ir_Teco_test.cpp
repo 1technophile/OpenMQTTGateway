@@ -23,13 +23,14 @@ TEST(TestSendTeco, SendDataOnly) {
   irsend.reset();
   irsend.sendTeco(0x250002BC9);
   EXPECT_EQ(
+      "f38000d50"
       "m9000s4440"
       "m620s1650m620s580m620s580m620s1650m620s580m620s580m620s1650m620s1650"
       "m620s1650m620s1650m620s580m620s1650m620s580m620s1650m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s580m620s580m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s1650m620s580m620s1650m620s580"
       "m620s580m620s1650m620s580"
-      "m620s1000000",
+      "m620s100000",
       irsend.outputStr());
 }
 
@@ -41,27 +42,28 @@ TEST(TestSendTeco, SendWithRepeats) {
   irsend.reset();
   irsend.sendTeco(0x250002BC9, kTecoBits, 2);  // two repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m9000s4440"
       "m620s1650m620s580m620s580m620s1650m620s580m620s580m620s1650m620s1650"
       "m620s1650m620s1650m620s580m620s1650m620s580m620s1650m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s580m620s580m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s1650m620s580m620s1650m620s580"
       "m620s580m620s1650m620s580"
-      "m620s1000000"
+      "m620s100000"
       "m9000s4440"
       "m620s1650m620s580m620s580m620s1650m620s580m620s580m620s1650m620s1650"
       "m620s1650m620s1650m620s580m620s1650m620s580m620s1650m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s580m620s580m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s1650m620s580m620s1650m620s580"
       "m620s580m620s1650m620s580"
-      "m620s1000000"
+      "m620s100000"
       "m9000s4440"
       "m620s1650m620s580m620s580m620s1650m620s580m620s580m620s1650m620s1650"
       "m620s1650m620s1650m620s580m620s1650m620s580m620s1650m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s580m620s580m620s580m620s580"
       "m620s580m620s580m620s580m620s580m620s1650m620s580m620s1650m620s580"
       "m620s580m620s1650m620s580"
-      "m620s1000000",
+      "m620s100000",
       irsend.outputStr());
 }
 
@@ -353,4 +355,35 @@ TEST(TestDecodeTeco, RealNormalExample) {
       "Power: On, Mode: 2 (DRY), Temp: 21C, Fan: 2 (Med), Sleep: Off, "
       "Swing: On",
       ac.toString());
+}
+
+
+TEST(TestTecoACClass, toCommon) {
+  IRTecoAc ac(0);
+  ac.setPower(true);
+  ac.setMode(kTecoCool);
+  ac.setTemp(20);
+  ac.setFan(kTecoFanHigh);
+  ac.setSwing(true);
+  ac.setSleep(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::TECO, ac.toCommon().protocol);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_EQ(0, ac.toCommon().sleep);
+  // Unsupported.
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

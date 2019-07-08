@@ -2,25 +2,18 @@
 // Copyright 2015 cheaplin
 // Copyright 2017, 2018 David Conran
 
+// Supports:
+//   Brand: LG,  Model: 6711A20083V remote
+//   Brand: LG,  Model: AKB74395308 remote
+
 #include "ir_LG.h"
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
 
-//                               L       GGGG
-//                               L      G
-//                               L      G  GG
-//                               L      G   G
-//                               LLLLL   GGG
-
 // LG decode originally added by Darryl Smith (based on the JVC protocol)
 // LG send originally added by https://github.com/chaeplin
-//
-// Known supported devices:
-//   IR Remotes:
-//     6711A20083V
-//     AKB74395308
 
 // Constants
 const uint16_t kLgTick = 50;
@@ -85,11 +78,13 @@ uint8_t calcLGChecksum(uint16_t data) {
 //   IR Remote models: 6711A20083V
 void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
   uint16_t repeatHeaderMark = 0;
+  uint8_t duty = kDutyDefault;
 
   if (nbits >= kLg32Bits) {
     // LG 32bit protocol is near identical to Samsung except for repeats.
     sendSAMSUNG(data, nbits, 0);  // Send it as a single Samsung message.
     repeatHeaderMark = kLg32RptHdrMark;
+    duty = 33;
     repeat++;
   } else {
     // LG (28-bit) protocol.
@@ -97,7 +92,7 @@ void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
     sendGeneric(kLgHdrMark, kLgHdrSpace, kLgBitMark, kLgOneSpace, kLgBitMark,
                 kLgZeroSpace, kLgBitMark, kLgMinGap, kLgMinMessageLength, data,
                 nbits, 38, true, 0,  // Repeats are handled later.
-                50);
+                duty);
   }
 
   // Repeat
@@ -105,7 +100,7 @@ void IRsend::sendLG(uint64_t data, uint16_t nbits, uint16_t repeat) {
   if (repeat)
     sendGeneric(repeatHeaderMark, kLgRptSpace, 0, 0, 0, 0,  // No data is sent.
                 kLgBitMark, kLgMinGap, kLgMinMessageLength, 0, 0,  // No data.
-                38, true, repeat - 1, 50);
+                38, true, repeat - 1, duty);
 }
 
 // Send an LG Variant-2 formatted message.

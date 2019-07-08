@@ -2,6 +2,8 @@
 // Copyright 2017, 2018 David Conran
 // Copyright 2018 Kamil Palczewski
 
+// Pioneer remote emulation
+
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 #include <algorithm>
@@ -9,12 +11,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 #include "ir_NEC.h"
-
-//                        PPPP  III  OOO  N   N EEEE EEEE RRRR
-//                        P   P  I  O   O NN  N E    E    R   R
-//                        PPPP   I  O   O N N N EEE  EEE  RRRR
-//                        P      I  O   O N  NN E    E    R R
-//                        P     III  OOO  N   N EEEE EEEE R  RR
 
 // Ref:
 //  http://adrian-kingston.com/IRFormatPioneer.htm

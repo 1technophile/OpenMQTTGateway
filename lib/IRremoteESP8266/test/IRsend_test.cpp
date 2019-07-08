@@ -1,6 +1,7 @@
 // Copyright 2017,2019 David Conran
 
 #include "IRsend_test.h"
+#include "IRrecv_test.h"
 #include "IRsend.h"
 #include "IRutils.h"
 #include "gtest/gtest.h"
@@ -20,9 +21,9 @@ TEST(TestSendData, SendSingleBit) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
-  EXPECT_EQ("m1s2", irsend.outputStr());
+  EXPECT_EQ("d50m1s2", irsend.outputStr());
   irsend.sendData(1, 2, 3, 4, 0b0, 1, true);
-  EXPECT_EQ("m3s4", irsend.outputStr());
+  EXPECT_EQ("d50m3s4", irsend.outputStr());
 }
 
 // Test sending bit order.
@@ -30,11 +31,11 @@ TEST(TestSendData, TestingBitSendOrder) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendData(1, 2, 3, 4, 0b10, 2, true);
-  EXPECT_EQ("m1s2m3s4", irsend.outputStr());
+  EXPECT_EQ("d50m1s2m3s4", irsend.outputStr());
   irsend.sendData(1, 2, 3, 4, 0b10, 2, false);
-  EXPECT_EQ("m3s4m1s2", irsend.outputStr());
+  EXPECT_EQ("d50m3s4m1s2", irsend.outputStr());
   irsend.sendData(1, 2, 3, 4, 0b0001, 4, false);
-  EXPECT_EQ("m1s2m3s4m3s4m3s4", irsend.outputStr());
+  EXPECT_EQ("d50m1s2m3s4m3s4m3s4", irsend.outputStr());
 }
 
 // Test sending typical data.
@@ -42,10 +43,12 @@ TEST(TestSendData, SendTypicalData) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendData(1, 2, 3, 4, 0b1010110011110000, 16, true);
-  EXPECT_EQ("m1s2m3s4m1s2m3s4m1s2m1s2m3s4m3s4m1s2m1s2m1s2m1s2m3s4m3s4m3s4m3s4",
-            irsend.outputStr());
+  EXPECT_EQ(
+      "d50m1s2m3s4m1s2m3s4m1s2m1s2m3s4m3s4m1s2m1s2m1s2m1s2m3s4m3s4m3s4m3s4",
+      irsend.outputStr());
   irsend.sendData(1, 2, 3, 4, 0x1234567890ABCDEF, 64, true);
   EXPECT_EQ(
+      "d50"
       "m3s4m3s4m3s4m1s2m3s4m3s4m1s2m3s4m3s4m3s4m1s2m1s2m3s4m1s2m3s4m3s4"
       "m3s4m1s2m3s4m1s2m3s4m1s2m1s2m3s4m3s4m1s2m1s2m1s2m1s2m3s4m3s4m3s4"
       "m1s2m3s4m3s4m1s2m3s4m3s4m3s4m3s4m1s2m3s4m1s2m3s4m1s2m3s4m1s2m1s2"
@@ -59,6 +62,7 @@ TEST(TestSendData, SendOverLargeData) {
   irsend.begin();
   irsend.sendData(1, 2, 3, 4, 0xFFFFFFFFFFFFFFFF, 70, true);
   EXPECT_EQ(
+      "d50"
       "m3s4m3s4m3s4m3s4m3s4m3s4"
       "m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2"
       "m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2m1s2"
@@ -72,9 +76,92 @@ TEST(TestIRSend, InvertedOutput) {
   IRsendTest irsend(4, true);
   irsend.begin();
   irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
-  EXPECT_EQ("s1m2", irsend.outputStr());
+  EXPECT_EQ("d50s1m2", irsend.outputStr());
   irsend.sendData(1, 2, 3, 4, 0b0, 1, true);
-  EXPECT_EQ("s3m4", irsend.outputStr());
+  EXPECT_EQ("d50s3m4", irsend.outputStr());
+}
+
+// Test we correctly pick up frequency changes.
+TEST(TestIRSend, DetectFreqChanges) {
+  IRsendTest irsend(0);
+
+  irsend.begin();
+  irsend.enableIROut(40);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  irsend.enableIROut(38);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  irsend.enableIROut(40);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  irsend.enableIROut(38);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  EXPECT_EQ(
+      "f40000d50"
+      "m1s2"
+      "f38000"
+      "m1s2"
+      "f40000"
+      "m1s2"
+      "f38000"
+      "m1s2",
+      irsend.outputStr());
+  irsend.reset();
+  irsend.enableIROut(40);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  irsend.enableIROut(40);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  irsend.enableIROut(38);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  irsend.enableIROut(38);  // 40kHz
+  irsend.sendData(1, 2, 3, 4, 0b1, 1, true);
+  EXPECT_EQ(
+      "f40000d50"
+      "m1s2m1s2"
+      "f38000m1s2m1s2",
+      irsend.outputStr());
+}
+
+// Test we correctly pick up duty cycle changes.
+TEST(TestIRSend, DetectDutyChanges) {
+  IRsendTest irsend(0);
+
+  irsend.begin();
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 38000, true, 0, 33);
+  EXPECT_EQ(
+      "f38000d33"
+      "m1s2m3s4m7s8",
+      irsend.outputStr());
+
+  irsend.reset();
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 38000, true, 0, 50);
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 38000, true, 0, 33);
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 38000, true, 0, 25);
+  EXPECT_EQ(
+      "f38000d50"
+      "m1s2m3s4m7s8"
+      "d33"
+      "m1s2m3s4m7s8"
+      "d25"
+      "m1s2m3s4m7s8",
+      irsend.outputStr());
+}
+
+
+// Test we correctly pick up frequency AND duty changes.
+TEST(TestIRSend, DetectFreqAndDutyChanges) {
+  IRsendTest irsend(0);
+
+  irsend.begin();
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 38000, true, 0, 50);
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 38000, true, 0, 33);
+  irsend.sendGeneric(1, 2, 3, 4, 5, 6, 7, 8, 0b1, 1, 40000, true, 0, 25);
+  EXPECT_EQ(
+      "f38000d50"
+      "m1s2m3s4m7s8"
+      "d33"
+      "m1s2m3s4m7s8"
+      "f40000d25"
+      "m1s2m3s4m7s8",
+      irsend.outputStr());
 }
 
 // Test typical use of sendRaw().
@@ -94,6 +181,7 @@ TEST(TestSendRaw, GeneralUse) {
 
   irsend.sendRaw(rawData, 67, 38);
   EXPECT_EQ(
+      "f38000d50"
       "m8950s4500"
       "m550s1650m600s1650m550s550m600s500m600s550m550s550m600s1650m550s1650"
       "m600s1650m600s1650m550s1700m550s550m600s550m550s550m600s500m600s550"
@@ -110,6 +198,7 @@ TEST(TestSendRaw, GeneralUse) {
   EXPECT_EQ(32, irsend.capture.bits);
   EXPECT_EQ(0xC3E0E0E8, irsend.capture.value);
   EXPECT_EQ(
+      "f38000d50"
       "m8950s4500"
       "m550s1650m600s1650m550s550m600s500m600s550m550s550m600s1650m550s1650"
       "m600s1650m600s1650m550s1700m550s550m600s550m550s550m600s500m600s550"
@@ -290,7 +379,7 @@ TEST(TestLowLevelSend, SpaceNoModulation) {
   EXPECT_EQ("[Off]1000usecs", irsend.low_level_sequence);
 }
 
-// Test expected to work/produce a message for irsend:send()
+// Test expected to work/produce a message for simple irsend:send()
 TEST(TestSend, GenericSimpleSendMethod) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
@@ -569,7 +658,7 @@ TEST(TestSend, GenericSimpleSendMethod) {
   EXPECT_EQ(0x1234, irsend.capture.value);
 }
 
-// Test some expected types to  NOT work/produce a message via irsend:send()
+// Test some expected types to NOT work/produce a message via irsend:send()
 TEST(TestSend, GenericSimpleSendMethodFailure) {
   IRsendTest irsend(0);
   IRrecv irrecv(0);
@@ -582,17 +671,71 @@ TEST(TestSend, GenericSimpleSendMethodFailure) {
   ASSERT_FALSE(irrecv.decode(&irsend.capture));
 
   // For every A/C protocol which decodes to having a state[].
-  for (int i = 0; i < 200; i++) {
+  for (int i = 0; i <= kLastDecodeType; i++) {
     if (hasACState((decode_type_t)i) && i != GREE) {  // Gree is an exception.
       // Check it fails.
-      ASSERT_FALSE(irsend.send((decode_type_t)i, 0, 0));
+      ASSERT_FALSE(irsend.send((decode_type_t)i, (uint64_t)0, 0));
     }
   }
 
   // Test some other special cases.
-  ASSERT_FALSE(irsend.send(UNKNOWN, 0, 0));
-  ASSERT_FALSE(irsend.send(UNUSED, 0, 0));
-  ASSERT_FALSE(irsend.send(RAW, 0, 0));
-  ASSERT_FALSE(irsend.send(PRONTO, 0, 0));
-  ASSERT_FALSE(irsend.send(GLOBALCACHE, 0, 0));
+  ASSERT_FALSE(irsend.send(UNKNOWN, (uint64_t)0, 0));
+  ASSERT_FALSE(irsend.send(UNUSED, (uint64_t)0, 0));
+  ASSERT_FALSE(irsend.send(RAW, (uint64_t)0, 0));
+  ASSERT_FALSE(irsend.send(PRONTO, (uint64_t)0, 0));
+  ASSERT_FALSE(irsend.send(GLOBALCACHE, (uint64_t)0, 0));
+}
+
+// Test expected to work/produce a message for complex irsend:send()
+TEST(TestSend, GenericComplexSendMethod) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+
+  irsend.reset();
+  uint8_t kelvinator[kKelvinatorStateLength] = {
+      0x19, 0x0B, 0x80, 0x50, 0x00, 0x00, 0x00, 0xE0,
+      0x19, 0x0B, 0x80, 0x70, 0x00, 0x00, 0x10, 0xF0};
+  ASSERT_TRUE(irsend.send(KELVINATOR, kelvinator, kKelvinatorStateLength));
+  irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(KELVINATOR, irsend.capture.decode_type);
+  EXPECT_EQ(kKelvinatorStateLength * 8, irsend.capture.bits);
+  EXPECT_STATE_EQ(kelvinator, irsend.capture.state, irsend.capture.bits / 8);
+
+  irsend.reset();
+  uint8_t panasonic[kPanasonicAcStateLength] = {
+      0x02, 0x20, 0xE0, 0x04, 0x00, 0x00, 0x00, 0x06, 0x02,
+      0x20, 0xE0, 0x04, 0x00, 0x4E, 0x2E, 0x80, 0xAF, 0x00,
+      0x00, 0x0E, 0xE0, 0x11, 0x00, 0x01, 0x00, 0x06, 0xB7};
+  ASSERT_TRUE(irsend.send(PANASONIC_AC, panasonic, kPanasonicAcStateLength));
+  irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(PANASONIC_AC, irsend.capture.decode_type);
+  EXPECT_EQ(kPanasonicAcStateLength * 8, irsend.capture.bits);
+  EXPECT_STATE_EQ(panasonic, irsend.capture.state, irsend.capture.bits / 8);
+}
+
+// Test some expected types to NOT work/produce a complex message via
+// irsend:send()
+TEST(TestSend, GenericComplexSendMethodFailure) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(0);
+  irsend.begin();
+
+  // Check nothing is sent for unexpected protocols
+  uint8_t state[kStateSizeMax] = {};
+  irsend.reset();
+  ASSERT_FALSE(irsend.send(NEC, state, kNECBits));
+  irsend.makeDecodeResult();
+  ASSERT_FALSE(irrecv.decode(&irsend.capture));
+
+  // For every A/C protocol which DOESN'T decode to having a state[].
+  for (int i = -1; i <= kLastDecodeType; i++) {
+    if (!hasACState((decode_type_t)i))
+      // Check it fails.
+      ASSERT_FALSE(irsend.send((decode_type_t)i, state, 0));
+    else  // Or if it is okay.
+      ASSERT_TRUE(irsend.send((decode_type_t)i, state, 0));
+  }
 }

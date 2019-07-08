@@ -1,5 +1,8 @@
 // Copyright 2017 David Conran
 
+// Toshiba A/C support added by David Conran
+
+
 #include "ir_Toshiba.h"
 #include <algorithm>
 #ifndef ARDUINO
@@ -9,13 +12,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//     TTTTTTT  OOOOO   SSSSS  HH   HH IIIII BBBBB     AAA
-//       TTT   OO   OO SS      HH   HH  III  BB   B   AAAAA
-//       TTT   OO   OO  SSSSS  HHHHHHH  III  BBBBBB  AA   AA
-//       TTT   OO   OO      SS HH   HH  III  BB   BB AAAAAAA
-//       TTT    OOOO0   SSSSS  HH   HH IIIII BBBBBB  AA   AA
-
-// Toshiba A/C support added by David Conran
 //
 // Equipment it seems compatible with:
 //  * Toshiba RAS-B13N3KV2 / Akita EVO II
@@ -46,8 +42,8 @@ const uint16_t kToshibaAcMinGap = 7048;
 //
 // Status: StABLE / Working.
 //
-void IRsend::sendToshibaAC(unsigned char data[], uint16_t nbytes,
-                           uint16_t repeat) {
+void IRsend::sendToshibaAC(const unsigned char data[], const uint16_t nbytes,
+                           const uint16_t repeat) {
   if (nbytes < kToshibaACStateLength)
     return;  // Not enough bytes to send a proper message.
   sendGeneric(kToshibaAcHdrMark, kToshibaAcHdrSpace, kToshibaAcBitMark,
@@ -64,10 +60,12 @@ void IRsend::sendToshibaAC(unsigned char data[], uint16_t nbytes,
 // Status:  STABLE / Working.
 //
 // Initialise the object.
-IRToshibaAC::IRToshibaAC(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRToshibaAC::IRToshibaAC(const uint16_t pin) : _irsend(pin) {
+  this->stateReset();
+}
 
 // Reset the state of the remote to a known good state/sequence.
-void IRToshibaAC::stateReset() {
+void IRToshibaAC::stateReset(void) {
   // The state of the IR remote in IR code form.
   // Known good state obtained from:
   //   https://github.com/r45635/HVAC-IR-Control/blob/master/HVAC_ESP8266/HVAC_ESP8266T.ino#L103
@@ -81,32 +79,32 @@ void IRToshibaAC::stateReset() {
   remote_state[4] = 0x01;
   for (uint8_t i = 5; i < kToshibaACStateLength; i++) remote_state[i] = 0;
   mode_state = remote_state[6] & 0b00000011;
-  checksum();  // Calculate the checksum
+  this->checksum();  // Calculate the checksum
 }
 
 // Configure the pin for output.
-void IRToshibaAC::begin() { _irsend.begin(); }
+void IRToshibaAC::begin(void) { _irsend.begin(); }
 
 #if SEND_TOSHIBA_AC
 // Send the current desired state to the IR LED.
 void IRToshibaAC::send(const uint16_t repeat) {
-  checksum();  // Ensure correct checksum before sending.
+  this->checksum();  // Ensure correct checksum before sending.
   _irsend.sendToshibaAC(remote_state, kToshibaACStateLength, repeat);
 }
 #endif  // SEND_TOSHIBA_AC
 
 // Return a pointer to the internal state date of the remote.
-uint8_t* IRToshibaAC::getRaw() {
-  checksum();
+uint8_t* IRToshibaAC::getRaw(void) {
+  this->checksum();
   return remote_state;
 }
 
 // Override the internal state with the new state.
-void IRToshibaAC::setRaw(uint8_t newState[]) {
+void IRToshibaAC::setRaw(const uint8_t newState[]) {
   for (uint8_t i = 0; i < kToshibaACStateLength; i++) {
     remote_state[i] = newState[i];
   }
-  mode_state = getMode(true);
+  mode_state = this->getMode(true);
 }
 
 // Calculate the checksum for a given array.
@@ -133,56 +131,59 @@ uint8_t IRToshibaAC::calcChecksum(const uint8_t state[],
 // Returns:
 //   A boolean.
 bool IRToshibaAC::validChecksum(const uint8_t state[], const uint16_t length) {
-  return (length > 1 && state[length - 1] == calcChecksum(state, length));
+  return (length > 1 && state[length - 1] == IRToshibaAC::calcChecksum(state,
+                                                                       length));
 }
 
 // Calculate & set the checksum for the current internal state of the remote.
 void IRToshibaAC::checksum(const uint16_t length) {
   // Stored the checksum value in the last byte.
-  if (length > 1) remote_state[length - 1] = calcChecksum(remote_state, length);
+  if (length > 1) remote_state[length - 1] = this->calcChecksum(remote_state,
+                                                                length);
 }
 
 // Set the requested power state of the A/C to off.
-void IRToshibaAC::on() {
+void IRToshibaAC::on(void) {
   // state = ON;
   remote_state[6] &= ~kToshibaAcPower;
   setMode(mode_state);
 }
 
 // Set the requested power state of the A/C to off.
-void IRToshibaAC::off() {
+void IRToshibaAC::off(void) {
   // state = OFF;
   remote_state[6] |= (kToshibaAcPower | 0b00000011);
 }
 
 // Set the requested power state of the A/C.
-void IRToshibaAC::setPower(bool state) {
-  if (state)
-    on();
+void IRToshibaAC::setPower(const bool on) {
+  if (on)
+    this->on();
   else
-    off();
+    this->off();
 }
 
 // Return the requested power state of the A/C.
-bool IRToshibaAC::getPower() {
+bool IRToshibaAC::getPower(void) {
   return ((remote_state[6] & kToshibaAcPower) == 0);
 }
 
 // Set the temp. in deg C
-void IRToshibaAC::setTemp(uint8_t temp) {
-  temp = std::max((uint8_t)kToshibaAcMinTemp, temp);
+void IRToshibaAC::setTemp(const uint8_t degrees) {
+  uint8_t temp = std::max((uint8_t)kToshibaAcMinTemp, degrees);
   temp = std::min((uint8_t)kToshibaAcMaxTemp, temp);
   remote_state[5] = (temp - kToshibaAcMinTemp) << 4;
 }
 
 // Return the set temp. in deg C
-uint8_t IRToshibaAC::getTemp() {
+uint8_t IRToshibaAC::getTemp(void) {
   return ((remote_state[5] >> 4) + kToshibaAcMinTemp);
 }
 
 // Set the speed of the fan, 0-5.
 // 0 is auto, 1-5 is the speed, 5 is Max.
-void IRToshibaAC::setFan(uint8_t fan) {
+void IRToshibaAC::setFan(const uint8_t speed) {
+  uint8_t fan = speed;
   // Bounds check
   if (fan > kToshibaAcFanMax)
     fan = kToshibaAcFanMax;  // Set the fan to maximum if out of range.
@@ -192,7 +193,7 @@ void IRToshibaAC::setFan(uint8_t fan) {
 }
 
 // Return the requested state of the unit's fan.
-uint8_t IRToshibaAC::getFan() {
+uint8_t IRToshibaAC::getFan(void) {
   uint8_t fan = remote_state[6] >> 5;
   if (fan == kToshibaAcFanAuto) return kToshibaAcFanAuto;
   return --fan;
@@ -203,7 +204,7 @@ uint8_t IRToshibaAC::getFan() {
 //   useRaw:  Indicate to get the mode from the state array. (Default: false)
 // Returns:
 //   A uint8_t containing the A/C mode.
-uint8_t IRToshibaAC::getMode(bool useRaw) {
+uint8_t IRToshibaAC::getMode(const bool useRaw) {
   if (useRaw)
     return (remote_state[6] & 0b00000011);
   else
@@ -211,66 +212,143 @@ uint8_t IRToshibaAC::getMode(bool useRaw) {
 }
 
 // Set the requested climate operation mode of the a/c unit.
-void IRToshibaAC::setMode(uint8_t mode) {
+void IRToshibaAC::setMode(const uint8_t mode) {
   // If we get an unexpected mode, default to AUTO.
   switch (mode) {
     case kToshibaAcAuto:
-      break;
     case kToshibaAcCool:
-      break;
     case kToshibaAcDry:
-      break;
     case kToshibaAcHeat:
-      break;
+      mode_state = mode;
+      // Only adjust the remote_state if we have power set to on.
+      if (getPower()) {
+        remote_state[6] &= 0b11111100;  // Clear the previous mode.
+        remote_state[6] |= mode_state;
+      }
+      return;
     default:
-      mode = kToshibaAcAuto;
-  }
-  mode_state = mode;
-  // Only adjust the remote_state if we have power set to on.
-  if (getPower()) {
-    remote_state[6] &= 0b11111100;  // Clear the previous mode.
-    remote_state[6] |= mode_state;
+      // THere is no Fan mode.
+      this->setMode(kToshibaAcAuto);
   }
 }
 
+// Convert a standard A/C mode into its native mode.
+uint8_t IRToshibaAC::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kToshibaAcCool;
+    case stdAc::opmode_t::kHeat:
+      return kToshibaAcHeat;
+    case stdAc::opmode_t::kDry:
+      return kToshibaAcDry;
+    // No Fan mode.
+    default:
+      return kToshibaAcAuto;
+  }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRToshibaAC::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+      return kToshibaAcFanMax - 4;
+    case stdAc::fanspeed_t::kLow:
+      return kToshibaAcFanMax - 3;
+    case stdAc::fanspeed_t::kMedium:
+      return kToshibaAcFanMax - 2;
+    case stdAc::fanspeed_t::kHigh:
+      return kToshibaAcFanMax - 1;
+    case stdAc::fanspeed_t::kMax:
+      return kToshibaAcFanMax;
+    default:
+      return kToshibaAcFanAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRToshibaAC::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kToshibaAcCool: return stdAc::opmode_t::kCool;
+    case kToshibaAcHeat: return stdAc::opmode_t::kHeat;
+    case kToshibaAcDry: return stdAc::opmode_t::kDry;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRToshibaAC::toCommonFanSpeed(const uint8_t spd) {
+  switch (spd) {
+    case kToshibaAcFanMax: return stdAc::fanspeed_t::kMax;
+    case kToshibaAcFanMax - 1: return stdAc::fanspeed_t::kHigh;
+    case kToshibaAcFanMax - 2: return stdAc::fanspeed_t::kMedium;
+    case kToshibaAcFanMax - 3: return stdAc::fanspeed_t::kLow;
+    case kToshibaAcFanMax - 4: return stdAc::fanspeed_t::kMin;
+    default: return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRToshibaAC::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::TOSHIBA_AC;
+  result.model = -1;  // Not supported.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  // Not supported.
+  result.turbo = false;
+  result.light = false;
+  result.filter = false;
+  result.econo = false;
+  result.swingv = stdAc::swingv_t::kOff;
+  result.swingh = stdAc::swingh_t::kOff;
+  result.quiet = false;
+  result.clean = false;
+  result.beep = false;
+  result.sleep = -1;
+  result.clock = -1;
+  return result;
+}
+
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRToshibaAC::toString() {
+String IRToshibaAC::toString(void) {
   String result = "";
-#else
-std::string IRToshibaAC::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += "Power: ";
-  if (getPower())
-    result += "On";
+  result.reserve(40);
+  result += F("Power: ");
+  if (this->getPower())
+    result += F("On");
   else
-    result += "Off";
-  result += ", Mode: " + uint64ToString(getMode());
-  switch (getMode()) {
+    result += F("Off");
+  result += F(", Mode: ");
+  result += uint64ToString(this->getMode());
+  switch (this->getMode()) {
     case kToshibaAcAuto:
-      result += " (AUTO)";
+      result += F(" (AUTO)");
       break;
     case kToshibaAcCool:
-      result += " (COOL)";
+      result += F(" (COOL)");
       break;
     case kToshibaAcHeat:
-      result += " (HEAT)";
+      result += F(" (HEAT)");
       break;
     case kToshibaAcDry:
-      result += " (DRY)";
+      result += F(" (DRY)");
       break;
     default:
-      result += " (UNKNOWN)";
+      result += F(" (UNKNOWN)");
   }
-  result += ", Temp: " + uint64ToString(getTemp()) + "C";
-  result += ", Fan: " + uint64ToString(getFan());
-  switch (getFan()) {
+  result += F(", Temp: ");
+  result += uint64ToString(this->getTemp());
+  result += F("C, Fan: ");
+  result += uint64ToString(this->getFan());
+  switch (this->getFan()) {
     case kToshibaAcFanAuto:
-      result += " (AUTO)";
+      result += F(" (AUTO)");
       break;
     case kToshibaAcFanMax:
-      result += " (MAX)";
+      result += F(" (MAX)");
       break;
   }
   return result;
@@ -290,8 +368,8 @@ std::string IRToshibaAC::toString() {
 //
 // Ref:
 //
-bool IRrecv::decodeToshibaAC(decode_results* results, uint16_t nbits,
-                             bool strict) {
+bool IRrecv::decodeToshibaAC(decode_results* results, const uint16_t nbits,
+                             const bool strict) {
   uint16_t offset = kStartOffset;
   uint16_t dataBitsSoFar = 0;
 

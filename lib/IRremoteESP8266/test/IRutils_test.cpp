@@ -3,6 +3,7 @@
 #include "IRutils.h"
 #include <stdint.h>
 #include "IRrecv.h"
+#include "IRrecv_test.h"
 #include "IRsend.h"
 #include "IRsend_test.h"
 #include "gtest/gtest.h"
@@ -394,4 +395,97 @@ TEST(TestCountBits, Integer) {
   ASSERT_EQ(0, countBits(data, 1, false));
   ASSERT_EQ(64, countBits(data, 64));
   ASSERT_EQ(0, countBits(data, 64, false));
+}
+
+TEST(TestStrToDecodeType, strToDecodeType) {
+  EXPECT_EQ(decode_type_t::NEC, strToDecodeType("NEC"));
+  EXPECT_EQ(decode_type_t::KELVINATOR, strToDecodeType("KELVINATOR"));
+  EXPECT_EQ(decode_type_t::UNKNOWN, strToDecodeType("foo"));
+}
+
+TEST(TestUtils, htmlEscape) {
+  EXPECT_EQ("", htmlEscape(""));
+  EXPECT_EQ("No Changes", htmlEscape("No Changes"));
+  EXPECT_EQ("No\tChanges+_%^$@~`\n:\\", htmlEscape("No\tChanges+_%^$@~`\n:\\"));
+  EXPECT_EQ("&quot;With Changes&quot;", htmlEscape("\"With Changes\""));
+  EXPECT_EQ(
+      "&apos;&semi;&excl;&dash;&quot;&lt;&gt;&#equals;&amp;&num;&lcub;&rcub;"
+      "&lpar;&rpar;", htmlEscape("';!-\"<>=&#{}()"));
+  EXPECT_EQ("&quot;&quot;", htmlEscape("\"\""));
+  EXPECT_EQ(
+      "&amp;quot&semi;&amp;lt&semi;&amp;apos&semi;&amp;gt&semi;&amp;amp&semi;",
+      htmlEscape("&quot;&lt;&apos;&gt;&amp;"));
+}
+
+TEST(TestUtils, TemperatureConversion) {
+  // Freezing point of water.
+  ASSERT_EQ(32.0, celsiusToFahrenheit(0.0));
+  ASSERT_EQ(0.0, fahrenheitToCelsius(32.0));
+  // Boiling point of water.
+  ASSERT_EQ(212.0, celsiusToFahrenheit(100.0));
+  ASSERT_EQ(100.0, fahrenheitToCelsius(212.0));
+  // Room Temp. (RTP)
+  ASSERT_EQ(77.0, celsiusToFahrenheit(25.0));
+  ASSERT_EQ(25.0, fahrenheitToCelsius(77.0));
+  // Misc
+  ASSERT_EQ(-40.0, fahrenheitToCelsius(-40.0));
+}
+
+TEST(TestResultToRawArray, TypicalCase) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(1);
+  irsend.begin();
+
+  // Generate a known message.
+  irsend.reset();
+  irsend.sendNikai(0xD0F2F);
+  irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
+  ASSERT_EQ(NIKAI, irsend.capture.decode_type);
+  ASSERT_EQ(kNikaiBits, irsend.capture.bits);
+  EXPECT_EQ(
+      "uint16_t rawData[52] = {4000, 4000,  500, 2000,  500, 2000,  "
+      "500, 2000,  500, 2000,  500, 1000,  500, 1000,  500, 2000,  500, 1000,  "
+      "500, 2000,  500, 2000,  500, 2000,  500, 2000,  500, 1000,  500, 1000,  "
+      "500, 1000,  500, 1000,  500, 2000,  500, 2000,  500, 1000,  500, 2000,  "
+      "500, 1000,  500, 1000,  500, 1000,  500, 1000,  500, 8500 };"
+      "  // NIKAI D0F2F\n"
+      "uint64_t data = 0xD0F2F;\n",
+      resultToSourceCode(&irsend.capture));
+  uint16_t rawData[52] = {  // Data taken from above.
+      4000, 4000, 500, 2000, 500, 2000, 500, 2000, 500, 2000, 500, 1000, 500,
+      1000, 500, 2000, 500, 1000, 500, 2000, 500, 2000, 500, 2000, 500, 2000,
+      500, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 2000, 500, 2000, 500,
+      1000, 500, 2000, 500, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 8500};
+  uint16_t * result = resultToRawArray(&irsend.capture);
+  ASSERT_EQ(52, getCorrectedRawLength(&irsend.capture));
+  EXPECT_STATE_EQ(rawData, result, getCorrectedRawLength(&irsend.capture));
+  if (result != NULL) delete[] result;
+}
+
+TEST(TestResultToRawArray, LargeValues) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(1);
+  uint16_t test_data[9] = {10, 20, 30, 40, 50, 60, 70, 80, 90};
+  irsend.begin();
+  irsend.reset();
+  irsend.sendRaw(test_data, 9, 38000);
+  irsend.makeDecodeResult();
+  irrecv.decode(&irsend.capture);
+  uint16_t * result = resultToRawArray(&irsend.capture);
+  ASSERT_EQ(9, getCorrectedRawLength(&irsend.capture));
+  EXPECT_STATE_EQ(test_data, result, 9);
+  if (result != NULL) delete[] result;
+  // Stick in some large values.
+  irsend.capture.rawbuf[3] = 60000;
+  EXPECT_EQ(
+      "uint16_t rawData[11] = {10, 20,  65535, 0,  54465, 40,  50, 60,  70, "
+      "80,  90};  // UNKNOWN 54051FFD\n",
+      resultToSourceCode(&irsend.capture));
+  uint16_t large_test_data[11] = {
+      10, 20, 65535, 0, 54465, 40, 50, 60, 70, 80, 90};
+  ASSERT_EQ(11, getCorrectedRawLength(&irsend.capture));
+  result = resultToRawArray(&irsend.capture);
+  EXPECT_STATE_EQ(large_test_data, result, 11);
+  if (result != NULL) delete[] result;
 }

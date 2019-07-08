@@ -1,13 +1,11 @@
 // Copyright 2017 David Conran
 
+// Supports:
+//   Brand: LG,  Model: 6711A20083V remote
+//   Brand: LG,  Model: AKB74395308 remote
+
 #ifndef IR_LG_H_
 #define IR_LG_H_
-
-//                               L       GGGG
-//                               L      G
-//                               L      G  GG
-//                               L      G   G
-//                               LLLLL   GGG
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>

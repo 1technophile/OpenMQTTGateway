@@ -5,14 +5,11 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//                       DDDD   IIIII   SSSS  H   H
-//                        D  D    I    S      H   H
-//                        D  D    I     SSS   HHHHH
-//                        D  D    I        S  H   H
-//                       DDDD   IIIII  SSSS   H   H
-
 // DISH support originally by Todd Treece
 //   http://unionbridge.org/design/ircommand
+
+// Supports:
+//   Brand: DISH NETWORK,  Model: echostar 301
 
 // Constants
 // Ref:

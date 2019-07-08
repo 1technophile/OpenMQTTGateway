@@ -1,7 +1,5 @@
 // Copyright 2017 Jonny Graham, 2018 David Conran
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <ir_Fujitsu.h>
@@ -30,11 +28,13 @@ void setup() {
   Serial.println("Default state of the remote.");
   printState();
   Serial.println("Setting desired state for A/C.");
-  ac.setCmd(kFujitsuAcCmdTurnOn);
-  ac.setSwing(kFujitsuAcSwingBoth);
+  // See `fujitsu_ac_remote_model_t` in `ir_Fujitsu.h` for a list of models.
+  ac.setModel(ARRAH2E);
+  ac.setSwing(kFujitsuAcSwingOff);
   ac.setMode(kFujitsuAcModeCool);
   ac.setFanSpeed(kFujitsuAcFanHigh);
   ac.setTemp(24);  // 24C
+  ac.setCmd(kFujitsuAcCmdTurnOn);
 }
 
 void loop() {

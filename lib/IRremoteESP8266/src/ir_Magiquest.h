@@ -31,5 +31,5 @@ const uint16_t kMagiQuestMarkZero = 280;
 const uint16_t kMagiQuestSpaceZero = 850;
 const uint16_t kMagiQuestMarkOne = 580;
 const uint16_t kMagiQuestSpaceOne = 600;
-const uint32_t kMagiQuestGap = 100000;  // A guess of the gap between messages
-#endif                                  // IR_MAGIQUEST_H_
+const uint32_t kMagiQuestGap = kDefaultMessageGap;  // Just a guess.
+#endif  // IR_MAGIQUEST_H_

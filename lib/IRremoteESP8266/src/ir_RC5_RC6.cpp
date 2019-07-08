@@ -1,20 +1,14 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017 David Conran
 
+// RC-5 & RC-6 support added from https://github.com/z3t0/Arduino-IRremote
+// RC-5X support added by David Conran
+
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRtimer.h"
 #include "IRutils.h"
-
-// RRRRRR   CCCCC          555555  XX    XX   RRRRRR   CCCCC            666
-// RR   RR CC    C         55       XX  XX    RR   RR CC    C          66
-// RRRRRR  CC       _____  555555    XXXX     RRRRRR  CC       _____  666666
-// RR  RR  CC    C            5555  XX  XX    RR  RR  CC    C         66   66
-// RR   RR  CCCCC          555555  XX    XX   RR   RR  CCCCC           66666
-
-// RC-5 & RC-6 support added from https://github.com/z3t0/Arduino-IRremote
-// RC-5X support added by David Conran
 
 // Constants
 // RC-5/RC-5X

@@ -1,13 +1,13 @@
 // Copyright 2017 David Conran
 
+// Sherwood IR remote emulation
+
+// Supports:
+//   Brand: Sherwood,  Model: RC-138 remote
+//   Brand: Sherwood,  Model: RD6505(B) Receiver
+
 #include <algorithm>
 #include "IRsend.h"
-
-//    SSSSS  HH   HH EEEEEEE RRRRRR  WW      WW  OOOOO   OOOOO  DDDDD
-//   SS      HH   HH EE      RR   RR WW      WW OO   OO OO   OO DD  DD
-//    SSSSS  HHHHHHH EEEEE   RRRRRR  WW   W  WW OO   OO OO   OO DD   DD
-//        SS HH   HH EE      RR  RR   WW WWW WW OO   OO OO   OO DD   DD
-//    SSSSS  HH   HH EEEEEEE RR   RR   WW   WW   OOOO0   OOOO0  DDDDDD
 
 #if SEND_SHERWOOD
 // Send an IR command to a Sherwood device.

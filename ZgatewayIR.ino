@@ -27,7 +27,7 @@
 */
 #ifdef ZgatewayIR
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   #include <IRremoteESP8266.h>
   #include <IRsend.h>  // Needed if you want to send IR commands.
   #include <IRrecv.h>  // Needed if you want to receive IR commands.
@@ -76,8 +76,8 @@
 void setupIR()
 {
  
-  //IR init parameters
-#ifdef ESP8266
+//IR init parameters
+#if defined(ESP8266) || defined(ESP32)
   irsend.begin();
 #endif
 
@@ -107,14 +107,14 @@ void IRtoMQTT(){
     IRdata.set("value", (unsigned long)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
     IRdata.set("bits",(int)(results.bits));
-    #ifdef ESP8266 //resultToHexidecimal is only available with IRremoteESP8266
+    #if defined(ESP8266) || defined(ESP32) //resultToHexidecimal is only available with IRremoteESP8266
       String hex = resultToHexidecimal(&results);
       IRdata.set("hex", (char *)hex.c_str());
     #endif
     String rawCode = "";
     // Dump data
     for (uint16_t i = 1;  i < results.rawlen;  i++) {
-       #ifdef ESP8266
+       #if defined(ESP8266) || defined(ESP32)
           if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
           rawCode = rawCode + (results.rawbuf[i] * RAWTICK);
        #else
@@ -126,7 +126,7 @@ void IRtoMQTT(){
     IRdata.set("raw", rawCode);
     // if needed we directly resend the raw code
     if (RawDirectForward){
-      #ifdef ESP8266
+      #if defined(ESP8266) || defined(ESP32)
         uint16_t rawsend[results.rawlen];
         for (uint16_t i = 1;  i < results.rawlen;  i++) {
           if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
@@ -204,7 +204,7 @@ void IRtoMQTT(){
     else if(strstr(topicOri, "IR_Raw") != NULL){ // sending Raw data
       trc(F("IR_Raw"));
       //buffer allocation from char datacallback
-      #ifdef ESP8266
+      #if defined(ESP8266) || defined(ESP32)
         uint16_t  Raw[count+1];
       #else
         unsigned int Raw[count+1];
@@ -253,7 +253,7 @@ void IRtoMQTT(){
     }else{
         trc(F("Using NEC protocol"));
         if (valueBITS == 0) valueBITS = NEC_BITS;
-          #ifdef ESP8266
+          #if defined(ESP8266) || defined(ESP32)
               irsend.sendNEC(data, valueBITS, valueRPT);
           #else
               for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
@@ -326,7 +326,7 @@ void IRtoMQTT(){
             if(strstr(protocol_name, "IR_Raw") != NULL){ // sending Raw data
               trc(F("IR_Raw"));
               //buffer allocation from char datacallback
-              #ifdef ESP8266
+              #if defined(ESP8266) || defined(ESP32)
                 uint16_t  Raw[count+1];
               #else
                 unsigned int Raw[count+1];
@@ -354,7 +354,7 @@ void IRtoMQTT(){
         }else{
             trc(F("Using NEC protocol"));
             if (valueBITS == 0) valueBITS = NEC_BITS;
-              #ifdef ESP8266
+              #if defined(ESP8266) || defined(ESP32)
                   irsend.sendNEC(data, valueBITS, valueRPT);
               #else
                   for (int i=0; i <= valueRPT; i++) irsend.sendNEC(data, valueBITS);
@@ -391,7 +391,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_Whynter
     if (strstr(protocol_name, "IR_Whynter") != NULL){
       if (valueBITS == 0) valueBITS = WHYNTER_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendWhynter(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendWhynter(data, valueBITS);
@@ -402,7 +402,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_LG
     if (strstr(protocol_name, "IR_LG") != NULL){
       if (valueBITS == 0) valueBITS = LG_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendLG(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendLG(data, valueBITS);
@@ -413,7 +413,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_Sony
     if (strstr(protocol_name, "IR_Sony") != NULL){
       if (valueBITS == 0) valueBITS = SONY_12_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendSony(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendSony(data, valueBITS);
@@ -424,7 +424,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_DISH
     if (strstr(protocol_name, "IR_DISH") != NULL){
       if (valueBITS == 0) valueBITS = DISH_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendDISH(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendDISH(data, valueBITS);
@@ -435,7 +435,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_RC5
     if (strstr(protocol_name, "IR_RC5") != NULL){
       if (valueBITS == 0) valueBITS = RC5_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendRC5(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendRC5(data, valueBITS);
@@ -446,7 +446,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_RC6
     if (strstr(protocol_name, "IR_RC6") != NULL){
       if (valueBITS == 0) valueBITS = RC6_MODE0_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendRC6(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendRC6(data, valueBITS);
@@ -457,7 +457,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_Sharp
     if (strstr(protocol_name, "IR_Sharp") != NULL){
       if (valueBITS == 0) valueBITS = SHARP_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendSharpRaw(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendSharpRaw(data, valueBITS);
@@ -468,7 +468,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_SAMSUNG
     if (strstr(protocol_name, "IR_SAMSUNG") != NULL){
       if (valueBITS == 0) valueBITS = SAMSUNG_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendSAMSUNG(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendSAMSUNG(data, valueBITS);
@@ -479,7 +479,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #ifdef IR_JVC
     if (strstr(protocol_name, "IR_JVC") != NULL){
       if (valueBITS == 0) valueBITS = JVC_BITS;
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined(ESP32)
             irsend.sendJVC(data, valueBITS, valueRPT);
         #else
             for (int i=0; i <= valueRPT; i++) irsend.sendJVC(data, valueBITS);
@@ -489,7 +489,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
   #endif
   #ifdef IR_PANASONIC
     if (strstr(protocol_name, "IR_PANASONIC") != NULL){
-      #ifdef ESP8266
+      #if defined(ESP8266) || defined(ESP32)
           if (valueBITS == 0) valueBITS = PANASONIC_BITS;
           irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
       #else
@@ -499,7 +499,7 @@ boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, c
     }
   #endif
   
-  #ifdef ESP8266  // sendings not available on arduino
+  #if defined(ESP8266) || defined(ESP32)  // sendings not available on arduino
     #ifdef IR_COOLIX
       if (strstr(protocol_name, "IR_COOLIX") != NULL){
         if (valueBITS == 0) valueBITS = kCoolixBits;

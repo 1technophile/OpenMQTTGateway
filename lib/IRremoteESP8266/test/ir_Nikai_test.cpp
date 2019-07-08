@@ -13,6 +13,7 @@ TEST(TestSendNikai, SendDataOnly) {
   irsend.reset();
   irsend.sendNikai(0xD5F2A);  // Nikai TV Power Off.
   EXPECT_EQ(
+      "f38000d33"
       "m4000s4000"
       "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
       "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
@@ -31,6 +32,7 @@ TEST(TestSendNikai, SendWithRepeats) {
   irsend.reset();
   irsend.sendNikai(0xD5F2A, kNikaiBits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d33"
       "m4000s4000"
       "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
       "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"
@@ -44,6 +46,7 @@ TEST(TestSendNikai, SendWithRepeats) {
       irsend.outputStr());
   irsend.sendNikai(0xD5F2A, kNikaiBits, 2);  // 2 repeat.
   EXPECT_EQ(
+      "f38000d33"
       "m4000s4000"
       "m500s2000m500s2000m500s2000m500s2000m500s1000m500s1000m500s2000"
       "m500s1000m500s2000m500s1000m500s2000m500s1000m500s1000m500s1000"

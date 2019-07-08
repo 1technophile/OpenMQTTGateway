@@ -22,6 +22,7 @@ TEST(TestSendHitachiAC, SendData) {
   irsend.reset();
   irsend.sendHitachiAC(hitachi_code);
   EXPECT_EQ(
+      "f38000d50"
       "m3300s1700"
       "m400s1250m400s500m400s500m400s500m400s500m400s500m400s500m400s500"
       "m400s500m400s500m400s500m400s500m400s1250m400s500m400s500m400s500"
@@ -68,6 +69,7 @@ TEST(TestSendHitachiAC, SendWithRepeats) {
 
   irsend.sendHitachiAC(hitachi_code, kHitachiAcStateLength, 1);
   EXPECT_EQ(
+      "f38000d50"
       "m3300s1700"
       "m400s1250m400s500m400s500m400s500m400s500m400s500m400s500m400s500"
       "m400s500m400s500m400s500m400s500m400s1250m400s500m400s500m400s500"
@@ -151,6 +153,7 @@ TEST(TestSendHitachiAC, SendUnexpectedSizes) {
   irsend.reset();
   irsend.sendHitachiAC(hitachi_long_code, kHitachiAcStateLength + 1);
   ASSERT_EQ(
+      "f38000d50"
       "m3300s1700"
       "m400s1250m400s500m400s500m400s500m400s500m400s500m400s500m400s500"
       "m400s500m400s500m400s500m400s500m400s1250m400s500m400s500m400s500"
@@ -511,6 +514,7 @@ TEST(TestSendHitachiAC1, SendData) {
   irsend.reset();
   irsend.sendHitachiAC1(hitachi_code);
   EXPECT_EQ(
+      "f38000d50"
       "m3400s3400"
       "m400s1250m400s500m400s1250m400s1250m400s500m400s500m400s1250m400s500"
       "m400s1250m400s500m400s1250m400s500m400s1250m400s1250m400s1250m400s500"
@@ -585,6 +589,7 @@ TEST(TestSendHitachiAC2, SendData) {
   irsend.reset();
   irsend.sendHitachiAC2(hitachi_code);
   EXPECT_EQ(
+      "f38000d50"
       "m3300s1700"
       "m400s1250m400s500m400s500m400s500m400s500m400s500m400s500m400s500"
       "m400s500m400s500m400s500m400s500m400s1250m400s500m400s500m400s500"
@@ -762,4 +767,34 @@ TEST(TestDecodeHitachiAC2, NormalRealExample) {
   EXPECT_EQ(HITACHI_AC2, irsend.capture.decode_type);
   ASSERT_EQ(kHitachiAc2Bits, irsend.capture.bits);
   EXPECT_STATE_EQ(hitachi_code, irsend.capture.state, kHitachiAc2Bits);
+}
+
+TEST(TestIRHitachiAcClass, toCommon) {
+  IRHitachiAc ac(0);
+  ac.setPower(true);
+  ac.setMode(kHitachiAcCool);
+  ac.setTemp(20);
+  ac.setFan(kHitachiAcFanHigh);
+  ac.setSwingVertical(true);
+  ac.setSwingHorizontal(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::HITACHI_AC, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_EQ(stdAc::swingh_t::kAuto, ac.toCommon().swingh);
+  // Unsupported.
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().sleep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

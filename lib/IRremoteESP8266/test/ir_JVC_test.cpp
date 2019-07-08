@@ -14,6 +14,7 @@ TEST(TestSendJVC, SendDataOnly) {
   irsend.reset();
   irsend.sendJVC(0xC2B8);  // JVC VCR Power On.
   EXPECT_EQ(
+      "f38000d33"
       "m8400s4200"
       "m525s1725m525s1725m525s525m525s525m525s525m525s525m525s1725m525s525"
       "m525s1725m525s525m525s1725m525s1725m525s1725m525s525m525s525m525s525"
@@ -29,6 +30,7 @@ TEST(TestSendJVC, SendWithRepeats) {
   irsend.reset();
   irsend.sendJVC(0xC2B8, kJvcBits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d33"
       "m8400s4200"
       "m525s1725m525s1725m525s525m525s525m525s525m525s525m525s1725m525s525"
       "m525s1725m525s525m525s1725m525s1725m525s1725m525s525m525s525m525s525"
@@ -39,6 +41,7 @@ TEST(TestSendJVC, SendWithRepeats) {
       irsend.outputStr());
   irsend.sendJVC(0xC2B8, kJvcBits, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f38000d33"
       "m8400s4200"
       "m525s1725m525s1725m525s525m525s525m525s525m525s525m525s1725m525s525"
       "m525s1725m525s525m525s1725m525s1725m525s1725m525s525m525s525m525s525"
@@ -60,6 +63,7 @@ TEST(TestSendJVC, SendUnusualSize) {
   irsend.reset();
   irsend.sendJVC(0x0, 8);
   EXPECT_EQ(
+      "f38000d33"
       "m8400s4200"
       "m525s525m525s525m525s525m525s525m525s525m525s525m525s525m525s525"
       "m525s38475",
@@ -68,6 +72,7 @@ TEST(TestSendJVC, SendUnusualSize) {
   irsend.reset();
   irsend.sendJVC(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
+      "f38000d33"
       "m8400s4200"
       "m525s525m525s525m525s525m525s1725m525s525m525s525m525s1725m525s525"
       "m525s525m525s525m525s1725m525s1725m525s525m525s1725m525s525m525s525"

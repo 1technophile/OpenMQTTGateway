@@ -1,4 +1,5 @@
 // Copyright 2018 David Conran
+// G.I. Cable
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -7,12 +8,6 @@
 #include "IRsend.h"
 #include "IRutils.h"
 
-//              GGGG      IIIII       CCCCC    AAA   BBBBB   LL      EEEEEEE
-//             GG  GG      III       CC    C  AAAAA  BB   B  LL      EE
-//            GG           III       CC      AA   AA BBBBBB  LL      EEEEE
-//            GG   GG ...  III  ...  CC    C AAAAAAA BB   BB LL      EE
-//             GGGGGG ... IIIII ...   CCCCC  AA   AA BBBBBB  LLLLLLL EEEEEEE
-//
 // Ref:
 //   https://github.com/cyborg5/IRLib2/blob/master/IRLibProtocols/IRLib_P09_GICable.h
 //   https://github.com/markszabo/IRremoteESP8266/issues/447

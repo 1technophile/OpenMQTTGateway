@@ -110,6 +110,9 @@ void IRsend::enableIROut(uint32_t freq, uint8_t duty) {
   }
   if (freq < 1000)  // Were we given kHz? Supports the old call usage.
     freq *= 1000;
+#ifdef UNIT_TEST
+  _freq_unittest = freq;
+#endif  // UNIT_TEST
   uint32_t period = calcUSecPeriod(freq);
   // Nr. of uSeconds the LED will be on per pulse.
   onTimePeriod = (period * _dutycycle) / kDutyMax;
@@ -496,7 +499,8 @@ void IRsend::sendRaw(uint16_t buf[], uint16_t len, uint16_t hz) {
 //   nbits: How many bits long the message is to be.
 // Returns:
 //   bool: True if it is a type we can attempt to send, false if not.
-bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
+bool IRsend::send(const decode_type_t type, const uint64_t data,
+                  const uint16_t nbits) {
   switch (type) {
 #if SEND_AIWA_RC_T501
     case AIWA_RC_T501:
@@ -533,6 +537,11 @@ bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
       sendGree(data, nbits);
       break;
 #endif
+#if SEND_INAX
+    case INAX:
+      sendInax(data, nbits);
+      break;
+#endif  // SEND_INAX
 #if SEND_JVC
     case JVC:
       sendJVC(data, nbits);
@@ -541,6 +550,11 @@ bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
 #if SEND_LASERTAG
     case LASERTAG:
       sendLasertag(data, nbits);
+      break;
+#endif
+#if SEND_LEGOPF
+    case LEGOPF:
+      sendLegoPf(data, nbits);
       break;
 #endif
 #if SEND_LG
@@ -657,6 +671,146 @@ bool IRsend::send(decode_type_t type, uint64_t data, uint16_t nbits) {
       sendWhynter(data, nbits);
       break;
 #endif
+    default:
+      return false;
+  }
+  return true;
+}
+
+// Send a complex (>= 64 bits) IR message of a given type.
+// An unknown/unsupported type will do nothing.
+// Args:
+//   type:   Protocol number/type of the message you want to send.
+//   state:  A pointer to the array of bytes that make up the state[].
+//   nbytes: How many bytes are in the state.
+// Returns:
+//   bool: True if it is a type we can attempt to send, false if not.
+bool IRsend::send(const decode_type_t type, const unsigned char *state,
+                  const uint16_t nbytes) {
+  switch (type) {
+#if SEND_ARGO
+    case ARGO:
+      sendArgo(state, nbytes);
+      break;
+#endif  // SEND_ARGO
+#if SEND_DAIKIN
+    case DAIKIN:
+      sendDaikin(state, nbytes);
+      break;
+#endif  // SEND_DAIKIN
+#if SEND_DAIKIN160
+    case DAIKIN160:
+      sendDaikin160(state, nbytes);
+      break;
+#endif  // SEND_DAIKIN160
+#if SEND_DAIKIN2
+    case DAIKIN2:
+      sendDaikin2(state, nbytes);
+      break;
+#endif  // SEND_DAIKIN2
+#if SEND_DAIKIN216
+    case DAIKIN216:
+      sendDaikin216(state, nbytes);
+      break;
+#endif  // SEND_DAIKIN216
+#if SEND_ELECTRA_AC
+    case ELECTRA_AC:
+      sendElectraAC(state, nbytes);
+      break;
+#endif  // SEND_ELECTRA_AC
+#if SEND_FUJITSU_AC
+    case FUJITSU_AC:
+      sendFujitsuAC(state, nbytes);
+      break;
+#endif  // SEND_FUJITSU_AC
+#if SEND_GREE
+    case GREE:
+      sendGree(state, nbytes);
+      break;
+#endif  // SEND_GREE
+#if SEND_HAIER_AC
+    case HAIER_AC:
+      sendHaierAC(state, nbytes);
+      break;
+#endif  // SEND_HAIER_AC
+#if SEND_HAIER_AC_YRW02
+    case HAIER_AC_YRW02:
+      sendHaierACYRW02(state, nbytes);
+      break;
+#endif  // SEND_HAIER_AC_YRW02
+#if SEND_HITACHI_AC
+    case HITACHI_AC:
+      sendHitachiAC(state, nbytes);
+      break;
+#endif  // SEND_HITACHI_AC
+#if SEND_HITACHI_AC1
+    case HITACHI_AC1:
+      sendHitachiAC1(state, nbytes);
+      break;
+#endif  // SEND_HITACHI_AC1
+#if SEND_HITACHI_AC2
+    case HITACHI_AC2:
+      sendHitachiAC2(state, nbytes);
+      break;
+#endif  // SEND_HITACHI_AC2
+#if SEND_KELVINATOR
+    case KELVINATOR:
+      sendKelvinator(state, nbytes);
+      break;
+#endif  // SEND_KELVINATOR
+#if SEND_MITSUBISHI_AC
+    case MITSUBISHI_AC:
+      sendMitsubishiAC(state, nbytes);
+      break;
+#endif  // SEND_MITSUBISHI_AC
+#if SEND_MITSUBISHIHEAVY
+    case MITSUBISHI_HEAVY_88:
+      sendMitsubishiHeavy88(state, nbytes);
+      break;
+    case MITSUBISHI_HEAVY_152:
+      sendMitsubishiHeavy152(state, nbytes);
+      break;
+#endif  // SEND_MITSUBISHIHEAVY
+#if SEND_MWM
+    case MWM:
+      sendMWM(state, nbytes);
+      break;
+#endif  // SEND_MWM
+#if SEND_PANASONIC_AC
+    case PANASONIC_AC:
+      sendPanasonicAC(state, nbytes);
+      break;
+#endif  // SEND_PANASONIC_AC
+#if SEND_SAMSUNG_AC
+    case SAMSUNG_AC:
+      sendSamsungAC(state, nbytes);
+      break;
+#endif  // SEND_SAMSUNG_AC
+#if SEND_SHARP_AC
+    case SHARP_AC:
+      sendSharpAc(state, nbytes);
+      break;
+#endif  // SEND_SHARP_AC
+#if SEND_TCL112AC
+    case TCL112AC:
+      sendTcl112Ac(state, nbytes);
+      break;
+#endif  // SEND_TCL112AC
+#if SEND_TOSHIBA_AC
+    case TOSHIBA_AC:
+      sendToshibaAC(state, nbytes);
+      break;
+#endif  // SEND_TOSHIBA_AC
+#if SEND_TROTEC
+    case TROTEC:
+      sendTrotec(state, nbytes);
+      break;
+#endif  // SEND_TROTEC
+#if SEND_WHIRLPOOL_AC
+    case WHIRLPOOL_AC:
+      sendWhirlpoolAC(state, nbytes);
+      break;
+#endif  // SEND_WHIRLPOOL_AC
     default:
       return false;
   }

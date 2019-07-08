@@ -1,19 +1,16 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017 David Conran
 
+// Whynter A/C ARC-110WD added by Francesco Meschia
+// Whynter originally added from https://github.com/shirriff/Arduino-IRremote/
+
+// Supports:
+//   Brand: Whynter,  Model: ARC-110WD A/C
+
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//               W   W  H   H  Y   Y N   N TTTTT EEEEE  RRRRR
-//               W   W  H   H   Y Y  NN  N   T   E      R   R
-//               W W W  HHHHH    Y   N N N   T   EEE    RRRR
-//               W W W  H   H    Y   N  NN   T   E      R  R
-//                WWW   H   H    Y   N   N   T   EEEEE  R   R
-
-// Whynter A/C ARC-110WD added by Francesco Meschia
-// Whynter originally added from https://github.com/shirriff/Arduino-IRremote/
 
 // Constants
 

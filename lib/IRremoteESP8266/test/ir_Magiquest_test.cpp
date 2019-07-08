@@ -26,6 +26,7 @@ TEST(TestSendMagiQuest, SendDataOnly) {
   irsend.reset();
   irsend.sendMagiQuest(0x0);
   EXPECT_EQ(
+      "f36000d50"
       "m280s850m280s850m280s850m280s850m280s850m280s850m280s850m280s850"
       "m280s850m280s850m280s850m280s850m280s850m280s850m280s850m280s850"
       "m280s850m280s850m280s850m280s850m280s850m280s850m280s850m280s850"
@@ -37,6 +38,7 @@ TEST(TestSendMagiQuest, SendDataOnly) {
   irsend.reset();
   irsend.sendMagiQuest(0x123456789ABC);
   EXPECT_EQ(
+      "f36000d50"
       "m280s850m280s850m280s850m280s850m280s850m280s850m280s850m280s850"
       "m280s850m280s850m280s850m580s600m280s850m280s850m580s600m280s850"
       "m280s850m280s850m580s600m580s600m280s850m580s600m280s850m280s850"
@@ -55,6 +57,7 @@ TEST(TestSendMagiQuest, SendWithRepeats) {
   irsend.reset();
   irsend.sendMagiQuest(0x12345678ABCD, kMagiquestBits, 2);  // two repeats.
   EXPECT_EQ(
+      "f36000d50"
       "m280s850m280s850m280s850m280s850m280s850m280s850m280s850m280s850"
       "m280s850m280s850m280s850m580s600m280s850m280s850m580s600m280s850"
       "m280s850m280s850m580s600m580s600m280s850m580s600m280s850m280s850"

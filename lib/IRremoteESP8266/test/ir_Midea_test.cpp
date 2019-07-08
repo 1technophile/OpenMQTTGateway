@@ -15,6 +15,7 @@ TEST(TestSendMidea, SendDataOnly) {
   irsend.reset();
   irsend.sendMidea(0x0);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -36,6 +37,7 @@ TEST(TestSendMidea, SendDataOnly) {
   irsend.reset();
   irsend.sendMidea(0x55AA55AA55AA);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680"
       "m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560"
@@ -57,6 +59,7 @@ TEST(TestSendMidea, SendDataOnly) {
   irsend.reset();
   irsend.sendMidea(0xFFFFFFFFFFFF);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
       "m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
@@ -84,6 +87,7 @@ TEST(TestSendMidea, SendWithRepeats) {
   irsend.reset();
   irsend.sendMidea(0x55AA55AA55AA, kMideaBits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680"
       "m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560"
@@ -119,6 +123,7 @@ TEST(TestSendMidea, SendWithRepeats) {
       irsend.outputStr());
   irsend.sendMidea(0x55AA55AA55AA, kMideaBits, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680"
       "m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560"
@@ -178,6 +183,7 @@ TEST(TestSendMidea, SendUnusualSize) {
   irsend.reset();
   irsend.sendMidea(0x0, 8);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s5600"
@@ -189,6 +195,7 @@ TEST(TestSendMidea, SendUnusualSize) {
   irsend.reset();
   irsend.sendMidea(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
+      "f38000d50"
       "m4480s4480"
       "m560s560m560s560m560s560m560s1680m560s560m560s560m560s1680m560s560"
       "m560s560m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
@@ -648,4 +655,32 @@ TEST(TestDecodeMidea, DecodeRealExample) {
   EXPECT_EQ(MIDEA, irsend.capture.decode_type);
   EXPECT_EQ(kMideaBits, irsend.capture.bits);
   EXPECT_EQ(0xA18263FFFF6E, irsend.capture.value);
+}
+
+TEST(TestMideaACClass, toCommon) {
+  IRMideaAC ac(0);
+  ac.setPower(true);
+  ac.setMode(kMideaACCool);
+  ac.setTemp(20, true);
+  ac.setFan(kMideaACFanHigh);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::MIDEA, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingv_t::kOff, ac.toCommon().swingv);
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().turbo);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().filter);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().sleep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

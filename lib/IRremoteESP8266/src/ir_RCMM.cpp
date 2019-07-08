@@ -1,18 +1,15 @@
 // Copyright 2017 David Conran
 
+// Send & decode support for Phillips RC-MM added by David Conran
+
+// Supports:
+//   Brand: Microsoft,  Model: XBOX 360
+
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRtimer.h"
 #include "IRutils.h"
-
-//                RRRRRR   CCCCC          MM    MM MM    MM
-//                RR   RR CC    C         MMM  MMM MMM  MMM
-//                RRRRRR  CC       _____  MM MM MM MM MM MM
-//                RR  RR  CC    C         MM    MM MM    MM
-//                RR   RR  CCCCC          MM    MM MM    MM
-
-// Send & decode support for RC-MM added by David Conran
 
 // Constants
 // Ref:

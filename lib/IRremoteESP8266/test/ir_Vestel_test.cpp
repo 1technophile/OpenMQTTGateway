@@ -17,6 +17,7 @@ TEST(TestSendVestelAc, SendDataOnly) {
   irsend.reset();
   irsend.sendVestelAc(0x0F00D9001FEF201ULL);
   EXPECT_EQ(
+      "f38000d50"
       "m3110s9066"
       "m520s1535m520s480m520s480m520s480m520s480m520s480m520s480m520s480"
       "m520s480m520s1535m520s480m520s480m520s1535m520s1535m520s1535m520s1535"
@@ -37,6 +38,7 @@ TEST(TestSendVestelAc, SendWithRepeats) {
   irsend.reset();
   irsend.sendVestelAc(0x0F00D9001FEF201ULL, kVestelAcBits, 2);  // two repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m3110s9066"
       "m520s1535m520s480m520s480m520s480m520s480m520s480m520s480m520s480"
       "m520s480m520s1535m520s480m520s480m520s1535m520s1535m520s1535m520s1535"
@@ -508,4 +510,35 @@ TEST(TestDecodeVestelAc, RealTimerExample) {
 TEST(TestDecodeVestelAc, Housekeeping) {
   ASSERT_EQ("VESTEL_AC", typeToString(VESTEL_AC));
   ASSERT_FALSE(hasACState(VESTEL_AC));  // Uses uint64_t, not uint8_t*.
+}
+
+TEST(TestVestelAcClass, toCommon) {
+  IRVestelAc ac(0);
+  ac.setPower(true);
+  ac.setMode(kVestelAcCool);
+  ac.setTemp(20);
+  ac.setFan(kVestelAcFanHigh);
+  ac.setSwing(true);
+  ac.setTurbo(true);
+  ac.setIon(true);
+  // Now test it.
+  ASSERT_EQ(decode_type_t::VESTEL_AC, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_TRUE(ac.toCommon().turbo);
+  ASSERT_TRUE(ac.toCommon().filter);
+  // Unsupported.
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().light);
+  ASSERT_FALSE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_EQ(-1, ac.toCommon().sleep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

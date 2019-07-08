@@ -14,6 +14,7 @@ TEST(TestSendRCMM, SendDataOnly) {
   irsend.reset();
   irsend.sendRCMM(0xe0a600);
   EXPECT_EQ(
+      "f36000d33"
       "m416s277"
       "m166s777m166s611m166s277m166s277"
       "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
@@ -22,6 +23,7 @@ TEST(TestSendRCMM, SendDataOnly) {
   irsend.reset();
   irsend.sendRCMM(0x28e0a600UL, 32);
   EXPECT_EQ(
+      "f36000d33"
       "m416s277"
       "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
       "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
@@ -37,6 +39,7 @@ TEST(TestSendRCMM, SendWithRepeats) {
   irsend.reset();
   irsend.sendRCMM(0x28e0a600, 32, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f36000d33"
       "m416s277"
       "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
       "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"
@@ -60,6 +63,7 @@ TEST(TestSendRCMM, SendUnusualSize) {
   irsend.reset();
   irsend.sendRCMM(0xE0, 8);
   EXPECT_EQ(
+      "f36000d33"
       "m416s277"
       "m166s777m166s611m166s277m166s277"
       "m166s24313",
@@ -67,6 +71,7 @@ TEST(TestSendRCMM, SendUnusualSize) {
   irsend.reset();
   irsend.sendRCMM(0x28e0a60000UL, 40);
   EXPECT_EQ(
+      "f36000d33"
       "m416s277"
       "m166s277m166s611m166s611m166s277m166s777m166s611m166s277m166s277"
       "m166s611m166s611m166s444m166s611m166s277m166s277m166s277m166s277"

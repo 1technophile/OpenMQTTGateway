@@ -28,9 +28,7 @@
  *     for your first time. e.g. ESP-12 etc.
  */
 
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 

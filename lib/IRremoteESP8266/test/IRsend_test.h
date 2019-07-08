@@ -17,12 +17,14 @@
 
 #ifdef UNIT_TEST
 // Used to help simulate elapsed time in unit tests.
-uint32_t _IRtimer_unittest_now = 0;
+extern uint32_t _IRtimer_unittest_now;
 #endif  // UNIT_TEST
 
 class IRsendTest : public IRsend {
  public:
   uint32_t output[OUTPUT_BUF];
+  uint32_t freq[OUTPUT_BUF];
+  uint8_t duty[OUTPUT_BUF];
   uint16_t last;
   uint16_t rawbuf[RAW_BUF];
   decode_results capture;
@@ -40,8 +42,22 @@ class IRsendTest : public IRsend {
 
   std::string outputStr() {
     std::stringstream result;
+    uint8_t lastduty = UINT8_MAX;  // An impossible duty cycle value.
+    uint32_t lastfreq = 0;  // An impossible frequency value.
     if (last == 0 && output[0] == 0) return "";
     for (uint16_t i = 0; i <= last; i++) {
+      // Display the frequency only if it changes.
+      if (freq[i] != lastfreq) {
+        result << "f";
+        result << freq[i];
+        lastfreq = freq[i];
+      }
+      // Display the duty cycle only if it changes.
+      if (duty[i] != lastduty) {
+        result << "d";
+        result << static_cast<uint16_t>(duty[i]);
+        lastduty = duty[i];
+      }
       if ((i & 1) != outputOff)  // Odd XOR outputOff
         result << "s";
       else
@@ -92,6 +108,8 @@ class IRsendTest : public IRsend {
       output[++last] = usec;
     else
       output[last] += usec;
+    duty[last] = _dutycycle;
+    freq[last] = _freq_unittest;
     return 0;
   }
 
@@ -103,6 +121,8 @@ class IRsendTest : public IRsend {
     } else {
       output[++last] = time;
     }
+    duty[last] = _dutycycle;
+    freq[last] = _freq_unittest;
   }
 };
 

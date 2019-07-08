@@ -16,6 +16,7 @@ GTEST_DIR = ../lib/googletest/googletest
 
 # Where to find user code.
 USER_DIR = ../src
+INCLUDES = -I$(USER_DIR) -I.
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
@@ -23,7 +24,7 @@ USER_DIR = ../src
 CPPFLAGS += -isystem $(GTEST_DIR)/include -DUNIT_TEST
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -pthread
+CXXFLAGS += -g -Wall -Wextra -pthread -std=gnu++11
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
@@ -36,7 +37,9 @@ TESTS = IRutils_test IRsend_test ir_NEC_test ir_GlobalCache_test \
         ir_Toshiba_test ir_Midea_test ir_Magiquest_test ir_Lasertag_test \
 	ir_Carrier_test ir_Haier_test ir_Hitachi_test ir_GICable_test \
 	ir_Whirlpool_test ir_Lutron_test ir_Electra_test ir_Pioneer_test \
-  ir_MWM_test ir_Vestel_test ir_Teco_test ir_Tcl_test
+  ir_MWM_test ir_Vestel_test ir_Teco_test ir_Tcl_test ir_Lego_test IRac_test \
+	ir_MitsubishiHeavy_test ir_Trotec_test ir_Argo_test ir_Goodweather_test \
+	ir_Inax_test
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -80,7 +83,8 @@ PROTOCOLS = ir_NEC.o ir_Sony.o ir_Samsung.o ir_JVC.o ir_RCMM.o ir_RC5_RC6.o \
 	ir_Kelvinator.o ir_Daikin.o ir_Gree.o ir_Pronto.o ir_Nikai.o ir_Toshiba.o \
 	ir_Midea.o ir_Magiquest.o ir_Lasertag.o ir_Carrier.o ir_Haier.o \
 	ir_Hitachi.o ir_GICable.o ir_Whirlpool.o ir_Lutron.o ir_Electra.o \
-	ir_Pioneer.o ir_MWM.o ir_Vestel.o ir_Teco.o ir_Tcl.o
+	ir_Pioneer.o ir_MWM.o ir_Vestel.o ir_Teco.o ir_Tcl.o ir_Lego.o ir_Argo.o \
+	ir_Trotec.o ir_MitsubishiHeavy.o ir_Goodweather.o ir_Inax.o
 
 # All the IR Protocol header files.
 PROTOCOLS_H = $(USER_DIR)/ir_Argo.h \
@@ -91,9 +95,12 @@ PROTOCOLS_H = $(USER_DIR)/ir_Argo.h \
 		$(USER_DIR)/ir_Midea.h \
 		$(USER_DIR)/ir_Toshiba.h \
 		$(USER_DIR)/ir_Daikin.h \
+		$(USER_DIR)/ir_Goodweather.h \
 		$(USER_DIR)/ir_Kelvinator.h \
 		$(USER_DIR)/ir_Mitsubishi.h \
+		$(USER_DIR)/ir_MitsubishiHeavy.h \
 		$(USER_DIR)/ir_NEC.h \
+		$(USER_DIR)/ir_Sharp.h \
 		$(USER_DIR)/ir_Samsung.h \
 		$(USER_DIR)/ir_Trotec.h \
 		$(USER_DIR)/ir_Fujitsu.h \
@@ -102,14 +109,15 @@ PROTOCOLS_H = $(USER_DIR)/ir_Argo.h \
 		$(USER_DIR)/ir_Whirlpool.h \
 		$(USER_DIR)/ir_Vestel.h \
 		$(USER_DIR)/ir_Tcl.h \
-		$(USER_DIR)/ir_Teco.h
+		$(USER_DIR)/ir_Teco.h \
+		$(USER_DIR)/ir_Trotec.h
 # Common object files
-COMMON_OBJ = IRutils.o IRtimer.o IRsend.o IRrecv.o ir_GlobalCache.o \
+COMMON_OBJ = IRutils.o IRtimer.o IRsend.o IRrecv.o IRac.o ir_GlobalCache.o \
              $(PROTOCOLS) gtest_main.a
 # Common dependencies
 COMMON_DEPS = $(USER_DIR)/IRrecv.h $(USER_DIR)/IRsend.h $(USER_DIR)/IRtimer.h \
               $(USER_DIR)/IRutils.h $(USER_DIR)/IRremoteESP8266.h \
-							$(PROTOCOLS_H)
+							$(USER_DIR)/IRac.h $(PROTOCOLS_H)
 
 # Common test dependencies
 COMMON_TEST_DEPS = $(COMMON_DEPS) IRrecv_test.h IRsend_test.h
@@ -140,7 +148,7 @@ IRutils.o : $(USER_DIR)/IRutils.cpp $(USER_DIR)/IRutils.h $(USER_DIR)/IRremoteES
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/IRutils.cpp
 
 IRutils_test.o : IRutils_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c IRutils_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c IRutils_test.cpp
 
 IRutils_test : IRutils_test.o ir_NEC.o ir_Nikai.o ir_Toshiba.o $(COMMON_OBJ) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -152,7 +160,7 @@ IRsend.o : $(USER_DIR)/IRsend.cpp $(USER_DIR)/IRsend.h $(USER_DIR)/IRremoteESP82
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/IRsend.cpp
 
 IRsend_test.o : IRsend_test.cpp $(USER_DIR)/IRsend.h $(USER_DIR)/IRrecv.h IRsend_test.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c IRsend_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c IRsend_test.cpp
 
 IRsend_test : IRsend_test.o $(COMMON_OBJ)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -161,16 +169,25 @@ IRrecv.o : $(USER_DIR)/IRrecv.cpp $(USER_DIR)/IRrecv.h $(USER_DIR)/IRremoteESP82
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/IRrecv.cpp
 
 IRrecv_test.o : IRrecv_test.cpp $(USER_DIR)/IRsend.h $(USER_DIR)/IRrecv.h IRsend_test.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c IRrecv_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c IRrecv_test.cpp
 
 IRrecv_test : IRrecv_test.o $(COMMON_OBJ)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+IRac.o : $(USER_DIR)/IRac.cpp $(USER_DIR)/IRac.h $(COMMON_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/IRac.cpp
+
+IRac_test.o : IRac_test.cpp $(USER_DIR)/IRac.h $(COMMON_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c IRac_test.cpp
+
+IRac_test : IRac_test.o $(COMMON_OBJ)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_NEC.o : $(USER_DIR)/ir_NEC.cpp $(USER_DIR)/ir_NEC.h $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_NEC.cpp
 
 ir_NEC_test.o : ir_NEC_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_NEC_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_NEC_test.cpp
 
 ir_NEC_test : $(COMMON_OBJ) ir_NEC_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -179,7 +196,7 @@ ir_GlobalCache.o : $(USER_DIR)/ir_GlobalCache.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_GlobalCache.cpp
 
 ir_GlobalCache_test.o : ir_GlobalCache_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_GlobalCache_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_GlobalCache_test.cpp
 
 ir_GlobalCache_test : $(COMMON_OBJ) ir_GlobalCache_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -188,7 +205,7 @@ ir_Sherwood.o : $(USER_DIR)/ir_Sherwood.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Sherwood.cpp
 
 ir_Sherwood_test.o : ir_Sherwood_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Sherwood_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Sherwood_test.cpp
 
 ir_Sherwood_test : $(COMMON_OBJ) ir_Sherwood_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -197,25 +214,25 @@ ir_Sony.o : $(USER_DIR)/ir_Sony.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Sony.cpp
 
 ir_Sony_test.o : ir_Sony_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Sony_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Sony_test.cpp
 
 ir_Sony_test : $(COMMON_OBJ) ir_Sony_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Samsung.o : $(USER_DIR)/ir_Samsung.cpp $(USER_DIR)/ir_Samsung.h $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Samsung.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Samsung.cpp
 
 ir_Samsung_test.o : ir_Samsung_test.cpp $(USER_DIR)/ir_Samsung.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Samsung_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Samsung_test.cpp
 
 ir_Samsung_test : $(COMMON_OBJ) ir_Samsung_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Kelvinator.o : $(USER_DIR)/ir_Kelvinator.cpp $(USER_DIR)/ir_Kelvinator.h $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Kelvinator.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Kelvinator.cpp
 
 ir_Kelvinator_test.o : ir_Kelvinator_test.cpp $(USER_DIR)/ir_Kelvinator.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Kelvinator_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Kelvinator_test.cpp
 
 ir_Kelvinator_test : $(COMMON_OBJ) ir_Kelvinator_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -224,7 +241,7 @@ ir_JVC.o : $(USER_DIR)/ir_JVC.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_JVC.cpp
 
 ir_JVC_test.o : ir_JVC_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_JVC_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_JVC_test.cpp
 
 ir_JVC_test : $(COMMON_OBJ) ir_JVC_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -233,7 +250,7 @@ ir_RCMM.o : $(USER_DIR)/ir_RCMM.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_RCMM.cpp
 
 ir_RCMM_test.o : ir_RCMM_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_RCMM_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_RCMM_test.cpp
 
 ir_RCMM_test : $(COMMON_OBJ) ir_RCMM_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -242,34 +259,43 @@ ir_LG.o : $(USER_DIR)/ir_LG.h $(USER_DIR)/ir_LG.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_LG.cpp
 
 ir_LG_test.o : ir_LG_test.cpp $(USER_DIR)/ir_LG.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_LG_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_LG_test.cpp
 
 ir_LG_test : $(COMMON_OBJ) ir_LG_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Mitsubishi.o : $(USER_DIR)/ir_Mitsubishi.h $(USER_DIR)/ir_Mitsubishi.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Mitsubishi.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Mitsubishi.cpp
 
 ir_Mitsubishi_test.o : ir_Mitsubishi_test.cpp $(USER_DIR)/ir_Mitsubishi.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Mitsubishi_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Mitsubishi_test.cpp
 
 ir_Mitsubishi_test : $(COMMON_OBJ) ir_Mitsubishi_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
+ir_MitsubishiHeavy.o : $(USER_DIR)/ir_MitsubishiHeavy.h $(USER_DIR)/ir_MitsubishiHeavy.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_MitsubishiHeavy.cpp
+
+ir_MitsubishiHeavy_test.o : ir_MitsubishiHeavy_test.cpp $(USER_DIR)/ir_MitsubishiHeavy.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_MitsubishiHeavy_test.cpp
+
+ir_MitsubishiHeavy_test : $(COMMON_OBJ) ir_MitsubishiHeavy_test.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
 ir_Fujitsu.o : $(USER_DIR)/ir_Fujitsu.h $(USER_DIR)/ir_Fujitsu.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Fujitsu.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Fujitsu.cpp
 
 ir_Fujitsu_test.o : ir_Fujitsu_test.cpp $(USER_DIR)/ir_Fujitsu.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Fujitsu_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Fujitsu_test.cpp
 
 ir_Fujitsu_test : $(COMMON_OBJ) ir_Fujitsu_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Sharp.o : $(USER_DIR)/ir_Sharp.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Sharp.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Sharp.cpp
 
 ir_Sharp_test.o : ir_Sharp_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Sharp_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Sharp_test.cpp
 
 ir_Sharp_test : $(COMMON_OBJ) ir_Sharp_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -278,16 +304,16 @@ ir_RC5_RC6.o : $(USER_DIR)/ir_RC5_RC6.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_RC5_RC6.cpp
 
 ir_RC5_RC6_test.o : ir_RC5_RC6_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_RC5_RC6_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_RC5_RC6_test.cpp
 
 ir_RC5_RC6_test : $(COMMON_OBJ) ir_RC5_RC6_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Panasonic.o : $(USER_DIR)/ir_Panasonic.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Panasonic.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Panasonic.cpp
 
 ir_Panasonic_test.o : ir_Panasonic_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Panasonic_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Panasonic_test.cpp
 
 ir_Panasonic_test : $(COMMON_OBJ) ir_Panasonic_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -296,7 +322,7 @@ ir_Dish.o : $(USER_DIR)/ir_Dish.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Dish.cpp
 
 ir_Dish_test.o : ir_Dish_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Dish_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Dish_test.cpp
 
 ir_Dish_test : $(COMMON_OBJ) ir_Dish_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -305,16 +331,16 @@ ir_Whynter.o : $(USER_DIR)/ir_Whynter.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Whynter.cpp
 
 ir_Whynter_test.o : ir_Whynter_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Whynter_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Whynter_test.cpp
 
 ir_Whynter_test : $(COMMON_OBJ) ir_Whynter_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Coolix.o : $(USER_DIR)/ir_Coolix.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Coolix.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Coolix.cpp
 
 ir_Coolix_test.o : ir_Coolix_test.cpp $(USER_DIR)/ir_Coolix.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Coolix_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Coolix_test.cpp
 
 ir_Coolix_test : $(COMMON_OBJ) ir_Coolix_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -323,7 +349,7 @@ ir_Aiwa.o : $(USER_DIR)/ir_Aiwa.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Aiwa.cpp
 
 ir_Aiwa_test.o : ir_Aiwa_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Aiwa_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Aiwa_test.cpp
 
 ir_Aiwa_test : $(COMMON_OBJ) ir_Aiwa_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -332,7 +358,7 @@ ir_Denon.o : $(USER_DIR)/ir_Denon.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Denon.cpp
 
 ir_Denon_test.o : ir_Denon_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Denon_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Denon_test.cpp
 
 ir_Denon_test : $(COMMON_OBJ) ir_Denon_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -341,25 +367,25 @@ ir_Sanyo.o : $(USER_DIR)/ir_Sanyo.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Sanyo.cpp
 
 ir_Sanyo_test.o : ir_Sanyo_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Sanyo_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Sanyo_test.cpp
 
 ir_Sanyo_test : $(COMMON_OBJ) ir_Sanyo_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Daikin.o : $(USER_DIR)/ir_Daikin.cpp $(USER_DIR)/ir_Daikin.h $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Daikin.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Daikin.cpp
 
 ir_Daikin_test.o : ir_Daikin_test.cpp $(USER_DIR)/ir_Daikin.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Daikin_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Daikin_test.cpp
 
 ir_Daikin_test : $(COMMON_OBJ) ir_Daikin_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Gree.o : $(USER_DIR)/ir_Gree.cpp $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Gree.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Gree.cpp
 
 ir_Gree_test.o : ir_Gree_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Gree_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Gree_test.cpp
 
 ir_Gree_test : $(COMMON_OBJ) ir_Gree_test.o ir_Kelvinator.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -368,7 +394,7 @@ ir_Pronto.o : $(USER_DIR)/ir_Pronto.cpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Pronto.cpp
 
 ir_Pronto_test.o : ir_Pronto_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Pronto_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Pronto_test.cpp
 
 ir_Pronto_test : $(COMMON_OBJ) ir_Pronto_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -377,25 +403,25 @@ ir_Nikai.o : $(USER_DIR)/ir_Nikai.cpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Nikai.cpp
 
 ir_Nikai_test.o : ir_Nikai_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Nikai_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Nikai_test.cpp
 
 ir_Nikai_test : $(COMMON_OBJ) ir_Nikai_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Toshiba.o : $(USER_DIR)/ir_Toshiba.cpp $(USER_DIR)/ir_Toshiba.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Toshiba.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Toshiba.cpp
 
 ir_Toshiba_test.o : ir_Toshiba_test.cpp $(USER_DIR)/ir_Toshiba.h $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Toshiba_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Toshiba_test.cpp
 
 ir_Toshiba_test : $(COMMON_OBJ) ir_Toshiba_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Midea.o : $(USER_DIR)/ir_Midea.cpp $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Midea.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Midea.cpp
 
 ir_Midea_test.o : ir_Midea_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Midea_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Midea_test.cpp
 
 ir_Midea_test : $(COMMON_OBJ) ir_Midea_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -404,7 +430,7 @@ ir_Magiquest.o : $(USER_DIR)/ir_Magiquest.cpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Magiquest.cpp
 
 ir_Magiquest_test.o : ir_Magiquest_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Magiquest_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Magiquest_test.cpp
 
 ir_Magiquest_test : $(COMMON_OBJ) ir_Magiquest_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -413,7 +439,7 @@ ir_Lasertag.o : $(USER_DIR)/ir_Lasertag.cpp $(USER_DIR)/ir_RC5_RC6.cpp $(GTEST_H
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Lasertag.cpp
 
 ir_Lasertag_test.o : ir_Lasertag_test.cpp $(USER_DIR)/ir_RC5_RC6.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Lasertag_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Lasertag_test.cpp
 
 ir_Lasertag_test : $(COMMON_OBJ) ir_Lasertag_test.o ir_RC5_RC6.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -422,25 +448,25 @@ ir_Carrier.o : $(USER_DIR)/ir_Carrier.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Carrier.cpp
 
 ir_Carrier_test.o : ir_Carrier_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Carrier_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Carrier_test.cpp
 
 ir_Carrier_test : $(COMMON_OBJ) ir_Carrier_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Haier.o : $(USER_DIR)/ir_Haier.cpp $(USER_DIR)/ir_Haier.h $(COMMON_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Haier.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Haier.cpp
 
 ir_Haier_test.o : ir_Haier_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Haier_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Haier_test.cpp
 
 ir_Haier_test : $(COMMON_OBJ) ir_Haier_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Hitachi.o : $(USER_DIR)/ir_Hitachi.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Hitachi.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Hitachi.cpp
 
 ir_Hitachi_test.o : ir_Hitachi_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Hitachi_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Hitachi_test.cpp
 
 ir_Hitachi_test : $(COMMON_OBJ) ir_Hitachi_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -449,16 +475,16 @@ ir_GICable.o : $(USER_DIR)/ir_GICable.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_GICable.cpp
 
 ir_GICable_test.o : ir_GICable_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_GICable_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_GICable_test.cpp
 
 ir_GICable_test : $(COMMON_OBJ) ir_GICable_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Whirlpool.o : $(USER_DIR)/ir_Whirlpool.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Whirlpool.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Whirlpool.cpp
 
 ir_Whirlpool_test.o : ir_Whirlpool_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Whirlpool_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Whirlpool_test.cpp
 
 ir_Whirlpool_test : $(COMMON_OBJ) ir_Whirlpool_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -467,7 +493,7 @@ ir_Lutron.o : $(USER_DIR)/ir_Lutron.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Lutron.cpp
 
 ir_Lutron_test.o : ir_Lutron_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Lutron_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Lutron_test.cpp
 
 ir_Lutron_test : $(COMMON_OBJ) ir_Lutron_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -476,7 +502,7 @@ ir_Electra.o : $(USER_DIR)/ir_Electra.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Electra.cpp
 
 ir_Electra_test.o : ir_Electra_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Electra_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Electra_test.cpp
 
 ir_Electra_test : $(COMMON_OBJ) ir_Electra_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -485,7 +511,7 @@ ir_Pioneer.o : $(USER_DIR)/ir_Pioneer.cpp $(COMMON_DEPS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Pioneer.cpp
 
 ir_Pioneer_test.o : ir_Pioneer_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Pioneer_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Pioneer_test.cpp
 
 ir_Pioneer_test : $(COMMON_OBJ) ir_Pioneer_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
@@ -494,34 +520,79 @@ ir_MWM.o : $(USER_DIR)/ir_MWM.cpp $(COMMON_DEPS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_MWM.cpp
 
 ir_MWM_test.o : ir_MWM_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_MWM_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_MWM_test.cpp
 
 ir_MWM_test : $(COMMON_OBJ) ir_MWM_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Vestel.o : $(USER_DIR)/ir_Vestel.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Vestel.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Vestel.cpp
 
 ir_Vestel_test.o : ir_Vestel_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Vestel_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Vestel_test.cpp
 
 ir_Vestel_test : $(COMMON_OBJ) ir_Vestel_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Teco.o : $(USER_DIR)/ir_Teco.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Teco.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Teco.cpp
 
 ir_Teco_test.o : ir_Teco_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Teco_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Teco_test.cpp
 
 ir_Teco_test : $(COMMON_OBJ) ir_Teco_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
 ir_Tcl.o : $(USER_DIR)/ir_Tcl.cpp $(COMMON_DEPS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Tcl.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Tcl.cpp
 
 ir_Tcl_test.o : ir_Tcl_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(USER_DIR) -c ir_Tcl_test.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Tcl_test.cpp
 
 ir_Tcl_test : $(COMMON_OBJ) ir_Tcl_test.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+ir_Lego.o : $(USER_DIR)/ir_Lego.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/ir_Lego.cpp
+
+ir_Lego_test.o : ir_Lego_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Lego_test.cpp
+
+ir_Lego_test : $(COMMON_OBJ) ir_Lego_test.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+ir_Argo.o : $(USER_DIR)/ir_Argo.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Argo.cpp
+
+ir_Argo_test.o : ir_Argo_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Argo_test.cpp
+
+ir_Argo_test : $(COMMON_OBJ) ir_Argo_test.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+ir_Trotec.o : $(USER_DIR)/ir_Trotec.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Trotec.cpp
+
+ir_Trotec_test.o : ir_Trotec_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Trotec_test.cpp
+
+ir_Trotec_test : $(COMMON_OBJ) ir_Trotec_test.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+ir_Goodweather.o : $(USER_DIR)/ir_Goodweather.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Goodweather.cpp
+
+ir_Goodweather_test.o : ir_Goodweather_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Goodweather_test.cpp
+
+ir_Goodweather_test : $(COMMON_OBJ) ir_Goodweather_test.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+ir_Inax.o : $(USER_DIR)/ir_Inax.cpp $(COMMON_DEPS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c $(USER_DIR)/ir_Inax.cpp
+
+ir_Inax_test.o : ir_Inax_test.cpp $(COMMON_TEST_DEPS) $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) -c ir_Inax_test.cpp
+
+ir_Inax_test : $(COMMON_OBJ) ir_Inax_test.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@

@@ -13,6 +13,7 @@ TEST(TestSendPioneer, SendDataOnly) {
   irsend.begin();
   irsend.sendPioneer(0);
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -28,6 +29,7 @@ TEST(TestSendPioneer, SendDataOnly) {
       irsend.outputStr());
   irsend.sendPioneer(0x55FF00AAAA00FF55);
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s560m560s1680m560s560m560s1680m560s560m560s1680"
       "m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680m560s1680"
@@ -136,6 +138,7 @@ TEST(TestDecodePioneer, SyntheticPioneerMessage) {
   irsend.reset();
   irsend.sendPioneer(0x659A857AF50A3DC2, 64, 0);
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480"
       "m560s560m560s1680m560s1680m560s560m560s560m560s1680m560s560m560s1680"
       "m560s1680m560s560m560s560m560s1680m560s1680m560s560m560s1680m560s560"

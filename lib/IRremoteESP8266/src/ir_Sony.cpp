@@ -2,16 +2,12 @@
 // Copyright 2016 marcosamarinho
 // Copyright 2017 David Conran
 
+// Sony Remote Emulation
+
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                           SSSS   OOO   N   N  Y   Y
-//                          S      O   O  NN  N   Y Y
-//                           SSS   O   O  N N N    Y
-//                              S  O   O  N  NN    Y
-//                          SSSS    OOO   N   N    Y
 
 // Sony originally added from https://github.com/shirriff/Arduino-IRremote/
 // Updates from marcosamarinho

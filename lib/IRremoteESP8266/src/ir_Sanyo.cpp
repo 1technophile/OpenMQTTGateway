@@ -6,12 +6,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 
-//                      SSSS   AAA   N   N  Y   Y   OOO
-//                     S      A   A  NN  N   Y Y   O   O
-//                      SSS   AAAAA  N N N    Y    O   O
-//                         S  A   A  N  NN    Y    O   O
-//                     SSSS   A   A  N   N    Y     OOO
-
 // Sanyo SA 8650B originally added from:
 //   https://github.com/shirriff/Arduino-IRremote/
 // Sanyo LC7461 support originally by marcosamarinho

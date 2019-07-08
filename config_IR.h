@@ -43,7 +43,7 @@
 #define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress      0x4004     // Panasonic address (Pre data) 
 
-#ifdef ESP8266 //IR supported protocols on ESP8266, all supported per default
+#if defined(ESP8266) || defined(ESP32)  //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
   #define IR_Raw
   #define IR_COOLIX
@@ -98,17 +98,6 @@
   #define IR_SAMSUNG36
   #define IR_TCL112AC
   #define IR_TECO
-#elif ESP32
-  #define IR_Raw
-  #define IR_COOLIX
-  #define IR_Whynter
-  #define IR_Sony
-  #define IR_LG
-  #define IR_DISH
-  #define IR_RC5
-  #define IR_Sharp
-  #define IR_SAMSUNG
-  #define IR_PANASONIC
 #elif __AVR_ATmega2560__
   #define IR_COOLIX
   #define IR_Whynter
@@ -141,9 +130,9 @@
   #define IR_RECEIVER_PIN 27
   #define IR_EMITTER_PIN 14
 #elif __AVR_ATmega2560__
-  #define IR_RECEIVER_PIN 2 // 2 = D2 on mega
+  #define IR_RECEIVER_PIN 2 // 2 = D2 on arduino mega
   #define IR_EMITTER_PIN 9
 #else
-  #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino
+  #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino UNO
   #define IR_EMITTER_PIN 9
 #endif

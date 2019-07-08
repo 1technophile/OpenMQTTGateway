@@ -1,19 +1,16 @@
 // Copyright 2018 David Conran
 
+// Supports:
+//   Brand: Carrier/Surrey,  Model: 42QG5A55970 remote
+//   Brand: Carrier/Surrey,  Model: 619EGX0090E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0120E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0180E0 A/C
+//   Brand: Carrier/Surrey,  Model: 619EGX0220E0 A/C
+//   Brand: Carrier/Surrey,  Model: 53NGK009/012 Inverter
+
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//             CCCCC    AAA   RRRRRR  RRRRRR  IIIII EEEEEEE RRRRRR
-//            CC    C  AAAAA  RR   RR RR   RR  III  EE      RR   RR
-//            CC      AA   AA RRRRRR  RRRRRR   III  EEEEE   RRRRRR
-//            CC    C AAAAAAA RR  RR  RR  RR   III  EE      RR  RR
-//             CCCCC  AA   AA RR   RR RR   RR IIIII EEEEEEE RR   RR
-
-// Suits Carrier/Surrey HVAC models:
-//   42QG5A55970 (remote)
-//   619EGX0090E0 / 619EGX0120E0 / 619EGX0180E0 / 619EGX0220E0 (indoor units)
-//   53NGK009/012 (inverter)
 
 // Constants
 // Ref:

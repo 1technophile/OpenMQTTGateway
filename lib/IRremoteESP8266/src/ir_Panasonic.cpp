@@ -1,6 +1,8 @@
 // Copyright 2015 Kristian Lauszus
 // Copyright 2017, 2018 David Conran
 
+// Panasonic devices
+
 #include "ir_Panasonic.h"
 #include <algorithm>
 #ifndef ARDUINO
@@ -9,12 +11,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//       PPPP    AAA   N   N   AAA    SSSS   OOO   N   N  IIIII   CCCC
-//       P   P  A   A  NN  N  A   A  S      O   O  NN  N    I    C
-//       PPPP   AAAAA  N N N  AAAAA   SSS   O   O  N N N    I    C
-//       P      A   A  N  NN  A   A      S  O   O  N  NN    I    C
-//       P      A   A  N   N  A   A  SSSS    OOO   N   N  IIIII   CCCC
 
 // Panasonic protocol originally added by Kristian Lauszus from:
 //   https://github.com/z3t0/Arduino-IRremote
@@ -27,8 +23,8 @@
 //   Code by crankyoldgit
 // Panasonic A/C models supported:
 //   A/C Series/models:
-//     JKE, LKE, DKE, CKP, & NKE series. (In theory)
-//     CS-YW9MKD (confirmed)
+//     JKE, LKE, DKE, CKP, RKR, & NKE series. (In theory)
+//     CS-YW9MKD, CS-Z9RKR (confirmed)
 //     CS-ME14CKPG / CS-ME12CKPG / CS-ME10CKPG
 //   A/C Remotes:
 //     A75C3747 (confirmed)
@@ -63,7 +59,7 @@ const uint32_t kPanasonicMinGap = kPanasonicMinGapTicks * kPanasonicTick;
 
 const uint16_t kPanasonicAcSectionGap = 10000;
 const uint16_t kPanasonicAcSection1Length = 8;
-const uint32_t kPanasonicAcMessageGap = 100000;  // A complete guess.
+const uint32_t kPanasonicAcMessageGap = kDefaultMessageGap;  // Just a guess.
 
 #if (SEND_PANASONIC || SEND_DENON)
 // Send a Panasonic formatted message.
@@ -77,7 +73,8 @@ const uint32_t kPanasonicAcMessageGap = 100000;  // A complete guess.
 //
 // Note:
 //   This protocol is a modified version of Kaseikyo.
-void IRsend::sendPanasonic64(uint64_t data, uint16_t nbits, uint16_t repeat) {
+void IRsend::sendPanasonic64(const uint64_t data, const uint16_t nbits,
+                             const uint16_t repeat) {
   sendGeneric(kPanasonicHdrMark, kPanasonicHdrSpace, kPanasonicBitMark,
               kPanasonicOneSpace, kPanasonicBitMark, kPanasonicZeroSpace,
               kPanasonicBitMark, kPanasonicMinGap, kPanasonicMinCommandLength,
@@ -96,8 +93,8 @@ void IRsend::sendPanasonic64(uint64_t data, uint16_t nbits, uint16_t repeat) {
 //
 // Note:
 //   This protocol is a modified version of Kaseikyo.
-void IRsend::sendPanasonic(uint16_t address, uint32_t data, uint16_t nbits,
-                           uint16_t repeat) {
+void IRsend::sendPanasonic(const uint16_t address, const uint32_t data,
+                           const uint16_t nbits, const uint16_t repeat) {
   sendPanasonic64(((uint64_t)address << 32) | (uint64_t)data, nbits, repeat);
 }
 
@@ -117,8 +114,10 @@ void IRsend::sendPanasonic(uint16_t address, uint32_t data, uint16_t nbits,
 //   Panasonic 48-bit protocol is a modified version of Kaseikyo.
 // Ref:
 //   http://www.remotecentral.com/cgi-bin/mboard/rc-pronto/thread.cgi?2615
-uint64_t IRsend::encodePanasonic(uint16_t manufacturer, uint8_t device,
-                                 uint8_t subdevice, uint8_t function) {
+uint64_t IRsend::encodePanasonic(const uint16_t manufacturer,
+                                 const uint8_t device,
+                                 const uint8_t subdevice,
+                                 const uint8_t function) {
   uint8_t checksum = device ^ subdevice ^ function;
   return (((uint64_t)manufacturer << 32) | ((uint64_t)device << 24) |
           ((uint64_t)subdevice << 16) | ((uint64_t)function << 8) | checksum);
@@ -141,8 +140,8 @@ uint64_t IRsend::encodePanasonic(uint16_t manufacturer, uint8_t device,
 // Ref:
 //   http://www.remotecentral.com/cgi-bin/mboard/rc-pronto/thread.cgi?26152
 //   http://www.hifi-remote.com/wiki/index.php?title=Panasonic
-bool IRrecv::decodePanasonic(decode_results *results, uint16_t nbits,
-                             bool strict, uint32_t manufacturer) {
+bool IRrecv::decodePanasonic(decode_results *results, const uint16_t nbits,
+                             const bool strict, const uint32_t manufacturer) {
   if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
     return false;  // Not enough entries to be a Panasonic message.
   if (strict && nbits != kPanasonicBits)
@@ -211,13 +210,14 @@ bool IRrecv::decodePanasonic(decode_results *results, uint16_t nbits,
 //:
 // Panasonic A/C models supported:
 //   A/C Series/models:
-//     JKE, LKE, DKE, & NKE series.
+//     JKE, LKE, DKE, CKP, RKR, & NKE series.
 //     CS-YW9MKD
 //   A/C Remotes:
 //     A75C3747
 //     A75C3704
 //
-void IRsend::sendPanasonicAC(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
+void IRsend::sendPanasonicAC(const uint8_t data[], const uint16_t nbytes,
+                             const uint16_t repeat) {
   if (nbytes < kPanasonicAcSection1Length) return;
   for (uint16_t r = 0; r <= repeat; r++) {
     // First section. (8 bytes)
@@ -236,16 +236,18 @@ void IRsend::sendPanasonicAC(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
 }
 #endif  // SEND_PANASONIC_AC
 
-IRPanasonicAc::IRPanasonicAc(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRPanasonicAc::IRPanasonicAc(const uint16_t pin) : _irsend(pin) {
+  this->stateReset();
+}
 
-void IRPanasonicAc::stateReset() {
+void IRPanasonicAc::stateReset(void) {
   for (uint8_t i = 0; i < kPanasonicAcStateLength; i++)
     remote_state[i] = kPanasonicKnownGoodState[i];
   _temp = 25;  // An initial saved desired temp. Completely made up.
   _swingh = kPanasonicAcSwingHMiddle;  // A similar made up value for H Swing.
 }
 
-void IRPanasonicAc::begin() { _irsend.begin(); }
+void IRPanasonicAc::begin(void) { _irsend.begin(); }
 
 // Verify the checksum is valid for a given state.
 // Args:
@@ -264,12 +266,12 @@ uint8_t IRPanasonicAc::calcChecksum(uint8_t state[], const uint16_t length) {
 }
 
 void IRPanasonicAc::fixChecksum(const uint16_t length) {
-  remote_state[length - 1] = calcChecksum(remote_state, length);
+  remote_state[length - 1] = this->calcChecksum(remote_state, length);
 }
 
 #if SEND_PANASONIC_AC
 void IRPanasonicAc::send(const uint16_t repeat) {
-  fixChecksum();
+  this->fixChecksum();
   _irsend.sendPanasonicAC(remote_state, kPanasonicAcStateLength, repeat);
 }
 #endif  // SEND_PANASONIC_AC
@@ -281,6 +283,7 @@ void IRPanasonicAc::setModel(const panasonic_ac_remote_model_t model) {
     case kPanasonicLke:
     case kPanasonicNke:
     case kPanasonicCkp:
+    case kPanasonicRkr:
       break;
     default:  // Only proceed if we know what to do.
       return;
@@ -301,7 +304,7 @@ void IRPanasonicAc::setModel(const panasonic_ac_remote_model_t model) {
       remote_state[23] = 0x01;
       remote_state[25] = 0x06;
       // Has to be done last as setSwingHorizontal has model check built-in
-      setSwingHorizontal(_swingh);
+      this->setSwingHorizontal(_swingh);
       break;
     case kPanasonicNke:
       remote_state[17] = 0x06;
@@ -311,12 +314,17 @@ void IRPanasonicAc::setModel(const panasonic_ac_remote_model_t model) {
     case kPanasonicCkp:
       remote_state[21] |= 0x10;
       remote_state[23] = 0x01;
+      break;
+    case kPanasonicRkr:
+      remote_state[13] |= 0x08;
+      remote_state[23] = 0x89;
     default:
       break;
   }
 }
 
-panasonic_ac_remote_model_t IRPanasonicAc::getModel() {
+panasonic_ac_remote_model_t IRPanasonicAc::getModel(void) {
+  if (remote_state[23] == 0x89) return kPanasonicRkr;
   if (remote_state[17] == 0x00) {
     if ((remote_state[21] & 0x10) && (remote_state[23] & 0x01))
       return kPanasonicCkp;
@@ -329,8 +337,8 @@ panasonic_ac_remote_model_t IRPanasonicAc::getModel() {
   return kPanasonicUnknown;
 }
 
-uint8_t *IRPanasonicAc::getRaw() {
-  fixChecksum();
+uint8_t *IRPanasonicAc::getRaw(void) {
+  this->fixChecksum();
   return remote_state;
 }
 
@@ -351,32 +359,32 @@ void IRPanasonicAc::setRaw(const uint8_t state[]) {
 //
 // For all other models, setPower(true) should set the internal state to
 // turn it on, and setPower(false) should turn it off.
-void IRPanasonicAc::setPower(const bool state) {
-  if (state)
-    on();
+void IRPanasonicAc::setPower(const bool on) {
+  if (on)
+    this->on();
   else
-    off();
+    this->off();
 }
 
 // Return the A/C power state of the remote.
 // Except for CKP models, where it returns if the power state will be toggled
 // on the A/C unit when the next message is sent.
-bool IRPanasonicAc::getPower() {
+bool IRPanasonicAc::getPower(void) {
   return (remote_state[13] & kPanasonicAcPower) == kPanasonicAcPower;
 }
 
-void IRPanasonicAc::on() { remote_state[13] |= kPanasonicAcPower; }
+void IRPanasonicAc::on(void) { remote_state[13] |= kPanasonicAcPower; }
 
-void IRPanasonicAc::off() { remote_state[13] &= ~kPanasonicAcPower; }
+void IRPanasonicAc::off(void) { remote_state[13] &= ~kPanasonicAcPower; }
 
-uint8_t IRPanasonicAc::getMode() { return remote_state[13] >> 4; }
+uint8_t IRPanasonicAc::getMode(void) { return remote_state[13] >> 4; }
 
 void IRPanasonicAc::setMode(const uint8_t desired) {
   uint8_t mode = kPanasonicAcAuto;  // Default to Auto mode.
   switch (desired) {
     case kPanasonicAcFan:
       // Allegedly Fan mode has a temperature of 27.
-      setTemp(kPanasonicAcFanModeTemp, false);
+      this->setTemp(kPanasonicAcFanModeTemp, false);
       mode = desired;
       break;
     case kPanasonicAcAuto:
@@ -385,16 +393,16 @@ void IRPanasonicAc::setMode(const uint8_t desired) {
     case kPanasonicAcDry:
       mode = desired;
       // Set the temp to the saved temp, just incase our previous mode was Fan.
-      setTemp(_temp);
+      this->setTemp(_temp);
       break;
   }
   remote_state[13] &= 0x0F;  // Clear the previous mode bits.
   remote_state[13] |= mode << 4;
 }
 
-uint8_t IRPanasonicAc::getTemp() { return remote_state[14] >> 1; }
+uint8_t IRPanasonicAc::getTemp(void) { return remote_state[14] >> 1; }
 
-// Set the desitred temperature in Celcius.
+// Set the desitred temperature in Celsius.
 // Args:
 //   celsius: The temperature to set the A/C unit to.
 //   remember: A boolean flag for the class to remember the temperature.
@@ -408,7 +416,9 @@ void IRPanasonicAc::setTemp(const uint8_t celsius, const bool remember) {
   if (remember) _temp = temperature;
 }
 
-uint8_t IRPanasonicAc::getSwingVertical() { return remote_state[16] & 0x0F; }
+uint8_t IRPanasonicAc::getSwingVertical(void) {
+  return remote_state[16] & 0x0F;
+}
 
 void IRPanasonicAc::setSwingVertical(const uint8_t desired_elevation) {
   uint8_t elevation = desired_elevation;
@@ -420,7 +430,7 @@ void IRPanasonicAc::setSwingVertical(const uint8_t desired_elevation) {
   remote_state[16] |= elevation;
 }
 
-uint8_t IRPanasonicAc::getSwingHorizontal() { return remote_state[17]; }
+uint8_t IRPanasonicAc::getSwingHorizontal(void) { return remote_state[17]; }
 
 void IRPanasonicAc::setSwingHorizontal(const uint8_t desired_direction) {
   switch (desired_direction) {
@@ -436,8 +446,9 @@ void IRPanasonicAc::setSwingHorizontal(const uint8_t desired_direction) {
   }
   _swingh = desired_direction;  // Store the direction for later.
   uint8_t direction = desired_direction;
-  switch (getModel()) {
+  switch (this->getModel()) {
     case kPanasonicDke:
+    case kPanasonicRkr:
       break;
     case kPanasonicNke:
     case kPanasonicLke:
@@ -455,48 +466,62 @@ void IRPanasonicAc::setFan(const uint8_t speed) {
         (remote_state[16] & 0x0F) | ((speed + kPanasonicAcFanOffset) << 4);
 }
 
-uint8_t IRPanasonicAc::getFan() {
+uint8_t IRPanasonicAc::getFan(void) {
   return (remote_state[16] >> 4) - kPanasonicAcFanOffset;
 }
 
-bool IRPanasonicAc::getQuiet() {
-  if (getModel() == kPanasonicCkp)
-    return remote_state[21] & kPanasonicAcQuietCkp;
-  else
-    return remote_state[21] & kPanasonicAcQuiet;
+bool IRPanasonicAc::getQuiet(void) {
+  switch (this->getModel()) {
+    case kPanasonicRkr:
+    case kPanasonicCkp:
+      return remote_state[21] & kPanasonicAcQuietCkp;
+    default:
+      return remote_state[21] & kPanasonicAcQuiet;
+  }
 }
 
-void IRPanasonicAc::setQuiet(const bool state) {
+void IRPanasonicAc::setQuiet(const bool on) {
   uint8_t quiet;
-  if (getModel() == kPanasonicCkp)
-    quiet = kPanasonicAcQuietCkp;
-  else
-    quiet = kPanasonicAcQuiet;
+  switch (this->getModel()) {
+    case kPanasonicRkr:
+    case kPanasonicCkp:
+      quiet = kPanasonicAcQuietCkp;
+      break;
+    default:
+      quiet = kPanasonicAcQuiet;
+  }
 
-  if (state) {
-    setPowerful(false);  // Powerful is mutually exclusive.
+  if (on) {
+    this->setPowerful(false);  // Powerful is mutually exclusive.
     remote_state[21] |= quiet;
   } else {
     remote_state[21] &= ~quiet;
   }
 }
 
-bool IRPanasonicAc::getPowerful() {
-  if (getModel() == kPanasonicCkp)
-    return remote_state[21] & kPanasonicAcPowerfulCkp;
-  else
-    return remote_state[21] & kPanasonicAcPowerful;
+bool IRPanasonicAc::getPowerful(void) {
+  switch (this->getModel()) {
+    case kPanasonicRkr:
+    case kPanasonicCkp:
+      return remote_state[21] & kPanasonicAcPowerfulCkp;
+    default:
+      return remote_state[21] & kPanasonicAcPowerful;
+  }
 }
 
-void IRPanasonicAc::setPowerful(const bool state) {
+void IRPanasonicAc::setPowerful(const bool on) {
   uint8_t powerful;
-  if (getModel() == kPanasonicCkp)
-    powerful = kPanasonicAcPowerfulCkp;
-  else
-    powerful = kPanasonicAcPowerful;
+  switch (this->getModel()) {
+    case kPanasonicRkr:
+    case kPanasonicCkp:
+      powerful = kPanasonicAcPowerfulCkp;
+      break;
+    default:
+      powerful = kPanasonicAcPowerful;
+  }
 
-  if (state) {
-    setQuiet(false);  // Quiet is mutually exclusive.
+  if (on) {
+    this->setQuiet(false);  // Quiet is mutually exclusive.
     remote_state[21] |= powerful;
   } else {
     remote_state[21] &= ~powerful;
@@ -507,7 +532,7 @@ uint16_t IRPanasonicAc::encodeTime(const uint8_t hours, const uint8_t mins) {
   return std::min(hours, (uint8_t)23) * 60 + std::min(mins, (uint8_t)59);
 }
 
-uint16_t IRPanasonicAc::getClock() {
+uint16_t IRPanasonicAc::getClock(void) {
   uint16_t result = ((remote_state[25] & 0b00000111) << 8) + remote_state[24];
   if (result == kPanasonicAcTimeSpecial) return 0;
   return result;
@@ -522,7 +547,7 @@ void IRPanasonicAc::setClock(const uint16_t mins_since_midnight) {
   remote_state[25] |= (corrected >> 8);
 }
 
-uint16_t IRPanasonicAc::getOnTimer() {
+uint16_t IRPanasonicAc::getOnTimer(void) {
   uint16_t result = ((remote_state[19] & 0b00000111) << 8) + remote_state[18];
   if (result == kPanasonicAcTimeSpecial) return 0;
   return result;
@@ -546,13 +571,13 @@ void IRPanasonicAc::setOnTimer(const uint16_t mins_since_midnight,
   remote_state[19] |= (corrected >> 8);
 }
 
-void IRPanasonicAc::cancelOnTimer() { setOnTimer(0, false); }
+void IRPanasonicAc::cancelOnTimer(void) { this->setOnTimer(0, false); }
 
-bool IRPanasonicAc::isOnTimerEnabled() {
+bool IRPanasonicAc::isOnTimerEnabled(void) {
   return remote_state[13] & kPanasonicAcOnTimer;
 }
 
-uint16_t IRPanasonicAc::getOffTimer() {
+uint16_t IRPanasonicAc::getOffTimer(void) {
   uint16_t result =
       ((remote_state[20] & 0b01111111) << 4) + (remote_state[19] >> 4);
   if (result == kPanasonicAcTimeSpecial) return 0;
@@ -578,111 +603,247 @@ void IRPanasonicAc::setOffTimer(const uint16_t mins_since_midnight,
   remote_state[20] |= corrected >> 4;
 }
 
-void IRPanasonicAc::cancelOffTimer() { setOffTimer(0, false); }
+void IRPanasonicAc::cancelOffTimer(void) { this->setOffTimer(0, false); }
 
-bool IRPanasonicAc::isOffTimerEnabled() {
+bool IRPanasonicAc::isOffTimerEnabled(void) {
   return remote_state[13] & kPanasonicAcOffTimer;
 }
 
-#ifdef ARDUINO
 String IRPanasonicAc::timeToString(const uint16_t mins_since_midnight) {
   String result = "";
-#else
-std::string IRPanasonicAc::timeToString(const uint16_t mins_since_midnight) {
-  std::string result = "";
-#endif  // ARDUINO
-  result += uint64ToString(mins_since_midnight / 60) + ":";
+  result.reserve(6);
+  result += uint64ToString(mins_since_midnight / 60) + ':';
   uint8_t mins = mins_since_midnight % 60;
-  if (mins < 10) result += "0";  // Zero pad the minutes.
+  if (mins < 10) result += '0';  // Zero pad the minutes.
   return result + uint64ToString(mins);
 }
 
+// Convert a standard A/C mode into its native mode.
+uint8_t IRPanasonicAc::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kPanasonicAcCool;
+    case stdAc::opmode_t::kHeat:
+      return kPanasonicAcHeat;
+    case stdAc::opmode_t::kDry:
+      return kPanasonicAcDry;
+    case stdAc::opmode_t::kFan:
+      return kPanasonicAcFan;
+    default:
+      return kPanasonicAcAuto;
+  }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRPanasonicAc::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+      return kPanasonicAcFanMin;
+    case stdAc::fanspeed_t::kLow:
+      return kPanasonicAcFanMin + 1;
+    case stdAc::fanspeed_t::kMedium:
+      return kPanasonicAcFanMin + 2;
+    case stdAc::fanspeed_t::kHigh:
+      return kPanasonicAcFanMin + 3;
+    case stdAc::fanspeed_t::kMax:
+      return kPanasonicAcFanMax;
+    default:
+      return kPanasonicAcFanAuto;
+  }
+}
+
+// Convert a standard A/C vertical swing into its native setting.
+uint8_t IRPanasonicAc::convertSwingV(const stdAc::swingv_t position) {
+  switch (position) {
+    case stdAc::swingv_t::kHighest:
+    case stdAc::swingv_t::kHigh:
+    case stdAc::swingv_t::kMiddle:
+      return kPanasonicAcSwingVUp;
+    case stdAc::swingv_t::kLow:
+    case stdAc::swingv_t::kLowest:
+      return kPanasonicAcSwingVDown;
+    default:
+      return kPanasonicAcSwingVAuto;
+  }
+}
+
+// Convert a standard A/C horizontal swing into its native setting.
+uint8_t IRPanasonicAc::convertSwingH(const stdAc::swingh_t position) {
+  switch (position) {
+    case stdAc::swingh_t::kLeftMax:
+      return kPanasonicAcSwingHFullLeft;
+    case stdAc::swingh_t::kLeft:
+      return kPanasonicAcSwingHLeft;
+    case stdAc::swingh_t::kMiddle:
+      return kPanasonicAcSwingHMiddle;
+    case stdAc::swingh_t::kRight:
+    return kPanasonicAcSwingHRight;
+    case stdAc::swingh_t::kRightMax:
+      return kPanasonicAcSwingHFullRight;
+    default:
+      return kPanasonicAcSwingHAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRPanasonicAc::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kPanasonicAcCool: return stdAc::opmode_t::kCool;
+    case kPanasonicAcHeat: return stdAc::opmode_t::kHeat;
+    case kPanasonicAcDry: return stdAc::opmode_t::kDry;
+    case kPanasonicAcFan: return stdAc::opmode_t::kFan;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRPanasonicAc::toCommonFanSpeed(const uint8_t spd) {
+  switch (spd) {
+    case kPanasonicAcFanMax: return stdAc::fanspeed_t::kMax;
+    case kPanasonicAcFanMin + 3: return stdAc::fanspeed_t::kHigh;
+    case kPanasonicAcFanMin + 2: return stdAc::fanspeed_t::kMedium;
+    case kPanasonicAcFanMin + 1: return stdAc::fanspeed_t::kLow;
+    case kPanasonicAcFanMin: return stdAc::fanspeed_t::kMin;
+    default: return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert a native vertical swing to it's common equivalent.
+stdAc::swingh_t IRPanasonicAc::toCommonSwingH(const uint8_t pos) {
+  switch (pos) {
+    case kPanasonicAcSwingHFullLeft: return stdAc::swingh_t::kLeftMax;
+    case kPanasonicAcSwingHLeft: return stdAc::swingh_t::kLeft;
+    case kPanasonicAcSwingHMiddle: return stdAc::swingh_t::kMiddle;
+    case kPanasonicAcSwingHRight: return stdAc::swingh_t::kRight;
+    case kPanasonicAcSwingHFullRight: return stdAc::swingh_t::kRightMax;
+    default: return stdAc::swingh_t::kAuto;
+  }
+}
+
+// Convert a native vertical swing to it's common equivalent.
+stdAc::swingv_t IRPanasonicAc::toCommonSwingV(const uint8_t pos) {
+  switch (pos) {
+    case kPanasonicAcSwingVUp: return stdAc::swingv_t::kHighest;
+    case kPanasonicAcSwingVDown: return stdAc::swingv_t::kLowest;
+    default: return stdAc::swingv_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRPanasonicAc::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::PANASONIC_AC;
+  result.model = this->getModel();
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.swingv = this->toCommonSwingV(this->getSwingVertical());
+  result.swingh = this->toCommonSwingH(this->getSwingHorizontal());
+  result.quiet = this->getQuiet();
+  result.turbo = this->getPowerful();
+  // Not supported.
+  result.econo = false;
+  result.clean = false;
+  result.filter = false;
+  result.light = false;
+  result.beep = false;
+  result.sleep = -1;
+  result.clock = -1;
+  return result;
+}
+
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRPanasonicAc::toString() {
+String IRPanasonicAc::toString(void) {
   String result = "";
-#else
-std::string IRPanasonicAc::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += "Model: " + uint64ToString(getModel());
+  result.reserve(180);  // Reserve some heap for the string to reduce fragging.
+  result += F("Model: ");
+  result += uint64ToString(getModel());
   switch (getModel()) {
     case kPanasonicDke:
-      result += " (DKE)";
+      result += F(" (DKE)");
       break;
     case kPanasonicJke:
-      result += " (JKE)";
+      result += F(" (JKE)");
       break;
     case kPanasonicNke:
-      result += " (NKE)";
+      result += F(" (NKE)");
       break;
     case kPanasonicLke:
-      result += " (LKE)";
+      result += F(" (LKE)");
       break;
     case kPanasonicCkp:
-      result += " (CKP)";
+      result += F(" (CKP)");
+      break;
+    case kPanasonicRkr:
+      result += F(" (RKR)");
       break;
     default:
-      result += " (UNKNOWN)";
+      result += F(" (UNKNOWN)");
   }
-  result += ", Power: ";
+  result += F(", Power: ");
   if (getPower())
-    result += "On";
+    result += F("On");
   else
-    result += "Off";
-  result += ", Mode: " + uint64ToString(getMode());
+    result += F("Off");
+  result += F(", Mode: ");
+  result += uint64ToString(getMode());
   switch (getMode()) {
     case kPanasonicAcAuto:
-      result += " (AUTO)";
+      result += F(" (AUTO)");
       break;
     case kPanasonicAcCool:
-      result += " (COOL)";
+      result += F(" (COOL)");
       break;
     case kPanasonicAcHeat:
-      result += " (HEAT)";
+      result += F(" (HEAT)");
       break;
     case kPanasonicAcDry:
-      result += " (DRY)";
+      result += F(" (DRY)");
       break;
     case kPanasonicAcFan:
-      result += " (FAN)";
+      result += F(" (FAN)");
       break;
     default:
-      result += " (UNKNOWN)";
+      result += F(" (UNKNOWN)");
   }
-  result += ", Temp: " + uint64ToString(getTemp()) + "C";
-  result += ", Fan: " + uint64ToString(getFan());
+  result += F(", Temp: ");
+  result += uint64ToString(getTemp());
+  result += F("C, Fan: ");
+  result += uint64ToString(getFan());
   switch (getFan()) {
     case kPanasonicAcFanAuto:
-      result += " (AUTO)";
+      result += F(" (AUTO)");
       break;
     case kPanasonicAcFanMax:
-      result += " (MAX)";
+      result += F(" (MAX)");
       break;
     case kPanasonicAcFanMin:
-      result += " (MIN)";
+      result += F(" (MIN)");
       break;
     default:
-      result += " (UNKNOWN)";
+      result += F(" (UNKNOWN)");
       break;
   }
-  result += ", Swing (Vertical): " + uint64ToString(getSwingVertical());
+  result += F(", Swing (Vertical): ");
+  result += uint64ToString(getSwingVertical());
   switch (getSwingVertical()) {
     case kPanasonicAcSwingVAuto:
-      result += " (AUTO)";
+      result += F(" (AUTO)");
       break;
     case kPanasonicAcSwingVUp:
-      result += " (Full Up)";
+      result += F(" (Full Up)");
       break;
     case kPanasonicAcSwingVDown:
-      result += " (Full Down)";
+      result += F(" (Full Down)");
       break;
     case 2:
     case 3:
     case 4:
       break;
     default:
-      result += " (UNKNOWN)";
+      result += F(" (UNKNOWN)");
       break;
   }
   switch (getModel()) {
@@ -690,52 +851,54 @@ std::string IRPanasonicAc::toString() {
     case kPanasonicCkp:
       break;  // No Horizontal Swing support.
     default:
-      result += ", Swing (Horizontal): " + uint64ToString(getSwingHorizontal());
+      result += F(", Swing (Horizontal): ");
+      result += uint64ToString(getSwingHorizontal());
       switch (getSwingHorizontal()) {
         case kPanasonicAcSwingHAuto:
-          result += " (AUTO)";
+          result += F(" (AUTO)");
           break;
         case kPanasonicAcSwingHFullLeft:
-          result += " (Full Left)";
+          result += F(" (Full Left)");
           break;
         case kPanasonicAcSwingHLeft:
-          result += " (Left)";
+          result += F(" (Left)");
           break;
         case kPanasonicAcSwingHMiddle:
-          result += " (Middle)";
+          result += F(" (Middle)");
           break;
         case kPanasonicAcSwingHFullRight:
-          result += " (Full Right)";
+          result += F(" (Full Right)");
           break;
         case kPanasonicAcSwingHRight:
-          result += " (Right)";
+          result += F(" (Right)");
           break;
         default:
-          result += " (UNKNOWN)";
+          result += F(" (UNKNOWN)");
           break;
       }
   }
-  result += ", Quiet: ";
+  result += F(", Quiet: ");
   if (getQuiet())
-    result += "On";
+    result += F("On");
   else
-    result += "Off";
-  result += ", Powerful: ";
+    result += F("Off");
+  result += F(", Powerful: ");
   if (getPowerful())
-    result += "On";
+    result += F("On");
   else
-    result += "Off";
-  result += ", Clock: " + timeToString(getClock());
-  result += ", On Timer: ";
+    result += F("Off");
+  result += F(", Clock: ");
+  result += timeToString(getClock());
+  result += F(", On Timer: ");
   if (isOnTimerEnabled())
     result += timeToString(getOnTimer());
   else
-    result += "Off";
-  result += ", Off Timer: ";
+    result += F("Off");
+  result += F(", Off Timer: ");
   if (isOffTimerEnabled())
     result += timeToString(getOffTimer());
   else
-    result += "Off";
+    result += F("Off");
   return result;
 }
 
@@ -758,8 +921,8 @@ std::string IRPanasonicAc::toString() {
 //   A/C Remotes:
 //     A75C3747 (Confirmed)
 //     A75C3704
-bool IRrecv::decodePanasonicAC(decode_results *results, uint16_t nbits,
-                               bool strict) {
+bool IRrecv::decodePanasonicAC(decode_results *results, const uint16_t nbits,
+                               const bool strict) {
   if (nbits % 8 != 0)  // nbits has to be a multiple of nr. of bits in a byte.
     return false;
 

@@ -2,6 +2,8 @@
 // Copyright 2017-2018 David Conran
 // Copyright 2018 Denes Varga
 
+// Mitsubishi
+
 #include "ir_Mitsubishi.h"
 #include <algorithm>
 #ifndef ARDUINO
@@ -10,12 +12,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//    MMMMM  IIIII TTTTT   SSSS  U   U  BBBB   IIIII   SSSS  H   H  IIIII
-//    M M M    I     T    S      U   U  B   B    I    S      H   H    I
-//    M M M    I     T     SSS   U   U  BBBB     I     SSS   HHHHH    I
-//    M   M    I     T        S  U   U  B   B    I        S  H   H    I
-//    M   M  IIIII   T    SSSS    UUU   BBBBB  IIIII  SSSS   H   H  IIIII
 
 // Mitsubishi (TV) decoding added from https://github.com/z3t0/Arduino-IRremote
 // Mitsubishi (TV) sending & Mitsubishi A/C support added by David Conran
@@ -165,7 +161,7 @@ bool IRrecv::decodeMitsubishi(decode_results *results, uint16_t nbits,
 //   This protocol appears to have a manditory in-protocol repeat.
 //   That is in *addition* to the entire message needing to be sent twice
 //   for the device to accept the command. That is separate from the repeat.
-//   i.e. Allegedly, the real remote requires the "OFF" button pressed twice.
+//   i.e. Allegedly, the real remote requires the "Off" button pressed twice.
 //        You will need to add a suitable gap yourself.
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/441
@@ -268,8 +264,8 @@ bool IRrecv::decodeMitsubishi2(decode_results *results, uint16_t nbits,
 //
 // Status: BETA / Appears to be working.
 //
-void IRsend::sendMitsubishiAC(unsigned char data[], uint16_t nbytes,
-                              uint16_t repeat) {
+void IRsend::sendMitsubishiAC(const unsigned char data[], const uint16_t nbytes,
+                              const uint16_t repeat) {
   if (nbytes < kMitsubishiACStateLength)
     return;  // Not enough bytes to send a proper message.
 
@@ -420,10 +416,12 @@ bool IRrecv::decodeMitsubishiAC(decode_results *results, uint16_t nbits,
 // Equipment it seems compatible with:
 //  * <Add models (A/C & remotes) you've gotten it working with here>
 // Initialise the object.
-IRMitsubishiAC::IRMitsubishiAC(uint16_t pin) : _irsend(pin) { stateReset(); }
+IRMitsubishiAC::IRMitsubishiAC(const uint16_t pin) : _irsend(pin) {
+  this->stateReset();
+}
 
 // Reset the state of the remote to a known good state/sequence.
-void IRMitsubishiAC::stateReset() {
+void IRMitsubishiAC::stateReset(void) {
   // The state of the IR remote in IR code form.
   // Known good state obtained from:
   //   https://github.com/r45635/HVAC-IR-Control/blob/master/HVAC_ESP8266/HVAC_ESP8266.ino#L108
@@ -445,39 +443,39 @@ void IRMitsubishiAC::stateReset() {
   for (uint8_t i = 11; i < kMitsubishiACStateLength - 1; i++)
     remote_state[i] = 0;
   remote_state[kMitsubishiACStateLength - 1] = 0x1F;
-  checksum();  // Calculate the checksum
+  this->checksum();  // Calculate the checksum
 }
 
 // Configure the pin for output.
-void IRMitsubishiAC::begin() { _irsend.begin(); }
+void IRMitsubishiAC::begin(void) { _irsend.begin(); }
 
 #if SEND_MITSUBISHI_AC
 // Send the current desired state to the IR LED.
 void IRMitsubishiAC::send(const uint16_t repeat) {
-  checksum();  // Ensure correct checksum before sending.
+  this->checksum();  // Ensure correct checksum before sending.
   _irsend.sendMitsubishiAC(remote_state, kMitsubishiACStateLength, repeat);
 }
 #endif  // SEND_MITSUBISHI_AC
 
 // Return a pointer to the internal state date of the remote.
-uint8_t *IRMitsubishiAC::getRaw() {
-  checksum();
+uint8_t *IRMitsubishiAC::getRaw(void) {
+  this->checksum();
   return remote_state;
 }
 
-void IRMitsubishiAC::setRaw(uint8_t *data) {
+void IRMitsubishiAC::setRaw(const uint8_t *data) {
   for (uint8_t i = 0; i < (kMitsubishiACStateLength - 1); i++) {
     remote_state[i] = data[i];
   }
-  checksum();
+  this->checksum();
 }
 
 // Calculate the checksum for the current internal state of the remote.
-void IRMitsubishiAC::checksum() {
-  remote_state[17] = calculateChecksum(remote_state);
+void IRMitsubishiAC::checksum(void) {
+  remote_state[17] = this->calculateChecksum(remote_state);
 }
 
-uint8_t IRMitsubishiAC::calculateChecksum(uint8_t *data) {
+uint8_t IRMitsubishiAC::calculateChecksum(const uint8_t *data) {
   uint8_t sum = 0;
   // Checksum is simple addition of all previous bytes stored
   // as an 8 bit value.
@@ -486,45 +484,46 @@ uint8_t IRMitsubishiAC::calculateChecksum(uint8_t *data) {
 }
 
 // Set the requested power state of the A/C to off.
-void IRMitsubishiAC::on() {
+void IRMitsubishiAC::on(void) {
   // state = ON;
   remote_state[5] |= kMitsubishiAcPower;
 }
 
 // Set the requested power state of the A/C to off.
-void IRMitsubishiAC::off() {
+void IRMitsubishiAC::off(void) {
   // state = OFF;
   remote_state[5] &= ~kMitsubishiAcPower;
 }
 
 // Set the requested power state of the A/C.
-void IRMitsubishiAC::setPower(bool state) {
-  if (state)
-    on();
+void IRMitsubishiAC::setPower(bool on) {
+  if (on)
+    this->on();
   else
-    off();
+    this->off();
 }
 
 // Return the requested power state of the A/C.
-bool IRMitsubishiAC::getPower() {
+bool IRMitsubishiAC::getPower(void) {
   return ((remote_state[5] & kMitsubishiAcPower) != 0);
 }
 
 // Set the temp. in deg C
-void IRMitsubishiAC::setTemp(uint8_t temp) {
-  temp = std::max((uint8_t)kMitsubishiAcMinTemp, temp);
+void IRMitsubishiAC::setTemp(const uint8_t degrees) {
+  uint8_t temp = std::max((uint8_t)kMitsubishiAcMinTemp, degrees);
   temp = std::min((uint8_t)kMitsubishiAcMaxTemp, temp);
   remote_state[7] = temp - kMitsubishiAcMinTemp;
 }
 
 // Return the set temp. in deg C
-uint8_t IRMitsubishiAC::getTemp() {
+uint8_t IRMitsubishiAC::getTemp(void) {
   return (remote_state[7] + kMitsubishiAcMinTemp);
 }
 
 // Set the speed of the fan, 0-6.
 // 0 is auto, 1-5 is the speed, 6 is silent.
-void IRMitsubishiAC::setFan(uint8_t fan) {
+void IRMitsubishiAC::setFan(const uint8_t speed) {
+  uint8_t fan = speed;
   // Bounds check
   if (fan > kMitsubishiAcFanSilent)
     fan = kMitsubishiAcFanMax;        // Set the fan to maximum if out of range.
@@ -539,17 +538,17 @@ void IRMitsubishiAC::setFan(uint8_t fan) {
 }
 
 // Return the requested state of the unit's fan.
-uint8_t IRMitsubishiAC::getFan() {
+uint8_t IRMitsubishiAC::getFan(void) {
   uint8_t fan = remote_state[9] & 0b111;
   if (fan == kMitsubishiAcFanMax) return kMitsubishiAcFanSilent;
   return fan;
 }
 
 // Return the requested climate operation mode of the a/c unit.
-uint8_t IRMitsubishiAC::getMode() { return (remote_state[6]); }
+uint8_t IRMitsubishiAC::getMode(void) { return (remote_state[6]); }
 
 // Set the requested climate operation mode of the a/c unit.
-void IRMitsubishiAC::setMode(uint8_t mode) {
+void IRMitsubishiAC::setMode(const uint8_t mode) {
   // If we get an unexpected mode, default to AUTO.
   switch (mode) {
     case kMitsubishiAcAuto:
@@ -565,48 +564,54 @@ void IRMitsubishiAC::setMode(uint8_t mode) {
       remote_state[8] = 0b00110000;
       break;
     default:
-      mode = kMitsubishiAcAuto;
-      remote_state[8] = 0b00110000;
+      this->setMode(kMitsubishiAcAuto);
+      return;
   }
   remote_state[6] = mode;
 }
 
 // Set the requested vane operation mode of the a/c unit.
-void IRMitsubishiAC::setVane(uint8_t mode) {
-  mode = std::min(mode, (uint8_t)0b111);  // bounds check
-  mode |= 0b1000;
-  mode <<= 3;
+void IRMitsubishiAC::setVane(const uint8_t position) {
+  uint8_t pos = std::min(position, (uint8_t)0b111);  // bounds check
+  pos |= 0b1000;
+  pos <<= 3;
   remote_state[9] &= 0b11000111;  // Clear the previous setting.
-  remote_state[9] |= mode;
+  remote_state[9] |= pos;
 }
 
 // Return the requested vane operation mode of the a/c unit.
-uint8_t IRMitsubishiAC::getVane() {
+uint8_t IRMitsubishiAC::getVane(void) {
   return ((remote_state[9] & 0b00111000) >> 3);
 }
 
 // Return the clock setting of the message. 1=1/6 hour. e.g. 4pm = 48
-uint8_t IRMitsubishiAC::getClock() { return remote_state[10]; }
+uint8_t IRMitsubishiAC::getClock(void) { return remote_state[10]; }
 
 // Set the current time. 1 = 1/6 hour. e.g. 6am = 36.
-void IRMitsubishiAC::setClock(uint8_t clock) { remote_state[10] = clock; }
+void IRMitsubishiAC::setClock(const uint8_t clock) {
+  remote_state[10] = clock;
+}
 
 // Return the desired start time. 1 = 1/6 hour. e.g. 1am = 6
-uint8_t IRMitsubishiAC::getStartClock() { return remote_state[12]; }
+uint8_t IRMitsubishiAC::getStartClock(void) { return remote_state[12]; }
 
-// Set the desired start tiem of the AC.  1 = 1/6 hour. e.g. 8pm = 120
-void IRMitsubishiAC::setStartClock(uint8_t clock) { remote_state[12] = clock; }
+// Set the desired start time of the AC.  1 = 1/6 hour. e.g. 8pm = 120
+void IRMitsubishiAC::setStartClock(const uint8_t clock) {
+  remote_state[12] = clock;
+}
 
 // Return the desired stop time of the AC. 1 = 1/6 hour. e.g 10pm = 132
-uint8_t IRMitsubishiAC::getStopClock() { return remote_state[11]; }
+uint8_t IRMitsubishiAC::getStopClock(void) { return remote_state[11]; }
 
 // Set the desired stop time of the AC. 1 = 1/6 hour. e.g 10pm = 132
-void IRMitsubishiAC::setStopClock(uint8_t clock) { remote_state[11] = clock; }
+void IRMitsubishiAC::setStopClock(const uint8_t clock) {
+  remote_state[11] = clock;
+}
 
 // Return the timer setting. Possible values: kMitsubishiAcNoTimer,
 //  kMitsubishiAcStartTimer, kMitsubishiAcStopTimer,
 //  kMitsubishiAcStartStopTimer
-uint8_t IRMitsubishiAC::getTimer() { return remote_state[13] & 0b111; }
+uint8_t IRMitsubishiAC::getTimer(void) { return remote_state[13] & 0b111; }
 
 // Set the timer setting. Possible values: kMitsubishiAcNoTimer,
 //  kMitsubishiAcStartTimer, kMitsubishiAcStopTimer,
@@ -615,100 +620,198 @@ void IRMitsubishiAC::setTimer(uint8_t timer) {
   remote_state[13] = timer & 0b111;
 }
 
-#ifdef ARDUINO
-String IRMitsubishiAC::timeToString(uint64_t time) {
+// Convert a standard A/C mode into its native mode.
+uint8_t IRMitsubishiAC::convertMode(const stdAc::opmode_t mode) {
+  switch (mode) {
+    case stdAc::opmode_t::kCool:
+      return kMitsubishiAcCool;
+    case stdAc::opmode_t::kHeat:
+      return kMitsubishiAcHeat;
+    case stdAc::opmode_t::kDry:
+      return kMitsubishiAcDry;
+    default:
+      return kMitsubishiAcAuto;
+  }
+}
+
+// Convert a standard A/C Fan speed into its native fan speed.
+uint8_t IRMitsubishiAC::convertFan(const stdAc::fanspeed_t speed) {
+  switch (speed) {
+    case stdAc::fanspeed_t::kMin:
+      return kMitsubishiAcFanSilent;
+    case stdAc::fanspeed_t::kLow:
+      return kMitsubishiAcFanRealMax - 3;
+    case stdAc::fanspeed_t::kMedium:
+      return kMitsubishiAcFanRealMax - 2;
+    case stdAc::fanspeed_t::kHigh:
+      return kMitsubishiAcFanRealMax - 1;
+    case stdAc::fanspeed_t::kMax:
+      return kMitsubishiAcFanRealMax;
+    default:
+      return kMitsubishiAcFanAuto;
+  }
+}
+
+// Convert a standard A/C vertical swing into its native setting.
+uint8_t IRMitsubishiAC::convertSwingV(const stdAc::swingv_t position) {
+  switch (position) {
+    case stdAc::swingv_t::kHighest:
+    case stdAc::swingv_t::kHigh:
+    case stdAc::swingv_t::kMiddle:
+    case stdAc::swingv_t::kLow:
+    case stdAc::swingv_t::kLowest:
+      return kMitsubishiAcVaneAutoMove;
+    default:
+      return kMitsubishiAcVaneAuto;
+  }
+}
+
+// Convert a native mode to it's common equivalent.
+stdAc::opmode_t IRMitsubishiAC::toCommonMode(const uint8_t mode) {
+  switch (mode) {
+    case kMitsubishiAcCool: return stdAc::opmode_t::kCool;
+    case kMitsubishiAcHeat: return stdAc::opmode_t::kHeat;
+    case kMitsubishiAcDry: return stdAc::opmode_t::kDry;
+    default: return stdAc::opmode_t::kAuto;
+  }
+}
+
+// Convert a native fan speed to it's common equivalent.
+stdAc::fanspeed_t IRMitsubishiAC::toCommonFanSpeed(const uint8_t speed) {
+  switch (speed) {
+    case kMitsubishiAcFanRealMax: return stdAc::fanspeed_t::kMax;
+    case kMitsubishiAcFanRealMax - 1: return stdAc::fanspeed_t::kHigh;
+    case kMitsubishiAcFanRealMax - 2: return stdAc::fanspeed_t::kMedium;
+    case kMitsubishiAcFanRealMax - 3: return stdAc::fanspeed_t::kLow;
+    case kMitsubishiAcFanSilent: return stdAc::fanspeed_t::kMin;
+    default: return stdAc::fanspeed_t::kAuto;
+  }
+}
+
+// Convert a native vertical swing to it's common equivalent.
+stdAc::swingv_t IRMitsubishiAC::toCommonSwingV(const uint8_t pos) {
+  switch (pos) {
+    case 1: return stdAc::swingv_t::kHighest;
+    case 2: return stdAc::swingv_t::kHigh;
+    case 3: return stdAc::swingv_t::kMiddle;
+    case 4: return stdAc::swingv_t::kLow;
+    case 5: return stdAc::swingv_t::kLowest;
+    default: return stdAc::swingv_t::kAuto;
+  }
+}
+
+// Convert the A/C state to it's common equivalent.
+stdAc::state_t IRMitsubishiAC::toCommon(void) {
+  stdAc::state_t result;
+  result.protocol = decode_type_t::MITSUBISHI_AC;
+  result.model = -1;  // No models used.
+  result.power = this->getPower();
+  result.mode = this->toCommonMode(this->getMode());
+  result.celsius = true;
+  result.degrees = this->getTemp();
+  result.fanspeed = this->toCommonFanSpeed(this->getFan());
+  result.swingv = this->toCommonSwingV(this->getVane());
+  result.quiet = this->getFan() == kMitsubishiAcFanSilent;
+  // Not supported.
+  result.swingh = stdAc::swingh_t::kOff;
+  result.turbo = false;
+  result.clean = false;
+  result.econo = false;
+  result.filter = false;
+  result.light = false;
+  result.beep = false;
+  result.sleep = -1;
+  result.clock = -1;
+  return result;
+}
+
+String IRMitsubishiAC::timeToString(const uint64_t time) {
   String result = "";
-#else
-std::string IRMitsubishiAC::timeToString(uint64_t time) {
-  std::string result = "";
-#endif  // ARDUINO
-  if (time / 6 < 10) result += "0";
+  result.reserve(6);
+  if (time / 6 < 10) result += '0';
   result += uint64ToString(time / 6);
-  result += ":";
-  if (time * 10 % 60 < 10) result += "0";
+  result += ':';
+  if (time * 10 % 60 < 10) result += '0';
   result += uint64ToString(time * 10 % 60);
   return result;
 }
 
 // Convert the internal state into a human readable string.
-#ifdef ARDUINO
-String IRMitsubishiAC::toString() {
+String IRMitsubishiAC::toString(void) {
   String result = "";
-#else
-std::string IRMitsubishiAC::toString() {
-  std::string result = "";
-#endif  // ARDUINO
-  result += "Power: ";
-  if (getPower())
-    result += "On";
+  result.reserve(110);  // Reserve some heap for the string to reduce fragging.
+  result += F("Power: ");
+  if (this->getPower())
+    result += F("On");
   else
-    result += "Off";
-  switch (getMode()) {
+    result += F("Off");
+  switch (this->getMode()) {
     case MITSUBISHI_AC_AUTO:
-      result += " (AUTO)";
+      result += F(" (AUTO)");
       break;
     case MITSUBISHI_AC_COOL:
-      result += " (COOL)";
+      result += F(" (COOL)");
       break;
     case MITSUBISHI_AC_DRY:
-      result += " (DRY)";
+      result += F(" (DRY)");
       break;
     case MITSUBISHI_AC_HEAT:
-      result += " (HEAT)";
+      result += F(" (HEAT)");
       break;
     default:
-      result += " (UNKNOWN)";
+      result += F(" (UNKNOWN)");
   }
-  result += ", Temp: " + uint64ToString(getTemp()) + "C";
-  result += ", FAN: ";
-  switch (getFan()) {
+  result += F(", Temp: ");
+  result += uint64ToString(this->getTemp());
+  result += F("C, FAN: ");
+  switch (this->getFan()) {
     case MITSUBISHI_AC_FAN_AUTO:
-      result += "AUTO";
+      result += F("AUTO");
       break;
     case MITSUBISHI_AC_FAN_MAX:
-      result += "MAX";
+      result += F("MAX");
       break;
     case MITSUBISHI_AC_FAN_SILENT:
-      result += "SILENT";
+      result += F("SILENT");
       break;
     default:
-      result += uint64ToString(getFan());
+      result += uint64ToString(this->getFan());
   }
-  result += ", VANE: ";
-  switch (getVane()) {
+  result += F(", VANE: ");
+  switch (this->getVane()) {
     case MITSUBISHI_AC_VANE_AUTO:
-      result += "AUTO";
+      result += F("AUTO");
       break;
     case MITSUBISHI_AC_VANE_AUTO_MOVE:
-      result += "AUTO MOVE";
+      result += F("AUTO MOVE");
       break;
     default:
-      result += uint64ToString(getVane());
+      result += uint64ToString(this->getVane());
   }
-  result += ", Time: ";
-  result += timeToString(getClock());
-  result += ", On timer: ";
-  result += timeToString(getStartClock());
-  result += ", Off timer: ";
-  result += timeToString(getStopClock());
-  result += ", Timer: ";
-  switch (getTimer()) {
+  result += F(", Time: ");
+  result += this->timeToString(this->getClock());
+  result += F(", On timer: ");
+  result += this->timeToString(this->getStartClock());
+  result += F(", Off timer: ");
+  result += this->timeToString(this->getStopClock());
+  result += F(", Timer: ");
+  switch (this->getTimer()) {
     case kMitsubishiAcNoTimer:
-      result += "-";
+      result += '-';
       break;
     case kMitsubishiAcStartTimer:
-      result += "Start";
+      result += F("Start");
       break;
     case kMitsubishiAcStopTimer:
-      result += "Stop";
+      result += F("Stop");
       break;
     case kMitsubishiAcStartStopTimer:
-      result += "Start+Stop";
+      result += F("Start+Stop");
       break;
     default:
-      result += "? (";
-      result += getTimer();
-      result += ")\n";
+      result += F("? (");
+      result += this->getTimer();
+      result += F(")\n");
   }
   return result;
 }

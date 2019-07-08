@@ -1,13 +1,9 @@
 // Copyright 2017 David Conran
 
+// Pronto code message generation
+
 #include <algorithm>
 #include "IRsend.h"
-
-//                PPPPPP                        tt
-//                PP   PP rr rr   oooo  nn nnn  tt     oooo
-//                PPPPPP  rrr  r oo  oo nnn  nn tttt  oo  oo
-//                PP      rr     oo  oo nn   nn tt    oo  oo
-//                PP      rr      oooo  nn   nn  tttt  oooo
 
 // Constants
 const float kProntoFreqFactor = 0.241246;

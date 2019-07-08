@@ -1,6 +1,8 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017 David Conran
 
+// NEC originally added from https://github.com/shirriff/Arduino-IRremote/
+
 #define __STDC_LIMIT_MACROS
 #include "ir_NEC.h"
 #include <stdint.h>
@@ -8,14 +10,6 @@
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//                           N   N  EEEEE   CCCC
-//                           NN  N  E      C
-//                           N N N  EEE    C
-//                           N  NN  E      C
-//                           N   N  EEEEE   CCCC
-
-// NEC originally added from https://github.com/shirriff/Arduino-IRremote/
 
 #if (SEND_NEC || SEND_SHERWOOD || SEND_AIWA_RC_T501 || SEND_SANYO || \
      SEND_PIONEER)

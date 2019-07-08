@@ -1,16 +1,12 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017 David Conran
 
+// Nikai
+
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//               NN   NN IIIII KK  KK   AAA   IIIII
-//               NNN  NN  III  KK KK   AAAAA   III
-//               NN N NN  III  KKKK   AA   AA  III
-//               NN  NNN  III  KK KK  AAAAAAA  III
-//               NN   NN IIIII KK  KK AA   AA IIIII
 
 // Constants
 // Ref:

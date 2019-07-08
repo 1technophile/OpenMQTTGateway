@@ -7,12 +7,6 @@
 #include "IRtimer.h"
 #include "IRutils.h"
 
-//                             JJJJJ  V   V   CCCC
-//                               J    V   V  C
-//                               J     V V   C
-//                             J J     V V   C
-//                              J       V     CCCC
-
 // JVC originally added by Kristian Lauszus
 // (Thanks to zenwheel and other people at the original blog post)
 

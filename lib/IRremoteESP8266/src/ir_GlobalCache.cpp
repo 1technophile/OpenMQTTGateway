@@ -1,17 +1,11 @@
 // Copyright 2016 Hisham Khalifa
 // Copyright 2017 David Conran
 
-#include <algorithm>
-#include "IRsend.h"
-
-//   GGG  L       OOOO  BBBB     AA   L       CCCC    AA    CCCC  H    H EEEEEE
-//  G   G L      O    O B   B   AAAA  L      C    C  AAAA  C    C H    H E
-// G      L      O    O BBBBB  A    A L      C      A    A C      HHHHHH EEEE
-// G   GG L      O    O B   BB AAAAAA L      C    C AAAAAA C    C H    H E
-//  GGGGG LLLLLL  OOOO  BBBBB  A    A LLLLLL  CCCC  A    A  CCCC  H    H EEEEEE
-
 // Global Cache IR format sender originally added by Hisham Khalifa
 //   (http://www.hishamkhalifa.com)
+
+#include <algorithm>
+#include "IRsend.h"
 
 // Constants
 const uint16_t kGlobalCacheMaxRepeat = 50;

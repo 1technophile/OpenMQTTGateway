@@ -29,6 +29,7 @@ TEST(TestSendGlobalCache, NonRepeatingCode) {
   EXPECT_EQ(0x4, irsend.capture.address);
   EXPECT_EQ(0x41, irsend.capture.command);
   EXPECT_EQ(
+      "f38000d50"
       "m8892s4472m546s572m546s546m546s1690m546s546m546s572m546s572"
       "m546s546m546s572m546s1690m546s1690m546s572m546s1690m546s1690"
       "m546s1690m546s1690m546s1690m546s1690m546s572m546s572m546s546"
@@ -60,6 +61,7 @@ TEST(TestSendGlobalCache, RepeatCode) {
   EXPECT_EQ(0x4583, irsend.capture.address);
   EXPECT_EQ(0x11, irsend.capture.command);
   EXPECT_EQ(
+      "f38000d50"
       "m8866s4446m546s1664m546s1664m546s546m546s546m546s546m546s546"
       "m546s546m546s1664m546s1664m546s546m546s1664m546s546m546s546"
       "m546s546m546s1664m546s546m546s1664m546s546m546s546m546s546"

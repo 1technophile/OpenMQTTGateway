@@ -1,14 +1,8 @@
-// Copyright 2018 David Conran
+// Copyright 2018, 2019 David Conran
 
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
-
-//          EEEEEEE LL      EEEEEEE  CCCCC  TTTTTTT RRRRRR    AAA
-//          EE      LL      EE      CC    C   TTT   RR   RR  AAAAA
-//          EEEEE   LL      EEEEE   CC        TTT   RRRRRR  AA   AA
-//          EE      LL      EE      CC    C   TTT   RR  RR  AAAAAAA
-//          EEEEEEE LLLLLLL EEEEEEE  CCCCC    TTT   RR   RR AA   AA
 
 // Electra A/C added by crankyoldgit
 //
@@ -17,6 +11,7 @@
 
 // Ref:
 //   https://github.com/markszabo/IRremoteESP8266/issues/527
+//   https://github.com/markszabo/IRremoteESP8266/issues/642
 
 // Constants
 const uint16_t kElectraAcHdrMark = 9166;
@@ -24,7 +19,7 @@ const uint16_t kElectraAcBitMark = 646;
 const uint16_t kElectraAcHdrSpace = 4470;
 const uint16_t kElectraAcOneSpace = 1647;
 const uint16_t kElectraAcZeroSpace = 547;
-const uint32_t kElectraAcMessageGap = 100000;  // Completely made-up guess.
+const uint32_t kElectraAcMessageGap = kDefaultMessageGap;  // Just a guess.
 
 #if SEND_ELECTRA_AC
 // Send a Electra message
@@ -36,13 +31,15 @@ const uint32_t kElectraAcMessageGap = 100000;  // Completely made-up guess.
 //
 // Status: Alpha / Needs testing against a real device.
 //
-void IRsend::sendElectraAC(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
+void IRsend::sendElectraAC(const uint8_t data[], const uint16_t nbytes,
+                           const uint16_t repeat) {
   for (uint16_t r = 0; r <= repeat; r++)
     sendGeneric(kElectraAcHdrMark, kElectraAcHdrSpace, kElectraAcBitMark,
                 kElectraAcOneSpace, kElectraAcBitMark, kElectraAcZeroSpace,
                 kElectraAcBitMark, kElectraAcMessageGap, data, nbytes,
                 38000,  // Complete guess of the modulation frequency.
-                true, 0, 50);
+                false,  // Send data in LSB order per byte
+                0, 50);
 }
 #endif
 
@@ -56,7 +53,7 @@ void IRsend::sendElectraAC(uint8_t data[], uint16_t nbytes, uint16_t repeat) {
 // Returns:
 //   boolean: True if it can decode it, false if it can't.
 //
-// Status: Alpha / Needs testing against a real device.
+// Status: Beta / Probably works.
 //
 bool IRrecv::decodeElectraAC(decode_results *results, uint16_t nbits,
                              bool strict) {
@@ -68,8 +65,6 @@ bool IRrecv::decodeElectraAC(decode_results *results, uint16_t nbits,
       return false;  // Not strictly a ELECTRA_AC message.
   }
 
-  // The protocol sends the data normal + inverted, alternating on
-  // each byte. Hence twice the number of expected data bits.
   if (results->rawlen < 2 * nbits + kHeader + kFooter - 1)
     return false;  // Can't possibly be a valid ELECTRA_AC message.
 
@@ -87,7 +82,7 @@ bool IRrecv::decodeElectraAC(decode_results *results, uint16_t nbits,
        i++, dataBitsSoFar += 8, offset += data_result.used) {
     data_result = matchData(&(results->rawbuf[offset]), 8, kElectraAcBitMark,
                             kElectraAcOneSpace, kElectraAcBitMark,
-                            kElectraAcZeroSpace, kTolerance, 0, true);
+                            kElectraAcZeroSpace, kTolerance, 0, false);
     if (data_result.success == false) return false;  // Fail
     results->state[i] = data_result.data;
   }
@@ -99,7 +94,12 @@ bool IRrecv::decodeElectraAC(decode_results *results, uint16_t nbits,
     return false;
 
   // Compliance
-  if (strict && dataBitsSoFar != nbits) return false;
+  if (strict) {
+    if (dataBitsSoFar != nbits) return false;
+    // Verify the checksum.
+    if (sumBytes(results->state, (dataBitsSoFar / 8) - 1) !=
+        results->state[(dataBitsSoFar / 8) - 1]) return false;
+  }
 
   // Success
   results->decode_type = ELECTRA_AC;

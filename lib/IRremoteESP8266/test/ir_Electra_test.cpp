@@ -12,12 +12,13 @@
 TEST(TestSendElectraAC, SendDataOnly) {
   IRsendTest irsend(0);
   irsend.begin();
-  uint8_t data[kElectraAcStateLength] = {0xC3, 0xE1, 0x6F, 0x14, 0x06,
-                                         0x00, 0x04, 0x00, 0x00, 0x04,
-                                         0x00, 0xA0, 0xB0};
+  uint8_t data[kElectraAcStateLength] = {0xC3, 0x87, 0xF6, 0x28, 0x60,
+                                         0x00, 0x20, 0x00, 0x00, 0x20,
+                                         0x00, 0x05, 0x0D};
 
   irsend.sendElectraAC(data);
   EXPECT_EQ(
+      "f38000d50"
       "m9166s4470"
       "m646s1647m646s1647m646s547m646s547m646s547m646s547m646s1647m646s1647"
       "m646s1647m646s1647m646s1647m646s547m646s547m646s547m646s547m646s1647"
@@ -46,9 +47,9 @@ TEST(TestDecodeElectraAC, SyntheticDecode) {
 
   // Synthesised Normal ElectraAC message.
   irsend.reset();
-  uint8_t expectedState[kElectraAcStateLength] = {0xC3, 0xE1, 0x6F, 0x14, 0x06,
-                                                  0x00, 0x04, 0x00, 0x00, 0x04,
-                                                  0x00, 0xA0, 0xB0};
+  uint8_t expectedState[kElectraAcStateLength] = {0xC3, 0x87, 0xF6, 0x28, 0x60,
+                                                  0x00, 0x20, 0x00, 0x00, 0x20,
+                                                  0x00, 0x05, 0x0D};
   irsend.sendElectraAC(expectedState);
   irsend.makeDecodeResult();
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
@@ -84,9 +85,9 @@ TEST(TestDecodeElectraAC, RealExampleDecode) {
       662,  562,  642, 1686, 582, 570,  634, 566,  604, 576,  636, 566,
       610,  578,  634, 1664, 584, 590,  660, 1636, 610, 1642, 664, 590,
       610,  590,  636, 566,  634, 568,  686};  // UNKNOWN 9AD8CDB5
-  uint8_t expectedState[kElectraAcStateLength] = {0xC3, 0xE1, 0x6F, 0x14, 0x06,
-                                                  0x00, 0x04, 0x00, 0x00, 0x04,
-                                                  0x00, 0xA0, 0xB0};
+  uint8_t expectedState[kElectraAcStateLength] = {0xC3, 0x87, 0xF6, 0x28, 0x60,
+                                                  0x00, 0x20, 0x00, 0x00, 0x20,
+                                                  0x00, 0x05, 0x0D};
 
   irsend.reset();
   irsend.sendRaw(rawData, 211, 38000);

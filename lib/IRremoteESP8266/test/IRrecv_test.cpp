@@ -399,7 +399,7 @@ TEST(TestDecode, DecodeDenon) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(DENON_BITS, irsend.capture.bits);
+  EXPECT_EQ(kDenonBits, irsend.capture.bits);
   EXPECT_EQ(0x2278, irsend.capture.value);
   // Legacy Denon 14-bit message.
   irsend.reset();
@@ -407,15 +407,15 @@ TEST(TestDecode, DecodeDenon) {
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(DENON_BITS, irsend.capture.bits);
+  EXPECT_EQ(kDenonBits, irsend.capture.bits);
   EXPECT_EQ(0x1278, irsend.capture.value);
   // Normal Denon 48-bit message. (Panasonic/Kaseikyo)
   irsend.reset();
-  irsend.sendDenon(0x2A4C028D6CE3, DENON_48_BITS);
+  irsend.sendDenon(0x2A4C028D6CE3, kDenon48Bits);
   irsend.makeDecodeResult();
   ASSERT_TRUE(irrecv.decode(&irsend.capture));
   EXPECT_EQ(DENON, irsend.capture.decode_type);
-  EXPECT_EQ(DENON_48_BITS, irsend.capture.bits);
+  EXPECT_EQ(kDenon48Bits, irsend.capture.bits);
   EXPECT_EQ(0x2A4C028D6CE3, irsend.capture.value);
 }
 

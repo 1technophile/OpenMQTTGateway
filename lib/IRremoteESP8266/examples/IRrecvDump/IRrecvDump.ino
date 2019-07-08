@@ -22,9 +22,7 @@
  * LG added by Darryl Smith (based on the JVC protocol)
  */
 
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>

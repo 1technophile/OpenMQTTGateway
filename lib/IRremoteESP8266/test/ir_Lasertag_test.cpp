@@ -20,6 +20,7 @@ TEST(TestSendLasertag, SendDataOnly) {
   irsend.reset();
   irsend.sendLasertag(0x1);  // Red 1
   EXPECT_EQ(
+      "f36000d25"
       "m333s333m333s333m333s333m333s333m333s333m333s333m333s333m333s333m333"
       "s333m333s333m333s333m333s666m333s100000",
       irsend.outputStr());
@@ -27,6 +28,7 @@ TEST(TestSendLasertag, SendDataOnly) {
   irsend.reset();
   irsend.sendLasertag(0x2);  // Red 2
   EXPECT_EQ(
+      "f36000d25"
       "m333s333m333s333m333s333m333s333m333s333m333s333m333s333"
       "m333s333m333s333m333s333m333s666m666s100333",
       irsend.outputStr());
@@ -38,6 +40,7 @@ TEST(TestSendLasertag, SendDataOnly) {
   EXPECT_EQ(
       // m364s364m332s336m384s276m332s364m332s304m416s584
       // m692s724m640s360m304s332m392s612m380
+      "f36000d25"
       "m333s333m333s333m333s333m333s333m333s333m333s666"
       "m666s666m666s333m333s333m333s666m333s100000",
       irsend.outputStr());
@@ -49,6 +52,7 @@ TEST(TestSendLasertag, SendDataOnly) {
   EXPECT_EQ(
       // m332s308m412s280m360s336m332s304m444s248m332s644
       // m744s612m696s692m668s636m360
+      "f36000d25"
       "m333s333m333s333m333s333m333s333m333s333m333s666"
       "m666s666m666s666m666s666m333s100000",
       irsend.outputStr());
@@ -61,6 +65,7 @@ TEST(TestSendLasertag, SendDataWithRepeat) {
   irsend.reset();
   irsend.sendLasertag(0x1, kLasertagBits, 1);  // Red 1, one repeat.
   EXPECT_EQ(
+      "f36000d25"
       "m333s333m333s333m333s333m333s333m333s333m333s333m333s333m333s333"
       "m333s333m333s333m333s333m333s666m333s100000"
       "m333s333m333s333m333s333m333s333m333s333m333s333m333s333m333s333"
@@ -70,6 +75,7 @@ TEST(TestSendLasertag, SendDataWithRepeat) {
   irsend.reset();
   irsend.sendLasertag(0x52, kLasertagBits, 2);  // Green 2, two repeats.
   EXPECT_EQ(
+      "f36000d25"
       "m333s333m333s333m333s333m333s333m333s333m333s666m666s666m666s333"
       "m333s666m666s100333"
       "m333s333m333s333m333s333m333s333m333s333m333s666m666s666m666s333"
@@ -86,7 +92,8 @@ TEST(TestSendLasertag, SmallestMessageSize) {
   irsend.reset();
   irsend.sendLasertag(0x1555);  // Alternating bit pattern will be the smallest.
   // i.e. 7 actual 'mark' pulses, which is a rawlen of 13.
-  EXPECT_EQ("m0s333m666s666m666s666m666s666m666s666m666s666m666s666m333s100000",
+  EXPECT_EQ("f36000d25"
+            "m0s333m666s666m666s666m666s666m666s666m666s666m666s666m333s100000",
             irsend.outputStr());
 }
 

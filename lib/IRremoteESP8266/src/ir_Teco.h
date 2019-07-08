@@ -5,11 +5,12 @@
 
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // Constants. Using LSB to be able to send only 35bits.
 const uint8_t kTecoAuto = 0;  // 0b000
@@ -120,16 +121,21 @@ class IRTecoAc {
   uint64_t getRaw(void);
   void setRaw(const uint64_t new_code);
 
-#ifdef ARDUINO
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
   String toString(void);
-#else
-  std::string toString(void);
-#endif
+#ifndef UNIT_TEST
 
  private:
+  IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
   // The state of the IR remote in IR code form.
   uint64_t remote_state;
-  IRsend _irsend;
 };
 
 #endif  // IR_TECO_H_

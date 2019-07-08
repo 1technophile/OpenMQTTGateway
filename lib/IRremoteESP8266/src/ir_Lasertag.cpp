@@ -1,20 +1,15 @@
 // Copyright 2017 David Conran
+// Lasertag
 
 #include <algorithm>
 #include "IRrecv.h"
 #include "IRsend.h"
 #include "IRutils.h"
 
-//   LL        AAA    SSSSS  EEEEEEE RRRRRR  TTTTTTT   AAA     GGGG
-//   LL       AAAAA  SS      EE      RR   RR   TTT    AAAAA   GG  GG
-//   LL      AA   AA  SSSSS  EEEEE   RRRRRR    TTT   AA   AA GG
-//   LL      AAAAAAA      SS EE      RR  RR    TTT   AAAAAAA GG   GG
-//   LLLLLLL AA   AA  SSSSS  EEEEEEE RR   RR   TTT   AA   AA  GGGGGG
-
 // Constants
 const uint16_t kLasertagMinSamples = 13;
 const uint16_t kLasertagTick = 333;
-const uint32_t kLasertagMinGap = 100000;  // Completely made up amount.
+const uint32_t kLasertagMinGap = kDefaultMessageGap;  // Just a guess.
 const uint8_t kLasertagTolerance = 0;     // Percentage error margin.
 const uint16_t kLasertagExcess = 0;       // See kMarkExcess.
 const uint16_t kLasertagDelta = 150;  // Use instead of Excess and Tolerance.

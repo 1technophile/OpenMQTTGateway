@@ -21,6 +21,7 @@ TEST(TestSendKelvinator, SendDataOnly) {
   irsend.reset();
   irsend.sendKelvinator(kelv_code);
   EXPECT_EQ(
+      "f38000d50"
       "m9010s4505"
       "m680s1530m680s510m680s510m680s1530m680s1530m680s510m680s510m680s510"
       "m680s1530m680s1530m680s510m680s1530m680s510m680s510m680s510m680s510"
@@ -61,6 +62,7 @@ TEST(TestSendKelvinator, SendWithRepeats) {
 
   irsend.sendKelvinator(kelv_code, kKelvinatorStateLength, 1);
   EXPECT_EQ(
+      "f38000d50"
       "m9010s4505"
       "m680s1530m680s510m680s510m680s1530m680s1530m680s510m680s510m680s510"
       "m680s1530m680s1530m680s510m680s1530m680s510m680s510m680s510m680s510"
@@ -131,6 +133,7 @@ TEST(TestSendKelvinator, SendUnexpectedSizes) {
   // extra data.
   irsend.sendKelvinator(kelv_long_code, 17);
   ASSERT_EQ(
+      "f38000d50"
       "m9010s4505"
       "m680s1530m680s510m680s510m680s1530m680s1530m680s510m680s510m680s510"
       "m680s1530m680s1530m680s510m680s1530m680s510m680s510m680s510m680s510"
@@ -472,6 +475,7 @@ TEST(TestKelvinatorClass, MessageConstuction) {
   irsend.reset();
   irsend.sendKelvinator(irkelv.getRaw());
   EXPECT_EQ(
+      "f38000d50"
       "m9010s4505"
       "m680s1530m680s510m680s510m680s1530m680s1530m680s510m680s1530m680s510"
       "m680s1530m680s1530m680s510m680s1530m680s510m680s510m680s510m680s510"
@@ -515,4 +519,40 @@ TEST(TestDecodeKelvinator, NormalSynthetic) {
   EXPECT_EQ(KELVINATOR, irsend.capture.decode_type);
   ASSERT_EQ(kKelvinatorBits, irsend.capture.bits);
   EXPECT_STATE_EQ(kelv_code, irsend.capture.state, kKelvinatorBits);
+}
+
+TEST(TestKelvinatorClass, toCommon) {
+  IRKelvinatorAC ac(0);
+  ac.setPower(true);
+  ac.setMode(kKelvinatorCool);
+  ac.setTemp(20);
+  ac.setFan(kKelvinatorFanMax);
+  ac.setIonFilter(true);
+  ac.setXFan(true);
+  ac.setQuiet(false);
+  ac.setTurbo(true);
+  ac.setLight(true);
+  ac.setSwingHorizontal(false);
+  ac.setSwingVertical(true);
+
+  // Now test it.
+  ASSERT_EQ(decode_type_t::KELVINATOR, ac.toCommon().protocol);
+  ASSERT_EQ(-1, ac.toCommon().model);
+  ASSERT_TRUE(ac.toCommon().power);
+  ASSERT_TRUE(ac.toCommon().celsius);
+  ASSERT_EQ(20, ac.toCommon().degrees);
+  ASSERT_TRUE(ac.toCommon().filter);
+  ASSERT_TRUE(ac.toCommon().clean);
+  ASSERT_FALSE(ac.toCommon().quiet);
+  ASSERT_TRUE(ac.toCommon().turbo);
+  ASSERT_TRUE(ac.toCommon().light);
+  ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
+  ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_EQ(stdAc::swingv_t::kAuto, ac.toCommon().swingv);
+  ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
+  // Unsupported.
+  ASSERT_FALSE(ac.toCommon().econo);
+  ASSERT_FALSE(ac.toCommon().beep);
+  ASSERT_EQ(-1, ac.toCommon().sleep);
+  ASSERT_EQ(-1, ac.toCommon().clock);
 }

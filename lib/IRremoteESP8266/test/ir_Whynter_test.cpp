@@ -14,6 +14,7 @@ TEST(TestSendWhynter, SendDataOnly) {
   irsend.reset();
   irsend.sendWhynter(0x0);
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s750m750s750m750s750m750s750m750s750m750s750m750s750m750s750"
       "m750s750m750s750m750s750m750s750m750s750m750s750m750s750m750s750"
@@ -25,6 +26,7 @@ TEST(TestSendWhynter, SendDataOnly) {
   irsend.reset();
   irsend.sendWhynter(0xFFFFFFFF);
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s2150m750s2150m750s2150m750s2150m750s2150m750s2150m750s2150m750s2150"
       "m750s2150m750s2150m750s2150m750s2150m750s2150m750s2150m750s2150m750s2150"
@@ -36,6 +38,7 @@ TEST(TestSendWhynter, SendDataOnly) {
   irsend.reset();
   irsend.sendWhynter(0x87654321);
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s2150m750s750m750s750m750s750m750s750m750s2150m750s2150m750s2150"
       "m750s750m750s2150m750s2150m750s750m750s750m750s2150m750s750m750s2150"
@@ -53,6 +56,7 @@ TEST(TestSendWhynter, SendWithRepeats) {
   irsend.reset();
   irsend.sendWhynter(0x87654321, kWhynterBits, 0);  // 0 repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s2150m750s750m750s750m750s750m750s750m750s2150m750s2150m750s2150"
       "m750s750m750s2150m750s2150m750s750m750s750m750s2150m750s750m750s2150"
@@ -64,6 +68,7 @@ TEST(TestSendWhynter, SendWithRepeats) {
   irsend.reset();
   irsend.sendWhynter(0x87654321, kWhynterBits, 1);  // 1 repeat.
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s2150m750s750m750s750m750s750m750s750m750s2150m750s2150m750s2150"
       "m750s750m750s2150m750s2150m750s750m750s750m750s2150m750s750m750s2150"
@@ -81,6 +86,7 @@ TEST(TestSendWhynter, SendWithRepeats) {
   irsend.reset();
   irsend.sendWhynter(0x87654321, kWhynterBits, 2);  // 2 repeats.
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s2150m750s750m750s750m750s750m750s750m750s2150m750s2150m750s2150"
       "m750s750m750s2150m750s2150m750s750m750s750m750s2150m750s750m750s2150"
@@ -110,6 +116,7 @@ TEST(TestSendWhynter, SendUnusualSize) {
   irsend.reset();
   irsend.sendWhynter(0x0, 8);
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s750m750s750m750s750m750s750m750s750m750s750m750s750m750s750"
       "m750s88050",
@@ -118,6 +125,7 @@ TEST(TestSendWhynter, SendUnusualSize) {
   irsend.reset();
   irsend.sendWhynter(0x1234567890ABCDEF, 64);
   EXPECT_EQ(
+      "f38000d50"
       "m750s750m2850s2850"
       "m750s750m750s750m750s750m750s2150m750s750m750s750m750s2150m750s750"
       "m750s750m750s750m750s2150m750s2150m750s750m750s2150m750s750m750s750"

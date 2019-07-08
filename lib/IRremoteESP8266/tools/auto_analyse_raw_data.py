@@ -8,7 +8,7 @@ import argparse
 import sys
 
 
-class RawIRMessage(object):
+class RawIRMessage():
   """Basic analyse functions & structure for raw IR messages."""
 
   # pylint: disable=too-many-instance-attributes
@@ -62,7 +62,7 @@ class RawIRMessage(object):
   def _usec_compare(self, seen, expected):
     """Compare two usec values and see if they match within a
        subtractive margin."""
-    return seen <= expected and seen > expected - self.margin
+    return expected - self.margin < seen <= expected
 
   def _usec_compares(self, usecs, expecteds):
     """Compare a usec value to a list of values and return True
@@ -160,7 +160,7 @@ class RawIRMessage(object):
 def avg_list(items):
   """Return the average of a list of numbers."""
   if items:
-    return sum(items) / len(items)
+    return int(sum(items) / len(items))
   return 0
 
 
@@ -293,7 +293,7 @@ def decode_data(message, defines, function_code, output=sys.stdout):
       output.write("kHdrSpace+")
       function_code.append("    space(kHdrSpace);")
     elif message.is_bit_mark(usec) and count % 2:
-      if state != "HS" and state != "BS":
+      if state not in ("HS", "BS"):
         output.write("kBitMark(UNEXPECTED)")
       state = "BM"
     elif message.is_zero_space(usec):

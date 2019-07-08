@@ -12,6 +12,7 @@ TEST(TestSendGICable, SendDataOnly) {
   irsend.begin();
   irsend.sendGICable(0);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200m550s2200"
@@ -20,6 +21,7 @@ TEST(TestSendGICable, SendDataOnly) {
       irsend.outputStr());
   irsend.sendGICable(0x8807);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -28,6 +30,7 @@ TEST(TestSendGICable, SendDataOnly) {
       irsend.outputStr());
   irsend.sendGICable(0xFFFF);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400"
       "m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400m550s4400"
@@ -43,6 +46,7 @@ TEST(TestSendGICable, SendWithRepeats) {
   // Send a command with 0 repeats.
   irsend.sendGICable(0x8807, kGicableBits, 0);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -51,6 +55,7 @@ TEST(TestSendGICable, SendWithRepeats) {
   // Send a command with 1 repeat.
   irsend.sendGICable(0x8807, kGicableBits, 1);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"
@@ -60,6 +65,7 @@ TEST(TestSendGICable, SendWithRepeats) {
   // Send a command with 3 repeats.
   irsend.sendGICable(0x8807, kGicableBits, 3);
   EXPECT_EQ(
+      "f39000d50"
       "m9000s4400"
       "m550s4400m550s2200m550s2200m550s2200m550s4400m550s2200m550s2200m550s2200"
       "m550s2200m550s2200m550s2200m550s2200m550s2200m550s4400m550s4400m550s4400"

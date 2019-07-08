@@ -1,6 +1,9 @@
 // Copyright 2018 Erdem U. Altinyurt
 // Copyright 2019 David Conran
 
+// Supports:
+//   Brand: Vestel,  Model: BIOX CXP-9 A/C (9K BTU)
+
 #ifndef IR_VESTEL_H_
 #define IR_VESTEL_H_
 
@@ -8,17 +11,12 @@
 #include <stdint.h>
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-
-//                 VV     VV  EEEEEEE   SSSSS  TTTTTTTT  EEEEEEE  LL
-//                 VV     VV  EE       S          TT     EE       LL
-//                  VV   VV   EEEEE     SSSS      TT     EEEEE    LL
-//                   VV VV    EE            S     TT     EE       LL
-//                    VVV     EEEEEEE  SSSSS      TT     EEEEEEE  LLLLLLL
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // Vestel added by Erdem U. Altinyurt
 
@@ -28,7 +26,7 @@
 //   Swing: 4 bits. (auto 0xA, stop 0xF)
 //   turbo_sleep_normal: 4bits. (normal 0x1, sleep 0x3, turbo 0x7)
 //   Unused: 8 bits. (0x00)
-//   Temperature: 4 bits. (Celcius, but offset by -16 degrees. e.g. 0x0 = 16C)
+//   Temperature: 4 bits. (Celsius, but offset by -16 degrees. e.g. 0x0 = 16C)
 //   Fan Speed: 4 bits (auto 0x1, low 0x5, mid 0x9, high 0xB, 0xD auto hot,
 //                    0xC auto cool)
 //   Mode: 3 bits. (auto 0x0, cold 0x1, dry 0x2, fan 0x3, hot 0x4)
@@ -100,20 +98,23 @@ const uint8_t kVestelAcOffTimerFlagOffset = kVestelAcHourOffset + 6;
 const uint8_t kVestelAcTimerFlagOffset = kVestelAcHourOffset + 7;
 const uint8_t kVestelAcMinuteOffset = 44;
 
+const uint64_t kVestelAcStateDefault = 0x0F00D9001FEF201ULL;
+const uint64_t kVestelAcTimeStateDefault = 0x201ULL;
 
 class IRVestelAc {
  public:
-  explicit IRVestelAc(uint16_t pin);
+  explicit IRVestelAc(const uint16_t pin);
 
-  void stateReset();
+  void stateReset(void);
 #if SEND_VESTEL_AC
-  void send();
+  void send(void);
+  uint8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_VESTEL_AC
   void begin(void);
   void on(void);
   void off(void);
-  void setPower(const bool state);
-  bool getPower();
+  void setPower(const bool on);
+  bool getPower(void);
   void setAuto(const int8_t autoLevel);
   void setTimer(const uint16_t minutes);
   uint16_t getTimer(void);
@@ -129,17 +130,17 @@ class IRVestelAc {
   uint8_t getFan(void);
   void setMode(const uint8_t mode);
   uint8_t getMode(void);
-  void setRaw(uint8_t* newState);
+  void setRaw(const uint8_t* newState);
   void setRaw(const uint64_t newState);
   uint64_t getRaw(void);
   static bool validChecksum(const uint64_t state);
-  void setSwing(const bool state);
+  void setSwing(const bool on);
   bool getSwing(void);
-  void setSleep(const bool state);
+  void setSleep(const bool on);
   bool getSleep(void);
-  void setTurbo(const bool state);
+  void setTurbo(const bool on);
   bool getTurbo(void);
-  void setIon(const bool state);
+  void setIon(const bool on);
   bool getIon(void);
   bool isTimeCommand(void);
   bool isOnTimerActive(void);
@@ -149,18 +150,23 @@ class IRVestelAc {
   bool isTimerActive(void);
   void setTimerActive(const bool on);
   static uint8_t calcChecksum(const uint64_t state);
-#ifdef ARDUINO
-  String toString();
-#else
-  std::string toString();
-#endif
+  static uint8_t convertMode(const stdAc::opmode_t mode);
+  static uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
+  String toString(void);
+#ifndef UNIT_TEST
 
  private:
+  IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
   uint64_t remote_state;
   uint64_t remote_time_state;
   bool use_time_state;
-  void checksum();
-  IRsend _irsend;
+  void checksum(void);
 };
 
 #endif  // IR_VESTEL_H_

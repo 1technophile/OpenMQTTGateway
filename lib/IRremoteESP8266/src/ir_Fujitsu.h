@@ -1,5 +1,16 @@
 // Copyright 2017 Jonny Graham
-// Copyright 2018 David Conran
+// Copyright 2018-2019 David Conran
+
+// Supports:
+//   Brand: Fujitsu,  Model: AR-RAH2E remote
+//   Brand: Fujitsu,  Model: ASYG30LFCA A/C
+//   Brand: Fujitsu,  Model: AR-DB1 remote
+//   Brand: Fujitsu,  Model: AST9RSGCW A/C
+//   Brand: Fujitsu,  Model: AR-REB1E remote
+//   Brand: Fujitsu,  Model: ASYG7LMCA A/C
+//   Brand: Fujitsu,  Model: AR-RAE1E remote
+//   Brand: Fujitsu General,  Model: AR-JW2 remote
+
 #ifndef IR_FUJITSU_H_
 #define IR_FUJITSU_H_
 
@@ -7,12 +18,13 @@
 #include <stdint.h>
 #ifdef ARDUINO
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRrecv.h"
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // FUJITSU A/C support added by Jonny Graham
 
@@ -23,11 +35,15 @@ const uint8_t kFujitsuAcModeDry = 0x02;
 const uint8_t kFujitsuAcModeFan = 0x03;
 const uint8_t kFujitsuAcModeHeat = 0x04;
 
-const uint8_t kFujitsuAcCmdStayOn = 0x00;
-const uint8_t kFujitsuAcCmdTurnOn = 0x01;
-const uint8_t kFujitsuAcCmdTurnOff = 0x02;
-const uint8_t kFujitsuAcCmdStepHoriz = 0x79;
-const uint8_t kFujitsuAcCmdStepVert = 0x6C;
+const uint8_t kFujitsuAcCmdStayOn = 0x00;            // b00000000
+const uint8_t kFujitsuAcCmdTurnOn = 0x01;            // b00000001
+const uint8_t kFujitsuAcCmdTurnOff = 0x02;           // b00000010
+const uint8_t kFujitsuAcCmdEcono = 0x09;             // b00001001
+const uint8_t kFujitsuAcCmdPowerful = 0x39;          // b00111001
+const uint8_t kFujitsuAcCmdStepVert = 0x6C;          // b01101100
+const uint8_t kFujitsuAcCmdToggleSwingVert = 0x6D;   // b01101101
+const uint8_t kFujitsuAcCmdStepHoriz = 0x79;         // b01111001
+const uint8_t kFujitsuAcCmdToggleSwingHoriz = 0x7A;  // b01111010
 
 const uint8_t kFujitsuAcFanAuto = 0x00;
 const uint8_t kFujitsuAcFanHigh = 0x01;
@@ -67,47 +83,63 @@ const uint8_t kFujitsuAcSwingBoth = 0x03;
 #define FUJITSU_AC_SWING_BOTH kFujitsuAcSwingBoth
 
 enum fujitsu_ac_remote_model_t {
-  ARRAH2E = 1,
-  ARDB1,
+  ARRAH2E = 1,  // (1) AR-RAH2E, AR-RAE1E (Default)
+  ARDB1,        // (2) AR-DB1
+  ARREB1E,      // (3) AR-REB1E
+  ARJW2,        // (4) AR-JW2  (Same as ARDB1 but with horiz control)
 };
 
 class IRFujitsuAC {
  public:
-  explicit IRFujitsuAC(uint16_t pin, fujitsu_ac_remote_model_t model = ARRAH2E);
+  explicit IRFujitsuAC(const uint16_t pin,
+                       const fujitsu_ac_remote_model_t model = ARRAH2E);
 
-  void setModel(fujitsu_ac_remote_model_t model);
-  void stateReset();
+  void setModel(const fujitsu_ac_remote_model_t model);
+  fujitsu_ac_remote_model_t getModel(void);
+  void stateReset(void);
 #if SEND_FUJITSU_AC
   void send(const uint16_t repeat = kFujitsuAcMinRepeat);
+  uint8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_FUJITSU_AC
-  void begin();
-  void off();
-  void stepHoriz();
-  void stepVert();
-  void setCmd(uint8_t cmd);
-  uint8_t getCmd();
-  void setTemp(uint8_t temp);
-  uint8_t getTemp();
-  void setFanSpeed(uint8_t fan);
-  uint8_t getFanSpeed();
-  void setMode(uint8_t mode);
-  uint8_t getMode();
-  void setSwing(uint8_t mode);
-  uint8_t getSwing();
-  uint8_t* getRaw();
+  void begin(void);
+  void off(void);
+  void stepHoriz(void);
+  void toggleSwingHoriz(const bool update = true);
+  void stepVert(void);
+  void toggleSwingVert(const bool update = true);
+  void setCmd(const uint8_t cmd);
+  uint8_t getCmd(const bool raw = false);
+  void setTemp(const uint8_t temp);
+  uint8_t getTemp(void);
+  void setFanSpeed(const uint8_t fan);
+  uint8_t getFanSpeed(void);
+  void setMode(const uint8_t mode);
+  uint8_t getMode(void);
+  void setSwing(const uint8_t mode);
+  uint8_t getSwing(const bool raw = false);
+  uint8_t* getRaw(void);
   bool setRaw(const uint8_t newState[], const uint16_t length);
-  uint8_t getStateLength();
-  static bool validChecksum(uint8_t* state, uint16_t length);
-  bool getPower();
-#ifdef ARDUINO
-  String toString();
-#else
-  std::string toString();
-#endif
+  uint8_t getStateLength(void);
+  static bool validChecksum(uint8_t* state, const uint16_t length);
+  bool getPower(void);
+  void setOutsideQuiet(const bool on);
+
+  bool getOutsideQuiet(const bool raw = false);
+
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  uint8_t convertFan(stdAc::fanspeed_t speed);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  stdAc::state_t toCommon(void);
+  String toString(void);
+#ifndef UNIT_TEST
 
  private:
-  uint8_t remote_state[kFujitsuAcStateLength];
   IRsend _irsend;
+#else
+  IRsendTest _irsend;
+#endif
+  uint8_t remote_state[kFujitsuAcStateLength];
   uint8_t _temp;
   uint8_t _fanSpeed;
   uint8_t _mode;
@@ -116,7 +148,8 @@ class IRFujitsuAC {
   fujitsu_ac_remote_model_t _model;
   uint8_t _state_length;
   uint8_t _state_length_short;
-  void buildState();
+  bool _outsideQuiet;
+  void buildState(void);
   void buildFromState(const uint16_t length);
 };
 

@@ -1,19 +1,13 @@
 // Copyright 2009 Ken Shirriff
 // Copyright 2017, 2018 David Conran
 
+// NEC originally added from https://github.com/shirriff/Arduino-IRremote/
+
 #ifndef IR_NEC_H_
 #define IR_NEC_H_
 
 #include <stdint.h>
 #include "IRremoteESP8266.h"
-
-//                           N   N  EEEEE   CCCC
-//                           NN  N  E      C
-//                           N N N  EEE    C
-//                           N  NN  E      C
-//                           N   N  EEEEE   CCCC
-
-// NEC originally added from https://github.com/shirriff/Arduino-IRremote/
 
 // Constants
 // Ref:

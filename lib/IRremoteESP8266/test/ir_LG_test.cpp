@@ -30,6 +30,7 @@ TEST(TestSendLG, SendDataOnly) {
   irsend.reset();
   irsend.sendLG(0x4B4AE51);
   EXPECT_EQ(
+      "f38000d50"
       "m8500s4250"
       "m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s1600m550s550m550s1600m550s550m550s550"
@@ -41,6 +42,7 @@ TEST(TestSendLG, SendDataOnly) {
   irsend.reset();
   irsend.sendLG(0xB4B4AE51, kLg32Bits);
   EXPECT_EQ(
+      "f38000d33"
       "m4480s4480"
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
@@ -59,6 +61,7 @@ TEST(TestSendLG, SendWithRepeats) {
   irsend.reset();
   irsend.sendLG(0x4B4AE51, kLgBits, 1);
   EXPECT_EQ(
+      "f38000d50"
       "m8500s4250"
       "m550s550m550s1600m550s550m550s550"
       "m550s1600m550s550m550s1600m550s1600m550s550m550s1600m550s550m550s550"
@@ -71,6 +74,7 @@ TEST(TestSendLG, SendWithRepeats) {
   irsend.reset();
   irsend.sendLG(0xB4B4AE51, kLg32Bits, 1);
   EXPECT_EQ(
+      "f38000d33"
       "m4480s4480"
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
       "m560s1680m560s560m560s1680m560s1680m560s560m560s1680m560s560m560s560"
@@ -90,6 +94,7 @@ TEST(TestSendLG, SendUnusualSize) {
   irsend.reset();
   irsend.sendLG(0x0, 31);
   EXPECT_EQ(
+      "f38000d50"
       "m8500s4250"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
@@ -101,6 +106,7 @@ TEST(TestSendLG, SendUnusualSize) {
   irsend.reset();
   irsend.sendLG(0x0, 64);
   EXPECT_EQ(
+      "f38000d33"
       "m4480s4480"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -373,6 +379,7 @@ TEST(TestSendLG2, SendDataOnly) {
   irsend.reset();
   irsend.sendLG2(0x880094D);
   EXPECT_EQ(
+      "f38000d50"
       "m3200s9850"
       "m550s1600m550s550m550s550m550s550m550s1600m550s550m550s550m550s550"
       "m550s550m550s550m550s550m550s550m550s550m550s550m550s550m550s550"
@@ -460,6 +467,7 @@ TEST(TestDecodeLG, Issue620) {
   EXPECT_EQ(0x872, irsend.capture.command);
   // The following seems to match the rawData above.
   EXPECT_EQ(
+      "f38000d50"
       "m8500s4250"
       "m550s1600m550s550m550s550m550s550m550s1600"
       "m550s550m550s550m550s550m550s550m550s550"
@@ -470,4 +478,3 @@ TEST(TestDecodeLG, Issue620) {
       "s55550",
       irsend.outputStr());
 }
-

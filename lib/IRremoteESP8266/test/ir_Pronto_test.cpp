@@ -58,7 +58,8 @@ TEST(TestSendPronto, MoreDataThanNeededInNormal) {
   uint16_t pronto_test[8] = {0x0000, 0x0067, 0x0001, 0x0000,
                              0x0001, 0x0002, 0x0003, 0x0004};
   irsend.sendPronto(pronto_test, 8);
-  EXPECT_EQ("m25s50", irsend.outputStr());  // Only send the data required.
+  EXPECT_EQ("f40244d50m25s50",
+            irsend.outputStr());  // Only send the data required.
 }
 
 TEST(TestSendPronto, MoreDataThanNeededInRepeat) {
@@ -70,7 +71,8 @@ TEST(TestSendPronto, MoreDataThanNeededInRepeat) {
   uint16_t pronto_test[8] = {0x0000, 0x0067, 0x0000, 0x0001,
                              0x0001, 0x0002, 0x0003, 0x0004};
   irsend.sendPronto(pronto_test, 8);
-  EXPECT_EQ("m25s50", irsend.outputStr());  // Only send the data required.
+  EXPECT_EQ("f40244d50m25s50",
+            irsend.outputStr());  // Only send the data required.
 }
 
 TEST(TestSendPronto, MoreDataThanNeededInBoth) {
@@ -82,9 +84,11 @@ TEST(TestSendPronto, MoreDataThanNeededInBoth) {
   uint16_t pronto_test[10] = {0x0000, 0x0067, 0x0001, 0x0001, 0x0001,
                               0x0002, 0x0003, 0x0004, 0x5,    0x6};
   irsend.sendPronto(pronto_test, 10);
-  EXPECT_EQ("m25s50", irsend.outputStr());  // Only send the data required.
+  EXPECT_EQ("f40244d50m25s50",
+             irsend.outputStr());  // Only send the data required.
   irsend.sendPronto(pronto_test, 10, 1);
-  EXPECT_EQ("m25s50m75s100", irsend.outputStr());  // Only the data required.
+  EXPECT_EQ("f40244d50m25s50m75s100",
+             irsend.outputStr());  // Only the data required.
 }
 
 TEST(TestSendPronto, ShortestValidCodeThatSendsNothing) {
@@ -134,6 +138,7 @@ TEST(TestSendPronto, NonRepeatingCode) {
   EXPECT_EQ(0x1, irsend.capture.address);
   EXPECT_EQ(0x0, irsend.capture.command);
   EXPECT_EQ(
+      "f40244d50"
       "m2400s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m600s600m600s27650"
@@ -160,6 +165,7 @@ TEST(TestSendPronto, NonRepeatingCode) {
   EXPECT_EQ(0x1, irsend.capture.address);
   EXPECT_EQ(0x0, irsend.capture.command);
   EXPECT_EQ(
+      "f40244d50"
       "m2400s600"
       "m600s600m600s600m600s600m600s600m600s600m600s600m600s600m1200s600"
       "m600s600m600s600m600s600m600s27650"
@@ -201,6 +207,7 @@ TEST(TestSendPronto, RepeatSequenceOnlyForSony) {
   EXPECT_EQ(0x1A, irsend.capture.address);
   EXPECT_EQ(0x24AE, irsend.capture.command);
   EXPECT_EQ(
+      "f40244d50"
       "m2400s600"
       "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
       "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
@@ -218,6 +225,7 @@ TEST(TestSendPronto, RepeatSequenceOnlyForSony) {
   EXPECT_EQ(0x1A, irsend.capture.address);
   EXPECT_EQ(0x24AE, irsend.capture.command);
   EXPECT_EQ(
+      "f40244d50"
       "m2400s600"
       "m600s600m1200s600m1200s600m1200s600m600s600m1200s600m600s600m600s600"
       "m1200s600m600s600m1200s600m1200s600m1200s600m600s600m600s600m1200s600"
@@ -265,6 +273,7 @@ TEST(TestSendPronto, RepeatSequenceOnlyForPanasonic) {
   EXPECT_EQ(0x4004, irsend.capture.address);
   EXPECT_EQ(0x1007C7D, irsend.capture.command);
   EXPECT_EQ(
+      "f36682d50"
       "m3456s1701"
       "m432s432m432s1296m432s432m432s432m432s432m432s432m432s432m432s432"
       "m432s432m432s432m432s432m432s432m432s432m432s1296m432s432m432s432"
@@ -305,6 +314,7 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
+      "f38028d50"
       "m8892s4446"
       "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
       "m546s1664m546s1664m546s1664m546s546m546s546m546s1664m546s1664m546s1664"
@@ -324,6 +334,7 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
+      "f38028d50"
       "m8892s4446"
       "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
       "m546s1664m546s1664m546s1664m546s546m546s546m546s1664m546s1664m546s1664"
@@ -344,6 +355,7 @@ TEST(TestSendPronto, NormalPlusRepeatSequence) {
   EXPECT_EQ(0x18, irsend.capture.address);
   EXPECT_EQ(0x8, irsend.capture.command);
   EXPECT_EQ(
+      "f38028d50"
       "m8892s4446"
       "m546s546m546s546m546s546m546s1664m546s1664m546s546m546s546m546s546"
       "m546s1664m546s1664m546s1664m546s546m546s546m546s1664m546s1664m546s1664"

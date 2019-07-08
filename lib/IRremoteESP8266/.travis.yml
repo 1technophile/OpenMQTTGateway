@@ -15,12 +15,14 @@ install:
   - ln -s $PWD /usr/local/share/arduino/libraries/
   - git clone https://github.com/tzapu/WiFiManager.git /usr/local/share/arduino/libraries/WiFiManager
   - git clone https://github.com/knolleary/pubsubclient.git /usr/local/share/arduino/libraries/PubSubClient
+  - git clone https://github.com/bblanchon/ArduinoJson.git --branch 5.x /usr/local/share/arduino/libraries/ArduinoJson
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266
   - arduino --board $BD --save-prefs
   - arduino --pref "compiler.warning_level=all" --save-prefs
   - sudo apt-get install jq
-  - sudo pip install pylint
+  - sudo apt-get purge python-enum34
+  - sudo apt-get install pylint3
 script:
   # Check that everything compiles.
   - arduino --verify --board $BD $PWD/examples/IRrecvDemo/IRrecvDemo.ino
@@ -41,12 +43,17 @@ script:
   - arduino --verify --board $BD $PWD/examples/IRMQTTServer/IRMQTTServer.ino
   - arduino --verify --board $BD $PWD/examples/TurnOnToshibaAC/TurnOnToshibaAC.ino
   - arduino --verify --board $BD $PWD/examples/ControlSamsungAC/ControlSamsungAC.ino
+  - arduino --verify --board $BD $PWD/examples/TurnOnPanasonicAC/TurnOnPanasonicAC.ino
+  - arduino --verify --board $BD $PWD/examples/TurnOnMitsubishiHeavyAc/TurnOnMitsubishiHeavyAc.ino
+  - arduino --verify --board $BD $PWD/examples/DumbIRRepeater/DumbIRRepeater.ino
+  - arduino --verify --board $BD $PWD/examples/SmartIRRepeater/SmartIRRepeater.ino
+
   # Also check the tools programs compile.
   - (cd tools; make all)
   # Check for lint issues.
   - shopt -s nullglob
   - python cpplint.py --extensions=c,cc,cpp,ino --headers=h,hpp {src,test,tools}/*.{h,c,cc,cpp,hpp,ino} examples/*/*.{h,c,cc,cpp,hpp,ino}
-  - pylint {src,test,tools}/*.py
+  - pylint3 -d F0001 {src,test,tools}/*.py
   - shopt -u nullglob
   # Build and run the unit tests.
   - (cd test; make run)

@@ -1,6 +1,9 @@
-// Kelvinator A/C
-//
 // Copyright 2016 David Conran
+// Gree A/C
+//
+// Supports:
+//   Brand: Ultimate,  Model: Heat Pump
+//   Brand: EKOKAI,  Model: A/C
 
 #ifndef IR_GREE_H_
 #define IR_GREE_H_
@@ -9,17 +12,12 @@
 #include <stdint.h>
 #ifndef UNIT_TEST
 #include <Arduino.h>
-#else
-#include <string>
 #endif
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-
-//                      GGGG  RRRRRR  EEEEEEE EEEEEEE
-//                     GG  GG RR   RR EE      EE
-//                    GG      RRRRRR  EEEEE   EEEEE
-//                    GG   GG RR  RR  EE      EE
-//                     GGGGGG RR   RR EEEEEEE EEEEEEE
+#ifdef UNIT_TEST
+#include "IRsend_test.h"
+#endif
 
 // Constants
 const uint8_t kGreeAuto = 0;
@@ -44,6 +42,8 @@ const uint8_t kGreeSwingPosMask = 0b00001111;
 
 const uint8_t kGreeMinTemp = 16;  // Celsius
 const uint8_t kGreeMaxTemp = 30;  // Celsius
+const uint8_t kGreeFanAuto = 0;
+const uint8_t kGreeFanMin = 1;
 const uint8_t kGreeFanMax = 3;
 
 const uint8_t kGreeSwingLastPos = 0b00000000;
@@ -82,49 +82,56 @@ class IRGreeAC {
  public:
   explicit IRGreeAC(uint16_t pin);
 
-  void stateReset();
+  void stateReset(void);
 #if SEND_GREE
   void send(const uint16_t repeat = kGreeDefaultRepeat);
+  uint8_t calibrate(void) { return _irsend.calibrate(); }
 #endif  // SEND_GREE
-  void begin();
-  void on();
-  void off();
-  void setPower(const bool state);
-  bool getPower();
+  void begin(void);
+  void on(void);
+  void off(void);
+  void setPower(const bool on);
+  bool getPower(void);
   void setTemp(const uint8_t temp);
-  uint8_t getTemp();
+  uint8_t getTemp(void);
   void setFan(const uint8_t speed);
-  uint8_t getFan();
+  uint8_t getFan(void);
   void setMode(const uint8_t new_mode);
-  uint8_t getMode();
-  void setLight(const bool state);
-  bool getLight();
-  void setXFan(const bool state);
-  bool getXFan();
-  void setSleep(const bool state);
-  bool getSleep();
-  void setTurbo(const bool state);
-  bool getTurbo();
+  uint8_t getMode(void);
+  void setLight(const bool on);
+  bool getLight(void);
+  void setXFan(const bool on);
+  bool getXFan(void);
+  void setSleep(const bool on);
+  bool getSleep(void);
+  void setTurbo(const bool on);
+  bool getTurbo(void);
   void setSwingVertical(const bool automatic, const uint8_t position);
-  bool getSwingVerticalAuto();
-  uint8_t getSwingVerticalPosition();
-
-  uint8_t* getRaw();
-  void setRaw(uint8_t new_code[]);
+  bool getSwingVerticalAuto(void);
+  uint8_t getSwingVerticalPosition(void);
+  uint8_t convertMode(const stdAc::opmode_t mode);
+  uint8_t convertFan(const stdAc::fanspeed_t speed);
+  uint8_t convertSwingV(const stdAc::swingv_t swingv);
+  static stdAc::opmode_t toCommonMode(const uint8_t mode);
+  static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
+  static stdAc::swingv_t toCommonSwingV(const uint8_t pos);
+  stdAc::state_t toCommon(void);
+  uint8_t* getRaw(void);
+  void setRaw(const uint8_t new_code[]);
   static bool validChecksum(const uint8_t state[],
                             const uint16_t length = kGreeStateLength);
-#ifdef ARDUINO
-  String toString();
-#else
-  std::string toString();
-#endif
+  String toString(void);
+#ifndef UNIT_TEST
 
  private:
+  IRsend _irsend;
+#else  // UNIT_TEST
+  IRsendTest _irsend;
+#endif  // UNIT_TEST
   // The state of the IR remote in IR code form.
   uint8_t remote_state[kGreeStateLength];
   void checksum(const uint16_t length = kGreeStateLength);
-  void fixup();
-  IRsend _irsend;
+  void fixup(void);
 };
 
 #endif  // IR_GREE_H_

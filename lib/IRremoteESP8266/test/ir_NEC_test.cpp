@@ -12,6 +12,7 @@ TEST(TestSendNEC, SendDataOnly) {
   irsend.begin();
   irsend.sendNEC(0);
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
@@ -20,6 +21,7 @@ TEST(TestSendNEC, SendDataOnly) {
       irsend.outputStr());
   irsend.sendNEC(0xAA00FF55);
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
       "m560s1680m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s560m560s1680m560s1680m560s1680m560s1680m560s1680"
@@ -33,15 +35,17 @@ TEST(TestSendNEC, SendSmallData) {
   IRsendTest irsend(4);
   irsend.begin();
   irsend.sendNEC(0xA, 4);  // Send only 4 data bits.
-  EXPECT_EQ("m8960s4480m560s1680m560s560m560s1680m560s560m560s87360",
+  EXPECT_EQ("f38000d33m8960s4480m560s1680m560s560m560s1680m560s560m560s87360",
             irsend.outputStr());
   irsend.sendNEC(0, 8);  // Send only 8 data bits.
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s85120",
       irsend.outputStr());
   irsend.sendNEC(0x1234567890ABCDEF, 64);  // Send 64 data bits.
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s560m560s560m560s560m560s1680m560s560m560s560"
       "m560s1680m560s560m560s560m560s560m560s1680m560s1680m560s560"
       "m560s1680m560s560m560s560m560s560m560s1680m560s560m560s1680"
@@ -61,17 +65,20 @@ TEST(TestSendNEC, SendWithRepeats) {
   irsend.begin();
   irsend.sendNEC(0, 8, 0);  // Send a command with 0 repeats.
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s560m560s560m560s560m560s560m560s560m560s560m560s560"
       "m560s560m560s85120",
       irsend.outputStr());
   irsend.sendNEC(0xAA, 8, 1);  // Send a command with 1 repeat.
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
       "m560s1680m560s560m560s80640"
       "m8960s2240m560s96320",
       irsend.outputStr());
   irsend.sendNEC(0xAA, 8, 3);  // Send a command with 3 repeats.
   EXPECT_EQ(
+      "f38000d33"
       "m8960s4480m560s1680m560s560m560s1680m560s560m560s1680m560s560"
       "m560s1680m560s560m560s80640"
       "m8960s2240m560s96320"

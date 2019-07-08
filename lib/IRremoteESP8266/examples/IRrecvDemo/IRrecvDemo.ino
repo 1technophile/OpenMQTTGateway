@@ -16,9 +16,7 @@
  *     Based on Ken Shirriff's IrsendDemo Version 0.1 July, 2009
  */
 
-#ifndef UNIT_TEST
 #include <Arduino.h>
-#endif
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
 #include <IRutils.h>
