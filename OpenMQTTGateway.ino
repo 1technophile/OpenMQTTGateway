@@ -580,12 +580,7 @@ void loop()
       if (reconnect()) {
         lastReconnectAttempt = 0;
       } else {
-        #if defined(ESP8266) || defined(ESP32)
-          if (!connectedOnce) {
-            trc(F("reseting wifi manager"));
-            setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
-          }
-        #elif defined(ESPWifiManualSetup)
+        #if defined(ESPWifiManualSetup)
           trc(F("restarting ESP"));
           #ifdef ESP32
             ESP.restart();
@@ -593,6 +588,11 @@ void loop()
           #ifdef ESP8266
             ESP.reset();
           #endif
+        #elif defined(ESP8266) || defined(ESP32)
+          if (!connectedOnce) {
+            trc(F("reseting wifi manager"));
+            setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
+          }
         #endif
       }
     }
