@@ -28,6 +28,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef user_config_h
+#define user_config_h
 /*-------------------VERSION----------------------*/
 #define OMG_VERSION "0.9.2beta"
 
@@ -126,7 +128,6 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #if defined(ESP8266) // for nodemcu, weemos, esp8266, and Arduino mega
   #define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
-  #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
   #define ZgatewayRF2 "RF2"
   #define ZgatewayIR "IR"
@@ -176,7 +177,6 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
-  #define ZgatewayRF315 "RF315"
   #define ZgatewaySRFB "SRFB"
   #define ZgatewayRF2 "RF2"
   #define ZgatewayIR "IR"
@@ -247,7 +247,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #else // boards with smaller memory
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
-#define TimeBetweenReadingSYS 30000 // time between system readings (like memory)
+#define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 0  // 0= trace off 1 = trace on
+
+#endif
