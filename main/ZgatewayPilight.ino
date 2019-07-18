@@ -25,6 +25,8 @@
      You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "User_config.h"
+
  #ifdef ZgatewayPilight
  #include <ESPiLight.h>
  ESPiLight rf(RF_EMITTER_PIN);  // use -1 to disable transmitter

@@ -37,6 +37,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "User_config.h"
 
 #ifdef ZsensorBME280
 #include "Wire.h" // Library for communication with I2C / TWI devices

@@ -28,6 +28,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "User_config.h"
+
 #ifdef ZgatewayRFM69
 
 #include <RFM69.h>                //https://www.github.com/lowpowerlab/rfm69

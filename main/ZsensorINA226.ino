@@ -32,6 +32,7 @@
 // SCL    - A5  - 21 - D1
 // SDA    - A4  - 20 - D2
 //
+#include "User_config.h"
 
 #ifdef ZsensorINA226
 #include <Wire.h>

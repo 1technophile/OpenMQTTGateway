@@ -28,6 +28,8 @@
 
 Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd https://github.com/dinosd/BLE_PROXIMITY for inspiring me how to implement the gateway
 */
+#include "User_config.h"
+
 #ifdef ZgatewayBT
 
 #include <vector>

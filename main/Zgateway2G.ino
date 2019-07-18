@@ -25,6 +25,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "User_config.h"
+
 #ifdef Zgateway2G
 
 #include <A6lib.h> // library for controling A6 or A7 module

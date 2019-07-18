@@ -33,6 +33,7 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m 
 Command example for dimming:
 sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/DIM 8
 */
+#include "User_config.h"
 
 #ifdef ZgatewayRF2
 
