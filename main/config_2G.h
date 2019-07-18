@@ -27,9 +27,9 @@
 #define config_2G_h
 
 extern void setup2G();
-extern void _2DtoMQTT();  
+extern bool _2GtoMQTT();
 extern void MQTTto2G(char * topicOri, char * datacallback);
-extern void MQTTto2G(char * topicOri, JsonObject& 2Gdata);
+extern void MQTTto2G(char * topicOri, JsonObject& SMSdata);
 /*-------------------2G topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTto2G  Base_Topic Gateway_Name "/commands/MQTTto2G"

@@ -29,6 +29,7 @@
 
 #ifdef Zgateway2G
 
+#include <ArduinoJson.h>
 #include <A6lib.h> // library for controling A6 or A7 module
 
 // Instantiate the library with TxPin, RxPin.
