@@ -67,7 +67,7 @@ void _rfbSend(byte * message, int times) {
     }
 }
 
-boolean SRFBtoMQTT() {
+bool SRFBtoMQTT() {
   
     static bool receiving = false;
 

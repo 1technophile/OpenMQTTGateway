@@ -105,7 +105,7 @@
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
-boolean connectedOnce = false; //indicate if we have been connected once to MQTT
+bool connectedOnce = false; //indicate if we have been connected once to MQTT
 
 int failure_number = 0; // number of failure connecting to MQTT
 
@@ -154,7 +154,7 @@ void revert_hex_data(char * in, char * out, int l){
   out[l-1] = '\0';
 }
 
-void extract_char(char * token_char, char * subset, int start ,int l, boolean reverse, boolean isNumber){
+void extract_char(char * token_char, char * subset, int start ,int l, bool reverse, bool isNumber){
     char tmp_subset[l+1];
     memcpy( tmp_subset, &token_char[start], l );
     tmp_subset[l] = '\0';
@@ -255,7 +255,7 @@ void trc(float msg){
   #endif
 }
 
-void pub(char * topic, char * payload, boolean retainFlag){
+void pub(char * topic, char * payload, bool retainFlag){
     client.publish(topic, payload, retainFlag);
 }
 
@@ -383,7 +383,7 @@ void pub(String topic, unsigned long payload){
     client.publish((char *)topic.c_str(),val);
 }
 
-boolean reconnect() {
+bool reconnect() {
 
   // Loop until we're reconnected
   while (!client.connected()) {
@@ -642,7 +642,7 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
-void setup_wifimanager(boolean reset_settings){
+void setup_wifimanager(bool reset_settings){
     if(reset_settings)  SPIFFS.format();
 
     //read configuration from FS json
@@ -1044,7 +1044,7 @@ int getMin(){
   return minindex;
 }
 
-boolean isAduplicate(unsigned long value){
+bool isAduplicate(unsigned long value){
 trc(F("isAduplicate?"));
 // check if the value has been already sent during the last time_avoid_duplicate
 for (int i = 0; i < array_size;i++){

@@ -163,7 +163,7 @@ void IRtoMQTT(){
     
     // IR DATA ANALYSIS    
     //send received MQTT value by IR signal
-    boolean signalSent = false;
+    bool signalSent = false;
     uint64_t data = 0;
     String strcallback = String(datacallback);
     trc(datacallback);
@@ -280,7 +280,7 @@ void IRtoMQTT(){
       const char * datastring = IRdata["datastring"];
       if (data != 0||raw||datastring) {
         trc(F("MQTTtoIR data || raw ok"));
-        boolean signalSent = false;
+        bool signalSent = false;
         trc(F("value"));
         trc(data);
         trc(F("raw"));
@@ -375,7 +375,7 @@ void IRtoMQTT(){
   }
 #endif
 
-boolean sendIdentifiedProtocol(const char * protocol_name, unsigned long data, const char * datastring, unsigned int valueBITS, uint16_t valueRPT){
+bool sendIdentifiedProtocol(const char * protocol_name, unsigned long data, const char * datastring, unsigned int valueBITS, uint16_t valueRPT){
     unsigned char dataarray[valueBITS];
     const char* pointer = datastring;
     int i = 0;

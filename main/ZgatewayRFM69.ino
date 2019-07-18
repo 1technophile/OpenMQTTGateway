@@ -140,7 +140,7 @@ void setupRFM69(void) {
   }
 }
 
-boolean RFM69toMQTT(void) {
+bool RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone())
   {

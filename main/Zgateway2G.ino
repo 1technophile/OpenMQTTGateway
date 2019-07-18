@@ -48,7 +48,7 @@ void setup2G(){
   trc(F("Zgateway2G setup done "));
 }
 
-void setupGSM(boolean deleteSMS){
+void setupGSM(bool deleteSMS){
     trc(F("Init 2G module: "));
     trc(_2G_PWR_PIN);
     delay(1000);
@@ -80,7 +80,7 @@ void signalStrengthAnalysis(){
     }
 }
 
-boolean _2GtoMQTT(){
+bool _2GtoMQTT(){
     // Get the memory locations of unread SMS messages.
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
     trc(F("Creating SMS  buffer"));

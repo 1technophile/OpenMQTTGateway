@@ -54,7 +54,7 @@ void createDiscovery(char * sensor_type,
                      char * availability_topic, char * device_class, char * value_template,
                      char * payload_on, char * payload_off, char * unit_of_meas,
                      int off_delay,
-                     char * payload_available, char * payload_not_avalaible, boolean child_device , char * command_topic)
+                     char * payload_available, char * payload_not_avalaible, bool child_device , char * command_topic)
 {
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5)+ JSON_ARRAY_SIZE(1);
   StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;

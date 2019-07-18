@@ -27,7 +27,7 @@
 #define config_RFM69_h
 
 extern void setupRFM69();
-extern boolean RFM69toMQTT();  
+extern bool RFM69toMQTT();  
 extern void MQTTtoRFM69(char * topicOri, char * datacallback);
 extern void MQTTtoRFM69(char * topicOri, JsonObject& RFdata);
 /*----------------------RFM69 topics & parameters -------------------------*/

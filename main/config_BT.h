@@ -27,7 +27,7 @@
 #define config_BT_h
 
 extern void setupBT();
-extern boolean BTtoMQTT();  
+extern bool BTtoMQTT();  
 extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
@@ -48,16 +48,16 @@ unsigned int BLEinterval ; //time between 2 scans
 
 struct BLEdevice{
   char macAdr[13];
-  boolean isDisc;
-  boolean isWhtL;
-  boolean isBlkL;
+  bool isDisc;
+  bool isWhtL;
+  bool isBlkL;
 };
 
 struct decompose{
   char subject[4];
   int start;
   int len;
-  boolean reverse;
+  bool reverse;
   char extract[60];
 };
      

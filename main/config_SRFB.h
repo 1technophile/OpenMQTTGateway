@@ -28,7 +28,7 @@
 #define config_SRFB_h
 
 extern void setupSRFB();
-extern boolean SRFBtoMQTT();  
+extern bool SRFBtoMQTT();  
 extern void MQTTtoSRFB(char * topicOri, char * datacallback);
 extern void MQTTtoSRFB(char * topicOri, JsonObject& RFdata);
 /*-------------------RF topics & parameters----------------------*/
