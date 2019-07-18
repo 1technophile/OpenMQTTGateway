@@ -32,10 +32,12 @@ sudo: false
 cache:
     directories:
         - "~/.platformio"
-
+  
 install:
     - pip install -U platformio
     - platformio update
+    - rm /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
+    - cp /home/travis/build/1technophile/OpenMQTTGateway/test/Test_config.h /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
 
 script:
     - platformio run
