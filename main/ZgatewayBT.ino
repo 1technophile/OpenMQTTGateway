@@ -36,8 +36,8 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 using namespace std;
 vector<BLEdevice> devices;
 
-void setWorBMac(char * mac , boolean isWhite){
-  boolean foundMac = false;
+void setWorBMac(char * mac , bool isWhite){
+  bool foundMac = false;
   for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         p->isWhtL = isWhite;
@@ -55,14 +55,14 @@ void setWorBMac(char * mac , boolean isWhite){
   }
 }
 
-boolean oneWhite(){
+bool oneWhite(){
   for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
         if(p->isWhtL) return true;
   }
   return false;
 }
 
-boolean isWhite(char * mac){
+bool isWhite(char * mac){
   for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         return p->isWhtL;
@@ -71,7 +71,7 @@ boolean isWhite(char * mac){
   return false;
 }
 
-boolean isBlack(char * mac){
+bool isBlack(char * mac){
   for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         return p->isBlkL;
@@ -80,7 +80,7 @@ boolean isBlack(char * mac){
   return false;
 }
 
-boolean isDiscovered(char * mac){
+bool isDiscovered(char * mac){
   for(vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p){
     if((strcmp(p->macAdr,mac) == 0)){
         return p->isDisc;
@@ -384,7 +384,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
           trc(F("ZgatewayBT multicore ESP32 setup done "));
     }   
 
-    boolean BTtoMQTT(){ // for on demand BLE scans
+    bool BTtoMQTT(){ // for on demand BLE scans
       BLEscan();
     }
   #else // arduino or ESP8266 working with HM10/11
@@ -423,7 +423,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
       trc(F("ZgatewayBT HM1X setup done "));
     }
     
-    boolean BTtoMQTT() {
+    bool BTtoMQTT() {
     
       //extract serial data from module in hexa format
       while (softserial.available() > 0) {
@@ -494,7 +494,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
                     #endif
-                    boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"20aa01");
@@ -504,7 +504,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
                     #endif
-                    boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"205b04");
@@ -514,7 +514,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
                     #endif
-                    boolean result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"304703");
@@ -523,7 +523,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
                     #endif
-                    boolean result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                   }
                   return true;
                 }
@@ -540,7 +540,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
     }
 #endif
 
-boolean process_data(int offset, char * rest_data, char * mac_adress){
+bool process_data(int offset, char * rest_data, char * mac_adress){
   
   trc(F("Creating BLE buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
