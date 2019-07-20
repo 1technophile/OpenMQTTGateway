@@ -889,7 +889,7 @@ void loop()
       PilighttoMQTT();
     #endif
     #ifdef ZgatewayBT
-        #if defined(ESP8266) || defined(ESP32)
+        #ifndef(ESP32)
           if(BTtoMQTT())
           trc(F("BTtoMQTT OK"));
         #endif
