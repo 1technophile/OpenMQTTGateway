@@ -951,7 +951,7 @@ void stateMeasures(){
         SYSdata["SSID"] = SSID;
         SYSdata["ip"] = ip2CharArray(WiFi.localIP());
         String mac = WiFi.macAddress();
-        SYSdata["mac"] = mac;
+        SYSdata["mac"] = (char*)mac.c_str();
       #else
         SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
       #endif
@@ -1019,7 +1019,7 @@ void stateMeasures(){
       #endif
       SYSdata["modules"] = modules;
       trc(SYSdata);
-      char JSONmessageBuffer[100];
+      char JSONmessageBuffer[JSON_MSG_BUFFER];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
       pub(subjectSYStoMQTT,JSONmessageBuffer);
     }
