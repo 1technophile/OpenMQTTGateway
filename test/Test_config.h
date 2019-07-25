@@ -150,6 +150,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   #define simplePublishing true
   #define simpleReceiving true
+  #define TRACE 1  // commented =  trace off, uncommented = trace on
 #elif ESP32
   #define ZgatewayRF "RF"
   #define ZgatewayLORA "LORA"
@@ -174,6 +175,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   #define simplePublishing true
   #define simpleReceiving true
+  #define TRACE 1  // commented =  trace off, uncommented = trace on
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
@@ -199,6 +201,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   #define simplePublishing true
   #define simpleReceiving true
+  #define TRACE 1  // commented =  trace off, uncommented = trace on
 #else // for arduino Uno
   #define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
@@ -220,6 +223,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   //#define simplePublishing true
   //#define simpleReceiving true
+  //#define TRACE 1  // commented =  trace off, uncommented = trace on
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
@@ -249,7 +253,5 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
 #define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
-/*-------------------ACTIVATE TRACES----------------------*/
-#define TRACE 0  // 0= trace off 1 = trace on
 
 #endif
