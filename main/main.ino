@@ -943,6 +943,13 @@ void stateMeasures(){
         String SSID = WiFi.SSID();
         SYSdata["SSID"] = SSID;
         trc(SSID);
+        SYSdata["ip"] = WiFi.localIP().toString();
+        trc(WiFi.localIP().toString());
+        SYSdata["mac"] = WiFi.macAddress();
+        trc(WiFi.macAddress()); 
+      #else
+        SYSdata["ip"] = Ethernet.localIP();
+        trc(Ethernet.localIP());
       #endif
       trc(F("Activated modules"));
       String modules = "";
