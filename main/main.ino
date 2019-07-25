@@ -180,6 +180,12 @@ int strpos(char *haystack, char *needle) //from @miere https://stackoverflow.com
    return -1;
 }
 
+char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
+  static char a[16];
+  sprintf(a, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+  return a;
+}
+
 bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
      return s != "0";
 }
@@ -253,6 +259,12 @@ void trc(float msg){
   #ifdef subjectTRACEtoMQTT
     pub(subjectTRACEtoMQTT,msg);
   #endif
+}
+
+void trc(JsonObject& data){
+      char JSONmessageBuffer[JSON_MSG_BUFFER];
+      data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+      trc(JSONmessageBuffer);
 }
 
 void pub(char * topic, char * payload, bool retainFlag){
@@ -930,28 +942,19 @@ void stateMeasures(){
       trc(uptime);
       SYSdata["uptime"] = uptime;
       #if defined(ESP8266) || defined(ESP32)
-        trc(F("Remaining memory"));
         uint32_t freeMem;
         freeMem = ESP.getFreeHeap();
         SYSdata["freeMem"] = freeMem;
-        trc(freeMem);
-        trc(F("RSSI"));
         long rssi = WiFi.RSSI();
         SYSdata["rssi"] = rssi;
-        trc(rssi);
-        trc(F("SSID"));
         String SSID = WiFi.SSID();
         SYSdata["SSID"] = SSID;
-        trc(SSID);
-        SYSdata["ip"] = WiFi.localIP().toString();
-        trc(WiFi.localIP().toString());
-        SYSdata["mac"] = WiFi.macAddress();
-        trc(WiFi.macAddress()); 
+        SYSdata["ip"] = ip2CharArray(WiFi.localIP());
+        String mac = WiFi.macAddress();
+        SYSdata["mac"] = mac;
       #else
-        SYSdata["ip"] = Ethernet.localIP();
-        trc(Ethernet.localIP());
+        SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
       #endif
-      trc(F("Activated modules"));
       String modules = "";
       #ifdef ZgatewayRF
           modules = modules + ZgatewayRF;
@@ -1015,7 +1018,7 @@ void stateMeasures(){
           pubMqttDiscovery();
       #endif
       SYSdata["modules"] = modules;
-      trc(modules);
+      trc(SYSdata);
       char JSONmessageBuffer[100];
       SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
       pub(subjectSYStoMQTT,JSONmessageBuffer);
