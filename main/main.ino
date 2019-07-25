@@ -317,46 +317,8 @@ void pub(char * topic, char * payload){
     client.publish(topic, payload);
 }
 
-void pub(char * topic, String payload){
-    client.publish(topic,(char *)payload.c_str());
-}
-
-void pub(String topic, String payload){
-    client.publish((char *)topic.c_str(),(char *)payload.c_str());
-}
-
 void pub(String topic, char *  payload){
     client.publish((char *)topic.c_str(),payload);
-}
-
-void pub(String topic, int payload){
-    char val[12];
-    sprintf(val, "%d", payload);
-    client.publish((char *)topic.c_str(),val);
-}
-
-void pub(String topic, float payload){
-    char val[12];
-    dtostrf(payload,3,1,val);
-    client.publish((char *)topic.c_str(),val);
-}
-
-void pub(char * topic, float payload){
-    char val[12];
-    dtostrf(payload,3,1,val);
-    client.publish(topic,val);
-}
-
-void pub(char * topic, int payload){
-    char val[6];
-    sprintf(val, "%d", payload);
-    client.publish(topic,val);
-}
-
-void pub(char * topic, unsigned int payload){
-    char val[6];
-    sprintf(val, "%u", payload);
-    client.publish(topic,val);
 }
 
 void pub(char * topic, unsigned long payload){
@@ -365,23 +327,64 @@ void pub(char * topic, unsigned long payload){
     client.publish(topic,val);
 }
 
-void pub(char * topic, long payload){
-    char val[11];
-    sprintf(val, "%l", payload);
-    client.publish(topic,val);
-}
+#ifdef simplePublishing
 
-void pub(char * topic, double payload){
-    char val[16];
-    sprintf(val, "%d", payload);
-    client.publish(topic,val);
-}
+  void pub(char * topic, String payload){
+      client.publish(topic,(char *)payload.c_str());
+  }
 
-void pub(String topic, unsigned long payload){
-    char val[11];
-    sprintf(val, "%lu", payload);
-    client.publish((char *)topic.c_str(),val);
-}
+  void pub(String topic, String payload){
+      client.publish((char *)topic.c_str(),(char *)payload.c_str());
+  }
+
+  void pub(String topic, int payload){
+      char val[12];
+      sprintf(val, "%d", payload);
+      client.publish((char *)topic.c_str(),val);
+  }
+
+  void pub(String topic, float payload){
+      char val[12];
+      dtostrf(payload,3,1,val);
+      client.publish((char *)topic.c_str(),val);
+  }
+
+  void pub(char * topic, float payload){
+      char val[12];
+      dtostrf(payload,3,1,val);
+      client.publish(topic,val);
+  }
+
+  void pub(char * topic, int payload){
+      char val[6];
+      sprintf(val, "%d", payload);
+      client.publish(topic,val);
+  }
+
+  void pub(char * topic, unsigned int payload){
+      char val[6];
+      sprintf(val, "%u", payload);
+      client.publish(topic,val);
+  }
+
+  void pub(char * topic, long payload){
+      char val[11];
+      sprintf(val, "%l", payload);
+      client.publish(topic,val);
+  }
+
+  void pub(char * topic, double payload){
+      char val[16];
+      sprintf(val, "%d", payload);
+      client.publish(topic,val);
+  }
+
+  void pub(String topic, unsigned long payload){
+      char val[11];
+      sprintf(val, "%lu", payload);
+      client.publish((char *)topic.c_str(),val);
+  }
+#endif
 
 bool reconnect() {
 
@@ -762,15 +765,15 @@ void setup_wifimanager(bool reset_settings){
 void setup_ethernet() {
   if (gateway[0] != 0 || Dns[0]!=0)
   {
-    trc(F("Advanced ethernet config"));
+    trc(F("Adv eth cfg"));
     Ethernet.begin(mac, ip, Dns, gateway, subnet);
   }else{
-    trc(F("Simple ethernet config"));
+    trc(F("Spl eth cfg"));
     Ethernet.begin(mac, ip); 
   }
-  trc(F("OpenMQTTGateway ip: "));
+  trc(F("ip: "));
   Serial.println(Ethernet.localIP());
-  trc(F("Ethernet ok"));
+  trc(F("Eth ok"));
 }
 #endif
 
@@ -811,7 +814,7 @@ void loop()
   digitalWrite(led_receive, LOW);
   digitalWrite(led_info, LOW);
   digitalWrite(led_send, LOW);
-  
+
   unsigned long now = millis();
   //MQTT client connexion management
   if (!client.connected()) { // not connected
@@ -1045,18 +1048,18 @@ int getMin(){
 }
 
 bool isAduplicate(unsigned long value){
-trc(F("isAduplicate?"));
-// check if the value has been already sent during the last time_avoid_duplicate
-for (int i = 0; i < array_size;i++){
- if (ReceivedSignal[i][0] == value){
-      unsigned long now = millis();
-      if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
-      trc(F("--don't pub. duplicate--"));
-      return true;
+  trc(F("isAdupl?"));
+  // check if the value has been already sent during the last time_avoid_duplicate
+  for (int i = 0; i < array_size;i++){
+  if (ReceivedSignal[i][0] == value){
+        unsigned long now = millis();
+        if (now - ReceivedSignal[i][1] < time_avoid_duplicate){ // change
+        trc(F("no pub. dupl"));
+        return true;
+      }
     }
   }
-}
-return false;
+  return false;
 }
 
 void receivingMQTT(char * topicOri, char * datacallback) {
@@ -1066,7 +1069,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
-    trc(F("Store signal"));
+    trc(F("Store str"));
     unsigned long data = 0;
     #ifdef jsonPublishing
       if (jsondata.success())  data =  jsondata["value"];
@@ -1078,7 +1081,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     
     if (data != 0) {
       storeValue(data);
-      trc(F("Data JSON stored"));
+      trc(F("JSON str"));
     }
   }
 

@@ -154,7 +154,7 @@ bool _2GtoMQTT(){
           pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }
       }else{
-        trc(F("MQTTto2G Fail reading from json"));
+        trc(F("MQTTto2G failed json read"));
       }
     }
     

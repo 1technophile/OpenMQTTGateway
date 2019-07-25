@@ -110,7 +110,7 @@ void MQTTtoPilight(char * topicOri, JsonObject& Pilightdata) {
       trc(F("MQTTtoPilight msg & protocol ok"));
       result = rf.send(protocol, message);
     }else{
-      trc(F("MQTTtoPilight fail reading from json"));
+      trc(F("MQTTtoPilight failed json read"));
     }
 
     if (result > 0) {

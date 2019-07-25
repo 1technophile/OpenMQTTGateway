@@ -263,7 +263,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
           pub(subjectGTWRF2toMQTT,RF2data);
         }
       }else{
-        trc(F("MQTTtoRF2 Fail reading from json"));
+        trc(F("MQTTtoRF2 failed json read"));
       }
     }
   }

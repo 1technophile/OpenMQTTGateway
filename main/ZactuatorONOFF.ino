@@ -66,7 +66,7 @@ void setupONOFF(){
         // we acknowledge the sending by publishing the value to an acknowledgement topic
         pub(subjectGTWONOFFtoMQTT, ONOFFdata);
       }else{
-        trc(F("MQTTtoONOFF Fail reading from json"));
+        trc(F("MQTTtoONOFF failed json read"));
       }
     }
   }

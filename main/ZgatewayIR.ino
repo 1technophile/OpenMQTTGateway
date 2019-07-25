@@ -75,32 +75,30 @@
   #define WHYNTER_BITS                32U
 #endif
 
-void setupIR()
-{
- 
-//IR init parameters
-#if defined(ESP8266) || defined(ESP32)
-  irsend.begin();
-#endif
+void setupIR(){
+  //IR init parameters
+  #if defined(ESP8266) || defined(ESP32)
+    irsend.begin();
+  #endif
 
-irrecv.enableIRIn(); // Start the receiver
-  
-trc(F("IR_EMITTER_PIN "));
-trc(IR_EMITTER_PIN);
-trc(F("IR_RECEIVER_PIN "));
-trc(IR_RECEIVER_PIN);
-trc(F("ZgatewayIR setup done "));
-
+  irrecv.enableIRIn(); // Start the receiver
+    
+  trc(F("IR_EMITTER_PIN "));
+  trc(IR_EMITTER_PIN);
+  trc(F("IR_RECEIVER_PIN "));
+  trc(IR_RECEIVER_PIN);
+  trc(F("ZgatewayIR setup done "));
 }
+
 void IRtoMQTT(){
   decode_results results;
-  
+
   if (irrecv.decode(&results)){
-  trc(F("Creating IR buffer"));
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& IRdata = jsonBuffer.createObject();
-  
-  trc(F("Rcv. IR"));
+    trc(F("Creating IR buffer"));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& IRdata = jsonBuffer.createObject();
+
+    trc(F("Rcv. IR"));
     #ifdef ESP32
       String taskMessage = "Task running on core ";
       taskMessage = taskMessage + xPortGetCoreID();
@@ -116,18 +114,18 @@ void IRtoMQTT(){
     String rawCode = "";
     // Dump data
     for (uint16_t i = 1;  i < results.rawlen;  i++) {
-       #if defined(ESP8266) || defined(ESP32)
+        #if defined(ESP8266) || defined(ESP32)
           if (i % 100 == 0) yield();  // Preemptive yield every 100th entry to feed the WDT.
           rawCode = rawCode + (results.rawbuf[i] * RAWTICK);
-       #else
+        #else
           rawCode = rawCode + (results.rawbuf[i] * USECPERTICK);
-       #endif
+        #endif
       if ( i < results.rawlen-1 ) rawCode = rawCode + ","; // ',' not needed on last one
     }
     trc(rawCode);
     IRdata.set("raw", rawCode);
     // if needed we directly resend the raw code
-    if (RawDirectForward){
+    #ifdef RawDirectForward
       #if defined(ESP8266) || defined(ESP32)
         uint16_t rawsend[results.rawlen];
         for (uint16_t i = 1;  i < results.rawlen;  i++) {
@@ -139,23 +137,23 @@ void IRtoMQTT(){
           rawsend[i] = results.rawbuf[i];
       }
       irsend.sendRaw(rawsend, results.rawlen, RawFrequency);
-      trc(F("raw signal redirected"));
-    }
+      trc(F("raw redirected"));
+    #endif
     irrecv.resume(); // Receive the next value
     unsigned long MQTTvalue = IRdata.get<unsigned long>("value");
     if (pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1){ // don't publish unknown IR protocol
-      trc(F("--no pub. unknown protocol--"));
-    } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
-        trc(F("Adv data IRtoMQTT"));         
+      trc(F("--no pub unknown prt--"));
+    } else if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of IR -->MQTT
+        trc(F("Adv data IRtoMQTT"));
         pub(subjectIRtoMQTT,IRdata);
-        trc(F("Store to avoid duplicate"));
+        trc(F("Store val"));
         storeValue(MQTTvalue);
         if (repeatIRwMQTT){
-            trc(F("Pub. IR for repeat"));
+            trc(F("Pub. IR for rpt"));
             pub(subjectMQTTtoIR,MQTTvalue);
         }
     }
-  } 
+    }
 }
 
 #ifdef simpleReceiving
@@ -369,7 +367,7 @@ void IRtoMQTT(){
           }
           irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
         }else{
-          trc(F("MQTTtoIR Fail reading from json"));
+          trc(F("MQTTtoIR failed json read"));
         }
      }
   }

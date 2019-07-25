@@ -131,10 +131,10 @@ void _rfbDecode() {
         if (!isAduplicate(MQTTvalue) && MQTTvalue!=0) {// conditions to avoid duplications of RF -->MQTT
             trc(F("Adv data SRFBtoMQTT")); 
             pub(subjectSRFBtoMQTT,SRFBdata);
-            trc(F("Store to avoid duplicate"));
+            trc(F("Store val"));
             storeValue(MQTTvalue);
             if (repeatSRFBwMQTT){
-                trc(F("Publish SRFB for repeat"));
+                trc(F("Publish SRFB for rpt"));
                 pub(subjectMQTTtoSRFB,SRFBdata);
             }
         } 

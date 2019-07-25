@@ -231,7 +231,7 @@ bool RFM69toMQTT(void) {
           trc(F("MQTTtoRFM69 sending failed"));
         }
       }else{
-        trc(F("MQTTtoRFM69 Fail reading from json"));
+        trc(F("MQTTtoRFM69 failed json read"));
       }
     }
   }
