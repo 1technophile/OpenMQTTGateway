@@ -71,8 +71,9 @@ char mqtt_pass[30] = "your_password"; // not compulsory only if your broker need
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
-#define Gateway_Name "OpenMQTTGateway"
-
+#ifndef Gateway_Name
+  #define Gateway_Name "OpenMQTTGateway"
+#endif
 //uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
