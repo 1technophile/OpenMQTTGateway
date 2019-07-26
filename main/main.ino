@@ -339,64 +339,61 @@ void pub(char * topic, unsigned long payload){
     client.publish(topic,val);
 }
 
-#ifdef simplePublishing
+void pub(char * topic, String payload){
+    client.publish(topic,(char *)payload.c_str());
+}
 
-  void pub(char * topic, String payload){
-      client.publish(topic,(char *)payload.c_str());
-  }
+void pub(String topic, String payload){
+    client.publish((char *)topic.c_str(),(char *)payload.c_str());
+}
 
-  void pub(String topic, String payload){
-      client.publish((char *)topic.c_str(),(char *)payload.c_str());
-  }
+void pub(String topic, int payload){
+    char val[12];
+    sprintf(val, "%d", payload);
+    client.publish((char *)topic.c_str(),val);
+}
 
-  void pub(String topic, int payload){
-      char val[12];
-      sprintf(val, "%d", payload);
-      client.publish((char *)topic.c_str(),val);
-  }
+void pub(String topic, float payload){
+    char val[12];
+    dtostrf(payload,3,1,val);
+    client.publish((char *)topic.c_str(),val);
+}
 
-  void pub(String topic, float payload){
-      char val[12];
-      dtostrf(payload,3,1,val);
-      client.publish((char *)topic.c_str(),val);
-  }
+void pub(char * topic, float payload){
+    char val[12];
+    dtostrf(payload,3,1,val);
+    client.publish(topic,val);
+}
 
-  void pub(char * topic, float payload){
-      char val[12];
-      dtostrf(payload,3,1,val);
-      client.publish(topic,val);
-  }
+void pub(char * topic, int payload){
+    char val[6];
+    sprintf(val, "%d", payload);
+    client.publish(topic,val);
+}
 
-  void pub(char * topic, int payload){
-      char val[6];
-      sprintf(val, "%d", payload);
-      client.publish(topic,val);
-  }
+void pub(char * topic, unsigned int payload){
+    char val[6];
+    sprintf(val, "%u", payload);
+    client.publish(topic,val);
+}
 
-  void pub(char * topic, unsigned int payload){
-      char val[6];
-      sprintf(val, "%u", payload);
-      client.publish(topic,val);
-  }
+void pub(char * topic, long payload){
+    char val[11];
+    sprintf(val, "%l", payload);
+    client.publish(topic,val);
+}
 
-  void pub(char * topic, long payload){
-      char val[11];
-      sprintf(val, "%l", payload);
-      client.publish(topic,val);
-  }
+void pub(char * topic, double payload){
+    char val[16];
+    sprintf(val, "%d", payload);
+    client.publish(topic,val);
+}
 
-  void pub(char * topic, double payload){
-      char val[16];
-      sprintf(val, "%d", payload);
-      client.publish(topic,val);
-  }
-
-  void pub(String topic, unsigned long payload){
-      char val[11];
-      sprintf(val, "%lu", payload);
-      client.publish((char *)topic.c_str(),val);
-  }
-#endif
+void pub(String topic, unsigned long payload){
+    char val[11];
+    sprintf(val, "%lu", payload);
+    client.publish((char *)topic.c_str(),val);
+}
 
 bool reconnect() {
 
