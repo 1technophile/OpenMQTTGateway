@@ -676,11 +676,14 @@ void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
 
     // Scan interval set
     if (BTdata.containsKey("interval")){
-      trc(F("BLE interval set"));
+      trc(F("BLE interval"));
       // storing BLE interval for further use if needed
-      unsigned int prevBLEinterval = BLEinterval; 
+      unsigned int prevBLEinterval = BLEinterval;
+      trc("previous interval");
+      trc(BLEinterval); 
       // set BLE interval if present if not setting default value
-      BLEinterval =  (unsigned int)BTdata["interval"]|prevBLEinterval;
+      BLEinterval = (unsigned int)BTdata["interval"];
+      trc("new interval");
       trc(BLEinterval);
       if (BLEinterval == 0) {
         if(BTtoMQTT())// as BLEinterval is = to 0 we can launch the loop and the scan will execute immediately
