@@ -831,28 +831,40 @@ void loop()
       trc("client disconnected");
       lastReconnectAttempt = now;
       // Attempt to reconnect
-      if (WiFi.status() == WL_CONNECTED){
-        if (reconnect()) {
-          lastReconnectAttempt = 0;
-        } else {
-          #if defined(ESPWifiManualSetup)
-            trc(F("restarting ESP"));
-            #ifdef ESP32
-              ESP.restart();
+      #if defined(ESP8266) || defined(ESP32)
+        if (WiFi.status() == WL_CONNECTED){
+          if (reconnect()) {
+            lastReconnectAttempt = 0;
+          } else {
+            #if defined(ESPWifiManualSetup)
+              trc(F("restarting ESP"));
+              #ifdef ESP32
+                ESP.restart();
+              #endif
+              #ifdef ESP8266
+                ESP.reset();
+              #endif
+            #else
+              if (!connectedOnce) {
+                trc(F("reseting wifi manager"));
+                setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
+              }
             #endif
-            #ifdef ESP8266
-              ESP.reset();
-            #endif
-          #elif defined(ESP8266) || defined(ESP32)
-            if (!connectedOnce) {
-              trc(F("reseting wifi manager"));
-              setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
-            }
-          #endif
+          }
+        }else{
+          trc("wifi disconnected");
         }
-      }else{
-        trc("wifi disconnected");
-      }
+      #else //other boards
+        if (Ethernet.linkStatus() == LinkON){
+          if (reconnect()) {
+            lastReconnectAttempt = 0;
+          } else {
+              trc(F("brk disconnected"));
+          }
+        }else{
+          trc("eth disconnected");
+        }
+      #endif
     }
   } else { //connected
     // MQTT loop
