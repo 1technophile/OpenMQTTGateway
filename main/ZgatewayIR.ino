@@ -276,79 +276,83 @@ void IRtoMQTT(){
       unsigned long data = IRdata["value"];
       const char * raw = IRdata["raw"];
       const char * datastring = IRdata["datastring"];
-      if (data != 0||raw||datastring) {
-        trc(F("MQTTtoIR data || raw ok"));
+      if (data != 0 || raw || datastring) {
+        trc(F("MQTTtoIR value || raw || datasring ok"));
         bool signalSent = false;
         trc(F("value"));
         trc(data);
-        trc(F("raw"));
-        trc(raw);
-        trc(F("datastring"));
-        trc(datastring);
+        if(datastring){
+          trc(F("datastring"));
+          trc(datastring);
+        }else{
+          datastring ="";
+        }
         const char * protocol_name = IRdata["protocol_name"];
-        unsigned int valueBITS  = IRdata["bits"];
+        unsigned int valueBITS  = IRdata["bits"]|0;
         uint16_t  valueRPT = IRdata["repeat"]|repeatIRwNumber;
 
         if(raw){
-            unsigned int s = strlen(raw);
-            //number of "," value count
-            int count = 0;
-            for(int i = 0; i < s; i++)
-            {
-             if (raw[i] == ',') {
-              count++;
-              }
+          trc(F("raw"));
+          trc(raw);
+          unsigned int s = strlen(raw);
+          //number of "," value count
+          int count = 0;
+          for(int i = 0; i < s; i++)
+          {
+            if (raw[i] == ',') {
+            count++;
             }
-            #ifdef IR_GC
-             if(strstr(protocol_name, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
-              trc(F("IR_GC"));
-              //buffer allocation from char datacallback
-              uint16_t  GC[count+1];
-              String value = "";
-              int j = 0;
-              for(int i = 0; i < s; i++)
-              {
-               if (raw[i] != ',') {
-                  value = value + String(raw[i]);
-                }
-                if ((raw[i] == ',') || (i == s - 1))
-                {
-                  GC[j]= value.toInt();
-                  value = "";
-                  j++;
-                }
-              }
-                irsend.sendGC(GC, j);
-                signalSent = true;
-            }
-            #endif
-            #ifdef IR_Raw
-            if(strstr(protocol_name, "IR_Raw") != NULL){ // sending Raw data
-              trc(F("IR_Raw"));
-              //buffer allocation from char datacallback
-              #if defined(ESP8266) || defined(ESP32)
-                uint16_t  Raw[count+1];
-              #else
-                unsigned int Raw[count+1];
-              #endif
+          }
+          #ifdef IR_GC
+            if(strstr(protocol_name, "IR_GC") != NULL){ // sending GC data from https://irdb.globalcache.com
+            trc(F("IR_GC"));
+            //buffer allocation from char datacallback
+            uint16_t  GC[count+1];
             String value = "";
             int j = 0;
             for(int i = 0; i < s; i++)
             {
-             if (raw[i] != ',') {
+              if (raw[i] != ',') {
                 value = value + String(raw[i]);
               }
               if ((raw[i] == ',') || (i == s - 1))
               {
-                Raw[j]= value.toInt();
+                GC[j]= value.toInt();
                 value = "";
                 j++;
               }
             }
-              irsend.sendRaw(Raw, j, RawFrequency);
+              irsend.sendGC(GC, j);
               signalSent = true;
-            }
+          }
+          #endif
+          #ifdef IR_Raw
+          if(strstr(protocol_name, "IR_Raw") != NULL){ // sending Raw data
+            trc(F("IR_Raw"));
+            //buffer allocation from char datacallback
+            #if defined(ESP8266) || defined(ESP32)
+              uint16_t  Raw[count+1];
+            #else
+              unsigned int Raw[count+1];
             #endif
+          String value = "";
+          int j = 0;
+          for(int i = 0; i < s; i++)
+          {
+            if (raw[i] != ',') {
+              value = value + String(raw[i]);
+            }
+            if ((raw[i] == ',') || (i == s - 1))
+            {
+              Raw[j]= value.toInt();
+              value = "";
+              j++;
+            }
+          }
+            irsend.sendRaw(Raw, j, RawFrequency);
+            signalSent = true;
+          }
+          #endif
         }else if(protocol_name && (strstr(protocol_name, "IR_NEC") == NULL)){
             signalSent = sendIdentifiedProtocol(protocol_name, data, datastring, valueBITS, valueRPT);
         }else{
