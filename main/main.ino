@@ -462,7 +462,7 @@ void setup()
 {
   //Launch serial for debugging purposes
   Serial.begin(SERIAL_BAUD);
-  
+
   #if defined(ESP8266) || defined(ESP32)
   
     #ifdef ESP8266
@@ -662,35 +662,35 @@ void setup_wifimanager(bool reset_settings){
   
     if (SPIFFS.begin()) {
       trc(F("mounted file system"));
-      if (SPIFFS.exists("/config.json")) {
-        //file exists, reading and loading
-        trc(F("reading config file"));
-        File configFile = SPIFFS.open("/config.json", "r");
-        if (configFile) {
-          trc(F("opened config file"));
-          size_t size = configFile.size();
-          // Allocate a buffer to store contents of the file.
-          std::unique_ptr<char[]> buf(new char[size]);
-  
-          configFile.readBytes(buf.get(), size);
-          DynamicJsonBuffer jsonBuffer;
-          JsonObject& json = jsonBuffer.parseObject(buf.get());
-          json.printTo(Serial);
-          if (json.success()) {
-            trc(F("\nparsed json"));
-  
-            strcpy(mqtt_server, json["mqtt_server"]);
-            strcpy(mqtt_port, json["mqtt_port"]);
-            strcpy(mqtt_user, json["mqtt_user"]);
-            strcpy(mqtt_pass, json["mqtt_pass"]);
-  
-          } else {
-            trc(F("failed to load json config"));
-          }
+    }else{
+      trc(F("failed to mount FS -> formating"));
+      SPIFFS.format();
+      if(SPIFFS.begin())
+      trc(F("mounted file system after formating"));
+    }
+    if (SPIFFS.exists("/config.json")) {
+      //file exists, reading and loading
+      trc(F("reading config file"));
+      File configFile = SPIFFS.open("/config.json", "r");
+      if (configFile) {
+        trc(F("opened config file"));
+        size_t size = configFile.size();
+        // Allocate a buffer to store contents of the file.
+        std::unique_ptr<char[]> buf(new char[size]);
+        configFile.readBytes(buf.get(), size);
+        DynamicJsonBuffer jsonBuffer;
+        JsonObject& json = jsonBuffer.parseObject(buf.get());
+        json.printTo(Serial);
+        if (json.success()) {
+          trc(F("\nparsed json"));
+          strcpy(mqtt_server, json["mqtt_server"]);
+          strcpy(mqtt_port, json["mqtt_port"]);
+          strcpy(mqtt_user, json["mqtt_user"]);
+          strcpy(mqtt_pass, json["mqtt_pass"]);
+        } else {
+          trc(F("failed to load json config"));
         }
       }
-    } else {
-      trc(F("failed to mount FS"));
     }
   
     // The extra parameters to be configured (can be either global or just in the setup)
@@ -704,6 +704,8 @@ void setup_wifimanager(bool reset_settings){
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
+
+    wifiManager.setConnectTimeout(WifiManager_TimeOut);
     //Set timeout before going to portal
     wifiManager.setConfigPortalTimeout(WifiManager_ConfigPortalTimeOut);
   
