@@ -99,6 +99,10 @@
 #ifdef ZmqttDiscovery
   #include "config_mqttDiscovery.h"
 #endif
+#ifdef ZactuatorFASTLED 
+ #include "config_FASTLED.h"
+#endif
+
 
 /*------------------------------------------------------------------------*/
 
@@ -989,6 +993,9 @@ void stateMeasures(){
       #endif
       #ifdef ZactuatorONOFF
           modules = modules + ZactuatorONOFF;
+      #endif
+      #ifdef ZactuatorFASTLED
+          modules = modules  + ZactuatorFASTLED;
       #endif
       #ifdef Zgateway2G
           modules = modules + Zgateway2G;
