@@ -31,7 +31,7 @@
 #define subjectGTWFASTLEDtoMQTT  Base_Topic Gateway_Name "/FASTLEDtoMQTT" //same color on all LEDs in #RRGGBB
 
 // How many leds in your strip?
-#define FASTLED_NUM_LEDS 1
+#define FASTLED_NUM_LEDS 20
 
 // Uncomment/edit one of the following lines for your leds arrangement.
 
@@ -79,7 +79,7 @@
   #define FASTLED_ESP8266_RAW_PIN_ORDER
   //#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
   //#define FASTLED_ESP8266_D1_PIN_ORDER
-  #define FASTLED_DATA_PIN D3
+  #define FASTLED_DATA_PIN D5
   //#define FASTLED_CLOCK_PIN 13
 #elif ESP32
   #define FASTLED_DATA_PIN 16
