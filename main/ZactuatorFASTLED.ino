@@ -38,7 +38,7 @@ void setupFASTLED() {
   trc(F("FASTLED_NUM_LEDS "));
   trc(String(FASTLED_NUM_LEDS));
   trc(F("ZactuatorFASTLED setup done "));
-  FastLED.addLeds<NEOPIXEL, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
+  FastLED.addLeds<FASTLED_TYPE, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
 }
 
 boolean FASTLEDtoMQTT() {

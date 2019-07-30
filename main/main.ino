@@ -612,6 +612,10 @@ void setup()
   #ifdef ZsensorGPIOKeyCode
    setupGPIOKeyCode();
   #endif
+  #ifdef ZactuatorFASTLED
+    setupFASTLED();
+  #endif 
+
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
@@ -1154,6 +1158,10 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
       MQTTtoONOFF(topicOri, jsondata);
     #endif
+    #ifdef ZactuatorFASTLED
+      MQTTtoFASTLED(topicOri, datacallback);
+    #endif 
+
     digitalWrite(led_send, HIGH);
   } else { // not a json object --> simple decoding
    #ifdef simpleReceiving
