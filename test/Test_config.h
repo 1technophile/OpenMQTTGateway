@@ -207,7 +207,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
   #define TRACE 1  // commented =  trace off, uncommented = trace on
 #else // for arduino Uno
-  #define ZgatewayRF "RF"
+  //#define ZgatewayRF "RF"
   //#define ZgatewayLORA "LORA" (not tested yet)
   //#define Zgateway2G  (not tested yet)
   //#define ZgatewayRF2 // too big for UNO
