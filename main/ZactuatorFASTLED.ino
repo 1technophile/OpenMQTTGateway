@@ -23,13 +23,13 @@
 #include "User_config.h"
 
 #ifdef ZactuatorFASTLED
-#include <ArduinoJson.h>
 
 #ifdef ESP8266
 #include <FastLED.h>
 #else
 #include <FastLED.h>
 #endif
+#include <ArduinoJson.h>
 enum LEDState
 {
   OFF,
@@ -123,17 +123,57 @@ void FASTLEDLoop()
   FastLED.show();
 }
 
-void MQTTtoFASTLED(char *topicOri, char *datacallback)
+boolean FASTLEDtoMQTT()
 {
+  return false;
+}
+void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
+{
+  trc(F("MQTTtoFASTLEDJSON: "));
   currentLEDState = GENERAL;
   String topic = topicOri;
   long number = 0;
-  if (topic != subjectMQTTtoFASTLEDsetled)
-  {
-    number = (long)strtol(&datacallback[1], NULL, 16);
-  }
+  trc(topic);
+  //number = (long)strtol(&datacallback[1], NULL, 16);
 
+  
+  
+  if (topic == subjectMQTTtoFASTLEDsetled)
+  {
+    
+    
+    
+   
+      trc(F("JSON parsed"));
+      int ledNr = jsonData["led"];
+      trc(F("led"));
+      trc(ledNr);
+      const char *color = jsonData["hex"];
+      trc(F("hex"));
+      
+      number = (long)strtol(color, NULL, 16);
+      trc(number);
+      bool blink = jsonData["blink"];
+      if (ledNr <= FASTLED_NUM_LEDS)
+      {
+        trc(F("blink"));
+        trc(blink);
+        blinkLED[ledNr] = blink;
+        leds[ledNr] = number;
+        FastLED.show();
+      }
+    
+  }
+}
+void MQTTtoFASTLED(char *topicOri, char *datacallback)
+{
   trc(F("MQTTtoFASTLED: "));
+  currentLEDState = GENERAL;
+  String topic = topicOri;
+  long number = 0;
+
+  number = (long)strtol(&datacallback[1], NULL, 16);
+
   trc(topic);
   trc(number);
 
@@ -145,24 +185,7 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
     }
     FastLED.show();
   }
-  else if (topic == subjectMQTTtoFASTLEDsetled)
-  {
-    JsonObject &setLED = jsonBuffer.parseObject(datacallback);
-    if (setLED.success())
-    {
-      int ledNr = setLED["led"];
-      const char *color = setLED["hex"];
-      number = (long)strtol(color, NULL, 16);
 
-      bool blink = setLED["blink"];
-      if (ledNr <= FASTLED_NUM_LEDS)
-      {
-        blinkLED[ledNr] = blink;
-        leds[ledNr] = number;
-        FastLED.show();
-      }
-    }
-  }
   else if (topic == subjectMQTTtoFASTLEDsetbrightness)
   {
     FastLED.setBrightness(number);

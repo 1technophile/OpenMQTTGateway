@@ -29,8 +29,13 @@
 #define subjectMQTTtoFASTLEDsetsetfire Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setfire"          //Animation Fire2012 by Mark Kriegsman
 #define subjectGTWFASTLEDtoMQTT Base_Topic Gateway_Name "/FASTLEDtoMQTT"                                  //same color on all LEDs in #RRGGBB
 
+
+
+
+
+
 // How many leds in your strip?
-#define FASTLED_NUM_LEDS 20
+#define FASTLED_NUM_LEDS 40
 
 // Uncomment/edit one of the following lines for your leds arrangement.
 
