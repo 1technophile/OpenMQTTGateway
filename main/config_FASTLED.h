@@ -24,10 +24,9 @@
 /*-------------------FASTLED topics & parameters----------------------*/
 //FASTLED MQTT Subjects
 #define subjectMQTTtoFASTLED  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED"
-#define subjectMQTTtoFASTLEDscan  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/scan" //for multiple LEDs, scanner like effect
-#define subjectMQTTtoFASTLEDalarm  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/alarm" //fast alarm blinking on all LEDss in in #RRGGBB
-#define subjectMQTTtoFASTLEDrainbow  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/rainbow" //rainbow fade on all LEDs, reset to in #RRGGBB
-#define subjectMQTTtoFASTLEDbreath  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/breath" //breathing effect on all LEDs in in #RRGGBB
+#define subjectMQTTtoFASTLEDsetled  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setled" //set only one LED with JSON struct {"led":0-x,"hex":"#000000","blink":true/false}
+#define subjectMQTTtoFASTLEDsetbrightness  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setbrightness" //set the brightness 0-255
+#define subjectMQTTtoFASTLEDsetsetfire  Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setfire" //Animation Fire2012 by Mark Kriegsman
 #define subjectGTWFASTLEDtoMQTT  Base_Topic Gateway_Name "/FASTLEDtoMQTT" //same color on all LEDs in #RRGGBB
 
 // How many leds in your strip?

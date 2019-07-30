@@ -951,6 +951,9 @@ void loop()
     #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       stateMeasures();
     #endif
+     #ifdef ZactuatorFASTLED
+       FASTLEDLoop();
+     #endif
   }
 }
 
