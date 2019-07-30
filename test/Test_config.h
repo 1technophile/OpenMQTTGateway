@@ -151,6 +151,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   #define simplePublishing true
   #define simpleReceiving true
+  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
   #define TRACE 1  // commented =  trace off, uncommented = trace on
 #elif ESP32
   #define ZgatewayRF "RF"
@@ -176,6 +177,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   #define simplePublishing true
   #define simpleReceiving true
+  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
   #define TRACE 1  // commented =  trace off, uncommented = trace on
 #elif defined(__AVR_ATmega1280__)
   #define ZgatewayRF "RF"
@@ -202,6 +204,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   #define simplePublishing true
   #define simpleReceiving true
+  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
   #define TRACE 1  // commented =  trace off, uncommented = trace on
 #else // for arduino Uno
   #define ZgatewayRF "RF"
@@ -224,6 +227,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define jsonReceiving true
   //#define simplePublishing true
   //#define simpleReceiving true
+  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
   //#define TRACE 1  // commented =  trace off, uncommented = trace on
 #endif
 /*----------------------------OTHER PARAMETERS-----------------------------*/
