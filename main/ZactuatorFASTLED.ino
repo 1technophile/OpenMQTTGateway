@@ -37,7 +37,8 @@ enum LEDState
   GENERAL
 };
 LEDState currentLEDState;
-
+long lastUpdate = 0;
+long currentUpdate = 0;
 CRGB leds[FASTLED_NUM_LEDS];
 CRGB ledColorBlink[FASTLED_NUM_LEDS];
 StaticJsonBuffer<200> jsonBuffer;
@@ -57,32 +58,52 @@ void setupFASTLED()
   FastLED.addLeds<FASTLED_TYPE, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
 }
 
+//returns the current step of the animation
+int animation_step(int duration, int steps)
+{
+  int currentStep = ((currentUpdate % duration) / ((float)duration)) * steps;
+  return currentStep;
+}
+
+//returns the number of steps since the last update
+int animation_step_count(int duration, int steps)
+{
+  long lastAnimationNumber = lastUpdate / duration;
+  long currentAnimationNumber = currentUpdate / duration;
+  int lastStep = ((lastUpdate % duration) / ((float)duration)) * steps;
+  int currentStep = ((currentUpdate % duration) / ((float)duration)) * steps;
+
+  return currentStep - lastStep + (currentAnimationNumber - lastAnimationNumber) * steps;
+}
+
 void FASTLEDLoop()
 {
+
+  lastUpdate = currentUpdate;
+  currentUpdate = millis();
+
   if (currentLEDState == GENERAL)
   {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= blinkInterval)
-    {
-      // save the last time you blinked the LED
-      previousMillis = currentMillis;
 
-      for (int i = 0; i < FASTLED_NUM_LEDS; i++)
+    for (int i = 0; i < FASTLED_NUM_LEDS; i++)
+    {
+
+      int count = animation_step_count(blinkInterval, 2);
+      if (count > 0)
       {
+        int step = animation_step(blinkInterval, 2);
 
         if (blinkLED[i])
         {
-          CRGB currentcolor = leds[i];
-          switch (currentcolor)
-          {
-          case CRGB::Black:
-            leds[i] = ledColorBlink[i];
-            break;
 
-          default:
+          if (step == 0)
+          {
+            leds[i] = ledColorBlink[i];
+          }
+          else
+          {
             ledColorBlink[i] = leds[i];
             leds[i] = CRGB::Black;
-            break;
           }
         }
       }
@@ -90,11 +111,12 @@ void FASTLEDLoop()
   }
   else if (currentLEDState == FIRE)
   {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= fireUpdate)
+    int count = animation_step_count(fireUpdate, 2);
+    if (count > 0)
     {
+      int step = animation_step(fireUpdate, 2);
       //random16_add_entropy( random()); //random() don't exists in ESP framework - workaround?
-      previousMillis = currentMillis;
+
       Fire2012WithPalette();
     }
   }
