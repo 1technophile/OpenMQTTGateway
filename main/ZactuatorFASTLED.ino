@@ -45,7 +45,6 @@ StaticJsonBuffer<200> jsonBuffer;
 bool blinkLED[FASTLED_NUM_LEDS];
 const long blinkInterval = 300;
 const long fireUpdate = 10;
-unsigned long previousMillis = 0;
 CRGBPalette16 gPal;
 
 void setupFASTLED()
@@ -89,10 +88,10 @@ void FASTLEDLoop()
     {
 
       int count = animation_step_count(blinkInterval, 2);
+      int step = animation_step(blinkInterval, 2);
+
       if (count > 0)
       {
-        int step = animation_step(blinkInterval, 2);
-
         if (blinkLED[i])
         {
 
@@ -111,12 +110,10 @@ void FASTLEDLoop()
   }
   else if (currentLEDState == FIRE)
   {
-    int count = animation_step_count(fireUpdate, 2);
+    int count = animation_step_count(fireUpdate, 1);
     if (count > 0)
     {
-      //int step = animation_step(fireUpdate, 2);
       //random16_add_entropy( random(0)); //random() don't exists in ESP framework - workaround?
-
       Fire2012WithPalette();
     }
   }
@@ -140,10 +137,6 @@ void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
   
   if (topic == subjectMQTTtoFASTLEDsetled)
   {
-    
-    
-    
-   
       trc(F("JSON parsed"));
       int ledNr = jsonData["led"];
       trc(F("led"));
@@ -160,7 +153,6 @@ void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
         trc(blink);
         blinkLED[ledNr] = blink;
         leds[ledNr] = number;
-        FastLED.show();
       }
     
   }
