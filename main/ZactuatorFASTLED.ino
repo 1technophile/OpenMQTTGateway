@@ -41,7 +41,6 @@ long lastUpdate = 0;
 long currentUpdate = 0;
 CRGB leds[FASTLED_NUM_LEDS];
 CRGB ledColorBlink[FASTLED_NUM_LEDS];
-StaticJsonBuffer<200> jsonBuffer;
 bool blinkLED[FASTLED_NUM_LEDS];
 const long blinkInterval = 300;
 const long fireUpdate = 10;
