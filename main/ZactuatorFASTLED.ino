@@ -151,7 +151,7 @@ void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
         trc(F("blink"));
         trc(blink);
         blinkLED[ledNr] = blink;
-        leds[ledNr] = number;
+        ledColorBlink[ledNr] = number;
       }
     
   }
