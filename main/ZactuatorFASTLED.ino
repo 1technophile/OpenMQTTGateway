@@ -151,7 +151,7 @@ void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
         trc(F("blink"));
         trc(blink);
         blinkLED[ledNr] = blink;
-        ledColorBlink[ledNr] = number;
+        leds[ledNr] = number;
       }
     
   }
@@ -162,39 +162,48 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
   currentLEDState = GENERAL;
   String topic = topicOri;
   long number = 0;
-
-  number = (long)strtol(&datacallback[1], NULL, 16);
-
   trc(topic);
-  trc(number);
-
   if (topic == subjectMQTTtoFASTLED)
   {
+    number = (long)strtol(&datacallback[1], NULL, 16);
+    trc(number);
     for (int i = 0; i < FASTLED_NUM_LEDS; i++)
     {
       leds[i] = number;
     }
     FastLED.show();
   }
-
   else if (topic == subjectMQTTtoFASTLEDsetbrightness)
   {
+    number = (long)strtol(&datacallback[1], NULL, 16);
+    trc(number);
     FastLED.setBrightness(number);
     FastLED.show();
   }
-  else if (topic == subjectMQTTtoFASTLEDsetsetfire)
+  else if (topic == subjectMQTTtoFASTLEDsetanimation)
   {
-    currentLEDState = FIRE;
-    gPal = HeatColors_p;
+    String payload = datacallback;
+    trc(payload);
+    if (payload.equals("fire"))
+    {
+      currentLEDState = FIRE;
+      gPal = HeatColors_p;
+    }
+    else
+    {
+      currentLEDState = OFF;
+    }
   }
   else
+  {
+    currentLEDState = OFF;
+  }
+  if (currentLEDState==OFF)
   {
     for (int i = 0; i < FASTLED_NUM_LEDS; i++)
     {
       leds[i] = CRGB::Black;
     }
-    FastLED.show();
-    currentLEDState = OFF;
   }
 }
 

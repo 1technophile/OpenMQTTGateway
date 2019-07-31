@@ -26,7 +26,7 @@
 #define subjectMQTTtoFASTLED Base_Topic Gateway_Name "/commands/MQTTtoFASTLED"
 #define subjectMQTTtoFASTLEDsetled Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setled"               //set only one LED with JSON struct {"led":0-x,"hex":"#000000","blink":true/false}
 #define subjectMQTTtoFASTLEDsetbrightness Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setbrightness" //set the brightness 0-255
-#define subjectMQTTtoFASTLEDsetsetfire Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setfire"          //Animation Fire2012 by Mark Kriegsman
+#define subjectMQTTtoFASTLEDsetanimation Base_Topic Gateway_Name "/commands/MQTTtoFASTLED/setanimation"          //Animation Fire2012 by Mark Kriegsman
 #define subjectGTWFASTLEDtoMQTT Base_Topic Gateway_Name "/FASTLEDtoMQTT"                                  //same color on all LEDs in #RRGGBB
 
 
@@ -35,7 +35,7 @@
 
 
 // How many leds in your strip?
-#define FASTLED_NUM_LEDS 40
+#define FASTLED_NUM_LEDS 16
 
 // Uncomment/edit one of the following lines for your leds arrangement.
 
