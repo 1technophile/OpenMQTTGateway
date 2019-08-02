@@ -99,6 +99,9 @@
 #ifdef ZmqttDiscovery
   #include "config_mqttDiscovery.h"
 #endif
+#ifdef ZactuatorFASTLED
+  #include "config_FASTLED.h"
+#endif
 
 /*------------------------------------------------------------------------*/
 
@@ -608,6 +611,10 @@ void setup()
   #ifdef ZsensorGPIOKeyCode
    setupGPIOKeyCode();
   #endif
+  #ifdef ZactuatorFASTLED
+    setupFASTLED();
+  #endif
+
   
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
@@ -943,6 +950,10 @@ void loop()
     #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       stateMeasures();
     #endif
+    #ifdef ZactuatorFASTLED
+      FASTLEDLoop();
+    #endif
+
   }
 }
 
@@ -1033,6 +1044,10 @@ void stateMeasures(){
           modules = modules  + ZmqttDiscovery;
           pubMqttDiscovery();
       #endif
+      #ifdef ZactuatorFASTLED
+          modules = modules + ZactuatorFASTLED;
+      #endif
+
       SYSdata["modules"] = modules;
       trc(SYSdata);
       char JSONmessageBuffer[JSON_MSG_BUFFER];
@@ -1148,6 +1163,12 @@ void receivingMQTT(char * topicOri, char * datacallback) {
       MQTTtoONOFF(topicOri, jsondata);
     #endif
     digitalWrite(led_send, HIGH);
+
+    #ifdef ZactuatorFASTLED
+      MQTTtoFASTLEDJSON(topicOri, jsondata);
+    #endif
+
+
   } else { // not a json object --> simple decoding
    #ifdef simpleReceiving
       #ifdef ZgatewayLORA
@@ -1179,6 +1200,11 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     MQTTtoONOFF(topicOri, datacallback);
   #endif
   digitalWrite(led_send, HIGH);
+
+  #ifdef ZactuatorFASTLED
+    MQTTtoFASTLED(topicOri, datacallback);
+  #endif
+
   }
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
