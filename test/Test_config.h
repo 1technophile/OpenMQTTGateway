@@ -124,112 +124,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
 
-/*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
-//Addons and module management, comment the Z line and the config file if you don't use
-#if defined(ESP8266) // for nodemcu, weemos, esp8266, and Arduino mega
-  #define ZgatewayRF "RF"
-  //#define ZgatewayLORA "LORA" (not tested yet)
-  #define ZgatewaySRFB "SRFB"
-  #define ZgatewayRF2 "RF2"
-  #define ZgatewayIR "IR"
-  #define ZgatewayBT "BT"
-  #define Zgateway2G "2G"
-  #define ZgatewayPilight "Pilight"
-  #define ZactuatorONOFF "ONOFF"
-  #define ZsensorINA226 "INA226"
-  #define ZsensorHCSR501 "HCSR501"
-  #define ZsensorADC "ADC"
-  #define ZsensorBH1750 "BH1750"
-  #define ZsensorBME280 "BME280"
-  #define ZsensorTSL2561 "TSL2561"
-  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  #define ZsensorGPIOInput "GPIOInput"
-  #define ZsensorGPIOKeyCode "GPIOKeyCode"
-  #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
-  #define jsonPublishing true
-  #define jsonReceiving true
-  #define simplePublishing true
-  #define simpleReceiving true
-  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-  #define TRACE 1  // commented =  trace off, uncommented = trace on
-#elif ESP32
-  #define ZgatewayRF "RF"
-  #define ZgatewayLORA "LORA"
-  #define ZgatewayRF "RF315"
-  #define ZgatewayRF2 "RF2"
-  //#define Zgateway2G (not tested yet)
-  #define ZgatewayIR "IR"
-  #define ZgatewayBT "BT"
-  #define ZactuatorONOFF "ONOFF"
-  #define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
-  #define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-  #define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
-  #define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
-  #define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
-  #define ZsensorTSL2561 "TSL2561"
-  #define ZsensorDHT "DHT"
-  #define ZgatewayRFM69 "RFM69"
-  #define ZsensorGPIOInput "GPIOInput"
-  #define ZsensorGPIOKeyCode "GPIOKeyCode"
-  #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
-  #define jsonPublishing true
-  #define jsonReceiving true
-  #define simplePublishing true
-  #define simpleReceiving true
-  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-  #define TRACE 1  // commented =  trace off, uncommented = trace on
-#elif defined(__AVR_ATmega1280__)
-  #define ZgatewayRF "RF"
-  //#define ZgatewayLORA "LORA" (not tested yet)
-  #define ZgatewaySRFB "SRFB"
-  #define ZgatewayRF2 "RF2"
-  #define ZgatewayIR "IR"
-  #define ZgatewayBT "BT"
-  #define Zgateway2G "2G"
-  //#define ZgatewayPilight "Pilight"
-  #define ZactuatorONOFF "ONOFF"
-  #define ZsensorINA226 "INA226"
-  #define ZsensorHCSR501 "HCSR501"
-  #define ZsensorADC "ADC"
-  #define ZsensorBH1750 "BH1750"
-  #define ZsensorBME280 "BME280"
-  #define ZsensorTSL2561 "TSL2561"
-  #define ZsensorDHT "DHT"// If you uncomment this you can't use I2C due to the fact that I2C use also D1
-  #define ZgatewayRFM69 "RFM69"// If you uncomment this you can't use RF and BT due to the fact that RF use also D8 and BT use also D6/D7
-  #define ZsensorGPIOInput "GPIOInput"
-  #define ZsensorGPIOKeyCode "GPIOKeyCode"
-  #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, EPS32, Sonoff RF Bridge
-  #define jsonPublishing true
-  #define jsonReceiving true
-  #define simplePublishing true
-  #define simpleReceiving true
-  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-  #define TRACE 1  // commented =  trace off, uncommented = trace on
-#else // for arduino Uno
-  //#define ZgatewayRF "RF"
-  //#define ZgatewayLORA "LORA" (not tested yet)
-  //#define Zgateway2G  (not tested yet)
-  //#define ZgatewayRF2 // too big for UNO
-  //#define ZgatewayIR
-  //#define ZgatewayBT
-  //#define ZactuatorONOFF
-  //#define ZsensorINA226
-  //#define ZsensorDHT
-  //#define ZsensorBH1750
-  //#define ZsensorBME280
-  //#define ZsensorHCSR501
-  //#define ZsensorADC
-  //#define ZgatewayRFM69 //not tested
-  //#define ZsensorGPIOInput //not tested
-  //#define ZsensorGPIOKeyCode "GPIOKeyCode" //not tested
-  #define jsonPublishing true
-  #define jsonReceiving true
-  //#define simplePublishing true
-  //#define simpleReceiving true
-  #define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-  //#define TRACE 1  // commented =  trace off, uncommented = trace on
-#endif
+
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
   #define SERIAL_BAUD 19200
@@ -252,7 +147,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   //#define multiCore //uncomment to use multicore function of ESP32 for BLE
 #endif
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  #define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+  #define JSON_MSG_BUFFER 1024 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #else // boards with smaller memory
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
