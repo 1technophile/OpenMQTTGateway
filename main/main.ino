@@ -295,7 +295,7 @@ void pub(char * topicori, JsonObject& data){
       pub(topic, JSONmessageBuffer);
     #endif
 
-    #ifdef simplePublishing
+    #if(simplePublishing == true)
       trc(F("Pub data per topic"));
       // Loop through all the key-value pairs in obj 
       for (JsonPair& p : data) {
