@@ -1,40 +1,43 @@
-language: c
-dist: trusty
-env:
-  - BD=arduino:avr:uno
-  - BD=arduino:avr:mega:cpu=atmega2560
-  - BD=esp8266:esp8266:nodemcuv2:CpuFrequency=80,FlashSize=4M3M
-  - BD=esp8266:esp8266:d1_mini:CpuFrequency=80,FlashSize=4M3M
-  - BD=espressif:esp32:esp32:PartitionScheme=min_spiffs,FlashFreq=80
-before_install:
-  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
-  - sleep 3
-  - export DISPLAY=:1.0
-  - wget http://downloads.arduino.cc/arduino-1.8.6-linux64.tar.xz
-  - tar xf arduino-1.8.6-linux64.tar.xz
-  - sudo mv arduino-1.8.6 /usr/local/share/arduino
-  - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+# Continuous Integration (CI) is the practice, in software
+# engineering, of merging all developer working copies with a shared mainline
+# several times a day < https://docs.platformio.org/page/ci/index.html >
+#
+# Documentation:
+#
+# * Travis CI Embedded Builds with PlatformIO
+#   < https://docs.travis-ci.com/user/integration/platformio/ >
+#
+# * PlatformIO integration with Travis CI
+#   < https://docs.platformio.org/page/ci/travis.html >
+#
+# * User Guide for `platformio ci` command
+#   < https://docs.platformio.org/page/userguide/cmd_ci.html >
+#
+#
+# Please choose one of the following templates (proposed below) and uncomment
+# it (remove "# " before each line) or use own configuration according to the
+# Travis CI documentation (see above).
+#
+
+
+#
+# Template #1: General project. Test it using existing `platformio.ini`.
+#
+
+language: python
+python:
+    - "2.7"
+
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+  
 install:
-  - ln -s $PWD /usr/local/share/arduino/OpenMQTTGateway
-  - rm /usr/local/share/arduino/OpenMQTTGateway/User_config.h
-  - cp /usr/local/share/arduino/OpenMQTTGateway/tests/Test_config.h /usr/local/share/arduino/OpenMQTTGateway/User_config.h
-  - rm -rf /usr/local/share/arduino/libraries/RobotIRremote
-  - cp -R /usr/local/share/arduino/OpenMQTTGateway/lib/. /usr/local/share/arduino/libraries
-  - mkdir -p /usr/local/share/arduino/hardware/espressif
-  - cd /usr/local/share/arduino/hardware/espressif
-  - wget https://github.com/espressif/arduino-esp32/archive/89859f7f4c07ce3e5d487a4b689dbda78f5d5c3a.zip -O /tmp/esp32.zip
-  - unzip /tmp/esp32.zip -d /usr/local/share/arduino/hardware/espressif
-  - mv arduino-esp32* esp32
-  - cd esp32/tools/
-  - python get.py
-  - cd /usr/local/share/arduino/OpenMQTTGateway
-  - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
-  - arduino --install-boards esp8266:esp8266:2.4.2
-  - arduino --board $BD --save-prefs
+    - pip install -U platformio
+    - platformio update
+    - rm /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
+    - cp /home/travis/build/1technophile/OpenMQTTGateway/test/Test_config.h /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
+
 script:
-  - arduino --verify --board $BD $PWD/OpenMQTTGateway.ino
-notifications:
-  email:
-    on_success: change
-    on_failure: change
-    
+    - platformio run
