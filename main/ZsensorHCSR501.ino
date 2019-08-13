@@ -48,6 +48,7 @@ void MeasureHCSR501(){
     if (pirState == LOW) {
       //turned on
       HCSR501data.set("hcsr501", "true");
+      trc(F("HC SR501 Motion started"));
       pirState = HIGH;
     }
     } else {
