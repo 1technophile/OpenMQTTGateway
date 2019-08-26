@@ -897,7 +897,7 @@ void loop()
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
     #endif
     #ifdef ZsensorINA226
-      MeasureINA226(); //Addon to measure the temperature with a DHT
+      MeasureINA226();
     #endif
     #ifdef ZsensorHCSR501
       MeasureHCSR501();
@@ -997,6 +997,9 @@ void stateMeasures(){
       #endif
       #ifdef ZsensorTSL2561
           modules = modules + ZsensorTSL2561;
+      #endif
+      #ifdef ZsensorDHT
+          modules = modules + ZsensorDHT;
       #endif
       #ifdef ZactuatorONOFF
           modules = modules + ZactuatorONOFF;
