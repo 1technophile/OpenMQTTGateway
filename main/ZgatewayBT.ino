@@ -222,6 +222,33 @@ void CLEARGRASSTRHDiscovery(char * mac){
   devices.push_back(device);
 }
 
+void MiScaleDiscovery(char * mac){
+  #define MiScaleparametersCount 1
+  trc(F("MiScaleDiscovery"));
+  char * MiScalesensor[MiScaleparametersCount][8] = {
+     {"sensor", "MiScale-weight", mac, "weight","{{ value_json.weight | is_defined }}","", "", "kg"} ,
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiScaleparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiScalesensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiScalesensor[i][1];
+   createDiscovery(MiScalesensor[i][0],
+                    (char *)discovery_topic.c_str(), MiScalesensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiScalesensor[i][3], MiScalesensor[i][4],
+                    MiScalesensor[i][5], MiScalesensor[i][6], MiScalesensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
 #endif
 
   #ifdef ESP32
@@ -290,7 +317,7 @@ void CLEARGRASSTRHDiscovery(char * mac){
                   BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
                 #endif
                 pub((char *)mactopic.c_str(),BLEdata);
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL || strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){
                   trc("Processing BLE device data");
                   int pos = -1;
                   pos = strpos(service_data,"209800");
@@ -330,6 +357,16 @@ void CLEARGRASSTRHDiscovery(char * mac){
                       if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
                     #endif
                     process_data(pos - 26,service_data,mac);
+                  }
+                  pos = -1;
+                  pos = strpos(service_data,"e30706");
+                  if (pos != -1){
+                    trc(F("Mi Scale data reading"));
+                    //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) MiScaleDiscovery(mac);
+                    #endif
+                    process_MiScale(service_data,mac);
                   }
                   }
               }
@@ -525,6 +562,15 @@ void CLEARGRASSTRHDiscovery(char * mac){
                     #endif
                     bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
                   }
+                  pos = -1;
+                  pos = strpos(d[5].extract,"e30706");
+                  if (pos != -1){
+                    trc("Mi Scale data reading");
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(d[0].extract)) MiScaleDiscovery(d[0].extract);
+                    #endif
+                    bool result = process_MiScale((char *)Service_data.c_str(),d[0].extract);
+                  }
                   return true;
                 }
               }
@@ -626,6 +672,35 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
     }
     pub((char *)mactopic.c_str(),BLEdata);
     return true;
+}
+
+bool process_MiScale(char * rest_data, char * mac_adress){
+  
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+  trc("rest_data");
+  trc(rest_data);
+  int data_length = 5;
+    
+  char rev_data[data_length];
+  char data[data_length];
+  memcpy( rev_data, &rest_data[2], data_length );
+  rev_data[data_length] = '\0';
+  trc(rev_data);
+  // reverse data order
+  revert_hex_data(rev_data, data, data_length);
+  trc(data);
+  double value = strtol(data, NULL, 16);
+  trc(value);
+  char val[12];
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+
+  BLEdata.set("weight", (double)value/200);
+
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
 }
 
 #ifdef subjectHomePresence
