@@ -44,16 +44,16 @@ void MeasureDistance() {
     trc(F("Creating HCSR04 buffer"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& HCSR04data = jsonBuffer.createObject();
-    static unsigned int distance = 99999;
     digitalWrite(HCSR04_TRI_PIN, LOW);
     delayMicroseconds(2);
     digitalWrite(HCSR04_TRI_PIN, HIGH);
     delayMicroseconds(10);
     digitalWrite(HCSR04_TRI_PIN, LOW);
+    unsigned long duration = pulseIn(HCSR04_ECH_PIN, HIGH);
     if (isnan(duration)) {
       trc(F("Failed to read from HC SR04 sensor!"));
     } else {
-      unsigned long duration = pulseIn(HCSR04_ECH_PIN, HIGH);
+      static unsigned int distance = 99999;
       unsigned int d = duration/58.2;
       HCSR04data.set("distance", (int)d);
       if (d > distance) {
