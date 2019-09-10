@@ -84,6 +84,9 @@
 #ifdef ZsensorBME280
   #include "config_BME280.h"
 #endif
+#ifdef ZsensorHCSR04
+  #include "config_HCSR04.h"
+#endif
 #ifdef ZsensorDHT
   #include "config_DHT.h"
 #endif
@@ -605,6 +608,9 @@ void setup()
   #ifdef ZsensorHCSR501
     setupHCSR501();
   #endif
+  #ifdef ZsensorHCSR04
+    setupHCSR04();
+  #endif
   #ifdef ZsensorGPIOInput
     setupGPIOInput();
   #endif
@@ -887,6 +893,9 @@ void loop()
     #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
     #endif
+    #ifdef ZsensorHCSR04
+      MeasureDistance(); //Addon to measure distance with a HC-SR04
+    #endif
     #ifdef ZsensorBH1750
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
     #endif
@@ -991,6 +1000,9 @@ void stateMeasures(){
       #endif
       #ifdef ZsensorBME280
           modules = modules + ZsensorBME280;
+      #endif
+      #ifdef ZsensorHCSR04
+          modules = modules + ZsensorHCSR04;
       #endif
       #ifdef ZsensorBH1750
           modules = modules + ZsensorBH1750;
