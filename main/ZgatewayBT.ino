@@ -317,7 +317,7 @@ void MiScaleDiscovery(char * mac){
                   BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
                 #endif
                 pub((char *)mactopic.c_str(),BLEdata);
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL || strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){ //Mi FLora, Mi jia, Cleargrass, LYWDS02
                   trc("Processing BLE device data");
                   int pos = -1;
                   pos = strpos(service_data,"209800");
@@ -327,7 +327,7 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) MiFloraDiscovery(mac);
                     #endif
-                    process_data(pos - 24,service_data,mac);
+                    process_sensors(pos - 24,service_data,mac);
                   }
                   pos = -1;
                   pos = strpos(service_data,"20aa01");
@@ -336,7 +336,7 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) MiJiaDiscovery(mac);
                     #endif
-                    process_data(pos - 26,service_data,mac);
+                    process_sensors(pos - 26,service_data,mac);
                   }
                   pos = -1;
                   pos = strpos(service_data,"205b04");
@@ -346,7 +346,7 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) LYWSD02Discovery(mac);
                     #endif
-                    process_data(pos - 24,service_data,mac);
+                    process_sensors(pos - 24,service_data,mac);
                   }
                   pos = -1;
                   pos = strpos(service_data,"304703");
@@ -356,19 +356,25 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
                     #endif
-                    process_data(pos - 26,service_data,mac);
+                    process_sensors(pos - 26,service_data,mac);
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"e30706");
-                  if (pos != -1){
-                    trc(F("Mi Scale data reading"));
+                }
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){ // Mi Scale V1
+                    trc(F("Mi Scale V1 data reading"));
                     //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) MiScaleDiscovery(mac);
                     #endif
-                    process_MiScale(service_data,mac);
-                  }
-                  }
+                    process_scale_v1(service_data,mac);
+                }
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181b") != NULL){ // Mi Scale V2
+                    trc(F("Mi Scale V2 data reading"));
+                    //example "servicedata":
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) MiScaleDiscovery(mac);
+                    #endif
+                    process_scale_v2(service_data,mac);
+                }
               }
           }else{
             pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
@@ -518,10 +524,10 @@ void MiScaleDiscovery(char * mac){
                   #ifdef subjectHomePresence
                     haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
                   #endif
-                  String Service_data(d[5].extract);
-                  Service_data = Service_data.substring(14);
+                  String service_data(d[5].extract);
+                  service_data = service_data.substring(14);
                   #ifdef pubBLEServiceData
-                    BLEdata.set("servicedata", (char *)Service_data.c_str());
+                    BLEdata.set("servicedata", (char *)service_data.c_str());
                   #endif
                   pub((char *)topic.c_str(),BLEdata);
                   int pos = -1;
@@ -531,7 +537,7 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
                     #endif
-                    bool result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"20aa01");
@@ -541,7 +547,7 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
                     #endif
-                    bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"205b04");
@@ -551,7 +557,7 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
                     #endif
-                    bool result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"304703");
@@ -560,16 +566,17 @@ void MiScaleDiscovery(char * mac){
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
                     #endif
-                    bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
                   }
                   pos = -1;
                   pos = strpos(d[5].extract,"e30706");
                   if (pos != -1){
                     trc("Mi Scale data reading");
+                    //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(d[0].extract)) MiScaleDiscovery(d[0].extract);
                     #endif
-                    bool result = process_MiScale((char *)Service_data.c_str(),d[0].extract);
+                    bool result = process_scale_v1((char *)service_data.c_str(),d[0].extract);
                   }
                   return true;
                 }
@@ -586,7 +593,21 @@ void MiScaleDiscovery(char * mac){
     }
 #endif
 
-bool process_data(int offset, char * rest_data, char * mac_adress){
+double value_from_service_data(char * service_data, int offset, int data_length){
+  char rev_data[data_length+1];
+  char data[data_length+1];
+  memcpy( rev_data, &service_data[offset], data_length );
+  rev_data[data_length] = '\0';
+  
+  // reverse data order
+  revert_hex_data(rev_data, data, data_length);
+  double value = strtol(data, NULL, 16);
+  if (value > 65000 && data_length <= 4) value = value - 65535;
+  trc(value);
+  return value;
+}
+
+bool process_sensors(int offset, char * rest_data, char * mac_adress){
   
   trc(F("Creating BLE buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
@@ -599,7 +620,7 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
     case '2' :
     case '3' :
     case '4' :
-        data_length = ((rest_data[51 + offset] - '0') * 2)+1;
+        data_length = ((rest_data[51 + offset] - '0') * 2);
         trc("data_length");
         trc(data_length);
     break;
@@ -607,24 +628,10 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
         trc("can't read data_length");
     return false;
     }
-    
-  char rev_data[data_length];
-  char data[data_length];
-  memcpy( rev_data, &rest_data[52 + offset], data_length );
-  rev_data[data_length] = '\0';
   
-  // reverse data order
-  revert_hex_data(rev_data, data, data_length);
-  double value = strtol(data, NULL, 16);
-  trc(value);
-  char val[12];
-  String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  double value = 9999;
+  value = value_from_service_data(rest_data, 52 + offset, data_length);
 
-  // second value
-  char val2[12];
-  trc("rest_data");
-  trc(rest_data);
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
   // Mi Jia provides tem(perature), batt(erry) and hum(idity)
   // following the value of digit 47 we determine the type of data we get from the sensor
@@ -633,11 +640,9 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
           BLEdata.set("fer", (double)value);
     break;
     case '4' :
-          if (value > 65000) value = value - 65535;
           BLEdata.set("tem", (double)value/10);
     break;
     case '6' :
-          if (value > 65000) value = value - 65535;
           BLEdata.set("hum", (double)value/10);
     break;
     case '7' :
@@ -647,58 +652,68 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
           BLEdata.set("moi", (double)value);
      break;
      
-    case 'a' : // batteryLevel
+    case 'a' :
           BLEdata.set("batt", (double)value);
      break;
 
-     case 'd' : // temp+hum
-          char tempAr[8];
+     case 'd' :
           // humidity
-          memcpy(tempAr, data, 4);
-          tempAr[4] = '\0';
-          value = strtol(tempAr, NULL, 16);
-          if (value > 65000) value = value - 65535;
-          BLEdata.set("hum", (double)value/10);
-          // temperature
-          memcpy(tempAr, &data[4], 4);
-          tempAr[4] = '\0';
-          value = strtol(tempAr, NULL, 16);
-          if (value > 65000) value = value - 65535;
+          value = value_from_service_data(rest_data, 52 + offset, 4);
           BLEdata.set("tem", (double)value/10);
+          // temperature
+          value = value_from_service_data(rest_data, 56 + offset, 4);
+          BLEdata.set("hum", (double)value/10);
      break;
     default:
     trc("can't read values");
     return false;
     }
+    String mactopic(mac_adress);
+    mactopic = subjectBTtoMQTT + mactopic;
     pub((char *)mactopic.c_str(),BLEdata);
     return true;
 }
 
-bool process_MiScale(char * rest_data, char * mac_adress){
-  
+bool process_scale_v1(char * rest_data, char * mac_adress){
+  //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+  trc("rest_data");
+  trc(rest_data);
+
   trc(F("Creating BLE buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& BLEdata = jsonBuffer.createObject();
-  trc("rest_data");
-  trc(rest_data);
-  int data_length = 5;
-    
-  char rev_data[data_length];
-  char data[data_length];
-  memcpy( rev_data, &rest_data[2], data_length );
-  rev_data[data_length] = '\0';
-  trc(rev_data);
-  // reverse data order
-  revert_hex_data(rev_data, data, data_length);
-  trc(data);
-  double value = strtol(data, NULL, 16);
-  trc(value);
-  char val[12];
+
+  double weight = value_from_service_data(rest_data, 2, 4)/200;
+
+  //Set Json value
+  BLEdata.set("weight", (double)weight);
+
+  // Publish weight
   String mactopic(mac_adress);
   mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
 
-  BLEdata.set("weight", (double)value/200);
+bool process_scale_v2(char * rest_data, char * mac_adress){
+  //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+  trc("rest_data");
+  trc(rest_data);
 
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double weight = value_from_service_data(rest_data, 22, 4)/200;
+  double impedance = value_from_service_data(rest_data, 18, 4);
+
+  //Set Json values
+  BLEdata.set("weight", (double)weight);
+  BLEdata.set("impedance", (double)impedance);
+
+  // Publish weight
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
   pub((char *)mactopic.c_str(),BLEdata);
   return true;
 }
