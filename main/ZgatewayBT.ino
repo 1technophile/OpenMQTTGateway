@@ -369,7 +369,7 @@ void MiScaleDiscovery(char * mac){
                 }
                 if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181b") != NULL){ // Mi Scale V2
                     trc(F("Mi Scale V2 data reading"));
-                    //example "servicedata":
+                    //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
                     #ifdef ZmqttDiscovery
                       if(!isDiscovered(mac)) MiScaleDiscovery(mac);
                     #endif
