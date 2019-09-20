@@ -724,7 +724,7 @@ void haRoomPresence(JsonObject& HomePresence){
   trc(F("BLErssi"));
   trc(BLErssi);
   int txPower = HomePresence["txpower"]|0;
-  if (txPower == 0)   txPower = -59; //if tx power is not found we set a default calibration value
+  if (txPower >= 0)   txPower = -59; //if tx power is not found we set a default calibration value
   trc(F("txPower"));
   trc(txPower);
   double ratio = BLErssi*1.0/txPower;
