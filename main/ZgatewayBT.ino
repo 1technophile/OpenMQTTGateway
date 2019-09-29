@@ -139,7 +139,7 @@ void MiJiaDiscovery(char * mac){
   #define MiJiaparametersCount 3
   trc(F("MiJiaDiscovery"));
   char * MiJiasensor[MiJiaparametersCount][8] = {
-     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "%"} ,
      {"sensor", "MiJia-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
      {"sensor", "MiJia-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
