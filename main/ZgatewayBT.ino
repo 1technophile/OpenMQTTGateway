@@ -600,7 +600,7 @@ double value_from_service_data(char * service_data, int offset, int data_length)
   rev_data[data_length] = '\0';
   
   // reverse data order
-  revert_hex_data(rev_data, data, data_length);
+  revert_hex_data(rev_data, data, data_length+1);
   double value = strtol(data, NULL, 16);
   if (value > 65000 && data_length <= 4) value = value - 65535;
   trc(value);
