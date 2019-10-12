@@ -681,8 +681,11 @@ void checkButton(){ // code from tzapu/wifimanager examples
 }
 
 void setup_wifimanager(bool reset_settings){
+  
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
     if(reset_settings)  SPIFFS.format();
+
+    WiFi.mode(WIFI_STA);
 
     //read configuration from FS json
     trc(F("mounting FS..."));
