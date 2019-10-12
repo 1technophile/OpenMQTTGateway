@@ -108,6 +108,11 @@
 
 /*------------------------------------------------------------------------*/
 
+// NTP config inclusion
+#ifdef USE_NTP
+  #include "config_NTP.h"
+#endif
+
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char*topic, byte* payload,unsigned int length);
 
@@ -464,6 +469,54 @@ void callback(char* topic, byte* payload, unsigned int length) {
   free(p);
 }
 
+#if defined(USE_NTP)
+void updateTime()
+{
+  time_t now;
+
+  configTime(UTC_OFFSET * 3600, 0, NTP_SERVERS);
+  while((now = time(nullptr)) < NTP_MIN_VALID_EPOCH) {
+    Serial.print(".");
+    delay(300);
+  }
+  Serial.print("\nCurrent time: ");
+  printTime(0);
+  dstOffset = UTC_OFFSET * 3600 + dstAdjusted.time(nullptr) - now;
+  Serial.printf("Time difference for DST: %d\n", dstOffset);
+  Serial.printf("Free mem: %d\n", ESP.getFreeHeap());
+}
+
+void printTime(time_t offset)
+{
+  char buf[30];
+  char *dstAbbrev;
+  time_t t = dstAdjusted.time(&dstAbbrev) + offset;
+  struct tm *timeinfo = localtime(&t);
+
+  int hour = (timeinfo->tm_hour + 11) % 12 + 1;  // take care of noon and midnight
+  sprintf(buf, "%2d/%2d/%4d %2d:%02d:%02d%s %s\n", \
+    timeinfo->tm_mon + 1, \
+    timeinfo->tm_mday, \
+    timeinfo->tm_year + 1900, \
+    hour, \
+    timeinfo->tm_min, \
+    timeinfo->tm_sec, \
+    timeinfo->tm_hour >= 12 ? "pm" : "am", \
+    dstAbbrev);
+  Serial.print(buf);
+}
+
+// NTP timer update ticker
+void secTicker()
+{
+  tick--;
+  if (tick <= 0) {
+    updateNTP = true;
+    tick = NTP_UPDATE_INTERVAL_SEC; // Re-arm
+  }
+}
+#endif
+
 void setup()
 {
   //Launch serial for debugging purposes
@@ -517,6 +570,14 @@ void setup()
       else if (error == OTA_END_ERROR) trc(F("End Failed"));
     });
     ArduinoOTA.begin();
+
+    #if defined(USE_NTP)
+      updateTime();
+      tick = NTP_UPDATE_INTERVAL_SEC; // Init the NTP update countdown ticker
+      ticker1.attach(1, secTicker);   // Run a 1 second interval Ticker
+      Serial.print("Next NTP Update: ");
+      printTime(tick);
+    #endif
 
   #else // In case of arduino platform
 
@@ -963,6 +1024,14 @@ void loop()
       FASTLEDLoop();
     #endif
 
+    #if defined(USE_NTP)
+      if (updateNTP) {
+        updateNTP = false;
+        updateTime();
+        Serial.print("Next NTP Update: ");
+        printTime(tick);
+      }
+    #endif
   }
 }
 

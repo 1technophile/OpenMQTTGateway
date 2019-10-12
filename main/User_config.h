@@ -194,4 +194,9 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // commented =  trace off, uncommented = trace on
 
+/*-------------------ENABLE NTP---------------------------*/
+#if defined(ESP8266) || defined(ESP32) // simpleDSTadjust library is ESP only
+  #define USE_NTP 1  // commented = NTP off, uncommented = NTP on
+#endif
+
 #endif
