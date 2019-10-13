@@ -106,6 +106,7 @@ char mqtt_port[6] = "1883";
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+#define maxMQTTretry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8

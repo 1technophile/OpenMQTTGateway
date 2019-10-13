@@ -406,11 +406,12 @@ void pub(String topic, unsigned long payload){
 
 void reconnect() {
 
+  #if defined(ESP8266) || defined(ESP32)
+    checkButton(); // check if a reset of wifi/mqtt settings is asked
+  #endif
+
   // Loop until we're reconnected
   while (!client.connected()) {
-    #if defined(ESP8266) || defined(ESP32)
-      checkButton(); // check if a reset of wifi/mqtt settings is asked
-    #endif
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
     if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
       trc(F("Connected to broker"));
@@ -433,6 +434,15 @@ void reconnect() {
         trc(F("Subscription OK to the subjects"));
       }
     } else {
+      failure_number ++; // we count the failure
+      trc(F("failure_number"));
+      trc(failure_number);
+      if (failure_number > maxMQTTretry && !connectedOnce){
+        trc(F("failed connecting to mqtt restarting wifi manager"));
+        #if defined(ESP8266) || defined(ESP32)
+          setup_wifimanager(true);
+        #endif
+      }
       trc(F("failed, rc="));
       trc(client.state());
     }
