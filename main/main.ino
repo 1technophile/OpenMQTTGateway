@@ -408,9 +408,11 @@ void reconnect() {
 
   // Loop until we're reconnected
   while (!client.connected()) {
+    #if defined(ESP8266) || defined(ESP32)
       checkButton(); // check if a reset of wifi/mqtt settings is asked
-      trc(F("MQTT connection...")); //F function enable to decrease sram usage
-      if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
+    #endif
+    trc(F("MQTT connection...")); //F function enable to decrease sram usage
+    if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
       trc(F("Connected to broker"));
       // Once connected, publish an announcement...
       pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
@@ -430,7 +432,7 @@ void reconnect() {
         #endif
         trc(F("Subscription OK to the subjects"));
       }
-      } else {
+    } else {
       trc(F("failed, rc="));
       trc(client.state());
       trc(F("try again in 5s"));
@@ -859,7 +861,9 @@ void setup_ethernet() {
 
 void loop()
 {
-  checkButton(); //check reset button state
+  #if defined(ESP8266) || defined(ESP32)
+    checkButton(); //check reset button state
+  #endif
 
   digitalWrite(led_receive, LOW);
   digitalWrite(led_info, LOW);
