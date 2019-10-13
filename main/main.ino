@@ -435,9 +435,6 @@ void reconnect() {
     } else {
       trc(F("failed, rc="));
       trc(client.state());
-      trc(F("try again in 5s"));
-      // Wait 5 seconds before retrying
-      delay(5000);
     }
   }
 }
