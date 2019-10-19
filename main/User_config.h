@@ -28,7 +28,7 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.9.2"
+#define OMG_VERSION "0.9.2beta"
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
@@ -106,7 +106,7 @@ char mqtt_port[6] = "1883";
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
+#define maxMQTTretry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
@@ -158,6 +158,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define led_receive 40
   #define led_send 42
   #define led_info 44
+#endif
+
+#ifndef TRIGGER_PIN
+    #ifdef ESP8266
+        #define TRIGGER_PIN 14 // pin D5 as full reset button (long press >10s)
+    #elif ESP32
+        #define TRIGGER_PIN 0 // boot button as full reset button (long press >10s)
+    #endif
 #endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN

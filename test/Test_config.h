@@ -123,7 +123,13 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
-
+#ifndef TRIGGER_PIN
+    #ifdef ESP8266
+        #define TRIGGER_PIN 14 // pin D5 as full reset button (long press >10s)
+    #elif ESP32
+        #define TRIGGER_PIN 0 // boot button as full reset button (long press >10s)
+    #endif
+#endif
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
