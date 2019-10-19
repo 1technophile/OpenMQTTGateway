@@ -82,21 +82,6 @@ void MeasureLightIntensity()
       ftcd = Lux/10.764;
       Wattsm2 = Lux/683.0;
 
-      /*
-      Useful Information ;-)
-      lux (lx)                            # 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
-      meter-candle (m-cd)                 # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
-      centimeter-candle (cm-sd)           # 1 m·cd = 1 lx = 1 lm/m² = 1 cd·sr·m⁻².
-      foot-candle (ft-c)                  # 
-      phot (ph)                           # 1 ph = 1 lm/cm² = 10,000 lm/m² - 10,000 lx = 10 klx
-      nox (nx)                            # 1 nox = 1 millilux
-      candela steradin/meter2(cd·sr·m⁻²)  # 1 lx = 1 lm/m² = 1 cd·sr·m⁻²
-      lumen/meter2 (lm·m⁻²)               # 1 lx = 1 lm/m² = 1 cd·sr·m⁻²
-      lumen/centimeter2 (lm·cm⁻²)         # 1 lm/cm² = 10,000 lx = 10,000 cd·sr·m⁻²
-      lumen/foot2 (lm·ft⁻²)               # (lm·ft⁻²)
-      watt/centimeter2 at 555nm  (W·cm⁻²) # 
-      */
-
       // Generate Lux
       if(Lux != persistedll || bh1750_always){
         BH1750data.set("lux", (unsigned int)Lux);

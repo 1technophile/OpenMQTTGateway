@@ -111,7 +111,7 @@ void MiFloraDiscovery(char * mac){
   char * MiFlorasensor[MiFloraparametersCount][8] = {
      {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux | is_defined }}","", "", "lu"} ,
      {"sensor", "MiFlora-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
-     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", ""} ,
+     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", "µS/cm"} ,
      {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -139,7 +139,7 @@ void MiJiaDiscovery(char * mac){
   #define MiJiaparametersCount 3
   trc(F("MiJiaDiscovery"));
   char * MiJiasensor[MiJiaparametersCount][8] = {
-     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "%"} ,
      {"sensor", "MiJia-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
      {"sensor", "MiJia-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -600,7 +600,7 @@ double value_from_service_data(char * service_data, int offset, int data_length)
   rev_data[data_length] = '\0';
   
   // reverse data order
-  revert_hex_data(rev_data, data, data_length);
+  revert_hex_data(rev_data, data, data_length+1);
   double value = strtol(data, NULL, 16);
   if (value > 65000 && data_length <= 4) value = value - 65535;
   trc(value);
