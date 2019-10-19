@@ -438,13 +438,14 @@ void reconnect() {
       trc(F("failure_number"));
       trc(failure_number);
       if (failure_number > maxMQTTretry && !connectedOnce){
-        trc(F("failed connecting to mqtt restarting wifi manager"));
+        trc(F("failed connecting first time to mqtt, reset wifi manager"));
         #if defined(ESP8266) || defined(ESP32)
           setup_wifimanager(true);
         #endif
       }
       trc(F("failed, rc="));
       trc(client.state());
+      delay(5000);
     }
   }
 }
@@ -692,7 +693,10 @@ void checkButton(){ // code from tzapu/wifimanager examples
 void setup_wifimanager(bool reset_settings){
   
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
-    if(reset_settings)  SPIFFS.format();
+    if(reset_settings) {
+      trc("Formatting requested, result:");
+      trc(SPIFFS.format());
+    } 
 
     WiFi.mode(WIFI_STA);
 
@@ -762,6 +766,7 @@ void setup_wifimanager(bool reset_settings){
 
     if(reset_settings){
       wifiManager.resetSettings();
+      wifiManager.erase();
       #if defined(ESP8266) 
         ESP.reset();
       #else
