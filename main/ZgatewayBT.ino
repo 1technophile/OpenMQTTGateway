@@ -390,13 +390,15 @@ void MiScaleDiscovery(char * mac){
       TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
       TIMERG0.wdt_feed=1;
       TIMERG0.wdt_wprotect=0;
-      
+      trc(F("Scan begin"));
       BLEDevice::init("");
       BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
       MyAdvertisedDeviceCallbacks myCallbacks;
       pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
       pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
       BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+      trc(F("Scan end, deinit controller"));
+      esp_bt_controller_deinit();
     }   
 
     void coreTask( void * pvParameters ){
