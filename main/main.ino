@@ -833,9 +833,13 @@ void setup_ethernet() {
     trc(F("Spl eth cfg"));
     Ethernet.begin(mac, ip); 
   }
-  trc(F("ip: "));
-  Serial.println(Ethernet.localIP());
-  trc(F("Eth ok"));
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    trc("Ethernet shield was not found.");
+  }else{
+    trc(F("ip: "));
+    Serial.println(Ethernet.localIP());
+    trc(F("Eth ok"));
+  }
 }
 #endif
 
@@ -886,7 +890,7 @@ void loop()
   #if defined(ESP8266) || defined(ESP32)
     if (WiFi.status() == WL_CONNECTED){
   #else
-    if (Ethernet.linkStatus() == LinkON){
+    if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)){//we are able to detect disconnection only on w5200 and w5500
   #endif
     lastNTWKReconnectAttempt = 0;
       if (client.connected()) {
