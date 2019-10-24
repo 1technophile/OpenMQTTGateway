@@ -375,6 +375,14 @@ void MiScaleDiscovery(char * mac){
                     #endif
                     process_scale_v2(service_data,mac);
                 }
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fee0") != NULL){ // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb
+                    trc(F("Mi Band data reading"));
+                    //example "servicedata":a21e0000
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) MiBandDiscovery(mac);
+                    #endif
+                    process_miband(service_data,mac);
+                }
               }
           }else{
             pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
@@ -712,6 +720,27 @@ bool process_scale_v2(char * rest_data, char * mac_adress){
   //Set Json values
   BLEdata.set("weight", (double)weight);
   BLEdata.set("impedance", (double)impedance);
+
+  // Publish weight
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+bool process_miband(char * rest_data, char * mac_adress){
+  //example "servicedata":"a21e0000"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double steps = value_from_service_data(rest_data, 0, 4);
+
+  //Set Json value
+  BLEdata.set("steps", (double)steps);
 
   // Publish weight
   String mactopic(mac_adress);
