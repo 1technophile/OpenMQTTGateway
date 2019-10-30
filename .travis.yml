@@ -49,6 +49,7 @@ matrix:
         - npm install -g vuepress
       script:
         - npm run docs:build
+      before_deploy: echo docs.openmqttgateway.com >> dist/CNAME
       deploy:
         provider: pages
         skip-cleanup: true
