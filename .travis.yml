@@ -46,7 +46,6 @@ matrix:
       node_js:
         - lts/*
       install:
-        - npm init
         - npm ci
       script:
         - npm run docs:build
