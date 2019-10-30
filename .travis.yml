@@ -48,11 +48,9 @@ matrix:
       before_install:
         - cd docs
       install:
-        - npm ci
-      after_install:
-        - cd ..
+        - npm install -g vuepress
       script:
-        - npm run docs:build
+        - vuepress build
       deploy:
       provider: pages
       skip-cleanup: true
