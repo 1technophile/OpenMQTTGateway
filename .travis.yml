@@ -46,7 +46,7 @@ matrix:
       node_js:
         - lts/*
       install:
-        - npm ci
+        - npm install
       script:
         - npm run docs:build
       deploy:
