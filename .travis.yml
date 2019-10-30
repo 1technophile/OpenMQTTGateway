@@ -41,11 +41,12 @@ matrix:
 
       script:
         - platformio run
-        
+
     - language: node_js
       node_js:
         - lts/*
       install:
+        - npm init
         - npm ci
       script:
         - npm run docs:build
