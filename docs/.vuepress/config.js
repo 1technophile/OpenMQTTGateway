@@ -2,7 +2,6 @@ module.exports = {
     markdown: {
       lineNumbers: true
     },
-    base: '/OpenMQTTGateway/',
     title: 'OpenMQTTGateway',
     description: 'One gateway, many technologies',
     themeConfig: {
