@@ -45,12 +45,10 @@ matrix:
     - language: node_js
       node_js:
         - lts/*
-      before_install:
-        - cd docs
       install:
         - npm install -g vuepress
       script:
-        - vuepress build
+        - npm run docs:build
       deploy:
       provider: pages
       skip-cleanup: true
