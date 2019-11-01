@@ -574,9 +574,6 @@ void setup()
   #ifdef ZsensorTSL2561
     setupZsensorTSL2561();
   #endif
-  #ifdef ZactuatorONOFF
-    setupONOFF();
-  #endif
   #ifdef Zgateway2G
     setup2G();
   #endif
