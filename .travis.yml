@@ -27,20 +27,37 @@ matrix:
   include:
     - language: python
       python: 2.7
-
       sudo: false
       cache:
             directories:
             - "~/.platformio"
-
       install:
         - pip install -U platformio
         - platformio update
-        - rm /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
+        - rm /home/travis/build/1technophile/OpenMQTTGateway/main/User_config.h
         - cp /home/travis/build/1technophile/OpenMQTTGateway/test/Test_config.h /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
-
       script:
         - platformio run
+        - rename -v 's:/:-:g' .pio/build/*/*.bin
+        - mkdir toDeploy
+        - rename 's/.pio-build-//' .*.bin
+        - mv *.bin toDeploy
+        - cd toDeploy
+        - ls -la
+        - cd ..
+      before_deploy: ls -a
+      deploy:
+        on:
+          repo: 1technophile/OpenMQTTGateway
+          all_branches: true
+          tags: true
+        provider: releases
+        overwrite: true
+        api_key: $GITHUB_TOKEN
+        file_glob: true
+        file:
+          - toDeploy/*
+        skip_cleanup: true
 
     - language: node_js
       node_js:
