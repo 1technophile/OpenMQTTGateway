@@ -249,6 +249,33 @@ void MiScaleDiscovery(char * mac){
   devices.push_back(device);
 }
 
+void MiLampDiscovery(char * mac){
+  #define MiLampparametersCount 1
+  trc(F("MiLampDiscovery"));
+  char * MiLampsensor[MiLampparametersCount][8] = {
+     {"sensor", "MiLamp-presence", mac, "presence","{{ value_json.presence}}","", "", "d"} ,
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiLampparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiLampsensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiLampsensor[i][1];
+   createDiscovery(MiLampsensor[i][0],
+                    (char *)discovery_topic.c_str(), MiLampsensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiLampsensor[i][3], MiLampsensor[i][4],
+                    MiLampsensor[i][5], MiLampsensor[i][6], MiLampsensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
 void MiBandDiscovery(char * mac){
   #define MiBandparametersCount 1
   trc(F("MiBandDiscovery"));
@@ -385,6 +412,16 @@ void MiBandDiscovery(char * mac){
                     #endif
                     process_sensors(pos - 26,service_data,mac);
                   }
+                  pos = -1;
+                  pos = strpos(service_data,"4030dd");
+                  if (pos != -1){
+                    trc(F("Mi Lamp data reading"));
+                    //example "servicedata":4030DD031D0300010100
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(mac)) MiLampDiscovery(mac);
+                    #endif
+                    process_milamp(service_data,mac);
+                  }
                 }
                 if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){ // Mi Scale V1
                     trc(F("Mi Scale V1 data reading"));
@@ -402,7 +439,7 @@ void MiBandDiscovery(char * mac){
                     #endif
                     process_scale_v2(service_data,mac);
                 }
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fee0") != NULL){ // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb
+                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fee0") != NULL){ // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb // ESP32 only
                     trc(F("Mi Band data reading"));
                     //example "servicedata":a21e0000
                     #ifdef ZmqttDiscovery
@@ -615,6 +652,16 @@ void MiBandDiscovery(char * mac){
                     #endif
                     bool result = process_scale_v1((char *)service_data.c_str(),d[0].extract);
                   }
+                  pos = -1;
+                  pos = strpos(d[5].extract,"4030dd");
+                  if (pos != -1){
+                    trc(F("Mi Lamp data reading"));
+                    //example "servicedata":4030dd31d0300010100
+                    #ifdef ZmqttDiscovery
+                      if(!isDiscovered(d[0].extract)) MiLampDiscovery(d[0].extract);
+                    #endif
+                    process_milamp((char *)service_data.c_str(),d[0].extract);
+                  }
                   return true;
                 }
               }
@@ -770,6 +817,28 @@ bool process_miband(char * rest_data, char * mac_adress){
   BLEdata.set("steps", (double)steps);
 
   // Publish weight
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+bool process_milamp(char * rest_data, char * mac_adress){
+  //example "servicedata":"4030dd31d0300010100"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  long darkness = value_from_service_data(rest_data, 8, 2);
+
+  //Set Json value
+  BLEdata.set("presence", (bool)"true");
+  BLEdata.set("darkness", (long)darkness);
+
+  // Publish
   String mactopic(mac_adress);
   mactopic = subjectBTtoMQTT + mactopic;
   pub((char *)mactopic.c_str(),BLEdata);
