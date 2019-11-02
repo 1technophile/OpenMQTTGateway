@@ -406,7 +406,7 @@ void pub(String topic, unsigned long payload){
 
 void reconnect() {
 
-  #if defined(ESP8266) || defined(ESP32)
+  #ifndef ESPWifiManualSetup
     checkButton(); // check if a reset of wifi/mqtt settings is asked
   #endif
 
@@ -439,7 +439,7 @@ void reconnect() {
       trc(failure_number);
       if (failure_number > maxMQTTretry && !connectedOnce){
         trc(F("failed connecting first time to mqtt, reset wifi manager"));
-        #if defined(ESP8266) || defined(ESP32)
+        #ifndef ESPWifiManualSetup
           setup_wifimanager(true);
         #endif
       }
@@ -877,7 +877,7 @@ void setup_ethernet() {
 
 void loop()
 {
-  #if defined(ESP8266) || defined(ESP32)
+  #ifndef ESPWifiManualSetup
     checkButton(); //check reset button state
   #endif
 
