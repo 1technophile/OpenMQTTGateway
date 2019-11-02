@@ -104,6 +104,22 @@ extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
   #define IR_SAMSUNG36
   #define IR_TCL112AC
   #define IR_TECO
+  #define IR_LEGOPF
+  #define IR_MITSUBISHI_HEAVY_88
+  #define IR_MITSUBISHI_HEAVY_152
+  #define IR_DAIKIN216
+  #define IR_SHARP_AC
+  #define IR_GOODWEATHER
+  #define IR_INAX
+  #define IR_DAIKIN160
+  #define IR_NEOCLIMA
+  #define IR_DAIKIN176
+  #define IR_DAIKIN128
+  #define IR_AMCOR
+  #define IR_DAIKIN152
+  #define IR_MITSUBISHI136
+  #define IR_MITSUBISHI112
+  #define IR_HITACHI_AC424
 #elif __AVR_ATmega2560__
   #define IR_COOLIX
   #define IR_Whynter

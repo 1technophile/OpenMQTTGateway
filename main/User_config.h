@@ -190,6 +190,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   #define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+  #define ARDUINOJSON_USE_LONG_LONG 1
 #else // boards with smaller memory
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
