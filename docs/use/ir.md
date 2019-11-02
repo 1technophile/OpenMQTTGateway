@@ -11,15 +11,10 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 And press your IR remote control in front of the receiver led you should see the following messages for example:
 
 ```
-home/OpenMQTTGateway/IRtoMQTT {"value":875849879,"protocol":7,"bits":32,"raw":"4534,4432,612,518,614,516,616,1618,618,1616,618,512,618,1618,608,524,612,518,616,514,618,512,616,1618,616,1618,618,514,616,1618,616,514,616,514,618,512,616,1618,618,1618,618,514,610,1622,616,514,618,514,614,516,616,1618,618,512,618,512,618,1616,550,580,618,1616,612,1624,618,1616,618"}
+home/OpenMQTTGateway/IRtoMQTT {"value":875849879,"protocol":7,"protocol_name":SAMSUNG,"bits":32,"raw":"4534,4432,612,518,614,516,616,1618,618,1616,618,512,618,1618,608,524,612,518,616,514,618,512,616,1618,616,1618,618,514,616,1618,616,514,616,514,618,512,616,1618,618,1618,618,514,610,1622,616,514,618,514,614,516,616,1618,618,512,618,512,618,1616,550,580,618,1616,612,1624,618,1616,618"}
 ```
 
 To receive big dump of raw data you need first to modify the [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L41) and uncomment DumpMode true
-
-To know the name of the protocol corresponding to the number X (X=7 in our case), go to IRRemote header file definition and go to the protocol number X, RC5 = 1, RC6 = 2...
-[For ESP8266](https://github.com/markszabo/IRremoteESP8266/blob/master/src/IRremoteESP8266.h)
-[For Arduino](https://github.com/z3t0/Arduino-IRremote/blob/master/IRremote.h)
-For number 7 it is samsung protocol
 
 Unknown protocols are filtered by default, if you want to see the unknown protocols set into [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/config_IR.h)
 `#define pubIRunknownPrtcl true` instead of false
@@ -29,38 +24,17 @@ Unknown protocols are filtered by default, if you want to see the unknown protoc
 You can take this code and try to reproduce it with the gateway either by using [decimal value](#send-data-by-mqtt-to-convert-it-on-ir-signal) or the [raw value](#send-raw-ir-data-by-mqtt).
 
 ## Send data by MQTT to convert it on IR signal 
-With the IR gateway you need to put on the topic the protocol you want to use to send the signal, the different protocols implemented are the following, the MQTT keyword to include is between "":
-* IR_GC
-* IR_Sony
-* IR_COOLIX
-* IR_Whynter
-* IR_NEC
-* IR_DISH
-* IR_Sharp
-* IR_SAMSUNG
-* IR_RC5
-* IR_RC6 (ESP8266 only)
-* IR_MITSUBISHI  (ESP8266 only)
-* IR_GICABLE (ESP8266 only)
-* IR_MITSUBISHI2 (ESP8266 only)
-* IR_LASERTAG (ESP8266 only)
-* IR_CARRIER_AC (ESP8266 only)
-* IR_MIDEA (ESP8266 only)
-* IR_NIKAI (ESP8266 only)
-* IR_SHERWOOD (ESP8266 only)
-* IR_DENON (ESP8266 only)
-* IR_AIWA_RC_T501 (ESP8266 only)
-* IR_JVC (ESP8266 only)
+With the IR gateway you need to put on the topic the protocol_name you want to use to send the signal, the different protocols implemented are [here](https://github.com/crankyoldgit/IRremoteESP8266/blob/f9d7e5c622670132731e3f9c64d9132128eb320c/src/IRremoteESP8266.h#L299)
 
 Exhaustive list [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1910001295)
 
 For example if I want to send a command to a sony TV you can use the following command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775,"protocol_name":"IR_Sony "}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775,"protocol_name":"SONY"}'`
 
 The code after the -m represent the payload you want to send.
 
-If you don’t want to use special parameters for IR just use value key, the protocol per default is IR_NEC
+If you don’t want to use special parameters for IR just use value key, the protocol per default is NEC
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775}'`
 
@@ -101,7 +75,7 @@ IR sending support two advanced parameters; bits length and repeat number.
 
 The example below will send the following advanced parameters bits: 14 and repeat:4 times for a sony protocol:
 ```
-mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"value":551489775,"protocol_name":"IR_NEC","repeat":4,"bits":14}'
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"value":551489775,"protocol_name":"NEC","repeat":4,"bits":14}'
 ```
 
 ## Send raw IR data by MQTT
