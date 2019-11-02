@@ -46,6 +46,10 @@
  * Otherwise you can provide these credentials on the web interface after connecting 
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
+/*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
+#ifndef Gateway_Name
+  #define Gateway_Name "OpenMQTTGateway"
+#endif
 
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
 #if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
@@ -60,7 +64,7 @@
 #endif
 
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
-#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+#define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
 #define WifiManager_ConfigPortalTimeOut 120
 #define WifiManager_TimeOut 5
 
@@ -72,9 +76,6 @@ char mqtt_pass[30] = "your_password"; // not compulsory only if your broker need
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
-#ifndef Gateway_Name
-  #define Gateway_Name "OpenMQTTGateway"
-#endif
 //uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
