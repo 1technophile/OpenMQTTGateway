@@ -51,15 +51,15 @@ extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
 
 #if defined(ESP8266) || defined(ESP32)  //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
-  #define IR_Raw
+  #define IR_RAW
   #define IR_COOLIX
-  #define IR_Whynter
+  #define IR_WHYNTER
   #define IR_LG
-  #define IR_Sony
+  #define IR_SONY
   #define IR_DISH
   #define IR_RC5
   #define IR_RC6
-  #define IR_Sharp
+  #define IR_SHARP
   #define IR_SAMSUNG
   #define IR_PANASONIC
   #define IR_RCMM

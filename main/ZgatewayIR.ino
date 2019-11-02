@@ -202,7 +202,7 @@ void IRtoMQTT(){
         signalSent = true;
     }
     #endif
-    #ifdef IR_Raw
+    #ifdef IR_RAW
     else if(strstr(topicOri, "Raw") != NULL){ // sending Raw data
       trc(F("Raw"));
       //buffer allocation from char datacallback
@@ -327,7 +327,7 @@ void IRtoMQTT(){
               signalSent = true;
           }
           #endif
-          #ifdef IR_Raw
+          #ifdef IR_RAW
           if(strstr(protocol_name, "Raw") != NULL){ // sending Raw data
             trc(F("Raw"));
             //buffer allocation from char datacallback
@@ -393,8 +393,8 @@ bool sendIdentifiedProtocol(const char * protocol_name, unsigned long long data,
         }
     }
 
-  #ifdef IR_Whynter
-    if (strstr(protocol_name, "Whynter") != NULL){
+  #ifdef IR_WHYNTER
+    if (strstr(protocol_name, "WHYNTER") != NULL){
       if (valueBITS == 0) valueBITS = WHYNTER_BITS;
         #if defined(ESP8266) || defined(ESP32)
             irsend.sendWhynter(data, valueBITS, valueRPT);
@@ -415,8 +415,8 @@ bool sendIdentifiedProtocol(const char * protocol_name, unsigned long long data,
       return true;
     }
   #endif
-  #ifdef IR_Sony
-    if (strstr(protocol_name, "Sony") != NULL){
+  #ifdef IR_SONY
+    if (strstr(protocol_name, "SONY") != NULL){
       if (valueBITS == 0) valueBITS = SONY_12_BITS;
         #if defined(ESP8266) || defined(ESP32)
             irsend.sendSony(data, valueBITS, valueRPT);
@@ -459,8 +459,8 @@ bool sendIdentifiedProtocol(const char * protocol_name, unsigned long long data,
       return true;
     }
   #endif
-  #ifdef IR_Sharp
-    if (strstr(protocol_name, "Sharp") != NULL){
+  #ifdef IR_SHARP
+    if (strstr(protocol_name, "SHARP") != NULL){
       if (valueBITS == 0) valueBITS = SHARP_BITS;
         #if defined(ESP8266) || defined(ESP32)
             irsend.sendSharpRaw(data, valueBITS, valueRPT);
