@@ -2,6 +2,7 @@
 default_envs = 
   esp32dev-ble-1
   esp32dev-ble-2
+  env:nodemcuv2-ONOFFPILIGHT
 
 ;esp32 1
 [env:esp32dev-ble-1]
@@ -41,3 +42,18 @@ upload_flags =
   --auth=OTAPASSWORD
 upload_speed = 512000
 monitor_speed = 115200
+
+[env:nodemcuv2-ONOFFPILIGHT]
+platform = ${com.esp8266_platform}
+board = nodemcuv2
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.esppilight}
+  ${libraries.esp8266_mdns}
+  ${libraries.wire}
+build_flags = 
+  ${com-esp.build_flags}
+  '-DZgatewayPilight="Pilight"'
+  '-DZactuatorONOFF="ONOFF"'
+  '-DGateway_Name="OpenMQTTGateway_ESP8266_ONOFFRF"'
+board_build.flash_mode = dout
