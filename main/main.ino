@@ -63,6 +63,9 @@
 #ifdef Zgateway2G
   #include "config_2G.h"
 #endif
+#ifdef ZgatewayLivolo
+  #include "config_Livolo.h"
+#endif
 #ifdef ZactuatorONOFF
   #include "config_ONOFF.h"
 #endif
@@ -597,6 +600,9 @@ void setup()
   #ifdef ZgatewayRF2
     setupRF2();
   #endif
+  #ifdef ZgatewayLivolo
+    setupLivolo();
+  #endif
   #ifdef ZgatewayPilight
     setupPilight();
   #endif
@@ -746,7 +752,7 @@ void setup_wifimanager(bool reset_settings){
     WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
     WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
     WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, 20);
-    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 30);
+    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 40);
   
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
@@ -1189,6 +1195,9 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   if (jsondata.success()) { // json object ok -> json decoding
    #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing
      MQTTtoPilight(topicOri, jsondata);
+   #endif
+   #ifdef ZgatewayLivolo // ZgatewayLivolo is only defined with json publishing
+     MQTTtoLivolo(topicOri, jsondata);
    #endif
    #ifdef jsonReceiving
     #ifdef ZgatewayLORA
