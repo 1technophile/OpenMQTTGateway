@@ -33,27 +33,30 @@
 
 bool livoloIsHigh;
 
-void setupLivolo(){
+void setupLivolo()
+{
   trc(F("LIVOLO_EMITTER_PIN "));
   trc(String(LIVOLO_EMITTER_PIN));
   trc(F("ZgatewayLivolo setup done "));
 }
 
 
-void MQTTtoLivolo(char * topicOri, JsonObject& data) {
-
-  int result = 0;
-  
-  if (strcmp(topicOri,subjectMQTTtoLivolo) == 0){
+void MQTTtoLivolo(char * topicOri, JsonObject& data) 
+{
+  if (strcmp(topicOri,subjectMQTTtoLivolo) == 0) 
+  { 
     trc(F("MQTTtoLivolo json data analysis"));
     const char * remoteIdChar = data["remoteId"];
     const char * keyCodeChar = data["keyCode"];
     uint16_t remoteId = 0;
     uint8_t keyCode = 0;    
-    if (_livolo_str_to_uint16(remoteIdChar, &remoteId) && _livolo_str_to_uint8(keyCodeChar, &keyCode)) {
+    if (_livolo_str_to_uint16(remoteIdChar, &remoteId) && _livolo_str_to_uint8(keyCodeChar, &keyCode)) 
+    {
       _livolo_sendButton(remoteId, keyCode);
       trc(F("MQTTtoLivolo sent"));
-    } else {
+    } 
+    else 
+    {
       trc(F("MQTTtoLivolo Fail json"));
     }
   }
