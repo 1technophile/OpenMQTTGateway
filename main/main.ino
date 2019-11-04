@@ -417,6 +417,7 @@ void reconnect() {
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
     if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
       trc(F("Connected to broker"));
+      failure_number = 0;
       // Once connected, publish an announcement...
       pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
@@ -442,7 +443,7 @@ void reconnect() {
       if (failure_number > maxMQTTretry && !connectedOnce){
         #ifndef ESPWifiManualSetup
           #if defined(ESP8266) || defined(ESP32)
-                trc(F("failed connecting first time to mqtt, reset wifi manager"));
+                trc(F("failed connecting first time to mqtt, reset wifi manager  & erase network credentials"));
                 setup_wifimanager(true);
           #endif
         #endif
@@ -665,7 +666,9 @@ void setup_wifi() {
 }
 
 #elif defined(ESP8266) || defined(ESP32)
-//Wifi manager parameters
+
+WiFiManager wifiManager;
+
 //flag for saving data
 bool shouldSaveConfig = true;
 //do we have been connected once to mqtt
@@ -750,7 +753,6 @@ void setup_wifimanager(bool reset_settings){
   
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
-    WiFiManager wifiManager;
 
     wifiManager.setConnectTimeout(WifiManager_TimeOut);
     //Set timeout before going to portal
