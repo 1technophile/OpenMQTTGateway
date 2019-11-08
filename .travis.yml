@@ -36,15 +36,9 @@ matrix:
         - platformio update
         - rm /home/travis/build/1technophile/OpenMQTTGateway/main/User_config.h
         - cp /home/travis/build/1technophile/OpenMQTTGateway/test/Test_config.h /home/travis/build/1technophile/OpenMQTTGateway/main//User_config.h
-      script:
+      script: 
         - platformio run
-        - rename -v 's:/:-:g' .pio/build/*/*.bin
-        - mkdir toDeploy
-        - rename 's/.pio-build-//' .*.bin
-        - mv *.bin toDeploy
-        - cd toDeploy
-        - ls -la
-        - cd ..
+        - bash scripts/prepare_deploy.sh
       before_deploy: ls -a
       deploy:
         on:
