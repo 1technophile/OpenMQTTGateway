@@ -56,7 +56,7 @@ module.exports = {
           sidebarDepth: 1,    // optional, defaults to 1
           children: [
             'upload/binaries',
-            'upload/pio'
+            'upload/pio',
             'upload/arduino-ide'
           ]
         },
@@ -91,7 +91,6 @@ module.exports = {
           children: [
             'participate/development',
             'participate/community',
-            'participate/financial_support',
             ['https://github.com/1technophile/OpenMQTTGateway/blob/development/LICENSE.txt','License']
           ]
         }
