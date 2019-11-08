@@ -1,9 +1,9 @@
-OpenMQTTGateway project goal is to concentrate in one gateway different technologies, decreasing by the way the number of proprietary gateways needed and hiding the different technologies singularity behind a simple & wide spread communication protocol; [MQTT](http://mqtt.org/).
+OpenMQTTGateway project goal is to concentrate in one gateway different technologies, decreasing by the way the number of proprietary gateways needed, and hiding the different technologies singularity behind a simple & wide spread communication protocol; [MQTT](http://mqtt.org/).
 
 ![Overview](./img/OpenMQTTGateway.png)
 
-OpenMQTTGateway support very mature technologies like basic 433mhz/315mhz protocols & infrared so as to make your old dumb devices "smart" and avoid you to throw then away. These devices have also the advantages of having a lower cost compared to Zwave or more sophisticated protocols.
-And support also up to date technologies like Bluetooth Low Energy or LORA.
+OpenMQTTGateway support very mature technologies like basic 433mhz/315mhz protocols & infrared (IR) so as to make your old dumb devices "smart" and avoid you to throw then away. These devices have also the advantages of having a lower cost compared to Zwave or more sophisticated protocols.
+OMG support also up to date technologies like Bluetooth Low Energy (BLE) or LORA.
 
 To have an overview of the supported PIR, door, water, smoke sensors, sirens, rings, beacons, switchs & weather stations you can take a look to the 
 [compatible devices list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079)

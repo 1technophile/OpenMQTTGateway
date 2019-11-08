@@ -1,4 +1,4 @@
-# Contributing
+# Development contributions
 
 I like pull requests from everyone. By participating in this project, you
 agree to follow the code of conduct below

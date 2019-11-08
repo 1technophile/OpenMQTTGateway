@@ -20,6 +20,18 @@ ON command
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"pin":15,"state":1}'`
 
 ## FASTLED
+### The FASTLED module support 2 different operation modes
+1. control one specific RGB LED
+* Set color
+* Set blink
+
+2. Start fire animation (Fire2012)
+
+### Hardware wiring
+Theoreticaly it should be possible to use every free IO pin. But after some tests only pin D2 works at WEMOS D1. Other platforms can work.
+The default setting use NEOPIXEL (WS2812B). The simplest wiring is direct connect D2 to data pin of LED stripe and connect VCC/GND to power source. You should also add an capacitor.
+
+
 
 
 
