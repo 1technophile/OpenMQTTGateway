@@ -72,6 +72,20 @@ you can also force a scan to be done by the following command:
 
 Once done the previous value of interval will be recovered.
 
+The default value is set into config_BT.h
+
+## Setting the minimum RSSI accepted to publish device data
+
+If you want to change the minimum RSSI value accepted for a device to be published, you can change it by MQTT. For example if you want to set -80
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/set -m '{"minrssi":-80}'`
+
+you can also accept all the devices by the following command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/set -m '{"minrssi":0}'`
+
+The default value is set into config_BT.h
+
 ## Other
 
 To check your hm10 firmware version upload a serial sketch to the nodemcu (this will enable communication directly with the hm10) and launch the command:

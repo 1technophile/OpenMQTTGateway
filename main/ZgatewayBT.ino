@@ -318,9 +318,6 @@ void MiBandDiscovery(char * mac){
     #include <BLEAdvertisedDevice.h>
     #include "soc/timer_group_struct.h"
     #include "soc/timer_group_reg.h"
-
-    //Time used to wait for an interval before resending BLE infos
-    unsigned long timeBLE= 0;
     
     //core on which the BLE detection task will run
     static int taskCore = 0;
@@ -370,86 +367,94 @@ void MiBandDiscovery(char * mac){
                   BLEdata.set("servicedata", service_data);  
                 #endif
                 BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
-                pub((char *)mactopic.c_str(),BLEdata);
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){ //Mi FLora, Mi jia, Cleargrass, LYWDS02
-                  trc("Processing BLE device data");
-                  int pos = -1;
-                  pos = strpos(service_data,"209800");
-                  if (pos != -1){
-                    trc(F("mi flora data reading"));
-                    //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiFloraDiscovery(mac);
-                    #endif
-                    process_sensors(pos - 24,service_data,mac);
+                if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
+                  pub((char *)mactopic.c_str(),BLEdata);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){ //Mi FLora, Mi jia, Cleargrass, LYWDS02
+                    trc("Processing BLE device data");
+                    int pos = -1;
+                    pos = strpos(service_data,"209800");
+                    if (pos != -1){
+                      trc(F("mi flora data reading"));
+                      //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiFloraDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 24,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"20aa01");
+                    if (pos != -1){
+                      trc(F("mi jia data reading"));
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiJiaDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 26,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"205b04");
+                    if (pos != -1){
+                      trc(F("LYWSD02 data reading"));
+                      //example "servicedata":"70205b04b96ab883c8593f09041002e000"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) LYWSD02Discovery(mac);
+                      #endif
+                      process_sensors(pos - 24,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"304703");
+                    if (pos != -1){
+                      trc(F("ClearGrass T RH data reading"));
+                      //example "servicedata":"5030470340743e10342d58041002d6000a100164"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 26,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"4030dd");
+                    if (pos != -1){
+                      trc(F("Mi Lamp data reading"));
+                      //example "servicedata":4030DD031D0300010100
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiLampDiscovery(mac);
+                      #endif
+                      process_milamp(service_data,mac);
+                    }
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"20aa01");
-                  if (pos != -1){
-                    trc(F("mi jia data reading"));
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiJiaDiscovery(mac);
-                    #endif
-                    process_sensors(pos - 26,service_data,mac);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){ // Mi Scale V1
+                      trc(F("Mi Scale V1 data reading"));
+                      //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiScaleDiscovery(mac);
+                      #endif
+                      process_scale_v1(service_data,mac);
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"205b04");
-                  if (pos != -1){
-                    trc(F("LYWSD02 data reading"));
-                    //example "servicedata":"70205b04b96ab883c8593f09041002e000"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) LYWSD02Discovery(mac);
-                    #endif
-                    process_sensors(pos - 24,service_data,mac);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181b") != NULL){ // Mi Scale V2
+                      trc(F("Mi Scale V2 data reading"));
+                      //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiScaleDiscovery(mac);
+                      #endif
+                      process_scale_v2(service_data,mac);
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"304703");
-                  if (pos != -1){
-                    trc(F("ClearGrass T RH data reading"));
-                    //example "servicedata":"5030470340743e10342d58041002d6000a100164"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
-                    #endif
-                    process_sensors(pos - 26,service_data,mac);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fee0") != NULL){ // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb // ESP32 only
+                      trc(F("Mi Band data reading"));
+                      //example "servicedata":a21e0000
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiBandDiscovery(mac);
+                      #endif
+                      process_miband(service_data,mac);
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"4030dd");
-                  if (pos != -1){
-                    trc(F("Mi Lamp data reading"));
-                    //example "servicedata":4030DD031D0300010100
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiLampDiscovery(mac);
-                    #endif
-                    process_milamp(service_data,mac);
-                  }
-                }
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){ // Mi Scale V1
-                    trc(F("Mi Scale V1 data reading"));
-                    //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiScaleDiscovery(mac);
-                    #endif
-                    process_scale_v1(service_data,mac);
-                }
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181b") != NULL){ // Mi Scale V2
-                    trc(F("Mi Scale V2 data reading"));
-                    //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiScaleDiscovery(mac);
-                    #endif
-                    process_scale_v2(service_data,mac);
-                }
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fee0") != NULL){ // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb // ESP32 only
-                    trc(F("Mi Band data reading"));
-                    //example "servicedata":a21e0000
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiBandDiscovery(mac);
-                    #endif
-                    process_miband(service_data,mac);
+                }else{
+                  trc("Low rssi, device filtered");
                 }
               }
           }else{
-            pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
+            if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
+              pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
+            }else{
+              trc("Low rssi, device filtered");
+            }
           }
         }else{
           trc(F("Filtered mac device"));
@@ -486,19 +491,22 @@ void MiBandDiscovery(char * mac){
     }
   
     void setupBT(){
-        BLEinterval = TimeBtw_Read;
-        trc(F("BLEinterval btw scans"));
-        trc(BLEinterval);
-        // we setup a task with priority one to avoid conflict with other gateways
-        xTaskCreatePinnedToCore(
-                          coreTask,   /* Function to implement the task */
-                          "coreTask", /* Name of the task */
-                          10000,      /* Stack size in words */
-                          NULL,       /* Task input parameter */
-                          1,          /* Priority of the task */
-                          NULL,       /* Task handle. */
-                          taskCore);  /* Core where the task should run */
-          trc(F("ZgatewayBT multicore ESP32 setup done "));
+      BLEinterval = TimeBtw_Read;
+      Minrssi = MinimumRSSI;
+      trc(F("BLEinterval btw scans"));
+      trc(BLEinterval);
+      trc(F("Minrssi"));
+      trc(Minrssi);
+      // we setup a task with priority one to avoid conflict with other gateways
+      xTaskCreatePinnedToCore(
+                        coreTask,   /* Function to implement the task */
+                        "coreTask", /* Name of the task */
+                        10000,      /* Stack size in words */
+                        NULL,       /* Task input parameter */
+                        1,          /* Priority of the task */
+                        NULL,       /* Task handle. */
+                        taskCore);  /* Core where the task should run */
+        trc(F("ZgatewayBT multicore ESP32 setup done "));
     }   
 
     bool BTtoMQTT(){ // for on demand BLE scans
@@ -524,8 +532,11 @@ void MiBandDiscovery(char * mac){
     
     void setupBT() {
       BLEinterval = TimeBtw_Read;
+      Minrssi = MinimumRSSI;
       trc(F("BLEinterval btw scans"));
       trc(BLEinterval);
+      trc(F("Minrssi"));
+      trc(Minrssi);
       softserial.begin(9600);
       softserial.print(F("AT+ROLE1"));
       delay(100);
@@ -603,66 +614,70 @@ void MiBandDiscovery(char * mac){
                   #ifdef pubBLEServiceData
                     BLEdata.set("servicedata", (char *)service_data.c_str());
                   #endif
-                  pub((char *)topic.c_str(),BLEdata);
-                  int pos = -1;
-                  pos = strpos(d[5].extract,"209800");
-                  if (pos != -1) {
-                    trc("mi flora data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
+                  if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
+                    pub((char *)topic.c_str(),BLEdata);
+                    int pos = -1;
+                    pos = strpos(d[5].extract,"209800");
+                    if (pos != -1) {
+                      trc("mi flora data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"20aa01");
+                    //example "servicedata":"5020aa0194dfaa33342d580d1004e3002c02"
+                    if (pos != -1){
+                      trc("mi jia data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"205b04");
+                    //example "servicedata":"141695fe70205b0461298882c8593f09061002d002"
+                    if (pos != -1){
+                      trc("LYWSD02 data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"304703");
+                    if (pos != -1){
+                      trc("CLEARGRASSTRH data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"e30706");
+                    if (pos != -1){
+                      trc("Mi Scale data reading");
+                      //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiScaleDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_scale_v1((char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"4030dd");
+                    if (pos != -1){
+                      trc(F("Mi Lamp data reading"));
+                      //example "servicedata":4030dd31d0300010100
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiLampDiscovery(d[0].extract);
+                      #endif
+                      process_milamp((char *)service_data.c_str(),d[0].extract);
+                    }
+                    return true;
+                  }else{
+                    trc("Low rssi, device filtered");
                   }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"20aa01");
-                  //example "servicedata":"5020aa0194dfaa33342d580d1004e3002c02"
-                  if (pos != -1){
-                    trc("mi jia data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"205b04");
-                  //example "servicedata":"141695fe70205b0461298882c8593f09061002d002"
-                  if (pos != -1){
-                    trc("LYWSD02 data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
-                    #endif
-                    bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"304703");
-                  if (pos != -1){
-                    trc("CLEARGRASSTRH data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"e30706");
-                  if (pos != -1){
-                    trc("Mi Scale data reading");
-                    //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) MiScaleDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_scale_v1((char *)service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"4030dd");
-                  if (pos != -1){
-                    trc(F("Mi Lamp data reading"));
-                    //example "servicedata":4030dd31d0300010100
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) MiLampDiscovery(d[0].extract);
-                    #endif
-                    process_milamp((char *)service_data.c_str(),d[0].extract);
-                  }
-                  return true;
                 }
               }
             }
@@ -907,6 +922,17 @@ void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
         trc(F("Scan done")); 
         BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
       }
+    }
+    // MinRSSI set
+    if (BTdata.containsKey("minrssi")){
+      trc(F("Min RSSI"));
+      // storing Min RSSI for further use if needed
+      trc("previous Minrssi");
+      trc(Minrssi); 
+      // set Min RSSI if present if not setting default value
+      Minrssi = (unsigned int)BTdata["minrssi"];
+      trc("new Minrssi");
+      trc(Minrssi);
     }
   }
 }
