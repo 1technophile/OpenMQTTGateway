@@ -8,19 +8,29 @@ Or can actutate things (LED chipsets, relays).
 
 Here is some information to find the board suitable for your need, you have the choice between wifi, ethernet and off the shelves devices:
 
-Off the shelves wifi
-* SONOFF RF Bridge
-* Sonoff RFR3
-* Sonoff Basic
-* Wifi RF Gateway
+|Off the shelves wifi boards|RF|IR|BLE|LORA|GSM|Button|Relay|
+|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|Sonoff RF Bridge (*) |X|[needs an hack](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
+|All bare ESP32|-|-|X|-|-|-|-|
+|M5Stack Basic|-|-|X|-|-|-|-|
+|M5Stick C|-|sending|X|-|-|X|X|
+|TTGO LORA32|-|-|-|X|-|-|-|
+|Sonoff RFR3|receiving [needs an hack](https://1technophile.blogspot.com/2019/08/new-sonoff-rfr3-as-433tomqtt-gateway.html)|-|-|-|-|X|X|
+|Sonoff Basic|-|-|-|-|-|X|X|
+|RF WIFI GATEWAY|[receiving](https://1technophile.blogspot.com/2019/09/hack-of-rf-wifi-gateway-usb-stick.html)|-|-|-|-|-|-|
+
+'(*)' *So as to extend the number of RF protocols supported by the Sonoff RF Bridge you can apply an [hardware hack](https://1technophile.blogspot.com/2019/04/sonoff-rf-bridge-pilight-or-how-to.html), this way you will be able to use Pilight or RF2 gateway.*
 
 ![boards](../img/OpenMQTTGateway_boards_sonoff.png)
 
-Wifi/Ethernet:
-* ESP8266
-* ESP32
-* Arduino Mega with an ethernet shield
-* Arduino Uno with an ethernet shield
+|DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
+|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|Arduino UNO|X|X(limited compared to ESP)|X|-|X|X|
+|Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
+|ESP32|X|X|X|X|not tested|X|X|
+|ESP8266|X|X|X|not tested|X|X|X|
+
+*Note that Pilight is only supported on ESP for the moment.*
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 
