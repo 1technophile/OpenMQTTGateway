@@ -32,22 +32,6 @@ https://github.com/marcelstoer/nodemcu-pyflasher/releases
 * Click on *FlashNodeMCU*
 The upload details appears.
 
+With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).
+
 Note that to reset the wifi and mqtt settings you can check *yes, wipes all data*
-
-Once loaded into your board you have to set your network parameters with wifi manager portal
-From your smartphone search for your OpenMQTTGateway wifi network and connect to it, a web page will appear
-* Select your wifi
-* Set your wifi password
-* Set your MQTT Server IP
-* Set your MQTT Server username (not compulsory)
-* Set your MQTT Server password (not compulsory)
-
-The ESP restart and connect to your network. Note that your credentials are saved into the ESP memory, if you want to redo the configuration you have to erase the ESP memory with the flash download tool.
-
-_The default password for wifi manager is "your_password"_
-
-Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
-```
-home/OpenMQTTGateway/LWT Online 
-home/OpenMQTTGateway/version
-```

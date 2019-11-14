@@ -132,7 +132,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
     trc(valueBITS);
   }
   
-  if ((topic == subjectMQTTtoRF) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
+  if ((strstr(topicOri,catToMainTopic(subjectMQTTtoRF)) != NULL) && (valuePRT == 0) && (valuePLSL  == 0) && (valueBITS == 0)){
     trc(F("MQTTtoRF dflt"));
     mySwitch.setProtocol(1,350);
     mySwitch.send(data, 24);
@@ -156,8 +156,7 @@ void MQTTtoRF(char * topicOri, char * datacallback) {
 
 #ifdef jsonReceiving
   void MQTTtoRF(char * topicOri, JsonObject& RFdata) { // json object decoding
-  
-   if (strcmp(topicOri,subjectMQTTtoRF) == 0){
+   if (strstr(topicOri,catToMainTopic(subjectMQTTtoRF)) != NULL){
       trc(F("MQTTtoRF json"));
       unsigned long data = RFdata["value"];
       if (data != 0) {

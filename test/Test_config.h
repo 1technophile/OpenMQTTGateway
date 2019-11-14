@@ -31,7 +31,7 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.9.2beta"
+#define OMG_VERSION "0.9.3beta"
 
 /*-------------CONFIGURE WIFIMANAGER-------------*/
 /*
@@ -49,6 +49,10 @@
  * Otherwise you can provide these credentials on the web interface after connecting 
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
+#ifndef Gateway_Name
+  #define Gateway_Name "OpenMQTTGateway"
+#endif
+#define Base_Topic "home/"
 
 #if defined(ESP8266)  // for nodemcu, weemos and esp8266
   //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
@@ -62,15 +66,17 @@
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[30] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[40] = "192.168.1.17";
+#define parameters_size 20
+#define mqtt_topic_max_size 100
+char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size] = "192.168.1.17";
 char mqtt_port[6] = "1883";
+char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
+char gateway_name[parameters_size * 2] = Gateway_Name;
 
-#define Gateway_Name "OpenMQTTGateway"
-#define Base_Topic "home/"
-#define version_Topic  Base_Topic Gateway_Name "/version"
-#define will_Topic  Base_Topic Gateway_Name "/LWT"
+#define version_Topic  "/version"
+#define will_Topic  "/LWT"
 #define will_QoS 0
 #define will_Retain true
 #define will_Message "Offline"
@@ -140,9 +146,12 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 /*-------------------CHANGING THEM IS NOT COMPULSORY-----------------------*/
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
-#define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
-#define subjectMultiGTWKey "toMQTT"
-#define subjectGTWSendKey "MQTTto"
+#define subjectMQTTtoX      "/commands/#"
+#define subjectMultiGTWKey  "toMQTT"
+#define subjectGTWSendKey   "MQTTto"
+#define restartCmd          "restart"
+#define eraseCmd            "erase"
+#define portalCmd           "portal"
 
 #define valueAsASubject true
 
@@ -159,6 +168,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
-#define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
+#define subjectSYStoMQTT  "/SYStoMQTT"
+#define subjectMQTTtoSYSset "/commands/MQTTtoSYS/set"
 
 #endif

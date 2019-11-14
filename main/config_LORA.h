@@ -31,9 +31,9 @@ extern void LORAtoMQTT();
 extern void MQTTtoLORA(char * topicOri, char * datacallback);
 extern void MQTTtoLORA(char * topicOri, JsonObject& RFdata);
 /*----------------------LORA topics & parameters-------------------------*/
-#define subjectLORAtoMQTT     Base_Topic Gateway_Name "/LORAtoMQTT"
-#define subjectMQTTtoLORA     Base_Topic Gateway_Name "/commands/MQTTtoLORA"
-#define subjectGTWLORAtoMQTT  Base_Topic Gateway_Name "/LORAtoMQTT"
+#define subjectLORAtoMQTT     "/LORAtoMQTT"
+#define subjectMQTTtoLORA     "/commands/MQTTtoLORA"
+#define subjectGTWLORAtoMQTT  "/LORAtoMQTT"
 
 //Default parameters used when the parameters are not set in the json data
 #define LORA_BAND             868E6

@@ -50,6 +50,7 @@
 #ifndef Gateway_Name
   #define Gateway_Name "OpenMQTTGateway"
 #endif
+#define Base_Topic "home/"
 
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
 #if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
@@ -71,11 +72,14 @@
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-char mqtt_user[20] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[30] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[40] = "192.168.1.17";
+#define parameters_size 20
+#define mqtt_topic_max_size 100
+char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size] = "192.168.1.17";
 char mqtt_port[6] = "1883";
-
+char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
+char gateway_name[parameters_size * 2] = Gateway_Name;
 //uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
@@ -119,9 +123,8 @@ const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from
 const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
-#define Base_Topic "home/"
-#define version_Topic  Base_Topic Gateway_Name "/version"
-#define will_Topic  Base_Topic Gateway_Name "/LWT"
+#define version_Topic  "/version"
+#define will_Topic  "/LWT"
 #define will_QoS 0
 #define will_Retain true
 #define will_Message "offline"
@@ -182,10 +185,12 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
-#define subjectMQTTtoX  Base_Topic Gateway_Name "/commands/#"
-#define subjectMultiGTWKey "toMQTT"
-#define subjectGTWSendKey "MQTTto"
-
+#define subjectMQTTtoX      "/commands/#"
+#define subjectMultiGTWKey  "toMQTT"
+#define subjectGTWSendKey   "MQTTto"
+#define restartCmd          "restart"
+#define eraseCmd            "erase"
+#define portalCmd           "portal"
 //variables to avoid duplicates
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
@@ -197,9 +202,10 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
-#define subjectSYStoMQTT  Base_Topic Gateway_Name "/SYStoMQTT"
+#define subjectSYStoMQTT  "/SYStoMQTT"
+#define subjectMQTTtoSYSset "/commands/MQTTtoSYS/set"
 
-//#define subjectTRACEtoMQTT Base_Topic Gateway_Name "/log" //uncomment if you want to see traces on /log topic
+//#define subjectTRACEtoMQTT "OpenMQTTGateway/log" //uncomment if you want to see traces on OpenMQTTGateway/log topic
 
 /*-------------------ACTIVATE TRACES----------------------*/
 #define TRACE 1  // commented =  trace off, uncommented = trace on

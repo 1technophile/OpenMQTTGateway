@@ -93,7 +93,7 @@ void createDiscovery(char * sensor_type,
     sensor.set("device", device); //device sensor is connected to
   }
   String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
-  pub((char *)topic.c_str(), sensor);
+  pub_custom_topic((char *)topic.c_str(), sensor);
 }
 
 void pubMqttDiscovery()

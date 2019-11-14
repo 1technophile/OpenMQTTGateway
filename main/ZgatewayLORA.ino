@@ -87,7 +87,7 @@ void LORAtoMQTT(){
 
 #ifdef jsonReceiving
   void MQTTtoLORA(char * topicOri, JsonObject& LORAdata) { // json object decoding
-   if (strcmp(topicOri,subjectMQTTtoLORA) == 0){
+   if (strstr(topicOri,catToMainTopic(subjectMQTTtoLORA)) != NULL){
       trc(F("MQTTtoLORA json"));
       const char * message = LORAdata["message"];
       int txPower = LORAdata["txpower"]|LORA_TX_POWER;
@@ -120,7 +120,7 @@ void LORAtoMQTT(){
 #endif
 #ifdef simpleReceiving
   void MQTTtoLORA(char * topicOri, char * LORAdata) { // json object decoding
-   if (strcmp(topicOri,subjectMQTTtoLORA) == 0){
+   if (strstr(topicOri,catToMainTopic(subjectMQTTtoLORA)) != NULL){
         LoRa.beginPacket();
         LoRa.print(LORAdata);
         LoRa.endPacket();

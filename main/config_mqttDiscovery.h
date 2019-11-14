@@ -38,7 +38,6 @@ extern void createDiscovery(char * sensor_type,
 
 #define discovery_Topic "homeassistant"
 
-#define DEVICENAME "OpenMQTTGateway " Gateway_Name
 #define DEVICEMANUFACTURER "OMG_community"
 
 #endif
