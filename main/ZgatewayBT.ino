@@ -484,7 +484,7 @@ void MiBandDiscovery(char * mac){
                       process_cleargrass_air(service_data,mac);
                   }
                   if (strstr(BLEdata["servicedata"].as<char*>(),"080774") != NULL){ // Clear grass standard method 2/0807743e10342d580104c3002c0202012a
-                      trc(F("Clear grass data reading"));
+                      trc(F("Clear grass data reading method 2"));
                       //example "servicedata":0807743e10342d580104 c300 2c02 02012a
                       // no discovery as it is already available with method 1
                       process_cleargrass(service_data,mac);
@@ -692,7 +692,7 @@ void MiBandDiscovery(char * mac){
                     pos = -1;
                     pos = strpos(d[5].extract,"304703");
                     if (pos != -1){
-                      trc("CLEARGRASSTRH data reading");
+                      trc("CLEARGRASSTRH data reading method 1");
                       #ifdef ZmqttDiscovery
                         if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
                       #endif
@@ -731,7 +731,7 @@ void MiBandDiscovery(char * mac){
                     pos = -1;
                     pos = strpos(d[5].extract,"080774"); // Clear grass standard method 2/0807743e10342d580104c3002c0202012a
                     if (pos != -1){
-                      trc(F("Clear grass data reading"));
+                      trc(F("Clear grass data reading method 2"));
                       //example "servicedata":0807743e10342d580104 c300 2c02 02012a
                       // no discovery as it is already available with method 1
                       process_cleargrass((char *)service_data.c_str(),d[0].extract);
