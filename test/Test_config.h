@@ -123,7 +123,13 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
-
+#ifndef TRIGGER_PIN
+    #ifdef ESP8266
+        #define TRIGGER_PIN 14 // pin D5 as full reset button (long press >10s)
+    #elif ESP32
+        #define TRIGGER_PIN 0 // boot button as full reset button (long press >10s)
+    #endif
+#endif
 
 /*----------------------------OTHER PARAMETERS-----------------------------*/
 #ifdef ZgatewaySRFB
@@ -148,6 +154,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #endif
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   #define JSON_MSG_BUFFER 1024 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+  #define ARDUINOJSON_USE_LONG_LONG 1
 #else // boards with smaller memory
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif

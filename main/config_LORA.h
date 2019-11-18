@@ -43,6 +43,7 @@ extern void MQTTtoLORA(char * topicOri, JsonObject& RFdata);
 #define LORA_CODING_RATE      5
 #define LORA_PREAMBLE_LENGTH  8
 #define LORA_SYNC_WORD        0x12
+#define DEFAULT_CRC           true
 
 #define repeatLORAwMQTT false // do we repeat a received signal by using mqtt with LORA gateway
 

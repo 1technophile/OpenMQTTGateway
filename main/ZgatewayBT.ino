@@ -111,7 +111,7 @@ void MiFloraDiscovery(char * mac){
   char * MiFlorasensor[MiFloraparametersCount][8] = {
      {"sensor", "MiFlora-lux", mac, "illuminance","{{ value_json.lux | is_defined }}","", "", "lu"} ,
      {"sensor", "MiFlora-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
-     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", ""} ,
+     {"sensor", "MiFlora-fer", mac,"","{{ value_json.fer | is_defined }}","", "", "µS/cm"} ,
      {"sensor", "MiFlora-moi", mac,"","{{ value_json.moi | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -139,7 +139,7 @@ void MiJiaDiscovery(char * mac){
   #define MiJiaparametersCount 3
   trc(F("MiJiaDiscovery"));
   char * MiJiasensor[MiJiaparametersCount][8] = {
-     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "V"} ,
+     {"sensor", "MiJia-batt", mac, "battery","{{ value_json.batt | is_defined }}","", "", "%"} ,
      {"sensor", "MiJia-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
      {"sensor", "MiJia-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -222,6 +222,117 @@ void CLEARGRASSTRHDiscovery(char * mac){
   devices.push_back(device);
 }
 
+void CLEARGRASSTRHKPADiscovery(char * mac){
+  #define CLEARGRASSTRHKPAparametersCount 3
+  trc(F("CLEARGRASSTRHKPADiscovery"));
+  char * CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
+     {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure","{{ value_json.pres | is_defined }}","", "", "kPa"} ,
+     {"sensor", "CLEARGRASSTRHKPA-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+     {"sensor", "CLEARGRASSTRHKPA-hum", mac,"humidity","{{ value_json.hum | is_defined }}","", "", "%"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<CLEARGRASSTRHKPAparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(CLEARGRASSTRHKPAsensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + CLEARGRASSTRHKPAsensor[i][1];
+   createDiscovery(CLEARGRASSTRHKPAsensor[i][0],
+                    (char *)discovery_topic.c_str(), CLEARGRASSTRHKPAsensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, CLEARGRASSTRHKPAsensor[i][3], CLEARGRASSTRHKPAsensor[i][4],
+                    CLEARGRASSTRHKPAsensor[i][5], CLEARGRASSTRHKPAsensor[i][6], CLEARGRASSTRHKPAsensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
+
+void MiScaleDiscovery(char * mac){
+  #define MiScaleparametersCount 1
+  trc(F("MiScaleDiscovery"));
+  char * MiScalesensor[MiScaleparametersCount][8] = {
+     {"sensor", "MiScale-weight", mac, "weight","{{ value_json.weight | is_defined }}","", "", "kg"} ,
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiScaleparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiScalesensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiScalesensor[i][1];
+   createDiscovery(MiScalesensor[i][0],
+                    (char *)discovery_topic.c_str(), MiScalesensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiScalesensor[i][3], MiScalesensor[i][4],
+                    MiScalesensor[i][5], MiScalesensor[i][6], MiScalesensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
+void MiLampDiscovery(char * mac){
+  #define MiLampparametersCount 1
+  trc(F("MiLampDiscovery"));
+  char * MiLampsensor[MiLampparametersCount][8] = {
+     {"sensor", "MiLamp-presence", mac, "presence","{{ value_json.presence}}","", "", "d"} ,
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiLampparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiLampsensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiLampsensor[i][1];
+   createDiscovery(MiLampsensor[i][0],
+                    (char *)discovery_topic.c_str(), MiLampsensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiLampsensor[i][3], MiLampsensor[i][4],
+                    MiLampsensor[i][5], MiLampsensor[i][6], MiLampsensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
+void MiBandDiscovery(char * mac){
+  #define MiBandparametersCount 1
+  trc(F("MiBandDiscovery"));
+  char * MiBandsensor[MiBandparametersCount][8] = {
+     {"sensor", "MiBand-steps", mac, "steps","{{ value_json.steps | is_defined }}","", "", "nb"} ,
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<MiBandparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(MiBandsensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + MiBandsensor[i][1];
+   createDiscovery(MiBandsensor[i][0],
+                    (char *)discovery_topic.c_str(), MiBandsensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, MiBandsensor[i][3], MiBandsensor[i][4],
+                    MiBandsensor[i][5], MiBandsensor[i][6], MiBandsensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
 #endif
 
   #ifdef ESP32
@@ -237,9 +348,6 @@ void CLEARGRASSTRHDiscovery(char * mac){
     #include <BLEAdvertisedDevice.h>
     #include "soc/timer_group_struct.h"
     #include "soc/timer_group_reg.h"
-
-    //Time used to wait for an interval before resending BLE infos
-    unsigned long timeBLE= 0;
     
     //core on which the BLE detection task will run
     static int taskCore = 0;
@@ -287,54 +395,110 @@ void CLEARGRASSTRHDiscovery(char * mac){
                 service_data[returnedString.length()] = '\0';
                 #ifdef pubBLEServiceData
                   BLEdata.set("servicedata", service_data);  
-                  BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
                 #endif
-                pub((char *)mactopic.c_str(),BLEdata);
-                if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL){
-                  trc("Processing BLE device data");
-                  int pos = -1;
-                  pos = strpos(service_data,"209800");
-                  if (pos != -1){
-                    trc(F("mi flora data reading"));
-                    //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiFloraDiscovery(mac);
-                    #endif
-                    process_data(pos - 24,service_data,mac);
+                BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
+                if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
+                  pub((char *)mactopic.c_str(),BLEdata);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL ){ //Mi FLora, Mi jia, Cleargrass Method 1, LYWDS02
+                    trc("Processing BLE device data");
+                    int pos = -1;
+                    pos = strpos(service_data,"209800");
+                    if (pos != -1){
+                      trc(F("mi flora data reading"));
+                      //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiFloraDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 24,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"20aa01");
+                    if (pos != -1){
+                      trc(F("mi jia data reading"));
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiJiaDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 26,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"205b04");
+                    if (pos != -1){
+                      trc(F("LYWSD02 data reading"));
+                      //example "servicedata":"70205b04b96ab883c8593f09041002e000"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) LYWSD02Discovery(mac);
+                      #endif
+                      process_sensors(pos - 24,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"304703");
+                    if (pos != -1){
+                      trc(F("ClearGrass T RH data reading method 1"));
+                      //example "servicedata":"5030470340743e10342d58041002d6000a100164"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 26,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"4030dd");
+                    if (pos != -1){
+                      trc(F("Mi Lamp data reading"));
+                      //example "servicedata":4030DD031D0300010100
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiLampDiscovery(mac);
+                      #endif
+                      process_milamp(service_data,mac);
+                    }
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"20aa01");
-                  if (pos != -1){
-                    trc(F("mi jia data reading"));
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) MiJiaDiscovery(mac);
-                    #endif
-                    process_data(pos - 26,service_data,mac);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181d") != NULL){ // Mi Scale V1
+                      trc(F("Mi Scale V1 data reading"));
+                      //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiScaleDiscovery(mac);
+                      #endif
+                      process_scale_v1(service_data,mac);
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"205b04");
-                  if (pos != -1){
-                    trc(F("LYWSD02 data reading"));
-                    //example "servicedata":"70205b04b96ab883c8593f09041002e000"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) LYWSD02Discovery(mac);
-                    #endif
-                    process_data(pos - 24,service_data,mac);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"181b") != NULL){ // Mi Scale V2
+                      trc(F("Mi Scale V2 data reading"));
+                      //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiScaleDiscovery(mac);
+                      #endif
+                      process_scale_v2(service_data,mac);
                   }
-                  pos = -1;
-                  pos = strpos(service_data,"304703");
-                  if (pos != -1){
-                    trc(F("ClearGrass T RH data reading"));
-                    //example "servicedata":"5030470340743e10342d58041002d6000a100164"
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(mac)) CLEARGRASSTRHDiscovery(mac);
-                    #endif
-                    process_data(pos - 26,service_data,mac);
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fee0") != NULL){ // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb // ESP32 only
+                      trc(F("Mi Band data reading"));
+                      //example "servicedata":a21e0000
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) MiBandDiscovery(mac);
+                      #endif
+                      process_miband(service_data,mac);
                   }
+                  if (strstr(BLEdata["servicedata"].as<char*>(),"08094c") != NULL){ // Clear grass with air pressure//08094c0140342d580104d8000c020702612702015a
+                      trc(F("Clear grass data with air pressure reading"));
+                      //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) CLEARGRASSTRHKPADiscovery(mac);
+                      #endif
+                      process_cleargrass_air(service_data,mac);
                   }
+                  if (strstr(BLEdata["servicedata"].as<char*>(),"080774") != NULL){ // Clear grass standard method 2/0807743e10342d580104c3002c0202012a
+                      trc(F("Clear grass data reading method 2"));
+                      //example "servicedata":0807743e10342d580104 c300 2c02 02012a
+                      // no discovery as it is already available with method 1
+                      process_cleargrass(service_data,mac);
+                  }
+                }else{
+                  trc("Low rssi, device filtered");
+                }
               }
           }else{
-            pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
+            if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
+              pub((char *)mactopic.c_str(),BLEdata); // publish device even if there is no service data
+            }else{
+              trc("Low rssi, device filtered");
+            }
           }
         }else{
           trc(F("Filtered mac device"));
@@ -347,13 +511,15 @@ void CLEARGRASSTRHDiscovery(char * mac){
       TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
       TIMERG0.wdt_feed=1;
       TIMERG0.wdt_wprotect=0;
-      
+      trc(F("Scan begin"));
       BLEDevice::init("");
       BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
       MyAdvertisedDeviceCallbacks myCallbacks;
       pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
       pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
       BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
+      trc(F("Scan end, deinit controller"));
+      esp_bt_controller_deinit();
     }   
 
     void coreTask( void * pvParameters ){
@@ -369,19 +535,22 @@ void CLEARGRASSTRHDiscovery(char * mac){
     }
   
     void setupBT(){
-        BLEinterval = TimeBtw_Read;
-        trc(F("BLEinterval btw scans"));
-        trc(BLEinterval);
-        // we setup a task with priority one to avoid conflict with other gateways
-        xTaskCreatePinnedToCore(
-                          coreTask,   /* Function to implement the task */
-                          "coreTask", /* Name of the task */
-                          10000,      /* Stack size in words */
-                          NULL,       /* Task input parameter */
-                          1,          /* Priority of the task */
-                          NULL,       /* Task handle. */
-                          taskCore);  /* Core where the task should run */
-          trc(F("ZgatewayBT multicore ESP32 setup done "));
+      BLEinterval = TimeBtw_Read;
+      Minrssi = MinimumRSSI;
+      trc(F("BLEinterval btw scans"));
+      trc(BLEinterval);
+      trc(F("Minrssi"));
+      trc(Minrssi);
+      // we setup a task with priority one to avoid conflict with other gateways
+      xTaskCreatePinnedToCore(
+                        coreTask,   /* Function to implement the task */
+                        "coreTask", /* Name of the task */
+                        10000,      /* Stack size in words */
+                        NULL,       /* Task input parameter */
+                        1,          /* Priority of the task */
+                        NULL,       /* Task handle. */
+                        taskCore);  /* Core where the task should run */
+        trc(F("ZgatewayBT multicore ESP32 setup done "));
     }   
 
     bool BTtoMQTT(){ // for on demand BLE scans
@@ -407,8 +576,11 @@ void CLEARGRASSTRHDiscovery(char * mac){
     
     void setupBT() {
       BLEinterval = TimeBtw_Read;
+      Minrssi = MinimumRSSI;
       trc(F("BLEinterval btw scans"));
       trc(BLEinterval);
+      trc(F("Minrssi"));
+      trc(Minrssi);
       softserial.begin(9600);
       softserial.print(F("AT+ROLE1"));
       delay(100);
@@ -481,51 +653,93 @@ void CLEARGRASSTRHDiscovery(char * mac){
                   #ifdef subjectHomePresence
                     haRoomPresence(BLEdata);// this device has an rssi in consequence we can use it for home assistant room presence component
                   #endif
-                  String Service_data(d[5].extract);
-                  Service_data = Service_data.substring(14);
+                  String service_data(d[5].extract);
+                  service_data = service_data.substring(14);
                   #ifdef pubBLEServiceData
-                    BLEdata.set("servicedata", (char *)Service_data.c_str());
+                    BLEdata.set("servicedata", (char *)service_data.c_str());
                   #endif
-                  pub((char *)topic.c_str(),BLEdata);
-                  int pos = -1;
-                  pos = strpos(d[5].extract,"209800");
-                  if (pos != -1) {
-                    trc("mi flora data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
+                  if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
+                    pub((char *)topic.c_str(),BLEdata);
+                    int pos = -1;
+                    pos = strpos(d[5].extract,"209800");
+                    if (pos != -1) {
+                      trc("mi flora data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiFloraDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"20aa01");
+                    //example "servicedata":"5020aa0194dfaa33342d580d1004e3002c02"
+                    if (pos != -1){
+                      trc("mi jia data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"205b04");
+                    //example "servicedata":"141695fe70205b0461298882c8593f09061002d002"
+                    if (pos != -1){
+                      trc("LYWSD02 data reading");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 38,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"304703");
+                    if (pos != -1){
+                      trc("CLEARGRASSTRH data reading method 1");
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_sensors(pos - 40,(char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"e30706");
+                    if (pos != -1){
+                      trc("Mi Scale data reading");
+                      //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiScaleDiscovery(d[0].extract);
+                      #endif
+                      bool result = process_scale_v1((char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"4030dd");
+                    if (pos != -1){
+                      trc(F("Mi Lamp data reading"));
+                      //example "servicedata":4030dd31d0300010100
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) MiLampDiscovery(d[0].extract);
+                      #endif
+                      process_milamp((char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"08094c"); // Clear grass with air pressure//08094c0140342d580104d8000c020702612702015a
+                    if (pos != -1){
+                      trc(F("Clear grass data with air pressure reading"));
+                      //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(d[0].extract)) CLEARGRASSTRHKPADiscovery(d[0].extract);
+                      #endif
+                      process_cleargrass_air((char *)service_data.c_str(),d[0].extract);
+                    }
+                    pos = -1;
+                    pos = strpos(d[5].extract,"080774"); // Clear grass standard method 2/0807743e10342d580104c3002c0202012a
+                    if (pos != -1){
+                      trc(F("Clear grass data reading method 2"));
+                      //example "servicedata":0807743e10342d580104 c300 2c02 02012a
+                      // no discovery as it is already available with method 1
+                      process_cleargrass((char *)service_data.c_str(),d[0].extract);
+                    }
+                    return true;
+                  }else{
+                    trc("Low rssi, device filtered");
                   }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"20aa01");
-                  //example "servicedata":"5020aa0194dfaa33342d580d1004e3002c02"
-                  if (pos != -1){
-                    trc("mi jia data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) MiJiaDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"205b04");
-                  //example "servicedata":"141695fe70205b0461298882c8593f09061002d002"
-                  if (pos != -1){
-                    trc("LYWSD02 data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) LYWSD02Discovery(d[0].extract);
-                    #endif
-                    bool result = process_data(pos - 38,(char *)Service_data.c_str(),d[0].extract);
-                  }
-                  pos = -1;
-                  pos = strpos(d[5].extract,"304703");
-                  if (pos != -1){
-                    trc("CLEARGRASSTRH data reading");
-                    #ifdef ZmqttDiscovery
-                      if(!isDiscovered(d[0].extract)) CLEARGRASSTRHDiscovery(d[0].extract);
-                    #endif
-                    bool result = process_data(pos - 40,(char *)Service_data.c_str(),d[0].extract);
-                  }
-                  return true;
                 }
               }
             }
@@ -540,7 +754,21 @@ void CLEARGRASSTRHDiscovery(char * mac){
     }
 #endif
 
-bool process_data(int offset, char * rest_data, char * mac_adress){
+double value_from_service_data(char * service_data, int offset, int data_length){
+  char rev_data[data_length+1];
+  char data[data_length+1];
+  memcpy( rev_data, &service_data[offset], data_length );
+  rev_data[data_length] = '\0';
+  
+  // reverse data order
+  revert_hex_data(rev_data, data, data_length+1);
+  double value = strtol(data, NULL, 16);
+  if (value > 65000 && data_length <= 4) value = value - 65535;
+  trc(value);
+  return value;
+}
+
+bool process_sensors(int offset, char * rest_data, char * mac_adress){
   
   trc(F("Creating BLE buffer"));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
@@ -548,37 +776,24 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
   trc("rest_data");
   trc(rest_data);
   int data_length = 0;
+  trc("data_length");
+  trc(rest_data[51 + offset]);
   switch (rest_data[51 + offset]) {
     case '1' :
     case '2' :
     case '3' :
     case '4' :
-        data_length = ((rest_data[51 + offset] - '0') * 2)+1;
-        trc("data_length");
-        trc(data_length);
+        data_length = ((rest_data[51 + offset] - '0') * 2);
+        trc("valid data_length");
     break;
     default:
-        trc("can't read data_length");
+        trc("invalid data_length");
     return false;
     }
-    
-  char rev_data[data_length];
-  char data[data_length];
-  memcpy( rev_data, &rest_data[52 + offset], data_length );
-  rev_data[data_length] = '\0';
   
-  // reverse data order
-  revert_hex_data(rev_data, data, data_length);
-  double value = strtol(data, NULL, 16);
-  trc(value);
-  char val[12];
-  String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  double value = 9999;
+  value = value_from_service_data(rest_data, 52 + offset, data_length);
 
-  // second value
-  char val2[12];
-  trc("rest_data");
-  trc(rest_data);
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
   // Mi Jia provides tem(perature), batt(erry) and hum(idity)
   // following the value of digit 47 we determine the type of data we get from the sensor
@@ -587,11 +802,9 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
           BLEdata.set("fer", (double)value);
     break;
     case '4' :
-          if (value > 65000) value = value - 65535;
           BLEdata.set("tem", (double)value/10);
     break;
     case '6' :
-          if (value > 65000) value = value - 65535;
           BLEdata.set("hum", (double)value/10);
     break;
     case '7' :
@@ -601,31 +814,164 @@ bool process_data(int offset, char * rest_data, char * mac_adress){
           BLEdata.set("moi", (double)value);
      break;
      
-    case 'a' : // batteryLevel
+    case 'a' :
           BLEdata.set("batt", (double)value);
      break;
 
-     case 'd' : // temp+hum
-          char tempAr[8];
+     case 'd' :
           // humidity
-          memcpy(tempAr, data, 4);
-          tempAr[4] = '\0';
-          value = strtol(tempAr, NULL, 16);
-          if (value > 65000) value = value - 65535;
-          BLEdata.set("hum", (double)value/10);
-          // temperature
-          memcpy(tempAr, &data[4], 4);
-          tempAr[4] = '\0';
-          value = strtol(tempAr, NULL, 16);
-          if (value > 65000) value = value - 65535;
+          value = value_from_service_data(rest_data, 52 + offset, 4);
           BLEdata.set("tem", (double)value/10);
+          // temperature
+          value = value_from_service_data(rest_data, 56 + offset, 4);
+          BLEdata.set("hum", (double)value/10);
      break;
     default:
     trc("can't read values");
     return false;
     }
+    String mactopic(mac_adress);
+    mactopic = subjectBTtoMQTT + mactopic;
     pub((char *)mactopic.c_str(),BLEdata);
     return true;
+}
+
+bool process_scale_v1(char * rest_data, char * mac_adress){
+  //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double weight = value_from_service_data(rest_data, 2, 4)/200;
+
+  //Set Json value
+  BLEdata.set("weight", (double)weight);
+
+  // Publish weight
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+bool process_scale_v2(char * rest_data, char * mac_adress){
+  //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double weight = value_from_service_data(rest_data, 22, 4)/200;
+  double impedance = value_from_service_data(rest_data, 18, 4);
+
+  //Set Json values
+  BLEdata.set("weight", (double)weight);
+  BLEdata.set("impedance", (double)impedance);
+
+  // Publish weight
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+bool process_miband(char * rest_data, char * mac_adress){
+  //example "servicedata":"a21e0000"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double steps = value_from_service_data(rest_data, 0, 4);
+
+  //Set Json value
+  BLEdata.set("steps", (double)steps);
+
+  // Publish weight
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+bool process_milamp(char * rest_data, char * mac_adress){
+  //example "servicedata":"4030dd31d0300010100"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  long darkness = value_from_service_data(rest_data, 8, 2);
+
+  //Set Json value
+  BLEdata.set("presence", (bool)"true");
+  BLEdata.set("darkness", (long)darkness);
+
+  // Publish
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+bool process_cleargrass_air(char * rest_data, char * mac_adress){
+  //example "servicedata":"08094c0140342d580104c400240207025d2702015a"
+  //decoding "08094c0140342d580104 temp:c400 hum:2402 0702 pressure:5d27 02015a"
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double value = 9999;
+  // humidity
+  value = value_from_service_data(rest_data, 20, 4);
+  BLEdata.set("tem", (double)value/10);
+  // temperature
+  value = value_from_service_data(rest_data, 24, 4);
+  BLEdata.set("hum", (double)value/10);
+  // air pressure
+  value = value_from_service_data(rest_data, 32, 4);
+  BLEdata.set("pres", (double)value/100);
+
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
+}
+
+
+bool process_cleargrass(char * rest_data, char * mac_adress){
+  //example "servicedata":0807743e10342d580104 c300 2c02 02012a
+  trc("rest_data");
+  trc(rest_data);
+
+  trc(F("Creating BLE buffer"));
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& BLEdata = jsonBuffer.createObject();
+
+  double value = 9999;
+  // humidity
+  value = value_from_service_data(rest_data, 20, 4);
+  BLEdata.set("tem", (double)value/10);
+  // temperature
+  value = value_from_service_data(rest_data, 24, 4);
+  BLEdata.set("hum", (double)value/10);
+
+  String mactopic(mac_adress);
+  mactopic = subjectBTtoMQTT + mactopic;
+  pub((char *)mactopic.c_str(),BLEdata);
+  return true;
 }
 
 #ifdef subjectHomePresence
@@ -634,7 +980,7 @@ void haRoomPresence(JsonObject& HomePresence){
   trc(F("BLErssi"));
   trc(BLErssi);
   int txPower = HomePresence["txpower"]|0;
-  if (txPower == 0)   txPower = -59; //if tx power is not found we set a default calibration value
+  if (txPower >= 0)   txPower = -59; //if tx power is not found we set a default calibration value
   trc(F("txPower"));
   trc(txPower);
   double ratio = BLErssi*1.0/txPower;
@@ -690,6 +1036,17 @@ void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
         trc(F("Scan done")); 
         BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
       }
+    }
+    // MinRSSI set
+    if (BTdata.containsKey("minrssi")){
+      trc(F("Min RSSI"));
+      // storing Min RSSI for further use if needed
+      trc("previous Minrssi");
+      trc(Minrssi); 
+      // set Min RSSI if present if not setting default value
+      Minrssi = (unsigned int)BTdata["minrssi"];
+      trc("new Minrssi");
+      trc(Minrssi);
     }
   }
 }

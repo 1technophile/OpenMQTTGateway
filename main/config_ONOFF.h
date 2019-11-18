@@ -34,7 +34,11 @@ extern void MQTTtoONOFF(char * topicOri, JsonObject& RFdata);
 #define subjectMQTTtoONOFF  Base_Topic Gateway_Name "/commands/MQTTtoONOFF"
 #define subjectGTWONOFFtoMQTT  Base_Topic Gateway_Name "/ONOFFtoMQTT"
 
+#define ONKey "setON"
+#define OFFKey "setOFF"
+
 /*-------------------PIN DEFINITIONS----------------------*/
+// default pin, if not set into the MQTT json
 #ifndef ACTUATOR_ONOFF_PIN
     #ifdef ESP8266
             #define ACTUATOR_ONOFF_PIN 15 //12 for sonoff basic relay

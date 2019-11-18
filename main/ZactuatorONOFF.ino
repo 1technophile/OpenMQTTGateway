@@ -1,10 +1,10 @@
 /*  
   OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker 
    Send and receiving command by MQTT
  
-    Output pin High or Low
+    Output pin defined to High or Low
   
     Copyright: (c)Florian ROBERT
     
@@ -30,44 +30,49 @@
 
 #ifdef ZactuatorONOFF
 
-void setupONOFF(){
-  trc(F("ACTUATOR_ONOFF_PIN"));
-  trc(ACTUATOR_ONOFF_PIN);
-  //init
-  pinMode(ACTUATOR_ONOFF_PIN, OUTPUT);
-  trc(F("Set to OFF"));
-  digitalWrite(ACTUATOR_ONOFF_PIN, LOW);
-  trc(F("ZactuatorONOFF setup done "));
-}
-
-  void MQTTtoONOFF(char * topicOri, char * datacallback){
+#ifdef jsonReceiving
+void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
   
-    int boolSWITCHTYPE;
-    if (strcmp(datacallback, "ON") == 0) boolSWITCHTYPE = 1;
-    if (strcmp(datacallback, "OFF") == 0) boolSWITCHTYPE = 0; 
-
-   if (strcmp(topicOri,subjectMQTTtoONOFF) == 0){
-      trc(F("MQTTtoONOFF data analysis"));
+  if (strcmp(topicOri,subjectMQTTtoONOFF) == 0){
+    trc(F("MQTTtoONOFF json data analysis"));
+    int boolSWITCHTYPE = ONOFFdata["state"] | 99;
+    int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
+    if (boolSWITCHTYPE != 99) {
+      trc(F("MQTTtoONOFF boolSWITCHTYPE ok"));
       trc(boolSWITCHTYPE);
-      digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
+      trc(F("pin number"));
+      trc(pin);
+      pinMode(pin, OUTPUT);
+      digitalWrite(pin, boolSWITCHTYPE);
       // we acknowledge the sending by publishing the value to an acknowledgement topic
-      pub(subjectGTWONOFFtoMQTT, datacallback);
+      pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+    }else{
+      trc(F("MQTTtoONOFF failed json read"));
     }
   }
-  void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
-   
-   if (strcmp(topicOri,subjectMQTTtoONOFF) == 0){
-      trc(F("MQTTtoONOFF json data analysis"));
-      int boolSWITCHTYPE = ONOFFdata["switchType"] | 99;
-      if (boolSWITCHTYPE != 99) {
-        trc(F("MQTTtoONOFF boolSWITCHTYPE ok"));
-        trc(boolSWITCHTYPE);
-        digitalWrite(ACTUATOR_ONOFF_PIN, boolSWITCHTYPE);
-        // we acknowledge the sending by publishing the value to an acknowledgement topic
-        pub(subjectGTWONOFFtoMQTT, ONOFFdata);
-      }else{
-        trc(F("MQTTtoONOFF failed json read"));
-      }
-    }
-  }
+}
+#endif
+
+#ifdef simpleReceiving
+void MQTTtoONOFF(char * topicOri, char * datacallback) {
+  if ((strstr(topicOri,subjectMQTTtoONOFF) != NULL) ){
+
+    trc(F("MQTTtoONOFF"));
+    int pin = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+    trc(F("pin number"));
+    trc(pin);
+    pinMode(pin, OUTPUT);
+
+    bool ON = false;
+    if (strstr(topicOri,ONKey) != NULL) ON = true;
+    if (strstr(topicOri,OFFKey) != NULL) ON = false;
+
+    digitalWrite(pin, ON);
+    // we acknowledge the sending by publishing the value to an acknowledgement topic
+    pub(subjectGTWONOFFtoMQTT, ON);
+  } 
+}
+#endif
+
+
 #endif

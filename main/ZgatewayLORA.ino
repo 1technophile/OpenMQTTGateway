@@ -97,7 +97,7 @@ void LORAtoMQTT(){
       int codingRateDenominator = LORAdata["codingrate"]|LORA_CODING_RATE;
       int preambleLength = LORAdata["preamblelength"]|LORA_PREAMBLE_LENGTH;
       byte syncWord = LORAdata["syncword"]|LORA_SYNC_WORD;
-      bool Crc = LORAdata["enablecrc"];
+      bool Crc = LORAdata["enablecrc"]|DEFAULT_CRC;
       if (message) {
         LoRa.setTxPower(txPower);
         LoRa.setFrequency(frequency);

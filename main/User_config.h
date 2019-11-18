@@ -28,7 +28,7 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.9.2"
+#define OMG_VERSION "0.9.3beta"
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
@@ -46,6 +46,10 @@
  * Otherwise you can provide these credentials on the web interface after connecting 
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
+/*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
+#ifndef Gateway_Name
+  #define Gateway_Name "OpenMQTTGateway"
+#endif
 
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
 #if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
@@ -60,7 +64,7 @@
 #endif
 
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
-#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+#define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
 #define WifiManager_ConfigPortalTimeOut 120
 #define WifiManager_TimeOut 5
 
@@ -72,9 +76,6 @@ char mqtt_pass[30] = "your_password"; // not compulsory only if your broker need
 char mqtt_server[40] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 
-#ifndef Gateway_Name
-  #define Gateway_Name "OpenMQTTGateway"
-#endif
 //uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
@@ -92,6 +93,7 @@ char mqtt_port[6] = "1883";
 //#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
 //#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
+//#define ZsensorHCSR04  "HCSR04"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
@@ -105,7 +107,7 @@ char mqtt_port[6] = "1883";
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-#define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
+#define maxMQTTretry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
@@ -159,6 +161,14 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
   #define led_info 44
 #endif
 
+#ifndef TRIGGER_PIN
+    #ifdef ESP8266
+        #define TRIGGER_PIN 14 // pin D5 as full reset button (long press >10s)
+    #elif ESP32
+        #define TRIGGER_PIN 0 // boot button as full reset button (long press >10s)
+    #endif
+#endif
+
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
 
@@ -181,6 +191,7 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   #define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+  #define ARDUINOJSON_USE_LONG_LONG 1
 #else // boards with smaller memory
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif

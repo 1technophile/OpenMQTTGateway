@@ -84,6 +84,9 @@
 #ifdef ZsensorBME280
   #include "config_BME280.h"
 #endif
+#ifdef ZsensorHCSR04
+  #include "config_HCSR04.h"
+#endif
 #ifdef ZsensorDHT
   #include "config_DHT.h"
 #endif
@@ -143,7 +146,8 @@ int failure_number = 0; // number of failure connecting to MQTT
 PubSubClient client(eClient);
 
 //MQTT last attemps reconnection date
-unsigned long lastReconnectAttempt = 0;
+unsigned long lastMQTTReconnectAttempt = 0;
+unsigned long lastNTWKReconnectAttempt = 0;
 
 void revert_hex_data(char * in, char * out, int l){
   //reverting array 2 by 2 to get the data in good order
@@ -275,7 +279,7 @@ void pub(char * topic, char * payload, bool retainFlag){
 }
 
 void pub(char * topicori, JsonObject& data){
-  
+  if(client.connected()) {
     digitalWrite(led_receive, HIGH);
     
     String topic = topicori;
@@ -325,7 +329,9 @@ void pub(char * topicori, JsonObject& data){
         }
       }
     #endif
-
+  }else{
+    trc("client not connected can't pub");
+  }
 }
 
 void pub(char * topic, char * payload){
@@ -398,12 +404,18 @@ void pub(String topic, unsigned long payload){
     client.publish((char *)topic.c_str(),val);
 }
 
-bool reconnect() {
+void reconnect() {
+
+  #ifndef ESPWifiManualSetup
+    #if defined(ESP8266) || defined(ESP32)
+      checkButton(); // check if a reset of wifi/mqtt settings is asked
+    #endif
+  #endif
 
   // Loop until we're reconnected
   while (!client.connected()) {
-      trc(F("MQTT connection...")); //F function enable to decrease sram usage
-      if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
+    trc(F("MQTT connection...")); //F function enable to decrease sram usage
+    if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
       trc(F("Connected to broker"));
       failure_number = 0;
       // Once connected, publish an announcement...
@@ -424,23 +436,23 @@ bool reconnect() {
         #endif
         trc(F("Subscription OK to the subjects"));
       }
-      } else {
+    } else {
       failure_number ++; // we count the failure
       trc(F("failure_number"));
       trc(failure_number);
+      if (failure_number > maxMQTTretry && !connectedOnce){
+        #ifndef ESPWifiManualSetup
+          #if defined(ESP8266) || defined(ESP32)
+                trc(F("failed connecting first time to mqtt, reset wifi manager  & erase network credentials"));
+                setup_wifimanager(true);
+          #endif
+        #endif
+      }
       trc(F("failed, rc="));
       trc(client.state());
-      trc(F("try again in 5s"));
-      // Wait 5 seconds before retrying
       delay(5000);
-
-      if (failure_number > maxMQTTretry){
-        trc(F("failed connecting to mqtt"));
-        return false;
-      }
     }
   }
-  return client.connected();
 }
 
 // Callback function, when the gateway receive an MQTT value on the topics subscribed this function is called
@@ -555,7 +567,8 @@ void setup()
   
   delay(1500);
 
-  lastReconnectAttempt = 0;
+  lastMQTTReconnectAttempt = 0;
+  lastNTWKReconnectAttempt = 0;
 
   #ifdef ZsensorBME280
     setupZsensorBME280();
@@ -565,9 +578,6 @@ void setup()
   #endif
   #ifdef ZsensorTSL2561
     setupZsensorTSL2561();
-  #endif
-  #ifdef ZactuatorONOFF
-    setupONOFF();
   #endif
   #ifdef Zgateway2G
     setup2G();
@@ -604,6 +614,9 @@ void setup()
   #endif
   #ifdef ZsensorHCSR501
     setupHCSR501();
+  #endif
+  #ifdef ZsensorHCSR04
+    setupHCSR04();
   #endif
   #ifdef ZsensorGPIOInput
     setupGPIOInput();
@@ -650,7 +663,9 @@ void setup_wifi() {
 }
 
 #elif defined(ESP8266) || defined(ESP32)
-//Wifi manager parameters
+
+WiFiManager wifiManager;
+
 //flag for saving data
 bool shouldSaveConfig = true;
 //do we have been connected once to mqtt
@@ -661,8 +676,33 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
+void checkButton(){ // code from tzapu/wifimanager examples
+  // check for button press
+  if ( digitalRead(TRIGGER_PIN) == LOW ) {
+    // poor mans debounce/press-hold, code not ideal for production
+    delay(50);
+    if( digitalRead(TRIGGER_PIN) == LOW ){
+      trc(F("Trigger button Pressed"));
+      // still holding button for 3000 ms, reset settings, code not ideaa for production
+      delay(3000); // reset delay hold
+      if( digitalRead(TRIGGER_PIN) == LOW ){
+        trc(F("Button Held"));
+        trc(F("Erasing ESP Config, restarting"));
+        setup_wifimanager(true);
+      }
+    }
+  }
+}
+
 void setup_wifimanager(bool reset_settings){
-    if(reset_settings)  SPIFFS.format();
+  
+    pinMode(TRIGGER_PIN, INPUT_PULLUP);
+    if(reset_settings) {
+      trc("Formatting requested, result:");
+      trc(SPIFFS.format());
+    } 
+
+    WiFi.mode(WIFI_STA);
 
     //read configuration from FS json
     trc(F("mounting FS..."));
@@ -710,7 +750,6 @@ void setup_wifimanager(bool reset_settings){
   
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
-    WiFiManager wifiManager;
 
     wifiManager.setConnectTimeout(WifiManager_TimeOut);
     //Set timeout before going to portal
@@ -728,8 +767,16 @@ void setup_wifimanager(bool reset_settings){
     wifiManager.addParameter(&custom_mqtt_user);
     wifiManager.addParameter(&custom_mqtt_pass);
 
-    if(reset_settings)  wifiManager.resetSettings();
-    //set minimu quality of signal so it ignores AP's under that quality
+    if(reset_settings){
+      wifiManager.resetSettings();
+      wifiManager.erase();
+      #if defined(ESP8266) 
+        ESP.reset();
+      #else
+        ESP.restart();
+      #endif
+    }
+    //set minimum quality of signal so it ignores AP's under that quality
     wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
   
     //fetches ssid and pass and tries to connect
@@ -789,9 +836,13 @@ void setup_ethernet() {
     trc(F("Spl eth cfg"));
     Ethernet.begin(mac, ip); 
   }
-  trc(F("ip: "));
-  Serial.println(Ethernet.localIP());
-  trc(F("Eth ok"));
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    trc("Ethernet shield was not found.");
+  }else{
+    trc(F("ip: "));
+    Serial.println(Ethernet.localIP());
+    trc(F("Eth ok"));
+  }
 }
 #endif
 
@@ -829,132 +880,137 @@ void setup_ethernet() {
 
 void loop()
 {
+  #ifndef ESPWifiManualSetup
+    #if defined(ESP8266) || defined(ESP32)
+      checkButton(); // check if a reset of wifi/mqtt settings is asked
+    #endif
+  #endif
+
   digitalWrite(led_receive, LOW);
   digitalWrite(led_info, LOW);
   digitalWrite(led_send, LOW);
 
   unsigned long now = millis();
-  //MQTT client connexion management
-  if (!client.connected()) { // not connected
-    if (now - lastReconnectAttempt > 5000) {
-      trc("client disconnected");
-      lastReconnectAttempt = now;
-      // Attempt to reconnect
-      #if defined(ESP8266) || defined(ESP32)
-        if (WiFi.status() == WL_CONNECTED){
-          if (reconnect()) {
-            lastReconnectAttempt = 0;
-          } else {
-            #if defined(ESPWifiManualSetup)
-              trc(F("restarting ESP"));
-              #ifdef ESP32
-                ESP.restart();
-              #endif
-              #ifdef ESP8266
-                ESP.reset();
-              #endif
-            #else
-              if (!connectedOnce) {
-                trc(F("reseting wifi manager"));
-                setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
-              }
-            #endif
-          }
-        }else{
-          trc("wifi disconnected");
-        }
-      #else //other boards
-        if (Ethernet.linkStatus() == LinkON){
-          if (reconnect()) {
-            lastReconnectAttempt = 0;
-          } else {
-              trc(F("brk disconnected"));
-          }
-        }else{
-          trc("eth disconnected");
-        }
-      #endif
-    }
-  } else { //connected
-    // MQTT loop
-    connectedOnce = true;
-    client.loop();
 
-    #if defined(ESP8266) || defined(ESP32)
-      ArduinoOTA.handle();
-    #endif
+  #if defined(ESP8266) || defined(ESP32)
+    if (WiFi.status() == WL_CONNECTED){
+  #else
+    if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)){//we are able to detect disconnection only on w5200 and w5500
+  #endif
+    lastNTWKReconnectAttempt = 0;
+      if (client.connected()) {
+        // MQTT loop
+        connectedOnce = true;
+        lastMQTTReconnectAttempt = 0;
+        client.loop();
 
-    #ifdef ZsensorBME280
-      MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
-    #endif
-    #ifdef ZsensorBH1750
-      MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
-    #endif
-    #ifdef ZsensorTSL2561
-      MeasureLightIntensityTSL2561();
-    #endif
-    #ifdef ZsensorDHT
-      MeasureTempAndHum(); //Addon to measure the temperature with a DHT
-    #endif
-    #ifdef ZsensorINA226
-      MeasureINA226(); //Addon to measure the temperature with a DHT
-    #endif
-    #ifdef ZsensorHCSR501
-      MeasureHCSR501();
-    #endif
-    #ifdef ZsensorGPIOInput
-      MeasureGPIOInput();
-    #endif
-    #ifdef ZsensorGPIOKeyCode
-      MeasureGPIOKeyCode();
-    #endif
-    #ifdef ZsensorADC
-      MeasureADC(); //Addon to measure the analog value of analog pin
-    #endif
-    #ifdef ZgatewayLORA
-      LORAtoMQTT();
-    #endif
-    #ifdef ZgatewayRF
-      RFtoMQTT();
-    #endif
-    #ifdef ZgatewayRF315
-      RF315toMQTT();
-    #endif
-    #ifdef ZgatewayRF2
-      RF2toMQTT();
-    #endif
-    #ifdef ZgatewayPilight
-      PilighttoMQTT();
-    #endif
-    #ifdef ZgatewayBT
-        #ifndef ESP32
-          if(BTtoMQTT())
-          trc(F("BTtoMQTT OK"));
+        #if defined(ESP8266) || defined(ESP32)
+          ArduinoOTA.handle();
         #endif
-    #endif
-    #ifdef ZgatewaySRFB
-      SRFBtoMQTT();
-    #endif
-    #ifdef ZgatewayIR
-      IRtoMQTT();
-    #endif
-    #ifdef Zgateway2G
-      if(_2GtoMQTT()){
-      trc(F("2GtoMQTT OK"));
-      }
-    #endif
-    #ifdef ZgatewayRFM69
-      if(RFM69toMQTT())
-      trc(F("RFM69toMQTT OK"));
-    #endif
-    #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-      stateMeasures();
-    #endif
-    #ifdef ZactuatorFASTLED
-      FASTLEDLoop();
-    #endif
 
-  }
+        #ifdef ZsensorBME280
+          MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
+        #endif
+        #ifdef ZsensorHCSR04
+          MeasureDistance(); //Addon to measure distance with a HC-SR04
+        #endif
+        #ifdef ZsensorBH1750
+          MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
+        #endif
+        #ifdef ZsensorTSL2561
+          MeasureLightIntensityTSL2561();
+        #endif
+        #ifdef ZsensorDHT
+          MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+        #endif
+        #ifdef ZsensorINA226
+          MeasureINA226();
+        #endif
+        #ifdef ZsensorHCSR501
+          MeasureHCSR501();
+        #endif
+        #ifdef ZsensorGPIOInput
+          MeasureGPIOInput();
+        #endif
+        #ifdef ZsensorGPIOKeyCode
+          MeasureGPIOKeyCode();
+        #endif
+        #ifdef ZsensorADC
+          MeasureADC(); //Addon to measure the analog value of analog pin
+        #endif
+        #ifdef ZgatewayLORA
+          LORAtoMQTT();
+        #endif
+        #ifdef ZgatewayRF
+          RFtoMQTT();
+        #endif
+        #ifdef ZgatewayRF315
+          RF315toMQTT();
+        #endif
+        #ifdef ZgatewayRF2
+          RF2toMQTT();
+        #endif
+        #ifdef ZgatewayPilight
+          PilighttoMQTT();
+        #endif
+        #ifdef ZgatewayBT
+            #ifndef ESP32
+              if(BTtoMQTT())
+              trc(F("BTtoMQTT OK"));
+            #endif
+        #endif
+        #ifdef ZgatewaySRFB
+          SRFBtoMQTT();
+        #endif
+        #ifdef ZgatewayIR
+          IRtoMQTT();
+        #endif
+        #ifdef Zgateway2G
+          if(_2GtoMQTT()){
+          trc(F("2GtoMQTT OK"));
+          }
+        #endif
+        #ifdef ZgatewayRFM69
+          if(RFM69toMQTT())
+          trc(F("RFM69toMQTT OK"));
+        #endif
+        #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+          stateMeasures();
+        #endif
+        #ifdef ZactuatorFASTLED
+          FASTLEDLoop();
+        #endif
+      }else{
+        if (now - lastMQTTReconnectAttempt > 5000) {
+          lastMQTTReconnectAttempt = now;
+          reconnect();
+        }
+      }
+    } else { // disconnected from network
+      if ( now - lastNTWKReconnectAttempt > 10000) {
+        lastNTWKReconnectAttempt = now;
+        #if defined(ESP8266) || defined(ESP32)
+          trc("wifi disconnected");
+          delay(10000);// add a delay to avoid ESP32 crash and reset
+          #if defined(ESPWifiManualSetup)
+            trc(F("restarting ESP"));
+            #ifdef ESP32
+              ESP.restart();
+            #endif
+            #ifdef ESP8266
+              ESP.reset();
+            #endif
+          #else
+            if (!connectedOnce) {
+              trc(F("reseting wifi manager"));
+              setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
+            }
+          #endif
+        #else
+          trc("eth disconnected");
+        #endif
+        }
+      }
 }
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
@@ -992,11 +1048,17 @@ void stateMeasures(){
       #ifdef ZsensorBME280
           modules = modules + ZsensorBME280;
       #endif
+      #ifdef ZsensorHCSR04
+          modules = modules + ZsensorHCSR04;
+      #endif
       #ifdef ZsensorBH1750
           modules = modules + ZsensorBH1750;
       #endif
       #ifdef ZsensorTSL2561
           modules = modules + ZsensorTSL2561;
+      #endif
+      #ifdef ZsensorDHT
+          modules = modules + ZsensorDHT;
       #endif
       #ifdef ZactuatorONOFF
           modules = modules + ZactuatorONOFF;
@@ -1050,9 +1112,7 @@ void stateMeasures(){
 
       SYSdata["modules"] = modules;
       trc(SYSdata);
-      char JSONmessageBuffer[JSON_MSG_BUFFER];
-      SYSdata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      pub(subjectSYStoMQTT,JSONmessageBuffer);
+      pub(subjectSYStoMQTT,SYSdata);
     }
 }
 #endif
