@@ -530,7 +530,12 @@ void MiBandDiscovery(char * mac){
       while(true){
           trc(taskMessage);
           delay(BLEinterval);
-          BLEscan();
+          if (client.state() == 0) {
+            BLEscan();
+          }else{
+            trc("MQTT client disconnected no BLE scan");
+            delay(1000);
+          }
       }
     }
   
