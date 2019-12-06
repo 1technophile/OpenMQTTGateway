@@ -149,10 +149,12 @@ const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 #define subjectMQTTtoX      "/commands/#"
 #define subjectMultiGTWKey  "toMQTT"
 #define subjectGTWSendKey   "MQTTto"
+
+// key used for launching commands to the gateway
 #define restartCmd          "restart"
 #define eraseCmd            "erase"
-#define portalCmd           "portal"
 
+// define if we concatenate the values into the topic
 #define valueAsASubject true
 
 //variables to avoid duplicates
