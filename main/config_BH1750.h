@@ -46,7 +46,7 @@ extern void BH1750toMQTT();
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectBH1750toMQTT  Base_Topic Gateway_Name "/BH1750toMQTT"
+#define subjectBH1750toMQTT  "/BH1750toMQTT"
 //Time used to wait for an interval before resending measured values
 unsigned long timebh1750 = 0;
 int BH1750_i2c_addr = 0x23; // Light Sensor I2C Address

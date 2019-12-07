@@ -46,7 +46,7 @@ extern void TSL2561toMQTT();
 #define TimeBetweenReadingtsl2561 30000  
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectTSL12561toMQTT   Base_Topic Gateway_Name "/LIGHTtoMQTT"
+#define subjectTSL12561toMQTT   "/LIGHTtoMQTT"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timetsl2561 = 0;

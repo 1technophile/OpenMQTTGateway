@@ -204,7 +204,7 @@ void trc(String msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -214,7 +214,7 @@ void trc(int msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -224,7 +224,7 @@ void trc(unsigned int msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -234,7 +234,7 @@ void trc(long msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -244,7 +244,7 @@ void trc(unsigned long msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -254,7 +254,7 @@ void trc(double msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
@@ -264,25 +264,25 @@ void trc(float msg){
     digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
-    pub(subjectTRACEtoMQTT,msg);
+    pubMQTT(subjectTRACEtoMQTT,msg);
   #endif
 }
 
 void trc(JsonObject& data){
-      char JSONmessageBuffer[JSON_MSG_BUFFER];
-      data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-      trc(JSONmessageBuffer);
+  char JSONmessageBuffer[JSON_MSG_BUFFER];
+  data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+  trc(JSONmessageBuffer);
 }
 
-void pub(char * topic, char * payload, bool retainFlag){
-    client.publish(topic, payload, retainFlag);
+void pub(char * topicori, char * payload, bool retainFlag){
+  String topic = String(mqtt_topic) + String(topicori);
+  client.publish((char *)topic.c_str(), payload, retainFlag);
 }
 
 void pub(char * topicori, JsonObject& data){
   if(client.connected()) {
     digitalWrite(led_receive, HIGH);
-    
-    String topic = topicori;
+    String topic = String(mqtt_topic) + String(topicori);
     #ifdef valueAsASubject
       unsigned long value = data["value"];
       if (value != 0){
@@ -296,7 +296,7 @@ void pub(char * topicori, JsonObject& data){
       trc(topic);
       data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
       trc(JSONmessageBuffer);
-      pub(topic, JSONmessageBuffer);
+      pubMQTT(topic, JSONmessageBuffer);
     #endif
 
     #ifdef simplePublishing
@@ -310,22 +310,22 @@ void pub(char * topicori, JsonObject& data){
           trc(p.key);
           trc(p.value.as<unsigned long>());
           if (strcmp(p.key, "value") == 0){ // if data is a value we don't integrate the name into the topic
-            pub(topic,p.value.as<unsigned long>());
+            pubMQTT(topic,p.value.as<unsigned long>());
           }else{ // if data is not a value we integrate the name into the topic
-            pub(topic + "/" + String(p.key),p.value.as<unsigned long>());
+            pubMQTT(topic + "/" + String(p.key),p.value.as<unsigned long>());
           }
         }else if (p.value.is<int>()) {
           trc(p.key);
           trc(p.value.as<int>());
-          pub(topic + "/" + String(p.key),p.value.as<int>());
+          pubMQTT(topic + "/" + String(p.key),p.value.as<int>());
         } else if (p.value.is<float>()) {
           trc(p.key);
           trc(p.value.as<float>());
-          pub(topic + "/" + String(p.key),p.value.as<float>());
+          pubMQTT(topic + "/" + String(p.key),p.value.as<float>());
         } else if (p.value.is<char*>()) {
           trc(p.key);
           trc(p.value.as<const char*>());
-          pub(topic + "/" + String(p.key),p.value.as<const char*>());
+          pubMQTT(topic + "/" + String(p.key),p.value.as<const char*>());
         }
       }
     #endif
@@ -334,74 +334,103 @@ void pub(char * topicori, JsonObject& data){
   }
 }
 
-void pub(char * topic, char * payload){
+void pub(char * topicori, char * payload){
+  if(client.connected()) {
+    String topic = String(mqtt_topic) + String(topicori);
+    trc(F("Pub ack into:"));
+    trc(topic);
+    pubMQTT(topic, payload);
+  }else{
+    trc("client not connected can't pub");
+  }
+}
+
+void pub_custom_topic(char * topicori, JsonObject& data){
+  if(client.connected()) {
+    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    trc(F("Pub json discovery into:"));
+    trc(topicori);
+    data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    trc(JSONmessageBuffer);
+    pubMQTT(topicori, JSONmessageBuffer);
+  }else{
+    trc("client not connected can't pub");
+  }
+}
+
+void pubMQTT(char * topic, char * payload){
     client.publish(topic, payload);
 }
 
-void pub(String topic, char *  payload){
+void pubMQTT(String topic, char *  payload){
     client.publish((char *)topic.c_str(),payload);
 }
 
-void pub(char * topic, unsigned long payload){
+void pubMQTT(char * topic, unsigned long payload){
     char val[11];
     sprintf(val, "%lu", payload);
     client.publish(topic,val);
 }
 
-void pub(char * topic, String payload){
+void pubMQTT(char * topic, String payload){
     client.publish(topic,(char *)payload.c_str());
 }
 
-void pub(String topic, String payload){
+void pubMQTT(String topic, String payload){
     client.publish((char *)topic.c_str(),(char *)payload.c_str());
 }
 
-void pub(String topic, int payload){
+void pubMQTT(String topic, int payload){
     char val[12];
     sprintf(val, "%d", payload);
     client.publish((char *)topic.c_str(),val);
 }
 
-void pub(String topic, float payload){
+void pubMQTT(String topic, float payload){
     char val[12];
     dtostrf(payload,3,1,val);
     client.publish((char *)topic.c_str(),val);
 }
 
-void pub(char * topic, float payload){
+void pubMQTT(char * topic, float payload){
     char val[12];
     dtostrf(payload,3,1,val);
     client.publish(topic,val);
 }
 
-void pub(char * topic, int payload){
+void pubMQTT(char * topic, int payload){
     char val[6];
     sprintf(val, "%d", payload);
     client.publish(topic,val);
 }
 
-void pub(char * topic, unsigned int payload){
+void pubMQTT(char * topic, unsigned int payload){
     char val[6];
     sprintf(val, "%u", payload);
     client.publish(topic,val);
 }
 
-void pub(char * topic, long payload){
+void pubMQTT(char * topic, long payload){
     char val[11];
     sprintf(val, "%l", payload);
     client.publish(topic,val);
 }
 
-void pub(char * topic, double payload){
+void pubMQTT(char * topic, double payload){
     char val[16];
     sprintf(val, "%d", payload);
     client.publish(topic,val);
 }
 
-void pub(String topic, unsigned long payload){
+void pubMQTT(String topic, unsigned long payload){
     char val[11];
     sprintf(val, "%lu", payload);
     client.publish((char *)topic.c_str(),val);
+}
+
+char * catToMainTopic(char * toAdd){
+  String resultTopic = String(mqtt_topic) + String(toAdd);
+  return (char *)resultTopic.c_str();
 }
 
 void reconnect() {
@@ -415,21 +444,17 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
-    if (client.connect(Gateway_Name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
+    if (client.connect(gateway_name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message)) {
       trc(F("Connected to broker"));
       failure_number = 0;
       // Once connected, publish an announcement...
       pub(will_Topic,Gateway_AnnouncementMsg,will_Retain);
       // publish version
       pub(version_Topic,OMG_VERSION,will_Retain);
-
       //Subscribing to topic
-      if (client.subscribe(subjectMQTTtoX)) {
+      if (client.subscribe(catToMainTopic(subjectMQTTtoX))) {
         #ifdef ZgatewayRF
           client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
-        #endif
-        #ifdef ZgatewayRF315
-          client.subscribe(subjectMultiGTWRF315);// subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
         #endif
         #ifdef ZgatewayIR
           client.subscribe(subjectMultiGTWIR);// subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
@@ -475,6 +500,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if ((strstr(topic, subjectMultiGTWKey) != NULL) || (strstr(topic, subjectGTWSendKey) != NULL))  receivingMQTT(topic,(char *) p);
   // Free the memory
   free(p);
+}
+
+void setup_parameters()
+{
+  strcat(mqtt_topic,gateway_name);
 }
 
 void setup()
@@ -567,6 +597,8 @@ void setup()
    #endif
   #endif
 
+  setup_parameters();
+
   client.setCallback(callback);
   
   delay(1500);
@@ -636,7 +668,7 @@ void setup()
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
   #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-    if(MQTT_MAX_PACKET_SIZE == 128) trc(F("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM OMG LIB FOLDER"));
+    if(MQTT_MAX_PACKET_SIZE == 128) trc(F("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM RELEASE PAGE"));
   #endif
   trc(F("Setup OpenMQTTGateway end"));
 }
@@ -697,14 +729,26 @@ void checkButton(){ // code from tzapu/wifimanager examples
     }
   }
 }
+void eraseAndRestart(){
+  #if defined(ESP8266) 
+    WiFi.disconnect(true);
+  #else
+    WiFi.disconnect(true,true);
+  #endif
+  trc("Formatting requested, result:");
+  trc(SPIFFS.format());
+  #if defined(ESP8266) 
+    ESP.reset();
+  #else
+    ESP.restart();
+  #endif
+}
 
 void setup_wifimanager(bool reset_settings){
   
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
-    if(reset_settings) {
-      trc("Formatting requested, result:");
-      trc(SPIFFS.format());
-    } 
+
+    if(reset_settings) eraseAndRestart();
 
     WiFi.mode(WIFI_STA);
 
@@ -734,10 +778,12 @@ void setup_wifimanager(bool reset_settings){
         json.printTo(Serial);
         if (json.success()) {
           trc(F("\nparsed json"));
-          strcpy(mqtt_server, json["mqtt_server"]);
-          strcpy(mqtt_port, json["mqtt_port"]);
-          strcpy(mqtt_user, json["mqtt_user"]);
-          strcpy(mqtt_pass, json["mqtt_pass"]);
+          if (json.containsKey("mqtt_server")) strcpy(mqtt_server, json["mqtt_server"]);
+          if (json.containsKey("mqtt_port")) strcpy(mqtt_port, json["mqtt_port"]);
+          if (json.containsKey("mqtt_user")) strcpy(mqtt_user, json["mqtt_user"]);
+          if (json.containsKey("mqtt_pass")) strcpy(mqtt_pass, json["mqtt_pass"]);
+          if (json.containsKey("mqtt_topic")) strcpy(mqtt_topic, json["mqtt_topic"]);
+          if (json.containsKey("gateway_name")) strcpy(gateway_name, json["gateway_name"]);
         } else {
           trc(F("failed to load json config"));
         }
@@ -747,11 +793,13 @@ void setup_wifimanager(bool reset_settings){
     // The extra parameters to be configured (can be either global or just in the setup)
     // After connecting, parameter.getValue() will get you the configured value
     // id/name placeholder/prompt default length
-    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
+    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size);
     WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
-    WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, 20);
-    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, 30);
-  
+    WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
+    WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
+    WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
+    WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
+
    //WiFiManager
     //Local intialization. Once its business is done, there is no need to keep it around
 
@@ -770,16 +818,9 @@ void setup_wifimanager(bool reset_settings){
     wifiManager.addParameter(&custom_mqtt_port);
     wifiManager.addParameter(&custom_mqtt_user);
     wifiManager.addParameter(&custom_mqtt_pass);
+    wifiManager.addParameter(&custom_gateway_name);
+    wifiManager.addParameter(&custom_mqtt_topic);
 
-    if(reset_settings){
-      wifiManager.resetSettings();
-      wifiManager.erase();
-      #if defined(ESP8266) 
-        ESP.reset();
-      #else
-        ESP.restart();
-      #endif
-    }
     //set minimum quality of signal so it ignores AP's under that quality
     wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
   
@@ -806,7 +847,9 @@ void setup_wifimanager(bool reset_settings){
     strcpy(mqtt_port, custom_mqtt_port.getValue());
     strcpy(mqtt_user, custom_mqtt_user.getValue());
     strcpy(mqtt_pass, custom_mqtt_pass.getValue());
-  
+    strcpy(mqtt_topic, custom_mqtt_topic.getValue());
+    strcpy(gateway_name, custom_gateway_name.getValue());
+
     //save the custom parameters to FS
     if (shouldSaveConfig) {
       trc(F("saving config"));
@@ -816,6 +859,8 @@ void setup_wifimanager(bool reset_settings){
       json["mqtt_port"] = mqtt_port;
       json["mqtt_user"] = mqtt_user;
       json["mqtt_pass"] = mqtt_pass;
+      json["mqtt_topic"] = mqtt_topic;
+      json["gateway_name"] = gateway_name;
     
       File configFile = SPIFFS.open("/config.json", "w");
       if (!configFile) {
@@ -1231,7 +1276,7 @@ void receivingMQTT(char * topicOri, char * datacallback) {
     #ifdef ZactuatorFASTLED
       MQTTtoFASTLEDJSON(topicOri, jsondata);
     #endif
-
+    MQTTtoSYS(topicOri, jsondata);
 
   } else { // not a json object --> simple decoding
    #ifdef simpleReceiving
@@ -1272,4 +1317,28 @@ void receivingMQTT(char * topicOri, char * datacallback) {
   }
 //YELLOW OFF
 digitalWrite(led_send, HIGH);
+}
+
+void MQTTtoSYS(char * topicOri, JsonObject& SYSdata) { // json object decoding
+ if (strstr(topicOri,catToMainTopic(subjectMQTTtoSYSset)) != NULL){
+    trc(F("MQTTtoSYS json set"));
+    #if defined(ESP8266) || defined(ESP32)
+      if (SYSdata.containsKey("cmd")){
+        trc(F("Command"));
+        const char * cmd = SYSdata["cmd"];
+        trc(cmd);
+        if (strstr(cmd,restartCmd) != NULL) {//restart
+          #if defined(ESP8266) 
+            ESP.reset();
+          #else
+            ESP.restart();
+          #endif
+        }else if (strstr(cmd,eraseCmd) != NULL) {//erase and restart
+          setup_wifimanager(true);
+        }else{
+          trc(F("wrong command"));
+        }
+      }
+    #endif
+  }
 }

@@ -111,3 +111,5 @@ If you want to use HASS MQTT discovery you need to have
 `#define ZmqttDiscovery "HADiscovery"`
 uncommented.
 Added to that auto discovery box should be selected into your Home Assistant MQTT integration configuration.
+
+With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).

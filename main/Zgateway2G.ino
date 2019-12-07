@@ -107,7 +107,7 @@ bool _2GtoMQTT(){
     String data = datacallback;
     String topic = topicOri;
     
-    if (topic == subjectMQTTto2G) {
+    if (strstr(topicOri,catToMainTopic(subjectMQTTto2G)) != NULL) {
       trc(F("MQTTto2G data analysis"));
       // 2G DATA ANALYSIS
       String phone_number = "";
@@ -122,7 +122,7 @@ bool _2GtoMQTT(){
         if (A6l.sendSMS(phone_number,data) == A6_OK ) {
           trc(F("SMS OK"));
           // Acknowledgement to the GTW2G topic
-          pub(subjectGTW2GtoMQTT, datacallback);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+          pub(subjectGTW2GtoMQTT, "SMS OK");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }else{
           trc(F("SMS KO"));
           // Acknowledgement to the GTW2G topic
@@ -138,7 +138,7 @@ bool _2GtoMQTT(){
 #ifdef jsonReceiving
   void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
     
-   if (strcmp(topicOri,subjectMQTTto2G) == 0){
+   if (strstr(topicOri,catToMainTopic(subjectMQTTto2G)) != NULL){
       const char * sms = SMSdata["message"];
       const char * phone = SMSdata["phone"];
       trc(F("MQTTto2G json data analysis"));
@@ -148,7 +148,7 @@ bool _2GtoMQTT(){
         if (A6l.sendSMS(String(phone),String(sms)) == A6_OK ) {
           trc(F("SMS OK"));
           // Acknowledgement to the GTW2G topic
-          pub(subjectGTW2GtoMQTT, SMSdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+          pub(subjectGTW2GtoMQTT, "SMS OK");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         }else{
           trc(F("SMS KO"));
           pub(subjectGTW2GtoMQTT, "SMS KO");// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also

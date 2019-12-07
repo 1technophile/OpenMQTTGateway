@@ -184,7 +184,7 @@ bool RFM69toMQTT(void) {
 #ifdef simpleReceiving
   void MQTTtoRFM69(char * topicOri, char * datacallback) {
 
-    if(strstr(topicOri, subjectMQTTtoRFM69) != NULL){
+    if(strstr(topicOri,catToMainTopic(subjectMQTTtoRFM69)) != NULL){
       trc(F("MQTTtoRFM69 data analysis"));
       char data[RF69_MAX_DATA_LEN+1];
       memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
@@ -215,7 +215,7 @@ bool RFM69toMQTT(void) {
 #ifdef jsonReceiving
   void MQTTtoRFM69(char * topicOri, JsonObject& RFM69data) {
   
-   if (strcmp(topicOri,subjectMQTTtoRFM69) == 0){
+   if (strstr(topicOri,catToMainTopic(subjectMQTTtoRFM69)) != NULL){
       const char * data = RFM69data["data"];
       trc(F("MQTTtoRFM69 json data analysis"));
       if(data){
