@@ -31,7 +31,7 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "0.9.3beta"
+#define OMG_VERSION "version_tag"
 
 /*-------------CONFIGURE WIFIMANAGER-------------*/
 /*
