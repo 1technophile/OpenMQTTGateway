@@ -475,7 +475,11 @@ void reconnect() {
       }
       trc(F("failed, rc="));
       trc(client.state());
-      delay(10000);
+      delay(5000);
+      // On ESP32 force wifi begin https://github.com/espressif/arduino-esp32/issues/2501
+      #if defined(ESP32)
+        WiFi.begin();
+      #endif
     }
   }
 }
