@@ -30,7 +30,7 @@ extern void setupHCSR501();
 extern void HCSR501toMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectHCSR501toMQTT    Base_Topic Gateway_Name "/HCSR501toMQTT"
+#define subjectHCSR501toMQTT    "/HCSR501toMQTT"
 
 #define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
 

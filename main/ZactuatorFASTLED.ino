@@ -127,14 +127,12 @@ void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
 {
   trc(F("MQTTtoFASTLEDJSON: "));
   currentLEDState = GENERAL;
-  String topic = topicOri;
-  
-  trc(topic);
+  trc(topicOri);
   //number = (long)strtol(&datacallback[1], NULL, 16);
 
   
   
-  if (topic == subjectMQTTtoFASTLEDsetled)
+  if (strstr(topicOri,catToMainTopic(subjectMQTTtoFASTLEDsetled)) != NULL)
   {
       trc(F("JSON parsed"));
       int ledNr = jsonData["led"];
@@ -160,10 +158,9 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
 {
   trc(F("MQTTtoFASTLED: "));
   currentLEDState = GENERAL;
-  String topic = topicOri;
   long number = 0;
-  trc(topic);
-  if (topic == subjectMQTTtoFASTLED)
+  trc(topicOri);
+  if (strstr(topicOri,catToMainTopic(subjectMQTTtoFASTLED)) != NULL)
   {
     number = (long)strtol(&datacallback[1], NULL, 16);
     trc(number);
@@ -173,18 +170,18 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
     }
     FastLED.show();
   }
-  else if (topic == subjectMQTTtoFASTLEDsetbrightness)
+  else if (strstr(topicOri,catToMainTopic(subjectMQTTtoFASTLEDsetbrightness)) != NULL)
   {
     number = (long)strtol(&datacallback[1], NULL, 16);
     trc(number);
     FastLED.setBrightness(number);
     FastLED.show();
   }
-  else if (topic == subjectMQTTtoFASTLEDsetanimation)
+  else if (strstr(topicOri,catToMainTopic(subjectMQTTtoFASTLEDsetanimation)) != NULL)
   {
     String payload = datacallback;
     trc(payload);
-    if (payload.equals("fire"))
+    if ( strstr(datacallback,"fire") != NULL)
     {
       currentLEDState = FIRE;
       gPal = HeatColors_p;

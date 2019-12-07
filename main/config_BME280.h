@@ -46,7 +46,7 @@ extern void BME280toMQTT();
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define BMETOPIC   Base_Topic Gateway_Name "/CLIMAtoMQTT/bme"
+#define BMETOPIC   "/CLIMAtoMQTT/bme"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timebme280 = 0;

@@ -530,7 +530,12 @@ void MiBandDiscovery(char * mac){
       while(true){
           trc(taskMessage);
           delay(BLEinterval);
-          BLEscan();
+          if (client.state() == 0) {
+            BLEscan();
+          }else{
+            trc("MQTT client disconnected no BLE scan");
+            delay(1000);
+          }
       }
     }
   
@@ -993,12 +998,13 @@ void haRoomPresence(JsonObject& HomePresence){
   HomePresence["distance"] = distance;
   trc(F("BLE DISTANCE :"));
   trc(distance);
-  pub(subjectHomePresence,HomePresence);
+  String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
+  pub_custom_topic((char *)topic.c_str(),HomePresence);
 }
 #endif
 
 void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
- if (strcmp(topicOri,subjectMQTTtoBTset) == 0){
+ if (strstr(topicOri,catToMainTopic(subjectMQTTtoBTset)) != NULL){
     trc(F("MQTTtoBT json set"));
 
     // Black list & white list set

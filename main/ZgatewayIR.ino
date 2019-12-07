@@ -152,7 +152,7 @@ void IRtoMQTT(){
         storeValue(MQTTvalue);
         if (repeatIRwMQTT){
             trc(F("Pub. IR for rpt"));
-            pub(subjectMQTTtoIR,MQTTvalue);
+            pubMQTT(subjectMQTTtoIR,MQTTvalue);
         }
     }
     }
@@ -274,7 +274,7 @@ void IRtoMQTT(){
 #ifdef jsonReceiving
   void MQTTtoIR(char * topicOri, JsonObject& IRdata) {
 
-     if (strcmp(topicOri,subjectMQTTtoIR) == 0){ 
+     if (strstr(topicOri,catToMainTopic(subjectMQTTtoIR)) != NULL){ 
       trc(F("MQTTtoIR json"));
       uint64_t data = IRdata["value"];
       const char * raw = IRdata["raw"];

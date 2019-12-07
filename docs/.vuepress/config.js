@@ -61,7 +61,8 @@ module.exports = {
           children: [
             'upload/binaries',
             'upload/pio',
-            'upload/arduino-ide'
+            'upload/arduino-ide',
+            'upload/portal'
           ]
         },
         {
@@ -75,7 +76,8 @@ module.exports = {
             'use/gsm',
             'use/rfm69',
             'use/sensors',
-            'use/actuators'
+            'use/actuators',
+            'use/gateway'
           ]
         },
         {

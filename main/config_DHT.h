@@ -30,7 +30,7 @@ extern void setupDHT();
 extern void DHTtoMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define DHTTOPIC    Base_Topic Gateway_Name "/DHTtoMQTT/dht1"
+#define DHTTOPIC    "/DHTtoMQTT/dht1"
 #define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------DHT SENSOR TYPE-------------*/

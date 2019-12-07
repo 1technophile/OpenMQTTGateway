@@ -32,9 +32,9 @@ extern void MQTTtoIR(char * topicOri, char * datacallback);
 extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
 /*-------------------IR topics & parameters----------------------*/
 //IR MQTT Subjects
-#define subjectGTWIRtoMQTT  Base_Topic Gateway_Name "/IRtoMQTT"
-#define subjectIRtoMQTT  Base_Topic Gateway_Name "/IRtoMQTT"
-#define subjectMQTTtoIR  Base_Topic Gateway_Name "/commands/MQTTtoIR"
+#define subjectGTWIRtoMQTT  "/IRtoMQTT"
+#define subjectIRtoMQTT  "/IRtoMQTT"
+#define subjectMQTTtoIR  "/commands/MQTTtoIR"
 
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/+/IRtoMQTT"

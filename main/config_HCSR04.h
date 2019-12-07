@@ -45,7 +45,7 @@ extern void MeasureDistance();
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectHCSR04   Base_Topic Gateway_Name "/DISTtoMQTT/sr04"
+#define subjectHCSR04   "/DISTtoMQTT/sr04"
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266)

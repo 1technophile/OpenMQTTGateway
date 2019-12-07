@@ -202,11 +202,11 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
       trc(F("Adv data MQTTtoRF2 push state via RF2toMQTT"));
       if (isDimCommand) {
         MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2dimKey+String("/")+RF2periodKey+MQTTperiod;
-        pub(MQTTRF2string,MQTTdimLevel);  
+        pub((char *)MQTTRF2string.c_str(),(char *)MQTTdimLevel.c_str());
       }
       else {
         MQTTRF2string = subjectRF2toMQTT+String("/")+RF2codeKey+MQTTAddress+String("/")+RF2unitKey+MQTTunit+String("/")+RF2groupKey+MQTTgroupBit+String("/")+RF2periodKey+MQTTperiod;
-        pub(MQTTRF2string,MQTTswitchType);  
+        pub((char *)MQTTRF2string.c_str(),(char *)MQTTswitchType.c_str());
       }
     }
   }
@@ -215,7 +215,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 #ifdef jsonReceiving
   void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
   
-   if (strcmp(topicOri,subjectMQTTtoRF2) == 0){
+   if (strstr(topicOri,catToMainTopic(subjectMQTTtoRF2)) != NULL){
       trc(F("MQTTtoRF2 json"));
       int boolSWITCHTYPE = RF2data["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {

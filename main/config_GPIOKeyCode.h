@@ -30,7 +30,7 @@ extern void setupGPIOKeyCode();
 extern void GPIOKeyCodetoMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectGPIOKeyCodetoMQTT    Base_Topic Gateway_Name "/keycode"
+#define subjectGPIOKeyCodetoMQTT    "/keycode"
 #define subjectGPIOKeyCodeStatetoMQTT subjectGPIOKeyCodetoMQTT "/status"
 #define GPIOKeyCodeDebounceDelay 60 //debounce time, increase if there are issues
 

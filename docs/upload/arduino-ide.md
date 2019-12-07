@@ -12,7 +12,7 @@
 *Example for the use of RF gateway*
 ```C++
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
-//#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+//#define ZgatewayIR     "IR"       //ESP8266, Arduino, Sonoff RF Bridge
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayBT     "BT"       //ESP8266, ESP32
@@ -24,3 +24,5 @@
 * Open the serial monitor and set 115200 bauds
 * Upload ➡️
 * You should see the logs into the serial monitor
+
+With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).

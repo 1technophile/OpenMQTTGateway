@@ -32,9 +32,9 @@ extern void MQTTto2G(char * topicOri, char * datacallback);
 extern void MQTTto2G(char * topicOri, JsonObject& SMSdata);
 /*-------------------2G topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTto2G  Base_Topic Gateway_Name "/commands/MQTTto2G"
-#define subject2GtoMQTT  Base_Topic Gateway_Name "/2GtoMQTT"
-#define subjectGTW2GtoMQTT  Base_Topic Gateway_Name "/2GtoMQTT"
+#define subjectMQTTto2G  "/commands/MQTTto2G"
+#define subject2GtoMQTT  "/2GtoMQTT"
+#define subjectGTW2GtoMQTT  "/2GtoMQTT"
 #define _2GPhoneKey "PHO_" // phone number define the phone number to send the SMS MQTT->2G
 
 #define _2G_MODULE_BAUDRATE 9600
