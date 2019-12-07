@@ -682,12 +682,18 @@ void setup_wifi() {
   // We start by connecting to a WiFi network
   trc(F("Connecting to "));
   trc(wifi_ssid);
-  IPAddress ip_adress(ip);
-  IPAddress gateway_adress(gateway);
-  IPAddress subnet_adress(subnet);
-  IPAddress dns_adress(Dns);
-  WiFi.begin(wifi_ssid, wifi_password);
-  //WiFi.config(ip_adress,gateway_adress,subnet_adress,dns_adress); //Uncomment this line if you want to use advanced network config
+  #ifdef ESPWifiAdvancedSetup
+    IPAddress ip_adress(ip);
+    IPAddress gateway_adress(gateway);
+    IPAddress subnet_adress(subnet);
+    IPAddress dns_adress(Dns);
+    if (!WiFi.config(ip_adress,gateway_adress,subnet_adress,dns_adress)) {
+      trc("STA Failed to configure");
+    }
+    WiFi.begin(wifi_ssid, wifi_password);
+  #else
+    WiFi.begin(wifi_ssid, wifi_password);
+  #endif
     
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -877,14 +883,13 @@ void setup_wifimanager(bool reset_settings){
 #else // Arduino case
 
 void setup_ethernet() {
-  if (gateway[0] != 0 || Dns[0]!=0)
-  {
+  #ifdef NetworkAdvancedSetup
     trc(F("Adv eth cfg"));
     Ethernet.begin(mac, ip, Dns, gateway, subnet);
-  }else{
+  #else
     trc(F("Spl eth cfg"));
     Ethernet.begin(mac, ip); 
-  }
+  #endif
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
     trc("Ethernet shield was not found.");
   }else{
