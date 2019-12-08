@@ -952,7 +952,9 @@ void loop()
   #endif
     lastNTWKReconnectAttempt = 0;
       if (client.connected()) {
-        if(!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
+        #ifdef ZmqttDiscovery
+          if(!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
+        #endif
         // MQTT loop
         connectedOnce = true;
         lastMQTTReconnectAttempt = 0;
