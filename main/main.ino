@@ -345,21 +345,26 @@ void pub(char * topicori, char * payload){
   }
 }
 
-void pub_custom_topic(char * topicori, JsonObject& data){
+void pub_custom_topic(char * topicori, JsonObject& data, boolean retain){
   if(client.connected()) {
     char JSONmessageBuffer[JSON_MSG_BUFFER];
     trc(F("Pub json discovery into:"));
     trc(topicori);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     trc(JSONmessageBuffer);
-    pubMQTT(topicori, JSONmessageBuffer);
+    pubMQTT(topicori, JSONmessageBuffer, retain);
   }else{
     trc("client not connected can't pub");
   }
 }
 
+// Low level MQTT functions 
 void pubMQTT(char * topic, char * payload){
     client.publish(topic, payload);
+}
+
+void pubMQTT(char * topicori, char * payload, bool retainFlag){
+  client.publish(topicori, payload, retainFlag);
 }
 
 void pubMQTT(String topic, char *  payload){
@@ -658,13 +663,12 @@ void setup()
     setupGPIOInput();
   #endif
   #ifdef ZsensorGPIOKeyCode
-   setupGPIOKeyCode();
+    setupGPIOKeyCode();
   #endif
   #ifdef ZactuatorFASTLED
     setupFASTLED();
   #endif
 
-  
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
   #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
@@ -948,6 +952,7 @@ void loop()
   #endif
     lastNTWKReconnectAttempt = 0;
       if (client.connected()) {
+        if(!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
         // MQTT loop
         connectedOnce = true;
         lastMQTTReconnectAttempt = 0;
@@ -1153,7 +1158,6 @@ void stateMeasures(){
       #endif
       #ifdef ZmqttDiscovery
           modules = modules  + ZmqttDiscovery;
-          pubMqttDiscovery();
       #endif
       #ifdef ZactuatorFASTLED
           modules = modules + ZactuatorFASTLED;
