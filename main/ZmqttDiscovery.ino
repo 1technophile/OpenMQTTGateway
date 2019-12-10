@@ -59,7 +59,7 @@ void createDiscovery(char * sensor_type,
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5)+ JSON_ARRAY_SIZE(1);
   StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject &sensor = jsonBuffer.createObject();
-  sensor.set("stat_t", state_topic); //state_topic
+  sensor.set("stat_t", catToMainTopic(state_topic)); //state_topic
   sensor.set("name", s_name);          //name
   sensor.set("uniq_id", unique_id);  //unique_id
   if (device_class[0])            sensor.set("dev_cla", device_class); //device_class
@@ -70,7 +70,7 @@ void createDiscovery(char * sensor_type,
   if (off_delay != 0)             sensor.set("off_delay", off_delay); //off_delay
   if (payload_available[0])       sensor.set("pl_avail", payload_available); // payload_on
   if (payload_not_avalaible[0])   sensor.set("pl_not_avail", payload_not_avalaible); //payload_off
-  if (command_topic[0])           sensor.set("cmd_t", command_topic); //command_topic
+  if (command_topic[0])           sensor.set("cmd_t", catToMainTopic(command_topic)); //command_topic
 
 /*if (strcmp(s_name, Gateway_Name) == 0){
   JsonArray &json_attributes = sensor.createNestedArray("json_attributes");
