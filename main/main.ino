@@ -428,9 +428,9 @@ void pubMQTT(String topic, unsigned long payload){
     client.publish((char *)topic.c_str(),val);
 }
 
-char * catToMainTopic(char * toAdd){
+String catToMainTopic(char * toAdd){
   String resultTopic = String(mqtt_topic) + String(toAdd);
-  return (char *)resultTopic.c_str();
+  return resultTopic;
 }
 
 void reconnect() {
@@ -452,7 +452,7 @@ void reconnect() {
       // publish version
       pub(version_Topic,OMG_VERSION,will_Retain);
       //Subscribing to topic
-      if (client.subscribe(catToMainTopic(subjectMQTTtoX))) {
+      if (client.subscribe((char *)catToMainTopic(subjectMQTTtoX).c_str())) {
         #ifdef ZgatewayRF
           client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
         #endif
@@ -1320,7 +1320,7 @@ digitalWrite(led_send, HIGH);
 }
 
 void MQTTtoSYS(char * topicOri, JsonObject& SYSdata) { // json object decoding
- if (strstr(topicOri,catToMainTopic(subjectMQTTtoSYSset)) != NULL){
+ if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoSYSset).c_str()) != NULL){
     trc(F("MQTTtoSYS json set"));
     #if defined(ESP8266) || defined(ESP32)
       if (SYSdata.containsKey("cmd")){

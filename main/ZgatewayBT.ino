@@ -1044,7 +1044,7 @@ void haRoomPresence(JsonObject& HomePresence){
 #endif
 
 void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
- if (strstr(topicOri,catToMainTopic(subjectMQTTtoBTset)) != NULL){
+ if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoBTset).c_str()) != NULL){
     trc(F("MQTTtoBT json set"));
 
     // Black list & white list set
