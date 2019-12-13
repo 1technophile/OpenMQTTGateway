@@ -215,7 +215,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 #ifdef jsonReceiving
   void MQTTtoRF2(char * topicOri, JsonObject& RF2data) { // json object decoding
   
-   if (strstr(topicOri,catToMainTopic(subjectMQTTtoRF2)) != NULL){
+   if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoRF2).c_str()) != NULL){
       trc(F("MQTTtoRF2 json"));
       int boolSWITCHTYPE = RF2data["switchType"] | 99;
       if (boolSWITCHTYPE != 99) {

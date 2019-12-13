@@ -135,6 +135,36 @@ void MiFloraDiscovery(char * mac){
   devices.push_back(device);
 }
 
+void VegTrugDiscovery(char * mac){
+  #define VegTrugparametersCount 4
+  trc(F("VegTrugDiscovery"));
+  char * VegTrugsensor[VegTrugparametersCount][8] = {
+     {"sensor", "VegTrug-lux", mac, "illuminance","{{ value_json.lux | is_defined }}","", "", "lu"} ,
+     {"sensor", "VegTrug-tem", mac,"temperature","{{ value_json.tem | is_defined }}","", "", "°C"} ,
+     {"sensor", "VegTrug-fer", mac,"","{{ value_json.fer | is_defined }}","", "", "µS/cm"} ,
+     {"sensor", "VegTrug-moi", mac,"","{{ value_json.moi | is_defined }}","", "", "%"}
+     //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+  
+  for (int i=0;i<VegTrugparametersCount;i++){
+   trc(F("CreateDiscoverySensor"));
+   trc(VegTrugsensor[i][1]);
+   String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+   String unique_id = String(mac) + "-" + VegTrugsensor[i][1];
+   createDiscovery(VegTrugsensor[i][0],
+                    (char *)discovery_topic.c_str(), VegTrugsensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, VegTrugsensor[i][3], VegTrugsensor[i][4],
+                    VegTrugsensor[i][5], VegTrugsensor[i][6], VegTrugsensor[i][7],
+                    0,"","",true,"");
+  }
+  BLEdevice device;
+  strcpy( device.macAdr, mac );
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
 void MiJiaDiscovery(char * mac){
   #define MiJiaparametersCount 3
   trc(F("MiJiaDiscovery"));
@@ -399,7 +429,7 @@ void MiBandDiscovery(char * mac){
                 BLEdata.set("servicedatauuid", (char *)advertisedDevice.getServiceDataUUID(j).toString().c_str());
                 if(abs((int)BLEdata["rssi"]|0) < abs(Minrssi)) { // publish only the devices close enough
                   pub((char *)mactopic.c_str(),BLEdata);
-                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL ){ //Mi FLora, Mi jia, Cleargrass Method 1, LYWDS02
+                  if (strstr(BLEdata["servicedatauuid"].as<char*>(),"fe95") != NULL ){ //Mi FLora, Mi jia, Cleargrass Method 1, LYWDS02, VegTrug
                     trc("Processing BLE device data");
                     int pos = -1;
                     pos = strpos(service_data,"209800");
@@ -408,6 +438,16 @@ void MiBandDiscovery(char * mac){
                       //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
                       #ifdef ZmqttDiscovery
                         if(!isDiscovered(mac)) MiFloraDiscovery(mac);
+                      #endif
+                      process_sensors(pos - 24,service_data,mac);
+                    }
+                    pos = -1;
+                    pos = strpos(service_data,"20bc03");
+                    if (pos != -1){
+                      trc(F("vegtrug data reading"));
+                      //example "servicedata":"7120bc0399c309688d7cc40d0910020000"
+                      #ifdef ZmqttDiscovery
+                        if(!isDiscovered(mac)) VegTrugDiscovery(mac);
                       #endif
                       process_sensors(pos - 24,service_data,mac);
                     }
@@ -1004,7 +1044,7 @@ void haRoomPresence(JsonObject& HomePresence){
 #endif
 
 void MQTTtoBT(char * topicOri, JsonObject& BTdata) { // json object decoding
- if (strstr(topicOri,catToMainTopic(subjectMQTTtoBTset)) != NULL){
+ if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoBTset).c_str()) != NULL){
     trc(F("MQTTtoBT json set"));
 
     // Black list & white list set

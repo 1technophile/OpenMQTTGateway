@@ -107,7 +107,7 @@ bool _2GtoMQTT(){
     String data = datacallback;
     String topic = topicOri;
     
-    if (strstr(topicOri,catToMainTopic(subjectMQTTto2G)) != NULL) {
+    if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTto2G).c_str()) != NULL) {
       trc(F("MQTTto2G data analysis"));
       // 2G DATA ANALYSIS
       String phone_number = "";
@@ -138,7 +138,7 @@ bool _2GtoMQTT(){
 #ifdef jsonReceiving
   void MQTTto2G(char * topicOri, JsonObject& SMSdata) {
     
-   if (strstr(topicOri,catToMainTopic(subjectMQTTto2G)) != NULL){
+   if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTto2G).c_str()) != NULL){
       const char * sms = SMSdata["message"];
       const char * phone = SMSdata["phone"];
       trc(F("MQTTto2G json data analysis"));
