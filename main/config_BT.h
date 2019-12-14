@@ -34,7 +34,7 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 #define subjectMQTTtoBTset  "/commands/MQTTtoBT/set"
 #define TimeBtw_Read 55555 //define default time between 2 scans
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
-#define Scan_duration 10 //define the time for a scan
+#define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #define HM-10
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
