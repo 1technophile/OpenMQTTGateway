@@ -1173,7 +1173,7 @@ void haRoomPresence(JsonObject &HomePresence)
   trc(F("BLE DISTANCE :"));
   trc(distance);
   String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
-  pub_custom_topic((char *)topic.c_str(), HomePresence);
+  pub_custom_topic((char *)topic.c_str(), HomePresence, false);
 }
 #endif
 

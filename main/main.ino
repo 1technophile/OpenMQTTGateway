@@ -385,7 +385,7 @@ void pub(char *topicori, char *payload)
   }
 }
 
-void pub_custom_topic(char *topicori, JsonObject &data)
+void pub_custom_topic(char *topicori, JsonObject &data, boolean retain)
 {
   if (client.connected())
   {
@@ -394,7 +394,7 @@ void pub_custom_topic(char *topicori, JsonObject &data)
     trc(topicori);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
     trc(JSONmessageBuffer);
-    pubMQTT(topicori, JSONmessageBuffer);
+    pubMQTT(topicori, JSONmessageBuffer, retain);
   }
   else
   {
@@ -402,14 +402,20 @@ void pub_custom_topic(char *topicori, JsonObject &data)
   }
 }
 
-void pubMQTT(char *topic, char *payload)
+// Low level MQTT functions 
+void pubMQTT(char * topic, char * payload)
 {
-  client.publish(topic, payload);
+    client.publish(topic, payload);
 }
 
-void pubMQTT(String topic, char *payload)
+void pubMQTT(char * topicori, char * payload, bool retainFlag)
 {
-  client.publish((char *)topic.c_str(), payload);
+  client.publish(topicori, payload, retainFlag);
+}
+
+void pubMQTT(String topic, char *  payload)
+{
+    client.publish((char *)topic.c_str(),payload);
 }
 
 void pubMQTT(char *topic, unsigned long payload)
@@ -1085,6 +1091,10 @@ void loop()
       // MQTT loop
       connectedOnce = true;
       lastMQTTReconnectAttempt = 0;
+
+      #ifdef ZmqttDiscovery
+      if(!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
+      #endif
       client.loop();
 
       #if defined(ESP8266) || defined(ESP32)

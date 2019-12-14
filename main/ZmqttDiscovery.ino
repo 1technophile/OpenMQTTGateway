@@ -113,7 +113,7 @@ void createDiscovery(char *sensor_type,
     sensor.set("device", device); //device sensor is connected to
   }
   String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
-  pub_custom_topic((char *)topic.c_str(), sensor);
+  pub_custom_topic((char *)topic.c_str(), sensor, true);
 }
 
 void pubMqttDiscovery()
@@ -320,21 +320,6 @@ void pubMqttDiscovery()
                   subjectRF2toMQTT, gatewayRF2[1], (char *)getUniqueId(gatewayRF2[1], gatewayRF2[2]).c_str(),
                   will_Topic, gatewayRF2[3], gatewayRF2[4],
                   gatewayRF2[5], gatewayRF2[6], gatewayRF2[7],
-                  0, "", "", true, "");
-#endif
-
-#ifdef ZgatewayRF315
-  // Sensor to display RF received value
-  trc(F("gatewayRF315Discovery"));
-  char *gatewayRF315[8] = {"sensor", "gatewayRF315", "", "", "{{ value_json.value }}", "", "", ""};
-  //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayRF315[1]);
-  createDiscovery(gatewayRF315[0],
-                  subjectRF315toMQTT, gatewayRF315[1], (char *)getUniqueId(gatewayRF315[1], gatewayRF315[2]).c_str(),
-                  will_Topic, gatewayRF315[3], gatewayRF315[4],
-                  gatewayRF315[5], gatewayRF315[6], gatewayRF315[7],
                   0, "", "", true, "");
 #endif
 
