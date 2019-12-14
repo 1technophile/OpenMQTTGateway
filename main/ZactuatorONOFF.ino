@@ -31,13 +31,15 @@
 #ifdef ZactuatorONOFF
 
 #ifdef jsonReceiving
-void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
-  
-  if (strstr(topicOri,catToMainTopic(subjectMQTTtoONOFF)) != NULL){
+void MQTTtoONOFF(char *topicOri, JsonObject &ONOFFdata)
+{
+  if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF))
+  {
     trc(F("MQTTtoONOFF json data analysis"));
     int boolSWITCHTYPE = ONOFFdata["state"] | 99;
     int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
-    if (boolSWITCHTYPE != 99) {
+    if (boolSWITCHTYPE != 99)
+    {
       trc(F("MQTTtoONOFF boolSWITCHTYPE ok"));
       trc(boolSWITCHTYPE);
       trc(F("pin number"));
@@ -46,7 +48,9 @@ void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
       digitalWrite(pin, boolSWITCHTYPE);
       // we acknowledge the sending by publishing the value to an acknowledgement topic
       pub(subjectGTWONOFFtoMQTT, ONOFFdata);
-    }else{
+    }
+    else
+    {
       trc(F("MQTTtoONOFF failed json read"));
     }
   }
@@ -54,8 +58,10 @@ void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
 #endif
 
 #ifdef simpleReceiving
-void MQTTtoONOFF(char * topicOri, char * datacallback) {
-  if ((strstr(topicOri,catToMainTopic(subjectMQTTtoONOFF)) != NULL) ){
+void MQTTtoONOFF(char *topicOri, char *datacallback)
+{
+  if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF)))
+  {
 
     trc(F("MQTTtoONOFF"));
     int pin = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
@@ -64,16 +70,17 @@ void MQTTtoONOFF(char * topicOri, char * datacallback) {
     pinMode(pin, OUTPUT);
 
     bool ON = false;
-    if (strstr(topicOri,ONKey) != NULL) ON = true;
-    if (strstr(topicOri,OFFKey) != NULL) ON = false;
+    if (strstr(topicOri, ONKey) != NULL)
+      ON = true;
+    if (strstr(topicOri, OFFKey) != NULL)
+      ON = false;
 
     digitalWrite(pin, ON);
     // we acknowledge the sending by publishing the value to an acknowledgement topic
     char b = ON;
     pub(subjectGTWONOFFtoMQTT, &b);
-  } 
+  }
 }
 #endif
-
 
 #endif

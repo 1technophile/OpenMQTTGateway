@@ -33,41 +33,53 @@
 
 unsigned long timeHCSR04 = 0;
 
-void setupHCSR04() {
-  pinMode(HCSR04_TRI_PIN, OUTPUT);    // declare HC SR-04 trigger pin as output
-  pinMode(HCSR04_ECH_PIN, INPUT);     // declare HC SR-04 echo pin as input
+void setupHCSR04()
+{
+  pinMode(HCSR04_TRI_PIN, OUTPUT); // declare HC SR-04 trigger pin as output
+  pinMode(HCSR04_ECH_PIN, INPUT);  // declare HC SR-04 echo pin as input
 }
 
-void MeasureDistance() {
-  if (millis() > (timeHCSR04 + TimeBetweenReadingHCSR04)) {
+void MeasureDistance()
+{
+  if (millis() > (timeHCSR04 + TimeBetweenReadingHCSR04))
+  {
     timeHCSR04 = millis();
     trc(F("Creating HCSR04 buffer"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& HCSR04data = jsonBuffer.createObject();
+    JsonObject &HCSR04data = jsonBuffer.createObject();
     digitalWrite(HCSR04_TRI_PIN, LOW);
     delayMicroseconds(2);
     digitalWrite(HCSR04_TRI_PIN, HIGH);
     delayMicroseconds(10);
     digitalWrite(HCSR04_TRI_PIN, LOW);
     unsigned long duration = pulseIn(HCSR04_ECH_PIN, HIGH);
-    if (isnan(duration)) {
+    if (isnan(duration))
+    {
       trc(F("Failed to read from HC SR04 sensor!"));
-    } else {
+    }
+    else
+    {
       static unsigned int distance = 99999;
-      unsigned int d = duration/58.2;
+      unsigned int d = duration / 58.2;
       HCSR04data.set("distance", (int)d);
-      if (d > distance) {
+      if (d > distance)
+      {
         HCSR04data.set("direction", "away");
         trc(F("HC SR04 Distance changed"));
-      } else if (d < distance) {
+      }
+      else if (d < distance)
+      {
         HCSR04data.set("direction", "towards");
         trc(F("HC SR04 Distance changed"));
-      } else if (HCSR04_always) {
+      }
+      else if (HCSR04_always)
+      {
         HCSR04data.set("direction", "static");
         trc(F("HC SR04 Distance hasn't changed"));
       }
       distance = d;
-      if(HCSR04data.size()>0) pub(subjectHCSR04,HCSR04data);
+      if (HCSR04data.size() > 0)
+        pub(subjectHCSR04, HCSR04data);
     }
   }
 }

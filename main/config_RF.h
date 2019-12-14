@@ -30,31 +30,31 @@
 #include <ArduinoJson.h>
 
 #ifdef ZgatewayRF
-    extern void setupRF();
-    extern void RFtoMQTT();  
-    extern void MQTTtoRF(char * topicOri, char * datacallback);
-    extern void MQTTtoRF(char * topicOri, JsonObject& RFdata);
+extern void setupRF();
+extern void RFtoMQTT();
+extern void MQTTtoRF(char *topicOri, char *datacallback);
+extern void MQTTtoRF(char *topicOri, JsonObject &RFdata);
 #endif
 #ifdef ZgatewayRF2
-    extern void setupRF2();
-    extern void RF2toMQTT();  
-    extern void MQTTtoRF2(char * topicOri, char * datacallback);
-    extern void MQTTtoRF2(char * topicOri, JsonObject& RFdata);
+extern void setupRF2();
+extern void RF2toMQTT();
+extern void MQTTtoRF2(char *topicOri, char *datacallback);
+extern void MQTTtoRF2(char *topicOri, JsonObject &RFdata);
 #endif
 #ifdef ZgatewayPilight
-    extern void setupPilight();
-    extern void PilighttoMQTT();  
-    extern void MQTTtoPilight(char * topicOri, char * datacallback);
-    extern void MQTTtoPilight(char * topicOri, JsonObject& RFdata);
+extern void setupPilight();
+extern void PilighttoMQTT();
+extern void MQTTtoPilight(char *topicOri, char *datacallback);
+extern void MQTTtoPilight(char *topicOri, JsonObject &RFdata);
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTtoRF  "/commands/MQTTto433"
-#define subjectRFtoMQTT  "/433toMQTT"
-#define subjectGTWRFtoMQTT  "/433toMQTT"
+#define subjectMQTTtoRF "/commands/MQTTto433"
+#define subjectRFtoMQTT "/433toMQTT"
+#define subjectGTWRFtoMQTT "/433toMQTT"
 #define RFprotocolKey "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
-#define RFbitsKey "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
-#define repeatRFwMQTT false // do we repeat a received signal by using mqtt with RF gateway
+#define RFbitsKey "RFBITS_"  // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
+#define repeatRFwMQTT false  // do we repeat a received signal by using mqtt with RF gateway
 
 /*
 RF supported protocols
@@ -73,31 +73,31 @@ RF supported protocols
 
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
-#define subjectMQTTtoRF2  "/commands/MQTTtoRF2"
-#define subjectRF2toMQTT  "/RF2toMQTT"
-#define subjectGTWRF2toMQTT  "/433toMQTT"
-#define RF2codeKey "ADDRESS_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
+#define subjectMQTTtoRF2 "/commands/MQTTtoRF2"
+#define subjectRF2toMQTT "/RF2toMQTT"
+#define subjectGTWRF2toMQTT "/433toMQTT"
+#define RF2codeKey "ADDRESS_"  // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
-#define RF2unitKey "UNIT_"  // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
-#define RF2groupKey "GROUP_"  // number of your group value  will be defined if a subject contains RF2groupKey followed by a value of 1 digit
-#define RF2dimKey "DIM"  // number of your dim value will be defined if a subject contains RF2dimKey and the payload contains the dim value as digits
+#define RF2unitKey "UNIT_"     // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
+#define RF2groupKey "GROUP_"   // number of your group value  will be defined if a subject contains RF2groupKey followed by a value of 1 digit
+#define RF2dimKey "DIM"        // number of your dim value will be defined if a subject contains RF2dimKey and the payload contains the dim value as digits
 
 /*-------------------ESPPiLight topics & parameters----------------------*/
 //433Mhz Pilight MQTT Subjects and keys
-#define subjectMQTTtoPilight  "/commands/MQTTtoPilight"
-#define subjectPilighttoMQTT  "/PilighttoMQTT"
-#define subjectGTWPilighttoMQTT  "/PilighttoMQTT"
+#define subjectMQTTtoPilight "/commands/MQTTtoPilight"
+#define subjectPilighttoMQTT "/PilighttoMQTT"
+#define subjectGTWPilighttoMQTT "/PilighttoMQTT"
 #define PilightRAW "RAW"
 #define repeatPilightwMQTT false // do we repeat a received signal by using mqtt with Pilight gateway
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RF_RECEIVER_PIN
     #ifdef ESP8266
-        #define RF_RECEIVER_PIN 0 // D3 on nodemcu // put 4 with rf bridge direct mod 
+        #define RF_RECEIVER_PIN 0 // D3 on nodemcu // put 4 with rf bridge direct mod
     #elif ESP32
         #define RF_RECEIVER_PIN 27 // D27 on DOIT ESP32
     #elif __AVR_ATmega2560__
-        #define RF_RECEIVER_PIN 1  //1 = D3 on mega
+        #define RF_RECEIVER_PIN 1 //1 = D3 on mega
     #else
         #define RF_RECEIVER_PIN 1 //1 = D3 on arduino
     #endif

@@ -33,37 +33,49 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-DHT dht(DHT_RECEIVER_PIN,DHT_SENSOR_TYPE); 
+DHT dht(DHT_RECEIVER_PIN, DHT_SENSOR_TYPE);
 
 //Time used to wait for an interval before resending temp and hum
 unsigned long timedht = 0;
 
-void MeasureTempAndHum(){
-  if (millis() > (timedht + TimeBetweenReadingDHT)) {//retriving value of temperature and humidity of the box from DHT every xUL
+void MeasureTempAndHum()
+{
+  if (millis() > (timedht + TimeBetweenReadingDHT))
+  { //retriving value of temperature and humidity of the box from DHT every xUL
     timedht = millis();
     static float persistedh;
     static float persistedt;
     float h = dht.readHumidity();
     // Read temperature as Celsius (the default)
-    float t = dht.readTemperature(); 
+    float t = dht.readTemperature();
     // Check if any reads failed and exit early (to try again).
-    if (isnan(h) || isnan(t)) {
+    if (isnan(h) || isnan(t))
+    {
       trc(F("Failed to read from DHT sensor!"));
-    }else{
+    }
+    else
+    {
       trc(F("Creating DHT buffer"));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& DHTdata = jsonBuffer.createObject();
-      if(h != persistedh || dht_always){
+      JsonObject &DHTdata = jsonBuffer.createObject();
+      if (h != persistedh || dht_always)
+      {
         DHTdata.set("hum", (float)h);
-       }else{
+      }
+      else
+      {
         trc(F("Same hum don't send it"));
-       }
-      if(t != persistedt || dht_always){
+      }
+      if (t != persistedt || dht_always)
+      {
         DHTdata.set("temp", (float)t);
-      }else{
+      }
+      else
+      {
         trc(F("Same temp don't send it"));
       }
-      if(DHTdata.size()>0) pub(DHTTOPIC,DHTdata);
+      if (DHTdata.size() > 0)
+        pub(DHTTOPIC, DHTdata);
     }
     persistedh = h;
     persistedt = t;
