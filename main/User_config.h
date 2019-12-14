@@ -80,6 +80,13 @@
 #define WifiManager_ConfigPortalTimeOut 120
 #define WifiManager_TimeOut 5
 
+/*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
+//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+#define maxMQTTretry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
+
+//set minimum quality of signal so it ignores AP's under that quality
+#define MinimumWifiSignalQuality 8
+
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
@@ -119,13 +126,6 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 //#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-
-/*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-#define maxMQTTretry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
-
-//set minimum quality of signal so it ignores AP's under that quality
-#define MinimumWifiSignalQuality 8
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #define version_Topic  "/version"
