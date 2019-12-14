@@ -91,19 +91,20 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
 
-#if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-  #define wifi_ssid "wifi ssid"
-  #define wifi_password "wifi password"
-#elif NetworkAdvancedSetup
-  // these values are only used if no dhcp configuration is available
-  const byte ip[] = { 192, 168, 1, 99 }; //ip adress
-  const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
-  const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
-  const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
-  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
-#else // for arduino + W5100
+/*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
+
+#if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
+  //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#else // for arduino boards
   const byte ip[] = { 192, 168, 1, 99 }; //ip adress
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
+  #ifdef NetworkAdvancedSetup // for arduino boards advanced config
+    // these values are only used if no dhcp configuration is available
+    const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+    const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+    const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
+  #endif
 #endif
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
