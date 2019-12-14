@@ -922,7 +922,13 @@ void setup_wifimanager(bool reset_settings)
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
   //set static ip
-  //wifiManager.setSTAStaticIPConfig(IPAddress(10,0,1,99), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+  #ifdef NetworkAdvancedSetup
+  trc(F("Adv wifi cfg"));
+  IPAddress gateway_adress(gateway);
+  IPAddress subnet_adress(subnet);
+  IPAddress ip_adress(ip);
+  wifiManager.setSTAStaticIPConfig(ip_adress, gateway_adress,subnet_adress);
+  #endif
 
   //add all your parameters here
   wifiManager.addParameter(&custom_mqtt_server);

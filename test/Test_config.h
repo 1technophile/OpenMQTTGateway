@@ -49,19 +49,44 @@
  * Otherwise you can provide these credentials on the web interface after connecting 
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
+/*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
 #ifndef Gateway_Name
   #define Gateway_Name "OpenMQTTGateway"
 #endif
+
 #define Base_Topic "home/"
 
-#if defined(ESP8266)  // for nodemcu, weemos and esp8266
+/*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
+#ifdef NetworkAdvancedSetup // for arduino boards advanced config
+  // these values are only used if no dhcp configuration is available
+  const byte ip[] = { 192, 168, 1, 99 }; //ip adress
+  const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+  const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
+  const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
+#endif
+
+#if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
   //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#else // for arduino boards
+  const byte ip[] = { 192, 168, 1, 99 }; //ip adress
+  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
+#endif
+
+#if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
+  #define wifi_ssid "wifi ssid"
+  #define wifi_password "wifi password"
 #endif
 
 #define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point 
-#define WifiManager_ssid "OpenMQTTGateway" //this is the network name of the initial setup access point
+#define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
 #define WifiManager_ConfigPortalTimeOut 120
 #define WifiManager_TimeOut 5
+
+//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+
+//set minimum quality of signal so it ignores AP's under that quality
+#define MinimumWifiSignalQuality 8
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
@@ -82,27 +107,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #define will_Message "Offline"
 #define Gateway_AnnouncementMsg "Online"
 
-/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 #define maxMQTTretry 4 //maximum MQTT connection attempts before going to wifi setup
-
-//set minimum quality of signal so it ignores AP's under that quality
-#define MinimumWifiSignalQuality 8
-
-// Update these with values suitable for your network.
-#if defined(ESP32) || defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-  #define wifi_ssid "wifi ssid"
-  #define wifi_password "wifi password"
-#else // for arduino + W5100
-  const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
-#endif
-
-// these values are only used if no dhcp configuration is available
-const byte ip[] = { 192, 168, 1, 99 }; //ip adress
-// Advanced network config (optional) if you want to use these parameters uncomment line 158, 172 and comment line 171  of OpenMQTTGateway.ino
-const byte gateway[] = { 192, 168, 1, 1 }; //ip adress
-const byte Dns[] = { 192, 168, 1, 1 }; //ip adress
-const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #define ota_hostname "OTAHOSTNAME"
