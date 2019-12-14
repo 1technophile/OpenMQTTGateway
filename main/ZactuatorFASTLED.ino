@@ -24,12 +24,8 @@
 
 #ifdef ZactuatorFASTLED
 
-#ifdef ESP8266
 #include <FastLED.h>
-#else
-#include <FastLED.h>
-#endif
-#include <ArduinoJson.h>
+
 enum LEDState
 {
   OFF,
@@ -123,35 +119,32 @@ boolean FASTLEDtoMQTT()
 {
   return false;
 }
-void MQTTtoFASTLEDJSON(char *topicOri, JsonObject&  jsonData)
+void MQTTtoFASTLEDJSON(char *topicOri, JsonObject &jsonData)
 {
   trc(F("MQTTtoFASTLEDJSON: "));
   currentLEDState = GENERAL;
   trc(topicOri);
   //number = (long)strtol(&datacallback[1], NULL, 16);
 
-  
-  
-  if (cmpToMainTopic(topicOri,subjectMQTTtoFASTLEDsetled))
+  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetled))
   {
-      trc(F("JSON parsed"));
-      int ledNr = jsonData["led"];
-      trc(F("led"));
-      trc(ledNr);
-      const char *color = jsonData["hex"];
-      trc(F("hex"));
-      
-      long number = (long)strtol(color, NULL, 16);
-      trc(number);
-      bool blink = jsonData["blink"];
-      if (ledNr <= FASTLED_NUM_LEDS)
-      {
-        trc(F("blink"));
-        trc(blink);
-        blinkLED[ledNr] = blink;
-        leds[ledNr] = number;
-      }
-    
+    trc(F("JSON parsed"));
+    int ledNr = jsonData["led"];
+    trc(F("led"));
+    trc(ledNr);
+    const char *color = jsonData["hex"];
+    trc(F("hex"));
+
+    long number = (long)strtol(color, NULL, 16);
+    trc(number);
+    bool blink = jsonData["blink"];
+    if (ledNr <= FASTLED_NUM_LEDS)
+    {
+      trc(F("blink"));
+      trc(blink);
+      blinkLED[ledNr] = blink;
+      leds[ledNr] = number;
+    }
   }
 }
 void MQTTtoFASTLED(char *topicOri, char *datacallback)
@@ -160,7 +153,7 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
   currentLEDState = GENERAL;
   long number = 0;
   trc(topicOri);
-  if (cmpToMainTopic(topicOri,subjectMQTTtoFASTLED))
+  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLED))
   {
     number = (long)strtol(&datacallback[1], NULL, 16);
     trc(number);
@@ -170,18 +163,18 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
     }
     FastLED.show();
   }
-  else if (cmpToMainTopic(topicOri,subjectMQTTtoFASTLEDsetbrightness))
+  else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetbrightness))
   {
     number = (long)strtol(&datacallback[1], NULL, 16);
     trc(number);
     FastLED.setBrightness(number);
     FastLED.show();
   }
-  else if (cmpToMainTopic(topicOri,subjectMQTTtoFASTLEDsetanimation))
+  else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetanimation))
   {
     String payload = datacallback;
     trc(payload);
-    if ( strstr(datacallback,"fire") != NULL)
+    if (strstr(datacallback, "fire") != NULL)
     {
       currentLEDState = FIRE;
       gPal = HeatColors_p;
@@ -195,7 +188,7 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
   {
     currentLEDState = OFF;
   }
-  if (currentLEDState==OFF)
+  if (currentLEDState == OFF)
   {
     for (int i = 0; i < FASTLED_NUM_LEDS; i++)
     {

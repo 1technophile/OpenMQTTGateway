@@ -5,6 +5,8 @@ agree to follow the code of conduct below
 
 [code of conduct]: https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md
 
+[code style guide](https://google.github.io/styleguide/cppguide.html#Formatting)
+
 Fork the [development branch](https://github.com/1technophile/OpenMQTTGateway/tree/development), then clone the repo
 
 Make your modification,

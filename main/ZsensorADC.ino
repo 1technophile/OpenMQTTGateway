@@ -31,32 +31,38 @@
 #ifdef ZsensorADC
 
 #if defined(ESP8266)
-  ADC_MODE(ADC_TOUT);
+ADC_MODE(ADC_TOUT);
 #endif
 
 //Time used to wait for an interval before resending adc value
 unsigned long timeadc = 0;
 
-void MeasureADC(){
-  if (millis() > (timeadc + TimeBetweenReadingADC)) {//retriving value of temperature and humidity of the box from DHT every xUL
-    #if defined(ESP8266)
-      yield();
-    #endif
+void MeasureADC()
+{
+  if (millis() > (timeadc + TimeBetweenReadingADC))
+  { //retriving value of temperature and humidity of the box from DHT every xUL
+#if defined(ESP8266)
+    yield();
+#endif
     timeadc = millis();
     static int persistedadc;
     int val = analogRead(ADC_PIN);
-    if (isnan(val)) {
+    if (isnan(val))
+    {
       trc(F("Failed to read from ADC !"));
-    }else{
-      if(val  >= persistedadc + ThresholdReadingADC || val  <= persistedadc - ThresholdReadingADC){
+    }
+    else
+    {
+      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC)
+      {
         trc(F("Creating ADC buffer"));
         const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
         StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-        JsonObject& ADCdata = jsonBuffer.createObject();
+        JsonObject &ADCdata = jsonBuffer.createObject();
         ADCdata.set("adc", (int)val);
-        pub(ADCTOPIC,ADCdata);
+        pub(ADCTOPIC, ADCdata);
         persistedadc = val;
-       }
+      }
     }
   }
 }
