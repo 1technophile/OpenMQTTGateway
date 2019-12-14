@@ -31,15 +31,18 @@
 
 #include <SPI.h>
 #include <LoRa.h>
-#include <Wire.h>  
+#include <Wire.h>
 
-void setupLORA() {
-  SPI.begin(LORA_SCK,LORA_MISO,LORA_MOSI,LORA_SS);
-  LoRa.setPins(LORA_SS,LORA_RST,LORA_DI0);  
-  
-  if (!LoRa.begin(LORA_BAND)) {
+void setupLORA()
+{
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
+
+  if (!LoRa.begin(LORA_BAND))
+  {
     trc(F("ZgatewayLORA setup failed!"));
-    while (1);
+    while (1)
+      ;
   }
   LoRa.receive();
   trc(F("LORA_SCK"));
@@ -55,78 +58,91 @@ void setupLORA() {
   trc(F("LORA_DI0"));
   trc(LORA_DI0);
   trc(F("ZgatewayLORA setup done"));
-   
 }
 
-void LORAtoMQTT(){
+void LORAtoMQTT()
+{
   int packetSize = LoRa.parsePacket();
-  if (packetSize) {
+  if (packetSize)
+  {
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& LORAdata = jsonBuffer.createObject();
+    JsonObject &LORAdata = jsonBuffer.createObject();
     trc(F("Rcv. LORA"));
-    #ifdef ESP32
-      String taskMessage = "LORA Task running on core ";
-      taskMessage = taskMessage + xPortGetCoreID();
-      trc(taskMessage);
-    #endif
-    String packet ;
-    packet ="";
-    for (int i = 0; i < packetSize; i++) { packet += (char) LoRa.read(); }
+#ifdef ESP32
+    String taskMessage = "LORA Task running on core ";
+    taskMessage = taskMessage + xPortGetCoreID();
+    trc(taskMessage);
+#endif
+    String packet;
+    packet = "";
+    for (int i = 0; i < packetSize; i++)
+    {
+      packet += (char)LoRa.read();
+    }
     LORAdata.set("rssi", (int)LoRa.packetRssi());
-    LORAdata.set("snr",(float)LoRa.packetSnr());
-    LORAdata.set("pferror",(float)LoRa.packetFrequencyError());
+    LORAdata.set("snr", (float)LoRa.packetSnr());
+    LORAdata.set("pferror", (float)LoRa.packetFrequencyError());
     LORAdata.set("packetSize", (int)packetSize);
     LORAdata.set("message", (char *)packet.c_str());
-    pub(subjectLORAtoMQTT,LORAdata);
-    if (repeatLORAwMQTT){
-        trc(F("Pub LORA for rpt"));
-        pub(subjectMQTTtoLORA,LORAdata);
+    pub(subjectLORAtoMQTT, LORAdata);
+    if (repeatLORAwMQTT)
+    {
+      trc(F("Pub LORA for rpt"));
+      pub(subjectMQTTtoLORA, LORAdata);
     }
   }
 }
 
 #ifdef jsonReceiving
-  void MQTTtoLORA(char * topicOri, JsonObject& LORAdata) { // json object decoding
-   if (cmpToMainTopic(topicOri,subjectMQTTtoLORA)){
-      trc(F("MQTTtoLORA json"));
-      const char * message = LORAdata["message"];
-      int txPower = LORAdata["txpower"]|LORA_TX_POWER;
-      int spreadingFactor = LORAdata["spreadingfactor"]|LORA_SPREADING_FACTOR;
-      long int frequency  = LORAdata["frequency "]|LORA_BAND;
-      long int signalBandwidth = LORAdata["signalbandwidth"]|LORA_SIGNAL_BANDWIDTH; 
-      int codingRateDenominator = LORAdata["codingrate"]|LORA_CODING_RATE;
-      int preambleLength = LORAdata["preamblelength"]|LORA_PREAMBLE_LENGTH;
-      byte syncWord = LORAdata["syncword"]|LORA_SYNC_WORD;
-      bool Crc = LORAdata["enablecrc"]|DEFAULT_CRC;
-      if (message) {
-        LoRa.setTxPower(txPower);
-        LoRa.setFrequency(frequency);
-        LoRa.setSpreadingFactor(spreadingFactor);
-        LoRa.setSignalBandwidth(signalBandwidth);
-        LoRa.setCodingRate4(codingRateDenominator);
-        LoRa.setPreambleLength(preambleLength);
-        LoRa.setSyncWord(syncWord);
-        if (Crc) LoRa.enableCrc();
-        LoRa.beginPacket();
-        LoRa.print(message);
-        LoRa.endPacket();
-        trc(F("MQTTtoLORA OK"));
-        pub(subjectGTWLORAtoMQTT, LORAdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      }else{
-        trc(F("MQTTtoLORA Fail json"));
-      }
+void MQTTtoLORA(char *topicOri, JsonObject &LORAdata)
+{ // json object decoding
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA))
+  {
+    trc(F("MQTTtoLORA json"));
+    const char *message = LORAdata["message"];
+    int txPower = LORAdata["txpower"] | LORA_TX_POWER;
+    int spreadingFactor = LORAdata["spreadingfactor"] | LORA_SPREADING_FACTOR;
+    long int frequency = LORAdata["frequency "] | LORA_BAND;
+    long int signalBandwidth = LORAdata["signalbandwidth"] | LORA_SIGNAL_BANDWIDTH;
+    int codingRateDenominator = LORAdata["codingrate"] | LORA_CODING_RATE;
+    int preambleLength = LORAdata["preamblelength"] | LORA_PREAMBLE_LENGTH;
+    byte syncWord = LORAdata["syncword"] | LORA_SYNC_WORD;
+    bool Crc = LORAdata["enablecrc"] | DEFAULT_CRC;
+    if (message)
+    {
+      LoRa.setTxPower(txPower);
+      LoRa.setFrequency(frequency);
+      LoRa.setSpreadingFactor(spreadingFactor);
+      LoRa.setSignalBandwidth(signalBandwidth);
+      LoRa.setCodingRate4(codingRateDenominator);
+      LoRa.setPreambleLength(preambleLength);
+      LoRa.setSyncWord(syncWord);
+      if (Crc)
+        LoRa.enableCrc();
+      LoRa.beginPacket();
+      LoRa.print(message);
+      LoRa.endPacket();
+      trc(F("MQTTtoLORA OK"));
+      pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    }
+    else
+    {
+      trc(F("MQTTtoLORA Fail json"));
     }
   }
+}
 #endif
 #ifdef simpleReceiving
-  void MQTTtoLORA(char * topicOri, char * LORAdata) { // json object decoding
-   if (cmpToMainTopic(topicOri,subjectMQTTtoLORA)){
-        LoRa.beginPacket();
-        LoRa.print(LORAdata);
-        LoRa.endPacket();
-        trc(F("MQTTtoLORA OK"));
-        pub(subjectGTWLORAtoMQTT, LORAdata);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    }
+void MQTTtoLORA(char *topicOri, char *LORAdata)
+{ // json object decoding
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA))
+  {
+    LoRa.beginPacket();
+    LoRa.print(LORAdata);
+    LoRa.endPacket();
+    trc(F("MQTTtoLORA OK"));
+    pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
+}
 #endif
 #endif

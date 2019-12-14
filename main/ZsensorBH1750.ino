@@ -1,4 +1,4 @@
-  /*  
+/*  
   OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
 
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
@@ -46,21 +46,22 @@ void setupZsensorBH1750()
 {
   Wire.begin();
   Wire.beginTransmission(BH1750_i2c_addr);
-  Wire.write(0x10);      // Set resolution to 1 Lux
+  Wire.write(0x10); // Set resolution to 1 Lux
   Wire.endTransmission();
   delay(300);
 }
- 
-// void loop() 
+
+// void loop()
 void MeasureLightIntensity()
 {
-  if (millis() > (timebh1750 + TimeBetweenReadingBH1750)) {//retriving value of Lux, FtCd and Wattsm2 from BH1750
+  if (millis() > (timebh1750 + TimeBetweenReadingBH1750))
+  { //retriving value of Lux, FtCd and Wattsm2 from BH1750
     trc(F("Creating BH1750 buffer"));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& BH1750data = jsonBuffer.createObject();
-    
+    JsonObject &BH1750data = jsonBuffer.createObject();
+
     timebh1750 = millis();
-    unsigned int i=0;
+    unsigned int i = 0;
     static float persistedll;
     static float persistedlf;
     static float persistedlw;
@@ -70,39 +71,52 @@ void MeasureLightIntensity()
 
     // Check if reads failed and exit early (to try again).
     Wire.requestFrom(BH1750_i2c_addr, 2);
-    if(Wire.available() != 2) {
+    if (Wire.available() != 2)
+    {
       trc(F("Failed to read from LightSensor BH1750!"));
-    }else{
+    }
+    else
+    {
       i = Wire.read();
-      i <<=8;
-      i |= Wire.read(); 
+      i <<= 8;
+      i |= Wire.read();
 
       // Calculate the Values
-      Lux = i/1.2;  // Convert to Lux
-      ftcd = Lux/10.764;
-      Wattsm2 = Lux/683.0;
+      Lux = i / 1.2; // Convert to Lux
+      ftcd = Lux / 10.764;
+      Wattsm2 = Lux / 683.0;
 
       // Generate Lux
-      if(Lux != persistedll || bh1750_always){
+      if (Lux != persistedll || bh1750_always)
+      {
         BH1750data.set("lux", (unsigned int)Lux);
-       }else{
+      }
+      else
+      {
         trc(F("Same lux don't send it"));
-       }
+      }
 
       // Generate FtCd
-      if(ftcd != persistedlf || bh1750_always){
+      if (ftcd != persistedlf || bh1750_always)
+      {
         BH1750data.set("ftcd", (unsigned int)ftcd);
-      }else{
+      }
+      else
+      {
         trc(F("Same ftcd don't send it"));
       }
 
       // Generate Watts/m2
-      if(Wattsm2 != persistedlw || bh1750_always){
+      if (Wattsm2 != persistedlw || bh1750_always)
+      {
         BH1750data.set("wattsm2", (unsigned int)Wattsm2);
-      }else{
+      }
+      else
+      {
         trc(F("Same wattsm2 don't send it"));
       }
-      if(BH1750data.size()>0) pub(subjectBH1750toMQTT,BH1750data);
+      if (BH1750data.size() > 0)
+        pub(subjectBH1750toMQTT, BH1750data);
     }
     persistedll = Lux;
     persistedlf = ftcd;

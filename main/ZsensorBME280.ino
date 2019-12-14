@@ -50,17 +50,17 @@ BME280 mySensor;
 void setupZsensorBME280()
 {
   mySensor.settings.commInterface = I2C_MODE;
-  mySensor.settings.I2CAddress = 0x76; // Bosch BME280 I2C Address  
-  
+  mySensor.settings.I2CAddress = 0x76; // Bosch BME280 I2C Address
+
   //***Operation settings*****************************//
-  
+
   // runMode Setting - Values:
   // -------------------------
   //  0, Sleep mode
   //  1 or 2, Forced mode
   //  3, Normal mode
   mySensor.settings.runMode = 3; //Normal mode
-  
+
   // tStandby Setting - Values:
   // --------------------------
   //  0, 0.5ms
@@ -72,7 +72,7 @@ void setupZsensorBME280()
   //  6, 10ms
   //  7, 20ms
   mySensor.settings.tStandby = 1;
-  
+
   // Filter can be off or number of FIR coefficients - Values:
   // ---------------------------------------------------------
   //  0, filter off
@@ -81,7 +81,7 @@ void setupZsensorBME280()
   //  3, coefficients = 8
   //  4, coefficients = 16
   mySensor.settings.filter = 4;
-  
+
   // tempOverSample - Values:
   // ------------------------
   //  0, skipped
@@ -92,14 +92,14 @@ void setupZsensorBME280()
   // -------------------------
   //  0, skipped
   //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
-    mySensor.settings.pressOverSample = 1;
-  
+  mySensor.settings.pressOverSample = 1;
+
   // humidOverSample - Values:
   // -------------------------
   //  0, skipped
   //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
   mySensor.settings.humidOverSample = 1;
-  
+
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
   Serial.print("Bosch BME280 Initialized - Result of .begin(): 0x");
   Serial.println(mySensor.begin(), HEX);
@@ -108,7 +108,8 @@ void setupZsensorBME280()
 void MeasureTempHumAndPressure()
 {
 
-  if (millis() > (timebme280 + TimeBetweenReadingbme280)) {
+  if (millis() > (timebme280 + TimeBetweenReadingbme280))
+  {
 
     timebme280 = millis();
     static float persisted_bme_tempc;
@@ -126,55 +127,77 @@ void MeasureTempHumAndPressure()
     float BmeAltiFt = mySensor.readFloatAltitudeFeet();
 
     // Check if reads failed and exit early (to try again).
-    if (isnan(BmeTempC) || isnan(BmeTempF) || isnan(BmeHum) || isnan(BmePa) || isnan(BmeAltiM) || isnan(BmeAltiFt)) {
+    if (isnan(BmeTempC) || isnan(BmeTempF) || isnan(BmeHum) || isnan(BmePa) || isnan(BmeAltiM) || isnan(BmeAltiFt))
+    {
       trc(F("Failed to read from Weather Sensor BME280!"));
-    }else{
-        trc(F("Creating BME280 buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-        JsonObject& BME280data = jsonBuffer.createObject();
+    }
+    else
+    {
+      trc(F("Creating BME280 buffer"));
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject &BME280data = jsonBuffer.createObject();
       // Generate Temperature in degrees C
-      if(BmeTempC != persisted_bme_tempc || bme280_always){
+      if (BmeTempC != persisted_bme_tempc || bme280_always)
+      {
         BME280data.set("tempc", (float)BmeTempC);
-      }else{
+      }
+      else
+      {
         trc(F("Same Degrees C don't send it"));
       }
-      
+
       // Generate Temperature in degrees F
-      if(BmeTempF != persisted_bme_tempf || bme280_always){
+      if (BmeTempF != persisted_bme_tempf || bme280_always)
+      {
         BME280data.set("tempf", (float)BmeTempF);
-      }else{
+      }
+      else
+      {
         trc(F("Same Degrees F don't send it"));
       }
-      
+
       // Generate Humidity in percent
-      if(BmeHum != persisted_bme_hum || bme280_always){
+      if (BmeHum != persisted_bme_hum || bme280_always)
+      {
         BME280data.set("hum", (float)BmeHum);
-      }else{
+      }
+      else
+      {
         trc(F("Same Humidity don't send it"));
       }
 
       // Generate Pressure in Pa
-      if(BmePa != persisted_bme_pa || bme280_always){
+      if (BmePa != persisted_bme_pa || bme280_always)
+      {
         BME280data.set("pa", (float)BmePa);
-      }else{
+      }
+      else
+      {
         trc(F("Same Pressure don't send it"));
       }
 
       // Generate Altitude in Meter
-      if(BmeAltiM != persisted_bme_altim || bme280_always){
+      if (BmeAltiM != persisted_bme_altim || bme280_always)
+      {
         trc(F("Sending Altitude Meter to MQTT"));
         BME280data.set("altim", (float)BmeAltiM);
-      }else{
+      }
+      else
+      {
         trc(F("Same Altitude Meter don't send it"));
       }
 
       // Generate Altitude in Feet
-      if(BmeAltiFt != persisted_bme_altift || bme280_always){
+      if (BmeAltiFt != persisted_bme_altift || bme280_always)
+      {
         BME280data.set("altift", (float)BmeAltiFt);
-      }else{
+      }
+      else
+      {
         trc(F("Same Altitude Feet don't send it"));
       }
-      if(BME280data.size()>0) pub(BMETOPIC,BME280data);
+      if (BME280data.size() > 0)
+        pub(BMETOPIC, BME280data);
     }
     persisted_bme_tempc = BmeTempC;
     persisted_bme_tempf = BmeTempF;
@@ -182,7 +205,6 @@ void MeasureTempHumAndPressure()
     persisted_bme_pa = BmePa;
     persisted_bme_altim = BmeAltiM;
     persisted_bme_altift = BmeAltiFt;
-
   }
 }
 
