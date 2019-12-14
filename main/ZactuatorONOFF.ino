@@ -33,7 +33,7 @@
 #ifdef jsonReceiving
 void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
   
-  if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoONOFF).c_str()) != NULL){
+  if (cmpToMainTopic(topicOri,subjectMQTTtoONOFF)){
     trc(F("MQTTtoONOFF json data analysis"));
     int boolSWITCHTYPE = ONOFFdata["state"] | 99;
     int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
@@ -55,7 +55,7 @@ void MQTTtoONOFF(char * topicOri, JsonObject& ONOFFdata){
 
 #ifdef simpleReceiving
 void MQTTtoONOFF(char * topicOri, char * datacallback) {
-  if ((strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoONOFF).c_str()) != NULL) ){
+  if ((cmpToMainTopic(topicOri,subjectMQTTtoONOFF)) ){
 
     trc(F("MQTTtoONOFF"));
     int pin = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295

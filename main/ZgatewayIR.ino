@@ -274,7 +274,7 @@ void IRtoMQTT(){
 #ifdef jsonReceiving
   void MQTTtoIR(char * topicOri, JsonObject& IRdata) {
 
-     if (strstr(topicOri,(char *)catToMainTopic(subjectMQTTtoIR).c_str()) != NULL){ 
+     if (cmpToMainTopic(topicOri,subjectMQTTtoIR)){ 
       trc(F("MQTTtoIR json"));
       uint64_t data = IRdata["value"];
       const char * raw = IRdata["raw"];
