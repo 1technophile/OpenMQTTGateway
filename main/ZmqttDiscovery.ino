@@ -50,16 +50,21 @@ String getUniqueId(String name, String sufix)
 }
 
 void createDiscovery(char * sensor_type,
-                     char * state_topic, char * s_name, char * unique_id,
+                     char * st_topic, char * s_name, char * unique_id,
                      char * availability_topic, char * device_class, char * value_template,
                      char * payload_on, char * payload_off, char * unit_of_meas,
                      int off_delay,
-                     char * payload_available, char * payload_not_avalaible, bool child_device , char * command_topic)
+                     char * payload_available, char * payload_not_avalaible, bool child_device , char * cmd_topic)
 {
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5)+ JSON_ARRAY_SIZE(1);
   StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject &sensor = jsonBuffer.createObject();
-  sensor.set("stat_t", catToMainTopic(state_topic)); //state_topic
+
+  char state_topic[mqtt_topic_max_size];
+  strcpy(state_topic,mqtt_topic);
+  strcat(state_topic,st_topic);
+  sensor.set("stat_t", state_topic); //state_topic
+  
   sensor.set("name", s_name);          //name
   sensor.set("uniq_id", unique_id);  //unique_id
   if (device_class[0])            sensor.set("dev_cla", device_class); //device_class
@@ -70,7 +75,13 @@ void createDiscovery(char * sensor_type,
   if (off_delay != 0)             sensor.set("off_delay", off_delay); //off_delay
   if (payload_available[0])       sensor.set("pl_avail", payload_available); // payload_on
   if (payload_not_avalaible[0])   sensor.set("pl_not_avail", payload_not_avalaible); //payload_off
-  if (command_topic[0])           sensor.set("cmd_t", catToMainTopic(command_topic)); //command_topic
+
+  if (cmd_topic[0]) {
+    char command_topic[mqtt_topic_max_size];
+    strcpy(command_topic,mqtt_topic);
+    strcat(command_topic,cmd_topic);
+    sensor.set("cmd_t", command_topic); //command_topic
+  }          
 
 /*if (strcmp(s_name, Gateway_Name) == 0){
   JsonArray &json_attributes = sensor.createNestedArray("json_attributes");
@@ -79,7 +90,6 @@ void createDiscovery(char * sensor_type,
   json_attributes.add("rssi");
   json_attributes.add("SSID");
 }*/
-
 
   if (child_device){
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(2);
