@@ -61,6 +61,7 @@ matrix:
       install:
         - npm install -g vuepress
       script:
+        - sed -i 's/version_tag/'$TRAVIS_TAG'/g' docs/.vuepress/config.js
         - npm run docs:build
       before_deploy: echo "docs.openmqttgateway.com" >> docs/.vuepress/dist/CNAME
       deploy:
