@@ -2,8 +2,8 @@
 
 ## Restart the ESP
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/set" -m '{"cmd":"restart"}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"restart"}'`
 
 ## Erase the ESP settings
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/set" -m '{"cmd":"erase"}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"erase"}'`

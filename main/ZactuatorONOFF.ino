@@ -36,7 +36,7 @@ void MQTTtoONOFF(char *topicOri, JsonObject &ONOFFdata)
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF))
   {
     trc(F("MQTTtoONOFF json data analysis"));
-    int boolSWITCHTYPE = ONOFFdata["state"] | 99;
+    int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
     int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
     if (boolSWITCHTYPE != 99)
     {

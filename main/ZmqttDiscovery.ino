@@ -102,10 +102,9 @@ void createDiscovery(char *sensor_type,
 
   if (child_device)
   {
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(2);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonDeviceBuffer;
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
     JsonObject &device = jsonDeviceBuffer.createObject();
-    device.set("name", Gateway_Name);
+    device.set("name", gateway_name);
     device.set("manufacturer", DEVICEMANUFACTURER);
     device.set("sw_version", OMG_VERSION);
     JsonArray &identifiers = device.createNestedArray("identifiers");
@@ -119,12 +118,26 @@ void createDiscovery(char *sensor_type,
 void pubMqttDiscovery()
 {
   trc(F("omgStatusDiscovery"));
-  createDiscovery("binary_sensor",                                               //set sensorType
+  createDiscovery("binary_sensor",                                               //set Type
                   will_Topic, Gateway_Name, (char *)getUniqueId("", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "connectivity", "",                                //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "",                     //set,payload_on,payload_off,unit_of_meas,
-                  0,                                                             //set optimistic,retain, off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, ""                //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic, state on, state off
+                  0,                                                             //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, false, ""                //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+  createDiscovery("switch",                                                      //set Type
+                  will_Topic, "restart OMG", (char *)getUniqueId("restart", "").c_str(),                            //set state_topic,name,uniqueId
+                  will_Topic, "", "",             //set availability_topic,device_class,value_template,
+                  "{\"cmd\":\"restart\"}", "", "",                               //set,payload_on,payload_off,unit_of_meas,
+                  0,                                                             //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset     //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+  createDiscovery("switch",                                                      //set Type
+                  will_Topic, "erase OMG", (char *)getUniqueId("erase", "").c_str(),                            //set state_topic,name,uniqueId
+                  will_Topic, "", "",             //set availability_topic,device_class,value_template,
+                  "{\"cmd\":\"erase\"}", "", "",                               //set,payload_on,payload_off,unit_of_meas,
+                  0,                                                             //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset     //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
   );
 
 #ifdef ZsensorBME280
@@ -281,7 +294,7 @@ void pubMqttDiscovery()
 
 #ifdef ZactuatorONOFF
   trc(F("actuatorONOFFDiscovery"));
-  char *actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "", "ON", "OFF", ""};
+  char *actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "", "{\"cmd\":1}", "{\"cmd\":0}", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   trc(F("CreateDiscoverySensor"));

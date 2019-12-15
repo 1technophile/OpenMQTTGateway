@@ -176,6 +176,6 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #endif
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
 #define subjectSYStoMQTT  "/SYStoMQTT"
-#define subjectMQTTtoSYSset "/commands/MQTTtoSYS/set"
+#define subjectMQTTtoSYSset "/commands/MQTTtoSYS/config"
 
 #endif

@@ -139,13 +139,13 @@ void MiFloraDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(MiFlorasensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
     createDiscovery(MiFlorasensor[i][0],
                     (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
                     MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -171,13 +171,13 @@ void VegTrugDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(VegTrugsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + VegTrugsensor[i][1];
     createDiscovery(VegTrugsensor[i][0],
                     (char *)discovery_topic.c_str(), VegTrugsensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, VegTrugsensor[i][3], VegTrugsensor[i][4],
                     VegTrugsensor[i][5], VegTrugsensor[i][6], VegTrugsensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -202,13 +202,13 @@ void MiJiaDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(MiJiasensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiJiasensor[i][1];
     createDiscovery(MiJiasensor[i][0],
                     (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
                     MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -233,13 +233,13 @@ void LYWSD02Discovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(LYWSD02sensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
     createDiscovery(LYWSD02sensor[i][0],
                     (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
                     LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -264,13 +264,13 @@ void CLEARGRASSTRHDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(CLEARGRASSTRHsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
     createDiscovery(CLEARGRASSTRHsensor[i][0],
                     (char *)discovery_topic.c_str(), CLEARGRASSTRHsensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, CLEARGRASSTRHsensor[i][3], CLEARGRASSTRHsensor[i][4],
                     CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -295,13 +295,13 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(CLEARGRASSTRHKPAsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + CLEARGRASSTRHKPAsensor[i][1];
     createDiscovery(CLEARGRASSTRHKPAsensor[i][0],
                     (char *)discovery_topic.c_str(), CLEARGRASSTRHKPAsensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, CLEARGRASSTRHKPAsensor[i][3], CLEARGRASSTRHKPAsensor[i][4],
                     CLEARGRASSTRHKPAsensor[i][5], CLEARGRASSTRHKPAsensor[i][6], CLEARGRASSTRHKPAsensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -324,13 +324,13 @@ void MiScaleDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(MiScalesensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiScalesensor[i][1];
     createDiscovery(MiScalesensor[i][0],
                     (char *)discovery_topic.c_str(), MiScalesensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiScalesensor[i][3], MiScalesensor[i][4],
                     MiScalesensor[i][5], MiScalesensor[i][6], MiScalesensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -353,13 +353,13 @@ void MiLampDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(MiLampsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiLampsensor[i][1];
     createDiscovery(MiLampsensor[i][0],
                     (char *)discovery_topic.c_str(), MiLampsensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiLampsensor[i][3], MiLampsensor[i][4],
                     MiLampsensor[i][5], MiLampsensor[i][6], MiLampsensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -382,13 +382,13 @@ void MiBandDiscovery(char *mac)
   {
     trc(F("CreateDiscoverySensor"));
     trc(MiBandsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + String(mac);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiBandsensor[i][1];
     createDiscovery(MiBandsensor[i][0],
                     (char *)discovery_topic.c_str(), MiBandsensor[i][1], (char *)unique_id.c_str(),
                     will_Topic, MiBandsensor[i][3], MiBandsensor[i][4],
                     MiBandsensor[i][5], MiBandsensor[i][6], MiBandsensor[i][7],
-                    0, "", "", true, "");
+                    0, "", "", false, "");
   }
   BLEdevice device;
   strcpy(device.macAdr, mac);
@@ -428,7 +428,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     BLEdata.set("id", (char *)mac_adress.c_str());
     mac_adress.replace(":", "");
     mac_adress.toUpperCase();
-    String mactopic = subjectBTtoMQTT + mac_adress;
+    String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
     char mac[mac_adress.length() + 1];
     mac_adress.toCharArray(mac, mac_adress.length() + 1);
     trc("device detected");
@@ -791,7 +791,7 @@ bool BTtoMQTT()
             trc(HomePresenceId);
             BLEdata.set("id", (char *)HomePresenceId.c_str());
             #endif
-            String topic = subjectBTtoMQTT + String(d[0].extract);
+            String topic = subjectBTtoMQTT + "/" + String(d[0].extract);
             int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
             BLEdata.set("rssi", (int)rssi);
             #ifdef subjectHomePresence
@@ -1000,7 +1000,7 @@ bool process_sensors(int offset, char *rest_data, char *mac_adress)
     return false;
   }
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }
@@ -1022,7 +1022,7 @@ bool process_scale_v1(char *rest_data, char *mac_adress)
 
   // Publish weight
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }
@@ -1046,7 +1046,7 @@ bool process_scale_v2(char *rest_data, char *mac_adress)
 
   // Publish weight
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }
@@ -1068,7 +1068,7 @@ bool process_miband(char *rest_data, char *mac_adress)
 
   // Publish weight
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }
@@ -1091,7 +1091,7 @@ bool process_milamp(char *rest_data, char *mac_adress)
 
   // Publish
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }
@@ -1119,7 +1119,7 @@ bool process_cleargrass_air(char *rest_data, char *mac_adress)
   BLEdata.set("pres", (double)value / 100);
 
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }
@@ -1143,7 +1143,7 @@ bool process_cleargrass(char *rest_data, char *mac_adress)
   BLEdata.set("hum", (double)value / 10);
 
   String mactopic(mac_adress);
-  mactopic = subjectBTtoMQTT + mactopic;
+  mactopic = subjectBTtoMQTT + String("/") + mactopic;
   pub((char *)mactopic.c_str(), BLEdata);
   return true;
 }

@@ -229,7 +229,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
 #define subjectSYStoMQTT  "/SYStoMQTT"
-#define subjectMQTTtoSYSset "/commands/MQTTtoSYS/set"
+#define subjectMQTTtoSYSset "/commands/MQTTtoSYS/config"
 
 //#define subjectTRACEtoMQTT "OpenMQTTGateway/log" //uncomment if you want to see traces on OpenMQTTGateway/log topic
 
