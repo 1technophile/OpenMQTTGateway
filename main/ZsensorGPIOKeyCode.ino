@@ -67,7 +67,7 @@ void MeasureGPIOKeyCode()
       sprintf(hex, "%02x", InputStateGPIOKeyCode);
       hex[2] = 0;
       Serial.printf("GPIOKeyCode %s\n", hex);
-      client.publish(subjectGPIOKeyCodetoMQTT, hex);
+      pub(subjectGPIOKeyCodetoMQTT, hex);
       lastLatchStateGPIOKeyCode = latch;
     }
 
@@ -76,7 +76,7 @@ void MeasureGPIOKeyCode()
       lastLatchStateGPIOKeyCode = latch;
       Serial.printf("GPIOKeyCode latch %d\n", latch);
       if (latch == 0)
-        client.publish(subjectGPIOKeyCodeStatetoMQTT, "done");
+        pub(subjectGPIOKeyCodeStatetoMQTT, "done");
     }
 
     // save the reading. Next time through the loop, it'll be the lastInputState:
