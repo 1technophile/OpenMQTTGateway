@@ -151,22 +151,38 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #define ota_port 8266
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifdef ESP8266
-  #define led_receive 40
-  #define led_send 42
-  #define led_info 44
-#elif ESP32
-  #define led_receive 40
-  #define led_send 42
-  #define led_info 44
-#elif __AVR_ATmega2560__ //arduino mega
-  #define led_receive 40
-  #define led_send 42
-  #define led_info 44
-#else //arduino uno/nano
-  #define led_receive 40
-  #define led_send 42
-  #define led_info 44
+#ifndef led_receive
+  #ifdef ESP8266
+    #define led_receive 40
+  #elif ESP32
+    #define led_receive 40
+  #elif __AVR_ATmega2560__ //arduino mega
+    #define led_receive 40
+  #else //arduino uno/nano
+    #define led_receive 40
+  #endif
+#endif
+#ifndef led_send
+  #ifdef ESP8266
+    #define led_send 42
+  #elif ESP32
+    #define led_send 42
+  #elif __AVR_ATmega2560__ //arduino mega
+    #define led_send 42
+  #else //arduino uno/nano
+    #define led_send 42
+  #endif
+#endif
+#ifndef led_info
+  #ifdef ESP8266
+    #define led_info 44
+  #elif ESP32
+    #define led_info 44
+  #elif __AVR_ATmega2560__ //arduino mega
+    #define led_info 44
+  #else //arduino uno/nano
+    #define led_info 44
+  #endif
 #endif
 
 #ifndef TRIGGER_PIN
