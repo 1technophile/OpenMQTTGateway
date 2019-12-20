@@ -296,7 +296,7 @@ void trc(JsonObject &data)
 void pub(char *topicori, char *payload, bool retainFlag)
 {
   String topic = String(mqtt_topic) + String(topicori);
-  client.publish((char *)topic.c_str(), payload, retainFlag);
+  pubMQTT((char *)topic.c_str(), payload, retainFlag);
 }
 
 void pub(char *topicori, JsonObject &data)
@@ -502,7 +502,6 @@ bool cmpToMainTopic(char * topicOri, char * toAdd){
   }
 }
 
-
 void reconnect()
 {
 
@@ -516,7 +515,10 @@ void reconnect()
   while (!client.connected())
   {
     trc(F("MQTT connection...")); //F function enable to decrease sram usage
-    if (client.connect(gateway_name, mqtt_user, mqtt_pass, will_Topic, will_QoS, will_Retain, will_Message))
+    char topic[mqtt_topic_max_size];
+    strcpy(topic,mqtt_topic);
+    strcat(topic,will_Topic);
+    if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message))
     {
       trc(F("Connected to broker"));
       failure_number = 0;
@@ -525,10 +527,10 @@ void reconnect()
       // publish version
       pub(version_Topic, OMG_VERSION, will_Retain);
       //Subscribing to topic
-      char topic[mqtt_topic_max_size];
-      strcpy(topic,mqtt_topic);
-      strcat(topic,subjectMQTTtoX);
-      if (client.subscribe(topic))
+      char topic2[mqtt_topic_max_size];
+      strcpy(topic2,mqtt_topic);
+      strcat(topic2,subjectMQTTtoX);
+      if (client.subscribe(topic2))
       {
         #ifdef ZgatewayRF
         client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published

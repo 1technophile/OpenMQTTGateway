@@ -30,8 +30,8 @@ extern void setupBT();
 extern bool BTtoMQTT();  
 extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
-#define subjectBTtoMQTT  "/BTtoMQTT/"
-#define subjectMQTTtoBTset  "/commands/MQTTtoBT/set"
+#define subjectBTtoMQTT  "/BTtoMQTT"
+#define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
 #define TimeBtw_Read 55555 //define default time between 2 scans
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 #define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
