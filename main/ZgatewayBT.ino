@@ -791,7 +791,7 @@ bool BTtoMQTT()
             trc(HomePresenceId);
             BLEdata.set("id", (char *)HomePresenceId.c_str());
             #endif
-            String topic = subjectBTtoMQTT + "/" + String(d[0].extract);
+            String topic = subjectBTtoMQTT + String("/") + String(d[0].extract);
             int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
             BLEdata.set("rssi", (int)rssi);
             #ifdef subjectHomePresence
