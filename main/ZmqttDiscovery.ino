@@ -186,7 +186,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorADC
   trc(F("ADCDiscovery"));
-  char *ADCsensor[8] = {"sensor", "adc", "adc", "", "{{ value_json.adc }}", "", "", ""};
+  char *ADCsensor[8] = {"sensor", "adc", "", "", "{{ value_json.adc }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   trc(F("CreateDiscoverySensor"));
@@ -244,7 +244,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorHCSR501
   trc(F("HCSR501Discovery"));
-  char *HCSR501sensor[8] = {"binary_sensor", "hcsr501", "hcsr501", "", "{{value_json.hcsr501}}", "true", "false", ""};
+  char *HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "", "{{value_json.hcsr501}}", "true", "false", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   trc(F("CreateDiscoverySensor"));
@@ -258,7 +258,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorGPIOInput
   trc(F("GPIOInputDiscovery"));
-  char *GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "GPIOInput", "", "{{value_json.gpio}}", "HIGH", "LOW", ""};
+  char *GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "", "", "{{value_json.gpio}}", "HIGH", "LOW", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   trc(F("CreateDiscoverySensor"));
