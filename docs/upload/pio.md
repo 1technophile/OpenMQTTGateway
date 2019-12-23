@@ -25,7 +25,7 @@ default_envs = esp32dev-rf
 ;default_envs = ttgo-lora32-v1
 ```
 
-If you don't know which env to activate you can refer to [devices](prerequisites/devices).
+If you don't know which env to activate you can refer to [devices](../prerequisites/devices).
 
 The different listed configurations represents some standard environments, to overload them with special parameters or modules you can modify the config files. The definitions coming from [platformio.ini](https://github.com/1technophile/OpenMQTTGateway/blob/development/platformio.ini) file and config files are cumulative.
 The main config file is [user_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/User_config.h), added to it you have one config file per gateway, sensor or actuator, you will find them in the [main](https://github.com/1technophile/OpenMQTTGateway/tree/development/main) folder.

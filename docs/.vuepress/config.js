@@ -62,7 +62,8 @@ module.exports = {
             'upload/binaries',
             'upload/pio',
             'upload/arduino-ide',
-            'upload/portal'
+            'upload/portal',
+            'upload/troubleshoot'
           ]
         },
         {
