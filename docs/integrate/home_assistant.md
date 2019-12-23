@@ -6,7 +6,7 @@ And enable discovery on your MQTT integration definition in HASS.
 OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
 
 ## Manual integration examples
-From @123, @finity,@denniz03
+From @123, @finity, @denniz03, @jrockstad
 
 ### Door sensor
 ```yaml
@@ -96,3 +96,27 @@ notify:
   name: hassio
   api_key: <api_key>
 ```
+
+### Mijia Thermometer BLE
+
+```yaml
+Sensor:
+- platform: mqtt
+  state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA' # MQTT topic, check MQTT messages; replace AA... with id (BLE MAC) of your device
+  name: "mijia_thermometer_temperature"
+  unit_of_measurement: '°C'
+  value_template: '{{ value_json.tem | is_defined }}'
+  expire_after: 21600 # 6 hours
+- platform: mqtt
+  state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA'
+  name: "mijia_thermometer_humidity"
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.hum | is_defined }}'
+  expire_after: 21600 # 6 hours
+- platform: mqtt
+  state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA'
+  name: "mijia_thermometer_battery"
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.batt | is_defined }}'
+  expire_after: 21600 # 6 hours
+  ```
