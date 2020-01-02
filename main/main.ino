@@ -312,7 +312,11 @@ void pub(char *topicori, JsonObject &data)
 #endif
 
 #ifdef jsonPublishing
+    #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
     char JSONmessageBuffer[data.measureLength() + 1];
+    #else
+    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    #endif
     trc(F("Pub json into:"));
     trc(topic);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
@@ -387,7 +391,11 @@ void pub_custom_topic(char *topicori, JsonObject &data, boolean retain)
 {
   if (client.connected())
   {
+    #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
     char JSONmessageBuffer[data.measureLength() + 1];
+    #else
+    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    #endif
     trc(F("Pub json discovery into:"));
     trc(topicori);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
