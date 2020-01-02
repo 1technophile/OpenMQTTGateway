@@ -288,9 +288,7 @@ void trc(float msg)
 
 void trc(JsonObject &data)
 {
-  char JSONmessageBuffer[JSON_MSG_BUFFER];
-  data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-  trc(JSONmessageBuffer);
+  data.printTo(Serial);
 }
 
 void pub(char *topicori, char *payload, bool retainFlag)
@@ -314,7 +312,7 @@ void pub(char *topicori, JsonObject &data)
 #endif
 
 #ifdef jsonPublishing
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    char JSONmessageBuffer[data.measureLength() + 1];
     trc(F("Pub json into:"));
     trc(topic);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
@@ -389,7 +387,7 @@ void pub_custom_topic(char *topicori, JsonObject &data, boolean retain)
 {
   if (client.connected())
   {
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    char JSONmessageBuffer[data.measureLength() + 1];
     trc(F("Pub json discovery into:"));
     trc(topicori);
     data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
