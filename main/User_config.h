@@ -54,19 +54,18 @@
 #define Base_Topic "home/"
 
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
-//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
+const byte ip[] = { 192, 168, 1, 99 }; //ip adress of the gateway, only used with arduino or NetworkAdvancedSetup uncommented
+
+#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
 #ifdef NetworkAdvancedSetup // for arduino boards advanced config
-  // these values are only used if no dhcp configuration is available
-  const byte ip[] = { 192, 168, 1, 99 }; //ip adress
-  const byte gateway[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
-  const byte Dns[] = { 0, 0, 0, 0 }; //ip adress, if first value is different from 0 advanced config network will be used and you should fill gateway & dns
-  const byte subnet[] = { 255, 255, 255, 0 }; //ip adress
+  const byte gateway[] = { 0, 0, 0, 0 }; 
+  const byte Dns[] = { 0, 0, 0, 0 }; 
+  const byte subnet[] = { 255, 255, 255, 0 }; 
 #endif
 
 #if defined(ESP8266)||defined(ESP32)  // for nodemcu, weemos and esp8266
   //#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #else // for arduino boards
-  const byte ip[] = { 192, 168, 1, 99 }; //ip adress
   const byte mac[] = {  0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95 }; //W5100 ethernet shield mac adress
 #endif
 
@@ -90,8 +89,13 @@
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
-#define parameters_size 20
-#define mqtt_topic_max_size 100
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  #define parameters_size 20
+  #define mqtt_topic_max_size 100
+#else
+  #define parameters_size 15
+  #define mqtt_topic_max_size 50
+#endif
 char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
 char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
 char mqtt_server[parameters_size] = "192.168.1.17";
@@ -143,7 +147,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //example 
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-#define simpleReceiving true //comment if you don't want to use old way reception analysis
+//#define simpleReceiving true //comment if you don't want to use old way reception analysis
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #define ota_hostname Gateway_Name
