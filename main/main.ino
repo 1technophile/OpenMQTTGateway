@@ -1096,13 +1096,14 @@ void loop()
     lastNTWKReconnectAttempt = 0;
     if (client.connected())
     {
-      // MQTT loop
-      connectedOnce = true;
-      lastMQTTReconnectAttempt = 0;
-
+      
       #ifdef ZmqttDiscovery
       if(!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
       #endif
+
+      connectedOnce = true;
+      lastMQTTReconnectAttempt = 0;
+
       client.loop();
 
       #if defined(ESP8266) || defined(ESP32)
@@ -1307,7 +1308,6 @@ void stateMeasures()
     #endif
     #ifdef ZmqttDiscovery
     modules = modules + ZmqttDiscovery;
-    pubMqttDiscovery();
     #endif
     #ifdef ZactuatorFASTLED
     modules = modules + ZactuatorFASTLED;
