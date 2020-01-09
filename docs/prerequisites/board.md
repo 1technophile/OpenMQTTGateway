@@ -13,6 +13,7 @@ Here is some information to find the board suitable for your need, you have the 
 |Sonoff RF Bridge (*) |X|[needs an hack](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
 |All bare ESP32|-|-|X|-|-|-|-|
 |M5Stack Basic|-|-|X|-|-|-|-|
+|M5Stick|-|sending|X|-|-|X|X|
 |M5Stick C|-|sending|X|-|-|X|X|
 |TTGO LORA32|-|-|-|X|-|-|-|
 |Sonoff RFR3|receiving [needs an hack](https://1technophile.blogspot.com/2019/08/new-sonoff-rfr3-as-433tomqtt-gateway.html)|-|-|-|-|X|X|
