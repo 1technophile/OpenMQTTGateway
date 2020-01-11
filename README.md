@@ -9,7 +9,7 @@
 **Questions, support please don't open an issue, go first to the [docs](https://docs.openmqttgateway.com) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
 
 # OpenMQTTGateway
-[![](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.jpg)](https://community.openmqttgateway.com)
+[![](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.png)](https://community.openmqttgateway.com)
 
 Download OpenMQTTGateway from the [releases page](https://github.com/1technophile/OpenMQTTGateway/releases)
 
