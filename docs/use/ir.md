@@ -14,6 +14,11 @@ And press your IR remote control in front of the receiver led you should see the
 home/OpenMQTTGateway/IRtoMQTT {"value":875849879,"protocol":7,"protocol_name":SAMSUNG,"bits":32,"raw":"4534,4432,612,518,614,516,616,1618,618,1616,618,512,618,1618,608,524,612,518,616,514,618,512,616,1618,616,1618,618,514,616,1618,616,514,616,514,618,512,616,1618,618,1618,618,514,610,1622,616,514,618,514,614,516,616,1618,618,512,618,512,618,1616,550,580,618,1616,612,1624,618,1616,618"}
 ```
 
+With an hexadecimal value:
+```
+{"value":9938405643,"protocol":55,"bits":35,"hex":"0x25060090B","protocol_name":"TECO"}
+```
+
 To receive big dump of raw data you need first to modify the [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L41) and uncomment DumpMode true
 
 Unknown protocols are filtered by default, if you want to see the unknown protocols set into [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/config_IR.h)
@@ -33,6 +38,9 @@ For example if I want to send a command to a sony TV you can use the following c
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775,"protocol_name":"SONY"}'`
 
 The code after the -m represent the payload you want to send.
+
+You could alternatively use an hex value:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"hex":"0x25060090B","protocol_name":"TECO"}'`
 
 If you don’t want to use special parameters for IR just use value key, the protocol per default is NEC
 

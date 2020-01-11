@@ -431,6 +431,13 @@ void pubMQTT(char *topic, unsigned long payload)
   client.publish(topic, val);
 }
 
+void pubMQTT(char *topic, unsigned long long payload)
+{
+  char val[21];
+  sprintf(val, "%llu", payload);
+  client.publish(topic, val);
+}
+
 void pubMQTT(char *topic, String payload)
 {
   client.publish(topic, (char *)payload.c_str());
@@ -1460,9 +1467,6 @@ void receivingMQTT(char *topicOri, char *datacallback)
       #endif
       #ifdef ZgatewaySRFB
       MQTTtoSRFB(topicOri, datacallback);
-      #endif
-      #ifdef ZgatewayIR
-      MQTTtoIR(topicOri, datacallback);
       #endif
       #ifdef ZgatewayRFM69
       MQTTtoRFM69(topicOri, datacallback);
