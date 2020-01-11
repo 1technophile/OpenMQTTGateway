@@ -30,10 +30,11 @@ extern void setupBT();
 extern bool BTtoMQTT();  
 extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
-#define subjectBTtoMQTT  Base_Topic Gateway_Name "/BTtoMQTT/"
-#define subjectMQTTtoBTset  Base_Topic Gateway_Name "/commands/MQTTtoBT/set"
+#define subjectBTtoMQTT  "/BTtoMQTT"
+#define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
 #define TimeBtw_Read 55555 //define default time between 2 scans
-#define Scan_duration 10 //define the time for a scan
+#define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
+#define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #define HM-10
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
@@ -42,9 +43,10 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 // if not commented Home presence integration with HOME ASSISTANT is activated
-#define subjectHomePresence Base_Topic "home_presence/" Gateway_Name // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
+#define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 unsigned int BLEinterval ; //time between 2 scans
+int Minrssi ; //minimum rssi value
 
 struct BLEdevice{
   char macAdr[13];

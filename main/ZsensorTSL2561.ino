@@ -1,4 +1,4 @@
-  /*  
+/*  
   OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
 
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
@@ -72,48 +72,53 @@ void setupZsensorTSL2561()
   {
     trc(F("No TSL2561 detected"));
   }
-  
+
   // enable auto ranging
   // tsl.setGain(TSL2561_GAIN_1X);      /* No gain ... use in bright light to avoid sensor saturation */
   // tsl.setGain(TSL2561_GAIN_16X);     /* 16x gain ... use in low light to boost sensitivity */
-  tsl.enableAutoRange(true);            /* Auto-gain ... switches automatically between 1x and 16x */
+  tsl.enableAutoRange(true); /* Auto-gain ... switches automatically between 1x and 16x */
   // since we're slowly sampling, enable high resolution but slow mode TSL2561
   // tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);      /* fast but low resolution */
   // tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);  /* medium resolution and speed   */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);
 
   trc(F("TSL2561 Initialized. Printing detials now."));
-  displaySensorDetails();  
+  displaySensorDetails();
 }
 
 void MeasureLightIntensityTSL2561()
 {
-  if (millis() > (timetsl2561 + TimeBetweenReadingtsl2561)) {
+  if (millis() > (timetsl2561 + TimeBetweenReadingtsl2561))
+  {
     static uint32_t persisted_lux;
     timetsl2561 = millis();
 
     trc(F("Creating TSL2561 buffer"));
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& TSL2561data = jsonBuffer.createObject();
-    
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject &TSL2561data = jsonBuffer.createObject();
+
     sensors_event_t event;
     tsl.getEvent(&event);
     if (event.light)
-      // if event.light == 0 the sensor is clipping, do not send
+    // if event.light == 0 the sensor is clipping, do not send
+    {
+      if (persisted_lux != event.light || tsl2561_always)
       {
-	if (persisted_lux != event.light || tsl2561_always ) {
-	  persisted_lux = event.light;
+        persisted_lux = event.light;
 
-    TSL2561data.set("lux", (float)event.light);
-    TSL2561data.set("ftcd", (float)(event.light)/10.764);
-    TSL2561data.set("wattsm2", (float)(event.light)/683.0);
+        TSL2561data.set("lux", (float)event.light);
+        TSL2561data.set("ftcd", (float)(event.light) / 10.764);
+        TSL2561data.set("wattsm2", (float)(event.light) / 683.0);
 
-    pub(subjectTSL12561toMQTT,TSL2561data);
-	} else {
-	  trc(F("Same lux value, do not send"));
-	}
-      } else {
+        pub(subjectTSL12561toMQTT, TSL2561data);
+      }
+      else
+      {
+        trc(F("Same lux value, do not send"));
+      }
+    }
+    else
+    {
       trc(F("Failed to read from TSL2561"));
     }
   }

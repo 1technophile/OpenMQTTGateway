@@ -32,17 +32,17 @@ extern void MQTTtoIR(char * topicOri, char * datacallback);
 extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
 /*-------------------IR topics & parameters----------------------*/
 //IR MQTT Subjects
-#define subjectGTWIRtoMQTT  Base_Topic Gateway_Name "/IRtoMQTT"
-#define subjectIRtoMQTT  Base_Topic Gateway_Name "/IRtoMQTT"
-#define subjectMQTTtoIR  Base_Topic Gateway_Name "/commands/MQTTtoIR"
+#define subjectGTWIRtoMQTT  "/IRtoMQTT"
+#define subjectIRtoMQTT  "/IRtoMQTT"
+#define subjectMQTTtoIR  "/commands/MQTTtoIR"
 
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/+/IRtoMQTT"
 #define IRbitsKey "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
 #define repeatIRwMQTT false // do we repeat a received signal by using mqtt
-#define repeatIRwNumber 3 // default repeat of the signal
-#define RawDirectForward false // direct repeat of IR signal with raw data
+#define repeatIRwNumber 0 // default repeat of the signal
+//#define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
 //#define DumpMode true // uncomment so as to see big dumps of IR codes
 
@@ -51,15 +51,15 @@ extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
 
 #if defined(ESP8266) || defined(ESP32)  //IR supported protocols on ESP8266, all supported per default
   #define IR_GC
-  #define IR_Raw
+  #define IR_RAW
   #define IR_COOLIX
-  #define IR_Whynter
+  #define IR_WHYNTER
   #define IR_LG
-  #define IR_Sony
+  #define IR_SONY
   #define IR_DISH
   #define IR_RC5
   #define IR_RC6
-  #define IR_Sharp
+  #define IR_SHARP
   #define IR_SAMSUNG
   #define IR_PANASONIC
   #define IR_RCMM
@@ -104,6 +104,22 @@ extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
   #define IR_SAMSUNG36
   #define IR_TCL112AC
   #define IR_TECO
+  #define IR_LEGOPF
+  #define IR_MITSUBISHI_HEAVY_88
+  #define IR_MITSUBISHI_HEAVY_152
+  #define IR_DAIKIN216
+  #define IR_SHARP_AC
+  #define IR_GOODWEATHER
+  #define IR_INAX
+  #define IR_DAIKIN160
+  #define IR_NEOCLIMA
+  #define IR_DAIKIN176
+  #define IR_DAIKIN128
+  #define IR_AMCOR
+  #define IR_DAIKIN152
+  #define IR_MITSUBISHI136
+  #define IR_MITSUBISHI112
+  #define IR_HITACHI_AC424
 #elif __AVR_ATmega2560__
   #define IR_COOLIX
   #define IR_Whynter
@@ -129,18 +145,28 @@ extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
-  #define IR_RECEIVER_PIN 2 //D4 /replace by 4 with sonoff rf bridge
-  #define IR_EMITTER_PIN 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield /replace by 5 with sonoff rf bridge
-#elif ESP32
-  #define IR_RECEIVER_PIN 27
-  #define IR_EMITTER_PIN 14
-#elif __AVR_ATmega2560__
-  #define IR_RECEIVER_PIN 2 // 2 = D2 on arduino mega
-  #define IR_EMITTER_PIN 9
-#else
-  #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino UNO
-  #define IR_EMITTER_PIN 9
+#ifndef IR_RECEIVER_PIN
+  #ifdef ESP8266
+    #define IR_RECEIVER_PIN 2 //D4 /replace by 4 with sonoff rf bridge
+  #elif ESP32
+    #define IR_RECEIVER_PIN 26
+  #elif __AVR_ATmega2560__
+    #define IR_RECEIVER_PIN 2 // 2 = D2 on arduino mega
+  #else
+    #define IR_RECEIVER_PIN 0 // 0 = D2 on arduino UNO
+  #endif
+#endif
+
+#ifndef IR_EMITTER_PIN
+  #ifdef ESP8266
+    #define IR_EMITTER_PIN 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield /replace by 5 with sonoff rf bridge
+  #elif ESP32
+    #define IR_EMITTER_PIN 14
+  #elif __AVR_ATmega2560__
+    #define IR_EMITTER_PIN 9
+  #else
+    #define IR_EMITTER_PIN 9
+  #endif
 #endif
 
 #endif

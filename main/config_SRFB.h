@@ -33,10 +33,10 @@ extern void MQTTtoSRFB(char * topicOri, char * datacallback);
 extern void MQTTtoSRFB(char * topicOri, JsonObject& RFdata);
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTtoSRFB  Base_Topic Gateway_Name "/commands/MQTTtoSRFB"
-#define subjectMQTTtoSRFBRaw  Base_Topic Gateway_Name "/commands/MQTTtoSRFB/Raw"
-#define subjectSRFBtoMQTT  Base_Topic Gateway_Name "/SRFBtoMQTT"
-#define subjectGTWSRFBtoMQTT  Base_Topic Gateway_Name "/SRFBtoMQTT"
+#define subjectMQTTtoSRFB  "/commands/MQTTtoSRFB"
+#define subjectMQTTtoSRFBRaw  "/commands/MQTTtoSRFB/Raw"
+#define subjectSRFBtoMQTT  "/SRFBtoMQTT"
+#define subjectGTWSRFBtoMQTT  "/SRFBtoMQTT"
 #define SRFBRptKey "RPT_"
 #define SRFBmaxipulselengthKey "Thigh_"
 #define SRFBminipulselengthKey "Tlow_"

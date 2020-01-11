@@ -6,19 +6,16 @@
 [![Download count](https://img.shields.io/github/downloads/1technophile/OpenMQTTGateway/total.svg)](https://github.com/1technophile/OpenMQTTGateway/releases)
 [![HitCount](http://hits.dwyl.io/1technophile/https://githubcom/1technophile/OpenMQTTGateway.svg)](http://hits.dwyl.io/1technophile/https://githubcom/1technophile/OpenMQTTGateway)
 
-**Questions, support please don't open an issue, go first to the [wiki](https://github.com/1technophile/OpenMQTTGateway/wiki) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
+**Questions, support please don't open an issue, go first to the [docs](https://docs.openmqttgateway.com) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
 
 # OpenMQTTGateway
-[![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway.jpg)](https://github.com/1technophile/OpenMQTTGateway/wiki)
-
-To know the main functions of the gateway see below
-https://1technophile.github.io/OpenMQTTGateway/
+[![](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.jpg)](https://community.openmqttgateway.com)
 
 Download OpenMQTTGateway from the [releases page](https://github.com/1technophile/OpenMQTTGateway/releases)
 
 The reference sheet, with the list of all functions, pinouts is [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=0)
 
-A list of supported 433mhz devices (and others) is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079), door/window sensors, PIR sensors, smoke detectors, weather stations...
+A list of supported devices is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079), door/window sensors, PIR sensors, smoke detectors, weather stations...
 
 A list of compatible components to build your gateway is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277), nodemcu, esp32, emitters and receivers...
 

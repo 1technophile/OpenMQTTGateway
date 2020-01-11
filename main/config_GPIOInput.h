@@ -30,14 +30,16 @@ extern void setupGPIOInput();
 extern void GPIOInputtoMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectGPIOInputtoMQTT    Base_Topic Gateway_Name "/GPIOInputtoMQTT"
+#define subjectGPIOInputtoMQTT    "/GPIOInputtoMQTT"
 #define GPIOInputDebounceDelay 60 //debounce time, increase if there are issues
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || defined(ESP32)
-  #define GPIOInput_PIN 14
-#else
-  #define GPIOInput_PIN 7
+#ifndef GPIOInput_PIN
+  #if defined(ESP8266) || defined(ESP32)
+    #define GPIOInput_PIN 14
+  #else
+    #define GPIOInput_PIN 7
+  #endif
 #endif
 
 #endif
