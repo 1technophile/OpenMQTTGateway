@@ -45,6 +45,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
 #include "config_RF.h"
 #endif
+#ifdef ZgatewayWeatherStation
+#include "config_WeatherStation.h"
+#endif
 #ifdef ZgatewayLORA
 #include "config_LORA.h"
 #endif
@@ -734,6 +737,9 @@ void setup()
   #ifdef ZgatewayPilight
   setupPilight();
   #endif
+  #ifdef ZgatewayWeatherStation
+  setupWeatherStation();
+  #endif
   #ifdef ZgatewaySRFB
   setupSRFB();
   #endif
@@ -1156,6 +1162,9 @@ void loop()
       #ifdef ZgatewayRF2
       RF2toMQTT();
       #endif
+      #ifdef ZgatewayWeatherStation
+      ZgatewayWeatherStationtoMQTT();
+      #endif
       #ifdef ZgatewayPilight
       PilighttoMQTT();
       #endif
@@ -1285,6 +1294,9 @@ void stateMeasures()
     #endif
     #ifdef ZgatewayRF2
     modules = modules + ZgatewayRF2;
+    #endif
+    #ifdef ZgatewayWeatherStation
+    modules = modules + ZgatewayWeatherStation;
     #endif
     #ifdef ZgatewayPilight
     modules = modules + ZgatewayPilight;
