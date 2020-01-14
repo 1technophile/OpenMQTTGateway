@@ -1505,7 +1505,9 @@ if (cmpToMainTopic(topicOri,subjectMQTTtoSYSset))
       }
       else if (strstr(cmd, eraseCmd) != NULL)
       { //erase and restart
+        #ifndef ESPWifiManualSetup
         setup_wifimanager(true);
+        #endif
       }
       else
       {
