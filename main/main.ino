@@ -90,6 +90,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #ifdef ZsensorDHT
 #include "config_DHT.h"
 #endif
+#ifdef ZsensorDS1820
+#include "config_DS1820.h"
+#endif
 #ifdef ZgatewayRFM69
 #include "config_RFM69.h"
 #endif
@@ -767,6 +770,9 @@ void setup()
   #ifdef ZactuatorFASTLED
   setupFASTLED();
   #endif
+  #ifdef ZsensorDS1820
+  setupZsensorDS1820();
+  #endif
 
   trc(F("MQTT_MAX_PACKET_SIZE"));
   trc(MQTT_MAX_PACKET_SIZE);
@@ -1138,6 +1144,9 @@ void loop()
       #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
       #endif
+      #ifdef ZsensorDS1820
+      MeasureDS1820Temp();  //Addon to measure the temperature with DS1820 sensor(s)
+      #endif
       #ifdef ZsensorINA226
       MeasureINA226();
       #endif
@@ -1279,6 +1288,9 @@ void stateMeasures()
     #endif
     #ifdef ZsensorDHT
     modules = modules + ZsensorDHT;
+    #endif
+    #ifdef ZsensorDS1820
+    modules = modules + ZsensorDS1820;
     #endif
     #ifdef ZactuatorONOFF
     modules = modules + ZactuatorONOFF;
