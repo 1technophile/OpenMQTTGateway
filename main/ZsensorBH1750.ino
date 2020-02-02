@@ -44,6 +44,7 @@
 
 void setupZsensorBH1750()
 {
+  Log.notice(F("Setup BH1750 on adress: %H" CR), BH1750_i2c_addr);
   Wire.begin();
   Wire.beginTransmission(BH1750_i2c_addr);
   Wire.write(0x10); // Set resolution to 1 Lux
@@ -56,7 +57,7 @@ void MeasureLightIntensity()
 {
   if (millis() > (timebh1750 + TimeBetweenReadingBH1750))
   { //retriving value of Lux, FtCd and Wattsm2 from BH1750
-    trc(F("Creating BH1750 buffer"));
+    Log.trace(F("Creating BH1750 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &BH1750data = jsonBuffer.createObject();
 
@@ -73,7 +74,7 @@ void MeasureLightIntensity()
     Wire.requestFrom(BH1750_i2c_addr, 2);
     if (Wire.available() != 2)
     {
-      trc(F("Failed to read from LightSensor BH1750!"));
+      Log.error(F("Failed to read from LightSensor BH1750!" CR));
     }
     else
     {
@@ -93,7 +94,7 @@ void MeasureLightIntensity()
       }
       else
       {
-        trc(F("Same lux don't send it"));
+        Log.trace(F("Same lux don't send it" CR));
       }
 
       // Generate FtCd
@@ -103,7 +104,7 @@ void MeasureLightIntensity()
       }
       else
       {
-        trc(F("Same ftcd don't send it"));
+        Log.trace(F("Same ftcd don't send it" CR));
       }
 
       // Generate Watts/m2
@@ -113,7 +114,7 @@ void MeasureLightIntensity()
       }
       else
       {
-        trc(F("Same wattsm2 don't send it"));
+        Log.trace(F("Same wattsm2 don't send it" CR));
       }
       if (BH1750data.size() > 0)
         pub(subjectBH1750toMQTT, BH1750data);

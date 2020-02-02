@@ -109,10 +109,10 @@ void dumpDevices()
 {
   for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
   {
-    trc(p->macAdr);
-    trc(p->isDisc);
-    trc(p->isWhtL);
-    trc(p->isBlkL);
+    Log.trace(F("macAdr %s" CR),p->macAdr);
+    Log.trace(F("isDisc %s" CR),p->isDisc);
+    Log.trace(F("isWhtL %s" CR),p->isWhtL);
+    Log.trace(F("isBlkL %s" CR),p->isBlkL);
   }
 }
 
@@ -126,7 +126,7 @@ void strupp(char *beg)
 void MiFloraDiscovery(char *mac)
 {
 #define MiFloraparametersCount 4
-  trc(F("MiFloraDiscovery"));
+  Log.trace(F("MiFloraDiscovery" CR));
   char *MiFlorasensor[MiFloraparametersCount][8] = {
       {"sensor", "MiFlora-lux", mac, "illuminance", "{{ value_json.lux | is_defined }}", "", "", "lu"},
       {"sensor", "MiFlora-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
@@ -137,8 +137,7 @@ void MiFloraDiscovery(char *mac)
 
   for (int i = 0; i < MiFloraparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(MiFlorasensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),MiFlorasensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
     createDiscovery(MiFlorasensor[i][0],
@@ -158,7 +157,7 @@ void MiFloraDiscovery(char *mac)
 void VegTrugDiscovery(char *mac)
 {
 #define VegTrugparametersCount 4
-  trc(F("VegTrugDiscovery"));
+  Log.trace(F("VegTrugDiscovery" CR));
   char *VegTrugsensor[VegTrugparametersCount][8] = {
       {"sensor", "VegTrug-lux", mac, "illuminance", "{{ value_json.lux | is_defined }}", "", "", "lu"},
       {"sensor", "VegTrug-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
@@ -169,8 +168,7 @@ void VegTrugDiscovery(char *mac)
 
   for (int i = 0; i < VegTrugparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(VegTrugsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),VegTrugsensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + VegTrugsensor[i][1];
     createDiscovery(VegTrugsensor[i][0],
@@ -190,7 +188,7 @@ void VegTrugDiscovery(char *mac)
 void MiJiaDiscovery(char *mac)
 {
 #define MiJiaparametersCount 3
-  trc(F("MiJiaDiscovery"));
+  Log.trace(F("MiJiaDiscovery" CR));
   char *MiJiasensor[MiJiaparametersCount][8] = {
       {"sensor", "MiJia-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "%"},
       {"sensor", "MiJia-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
@@ -200,8 +198,7 @@ void MiJiaDiscovery(char *mac)
 
   for (int i = 0; i < MiJiaparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(MiJiasensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),MiJiasensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiJiasensor[i][1];
     createDiscovery(MiJiasensor[i][0],
@@ -221,7 +218,7 @@ void MiJiaDiscovery(char *mac)
 void LYWSD02Discovery(char *mac)
 {
 #define LYWSD02parametersCount 3
-  trc(F("LYWSD02Discovery"));
+  Log.trace(F("LYWSD02Discovery" CR));
   char *LYWSD02sensor[LYWSD02parametersCount][8] = {
       {"sensor", "LYWSD02-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "V"},
       {"sensor", "LYWSD02-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
@@ -231,8 +228,7 @@ void LYWSD02Discovery(char *mac)
 
   for (int i = 0; i < LYWSD02parametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(LYWSD02sensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),LYWSD02sensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
     createDiscovery(LYWSD02sensor[i][0],
@@ -252,7 +248,7 @@ void LYWSD02Discovery(char *mac)
 void CLEARGRASSTRHDiscovery(char *mac)
 {
 #define CLEARGRASSTRHparametersCount 3
-  trc(F("CLEARGRASSTRHDiscovery"));
+  Log.trace(F("CLEARGRASSTRHDiscovery" CR));
   char *CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
       {"sensor", "CLEARGRASSTRH-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "V"},
       {"sensor", "CLEARGRASSTRH-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
@@ -262,8 +258,7 @@ void CLEARGRASSTRHDiscovery(char *mac)
 
   for (int i = 0; i < CLEARGRASSTRHparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(CLEARGRASSTRHsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSTRHsensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
     createDiscovery(CLEARGRASSTRHsensor[i][0],
@@ -283,7 +278,7 @@ void CLEARGRASSTRHDiscovery(char *mac)
 void CLEARGRASSTRHKPADiscovery(char *mac)
 {
 #define CLEARGRASSTRHKPAparametersCount 3
-  trc(F("CLEARGRASSTRHKPADiscovery"));
+  Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char *CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
       {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", "{{ value_json.pres | is_defined }}", "", "", "kPa"},
       {"sensor", "CLEARGRASSTRHKPA-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
@@ -293,8 +288,7 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
 
   for (int i = 0; i < CLEARGRASSTRHKPAparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(CLEARGRASSTRHKPAsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSTRHKPAsensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + CLEARGRASSTRHKPAsensor[i][1];
     createDiscovery(CLEARGRASSTRHKPAsensor[i][0],
@@ -314,7 +308,7 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
 void MiScaleDiscovery(char *mac)
 {
 #define MiScaleparametersCount 1
-  trc(F("MiScaleDiscovery"));
+  Log.trace(F("MiScaleDiscovery" CR));
   char *MiScalesensor[MiScaleparametersCount][8] = {
       {"sensor", "MiScale-weight", mac, "weight", "{{ value_json.weight | is_defined }}", "", "", "kg"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -322,8 +316,7 @@ void MiScaleDiscovery(char *mac)
 
   for (int i = 0; i < MiScaleparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(MiScalesensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),MiScalesensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiScalesensor[i][1];
     createDiscovery(MiScalesensor[i][0],
@@ -343,7 +336,7 @@ void MiScaleDiscovery(char *mac)
 void MiLampDiscovery(char *mac)
 {
 #define MiLampparametersCount 1
-  trc(F("MiLampDiscovery"));
+  Log.trace(F("MiLampDiscovery" CR));
   char *MiLampsensor[MiLampparametersCount][8] = {
       {"sensor", "MiLamp-presence", mac, "presence", "{{ value_json.presence}}", "", "", "d"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -351,8 +344,7 @@ void MiLampDiscovery(char *mac)
 
   for (int i = 0; i < MiLampparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(MiLampsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),MiLampsensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiLampsensor[i][1];
     createDiscovery(MiLampsensor[i][0],
@@ -372,7 +364,7 @@ void MiLampDiscovery(char *mac)
 void MiBandDiscovery(char *mac)
 {
 #define MiBandparametersCount 1
-  trc(F("MiBandDiscovery"));
+  Log.trace(F("MiBandDiscovery" CR));
   char *MiBandsensor[MiBandparametersCount][8] = {
       {"sensor", "MiBand-steps", mac, "steps", "{{ value_json.steps | is_defined }}", "", "", "nb"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -380,8 +372,7 @@ void MiBandDiscovery(char *mac)
 
   for (int i = 0; i < MiBandparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(MiBandsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor %s" CR),MiBandsensor[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + MiBandsensor[i][1];
     createDiscovery(MiBandsensor[i][0],
@@ -421,7 +412,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
   void onResult(BLEAdvertisedDevice advertisedDevice)
   {
-    trc(F("Creating BLE buffer"));
+    Log.trace(F("Creating BLE buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &BLEdata = jsonBuffer.createObject();
     String mac_adress = advertisedDevice.getAddress().toString().c_str();
@@ -431,8 +422,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
     char mac[mac_adress.length() + 1];
     mac_adress.toCharArray(mac, mac_adress.length() + 1);
-    trc("device detected");
-    trc(mac);
+    Log.notice(F("Device detected: %s" CR),mac);
     if ((!oneWhite() || isWhite(mac)) && !isBlack(mac))
     { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice.haveName())
@@ -449,9 +439,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
       #endif
       if (advertisedDevice.haveServiceData())
       {
-        trc(F("Get services data :"));
         int serviceDataCount = advertisedDevice.getServiceDataCount();
-        trc(serviceDataCount);
+        Log.trace(F("Get services data number: %d" CR),serviceDataCount);
         for (int j = 0; j < serviceDataCount; j++)
         {
           std::string serviceData = advertisedDevice.getServiceData(j);
@@ -469,6 +458,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           char service_data[returnedString.length() + 1];
           returnedString.toCharArray(service_data, returnedString.length() + 1);
           service_data[returnedString.length()] = '\0';
+          Log.notice(F("Service data: %s" CR),service_data);
           #ifdef pubBLEServiceData
           BLEdata.set("servicedata", service_data);
           #endif
@@ -477,13 +467,13 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           { // publish only the devices close enough
             pub((char *)mactopic.c_str(), BLEdata);
             if (strstr(BLEdata["servicedatauuid"].as<char *>(), "fe95") != NULL)
-            { //Mi FLora, Mi jia, Cleargrass Method 1, LYWDS02, VegTrug
-              trc("Processing BLE device data");
+            { //Mi FLora, Mi jia, Cleargrass Method 1, LYWSD02, VegTrug
+              Log.trace(F("Processing BLE device data" CR));
               int pos = -1;
               pos = strpos(service_data, "209800");
               if (pos != -1)
               {
-                trc(F("mi flora data reading"));
+                Log.trace(F("mi flora data reading" CR));
                 //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(mac))
@@ -495,7 +485,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               pos = strpos(service_data, "20bc03");
               if (pos != -1)
               {
-                trc(F("vegtrug data reading"));
+                Log.trace(F("vegtrug data reading" CR));
                 //example "servicedata":"7120bc0399c309688d7cc40d0910020000"
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(mac))
@@ -507,7 +497,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               pos = strpos(service_data, "20aa01");
               if (pos != -1)
               {
-                trc(F("mi jia data reading"));
+                Log.trace(F("mi jia data reading" CR));
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(mac))
                   MiJiaDiscovery(mac);
@@ -518,7 +508,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               pos = strpos(service_data, "205b04");
               if (pos != -1)
               {
-                trc(F("LYWSD02 data reading"));
+                Log.trace(F("LYWSD02 data reading" CR));
                 //example "servicedata":"70205b04b96ab883c8593f09041002e000"
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(mac))
@@ -530,7 +520,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               pos = strpos(service_data, "304703");
               if (pos != -1)
               {
-                trc(F("ClearGrass T RH data reading method 1"));
+                Log.trace(F("ClearGrass T RH data reading method 1" CR));
                 //example "servicedata":"5030470340743e10342d58041002d6000a100164"
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(mac))
@@ -542,7 +532,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               pos = strpos(service_data, "4030dd");
               if (pos != -1)
               {
-                trc(F("Mi Lamp data reading"));
+                Log.trace(F("Mi Lamp data reading" CR));
                 //example "servicedata":4030DD031D0300010100
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(mac))
@@ -553,7 +543,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             }
             if (strstr(BLEdata["servicedatauuid"].as<char *>(), "181d") != NULL)
             { // Mi Scale V1
-              trc(F("Mi Scale V1 data reading"));
+              Log.trace(F("Mi Scale V1 data reading" CR));
               //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
               #ifdef ZmqttDiscovery
               if (!isDiscovered(mac))
@@ -563,7 +553,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             }
             if (strstr(BLEdata["servicedatauuid"].as<char *>(), "181b") != NULL)
             { // Mi Scale V2
-              trc(F("Mi Scale V2 data reading"));
+              Log.trace(F("Mi Scale V2 data reading" CR));
               //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
               #ifdef ZmqttDiscovery
               if (!isDiscovered(mac))
@@ -573,7 +563,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             }
             if (strstr(BLEdata["servicedatauuid"].as<char *>(), "fee0") != NULL)
             { // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb // ESP32 only
-              trc(F("Mi Band data reading"));
+              Log.trace(F("Mi Band data reading" CR));
               //example "servicedata":a21e0000
               #ifdef ZmqttDiscovery
               if (!isDiscovered(mac))
@@ -583,7 +573,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             }
             if (strstr(BLEdata["servicedata"].as<char *>(), "08094c") != NULL)
             { // Clear grass with air pressure//08094c0140342d580104d8000c020702612702015a
-              trc(F("Clear grass data with air pressure reading"));
+              Log.trace(F("Clear grass data with air pressure reading" CR));
               //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
               #ifdef ZmqttDiscovery
               if (!isDiscovered(mac))
@@ -593,7 +583,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             }
             if (strstr(BLEdata["servicedata"].as<char *>(), "080774") != NULL)
             { // Clear grass standard method 2/0807743e10342d580104c3002c0202012a
-              trc(F("Clear grass data reading method 2"));
+              Log.trace(F("Clear grass data reading method 2" CR));
               //example "servicedata":0807743e10342d580104 c300 2c02 02012a
               // no discovery as it is already available with method 1
               process_cleargrass(service_data, mac);
@@ -601,7 +591,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           }
           else
           {
-            trc("Low rssi, device filtered");
+            Log.trace(F("Low rssi, device filtered" CR));
           }
         }
       }
@@ -613,13 +603,13 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         }
         else
         {
-          trc("Low rssi, device filtered");
+          Log.trace(F("Low rssi, device filtered" CR));
         }
       }
     }
     else
     {
-      trc(F("Filtered mac device"));
+      Log.trace(F("Filtered mac device" CR));
     }
   }
 };
@@ -630,26 +620,23 @@ void BLEscan()
   TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
   TIMERG0.wdt_feed = 1;
   TIMERG0.wdt_wprotect = 0;
-  trc(F("Scan begin"));
+  Log.notice(F("Scan begin" CR));
   BLEDevice::init("");
   BLEScan *pBLEScan = BLEDevice::getScan(); //create new scan
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
   pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
-  trc(F("Scan end, deinit controller"));
+  Log.notice(F("Scan end, deinit controller" CR));
   esp_bt_controller_deinit();
 }
 
 void coreTask(void *pvParameters)
 {
 
-  String taskMessage = "BT Task running on core ";
-  taskMessage = taskMessage + xPortGetCoreID();
-
   while (true)
   {
-    trc(taskMessage);
+    Log.trace(F('BT Task running on core: %d'),xPortGetCoreID());
     delay(BLEinterval);
     if (client.state() == 0)
     {
@@ -657,7 +644,7 @@ void coreTask(void *pvParameters)
     }
     else
     {
-      trc("MQTT client disconnected no BLE scan");
+      Log.warning(F("MQTT client disconnected no BLE scan" CR));
       delay(1000);
     }
   }
@@ -667,10 +654,8 @@ void setupBT()
 {
   BLEinterval = TimeBtw_Read;
   Minrssi = MinimumRSSI;
-  trc(F("BLEinterval btw scans"));
-  trc(BLEinterval);
-  trc(F("Minrssi"));
-  trc(Minrssi);
+  Log.notice(F("BLEinterval: %d" CR),BLEinterval);
+  Log.notice(F("Minrssi: %d" CR),Minrssi);
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
       coreTask,   /* Function to implement the task */
@@ -680,7 +665,7 @@ void setupBT()
       1,          /* Priority of the task */
       NULL,       /* Task handle. */
       taskCore);  /* Core where the task should run */
-  trc(F("ZgatewayBT multicore ESP32 setup done "));
+  Log.trace(F("ZgatewayBT multicore ESP32 setup done " CR));
 }
 
 bool BTtoMQTT()
@@ -709,22 +694,20 @@ void setupBT()
 {
   BLEinterval = TimeBtw_Read;
   Minrssi = MinimumRSSI;
-  trc(F("BLEinterval btw scans"));
-  trc(BLEinterval);
-  trc(F("Minrssi"));
-  trc(Minrssi);
+  Log.notice(F("BLEinterval: %d" CR),BLEinterval);
+  Log.notice(F("Minrssi: %d" CR),Minrssi);
   softserial.begin(9600);
-  softserial.print(F("AT+ROLE1"));
+  softserial.print(F("AT+ROLE1" CR));
   delay(100);
-  softserial.print(F("AT+IMME1"));
+  softserial.print(F("AT+IMME1" CR));
   delay(100);
-  softserial.print(F("AT+RESET"));
+  softserial.print(F("AT+RESET" CR));
   delay(100);
   #ifdef HM_BLUE_LED_STOP
-  softserial.print(F("AT+PIO11")); // When not connected (as in BLE mode) the LED is off. When connected the LED is solid on.
+  softserial.print(F("AT+PIO11" CR)); // When not connected (as in BLE mode) the LED is off. When connected the LED is solid on.
   #endif
   delay(100);
-  trc(F("ZgatewayBT HM1X setup done "));
+  Log.trace(F("ZgatewayBT HM1X setup done " CR));
 }
 
 bool BTtoMQTT()
@@ -759,7 +742,7 @@ bool BTtoMQTT()
         returnedString.remove(pos, returnedString.length());
         char token_char[token.length() + 1];
         token.toCharArray(token_char, token.length() + 1);
-        trc(token);
+        Log.trace(F("Token: %s" CR),token_char);
         if (token.length() > 60)
         { // we extract data only if we have detailled infos
           for (int i = 0; i < 6; i++)
@@ -771,7 +754,7 @@ bool BTtoMQTT()
 
           if ((strlen(d[0].extract)) == 12) // if a mac adress is detected we publish it
           {
-            trc(F("Creating BLE buffer"));
+            Log.trace(F("Creating BLE buffer" CR));
             StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject &BLEdata = jsonBuffer.createObject();
             strupp(d[0].extract);
@@ -787,8 +770,7 @@ bool BTtoMQTT()
               if (((i - 1) % 2 == 0) && (i != 11))
                 HomePresenceId += ":";
             }
-            trc(F("HomePresenceId"));
-            trc(HomePresenceId);
+            Log.trace(F("HomePresenceId %s" CR),(char *)HomePresenceId.c_str());
             BLEdata.set("id", (char *)HomePresenceId.c_str());
             #endif
             String topic = subjectBTtoMQTT + String("/") + String(d[0].extract);
@@ -798,6 +780,7 @@ bool BTtoMQTT()
             haRoomPresence(BLEdata); // this device has an rssi in consequence we can use it for home assistant room presence component
             #endif
             String service_data(d[5].extract);
+            Log.notice(F("Service data: %s" CR),d[5].extract);
             service_data = service_data.substring(14);
             #ifdef pubBLEServiceData
             BLEdata.set("servicedata", (char *)service_data.c_str());
@@ -809,7 +792,7 @@ bool BTtoMQTT()
               pos = strpos(d[5].extract, "209800");
               if (pos != -1)
               {
-                trc("mi flora data reading");
+                Log.trace(F("mi flora data reading" CR));
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
                   MiFloraDiscovery(d[0].extract);
@@ -821,7 +804,7 @@ bool BTtoMQTT()
               //example "servicedata":"5020aa0194dfaa33342d580d1004e3002c02"
               if (pos != -1)
               {
-                trc("mi jia data reading");
+                Log.trace(F("mi jia data reading" CR));
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
                   MiJiaDiscovery(d[0].extract);
@@ -833,7 +816,7 @@ bool BTtoMQTT()
               //example "servicedata":"141695fe70205b0461298882c8593f09061002d002"
               if (pos != -1)
               {
-                trc("LYWSD02 data reading");
+                Log.trace(F("LYWSD02 data reading" CR));
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
                   LYWSD02Discovery(d[0].extract);
@@ -844,7 +827,7 @@ bool BTtoMQTT()
               pos = strpos(d[5].extract, "304703");
               if (pos != -1)
               {
-                trc("CLEARGRASSTRH data reading method 1");
+                Log.trace(F("CLEARGRASSTRH data reading method 1" CR));
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
                   CLEARGRASSTRHDiscovery(d[0].extract);
@@ -855,7 +838,7 @@ bool BTtoMQTT()
               pos = strpos(d[5].extract, "e30706");
               if (pos != -1)
               {
-                trc("Mi Scale data reading");
+                Log.trace(F("Mi Scale data reading" CR));
                 //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
@@ -867,7 +850,7 @@ bool BTtoMQTT()
               pos = strpos(d[5].extract, "4030dd");
               if (pos != -1)
               {
-                trc(F("Mi Lamp data reading"));
+                Log.trace(F("Mi Lamp data reading" CR));
                 //example "servicedata":4030dd31d0300010100
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
@@ -879,7 +862,7 @@ bool BTtoMQTT()
               pos = strpos(d[5].extract, "08094c"); // Clear grass with air pressure//08094c0140342d580104d8000c020702612702015a
               if (pos != -1)
               {
-                trc(F("Clear grass data with air pressure reading"));
+                Log.trace(F("Clear grass data with air pressure reading" CR));
                 //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
                 #ifdef ZmqttDiscovery
                 if (!isDiscovered(d[0].extract))
@@ -891,7 +874,7 @@ bool BTtoMQTT()
               pos = strpos(d[5].extract, "080774"); // Clear grass standard method 2/0807743e10342d580104c3002c0202012a
               if (pos != -1)
               {
-                trc(F("Clear grass data reading method 2"));
+                Log.trace(F("Clear grass data reading method 2" CR));
                 //example "servicedata":0807743e10342d580104 c300 2c02 02012a
                 // no discovery as it is already available with method 1
                 process_cleargrass((char *)service_data.c_str(), d[0].extract);
@@ -900,7 +883,7 @@ bool BTtoMQTT()
             }
             else
             {
-              trc("Low rssi, device filtered");
+              Log.trace(F("Low rssi, device filtered" CR));
             }
           }
         }
@@ -930,21 +913,18 @@ double value_from_service_data(char *service_data, int offset, int data_length)
   double value = strtol(data, NULL, 16);
   if (value > 65000 && data_length <= 4)
     value = value - 65535;
-  trc(value);
+  Log.trace(F("value %D" CR),value);
   return value;
 }
 
 bool process_sensors(int offset, char *rest_data, char *mac_adress)
 {
 
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
-  trc("rest_data");
-  trc(rest_data);
   int data_length = 0;
-  trc("data_length");
-  trc(rest_data[51 + offset]);
+  
   switch (rest_data[51 + offset])
   {
   case '1':
@@ -952,10 +932,10 @@ bool process_sensors(int offset, char *rest_data, char *mac_adress)
   case '3':
   case '4':
     data_length = ((rest_data[51 + offset] - '0') * 2);
-    trc("valid data_length");
+    Log.trace(F("Valid data_length: %d" CR), data_length);
     break;
   default:
-    trc("invalid data_length");
+    Log.trace(F("Invalid data_length" CR));
     return false;
   }
 
@@ -996,7 +976,7 @@ bool process_sensors(int offset, char *rest_data, char *mac_adress)
     BLEdata.set("hum", (double)value / 10);
     break;
   default:
-    trc("can't read values");
+    Log.trace(F("can't read values" CR));
     return false;
   }
   String mactopic(mac_adress);
@@ -1008,10 +988,7 @@ bool process_sensors(int offset, char *rest_data, char *mac_adress)
 bool process_scale_v1(char *rest_data, char *mac_adress)
 {
   //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
-  trc("rest_data");
-  trc(rest_data);
-
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
 
@@ -1030,10 +1007,7 @@ bool process_scale_v1(char *rest_data, char *mac_adress)
 bool process_scale_v2(char *rest_data, char *mac_adress)
 {
   //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
-  trc("rest_data");
-  trc(rest_data);
-
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
 
@@ -1054,10 +1028,7 @@ bool process_scale_v2(char *rest_data, char *mac_adress)
 bool process_miband(char *rest_data, char *mac_adress)
 {
   //example "servicedata":"a21e0000"
-  trc("rest_data");
-  trc(rest_data);
-
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
 
@@ -1076,10 +1047,7 @@ bool process_miband(char *rest_data, char *mac_adress)
 bool process_milamp(char *rest_data, char *mac_adress)
 {
   //example "servicedata":"4030dd31d0300010100"
-  trc("rest_data");
-  trc(rest_data);
-
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
 
@@ -1100,10 +1068,7 @@ bool process_cleargrass_air(char *rest_data, char *mac_adress)
 {
   //example "servicedata":"08094c0140342d580104c400240207025d2702015a"
   //decoding "08094c0140342d580104 temp:c400 hum:2402 0702 pressure:5d27 02015a"
-  trc("rest_data");
-  trc(rest_data);
-
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
 
@@ -1127,10 +1092,7 @@ bool process_cleargrass_air(char *rest_data, char *mac_adress)
 bool process_cleargrass(char *rest_data, char *mac_adress)
 {
   //example "servicedata":0807743e10342d580104 c300 2c02 02012a
-  trc("rest_data");
-  trc(rest_data);
-
-  trc(F("Creating BLE buffer"));
+  Log.trace(F("Creating BLE buffer" CR));
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject &BLEdata = jsonBuffer.createObject();
 
@@ -1152,13 +1114,11 @@ bool process_cleargrass(char *rest_data, char *mac_adress)
 void haRoomPresence(JsonObject &HomePresence)
 {
   int BLErssi = HomePresence["rssi"];
-  trc(F("BLErssi"));
-  trc(BLErssi);
+  Log.trace(F("BLErssi %d" CR), BLErssi);
   int txPower = HomePresence["txpower"] | 0;
   if (txPower >= 0)
     txPower = -59; //if tx power is not found we set a default calibration value
-  trc(F("txPower"));
-  trc(txPower);
+  Log.trace(F("TxPower: %d" CR),txPower);
   double ratio = BLErssi * 1.0 / txPower;
   double distance;
   if (ratio < 1.0)
@@ -1170,8 +1130,7 @@ void haRoomPresence(JsonObject &HomePresence)
     distance = (0.89976) * pow(ratio, 7.7095) + 0.111;
   }
   HomePresence["distance"] = distance;
-  trc(F("BLE DISTANCE :"));
-  trc(distance);
+  Log.trace(F("Ble distance %D" CR),distance);
   String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
   pub_custom_topic((char *)topic.c_str(), HomePresence, false);
 }
@@ -1181,26 +1140,26 @@ void MQTTtoBT(char *topicOri, JsonObject &BTdata)
 { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoBTset))
   {
-    trc(F("MQTTtoBT json set"));
+    Log.trace(F("MQTTtoBT json set" CR));
 
     // Black list & white list set
     int WLsize = BTdata["white-list"].size();
     if (WLsize > 0)
     {
-      trc(F("WL set"));
       for (int i = 0; i < WLsize; i++)
       {
         const char *whiteMac = BTdata["white-list"][i];
+        Log.trace(F("WL set: %s" CR), whiteMac);
         setWorBMac((char *)whiteMac, true);
       }
     }
     int BLsize = BTdata["black-list"].size();
     if (BLsize > 0)
     {
-      trc(F("BL set"));
       for (int i = 0; i < BLsize; i++)
       {
         const char *blackMac = BTdata["black-list"][i];
+        Log.trace(F("BL set: %s" CR), blackMac);
         setWorBMac((char *)blackMac, false);
       }
     }
@@ -1210,33 +1169,28 @@ void MQTTtoBT(char *topicOri, JsonObject &BTdata)
     // Scan interval set
     if (BTdata.containsKey("interval"))
     {
-      trc(F("BLE interval"));
+      Log.trace(F("BLE interval setup" CR));
       // storing BLE interval for further use if needed
       unsigned int prevBLEinterval = BLEinterval;
-      trc("previous interval");
-      trc(BLEinterval);
+      Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
       // set BLE interval if present if not setting default value
       BLEinterval = (unsigned int)BTdata["interval"];
-      trc("new interval");
-      trc(BLEinterval);
+      Log.notice(F("New interval: %d ms" CR), BLEinterval);
       if (BLEinterval == 0)
       {
         if (BTtoMQTT()) // as BLEinterval is = to 0 we can launch the loop and the scan will execute immediately
-          trc(F("Scan done"));
+          Log.trace(F("Scan done" CR));
         BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
       }
     }
     // MinRSSI set
     if (BTdata.containsKey("minrssi"))
     {
-      trc(F("Min RSSI"));
       // storing Min RSSI for further use if needed
-      trc("previous Minrssi");
-      trc(Minrssi);
+      Log.trace(F("Previous Minrssi: %d" CR), Minrssi);
       // set Min RSSI if present if not setting default value
       Minrssi = (unsigned int)BTdata["minrssi"];
-      trc("new Minrssi");
-      trc(Minrssi);
+      Log.notice(F("New Minrssi: %d" CR), Minrssi);
     }
   }
 }

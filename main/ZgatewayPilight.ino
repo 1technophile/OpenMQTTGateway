@@ -36,7 +36,7 @@ void pilightCallback(const String &protocol, const String &message, int status,
 {
   if (status == VALID)
   {
-    trc(F("Creating RF PiLight buffer"));
+    Log.trace(F("Creating RF PiLight buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &RFPiLightdata = jsonBuffer.createObject();
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer2;
@@ -49,7 +49,7 @@ void pilightCallback(const String &protocol, const String &message, int status,
     pub(subjectPilighttoMQTT, RFPiLightdata);
     if (repeatPilightwMQTT)
     {
-      trc(F("Pub Pilight for rpt"));
+      Log.trace(F("Pub Pilight for rpt" CR));
       pub(subjectMQTTtoPilight, RFPiLightdata);
     }
   }
@@ -57,16 +57,14 @@ void pilightCallback(const String &protocol, const String &message, int status,
 
 void setupPilight()
 {
-#ifndef ZgatewayRF &&ZgatewayRF2 &&ZgatewayRF315 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
+#ifndef ZgatewayRF &&ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_PIN);
-  trc(F("RF_EMITTER_PIN "));
-  trc(String(RF_EMITTER_PIN));
-  trc(F("RF_RECEIVER_PIN "));
-  trc(String(RF_RECEIVER_PIN));
-  trc(F("ZgatewayPilight setup done "));
+  Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
+  Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+  Log.trace(F("ZgatewayPilight setup done " CR));
 #else
-  trc(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2 && ZgatewayRF315"));
+  Log.trace(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2" CR));
 #endif
 }
 
@@ -82,7 +80,7 @@ void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoPilight))
   {
-    trc(F("MQTTtoPilight json data analysis"));
+    Log.trace(F("MQTTtoPilight json data analysis" CR));
     const char *message = Pilightdata["message"];
     const char *protocol = Pilightdata["protocol"];
     const char *raw = Pilightdata["raw"];
@@ -95,43 +93,43 @@ void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
           codes, MAXPULSESTREAMLENGTH);
       if (msgLength > 0)
       {
-        trc(F("MQTTtoPilight raw ok"));
         rf.sendPulseTrain(codes, msgLength);
+        Log.notice(F("MQTTtoPilight raw ok" CR));
         result = msgLength;
       }
       else
       {
-        trc(F("MQTTtoPilight raw KO"));
+        Log.trace(F("MQTTtoPilight raw KO" CR));
         switch (result)
         {
         case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_C:
-          trc(F("'c' not found in string, or has no data"));
+          Log.trace(F("'c' not found in string, or has no data" CR));
           break;
         case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_P:
-          trc(F("'p' not found in string, or has no data"));
+          Log.trace(F("'p' not found in string, or has no data" CR));
           break;
         case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
-          trc(F("';' or '@' not found in data string"));
+          Log.trace(F("';' or '@' not found in data string" CR));
           break;
         case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_TYPE:
-          trc(F("pulse type not defined"));
+          Log.trace(F("pulse type not defined" CR));
           break;
         }
       }
     }
     else if (message && protocol)
     {
-      trc(F("MQTTtoPilight msg & protocol ok"));
+      Log.trace(F("MQTTtoPilight msg & protocol ok" CR));
       result = rf.send(protocol, message);
     }
     else
     {
-      trc(F("MQTTtoPilight failed json read"));
+      Log.error(F("MQTTtoPilight failed json read" CR));
     }
 
     if (result > 0)
     {
-      trc(F("Adv data MQTTtoPilight push state via PilighttoMQTT"));
+      Log.trace(F("Adv data MQTTtoPilight push state via PilighttoMQTT" CR));
       pub(subjectGTWPilighttoMQTT, Pilightdata);
     }
     else
@@ -139,19 +137,19 @@ void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
       switch (result)
       {
       case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
-        trc(F("protocol is not available"));
+        Log.error(F("protocol is not available" CR));
         break;
       case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
-        trc(F("message is invalid"));
+        Log.error(F("message is invalid" CR));
         break;
       case ESPiLight::ERROR_INVALID_JSON:
-        trc(F("message is not a proper json object"));
+        Log.error(F("message is not a proper json object" CR));
         break;
       case ESPiLight::ERROR_NO_OUTPUT_PIN:
-        trc(F("no transmitter pin"));
+        Log.error(F("no transmitter pin" CR));
         break;
       default:
-        trc(F("invalid json data, can't read raw or message/protocol"));
+        Log.error(F("invalid json data, can't read raw or message/protocol" CR));
         break;
       }
     }

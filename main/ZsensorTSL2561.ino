@@ -51,26 +51,26 @@ void displaySensorDetails(void)
 {
   sensor_t sensor;
   tsl.getSensor(&sensor);
-  trc(F("------------------------------------"));
-  trc("Sensor:       " + String(sensor.name));
-  trc("Driver Ver:   " + String(sensor.version));
-  trc("Unique ID:    " + String(sensor.sensor_id));
-  trc("Max Value:    " + String(sensor.max_value) + " lux");
-  trc("Min Value:    " + String(sensor.min_value) + " lux");
-  trc("Resolution:   " + String(sensor.resolution) + " lux");
-  trc(F("------------------------------------"));
-  trc(F(""));
+  Log.trace(F("------------------------------------" CR));
+  Log.trace(("Sensor: %s" CR), sensor.name);
+  Log.trace(("Driver Ver: %s" CR), sensor.version);
+  Log.trace(("Unique ID: %s" CR), sensor.sensor_id);
+  Log.trace(("Max Value: %s lux" CR), sensor.max_value);
+  Log.trace(("Min Value: %s lux" CR), sensor.min_value);
+  Log.trace(("Resolution: %s lux" CR), sensor.resolution);
+  Log.trace(F("------------------------------------" CR));
   delay(500);
 }
 
 void setupZsensorTSL2561()
 {
+  Log.notice(F("Setup TSL2561 on adress: %H" CR), TSL2561_ADDR_FLOAT);
   Wire.begin();
   Wire.beginTransmission(TSL2561_ADDR_FLOAT);
 
   if (!tsl.begin())
   {
-    trc(F("No TSL2561 detected"));
+    Log.error(F("No TSL2561 detected" CR));
   }
 
   // enable auto ranging
@@ -82,7 +82,7 @@ void setupZsensorTSL2561()
   // tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);  /* medium resolution and speed   */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);
 
-  trc(F("TSL2561 Initialized. Printing detials now."));
+  Log.trace(F("TSL2561 Initialized. Printing detials now." CR));
   displaySensorDetails();
 }
 
@@ -93,7 +93,7 @@ void MeasureLightIntensityTSL2561()
     static uint32_t persisted_lux;
     timetsl2561 = millis();
 
-    trc(F("Creating TSL2561 buffer"));
+    Log.trace(F("Creating TSL2561 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &TSL2561data = jsonBuffer.createObject();
 
@@ -114,12 +114,12 @@ void MeasureLightIntensityTSL2561()
       }
       else
       {
-        trc(F("Same lux value, do not send"));
+        Log.trace(F("Same lux value, do not send" CR));
       }
     }
     else
     {
-      trc(F("Failed to read from TSL2561"));
+      Log.error(F("Failed to read from TSL2561" CR));
     }
   }
 }

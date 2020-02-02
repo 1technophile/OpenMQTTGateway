@@ -55,16 +55,13 @@ void MeasureINA226()
   if (millis() > (timeINA226 + TimeBetweenReadingINA226))
   { //retriving value of temperature and humidity of the box from DHT every xUL
     timeINA226 = millis();
-    trc(F("Creating INA226 buffer"));
+    Log.trace(F("Creating INA226 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &INA226data = jsonBuffer.createObject();
     // Topic on which we will send data
-    trc(F("Retrieving electrical data"));
+    Log.trace(F("Retrieving electrical data" CR));
     // Bus Spannung, read-only, 16Bit, 0...40.96V max., LSB 1.25mV
-    trc(F(" Volt: "));
     float volt = readRegister(0x02) * 0.00125;
-    trc(volt);
-    trc(F(" V, Current: "));
     // Seite 24: Shunt Spannung +- 81,92mV mit 16 Bit, LSB 2,5uV
     int shuntvolt = readRegister(0x01);
     if (shuntvolt && 0x8000)
@@ -74,11 +71,7 @@ void MeasureINA226()
       shuntvolt *= -1;        // negativ machen
     }
     float current = shuntvolt * 0.0000025 / rShunt; // * LSB / R
-    trc(current);
-    trc(F(" A, Power: "));
     float power = abs(volt * current);
-    trc(power);
-    trc(F(" W"));
 
     char volt_c[7];
     char current_c[7];

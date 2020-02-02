@@ -35,6 +35,8 @@ unsigned long timeHCSR04 = 0;
 
 void setupHCSR04()
 {
+  Log.notice(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_PIN);
+  Log.notice(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_PIN);
   pinMode(HCSR04_TRI_PIN, OUTPUT); // declare HC SR-04 trigger pin as output
   pinMode(HCSR04_ECH_PIN, INPUT);  // declare HC SR-04 echo pin as input
 }
@@ -44,7 +46,7 @@ void MeasureDistance()
   if (millis() > (timeHCSR04 + TimeBetweenReadingHCSR04))
   {
     timeHCSR04 = millis();
-    trc(F("Creating HCSR04 buffer"));
+    Log.trace(F("Creating HCSR04 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &HCSR04data = jsonBuffer.createObject();
     digitalWrite(HCSR04_TRI_PIN, LOW);
@@ -55,7 +57,7 @@ void MeasureDistance()
     unsigned long duration = pulseIn(HCSR04_ECH_PIN, HIGH);
     if (isnan(duration))
     {
-      trc(F("Failed to read from HC SR04 sensor!"));
+      Log.error(F("Failed to read from HC SR04 sensor!" CR));
     }
     else
     {
@@ -65,17 +67,17 @@ void MeasureDistance()
       if (d > distance)
       {
         HCSR04data.set("direction", "away");
-        trc(F("HC SR04 Distance changed"));
+        Log.trace(F("HC SR04 Distance changed" CR));
       }
       else if (d < distance)
       {
         HCSR04data.set("direction", "towards");
-        trc(F("HC SR04 Distance changed"));
+        Log.trace(F("HC SR04 Distance changed" CR));
       }
       else if (HCSR04_always)
       {
         HCSR04data.set("direction", "static");
-        trc(F("HC SR04 Distance hasn't changed"));
+        Log.trace(F("HC SR04 Distance hasn't changed" CR));
       }
       distance = d;
       if (HCSR04data.size() > 0)

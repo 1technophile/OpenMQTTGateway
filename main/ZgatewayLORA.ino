@@ -40,24 +40,18 @@ void setupLORA()
 
   if (!LoRa.begin(LORA_BAND))
   {
-    trc(F("ZgatewayLORA setup failed!"));
+    Log.error(F("ZgatewayLORA setup failed!" CR));
     while (1)
       ;
   }
   LoRa.receive();
-  trc(F("LORA_SCK"));
-  trc(LORA_SCK);
-  trc(F("LORA_MISO"));
-  trc(LORA_MISO);
-  trc(F("LORA_MOSI"));
-  trc(LORA_MOSI);
-  trc(F("LORA_SS"));
-  trc(LORA_SS);
-  trc(F("LORA_RST"));
-  trc(LORA_RST);
-  trc(F("LORA_DI0"));
-  trc(LORA_DI0);
-  trc(F("ZgatewayLORA setup done"));
+  Log.notice(F("LORA_SCK: %s" CR), LORA_SCK);
+  Log.notice(F("LORA_MISO: %s" CR), LORA_MISO);
+  Log.notice(F("LORA_MOSI: %s" CR), LORA_MOSI);
+  Log.notice(F("LORA_SS: %s" CR), LORA_SS);
+  Log.notice(F("LORA_RST: %s" CR), LORA_RST);
+  Log.notice(F("LORA_DI0: %s" CR), LORA_DI0);
+  Log.trace(F("ZgatewayLORA setup done" CR));
 }
 
 void LORAtoMQTT()
@@ -67,11 +61,11 @@ void LORAtoMQTT()
   {
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &LORAdata = jsonBuffer.createObject();
-    trc(F("Rcv. LORA"));
+    Log.trace(F("Rcv. LORA" CR));
 #ifdef ESP32
     String taskMessage = "LORA Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
-    trc(taskMessage);
+    //trc(taskMessage);
 #endif
     String packet;
     packet = "";
@@ -87,7 +81,7 @@ void LORAtoMQTT()
     pub(subjectLORAtoMQTT, LORAdata);
     if (repeatLORAwMQTT)
     {
-      trc(F("Pub LORA for rpt"));
+      Log.trace(F("Pub LORA for rpt" CR));
       pub(subjectMQTTtoLORA, LORAdata);
     }
   }
@@ -98,7 +92,7 @@ void MQTTtoLORA(char *topicOri, JsonObject &LORAdata)
 { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA))
   {
-    trc(F("MQTTtoLORA json"));
+    Log.trace(F("MQTTtoLORA json" CR));
     const char *message = LORAdata["message"];
     int txPower = LORAdata["txpower"] | LORA_TX_POWER;
     int spreadingFactor = LORAdata["spreadingfactor"] | LORA_SPREADING_FACTOR;
@@ -122,12 +116,12 @@ void MQTTtoLORA(char *topicOri, JsonObject &LORAdata)
       LoRa.beginPacket();
       LoRa.print(message);
       LoRa.endPacket();
-      trc(F("MQTTtoLORA OK"));
+      Log.trace(F("MQTTtoLORA OK" CR));
       pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     }
     else
     {
-      trc(F("MQTTtoLORA Fail json"));
+      Log.error(F("MQTTtoLORA Fail json" CR));
     }
   }
 }
@@ -140,7 +134,7 @@ void MQTTtoLORA(char *topicOri, char *LORAdata)
     LoRa.beginPacket();
     LoRa.print(LORAdata);
     LoRa.endPacket();
-    trc(F("MQTTtoLORA OK"));
+    Log.notice(F("MQTTtoLORA OK" CR));
     pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
 }

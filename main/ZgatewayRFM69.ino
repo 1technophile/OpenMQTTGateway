@@ -78,7 +78,7 @@ void eeprom_setup()
   // if checksum bad init GC else use GC values
   if (gc_checksum() != pGC->checksum)
   {
-    trc(F("Factory reset"));
+    Log.trace(F("Factory reset" CR));
     memset(pGC, 0, sizeof(*pGC));
     strcpy_P(pGC->encryptkey, ENCRYPTKEY);
     strcpy_P(pGC->rfmapname, RFM69AP_NAME);
@@ -109,7 +109,7 @@ void setupRFM69(void)
   // Initialize radio
   if (!radio.initialize(pGC->rfmfrequency, pGC->nodeid, pGC->networkid))
   {
-    trc(F("ZgatewayRFM69 initialization failed"));
+    Log.error(F("ZgatewayRFM69 initialization failed" CR));
   }
 
   if (GC_IS_RFM69HCW)
@@ -121,7 +121,6 @@ void setupRFM69(void)
   if (pGC->encryptkey[0] != '\0')
     radio.encrypt(pGC->encryptkey);
 
-  trc(F("ZgatewayRFM69 Listening and transmitting at"));
   switch (pGC->rfmfrequency)
   {
   case RF69_433MHZ:
@@ -140,13 +139,13 @@ void setupRFM69(void)
     freq = -1;
     break;
   }
-  trc(freq);
+  Log.notice(F("ZgatewayRFM69 Listening and transmitting at: %d" CR), freq);
 
   size_t len = snprintf_P(RadioConfig, sizeof(RadioConfig), JSONtemplate,
                           freq, GC_IS_RFM69HCW, pGC->networkid, GC_POWER_LEVEL);
   if (len >= sizeof(RadioConfig))
   {
-    trc(F("\n\n*** RFM69 config truncated ***\n"));
+    Log.trace(F("\n\n*** RFM69 config truncated ***\n" CR));
   }
 }
 
@@ -155,7 +154,7 @@ bool RFM69toMQTT(void)
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone())
   {
-    trc(F("Creating RFM69 buffer"));
+    Log.trace(F("Creating RFM69 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &RFM69data = jsonBuffer.createObject();
     uint8_t data[RF69_MAX_DATA_LEN + 1]; // For the null character
@@ -175,8 +174,7 @@ bool RFM69toMQTT(void)
     }
     //updateClients(senderId, rssi, (const char *)data);
 
-    trc(F("Data received"));
-    trc((const char *)data);
+    Log.trace(F("Data received: %s" CR), (const char *)data);
 
     char buff[sizeof(subjectRFM69toMQTT) + 4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
@@ -199,7 +197,7 @@ void MQTTtoRFM69(char *topicOri, char *datacallback)
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69))
   {
-    trc(F("MQTTtoRFM69 data analysis"));
+    Log.trace(F("MQTTtoRFM69 data analysis" CR));
     char data[RF69_MAX_DATA_LEN + 1];
     memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
     data[RF69_MAX_DATA_LEN] = '\0';
@@ -212,12 +210,11 @@ void MQTTtoRFM69(char *topicOri, char *datacallback)
     {
       pos = pos + +strlen(RFM69receiverKey);
       valueRCV = (topic.substring(pos, pos + 3)).toInt();
-      trc(F("RFM69 receiver ID:"));
-      trc(valueRCV);
+      Log.notice(F("RFM69 receiver ID: %d" CR), valueRCV);
     }
     if (radio.sendWithRetry(valueRCV, data, strlen(data), 10))
     {
-      trc(F(" OK "));
+      Log.notice(F(" OK " CR));
       // Acknowledgement to the GTWRF topic
       char buff[sizeof(subjectGTWRFM69toMQTT) + 4];
       sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
@@ -225,7 +222,7 @@ void MQTTtoRFM69(char *topicOri, char *datacallback)
     }
     else
     {
-      trc(F("RFM69 sending failed"));
+      Log.error(F("RFM69 sending failed" CR));
     }
   }
 }
@@ -237,27 +234,26 @@ void MQTTtoRFM69(char *topicOri, JsonObject &RFM69data)
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69))
   {
     const char *data = RFM69data["data"];
-    trc(F("MQTTtoRFM69 json data analysis"));
+    Log.trace(F("MQTTtoRFM69 json data analysis" CR));
     if (data)
     {
-      trc(F("MQTTtoRFM69 data ok"));
+      Log.trace(F("MQTTtoRFM69 data ok" CR));
       int valueRCV = RFM69data["receiverid"] | defaultRFM69ReceiverId; //default receiver id value
-      trc(F("RFM69 receiver ID:"));
-      trc(valueRCV);
+      Log.notice(F("RFM69 receiver ID: %d" CR), valueRCV);
       if (radio.sendWithRetry(valueRCV, data, strlen(data), 10))
       {
-        trc(F(" OK "));
+        Log.notice(F(" OK " CR));
         // Acknowledgement to the GTWRF topic
         pub(subjectGTWRFM69toMQTT, RFM69data); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       }
       else
       {
-        trc(F("MQTTtoRFM69 sending failed"));
+        Log.error(F("MQTTtoRFM69 sending failed" CR));
       }
     }
     else
     {
-      trc(F("MQTTtoRFM69 failed json read"));
+      Log.error(F("MQTTtoRFM69 failed json read" CR));
     }
   }
 }
