@@ -48,11 +48,10 @@ void PairedDeviceAdded(byte newID)
 
 void setupWeatherStation()
 {
-  trc(F("RF_WS_RECEIVER_PIN "));
-  trc(String(RF_WS_RECEIVER_PIN));
+  Log.notice(F("RF_WS_RECEIVER_PIN %d" CR),RF_WS_RECEIVER_PIN);
   wsdr.begin();
   wsdr.pair(NULL, PairedDeviceAdded);
-  trc(F("ZgatewayWeatherStation setup done "));
+  Log.trace(F("ZgatewayWeatherStation setup done " CR));
 }
 
 void sendWindSpeedData(byte id, float wind_speed, byte battery_status)
@@ -67,7 +66,7 @@ void sendWindSpeedData(byte id, float wind_speed, byte battery_status)
     RFdata.set("wind_speed", wind_speed);
     RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
     pub(subjectRFtoMQTT, RFdata);
-    trc(F("Store wind speed val"));
+    Log.trace(F("Store wind speed val: %lu" CR), MQTTvalue);
     storeValue(MQTTvalue);
   }
 }
@@ -84,7 +83,7 @@ void sendRainData(byte id, float rain_volume, byte battery_status)
     RFdata.set("rain_volume", rain_volume);
     RFdata.set("battery", bitRead(battery_status, 1) == 0 ? "OK" : "Low");
     pub(subjectRFtoMQTT, RFdata);
-    trc(F("Store rain_volume"));
+    Log.trace(F("Store rain_volume: %lu" CR), MQTTvalue);
     storeValue(MQTTvalue);
   }
 }
@@ -102,7 +101,7 @@ void sendWindData(byte id, int wind_direction, float wind_gust, byte battery_sta
     RFdata.set("wind_gust", wind_gust);
     RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
     pub(subjectRFtoMQTT, RFdata);
-    trc(F("Store wind data val"));
+    Log.trace(F("Store wind data val: %lu" CR), MQTTvalue);
     storeValue(MQTTvalue);
   }
 }
@@ -120,7 +119,7 @@ void sendTemperatureData(byte id, float temperature, int humidity, byte battery_
     RFdata.set("humidity", humidity);
     RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
     pub(subjectRFtoMQTT, RFdata);
-    trc(F("Store temperature val"));
+    Log.trace(F("Store temp val: %lu" CR), MQTTvalue);
     storeValue(MQTTvalue);
    }
 }
@@ -131,22 +130,22 @@ void ZgatewayWeatherStationtoMQTT()
   switch (newData)
   {
   case 'T':
-    trc(F("Temperature"));
+    Log.trace(F("Temperature" CR));
     sendTemperatureData(wsdr.sensorID(), wsdr.readTemperature(), wsdr.readHumidity(), wsdr.batteryStatus());
     break;
 
   case 'S':
-    trc(F("Wind speed"));
+    Log.trace(F("Wind speed" CR));
     sendWindSpeedData(wsdr.sensorID(), wsdr.readWindSpeed(), wsdr.batteryStatus());
     break;
 
   case 'G':
-    trc(F("Wind direction"));    
+    Log.trace(F("Wind direction" CR));    
     sendWindData(wsdr.sensorID(), wsdr.readWindDirection(), wsdr.readWindGust(), wsdr.batteryStatus());
     break;
 
   case 'R':
-    trc(F("Rain volume"));
+    Log.trace(F("Rain volume" CR));
     sendRainData(wsdr.sensorID(), wsdr.readRainVolume(), wsdr.batteryStatus());
     break;
 

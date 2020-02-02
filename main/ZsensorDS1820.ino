@@ -41,11 +41,11 @@ static String ds1820_addr[OW_MAX_SENSORS];
 
 void setupZsensorDS1820()
 {
-  trc(String("DS1820: configured pin ") + DS1820_OWBUS_PIN + String(" for 1-wire bus"));
+  Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_PIN );
   ds1820.begin();
 
   // locate device(s) on 1-wire bus
-  trc("DS1820: Found " + String(ds1820.getDeviceCount(), DEC) + String(" devices."));
+  Log.notice(F("DS1820: Found %d devices" CR), ds1820.getDeviceCount());
 
   // determine device addresses on 1-wire bus
   if (owbus.search(ds1820_address)) 
@@ -90,10 +90,11 @@ void setupZsensorDS1820()
           ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
         }  
         ds1820_resolution[ds1820_count] = ds1820.getResolution(ds1820_address);
-        trc(String("DS1820: Device ") + ds1820_count 
-          + String(", Type ") + ds1820_type[ds1820_count] 
-          + String(", Address ") + ds1820_addr[ds1820_count] 
-          + String(", Resolution ") + ds1820_resolution[ds1820_count]);
+        Log.trace(F("DS1820: Device %d, Type: %s, Address: %s, Resolution: %d" CR),
+          ds1820_count,
+          (char *)ds1820_type[ds1820_count].c_str(),
+          (char *)ds1820_addr[ds1820_count].c_str(),
+          ds1820_resolution[ds1820_count]);
         ds1820_count++;
       }       
     } while (owbus.search(ds1820_address));
@@ -101,7 +102,7 @@ void setupZsensorDS1820()
   } 
   else
   {  
-    trc(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your pin assignment!"));
+    Log.error(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your pin assignment!" CR));
   }
 
   // make requestTemperatures() non-blocking
@@ -120,7 +121,7 @@ void MeasureDS1820Temp()
   // calling getTempC() to make reading temperatures non-blocking
   if (!triggeredConversion && (millis() > (timeDS1820 + (DS1820_INTERVAL_SEC*1000) - DS1820_CONV_TIME)))
   {
-    trc(F("DS1820: Trigger temperature conversion..."));
+    Log.trace(F("DS1820: Trigger temperature conversion..." CR));
     ds1820.requestTemperatures();
     triggeredConversion = true;
   }
@@ -131,11 +132,11 @@ void MeasureDS1820Temp()
     
     if (ds1820_count < 1)
     {
-      trc(F("DS1820: Failed to identify any temperature sensors on 1-wire bus during setup!"));
+      Log.error(F("DS1820: Failed to identify any temperature sensors on 1-wire bus during setup!" CR));
     }
     else
     {
-      trc(String("DS1820: Reading temperature(s) from ") + ds1820_count + String(" sensor(s)..."));
+      Log.trace(F("DS1820: Reading temperature(s) from %d sensor(s)..." CR), ds1820_count);
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject &DS1820data = jsonBuffer.createObject();
 
@@ -144,24 +145,28 @@ void MeasureDS1820Temp()
         current_temp[i] = round(ds1820.getTempC(ds1820_devices[i])*10)/10.0;
         if (current_temp[i] == -127) 
         {
-          trc(String("DS1820: Device ") + ds1820_addr[i] + String(" currently disconnected!"));
+          Log.error(F("DS1820: Device %s currently disconnected!" CR), (char *)ds1820_addr[i].c_str() );
         }
         else if (DS1820_ALWAYS || current_temp[i] != persisted_temp[i])
         {
           if (DS1820_FAHRENHEIT) {
-            trc(String("DS1820: Temperature (") + ds1820_addr[i] + String("): ") 
-                  + DallasTemperature::toFahrenheit(current_temp[i]) + String(" F"));
+            Log.notice(F("DS1820: Temperature %s %d F" CR), 
+              (char *)ds1820_addr[i].c_str(), 
+              DallasTemperature::toFahrenheit(current_temp[i]));
             DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
             DS1820data.set("unit", "F");
           } else {
-            trc(String("DS1820: Temperature (") + ds1820_addr[i] 
-                  + String("): ") + current_temp[i] + String(" C"));
+            Log.notice(F("DS1820: Temperature %s %d C" CR), 
+              (char *)ds1820_addr[i].c_str(), 
+              current_temp[i]);
+            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
+            DS1820data.set("unit", "F");
             DS1820data.set("temp", (float)current_temp[i]);
             DS1820data.set("unit", "C");
           }
           if (DS1820_DETAILS) {          
             DS1820data.set("type", ds1820_type[i]);
-            DS1820data.set("res", ds1820_resolution[i] + String("bit"));
+            DS1820data.set("res", ds1820_resolution[i] + String("bit" CR));
             DS1820data.set("addr", ds1820_addr[i]);
           }
           pub(OW_TOPIC, DS1820data);
@@ -169,7 +174,7 @@ void MeasureDS1820Temp()
         }
         else 
         {
-          trc(String("DS1820: Temperature for device ") + ds1820_addr[i] + String(" didn't change, don't publish it."));
+          Log.trace(F("DS1820: Temperature for device %s didn't change, don't publish it." CR), (char *)ds1820_addr[i].c_str());
         }
         persisted_temp[i] = current_temp[i];
       }

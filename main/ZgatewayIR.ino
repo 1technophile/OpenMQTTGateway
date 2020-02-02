@@ -103,11 +103,9 @@ void setupIR()
 
   irrecv.enableIRIn(); // Start the receiver
 
-  trc(F("IR_EMITTER_PIN "));
-  trc(IR_EMITTER_PIN);
-  trc(F("IR_RECEIVER_PIN "));
-  trc(IR_RECEIVER_PIN);
-  trc(F("ZgatewayIR setup done "));
+  Log.notice(F("IR_EMITTER_PIN: %d " CR), IR_EMITTER_PIN);
+  Log.notice(F("IR_RECEIVER_PIN: %d " CR), IR_RECEIVER_PIN);
+  Log.trace(F("ZgatewayIR setup done " CR));
 }
 
 void IRtoMQTT()
@@ -116,15 +114,15 @@ void IRtoMQTT()
 
   if (irrecv.decode(&results))
   {
-    trc(F("Creating IR buffer"));
+    Log.trace(F("Creating IR buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject &IRdata = jsonBuffer.createObject();
 
-    trc(F("Rcv. IR"));
+    Log.trace(F("Rcv. IR" CR));
 #ifdef ESP32
     String taskMessage = "Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
-    trc(taskMessage);
+    //trc(taskMessage);
 #endif
     IRdata.set("value", (unsigned long long)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
@@ -148,7 +146,7 @@ void IRtoMQTT()
       if (i < results.rawlen - 1)
         rawCode = rawCode + ","; // ',' not needed on last one
     }
-    trc(rawCode);
+    //trc(rawCode);
     IRdata.set("raw", rawCode);
 // if needed we directly resend the raw code
 #ifdef RawDirectForward
@@ -166,24 +164,24 @@ void IRtoMQTT()
       rawsend[i] = results.rawbuf[i];
     }
     irsend.sendRaw(rawsend, results.rawlen, RawFrequency);
-    trc(F("raw redirected"));
+    Log.trace(F("raw redirected" CR));
 #endif
     irrecv.resume(); // Receive the next value
     unsigned long long MQTTvalue = IRdata.get<unsigned long long>("value");
     //trc(MQTTvalue);
     if ((pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1) /*|| MQTTvalue == ULONG_MAX*/)
     { // don't publish unknown IR protocol or data to high
-      trc(F("--no pub unknwn prt or data to high--"));
+      Log.notice(F("--no pub unknwn prt or data to high--" CR));
     }
     else if (!isAduplicate(MQTTvalue) && MQTTvalue != 0)
     { // conditions to avoid duplications of IR -->MQTT
-      trc(F("Adv data IRtoMQTT"));
+      Log.trace(F("Adv data IRtoMQTT" CR));
       pub(subjectIRtoMQTT, IRdata);
-      trc(F("Store val"));
+      Log.trace(F("Store val: %D" CR), MQTTvalue);
       storeValue(MQTTvalue);
       if (repeatIRwMQTT)
       {
-        trc(F("Pub. IR for rpt"));
+        Log.trace(F("Pub. IR for rpt" CR));
         pubMQTT(subjectMQTTtoIR, MQTTvalue);
       }
     }
@@ -196,7 +194,7 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoIR))
   {
-    trc(F("MQTTtoIR json"));
+    Log.trace(F("MQTTtoIR json" CR));
     uint64_t data = IRdata["value"];
     const char *raw = IRdata["raw"];
     const char *datastring = IRdata["datastring"];
@@ -206,12 +204,11 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
     }
     if (data != 0 || raw || datastring)
     {
-      trc(F("MQTTtoIR value || raw || datasring ok"));
+      Log.trace(F("MQTTtoIR value || raw || datasring ok" CR));
       bool signalSent = false;
       if (datastring)
       {
-        trc(F("datastring"));
-        trc(datastring);
+        Log.notice(F("Datastring: %s" CR), datastring);
       }
       else
       {
@@ -223,8 +220,7 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
 
       if (raw)
       {
-        trc(F("raw"));
-        trc(raw);
+        Log.notice(F("Raw: %s" CR), raw);
         unsigned int s = strlen(raw);
         //number of "," value count
         int count = 0;
@@ -238,7 +234,7 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
 #ifdef IR_GC
         if (strstr(protocol_name, "GC") != NULL)
         { // sending GC data from https://irdb.globalcache.com
-          trc(F("GC"));
+          Log.trace(F("GC" CR));
           //buffer allocation from char datacallback
           uint16_t GC[count + 1];
           String value = "";
@@ -263,7 +259,7 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
 #ifdef IR_RAW
         if (strstr(protocol_name, "Raw") != NULL)
         { // sending Raw data
-          trc(F("Raw"));
+          Log.trace(F("Raw" CR));
 //buffer allocation from char datacallback
 #if defined(ESP8266) || defined(ESP32)
           uint16_t Raw[count + 1];
@@ -292,11 +288,12 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
       }
       else if (protocol_name && (strstr(protocol_name, "NEC") == NULL))
       {
+        Log.trace(F("Using Identified Protocol: %s  bits: %d repeat: %d" CR),protocol_name, valueBITS, valueRPT);
         signalSent = sendIdentifiedProtocol(protocol_name, data, datastring, valueBITS, valueRPT);
       }
       else
       {
-        trc(F("Using NEC protocol"));
+        Log.trace(F("Using NEC protocol" CR));
         if (valueBITS == 0)
           valueBITS = NEC_BITS;
 #if defined(ESP8266) || defined(ESP32)
@@ -309,14 +306,14 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
       }
       if (signalSent)
       { // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-        trc(F("MQTTtoIR OK"));
+        Log.notice(F("MQTTtoIR OK" CR));
         pub(subjectGTWIRtoMQTT, IRdata);
       }
       irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
     }
     else
     {
-      trc(F("MQTTtoIR failed json read"));
+      Log.error(F("MQTTtoIR failed json read" CR));
     }
   }
 }

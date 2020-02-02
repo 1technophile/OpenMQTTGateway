@@ -41,6 +41,7 @@ void MeasureADC()
 {
   if (millis() > (timeadc + TimeBetweenReadingADC))
   { //retriving value of temperature and humidity of the box from DHT every xUL
+    Log.notice(F("Read ADC on pin: %d" CR), ADC_PIN);
 #if defined(ESP8266)
     yield();
 #endif
@@ -49,13 +50,13 @@ void MeasureADC()
     int val = analogRead(ADC_PIN);
     if (isnan(val))
     {
-      trc(F("Failed to read from ADC !"));
+      Log.error(F("Failed to read from ADC !" CR));
     }
     else
     {
       if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC)
       {
-        trc(F("Creating ADC buffer"));
+        Log.trace(F("Creating ADC buffer" CR));
         const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
         StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
         JsonObject &ADCdata = jsonBuffer.createObject();

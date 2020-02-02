@@ -36,6 +36,7 @@ int lastInputState = 3;
 
 void setupGPIOInput()
 {
+  Log.notice(F("Reading GPIO at pin: %d" CR), GPIOInput_PIN);
   pinMode(GPIOInput_PIN, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 }
 
@@ -65,18 +66,16 @@ void MeasureGPIOInput()
     if (reading != InputState)
     {
       InputState = reading;
-      trc(F("Creating GPIOInput buffer"));
+      Log.trace(F("Creating GPIOInput buffer" CR));
       const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
       StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
       JsonObject &GPIOdata = jsonBuffer.createObject();
       if (InputState == HIGH)
       {
-        trc(F("GPIO HIGH"));
         GPIOdata.set("gpio", "HIGH");
       }
       if (InputState == LOW)
       {
-        trc(F("GPIO LOW"));
         GPIOdata.set("gpio", "LOW");
       }
       if (GPIOdata.size() > 0)

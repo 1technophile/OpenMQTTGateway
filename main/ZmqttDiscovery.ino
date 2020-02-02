@@ -117,7 +117,7 @@ void createDiscovery(char *sensor_type,
 
 void pubMqttDiscovery()
 {
-  trc(F("omgStatusDiscovery"));
+  Log.trace(F("omgStatusDiscovery" CR));
   createDiscovery("binary_sensor",                                               //set Type
                   will_Topic, Gateway_Name, (char *)getUniqueId("", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "connectivity", "",                                //set availability_topic,device_class,value_template,
@@ -142,7 +142,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorBME280
 #define BMEparametersCount 6
-  trc(F("bme280Discovery"));
+  Log.trace(F("bme280Discovery" CR));
   char *BMEsensor[BMEparametersCount][8] = {
       {"sensor", "tempc", "bme", "temperature", "{{ value_json.tempc }}", "", "", "°C"},
       {"sensor", "tempf", "bme", "temperature", "{{ value_json.tempf }}", "", "", "°F"},
@@ -155,8 +155,8 @@ void pubMqttDiscovery()
 
   for (int i = 0; i < BMEparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(BMEsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor" CR));
+    //trc(BMEsensor[i][1]);
     createDiscovery(BMEsensor[i][0],
                     BMETOPIC, BMEsensor[i][1], (char *)getUniqueId(BMEsensor[i][1], BMEsensor[i][2]).c_str(),
                     will_Topic, BMEsensor[i][3], BMEsensor[i][4],
@@ -167,15 +167,15 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorDHT
 #define DHTparametersCount 2
-  trc(F("DHTDiscovery"));
+  Log.trace(F("DHTDiscovery" CR));
   char *DHTsensor[DHTparametersCount][8] = {
       {"sensor", "tempc", "dht", "temperature", "{{ value_json.temp }}", "", "", "°C"},
       {"sensor", "hum", "dht", "humidity", "{{ value_json.hum }}", "", "", "%"}};
 
   for (int i = 0; i < DHTparametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(DHTsensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor" CR));
+    //trc(DHTsensor[i][1]);
     createDiscovery(DHTsensor[i][0],
                     DHTTOPIC, DHTsensor[i][1], (char *)getUniqueId(DHTsensor[i][1], DHTsensor[i][2]).c_str(),
                     will_Topic, DHTsensor[i][3], DHTsensor[i][4],
@@ -185,12 +185,12 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZsensorADC
-  trc(F("ADCDiscovery"));
+  Log.trace(F("ADCDiscovery" CR));
   char *ADCsensor[8] = {"sensor", "adc", "", "", "{{ value_json.adc }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(ADCsensor[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(ADCsensor[1]);
   createDiscovery(ADCsensor[0],
                   ADCTOPIC, ADCsensor[1], (char *)getUniqueId(ADCsensor[1], ADCsensor[2]).c_str(),
                   will_Topic, ADCsensor[3], ADCsensor[4],
@@ -200,7 +200,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorBH1750
 #define BH1750parametersCount 3
-  trc(F("BH1750Discovery"));
+  Log.trace(F("BH1750Discovery" CR));
   char *BH1750sensor[BH1750parametersCount][8] = {
       {"sensor", "lux", "BH1750", "illuminance", "{{ value_json.lux }}", "", "", "lu"},
       {"sensor", "ftCd", "BH1750", "", "{{ value_json.ftCd }}", "", "", ""},
@@ -210,8 +210,8 @@ void pubMqttDiscovery()
 
   for (int i = 0; i < BH1750parametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(BH1750sensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor" CR));
+    //trc(BH1750sensor[i][1]);
     createDiscovery(BH1750sensor[i][0],
                     subjectBH1750toMQTT, BH1750sensor[i][1], (char *)getUniqueId(BH1750sensor[i][1], BH1750sensor[i][2]).c_str(),
                     will_Topic, BH1750sensor[i][3], BH1750sensor[i][4],
@@ -222,7 +222,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorTSL2561
 #define TSL2561parametersCount 3
-  trc(F("TSL2561Discovery"));
+  Log.trace(F("TSL2561Discovery" CR));
   char *TSL2561sensor[TSL2561parametersCount][8] = {
       {"sensor", "lux", "TSL2561", "illuminance", "{{ value_json.lux }}", "", "", "lu"},
       {"sensor", "ftcd", "TSL2561", "", "{{ value_json.ftcd }}", "", "", ""},
@@ -232,8 +232,8 @@ void pubMqttDiscovery()
 
   for (int i = 0; i < TSL2561parametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(TSL2561sensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor" CR));
+    //trc(TSL2561sensor[i][1]);
     createDiscovery(TSL2561sensor[i][0],
                     subjectTSL12561toMQTT, TSL2561sensor[i][1], (char *)getUniqueId(TSL2561sensor[i][1], TSL2561sensor[i][2]).c_str(),
                     will_Topic, TSL2561sensor[i][3], TSL2561sensor[i][4],
@@ -243,12 +243,12 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZsensorHCSR501
-  trc(F("HCSR501Discovery"));
+  Log.trace(F("HCSR501Discovery" CR));
   char *HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "", "{{value_json.hcsr501}}", "true", "false", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(HCSR501sensor[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(HCSR501sensor[1]);
   createDiscovery(HCSR501sensor[0],
                   subjectHCSR501toMQTT, HCSR501sensor[1], (char *)getUniqueId(HCSR501sensor[1], HCSR501sensor[2]).c_str(),
                   will_Topic, HCSR501sensor[3], HCSR501sensor[4],
@@ -257,12 +257,12 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZsensorGPIOInput
-  trc(F("GPIOInputDiscovery"));
+  Log.trace(F("GPIOInputDiscovery" CR));
   char *GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "", "", "{{value_json.gpio}}", "HIGH", "LOW", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(GPIOInputsensor[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(GPIOInputsensor[1]);
   createDiscovery(GPIOInputsensor[0],
                   subjectGPIOInputtoMQTT, GPIOInputsensor[1], (char *)getUniqueId(GPIOInputsensor[1], GPIOInputsensor[2]).c_str(),
                   will_Topic, GPIOInputsensor[3], GPIOInputsensor[4],
@@ -272,7 +272,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorINA226
 #define INA226parametersCount 3
-  trc(F("INA226Discovery"));
+  Log.trace(F("INA226Discovery" CR));
   char *INA226sensor[INA226parametersCount][8] = {
       {"sensor", "volt", "INA226", "", "{{ value_json.volt }}", "", "", "V"},
       {"sensor", "current", "INA226", "", "{{ value_json.current }}", "", "", "A"},
@@ -282,8 +282,8 @@ void pubMqttDiscovery()
 
   for (int i = 0; i < INA226parametersCount; i++)
   {
-    trc(F("CreateDiscoverySensor"));
-    trc(INA226sensor[i][1]);
+    Log.trace(F("CreateDiscoverySensor" CR));
+    //trc(INA226sensor[i][1]);
     createDiscovery(INA226sensor[i][0],
                     subjectINA226toMQTT, INA226sensor[i][1], (char *)getUniqueId(INA226sensor[i][1], INA226sensor[i][2]).c_str(),
                     will_Topic, INA226sensor[i][3], INA226sensor[i][4],
@@ -293,12 +293,12 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZactuatorONOFF
-  trc(F("actuatorONOFFDiscovery"));
+  Log.trace(F("actuatorONOFFDiscovery" CR));
   char *actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "", "{\"cmd\":1}", "{\"cmd\":0}", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(actuatorONOFF[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(actuatorONOFF[1]);
   createDiscovery(actuatorONOFF[0],
                   subjectGTWONOFFtoMQTT, actuatorONOFF[1], (char *)getUniqueId(actuatorONOFF[1], actuatorONOFF[2]).c_str(),
                   will_Topic, actuatorONOFF[3], actuatorONOFF[4],
@@ -308,12 +308,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayRF
   // Sensor to display RF received value
-  trc(F("gatewayRFDiscovery"));
+  Log.trace(F("gatewayRFDiscovery" CR));
   char *gatewayRF[8] = {"sensor", "gatewayRF", "", "", "{{ value_json.value }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayRF[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayRF[1]);
   createDiscovery(gatewayRF[0],
                   subjectRFtoMQTT, gatewayRF[1], (char *)getUniqueId(gatewayRF[1], gatewayRF[2]).c_str(),
                   will_Topic, gatewayRF[3], gatewayRF[4],
@@ -323,12 +323,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayRF2
   // Sensor to display RF received value
-  trc(F("gatewayRF2Discovery"));
+  Log.trace(F("gatewayRF2Discovery" CR));
   char *gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", "{{ value_json.value }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayRF2[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayRF2[1]);
   createDiscovery(gatewayRF2[0],
                   subjectRF2toMQTT, gatewayRF2[1], (char *)getUniqueId(gatewayRF2[1], gatewayRF2[2]).c_str(),
                   will_Topic, gatewayRF2[3], gatewayRF2[4],
@@ -338,12 +338,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayRFM69
   // Sensor to display RF received value
-  trc(F("gatewayRFM69Discovery"));
+  Log.trace(F("gatewayRFM69Discovery" CR));
   char *gatewayRFM69[8] = {"sensor", "gatewayRFM69", "", "", "{{ value_json.value }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayRFM69[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayRFM69[1]);
   createDiscovery(gatewayRFM69[0],
                   subjectRFM69toMQTT, gatewayRFM69[1], (char *)getUniqueId(gatewayRFM69[1], gatewayRFM69[2]).c_str(),
                   will_Topic, gatewayRFM69[3], gatewayRFM69[4],
@@ -353,12 +353,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayLORA
   // Sensor to display RF received value
-  trc(F("gatewayLORADiscovery"));
+  Log.trace(F("gatewayLORADiscovery" CR));
   char *gatewayLORA[8] = {"sensor", "gatewayLORA", "", "", "{{ value_json.message }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayLORA[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayLORA[1]);
   createDiscovery(gatewayLORA[0],
                   subjectLORAtoMQTT, gatewayLORA[1], (char *)getUniqueId(gatewayLORA[1], gatewayLORA[2]).c_str(),
                   will_Topic, gatewayLORA[3], gatewayLORA[4],
@@ -368,12 +368,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewaySRFB
   // Sensor to display RF received value
-  trc(F("gatewaySRFBDiscovery"));
+  Log.trace(F("gatewaySRFBDiscovery" CR));
   char *gatewaySRFB[8] = {"sensor", "gatewaySRFB", "", "", "{{ value_json.value }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewaySRFB[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewaySRFB[1]);
   createDiscovery(gatewaySRFB[0],
                   subjectSRFBtoMQTT, gatewaySRFB[1], (char *)getUniqueId(gatewaySRFB[1], gatewaySRFB[2]).c_str(),
                   will_Topic, gatewaySRFB[3], gatewaySRFB[4],
@@ -383,12 +383,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayPilight
   // Sensor to display RF received value
-  trc(F("gatewayPilightDiscovery"));
+  Log.trace(F("gatewayPilightDiscovery" CR));
   char *gatewayPilight[8] = {"sensor", "gatewayPilight", "", "", "{{ value_json.message }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayPilight[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayPilight[1]);
   createDiscovery(gatewayPilight[0],
                   subjectPilighttoMQTT, gatewayPilight[1], (char *)getUniqueId(gatewayPilight[1], gatewayPilight[2]).c_str(),
                   will_Topic, gatewayPilight[3], gatewayPilight[4],
@@ -398,12 +398,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayIR
   // Sensor to display IR received value
-  trc(F("gatewayIRDiscovery"));
+  Log.trace(F("gatewayIRDiscovery" CR));
   char *gatewayIR[8] = {"sensor", "gatewayIR", "", "", "{{ value_json.value }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayIR[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayIR[1]);
   createDiscovery(gatewayIR[0],
                   subjectIRtoMQTT, gatewayIR[1], (char *)getUniqueId(gatewayIR[1], gatewayIR[2]).c_str(),
                   will_Topic, gatewayIR[3], gatewayIR[4],
@@ -413,12 +413,12 @@ void pubMqttDiscovery()
 
 #ifdef Zgateway2G
   // Sensor to display 2G received value
-  trc(F("gateway2GDiscovery"));
+  Log.trace(F("gateway2GDiscovery" CR));
   char *gateway2G[8] = {"sensor", "gateway2G", "", "", "{{ value_json.message }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gateway2G[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gateway2G[1]);
   createDiscovery(gateway2G[0],
                   subject2GtoMQTT, gateway2G[1], (char *)getUniqueId(gateway2G[1], gateway2G[2]).c_str(),
                   will_Topic, gateway2G[3], gateway2G[4],
@@ -428,12 +428,12 @@ void pubMqttDiscovery()
 
 #ifdef ZgatewayBT
   // Sensor to display BT received value
-  trc(F("gatewayBTDiscovery"));
+  Log.trace(F("gatewayBTDiscovery" CR));
   char *gatewayBT[8] = {"sensor", "gatewayBT", "", "", "{{ value_json.id }}", "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
-  trc(F("CreateDiscoverySensor"));
-  trc(gatewayBT[1]);
+  Log.trace(F("CreateDiscoverySensor" CR));
+  //trc(gatewayBT[1]);
   createDiscovery(gatewayBT[0],
                   subjectBTtoMQTT, gatewayBT[1], (char *)getUniqueId(gatewayBT[1], gatewayBT[2]).c_str(),
                   will_Topic, gatewayBT[3], gatewayBT[4],

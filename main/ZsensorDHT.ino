@@ -42,6 +42,7 @@ void MeasureTempAndHum()
 {
   if (millis() > (timedht + TimeBetweenReadingDHT))
   { //retriving value of temperature and humidity of the box from DHT every xUL
+    Log.notice(F("Read %s on pin: %d" CR), DHT_SENSOR_TYPE, DHT_RECEIVER_PIN);
     timedht = millis();
     static float persistedh;
     static float persistedt;
@@ -51,11 +52,11 @@ void MeasureTempAndHum()
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t))
     {
-      trc(F("Failed to read from DHT sensor!"));
+      Log.error(F("Failed to read from DHT sensor!" CR));
     }
     else
     {
-      trc(F("Creating DHT buffer"));
+      Log.trace(F("Creating DHT buffer" CR));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject &DHTdata = jsonBuffer.createObject();
       if (h != persistedh || dht_always)
@@ -64,7 +65,7 @@ void MeasureTempAndHum()
       }
       else
       {
-        trc(F("Same hum don't send it"));
+        Log.trace(F("Same hum don't send it" CR));
       }
       if (t != persistedt || dht_always)
       {
@@ -72,7 +73,7 @@ void MeasureTempAndHum()
       }
       else
       {
-        trc(F("Same temp don't send it"));
+        Log.trace(F("Same temp don't send it" CR));
       }
       if (DHTdata.size() > 0)
         pub(DHTTOPIC, DHTdata);
