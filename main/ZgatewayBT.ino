@@ -275,6 +275,36 @@ void CLEARGRASSTRHDiscovery(char *mac)
   devices.push_back(device);
 }
 
+void CLEARGRASSCGD1Discovery(char *mac)
+{
+#define CLEARGRASSCGD1parametersCount 3
+  Log.trace(F("CLEARGRASSCGD1Discovery" CR));
+  char *CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
+      {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "V"},
+      {"sensor", "CLEARGRASSCGD1-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
+      {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  for (int i = 0; i < CLEARGRASSCGD1parametersCount; i++)
+  {
+    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSCGD1sensor[i][1]);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
+    String unique_id = String(mac) + "-" + CLEARGRASSCGD1sensor[i][1];
+    createDiscovery(CLEARGRASSCGD1sensor[i][0],
+                    (char *)discovery_topic.c_str(), CLEARGRASSCGD1sensor[i][1], (char *)unique_id.c_str(),
+                    will_Topic, CLEARGRASSCGD1sensor[i][3], CLEARGRASSCGD1sensor[i][4],
+                    CLEARGRASSCGD1sensor[i][5], CLEARGRASSCGD1sensor[i][6], CLEARGRASSCGD1sensor[i][7],
+                    0, "", "", false, "");
+  }
+  BLEdevice device;
+  strcpy(device.macAdr, mac);
+  device.isDisc = true;
+  device.isWhtL = false;
+  device.isBlkL = false;
+  devices.push_back(device);
+}
+
 void CLEARGRASSTRHKPADiscovery(char *mac)
 {
 #define CLEARGRASSTRHKPAparametersCount 3
@@ -588,6 +618,16 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               // no discovery as it is already available with method 1
               process_cleargrass(service_data, mac);
             }
+            if (strstr(BLEdata["servicedata"].as<char *>(), "080caf") != NULL)
+            { // Clear grass CGD1 080caffd50342d580104c900a102
+              Log.trace(F("Clear grass CGD1 data reading" CR));
+              //example "servicedata":080caffd50342d580104 c900 a102
+              #ifdef ZmqttDiscovery
+              if (!isDiscovered(mac))
+                CLEARGRASSCGD1Discovery(mac);
+              #endif
+              process_cleargrass(service_data, mac);
+            }
           }
           else
           {
@@ -879,6 +919,18 @@ bool BTtoMQTT()
                 // no discovery as it is already available with method 1
                 process_cleargrass((char *)service_data.c_str(), d[0].extract);
               }
+              pos = strpos(d[5].extract, "080caf"); // Clear grass CGD1 08094c0140342d580104d8000c020702612702015a
+              if (pos != -1)
+              {
+                Log.trace(F("Clear grass data CGD1" CR));
+                //example "servicedata":080caffd50342d580104 c900 a102
+                #ifdef ZmqttDiscovery
+                if (!isDiscovered(d[0].extract))
+                  CLEARGRASSCGD1Discovery(d[0].extract);
+                #endif
+                process_cleargrass((char *)service_data.c_str(), d[0].extract);
+              }
+
               return true;
             }
             else
