@@ -32,6 +32,7 @@
 
 void setupHCSR501()
 {
+  Log.notice(F("HCSR501 pin: %d" CR), HCSR501_PIN);
   pinMode(HCSR501_PIN, INPUT); // declare HC SR-501 pin as input
 }
 
@@ -53,7 +54,6 @@ void MeasureHCSR501()
       {
         //turned on
         HCSR501data.set("hcsr501", "true");
-        trc(F("HC SR501 Motion started"));
         pirState = HIGH;
       }
     }
@@ -63,7 +63,6 @@ void MeasureHCSR501()
       {
         // turned off
         HCSR501data.set("hcsr501", "false");
-        trc(F("HC SR501 Motion ended"));
         pirState = LOW;
       }
     }

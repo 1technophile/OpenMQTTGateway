@@ -66,7 +66,7 @@ void MeasureGPIOKeyCode()
       InputStateGPIOKeyCode = reading;
       sprintf(hex, "%02x", InputStateGPIOKeyCode);
       hex[2] = 0;
-      Serial.printf("GPIOKeyCode %s\n", hex);
+      Log.notice(F("GPIOKeyCode %H" CR), hex);
       pub(subjectGPIOKeyCodetoMQTT, hex);
       lastLatchStateGPIOKeyCode = latch;
     }
@@ -74,7 +74,7 @@ void MeasureGPIOKeyCode()
     if (latch != lastLatchStateGPIOKeyCode)
     {
       lastLatchStateGPIOKeyCode = latch;
-      Serial.printf("GPIOKeyCode latch %d\n", latch);
+      Log.notice(F("GPIOKeyCode latch %d" CR), latch);
       if (latch == 0)
         pub(subjectGPIOKeyCodeStatetoMQTT, "done");
     }

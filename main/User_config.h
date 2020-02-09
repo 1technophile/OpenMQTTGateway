@@ -109,7 +109,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //#define valueAsASubject true
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
-//Addons and module management, comment the Z line
+//Addons and module management, uncomment the Z line corresponding to the module you want to use
 
 //#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
 //#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
@@ -240,9 +240,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #define subjectSYStoMQTT  "/SYStoMQTT"
 #define subjectMQTTtoSYSset "/commands/MQTTtoSYS/config"
 
-//#define subjectTRACEtoMQTT "OpenMQTTGateway/log" //uncomment if you want to see traces on OpenMQTTGateway/log topic
-
-/*-------------------ACTIVATE TRACES----------------------*/
-#define TRACE 1  // commented =  trace off, uncommented = trace on
+/*-------------------DEFINE LOG LEVEL----------------------*/
+#define LOG_LEVEL LOG_LEVEL_VERBOSE
 
 #endif

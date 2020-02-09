@@ -38,6 +38,11 @@ DHT dht(DHT_RECEIVER_PIN, DHT_SENSOR_TYPE);
 //Time used to wait for an interval before resending temp and hum
 unsigned long timedht = 0;
 
+void setupDHT()
+{
+  Log.notice(F("Reading DHT on pin: %d" CR), DHT_RECEIVER_PIN);
+}
+
 void MeasureTempAndHum()
 {
   if (millis() > (timedht + TimeBetweenReadingDHT))
@@ -51,11 +56,11 @@ void MeasureTempAndHum()
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t))
     {
-      trc(F("Failed to read from DHT sensor!"));
+      Log.error(F("Failed to read from DHT sensor!" CR));
     }
     else
     {
-      trc(F("Creating DHT buffer"));
+      Log.trace(F("Creating DHT buffer" CR));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject &DHTdata = jsonBuffer.createObject();
       if (h != persistedh || dht_always)
@@ -64,7 +69,7 @@ void MeasureTempAndHum()
       }
       else
       {
-        trc(F("Same hum don't send it"));
+        Log.trace(F("Same hum don't send it" CR));
       }
       if (t != persistedt || dht_always)
       {
@@ -72,7 +77,7 @@ void MeasureTempAndHum()
       }
       else
       {
-        trc(F("Same temp don't send it"));
+        Log.trace(F("Same temp don't send it" CR));
       }
       if (DHTdata.size() > 0)
         pub(DHTTOPIC, DHTdata);
