@@ -778,9 +778,11 @@ void eraseAndRestart()
   WiFi.disconnect(true, true);
   #endif
 
-  Log.trace(F("Formatting requested, result: %d" CR),SPIFFS.format());
+  Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
 
   #if defined(ESP8266)
+  ESP.eraseConfig();
+  delay(5000);
   ESP.reset();
   #else
   ESP.restart();
