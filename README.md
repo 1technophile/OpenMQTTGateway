@@ -18,7 +18,3 @@ The reference sheet, with the list of all functions, pinouts is [here](https://d
 A list of supported devices is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079), door/window sensors, PIR sensors, smoke detectors, weather stations...
 
 A list of compatible components to build your gateway is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277), nodemcu, esp32, emitters and receivers...
-
-If you want to buy a coffee or other beverage so as to give me some support, here is a way to do it : 
-
-<a href="https://www.buymeacoffee.com/1technophile" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
