@@ -13,17 +13,18 @@ Note that for the moment RF, RF2 and Pilight can not be activated on the same bo
 ## For BLE devices 
 OpenMQTTGateway is able to scan all the BLE devices that advertise their data so as to do presence detection. Added to that it can retrieve the measures from the devices below.
 
-|Devices|Measurements|
-|-|:-:|
-| BLE watches with fixed mac|rssi for presence detection|
-| BLE beacons keychains|rssi for presence detection|
-| XIAOMI Mi Flora |temperature/moisture/luminance/fertility|
-| XIAOMI Mi Jia |temperature/humidity/battery|
-| ClearGrass |temperature/humidity/battery|
-| ClearGrass with atmospheric pressure |temperature/humidity/air pressure|
-| LYWDS02 Clock |temperature/humidity|
-| XIAOMI Mi Scale |weight|
-| XIAOMI Mi band |steps|
+|Devices|Model|Measurements|
+|-|:-:|:-:|
+| BLE watches with fixed mac||rssi for presence detection|
+| BLE beacons keychains||rssi for presence detection|
+| XIAOMI Mi Flora ||temperature/moisture/luminance/fertility|
+| XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
+| ClearGrass |CGG1|temperature/humidity/battery|
+| ClearGrass alarm clock|CGD1|temperature/humidity|
+| ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
+| Clock |LYWDS02|temperature/humidity|
+| XIAOMI Mi Scale ||weight|
+| XIAOMI Mi band ||steps|
 
 
 ![boards](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
