@@ -36,27 +36,41 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 using namespace std;
 vector<BLEdevice> devices;
 
-void setWorBMac(char *mac, bool isWhite)
-{
-  bool foundMac = false;
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
+bool setWorBMac(JsonObject &BTdata, bool isWhite){
+  const char* jsonKey = isWhite ? "white-list" : "black-list";
+
+  int size = BTdata[jsonKey].size();
+  if (size == 0) 
+    return false;
+  
+  bool foundMac;
+  for (int i = 0; i < size; i++)
   {
-    if ((strcmp(p->macAdr, mac) == 0))
+    const char *mac = BTdata[jsonKey][i];
+    Log.trace(F("%s set: %s" CR), jsonKey, mac);
+
+    foundMac = false;
+    for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
     {
-      p->isWhtL = isWhite;
-      p->isBlkL = !isWhite;
-      foundMac = true;
+      if ((strcmp(p->macAdr, mac) == 0))
+      {
+        p->isWhtL = isWhite;
+        p->isBlkL = !isWhite;
+        foundMac = true;
+      }
+    }
+    if (!foundMac)
+    {
+      BLEdevice device;
+      strcpy(device.macAdr, mac);
+      device.isDisc = false;
+      device.isWhtL = isWhite;
+      device.isBlkL = !isWhite;
+      devices.push_back(device);
     }
   }
-  if (!foundMac)
-  {
-    BLEdevice device;
-    strcpy(device.macAdr, mac);
-    device.isDisc = false;
-    device.isWhtL = isWhite;
-    device.isBlkL = !isWhite;
-    devices.push_back(device);
-  }
+  
+  return true;
 }
 
 bool oneWhite()
@@ -1195,27 +1209,11 @@ void MQTTtoBT(char *topicOri, JsonObject &BTdata)
     Log.trace(F("MQTTtoBT json set" CR));
 
     // Black list & white list set
-    int WLsize = BTdata["white-list"].size();
-    if (WLsize > 0)
-    {
-      for (int i = 0; i < WLsize; i++)
-      {
-        const char *whiteMac = BTdata["white-list"][i];
-        Log.trace(F("WL set: %s" CR), whiteMac);
-        setWorBMac((char *)whiteMac, true);
-      }
-    }
-    int BLsize = BTdata["black-list"].size();
-    if (BLsize > 0)
-    {
-      for (int i = 0; i < BLsize; i++)
-      {
-        const char *blackMac = BTdata["black-list"][i];
-        Log.trace(F("BL set: %s" CR), blackMac);
-        setWorBMac((char *)blackMac, false);
-      }
-    }
-    if (BLsize > 0 || WLsize > 0)
+    bool WLorBLupdated;
+    WLorBLupdated |= setWorBMac(BTdata, true);
+    WLorBLupdated |= setWorBMac(BTdata, false);
+
+    if (WLorBLupdated)
       dumpDevices();
 
     // Scan interval set
