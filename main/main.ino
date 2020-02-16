@@ -49,6 +49,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #ifdef ZgatewayWeatherStation
 #include "config_WeatherStation.h"
 #endif
+#ifdef ZgatewayElectricityMeter
+#include "config_ElectricityMeter.h"
+#endif
 #ifdef ZgatewayLORA
 #include "config_LORA.h"
 #endif
@@ -213,6 +216,90 @@ char *ip2CharArray(IPAddress ip)
 bool to_bool(String const &s)
 { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
+}
+
+
+//trace
+void trc(String msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(int msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(unsigned int msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(long msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(unsigned long msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(double msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(float msg)
+{
+  #ifdef TRACE
+  Serial1.println(msg);
+  digitalWrite(led_info, HIGH);
+  #endif
+  #ifdef subjectTRACEtoMQTT
+  pubMQTT(subjectTRACEtoMQTT, msg);
+  #endif
+}
+
+void trc(JsonObject &data)
+{
+  data.printTo(Serial1);
 }
 
 void pub(char *topicori, char *payload, bool retainFlag)
@@ -655,6 +742,9 @@ void setup()
   #endif
   #ifdef ZgatewayWeatherStation
   setupWeatherStation();
+  #endif  
+  #ifdef ZgatewayElectricityMeter
+  setupElectricityMeter();
   #endif
   #ifdef ZgatewaySRFB
   setupSRFB();
@@ -1085,6 +1175,9 @@ void loop()
       #ifdef ZgatewayWeatherStation
       ZgatewayWeatherStationtoMQTT();
       #endif
+      #ifdef ZgatewayElectricityMeter
+      ZgatewayElectricityMetertoMQTT();
+      #endif
       #ifdef ZgatewayPilight
       PilighttoMQTT();
       #endif
@@ -1219,6 +1312,9 @@ void stateMeasures()
     #endif
     #ifdef ZgatewayWeatherStation
     modules = modules + ZgatewayWeatherStation;
+    #endif
+    #ifdef ZgatewayElectricityMeter
+    modules = modules + ZgatewayElectricityMeter;
     #endif
     #ifdef ZgatewayPilight
     modules = modules + ZgatewayPilight;

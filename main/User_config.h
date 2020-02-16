@@ -243,4 +243,8 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL LOG_LEVEL_VERBOSE
 
+//#define subjectTRACEtoMQTT "OpenMQTTGateway/log" //uncomment if you want to see traces on OpenMQTTGateway/log topic
+
+/*-------------------ACTIVATE TRACES----------------------*/
+//#define TRACE 1  // commented =  trace off, uncommented = trace on
 #endif
