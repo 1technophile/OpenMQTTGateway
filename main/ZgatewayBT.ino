@@ -36,7 +36,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 using namespace std;
 vector<BLEdevice> devices;
 
-bool setWorBMac(JsonObject &BTdata, bool isWhite){
+bool updateWorB(JsonObject &BTdata, bool isWhite){
   const char* jsonKey = isWhite ? "white-list" : "black-list";
 
   int size = BTdata[jsonKey].size();
@@ -1209,11 +1209,11 @@ void MQTTtoBT(char *topicOri, JsonObject &BTdata)
     Log.trace(F("MQTTtoBT json set" CR));
 
     // Black list & white list set
-    bool WLorBLupdated;
-    WLorBLupdated |= setWorBMac(BTdata, true);
-    WLorBLupdated |= setWorBMac(BTdata, false);
+    bool WorBupdated;
+    WorBupdated |= updateWorB(BTdata, true);
+    WorBupdated |= updateWorB(BTdata, false);
 
-    if (WLorBLupdated)
+    if (WorBupdated)
       dumpDevices();
 
     // Scan interval set
