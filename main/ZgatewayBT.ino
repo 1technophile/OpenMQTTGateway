@@ -98,18 +98,7 @@ bool oneWhite()
 
 #define isWhite(mac) getDeviceByMac(mac)->isWhtL
 #define isBlack(mac) getDeviceByMac(mac)->isBlkL
-
-bool isDiscovered(char *mac)
-{
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
-  {
-    if ((strcmp(p->macAdr, mac) == 0))
-    {
-      return p->isDisc;
-    }
-  }
-  return false;
-}
+#define isDiscovered(mac) getDeviceByMac(mac)->isDisc
 
 void dumpDevices()
 {
