@@ -62,26 +62,18 @@ bool updateWorB(JsonObject &BTdata, bool isWhite){
   {
     const char *mac = BTdata[jsonKey][i];
     Log.trace(F("%s set: %s" CR), jsonKey, mac);
-
-    foundMac = false;
-    for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
-    {
-      if ((strcmp(p->macAdr, mac) == 0))
-      {
-        p->isWhtL = isWhite;
-        p->isBlkL = !isWhite;
-        foundMac = true;
-      }
+    
+    BLEdevice *device = getDeviceByMac(mac);
+    if(device == &NO_DEVICE_FOUND){
+      //new device
+      device = new BLEdevice();
+      strcpy(device->macAdr, mac);
+      device->isDisc = false;
+      devices.push_back(*device);
     }
-    if (!foundMac)
-    {
-      BLEdevice device;
-      strcpy(device.macAdr, mac);
-      device.isDisc = false;
-      device.isWhtL = isWhite;
-      device.isBlkL = !isWhite;
-      devices.push_back(device);
-    }
+    
+    device->isWhtL = isWhite;
+    device->isBlkL = !isWhite;
   }
   
   return true;
