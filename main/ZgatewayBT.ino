@@ -110,9 +110,9 @@ void dumpDevices()
   for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
   {
     Log.trace(F("macAdr %s" CR),p->macAdr);
-    Log.trace(F("isDisc %s" CR),p->isDisc);
-    Log.trace(F("isWhtL %s" CR),p->isWhtL);
-    Log.trace(F("isBlkL %s" CR),p->isBlkL);
+    Log.trace(F("isDisc %d" CR),p->isDisc);
+    Log.trace(F("isWhtL %d" CR),p->isWhtL);
+    Log.trace(F("isBlkL %d" CR),p->isBlkL);
   }
 }
 
