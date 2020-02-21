@@ -69,13 +69,13 @@ bool updateWorB(JsonObject &BTdata, bool isWhite)
   {
     const char *mac = BTdata[jsonKey][i];
 
-    createOrUpdateDevice(mac, NULL /*isDisc*/, isWhite /*isWhite*/);
+    createOrUpdateDevice(mac, (isWhite ? device_flags::isWhiteL : device_flags::isBlackL));
   }
   
   return true;
 }
 
-void createOrUpdateDevice(const char *mac, bool isDisc, bool isWhite)
+void createOrUpdateDevice(const char *mac, device_flags flags)
 {
 #if ESP32
   bool rc = false;
@@ -93,30 +93,29 @@ void createOrUpdateDevice(const char *mac, bool isDisc, bool isWhite)
     //new device
     device = new BLEdevice();
     strcpy(device->macAdr, mac);
-    device->isDisc = isDisc != NULL && isDisc;
-    device->isWhtL = isWhite != NULL && isWhite;
-    device->isBlkL = isWhite != NULL && !isWhite;
+    device->isDisc = flags & device_flags::isDisc;
+    device->isWhtL = flags & device_flags::isWhiteL;
+    device->isBlkL = flags & device_flags::isBlackL;
     devices.push_back(*device);
   }
   else
   {
     Log.trace(F("update %s" CR), mac);
     
-    if(isDisc != NULL)
+    if(flags & device_flags::isDisc)
     {
-      device->isDisc = isDisc;
+      device->isDisc = true;
     }
 
-    if(isWhite != NULL)
+    if(flags & device_flags::isWhiteL || flags & device_flags::isBlackL)
     {
-      device->isWhtL = isWhite;
-      device->isBlkL = !isWhite;
+      device->isWhtL = flags & device_flags::isWhiteL;
+      device->isBlkL = flags & device_flags::isBlackL;
     }
   }
 
   // update oneWhite flag
-  if(isWhite != NULL)
-    oneWhite = oneWhite || isWhite;
+  oneWhite = oneWhite || device->isWhtL;
 
 #if ESP32
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
@@ -169,7 +168,7 @@ void MiFloraDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void VegTrugDiscovery(char *mac)
@@ -196,7 +195,7 @@ void VegTrugDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void MiJiaDiscovery(char *mac)
@@ -222,7 +221,7 @@ void MiJiaDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void LYWSD02Discovery(char *mac)
@@ -248,7 +247,7 @@ void LYWSD02Discovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void CLEARGRASSTRHDiscovery(char *mac)
@@ -274,7 +273,7 @@ void CLEARGRASSTRHDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void CLEARGRASSCGD1Discovery(char *mac)
@@ -300,7 +299,7 @@ void CLEARGRASSCGD1Discovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void CLEARGRASSTRHKPADiscovery(char *mac)
@@ -326,7 +325,7 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void MiScaleDiscovery(char *mac)
@@ -350,7 +349,7 @@ void MiScaleDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void MiLampDiscovery(char *mac)
@@ -374,7 +373,7 @@ void MiLampDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 void MiBandDiscovery(char *mac)
@@ -398,7 +397,7 @@ void MiBandDiscovery(char *mac)
                     0, "", "", false, "");
   }
 
-  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
+  createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
 #endif
