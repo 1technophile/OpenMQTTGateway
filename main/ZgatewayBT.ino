@@ -36,6 +36,20 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 using namespace std;
 vector<BLEdevice> devices;
 
+static BLEdevice NO_DEVICE_FOUND = { {0,0,0,0,0,0,0,0,0,0,0,0}, false, false, false };
+
+BLEdevice * getDeviceByMac(const char *mac)
+{
+  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
+  {
+    if ((strcmp(p->macAdr, mac) == 0))
+    {
+      return &(*p);
+    }
+  }
+  return &NO_DEVICE_FOUND;
+}
+
 bool updateWorB(JsonObject &BTdata, bool isWhite){
   const char* jsonKey = isWhite ? "white-list" : "black-list";
 
