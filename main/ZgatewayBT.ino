@@ -57,33 +57,45 @@ bool updateWorB(JsonObject &BTdata, bool isWhite)
   int size = BTdata[jsonKey].size();
   if (size == 0) 
     return false;
-  
-  bool foundMac;
+
   for (int i = 0; i < size; i++)
   {
     const char *mac = BTdata[jsonKey][i];
 
-    BLEdevice *device = getDeviceByMac(mac);
-    if(device == &NO_DEVICE_FOUND)
+    createOrUpdateDevice(mac, NULL /*isDisc*/, isWhite /*isWhite*/);
+  }
+  
+  return true;
+}
+
+void createOrUpdateDevice(const char *mac, bool isDisc, bool isWhite)
+{
+  BLEdevice *device = getDeviceByMac(mac);
+  if(device == &NO_DEVICE_FOUND){
+    Log.trace(F("add %s" CR), mac);
+    //new device
+    device = new BLEdevice();
+    strcpy(device->macAdr, mac);
+    device->isDisc = isDisc != NULL && isDisc;
+    device->isWhtL = isWhite != NULL && isWhite;
+    device->isBlkL = isWhite != NULL && !isWhite;
+    devices.push_back(*device);
+  }
+  else
+  {
+    Log.trace(F("update %s" CR), mac);
+    
+    if(isDisc != NULL)
     {
-      Log.trace(F("add %s from %s" CR), mac, jsonKey);
-      //new device
-      device = new BLEdevice();
-      strcpy(device->macAdr, mac);
-      device->isDisc = false;
-      device->isWhtL = isWhite;
-      device->isBlkL = !isWhite;
-      devices.push_back(*device);
+      device->isDisc = isDisc;
     }
-    else
+
+    if(isWhite != NULL)
     {
-      Log.trace(F("update %s from %s" CR), mac, jsonKey);
       device->isWhtL = isWhite;
       device->isBlkL = !isWhite;
     }
   }
-  
-  return true;
 }
 
 bool oneWhite()
@@ -141,12 +153,8 @@ void MiFloraDiscovery(char *mac)
                     MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void VegTrugDiscovery(char *mac)
@@ -172,12 +180,8 @@ void VegTrugDiscovery(char *mac)
                     VegTrugsensor[i][5], VegTrugsensor[i][6], VegTrugsensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void MiJiaDiscovery(char *mac)
@@ -202,12 +206,8 @@ void MiJiaDiscovery(char *mac)
                     MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void LYWSD02Discovery(char *mac)
@@ -232,12 +232,8 @@ void LYWSD02Discovery(char *mac)
                     LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void CLEARGRASSTRHDiscovery(char *mac)
@@ -262,12 +258,8 @@ void CLEARGRASSTRHDiscovery(char *mac)
                     CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void CLEARGRASSCGD1Discovery(char *mac)
@@ -292,12 +284,8 @@ void CLEARGRASSCGD1Discovery(char *mac)
                     CLEARGRASSCGD1sensor[i][5], CLEARGRASSCGD1sensor[i][6], CLEARGRASSCGD1sensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void CLEARGRASSTRHKPADiscovery(char *mac)
@@ -322,12 +310,8 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
                     CLEARGRASSTRHKPAsensor[i][5], CLEARGRASSTRHKPAsensor[i][6], CLEARGRASSTRHKPAsensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void MiScaleDiscovery(char *mac)
@@ -350,12 +334,8 @@ void MiScaleDiscovery(char *mac)
                     MiScalesensor[i][5], MiScalesensor[i][6], MiScalesensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void MiLampDiscovery(char *mac)
@@ -378,12 +358,8 @@ void MiLampDiscovery(char *mac)
                     MiLampsensor[i][5], MiLampsensor[i][6], MiLampsensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 void MiBandDiscovery(char *mac)
@@ -406,12 +382,8 @@ void MiBandDiscovery(char *mac)
                     MiBandsensor[i][5], MiBandsensor[i][6], MiBandsensor[i][7],
                     0, "", "", false, "");
   }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+
+  createOrUpdateDevice(mac, true /*isDisc*/, NULL /*isWhite*/);
 }
 
 #endif
