@@ -50,7 +50,8 @@ BLEdevice * getDeviceByMac(const char *mac)
   return &NO_DEVICE_FOUND;
 }
 
-bool updateWorB(JsonObject &BTdata, bool isWhite){
+bool updateWorB(JsonObject &BTdata, bool isWhite)
+{
   const char* jsonKey = isWhite ? "white-list" : "black-list";
 
   int size = BTdata[jsonKey].size();
@@ -61,26 +62,24 @@ bool updateWorB(JsonObject &BTdata, bool isWhite){
   for (int i = 0; i < size; i++)
   {
     const char *mac = BTdata[jsonKey][i];
-    Log.trace(F("%s set: %s" CR), jsonKey, mac);
 
-    foundMac = false;
-    for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
+    BLEdevice *device = getDeviceByMac(mac);
+    if(device == &NO_DEVICE_FOUND)
     {
-      if ((strcmp(p->macAdr, mac) == 0))
-      {
-        p->isWhtL = isWhite;
-        p->isBlkL = !isWhite;
-        foundMac = true;
-      }
+      Log.trace(F("add %s from %s" CR), mac, jsonKey);
+      //new device
+      device = new BLEdevice();
+      strcpy(device->macAdr, mac);
+      device->isDisc = false;
+      device->isWhtL = isWhite;
+      device->isBlkL = !isWhite;
+      devices.push_back(*device);
     }
-    if (!foundMac)
+    else
     {
-      BLEdevice device;
-      strcpy(device.macAdr, mac);
-      device.isDisc = false;
-      device.isWhtL = isWhite;
-      device.isBlkL = !isWhite;
-      devices.push_back(device);
+      Log.trace(F("update %s from %s" CR), mac, jsonKey);
+      device->isWhtL = isWhite;
+      device->isBlkL = !isWhite;
     }
   }
   
