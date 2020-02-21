@@ -108,9 +108,9 @@ bool oneWhite()
   return false;
 }
 
-#define isWhite(mac) getDeviceByMac(mac)->isWhtL
-#define isBlack(mac) getDeviceByMac(mac)->isBlkL
-#define isDiscovered(mac) getDeviceByMac(mac)->isDisc
+#define isWhite(device) device->isWhtL
+#define isBlack(device) device->isBlkL
+#define isDiscovered(device) device->isDisc
 
 void dumpDevices()
 {
@@ -420,7 +420,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     char mac[mac_adress.length() + 1];
     mac_adress.toCharArray(mac, mac_adress.length() + 1);
     Log.notice(F("Device detected: %s" CR),mac);
-    if ((!oneWhite() || isWhite(mac)) && !isBlack(mac))
+
+    BLEdevice *device = getDeviceByMac(mac);
+
+    if ((!oneWhite() || isWhite(device)) && !isBlack(device))
     { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice.haveName())
         BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
@@ -473,7 +476,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 Log.trace(F("mi flora data reading" CR));
                 //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                if (!isDiscovered(device))
                   MiFloraDiscovery(mac);
                 #endif
                 process_sensors(pos - 24, service_data, mac);
@@ -485,7 +488,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 Log.trace(F("vegtrug data reading" CR));
                 //example "servicedata":"7120bc0399c309688d7cc40d0910020000"
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                if (!isDiscovered(device))
                   VegTrugDiscovery(mac);
                 #endif
                 process_sensors(pos - 24, service_data, mac);
@@ -496,7 +499,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               {
                 Log.trace(F("mi jia data reading" CR));
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                if (!isDiscovered(device))
                   MiJiaDiscovery(mac);
                 #endif
                 process_sensors(pos - 26, service_data, mac);
@@ -508,7 +511,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 Log.trace(F("LYWSD02 data reading" CR));
                 //example "servicedata":"70205b04b96ab883c8593f09041002e000"
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                if (!isDiscovered(device))
                   LYWSD02Discovery(mac);
                 #endif
                 process_sensors(pos - 24, service_data, mac);
@@ -520,7 +523,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 Log.trace(F("ClearGrass T RH data reading method 1" CR));
                 //example "servicedata":"5030470340743e10342d58041002d6000a100164"
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                if (!isDiscovered(device))
                   CLEARGRASSTRHDiscovery(mac);
                 #endif
                 process_sensors(pos - 26, service_data, mac);
@@ -532,7 +535,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 Log.trace(F("Mi Lamp data reading" CR));
                 //example "servicedata":4030DD031D0300010100
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                if (!isDiscovered(device))
                   MiLampDiscovery(mac);
                 #endif
                 process_milamp(service_data, mac);
@@ -543,7 +546,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               Log.trace(F("Mi Scale V1 data reading" CR));
               //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
               #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+              if (!isDiscovered(device))
                 MiScaleDiscovery(mac);
               #endif
               process_scale_v1(service_data, mac);
@@ -553,7 +556,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               Log.trace(F("Mi Scale V2 data reading" CR));
               //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
               #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+              if (!isDiscovered(device))
                 MiScaleDiscovery(mac);
               #endif
               process_scale_v2(service_data, mac);
@@ -563,7 +566,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               Log.trace(F("Mi Band data reading" CR));
               //example "servicedata":a21e0000
               #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+              if (!isDiscovered(device))
                 MiBandDiscovery(mac);
               #endif
               process_miband(service_data, mac);
@@ -573,7 +576,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               Log.trace(F("Clear grass data with air pressure reading" CR));
               //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
               #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+              if (!isDiscovered(device))
                 CLEARGRASSTRHKPADiscovery(mac);
               #endif
               process_cleargrass_air(service_data, mac);
@@ -590,7 +593,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               Log.trace(F("Clear grass CGD1 data reading" CR));
               //example "servicedata":080caffd50342d580104 c900 a102
               #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+              if (!isDiscovered(device))
                 CLEARGRASSCGD1Discovery(mac);
               #endif
               process_cleargrass(service_data, mac);
@@ -765,9 +768,12 @@ bool BTtoMQTT()
             StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject &BLEdata = jsonBuffer.createObject();
             strupp(d[0].extract);
-            if (isBlack(d[0].extract))
+
+            BLEdevice *device = getDeviceByMac(d[0].extract);
+
+            if (isBlack(device))
               return false; //if black listed mac we go out
-            if (oneWhite() && !isWhite(d[0].extract))
+            if (oneWhite() && !isWhite(device))
               return false; //if we have at least one white mac and this mac is not white we go out
             #ifdef subjectHomePresence
             String HomePresenceId;
@@ -801,7 +807,7 @@ bool BTtoMQTT()
               {
                 Log.trace(F("mi flora data reading" CR));
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   MiFloraDiscovery(d[0].extract);
                 #endif
                 bool result = process_sensors(pos - 38, (char *)service_data.c_str(), d[0].extract);
@@ -813,7 +819,7 @@ bool BTtoMQTT()
               {
                 Log.trace(F("mi jia data reading" CR));
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   MiJiaDiscovery(d[0].extract);
                 #endif
                 bool result = process_sensors(pos - 40, (char *)service_data.c_str(), d[0].extract);
@@ -825,7 +831,7 @@ bool BTtoMQTT()
               {
                 Log.trace(F("LYWSD02 data reading" CR));
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   LYWSD02Discovery(d[0].extract);
                 #endif
                 bool result = process_sensors(pos - 38, (char *)service_data.c_str(), d[0].extract);
@@ -836,7 +842,7 @@ bool BTtoMQTT()
               {
                 Log.trace(F("CLEARGRASSTRH data reading method 1" CR));
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   CLEARGRASSTRHDiscovery(d[0].extract);
                 #endif
                 bool result = process_sensors(pos - 40, (char *)service_data.c_str(), d[0].extract);
@@ -848,7 +854,7 @@ bool BTtoMQTT()
                 Log.trace(F("Mi Scale data reading" CR));
                 //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   MiScaleDiscovery(d[0].extract);
                 #endif
                 bool result = process_scale_v1((char *)service_data.c_str(), d[0].extract);
@@ -860,7 +866,7 @@ bool BTtoMQTT()
                 Log.trace(F("Mi Lamp data reading" CR));
                 //example "servicedata":4030dd31d0300010100
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   MiLampDiscovery(d[0].extract);
                 #endif
                 process_milamp((char *)service_data.c_str(), d[0].extract);
@@ -872,7 +878,7 @@ bool BTtoMQTT()
                 Log.trace(F("Clear grass data with air pressure reading" CR));
                 //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   CLEARGRASSTRHKPADiscovery(d[0].extract);
                 #endif
                 process_cleargrass_air((char *)service_data.c_str(), d[0].extract);
@@ -892,7 +898,7 @@ bool BTtoMQTT()
                 Log.trace(F("Clear grass data CGD1" CR));
                 //example "servicedata":080caffd50342d580104 c900 a102
                 #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+                if (!isDiscovered(device))
                   CLEARGRASSCGD1Discovery(d[0].extract);
                 #endif
                 process_cleargrass((char *)service_data.c_str(), d[0].extract);
