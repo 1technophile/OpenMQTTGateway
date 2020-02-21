@@ -37,6 +37,7 @@ using namespace std;
 vector<BLEdevice> devices;
 
 static BLEdevice NO_DEVICE_FOUND = { {0,0,0,0,0,0,0,0,0,0,0,0}, false, false, false };
+static bool oneWhite = false;
 
 BLEdevice * getDeviceByMac(const char *mac)
 {
@@ -71,7 +72,8 @@ bool updateWorB(JsonObject &BTdata, bool isWhite)
 void createOrUpdateDevice(const char *mac, bool isDisc, bool isWhite)
 {
   BLEdevice *device = getDeviceByMac(mac);
-  if(device == &NO_DEVICE_FOUND){
+  if(device == &NO_DEVICE_FOUND)
+  {
     Log.trace(F("add %s" CR), mac);
     //new device
     device = new BLEdevice();
@@ -96,16 +98,10 @@ void createOrUpdateDevice(const char *mac, bool isDisc, bool isWhite)
       device->isBlkL = !isWhite;
     }
   }
-}
 
-bool oneWhite()
-{
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
-  {
-    if (p->isWhtL)
-      return true;
-  }
-  return false;
+  // update oneWhite flag
+  if(isWhite != NULL)
+    oneWhite = oneWhite || isWhite;
 }
 
 #define isWhite(device) device->isWhtL
@@ -423,7 +419,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 
     BLEdevice *device = getDeviceByMac(mac);
 
-    if ((!oneWhite() || isWhite(device)) && !isBlack(device))
+    if ((!oneWhite || isWhite(device)) && !isBlack(device))
     { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice.haveName())
         BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
@@ -773,7 +769,7 @@ bool BTtoMQTT()
 
             if (isBlack(device))
               return false; //if black listed mac we go out
-            if (oneWhite() && !isWhite(device))
+            if (oneWhite && !isWhite(device))
               return false; //if we have at least one white mac and this mac is not white we go out
             #ifdef subjectHomePresence
             String HomePresenceId;
