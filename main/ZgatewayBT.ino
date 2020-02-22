@@ -152,18 +152,7 @@ void MiFloraDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiFloraparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiFlorasensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
-    createDiscovery(MiFlorasensor[i][0],
-                    (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
-                    MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, MiFlorasensor, MiFloraparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -178,19 +167,8 @@ void VegTrugDiscovery(char *mac)
       {"sensor", "VegTrug-moi", mac, "", "{{ value_json.moi | is_defined }}", "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
-
-  for (int i = 0; i < VegTrugparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),VegTrugsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + VegTrugsensor[i][1];
-    createDiscovery(VegTrugsensor[i][0],
-                    (char *)discovery_topic.c_str(), VegTrugsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, VegTrugsensor[i][3], VegTrugsensor[i][4],
-                    VegTrugsensor[i][5], VegTrugsensor[i][6], VegTrugsensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  
+  createDiscoveryFromList(mac, VegTrugsensor, VegTrugparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -204,19 +182,8 @@ void MiJiaDiscovery(char *mac)
       {"sensor", "MiJia-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
-
-  for (int i = 0; i < MiJiaparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiJiasensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiJiasensor[i][1];
-    createDiscovery(MiJiasensor[i][0],
-                    (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
-                    MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  
+  createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -231,18 +198,7 @@ void LYWSD02Discovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < LYWSD02parametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),LYWSD02sensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
-    createDiscovery(LYWSD02sensor[i][0],
-                    (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
-                    LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, LYWSD02sensor, LYWSD02parametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -257,18 +213,7 @@ void CLEARGRASSTRHDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < CLEARGRASSTRHparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSTRHsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
-    createDiscovery(CLEARGRASSTRHsensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSTRHsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSTRHsensor[i][3], CLEARGRASSTRHsensor[i][4],
-                    CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, CLEARGRASSTRHsensor, CLEARGRASSTRHparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -283,18 +228,7 @@ void CLEARGRASSCGD1Discovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < CLEARGRASSCGD1parametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSCGD1sensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + CLEARGRASSCGD1sensor[i][1];
-    createDiscovery(CLEARGRASSCGD1sensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSCGD1sensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSCGD1sensor[i][3], CLEARGRASSCGD1sensor[i][4],
-                    CLEARGRASSCGD1sensor[i][5], CLEARGRASSCGD1sensor[i][6], CLEARGRASSCGD1sensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -309,18 +243,7 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < CLEARGRASSTRHKPAparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSTRHKPAsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + CLEARGRASSTRHKPAsensor[i][1];
-    createDiscovery(CLEARGRASSTRHKPAsensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSTRHKPAsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSTRHKPAsensor[i][3], CLEARGRASSTRHKPAsensor[i][4],
-                    CLEARGRASSTRHKPAsensor[i][5], CLEARGRASSTRHKPAsensor[i][6], CLEARGRASSTRHKPAsensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, CLEARGRASSTRHKPAsensor, CLEARGRASSTRHKPAparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -333,18 +256,7 @@ void MiScaleDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiScaleparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiScalesensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiScalesensor[i][1];
-    createDiscovery(MiScalesensor[i][0],
-                    (char *)discovery_topic.c_str(), MiScalesensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiScalesensor[i][3], MiScalesensor[i][4],
-                    MiScalesensor[i][5], MiScalesensor[i][6], MiScalesensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, MiScalesensor, MiScaleparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -357,18 +269,7 @@ void MiLampDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiLampparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiLampsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiLampsensor[i][1];
-    createDiscovery(MiLampsensor[i][0],
-                    (char *)discovery_topic.c_str(), MiLampsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiLampsensor[i][3], MiLampsensor[i][4],
-                    MiLampsensor[i][5], MiLampsensor[i][6], MiLampsensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, MiLampsensor, MiLampparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
@@ -381,18 +282,7 @@ void MiBandDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiBandparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiBandsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiBandsensor[i][1];
-    createDiscovery(MiBandsensor[i][0],
-                    (char *)discovery_topic.c_str(), MiBandsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiBandsensor[i][3], MiBandsensor[i][4],
-                    MiBandsensor[i][5], MiBandsensor[i][6], MiBandsensor[i][7],
-                    0, "", "", false, "");
-  }
-
+  createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount);
   createOrUpdateDevice(mac, device_flags::isDisc);
 }
 
