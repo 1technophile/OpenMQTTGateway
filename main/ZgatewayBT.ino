@@ -30,10 +30,10 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 */
 #include "User_config.h"
 
-#if ESP32
-#include <freertos/semphr.h> 
+#ifdef ESP32
+#include "FreeRTOS.h"
 
-SemaphoreHandle_t semaphoreCreateOrUpdateDevice = xSemaphoreCreateMutex();
+FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createOrUpdateDevice");
 #endif
 
 #ifdef ZgatewayBT
@@ -77,13 +77,9 @@ bool updateWorB(JsonObject &BTdata, bool isWhite)
 
 void createOrUpdateDevice(const char *mac, device_flags flags)
 {
-#if ESP32
-  bool rc = false;
-  rc = xSemaphoreTake(semaphoreCreateOrUpdateDevice, 30000 / portTICK_PERIOD_MS) == pdTRUE;
-  if (!rc) {
-		Log.error(F("abort unable to take lock 'semaphoreCreateOrUpdateDevice'" CR));
+#ifdef ESP32
+  if (!semaphoreCreateOrUpdateDevice.take(30000, "createOrUpdateDevice"))
     return;
-	}
 #endif
 
   BLEdevice *device = getDeviceByMac(mac);
@@ -117,8 +113,8 @@ void createOrUpdateDevice(const char *mac, device_flags flags)
   // update oneWhite flag
   oneWhite = oneWhite || device->isWhtL;
 
-#if ESP32
-  xSemaphoreGive(semaphoreCreateOrUpdateDevice);
+#ifdef ESP32
+  semaphoreCreateOrUpdateDevice.give();
 #endif
 }
 
