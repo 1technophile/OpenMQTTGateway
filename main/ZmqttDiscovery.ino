@@ -49,6 +49,7 @@ String getUniqueId(String name, String sufix)
   return String(uniqueId);
 }
 
+#ifdef ZgatewayBT
 void createDiscoveryFromList(char *mac, char *sensorList[][8], int sensorCount)
 {
   for (int i = 0; i < sensorCount; i++)
@@ -63,6 +64,7 @@ void createDiscoveryFromList(char *mac, char *sensorList[][8], int sensorCount)
                     0, "", "", false, "");
   }
 }
+#endif
 
 void createDiscovery(char *sensor_type,
                      char *st_topic, char *s_name, char *unique_id,

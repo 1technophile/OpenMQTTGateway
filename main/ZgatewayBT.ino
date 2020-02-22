@@ -69,13 +69,13 @@ bool updateWorB(JsonObject &BTdata, bool isWhite)
   {
     const char *mac = BTdata[jsonKey][i];
 
-    createOrUpdateDevice(mac, (isWhite ? device_flags::isWhiteL : device_flags::isBlackL));
+    createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL));
   }
   
   return true;
 }
 
-void createOrUpdateDevice(const char *mac, device_flags flags)
+void createOrUpdateDevice(const char *mac, uint8_t flags)
 {
 #ifdef ESP32
   if (!semaphoreCreateOrUpdateDevice.take(30000, "createOrUpdateDevice"))
@@ -89,24 +89,24 @@ void createOrUpdateDevice(const char *mac, device_flags flags)
     //new device
     device = new BLEdevice();
     strcpy(device->macAdr, mac);
-    device->isDisc = flags & device_flags::isDisc;
-    device->isWhtL = flags & device_flags::isWhiteL;
-    device->isBlkL = flags & device_flags::isBlackL;
+    device->isDisc = flags & device_flags_isDisc;
+    device->isWhtL = flags & device_flags_isWhiteL;
+    device->isBlkL = flags & device_flags_isBlackL;
     devices.push_back(*device);
   }
   else
   {
     Log.trace(F("update %s" CR), mac);
     
-    if(flags & device_flags::isDisc)
+    if(flags & device_flags_isDisc)
     {
       device->isDisc = true;
     }
 
-    if(flags & device_flags::isWhiteL || flags & device_flags::isBlackL)
+    if(flags & device_flags_isWhiteL || flags & device_flags_isBlackL)
     {
-      device->isWhtL = flags & device_flags::isWhiteL;
-      device->isBlkL = flags & device_flags::isBlackL;
+      device->isWhtL = flags & device_flags_isWhiteL;
+      device->isBlkL = flags & device_flags_isBlackL;
     }
   }
 
@@ -153,7 +153,7 @@ void MiFloraDiscovery(char *mac)
   };
 
   createDiscoveryFromList(mac, MiFlorasensor, MiFloraparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void VegTrugDiscovery(char *mac)
@@ -169,7 +169,7 @@ void VegTrugDiscovery(char *mac)
   };
   
   createDiscoveryFromList(mac, VegTrugsensor, VegTrugparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiJiaDiscovery(char *mac)
@@ -184,7 +184,7 @@ void MiJiaDiscovery(char *mac)
   };
   
   createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void LYWSD02Discovery(char *mac)
@@ -199,7 +199,7 @@ void LYWSD02Discovery(char *mac)
   };
 
   createDiscoveryFromList(mac, LYWSD02sensor, LYWSD02parametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void CLEARGRASSTRHDiscovery(char *mac)
@@ -214,7 +214,7 @@ void CLEARGRASSTRHDiscovery(char *mac)
   };
 
   createDiscoveryFromList(mac, CLEARGRASSTRHsensor, CLEARGRASSTRHparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void CLEARGRASSCGD1Discovery(char *mac)
@@ -229,7 +229,7 @@ void CLEARGRASSCGD1Discovery(char *mac)
   };
 
   createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void CLEARGRASSTRHKPADiscovery(char *mac)
@@ -244,7 +244,7 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
   };
 
   createDiscoveryFromList(mac, CLEARGRASSTRHKPAsensor, CLEARGRASSTRHKPAparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiScaleDiscovery(char *mac)
@@ -257,7 +257,7 @@ void MiScaleDiscovery(char *mac)
   };
 
   createDiscoveryFromList(mac, MiScalesensor, MiScaleparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiLampDiscovery(char *mac)
@@ -270,7 +270,7 @@ void MiLampDiscovery(char *mac)
   };
 
   createDiscoveryFromList(mac, MiLampsensor, MiLampparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiBandDiscovery(char *mac)
@@ -283,7 +283,7 @@ void MiBandDiscovery(char *mac)
   };
 
   createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount);
-  createOrUpdateDevice(mac, device_flags::isDisc);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 #else
 void MiFloraDiscovery(char *mac){}

@@ -55,12 +55,9 @@ struct BLEdevice{
   bool isBlkL;
 };
 
-enum device_flags {
-  unknown = 0,
-  isDisc = 1 << 0,
-  isWhiteL = 1 << 1,
-  isBlackL = 1 << 2
-};
+#define device_flags_isDisc 1 << 0
+#define device_flags_isWhiteL 1 << 1
+#define device_flags_isBlackL 1 << 2
 
 struct decompose{
   char subject[4];
