@@ -18,6 +18,13 @@
      You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#ifdef ESP8266
+  #define PRINTER Serial1
+#elif ESP32
+  #define PRINTER Serial
+#endif
+
 #include "User_config.h"
 
 #ifdef ZgatewayElectricityMeter
@@ -26,14 +33,13 @@ MikromarzMeter mm = MikromarzMeter(SE1_PM2);
 
 void setupElectricityMeter()
 {
-  // trc(F("RF_WS_RECEIVER_PIN "));
-  // trc(String(RF_WS_RECEIVER_PIN));
-  Serial.end();
-  Serial1.end();
   mm.setup();
-  Serial1.begin(115200, SERIAL_8N1, SERIAL_FULL, 1);
-  Serial1.setDebugOutput(true);
-  Serial1.println(F("ZgatewayElectricityMeter setup done "));
+  #ifdef ESP8266
+    PRINTER.begin(115200, SERIAL_8N1, SERIAL_FULL, 1);
+  #elif ESP32
+    PRINTER.begin(115200);
+  #endif
+ PRINTER.println(F("ZgatewayElectricityMeter setup done "));
 }
 
 
@@ -45,8 +51,8 @@ void ZgatewayElectricityMetertoMQTT()
     for (byte i=1; i<4; i++) {
       StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
       JsonObject &RFdata = jsonBuffer.createObject();
-      Serial1.printf("Power %d: %ld W\n", i, (long)mm.getPower(i));
-      Serial1.printf("Energy %d (%s): %ld kW/h\n", i, 
+      PRINTER.printf("Power %d: %ld W\n", i, (long)mm.getPower(i));
+      PRINTER.printf("Energy %d (%s): %ld kW/h\n", i, 
                      (tarif_status == TARIF_HIGHT ? "high" : "low"),
                      (long)mm.getEnergy(i, tarif_status));
       RFdata.set("phase", i);
@@ -56,6 +62,6 @@ void ZgatewayElectricityMetertoMQTT()
       pub(subjectToMQTT, RFdata);
     }
   }
-  delay(3000);
+  delay(1000);
 }
 #endif

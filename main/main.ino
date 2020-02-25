@@ -29,8 +29,8 @@
 
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#define array_size 12
-unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+ #define array_size 12
+ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
 //Time used to wait for an interval before checking system measures
 unsigned long timer_sys_measures = 0;
 #else // boards with smaller memory
@@ -408,7 +408,7 @@ void pub_custom_topic(char *topicori, JsonObject &data, boolean retain)
   }
 }
 
-// Low level MQTT functions 
+// Low level MQTT functions
 void pubMQTT(char * topic, char * payload)
 {
     client.publish(topic, payload);

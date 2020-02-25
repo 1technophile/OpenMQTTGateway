@@ -35,14 +35,4 @@ extern void ZgatewayElectricityMetertoMQTT();
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectToMQTT "/EMtoMQTT"
 
-
-/*-------------------PIN DEFINITIONS----------------------*/
-#ifndef RF_WS_RECEIVER_PIN
-    #ifdef ESP8266
-        #define RF_WS_RECEIVER_PIN 0 // D3 on nodemcu // put 4 with rf bridge direct mod
-    #elif ESP32
-        #define RF_WS_RECEIVER_PIN 27 // D27 on DOIT ESP32
-    #endif
-#endif
-
 #endif
