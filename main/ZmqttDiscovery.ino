@@ -49,6 +49,23 @@ String getUniqueId(String name, String sufix)
   return String(uniqueId);
 }
 
+#ifdef ZgatewayBT
+void createDiscoveryFromList(char *mac, char *sensorList[][8], int sensorCount)
+{
+  for (int i = 0; i < sensorCount; i++)
+  {
+    Log.trace(F("CreateDiscoverySensor %s" CR),sensorList[i][1]);
+    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
+    String unique_id = String(mac) + "-" + sensorList[i][1];
+    createDiscovery(sensorList[i][0],
+                    (char *)discovery_topic.c_str(), sensorList[i][1], (char *)unique_id.c_str(),
+                    will_Topic, sensorList[i][3], sensorList[i][4],
+                    sensorList[i][5], sensorList[i][6], sensorList[i][7],
+                    0, "", "", false, "");
+  }
+}
+#endif
+
 void createDiscovery(char *sensor_type,
                      char *st_topic, char *s_name, char *unique_id,
                      char *availability_topic, char *device_class, char *value_template,

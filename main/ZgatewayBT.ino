@@ -30,80 +30,97 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 */
 #include "User_config.h"
 
+#ifdef ESP32
+#include "FreeRTOS.h"
+
+FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createOrUpdateDevice");
+#endif
+
 #ifdef ZgatewayBT
 
 #include <vector>
 using namespace std;
 vector<BLEdevice> devices;
 
-void setWorBMac(char *mac, bool isWhite)
-{
-  bool foundMac = false;
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
-  {
-    if ((strcmp(p->macAdr, mac) == 0))
-    {
-      p->isWhtL = isWhite;
-      p->isBlkL = !isWhite;
-      foundMac = true;
-    }
-  }
-  if (!foundMac)
-  {
-    BLEdevice device;
-    strcpy(device.macAdr, mac);
-    device.isDisc = false;
-    device.isWhtL = isWhite;
-    device.isBlkL = !isWhite;
-    devices.push_back(device);
-  }
-}
+static BLEdevice NO_DEVICE_FOUND = { {0,0,0,0,0,0,0,0,0,0,0,0}, false, false, false };
+static bool oneWhite = false;
 
-bool oneWhite()
-{
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
-  {
-    if (p->isWhtL)
-      return true;
-  }
-  return false;
-}
-
-bool isWhite(char *mac)
+BLEdevice * getDeviceByMac(const char *mac)
 {
   for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
   {
     if ((strcmp(p->macAdr, mac) == 0))
     {
-      return p->isWhtL;
+      return &(*p);
     }
   }
-  return false;
+  return &NO_DEVICE_FOUND;
 }
 
-bool isBlack(char *mac)
+bool updateWorB(JsonObject &BTdata, bool isWhite)
 {
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
+  const char* jsonKey = isWhite ? "white-list" : "black-list";
+
+  int size = BTdata[jsonKey].size();
+  if (size == 0) 
+    return false;
+
+  for (int i = 0; i < size; i++)
   {
-    if ((strcmp(p->macAdr, mac) == 0))
-    {
-      return p->isBlkL;
-    }
+    const char *mac = BTdata[jsonKey][i];
+
+    createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL));
   }
-  return false;
+  
+  return true;
 }
 
-bool isDiscovered(char *mac)
+void createOrUpdateDevice(const char *mac, uint8_t flags)
 {
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p)
+#ifdef ESP32
+  if (!semaphoreCreateOrUpdateDevice.take(30000, "createOrUpdateDevice"))
+    return;
+#endif
+
+  BLEdevice *device = getDeviceByMac(mac);
+  if(device == &NO_DEVICE_FOUND)
   {
-    if ((strcmp(p->macAdr, mac) == 0))
+    Log.trace(F("add %s" CR), mac);
+    //new device
+    device = new BLEdevice();
+    strcpy(device->macAdr, mac);
+    device->isDisc = flags & device_flags_isDisc;
+    device->isWhtL = flags & device_flags_isWhiteL;
+    device->isBlkL = flags & device_flags_isBlackL;
+    devices.push_back(*device);
+  }
+  else
+  {
+    Log.trace(F("update %s" CR), mac);
+    
+    if(flags & device_flags_isDisc)
     {
-      return p->isDisc;
+      device->isDisc = true;
+    }
+
+    if(flags & device_flags_isWhiteL || flags & device_flags_isBlackL)
+    {
+      device->isWhtL = flags & device_flags_isWhiteL;
+      device->isBlkL = flags & device_flags_isBlackL;
     }
   }
-  return false;
+
+  // update oneWhite flag
+  oneWhite = oneWhite || device->isWhtL;
+
+#ifdef ESP32
+  semaphoreCreateOrUpdateDevice.give();
+#endif
 }
+
+#define isWhite(device) device->isWhtL
+#define isBlack(device) device->isBlkL
+#define isDiscovered(device) device->isDisc
 
 void dumpDevices()
 {
@@ -135,23 +152,8 @@ void MiFloraDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiFloraparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiFlorasensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiFlorasensor[i][1];
-    createDiscovery(MiFlorasensor[i][0],
-                    (char *)discovery_topic.c_str(), MiFlorasensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiFlorasensor[i][3], MiFlorasensor[i][4],
-                    MiFlorasensor[i][5], MiFlorasensor[i][6], MiFlorasensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, MiFlorasensor, MiFloraparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void VegTrugDiscovery(char *mac)
@@ -165,24 +167,9 @@ void VegTrugDiscovery(char *mac)
       {"sensor", "VegTrug-moi", mac, "", "{{ value_json.moi | is_defined }}", "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
-
-  for (int i = 0; i < VegTrugparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),VegTrugsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + VegTrugsensor[i][1];
-    createDiscovery(VegTrugsensor[i][0],
-                    (char *)discovery_topic.c_str(), VegTrugsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, VegTrugsensor[i][3], VegTrugsensor[i][4],
-                    VegTrugsensor[i][5], VegTrugsensor[i][6], VegTrugsensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  
+  createDiscoveryFromList(mac, VegTrugsensor, VegTrugparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiJiaDiscovery(char *mac)
@@ -195,24 +182,9 @@ void MiJiaDiscovery(char *mac)
       {"sensor", "MiJia-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
-
-  for (int i = 0; i < MiJiaparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiJiasensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiJiasensor[i][1];
-    createDiscovery(MiJiasensor[i][0],
-                    (char *)discovery_topic.c_str(), MiJiasensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiJiasensor[i][3], MiJiasensor[i][4],
-                    MiJiasensor[i][5], MiJiasensor[i][6], MiJiasensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  
+  createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void LYWSD02Discovery(char *mac)
@@ -226,23 +198,8 @@ void LYWSD02Discovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < LYWSD02parametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),LYWSD02sensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + LYWSD02sensor[i][1];
-    createDiscovery(LYWSD02sensor[i][0],
-                    (char *)discovery_topic.c_str(), LYWSD02sensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, LYWSD02sensor[i][3], LYWSD02sensor[i][4],
-                    LYWSD02sensor[i][5], LYWSD02sensor[i][6], LYWSD02sensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, LYWSD02sensor, LYWSD02parametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void CLEARGRASSTRHDiscovery(char *mac)
@@ -256,23 +213,8 @@ void CLEARGRASSTRHDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < CLEARGRASSTRHparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSTRHsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + CLEARGRASSTRHsensor[i][1];
-    createDiscovery(CLEARGRASSTRHsensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSTRHsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSTRHsensor[i][3], CLEARGRASSTRHsensor[i][4],
-                    CLEARGRASSTRHsensor[i][5], CLEARGRASSTRHsensor[i][6], CLEARGRASSTRHsensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, CLEARGRASSTRHsensor, CLEARGRASSTRHparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void CLEARGRASSCGD1Discovery(char *mac)
@@ -286,23 +228,8 @@ void CLEARGRASSCGD1Discovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < CLEARGRASSCGD1parametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSCGD1sensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + CLEARGRASSCGD1sensor[i][1];
-    createDiscovery(CLEARGRASSCGD1sensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSCGD1sensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSCGD1sensor[i][3], CLEARGRASSCGD1sensor[i][4],
-                    CLEARGRASSCGD1sensor[i][5], CLEARGRASSCGD1sensor[i][6], CLEARGRASSCGD1sensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void CLEARGRASSTRHKPADiscovery(char *mac)
@@ -316,23 +243,8 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < CLEARGRASSTRHKPAparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),CLEARGRASSTRHKPAsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + CLEARGRASSTRHKPAsensor[i][1];
-    createDiscovery(CLEARGRASSTRHKPAsensor[i][0],
-                    (char *)discovery_topic.c_str(), CLEARGRASSTRHKPAsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, CLEARGRASSTRHKPAsensor[i][3], CLEARGRASSTRHKPAsensor[i][4],
-                    CLEARGRASSTRHKPAsensor[i][5], CLEARGRASSTRHKPAsensor[i][6], CLEARGRASSTRHKPAsensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, CLEARGRASSTRHKPAsensor, CLEARGRASSTRHKPAparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiScaleDiscovery(char *mac)
@@ -344,23 +256,8 @@ void MiScaleDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiScaleparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiScalesensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiScalesensor[i][1];
-    createDiscovery(MiScalesensor[i][0],
-                    (char *)discovery_topic.c_str(), MiScalesensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiScalesensor[i][3], MiScalesensor[i][4],
-                    MiScalesensor[i][5], MiScalesensor[i][6], MiScalesensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, MiScalesensor, MiScaleparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiLampDiscovery(char *mac)
@@ -372,23 +269,8 @@ void MiLampDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiLampparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiLampsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiLampsensor[i][1];
-    createDiscovery(MiLampsensor[i][0],
-                    (char *)discovery_topic.c_str(), MiLampsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiLampsensor[i][3], MiLampsensor[i][4],
-                    MiLampsensor[i][5], MiLampsensor[i][6], MiLampsensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, MiLampsensor, MiLampparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
 
 void MiBandDiscovery(char *mac)
@@ -400,25 +282,20 @@ void MiBandDiscovery(char *mac)
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  for (int i = 0; i < MiBandparametersCount; i++)
-  {
-    Log.trace(F("CreateDiscoverySensor %s" CR),MiBandsensor[i][1]);
-    String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
-    String unique_id = String(mac) + "-" + MiBandsensor[i][1];
-    createDiscovery(MiBandsensor[i][0],
-                    (char *)discovery_topic.c_str(), MiBandsensor[i][1], (char *)unique_id.c_str(),
-                    will_Topic, MiBandsensor[i][3], MiBandsensor[i][4],
-                    MiBandsensor[i][5], MiBandsensor[i][6], MiBandsensor[i][7],
-                    0, "", "", false, "");
-  }
-  BLEdevice device;
-  strcpy(device.macAdr, mac);
-  device.isDisc = true;
-  device.isWhtL = false;
-  device.isBlkL = false;
-  devices.push_back(device);
+  createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
 }
-
+#else
+void MiFloraDiscovery(char *mac){}
+void VegTrugDiscovery(char *mac){}
+void MiJiaDiscovery(char *mac){}
+void LYWSD02Discovery(char *mac){}
+void CLEARGRASSTRHDiscovery(char *mac){}
+void CLEARGRASSCGD1Discovery(char *mac){}
+void CLEARGRASSTRHKPADiscovery(char *mac){}
+void MiScaleDiscovery(char *mac){}
+void MiLampDiscovery(char *mac){}
+void MiBandDiscovery(char *mac){}
 #endif
 
 #ifdef ESP32
@@ -453,7 +330,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     char mac[mac_adress.length() + 1];
     mac_adress.toCharArray(mac, mac_adress.length() + 1);
     Log.notice(F("Device detected: %s" CR),mac);
-    if ((!oneWhite() || isWhite(mac)) && !isBlack(mac))
+
+    BLEdevice *device = getDeviceByMac(mac);
+
+    if ((!oneWhite || isWhite(device)) && !isBlack(device))
     { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice.haveName())
         BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
@@ -505,10 +385,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               {
                 Log.trace(F("mi flora data reading" CR));
                 //example "servicedata":"71209800bc63b6658d7cc40d0910023200"
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+                
+                if (!isDiscovered(device))
                   MiFloraDiscovery(mac);
-                #endif
+
                 process_sensors(pos - 24, service_data, mac);
               }
               pos = -1;
@@ -517,10 +397,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               {
                 Log.trace(F("vegtrug data reading" CR));
                 //example "servicedata":"7120bc0399c309688d7cc40d0910020000"
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+
+                if (!isDiscovered(device))
                   VegTrugDiscovery(mac);
-                #endif
+
                 process_sensors(pos - 24, service_data, mac);
               }
               pos = -1;
@@ -528,10 +408,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               if (pos != -1)
               {
                 Log.trace(F("mi jia data reading" CR));
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+
+                if (!isDiscovered(device))
                   MiJiaDiscovery(mac);
-                #endif
+
                 process_sensors(pos - 26, service_data, mac);
               }
               pos = -1;
@@ -540,10 +420,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               {
                 Log.trace(F("LYWSD02 data reading" CR));
                 //example "servicedata":"70205b04b96ab883c8593f09041002e000"
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+
+                if (!isDiscovered(device))
                   LYWSD02Discovery(mac);
-                #endif
+
                 process_sensors(pos - 24, service_data, mac);
               }
               pos = -1;
@@ -552,10 +432,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               {
                 Log.trace(F("ClearGrass T RH data reading method 1" CR));
                 //example "servicedata":"5030470340743e10342d58041002d6000a100164"
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+
+                if (!isDiscovered(device))
                   CLEARGRASSTRHDiscovery(mac);
-                #endif
+
                 process_sensors(pos - 26, service_data, mac);
               }
               pos = -1;
@@ -564,10 +444,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
               {
                 Log.trace(F("Mi Lamp data reading" CR));
                 //example "servicedata":4030DD031D0300010100
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(mac))
+
+                if (!isDiscovered(device))
                   MiLampDiscovery(mac);
-                #endif
+
                 process_milamp(service_data, mac);
               }
             }
@@ -575,40 +455,40 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             { // Mi Scale V1
               Log.trace(F("Mi Scale V1 data reading" CR));
               //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
-              #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+
+              if (!isDiscovered(device))
                 MiScaleDiscovery(mac);
-              #endif
+
               process_scale_v1(service_data, mac);
             }
             if (strstr(BLEdata["servicedatauuid"].as<char *>(), "181b") != NULL)
             { // Mi Scale V2
               Log.trace(F("Mi Scale V2 data reading" CR));
               //example "servicedata":02c4e1070b1e13050c00002607 / 02a6e20705150a251df401443e /02a6e20705180c0d04d701943e
-              #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+
+              if (!isDiscovered(device))
                 MiScaleDiscovery(mac);
-              #endif
+
               process_scale_v2(service_data, mac);
             }
             if (strstr(BLEdata["servicedatauuid"].as<char *>(), "fee0") != NULL)
             { // Mi Band //0000fee0-0000-1000-8000-00805f9b34fb // ESP32 only
               Log.trace(F("Mi Band data reading" CR));
               //example "servicedata":a21e0000
-              #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+
+              if (!isDiscovered(device))
                 MiBandDiscovery(mac);
-              #endif
+
               process_miband(service_data, mac);
             }
             if (strstr(BLEdata["servicedata"].as<char *>(), "08094c") != NULL)
             { // Clear grass with air pressure//08094c0140342d580104d8000c020702612702015a
               Log.trace(F("Clear grass data with air pressure reading" CR));
               //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
-              #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+
+              if (!isDiscovered(device))
                 CLEARGRASSTRHKPADiscovery(mac);
-              #endif
+
               process_cleargrass_air(service_data, mac);
             }
             if (strstr(BLEdata["servicedata"].as<char *>(), "080774") != NULL)
@@ -622,10 +502,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             { // Clear grass CGD1 080caffd50342d580104c900a102
               Log.trace(F("Clear grass CGD1 data reading" CR));
               //example "servicedata":080caffd50342d580104 c900 a102
-              #ifdef ZmqttDiscovery
-              if (!isDiscovered(mac))
+
+              if (!isDiscovered(device))
                 CLEARGRASSCGD1Discovery(mac);
-              #endif
+
               process_cleargrass(service_data, mac);
             }
           }
@@ -798,9 +678,12 @@ bool BTtoMQTT()
             StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
             JsonObject &BLEdata = jsonBuffer.createObject();
             strupp(d[0].extract);
-            if (isBlack(d[0].extract))
+
+            BLEdevice *device = getDeviceByMac(d[0].extract);
+
+            if (isBlack(device))
               return false; //if black listed mac we go out
-            if (oneWhite() && !isWhite(d[0].extract))
+            if (oneWhite && !isWhite(device))
               return false; //if we have at least one white mac and this mac is not white we go out
             #ifdef subjectHomePresence
             String HomePresenceId;
@@ -833,10 +716,10 @@ bool BTtoMQTT()
               if (pos != -1)
               {
                 Log.trace(F("mi flora data reading" CR));
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   MiFloraDiscovery(d[0].extract);
-                #endif
+
                 bool result = process_sensors(pos - 38, (char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -845,10 +728,10 @@ bool BTtoMQTT()
               if (pos != -1)
               {
                 Log.trace(F("mi jia data reading" CR));
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   MiJiaDiscovery(d[0].extract);
-                #endif
+
                 bool result = process_sensors(pos - 40, (char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -857,10 +740,10 @@ bool BTtoMQTT()
               if (pos != -1)
               {
                 Log.trace(F("LYWSD02 data reading" CR));
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   LYWSD02Discovery(d[0].extract);
-                #endif
+
                 bool result = process_sensors(pos - 38, (char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -868,10 +751,10 @@ bool BTtoMQTT()
               if (pos != -1)
               {
                 Log.trace(F("CLEARGRASSTRH data reading method 1" CR));
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   CLEARGRASSTRHDiscovery(d[0].extract);
-                #endif
+
                 bool result = process_sensors(pos - 40, (char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -880,10 +763,10 @@ bool BTtoMQTT()
               {
                 Log.trace(F("Mi Scale data reading" CR));
                 //example "servicedata":"a2ac2be307060207122b" /"a28039e3070602070e28"
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   MiScaleDiscovery(d[0].extract);
-                #endif
+
                 bool result = process_scale_v1((char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -892,10 +775,10 @@ bool BTtoMQTT()
               {
                 Log.trace(F("Mi Lamp data reading" CR));
                 //example "servicedata":4030dd31d0300010100
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   MiLampDiscovery(d[0].extract);
-                #endif
+
                 process_milamp((char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -904,10 +787,10 @@ bool BTtoMQTT()
               {
                 Log.trace(F("Clear grass data with air pressure reading" CR));
                 //example "servicedata":08094c0140342d580104 c400 2402 0702 5d27 02015a
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   CLEARGRASSTRHKPADiscovery(d[0].extract);
-                #endif
+
                 process_cleargrass_air((char *)service_data.c_str(), d[0].extract);
               }
               pos = -1;
@@ -924,10 +807,10 @@ bool BTtoMQTT()
               {
                 Log.trace(F("Clear grass data CGD1" CR));
                 //example "servicedata":080caffd50342d580104 c900 a102
-                #ifdef ZmqttDiscovery
-                if (!isDiscovered(d[0].extract))
+
+                if (!isDiscovered(device))
                   CLEARGRASSCGD1Discovery(d[0].extract);
-                #endif
+
                 process_cleargrass((char *)service_data.c_str(), d[0].extract);
               }
 
@@ -1195,27 +1078,11 @@ void MQTTtoBT(char *topicOri, JsonObject &BTdata)
     Log.trace(F("MQTTtoBT json set" CR));
 
     // Black list & white list set
-    int WLsize = BTdata["white-list"].size();
-    if (WLsize > 0)
-    {
-      for (int i = 0; i < WLsize; i++)
-      {
-        const char *whiteMac = BTdata["white-list"][i];
-        Log.trace(F("WL set: %s" CR), whiteMac);
-        setWorBMac((char *)whiteMac, true);
-      }
-    }
-    int BLsize = BTdata["black-list"].size();
-    if (BLsize > 0)
-    {
-      for (int i = 0; i < BLsize; i++)
-      {
-        const char *blackMac = BTdata["black-list"][i];
-        Log.trace(F("BL set: %s" CR), blackMac);
-        setWorBMac((char *)blackMac, false);
-      }
-    }
-    if (BLsize > 0 || WLsize > 0)
+    bool WorBupdated;
+    WorBupdated |= updateWorB(BTdata, true);
+    WorBupdated |= updateWorB(BTdata, false);
+
+    if (WorBupdated)
       dumpDevices();
 
     // Scan interval set
