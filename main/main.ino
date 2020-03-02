@@ -223,7 +223,7 @@ bool to_bool(String const &s)
 void trc(String msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -234,7 +234,7 @@ void trc(String msg)
 void trc(int msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -245,7 +245,7 @@ void trc(int msg)
 void trc(unsigned int msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -256,7 +256,7 @@ void trc(unsigned int msg)
 void trc(long msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -267,7 +267,7 @@ void trc(long msg)
 void trc(unsigned long msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -278,7 +278,7 @@ void trc(unsigned long msg)
 void trc(double msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -289,7 +289,7 @@ void trc(double msg)
 void trc(float msg)
 {
   #ifdef TRACE
-  Serial1.println(msg);
+  PRINTER.println(msg);
   digitalWrite(led_info, HIGH);
   #endif
   #ifdef subjectTRACEtoMQTT
@@ -299,7 +299,7 @@ void trc(float msg)
 
 void trc(JsonObject &data)
 {
-  data.printTo(Serial1);
+  data.printTo(PRINTER);
 }
 
 void pub(char *topicori, char *payload, bool retainFlag)
@@ -616,15 +616,15 @@ void setup_parameters()
 void setup()
 {
   //Launch serial for debugging purposes
-  Serial.begin(SERIAL_BAUD);
-  Log.begin(LOG_LEVEL, &Serial);
+  PRINTER.begin(SERIAL_BAUD);
+  Log.begin(LOG_LEVEL, &PRINTER);
   Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
 
 #if defined(ESP8266) || defined(ESP32)
   #ifdef ESP8266
     #ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 pin optimization
-    Serial.end();
-    Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
+    PRINTER.end();
+    PRINTER.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
     #endif
   #endif
 
@@ -656,7 +656,7 @@ void setup()
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
+    PRINTER.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
     else if (error == OTA_BEGIN_ERROR)
@@ -673,7 +673,7 @@ void setup()
   #else // In case of arduino platform
 
   //Launch serial for debugging purposes
-  Serial.begin(SERIAL_BAUD);
+  PRINTER.begin(SERIAL_BAUD);
   //Begining ethernet connection in case of Arduino + W5100
   setup_ethernet();
   #endif
@@ -917,7 +917,7 @@ void setup_wifimanager(bool reset_settings)
       configFile.readBytes(buf.get(), size);
       DynamicJsonBuffer jsonBuffer;
       JsonObject &json = jsonBuffer.parseObject(buf.get());
-      json.printTo(Serial);
+      json.printTo(PRINTER);
       if (json.success())
       {
         Log.trace(F("\nparsed json" CR));
@@ -1027,7 +1027,7 @@ void setup_wifimanager(bool reset_settings)
       Log.error(F("failed to open config file for writing" CR));
     }
 
-    json.printTo(Serial);
+    json.printTo(PRINTER);
     json.printTo(configFile);
     configFile.close();
     //end save

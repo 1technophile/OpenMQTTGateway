@@ -53,6 +53,8 @@
 
 #define Base_Topic "home/"
 
+#define PRINTER Serial1
+
 /*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
 
 //#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only

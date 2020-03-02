@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your MikroMarz electricity meter and a MQTT broker
    Send and receiving command by MQTT
 
-   https://www.mikromarz.com/www-mikromarz-cz/eshop/51-1-Elektromery/179-2-3-fazove-elektromery/5/690-3-fazovy-2-tarifni-elektromer-SE1-PM2
+   https://www.mikromarz.com/www-mikromarz-cz
 
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,49 +19,58 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef ESP8266
-  #define PRINTER Serial1
-#elif ESP32
-  #define PRINTER Serial
+#ifndef PRINTER
+  #ifdef ESP8266
+    #define PRINTER Serial1
+  #elif ESP32
+    #define PRINTER Serial
+  #endif
 #endif
 
 #include "User_config.h"
 
 #ifdef ZgatewayElectricityMeter
+#define SLEEP_TIME 5000
+#define MAX_IDLE 12 
 #include <MikromarzMeter.h>
 MikromarzMeter mm = MikromarzMeter(SE1_PM2);
+byte counter = MAX_IDLE;
 
 void setupElectricityMeter()
 {
   mm.setup();
+  PRINTER.end();
   #ifdef ESP8266
     PRINTER.begin(115200, SERIAL_8N1, SERIAL_FULL, 1);
   #elif ESP32
     PRINTER.begin(115200);
   #endif
  PRINTER.println(F("ZgatewayElectricityMeter setup done "));
+ delay(SLEEP_TIME);
 }
 
 
 void ZgatewayElectricityMetertoMQTT()
 {  
   if (mm.readData()) {
+    counter = MAX_IDLE;
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);    
     tarif tarif_status = mm.getTarif();
     for (byte i=1; i<4; i++) {
       StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
       JsonObject &RFdata = jsonBuffer.createObject();
-      PRINTER.printf("Power %d: %ld W\n", i, (long)mm.getPower(i));
-      PRINTER.printf("Energy %d (%s): %ld kW/h\n", i, 
-                     (tarif_status == TARIF_HIGHT ? "high" : "low"),
-                     (long)mm.getEnergy(i, tarif_status));
       RFdata.set("phase", i);
       RFdata.set("power", (long)mm.getPower(i));
       RFdata.set("energy", (long)mm.getEnergy(i, tarif_status));
       RFdata.set("tarif", (tarif_status == TARIF_HIGHT ? "high" : "low"));
       pub(subjectToMQTT, RFdata);
     }
+  } else {
+    counter--;
   }
-  delay(1000);
+  if (counter == 0) {
+    ESP.restart();
+  }
+  delay(SLEEP_TIME);
 }
 #endif
