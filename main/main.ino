@@ -116,8 +116,8 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 void callback(char *topic, byte *payload, unsigned int length);
 
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
-
-int failure_number = 0; // number of failure connecting to MQTT
+int failure_number_ntwk = 0; // number of failure connecting to network
+int failure_number_mqtt = 0; // number of failure connecting to MQTT
 
 #ifdef ESP32
   #include <FS.h>
@@ -125,6 +125,7 @@ int failure_number = 0; // number of failure connecting to MQTT
   #include <WiFi.h>
   #include <ArduinoOTA.h>
   #include <WiFiUdp.h>
+  #include "esp_wifi.h"
   WiFiClient eClient;
   #include <WiFiManager.h>
 #ifdef MDNS_SD
@@ -133,6 +134,7 @@ int failure_number = 0; // number of failure connecting to MQTT
 #elif defined(ESP8266)
   #include <FS.h>
   #include <ESP8266WiFi.h>
+  #include "esp_wifi.h"
   #include <ArduinoOTA.h>
   #include <DNSServer.h>
   #include <ESP8266WebServer.h>
@@ -151,7 +153,6 @@ PubSubClient client(eClient);
 
 //MQTT last attemps reconnection date
 unsigned long lastMQTTReconnectAttempt = 0;
-unsigned long lastNTWKReconnectAttempt = 0;
 
 void revert_hex_data(char *in, char *out, int l)
 {
@@ -439,7 +440,66 @@ bool cmpToMainTopic(char * topicOri, char * toAdd){
   }
 }
 
-void reconnect()
+void disconnection_handling( int failure_number){
+  Log.trace(F("disconnection_handling, failed %d times" CR), failure_number);
+  if (failure_number > maxConnectionRetry && !connectedOnce)
+  {
+  #if defined(ESP8266) || defined(ESP32)
+    #ifndef ESPWifiManualSetup
+    Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
+    setup_wifimanager(true);
+    #else
+    Log.error(F("Failed connecting 1st time to mqtt, restarting ESP" CR));
+      #ifdef ESP32
+      ESP.restart();
+      #endif
+      #ifdef ESP8266
+      ESP.reset();
+      #endif
+    #endif
+  #endif 
+  }
+  else if (failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_BG && connectedOnce)
+  {
+    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_BG && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B ) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
+  {
+    #ifdef ESP32
+    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
+    #endif
+    #ifdef ESP8266
+    wifiProtocol = WIFI_PHY_MODE_11G;
+    #endif
+    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG ) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  {
+    #ifdef ESP32
+    wifiProtocol = WIFI_PROTOCOL_11B;
+    #endif
+    #ifdef ESP8266
+    wifiProtocol = WIFI_PHY_MODE_11B;
+    #endif
+    Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG ) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  {
+    #ifdef ESP32
+    wifiProtocol = 0;
+    #endif
+    #ifdef ESP8266
+    wifiProtocol = 0;
+    #endif
+    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+}
+
+void connectMQTT()
 {
 
 #ifndef ESPWifiManualSetup
@@ -458,7 +518,7 @@ void reconnect()
     if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message))
     {
       Log.notice(F("Connected to broker" CR));
-      failure_number = 0;
+      failure_number_mqtt = 0;
       // Once connected, publish an announcement...
       pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
       // publish version
@@ -480,23 +540,11 @@ void reconnect()
     }
     else
     {
-      failure_number++; // we count the failure
-      Log.warning(F("failure_number: %d" CR),failure_number);
-      if (failure_number > maxMQTTretry && !connectedOnce)
-      {
-      #ifndef ESPWifiManualSetup
-        #if defined(ESP8266) || defined(ESP32)
-        Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
-        setup_wifimanager(true);
-        #endif
-      #endif
-      }
+      failure_number_mqtt++; // we count the failure
+      Log.warning(F("failure_number_mqtt: %d" CR),failure_number_mqtt);
       Log.warning(F("failed, rc=%d" CR),client.state());
       delay(5000);
-// On ESP32 force wifi begin https://github.com/espressif/arduino-esp32/issues/2501
-    #if defined(ESP32)
-      WiFi.begin();
-    #endif
+      disconnection_handling(failure_number_mqtt);
     }
   }
 }
@@ -526,30 +574,7 @@ void setup_parameters()
   strcat(mqtt_topic, gateway_name);
 }
 
-void setup()
-{
-  //Launch serial for debugging purposes
-  Serial.begin(SERIAL_BAUD);
-  Log.begin(LOG_LEVEL, &Serial);
-  Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
-
-#if defined(ESP8266) || defined(ESP32)
-  #ifdef ESP8266
-    #ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 pin optimization
-    Serial.end();
-    Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
-    #endif
-  #endif
-
-  #if defined(ESPWifiManualSetup)
-  setup_wifi();
-  #else
-  setup_wifimanager(false);
-  #endif
-
-  Log.trace(F("OpenMQTTGateway mac: %s" CR),WiFi.macAddress().c_str());
-  Log.trace(F("OpenMQTTGateway ip: %s" CR),WiFi.localIP().toString().c_str());
-
+void setOTA(){
   // Port defaults to 8266
   ArduinoOTA.setPort(ota_port);
 
@@ -582,6 +607,35 @@ void setup()
       Log.error(F("End Failed" CR));
   });
   ArduinoOTA.begin();
+}
+
+void setup()
+{
+  //Launch serial for debugging purposes
+  Serial.begin(SERIAL_BAUD);
+  Log.begin(LOG_LEVEL, &Serial);
+  Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
+
+#if defined(ESP8266) || defined(ESP32)
+  #ifdef ESP8266
+    #ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 pin optimization
+    Serial.end();
+    Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
+    #endif
+  #endif
+
+  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
+
+  #if defined(ESPWifiManualSetup)
+  setup_wifi();
+  #else
+  setup_wifimanager(false);
+  #endif
+
+  Log.trace(F("OpenMQTTGateway mac: %s" CR),WiFi.macAddress().c_str());
+  Log.trace(F("OpenMQTTGateway ip: %s" CR),WiFi.localIP().toString().c_str());
+
+  setOTA();
 
   #else // In case of arduino platform
 
@@ -624,7 +678,6 @@ void setup()
   delay(1500);
 
   lastMQTTReconnectAttempt = 0;
-  lastNTWKReconnectAttempt = 0;
 
   #ifdef ZsensorBME280
   setupZsensorBME280();
@@ -703,9 +756,11 @@ void setup()
 #if defined(ESPWifiManualSetup)
 void setup_wifi()
 {
+
   delay(10);
-  int failureAttempt = 0; //DIRTY FIX ESP32 waiting for https://github.com/espressif/arduino-esp32/issues/653
   WiFi.mode(WIFI_STA);
+  if (!wifiProtocol) forceWifiProtocol();
+
   // We start by connecting to a WiFi network
   Log.trace(F("Connecting to %s" CR),wifi_ssid);
   #ifdef ESPWifiAdvancedSetup
@@ -726,9 +781,8 @@ void setup_wifi()
   {
     delay(500);
     Log.trace(F("." CR));
-    failureAttempt++; //DIRTY FIX ESP32
-    if (failureAttempt > 30)
-      setup_wifi(); //DIRTY FIX ESP32
+    failure_number_ntwk++;
+    disconnection_handling(failure_number_ntwk);
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
 }
@@ -789,15 +843,27 @@ void eraseAndRestart()
   #endif
 }
 
+void forceWifiProtocol(){
+#ifdef ESP32
+  Log.trace(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
+  esp_wifi_set_protocol(WIFI_IF_STA, wifiProtocol);
+#elif ESP8266
+  Log.trace(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
+  WiFi.setPhyMode(wifiProtocol);
+#endif
+}
+
 void setup_wifimanager(bool reset_settings)
 {
 
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
 
+  delay(10);
+  WiFi.mode(WIFI_STA);
+  if (!wifiProtocol) forceWifiProtocol();
+
   if (reset_settings)
     eraseAndRestart();
-
-  WiFi.mode(WIFI_STA);
 
   //read configuration from FS json
   Log.trace(F("mounting FS..." CR));
@@ -898,7 +964,7 @@ void setup_wifimanager(bool reset_settings)
   {
     Log.warning(F("failed to connect and hit timeout" CR));
     delay(3000);
-//reset and try again, or maybe put it to deep sleep
+//reset and try again
     #if defined(ESP8266)
     ESP.reset();
     #else
@@ -943,6 +1009,17 @@ void setup_wifimanager(bool reset_settings)
     //end save
   }
 }
+
+void reinit_wifi()
+{
+
+  delay(10);
+  WiFi.mode(WIFI_STA);
+  if (!wifiProtocol) forceWifiProtocol();
+  WiFi.begin();
+
+}
+
 #else // Arduino case
 void setup_ethernet()
 {
@@ -1023,7 +1100,7 @@ void loop()
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100))
   { //we are able to detect disconnection only on w5200 and w5500
   #endif
-    lastNTWKReconnectAttempt = 0;
+    failure_number_ntwk = 0;
     if (client.connected())
     {
       
@@ -1032,7 +1109,7 @@ void loop()
       #endif
 
       connectedOnce = true;
-      lastMQTTReconnectAttempt = 0;
+      failure_number_ntwk = 0;
 
       client.loop();
 
@@ -1117,40 +1194,19 @@ void loop()
     }
     else
     {
-      if (now - lastMQTTReconnectAttempt > 5000)
-      {
-        lastMQTTReconnectAttempt = now;
-        reconnect();
-      }
+      connectMQTT();
     }
   }
   else
   { // disconnected from network
-    if (now - lastNTWKReconnectAttempt > 10000)
-    {
-      lastNTWKReconnectAttempt = now;
-      #if defined(ESP8266) || defined(ESP32)
-        Log.warning(F("wifi disconnected" CR));
-        delay(10000); // add a delay to avoid ESP32 crash and reset
-        #if defined(ESPWifiManualSetup)
-        Log.notice(F("restarting ESP" CR));
-          #ifdef ESP32
-          ESP.restart();
-          #endif
-          #ifdef ESP8266
-          ESP.reset();
-          #endif
-        #else
-        if (!connectedOnce)
-        {
-          Log.notice(F("reseting wifi manager" CR));
-          setup_wifimanager(true); // if we didn't connected once to mqtt we reset and start in AP mode again to have a chance to change the parameters
-        }
-        #endif
-      #else
-      Log.warning(F("eth disconnected" CR));
-      #endif
-    }
+    #if defined(ESP8266) || defined(ESP32)
+    Log.warning(F("wifi disconnected" CR));
+    delay(10000); // add a delay to avoid ESP32 crash and reset
+    failure_number_ntwk++;
+    disconnection_handling(failure_number_ntwk);
+    #else
+    Log.warning(F("eth disconnected" CR));
+    #endif
   }
 }
 
@@ -1177,6 +1233,7 @@ void stateMeasures()
       SYSdata["ip"] = ip2CharArray(WiFi.localIP());
       String mac = WiFi.macAddress();
       SYSdata["mac"] = (char *)mac.c_str();
+      SYSdata["wifiPrt"] = (int)wifiProtocol;
     #else
       SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
     #endif

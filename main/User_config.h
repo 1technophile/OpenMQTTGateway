@@ -84,7 +84,7 @@
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-#define maxMQTTretry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
+#define maxConnectionRetry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
@@ -107,6 +107,26 @@ char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
 char gateway_name[parameters_size * 2] = Gateway_Name;
 //uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
+
+#if defined(ESP8266)||defined(ESP32) 
+  #include "esp_wifi.h"
+  #define ATTEMPTS_BEFORE_BG  10 // Number of wifi connection attempts before going to BG protocol
+  #define ATTEMPTS_BEFORE_B   20 // Number of wifi connection attempts before going to B protocol
+#endif
+
+// WIFI mode, uncomment to force a wifi mode, if not uncommented the ESP will connect without a mode forced
+// if there is a reconnection issue it will try to connect with G mode and if not working with B mode
+#ifdef ESP32
+  uint8_t wifiProtocol = 0; // default mode, automatic selection
+  //uint8_t wifiProtocol = WIFI_PROTOCOL_11B;
+  //uint8_t wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // can't have only one https://github.com/espressif/esp-idf/issues/702
+  //uint8_t wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N; // can't have only one https://github.com/espressif/esp-idf/issues/702
+#elif ESP8266
+  uint8_t wifiProtocol = 0; // default mode, automatic selection
+  //uint8_t wifiProtocol = WIFI_PHY_MODE_11B;
+  //uint8_t wifiProtocol = WIFI_PHY_MODE_11G;
+  //uint8_t wifiProtocol = WIFI_PHY_MODE_11N;
+#endif
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
