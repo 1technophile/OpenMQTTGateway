@@ -105,8 +105,6 @@ char mqtt_server[parameters_size] = "192.168.1.17";
 char mqtt_port[6] = "1883";
 char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
 char gateway_name[parameters_size * 2] = Gateway_Name;
-//uncomment the line below to integrate msg value into the subject when receiving
-//#define valueAsASubject true
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
@@ -223,7 +221,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #define restartCmd          "restart"
 #define eraseCmd            "erase"
 
-// define if we concatenate the values into the topic
+// uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
 //variables to avoid duplicates
