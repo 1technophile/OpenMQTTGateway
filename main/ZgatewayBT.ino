@@ -252,7 +252,7 @@ void MiScaleDiscovery(char *mac)
 #define MiScaleparametersCount 1
   Log.trace(F("MiScaleDiscovery" CR));
   char *MiScalesensor[MiScaleparametersCount][8] = {
-      {"sensor", "MiScale-weight", mac, "weight", "{{ value_json.weight | is_defined }}", "", "", "kg"},
+      {"sensor", "MiScale-weight", mac, "", "{{ value_json.weight | is_defined }}", "", "", "kg"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -265,7 +265,7 @@ void MiLampDiscovery(char *mac)
 #define MiLampparametersCount 1
   Log.trace(F("MiLampDiscovery" CR));
   char *MiLampsensor[MiLampparametersCount][8] = {
-      {"sensor", "MiLamp-presence", mac, "presence", "{{ value_json.presence}}", "", "", "d"},
+      {"sensor", "MiLamp-presence", mac, "", "{{ value_json.presence}}", "", "", "d"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -278,7 +278,7 @@ void MiBandDiscovery(char *mac)
 #define MiBandparametersCount 1
   Log.trace(F("MiBandDiscovery" CR));
   char *MiBandsensor[MiBandparametersCount][8] = {
-      {"sensor", "MiBand-steps", mac, "steps", "{{ value_json.steps | is_defined }}", "", "", "nb"},
+      {"sensor", "MiBand-steps", mac, "", "{{ value_json.steps | is_defined }}", "", "", "nb"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
