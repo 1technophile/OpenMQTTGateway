@@ -1165,6 +1165,7 @@ void stateMeasures()
     JsonObject &SYSdata = jsonBuffer.createObject();
     unsigned long uptime = millis() / 1000;
     SYSdata["uptime"] = uptime;
+    SYSdata["version"] = OMG_VERSION;
     Log.trace(F("retriving value of system characteristics Uptime (s):%u" CR),uptime);
     #if defined(ESP8266) || defined(ESP32)
       uint32_t freeMem;
