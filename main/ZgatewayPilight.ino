@@ -60,6 +60,7 @@ void setupPilight()
 #ifndef ZgatewayRF &&ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_PIN);
+  pinMode(RF_EMITTER_PIN, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
   Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
   Log.trace(F("ZgatewayPilight setup done " CR));
