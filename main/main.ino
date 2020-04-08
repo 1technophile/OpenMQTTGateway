@@ -134,7 +134,6 @@ int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #elif defined(ESP8266)
   #include <FS.h>
   #include <ESP8266WiFi.h>
-  #include "esp_wifi.h"
   #include <ArduinoOTA.h>
   #include <DNSServer.h>
   #include <ESP8266WebServer.h>
@@ -753,6 +752,27 @@ void setup()
   Log.notice(F("Setup OpenMQTTGateway end" CR));
 }
 
+#if defined(ESP8266) || defined(ESP32)
+// the 2 methods below are used to recover wifi connection by changing the protocols
+void forceWifiProtocol(){
+#ifdef ESP32
+  Log.trace(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
+  esp_wifi_set_protocol(WIFI_IF_STA, wifiProtocol);
+#elif ESP8266
+  Log.trace(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
+  WiFi.setPhyMode((WiFiPhyMode_t)wifiProtocol);
+#endif
+}
+
+void reinit_wifi()
+{
+  delay(10);
+  WiFi.mode(WIFI_STA);
+  if (!wifiProtocol) forceWifiProtocol();
+  WiFi.begin();
+}
+#endif
+
 #if defined(ESPWifiManualSetup)
 void setup_wifi()
 {
@@ -841,16 +861,6 @@ void eraseAndRestart()
   #else
   ESP.restart();
   #endif
-}
-
-void forceWifiProtocol(){
-#ifdef ESP32
-  Log.trace(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
-  esp_wifi_set_protocol(WIFI_IF_STA, wifiProtocol);
-#elif ESP8266
-  Log.trace(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
-  WiFi.setPhyMode(wifiProtocol);
-#endif
 }
 
 void setup_wifimanager(bool reset_settings)
@@ -1008,16 +1018,6 @@ void setup_wifimanager(bool reset_settings)
     configFile.close();
     //end save
   }
-}
-
-void reinit_wifi()
-{
-
-  delay(10);
-  WiFi.mode(WIFI_STA);
-  if (!wifiProtocol) forceWifiProtocol();
-  WiFi.begin();
-
 }
 
 #else // Arduino case
