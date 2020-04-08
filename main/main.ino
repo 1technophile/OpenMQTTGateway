@@ -439,65 +439,6 @@ bool cmpToMainTopic(char * topicOri, char * toAdd){
   }
 }
 
-void disconnection_handling( int failure_number){
-  Log.trace(F("disconnection_handling, failed %d times" CR), failure_number);
-  if (failure_number > maxConnectionRetry && !connectedOnce)
-  {
-  #if defined(ESP8266) || defined(ESP32)
-    #ifndef ESPWifiManualSetup
-    Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
-    setup_wifimanager(true);
-    #else
-    Log.error(F("Failed connecting 1st time to mqtt, restarting ESP" CR));
-      #ifdef ESP32
-      ESP.restart();
-      #endif
-      #ifdef ESP8266
-      ESP.reset();
-      #endif
-    #endif
-  #endif 
-  }
-  else if (failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_BG && connectedOnce)
-  {
-    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
-    reinit_wifi();
-  }
-  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_BG && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B ) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
-  {
-    #ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
-    #endif
-    #ifdef ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11G;
-    #endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
-    reinit_wifi();
-  }
-  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG ) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
-  {
-    #ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B;
-    #endif
-    #ifdef ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11B;
-    #endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
-    reinit_wifi();
-  }
-  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG ) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
-  {
-    #ifdef ESP32
-    wifiProtocol = 0;
-    #endif
-    #ifdef ESP8266
-    wifiProtocol = 0;
-    #endif
-    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
-    reinit_wifi();
-  }
-}
-
 void connectMQTT()
 {
 
@@ -543,7 +484,9 @@ void connectMQTT()
       Log.warning(F("failure_number_mqtt: %d" CR),failure_number_mqtt);
       Log.warning(F("failed, rc=%d" CR),client.state());
       delay(5000);
+      #if defined(ESP8266) || defined(ESP32)
       disconnection_handling(failure_number_mqtt);
+      #endif
     }
   }
 }
@@ -571,41 +514,6 @@ void callback(char *topic, byte *payload, unsigned int length)
 void setup_parameters()
 {
   strcat(mqtt_topic, gateway_name);
-}
-
-void setOTA(){
-  // Port defaults to 8266
-  ArduinoOTA.setPort(ota_port);
-
-  // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname(ota_hostname);
-
-  // No authentication by default
-  ArduinoOTA.setPassword(ota_password);
-
-  ArduinoOTA.onStart([]() {
-    Log.trace(F("Start OTA" CR));
-  });
-  ArduinoOTA.onEnd([]() {
-    Log.trace(F("\nEnd OTA" CR));
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR)
-      Log.error(F("Auth Failed" CR));
-    else if (error == OTA_BEGIN_ERROR)
-      Log.error(F("Begin Failed" CR));
-    else if (error == OTA_CONNECT_ERROR)
-      Log.error(F("Connect Failed" CR));
-    else if (error == OTA_RECEIVE_ERROR)
-      Log.error(F("Receive Failed" CR));
-    else if (error == OTA_END_ERROR)
-      Log.error(F("End Failed" CR));
-  });
-  ArduinoOTA.begin();
 }
 
 void setup()
@@ -770,6 +678,101 @@ void reinit_wifi()
   WiFi.mode(WIFI_STA);
   if (!wifiProtocol) forceWifiProtocol();
   WiFi.begin();
+}
+
+void disconnection_handling( int failure_number){
+  Log.trace(F("disconnection_handling, failed %d times" CR), failure_number);
+  if (failure_number > maxConnectionRetry && !connectedOnce)
+  {
+  #if defined(ESP8266) || defined(ESP32)
+    #ifndef ESPWifiManualSetup
+    Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
+    setup_wifimanager(true);
+    #else
+    Log.error(F("Failed connecting 1st time to mqtt, restarting ESP" CR));
+      #ifdef ESP32
+      ESP.restart();
+      #endif
+      #ifdef ESP8266
+      ESP.reset();
+      #endif
+    #endif
+  #endif 
+  }
+  else if (failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_BG && connectedOnce)
+  {
+    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_BG && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B ) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
+  {
+    #ifdef ESP32
+    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
+    #endif
+    #ifdef ESP8266
+    wifiProtocol = WIFI_PHY_MODE_11G;
+    #endif
+    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG ) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  {
+    #ifdef ESP32
+    wifiProtocol = WIFI_PROTOCOL_11B;
+    #endif
+    #ifdef ESP8266
+    wifiProtocol = WIFI_PHY_MODE_11B;
+    #endif
+    Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+  else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG ) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  {
+    #ifdef ESP32
+    wifiProtocol = 0;
+    #endif
+    #ifdef ESP8266
+    wifiProtocol = 0;
+    #endif
+    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+}
+
+
+void setOTA(){
+  // Port defaults to 8266
+  ArduinoOTA.setPort(ota_port);
+
+  // Hostname defaults to esp8266-[ChipID]
+  ArduinoOTA.setHostname(ota_hostname);
+
+  // No authentication by default
+  ArduinoOTA.setPassword(ota_password);
+
+  ArduinoOTA.onStart([]() {
+    Log.trace(F("Start OTA" CR));
+  });
+  ArduinoOTA.onEnd([]() {
+    Log.trace(F("\nEnd OTA" CR));
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR)
+      Log.error(F("Auth Failed" CR));
+    else if (error == OTA_BEGIN_ERROR)
+      Log.error(F("Begin Failed" CR));
+    else if (error == OTA_CONNECT_ERROR)
+      Log.error(F("Connect Failed" CR));
+    else if (error == OTA_RECEIVE_ERROR)
+      Log.error(F("Receive Failed" CR));
+    else if (error == OTA_END_ERROR)
+      Log.error(F("End Failed" CR));
+  });
+  ArduinoOTA.begin();
 }
 #endif
 
