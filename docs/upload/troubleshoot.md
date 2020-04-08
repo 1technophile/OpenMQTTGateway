@@ -1,7 +1,7 @@
 # Troubleshooting
 
 ## Compilation/build error
-This badge [![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway) show you the state of the compilation of the master and this one [![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=development)](https://travis-ci.org/1technophile/OpenMQTTGateway) for the development branch. If you see a green badge this means that the code compilation is OK with the configuration given in the docs/platformio.ini. Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
+This badge [![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.com/1technophile/OpenMQTTGateway) show you the state of the compilation of the master and this one [![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=development)](https://travis-ci.com/1technophile/OpenMQTTGateway) for the development branch. If you see a green badge this means that the code compilation is OK with the configuration given in the docs/platformio.ini. Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
 Verify especially that the libraries provided into the [the release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
 
 ## ESP32 compilation errors related to wifi

@@ -31,6 +31,6 @@ If applicable, add screenshots to help explain your problem.
 Add any other context about the problem here.
 
 * You should not have a compilation error if you use the versions of the libraries linked into the libraries folder, this badges show you the state of the compilation 
-[![Build Status](https://travis-ci.org/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.org/1technophile/OpenMQTTGateway)
+[![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.com/1technophile/OpenMQTTGateway)
 * If you are not sure this is a bug or an enhancement post your question to the forum below
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
