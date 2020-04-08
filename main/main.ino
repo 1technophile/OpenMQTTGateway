@@ -661,6 +661,21 @@ void setup()
 }
 
 #if defined(ESP8266) || defined(ESP32)
+// Bypass for ESP not reconnecting automaticaly the second time https://github.com/espressif/arduino-esp32/issues/2501
+void wifi_reconnect_bypass(){
+  uint8_t  wifi_autoreconnect_cnt = 0;
+  #ifdef ESP32
+    while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < 3) {
+  #else
+    while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < 3) {
+  #endif
+    Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
+  WiFi.begin();
+  delay(500);
+  wifi_autoreconnect_cnt++;
+  } 
+}
+
 // the 2 methods below are used to recover wifi connection by changing the protocols
 void forceWifiProtocol(){
 #ifdef ESP32
@@ -799,6 +814,8 @@ void setup_wifi()
   #else
   WiFi.begin(wifi_ssid, wifi_password);
   #endif
+
+  wifi_reconnect_bypass();
 
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -969,6 +986,8 @@ void setup_wifimanager(bool reset_settings)
 
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
+
+  wifi_reconnect_bypass();
 
   //fetches ssid and pass and tries to connect
   //if it does not connect it starts an access point with the specified name
