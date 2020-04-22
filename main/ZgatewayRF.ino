@@ -29,6 +29,10 @@
 
 #ifdef ZgatewayRF
 
+#ifdef ZradioCC1101
+  #include <ELECHOUSE_CC1101_SRC_DRV.h>
+#endif
+
 #include <RCSwitch.h> // library for controling Radio frequency switch
 
 RCSwitch mySwitch = RCSwitch();
@@ -57,6 +61,11 @@ void setupRF()
   //RF init parameters
   Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
   Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+  #ifdef ZradioCC1101 //receiving with CC1101
+    ELECHOUSE_cc1101.Init();
+    ELECHOUSE_cc1101.setMHZ(433.92);
+    ELECHOUSE_cc1101.SetRx();
+  #endif
   mySwitch.enableTransmit(RF_EMITTER_PIN);
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
   mySwitch.enableReceive(RF_RECEIVER_PIN);
@@ -103,6 +112,11 @@ void RFtoMQTT()
 void MQTTtoRF(char *topicOri, char *datacallback)
 {
 
+  #ifdef ZradioCC1101 // set Receive off and Transmitt on
+    ELECHOUSE_cc1101.SetTx();
+    mySwitch.disableReceive(); 
+    mySwitch.enableTransmit(RF_EMITTER_PIN);
+  #endif
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
 
   // RF DATA ANALYSIS
@@ -156,12 +170,22 @@ void MQTTtoRF(char *topicOri, char *datacallback)
     // Acknowledgement to the GTWRF topic
     pub(subjectGTWRFtoMQTT, datacallback); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
+  #ifdef ZradioCC1101 // set Receive on and Transmitt off
+    ELECHOUSE_cc1101.SetRx();
+    mySwitch.disableTransmit();
+    mySwitch.enableReceive(RF_RECEIVER_PIN);
+  #endif
 }
 #endif
 
 #ifdef jsonReceiving
 void MQTTtoRF(char *topicOri, JsonObject &RFdata)
 { // json object decoding
+  #ifdef ZradioCC1101 // set Receive off and Transmitt on
+    ELECHOUSE_cc1101.SetTx();
+    mySwitch.disableReceive(); 
+    mySwitch.enableTransmit(RF_EMITTER_PIN);
+  #endif
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF))
   {
     Log.trace(F("MQTTtoRF json" CR));
@@ -187,6 +211,11 @@ void MQTTtoRF(char *topicOri, JsonObject &RFdata)
       Log.error(F("MQTTtoRF Fail json" CR));
     }
   }
+  #ifdef ZradioCC1101 // set Receive on and Transmitt off
+    ELECHOUSE_cc1101.SetRx();
+    mySwitch.disableTransmit();
+    mySwitch.enableReceive(RF_RECEIVER_PIN);
+  #endif
 }
 #endif
 #endif
