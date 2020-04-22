@@ -37,6 +37,10 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/
 
 #ifdef ZgatewayRF2
 
+#ifdef ZradioCC1101
+  #include <ELECHOUSE_CC1101_SRC_DRV.h>
+#endif
+
 #include <NewRemoteTransmitter.h>
 #include <NewRemoteReceiver.h>
 
@@ -55,6 +59,11 @@ RF2rxd rf2rd;
 void setupRF2()
 {
 #ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
+  #ifdef ZradioCC1101 //receiving with CC1101
+    ELECHOUSE_cc1101.Init();
+    ELECHOUSE_cc1101.setMHZ(433.92);
+    ELECHOUSE_cc1101.SetRx();
+  #endif
   NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
   Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
   Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
@@ -101,6 +110,10 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 #ifdef simpleReceiving
 void MQTTtoRF2(char *topicOri, char *datacallback)
 {
+  #ifdef ZradioCC1101
+    NewRemoteReceiver::disable();
+    ELECHOUSE_cc1101.SetTx();           // set Transmit on
+  #endif
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined
@@ -216,12 +229,20 @@ void MQTTtoRF2(char *topicOri, char *datacallback)
       pub((char *)MQTTRF2string.c_str(), (char *)MQTTswitchType.c_str());
     }
   }
+  #ifdef ZradioCC1101
+    ELECHOUSE_cc1101.SetRx();           // set Receive on
+    NewRemoteReceiver::enable();
+  #endif
 }
 #endif
 
 #ifdef jsonReceiving
 void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
 { // json object decoding
+  #ifdef ZradioCC1101
+    NewRemoteReceiver::disable();
+    ELECHOUSE_cc1101.SetTx();           // set Transmit on
+  #endif
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF2))
   {
@@ -282,6 +303,10 @@ void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
       Log.error(F("MQTTtoRF2 failed json read" CR));
     }
   }
+  #ifdef ZradioCC1101
+    ELECHOUSE_cc1101.SetRx();           // set Receive on
+    NewRemoteReceiver::enable();
+  #endif
 }
 #endif
 #endif
