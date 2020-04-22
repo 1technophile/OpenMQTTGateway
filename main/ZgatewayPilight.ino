@@ -28,9 +28,11 @@
 #include "User_config.h"
 
 #ifdef ZgatewayPilight
+
 #ifdef ZradioCC1101
   #include <ELECHOUSE_CC1101_SRC_DRV.h>
 #endif
+
 #include <ESPiLight.h>
 ESPiLight rf(RF_EMITTER_PIN); // use -1 to disable transmitter
 
