@@ -28,6 +28,11 @@
 #include "User_config.h"
 
 #ifdef ZgatewayPilight
+
+#ifdef ZradioCC1101
+  #include <ELECHOUSE_CC1101_SRC_DRV.h>
+#endif
+
 #include <ESPiLight.h>
 ESPiLight rf(RF_EMITTER_PIN); // use -1 to disable transmitter
 
@@ -58,6 +63,12 @@ void pilightCallback(const String &protocol, const String &message, int status,
 void setupPilight()
 {
 #ifndef ZgatewayRF &&ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
+  #ifdef ZradioCC1101 //receiving with CC1101
+    ELECHOUSE_cc1101.Init();
+    ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
+    rf.enableReceiver();
+  #endif
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_PIN);
   pinMode(RF_EMITTER_PIN, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
@@ -76,7 +87,10 @@ void PilighttoMQTT()
 
 void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
 {
-
+  #ifdef ZradioCC1101
+    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
+    rf.disableReceiver();
+  #endif
   int result = 0;
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoPilight))
@@ -155,5 +169,9 @@ void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
       }
     }
   }
+  #ifdef ZradioCC1101
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
+    rf.enableReceiver();
+  #endif
 }
 #endif

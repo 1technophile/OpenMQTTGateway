@@ -153,6 +153,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 //#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZradioCC1101  "CC1101" //ESP8266, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #define version_Topic  "/version"

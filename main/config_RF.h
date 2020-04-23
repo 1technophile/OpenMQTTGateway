@@ -90,6 +90,10 @@ RF supported protocols
 #define PilightRAW "RAW"
 #define repeatPilightwMQTT false // do we repeat a received signal by using mqtt with Pilight gateway
 
+/*-------------------CC1101 frequency----------------------*/
+//Match frequency to the hardware version of the radio if ZradioCC1101 is used. 
+#define CC1101_FREQUENCY     433.92
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RF_RECEIVER_PIN
     #ifdef ESP8266
