@@ -61,8 +61,8 @@ void setupRF2()
 #ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
   #ifdef ZradioCC1101 //receiving with CC1101
     ELECHOUSE_cc1101.Init();
-    ELECHOUSE_cc1101.setMHZ(433.92);
-    ELECHOUSE_cc1101.SetRx();
+    ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
   #endif
   NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
   Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
@@ -112,7 +112,7 @@ void MQTTtoRF2(char *topicOri, char *datacallback)
 {
   #ifdef ZradioCC1101
     NewRemoteReceiver::disable();
-    ELECHOUSE_cc1101.SetTx();           // set Transmit on
+    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
   #endif
 
   // RF DATA ANALYSIS
@@ -230,7 +230,7 @@ void MQTTtoRF2(char *topicOri, char *datacallback)
     }
   }
   #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx();           // set Receive on
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
     NewRemoteReceiver::enable();
   #endif
 }
@@ -241,7 +241,7 @@ void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
 { // json object decoding
   #ifdef ZradioCC1101
     NewRemoteReceiver::disable();
-    ELECHOUSE_cc1101.SetTx();           // set Transmit on
+    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
   #endif
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF2))
@@ -304,7 +304,7 @@ void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
     }
   }
   #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx();           // set Receive on
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
     NewRemoteReceiver::enable();
   #endif
 }

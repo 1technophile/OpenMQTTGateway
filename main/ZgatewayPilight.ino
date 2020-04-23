@@ -65,8 +65,8 @@ void setupPilight()
 #ifndef ZgatewayRF &&ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
   #ifdef ZradioCC1101 //receiving with CC1101
     ELECHOUSE_cc1101.Init();
-    ELECHOUSE_cc1101.setMHZ(433.92);
-    ELECHOUSE_cc1101.SetRx();
+    ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
     rf.enableReceiver();
   #endif
   rf.setCallback(pilightCallback);
@@ -88,7 +88,7 @@ void PilighttoMQTT()
 void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
 {
   #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetTx();           // set Transmit on
+    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
     rf.disableReceiver();
   #endif
   int result = 0;
@@ -170,7 +170,7 @@ void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
     }
   }
   #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx();           // set Receive on
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
     rf.enableReceiver();
   #endif
 }

@@ -63,8 +63,8 @@ void setupRF()
   Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
   #ifdef ZradioCC1101 //receiving with CC1101
     ELECHOUSE_cc1101.Init();
-    ELECHOUSE_cc1101.setMHZ(433.92);
-    ELECHOUSE_cc1101.SetRx();
+    ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
   #endif
   mySwitch.enableTransmit(RF_EMITTER_PIN);
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
@@ -113,7 +113,7 @@ void MQTTtoRF(char *topicOri, char *datacallback)
 {
 
   #ifdef ZradioCC1101 // set Receive off and Transmitt on
-    ELECHOUSE_cc1101.SetTx();
+    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);
     mySwitch.disableReceive(); 
     mySwitch.enableTransmit(RF_EMITTER_PIN);
   #endif
@@ -171,7 +171,7 @@ void MQTTtoRF(char *topicOri, char *datacallback)
     pub(subjectGTWRFtoMQTT, datacallback); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
   #ifdef ZradioCC1101 // set Receive on and Transmitt off
-    ELECHOUSE_cc1101.SetRx();
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
     mySwitch.disableTransmit();
     mySwitch.enableReceive(RF_RECEIVER_PIN);
   #endif
@@ -182,7 +182,7 @@ void MQTTtoRF(char *topicOri, char *datacallback)
 void MQTTtoRF(char *topicOri, JsonObject &RFdata)
 { // json object decoding
   #ifdef ZradioCC1101 // set Receive off and Transmitt on
-    ELECHOUSE_cc1101.SetTx();
+    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);
     mySwitch.disableReceive(); 
     mySwitch.enableTransmit(RF_EMITTER_PIN);
   #endif
@@ -212,7 +212,7 @@ void MQTTtoRF(char *topicOri, JsonObject &RFdata)
     }
   }
   #ifdef ZradioCC1101 // set Receive on and Transmitt off
-    ELECHOUSE_cc1101.SetRx();
+    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
     mySwitch.disableTransmit();
     mySwitch.enableReceive(RF_RECEIVER_PIN);
   #endif
