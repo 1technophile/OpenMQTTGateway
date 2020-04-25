@@ -54,5 +54,8 @@ If you notice that your Arduino with w5100 Ethernet shield does not connect to n
 According to this [video](https://www.youtube.com/watch?v=9ZBeprOqC3w&feature=youtu.be), w5100 clones sometimes struggle to initialise because the reset pin wasn't held low long enough. The solution is simple - add a 0.1uF (100nF) capacitor between the pins on the reset switch. You can get more details [here](http://forum.arduino.cc/index.php?topic=28175.15).
 But even with this fix your board might not work well with a specific PSU. I would recommend try at least one different one and also try bigger capacitor (some report using 47uF)
 
+## ESP Continuous restart or strange behaviour:
+This can be due to corruption of the ESP flash memory, try to erase flash and upload OMG on it again.
+
 If you didn't find your answer here post a question to the forum:
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)

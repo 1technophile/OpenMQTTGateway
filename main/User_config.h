@@ -50,6 +50,9 @@
 #ifndef Gateway_Name
   #define Gateway_Name "OpenMQTTGateway"
 #endif
+#ifndef Gateway_Short_Name
+  #define Gateway_Short_Name "OMG"
+#endif
 
 #define Base_Topic "home/"
 
@@ -111,6 +114,26 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
   #define ATTEMPTS_BEFORE_B   20 // Number of wifi connection attempts before going to B protocol
 #endif
 
+/*------------------DEEP SLEEP parameters ------------------*/
+//DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)
+//DEFAULT_LOW_POWER_MODE 1 to activate deep sleep with LCD ON when a function is processing,
+//DEFAULT_LOW_POWER_MODE 2 to activate deep sleep with LED ON when a function is processing (LCD is turned OFF)
+#ifdef ESP32
+  #ifndef SLEEP_BUTTON
+    #define SLEEP_BUTTON 33
+  #endif
+  #ifndef DEFAULT_LOW_POWER_MODE
+    #define DEFAULT_LOW_POWER_MODE 0
+  #endif
+  #ifndef LOW_POWER_LED
+    #define LOW_POWER_LED 2
+  #endif
+  #ifndef LOW_POWER_LED_OFF
+    #define LOW_POWER_LED_OFF 1
+  #endif
+int low_power_mode = DEFAULT_LOW_POWER_MODE;
+#endif
+
 // WIFI mode, uncomment to force a wifi mode, if not uncommented the ESP will connect without a mode forced
 // if there is a reconnection issue it will try to connect with G mode and if not working with B mode
 #ifdef ESP32
@@ -153,6 +176,8 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 //#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZboardM5STICKC "M5StickC"
+//#define ZboardM5STACK "ZboardM5STACK"
 //#define ZradioCC1101  "CC1101" //ESP8266, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
@@ -255,11 +280,12 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
   #define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
 
-#define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
+#define TimeBetweenReadingSYS 120 // time between (s) system readings (like memory)
+#define TimeBeforeMQTTconnect 10  // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT  "/SYStoMQTT"
 #define subjectMQTTtoSYSset "/commands/MQTTtoSYS/config"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
-#define LOG_LEVEL LOG_LEVEL_VERBOSE
+#define LOG_LEVEL LOG_LEVEL_NOTICE
 
 #endif

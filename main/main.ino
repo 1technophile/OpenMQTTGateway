@@ -109,7 +109,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #ifdef ZactuatorFASTLED
 #include "config_FASTLED.h"
 #endif
-
+#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#include "config_M5.h"
+#endif
 /*------------------------------------------------------------------------*/
 
 //adding this to bypass the problem of the arduino builder issue 50
@@ -128,6 +130,8 @@ int failure_number_mqtt = 0; // number of failure connecting to MQTT
   #include "esp_wifi.h"
   WiFiClient eClient;
   #include <WiFiManager.h>
+  #include <Preferences.h>
+  Preferences preferences;
 #ifdef MDNS_SD
   #include <ESPmDNS.h>
 #endif
@@ -448,46 +452,45 @@ void connectMQTT()
   #endif
 #endif
 
-  // Loop until we're reconnected
-  while (!client.connected())
+  Log.warning(F("MQTT connection..." CR));
+  char topic[mqtt_topic_max_size];
+  strcpy(topic,mqtt_topic);
+  strcat(topic,will_Topic);
+  if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message))
   {
-    Log.notice(F("MQTT connection..." CR)); //F function enable to decrease sram usage
-    char topic[mqtt_topic_max_size];
-    strcpy(topic,mqtt_topic);
-    strcat(topic,will_Topic);
-    if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message))
+    #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+    M5Display("MQTT connected", "", "");
+    #endif
+    Log.notice(F("Connected to broker" CR));
+    failure_number_mqtt = 0;
+    // Once connected, publish an announcement...
+    pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
+    // publish version
+    pub(version_Topic, OMG_VERSION, will_Retain);
+    //Subscribing to topic
+    char topic2[mqtt_topic_max_size];
+    strcpy(topic2,mqtt_topic);
+    strcat(topic2,subjectMQTTtoX);
+    if (client.subscribe(topic2))
     {
-      Log.notice(F("Connected to broker" CR));
-      failure_number_mqtt = 0;
-      // Once connected, publish an announcement...
-      pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
-      // publish version
-      pub(version_Topic, OMG_VERSION, will_Retain);
-      //Subscribing to topic
-      char topic2[mqtt_topic_max_size];
-      strcpy(topic2,mqtt_topic);
-      strcat(topic2,subjectMQTTtoX);
-      if (client.subscribe(topic2))
-      {
-        #ifdef ZgatewayRF
-        client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
-        #endif
-        #ifdef ZgatewayIR
-        client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
-        #endif
-        Log.trace(F("Subscription OK to the subjects" CR));
-      }
-    }
-    else
-    {
-      failure_number_mqtt++; // we count the failure
-      Log.warning(F("failure_number_mqtt: %d" CR),failure_number_mqtt);
-      Log.warning(F("failed, rc=%d" CR),client.state());
-      delay(5000);
-      #if defined(ESP8266) || defined(ESP32)
-      disconnection_handling(failure_number_mqtt);
+      #ifdef ZgatewayRF
+      client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
       #endif
+      #ifdef ZgatewayIR
+      client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
+      #endif
+      Log.trace(F("Subscription OK to the subjects" CR));
     }
+  }
+  else
+  {
+    failure_number_mqtt++; // we count the failure
+    Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
+    Log.warning(F("failed, rc=%d" CR), client.state());
+    delay(5000);
+    #if defined(ESP8266) || defined(ESP32)
+    disconnection_handling(failure_number_mqtt);
+    #endif
   }
 }
 
@@ -528,6 +531,13 @@ void setup()
     #ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 pin optimization
     Serial.end();
     Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
+    #endif
+  #elif ESP32
+    preferences.begin(Gateway_Short_Name, false);
+    low_power_mode = preferences.getUInt("low_power_mode", DEFAULT_LOW_POWER_MODE);
+    preferences.end();
+    #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+    setupM5();
     #endif
   #endif
 
@@ -662,7 +672,7 @@ void setup()
 
 #if defined(ESP8266) || defined(ESP32)
 // Bypass for ESP not reconnecting automaticaly the second time https://github.com/espressif/arduino-esp32/issues/2501
-void wifi_reconnect_bypass(){
+bool wifi_reconnect_bypass(){
   uint8_t  wifi_autoreconnect_cnt = 0;
   #ifdef ESP32
     while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < 3) {
@@ -670,19 +680,25 @@ void wifi_reconnect_bypass(){
     while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < 3) {
   #endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
-  WiFi.begin();
-  delay(500);
-  wifi_autoreconnect_cnt++;
+    WiFi.begin();
+    delay(500);
+    wifi_autoreconnect_cnt++;
   } 
+  if(wifi_autoreconnect_cnt < 3)
+  {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // the 2 methods below are used to recover wifi connection by changing the protocols
 void forceWifiProtocol(){
 #ifdef ESP32
-  Log.trace(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
+  Log.warning(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
   esp_wifi_set_protocol(WIFI_IF_STA, wifiProtocol);
 #elif ESP8266
-  Log.trace(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
+  Log.warning(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
   WiFi.setPhyMode((WiFiPhyMode_t)wifiProtocol);
 #endif
 }
@@ -696,21 +712,13 @@ void reinit_wifi()
 }
 
 void disconnection_handling( int failure_number){
-  Log.trace(F("disconnection_handling, failed %d times" CR), failure_number);
+  Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
   if (failure_number > maxConnectionRetry && !connectedOnce)
   {
   #if defined(ESP8266) || defined(ESP32)
     #ifndef ESPWifiManualSetup
-    Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
-    setup_wifimanager(true);
-    #else
-    Log.error(F("Failed connecting 1st time to mqtt, restarting ESP" CR));
-      #ifdef ESP32
-      ESP.restart();
-      #endif
-      #ifdef ESP8266
-      ESP.reset();
-      #endif
+      Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
+      setup_wifimanager(true);
     #endif
   #endif 
   }
@@ -753,7 +761,6 @@ void disconnection_handling( int failure_number){
     reinit_wifi();
   }
 }
-
 
 void setOTA(){
   // Port defaults to 8266
@@ -987,25 +994,33 @@ void setup_wifimanager(bool reset_settings)
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
 
-  wifi_reconnect_bypass();
-
-  //fetches ssid and pass and tries to connect
-  //if it does not connect it starts an access point with the specified name
-  //and goes into a blocking loop awaiting configuration
-  if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password))
+  if(!wifi_reconnect_bypass())// if we didn't connect with saved credential we start Wifimanager web portal
   {
-    Log.warning(F("failed to connect and hit timeout" CR));
-    delay(3000);
-//reset and try again
-    #if defined(ESP8266)
-    ESP.reset();
-    #else
-    ESP.restart();
+    #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+    M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
     #endif
-    delay(5000);
+    //fetches ssid and pass and tries to connect
+    //if it does not connect it starts an access point with the specified name
+    //and goes into a blocking loop awaiting configuration
+    if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password))
+    {
+      Log.warning(F("failed to connect and hit timeout" CR));
+      delay(3000);
+      //reset and try again
+      #if defined(ESP8266)
+      ESP.reset();
+      #else
+      ESP.restart();
+      #endif
+      delay(5000);
+    }
   }
 
-  //if you get here you have connected to the WiFi
+  #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+  M5Display("Wifi connected", "", "");
+  #endif
+
+  //if you get here you are connected to the WiFi
   Log.notice(F("Wifi connected" CR));
 
   //read updated parameters
@@ -1208,7 +1223,11 @@ void loop()
         Log.trace(F("RFM69toMQTT OK" CR));
       #endif
       #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-      stateMeasures();
+      if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)))
+      {
+        timer_sys_measures = millis();
+        stateMeasures();
+      }
       #endif
       #ifdef ZactuatorFASTLED
       FASTLEDLoop();
@@ -1219,7 +1238,7 @@ void loop()
       connectMQTT();
     }
   }
-  else
+  else  
   { // disconnected from network
     #if defined(ESP8266) || defined(ESP32)
     Log.warning(F("wifi disconnected" CR));
@@ -1230,113 +1249,133 @@ void loop()
     Log.warning(F("eth disconnected" CR));
     #endif
   }
+  // Function that doesn't need an active connection
+  #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+  loopM5();
+  #endif
 }
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures()
 {
-  unsigned long now = millis();
-  if (now > (timer_sys_measures + TimeBetweenReadingSYS))
-  {
-    timer_sys_measures = millis();
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject &SYSdata = jsonBuffer.createObject();
-    unsigned long uptime = millis() / 1000;
-    SYSdata["uptime"] = uptime;
-    SYSdata["version"] = OMG_VERSION;
-    Log.trace(F("retriving value of system characteristics Uptime (s):%u" CR),uptime);
-    #if defined(ESP8266) || defined(ESP32)
-      uint32_t freeMem;
-      freeMem = ESP.getFreeHeap();
-      SYSdata["freeMem"] = freeMem;
-      long rssi = WiFi.RSSI();
-      SYSdata["rssi"] = rssi;
-      String SSID = WiFi.SSID();
-      SYSdata["SSID"] = SSID;
-      SYSdata["ip"] = ip2CharArray(WiFi.localIP());
-      String mac = WiFi.macAddress();
-      SYSdata["mac"] = (char *)mac.c_str();
-      SYSdata["wifiPrt"] = (int)wifiProtocol;
-    #else
-      SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject &SYSdata = jsonBuffer.createObject();
+  unsigned long uptime = millis() / 1000;
+  SYSdata["uptime"] = uptime;
+  SYSdata["version"] = OMG_VERSION;
+  Log.trace(F("retriving value of system characteristics Uptime (s):%u" CR),uptime);
+  #if defined(ESP8266) || defined(ESP32)
+    uint32_t freeMem;
+    freeMem = ESP.getFreeHeap();
+    SYSdata["freeMem"] = freeMem;
+    long rssi = WiFi.RSSI();
+    SYSdata["rssi"] = rssi;
+    String SSID = WiFi.SSID();
+    SYSdata["SSID"] = SSID;
+    SYSdata["ip"] = ip2CharArray(WiFi.localIP());
+    String mac = WiFi.macAddress();
+    SYSdata["mac"] = (char *)mac.c_str();
+    SYSdata["wifiPrt"] = (int)wifiProtocol;
+  #else
+    SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
+  #endif
+  String modules = "";
+  #ifdef ZgatewayRF
+  modules = modules + ZgatewayRF;
+  #endif
+  #ifdef ZsensorBME280
+  modules = modules + ZsensorBME280;
+  #endif
+  #ifdef ZsensorHCSR04
+  modules = modules + ZsensorHCSR04;
+  #endif
+  #ifdef ZsensorBH1750
+  modules = modules + ZsensorBH1750;
+  #endif
+  #ifdef ZsensorTSL2561
+  modules = modules + ZsensorTSL2561;
+  #endif
+  #ifdef ZsensorDHT
+  modules = modules + ZsensorDHT;
+  #endif
+  #ifdef ZsensorDS1820
+  modules = modules + ZsensorDS1820;
+  #endif
+  #ifdef ZactuatorONOFF
+  modules = modules + ZactuatorONOFF;
+  #endif
+  #ifdef Zgateway2G
+  modules = modules + Zgateway2G;
+  #endif
+  #ifdef ZgatewayIR
+  modules = modules + ZgatewayIR;
+  #endif
+  #ifdef ZgatewayLORA
+  modules = modules + ZgatewayLORA;
+  #endif
+  #ifdef ZgatewayRF2
+  modules = modules + ZgatewayRF2;
+  #endif
+  #ifdef ZgatewayWeatherStation
+  modules = modules + ZgatewayWeatherStation;
+  #endif
+  #ifdef ZgatewayPilight
+  modules = modules + ZgatewayPilight;
+  #endif
+  #ifdef ZgatewaySRFB
+  modules = modules + ZgatewaySRFB;
+  #endif
+  #ifdef ZgatewayBT
+  modules = modules + ZgatewayBT;
+    #ifdef ESP32
+    SYSdata["low_power_mode"] = (int)low_power_mode;
     #endif
-    String modules = "";
-    #ifdef ZgatewayRF
-    modules = modules + ZgatewayRF;
-    #endif
-    #ifdef ZsensorBME280
-    modules = modules + ZsensorBME280;
-    #endif
-    #ifdef ZsensorHCSR04
-    modules = modules + ZsensorHCSR04;
-    #endif
-    #ifdef ZsensorBH1750
-    modules = modules + ZsensorBH1750;
-    #endif
-    #ifdef ZsensorTSL2561
-    modules = modules + ZsensorTSL2561;
-    #endif
-    #ifdef ZsensorDHT
-    modules = modules + ZsensorDHT;
-    #endif
-    #ifdef ZsensorDS1820
-    modules = modules + ZsensorDS1820;
-    #endif
-    #ifdef ZactuatorONOFF
-    modules = modules + ZactuatorONOFF;
-    #endif
-    #ifdef Zgateway2G
-    modules = modules + Zgateway2G;
-    #endif
-    #ifdef ZgatewayIR
-    modules = modules + ZgatewayIR;
-    #endif
-    #ifdef ZgatewayLORA
-    modules = modules + ZgatewayLORA;
-    #endif
-    #ifdef ZgatewayRF2
-    modules = modules + ZgatewayRF2;
-    #endif
-    #ifdef ZgatewayWeatherStation
-    modules = modules + ZgatewayWeatherStation;
-    #endif
-    #ifdef ZgatewayPilight
-    modules = modules + ZgatewayPilight;
-    #endif
-    #ifdef ZgatewaySRFB
-    modules = modules + ZgatewaySRFB;
-    #endif
-    #ifdef ZgatewayBT
-    modules = modules + ZgatewayBT;
-    #endif
-    #ifdef ZgatewayRFM69
-    modules = modules + ZgatewayRFM69;
-    #endif
-    #ifdef ZsensorINA226
-    modules = modules + ZsensorINA226;
-    #endif
-    #ifdef ZsensorHCSR501
-    modules = modules + ZsensorHCSR501;
-    #endif
-    #ifdef ZsensorGPIOInput
-    modules = modules + ZsensorGPIOInput;
-    #endif
-    #ifdef ZsensorGPIOKeyCode
-    modules = modules + ZsensorGPIOKeyCode;
-    #endif
-    #ifdef ZsensorGPIOKeyCode
-    modules = modules + ZsensorGPIOKeyCode;
-    #endif
-    #ifdef ZmqttDiscovery
-    modules = modules + ZmqttDiscovery;
-    #endif
-    #ifdef ZactuatorFASTLED
-    modules = modules + ZactuatorFASTLED;
-    #endif
-
-    SYSdata["modules"] = modules;
-    pub(subjectSYStoMQTT, SYSdata);
-  }
+  #endif
+  #ifdef ZgatewayRFM69
+  modules = modules + ZgatewayRFM69;
+  #endif
+  #ifdef ZsensorINA226
+  modules = modules + ZsensorINA226;
+  #endif
+  #ifdef ZsensorHCSR501
+  modules = modules + ZsensorHCSR501;
+  #endif
+  #ifdef ZsensorGPIOInput
+  modules = modules + ZsensorGPIOInput;
+  #endif
+  #ifdef ZsensorGPIOKeyCode
+  modules = modules + ZsensorGPIOKeyCode;
+  #endif
+  #ifdef ZsensorGPIOKeyCode
+  modules = modules + ZsensorGPIOKeyCode;
+  #endif
+  #ifdef ZmqttDiscovery
+  modules = modules + ZmqttDiscovery;
+  #endif
+  #ifdef ZactuatorFASTLED
+  modules = modules + ZactuatorFASTLED;
+  #endif
+  #ifdef ZboardM5STACK
+  M5.Power.begin();
+  SYSdata["m5-batt-level"] = (int8_t)M5.Power.getBatteryLevel();
+  SYSdata["m5-is-charging"] = (bool)M5.Power.isCharging();
+  SYSdata["m5-is-chargefull"] = (bool)M5.Power.isChargeFull();
+  #endif
+  #ifdef ZboardM5STICKC
+  M5.Axp.EnableCoulombcounter();
+  SYSdata["m5-bat-voltage"] = (float)M5.Axp.GetBatVoltage();
+  SYSdata["m5-bat-current"] = (float)M5.Axp.GetBatCurrent();
+  SYSdata["m5-vin-voltage"] = (float)M5.Axp.GetVinVoltage();
+  SYSdata["m5-vin-current"] = (float)M5.Axp.GetVinCurrent();
+  SYSdata["m5-vbus-voltage"] = (float)M5.Axp.GetVBusVoltage();
+  SYSdata["m5-vbus-current"] = (float)M5.Axp.GetVBusCurrent();
+  SYSdata["m5-temp-axp"] = (float)M5.Axp.GetTempInAXP192();
+  SYSdata["m5-bat-power"] = (float)M5.Axp.GetBatPower();
+  SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
+  SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
+  #endif
+  SYSdata["modules"] = modules;
+  pub(subjectSYStoMQTT, SYSdata);
 }
 #endif
 
@@ -1451,6 +1490,9 @@ void receivingMQTT(char *topicOri, char *datacallback)
       #ifdef ZactuatorFASTLED
       MQTTtoFASTLED(topicOri, jsondata);
       #endif
+      #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+      MQTTtoM5(topicOri, jsondata);
+      #endif 
     #endif
     #ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);

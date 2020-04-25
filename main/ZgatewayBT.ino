@@ -32,8 +32,12 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #ifdef ESP32
 #include "FreeRTOS.h"
-
 FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createOrUpdateDevice");
+  // Headers used for deep sleep functions
+  #include <esp_wifi.h>
+  #include <esp_bt.h>
+  #include <esp_bt_main.h>
+  #include <driver/adc.h>
 #endif
 
 #ifdef ZgatewayBT
@@ -553,29 +557,95 @@ void BLEscan()
 
 void coreTask(void *pvParameters)
 {
-
   while (true)
   {
-    Log.trace(F('BT Task running on core: %d'),xPortGetCoreID());
-    delay(BLEinterval);
-    if (client.state() == 0)
+    Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
+    if (!low_power_mode)
+      delay(BLEinterval);
+    int n = 0;
+    while (client.state() != 0 && n <= TimeBeforeMQTTconnect)
     {
-      BLEscan();
+      n++;
+      Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
+      delay(1000);
     }
-    else
+    if(client.state() != 0 ) 
     {
       Log.warning(F("MQTT client disconnected no BLE scan" CR));
       delay(1000);
     }
+    else 
+    {
+      pinMode(LOW_POWER_LED, OUTPUT);
+      if (low_power_mode == 2)
+        digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
+      BLEscan();
+      digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF); // to switch off no need of condition
+    }
+    if(low_power_mode)
+      lowPowerESP32();
   }
+}
+
+void lowPowerESP32() // low power mode
+{
+  stateMeasures(); // publish MQTT SYS data before going to sleep
+  Log.trace(F("Going to deep sleep for: %l s" CR), (BLEinterval / 1000));
+  deepSleep(BLEinterval * 1000);
+}
+
+void deepSleep(uint64_t time_in_us)
+{
+  #if defined(ZboardM5STACK) || defined(ZboardM5STICKC)
+  sleepScreen();
+  esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
+  #endif
+  
+
+  Log.trace(F("Deactivating ESP32 components" CR));
+  esp_wifi_stop();
+  esp_bluedroid_disable();
+  esp_bluedroid_deinit();
+  esp_bt_controller_disable();
+  esp_bt_controller_deinit();
+  esp_bt_mem_release(ESP_BT_MODE_BTDM);
+  adc_power_off();
+  esp_wifi_stop();
+  esp_deep_sleep(time_in_us);
+}
+
+void changelow_power_mode(int newLowPowerMode)
+{
+  Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
+  #if defined(ZboardM5STACK) || defined(ZboardM5STICKC)
+  if (low_power_mode == 2)
+  {
+    #ifdef ZboardM5STACK
+    M5.Lcd.wakeup();
+    #endif
+    #ifdef ZboardM5STICKC
+    M5.Axp.SetLDO2(true);
+    M5.Lcd.begin();
+    #endif
+  }
+  char lpm[2];
+  sprintf(lpm, "%d", newLowPowerMode);
+  M5Display("Changing LOW POWER mode to:", lpm, "");
+  #endif
+  low_power_mode = newLowPowerMode;
+  preferences.begin(Gateway_Short_Name, false);
+  preferences.putUInt("low_power_mode", low_power_mode);
+  preferences.end();
 }
 
 void setupBT()
 {
   BLEinterval = TimeBtw_Read;
   Minrssi = MinimumRSSI;
-  Log.notice(F("BLEinterval: %d" CR),BLEinterval);
-  Log.notice(F("Minrssi: %d" CR),Minrssi);
+  Log.notice(F("BLEinterval: %d" CR), BLEinterval);
+  Log.notice(F("Minrssi: %d" CR), Minrssi);
+  Log.notice(F("Low Power Mode: %d" CR), low_power_mode);
+
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
       coreTask,   /* Function to implement the task */
@@ -1111,6 +1181,12 @@ void MQTTtoBT(char *topicOri, JsonObject &BTdata)
       Minrssi = (unsigned int)BTdata["minrssi"];
       Log.notice(F("New Minrssi: %d" CR), Minrssi);
     }
+    #ifdef ESP32
+    if (BTdata.containsKey("low_power_mode"))
+    {
+      changelow_power_mode((int)BTdata["low_power_mode"]);
+    }
+    #endif
   }
 }
 
