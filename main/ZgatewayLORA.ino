@@ -45,12 +45,12 @@ void setupLORA()
       ;
   }
   LoRa.receive();
-  Log.notice(F("LORA_SCK: %s" CR), LORA_SCK);
-  Log.notice(F("LORA_MISO: %s" CR), LORA_MISO);
-  Log.notice(F("LORA_MOSI: %s" CR), LORA_MOSI);
-  Log.notice(F("LORA_SS: %s" CR), LORA_SS);
-  Log.notice(F("LORA_RST: %s" CR), LORA_RST);
-  Log.notice(F("LORA_DI0: %s" CR), LORA_DI0);
+  Log.notice(F("LORA_SCK: %d" CR), LORA_SCK);
+  Log.notice(F("LORA_MISO: %d" CR), LORA_MISO);
+  Log.notice(F("LORA_MOSI: %d" CR), LORA_MOSI);
+  Log.notice(F("LORA_SS: %d" CR), LORA_SS);
+  Log.notice(F("LORA_RST: %d" CR), LORA_RST);
+  Log.notice(F("LORA_DI0: %d" CR), LORA_DI0);
   Log.trace(F("ZgatewayLORA setup done" CR));
 }
 
