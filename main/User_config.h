@@ -28,7 +28,7 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "version_tag"
+#define OMG_VERSION "v0.9.4beta"
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
