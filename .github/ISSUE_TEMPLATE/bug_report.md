@@ -5,7 +5,7 @@ about: Create a report to help us improve
 ---
 
 Before submitting a problem please check the troubleshooting section
-https://github.com/1technophile/OpenMQTTGateway/wiki/Troubleshooting
+https://docs.openmqttgateway.com/upload/troubleshoot.html
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -23,7 +23,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment (please complete the following information):**
-* OpenMQTTGateway version used (V0.4, 0.3, master...)
+* OpenMQTTGateway version used (V0.9.3, 0.8, development)
 * Library version related to the problem you have (if you have troubles with RF provide the version of RCSwitch library)
 * For IR and RF clarify if you tested with the basic examples given with these libraries
 
