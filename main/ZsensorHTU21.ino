@@ -47,7 +47,7 @@
 unsigned long timehtu21 = 0;
 
 //Global sensor object
-HTU21D mySensor;
+HTU21D htuSensor;
 
 void setupZsensorHTU21()
 {
@@ -56,10 +56,10 @@ void setupZsensorHTU21()
 
 #if defined(ESP32)
   Wire.begin(I2C_SDA, I2C_SCL);
-  mySensor.begin(Wire);
+  htuSensor.begin(Wire);
 #else
 #endif
-  mySensor.begin();
+  htuSensor.begin();
 }
 
 void MeasureTempHum()
@@ -73,8 +73,8 @@ void MeasureTempHum()
     static float persisted_htu_tempc;
     static float persisted_htu_hum;
 
-    float HtuTempC = mySensor.readTemperature();
-    float HtuHum = mySensor.readHumidity();
+    float HtuTempC = htuSensor.readTemperature();
+    float HtuHum = htuSensor.readHumidity();
 
     if (HtuTempC >= 998 || HtuHum >= 998 )
     {
