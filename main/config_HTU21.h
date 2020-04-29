@@ -19,9 +19,7 @@
    GND ---------> GND ------------------> GND
    SCL ---------> Pin A5 ---------------> D1
    SDA ---------> Pin A4 ---------------> D2
- 
-    Copyright: (c) Hans-Juergen Dinges
-  
+   
     This file is part of OpenMQTTGateway.
     
     OpenMQTTGateway is free software: you can redistribute it and/or modify
@@ -49,9 +47,6 @@ extern void HTU21toMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define HTUTOPIC   "/CLIMAtoMQTT/htu"
-
-//Time used to wait for an interval before resending measured values
-unsigned long timehtu21 = 0;
 
 #if defined(ESP32)
   #define I2C_SDA 16

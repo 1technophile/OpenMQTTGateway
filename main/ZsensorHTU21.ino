@@ -19,9 +19,7 @@
    GND ---------> GND ------------------> GND
    SCL ---------> Pin A5 ---------------> D1
    SDA ---------> Pin A4 ---------------> D2
- 
-    Copyright: (c) Hans-Juergen Dinges
-  
+   
     This file is part of OpenMQTTGateway.
     
     OpenMQTTGateway is free software: you can redistribute it and/or modify
@@ -45,13 +43,16 @@
 #include "SparkFunHTU21D.h"
 #include "config_HTU21.h"
 
+//Time used to wait for an interval before resending measured values
+unsigned long timehtu21 = 0;
+
 //Global sensor object
 HTU21D mySensor;
 
 void setupZsensorHTU21()
 {
   delay(10); // Gives the Sensor enough time to turn on
-  Serial.println("HTU21 Initialized - begin()");
+  Log.notice(F("HTU21 Initialized - begin()" CR));
 
 #if defined(ESP32)
   Wire.begin(I2C_SDA, I2C_SCL);
