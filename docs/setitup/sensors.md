@@ -7,6 +7,7 @@
 |HCSR501|PIR|[parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
 |BH1750|Digital light|[parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
 |BME280|Temperature, Humidity and pressure|[parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|HTU21|Temperature, Humidity|[parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
 |GPIO Input|Inputs|-|
 |GPIO KeyCode|Keycode|[parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
 |INA226|Current and voltage|[parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
@@ -22,6 +23,8 @@
 |BH1750 SCL|A5|D1|22|
 |BME280 SDA|A4|D2|21|
 |BME280 SCL|A5|D1|22|
+|HTU21 SDA|A4|D2|21|
+|HTU21 SCL|A5|D1|22|
 |INA226 SDA|A4|D2|21|
 |INA226 SCL|A5|D1|22|
 |TSL2561 SDA|A4|D2|21|

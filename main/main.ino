@@ -85,6 +85,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #ifdef ZsensorBME280
 #include "config_BME280.h"
 #endif
+#ifdef ZsensorHTU21
+#include "config_HTU21.h"
+#endif
 #ifdef ZsensorHCSR04
 #include "config_HCSR04.h"
 #endif
@@ -598,6 +601,9 @@ void setup()
 
   #ifdef ZsensorBME280
   setupZsensorBME280();
+  #endif
+  #ifdef ZsensorHTU21
+  setupZsensorHTU21();
   #endif
   #ifdef ZsensorBH1750
   setupZsensorBH1750();
@@ -1157,6 +1163,9 @@ void loop()
       #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
       #endif
+      #ifdef ZsensorHTU21
+      MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
+      #endif
       #ifdef ZsensorHCSR04
       MeasureDistance(); //Addon to measure distance with a HC-SR04
       #endif
@@ -1285,6 +1294,9 @@ void stateMeasures()
   #endif
   #ifdef ZsensorBME280
   modules = modules + ZsensorBME280;
+  #endif
+  #ifdef ZsensorHTU21
+  modules = modules + ZsensorHTU21;
   #endif
   #ifdef ZsensorHCSR04
   modules = modules + ZsensorHCSR04;
