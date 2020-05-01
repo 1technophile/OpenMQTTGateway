@@ -41,7 +41,7 @@ void PairedDeviceAdded(byte newID)
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject &RFdata = jsonBuffer.createObject();
     RFdata.set("sensor", newID);
-    RFdata.set("action", "paried");
+    RFdata.set("action", "paired");
     pub(subjectRFtoMQTT, RFdata);
     wsdr.pair(NULL, PairedDeviceAdded);
 }
