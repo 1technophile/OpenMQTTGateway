@@ -35,16 +35,21 @@ extern void DS1820toMQTT();
 #define DS1820_ALWAYS  true // if false only published current temperature if has changed from previous reading
 #define DS1820_INTERVAL_SEC 60 // time between DS1820 readings (seconds)
 #define DS1820_RESOLUTION  10  // conversion times: 9 bit (93.75 ms), 10 bit (187.5 ms), 11 bit (375 ms), 12 bit (750 ms)
-#define DS1820_FAHRENHEIT  false // defaults to Celcius
+#ifndef DS1820_FAHRENHEIT
+  #define DS1820_FAHRENHEIT  false // defaults to Celcius
+#endif
 #define DS1820_DETAILS  true // publish extented info for each sensor (resolution, address, type)
 #define DS1820_CONV_TIME  2000  // trigger conversion before requesting temperature readings (ms)
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266)
-  #define DS1820_OWBUS_PIN 2
-#elif defined(ESP32)
-  #define DS1820_OWBUS_PIN 2
-#else
-  #define DS1820_OWBUS_PIN 2
+
+#ifndef DS1820_OWBUS_PIN
+  #if defined(ESP8266)
+    #define DS1820_OWBUS_PIN 2
+  #elif defined(ESP32)
+    #define DS1820_OWBUS_PIN 2
+  #else
+    #define DS1820_OWBUS_PIN 2
+  #endif
 #endif
 
 #endif

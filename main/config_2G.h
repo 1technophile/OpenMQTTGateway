@@ -42,18 +42,21 @@ extern void MQTTto2G(char *topicOri, JsonObject &SMSdata);
 #define _2G_MAX_SIGNAL 1000
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
-  #define _2G_TX_PIN D6  //D6 to A6 RX,
-  #define _2G_RX_PIN D7  //D7 to A6 TX
-  #define _2G_PWR_PIN D5 // connect a MOSFET to power on and off your A6/7 module
-#elif defined(ESP32)
-  #define _2G_TX_PIN 16 //D16 to A6 RX,
-  #define _2G_RX_PIN 17 //D17 to A6 TX
-  #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
-#else
-  #define _2G_TX_PIN 6  //D6 to A6 RX,
-  #define _2G_RX_PIN 7  //D7 to A6 TX
-  #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
+
+#if !defined(_2G_TX_PIN) || !defined(_2G_RX_PIN) || !defined(_2G_PWR_PIN)
+  #ifdef ESP8266
+    #define _2G_TX_PIN D6  //D6 to A6 RX,
+    #define _2G_RX_PIN D7  //D7 to A6 TX
+    #define _2G_PWR_PIN D5 // connect a MOSFET to power on and off your A6/7 module
+  #elif defined(ESP32)
+    #define _2G_TX_PIN 16 //D16 to A6 RX,
+    #define _2G_RX_PIN 17 //D17 to A6 TX
+    #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
+  #else
+    #define _2G_TX_PIN 6  //D6 to A6 RX,
+    #define _2G_RX_PIN 7  //D7 to A6 TX
+    #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
+  #endif
 #endif
 
 #endif
