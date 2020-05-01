@@ -580,7 +580,9 @@ void coreTask(void *pvParameters)
       if (low_power_mode == 2)
         digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
       BLEscan();
-      digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF); // to switch off no need of condition
+      //only change LOW_POWER_LED if low power mode is enabled
+      if (low_power_mode)
+        digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
     }
     if(low_power_mode)
       lowPowerESP32();
