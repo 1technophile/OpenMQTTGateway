@@ -42,7 +42,6 @@ extern void MQTTto2G(char *topicOri, JsonObject &SMSdata);
 #define _2G_MAX_SIGNAL 1000
 
 /*-------------------PIN DEFINITIONS----------------------*/
-
 #if !defined(_2G_TX_PIN) || !defined(_2G_RX_PIN) || !defined(_2G_PWR_PIN)
   #ifdef ESP8266
     #define _2G_TX_PIN D6  //D6 to A6 RX,
