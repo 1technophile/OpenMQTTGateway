@@ -82,7 +82,11 @@ void createDiscovery(char *sensor_type,
   strcat(state_topic, st_topic);
   sensor.set("stat_t", state_topic); //state_topic
 
-  sensor.set("name", s_name);       //name
+  String grouped_s_name = String(Gateway_Short_Name);
+  grouped_s_name.concat('_');
+  grouped_s_name.concat(s_name);
+
+  sensor.set("name", grouped_s_name);       //name
   sensor.set("uniq_id", unique_id); //unique_id
   if (device_class[0])
     sensor.set("dev_cla", device_class); //device_class
