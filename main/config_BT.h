@@ -32,7 +32,6 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  "/BTtoMQTT"
 #define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
-#define TimeBtw_Read 55555 //define default time between 2 scans
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 #define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #define HM-10
@@ -40,8 +39,16 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
 #define BLEdelimiter "4f4b2b444953413a"
 
+#ifndef TimeBtw_Read
+  #define TimeBtw_Read 55555 //define default time between 2 scans
+#endif
+
 #ifndef pubBLEServiceData
   #define pubBLEServiceData true // comment if you don't want to publish service data (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+#endif
+
+#ifndef pubBLEManufacturerData
+  #define pubBLEManufacturerData true // comment if you don't want to publish the manufacturer's data (in case data has characters that aren't valid with receiving client)
 #endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
