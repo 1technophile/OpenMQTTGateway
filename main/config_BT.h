@@ -48,7 +48,7 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 #endif
 
 #ifndef pubBLEManufacturerData
-  #define pubBLEManufacturerData true // comment if you don't want to publish the manufacturer's data (in case data has characters that aren't valid with receiving client)
+  #define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
 #endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
