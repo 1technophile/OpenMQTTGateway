@@ -32,14 +32,24 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT  "/BTtoMQTT"
 #define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
-#define TimeBtw_Read 55555 //define default time between 2 scans
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 #define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #define HM-10
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
 #define BLEdelimiter "4f4b2b444953413a"
-#define pubBLEServiceData true // comment if you don't want to publish service data (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+
+#ifndef TimeBtw_Read
+  #define TimeBtw_Read 55555 //define default time between 2 scans
+#endif
+
+#ifndef pubBLEServiceData
+  #define pubBLEServiceData true // comment if you don't want to publish service data (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+#endif
+
+#ifndef pubBLEManufacturerData
+  #define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+#endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 // if not commented Home presence integration with HOME ASSISTANT is activated
@@ -68,15 +78,17 @@ struct decompose{
 };
      
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
-  #define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
-  #define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
-#elif defined(ESP32)
-  #define BT_RX 18 // not tested
-  #define BT_TX 19 // not tested
-#else
-  #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
-  #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
+#if !defined(BT_RX) || !defined(BT_TX)
+  #ifdef ESP8266
+    #define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
+    #define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
+  #elif defined(ESP32)
+    #define BT_RX 18 // not tested
+    #define BT_TX 19 // not tested
+  #else
+    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
+  #endif
 #endif
 
 #endif

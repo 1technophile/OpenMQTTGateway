@@ -32,15 +32,19 @@ extern void HCSR501toMQTT();
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectHCSR501toMQTT    "/HCSR501toMQTT"
 
-#define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
+#ifndef TimeBeforeStartHCSR501
+  #define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) 
-  #define HCSR501_PIN D5
-#elif defined(ESP32)
-  #define HCSR501_PIN 5
-#else
-  #define HCSR501_PIN 7
+#ifndef HCSR501_PIN
+  #if defined(ESP8266) 
+    #define HCSR501_PIN D5
+  #elif defined(ESP32)
+    #define HCSR501_PIN 5
+  #else
+    #define HCSR501_PIN 7
+  #endif
 #endif
 
 #endif

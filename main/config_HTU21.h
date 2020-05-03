@@ -49,8 +49,10 @@ extern void HTU21toMQTT();
 #define HTUTOPIC   "/CLIMAtoMQTT/htu"
 
 #if defined(ESP32)
-  #define I2C_SDA 16
-  #define I2C_SCL 0
+  #if !defined(I2C_SDA) || !defined(I2C_SCL)
+    #define I2C_SDA 16
+    #define I2C_SCL 0
+  #endif
 #endif
 
 #endif
