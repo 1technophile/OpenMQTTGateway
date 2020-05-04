@@ -87,7 +87,8 @@
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
-#define maxConnectionRetry 10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
+#define maxConnectionRetry      10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
+#define maxConnectionRetryWifi  5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8

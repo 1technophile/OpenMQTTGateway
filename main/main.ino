@@ -462,7 +462,8 @@ void connectMQTT()
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message))
   {
     #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
-    M5Display("MQTT connected", "", "");
+    if (low_power_mode < 2) 
+      M5Display("MQTT connected", "", "");
     #endif
     Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
@@ -681,16 +682,16 @@ void setup()
 bool wifi_reconnect_bypass(){
   uint8_t  wifi_autoreconnect_cnt = 0;
   #ifdef ESP32
-    while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < 3) {
+    while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
   #else
-    while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < 3) {
+    while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
   #endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
     WiFi.begin();
     delay(500);
     wifi_autoreconnect_cnt++;
   } 
-  if(wifi_autoreconnect_cnt < 3)
+  if(wifi_autoreconnect_cnt < maxConnectionRetryWifi)
   {
     return true;
   } else {
@@ -721,12 +722,10 @@ void disconnection_handling( int failure_number){
   Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
   if (failure_number > maxConnectionRetry && !connectedOnce)
   {
-  #if defined(ESP8266) || defined(ESP32)
-    #ifndef ESPWifiManualSetup
-      Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
-      setup_wifimanager(true);
-    #endif
-  #endif 
+  #ifndef ESPWifiManualSetup
+    Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
+    setup_wifimanager(true);
+  #endif
   }
   else if (failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_BG && connectedOnce)
   {
@@ -737,8 +736,7 @@ void disconnection_handling( int failure_number){
   {
     #ifdef ESP32
     wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
-    #endif
-    #ifdef ESP8266
+    #elif ESP8266
     wifiProtocol = WIFI_PHY_MODE_11G;
     #endif
     Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
@@ -748,8 +746,7 @@ void disconnection_handling( int failure_number){
   {
     #ifdef ESP32
     wifiProtocol = WIFI_PROTOCOL_11B;
-    #endif
-    #ifdef ESP8266
+    #elif ESP8266
     wifiProtocol = WIFI_PHY_MODE_11B;
     #endif
     Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
@@ -759,8 +756,7 @@ void disconnection_handling( int failure_number){
   {
     #ifdef ESP32
     wifiProtocol = 0;
-    #endif
-    #ifdef ESP8266
+    #elif ESP8266
     wifiProtocol = 0;
     #endif
     Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
@@ -813,7 +809,7 @@ void setup_wifi()
   if (!wifiProtocol) forceWifiProtocol();
 
   // We start by connecting to a WiFi network
-  Log.trace(F("Connecting to %s" CR),wifi_ssid);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid);
   #ifdef ESPWifiAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
@@ -828,7 +824,8 @@ void setup_wifi()
   WiFi.begin(wifi_ssid, wifi_password);
   #endif
 
-  wifi_reconnect_bypass();
+  if(wifi_reconnect_bypass());
+    Log.notice(F("Connected with saved credentials" CR));
 
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -1002,9 +999,20 @@ void setup_wifimanager(bool reset_settings)
 
   if(!wifi_reconnect_bypass())// if we didn't connect with saved credential we start Wifimanager web portal
   {
-    #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
-    M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
+    #ifdef ESP32
+    if (low_power_mode < 2)
+    {
+      #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+      M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
+      #endif
+    } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
+      #ifdef ZgatewayBT
+      lowPowerESP32();
+      #endif
+    }
     #endif
+
+    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password );
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
@@ -1023,11 +1031,9 @@ void setup_wifimanager(bool reset_settings)
   }
 
   #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
-  M5Display("Wifi connected", "", "");
+  if (low_power_mode < 2) 
+    M5Display("Wifi connected", "", "");
   #endif
-
-  //if you get here you are connected to the WiFi
-  Log.notice(F("Wifi connected" CR));
 
   //read updated parameters
   strcpy(mqtt_server, custom_mqtt_server.getValue());
@@ -1160,6 +1166,13 @@ void loop()
       ArduinoOTA.handle();
       #endif
 
+      #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+      if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures)
+      {
+        timer_sys_measures = millis();
+        stateMeasures();
+      }
+      #endif
       #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
       #endif
@@ -1231,13 +1244,6 @@ void loop()
       if (RFM69toMQTT())
         Log.trace(F("RFM69toMQTT OK" CR));
       #endif
-      #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-      if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)))
-      {
-        timer_sys_measures = millis();
-        stateMeasures();
-      }
-      #endif
       #ifdef ZactuatorFASTLED
       FASTLEDLoop();
       #endif
@@ -1276,7 +1282,7 @@ void stateMeasures()
   #if defined(ESP8266) || defined(ESP32)
     uint32_t freeMem;
     freeMem = ESP.getFreeHeap();
-    SYSdata["freeMem"] = freeMem;
+    SYSdata["freemem"] = freeMem;
     long rssi = WiFi.RSSI();
     SYSdata["rssi"] = rssi;
     String SSID = WiFi.SSID();
@@ -1284,7 +1290,7 @@ void stateMeasures()
     SYSdata["ip"] = ip2CharArray(WiFi.localIP());
     String mac = WiFi.macAddress();
     SYSdata["mac"] = (char *)mac.c_str();
-    SYSdata["wifiPrt"] = (int)wifiProtocol;
+    SYSdata["wifiprt"] = (int)wifiProtocol;
   #else
     SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
   #endif
@@ -1340,7 +1346,7 @@ void stateMeasures()
   #ifdef ZgatewayBT
   modules = modules + ZgatewayBT;
     #ifdef ESP32
-    SYSdata["low_power_mode"] = (int)low_power_mode;
+    SYSdata["lowpowermode"] = (int)low_power_mode;
     #endif
   #endif
   #ifdef ZgatewayRFM69

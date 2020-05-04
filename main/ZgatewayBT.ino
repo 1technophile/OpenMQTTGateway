@@ -591,7 +591,6 @@ void coreTask(void *pvParameters)
 
 void lowPowerESP32() // low power mode
 {
-  stateMeasures(); // publish MQTT SYS data before going to sleep
   Log.trace(F("Going to deep sleep for: %l s" CR), (BLEinterval / 1000));
   deepSleep(BLEinterval * 1000);
 }
@@ -602,7 +601,6 @@ void deepSleep(uint64_t time_in_us)
   sleepScreen();
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
   #endif
-  
 
   Log.trace(F("Deactivating ESP32 components" CR));
   esp_wifi_stop();
@@ -642,8 +640,6 @@ void changelow_power_mode(int newLowPowerMode)
 
 void setupBT()
 {
-  BLEinterval = TimeBtw_Read;
-  Minrssi = MinimumRSSI;
   Log.notice(F("BLEinterval: %d" CR), BLEinterval);
   Log.notice(F("Minrssi: %d" CR), Minrssi);
   Log.notice(F("Low Power Mode: %d" CR), low_power_mode);

@@ -13,6 +13,10 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
 
+::: warning
+If you change the default low power mode in config_BT.h to 2 and your credential are not set or not correct, the ESP32 will not connect to the broker and the only way to change the low power mode will be a new erase/upload.
+:::
+
 ## M5Stick C or M5Stack
 
 ### Behaviour
