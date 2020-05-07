@@ -55,8 +55,8 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 // if not commented Home presence integration with HOME ASSISTANT is activated
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
-unsigned int BLEinterval ; //time between 2 scans
-int Minrssi ; //minimum rssi value
+unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
+int Minrssi = MinimumRSSI; //minimum rssi value
 
 struct BLEdevice{
   char macAdr[13];

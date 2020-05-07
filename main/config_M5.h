@@ -45,7 +45,7 @@ extern void loopM5();
 #endif
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL_LCD LOG_LEVEL_WARNING // if we go down below warning the size of the text to display can make the M5 restarting
-#define LOG_TO_LCD true //comment if you want to use serial monitor for the log per default instead of the M5 screen
+#define LOG_TO_LCD true //set to false if you want to use serial monitor for the log per default instead of the M5 screen
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 #define subjectMQTTtoM5set  "/commands/MQTTtoM5/config"
 

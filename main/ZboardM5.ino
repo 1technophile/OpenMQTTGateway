@@ -64,14 +64,14 @@ void setupM5()
         wakeScreen(NORMAL_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(WHITE);
         displayIntro(M5.Lcd.width() * 0.25,  (M5.Lcd.width() / 2) + M5.Lcd.width() * 0.12, (M5.Lcd.height()/2) + M5.Lcd.height() * 0.2);
-        #ifdef LOG_TO_LCD
+        #if LOG_TO_LCD
         Log.begin(LOG_LEVEL_LCD, &M5.Lcd); // Log on LCD following LOG_LEVEL_LCD
         #endif
         break;
         case 1:
         wakeScreen(SLEEP_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(WHITE);
-        #ifdef LOG_TO_LCD
+        #if LOG_TO_LCD
         Log.begin(LOG_LEVEL_LCD, &M5.Lcd); // Log on LCD following LOG_LEVEL_LCD
         #endif
         break;
