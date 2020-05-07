@@ -58,8 +58,8 @@ void setupZsensorHTU21()
   Wire.begin(I2C_SDA, I2C_SCL);
   htuSensor.begin(Wire);
 #else
-#endif
   htuSensor.begin();
+#endif
 }
 
 void MeasureTempHum()

@@ -21,6 +21,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef config_FASTLED_h
+#define config_FASTLED_h
+
 /*-------------------FASTLED topics & parameters----------------------*/
 //FASTLED MQTT Subjects
 #define subjectMQTTtoFASTLED "/commands/MQTTtoFASTLED"
@@ -67,14 +70,6 @@
 //#define CLOCK_PIN 13
 
 #ifdef ESP8266
-
-#elif ESP32
-
-#else
-
-#endif
-
-#ifdef ESP8266
 //#define FASTLED_ESP8266_RAW_PIN_ORDER
 //#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
 #define FASTLED_ESP8266_D1_PIN_ORDER
@@ -86,4 +81,6 @@
 #else
 #define FASTLED_DATA_PIN 10
 #define FASTLED_CLOCK_PIN 13
+#endif
+
 #endif

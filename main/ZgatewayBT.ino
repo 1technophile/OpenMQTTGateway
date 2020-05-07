@@ -341,8 +341,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice.haveName())
         BLEdata.set("name", (char *)advertisedDevice.getName().c_str());
+      #if pubBLEManufacturerData
       if (advertisedDevice.haveManufacturerData())
         BLEdata.set("manufacturerdata", (char *)advertisedDevice.getManufacturerData().c_str());
+      #endif
       if (advertisedDevice.haveRSSI())
         BLEdata.set("rssi", (int)advertisedDevice.getRSSI());
       if (advertisedDevice.haveTXPower())
