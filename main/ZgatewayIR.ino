@@ -39,11 +39,14 @@ IRrecv irrecv(IR_RECEIVER_PIN, 1024, 15U, true);
 #else
 IRrecv irrecv(IR_RECEIVER_PIN);
 #endif
-IRsend irsend(IR_EMITTER_PIN);
+IRsend irsend0(IR_EMITTER_PIN_0);
+#ifdef IR_EMITTER_PIN_1
+IRsend irsend1(IR_EMITTER_PIN_1);
+#endif
 #else
 #include <IRremote.h>
 IRrecv irrecv(IR_RECEIVER_PIN);
-IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
+IRsend irsend0; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
 #endif
 
 // IR protocol bits definition for Arduino (for ESP9266 they are defined in IRRemoteESP8266.h)
@@ -98,12 +101,18 @@ void setupIR()
 {
 //IR init parameters
 #if defined(ESP8266) || defined(ESP32)
-  irsend.begin();
+  irsend0.begin();
+#ifdef IR_EMITTER_PIN_1
+  irsend1.begin();
+#endif
 #endif
 
   irrecv.enableIRIn(); // Start the receiver
 
-  Log.notice(F("IR_EMITTER_PIN: %d " CR), IR_EMITTER_PIN);
+  Log.notice(F("IR_EMITTER_PIN_0: %d " CR), IR_EMITTER_PIN_0);
+#ifdef IR_EMITTER_PIN_1
+  Log.notice(F("IR_EMITTER_PIN_1: %d " CR), IR_EMITTER_PIN_1);
+#endif
   Log.notice(F("IR_RECEIVER_PIN: %d " CR), IR_RECEIVER_PIN);
   Log.trace(F("ZgatewayIR setup done " CR));
 }
@@ -163,7 +172,10 @@ void IRtoMQTT()
 #endif
       rawsend[i] = results.rawbuf[i];
     }
-    irsend.sendRaw(rawsend, results.rawlen, RawFrequency);
+    irsend0.sendRaw(rawsend, results.rawlen, RawFrequency);
+#ifdef IR_EMITTER_PIN_1
+    irsend1.sendRaw(rawsend, results.rawlen, RawFrequency);
+#endif
     Log.trace(F("raw redirected" CR));
 #endif
     irrecv.resume(); // Receive the next value
@@ -199,6 +211,13 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
     const char *raw = IRdata["raw"];
     const char *datastring = IRdata["datastring"];
     const char *hex = IRdata["hex"];
+    unsigned short out = IRdata["out"] | 0;
+    IRsend irsend = irsend0;
+#ifdef IR_EMITTER_PIN_1
+    if (out == 1) {
+      irsend = irsend1;
+    }
+#endif
     if (hex) {// we privilegiate the hex usage over the value one (less risk of error)
       data = getUInt64fromHex(hex);
     }
@@ -289,7 +308,7 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
       else if (protocol_name && (strstr(protocol_name, "NEC") == NULL))
       {
         Log.trace(F("Using Identified Protocol: %s  bits: %d repeat: %d" CR),protocol_name, valueBITS, valueRPT);
-        signalSent = sendIdentifiedProtocol(protocol_name, data, datastring, valueBITS, valueRPT);
+        signalSent = sendIdentifiedProtocol(protocol_name, data, datastring, valueBITS, valueRPT, out);
       }
       else
       {
@@ -319,11 +338,17 @@ void MQTTtoIR(char *topicOri, JsonObject &IRdata)
 }
 #endif
 
-bool sendIdentifiedProtocol(const char *protocol_name, unsigned long long data, const char *datastring, unsigned int valueBITS, uint16_t valueRPT)
+bool sendIdentifiedProtocol(const char *protocol_name, unsigned long long data, const char *datastring, unsigned int valueBITS, uint16_t valueRPT, unsigned short out)
 {
   unsigned char dataarray[valueBITS];
   const char *pointer = datastring;
   int i = 0;
+  IRsend irsend = irsend0;
+#ifdef IR_EMITTER_PIN_1
+  if (out == 1) {
+    irsend = irsend1;
+  }
+#endif
   while (strlen(pointer) > 0 && i < valueBITS)
   {
     if (pointer[0] == ',')

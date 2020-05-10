@@ -157,15 +157,21 @@ extern void MQTTtoIR(char * topicOri, JsonObject& RFdata);
   #endif
 #endif
 
-#ifndef IR_EMITTER_PIN
+#ifndef IR_EMITTER_PIN_0
   #ifdef ESP8266
-    #define IR_EMITTER_PIN 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield /replace by 5 with sonoff rf bridge
+    #define IR_EMITTER_PIN_0 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield /replace by 5 with sonoff rf bridge
   #elif ESP32
-    #define IR_EMITTER_PIN 14
+    #define IR_EMITTER_PIN_0 14
   #elif __AVR_ATmega2560__
-    #define IR_EMITTER_PIN 9
+    #define IR_EMITTER_PIN_0 9
   #else
-    #define IR_EMITTER_PIN 9
+    #define IR_EMITTER_PIN_0 9
+  #endif
+#endif
+
+#ifndef IR_EMITTER_PIN_1
+  #ifdef ESP8266
+    #define IR_EMITTER_PIN_1 5 //D1
   #endif
 #endif
 
