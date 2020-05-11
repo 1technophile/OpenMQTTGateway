@@ -686,7 +686,7 @@ void setupBT()
   Minrssi = MinimumRSSI;
   Log.notice(F("BLEinterval: %d" CR),BLEinterval);
   Log.notice(F("Minrssi: %d" CR),Minrssi);
-  softserial.begin(9600);
+  softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
   delay(100);
   softserial.print(F("AT+IMME1" CR));
