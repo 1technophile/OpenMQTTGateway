@@ -109,14 +109,6 @@ void createDiscovery(char *sensor_type,
     sensor.set("cmd_t", command_topic); //command_topic
   }
 
-  /*if (strcmp(s_name, Gateway_Name) == 0){
-  JsonArray &json_attributes = sensor.createNestedArray("json_attributes");
-  json_attributes.add("uptime");
-  json_attributes.add("freemem");
-  json_attributes.add("rssi");
-  json_attributes.add("SSID");
-}*/
-
   if (child_device)
   {
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
@@ -161,12 +153,12 @@ void pubMqttDiscovery()
 #define BMEparametersCount 6
   Log.trace(F("bme280Discovery" CR));
   char *BMEsensor[BMEparametersCount][8] = {
-      {"sensor", "tempc", "bme", "temperature", "{{ value_json.tempc }}", "", "", "°C"},
-      {"sensor", "tempf", "bme", "temperature", "{{ value_json.tempf }}", "", "", "°F"},
-      {"sensor", "pa", "bme", "", "{{ float(value_json.pa) * 0.01 }}", "", "", "hPa"},
-      {"sensor", "hum", "bme", "humidity", "{{ value_json.hum }}", "", "", "%"},
-      {"sensor", "altim", "bme", "", "{{ value_json.altim }}", "", "", "m"},
-      {"sensor", "altift", "bme", "", "{{ value_json.altift }}", "", "", "ft"}
+      {"sensor", "tempc", "bme", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "tempf", "bme", "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "pa", "bme", "", jsonPa, "", "", "hPa"},
+      {"sensor", "hum", "bme", "humidity", jsonHum, "", "", "%"},
+      {"sensor", "altim", "bme", "", jsonAltim, "", "", "m"},
+      {"sensor", "altift", "bme", "", jsonAltif, "", "", "ft"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -186,9 +178,9 @@ void pubMqttDiscovery()
 #define HTUparametersCount 3
   Log.trace(F("htu21Discovery" CR));
   char *HTUsensor[HTUparametersCount][8] = {
-      {"sensor", "tempc", "htu", "temperature", "{{ value_json.tempc }}", "", "", "°C"},
-      {"sensor", "tempf", "htu", "temperature", "{{ value_json.tempf }}", "", "", "°F"},
-      {"sensor", "hum", "htu", "humidity", "{{ value_json.hum }}", "", "", "%"}
+      {"sensor", "tempc", "htu", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "tempf", "htu", "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "hum", "htu", "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -208,8 +200,8 @@ void pubMqttDiscovery()
 #define DHTparametersCount 2
   Log.trace(F("DHTDiscovery" CR));
   char *DHTsensor[DHTparametersCount][8] = {
-      {"sensor", "tempc", "dht", "temperature", "{{ value_json.temp }}", "", "", "°C"},
-      {"sensor", "hum", "dht", "humidity", "{{ value_json.hum }}", "", "", "%"}};
+      {"sensor", "tempc", "dht", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "hum", "dht", "humidity", jsonHum, "", "", "%"}};
 
   for (int i = 0; i < DHTparametersCount; i++)
   {
@@ -225,7 +217,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorADC
   Log.trace(F("ADCDiscovery" CR));
-  char *ADCsensor[8] = {"sensor", "adc", "", "", "{{ value_json.adc }}", "", "", ""};
+  char *ADCsensor[8] = {"sensor", "adc", "", "", jsonAdc, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -241,9 +233,9 @@ void pubMqttDiscovery()
 #define BH1750parametersCount 3
   Log.trace(F("BH1750Discovery" CR));
   char *BH1750sensor[BH1750parametersCount][8] = {
-      {"sensor", "lux", "BH1750", "illuminance", "{{ value_json.lux }}", "", "", "lu"},
-      {"sensor", "ftCd", "BH1750", "", "{{ value_json.ftCd }}", "", "", ""},
-      {"sensor", "wattsm2", "BH1750", "", "{{ value_json.wattsm2 }}", "", "", "wm²"}
+      {"sensor", "lux", "BH1750", "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "ftCd", "BH1750", "", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "BH1750", "", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -263,9 +255,9 @@ void pubMqttDiscovery()
 #define TSL2561parametersCount 3
   Log.trace(F("TSL2561Discovery" CR));
   char *TSL2561sensor[TSL2561parametersCount][8] = {
-      {"sensor", "lux", "TSL2561", "illuminance", "{{ value_json.lux }}", "", "", "lu"},
-      {"sensor", "ftcd", "TSL2561", "", "{{ value_json.ftcd }}", "", "", ""},
-      {"sensor", "wattsm2", "TSL2561", "", "{{ value_json.wattsm2 }}", "", "", "wm²"}
+      {"sensor", "lux", "TSL2561", "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "ftcd", "TSL2561", "", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "TSL2561", "", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -283,7 +275,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorHCSR501
   Log.trace(F("HCSR501Discovery" CR));
-  char *HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "", "{{value_json.hcsr501}}", "true", "false", ""};
+  char *HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "", jsonPresence, "true", "false", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -297,7 +289,7 @@ void pubMqttDiscovery()
 
 #ifdef ZsensorGPIOInput
   Log.trace(F("GPIOInputDiscovery" CR));
-  char *GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "", "", "{{value_json.gpio}}", "HIGH", "LOW", ""};
+  char *GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "", "", jsonGpio, "HIGH", "LOW", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -313,9 +305,9 @@ void pubMqttDiscovery()
 #define INA226parametersCount 3
   Log.trace(F("INA226Discovery" CR));
   char *INA226sensor[INA226parametersCount][8] = {
-      {"sensor", "volt", "INA226", "", "{{ value_json.volt }}", "", "", "V"},
-      {"sensor", "current", "INA226", "", "{{ value_json.current }}", "", "", "A"},
-      {"sensor", "power", "INA226", "", "{{ value_json.power }}", "", "", "W"}
+      {"sensor", "volt", "INA226", "", jsonVolt, "", "", "V"},
+      {"sensor", "current", "INA226", "", jsonCurrent, "", "", "A"},
+      {"sensor", "power", "INA226", "", jsonPower, "", "", "W"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -348,7 +340,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayRF
   // Sensor to display RF received value
   Log.trace(F("gatewayRFDiscovery" CR));
-  char *gatewayRF[8] = {"sensor", "gatewayRF", "", "", "{{ value_json.value }}", "", "", ""};
+  char *gatewayRF[8] = {"sensor", "gatewayRF", "", "", jsonVal, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -363,7 +355,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayRF2
   // Sensor to display RF received value
   Log.trace(F("gatewayRF2Discovery" CR));
-  char *gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", "{{ value_json.value }}", "", "", ""};
+  char *gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", jsonVal, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -378,7 +370,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayRFM69
   // Sensor to display RF received value
   Log.trace(F("gatewayRFM69Discovery" CR));
-  char *gatewayRFM69[8] = {"sensor", "gatewayRFM69", "", "", "{{ value_json.value }}", "", "", ""};
+  char *gatewayRFM69[8] = {"sensor", "gatewayRFM69", "", "", jsonVal, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -393,7 +385,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayLORA
   // Sensor to display RF received value
   Log.trace(F("gatewayLORADiscovery" CR));
-  char *gatewayLORA[8] = {"sensor", "gatewayLORA", "", "", "{{ value_json.message }}", "", "", ""};
+  char *gatewayLORA[8] = {"sensor", "gatewayLORA", "", "", jsonMsg, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -408,7 +400,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewaySRFB
   // Sensor to display RF received value
   Log.trace(F("gatewaySRFBDiscovery" CR));
-  char *gatewaySRFB[8] = {"sensor", "gatewaySRFB", "", "", "{{ value_json.value }}", "", "", ""};
+  char *gatewaySRFB[8] = {"sensor", "gatewaySRFB", "", "", jsonVal, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -423,7 +415,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayPilight
   // Sensor to display RF received value
   Log.trace(F("gatewayPilightDiscovery" CR));
-  char *gatewayPilight[8] = {"sensor", "gatewayPilight", "", "", "{{ value_json.message }}", "", "", ""};
+  char *gatewayPilight[8] = {"sensor", "gatewayPilight", "", "", jsonMsg, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -438,7 +430,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayIR
   // Sensor to display IR received value
   Log.trace(F("gatewayIRDiscovery" CR));
-  char *gatewayIR[8] = {"sensor", "gatewayIR", "", "", "{{ value_json.value }}", "", "", ""};
+  char *gatewayIR[8] = {"sensor", "gatewayIR", "", "", jsonVal, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -453,7 +445,7 @@ void pubMqttDiscovery()
 #ifdef Zgateway2G
   // Sensor to display 2G received value
   Log.trace(F("gateway2GDiscovery" CR));
-  char *gateway2G[8] = {"sensor", "gateway2G", "", "", "{{ value_json.message }}", "", "", ""};
+  char *gateway2G[8] = {"sensor", "gateway2G", "", "", jsonMsg, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -468,7 +460,7 @@ void pubMqttDiscovery()
 #ifdef ZgatewayBT
   // Sensor to display BT received value
   Log.trace(F("gatewayBTDiscovery" CR));
-  char *gatewayBT[8] = {"sensor", "gatewayBT", "", "", "{{ value_json.id }}", "", "", ""};
+  char *gatewayBT[8] = {"sensor", "gatewayBT", "", "", jsonId, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
