@@ -1,5 +1,18 @@
 # Integrate OPENHAB2
 
+## Auto discovery through home assistant convention
+
+OpenMQTTGateway support autodiscovery of things for OpenHAB 2.4, so as to do that it rely on home assistant auto discovery convention.
+So as to use the autodiscovery function you need to have:
+* The Jinga transformation addon installed
+* The Json transformation addon installed
+
+You need to set `OpenHABAutoDiscovery` to true into `config_mqttDiscovery.h`
+`#define OpenHABDiscovery true`
+
+The things will appear in the inbox of the paperUI, add them and links the channels. You should see them into the control panel for further usage.
+![](../img/OpenMQTTgateway_OpenHAB_Control.png)
+
 ## MQTT 2 manual setup >=Openhab2.4
 You should have a mqtt broker installed (either mosquitto or the OpenHAB2 embedded one)
 

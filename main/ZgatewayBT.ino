@@ -149,10 +149,10 @@ void MiFloraDiscovery(char *mac)
 #define MiFloraparametersCount 4
   Log.trace(F("MiFloraDiscovery" CR));
   char *MiFlorasensor[MiFloraparametersCount][8] = {
-      {"sensor", "MiFlora-lux", mac, "illuminance", "{{ value_json.lux | is_defined }}", "", "", "lu"},
-      {"sensor", "MiFlora-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "MiFlora-fer", mac, "", "{{ value_json.fer | is_defined }}", "", "", "µS/cm"},
-      {"sensor", "MiFlora-moi", mac, "", "{{ value_json.moi | is_defined }}", "", "", "%"}
+      {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "MiFlora-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm"},
+      {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -165,10 +165,10 @@ void VegTrugDiscovery(char *mac)
 #define VegTrugparametersCount 4
   Log.trace(F("VegTrugDiscovery" CR));
   char *VegTrugsensor[VegTrugparametersCount][8] = {
-      {"sensor", "VegTrug-lux", mac, "illuminance", "{{ value_json.lux | is_defined }}", "", "", "lu"},
-      {"sensor", "VegTrug-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "VegTrug-fer", mac, "", "{{ value_json.fer | is_defined }}", "", "", "µS/cm"},
-      {"sensor", "VegTrug-moi", mac, "", "{{ value_json.moi | is_defined }}", "", "", "%"}
+      {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "VegTrug-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm"},
+      {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
   
@@ -181,9 +181,9 @@ void MiJiaDiscovery(char *mac)
 #define MiJiaparametersCount 3
   Log.trace(F("MiJiaDiscovery" CR));
   char *MiJiasensor[MiJiaparametersCount][8] = {
-      {"sensor", "MiJia-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "%"},
-      {"sensor", "MiJia-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "MiJia-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
+      {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "MiJia-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "MiJia-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
   
@@ -196,9 +196,9 @@ void LYWSD02Discovery(char *mac)
 #define LYWSD02parametersCount 3
   Log.trace(F("LYWSD02Discovery" CR));
   char *LYWSD02sensor[LYWSD02parametersCount][8] = {
-      {"sensor", "LYWSD02-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "V"},
-      {"sensor", "LYWSD02-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "LYWSD02-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
+      {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V"},
+      {"sensor", "LYWSD02-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "LYWSD02-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -211,9 +211,9 @@ void CLEARGRASSTRHDiscovery(char *mac)
 #define CLEARGRASSTRHparametersCount 3
   Log.trace(F("CLEARGRASSTRHDiscovery" CR));
   char *CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
-      {"sensor", "CLEARGRASSTRH-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "V"},
-      {"sensor", "CLEARGRASSTRH-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
+      {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V"},
+      {"sensor", "CLEARGRASSTRH-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -226,9 +226,9 @@ void CLEARGRASSCGD1Discovery(char *mac)
 #define CLEARGRASSCGD1parametersCount 3
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char *CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", "{{ value_json.batt | is_defined }}", "", "", "V"},
-      {"sensor", "CLEARGRASSCGD1-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
+      {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
+      {"sensor", "CLEARGRASSCGD1-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -241,9 +241,9 @@ void CLEARGRASSTRHKPADiscovery(char *mac)
 #define CLEARGRASSTRHKPAparametersCount 3
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char *CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
-      {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", "{{ value_json.pres | is_defined }}", "", "", "kPa"},
-      {"sensor", "CLEARGRASSTRHKPA-tem", mac, "temperature", "{{ value_json.tem | is_defined }}", "", "", "°C"},
-      {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", "{{ value_json.hum | is_defined }}", "", "", "%"}
+      {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa"},
+      {"sensor", "CLEARGRASSTRHKPA-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -256,7 +256,7 @@ void MiScaleDiscovery(char *mac)
 #define MiScaleparametersCount 1
   Log.trace(F("MiScaleDiscovery" CR));
   char *MiScalesensor[MiScaleparametersCount][8] = {
-      {"sensor", "MiScale-weight", mac, "", "{{ value_json.weight | is_defined }}", "", "", "kg"},
+      {"sensor", "MiScale-weight", mac, "", jsonWeight, "", "", "kg"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -269,7 +269,7 @@ void MiLampDiscovery(char *mac)
 #define MiLampparametersCount 1
   Log.trace(F("MiLampDiscovery" CR));
   char *MiLampsensor[MiLampparametersCount][8] = {
-      {"sensor", "MiLamp-presence", mac, "", "{{ value_json.presence}}", "", "", "d"},
+      {"sensor", "MiLamp-presence", mac, "", jsonPresence, "", "", "d"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -282,7 +282,7 @@ void MiBandDiscovery(char *mac)
 #define MiBandparametersCount 1
   Log.trace(F("MiBandDiscovery" CR));
   char *MiBandsensor[MiBandparametersCount][8] = {
-      {"sensor", "MiBand-steps", mac, "", "{{ value_json.steps | is_defined }}", "", "", "nb"},
+      {"sensor", "MiBand-steps", mac, "", jsonStep, "", "", "nb"},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
