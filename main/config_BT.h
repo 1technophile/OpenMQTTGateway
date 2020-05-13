@@ -35,6 +35,7 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 #define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #define HM-10
+#define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
 #define BLEdelimiter "4f4b2b444953413a"

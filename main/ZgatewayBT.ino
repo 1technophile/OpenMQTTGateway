@@ -665,12 +665,7 @@ bool BTtoMQTT()
 #else // arduino or ESP8266 working with HM10/11
 
 #include <SoftwareSerial.h>
-
-#define STRING_MSG "OK+DISC:"
 #define QUESTION_MSG "AT+DISA?"
-#define RESPONSE_MSG "OK+DISIS"
-#define RESP_END_MSG "OK+DISCE"
-#define SETUP_MSG "OK+RESET"
 
 SoftwareSerial softserial(BT_RX, BT_TX);
 
@@ -686,7 +681,7 @@ void setupBT()
   Minrssi = MinimumRSSI;
   Log.notice(F("BLEinterval: %d" CR),BLEinterval);
   Log.notice(F("Minrssi: %d" CR),Minrssi);
-  softserial.begin(9600);
+  softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
   delay(100);
   softserial.print(F("AT+IMME1" CR));
@@ -702,7 +697,6 @@ void setupBT()
 
 bool BTtoMQTT()
 {
-
   //extract serial data from module in hexa format
   while (softserial.available() > 0)
   {
