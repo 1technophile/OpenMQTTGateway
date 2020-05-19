@@ -202,7 +202,7 @@ void extract_char(char *token_char, char *subset, int start, int l, bool reverse
   subset[l] = '\0';
 }
 
-int strpos(char *haystack, char *needle) //from @miere https://stackoverflow.com/users/548685/miere
+int strpos(const char *haystack, const char *needle) //from @miere https://stackoverflow.com/users/548685/miere
 {
   char *p = strstr(haystack, needle);
   if (p)
