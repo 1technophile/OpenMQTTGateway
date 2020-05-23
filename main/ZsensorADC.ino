@@ -45,7 +45,7 @@ void setupADC()
 void MeasureADC()
 {
   if (millis() > (timeadc + TimeBetweenReadingADC))
-  { //retriving value of temperature and humidity of the box from DHT every xUL
+  { //retrieving value of temperature and humidity of the box from DHT every xUL
 #if defined(ESP8266)
     yield();
 #endif

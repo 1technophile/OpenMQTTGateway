@@ -46,7 +46,7 @@ void setupDHT()
 void MeasureTempAndHum()
 {
   if (millis() > (timedht + TimeBetweenReadingDHT))
-  { //retriving value of temperature and humidity of the box from DHT every xUL
+  { //retrieving value of temperature and humidity of the box from DHT every xUL
     timedht = millis();
     static float persistedh;
     static float persistedt;

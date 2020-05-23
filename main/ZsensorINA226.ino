@@ -53,7 +53,7 @@ void setupINA226()
 void MeasureINA226()
 {
   if (millis() > (timeINA226 + TimeBetweenReadingINA226))
-  { //retriving value of temperature and humidity of the box from DHT every xUL
+  { //retrieving value of temperature and humidity of the box from DHT every xUL
     timeINA226 = millis();
     Log.trace(F("Creating INA226 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
