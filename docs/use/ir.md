@@ -39,8 +39,12 @@ For example if I want to send a command to a sony TV you can use the following c
 
 The code after the -m represent the payload you want to send.
 
-You could alternatively use an hex value:
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"hex":"0x25060090B","protocol_name":"TECO"}'`
+You could alternatively use an hex value (bits is the number of hexadecimal values):
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"hex":"0x250600090B","bits":5,"protocol_name":"TECO"}'`
+
+or
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"hex":"0xA6BCF20040600020000000000519","bits":14,"protocol_name":"HAIER_AC_YRW02"}'`
 
 If you don’t want to use special parameters for IR just use value key, the protocol per default is NEC
 
@@ -73,7 +77,7 @@ Extract this part of the code:
 
 and publish it to mqtt with the a subject containing IR_GC:
 ```
-mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"38000,1,1,171,171,21,64,21,21,21,21,21,21,21,21,21,21,21,21,21,64,21,64,21,21,21,21,21,21,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,21,21,64,21,64,21,64,21,21,21,64,21,64,21,64,21,64,21,1114","protocol_name":"IR_GC"}'
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"38000,1,1,171,171,21,64,21,21,21,21,21,21,21,21,21,21,21,21,21,64,21,64,21,21,21,21,21,21,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,21,21,64,21,64,21,64,21,21,21,64,21,64,21,64,21,64,21,1114","protocol_name":"GC"}'
 ```
 
 You should be able to command your devices without having listened with the IR receiver or if your protocol is unknown by the IRremote library
@@ -94,8 +98,20 @@ If you are using the uno you will have to comment other gateway like ZgatewayRF,
 
 3) publish your code like below
 ```
-mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"8850,4450,600,550,550,550,600,1600,600,550,600,500,600,500,600,550,600,500,600,1650,600,1600,600,550,600,1600,600,1650,600,1600,600,1650,600,1600,600,550,600,500,600,550,550,1650,600,500,600,550,600,500,600,550,550,1650,600,1650,550,1650,600,550,550,1650,600,1650,550,1650,600,1650,600","protocol_name":"IR_Raw"}'
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"8850,4450,600,550,550,550,600,1600,600,550,600,500,600,500,600,550,600,500,600,1650,600,1600,600,550,600,1600,600,1650,600,1600,600,1650,600,1600,600,550,600,500,600,550,550,1650,600,500,600,550,600,500,600,550,550,1650,600,1650,550,1650,600,550,550,1650,600,1650,550,1650,600,1650,600","protocol_name":"Raw"}'
 ```
+
+With big raw array you may cross the limit of default payload size. In this case the gateway will not receive the message or will not send it to the broker.
+In this case the best way is to use hex values instead, but if you can't you may change the parameters below:
+In user_config.h replace:
+`#define JSON_MSG_BUFFER 512`
+by
+`#define JSON_MSG_BUFFER 1280`
+
+And into platformio.ini
+`MQTT_MAX_PACKET_SIZE=1024`
+by
+`MQTT_MAX_PACKET_SIZE=1280`
 
 ## Repeat the IR signal OpenMQTTGateway receive
 So as to repeat the IR signal received by the gateway once set the following parameter to true in [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L37)
