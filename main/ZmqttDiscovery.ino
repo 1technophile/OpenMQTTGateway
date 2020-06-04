@@ -324,6 +324,7 @@ void pubMqttDiscovery()
 #endif
 
 #ifdef ZsensorDS1820
+  // Publish any DS1820 sensors found on the OneWire bus
   pubOneWire_HADiscovery();
 #endif
 
