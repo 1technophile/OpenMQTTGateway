@@ -390,14 +390,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
       }
       else
       {
-        if (abs((int)BLEdata["rssi"] | 0) < abs(Minrssi))
-        {                                         // publish only the devices close enough
-          pub((char *)mactopic.c_str(), BLEdata); // publish device even if there is no service data
-        }
-        else
-        {
-          Log.trace(F("Low rssi, device filtered" CR));
-        }
+        PublishDeviceData(BLEdata); // publish device even if there is no service data
       }
     }
     else
@@ -817,34 +810,34 @@ JsonObject& process_bledata(JsonObject &BLEdata){
 
         return process_cleargrass(BLEdata, false);
       }
-    }
-    if(BLEdata.containsKey("servicedatauuid"))
-    {
-      const char * service_datauuid = (const char *)(BLEdata["servicedatauuid"]|"");
-      Log.trace(F("servicedatauuid %s" CR), service_datauuid);
-      Log.trace(F("Is it a MiBand?" CR));
-      if (strstr(service_datauuid, "fee0") != NULL)
+      if(BLEdata.containsKey("servicedatauuid"))
       {
-        Log.trace(F("Mi Band data reading" CR));
-        BLEdata.set("model", "MiBand");
+        const char * service_datauuid = (const char *)(BLEdata["servicedatauuid"]|"");
+        Log.trace(F("servicedatauuid %s" CR), service_datauuid);
+        Log.trace(F("Is it a MiBand?" CR));
+        if (strstr(service_datauuid, "fee0") != NULL)
+        {
+          Log.trace(F("Mi Band data reading" CR));
+          BLEdata.set("model", "MiBand");
 
-        return process_miband(BLEdata);
-      }
-      Log.trace(F("Is it a XMTZC04HM?" CR));
-      if (strstr(service_datauuid, "181d") != NULL)
-      {
-        Log.trace(F("XMTZC04HM data reading" CR));
-        BLEdata.set("model", "XMTZC04HM");
+          return process_miband(BLEdata);
+        }
+        Log.trace(F("Is it a XMTZC04HM?" CR));
+        if (strstr(service_datauuid, "181d") != NULL)
+        {
+          Log.trace(F("XMTZC04HM data reading" CR));
+          BLEdata.set("model", "XMTZC04HM");
 
-        return process_scale_v1(BLEdata);
-      }
-      Log.trace(F("Is it a XMTZC05HM?" CR));
-      if (strstr(service_datauuid, "181b") != NULL)
-      {
-        Log.trace(F("XMTZC05HM data reading" CR));
-        BLEdata.set("model", "XMTZC05HM");;
+          return process_scale_v1(BLEdata);
+        }
+        Log.trace(F("Is it a XMTZC05HM?" CR));
+        if (strstr(service_datauuid, "181b") != NULL)
+        {
+          Log.trace(F("XMTZC05HM data reading" CR));
+          BLEdata.set("model", "XMTZC05HM");;
 
-        return process_scale_v2(BLEdata);
+          return process_scale_v2(BLEdata);
+        }
       }
     }
     else
@@ -852,14 +845,12 @@ JsonObject& process_bledata(JsonObject &BLEdata){
       Log.trace(F("Non valid service data, removing it" CR));
       BLEdata.remove("servicedata");
     }
+
+    #if !pubUnknownBLEServiceData
+      Log.trace(F("Unknown service data, removing it" CR));
+      BLEdata.remove("servicedata");
+    #endif
   }
-  #if !pubUnknownBLEServiceData
-  if(BLEdata.containsKey("servicedata"))
-  {
-    Log.trace(F("Unknown service data, removing it" CR));
-    BLEdata.remove("servicedata");
-  }
-  #endif
 
   return BLEdata;
 }
