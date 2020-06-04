@@ -336,8 +336,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
     char mac[mac_adress.length() + 1];
     mac_adress.toCharArray(mac, mac_adress.length() + 1);
-    Log.notice(F("Device detected: %s" CR),mac);
-
+    Log.notice(F("Device detected: %s" CR), mac);
     BLEdevice *device = getDeviceByMac(mac);
 
     if ((!oneWhite || isWhite(device)) && !isBlack(device))
@@ -363,7 +362,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
       if (advertisedDevice.haveServiceData())
       {
         int serviceDataCount = advertisedDevice.getServiceDataCount();
-        Log.trace(F("Get services data number: %d" CR),serviceDataCount);
+        Log.trace(F("Get services data number: %d" CR), serviceDataCount);
         for (int j = 0; j < serviceDataCount; j++)
         {
           std::string serviceData = advertisedDevice.getServiceData(j);
@@ -386,34 +385,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           std::string serviceDatauuid = advertisedDevice.getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char *)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char *)serviceDatauuid.c_str());
-          if (abs((int)BLEdata["rssi"] | 0) < abs(Minrssi))
-          { // process only the devices close enough
-            JsonObject &BLEdataOut = process_bledata(BLEdata);
-            #ifdef ZmqttDiscovery
-              launch_discovery(BLEdataOut, mac);
-            #endif
-            #if !pubBLEServiceUUID
-            if(BLEdataOut.containsKey("servicedatauuid"))
-            {
-              Log.trace(F("Removing service data UUID" CR));
-              BLEdataOut.remove("servicedatauuid");
-            }
-            #endif
-            #if !pubKnownBLEServiceData
-            if(BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata")) // if we have recognised a sensor we remove the servicedata key/value
-            {
-              Log.trace(F("Removing service data" CR));
-              BLEdataOut.remove("servicedata");
-            }
-            #endif
-            String mactopic(mac);
-            mactopic = subjectBTtoMQTT + String("/") + mactopic;
-            pub((char *)mactopic.c_str(), BLEdataOut);
-          }
-          else
-          {
-            Log.trace(F("Low rssi, device filtered" CR));
-          }
+          PublishDeviceData(BLEdata);
         }
       }
       else
@@ -573,8 +545,8 @@ void setupBT()
 {
   BLEinterval = TimeBtw_Read;
   Minrssi = MinimumRSSI;
-  Log.notice(F("BLEinterval: %d" CR),BLEinterval);
-  Log.notice(F("Minrssi: %d" CR),Minrssi);
+  Log.notice(F("BLEinterval: %d" CR), BLEinterval);
+  Log.notice(F("Minrssi: %d" CR), Minrssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
   delay(100);
@@ -662,28 +634,7 @@ bool BTtoMQTT()
             #endif
             Log.trace(F("Service data: %s" CR), d[5].extract);
             BLEdata.set("servicedata", d[5].extract);
-            if (abs((int)BLEdata["rssi"] | 0) < abs(Minrssi))
-            { // process only the devices close enough
-              JsonObject &BLEdataOut = process_bledata(BLEdata);
-              #ifdef ZmqttDiscovery
-                launch_discovery(BLEdataOut, d[0].extract);
-              #endif
-              #if !pubKnownBLEServiceData
-              if(BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata")) // if we have recognised a sensor we remove the servicedata key/value
-              {
-                Log.trace(F("Removing service data" CR));
-                BLEdataOut.remove("servicedata");
-              }
-              #endif
-              String mactopic(d[0].extract);
-              mactopic = subjectBTtoMQTT + String("/") + mactopic;
-              pub((char *)mactopic.c_str(), BLEdataOut);
-              return true;
-            }
-            else
-            {
-              Log.trace(F("Low rssi, device filtered" CR));
-            }
+            PublishDeviceData(BLEdata);
           }
         }
       }
@@ -699,6 +650,14 @@ bool BTtoMQTT()
   }
 }
 #endif
+
+void RemoveJsonPropertyIf(JsonObject &obj, char* key, bool condition)
+{
+  if(condition){
+     Log.trace(F("Removing %s" CR), key);
+     obj.remove(key);
+  }
+}
 
 double value_from_service_data(const char *service_data, int offset, int data_length)
 {
@@ -746,6 +705,34 @@ void launch_discovery(JsonObject &BLEdata, char * mac){
   else
   {
     Log.trace(F("Device already discovered or model not detected" CR));
+  }
+}
+
+void PublishDeviceData(JsonObject &BLEdata)
+{
+  if (abs((int)BLEdata["rssi"] | 0) < abs(Minrssi))
+  { // process only the devices close enough
+    JsonObject &BLEdataOut = process_bledata(BLEdata);
+    String mac_adress = BLEdataOut["id"].as<const char*>();
+    mac_adress.replace(":", "");
+    char mac[mac_adress.length() + 1];
+    mac_adress.toCharArray(mac, mac_adress.length() + 1);
+    #ifdef ZmqttDiscovery
+      launch_discovery(BLEdataOut, mac);
+    #endif
+    #if !pubBLEServiceUUID
+      RemoveJsonPropertyIf(BLEdataOut, "servicedatauuid", BLEdataOut.containsKey("servicedatauuid"));
+    #endif
+    #if !pubKnownBLEServiceData
+      RemoveJsonPropertyIf(BLEdataOut, "servicedata", BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata"));
+    #endif
+    String mactopic(mac);
+    mactopic = subjectBTtoMQTT + String("/") + mactopic;
+    pub((char *)mactopic.c_str(), BLEdataOut);
+  }
+  else
+  {
+    Log.trace(F("Low rssi, device filtered" CR));
   }
 }
 
@@ -860,11 +847,11 @@ JsonObject& process_bledata(JsonObject &BLEdata){
         return process_scale_v2(BLEdata);
       }
     }
-  }
-  else
-  {
-    Log.trace(F("Non valid service data, removing it" CR));
-    BLEdata.remove("servicedata");
+    else
+    {
+      Log.trace(F("Non valid service data, removing it" CR));
+      BLEdata.remove("servicedata");
+    }
   }
   #if !pubUnknownBLEServiceData
   if(BLEdata.containsKey("servicedata"))
