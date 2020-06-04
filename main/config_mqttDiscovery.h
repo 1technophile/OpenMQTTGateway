@@ -77,7 +77,7 @@ extern void createDiscovery(char * sensor_type,
 #define jsonFer       "{{ value_json.fer | is_defined }}"
 #define jsonMoi       "{{ value_json.moi | is_defined }}"
 #define jsonHum       "{{ value_json.hum | is_defined }}"
-#define jsonTemp      "{{ value_json.tem | is_defined }}"
+#define jsonTemp      "{{ value_json.temp | is_defined }}"
 #define jsonStep      "{{ value_json.steps | is_defined }}"
 #define jsonWeight    "{{ value_json.weight | is_defined }}"
 #define jsonPresence  "{{ value_json.presence | is_defined }}"

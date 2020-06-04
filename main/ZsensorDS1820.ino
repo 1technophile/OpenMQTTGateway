@@ -110,6 +110,38 @@ void setupZsensorDS1820()
   ds1820.setWaitForConversion(false);
 }
 
+void pubOneWire_HADiscovery()
+{
+  // If zmqttDiscovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
+#ifdef ZmqttDiscovery
+  Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
+  for (int index=0; index<ds1820_count; index++)
+  {
+    #if DS1820_FAHRENHEIT
+      createDiscovery("sensor",
+                      (char *)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(), 
+                      (char *)String("DS12B20_" + String(index+1)).c_str(),
+                      (char *)ds1820_addr[index].c_str(),
+                      will_Topic,
+                      "temperature",
+                      jsonTempf,
+                      "", "", "°F",
+                      0, "", "", true, "");
+    #else
+      createDiscovery("sensor",
+                      (char *)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(), 
+                      (char *)String("DS12B20_" + String(index+1)).c_str(),
+                      (char *)ds1820_addr[index].c_str(),
+                      will_Topic,
+                      "temperature",
+                      jsonTemp,
+                      "", "", "°C",
+                      0, "", "", true, "");
+    #endif
+  }
+#endif      
+}
+
 void MeasureDS1820Temp()
 {
   static float persisted_temp[OW_MAX_SENSORS];
@@ -169,7 +201,7 @@ void MeasureDS1820Temp()
             DS1820data.set("res", ds1820_resolution[i] + String("bit" CR));
             DS1820data.set("addr", ds1820_addr[i]);
           }
-          pub(OW_TOPIC, DS1820data);
+          pub((char *)(String(OW_TOPIC) + "/" + ds1820_addr[i]).c_str(), DS1820data);
           delay(10);
         }
         else 
