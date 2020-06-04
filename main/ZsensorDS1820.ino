@@ -41,7 +41,7 @@ static String ds1820_addr[OW_MAX_SENSORS];
 
 void setupZsensorDS1820()
 {
-  Log.notice(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_PIN );
+  Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_PIN );
   ds1820.begin();
 
   // locate device(s) on 1-wire bus
