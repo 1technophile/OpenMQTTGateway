@@ -44,11 +44,14 @@ void setupZsensorDS1820()
   Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_PIN );
   ds1820.begin();
 
+  // Search the OneWire bus for all devices
+  uint8_t numDevicesOnBus = ds1820.getDeviceCount();
+
   // locate device(s) on 1-wire bus
-  Log.notice(F("DS1820: Found %d devices" CR), ds1820.getDeviceCount());
+  Log.notice(F("DS1820: Found %d devices" CR), numDevicesOnBus);
 
   // Cycle though all of the devices on the OneWire bus
-  for (int deviceIndex = 0; deviceIndex < ds1820.getDeviceCount(); deviceIndex++)
+  for (int deviceIndex = 0; deviceIndex < numDevicesOnBus; deviceIndex++)
   {
     // get the next device on the OneWire bus and confirm it is a sensor the library can handle (Dallas DS18X20 1-wire devices)
     if ( ds1820.getAddress(ds1820_address, deviceIndex) && ds1820.validFamily(ds1820_address) )
