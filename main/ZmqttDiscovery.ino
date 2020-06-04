@@ -323,6 +323,10 @@ void pubMqttDiscovery()
   }
 #endif
 
+#ifdef ZsensorDS1820
+  pubOneWire_HADiscovery();
+#endif
+
 #ifdef ZactuatorONOFF
   Log.trace(F("actuatorONOFFDiscovery" CR));
   char *actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "", "{\"cmd\":1}", "{\"cmd\":0}", ""};
