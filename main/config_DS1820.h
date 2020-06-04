@@ -28,6 +28,7 @@
 
 extern void setupZsensorDS1820();
 extern void DS1820toMQTT();
+extern void pubOneWire_HADiscovery();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define OW_TOPIC    "/OneWiretoMQTT/ds1820"

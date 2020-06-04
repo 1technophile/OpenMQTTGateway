@@ -44,63 +44,63 @@ void setupZsensorDS1820()
   Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_PIN );
   ds1820.begin();
 
-  // locate device(s) on 1-wire bus
-  Log.notice(F("DS1820: Found %d devices" CR), ds1820.getDeviceCount());
+  // Search the OneWire bus for all devices
+  uint8_t numDevicesOnBus = ds1820.getDeviceCount();
 
-  // determine device addresses on 1-wire bus
-  if (owbus.search(ds1820_address)) 
+  // locate device(s) on 1-wire bus
+  Log.notice(F("DS1820: Found %d devices" CR), numDevicesOnBus);
+
+  // Cycle though all of the devices on the OneWire bus
+  for (int deviceIndex = 0; deviceIndex < numDevicesOnBus && ds1820_count < OW_MAX_SENSORS; deviceIndex++)
   {
-    do {
-      // we only care about Dallas DS18X20 1-wire devices
-      if (ds1820_address[0] == 0x10 || ds1820_address[0] == 0x28 || 
-          ds1820_address[0] == 0x22 || ds1820_address[0] == 0x3B) 
+    // get the next device on the OneWire bus and confirm it is a sensor the library can handle (Dallas DS18X20 1-wire devices)
+    if ( ds1820.getAddress(ds1820_address, deviceIndex) && ds1820.validFamily(ds1820_address) )
+    {
+      ds1820_addr[ds1820_count] = String("0x");
+      for (uint8_t i = 0; i < 8; i++)
+      {  
+        if (ds1820_address[i] < 0x10) ds1820_addr[ds1820_count] += String("0");
+        ds1820_devices[ds1820_count][i] = ds1820_address[i];
+        ds1820_addr[ds1820_count] += String(ds1820_address[i], HEX);
+      }          
+      
+      // set the resolution and thus conversion timing
+      if (ds1820_address[0] == 0x10) 
       {
-        ds1820_addr[ds1820_count] = String("0x");
-        for (uint8_t i = 0; i < 8; i++)
-        {  
-          if (ds1820_address[i] < 0x10) ds1820_addr[ds1820_count] += String("0");
-          ds1820_devices[ds1820_count][i] = ds1820_address[i];
-          ds1820_addr[ds1820_count] += String(ds1820_address[i], HEX);
-        }          
-        
-        // set the resolution and thus conversion timing
-        if (ds1820_address[0] == 0x10) 
-        {
-          // DS1820/DS18S20 have no resolution configuration register,
-          // both have a 9-bit temperature register. Resolutions greater 
-          // than 9-bit can be calculated using the data from the temperature, 
-          // and COUNT REMAIN and COUNT PER °C registers in the scratchpad.
-          // The resolution of the calculation depends on the model.
-          ds1820_type[ds1820_count] = String("DS1820/DS18S20"); 
-        } 
-        else if (ds1820_address[0] == 0x28) 
-        {
-          // DS18B20 and 18B22 are capable of different resolutions (9-12 bit)
-          ds1820_type[ds1820_count] = String("DS18B20");
-          ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
-        } 
-        else if (ds1820_address[0] == 0x22)
-        {
-          ds1820_type[ds1820_count] = String("DS1822");
-          ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
-        } 
-        else 
-        {
-          ds1820_type[ds1820_count] = String("DS1825");
-          ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
-        }  
-        ds1820_resolution[ds1820_count] = ds1820.getResolution(ds1820_address);
-        Log.trace(F("DS1820: Device %d, Type: %s, Address: %s, Resolution: %d" CR),
-          ds1820_count,
-          (char *)ds1820_type[ds1820_count].c_str(),
-          (char *)ds1820_addr[ds1820_count].c_str(),
-          ds1820_resolution[ds1820_count]);
-        ds1820_count++;
-      }       
-    } while (owbus.search(ds1820_address));
-    
-  } 
-  else
+        // DS1820/DS18S20 have no resolution configuration register,
+        // both have a 9-bit temperature register. Resolutions greater 
+        // than 9-bit can be calculated using the data from the temperature, 
+        // and COUNT REMAIN and COUNT PER °C registers in the scratchpad.
+        // The resolution of the calculation depends on the model.
+        ds1820_type[ds1820_count] = String("DS1820/DS18S20"); 
+      } 
+      else if (ds1820_address[0] == 0x28) 
+      {
+        // DS18B20 and 18B22 are capable of different resolutions (9-12 bit)
+        ds1820_type[ds1820_count] = String("DS18B20");
+        ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
+      } 
+      else if (ds1820_address[0] == 0x22)
+      {
+        ds1820_type[ds1820_count] = String("DS1822");
+        ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
+      } 
+      else 
+      {
+        ds1820_type[ds1820_count] = String("DS1825");
+        ds1820.setResolution(ds1820_address, DS1820_RESOLUTION);
+      } 
+      ds1820_resolution[ds1820_count] = ds1820.getResolution(ds1820_address);
+      Log.trace(F("DS1820: Device %d, Type: %s, Address: %s, Resolution: %d" CR),
+        ds1820_count,
+        (char *)ds1820_type[ds1820_count].c_str(),
+        (char *)ds1820_addr[ds1820_count].c_str(),
+        ds1820_resolution[ds1820_count]);
+      ds1820_count++;
+    }
+  }
+  
+  if (ds1820.getDS18Count() == 0)
   {  
     Log.error(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your pin assignment!" CR));
   }
@@ -108,6 +108,38 @@ void setupZsensorDS1820()
   // make requestTemperatures() non-blocking
   // we've to take that conversion is triggered some time before reading temperature values!
   ds1820.setWaitForConversion(false);
+}
+
+void pubOneWire_HADiscovery()
+{
+  // If zmqttDiscovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
+#ifdef ZmqttDiscovery
+  Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
+  for (int index=0; index<ds1820_count; index++)
+  {
+    #if DS1820_FAHRENHEIT
+      createDiscovery("sensor",
+                      (char *)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(), 
+                      (char *)String("DS12B20_" + String(index+1)).c_str(),
+                      (char *)ds1820_addr[index].c_str(),
+                      will_Topic,
+                      "temperature",
+                      jsonTempf,
+                      "", "", "°F",
+                      0, "", "", true, "");
+    #else
+      createDiscovery("sensor",
+                      (char *)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(), 
+                      (char *)String("DS12B20_" + String(index+1)).c_str(),
+                      (char *)ds1820_addr[index].c_str(),
+                      will_Topic,
+                      "temperature",
+                      jsonTemp,
+                      "", "", "°C",
+                      0, "", "", true, "");
+    #endif
+  }
+#endif      
 }
 
 void MeasureDS1820Temp()
@@ -169,7 +201,7 @@ void MeasureDS1820Temp()
             DS1820data.set("res", ds1820_resolution[i] + String("bit" CR));
             DS1820data.set("addr", ds1820_addr[i]);
           }
-          pub(OW_TOPIC, DS1820data);
+          pub((char *)(String(OW_TOPIC) + "/" + ds1820_addr[i]).c_str(), DS1820data);
           delay(10);
         }
         else 

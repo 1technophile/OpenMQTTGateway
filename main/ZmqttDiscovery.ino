@@ -323,6 +323,11 @@ void pubMqttDiscovery()
   }
 #endif
 
+#ifdef ZsensorDS1820
+  // Publish any DS1820 sensors found on the OneWire bus
+  pubOneWire_HADiscovery();
+#endif
+
 #ifdef ZactuatorONOFF
   Log.trace(F("actuatorONOFFDiscovery" CR));
   char *actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "", "{\"cmd\":1}", "{\"cmd\":0}", ""};
