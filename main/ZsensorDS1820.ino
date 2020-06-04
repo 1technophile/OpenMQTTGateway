@@ -51,7 +51,7 @@ void setupZsensorDS1820()
   Log.notice(F("DS1820: Found %d devices" CR), numDevicesOnBus);
 
   // Cycle though all of the devices on the OneWire bus
-  for (int deviceIndex = 0; deviceIndex < numDevicesOnBus; deviceIndex++)
+  for (int deviceIndex = 0; deviceIndex < numDevicesOnBus && ds1820_count < OW_MAX_SENSORS; deviceIndex++)
   {
     // get the next device on the OneWire bus and confirm it is a sensor the library can handle (Dallas DS18X20 1-wire devices)
     if ( ds1820.getAddress(ds1820_address, deviceIndex) && ds1820.validFamily(ds1820_address) )
