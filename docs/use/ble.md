@@ -60,6 +60,11 @@ to set white list
 
 Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list
 
+::: tip
+So as to keep your white/black list persistent you can publish it with the retain option of MQTT (-r with mosquitto_pub or retain check box of MQTT Explorer)
+`mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["012314551615","4C65A5553C79","4C65A6663C79"]}'`
+:::
+
 ## Setting the time between scans and force a scan
 
 If you want to change the time between readings you can change the interval by MQTT, if you want the BLE scan every 66seconds:
