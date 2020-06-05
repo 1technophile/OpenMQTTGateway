@@ -39,6 +39,9 @@ Note that the gateway return one or two measurement value each time. The differe
 * Temperature
 * Moisture
 * Fertilization
+* Humidity
+* Pressure
+* Steps
 * Weight
 * Impedance
 * Battery (mi jia only)
@@ -48,6 +51,11 @@ The infos will appear like this on your MQTT broker:
 `home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tem":"19.2"}`
 
 More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html)  (especially about how it was implemented with HM10)
+
+::: tip
+The HM10 module doesn't read enough information (servicedata UUID is missing) to support Mi Scale and Mi Band. They are supported nevertheless with ESP32.
+OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 this field can be longer compared to ESP32 if the device is not recognised.
+:::
 
 ## Setting a white or black list
 A black list is a list of mac adresses that will never be published by OMG

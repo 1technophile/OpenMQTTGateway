@@ -38,18 +38,27 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
-#define BLEdelimiter "4f4b2b444953413a"
+#define BLEdelimiter "4f4b2b444953413a" // OK+DISA:
+#define ServicedataMinLength 30
 
 #ifndef TimeBtw_Read
   #define TimeBtw_Read 55555 //define default time between 2 scans
 #endif
 
-#ifndef pubBLEServiceData
-  #define pubBLEServiceData true // comment if you don't want to publish service data (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+#ifndef pubKnownBLEServiceData
+  #define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
+#endif
+
+#ifndef pubUnknownBLEServiceData
+  #define pubUnknownBLEServiceData true // define false if you don't want to publish service data to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
 #endif
 
 #ifndef pubBLEManufacturerData
   #define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+#endif
+
+#ifndef pubBLEServiceUUID
+  #define pubBLEServiceUUID false // define true if you want to publish the service UUID data
 #endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/

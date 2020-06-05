@@ -202,14 +202,6 @@ void extract_char(char *token_char, char *subset, int start, int l, bool reverse
   subset[l] = '\0';
 }
 
-int strpos(char *haystack, char *needle) //from @miere https://stackoverflow.com/users/548685/miere
-{
-  char *p = strstr(haystack, needle);
-  if (p)
-    return p - haystack;
-  return -1;
-}
-
 char *ip2CharArray(IPAddress ip)
 { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
   static char a[16];
