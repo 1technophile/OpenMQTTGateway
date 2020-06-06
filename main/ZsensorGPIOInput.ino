@@ -34,14 +34,12 @@ unsigned long lastDebounceTime = 0;
 int InputState = 3; // Set to 3 so that it reads on startup
 int lastInputState = 3;
 
-void setupGPIOInput()
-{
+void setupGPIOInput() {
   Log.notice(F("Reading GPIO at pin: %d" CR), GPIOInput_PIN);
   pinMode(GPIOInput_PIN, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 }
 
-void MeasureGPIOInput()
-{
+void MeasureGPIOInput() {
   int reading = digitalRead(GPIOInput_PIN);
 
   // check to see if you just pressed the button
@@ -49,33 +47,28 @@ void MeasureGPIOInput()
   // since the last press to ignore any noise:
 
   // If the switch changed, due to noise or pressing:
-  if (reading != lastInputState)
-  {
+  if (reading != lastInputState) {
     // reset the debouncing timer
     lastDebounceTime = millis();
   }
 
-  if ((millis() - lastDebounceTime) > GPIOInputDebounceDelay)
-  {
+  if ((millis() - lastDebounceTime) > GPIOInputDebounceDelay) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
-#if defined(ESP8266) || defined(ESP32)
+#  if defined(ESP8266) || defined(ESP32)
     yield();
-#endif
+#  endif
     // if the Input state has changed:
-    if (reading != InputState)
-    {
+    if (reading != InputState) {
       InputState = reading;
       Log.trace(F("Creating GPIOInput buffer" CR));
       const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
       StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-      JsonObject &GPIOdata = jsonBuffer.createObject();
-      if (InputState == HIGH)
-      {
+      JsonObject& GPIOdata = jsonBuffer.createObject();
+      if (InputState == HIGH) {
         GPIOdata.set("gpio", "HIGH");
       }
-      if (InputState == LOW)
-      {
+      if (InputState == LOW) {
         GPIOdata.set("gpio", "LOW");
       }
       if (GPIOdata.size() > 0)

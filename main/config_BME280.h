@@ -41,12 +41,12 @@
 extern void setupBME280();
 extern void BME280toMQTT();
 
-#define bme280_always true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
+#define bme280_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingbme280 30000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define BMETOPIC   "/CLIMAtoMQTT/bme"
+#define BMETOPIC "/CLIMAtoMQTT/bme"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timebme280 = 0;

@@ -19,7 +19,6 @@
 # Travis CI documentation (see above).
 #
 
-
 #
 # Template #1: General project. Test it using existing `platformio.ini`.
 #
@@ -29,12 +28,12 @@ matrix:
       python: 2.7
       sudo: false
       cache:
-            directories:
-            - "~/.platformio"
+        directories:
+          - "~/.platformio"
       install:
         - pip install -U platformio
         - platformio update
-      script: 
+      script:
         - sed -i 's/version_tag/'$TRAVIS_TAG'/g' main/User_config.h
         - platformio run
         - bash scripts/prepare_deploy.sh

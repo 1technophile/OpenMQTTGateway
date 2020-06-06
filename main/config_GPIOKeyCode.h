@@ -30,30 +30,30 @@ extern void setupGPIOKeyCode();
 extern void GPIOKeyCodetoMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectGPIOKeyCodetoMQTT    "/keycode"
+#define subjectGPIOKeyCodetoMQTT      "/keycode"
 #define subjectGPIOKeyCodeStatetoMQTT subjectGPIOKeyCodetoMQTT "/status"
-#define GPIOKeyCodeDebounceDelay 60 //debounce time, increase if there are issues
+#define GPIOKeyCodeDebounceDelay      60 //debounce time, increase if there are issues
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266) || defined(ESP32)
 
-#ifndef GPIOKeyCode_LATCH_PIN
-  #define GPIOKeyCode_LATCH_PIN 12 //D6
-#endif  
-#ifndef GPIOKeyCode_D0_PIN
-  #define GPIOKeyCode_D0_PIN 14 //D5
-#endif  
-#ifndef GPIOKeyCode_D1_PIN
-  #define GPIOKeyCode_D1_PIN 5 //D1
-#endif  
-#ifndef GPIOKeyCode_D2_PIN
-  #define GPIOKeyCode_D2_PIN 13 //D7
-#endif  
-#ifndef GPIOKeyCode_D3_PIN
-  #define GPIOKeyCode_D3_PIN XX //??
-#endif  
+#  ifndef GPIOKeyCode_LATCH_PIN
+#    define GPIOKeyCode_LATCH_PIN 12 //D6
+#  endif
+#  ifndef GPIOKeyCode_D0_PIN
+#    define GPIOKeyCode_D0_PIN 14 //D5
+#  endif
+#  ifndef GPIOKeyCode_D1_PIN
+#    define GPIOKeyCode_D1_PIN 5 //D1
+#  endif
+#  ifndef GPIOKeyCode_D2_PIN
+#    define GPIOKeyCode_D2_PIN 13 //D7
+#  endif
+#  ifndef GPIOKeyCode_D3_PIN
+#    define GPIOKeyCode_D3_PIN XX //??
+#  endif
 #else
-// must define !!!  
+// must define !!!
 #endif
 
 #endif

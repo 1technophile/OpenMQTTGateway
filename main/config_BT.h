@@ -27,38 +27,38 @@
 #define config_BT_h
 
 extern void setupBT();
-extern bool BTtoMQTT();  
-extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
+extern bool BTtoMQTT();
+extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 /*----------------------BT topics & parameters-------------------------*/
-#define subjectBTtoMQTT  "/BTtoMQTT"
-#define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
-#define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
-#define Scan_duration 10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
-#define HM-10
-#define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
+#define subjectBTtoMQTT    "/BTtoMQTT"
+#define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
+#define MinimumRSSI        -100 //default minimum rssi value, all the devices below -90 will not be reported
+#define Scan_duration      10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
+#define HM                 -10
+#define HMSerialSpeed      9600 // Communication speed with the HM module, softwareserial doesn't support 115200
 //#define HM-11 // uncomment this line if you use HM-11 and comment the line above
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
-#define BLEdelimiter "4f4b2b444953413a" // OK+DISA:
+#define BLEdelimiter         "4f4b2b444953413a" // OK+DISA:
 #define ServicedataMinLength 30
 
 #ifndef TimeBtw_Read
-  #define TimeBtw_Read 55555 //define default time between 2 scans
+#  define TimeBtw_Read 55555 //define default time between 2 scans
 #endif
 
 #ifndef pubKnownBLEServiceData
-  #define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
+#  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
 #endif
 
 #ifndef pubUnknownBLEServiceData
-  #define pubUnknownBLEServiceData true // define false if you don't want to publish service data to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+#  define pubUnknownBLEServiceData true // define false if you don't want to publish service data to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
 #endif
 
 #ifndef pubBLEManufacturerData
-  #define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+#  define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
 #endif
 
 #ifndef pubBLEServiceUUID
-  #define pubBLEServiceUUID false // define true if you want to publish the service UUID data
+#  define pubBLEServiceUUID false // define true if you want to publish the service UUID data
 #endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
@@ -68,37 +68,37 @@ extern void MQTTtoBT(char * topicOri, JsonObject& RFdata);
 unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
 int Minrssi = MinimumRSSI; //minimum rssi value
 
-struct BLEdevice{
+struct BLEdevice {
   char macAdr[13];
   bool isDisc;
   bool isWhtL;
   bool isBlkL;
 };
 
-#define device_flags_isDisc 1 << 0
+#define device_flags_isDisc   1 << 0
 #define device_flags_isWhiteL 1 << 1
 #define device_flags_isBlackL 1 << 2
 
-struct decompose{
+struct decompose {
   char subject[4];
   int start;
   int len;
   bool reverse;
   char extract[60];
 };
-     
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)
-  #ifdef ESP8266
-    #define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
-    #define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
-  #elif defined(ESP32)
-    #define BT_RX 18 // not tested
-    #define BT_TX 19 // not tested
-  #else
-    #define BT_RX 5 //arduino RX connect HM-10 or 11 TX
-    #define BT_TX 6 //arduino TX connect HM-10 or 11 RX
-  #endif
+#  ifdef ESP8266
+#    define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX
+#    define BT_TX 12 //D6 ESP8266 TX connect HM-10 or 11 RX
+#  elif defined(ESP32)
+#    define BT_RX 18 // not tested
+#    define BT_TX 19 // not tested
+#  else
+#    define BT_RX 5 //arduino RX connect HM-10 or 11 TX
+#    define BT_TX 6 //arduino TX connect HM-10 or 11 RX
+#  endif
 #endif
 
 #endif

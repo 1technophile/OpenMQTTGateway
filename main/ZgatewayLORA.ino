@@ -29,17 +29,15 @@
 
 #ifdef ZgatewayLORA
 
-#include <SPI.h>
-#include <LoRa.h>
-#include <Wire.h>
+#  include <LoRa.h>
+#  include <SPI.h>
+#  include <Wire.h>
 
-void setupLORA()
-{
+void setupLORA() {
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
 
-  if (!LoRa.begin(LORA_BAND))
-  {
+  if (!LoRa.begin(LORA_BAND)) {
     Log.error(F("ZgatewayLORA setup failed!" CR));
     while (1)
       ;
@@ -54,46 +52,40 @@ void setupLORA()
   Log.trace(F("ZgatewayLORA setup done" CR));
 }
 
-void LORAtoMQTT()
-{
+void LORAtoMQTT() {
   int packetSize = LoRa.parsePacket();
-  if (packetSize)
-  {
+  if (packetSize) {
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject &LORAdata = jsonBuffer.createObject();
+    JsonObject& LORAdata = jsonBuffer.createObject();
     Log.trace(F("Rcv. LORA" CR));
-#ifdef ESP32
+#  ifdef ESP32
     String taskMessage = "LORA Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
     //trc(taskMessage);
-#endif
+#  endif
     String packet;
     packet = "";
-    for (int i = 0; i < packetSize; i++)
-    {
+    for (int i = 0; i < packetSize; i++) {
       packet += (char)LoRa.read();
     }
     LORAdata.set("rssi", (int)LoRa.packetRssi());
     LORAdata.set("snr", (float)LoRa.packetSnr());
     LORAdata.set("pferror", (float)LoRa.packetFrequencyError());
     LORAdata.set("packetSize", (int)packetSize);
-    LORAdata.set("message", (char *)packet.c_str());
+    LORAdata.set("message", (char*)packet.c_str());
     pub(subjectLORAtoMQTT, LORAdata);
-    if (repeatLORAwMQTT)
-    {
+    if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
       pub(subjectMQTTtoLORA, LORAdata);
     }
   }
 }
 
-#ifdef jsonReceiving
-void MQTTtoLORA(char *topicOri, JsonObject &LORAdata)
-{ // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA))
-  {
+#  ifdef jsonReceiving
+void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
-    const char *message = LORAdata["message"];
+    const char* message = LORAdata["message"];
     int txPower = LORAdata["txpower"] | LORA_TX_POWER;
     int spreadingFactor = LORAdata["spreadingfactor"] | LORA_SPREADING_FACTOR;
     long int frequency = LORAdata["frequency "] | LORA_BAND;
@@ -102,8 +94,7 @@ void MQTTtoLORA(char *topicOri, JsonObject &LORAdata)
     int preambleLength = LORAdata["preamblelength"] | LORA_PREAMBLE_LENGTH;
     byte syncWord = LORAdata["syncword"] | LORA_SYNC_WORD;
     bool Crc = LORAdata["enablecrc"] | DEFAULT_CRC;
-    if (message)
-    {
+    if (message) {
       LoRa.setTxPower(txPower);
       LoRa.setFrequency(frequency);
       LoRa.setSpreadingFactor(spreadingFactor);
@@ -118,19 +109,15 @@ void MQTTtoLORA(char *topicOri, JsonObject &LORAdata)
       LoRa.endPacket();
       Log.trace(F("MQTTtoLORA OK" CR));
       pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-    }
-    else
-    {
+    } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
   }
 }
-#endif
-#ifdef simpleReceiving
-void MQTTtoLORA(char *topicOri, char *LORAdata)
-{ // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA))
-  {
+#  endif
+#  ifdef simpleReceiving
+void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
     LoRa.print(LORAdata);
     LoRa.endPacket();
@@ -138,5 +125,5 @@ void MQTTtoLORA(char *topicOri, char *LORAdata)
     pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
 }
-#endif
+#  endif
 #endif
