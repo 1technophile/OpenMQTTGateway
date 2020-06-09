@@ -27,26 +27,26 @@
 #define config_ONOFF_h
 
 extern void setupONOFF();
-extern void MQTTtoONOFF(char * topicOri, char * datacallback);
-extern void MQTTtoONOFF(char * topicOri, JsonObject& RFdata);
+extern void MQTTtoONOFF(char* topicOri, char* datacallback);
+extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectMQTTtoONOFF  "/commands/MQTTtoONOFF"
-#define subjectGTWONOFFtoMQTT  "/ONOFFtoMQTT"
+#define subjectMQTTtoONOFF    "/commands/MQTTtoONOFF"
+#define subjectGTWONOFFtoMQTT "/ONOFFtoMQTT"
 
-#define ONKey "setON"
+#define ONKey  "setON"
 #define OFFKey "setOFF"
 
 /*-------------------PIN DEFINITIONS----------------------*/
 // default pin, if not set into the MQTT json
 #ifndef ACTUATOR_ONOFF_PIN
-    #ifdef ESP8266
-            #define ACTUATOR_ONOFF_PIN 15 //12 for sonoff basic relay
-    #elif ESP32
-        #define ACTUATOR_ONOFF_PIN 15 
-    #else
-        #define ACTUATOR_ONOFF_PIN 13
-    #endif
+#  ifdef ESP8266
+#    define ACTUATOR_ONOFF_PIN 15 //12 for sonoff basic relay
+#  elif ESP32
+#    define ACTUATOR_ONOFF_PIN 15
+#  else
+#    define ACTUATOR_ONOFF_PIN 13
+#  endif
 #endif
 
 #endif

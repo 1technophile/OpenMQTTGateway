@@ -30,19 +30,19 @@ extern void setupADC();
 extern void ADCtoMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define ADCTOPIC  "/ADCtoMQTT"
+#define ADCTOPIC "/ADCtoMQTT"
 
 #if !defined(TimeBetweenReadingADC) || (TimeBetweenReadingADC < 200)
-  #define TimeBetweenReadingADC 500 // time between 2 ADC readings, minimum 200 to let the time of the ESP to keep the connection
+#  define TimeBetweenReadingADC 500 // time between 2 ADC readings, minimum 200 to let the time of the ESP to keep the connection
 #endif
 
 #ifndef ThresholdReadingADC
-  #define ThresholdReadingADC 50  //  following the comparison between the previous value and the current one +- the threshold the value will be published or not
+#  define ThresholdReadingADC 50 // following the comparison between the previous value and the current one +- the threshold the value will be published or not
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266) || !defined(ADC_PIN)
-  #define ADC_PIN A0 //on nodeMCU this is D3 GPIO0
+#  define ADC_PIN A0 //on nodeMCU this is D3 GPIO0
 #endif
 
 #endif

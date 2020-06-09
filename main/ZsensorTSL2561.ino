@@ -40,15 +40,15 @@
 #include "User_config.h"
 
 #ifdef ZsensorTSL2561
-#include "math.h"
-#include "Wire.h"
-#include <Adafruit_Sensor.h>
-#include <Adafruit_TSL2561_U.h>
+#  include <Adafruit_Sensor.h>
+#  include <Adafruit_TSL2561_U.h>
+
+#  include "Wire.h"
+#  include "math.h"
 
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
 
-void displaySensorDetails(void)
-{
+void displaySensorDetails(void) {
   sensor_t sensor;
   tsl.getSensor(&sensor);
   Log.trace(F("------------------------------------" CR));
@@ -62,14 +62,12 @@ void displaySensorDetails(void)
   delay(500);
 }
 
-void setupZsensorTSL2561()
-{
+void setupZsensorTSL2561() {
   Log.notice(F("Setup TSL2561 on adress: %H" CR), TSL2561_ADDR_FLOAT);
   Wire.begin();
   Wire.beginTransmission(TSL2561_ADDR_FLOAT);
 
-  if (!tsl.begin())
-  {
+  if (!tsl.begin()) {
     Log.error(F("No TSL2561 detected" CR));
   }
 
@@ -86,24 +84,21 @@ void setupZsensorTSL2561()
   displaySensorDetails();
 }
 
-void MeasureLightIntensityTSL2561()
-{
-  if (millis() > (timetsl2561 + TimeBetweenReadingtsl2561))
-  {
+void MeasureLightIntensityTSL2561() {
+  if (millis() > (timetsl2561 + TimeBetweenReadingtsl2561)) {
     static uint32_t persisted_lux;
     timetsl2561 = millis();
 
     Log.trace(F("Creating TSL2561 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject &TSL2561data = jsonBuffer.createObject();
+    JsonObject& TSL2561data = jsonBuffer.createObject();
 
     sensors_event_t event;
     tsl.getEvent(&event);
     if (event.light)
     // if event.light == 0 the sensor is clipping, do not send
     {
-      if (persisted_lux != event.light || tsl2561_always)
-      {
+      if (persisted_lux != event.light || tsl2561_always) {
         persisted_lux = event.light;
 
         TSL2561data.set("lux", (float)event.light);
@@ -111,14 +106,10 @@ void MeasureLightIntensityTSL2561()
         TSL2561data.set("wattsm2", (float)(event.light) / 683.0);
 
         pub(subjectTSL12561toMQTT, TSL2561data);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same lux value, do not send" CR));
       }
-    }
-    else
-    {
+    } else {
       Log.error(F("Failed to read from TSL2561" CR));
     }
   }

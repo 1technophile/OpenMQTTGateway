@@ -26,11 +26,11 @@
 
 /*-------------------FASTLED topics & parameters----------------------*/
 //FASTLED MQTT Subjects
-#define subjectMQTTtoFASTLED "/commands/MQTTtoFASTLED"
-#define subjectMQTTtoFASTLEDsetled "/commands/MQTTtoFASTLED/setled"               //set only one LED with JSON struct {"led":0-x,"hex":"#000000","blink":true/false}
+#define subjectMQTTtoFASTLED              "/commands/MQTTtoFASTLED"
+#define subjectMQTTtoFASTLEDsetled        "/commands/MQTTtoFASTLED/setled" //set only one LED with JSON struct {"led":0-x,"hex":"#000000","blink":true/false}
 #define subjectMQTTtoFASTLEDsetbrightness "/commands/MQTTtoFASTLED/setbrightness" //set the brightness 0-255
-#define subjectMQTTtoFASTLEDsetanimation "/commands/MQTTtoFASTLED/setanimation"          //Animation Fire2012 by Mark Kriegsman
-#define subjectGTWFASTLEDtoMQTT "/FASTLEDtoMQTT"                                  //same color on all LEDs in #RRGGBB
+#define subjectMQTTtoFASTLEDsetanimation  "/commands/MQTTtoFASTLED/setanimation" //Animation Fire2012 by Mark Kriegsman
+#define subjectGTWFASTLEDtoMQTT           "/FASTLEDtoMQTT" //same color on all LEDs in #RRGGBB
 
 // How many leds in your strip?
 #define FASTLED_NUM_LEDS 16
@@ -72,15 +72,15 @@
 #ifdef ESP8266
 //#define FASTLED_ESP8266_RAW_PIN_ORDER
 //#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-#define FASTLED_ESP8266_D1_PIN_ORDER
-#define FASTLED_DATA_PIN D2 // only D2 works by me
+#  define FASTLED_ESP8266_D1_PIN_ORDER
+#  define FASTLED_DATA_PIN D2 // only D2 works by me
 //#define FASTLED_CLOCK_PIN 13
 #elif ESP32
-#define FASTLED_DATA_PIN 16
-#define FASTLED_CLOCK_PIN 13
+#  define FASTLED_DATA_PIN  16
+#  define FASTLED_CLOCK_PIN 13
 #else
-#define FASTLED_DATA_PIN 10
-#define FASTLED_CLOCK_PIN 13
+#  define FASTLED_DATA_PIN  10
+#  define FASTLED_CLOCK_PIN 13
 #endif
 
 #endif

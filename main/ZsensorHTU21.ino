@@ -38,10 +38,11 @@
 #include "User_config.h"
 
 #ifdef ZsensorHTU21
-#include "Wire.h" // Library for communication with I2C / TWI devices
-#include <stdint.h>
-#include "SparkFunHTU21D.h"
-#include "config_HTU21.h"
+#  include <stdint.h>
+
+#  include "SparkFunHTU21D.h"
+#  include "Wire.h" // Library for communication with I2C / TWI devices
+#  include "config_HTU21.h"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timehtu21 = 0;
@@ -49,24 +50,20 @@ unsigned long timehtu21 = 0;
 //Global sensor object
 HTU21D htuSensor;
 
-void setupZsensorHTU21()
-{
+void setupZsensorHTU21() {
   delay(10); // Gives the Sensor enough time to turn on
   Log.notice(F("HTU21 Initialized - begin()" CR));
 
-#if defined(ESP32)
+#  if defined(ESP32)
   Wire.begin(I2C_SDA, I2C_SCL);
   htuSensor.begin(Wire);
-#else
+#  else
   htuSensor.begin();
-#endif
+#  endif
 }
 
-void MeasureTempHum()
-{
-
-  if (millis() > (timehtu21 + TimeBetweenReadinghtu21))
-  {
+void MeasureTempHum() {
+  if (millis() > (timehtu21 + TimeBetweenReadinghtu21)) {
     Log.trace(F("Read HTU21 Sensor" CR));
 
     timehtu21 = millis();
@@ -76,41 +73,31 @@ void MeasureTempHum()
     float HtuTempC = htuSensor.readTemperature();
     float HtuHum = htuSensor.readHumidity();
 
-    if (HtuTempC >= 998 || HtuHum >= 998 )
-    {
+    if (HtuTempC >= 998 || HtuHum >= 998) {
       Log.error(F("Failed to read from sensor HTU21!" CR));
       return;
     }
 
     // Check if reads failed and exit early (to try again).
-    if (isnan(HtuTempC) || isnan(HtuHum))
-    {
+    if (isnan(HtuTempC) || isnan(HtuHum)) {
       Log.error(F("Failed to read from sensor HTU21!" CR));
-    }
-    else
-    {
+    } else {
       Log.notice(F("Creating HTU21 buffer" CR));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject &HTU21data = jsonBuffer.createObject();
+      JsonObject& HTU21data = jsonBuffer.createObject();
       // Generate Temperature in degrees C
-      if (HtuTempC != persisted_htu_tempc || htu21_always)
-      {
-        float HtuTempF = (HtuTempC*1.8)+32;
+      if (HtuTempC != persisted_htu_tempc || htu21_always) {
+        float HtuTempF = (HtuTempC * 1.8) + 32;
         HTU21data.set("tempc", (float)HtuTempC);
         HTU21data.set("tempf", (float)HtuTempF);
-      }
-      else
-      {
+      } else {
         Log.notice(F("Same Temp. Don't send it" CR));
       }
 
       // Generate Humidity in percent
-      if (HtuHum != persisted_htu_hum || htu21_always)
-      {
+      if (HtuHum != persisted_htu_hum || htu21_always) {
         HTU21data.set("hum", (float)HtuHum);
-      }
-      else
-      {
+      } else {
         Log.notice(F("Same Humidity. Don't send it" CR));
       }
 
