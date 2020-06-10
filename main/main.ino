@@ -1377,10 +1377,11 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     MQTTtoM5(topicOri, jsondata);
 #  endif
-#endif
-#ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
+#  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);
+#  endif
 #endif
+
     digitalWrite(led_send, HIGH);
 
     MQTTtoSYS(topicOri, jsondata);
