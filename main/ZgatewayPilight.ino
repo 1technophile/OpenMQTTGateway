@@ -67,7 +67,7 @@ void setupPilight() {
 #    endif
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_GPIO);
-  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX GPIO it was reset to INPUT by Serial.end();
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayPilight setup done " CR));
@@ -140,8 +140,8 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
         case ESPiLight::ERROR_INVALID_JSON:
           Log.error(F("message is not a proper json object" CR));
           break;
-        case ESPiLight::ERROR_NO_OUTPUT_GPIO:
-          Log.error(F("no transmitter pin" CR));
+        case ESPiLight::ERROR_NO_OUTPUT_PIN:
+          Log.error(F("no transmitter GPIO" CR));
           break;
         default:
           Log.error(F("invalid json data, can't read raw or message/protocol" CR));

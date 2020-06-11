@@ -89,7 +89,7 @@ void setupZsensorDS1820() {
   }
 
   if (ds1820.getDS18Count() == 0) {
-    Log.error(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your pin assignment!" CR));
+    Log.error(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your GPIO assignment!" CR));
   }
 
   // make requestTemperatures() non-blocking

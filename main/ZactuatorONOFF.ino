@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker 
    Send and receiving command by MQTT
  
-    Output pin defined to High or Low
+    Output GPIO defined to High or Low
   
     Copyright: (c)Florian ROBERT
     

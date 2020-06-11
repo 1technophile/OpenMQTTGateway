@@ -36,8 +36,8 @@ unsigned long timeHCSR04 = 0;
 void setupHCSR04() {
   Log.notice(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_GPIO);
   Log.notice(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_GPIO);
-  pinMode(HCSR04_TRI_GPIO, OUTPUT); // declare HC SR-04 trigger pin as output
-  pinMode(HCSR04_ECH_GPIO, INPUT); // declare HC SR-04 echo pin as input
+  pinMode(HCSR04_TRI_GPIO, OUTPUT); // declare HC SR-04 trigger GPIO as output
+  pinMode(HCSR04_ECH_GPIO, INPUT); // declare HC SR-04 echo GPIO as input
 }
 
 void MeasureDistance() {

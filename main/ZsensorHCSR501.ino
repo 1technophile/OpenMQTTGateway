@@ -32,7 +32,7 @@
 
 void setupHCSR501() {
   Log.notice(F("HCSR501 pin: %d" CR), HCSR501_GPIO);
-  pinMode(HCSR501_GPIO, INPUT); // declare HC SR-501 pin as input
+  pinMode(HCSR501_GPIO, INPUT); // declare HC SR-501 GPIO as input
 }
 
 void MeasureHCSR501() {

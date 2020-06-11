@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-    Analog pin reading Addon
+    Analog GPIO reading Addon
   
     Copyright: (c)Florian ROBERT
     
