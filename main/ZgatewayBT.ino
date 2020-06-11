@@ -138,7 +138,7 @@ void MiFloraDiscovery(char* mac) {
 #    define MiFloraparametersCount 4
   Log.trace(F("MiFloraDiscovery" CR));
   char* MiFlorasensor[MiFloraparametersCount][8] = {
-      {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx"},
       {"sensor", "MiFlora-tem", mac, "temperature", jsonTemp, "", "", "°C"},
       {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm"},
       {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%"}
@@ -153,7 +153,7 @@ void VegTrugDiscovery(char* mac) {
 #    define VegTrugparametersCount 4
   Log.trace(F("VegTrugDiscovery" CR));
   char* VegTrugsensor[VegTrugparametersCount][8] = {
-      {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx"},
       {"sensor", "VegTrug-tem", mac, "temperature", jsonTemp, "", "", "°C"},
       {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm"},
       {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%"}
