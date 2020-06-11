@@ -222,7 +222,7 @@ void pubMqttDiscovery() {
 #    define BH1750parametersCount 3
   Log.trace(F("BH1750Discovery" CR));
   char* BH1750sensor[BH1750parametersCount][8] = {
-      {"sensor", "lux", "BH1750", "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "lux", "BH1750", "illuminance", jsonLux, "", "", "lx"},
       {"sensor", "ftCd", "BH1750", "", jsonFtcd, "", "", ""},
       {"sensor", "wattsm2", "BH1750", "", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -243,7 +243,7 @@ void pubMqttDiscovery() {
 #    define TSL2561parametersCount 3
   Log.trace(F("TSL2561Discovery" CR));
   char* TSL2561sensor[TSL2561parametersCount][8] = {
-      {"sensor", "lux", "TSL2561", "illuminance", jsonLux, "", "", "lu"},
+      {"sensor", "lux", "TSL2561", "illuminance", jsonLux, "", "", "lx"},
       {"sensor", "ftcd", "TSL2561", "", jsonFtcd, "", "", ""},
       {"sensor", "wattsm2", "TSL2561", "", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
