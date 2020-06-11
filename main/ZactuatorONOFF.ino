@@ -35,10 +35,10 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
     int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
-    int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
+    int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_GPIO;
     if (boolSWITCHTYPE != 99) {
       Log.notice(F("MQTTtoONOFF boolSWITCHTYPE ok: %d" CR), boolSWITCHTYPE);
-      Log.notice(F("Pin number: %d" CR), pin);
+      Log.notice(F("GPIO number: %d" CR), pin);
       pinMode(pin, OUTPUT);
       digitalWrite(pin, boolSWITCHTYPE);
       // we acknowledge the sending by publishing the value to an acknowledgement topic
@@ -55,7 +55,7 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
     int pin = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-    Log.notice(F("Pin number: %d" CR), pin);
+    Log.notice(F("GPIO number: %d" CR), pin);
     pinMode(pin, OUTPUT);
 
     bool ON = false;

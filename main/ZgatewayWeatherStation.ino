@@ -27,7 +27,7 @@
 
 #ifdef ZgatewayWeatherStation
 #  include <WeatherStationDataRx.h>
-WeatherStationDataRx wsdr(RF_WS_RECEIVER_PIN, true);
+WeatherStationDataRx wsdr(RF_WS_RECEIVER_GPIO, true);
 
 void PairedDeviceAdded(byte newID) {
 #  if defined(ESP8266) || defined(ESP32)
@@ -46,7 +46,7 @@ void PairedDeviceAdded(byte newID) {
 }
 
 void setupWeatherStation() {
-  Log.notice(F("RF_WS_RECEIVER_PIN %d" CR), RF_WS_RECEIVER_PIN);
+  Log.notice(F("RF_WS_RECEIVER_GPIO %d" CR), RF_WS_RECEIVER_GPIO);
   wsdr.begin();
   wsdr.pair(NULL, PairedDeviceAdded);
   Log.trace(F("ZgatewayWeatherStation setup done " CR));

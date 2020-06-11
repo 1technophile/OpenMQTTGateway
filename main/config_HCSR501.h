@@ -36,14 +36,14 @@ extern void HCSR501toMQTT();
 #  define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
 #endif
 
-/*-------------------PIN DEFINITIONS----------------------*/
-#ifndef HCSR501_PIN
+/*-------------------GPIO DEFINITIONS----------------------*/
+#ifndef HCSR501_GPIO
 #  if defined(ESP8266)
-#    define HCSR501_PIN D5
+#    define HCSR501_GPIO D5
 #  elif defined(ESP32)
-#    define HCSR501_PIN 5
+#    define HCSR501_GPIO 5
 #  else
-#    define HCSR501_PIN 7
+#    define HCSR501_GPIO 7
 #  endif
 #endif
 

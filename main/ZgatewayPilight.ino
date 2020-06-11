@@ -34,7 +34,7 @@
 #  endif
 
 #  include <ESPiLight.h>
-ESPiLight rf(RF_EMITTER_PIN); // use -1 to disable transmitter
+ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 
 void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
@@ -66,10 +66,10 @@ void setupPilight() {
   rf.enableReceiver();
 #    endif
   rf.setCallback(pilightCallback);
-  rf.initReceiver(RF_RECEIVER_PIN);
-  pinMode(RF_EMITTER_PIN, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
-  Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
-  Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+  rf.initReceiver(RF_RECEIVER_GPIO);
+  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayPilight setup done " CR));
 #  else
   Log.trace(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2" CR));
@@ -140,7 +140,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
         case ESPiLight::ERROR_INVALID_JSON:
           Log.error(F("message is not a proper json object" CR));
           break;
-        case ESPiLight::ERROR_NO_OUTPUT_PIN:
+        case ESPiLight::ERROR_NO_OUTPUT_GPIO:
           Log.error(F("no transmitter pin" CR));
           break;
         default:

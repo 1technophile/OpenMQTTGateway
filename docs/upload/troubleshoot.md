@@ -29,10 +29,10 @@ Regarding the IR led emitter you can replace it with a normal led and see if it 
 
 try with D2 instead of D3
 and put
-define RF_RECEIVER_PIN 4 // D2 on nodemcu
+define RF_RECEIVER_GPIO 4 // D2 on nodemcu
 in config_rf.h
 instead of
-define RF_RECEIVER_PIN 0 // D3 on nodemcu
+define RF_RECEIVER_GPIO 0 // D3 on nodemcu
 
 ## Exception seen on serial monitor:
 Hey I got a callback 

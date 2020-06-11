@@ -42,10 +42,10 @@ const long fireUpdate = 10;
 CRGBPalette16 gPal;
 
 void setupFASTLED() {
-  Log.notice(F("FASTLED_DATA_PIN: %d" CR), FASTLED_DATA_PIN);
+  Log.notice(F("FASTLED_DATA_GPIO: %d" CR), FASTLED_DATA_GPIO);
   Log.notice(F("FASTLED_NUM_LEDS: %d" CR), FASTLED_NUM_LEDS);
   Log.trace(F("ZactuatorFASTLED setup done " CR));
-  FastLED.addLeds<FASTLED_TYPE, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
+  FastLED.addLeds<FASTLED_TYPE, FASTLED_DATA_GPIO>(leds, FASTLED_NUM_LEDS);
 }
 
 //returns the current step of the animation

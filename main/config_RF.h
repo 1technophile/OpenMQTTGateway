@@ -94,30 +94,30 @@ RF supported protocols
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
 #define CC1101_FREQUENCY 433.92
 
-/*-------------------PIN DEFINITIONS----------------------*/
-#ifndef RF_RECEIVER_PIN
+/*-------------------GPIO DEFINITIONS----------------------*/
+#ifndef RF_RECEIVER_GPIO
 #  ifdef ESP8266
-#    define RF_RECEIVER_PIN 0 // D3 on nodemcu // put 4 with rf bridge direct mod
+#    define RF_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
 #  elif ESP32
-#    define RF_RECEIVER_PIN 27 // D27 on DOIT ESP32
+#    define RF_RECEIVER_GPIO 27 // D27 on DOIT ESP32
 #  elif __AVR_ATmega2560__
-#    define RF_RECEIVER_PIN 1 //1 = D3 on mega
+#    define RF_RECEIVER_GPIO 1 //1 = D3 on mega
 #  else
-#    define RF_RECEIVER_PIN 1 //1 = D3 on arduino
+#    define RF_RECEIVER_GPIO 1 //1 = D3 on arduino
 #  endif
 #endif
 
-#ifndef RF_EMITTER_PIN
+#ifndef RF_EMITTER_GPIO
 #  ifdef ESP8266
-#    define RF_EMITTER_PIN 3 // RX on nodemcu if it doesn't work with 3, try with 4 (D2) // put 5 with rf bridge direct mod
+#    define RF_EMITTER_GPIO 3 // RX on nodemcu if it doesn't work with 3, try with 4 (D2) // put 5 with rf bridge direct mod
 #  elif ESP32
-#    define RF_EMITTER_PIN 12 // D12 on DOIT ESP32
+#    define RF_EMITTER_GPIO 12 // D12 on DOIT ESP32
 #  elif __AVR_ATmega2560__
-#    define RF_EMITTER_PIN 4
+#    define RF_EMITTER_GPIO 4
 #  else
-//IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/boarddefs.h so as to free pin D3 for RF RECEIVER PIN
-//RF PIN definition
-#    define RF_EMITTER_PIN 4 //4 = D4 on arduino
+//IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/boarddefs.h so as to free pin D3 for RF RECEIVER GPIO
+//RF GPIO definition
+#    define RF_EMITTER_GPIO 4 //4 = D4 on arduino
 #  endif
 #endif
 

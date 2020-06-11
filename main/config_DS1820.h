@@ -41,15 +41,15 @@ extern void pubOneWire_HADiscovery();
 #endif
 #define DS1820_DETAILS   true // publish extented info for each sensor (resolution, address, type)
 #define DS1820_CONV_TIME 2000 // trigger conversion before requesting temperature readings (ms)
-/*-------------------PIN DEFINITIONS----------------------*/
+/*-------------------GPIO DEFINITIONS----------------------*/
 
-#ifndef DS1820_OWBUS_PIN
+#ifndef DS1820_OWBUS_GPIO
 #  if defined(ESP8266)
-#    define DS1820_OWBUS_PIN 2
+#    define DS1820_OWBUS_GPIO 2
 #  elif defined(ESP32)
-#    define DS1820_OWBUS_PIN 2
+#    define DS1820_OWBUS_GPIO 2
 #  else
-#    define DS1820_OWBUS_PIN 2
+#    define DS1820_OWBUS_GPIO 2
 #  endif
 #endif
 

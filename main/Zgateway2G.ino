@@ -33,24 +33,24 @@
 #  include <ArduinoJson.h>
 
 // Instantiate the library with TxPin, RxPin.
-A6lib A6l(_2G_TX_PIN, _2G_RX_PIN); //D6 to A6 RX, D7 to A6 TX
+A6lib A6l(_2G_TX_GPIO, _2G_RX_GPIO); //D6 to A6 RX, D7 to A6 TX
 
 int unreadSMSLocs[50] = {0};
 int unreadSMSNum = 0;
 SMSmessage sms;
 
 void setup2G() {
-  Log.notice(F("_2G_TX_PIN: %d " CR), _2G_TX_PIN);
-  Log.notice(F("_2G_RX_PIN: %d " CR), _2G_RX_PIN);
+  Log.notice(F("_2G_TX_GPIO: %d " CR), _2G_TX_GPIO);
+  Log.notice(F("_2G_RX_GPIO: %d " CR), _2G_RX_GPIO);
   setupGSM(false);
   Log.trace(F("Zgateway2G setup done " CR));
 }
 
 void setupGSM(bool deleteSMS) {
-  Log.trace(F("Init 2G module: %d" CR), _2G_PWR_PIN);
+  Log.trace(F("Init 2G module: %d" CR), _2G_PWR_GPIO);
   delay(1000);
   // Power-cycle the module to reset it.
-  A6l.powerCycle(_2G_PWR_PIN);
+  A6l.powerCycle(_2G_PWR_GPIO);
   Log.notice(F("waiting for network connection at bd: %d" CR), _2G_MODULE_BAUDRATE);
   A6l.blockUntilReady(_2G_MODULE_BAUDRATE);
   Log.notice(F("A6/A7 gsm ready" CR));

@@ -113,7 +113,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #define ota_hostname "OTAHOSTNAME"
 #define ota_password "OTAPASSWORD"
 #define ota_port     8266
-/*-------------DEFINE PINs FOR STATUS LEDs----------------*/
+/*-------------DEFINE GPIOs FOR STATUS LEDs----------------*/
 #ifdef ESP8266
 #  define led_receive 40
 #  define led_send    42
@@ -132,13 +132,13 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #  define led_info    44
 #endif
 
-//      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
+//      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino GPIO
 //                        LED       Resistor 270-510R
-#ifndef TRIGGER_PIN
+#ifndef TRIGGER_GPIO
 #  ifdef ESP8266
-#    define TRIGGER_PIN 14 // pin D5 as full reset button (long press >10s)
+#    define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
 #  elif ESP32
-#    define TRIGGER_PIN 0 // boot button as full reset button (long press >10s)
+#    define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 #  endif
 #endif
 

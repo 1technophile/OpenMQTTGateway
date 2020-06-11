@@ -47,8 +47,8 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 
 #define repeatLORAwMQTT false // do we repeat a received signal by using mqtt with LORA gateway
 
-/*-------------------PIN DEFINITIONS----------------------*/
-//TTGO LORA BOARD ESP32 PIN DEFINITION
+/*-------------------GPIO DEFINITIONS----------------------*/
+//TTGO LORA BOARD ESP32 GPIO DEFINITION
 #define LORA_SCK  5 // GPIO5  -- SX1278's SCK
 #define LORA_MISO 19 // GPIO19 -- SX1278's MISO
 #define LORA_MOSI 27 // GPIO27 -- SX1278's MOSI

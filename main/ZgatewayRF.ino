@@ -56,16 +56,16 @@ void RFtoMQTTdiscovery(unsigned long MQTTvalue) { //on the fly switch creation f
 
 void setupRF() {
   //RF init parameters
-  Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
-  Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
 #  ifdef ZradioCC1101 //receiving with CC1101
   ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
 #  endif
-  mySwitch.enableTransmit(RF_EMITTER_PIN);
+  mySwitch.enableTransmit(RF_EMITTER_GPIO);
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
-  mySwitch.enableReceive(RF_RECEIVER_PIN);
+  mySwitch.enableReceive(RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayRF setup done" CR));
 }
 
@@ -105,7 +105,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);
   mySwitch.disableReceive();
-  mySwitch.enableTransmit(RF_EMITTER_PIN);
+  mySwitch.enableTransmit(RF_EMITTER_GPIO);
 #    endif
   unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
 
@@ -157,7 +157,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
   mySwitch.disableTransmit();
-  mySwitch.enableReceive(RF_RECEIVER_PIN);
+  mySwitch.enableReceive(RF_RECEIVER_GPIO);
 #    endif
 }
 #  endif
@@ -167,7 +167,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);
   mySwitch.disableReceive();
-  mySwitch.enableTransmit(RF_EMITTER_PIN);
+  mySwitch.enableTransmit(RF_EMITTER_GPIO);
 #    endif
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));
@@ -193,7 +193,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
   mySwitch.disableTransmit();
-  mySwitch.enableReceive(RF_RECEIVER_PIN);
+  mySwitch.enableReceive(RF_RECEIVER_GPIO);
 #    endif
 }
 #  endif

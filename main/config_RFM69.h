@@ -57,7 +57,7 @@ const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
 #define IS_RFM69HCW true // set to 'true' if you are using an RFM69HCW module
 #define POWER_LEVEL 31
 
-/*-------------------PIN DEFINITIONS----------------------*/
+/*-------------------GPIO DEFINITIONS----------------------*/
 #if defined(ESP8266)
 #  define RFM69_CS   D1
 #  define RFM69_IRQ  D8 // GPIO15/D8

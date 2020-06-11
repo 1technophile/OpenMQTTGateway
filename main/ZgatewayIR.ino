@@ -35,15 +35,15 @@
 #    include <IRsend.h> // Needed if you want to send IR commands.
 #    include <IRutils.h>
 #    ifdef DumpMode // in dump mode we increase the size of the buffer to catch big codes
-IRrecv irrecv(IR_RECEIVER_PIN, 1024, 15U, true);
+IRrecv irrecv(IR_RECEIVER_GPIO, 1024, 15U, true);
 #    else
-IRrecv irrecv(IR_RECEIVER_PIN);
+IRrecv irrecv(IR_RECEIVER_GPIO);
 #    endif
-IRsend irsend(IR_EMITTER_PIN);
+IRsend irsend(IR_EMITTER_GPIO);
 #  else
 #    include <IRremote.h>
-IRrecv irrecv(IR_RECEIVER_PIN);
-IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
+IRrecv irrecv(IR_RECEIVER_GPIO);
+IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER GPIO
 #  endif
 
 // IR protocol bits definition for Arduino (for ESP9266 they are defined in IRRemoteESP8266.h)
@@ -102,8 +102,8 @@ void setupIR() {
 
   irrecv.enableIRIn(); // Start the receiver
 
-  Log.notice(F("IR_EMITTER_PIN: %d " CR), IR_EMITTER_PIN);
-  Log.notice(F("IR_RECEIVER_PIN: %d " CR), IR_RECEIVER_PIN);
+  Log.notice(F("IR_EMITTER_GPIO: %d " CR), IR_EMITTER_GPIO);
+  Log.notice(F("IR_RECEIVER_GPIO: %d " CR), IR_RECEIVER_GPIO);
   Log.trace(F("ZgatewayIR setup done " CR));
 }
 

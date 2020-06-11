@@ -37,15 +37,15 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 #define ONKey  "setON"
 #define OFFKey "setOFF"
 
-/*-------------------PIN DEFINITIONS----------------------*/
+/*-------------------GPIO DEFINITIONS----------------------*/
 // default pin, if not set into the MQTT json
-#ifndef ACTUATOR_ONOFF_PIN
+#ifndef ACTUATOR_ONOFF_GPIO
 #  ifdef ESP8266
-#    define ACTUATOR_ONOFF_PIN 15 //12 for sonoff basic relay
+#    define ACTUATOR_ONOFF_GPIO 15 //12 for sonoff basic relay
 #  elif ESP32
-#    define ACTUATOR_ONOFF_PIN 15
+#    define ACTUATOR_ONOFF_GPIO 15
 #  else
-#    define ACTUATOR_ONOFF_PIN 13
+#    define ACTUATOR_ONOFF_GPIO 13
 #  endif
 #endif
 

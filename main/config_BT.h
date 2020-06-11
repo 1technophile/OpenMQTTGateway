@@ -87,7 +87,7 @@ struct decompose {
   char extract[60];
 };
 
-/*-------------------PIN DEFINITIONS----------------------*/
+/*-------------------GPIO DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)
 #  ifdef ESP8266
 #    define BT_RX 13 //D7 ESP8266 RX connect HM-10 or 11 TX

@@ -62,13 +62,13 @@ void setupRF2() {
   ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
 #    endif
-  NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
-  Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
-  Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+  NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayRF2 setup done " CR));
 #  endif
-  pinMode(RF_EMITTER_PIN, OUTPUT);
-  digitalWrite(RF_EMITTER_PIN, LOW);
+  pinMode(RF_EMITTER_GPIO, OUTPUT);
+  digitalWrite(RF_EMITTER_GPIO, LOW);
 }
 
 void RF2toMQTT() {
@@ -161,7 +161,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
       valuePERIOD = 272;
     NewRemoteReceiver::disable();
     Log.trace(F("Creating transmitter" CR));
-    NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
+    NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_GPIO, valuePERIOD);
     Log.trace(F("Sending data" CR));
     if (valueGROUP) {
       if (isDimCommand) {
@@ -237,7 +237,7 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
         if (valuePERIOD == 0)
           valuePERIOD = 272;
         NewRemoteReceiver::disable();
-        NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
+        NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_GPIO, valuePERIOD);
         Log.trace(F("Sending" CR));
         if (valueGROUP) {
           if (isDimCommand) {

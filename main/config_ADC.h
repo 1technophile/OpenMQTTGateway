@@ -40,9 +40,9 @@ extern void ADCtoMQTT();
 #  define ThresholdReadingADC 50 // following the comparison between the previous value and the current one +- the threshold the value will be published or not
 #endif
 
-/*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || !defined(ADC_PIN)
-#  define ADC_PIN A0 //on nodeMCU this is D3 GPIO0
+/*-------------------GPIO DEFINITIONS----------------------*/
+#if defined(ESP8266) || !defined(ADC_GPIO)
+#  define ADC_GPIO A0 //on nodeMCU this is D3 GPIO0
 #endif
 
 #endif

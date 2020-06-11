@@ -1,6 +1,6 @@
 # Actuators
 ## ON OFF
-This module enables to actuate things by giving to a PIN a HIGH or LOW value corresponding to an MQTT topic.
+This module enables to actuate things by giving to a GPIO a HIGH or LOW value corresponding to an MQTT topic.
 Example usage: Connect a transistor to power a relay, connect a led...
 
 So as to pilot the pin use the following commands with [simple receiving](../upload/pio.md#api):
