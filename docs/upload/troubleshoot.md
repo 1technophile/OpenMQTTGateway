@@ -1,8 +1,10 @@
 # Troubleshooting
 
 ## Compilation/build error
-This badge [![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.com/1technophile/OpenMQTTGateway) show you the state of the compilation of the master and this one [![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=development)](https://travis-ci.com/1technophile/OpenMQTTGateway) for the development branch. If you see a green badge this means that the code compilation is OK with the configuration given in the docs/platformio.ini. Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
-Verify especially that the libraries provided into the [the release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
+This badge [![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=master)](https://github.com/1technophile/OpenMQTTGateway/actions?query=branch%3Amaster+workflow%3ABuild) show you the state of the compilation of the master and this one [![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=development)](https://github.com/1technophile/OpenMQTTGateway/actions?query=branch%3Adevelopment+workflow%3ABuild) for the development branch.
+If you see a green badge this means that the code compilation is OK with the configuration given in the `docs/platformio.ini`.
+Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
+Verify especially that the libraries provided into the [release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
 
 ## ESP32 compilation errors related to wifi
 If you get one or several of the following errors:
@@ -29,10 +31,10 @@ Regarding the IR led emitter you can replace it with a normal led and see if it 
 
 try with D2 instead of D3
 and put
-define RF_RECEIVER_PIN 4 // D2 on nodemcu
+`#define RF_RECEIVER_PIN 4 // D2 on nodemcu`
 in config_rf.h
 instead of
-define RF_RECEIVER_PIN 0 // D3 on nodemcu
+`#define RF_RECEIVER_PIN 0 // D3 on nodemcu`
 
 ## Exception seen on serial monitor:
 Hey I got a callback 
