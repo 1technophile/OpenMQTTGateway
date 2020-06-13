@@ -14,10 +14,10 @@ ON command
 or with [json receiving](../upload/pio.md#api)
 
 OFF command:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"pin":15,"cmd":0}'`
+`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":0}'`
 
 ON command
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"pin":15,"cmd":1}'`
+`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":1}'`
 
 ## FASTLED
 ### The FASTLED module support 2 different operation modes
