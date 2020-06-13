@@ -34,11 +34,11 @@ extern void GPIOInputtoMQTT();
 #define GPIOInputDebounceDelay 60 //debounce time, increase if there are issues
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifndef GPIOInput_GPIO
+#ifndef INPUT_GPIO
 #  if defined(ESP8266) || defined(ESP32)
-#    define GPIOInput_GPIO 13
+#    define INPUT_GPIO 13
 #  else
-#    define GPIOInput_GPIO 7
+#    define INPUT_GPIO 7
 #  endif
 #endif
 
