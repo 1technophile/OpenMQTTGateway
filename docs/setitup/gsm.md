@@ -19,6 +19,6 @@ For VCC5 you can power it directly all the time with an USB cable or use a MOSFE
 
 Don't use the nodemcu/wemos 5V pin for the A6/7 power, use a dedicated power supply for both or dedicated to the A6/7 with at least 2 amps ability.
 
-So as to start your A6/7 module press the red button for 4 seconds, or link the PWR_KEY pin to VCC5.0 for the same time.
+So as to start your A6/7 module press the red button for 4 seconds, or link the PWR_KEY GPIO to VCC5.0 for the same time.
 
 ![Addon_2G](../img/OpenMQTTgateway_ESP8266_Addon_2G.png)

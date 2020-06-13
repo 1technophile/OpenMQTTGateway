@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker 
    Send and receiving command by MQTT
  
-    Output pin defined to High or Low
+    Output GPIO defined to High or Low
   
     Copyright: (c)Florian ROBERT
     
@@ -35,7 +35,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
     int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
-    int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
+    int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_GPIO;
     if (boolSWITCHTYPE != 99) {
       Log.notice(F("MQTTtoONOFF boolSWITCHTYPE ok: %d" CR), boolSWITCHTYPE);
       Log.notice(F("Pin number: %d" CR), pin);

@@ -240,11 +240,11 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  endif
 #endif
 
-#ifndef TRIGGER_PIN
+#ifndef TRIGGER_GPIO
 #  ifdef ESP8266
-#    define TRIGGER_PIN 14 // pin D5 as full reset button (long press >10s)
+#    define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
 #  elif ESP32
-#    define TRIGGER_PIN 0 // boot button as full reset button (long press >10s)
+#    define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 #  endif
 #endif
 

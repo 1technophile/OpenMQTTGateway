@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-    Analog pin reading Addon
+    Analog GPIO reading Addon
   
     Copyright: (c)Florian ROBERT
     
@@ -38,7 +38,7 @@ ADC_MODE(ADC_TOUT);
 unsigned long timeadc = 0;
 
 void setupADC() {
-  Log.notice(F("Reading ADC on pin: %d" CR), ADC_PIN);
+  Log.notice(F("Reading ADC on pin: %d" CR), ADC_GPIO);
 }
 
 void MeasureADC() {
@@ -48,7 +48,7 @@ void MeasureADC() {
 #  endif
     timeadc = millis();
     static int persistedadc;
-    int val = analogRead(ADC_PIN);
+    int val = analogRead(ADC_GPIO);
     if (isnan(val)) {
       Log.error(F("Failed to read from ADC !" CR));
     } else {

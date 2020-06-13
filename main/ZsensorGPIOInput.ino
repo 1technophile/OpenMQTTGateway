@@ -35,12 +35,12 @@ int InputState = 3; // Set to 3 so that it reads on startup
 int lastInputState = 3;
 
 void setupGPIOInput() {
-  Log.notice(F("Reading GPIO at pin: %d" CR), GPIOInput_PIN);
-  pinMode(GPIOInput_PIN, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
+  Log.notice(F("Reading GPIO at pin: %d" CR), GPIOInput_GPIO);
+  pinMode(GPIOInput_GPIO, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 }
 
 void MeasureGPIOInput() {
-  int reading = digitalRead(GPIOInput_PIN);
+  int reading = digitalRead(GPIOInput_GPIO);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough

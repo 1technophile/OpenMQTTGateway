@@ -42,7 +42,7 @@ extern void ADCtoMQTT();
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266) || !defined(ADC_PIN)
-#  define ADC_PIN A0 //on nodeMCU this is D3 GPIO0
+#  define ADC_PIN A0 //on nodeMCU this is D3 pin
 #endif
 
 #endif

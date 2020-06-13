@@ -29,7 +29,7 @@
 #  include <DallasTemperature.h>
 #  include <OneWire.h>
 
-OneWire owbus(DS1820_OWBUS_PIN);
+OneWire owbus(DS1820_OWBUS_GPIO);
 DallasTemperature ds1820(&owbus);
 DeviceAddress ds1820_address, ds1820_devices[OW_MAX_SENSORS];
 
@@ -39,7 +39,7 @@ static String ds1820_type[OW_MAX_SENSORS];
 static String ds1820_addr[OW_MAX_SENSORS];
 
 void setupZsensorDS1820() {
-  Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_PIN);
+  Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_GPIO);
   ds1820.begin();
 
   // Search the OneWire bus for all devices
@@ -89,7 +89,7 @@ void setupZsensorDS1820() {
   }
 
   if (ds1820.getDS18Count() == 0) {
-    Log.error(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your pin assignment!" CR));
+    Log.error(F("DS1820: Failed to enumerate sensors on 1-wire bus. Check your GPIO assignment!" CR));
   }
 
   // make requestTemperatures() non-blocking

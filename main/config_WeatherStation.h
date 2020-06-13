@@ -36,15 +36,15 @@ extern void ZgatewayWeatherStationtoMQTT();
 #define subjectRFtoMQTT "/433toMQTT"
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifndef RF_WS_RECEIVER_PIN
+#ifndef RF_WS_RECEIVER_GPIO
 #  ifdef ESP8266
-#    define RF_WS_RECEIVER_PIN 0 // D3 on nodemcu // put 4 with rf bridge direct mod
+#    define RF_WS_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
 #  elif ESP32
-#    define RF_WS_RECEIVER_PIN 27 // D27 on DOIT ESP32
+#    define RF_WS_RECEIVER_GPIO 27 // D27 on DOIT ESP32
 #  elif __AVR_ATmega2560__
-#    define RF_WS_RECEIVER_PIN 1 //1 = D3 on mega
+#    define RF_WS_RECEIVER_GPIO 1 //1 = D3 on mega
 #  else
-#    define RF_WS_RECEIVER_PIN 1 //1 = D3 on arduino
+#    define RF_WS_RECEIVER_GPIO 1 //1 = D3 on arduino
 #  endif
 #endif
 

@@ -37,20 +37,20 @@ extern void GPIOKeyCodetoMQTT();
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266) || defined(ESP32)
 
-#  ifndef GPIOKeyCode_LATCH_PIN
-#    define GPIOKeyCode_LATCH_PIN 12 //D6
+#  ifndef GPIOKeyCode_LATCH_GPIO
+#    define GPIOKeyCode_LATCH_GPIO 12 //D6
 #  endif
-#  ifndef GPIOKeyCode_D0_PIN
-#    define GPIOKeyCode_D0_PIN 14 //D5
+#  ifndef GPIOKeyCode_D0_GPIO
+#    define GPIOKeyCode_D0_GPIO 14 //D5
 #  endif
-#  ifndef GPIOKeyCode_D1_PIN
-#    define GPIOKeyCode_D1_PIN 5 //D1
+#  ifndef GPIOKeyCode_D1_GPIO
+#    define GPIOKeyCode_D1_GPIO 5 //D1
 #  endif
-#  ifndef GPIOKeyCode_D2_PIN
-#    define GPIOKeyCode_D2_PIN 13 //D7
+#  ifndef GPIOKeyCode_D2_GPIO
+#    define GPIOKeyCode_D2_GPIO 13 //D7
 #  endif
-#  ifndef GPIOKeyCode_D3_PIN
-#    define GPIOKeyCode_D3_PIN XX //??
+#  ifndef GPIOKeyCode_D3_GPIO
+#    define GPIOKeyCode_D3_GPIO XX //??
 #  endif
 #else
 // must define !!!
