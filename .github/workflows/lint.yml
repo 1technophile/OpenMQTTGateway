@@ -1,0 +1,22 @@
+name: Check Code Format
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Check main format
+        uses: DoozyX/clang-format-lint-action@v0.6
+        with:
+          source: "./main"
+          extensions: "h,ino"
+          clangFormatVersion: 9
+      - name: Check test format
+        uses: DoozyX/clang-format-lint-action@v0.6
+        with:
+          source: "./test"
+          extensions: "h,ino"
+          clangFormatVersion: 9

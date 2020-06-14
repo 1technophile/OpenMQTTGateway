@@ -41,18 +41,18 @@
 extern void setupHTU21();
 extern void HTU21toMQTT();
 
-#define htu21_always true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
+#define htu21_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadinghtu21 30000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define HTUTOPIC   "/CLIMAtoMQTT/htu"
+#define HTUTOPIC "/CLIMAtoMQTT/htu"
 
 #if defined(ESP32)
-  #if !defined(I2C_SDA) || !defined(I2C_SCL)
-    #define I2C_SDA 16
-    #define I2C_SCL 0
-  #endif
+#  if !defined(I2C_SDA) || !defined(I2C_SCL)
+#    define I2C_SDA 16
+#    define I2C_SCL 0
+#  endif
 #endif
 
 #endif

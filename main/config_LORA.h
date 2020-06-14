@@ -27,13 +27,13 @@
 #define config_LORA_h
 
 extern void setupLORA();
-extern void LORAtoMQTT();  
-extern void MQTTtoLORA(char * topicOri, char * datacallback);
-extern void MQTTtoLORA(char * topicOri, JsonObject& RFdata);
+extern void LORAtoMQTT();
+extern void MQTTtoLORA(char* topicOri, char* datacallback);
+extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 /*----------------------LORA topics & parameters-------------------------*/
-#define subjectLORAtoMQTT     "/LORAtoMQTT"
-#define subjectMQTTtoLORA     "/commands/MQTTtoLORA"
-#define subjectGTWLORAtoMQTT  "/LORAtoMQTT"
+#define subjectLORAtoMQTT    "/LORAtoMQTT"
+#define subjectMQTTtoLORA    "/commands/MQTTtoLORA"
+#define subjectGTWLORAtoMQTT "/LORAtoMQTT"
 
 //Default parameters used when the parameters are not set in the json data
 #define LORA_BAND             868E6
@@ -49,11 +49,11 @@ extern void MQTTtoLORA(char * topicOri, JsonObject& RFdata);
 
 /*-------------------PIN DEFINITIONS----------------------*/
 //TTGO LORA BOARD ESP32 PIN DEFINITION
-#define LORA_SCK     5    // GPIO5  -- SX1278's SCK
-#define LORA_MISO    19   // GPIO19 -- SX1278's MISO
-#define LORA_MOSI    27   // GPIO27 -- SX1278's MOSI
-#define LORA_SS      18   // GPIO18 -- SX1278's CS
-#define LORA_RST     14   // GPIO14 -- SX1278's RESET
-#define LORA_DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
+#define LORA_SCK  5 // GPIO5  -- SX1278's SCK
+#define LORA_MISO 19 // GPIO19 -- SX1278's MISO
+#define LORA_MOSI 27 // GPIO27 -- SX1278's MOSI
+#define LORA_SS   18 // GPIO18 -- SX1278's CS
+#define LORA_RST  14 // GPIO14 -- SX1278's RESET
+#define LORA_DI0  26 // GPIO26 -- SX1278's IRQ(Interrupt Request)
 
 #endif

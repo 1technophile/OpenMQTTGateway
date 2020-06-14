@@ -30,37 +30,29 @@
 
 #ifdef ZsensorHCSR501
 
-void setupHCSR501()
-{
-  Log.notice(F("HCSR501 pin: %d" CR), HCSR501_PIN);
-  pinMode(HCSR501_PIN, INPUT); // declare HC SR-501 pin as input
+void setupHCSR501() {
+  Log.notice(F("HCSR501 pin: %d" CR), HCSR501_GPIO);
+  pinMode(HCSR501_GPIO, INPUT); // declare HC SR-501 GPIO as input
 }
 
-void MeasureHCSR501()
-{
-  if (millis() > TimeBeforeStartHCSR501)
-  { //let time to init the PIR sensor
+void MeasureHCSR501() {
+  if (millis() > TimeBeforeStartHCSR501) { //let time to init the PIR sensor
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject &HCSR501data = jsonBuffer.createObject();
+    JsonObject& HCSR501data = jsonBuffer.createObject();
     static int pirState = LOW;
-    int PresenceValue = digitalRead(HCSR501_PIN);
-    #if defined(ESP8266) || defined(ESP32)
+    int PresenceValue = digitalRead(HCSR501_GPIO);
+#  if defined(ESP8266) || defined(ESP32)
     yield();
-    #endif
-    if (PresenceValue == HIGH)
-    {
-      if (pirState == LOW)
-      {
+#  endif
+    if (PresenceValue == HIGH) {
+      if (pirState == LOW) {
         //turned on
         HCSR501data.set("hcsr501", "true");
         pirState = HIGH;
       }
-    }
-    else
-    {
-      if (pirState == HIGH)
-      {
+    } else {
+      if (pirState == HIGH) {
         // turned off
         HCSR501data.set("hcsr501", "false");
         pirState = LOW;

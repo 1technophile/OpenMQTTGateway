@@ -1,0 +1,14 @@
+BasedOnStyle: Google
+Language: Cpp
+ColumnLimit: 0
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+IndentPPDirectives: AfterHash
+ReflowComments: false
+SpacesBeforeTrailingComments: 1
+AlignConsecutiveMacros: true
+AlignTrailingComments: false
+AccessModifierOffset: -2
+DerivePointerAlignment: false
+PointerAlignment: Left

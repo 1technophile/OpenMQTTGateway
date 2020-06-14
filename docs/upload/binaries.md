@@ -3,6 +3,7 @@ This section is usefull if you want to directly flash your ESP from your desktop
 Nevertheless you will not be able to change advanced parameters, if you want to do so refer to [Upload from PlatformIO][pio] section.
 
 Download the binary corresponding to your board and gateway [here](https://github.com/1technophile/OpenMQTTGateway/releases) from github and uncompress it.
+Note that the -all binary packages are produced for tests only.
 
 ## ESP32
 * Download the bootloader [here](https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/bin/bootloader_dio_80m.bin)
