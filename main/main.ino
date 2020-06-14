@@ -774,6 +774,7 @@ void saveConfigCallback() {
   shouldSaveConfig = true;
 }
 
+#  if TRIGGER_GPIO
 void checkButton() { // code from tzapu/wifimanager examples
   // check for button press
   if (digitalRead(TRIGGER_GPIO) == LOW) {
@@ -791,6 +792,9 @@ void checkButton() { // code from tzapu/wifimanager examples
     }
   }
 }
+#  else
+void checkButton() {}
+#  endif
 
 void eraseAndRestart() {
 #  if defined(ESP8266)
@@ -811,8 +815,9 @@ void eraseAndRestart() {
 }
 
 void setup_wifimanager(bool reset_settings) {
+#  if TRIGGER_GPIO
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
-
+#  endif
   delay(10);
   WiFi.mode(WIFI_STA);
   if (!wifiProtocol) forceWifiProtocol();

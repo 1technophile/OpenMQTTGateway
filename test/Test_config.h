@@ -136,9 +136,9 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //                        LED       Resistor 270-510R
 #ifndef TRIGGER_GPIO
 #  ifdef ESP8266
-#    define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
+//#    define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
 #  elif ESP32
-#    define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
+//#    define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 #  endif
 #endif
 
