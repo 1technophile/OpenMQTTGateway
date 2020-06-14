@@ -49,14 +49,14 @@ extern void MeasureDistance();
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266)
-#  define HCSR04_TRI_PIN D6
-#  define HCSR04_ECH_PIN D7
+#  define HCSR04_TRI_GPIO D6
+#  define HCSR04_ECH_GPIO D7
 #elif defined(ESP32)
-#  define HCSR04_TRI_PIN 16 // NOT TESTED
-#  define HCSR04_ECH_PIN 17 // NOT TESTED
+#  define HCSR04_TRI_GPIO 16 // NOT TESTED
+#  define HCSR04_ECH_GPIO 17 // NOT TESTED
 #else
-#  define HCSR04_TRI_PIN 6 // NOT TESTED
-#  define HCSR04_ECH_PIN 5 // NOT TESTED
+#  define HCSR04_TRI_GPIO 6 // NOT TESTED
+#  define HCSR04_ECH_GPIO 5 // NOT TESTED
 #endif
 
 #endif

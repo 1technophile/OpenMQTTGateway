@@ -467,7 +467,7 @@ void setup() {
 
 #if defined(ESP8266) || defined(ESP32)
 #  ifdef ESP8266
-#    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 pin optimization
+#    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
   Serial.end();
   Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
 #    endif
@@ -777,14 +777,14 @@ void saveConfigCallback() {
 
 void checkButton() { // code from tzapu/wifimanager examples
   // check for button press
-  if (digitalRead(TRIGGER_PIN) == LOW) {
+  if (digitalRead(TRIGGER_GPIO) == LOW) {
     // poor mans debounce/press-hold, code not ideal for production
     delay(50);
-    if (digitalRead(TRIGGER_PIN) == LOW) {
+    if (digitalRead(TRIGGER_GPIO) == LOW) {
       Log.trace(F("Trigger button Pressed" CR));
       // still holding button for 3000 ms, reset settings, code not ideaa for production
       delay(3000); // reset delay hold
-      if (digitalRead(TRIGGER_PIN) == LOW) {
+      if (digitalRead(TRIGGER_GPIO) == LOW) {
         Log.trace(F("Button Held" CR));
         Log.notice(F("Erasing ESP Config, restarting" CR));
         setup_wifimanager(true);
@@ -812,7 +812,7 @@ void eraseAndRestart() {
 }
 
 void setup_wifimanager(bool reset_settings) {
-  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  pinMode(TRIGGER_GPIO, INPUT_PULLUP);
 
   delay(10);
   WiFi.mode(WIFI_STA);

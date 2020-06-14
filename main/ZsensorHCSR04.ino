@@ -34,10 +34,10 @@
 unsigned long timeHCSR04 = 0;
 
 void setupHCSR04() {
-  Log.notice(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_PIN);
-  Log.notice(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_PIN);
-  pinMode(HCSR04_TRI_PIN, OUTPUT); // declare HC SR-04 trigger pin as output
-  pinMode(HCSR04_ECH_PIN, INPUT); // declare HC SR-04 echo pin as input
+  Log.notice(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_GPIO);
+  Log.notice(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_GPIO);
+  pinMode(HCSR04_TRI_GPIO, OUTPUT); // declare HC SR-04 trigger GPIO as output
+  pinMode(HCSR04_ECH_GPIO, INPUT); // declare HC SR-04 echo GPIO as input
 }
 
 void MeasureDistance() {
@@ -46,12 +46,12 @@ void MeasureDistance() {
     Log.trace(F("Creating HCSR04 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& HCSR04data = jsonBuffer.createObject();
-    digitalWrite(HCSR04_TRI_PIN, LOW);
+    digitalWrite(HCSR04_TRI_GPIO, LOW);
     delayMicroseconds(2);
-    digitalWrite(HCSR04_TRI_PIN, HIGH);
+    digitalWrite(HCSR04_TRI_GPIO, HIGH);
     delayMicroseconds(10);
-    digitalWrite(HCSR04_TRI_PIN, LOW);
-    unsigned long duration = pulseIn(HCSR04_ECH_PIN, HIGH);
+    digitalWrite(HCSR04_TRI_GPIO, LOW);
+    unsigned long duration = pulseIn(HCSR04_ECH_GPIO, HIGH);
     if (isnan(duration)) {
       Log.error(F("Failed to read from HC SR04 sensor!" CR));
     } else {

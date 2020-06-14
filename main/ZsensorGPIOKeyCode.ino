@@ -32,15 +32,15 @@ int lastInputStateGPIOKeyCode = 0x0f;
 int lastLatchStateGPIOKeyCode = 0;
 
 void setupGPIOKeyCode() {
-  pinMode(GPIOKeyCode_LATCH_PIN, INPUT_PULLUP); //
-  pinMode(GPIOKeyCode_D0_PIN, INPUT_PULLUP); //
-  pinMode(GPIOKeyCode_D1_PIN, INPUT_PULLUP); //
-  pinMode(GPIOKeyCode_D2_PIN, INPUT_PULLUP); //
-  //pinMode(GPIOKeyCode_D3_PIN, INPUT_PULLUP);     //
+  pinMode(GPIOKeyCode_LATCH_GPIO, INPUT_PULLUP); //
+  pinMode(GPIOKeyCode_D0_GPIO, INPUT_PULLUP); //
+  pinMode(GPIOKeyCode_D1_GPIO, INPUT_PULLUP); //
+  pinMode(GPIOKeyCode_D2_GPIO, INPUT_PULLUP); //
+  //pinMode(GPIOKeyCode_D3_GPIO, INPUT_PULLUP);     //
 }
 
 void MeasureGPIOKeyCode() {
-  int latch = digitalRead(GPIOKeyCode_LATCH_PIN);
+  int latch = digitalRead(GPIOKeyCode_LATCH_GPIO);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
@@ -54,8 +54,8 @@ void MeasureGPIOKeyCode() {
 #  endif
     // if the Input state has changed:
     if (latch > 0 && lastLatchStateGPIOKeyCode != latch) {
-      int reading = digitalRead(GPIOKeyCode_D0_PIN) | (digitalRead(GPIOKeyCode_D1_PIN) << 1) | (digitalRead(GPIOKeyCode_D2_PIN) << 2);
-      //| digitalRead(GPIOKeyCode_D3_PIN) << 3;
+      int reading = digitalRead(GPIOKeyCode_D0_GPIO) | (digitalRead(GPIOKeyCode_D1_GPIO) << 1) | (digitalRead(GPIOKeyCode_D2_GPIO) << 2);
+      //| digitalRead(GPIOKeyCode_D3_GPIO) << 3;
 
       char hex[3];
 

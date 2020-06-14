@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker 
    Send and receiving command by MQTT
  
-    Output pin defined to High or Low
+    Output GPIO defined to High or Low
   
     Copyright: (c)Florian ROBERT
     
@@ -35,12 +35,12 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
     int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
-    int pin = ONOFFdata["pin"] | ACTUATOR_ONOFF_PIN;
+    int gpio = ONOFFdata["gpio"] | ACTUATOR_ONOFF_GPIO;
     if (boolSWITCHTYPE != 99) {
       Log.notice(F("MQTTtoONOFF boolSWITCHTYPE ok: %d" CR), boolSWITCHTYPE);
-      Log.notice(F("Pin number: %d" CR), pin);
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, boolSWITCHTYPE);
+      Log.notice(F("GPIO number: %d" CR), gpio);
+      pinMode(gpio, OUTPUT);
+      digitalWrite(gpio, boolSWITCHTYPE);
       // we acknowledge the sending by publishing the value to an acknowledgement topic
       pub(subjectGTWONOFFtoMQTT, ONOFFdata);
     } else {
@@ -54,9 +54,9 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
 void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
-    int pin = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-    Log.notice(F("Pin number: %d" CR), pin);
-    pinMode(pin, OUTPUT);
+    int gpio = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+    Log.notice(F("GPIO number: %d" CR), gpio);
+    pinMode(gpio, OUTPUT);
 
     bool ON = false;
     if (strstr(topicOri, ONKey) != NULL)
@@ -64,7 +64,7 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
     if (strstr(topicOri, OFFKey) != NULL)
       ON = false;
 
-    digitalWrite(pin, ON);
+    digitalWrite(gpio, ON);
     // we acknowledge the sending by publishing the value to an acknowledgement topic
     char b = ON;
     pub(subjectGTWONOFFtoMQTT, &b);

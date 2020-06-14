@@ -56,31 +56,31 @@
 //#define FASTLED_TYPE APA102, RGB>(leds, NUM_LEDS);
 //#define FASTLED_TYPE DOTSTAR, RGB>(leds, NUM_LEDS);
 
-//#define FASTLED_TYPE WS2801, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-//#define FASTLED_TYPE SM16716, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-//#define FASTLED_TYPE LPD8806, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-//#define FASTLED_TYPE P9813, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-//#define FASTLED_TYPE APA102, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
-//#define FASTLED_TYPE DOTSTAR, DATA_PIN, CLOCK_PIN, RGB>(leds, NUM_LEDS);
+//#define FASTLED_TYPE WS2801, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
+//#define FASTLED_TYPE SM16716, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
+//#define FASTLED_TYPE LPD8806, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
+//#define FASTLED_TYPE P9813, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
+//#define FASTLED_TYPE APA102, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
+//#define FASTLED_TYPE DOTSTAR, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
 
 // For led chips like Neopixels, which have a data line, ground, and power, you just
-// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
-// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
-//#define DATA_PIN 3
-//#define CLOCK_PIN 13
+// need to define DATA_GPIO.  For led chipsets that are SPI based (four wires - data, clock,
+// ground, and power), like the LPD8806 define both DATA_GPIO and CLOCK_GPIO
+//#define DATA_GPIO 3
+//#define CLOCK_GPIO 13
 
 #ifdef ESP8266
-//#define FASTLED_ESP8266_RAW_PIN_ORDER
-//#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-#  define FASTLED_ESP8266_D1_PIN_ORDER
-#  define FASTLED_DATA_PIN D2 // only D2 works by me
-//#define FASTLED_CLOCK_PIN 13
+//#define FASTLED_ESP8266_RAW_GPIO_ORDER
+//#define FASTLED_ESP8266_NODEMCU_GPIO_ORDER
+#  define FASTLED_ESP8266_D1_GPIO_ORDER
+#  define FASTLED_DATA_GPIO D2 // only D2 works by me
+//#define FASTLED_CLOCK_GPIO 13
 #elif ESP32
-#  define FASTLED_DATA_PIN  16
-#  define FASTLED_CLOCK_PIN 13
+#  define FASTLED_DATA_GPIO  16
+#  define FASTLED_CLOCK_GPIO 13
 #else
-#  define FASTLED_DATA_PIN  10
-#  define FASTLED_CLOCK_PIN 13
+#  define FASTLED_DATA_GPIO  10
+#  define FASTLED_CLOCK_GPIO 13
 #endif
 
 #endif
