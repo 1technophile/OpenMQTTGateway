@@ -386,26 +386,28 @@ void coreTask(void* pvParameters) {
     Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
     if (!low_power_mode)
       delay(BLEinterval);
-    int n = 0;
-    while (client.state() != 0 && n <= TimeBeforeMQTTconnect) {
-      n++;
-      Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
-      delay(1000);
-    }
-    if (client.state() != 0 || ProcessLock) {
-      Log.warning(F("MQTT client disconnected or OTA in progress no BLE scan" CR));
-      delay(1000);
-    } else {
-      pinMode(LOW_POWER_LED, OUTPUT);
-      if (low_power_mode == 2)
-        digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
-      BLEscan();
-      //only change LOW_POWER_LED if low power mode is enabled
+    if (!ProcessLock) {
+      int n = 0;
+      while (client.state() != 0 && n <= TimeBeforeMQTTconnect) {
+        n++;
+        Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
+        delay(1000);
+      }
+      if (client.state() != 0) {
+        Log.warning(F("MQTT client disconnected or OTA in progress no BLE scan" CR));
+        delay(1000);
+      } else {
+        pinMode(LOW_POWER_LED, OUTPUT);
+        if (low_power_mode == 2)
+          digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
+        BLEscan();
+        //only change LOW_POWER_LED if low power mode is enabled
+        if (low_power_mode)
+          digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
+      }
       if (low_power_mode)
-        digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
+        lowPowerESP32();
     }
-    if (low_power_mode)
-      lowPowerESP32();
   }
 }
 
