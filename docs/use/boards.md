@@ -64,7 +64,7 @@ The low power mode can be changed also with a push to button B when the board is
 
 ### Erasing the flash
 
-So as to erase the flash memory on M5Stack boards you may do a long press to TRIGGER_PIN button:
-* Button A on M5StickC (GPIO 37)
+So as to erase the flash memory on M5Stack boards you may do a long press to TRIGGER_GPIO button:
+* Button B on M5StickC (GPIO 37)
 * Button C on M5Stack (GPIO 37)
 * Button lateral on M5stick (GPIO 35)
