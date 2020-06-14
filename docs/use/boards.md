@@ -4,7 +4,7 @@
 
 ### Erasing the flash
 
-So as to erase the flash memory on ESP boards you may do a long press to TRIGGER_PIN button or connect the pin to the ground.
+So as to erase the flash memory on ESP boards you may do a long press to TRIGGER_GPIO button or connect the pin to the ground.
 
 ### Low power mode for ESP32
 OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT on a barebone ESP32:
