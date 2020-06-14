@@ -120,9 +120,6 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 //DEFAULT_LOW_POWER_MODE 1 to activate deep sleep with LCD ON when a function is processing,
 //DEFAULT_LOW_POWER_MODE 2 to activate deep sleep with LED ON when a function is processing (LCD is turned OFF)
 #ifdef ESP32
-#  ifndef SLEEP_BUTTON
-#    define SLEEP_BUTTON 33
-#  endif
 #  ifndef DEFAULT_LOW_POWER_MODE
 #    define DEFAULT_LOW_POWER_MODE 0
 #  endif
@@ -240,12 +237,10 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  endif
 #endif
 
-#ifndef TRIGGER_GPIO
-#  ifdef ESP8266
-#    define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
-#  elif ESP32
-#    define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
-#  endif
+#ifdef ESP8266
+//#  define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
+#elif ESP32
+//#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 #endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
