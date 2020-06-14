@@ -392,8 +392,8 @@ void coreTask(void* pvParameters) {
       Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
       delay(1000);
     }
-    if (client.state() != 0) {
-      Log.warning(F("MQTT client disconnected no BLE scan" CR));
+    if (client.state() != 0 || ProcessLock) {
+      Log.warning(F("MQTT client disconnected or OTA in progress no BLE scan" CR));
       delay(1000);
     } else {
       pinMode(LOW_POWER_LED, OUTPUT);
