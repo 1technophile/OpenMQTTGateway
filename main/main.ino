@@ -655,8 +655,7 @@ void disconnection_handling(int failure_number) {
   Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
   if (failure_number > maxConnectionRetry && !connectedOnce) {
 #  ifndef ESPWifiManualSetup
-    Log.error(F("Failed connecting 1st time to mqtt, reset wifi manager & erase network credentials" CR));
-    setup_wifimanager(true);
+    Log.error(F("Failed connecting 1st time to mqtt, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
 #  endif
   } else if (failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_BG && connectedOnce) {
     Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
