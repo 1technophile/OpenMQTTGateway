@@ -711,12 +711,14 @@ void setOTA() {
 #  endif
   });
   ArduinoOTA.onEnd([]() {
+    ProcessLock = false;
     Log.trace(F("\nEnd OTA" CR));
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
+    ProcessLock = false;
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
@@ -1156,7 +1158,7 @@ void loop() {
   }
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
-  loopM5();
+  if (!ProcessLock) loopM5();
 #endif
 }
 
