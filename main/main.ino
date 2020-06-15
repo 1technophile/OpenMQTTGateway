@@ -712,7 +712,10 @@ void setOTA() {
   });
   ArduinoOTA.onEnd([]() {
     ProcessLock = false;
-    Log.trace(F("\nEnd OTA" CR));
+    Log.trace(F("\nOTA done" CR));
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+    M5Display("OTA done", "", "");
+#  endif
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
