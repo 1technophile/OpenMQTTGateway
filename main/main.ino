@@ -653,14 +653,15 @@ void reinit_wifi() {
 
 void disconnection_handling(int failure_number) {
   Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
-  if (failure_number > maxConnectionRetry && !connectedOnce) {
+  if ((failure_number > maxConnectionRetry) && !connectedOnce) {
 #  ifndef ESPWifiManualSetup
     Log.error(F("Failed connecting 1st time to mqtt, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
 #  endif
-  } else if (failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_BG && connectedOnce) {
+  }
+  if (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) {
     Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_BG && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
+  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B))) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
   {
 #  ifdef ESP32
     wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
@@ -669,7 +670,7 @@ void disconnection_handling(int failure_number) {
 #  endif
     Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B && failure_number <= maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG))) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
   {
 #  ifdef ESP32
     wifiProtocol = WIFI_PROTOCOL_11B;
@@ -678,7 +679,7 @@ void disconnection_handling(int failure_number) {
 #  endif
     Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if (failure_number > maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  } else if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG)) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
   {
 #  ifdef ESP32
     wifiProtocol = 0;
@@ -748,8 +749,7 @@ void setup_wifi() {
 #  endif
 
   if (wifi_reconnect_bypass())
-    ;
-  Log.notice(F("Connected with saved credentials" CR));
+    Log.notice(F("Connected with saved credentials" CR));
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
