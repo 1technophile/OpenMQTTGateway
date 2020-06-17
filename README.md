@@ -4,7 +4,6 @@
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
 [![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
 [![Download count](https://img.shields.io/github/downloads/1technophile/OpenMQTTGateway/total.svg)](https://github.com/1technophile/OpenMQTTGateway/releases)
-[![HitCount](http://hits.dwyl.io/1technophile/https://githubcom/1technophile/OpenMQTTGateway.svg)](http://hits.dwyl.io/1technophile/https://githubcom/1technophile/OpenMQTTGateway)
 
 **Questions, support please don't open an issue, go first to the [docs](https://docs.openmqttgateway.com) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
 
@@ -18,3 +17,7 @@ The reference sheet, with the list of all functions, pinouts is [here](https://d
 A list of supported devices is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079), door/window sensors, PIR sensors, smoke detectors, weather stations...
 
 A list of compatible components to build your gateway is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277), nodemcu, esp32, emitters and receivers...
+
+If you want to buy a coffee or other beverage so as to give me some support, here is a way to do it : 
+
+<a href="https://www.buymeacoffee.com/1technophile" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
