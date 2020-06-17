@@ -120,6 +120,17 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #  define IR_MITSUBISHI136
 #  define IR_MITSUBISHI112
 #  define IR_HITACHI_AC424
+#  define IR_SONY_38K
+#  define IR_EPSON
+#  define IR_SYMPHONY
+#  define IR_HITACHI_AC3
+#  define IR_DAIKIN64
+#  define IR_AIRWELL
+#  define IR_DELONGHI_AC
+#  define IR_DOSHISHA
+#  define IR_MULTIBRACKETS
+#  define IR_CARRIER_AC40
+#  define IR_CARRIER_AC64
 #elif __AVR_ATmega2560__
 #  define IR_COOLIX
 #  define IR_Whynter
