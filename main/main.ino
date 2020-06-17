@@ -605,11 +605,7 @@ void setup() {
 #ifdef ZsensorDHT
   setupDHT();
 #endif
-  Log.trace(F("MQTT_MAX_PACKET_SIZE: %d" CR), MQTT_MAX_PACKET_SIZE);
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  if (MQTT_MAX_PACKET_SIZE == 128)
-    Log.error(F("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM RELEASE PAGE" CR));
-#endif
+  Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
 }
 
