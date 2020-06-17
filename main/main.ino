@@ -161,9 +161,6 @@ PubSubClient client(eClient);
 //MQTT last attemps reconnection date
 unsigned long lastMQTTReconnectAttempt = 0;
 
-// Process lock when we want to use a critical function like OTA for example
-bool ProcessLock = false;
-
 void revert_hex_data(char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
   int i = l - 2, j = 0;
@@ -705,13 +702,17 @@ void setOTA() {
 
   ArduinoOTA.onStart([]() {
     Log.trace(F("Start OTA, lock other functions" CR));
-    ProcessLock = true;
+#  if defined(ZgatewayBT) && defined(ESP32)
+    stopProcessing();
+#  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     M5Display("OTA in progress", "", "");
 #  endif
   });
   ArduinoOTA.onEnd([]() {
-    ProcessLock = false;
+#  if defined(ZgatewayBT) && defined(ESP32)
+    startProcessing();
+#  endif
     Log.trace(F("\nOTA done" CR));
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     M5Display("OTA done", "", "");
@@ -721,7 +722,9 @@ void setOTA() {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    ProcessLock = false;
+#  if defined(ZgatewayBT) && defined(ESP32)
+    startProcessing();
+#  endif
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
