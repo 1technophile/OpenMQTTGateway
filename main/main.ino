@@ -1054,100 +1054,98 @@ void loop() {
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
 #endif
     failure_number_ntwk = 0;
-    if (!ProcessLock) { // If no blocking process we can handle MQTT processing
-      if (client.connected()) {
+    if (client.connected()) {
 #ifdef ZmqttDiscovery
-        if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
+      if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
 #endif
 
-        connectedOnce = true;
-        failure_number_ntwk = 0;
+      connectedOnce = true;
+      failure_number_ntwk = 0;
 
-        client.loop();
+      client.loop();
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-        if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
-          timer_sys_measures = millis();
-          stateMeasures();
-        }
+      if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
+        timer_sys_measures = millis();
+        stateMeasures();
+      }
 #endif
 #ifdef ZsensorBME280
-        MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
+      MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
 #endif
 #ifdef ZsensorHTU21
-        MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
+      MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
 #endif
 #ifdef ZsensorHCSR04
-        MeasureDistance(); //Addon to measure distance with a HC-SR04
+      MeasureDistance(); //Addon to measure distance with a HC-SR04
 #endif
 #ifdef ZsensorBH1750
-        MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
+      MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
 #endif
 #ifdef ZsensorTSL2561
-        MeasureLightIntensityTSL2561();
+      MeasureLightIntensityTSL2561();
 #endif
 #ifdef ZsensorDHT
-        MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+      MeasureTempAndHum(); //Addon to measure the temperature with a DHT
 #endif
 #ifdef ZsensorDS1820
-        MeasureDS1820Temp(); //Addon to measure the temperature with DS1820 sensor(s)
+      MeasureDS1820Temp(); //Addon to measure the temperature with DS1820 sensor(s)
 #endif
 #ifdef ZsensorINA226
-        MeasureINA226();
+      MeasureINA226();
 #endif
 #ifdef ZsensorHCSR501
-        MeasureHCSR501();
+      MeasureHCSR501();
 #endif
 #ifdef ZsensorGPIOInput
-        MeasureGPIOInput();
+      MeasureGPIOInput();
 #endif
 #ifdef ZsensorGPIOKeyCode
-        MeasureGPIOKeyCode();
+      MeasureGPIOKeyCode();
 #endif
 #ifdef ZsensorADC
-        MeasureADC(); //Addon to measure the analog value of analog pin
+      MeasureADC(); //Addon to measure the analog value of analog pin
 #endif
 #ifdef ZgatewayLORA
-        LORAtoMQTT();
+      LORAtoMQTT();
 #endif
 #ifdef ZgatewayRF
-        RFtoMQTT();
+      RFtoMQTT();
 #endif
 #ifdef ZgatewayRF2
-        RF2toMQTT();
+      RF2toMQTT();
 #endif
 #ifdef ZgatewayWeatherStation
-        ZgatewayWeatherStationtoMQTT();
+      ZgatewayWeatherStationtoMQTT();
 #endif
 #ifdef ZgatewayPilight
-        PilighttoMQTT();
+      PilighttoMQTT();
 #endif
 #ifdef ZgatewayBT
 #  ifndef ESP32
-        if (BTtoMQTT())
-          Log.trace(F("BTtoMQTT OK" CR));
+      if (BTtoMQTT())
+        Log.trace(F("BTtoMQTT OK" CR));
 #  endif
 #endif
 #ifdef ZgatewaySRFB
-        SRFBtoMQTT();
+      SRFBtoMQTT();
 #endif
 #ifdef ZgatewayIR
-        IRtoMQTT();
+      IRtoMQTT();
 #endif
 #ifdef Zgateway2G
-        if (_2GtoMQTT())
-          Log.trace(F("2GtoMQTT OK" CR));
+      if (_2GtoMQTT())
+        Log.trace(F("2GtoMQTT OK" CR));
 #endif
 #ifdef ZgatewayRFM69
-        if (RFM69toMQTT())
-          Log.trace(F("RFM69toMQTT OK" CR));
+      if (RFM69toMQTT())
+        Log.trace(F("RFM69toMQTT OK" CR));
 #endif
 #ifdef ZactuatorFASTLED
-        FASTLEDLoop();
+      FASTLEDLoop();
 #endif
-      } else {
-        connectMQTT();
-      }
+    } else {
+      connectMQTT();
     }
   } else { // disconnected from network
 #if defined(ESP8266) || defined(ESP32)
@@ -1161,7 +1159,7 @@ void loop() {
   }
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
-  if (!ProcessLock) loopM5();
+  loopM5();
 #endif
 }
 
