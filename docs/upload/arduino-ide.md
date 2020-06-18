@@ -6,16 +6,6 @@
 * Download OpenMQTTGateway code (OpenMQTTGateway_sources.zip) from the [release page](https://github.com/1technophile/OpenMQTTGateway/releases) and unzip it
 * Download the libraries package corresponding to your board and module wished into the same page (example esp32-m5stick-c-ble-libraries.zip)
 * Unzip the libraries into your arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
-* If you are using an ESP, Mega or other powerfull board; Open the *PubSubClient* folder, open the file src/PubSubClient.h, replace 
-```C++
-#define MQTT_MAX_PACKET_SIZE 128
-```
-by
-```C++
-#define MQTT_MAX_PACKET_SIZE 1024
-```
-This modification will enable to send and receive by MQTT long json messages.
-
 * If necessary replace the spaces into each library folder by _: example rename “ESP32 BLE Arduino” folder to “ESP32_BLE_Arduino”
 * Open the file main.ino from OpenMQTTGateway/main folder with the arduino IDE
 * Change the settings and the desired gateways into user_config.h (uncomment the modules you want)
