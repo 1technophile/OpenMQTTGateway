@@ -104,14 +104,12 @@ mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"8850,4450,60
 With big raw array you may cross the limit of default payload size. In this case the gateway will not receive the message or will not send it to the broker.
 In this case the best way is to use hex values instead, but if you can't you may change the parameters below:
 In user_config.h replace:
-`#define JSON_MSG_BUFFER 512`
+`# define JSON_MSG_BUFFER 512`
+`# define mqtt_max_packet_size 1024
 by
-`#define JSON_MSG_BUFFER 1280`
+`# define JSON_MSG_BUFFER 1280`
+`# define mqtt_max_packet_size 1280`
 
-And into platformio.ini
-`MQTT_MAX_PACKET_SIZE=1024`
-by
-`MQTT_MAX_PACKET_SIZE=1280`
 
 ## Repeat the IR signal OpenMQTTGateway receive
 So as to repeat the IR signal received by the gateway once set the following parameter to true in [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L37)
