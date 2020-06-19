@@ -436,7 +436,6 @@ void deepSleep(uint64_t time_in_us) {
 #    endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
-  esp_wifi_stop();
   esp_bluedroid_disable();
   esp_bluedroid_deinit();
   esp_bt_controller_disable();
