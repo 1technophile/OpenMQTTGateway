@@ -46,7 +46,7 @@ IRrecv irrecv(IR_RECEIVER_GPIO);
 IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library IRremote.h so as to free pin D3 for RF RECEIVER PIN
 #  endif
 
-// IR protocol bits definition for Arduino (for ESP9266 they are defined in IRRemoteESP8266.h)
+// IR protocol bits definition for Arduino (for ESP8266 they are defined in IRRemoteESP8266.h)
 #  ifndef NEC_BITS
 #    define NEC_BITS 32U
 #  endif
@@ -64,6 +64,9 @@ IRsend irsend; //connect IR emitter pin to D9 on arduino, you need to comment #d
 #  endif
 #  ifndef DISH_BITS
 #    define DISH_BITS 16U
+#  endif
+#  ifndef SONY_20_BITS
+#    define SONY_20_BITS 20
 #  endif
 #  ifndef SONY_12_BITS
 #    define SONY_12_BITS 12U
@@ -252,7 +255,7 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
           signalSent = true;
         }
 #    endif
-      } else if (protocol_name && (strcmp(protocol_name, "NEC") != 1)) {
+      } else if (protocol_name && (strcmp(protocol_name, "NEC") != 0)) {
         Log.trace(F("Using Identified Protocol: %s  bits: %d repeat: %d" CR), protocol_name, valueBITS, valueRPT);
         signalSent = sendIdentifiedProtocol(protocol_name, data, hex, valueBITS, valueRPT);
       } else {
@@ -324,11 +327,13 @@ bool sendIdentifiedProtocol(const char* protocol_name, unsigned long long data, 
 #  ifdef IR_SONY
   if (strcmp(protocol_name, "SONY") == 0) {
     Log.notice(F("Sending IR signal with %s" CR), protocol_name);
-    if (valueBITS == 0)
-      valueBITS = SONY_12_BITS;
 #    if defined(ESP8266) || defined(ESP32)
+    if (valueBITS == 0)
+      valueBITS = SONY_20_BITS;
     irsend.sendSony(data, valueBITS, valueRPT);
 #    else
+    if (valueBITS == 0)
+      valueBITS = SONY_12_BITS;
     for (int i = 0; i <= valueRPT; i++)
       irsend.sendSony(data, valueBITS);
 #    endif
@@ -1013,7 +1018,6 @@ bool sendIdentifiedProtocol(const char* protocol_name, unsigned long long data, 
 #    ifdef IR_HITACHI_AC424
   if (strcmp(protocol_name, "HITACHI_AC424") == 0) {
     Log.notice(F("Sending IR signal with %s" CR), protocol_name);
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc424StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -1022,7 +1026,115 @@ bool sendIdentifiedProtocol(const char* protocol_name, unsigned long long data, 
     return true;
   }
 #    endif
-  Log.trace(F("At the end" CR));
+#    ifdef IR_SONY_38K
+  if (strcmp(protocol_name, "SONY_38K") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, (uint16_t)(kSonyMinRepeat + 1));
+    if (valueBITS == 0)
+      valueBITS = kSony20Bits;
+    irsend.sendSony38(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_EPSON
+  if (strcmp(protocol_name, "EPSON") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kEpsonMinRepeat);
+    if (valueBITS == 0)
+      valueBITS = kEpsonBits;
+    irsend.sendEpson(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_SYMPHONY
+  if (strcmp(protocol_name, "SYMPHONY") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kSymphonyDefaultRepeat);
+    if (valueBITS == 0)
+      valueBITS = kSymphonyBits;
+    irsend.sendSymphony(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_HITACHI_AC3
+  if (strcmp(protocol_name, "HITACHI_AC3") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kHitachiAcDefaultRepeat);
+    if (valueBITS == 0)
+      Log.error(F("For this protocol you should have a BIT number as there is no default one defined" CR));
+    irsend.sendHitachiAc3(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_DAIKIN64
+  if (strcmp(protocol_name, "DAIKIN64") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kDaikin64DefaultRepeat);
+    if (valueBITS == 0)
+      valueBITS = kDaikin64Bits;
+    irsend.sendDaikin64(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_AIRWELL
+  if (strcmp(protocol_name, "AIRWELL") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kAirwellMinRepeats);
+    if (valueBITS == 0)
+      valueBITS = kAirwellBits;
+    irsend.sendAirwell(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_DELONGHI_AC
+  if (strcmp(protocol_name, "DELONGHI_AC") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kDelonghiAcDefaultRepeat);
+    if (valueBITS == 0)
+      valueBITS = kDelonghiAcBits;
+    irsend.sendDelonghiAc(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_DOSHISHA
+  if (strcmp(protocol_name, "DOSHISHA") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kDoshishaBits;
+    irsend.sendDoshisha(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_CARRIER_AC40
+  if (strcmp(protocol_name, "CARRIER_AC40") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kCarrierAc40MinRepeat);
+    if (valueBITS == 0)
+      valueBITS = kCarrierAc40Bits;
+    irsend.sendCarrierAC40(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_CARRIER_AC64
+  if (strcmp(protocol_name, "CARRIER_AC64") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kCarrierAc64MinRepeat);
+    if (valueBITS == 0)
+      valueBITS = kCarrierAc64Bits;
+    irsend.sendCarrierAC64(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+  Log.warning(F("Unknown IR protocol" CR));
   return false;
 #  endif
 }
