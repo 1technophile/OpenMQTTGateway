@@ -30,17 +30,17 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 */
 #include "User_config.h"
 
-#ifdef ESP32
-#  include "FreeRTOS.h"
+#ifdef ZgatewayBT
+
+#  ifdef ESP32
+#    include "FreeRTOS.h"
 FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createOrUpdateDevice");
 // Headers used for deep sleep functions
-#  include <driver/adc.h>
-#  include <esp_bt.h>
-#  include <esp_bt_main.h>
-#  include <esp_wifi.h>
-#endif
-
-#ifdef ZgatewayBT
+#    include <driver/adc.h>
+#    include <esp_bt.h>
+#    include <esp_bt_main.h>
+#    include <esp_wifi.h>
+#  endif
 
 #  include <vector>
 using namespace std;
@@ -299,6 +299,8 @@ void MiBandDiscovery(char* mac) {}
 
 //core on which the BLE detection task will run
 static int taskCore = 0;
+// Process lock when we want to use a critical function like OTA for example
+bool ProcessLock = false;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice advertisedDevice) {
@@ -381,31 +383,43 @@ void BLEscan() {
   esp_bt_controller_deinit();
 }
 
+void stopProcessing() {
+  Log.notice(F("Stop BLE processing" CR));
+  ProcessLock = true;
+}
+
+void startProcessing() {
+  Log.notice(F("Start BLE processing" CR));
+  ProcessLock = false;
+}
+
 void coreTask(void* pvParameters) {
   while (true) {
     Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
-    if (!low_power_mode)
-      delay(BLEinterval);
-    int n = 0;
-    while (client.state() != 0 && n <= TimeBeforeMQTTconnect) {
-      n++;
-      Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
-      delay(1000);
+    if (!ProcessLock) {
+      int n = 0;
+      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout) {
+        n++;
+        Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
+        delay(1000);
+      }
+      if (client.state() != 0) {
+        Log.warning(F("MQTT client disconnected no BLE scan" CR));
+      } else {
+        pinMode(LOW_POWER_LED, OUTPUT);
+        if (low_power_mode == 2)
+          digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
+        BLEscan();
+        //only change LOW_POWER_LED if low power mode is enabled
+        if (low_power_mode)
+          digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
+      }
+      if (low_power_mode) {
+        lowPowerESP32();
+      } else {
+        delay(BLEinterval);
+      }
     }
-    if (client.state() != 0) {
-      Log.warning(F("MQTT client disconnected no BLE scan" CR));
-      delay(1000);
-    } else {
-      pinMode(LOW_POWER_LED, OUTPUT);
-      if (low_power_mode == 2)
-        digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
-      BLEscan();
-      //only change LOW_POWER_LED if low power mode is enabled
-      if (low_power_mode)
-        digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
-    }
-    if (low_power_mode)
-      lowPowerESP32();
   }
 }
 

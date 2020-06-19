@@ -279,10 +279,10 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
 
-#define TimeBetweenReadingSYS 120 // time between (s) system readings (like memory)
-#define TimeBeforeMQTTconnect 10 // time estimated (s) before the board is connected to MQTT
-#define subjectSYStoMQTT      "/SYStoMQTT"
-#define subjectMQTTtoSYSset   "/commands/MQTTtoSYS/config"
+#define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
+#define subjectSYStoMQTT             "/SYStoMQTT"
+#define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL LOG_LEVEL_NOTICE
