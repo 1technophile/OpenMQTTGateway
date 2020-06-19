@@ -401,6 +401,7 @@ void connectMQTT() {
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
   strcat(topic, will_Topic);
+  client.setBufferSize(mqtt_max_packet_size);
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     if (low_power_mode < 2)
@@ -604,11 +605,7 @@ void setup() {
 #ifdef ZsensorDHT
   setupDHT();
 #endif
-  Log.trace(F("MQTT_MAX_PACKET_SIZE: %d" CR), MQTT_MAX_PACKET_SIZE);
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  if (MQTT_MAX_PACKET_SIZE == 128)
-    Log.error(F("WRONG PUBSUBCLIENT LIBRARY USED PLEASE INSTALL THE ONE FROM RELEASE PAGE" CR));
-#endif
+  Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
 }
 
@@ -702,15 +699,30 @@ void setOTA() {
   ArduinoOTA.setPassword(ota_password);
 
   ArduinoOTA.onStart([]() {
-    Log.trace(F("Start OTA" CR));
+    Log.trace(F("Start OTA, lock other functions" CR));
+#  if defined(ZgatewayBT) && defined(ESP32)
+    stopProcessing();
+#  endif
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+    M5Display("OTA in progress", "", "");
+#  endif
   });
   ArduinoOTA.onEnd([]() {
-    Log.trace(F("\nEnd OTA" CR));
+#  if defined(ZgatewayBT) && defined(ESP32)
+    startProcessing();
+#  endif
+    Log.trace(F("\nOTA done" CR));
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+    M5Display("OTA done", "", "");
+#  endif
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
+#  if defined(ZgatewayBT) && defined(ESP32)
+    startProcessing();
+#  endif
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
@@ -1037,6 +1049,7 @@ void loop() {
 
 #if defined(ESP8266) || defined(ESP32)
   if (WiFi.status() == WL_CONNECTED) {
+    ArduinoOTA.handle();
 #else
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
 #endif
@@ -1050,10 +1063,6 @@ void loop() {
       failure_number_ntwk = 0;
 
       client.loop();
-
-#if defined(ESP8266) || defined(ESP32)
-      ArduinoOTA.handle();
-#endif
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
@@ -1231,6 +1240,7 @@ void stateMeasures() {
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)low_power_mode;
 #    endif
+  SYSdata["interval"] = BLEinterval;
 #  endif
 #  ifdef ZgatewayRFM69
   modules = modules + ZgatewayRFM69;

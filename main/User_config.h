@@ -97,11 +97,13 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 //MQTT Parameters definition
 //#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define parameters_size     20
-#  define mqtt_topic_max_size 100
+#  define parameters_size      20
+#  define mqtt_topic_max_size  100
+#  define mqtt_max_packet_size 1024
 #else
-#  define parameters_size     15
-#  define mqtt_topic_max_size 50
+#  define parameters_size      15
+#  define mqtt_topic_max_size  50
+#  define mqtt_max_packet_size 128
 #endif
 char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
 char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
@@ -277,10 +279,10 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #endif
 
-#define TimeBetweenReadingSYS 120 // time between (s) system readings (like memory)
-#define TimeBeforeMQTTconnect 10 // time estimated (s) before the board is connected to MQTT
-#define subjectSYStoMQTT      "/SYStoMQTT"
-#define subjectMQTTtoSYSset   "/commands/MQTTtoSYS/config"
+#define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
+#define subjectSYStoMQTT             "/SYStoMQTT"
+#define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL LOG_LEVEL_NOTICE

@@ -75,6 +75,28 @@ home/OpenMQTTGateway/LWT Online
 home/OpenMQTTGateway/version
 ```
 
+# OTA
+With PIO you can also upload the firmware through Over the Air, so as to do that you can add the upload options flags used below, `upload_port` is the IP adress of your ESP:
+
+``` ini
+[env:esp32-ble]
+platform = ${com.esp32_platform}
+board = esp32dev
+board_build.partitions = min_spiffs.csv
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.ble}
+build_flags =
+  ${com-esp.build_flags}
+  '-DZgatewayBT="BT"'
+  '-DGateway_Name="OpenMQTTGateway_ESP32"'
+upload_protocol = espota
+upload_port = 192.168.1.22
+upload_flags =
+  --auth=OTAPASSWORD
+  --port=8266
+```
+
 # API
 With the V0.9 we added the support of json for receiving and publishing.
 Per default Json reception and Json publication is activated, the previous simple reception mode is also activated to avoid regression on commands.
@@ -100,7 +122,7 @@ If you are using platformio you can also comment the definitions above and defin
 ```
 
 Note that depending on the environment the default platformio.ini has common option defined see sections:
-```
+``` ini
 [com-arduino]
 [com-esp]
 ```

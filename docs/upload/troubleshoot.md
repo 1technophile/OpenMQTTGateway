@@ -46,10 +46,8 @@ Exception (2):
 → You are not using the last update of ESP8266 into board manager, go to your Arduino IDE and update it, should be at least 2.3.0
 
 ## You don't see the messages appearing on your broker but they appears on the serial monitor
-This is due to a too small mqtt packet size, open pubsubclient.h from pubsubclient library and set:
-try to modify in pubsubclient.h:
-`#define MQTT_MAX_PACKET_SIZE 1024`
-The other option is to use the [pubsubclient library](https://github.com/1technophile/OpenMQTTGateway/tree/master/lib/pubsubclient) provided in the OMG repository folder.
+This is due to a too small mqtt packet size, open User_config.h and set:
+`#define mqtt_max_packet_size 1024`
 
 ## Your Arduino with w5100 Ethernet shield does not connect to network until you press Reset button
 If you notice that your Arduino with w5100 Ethernet shield does not connect to network until you press its Reset button, but connects fine if you connect the Arduino with a USB cable to a computer/laptop with Arduino IDE running and open Serial Monitor, the problem is most likely the Ethernet shield and/or the power supply you're using.
