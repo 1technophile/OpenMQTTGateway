@@ -54,7 +54,11 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
 void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
-    int gpio = strtol(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+    char* endptr = NULL;
+    long gpio = strtol(datacallback, &endptr, 10);
+    if (datacallback == endptr)
+      gpio = ACTUATOR_ONOFF_GPIO;
+
     Log.notice(F("GPIO number: %d" CR), gpio);
     pinMode(gpio, OUTPUT);
 
