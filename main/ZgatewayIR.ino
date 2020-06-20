@@ -120,9 +120,7 @@ void IRtoMQTT() {
 
     Log.trace(F("Rcv. IR" CR));
 #  ifdef ESP32
-    String taskMessage = "Task running on core ";
-    taskMessage = taskMessage + xPortGetCoreID();
-    //trc(taskMessage);
+    Log.trace(F("IR Task running on core :%d" CR), xPortGetCoreID());
 #  endif
     IRdata.set("value", (unsigned long long)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
