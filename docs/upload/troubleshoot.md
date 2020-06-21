@@ -45,6 +45,9 @@ Exception (2):
 
 → You are not using the last update of ESP8266 into board manager, go to your Arduino IDE and update it, should be at least 2.3.0
 
+## Repetitive MQTT disconnections or/and commands sent to the gateway not taken into account
+Most probably a network issue, don't use a guest network and if going through a firewall check its rules. To put aside gateway issue, try to connect to a local broker on the same network.
+
 ## You don't see the messages appearing on your broker but they appears on the serial monitor
 This is due to a too small mqtt packet size, open User_config.h and set:
 `#define mqtt_max_packet_size 1024`
