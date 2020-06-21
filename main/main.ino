@@ -644,7 +644,7 @@ void forceWifiProtocol() {
 void reinit_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (!wifiProtocol) forceWifiProtocol();
+  if (wifiProtocol) forceWifiProtocol();
   WiFi.begin();
 }
 
@@ -743,7 +743,7 @@ void setOTA() {
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (!wifiProtocol) forceWifiProtocol();
+  if (wifiProtocol) forceWifiProtocol();
 
   // We start by connecting to a WiFi network
   Log.trace(F("Connecting to %s" CR), wifi_ssid);
@@ -832,7 +832,7 @@ void setup_wifimanager(bool reset_settings) {
 #  endif
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (!wifiProtocol) forceWifiProtocol();
+  if (wifiProtocol) forceWifiProtocol();
 
   if (reset_settings)
     eraseAndRestart();
