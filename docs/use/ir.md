@@ -110,7 +110,10 @@ by
 `# define JSON_MSG_BUFFER 1280`
 `# define mqtt_max_packet_size 1280`
 
-
 ## Repeat the IR signal OpenMQTTGateway receive
 So as to repeat the IR signal received by the gateway once set the following parameter to true in [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L37)
 `#define repeatIRwMQTT true`
+
+## Raw IR signal forwarding
+So as to repeat the raw IR signal received by the gateway, uncomment and set the following parameter to true in [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L39)
+`#define RawDirectForward true`

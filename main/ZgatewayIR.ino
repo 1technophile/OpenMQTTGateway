@@ -173,7 +173,7 @@ void IRtoMQTT() {
       storeValue(MQTTvalue);
       if (repeatIRwMQTT) {
         Log.trace(F("Pub. IR for rpt" CR));
-        pubMQTT(subjectMQTTtoIR, MQTTvalue);
+        pubMQTT(subjectForwardMQTTtoIR, MQTTvalue);
       }
     }
   }

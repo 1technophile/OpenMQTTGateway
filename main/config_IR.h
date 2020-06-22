@@ -32,15 +32,16 @@ extern void MQTTtoIR(char* topicOri, char* datacallback);
 extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 /*-------------------IR topics & parameters----------------------*/
 //IR MQTT Subjects
-#define subjectGTWIRtoMQTT "/IRtoMQTT"
-#define subjectIRtoMQTT    "/IRtoMQTT"
-#define subjectMQTTtoIR    "/commands/MQTTtoIR"
+#define subjectGTWIRtoMQTT     "/IRtoMQTT"
+#define subjectIRtoMQTT        "/IRtoMQTT"
+#define subjectMQTTtoIR        "/commands/MQTTtoIR"
+#define subjectForwardMQTTtoIR "home/gateway2/commands/MQTTtoIR"
 
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWIR "+/+/IRtoMQTT"
 #define IRbitsKey         "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey          "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
-#define repeatIRwMQTT     false // do we repeat a received signal by using mqtt
+#define repeatIRwMQTT     false // do we repeat a received signal by using mqtt, we send a command signal to subjectForwardMQTTtoIR
 #define repeatIRwNumber   0 // default repeat of the signal
 //#define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
