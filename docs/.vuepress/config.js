@@ -78,6 +78,7 @@ module.exports = {
             'use/rfm69',
             'use/sensors',
             'use/actuators',
+            'use/boards',
             'use/gateway'
           ]
         },

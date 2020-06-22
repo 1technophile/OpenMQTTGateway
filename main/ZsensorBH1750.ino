@@ -39,11 +39,11 @@
 #include "User_config.h"
 
 #ifdef ZsensorBH1750
-#include "math.h" // Library for trig and exponential functions
-#include "Wire.h" // Library for communication with I2C / TWI devices
+#  include "Wire.h" // Library for communication with I2C / TWI devices
+#  include "math.h" // Library for trig and exponential functions
 
-void setupZsensorBH1750()
-{
+void setupZsensorBH1750() {
+  Log.notice(F("Setup BH1750 on adress: %H" CR), BH1750_i2c_addr);
   Wire.begin();
   Wire.beginTransmission(BH1750_i2c_addr);
   Wire.write(0x10); // Set resolution to 1 Lux
@@ -51,14 +51,11 @@ void setupZsensorBH1750()
   delay(300);
 }
 
-// void loop()
-void MeasureLightIntensity()
-{
-  if (millis() > (timebh1750 + TimeBetweenReadingBH1750))
-  { //retriving value of Lux, FtCd and Wattsm2 from BH1750
-    trc(F("Creating BH1750 buffer"));
+void MeasureLightIntensity() {
+  if (millis() > (timebh1750 + TimeBetweenReadingBH1750)) { //retrieving value of Lux, FtCd and Wattsm2 from BH1750
+    Log.trace(F("Creating BH1750 buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject &BH1750data = jsonBuffer.createObject();
+    JsonObject& BH1750data = jsonBuffer.createObject();
 
     timebh1750 = millis();
     unsigned int i = 0;
@@ -71,12 +68,9 @@ void MeasureLightIntensity()
 
     // Check if reads failed and exit early (to try again).
     Wire.requestFrom(BH1750_i2c_addr, 2);
-    if (Wire.available() != 2)
-    {
-      trc(F("Failed to read from LightSensor BH1750!"));
-    }
-    else
-    {
+    if (Wire.available() != 2) {
+      Log.error(F("Failed to read from LightSensor BH1750!" CR));
+    } else {
       i = Wire.read();
       i <<= 8;
       i |= Wire.read();
@@ -87,33 +81,24 @@ void MeasureLightIntensity()
       Wattsm2 = Lux / 683.0;
 
       // Generate Lux
-      if (Lux != persistedll || bh1750_always)
-      {
+      if (Lux != persistedll || bh1750_always) {
         BH1750data.set("lux", (unsigned int)Lux);
-      }
-      else
-      {
-        trc(F("Same lux don't send it"));
+      } else {
+        Log.trace(F("Same lux don't send it" CR));
       }
 
       // Generate FtCd
-      if (ftcd != persistedlf || bh1750_always)
-      {
+      if (ftcd != persistedlf || bh1750_always) {
         BH1750data.set("ftcd", (unsigned int)ftcd);
-      }
-      else
-      {
-        trc(F("Same ftcd don't send it"));
+      } else {
+        Log.trace(F("Same ftcd don't send it" CR));
       }
 
       // Generate Watts/m2
-      if (Wattsm2 != persistedlw || bh1750_always)
-      {
+      if (Wattsm2 != persistedlw || bh1750_always) {
         BH1750data.set("wattsm2", (unsigned int)Wattsm2);
-      }
-      else
-      {
-        trc(F("Same wattsm2 don't send it"));
+      } else {
+        Log.trace(F("Same wattsm2 don't send it" CR));
       }
       if (BH1750data.size() > 0)
         pub(subjectBH1750toMQTT, BH1750data);

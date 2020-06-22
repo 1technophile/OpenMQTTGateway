@@ -30,7 +30,7 @@ extern void setupINA226();
 extern void INA226toMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectINA226toMQTT  "/INA226toMQTT"
+#define subjectINA226toMQTT      "/INA226toMQTT"
 #define TimeBetweenReadingINA226 30000 // time between 2 INA226 readings
 
 #endif

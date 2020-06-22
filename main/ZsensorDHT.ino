@@ -30,18 +30,20 @@
 #include "User_config.h"
 
 #ifdef ZsensorDHT
-#include <DHT.h>
-#include <DHT_U.h>
+#  include <DHT.h>
+#  include <DHT_U.h>
 
-DHT dht(DHT_RECEIVER_PIN, DHT_SENSOR_TYPE);
+DHT dht(DHT_RECEIVER_GPIO, DHT_SENSOR_TYPE);
 
 //Time used to wait for an interval before resending temp and hum
 unsigned long timedht = 0;
 
-void MeasureTempAndHum()
-{
-  if (millis() > (timedht + TimeBetweenReadingDHT))
-  { //retriving value of temperature and humidity of the box from DHT every xUL
+void setupDHT() {
+  Log.notice(F("Reading DHT on pin: %d" CR), DHT_RECEIVER_GPIO);
+}
+
+void MeasureTempAndHum() {
+  if (millis() > (timedht + TimeBetweenReadingDHT)) { //retrieving value of temperature and humidity of the box from DHT every xUL
     timedht = millis();
     static float persistedh;
     static float persistedt;
@@ -49,30 +51,21 @@ void MeasureTempAndHum()
     // Read temperature as Celsius (the default)
     float t = dht.readTemperature();
     // Check if any reads failed and exit early (to try again).
-    if (isnan(h) || isnan(t))
-    {
-      trc(F("Failed to read from DHT sensor!"));
-    }
-    else
-    {
-      trc(F("Creating DHT buffer"));
+    if (isnan(h) || isnan(t)) {
+      Log.error(F("Failed to read from DHT sensor!" CR));
+    } else {
+      Log.trace(F("Creating DHT buffer" CR));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject &DHTdata = jsonBuffer.createObject();
-      if (h != persistedh || dht_always)
-      {
+      JsonObject& DHTdata = jsonBuffer.createObject();
+      if (h != persistedh || dht_always) {
         DHTdata.set("hum", (float)h);
+      } else {
+        Log.trace(F("Same hum don't send it" CR));
       }
-      else
-      {
-        trc(F("Same hum don't send it"));
-      }
-      if (t != persistedt || dht_always)
-      {
+      if (t != persistedt || dht_always) {
         DHTdata.set("temp", (float)t);
-      }
-      else
-      {
-        trc(F("Same temp don't send it"));
+      } else {
+        Log.trace(F("Same temp don't send it" CR));
       }
       if (DHTdata.size() > 0)
         pub(DHTTOPIC, DHTdata);

@@ -3,7 +3,7 @@
 I like pull requests from everyone. By participating in this project, you
 agree to follow the code of conduct below
 
-[code of conduct]: https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md
+[code of conduct](https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md)
 
 [code style guide](https://google.github.io/styleguide/cppguide.html#Formatting)
 
@@ -16,7 +16,7 @@ Make your modification,
 
 Review your code, compile it for Arduino Uno and ESP8266
 
-Test it localy on your hardware config
+Test it locally on your hardware config
 
 If you modify `User_config.h` during your developments you need to report your modifications into Test_config.h
 https://github.com/1technophile/OpenMQTTGateway/blob/master/tests/Test_config.h 
@@ -25,7 +25,7 @@ Indeed during the continuous integration process `User_config.h` is replaced by 
 
 Emit a pull request
 
-Verify the travis CI compilation results
+Verify the GitHub Actions CI compilation results
 
 Request for review
 

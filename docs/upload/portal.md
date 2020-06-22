@@ -31,4 +31,4 @@ home/OpenMQTTGateway/LWT Online
 home/OpenMQTTGateway/version
 ```
 
-Note that the web portal appears only on first boot, if you want to configure again the setting you can do a long press on TRIGGER_PIN or [erase the settings](../use/gateway.md#erase-the-esp-settings).
+Note that the web portal appears only on first boot, if you want to configure again the setting you can do a long press on TRIGGER_GPIO or [erase the settings](../use/gateway.md#erase-the-esp-settings).

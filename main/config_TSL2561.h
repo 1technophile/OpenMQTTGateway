@@ -42,11 +42,11 @@
 extern void setupTSL2561();
 extern void TSL2561toMQTT();
 
-#define tsl2561_always true              // if false only send current value if it has changed 
-#define TimeBetweenReadingtsl2561 30000  
+#define tsl2561_always            true // if false only send current value if it has changed
+#define TimeBetweenReadingtsl2561 30000
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectTSL12561toMQTT   "/LIGHTtoMQTT"
+#define subjectTSL12561toMQTT "/LIGHTtoMQTT"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timetsl2561 = 0;

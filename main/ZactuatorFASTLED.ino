@@ -24,10 +24,9 @@
 
 #ifdef ZactuatorFASTLED
 
-#include <FastLED.h>
+#  include <FastLED.h>
 
-enum LEDState
-{
+enum LEDState {
   OFF,
   FIRE,
   GENERAL
@@ -42,26 +41,21 @@ const long blinkInterval = 300;
 const long fireUpdate = 10;
 CRGBPalette16 gPal;
 
-void setupFASTLED()
-{
-  trc(F("FASTLED_DATA_PIN "));
-  trc(String(FASTLED_DATA_PIN));
-  trc(F("FASTLED_NUM_LEDS "));
-  trc(String(FASTLED_NUM_LEDS));
-  trc(F("ZactuatorFASTLED setup done "));
-  FastLED.addLeds<FASTLED_TYPE, FASTLED_DATA_PIN>(leds, FASTLED_NUM_LEDS);
+void setupFASTLED() {
+  Log.notice(F("FASTLED_DATA_GPIO: %d" CR), FASTLED_DATA_GPIO);
+  Log.notice(F("FASTLED_NUM_LEDS: %d" CR), FASTLED_NUM_LEDS);
+  Log.trace(F("ZactuatorFASTLED setup done " CR));
+  FastLED.addLeds<FASTLED_TYPE, FASTLED_DATA_GPIO>(leds, FASTLED_NUM_LEDS);
 }
 
 //returns the current step of the animation
-int animation_step(int duration, int steps)
-{
+int animation_step(int duration, int steps) {
   int currentStep = ((currentUpdate % duration) / ((float)duration)) * steps;
   return currentStep;
 }
 
 //returns the number of steps since the last update
-int animation_step_count(int duration, int steps)
-{
+int animation_step_count(int duration, int steps) {
   long lastAnimationNumber = lastUpdate / duration;
   long currentAnimationNumber = currentUpdate / duration;
   int lastStep = ((lastUpdate % duration) / ((float)duration)) * steps;
@@ -70,44 +64,29 @@ int animation_step_count(int duration, int steps)
   return currentStep - lastStep + (currentAnimationNumber - lastAnimationNumber) * steps;
 }
 
-void FASTLEDLoop()
-{
-
+void FASTLEDLoop() {
   lastUpdate = currentUpdate;
   currentUpdate = millis();
 
-  if (currentLEDState == GENERAL)
-  {
-
-    for (int i = 0; i < FASTLED_NUM_LEDS; i++)
-    {
-
+  if (currentLEDState == GENERAL) {
+    for (int i = 0; i < FASTLED_NUM_LEDS; i++) {
       int count = animation_step_count(blinkInterval, 2);
       int step = animation_step(blinkInterval, 2);
 
-      if (count > 0)
-      {
-        if (blinkLED[i])
-        {
-
-          if (step == 0)
-          {
+      if (count > 0) {
+        if (blinkLED[i]) {
+          if (step == 0) {
             leds[i] = ledColorBlink[i];
-          }
-          else
-          {
+          } else {
             ledColorBlink[i] = leds[i];
             leds[i] = CRGB::Black;
           }
         }
       }
     }
-  }
-  else if (currentLEDState == FIRE)
-  {
+  } else if (currentLEDState == FIRE) {
     int count = animation_step_count(fireUpdate, 1);
-    if (count > 0)
-    {
+    if (count > 0) {
       //random16_add_entropy( random(0)); //random() don't exists in ESP framework - workaround?
       Fire2012WithPalette();
     }
@@ -115,88 +94,69 @@ void FASTLEDLoop()
   FastLED.show();
 }
 
-boolean FASTLEDtoMQTT()
-{
+boolean FASTLEDtoMQTT() {
   return false;
 }
-void MQTTtoFASTLEDJSON(char *topicOri, JsonObject &jsonData)
-{
-  trc(F("MQTTtoFASTLEDJSON: "));
+#  ifdef jsonReceiving
+void MQTTtoFASTLED(char* topicOri, JsonObject& jsonData) {
   currentLEDState = GENERAL;
-  trc(topicOri);
+  //trc(topicOri);
   //number = (long)strtol(&datacallback[1], NULL, 16);
 
-  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetled))
-  {
-    trc(F("JSON parsed"));
+  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetled)) {
+    Log.trace(F("MQTTtoFASTLED JSON analysis" CR));
     int ledNr = jsonData["led"];
-    trc(F("led"));
-    trc(ledNr);
-    const char *color = jsonData["hex"];
-    trc(F("hex"));
+    Log.notice(F("Led numero: %d" CR), ledNr);
+    const char* color = jsonData["hex"];
+    Log.notice(F("Color hex: %s" CR), color);
 
     long number = (long)strtol(color, NULL, 16);
-    trc(number);
     bool blink = jsonData["blink"];
-    if (ledNr <= FASTLED_NUM_LEDS)
-    {
-      trc(F("blink"));
-      trc(blink);
+    if (ledNr <= FASTLED_NUM_LEDS) {
+      Log.notice(F("Blink: %d" CR), blink);
       blinkLED[ledNr] = blink;
       leds[ledNr] = number;
     }
   }
 }
-void MQTTtoFASTLED(char *topicOri, char *datacallback)
-{
-  trc(F("MQTTtoFASTLED: "));
+#  endif
+
+#  ifdef simpleReceiving
+void MQTTtoFASTLED(char* topicOri, char* datacallback) {
+  Log.trace(F("MQTTtoFASTLED: " CR));
   currentLEDState = GENERAL;
   long number = 0;
-  trc(topicOri);
-  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLED))
-  {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLED)) {
     number = (long)strtol(&datacallback[1], NULL, 16);
-    trc(number);
-    for (int i = 0; i < FASTLED_NUM_LEDS; i++)
-    {
+    Log.notice(F("Number: %l" CR), number);
+    for (int i = 0; i < FASTLED_NUM_LEDS; i++) {
       leds[i] = number;
     }
     FastLED.show();
-  }
-  else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetbrightness))
-  {
+  } else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetbrightness)) {
     number = (long)strtol(&datacallback[1], NULL, 16);
-    trc(number);
+    Log.notice(F("Number: %l" CR), number);
     FastLED.setBrightness(number);
     FastLED.show();
-  }
-  else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetanimation))
-  {
+  } else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetanimation)) {
     String payload = datacallback;
-    trc(payload);
-    if (strstr(datacallback, "fire") != NULL)
-    {
+    Log.notice(F("Datacallback: %s" CR), datacallback);
+    if (strstr(datacallback, "fire") != NULL) {
       currentLEDState = FIRE;
       gPal = HeatColors_p;
-    }
-    else
-    {
+    } else {
       currentLEDState = OFF;
     }
-  }
-  else
-  {
+  } else {
     currentLEDState = OFF;
   }
-  if (currentLEDState == OFF)
-  {
-    for (int i = 0; i < FASTLED_NUM_LEDS; i++)
-    {
+  if (currentLEDState == OFF) {
+    for (int i = 0; i < FASTLED_NUM_LEDS; i++) {
       leds[i] = CRGB::Black;
     }
   }
 }
-
+#  endif
 // Fire2012 by Mark Kriegsman, July 2012
 // as part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
 ////
@@ -228,52 +188,44 @@ void MQTTtoFASTLED(char *topicOri, char *datacallback)
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 55, suggested range 20-100
-#define COOLING 55
+#  define COOLING 55
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
-#define SPARKING 120
+#  define SPARKING 120
 bool gReverseDirection = false;
 
-void Fire2012WithPalette()
-{
+void Fire2012WithPalette() {
   // Array of temperature readings at each simulation cell
   static byte heat[FASTLED_NUM_LEDS];
 
   // Step 1.  Cool down every cell a little
-  for (int i = 0; i < FASTLED_NUM_LEDS; i++)
-  {
+  for (int i = 0; i < FASTLED_NUM_LEDS; i++) {
     heat[i] = qsub8(heat[i], random8(0, ((COOLING * 10) / FASTLED_NUM_LEDS) + 2));
   }
 
   // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-  for (int k = FASTLED_NUM_LEDS - 1; k >= 2; k--)
-  {
+  for (int k = FASTLED_NUM_LEDS - 1; k >= 2; k--) {
     heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
   }
 
   // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-  if (random8() < SPARKING)
-  {
+  if (random8() < SPARKING) {
     int y = random8(7);
     heat[y] = qadd8(heat[y], random8(160, 255));
   }
 
   // Step 4.  Map from heat cells to LED colors
-  for (int j = 0; j < FASTLED_NUM_LEDS; j++)
-  {
+  for (int j = 0; j < FASTLED_NUM_LEDS; j++) {
     // Scale the heat value from 0-255 down to 0-240
     // for best results with color palettes.
     byte colorindex = scale8(heat[j], 240);
     CRGB color = ColorFromPalette(gPal, colorindex);
     int pixelnumber;
-    if (gReverseDirection)
-    {
+    if (gReverseDirection) {
       pixelnumber = (FASTLED_NUM_LEDS - 1) - j;
-    }
-    else
-    {
+    } else {
       pixelnumber = j;
     }
     leds[pixelnumber] = color;

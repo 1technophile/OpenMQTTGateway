@@ -6,24 +6,26 @@ You can take a look to the components sheet to have a view of [supported boards 
 Moreover it supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561
 Or can actutate things (LED chipsets, relays).
 
-Here is some information to find the board suitable for your need, you have the choice between wifi, ethernet and off the shelves devices:
+Here is some information to find the board suitable for your need, you have the choice between wifi, ethernet and off the shelves devices.
 
-|Off the shelves wifi boards|RF|IR|BLE|LORA|GSM|Button|Relay|
-|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|Sonoff RF Bridge (*) |X|[needs an hack](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
-|All bare ESP32|-|-|X|-|-|-|-|
-|M5Stack Basic|-|-|X|-|-|-|-|
-|M5Stick|-|sending|X|-|-|X|X|
-|M5Stick C|-|sending|X|-|-|X|X|
-|TTGO LORA32|-|-|-|X|-|-|-|
-|Sonoff RFR3|receiving [needs an hack](https://1technophile.blogspot.com/2019/08/new-sonoff-rfr3-as-433tomqtt-gateway.html)|-|-|-|-|X|X|
-|Sonoff Basic|-|-|-|-|-|X|X|
-|RF WIFI GATEWAY|[receiving](https://1technophile.blogspot.com/2019/09/hack-of-rf-wifi-gateway-usb-stick.html)|-|-|-|-|-|-|
+## Off the shelves boards
+The boards below doesn't need hardware modification (or a lite one).
+|Off the shelves wifi boards|Pictures|RF|IR|BLE|LORA|Relay|Display|Low Power|
+|-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|Sonoff RF Bridge (*) |![](../img/OpenMQTTGateway_boards_sonoff_rfbridge.png)|X|[mod](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
+|All bare ESP32|-|-|-|X|-|X|-|X|
+|[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
+|M5Stick|-|-|send|X|-|X|-|X|
+|[M5Stick C](M5)|![](../img/OpenMQTTgateway_M5_StickC_Board_Display_Text.png)|-|send|X|-|X|X|X|
+|TTGO LORA32|![](../img/OpenMQTTGateway_TTGO32_LORA_Send.jpg)|-|-|-|X|-|-|-|
+|Sonoff RFR3|![](../img/OpenMQTTGateway_boards_sonoff_rfr3.png)|[receiving](https://1technophile.blogspot.com/2019/08/new-sonoff-rfr3-as-433tomqtt-gateway.html)|-|-|-|X|-|-|
+|Sonoff Basic|-|-|-|-|-|X|-|-|
+|RF WIFI GATEWAY|![](../img/OpenMQTTGateway_board_wifi_rf_gateway.png)|[receiving](https://1technophile.blogspot.com/2019/09/hack-of-rf-wifi-gateway-usb-stick.html)|-|-|-|-|-|-|
 
 '(*)' *So as to extend the number of RF protocols supported by the Sonoff RF Bridge you can apply an [hardware hack](https://1technophile.blogspot.com/2019/04/sonoff-rf-bridge-pilight-or-how-to.html), this way you will be able to use Pilight or RF2 gateway.*
 
-![boards](../img/OpenMQTTGateway_boards_sonoff.png)
-
+## DIY boards
+The boards below need hardware modifications and electronic/hardware competencies. You have more possibilities of gateways combination compared to off the shelves ones.
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |Arduino UNO|X|X(limited compared to ESP)|X|-|X|X|
