@@ -1,9 +1,11 @@
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
-[![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=master)](https://github.com/1technophile/OpenMQTTGateway/actions)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/943c9b639b68441dae8e29ee39977ab2)](https://www.codacy.com/app/1technophile/OpenMQTTGateway?utm_source=github.com&utm_medium=referral&utm_content=1technophile/OpenMQTTGateway&utm_campaign=badger)
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
 [![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
 [![Download count](https://img.shields.io/github/downloads/1technophile/OpenMQTTGateway/total.svg)](https://github.com/1technophile/OpenMQTTGateway/releases)
+
+![Build](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=development)
+![Check Code Format](https://github.com/1technophile/OpenMQTTGateway/workflows/Check%20Code%20Format/badge.svg?branch=development)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/943c9b639b68441dae8e29ee39977ab2)](https://www.codacy.com/app/1technophile/OpenMQTTGateway?utm_source=github.com&utm_medium=referral&utm_content=1technophile/OpenMQTTGateway&utm_campaign=badger)
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
 
 **Questions, support please don't open an issue, go first to the [docs](https://docs.openmqttgateway.com) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
 
