@@ -95,6 +95,7 @@ module.exports = {
           title: '6 - Participate 💻',   // required
           sidebarDepth: 1,    // optional, defaults to 1
           children: [
+            'participate/support',
             'participate/development',
             'participate/community',
             ['https://github.com/1technophile/OpenMQTTGateway/blob/development/LICENSE.txt','License']

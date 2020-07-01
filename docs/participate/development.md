@@ -31,6 +31,11 @@ Request for review
 
 I may suggest some changes or improvements or alternatives.
 
+Once done don't forget to add yourself to the list of contributors:
+```
+@all-contributors please add <username> for <contributions>
+```
+
 Some things that will increase the chance that your pull request is accepted:
 * Comment your code
 * Ask eventually for design guidelines
