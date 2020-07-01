@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "balvig",
+      "name": "Jens Balvig",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/104138?v=4",
+      "profile": "http://balvig.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
