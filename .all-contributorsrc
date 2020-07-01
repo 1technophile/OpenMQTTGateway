@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "BlackSmith",
+      "name": "Martin Korbel",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/192467?v=4",
+      "profile": "https://github.com/BlackSmith",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
