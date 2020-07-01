@@ -6,6 +6,7 @@ agree to follow the code of conduct below
 [code of conduct](https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md)
 
 [code style guide](https://google.github.io/styleguide/cppguide.html#Formatting)
+So as to format automaticaly your document you have to add the "clang-Format" extension to VSCode, once done you can format the code by doing a right click into the code file window and clicking "Format document".
 
 Fork the [development branch](https://github.com/1technophile/OpenMQTTGateway/tree/development), then clone the repo
 
@@ -30,11 +31,6 @@ Verify the GitHub Actions CI compilation results
 Request for review
 
 I may suggest some changes or improvements or alternatives.
-
-Once done don't forget to add yourself to the list of contributors:
-```
-@all-contributors please add <username> for <contributions>
-```
 
 Some things that will increase the chance that your pull request is accepted:
 * Comment your code
