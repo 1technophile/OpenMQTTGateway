@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "larsenglund",
+      "name": "Lars Englund",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5367846?v=4",
+      "profile": "http://en.gravatar.com/larsenglund",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
