@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](CONTRIBUTORS.md)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ## Contributors ✨
@@ -12,6 +12,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tr>
     <td align="center"><a href="https://github.com/Alomon31"><img src="https://avatars0.githubusercontent.com/u/59569925?v=4" width="100px;" alt=""/><br /><sub><b>Alomon31</b></sub></a><br /><a href="https://github.com/1technophile/OpenMQTTGateway/commits?author=Alomon31" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.blackmesaeast.com.pl/projects/electronics/sarge-single-board-computer/"><img src="https://avatars3.githubusercontent.com/u/3796827?v=4" width="100px;" alt=""/><br /><sub><b>McGr3g0r</b></sub></a><br /><a href="https://github.com/1technophile/OpenMQTTGateway/commits?author=McGr3g0r" title="Code">💻</a></td>
   </tr>
 </table>
 
