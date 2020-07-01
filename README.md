@@ -1,7 +1,4 @@
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
 [![Download count](https://img.shields.io/github/downloads/1technophile/OpenMQTTGateway/total.svg)](https://github.com/1technophile/OpenMQTTGateway/releases)
 
@@ -12,36 +9,27 @@
 
 **Questions, support please don't open an issue, go first to the [docs](https://docs.openmqttgateway.com) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
 
-# OpenMQTTGateway
 [![](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.png)](https://community.openmqttgateway.com)
 
+## Download
 Download OpenMQTTGateway from the [releases page](https://github.com/1technophile/OpenMQTTGateway/releases)
 
+## Documentation
+The documentation is [here](https://docs.openmqttgateway.com)
+
 The reference sheet, with the list of all functions, pinouts is [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=0)
+
+## Compatible devices and parts
 
 A list of supported devices is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079), door/window sensors, PIR sensors, smoke detectors, weather stations...
 
 A list of compatible components to build your gateway is available [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277), nodemcu, esp32, emitters and receivers...
 
+## Contributors ✨
+
+Thanks goes to these wonderful [people](https://github.com/1technophile/OpenMQTTGateway/graphs/contributors) who helped OpenMQTTGateway
+
+## Support
 If you want to buy a coffee or other beverage so as to give me some support, here is a way to do it : 
 
 <a href="https://www.buymeacoffee.com/1technophile" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
-
-## Contributors ✨
-
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/Alomon31"><img src="https://avatars0.githubusercontent.com/u/59569925?v=4" width="100px;" alt=""/><br /><sub><b>Alomon31</b></sub></a><br /><a href="https://github.com/1technophile/OpenMQTTGateway/commits?author=Alomon31" title="Code">💻</a></td>
-  </tr>
-</table>
-
-<!-- markdownlint-enable -->
-<!-- prettier-ignore-end -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
