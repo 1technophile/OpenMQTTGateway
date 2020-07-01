@@ -16,6 +16,7 @@ With OpenMQTTGateway and a controller you can for example:
 * Trigger a fan depending on the temperature and humidity thanks to a Mi Jia sensor,
 * Alert yourself by a controller notification if the temperature of your fridge is too high,
 * Detect your beacon/smartwatch so as to trigger a special scenario when you come home,
+* [Lose weight with the help of a complete log system](https://www.youtube.com/watch?v=noUROhtf0E0&t=18s), video from [@Andreas Spiess](https://www.youtube.com/channel/UCu7_D0o48KbfhpEohoP7YSQ)
 * Detect opened door or windows and alert yourself when leaving home
 * Detect water leakage or smoke
 * Actionate a siren if something is going wrong
