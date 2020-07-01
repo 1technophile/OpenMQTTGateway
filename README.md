@@ -36,7 +36,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://legion2.github.io/"><img src="https://avatars3.githubusercontent.com/u/12752323?v=4" width="100px;" alt=""/><br /><sub><b>Leon Kiefer</b></sub></a><br /><a href="https://github.com/1technophile/OpenMQTTGateway/commits?author=Legion2" title="Code">💻</a> <a href="https://github.com/1technophile/OpenMQTTGateway/pulls?q=is%3Apr+reviewed-by%3ALegion2" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://legion2.github.io/"><img src="https://avatars3.githubusercontent.com/u/12752323?v=4" width="100px;" alt=""/><br /><sub><b>Leon Kiefer</b></sub></a><br /><a href="https://github.com/1technophile/OpenMQTTGateway/commits?author=Legion2" title="Code">💻</a> <a href="https://github.com/1technophile/OpenMQTTGateway/pulls?q=is%3Apr+reviewed-by%3ALegion2" title="Reviewed Pull Requests">👀</a> <a href="#infra-Legion2" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#ideas-Legion2" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
