@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "posicat",
+      "name": "Mark",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1840136?v=4",
+      "profile": "http://www.cattech.org/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
