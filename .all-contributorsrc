@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "HosfordDotMe",
+      "name": "Eric Hosford",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/555977?v=4",
+      "profile": "http://hosford.me",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
