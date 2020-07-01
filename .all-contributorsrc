@@ -1,0 +1,25 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "Legion2",
+      "name": "Leon Kiefer",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/12752323?v=4",
+      "profile": "https://legion2.github.io/",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "OpenMQTTGateway",
+  "projectOwner": "1technophile",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
