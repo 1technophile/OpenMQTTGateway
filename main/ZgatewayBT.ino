@@ -269,6 +269,21 @@ void MiBandDiscovery(char* mac) {
   createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount);
   createOrUpdateDevice(mac, device_flags_isDisc);
 }
+
+void InkBirdDiscovery(char* mac) {
+#    define InkBirdparametersCount 3
+  Log.trace(F("InkBirdDiscovery" CR));
+  char* InkBirdsensor[InkBirdparametersCount][8] = {
+      {"sensor", "InkBird-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "InkBird-tem", mac, "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "InkBird-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, InkBirdsensor, InkBirdparametersCount);
+  createOrUpdateDevice(mac, device_flags_isDisc);
+}
+
 #  else
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
@@ -280,6 +295,7 @@ void CLEARGRASSTRHKPADiscovery(char* mac) {}
 void MiScaleDiscovery(char* mac) {}
 void MiLampDiscovery(char* mac) {}
 void MiBandDiscovery(char* mac) {}
+void InkBirdDiscovery(char* mac) {}
 #  endif
 
 #  ifdef ESP32
@@ -320,13 +336,11 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice.haveName())
         BLEdata.set("name", (char*)advertisedDevice.getName().c_str());
-#    if pubBLEManufacturerData
       if (advertisedDevice.haveManufacturerData()) {
         char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice.getManufacturerData().data(), advertisedDevice.getManufacturerData().length());
         Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
         BLEdata.set("manufacturerdata", manufacturerdata);
       }
-#    endif
       if (advertisedDevice.haveRSSI())
         BLEdata.set("rssi", (int)advertisedDevice.getRSSI());
       if (advertisedDevice.haveTXPower())
@@ -378,8 +392,8 @@ void BLEscan() {
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
   pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-  BLEScanResults foundDevices = pBLEScan->start(Scan_duration);
-  Log.notice(F("Scan end, deinit controller" CR));
+  BLEScanResults foundDevices = pBLEScan->start(Scan_duration, false);
+  Log.notice(F("Found %d devices, scan end deinit controller" CR), foundDevices.getCount());
   esp_bt_controller_deinit();
 }
 
@@ -645,6 +659,7 @@ void launch_discovery(JsonObject& BLEdata, char* mac) {
     if (strcmp(BLEdata["model"].as<const char*>(), "MiBand") == 0) MiBandDiscovery(mac);
     if (strcmp(BLEdata["model"].as<const char*>(), "XMTZC04HM") == 0 ||
         strcmp(BLEdata["model"].as<const char*>(), "XMTZC05HM") == 0) MiScaleDiscovery(mac);
+    if (strcmp(BLEdata["model"].as<const char*>(), "INKBIRD") == 0) InkBirdDiscovery(mac);
   } else {
     Log.trace(F("Device already discovered or model not detected" CR));
   }
@@ -764,7 +779,6 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (strstr(service_datauuid, "181b") != NULL) {
           Log.trace(F("XMTZC05HM data reading" CR));
           BLEdata.set("model", "XMTZC05HM");
-          ;
 
           return process_scale_v2(BLEdata);
         }
@@ -777,6 +791,26 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
 #  if !pubUnknownBLEServiceData
     Log.trace(F("Unknown service data, removing it" CR));
     BLEdata.remove("servicedata");
+#  endif
+  }
+
+  if (BLEdata.containsKey("manufacturerdata")) {
+    const char* manufacturerdata = (const char*)(BLEdata["manufacturerdata"] | "");
+    Log.trace(F("manufacturerdata %s" CR), manufacturerdata);
+    if (BLEdata.containsKey("name")) {
+      const char* name = (const char*)(BLEdata["name"] | "");
+      Log.trace(F("name %s" CR), name);
+      Log.trace(F("Is it a INKBIRD?" CR));
+      if (strcmp(name, "sps") == 0) {
+        Log.trace(F("INKBIRD data reading" CR));
+        BLEdata.set("model", "INKBIRD");
+
+        return process_inkbird(BLEdata);
+      }
+    }
+#  if !pubBLEManufacturerData
+    Log.trace(F("Remove manufacturer data" CR));
+    BLEdata.remove("manufacturerdata");
 #  endif
   }
 
@@ -860,6 +894,21 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
   //Set Json values
   BLEdata.set("weight", (double)weight);
   BLEdata.set("impedance", (double)impedance);
+
+  return BLEdata;
+}
+
+JsonObject& process_inkbird(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+
+  double temperature = value_from_service_data(manufacturerdata, 0, 4) / 100;
+  double humidity = value_from_service_data(manufacturerdata, 4, 4) / 100;
+  double battery = value_from_service_data(manufacturerdata, 14, 2);
+
+  //Set Json values
+  BLEdata.set("tem", (double)temperature);
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("batt", (double)battery);
 
   return BLEdata;
 }
