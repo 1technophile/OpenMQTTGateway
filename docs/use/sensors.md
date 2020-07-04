@@ -21,6 +21,13 @@ You will receive the HTU21 sensor readings every TimeBetweenReadinghtu21 (set in
 
 If you don't want to resend values that haven't changed you can set htu21_always = false in config_HTU21.h
 
+### AHTx0 (AHT10 and AHT20)
+You will receive the AHT sensor readings every TimeBetweenReadingAHTx0 (set into config_AHTx0.h) (30s by default).
+
+`home/OpenMQTTGateway/CLIMAtoMQTT/aht { "tempc": 27.48108, "tempf": 81.46594, "hum": 48.90614 }`
+
+If you don't want to resend values that haven't changed you can set AHTx0_always = false in config_AHTx0.h
+
 ### DS18x20
 You will receive the DS18x20 sensor readings every DS1820_INTERVAL_SEC (set into config_DS1820.h) (60s by default).
 Each sensor will be published under the following topic using each sensors' address.
