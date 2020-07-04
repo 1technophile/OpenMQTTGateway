@@ -55,7 +55,7 @@ void setupZsensorAHTx0() {
   Log.notice(F("AHTx0 Initialized - begin()" CR));
 
 #  if defined(ESP32)
-  Wire.begin(I2C_SDA, I2C_SCL);
+  Wire.begin(AHT_I2C_SDA, AHT_I2C_SCL);
   ahtSensor.begin(&Wire);
 #  else
   ahtSensor.begin();
