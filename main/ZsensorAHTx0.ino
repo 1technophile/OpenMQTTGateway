@@ -1,21 +1,21 @@
 /*  
   OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
  
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker
    Send and receiving command by MQTT
    
    This is the Climate Addon:
-   - Measures Temperature, Humidity and Pressure
-   - Generates Values for: Temperature in degrees C and F, Humidity in %, Pressure in Pa, Altitude in Meter and Feet
-   - Required Hardware Module: HTU21
-   - Required Library: SparkFun HTU21 Library v1.1.3
+   - Measures Temperature, Humidity
+   - Generates Values for: Temperature in degrees C and F, Humidity in %
+   - Required Hardware Module: AHTX0 (AHT10 & AHT20)
+   - Required Library: Adafruit AHTX0 by Adafruit
 
    Connection Schemata:
    --------------------
 
-   HTU21 ------> Arduino Uno ----------> ESP8266
+   AHT10 ------> Arduino Uno ----------> ESP8266
    ==============================================
-   Vcc ---------> 5V -------------------> Vu (5V)
+   Vcc ---------> 5V -------------------> 3v3 (3V)
    GND ---------> GND ------------------> GND
    SCL ---------> Pin A5 ---------------> D1
    SDA ---------> Pin A4 ---------------> D2
