@@ -186,6 +186,26 @@ void pubMqttDiscovery() {
   }
 #  endif
 
+#  ifdef ZsensorAHTx0
+#    define AHTparametersCount 3
+  Log.trace(F("AHTx0Discovery" CR));
+  char* AHTsensor[AHTparametersCount][8] = {
+      {"sensor", "tempc", "aht", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "tempf", "aht", "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "hum", "aht", "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  for (int i = 0; i < AHTparametersCount; i++) {
+    Log.trace(F("CreateDiscoverySensor" CR));
+    createDiscovery(AHTsensor[i][0],
+                    AHTTOPIC, AHTsensor[i][1], (char*)getUniqueId(AHTsensor[i][1], AHTsensor[i][2]).c_str(),
+                    will_Topic, AHTsensor[i][3], AHTsensor[i][4],
+                    AHTsensor[i][5], AHTsensor[i][6], AHTsensor[i][7],
+                    0, "", "", true, "");
+  }
+#  endif
+
 #  ifdef ZsensorDHT
 #    define DHTparametersCount 2
   Log.trace(F("DHTDiscovery" CR));
