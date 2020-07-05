@@ -56,9 +56,11 @@ void setupZsensorAHTx0() {
 
 #  if defined(ESP32)
   Wire.begin(AHT_I2C_SDA, AHT_I2C_SCL);
-  ahtSensor.begin(&Wire);
+  if ( !ahtSensor.begin(&Wire) )
+      Log.error(F("Failed to initialize AHTx0 sensor!" CR));
 #  else
-  ahtSensor.begin();
+  if ( !ahtSensor.begin() )
+      Log.error(F("Failed to initialize AHTx0 sensor!" CR));
 #  endif
 }
 
@@ -71,9 +73,8 @@ void MeasureAHTTempHum() {
     static float persisted_aht_hum;
 
     sensors_event_t ahtTempC, ahtHum;
-    ahtSensor.getEvent(&ahtHum, &ahtTempC); // get sensor data
-
-    if (ahtTempC.temperature >= 998 || ahtHum.relative_humidity >= 998) {
+    if ( !ahtSensor.getEvent(&ahtHum, &ahtTempC) ) // get sensor data
+    {
       Log.error(F("Failed to read from sensor AHTx0!" CR));
       return;
     }
