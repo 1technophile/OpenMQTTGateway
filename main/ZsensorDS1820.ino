@@ -159,15 +159,13 @@ void MeasureDS1820Temp() {
             Log.notice(F("DS1820: Temperature %s %d F" CR),
                        (char*)ds1820_addr[i].c_str(),
                        DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
+            DS1820data.set("tempf", (float)DallasTemperature::toFahrenheit(current_temp[i]));
             DS1820data.set("unit", "F");
           } else {
             Log.notice(F("DS1820: Temperature %s %d C" CR),
                        (char*)ds1820_addr[i].c_str(),
                        current_temp[i]);
-            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("unit", "F");
-            DS1820data.set("temp", (float)current_temp[i]);
+            DS1820data.set("tempc", (float)current_temp[i]);
             DS1820data.set("unit", "C");
           }
           if (DS1820_DETAILS) {

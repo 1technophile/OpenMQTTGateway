@@ -63,7 +63,7 @@ void MeasureTempAndHum() {
         Log.trace(F("Same hum don't send it" CR));
       }
       if (t != persistedt || dht_always) {
-        DHTdata.set("temp", (float)t);
+        DHTdata.set("tempc", (float)t);
       } else {
         Log.trace(F("Same temp don't send it" CR));
       }
