@@ -102,7 +102,7 @@ void pubOneWire_HADiscovery() {
 #  ifdef ZmqttDiscovery
   Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
   for (int index = 0; index < ds1820_count; index++) {
-#    if DS1820_FAHRENHEIT
+
     createDiscovery("sensor",
                     (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
                     (char*)String("DS12B20_" + String(index + 1)).c_str(),
@@ -112,17 +112,17 @@ void pubOneWire_HADiscovery() {
                     jsonTempf,
                     "", "", "°F",
                     0, "", "", true, "");
-#    else
+
     createDiscovery("sensor",
                     (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
                     (char*)String("DS12B20_" + String(index + 1)).c_str(),
                     (char*)ds1820_addr[index].c_str(),
                     will_Topic,
                     "temperature",
-                    jsonTemp,
+                    jsonTempc,
                     "", "", "°C",
                     0, "", "", true, "");
-#    endif
+
   }
 #  endif
 }
@@ -155,6 +155,7 @@ void MeasureDS1820Temp() {
         if (current_temp[i] == -127) {
           Log.error(F("DS1820: Device %s currently disconnected!" CR), (char*)ds1820_addr[i].c_str());
         } else if (DS1820_ALWAYS || current_temp[i] != persisted_temp[i]) {
+          // remove for 0.9.6 release -- BEGIN (Additional BREAKING CHANGE - Unit will be removed)
           if (DS1820_FAHRENHEIT) {
             Log.notice(F("DS1820: Temperature %s %d F" CR),
                        (char*)ds1820_addr[i].c_str(),
@@ -170,6 +171,11 @@ void MeasureDS1820Temp() {
             DS1820data.set("temp", (float)current_temp[i]);
             DS1820data.set("unit", "C");
           }
+          // remove for 0.9.6 release -- END
+
+          DS1820data.set("tempc", (float)DallasTemperature::toFahrenheit(current_temp[i]));
+          DS1820data.set("tempf", (float)current_temp[i]);
+          
           if (DS1820_DETAILS) {
             DS1820data.set("type", ds1820_type[i]);
             DS1820data.set("res", ds1820_resolution[i] + String("bit" CR));

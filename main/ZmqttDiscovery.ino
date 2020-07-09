@@ -145,7 +145,7 @@ void pubMqttDiscovery() {
 #    define BMEparametersCount 6
   Log.trace(F("bme280Discovery" CR));
   char* BMEsensor[BMEparametersCount][8] = {
-      {"sensor", "tempc", "bme", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "tempc", "bme", "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "tempf", "bme", "temperature", jsonTempf, "", "", "°F"},
       {"sensor", "pa", "bme", "", jsonPa, "", "", "hPa"},
       {"sensor", "hum", "bme", "humidity", jsonHum, "", "", "%"},
@@ -169,7 +169,7 @@ void pubMqttDiscovery() {
 #    define HTUparametersCount 3
   Log.trace(F("htu21Discovery" CR));
   char* HTUsensor[HTUparametersCount][8] = {
-      {"sensor", "tempc", "htu", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "tempc", "htu", "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "tempf", "htu", "temperature", jsonTempf, "", "", "°F"},
       {"sensor", "hum", "htu", "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -190,7 +190,7 @@ void pubMqttDiscovery() {
 #    define AHTparametersCount 3
   Log.trace(F("AHTx0Discovery" CR));
   char* AHTsensor[AHTparametersCount][8] = {
-      {"sensor", "tempc", "aht", "temperature", jsonTemp, "", "", "°C"},
+      {"sensor", "tempc", "aht", "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "tempf", "aht", "temperature", jsonTempf, "", "", "°F"},
       {"sensor", "hum", "aht", "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -207,11 +207,13 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorDHT
-#    define DHTparametersCount 2
+#    define DHTparametersCount 3
   Log.trace(F("DHTDiscovery" CR));
   char* DHTsensor[DHTparametersCount][8] = {
-      {"sensor", "tempc", "dht", "temperature", jsonTemp, "", "", "°C"},
-      {"sensor", "hum", "dht", "humidity", jsonHum, "", "", "%"}};
+      {"sensor", "tempc", "dht", "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "tempc", "dht", "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "hum", "dht", "humidity", jsonHum, "", "", "%"}
+  };
 
   for (int i = 0; i < DHTparametersCount; i++) {
     Log.trace(F("CreateDiscoverySensor" CR));

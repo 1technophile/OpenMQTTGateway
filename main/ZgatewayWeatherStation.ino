@@ -105,7 +105,9 @@ void sendTemperatureData(byte id, float temperature, int humidity, byte battery_
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& RFdata = jsonBuffer.createObject();
     RFdata.set("sensor", id);
-    RFdata.set("temperature", temperature);
+    RFdata.set("temperature", temperature); // remove for 0.9.6 release
+    RFdata.set("tempc", temperature);
+    RFdata.set("tempf", wsdr.convertCtoF(temperature));
     RFdata.set("humidity", humidity);
     RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
     pub(subjectRFtoMQTT, RFdata);
