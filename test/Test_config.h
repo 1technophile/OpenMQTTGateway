@@ -188,4 +188,7 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #define subjectSYStoMQTT      "/SYStoMQTT"
 #define subjectMQTTtoSYSset   "/commands/MQTTtoSYS/config"
 
+#define convertTemp_CtoF(c) ((c * 1.8) + 32)
+#define convertTemp_FtoC(f) ((f - 32) * 5/9)
+
 #endif
