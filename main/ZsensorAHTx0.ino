@@ -56,11 +56,13 @@ void setupZsensorAHTx0() {
 
 #  if defined(ESP32)
   Wire.begin(AHT_I2C_SDA, AHT_I2C_SCL);
-  if (!ahtSensor.begin(&Wire))
-      Log.error(F("Failed to initialize AHTx0 sensor!" CR));
+  if (!ahtSensor.begin(&Wire)) {
+    Log.error(F("Failed to initialize AHTx0 sensor!" CR));
+  }
 #  else
-  if (!ahtSensor.begin())
-      Log.error(F("Failed to initialize AHTx0 sensor!" CR));
+  if (!ahtSensor.begin()) {
+    Log.error(F("Failed to initialize AHTx0 sensor!" CR));
+  }
 #  endif
 }
 
