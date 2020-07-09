@@ -296,4 +296,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL LOG_LEVEL_NOTICE
 
+#define convertTemp_CtoF(c) ((c * 1.8) + 32)
+#define convertTemp_FtoC(f) ((f - 32) * 5/9)
+
 #endif
