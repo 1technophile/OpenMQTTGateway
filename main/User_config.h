@@ -272,11 +272,18 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //variables to avoid duplicates
 #define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER           512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
-#  define ARDUINOJSON_USE_LONG_LONG 1
+#if defined(ESP8266) || defined(ESP32)
+#  define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define TYPE_UL_ULL     uint64_t
+#  define STRTO_UL_ULL    strtoull
+#elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#  define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define TYPE_UL_ULL     uint64_t
+#  define STRTO_UL_ULL    strtoul
 #else // boards with smaller memory
 #  define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define TYPE_UL_ULL     uint32_t
+#  define STRTO_UL_ULL    strtoul
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)

@@ -33,7 +33,7 @@ The boards below need hardware modifications and electronic/hardware competencie
 |ESP32|X|X|X|X|not tested|X|X|
 |ESP8266|X|X|X|not tested|X|X|X|
 
-*Note that Pilight is only supported on ESP for the moment.*
+*Note that Pilight is only supported on ESP and Arduino UNO handle only 32bits values in our context.*
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 

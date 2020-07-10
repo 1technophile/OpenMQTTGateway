@@ -135,3 +135,7 @@ uncommented.
 Added to that auto discovery box should be selected into your Home Assistant MQTT integration configuration.
 
 With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).
+
+::: warning Note
+simpleReceiving on Arduino boards doesn't accept 64 bits MQTT values, you can only send 32bits values from the MQTT broker.
+:::

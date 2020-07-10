@@ -30,7 +30,7 @@
 // array to store previous received RFs, IRs codes and their timestamps
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 #  define array_size 12
-unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+unsigned long long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
 //Time used to wait for an interval before checking system measures
 unsigned long timer_sys_measures = 0;
 #else // boards with smaller memory
@@ -38,6 +38,9 @@ unsigned long timer_sys_measures = 0;
 unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #endif
 
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#  define ARDUINOJSON_USE_LONG_LONG 1
+#endif
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
@@ -222,7 +225,7 @@ void pub(char* topicori, JsonObject& data) {
     digitalWrite(led_receive, HIGH);
     String topic = String(mqtt_topic) + String(topicori);
 #ifdef valueAsASubject
-    unsigned long value = data["value"];
+    TYPE_UL_ULL value = data["value"];
     if (value != 0) {
       topic = topic + "/" + String(value);
     }
@@ -246,11 +249,11 @@ void pub(char* topicori, JsonObject& data) {
 #  if defined(ESP8266)
       yield();
 #  endif
-      if (p.value.is<unsigned long>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an unsigned long
+      if (p.value.is<TYPE_UL_ULL>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an TYPE_UL_ULL
         if (strcmp(p.key, "value") == 0) { // if data is a value we don't integrate the name into the topic
-          pubMQTT(topic, p.value.as<unsigned long>());
+          pubMQTT(topic, p.value.as<TYPE_UL_ULL>());
         } else { // if data is not a value we integrate the name into the topic
-          pubMQTT(topic + "/" + String(p.key), p.value.as<unsigned long>());
+          pubMQTT(topic + "/" + String(p.key), p.value.as<TYPE_UL_ULL>());
         }
       } else if (p.value.is<int>()) {
         pubMQTT(topic + "/" + String(p.key), p.value.as<int>());
@@ -327,6 +330,12 @@ void pubMQTT(String topic, String payload) {
 void pubMQTT(String topic, int payload) {
   char val[12];
   sprintf(val, "%d", payload);
+  client.publish((char*)topic.c_str(), val);
+}
+
+void pubMQTT(String topic, unsigned long long payload) {
+  char val[21];
+  sprintf(val, "%llu", payload);
   client.publish((char*)topic.c_str(), val);
 }
 
@@ -1300,7 +1309,7 @@ void stateMeasures() {
 }
 #endif
 
-void storeValue(unsigned long MQTTvalue) {
+void storeValue(TYPE_UL_ULL MQTTvalue) {
   unsigned long now = millis();
   // find oldest value of the buffer
   int o = getMin();
@@ -1327,7 +1336,7 @@ int getMin() {
   return minindex;
 }
 
-bool isAduplicate(unsigned long value) {
+bool isAduplicate(TYPE_UL_ULL value) {
   Log.trace(F("isAdupl?" CR));
   // check if the value has been already sent during the last time_avoid_duplicate
   for (int i = 0; i < array_size; i++) {
@@ -1348,15 +1357,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
-    unsigned long data = 0;
-#ifdef jsonPublishing
-    if (jsondata.success())
-      data = jsondata["value"];
-#endif
+    TYPE_UL_ULL data = 0;
 
-#ifdef simplePublishing
-    data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-#endif
+    jsondata.success() ? data = jsondata["value"] : data = STRTO_UL_ULL(datacallback, NULL, 10);
 
     if (data != 0) {
       storeValue(data);
