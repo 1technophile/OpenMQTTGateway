@@ -102,27 +102,24 @@ void pubOneWire_HADiscovery() {
 #  ifdef ZmqttDiscovery
   Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
   for (int index = 0; index < ds1820_count; index++) {
-
     createDiscovery("sensor",
                     (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
-                    (char*)String("DS12B20_" + String(index + 1)).c_str(),
-                    (char*)ds1820_addr[index].c_str(),
+                    (char*)("DS12B20_" + String(index + 1) + "_f").c_str(),
+                    (char*)(ds1820_addr[index] + "_f").c_str(),
                     will_Topic,
                     "temperature",
                     jsonTempf,
                     "", "", "°F",
                     0, "", "", true, "");
-
     createDiscovery("sensor",
                     (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
-                    (char*)String("DS12B20_" + String(index + 1)).c_str(),
-                    (char*)ds1820_addr[index].c_str(),
+                    (char*)("DS12B20_" + String(index + 1) + "_c").c_str(),
+                    (char*)(ds1820_addr[index] + "_c").c_str(),
                     will_Topic,
                     "temperature",
                     jsonTempc,
                     "", "", "°C",
                     0, "", "", true, "");
-
   }
 #  endif
 }
