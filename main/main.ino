@@ -147,12 +147,16 @@ int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ESP32
 #  include <ArduinoOTA.h>
 #  include <FS.h>
-#  include <WiFi.h>
-#  include <WiFiUdp.h>
+#  include <SPIFFS.h>
+#  include <esp_wifi.h>
 
-#  include "SPIFFS.h"
-#  include "esp_wifi.h"
+#  ifdef SECURE_CONNECTION
+#    include <WiFiClientSecure.h>
+WiFiClientSecure eClient;
+#  else
+#    include <WiFi.h>
 WiFiClient eClient;
+#  endif
 #  include <Preferences.h>
 #  include <WiFiManager.h>
 Preferences preferences;
@@ -166,7 +170,12 @@ Preferences preferences;
 #  include <ESP8266WiFi.h>
 #  include <FS.h>
 #  include <WiFiManager.h>
+#  ifdef SECURE_CONNECTION
+WiFiClientSecure eClient;
+X509List caCert(certificat);
+#  else
 WiFiClient eClient;
+#  endif
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
 #  endif
@@ -459,6 +468,11 @@ void connectMQTT() {
     failure_number_mqtt++; // we count the failure
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
     Log.warning(F("failed, rc=%d" CR), client.state());
+#if defined(SECURE_CONNECTION) && defined(ESP32)
+    Log.warning(F("failed, ssl error code=%d" CR), eClient.lastError(nullptr, 0));
+#elif defined(SECURE_CONNECTION) && defined(ESP8266)
+    Log.warning(F("failed, ssl error code=%d" CR), eClient.getLastSSLError());
+#endif
     delay(5000);
 #if defined(ESP8266) || defined(ESP32)
     disconnection_handling(failure_number_mqtt);
@@ -522,7 +536,9 @@ void setup() {
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
 
   setOTA();
-
+#  ifdef SECURE_CONNECTION
+  setupTLS();
+#  endif
 #else // In case of arduino platform
 
   //Launch serial for debugging purposes
@@ -546,8 +562,8 @@ void setup() {
   long port;
   port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
-  client.setServer(mqtt_server, port);
   Log.trace(F("Mqtt server: %s" CR), mqtt_server);
+  client.setServer(mqtt_server, port);
 #endif
 
   setup_parameters();
@@ -733,10 +749,10 @@ void setOTA() {
 #  endif
   });
   ArduinoOTA.onEnd([]() {
+    Log.trace(F("\nOTA done" CR));
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-    Log.trace(F("\nOTA done" CR));
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     M5Display("OTA done", "", "");
 #  endif
@@ -762,6 +778,20 @@ void setOTA() {
   });
   ArduinoOTA.begin();
 }
+
+#  ifdef SECURE_CONNECTION
+void setupTLS() {
+#    if defined(NTP_SERVER)
+  configTime(0, 0, NTP_SERVER);
+#    endif
+#    if defined(ESP32)
+  eClient.setCACert(certificat);
+#    elif defined(ESP8266)
+  eClient.setTrustAnchors(&caCert);
+  eClient.setBufferSizes(512, 512);
+#    endif
+}
+#  endif
 #endif
 
 #if defined(ESPWifiManualSetup)

@@ -56,7 +56,7 @@
 
 #define Base_Topic "home/"
 
-/*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
+/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
 //#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
 #ifdef NetworkAdvancedSetup // for arduino boards advanced config
@@ -69,7 +69,7 @@ const byte subnet[] = {255, 255, 255, 0};
 #endif
 
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
-//#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+//#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #else // for arduino boards
 const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
@@ -100,13 +100,23 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define parameters_size      20
+#  define parameters_size      30
 #  define mqtt_topic_max_size  100
 #  define mqtt_max_packet_size 1024
 #else
 #  define parameters_size      15
 #  define mqtt_topic_max_size  50
 #  define mqtt_max_packet_size 128
+#endif
+
+// activate the use of TLS for secure connection to the MQTT broker
+// MQTT_SERVER must be set to the hostname instead of the IP to connect to the broker
+//#define SECURE_CONNECTION
+
+#ifdef SECURE_CONNECTION
+#  define MQTT_DEFAULT_PORT "8883"
+#else
+#  define MQTT_DEFAULT_PORT "1883"
 #endif
 
 #ifndef MQTT_USER
@@ -119,7 +129,30 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define MQTT_SERVER "192.168.1.17"
 #endif
 #ifndef MQTT_PORT
-#  define MQTT_PORT "1883"
+#  define MQTT_PORT MQTT_DEFAULT_PORT
+#endif
+
+#ifdef SECURE_CONNECTION
+#  if defined(ESP8266) || defined(ESP32)
+#    if defined(ESP32)
+#      define CERT_ATTRIBUTE
+#    elif defined(ESP8266)
+#      define CERT_ATTRIBUTE PROGMEM
+#    endif
+
+// The root ca certificat used for validating the MQTT broker
+// The certificat must be in PEM ascii format
+const char* certificat CERT_ATTRIBUTE = R"EOF("
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+")EOF";
+
+// specify a NTP server here or else the NTP server from DHCP is used
+//#    define NTP_SERVER "pool.ntp.org"
+#  else
+#    error "only ESP8266 and ESP32 support SECURE_CONNECTION with TLS"
+#  endif
 #endif
 
 #if defined(ESP8266) || defined(ESP32)
