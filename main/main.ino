@@ -1359,7 +1359,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   {
     TYPE_UL_ULL data = 0;
 
-    jsondata.success() ? data = jsondata["value"] : data = STRTO_UL_ULL(datacallback, NULL, 10);
+    data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
 
     if (data != 0) {
       storeValue(data);
