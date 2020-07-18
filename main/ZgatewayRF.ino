@@ -38,7 +38,7 @@
 RCSwitch mySwitch = RCSwitch();
 
 #  ifdef ZmqttDiscovery
-void RFtoMQTTdiscovery(unsigned long MQTTvalue) { //on the fly switch creation from received RF values
+void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creation from received RF values
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
   Log.trace(F("switchRFDiscovery" CR));
@@ -78,20 +78,20 @@ void RFtoMQTT() {
 #  ifdef ESP32
     Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
 #  endif
-    RFdata.set("value", (unsigned long)mySwitch.getReceivedValue());
+    SIGNAL_SIZE_UL_ULL MQTTvalue = mySwitch.getReceivedValue();
+    RFdata.set("value", (SIGNAL_SIZE_UL_ULL)MQTTvalue);
     RFdata.set("protocol", (int)mySwitch.getReceivedProtocol());
     RFdata.set("length", (int)mySwitch.getReceivedBitlength());
     RFdata.set("delay", (int)mySwitch.getReceivedDelay());
     mySwitch.resetAvailable();
 
-    unsigned long MQTTvalue = RFdata.get<unsigned long>("value");
-    if (!isAduplicate(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
+    if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
 #  ifdef ZmqttDiscovery //component creation for HA
       RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       pub(subjectRFtoMQTT, RFdata);
       Log.trace(F("Store val: %lu" CR), MQTTvalue);
-      storeValue(MQTTvalue);
+      storeSignalValue(MQTTvalue);
       if (repeatRFwMQTT) {
         Log.trace(F("Pub RF for rpt" CR));
         pub(subjectMQTTtoRF, RFdata);
@@ -107,7 +107,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
 #    endif
-  unsigned long data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
+  SIGNAL_SIZE_UL_ULL data = STRTO_UL_ULL(datacallback, NULL, 10); // we will not be able to pass values > 4294967295 on Arduino boards
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined
@@ -171,7 +171,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #    endif
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));
-    unsigned long data = RFdata["value"];
+    SIGNAL_SIZE_UL_ULL data = RFdata["value"];
     if (data != 0) {
       int valuePRT = RFdata["protocol"] | 1;
       int valuePLSL = RFdata["delay"] | 350;

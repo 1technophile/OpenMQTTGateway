@@ -126,11 +126,11 @@ void _rfbDecode() {
     unsigned long MQTTvalue = (unsigned long)strtoul(val, NULL, 10);
     SRFBdata.set("value", (unsigned long)MQTTvalue);
 
-    if (!isAduplicate(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
+    if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
       Log.trace(F("Adv data SRFBtoMQTT" CR));
       pub(subjectSRFBtoMQTT, SRFBdata);
       Log.trace(F("Store val: %lu" CR), MQTTvalue);
-      storeValue(MQTTvalue);
+      storeSignalValue(MQTTvalue);
       if (repeatSRFBwMQTT) {
         Log.trace(F("Publish SRFB for rpt" CR));
         pub(subjectMQTTtoSRFB, SRFBdata);

@@ -122,7 +122,7 @@ void IRtoMQTT() {
 #  ifdef ESP32
     Log.trace(F("IR Task running on core :%d" CR), xPortGetCoreID());
 #  endif
-    IRdata.set("value", (unsigned long long)(results.value));
+    IRdata.set("value", (SIGNAL_SIZE_UL_ULL)(results.value));
     IRdata.set("protocol", (int)(results.decode_type));
     IRdata.set("bits", (int)(results.bits));
 #  if defined(ESP8266) || defined(ESP32) //resultToHexidecimal is only available with IRremoteESP8266
@@ -162,15 +162,15 @@ void IRtoMQTT() {
     Log.trace(F("raw redirected" CR));
 #  endif
     irrecv.resume(); // Receive the next value
-    unsigned long long MQTTvalue = IRdata.get<unsigned long long>("value");
+    SIGNAL_SIZE_UL_ULL MQTTvalue = IRdata.get<SIGNAL_SIZE_UL_ULL>("value");
     //trc(MQTTvalue);
     if ((pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1)) { // don't publish unknown IR protocol
       Log.notice(F("--no pub unknwn prt--" CR));
-    } else if (!isAduplicate(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
+    } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
       Log.trace(F("Adv data IRtoMQTT" CR));
       pub(subjectIRtoMQTT, IRdata);
       Log.trace(F("Store val: %D" CR), MQTTvalue);
-      storeValue(MQTTvalue);
+      storeSignalValue(MQTTvalue);
       if (repeatIRwMQTT) {
         Log.trace(F("Pub. IR for rpt" CR));
         pubMQTT(subjectForwardMQTTtoIR, MQTTvalue);
@@ -281,7 +281,7 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
 }
 #  endif
 
-bool sendIdentifiedProtocol(const char* protocol_name, unsigned long long data, const char* hex, unsigned int valueBITS, uint16_t valueRPT) {
+bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, const char* hex, unsigned int valueBITS, uint16_t valueRPT) {
   uint8_t dataarray[valueBITS];
   if (hex) {
     const char* ptr = NULL;
