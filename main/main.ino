@@ -521,10 +521,8 @@ void setup() {
   port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
 #  ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
-  IPAddress mqtt_server_ip;
-  WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
-  client.setServer(mqtt_server_ip, port);
-  Log.trace(F("Mqtt server connection by host name: %s" CR), mqtt_server_ip.toString().c_str());
+  client.setServer(mqtt_server_name, port);
+  Log.trace(F("Mqtt server connection by host name: %s" CR), mqtt_server_name);
 #  else // if not by its IP adress
   client.setServer(mqtt_server, port);
   Log.trace(F("Mqtt server connection by IP: %s" CR), mqtt_server);
