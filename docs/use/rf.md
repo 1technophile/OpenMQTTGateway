@@ -15,6 +15,12 @@ Generate your RF signals by pressing a remote button or other and you should see
 
 `home/OpenMQTTGateway/433toMQTT {"value":1315156,"protocol":1,"length":24,"delay":317}`
 
+### Disabling Transmit function to safe a PIN
+
+To disable transmit functions to allow the use of another pin, add the following to the config_rf.h file :
+
+`#define RF_DISABLE_TRANSMIT`
+
 ### Send data by MQTT to convert it on RF signal 
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156}'`
