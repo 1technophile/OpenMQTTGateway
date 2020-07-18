@@ -37,3 +37,14 @@ Each sensor will be published under the following topic using each sensors' addr
 The units for temperature readings are sent in Celcius by default can be changed to ferenheight by setting DS1820_FAHRENHEIT = true in in config_DS1820.h
 
 If you don't want to resend values that haven't changed you can set DS1820_ALWAYS = false in config_DS1820.h
+
+
+### HCSR501
+The a boolean value of the PIR sensor when a state change occurs. The length of time that the PIR stays triggered depends on the PIR hardware and is not changed by OpenMQTTGateway.
+
+`home/OpenMQTTGateway/HCSR501toMQTT {"hcsr501":"false"}`
+
+You can have another PIN mirror the value of the PIR sensor output by adding the following to config_HCSR501.h
+This can be useful if you would like to connect an LED to turn on when motion is detected.
+
+`#define HCSR501_LED_NOTIFY_PIN 4`
