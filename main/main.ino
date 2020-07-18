@@ -27,18 +27,25 @@
 */
 #include "User_config.h"
 
+// Macros and structure to enable the duplicates removing on the following gateways
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 // array to store previous received RFs, IRs codes and their timestamps
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define array_size 12
-unsigned long long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-//Time used to wait for an interval before checking system measures
-unsigned long timer_sys_measures = 0;
-#else // boards with smaller memory
-#  define array_size 4
-unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+struct ReceivedSignal {
+  SIGNAL_SIZE_UL_ULL value;
+  uint32_t time;
+};
+#  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#    define struct_size 12
+ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+#  else // boards with smaller memory
+#    define struct_size 4
+ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+#  endif
 #endif
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+//Time used to wait for an interval before checking system measures
+unsigned long timer_sys_measures = 0;
 #  define ARDUINOJSON_USE_LONG_LONG 1
 #endif
 #include <ArduinoJson.h>
@@ -225,7 +232,7 @@ void pub(char* topicori, JsonObject& data) {
     digitalWrite(led_receive, HIGH);
     String topic = String(mqtt_topic) + String(topicori);
 #ifdef valueAsASubject
-    TYPE_UL_ULL value = data["value"];
+    SIGNAL_SIZE_UL_ULL value = data["value"];
     if (value != 0) {
       topic = topic + "/" + String(value);
     }
@@ -249,11 +256,11 @@ void pub(char* topicori, JsonObject& data) {
 #  if defined(ESP8266)
       yield();
 #  endif
-      if (p.value.is<TYPE_UL_ULL>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an TYPE_UL_ULL
+      if (p.value.is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
         if (strcmp(p.key, "value") == 0) { // if data is a value we don't integrate the name into the topic
-          pubMQTT(topic, p.value.as<TYPE_UL_ULL>());
+          pubMQTT(topic, p.value.as<SIGNAL_SIZE_UL_ULL>());
         } else { // if data is not a value we integrate the name into the topic
-          pubMQTT(topic + "/" + String(p.key), p.value.as<TYPE_UL_ULL>());
+          pubMQTT(topic + "/" + String(p.key), p.value.as<SIGNAL_SIZE_UL_ULL>());
         }
       } else if (p.value.is<int>()) {
         pubMQTT(topic + "/" + String(p.key), p.value.as<int>());
@@ -1309,40 +1316,49 @@ void stateMeasures() {
 }
 #endif
 
-void storeValue(TYPE_UL_ULL MQTTvalue) {
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+/** 
+ * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
+ */
+void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   unsigned long now = millis();
   // find oldest value of the buffer
   int o = getMin();
   Log.trace(F("Min ind: %d" CR), o);
   // replace it by the new one
-  ReceivedSignal[o][0] = MQTTvalue;
-  ReceivedSignal[o][1] = now;
-  Log.trace(F("store code : %u / %u" CR), ReceivedSignal[o][0], ReceivedSignal[o][1]);
+  receivedSignal[o].value = MQTTvalue;
+  receivedSignal[o].time = now;
+  Log.trace(F("store code : %u / %u" CR), receivedSignal[o].value, receivedSignal[o].time);
   Log.trace(F("Col: val/timestamp" CR));
-  for (int i = 0; i < array_size; i++) {
-    Log.trace(F("mem code : %u / %u" CR), ReceivedSignal[i][0], ReceivedSignal[i][1]);
+  for (int i = 0; i < struct_size; i++) {
+    Log.trace(F("mem code : %u / %u" CR), receivedSignal[i].value, receivedSignal[i].time);
   }
 }
 
+/** 
+ * get oldest time index from the values array from RF, IR, SRFB or Weather stations so as to avoid duplicates
+ */
 int getMin() {
-  unsigned int minimum = ReceivedSignal[0][1];
+  unsigned int minimum = receivedSignal[0].time;
   int minindex = 0;
-  for (int i = 0; i < array_size; i++) {
-    if (ReceivedSignal[i][1] < minimum) {
-      minimum = ReceivedSignal[i][1];
+  for (int i = 0; i < struct_size; i++) {
+    if (receivedSignal[i].time < minimum) {
+      minimum = receivedSignal[i].time;
       minindex = i;
     }
   }
   return minindex;
 }
 
-bool isAduplicate(TYPE_UL_ULL value) {
+/** 
+ * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
+ */
+bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
   Log.trace(F("isAdupl?" CR));
-  // check if the value has been already sent during the last time_avoid_duplicate
-  for (int i = 0; i < array_size; i++) {
-    if (ReceivedSignal[i][0] == value) {
+  for (int i = 0; i < struct_size; i++) {
+    if (receivedSignal[i].value == value) {
       unsigned long now = millis();
-      if (now - ReceivedSignal[i][1] < time_avoid_duplicate) { // change
+      if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
         Log.notice(F("no pub. dupl" CR));
         return true;
       }
@@ -1350,6 +1366,7 @@ bool isAduplicate(TYPE_UL_ULL value) {
   }
   return false;
 }
+#endif
 
 void receivingMQTT(char* topicOri, char* datacallback) {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
@@ -1357,13 +1374,13 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
   {
-    TYPE_UL_ULL data = 0;
-
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+    SIGNAL_SIZE_UL_ULL data = 0;
     data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
-
     if (data != 0) {
-      storeValue(data);
+      storeSignalValue(data);
     }
+#endif
   }
 
   if (jsondata.success()) { // json object ok -> json decoding

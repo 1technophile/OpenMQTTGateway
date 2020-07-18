@@ -171,17 +171,17 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 #endif
 
 #if defined(ESP8266) || defined(ESP32)
-#  define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
-#  define TYPE_UL_ULL     uint64_t
-#  define STRTO_UL_ULL    strtoull
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define SIGNAL_SIZE_UL_ULL uint64_t
+#  define STRTO_UL_ULL       strtoull
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
-#  define TYPE_UL_ULL     uint64_t
-#  define STRTO_UL_ULL    strtoul
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define SIGNAL_SIZE_UL_ULL uint64_t
+#  define STRTO_UL_ULL       strtoul
 #else // boards with smaller memory
-#  define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
-#  define TYPE_UL_ULL     uint32_t
-#  define STRTO_UL_ULL    strtoul
+#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define SIGNAL_SIZE_UL_ULL uint32_t
+#  define STRTO_UL_ULL       strtoul
 #endif
 
 #define TimeBetweenReadingSYS 120000 // time between system readings (like memory)
