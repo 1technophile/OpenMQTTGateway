@@ -90,7 +90,7 @@ void MeasureAHTTempHum() {
       JsonObject& AHTx0data = jsonBuffer.createObject();
       // Generate Temperature in degrees C
       if (ahtTempC.temperature != persisted_aht_tempc || AHTx0_always) {
-        float ahtTempF = (ahtTempC.temperature * 1.8) + 32;
+        float ahtTempF = convertTemp_CtoF(ahtTempC.temperature);
         AHTx0data.set("tempc", (float)ahtTempC.temperature);
         AHTx0data.set("tempf", (float)ahtTempF);
       } else {
