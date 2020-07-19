@@ -63,7 +63,11 @@ void setupRF() {
   ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
 #  endif
+#  ifdef RF_DISABLE_TRANSMIT
+  mySwitch.disableTransmit();
+#  else
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
+#  endif
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayRF setup done" CR));
