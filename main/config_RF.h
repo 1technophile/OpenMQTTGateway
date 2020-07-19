@@ -60,6 +60,7 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #define subjectMultiGTWRF "+/+/433toMQTT"
 //RF number of signal repetition - Can be overridden by specifying "repeat" in a JSON message.
 #define RF_EMITTER_REPEAT 20
+//#define RF_DISABLE_TRANSMIT //Uncomment this line to disable RF transmissions. (RF Receive will work as normal.)
 
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
