@@ -169,7 +169,7 @@ EthernetClient eClient;
 #endif
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
-#define convertTemp_FtoC(f) ((f - 32) * 5/9)
+#define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 
 // client link to pubsub mqtt
 PubSubClient client(eClient);

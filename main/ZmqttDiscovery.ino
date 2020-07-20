@@ -213,6 +213,7 @@ void pubMqttDiscovery() {
       {"sensor", "tempc", "dht", "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "tempc", "dht", "temperature", jsonTempf, "", "", "°F"},
       {"sensor", "hum", "dht", "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
   for (int i = 0; i < DHTparametersCount; i++) {

@@ -172,7 +172,7 @@ void MeasureDS1820Temp() {
 
           DS1820data.set("tempc", (float)DallasTemperature::toFahrenheit(current_temp[i]));
           DS1820data.set("tempf", (float)current_temp[i]);
-          
+
           if (DS1820_DETAILS) {
             DS1820data.set("type", ds1820_type[i]);
             DS1820data.set("res", ds1820_resolution[i] + String("bit" CR));
