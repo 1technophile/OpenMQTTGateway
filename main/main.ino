@@ -133,6 +133,13 @@ unsigned long timer_sys_measures = 0;
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
+char mqtt_user[parameters_size] = MQTT_USER_DEFAULT; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size] = MQTT_PASS_DEFAULT; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size] = MQTT_MQTT_DEFAULT;
+char mqtt_port[6] = MQTT_PORT_DEFAULT;
+char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
+char gateway_name[parameters_size * 2] = Gateway_Name;
+
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT

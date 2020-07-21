@@ -105,12 +105,11 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define mqtt_topic_max_size  50
 #  define mqtt_max_packet_size 128
 #endif
-char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = "192.168.1.17";
-char mqtt_port[6] = "1883";
-char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size * 2] = Gateway_Name;
+
+#define MQTT_USER_DEFAULT "your_username"
+#define MQTT_PASS_DEFAULT "your_password"
+#define MQTT_MQTT_DEFAULT "192.168.1.17"
+#define MQTT_PORT_DEFAULT "1883"
 
 #if defined(ESP8266) || defined(ESP32)
 #  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
