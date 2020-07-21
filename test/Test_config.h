@@ -75,7 +75,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
 #  ifndef wifi_ssid
-#    define wifi_ssid    "wifi ssid"
+#    define wifi_ssid "wifi ssid"
 #  endif
 #  ifndef wifi_password
 #    define wifi_password "wifi password"
