@@ -305,6 +305,6 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
-#define LOG_LEVEL LOG_LEVEL_TRACE
+#define LOG_LEVEL LOG_LEVEL_NOTICE
 
 #endif
