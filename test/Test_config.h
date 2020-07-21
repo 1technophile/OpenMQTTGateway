@@ -74,8 +74,12 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-#  define wifi_ssid     "wifi ssid"
-#  define wifi_password "wifi password"
+#  ifndef wifi_ssid
+#    define wifi_ssid    "wifi ssid"
+#  endif
+#  ifndef wifi_password
+#    define wifi_password "wifi password"
+#  endif
 #endif
 
 #define WifiManager_password            "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
@@ -94,12 +98,19 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #define parameters_size      20
 #define mqtt_topic_max_size  100
 #define mqtt_max_packet_size 128
-char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = "192.168.1.17";
-char mqtt_port[6] = "1883";
-char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size * 2] = Gateway_Name;
+
+#ifndef MQTT_USER_DEFAULT
+#  define MQTT_USER_DEFAULT "your_username"
+#endif
+#ifndef MQTT_PASS_DEFAULT
+#  define MQTT_PASS_DEFAULT "your_password"
+#endif
+#ifndef MQTT_MQTT_DEFAULT
+#  define MQTT_MQTT_DEFAULT "192.168.1.17"
+#endif
+#ifndef MQTT_PORT_DEFAULT
+#  define MQTT_PORT_DEFAULT "1883"
+#endif
 
 #define version_Topic           "/version"
 #define will_Topic              "/LWT"
