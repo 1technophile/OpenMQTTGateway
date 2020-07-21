@@ -76,9 +76,14 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-#  define wifi_ssid     "wifi ssid"
-#  define wifi_password "wifi password"
+#  ifndef wifi_ssid
+#    define wifi_ssid    "wifi ssid"
+#  endif
+#  ifndef wifi_password
+#    define wifi_password "wifi password"
+#  endif
 #endif
+
 
 #define WifiManager_password            "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
 #define WifiManager_ssid                Gateway_Name //this is the network name of the initial setup access point
@@ -106,10 +111,18 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define mqtt_max_packet_size 128
 #endif
 
-#define MQTT_USER_DEFAULT "your_username"
-#define MQTT_PASS_DEFAULT "your_password"
-#define MQTT_MQTT_DEFAULT "192.168.1.17"
-#define MQTT_PORT_DEFAULT "1883"
+#ifndef MQTT_USER_DEFAULT
+#  define MQTT_USER_DEFAULT "your_username"
+#endif
+#ifndef MQTT_PASS_DEFAULT
+#  define MQTT_PASS_DEFAULT "your_password"
+#endif
+#ifndef MQTT_MQTT_DEFAULT
+#  define MQTT_MQTT_DEFAULT "192.168.1.17"
+#endif
+#ifndef MQTT_PORT_DEFAULT
+#  define MQTT_PORT_DEFAULT "1883"
+#endif
 
 #if defined(ESP8266) || defined(ESP32)
 #  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
@@ -293,6 +306,6 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
-#define LOG_LEVEL LOG_LEVEL_NOTICE
+#define LOG_LEVEL LOG_LEVEL_TRACE
 
 #endif
