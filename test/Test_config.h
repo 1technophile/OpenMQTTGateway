@@ -94,22 +94,21 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
-//#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 #define parameters_size      20
 #define mqtt_topic_max_size  100
 #define mqtt_max_packet_size 128
 
-#ifndef MQTT_USER_DEFAULT
-#  define MQTT_USER_DEFAULT "your_username"
+#ifndef MQTT_USER
+#  define MQTT_USER "your_username"
 #endif
-#ifndef MQTT_PASS_DEFAULT
-#  define MQTT_PASS_DEFAULT "your_password"
+#ifndef MQTT_PASS
+#  define MQTT_PASS "your_password"
 #endif
-#ifndef MQTT_MQTT_DEFAULT
-#  define MQTT_MQTT_DEFAULT "192.168.1.17"
+#ifndef MQTT_SERVER
+#  define MQTT_SERVER "192.168.1.17"
 #endif
-#ifndef MQTT_PORT_DEFAULT
-#  define MQTT_PORT_DEFAULT "1883"
+#ifndef MQTT_PORT
+#  define MQTT_PORT "1883"
 #endif
 
 #define version_Topic           "/version"

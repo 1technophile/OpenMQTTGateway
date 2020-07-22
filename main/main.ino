@@ -133,15 +133,10 @@ unsigned long timer_sys_measures = 0;
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
-#ifdef ESPWifiManualSetup
-char manual_wifi_ssid[] = wifi_ssid;
-char manual_wifi_password[] = wifi_password;
-#endif
-
-char mqtt_user[parameters_size] = MQTT_USER_DEFAULT; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = MQTT_PASS_DEFAULT; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = MQTT_MQTT_DEFAULT;
-char mqtt_port[6] = MQTT_PORT_DEFAULT;
+char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size] = MQTT_PASS; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size] = MQTT_SERVER;
+char mqtt_port[6] = MQTT_PORT;
 char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
 char gateway_name[parameters_size * 2] = Gateway_Name;
 
@@ -548,13 +543,8 @@ void setup() {
   long port;
   port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
-#  ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
-  client.setServer(mqtt_server_name, port);
-  Log.trace(F("Mqtt server connection by host name: %s" CR), mqtt_server_name);
-#  else // if not by its IP adress
   client.setServer(mqtt_server, port);
-  Log.trace(F("Mqtt server connection by IP: %s" CR), mqtt_server);
-#  endif
+  Log.trace(F("Mqtt server: %s" CR), mqtt_server);
 #endif
 
   setup_parameters();
@@ -773,6 +763,10 @@ void setOTA() {
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
+
+  char manual_wifi_ssid[] = wifi_ssid;
+  char manual_wifi_password[] = wifi_password;
+
   delay(10);
   WiFi.mode(WIFI_STA);
   if (wifiProtocol) forceWifiProtocol();
