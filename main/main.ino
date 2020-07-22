@@ -763,7 +763,6 @@ void setOTA() {
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
-
   char manual_wifi_ssid[] = wifi_ssid;
   char manual_wifi_password[] = wifi_password;
 
