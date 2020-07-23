@@ -217,7 +217,7 @@ void CLEARGRASSTRHDiscovery(char* mac) {
 }
 
 void CLEARGRASSCGD1Discovery(char* mac) {
-#    define CLEARGRASSCGD1parametersCount 4
+#    define CLEARGRASSCGD1parametersCount 5
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
       {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
@@ -233,7 +233,7 @@ void CLEARGRASSCGD1Discovery(char* mac) {
 }
 
 void CLEARGRASSTRHKPADiscovery(char* mac) {
-#    define CLEARGRASSTRHKPAparametersCount 4
+#    define CLEARGRASSTRHKPAparametersCount 5
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
       {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa"},
@@ -285,7 +285,7 @@ void MiBandDiscovery(char* mac) {
 }
 
 void InkBirdDiscovery(char* mac) {
-#    define InkBirdparametersCount 4
+#    define InkBirdparametersCount 5
   Log.trace(F("InkBirdDiscovery" CR));
   char* InkBirdsensor[InkBirdparametersCount][8] = {
       {"sensor", "InkBird-batt", mac, "battery", jsonBatt, "", "", "%"},
