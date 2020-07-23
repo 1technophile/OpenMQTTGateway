@@ -139,8 +139,8 @@ void MiFloraDiscovery(char* mac) {
   Log.trace(F("MiFloraDiscovery" CR));
   char* MiFlorasensor[MiFloraparametersCount][8] = {
       {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "MiFlora-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "MiFlora-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "MiFlora-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "MiFlora-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm"},
       {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -155,8 +155,8 @@ void VegTrugDiscovery(char* mac) {
   Log.trace(F("VegTrugDiscovery" CR));
   char* VegTrugsensor[VegTrugparametersCount][8] = {
       {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "VegTrug-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "VegTrug-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "VegTrug-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "VegTrug-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm"},
       {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -171,8 +171,8 @@ void MiJiaDiscovery(char* mac) {
   Log.trace(F("MiJiaDiscovery" CR));
   char* MiJiasensor[MiJiaparametersCount][8] = {
       {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "MiJia-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "MiJia-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "MiJia-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "MiJia-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "MiJia-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -186,8 +186,8 @@ void LYWSD02Discovery(char* mac) {
   Log.trace(F("LYWSD02Discovery" CR));
   char* LYWSD02sensor[LYWSD02parametersCount][8] = {
       {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "LYWSD02-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "LYWSD02-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "LYWSD02-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "LYWSD02-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "LYWSD02-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -201,8 +201,8 @@ void CLEARGRASSTRHDiscovery(char* mac) {
   Log.trace(F("CLEARGRASSTRHDiscovery" CR));
   char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
       {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "CLEARGRASSTRH-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSTRH-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "CLEARGRASSTRH-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "CLEARGRASSTRH-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -216,8 +216,8 @@ void CLEARGRASSCGD1Discovery(char* mac) {
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
       {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "CLEARGRASSCGD1-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSCGD1-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "CLEARGRASSCGD1-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "CLEARGRASSCGD1-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -231,8 +231,8 @@ void CLEARGRASSTRHKPADiscovery(char* mac) {
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
       {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa"},
-      {"sensor", "CLEARGRASSTRHKPA-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSTRHKPA-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "CLEARGRASSTRHKPA-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "CLEARGRASSTRHKPA-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -282,8 +282,8 @@ void InkBirdDiscovery(char* mac) {
   Log.trace(F("InkBirdDiscovery" CR));
   char* InkBirdsensor[InkBirdparametersCount][8] = {
       {"sensor", "InkBird-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "InkBird-tem", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "InkBird-tempf", mac, "temperature", jsonTempf, "", "", "°F"},
+      {"sensor", "InkBird-tem", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "InkBird-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "InkBird-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };

@@ -109,7 +109,7 @@ void pubOneWire_HADiscovery() {
                     will_Topic,
                     "temperature",
                     jsonTempf,
-                    "", "", "°F",
+                    "", "", "F",
                     0, "", "", true, "");
     createDiscovery("sensor",
                     (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
@@ -118,7 +118,7 @@ void pubOneWire_HADiscovery() {
                     will_Topic,
                     "temperature",
                     jsonTempc,
-                    "", "", "°C",
+                    "", "", "C",
                     0, "", "", true, "");
   }
 #  endif
