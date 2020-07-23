@@ -211,7 +211,7 @@ void pubMqttDiscovery() {
   Log.trace(F("DHTDiscovery" CR));
   char* DHTsensor[DHTparametersCount][8] = {
       {"sensor", "tempc", "dht", "temperature", jsonTempc, "", "", "C"},
-      {"sensor", "tempc", "dht", "temperature", jsonTempf, "", "", "F"},
+      {"sensor", "tempf", "dht", "temperature", jsonTempf, "", "", "F"},
       {"sensor", "hum", "dht", "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
