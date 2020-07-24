@@ -76,8 +76,12 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-#  define wifi_ssid     "wifi ssid"
-#  define wifi_password "wifi password"
+#  ifndef wifi_ssid
+#    define wifi_ssid "wifi ssid"
+#  endif
+#  ifndef wifi_password
+#    define wifi_password "wifi password"
+#  endif
 #endif
 
 #define WifiManager_password            "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
@@ -95,7 +99,6 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
-//#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 #  define parameters_size      20
 #  define mqtt_topic_max_size  100
@@ -105,12 +108,19 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define mqtt_topic_max_size  50
 #  define mqtt_max_packet_size 128
 #endif
-char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = "192.168.1.17";
-char mqtt_port[6] = "1883";
-char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size * 2] = Gateway_Name;
+
+#ifndef MQTT_USER
+#  define MQTT_USER "your_username"
+#endif
+#ifndef MQTT_PASS
+#  define MQTT_PASS "your_password"
+#endif
+#ifndef MQTT_SERVER
+#  define MQTT_SERVER "192.168.1.17"
+#endif
+#ifndef MQTT_PORT
+#  define MQTT_PORT "1883"
+#endif
 
 #if defined(ESP8266) || defined(ESP32)
 #  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
