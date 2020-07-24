@@ -12,6 +12,7 @@ Here is some information to find the board suitable for your need, you have the 
 The boards below doesn't need hardware modification (or a lite one).
 |Off the shelves wifi boards|Pictures|RF|IR|BLE|LORA|Relay|Display|Low Power|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|AVATTO / BAKEEY|![](../img/OpenMQTTGateway_boards_avatto_s06.png)|-|[X](https://1technophile.blogspot.com/2020/07/avatto-s06-ir-gateway-compatible-with.html)|-|-|-|-|-|
 |Sonoff RF Bridge (*) |![](../img/OpenMQTTGateway_boards_sonoff_rfbridge.png)|X|[mod](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
 |All bare ESP32|-|-|-|X|-|X|-|X|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
