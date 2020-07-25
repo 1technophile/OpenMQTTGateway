@@ -110,7 +110,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 // activate the use of TLS for secure connection to the MQTT broker
-// MQTT_SERVER must be set to the hostname instead of the IP to connect to the broker
+// MQTT_SERVER must be set to the Common Name (CN) of the broker's certificate
 //#define SECURE_CONNECTION
 
 #ifdef SECURE_CONNECTION
@@ -140,9 +140,9 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #      define CERT_ATTRIBUTE PROGMEM
 #    endif
 
-// The root ca certificat used for validating the MQTT broker
-// The certificat must be in PEM ascii format
-const char* certificat CERT_ATTRIBUTE = R"EOF("
+// The root ca certificate used for validating the MQTT broker
+// The certificate must be in PEM ascii format
+const char* certificate CERT_ATTRIBUTE = R"EOF("
 -----BEGIN CERTIFICATE-----
 ...
 -----END CERTIFICATE-----

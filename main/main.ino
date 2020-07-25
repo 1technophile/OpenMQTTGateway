@@ -172,7 +172,7 @@ Preferences preferences;
 #  include <WiFiManager.h>
 #  ifdef SECURE_CONNECTION
 WiFiClientSecure eClient;
-X509List caCert(certificat);
+X509List caCert(certificate);
 #  else
 WiFiClient eClient;
 #  endif
@@ -785,7 +785,7 @@ void setupTLS() {
   configTime(0, 0, NTP_SERVER);
 #    endif
 #    if defined(ESP32)
-  eClient.setCACert(certificat);
+  eClient.setCACert(certificate);
 #    elif defined(ESP8266)
   eClient.setTrustAnchors(&caCert);
   eClient.setBufferSizes(512, 512);
