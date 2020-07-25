@@ -28,4 +28,7 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 ")EOF";
 ```
 
+If you have no ntp server in your local network (included in the router) or not using dhcp, you should uncomment `//#    define NTP_SERVER "pool.ntp.org"` to use a ntp server for time synchronization.
+This is related to the `W: failed, ssl error code=54` error message, which indicate that the time of the esp is not correct.
+
 You can know compile and upload to your board and the gateway should connect with TLS to your broker.
