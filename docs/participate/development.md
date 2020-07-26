@@ -19,11 +19,6 @@ Review your code, compile it for Arduino Uno and ESP8266
 
 Test it locally on your hardware config
 
-If you modify `User_config.h` during your developments you need to report your modifications into Test_config.h
-https://github.com/1technophile/OpenMQTTGateway/blob/master/tests/Test_config.h 
-Indeed during the continuous integration process `User_config.h` is replaced by `Test_config.h`. 
-`Test_config.h` as much more gateway/sensors enabled for the test than the default `User_config.h`
-
 Emit a pull request
 
 Verify the GitHub Actions CI compilation results
