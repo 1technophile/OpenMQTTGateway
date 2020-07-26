@@ -52,13 +52,13 @@ void MeasureHCSR501() {
     if (PresenceValue == HIGH) {
       if (pirState == LOW) {
         //turned on
-        HCSR501data.set("hcsr501", "true");
+        HCSR501data.set("presence", "true");
         pirState = HIGH;
       }
     } else {
       if (pirState == HIGH) {
         // turned off
-        HCSR501data.set("hcsr501", "false");
+        HCSR501data.set("presence", "false");
         pirState = LOW;
       }
     }
