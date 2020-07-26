@@ -71,7 +71,7 @@ binary_sensor:
         name: "Bewegung_Schlafzimmer"
         #device_class: motion
         state_topic: "home/OpenMQTTGateway1/HCSR501toMQTT"
-        value_template: '{{ value_json["hcsr501"] }}'
+        value_template: '{{ value_json["presence"] }}'
         payload_on: "true"
         payload_off: "false"
 ```
