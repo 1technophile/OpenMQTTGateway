@@ -14,9 +14,3 @@ jobs:
           source: "./main"
           extensions: "h,ino"
           clangFormatVersion: 9
-      - name: Check test format
-        uses: DoozyX/clang-format-lint-action@v0.6
-        with:
-          source: "./test"
-          extensions: "h,ino"
-          clangFormatVersion: 9
