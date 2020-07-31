@@ -45,6 +45,9 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #  define TimeBtw_Read 55555 //define default time between 2 scans
 #endif
 
+unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
+int Minrssi = MinimumRSSI; //minimum rssi value
+
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
 #endif
@@ -64,28 +67,6 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 // if not commented Home presence integration with HOME ASSISTANT is activated
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
-
-unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
-int Minrssi = MinimumRSSI; //minimum rssi value
-
-struct BLEdevice {
-  char macAdr[13];
-  bool isDisc;
-  bool isWhtL;
-  bool isBlkL;
-};
-
-#define device_flags_isDisc   1 << 0
-#define device_flags_isWhiteL 1 << 1
-#define device_flags_isBlackL 1 << 2
-
-struct decompose {
-  char subject[4];
-  int start;
-  int len;
-  bool reverse;
-  char extract[60];
-};
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)
