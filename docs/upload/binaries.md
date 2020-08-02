@@ -1,9 +1,8 @@
 # Upload Binaries
-This section is usefull if you want to directly flash your ESP from your desktop. Once flashed you can change  wifi and broker settings.
+This section is useful if you want to directly flash your ESP from your desktop. Once flashed you can change  wifi and broker settings.
 Nevertheless you will not be able to change advanced parameters, if you want to do so refer to [Upload from PlatformIO][pio] section.
 
 Download the binary corresponding to your board and gateway [here](https://github.com/1technophile/OpenMQTTGateway/releases) from github and uncompress it.
-Note that the -all binary packages are produced for tests only.
 
 ## ESP32
 * Download the bootloader [here](https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/bin/bootloader_dio_80m.bin)
@@ -13,7 +12,7 @@ https://www.espressif.com/en/products/hardware/esp32/resources
 * Uncompress the package
 * Execute `flash_download_tools`
 * Choose ESP32 DownloadTool
-* Set the files and the adress as below:
+* Set the files and the address as below:
 ![Flash download tool](../img/OpenMQTTgateway_ESP32_binary_flash.png)
 And set the parameters used by arduino IDE, we are able to upload to ESP32 a binary file containing OpenMQTTGateway.
 * Set the config as above
@@ -33,6 +32,6 @@ https://github.com/marcelstoer/nodemcu-pyflasher/releases
 * Click on *FlashNodeMCU*
 The upload details appears.
 
-With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
 
 Note that to reset the wifi and mqtt settings you can check *yes, wipes all data*
