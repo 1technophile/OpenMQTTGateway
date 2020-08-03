@@ -1366,8 +1366,8 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   // replace it by the new one
   receivedSignal[o].value = MQTTvalue;
   receivedSignal[o].time = now;
-  
-  // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's 
+
+  // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
   Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
   Log.trace(F("Col: val/timestamp" CR));
   for (int i = 0; i < struct_size; i++) {
@@ -1413,10 +1413,10 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
-    SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
-    if (data != 0 && !isAduplicateSignal(data)) {
-      storeSignalValue(data);
-    }
+  SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
+  if (data != 0 && !isAduplicateSignal(data)) {
+    storeSignalValue(data);
+  }
 #endif
 
   if (jsondata.success()) { // json object ok -> json decoding

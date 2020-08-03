@@ -94,7 +94,7 @@ void RFtoMQTT() {
       RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       pub(subjectRFtoMQTT, RFdata);
-      // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's 
+      // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
       Log.trace(F("Store val: %u" CR), (unsigned long)MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatRFwMQTT) {
