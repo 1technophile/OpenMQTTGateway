@@ -62,3 +62,16 @@ This can be due to corruption of the ESP flash memory, try to erase flash and up
 
 If you didn't find your answer here post a question to the forum:
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
+
+## ESP does not connect to broker with TLS enabled
+If you get the following error:
+`W: failed, ssl error code=54` ("Certificate is expired or not yet valid.")
+
+This is most probable caused by the time of the esp is not correct/synchronized.
+The esp uses the Network Time Protocol (NTP) to get the current time from a time server.
+If you get this error ntp is not configured correctly in the gateway.
+Uncomment `//#    define NTP_SERVER "pool.ntp.org"` to set the `pool.ntp.org` as the time server.
+You can also choose any other ntp time server you like.
+
+It is normal that the time synchronization process takes some time and the MQTT connection will not be successful the first time.
+If you set the ntp server for the gateway and keep getting the errors you should check your certificate validity duration.

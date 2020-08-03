@@ -5,7 +5,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 
 `    sudo mosquitto_sub -t +/# -v`
 
-_NOTE: HM-10 or HM-11 module needed if you are not using ESP32; configure in `user_config.h`_
+_NOTE: HM-10 or HM-11 module needed if you are not using ESP32; configure in `User_config.h`_
 
 The BT gateway module for OpenMQTTGateway enables the detection of BLE beacons and their signal strength.  Generally BLE devices will not broadcast if they are paired so you may need to ensure your beacons is unpaired before it will be seen by the gateway.
 

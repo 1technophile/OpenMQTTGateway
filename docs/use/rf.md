@@ -133,7 +133,7 @@ will make RF Bridge send a signal with the use of advanced parameters defined in
 RF2 gateway enables to send command to RF devices with the KAKU protocol. DIO chacon devices are an example.
 It uses the same pinout as the RF gateway and both gateways can be used on the same setup.
 
-Receiving RF codes with the KAKU protocol is not compatible with ZgatewayRF , so as to get the code of your remotes you should comment ZgatewayRF in user_config.h.
+Receiving RF codes with the KAKU protocol is not compatible with ZgatewayRF , so as to get the code of your remotes you should comment ZgatewayRF in User_config.h.
 Transmitting can be done with both ZgatewayRF and ZgatewayRF2
 
 ### Receiving data from KAKU signal
