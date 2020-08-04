@@ -42,6 +42,10 @@ FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createO
 #    include <esp_wifi.h>
 #  endif
 
+#  if !defined(ESP32) && !defined(ESP8266)
+#    include <ArduinoSTL.h>
+#  endif
+
 #  include <vector>
 using namespace std;
 
