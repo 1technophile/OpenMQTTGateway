@@ -46,7 +46,6 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #endif
 
 unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
-int Minrssi = MinimumRSSI; //minimum rssi value
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors

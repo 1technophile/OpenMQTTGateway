@@ -68,6 +68,9 @@ vector<BLEdevice> devices;
 
 static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false};
 static bool oneWhite = false;
+
+int minRssi = abs(MinimumRSSI); //minimum rssi value
+
 BLEdevice* getDeviceByMac(const char* mac);
 
 BLEdevice* getDeviceByMac(const char* mac) {
@@ -503,8 +506,8 @@ void changelow_power_mode(int newLowPowerMode) {
 }
 
 void setupBT() {
-  Log.notice(F("BLEinterval: %d" CR), BLEinterval);
-  Log.notice(F("Minrssi: %d" CR), Minrssi);
+  Log.notice(F("BLE interval: %d" CR), BLEinterval);
+  Log.notice(F("minrssi: %d" CR), minRssi);
   Log.notice(F("Low Power Mode: %d" CR), low_power_mode);
 
   // we setup a task with priority one to avoid conflict with other gateways
@@ -537,9 +540,8 @@ struct decompose d[6] = {{"mac", 16, 12, true}, {"typ", 28, 2, false}, {"rsi", 3
 
 void setupBT() {
   BLEinterval = TimeBtw_Read;
-  Minrssi = MinimumRSSI;
-  Log.notice(F("BLEinterval: %d" CR), BLEinterval);
-  Log.notice(F("Minrssi: %d" CR), Minrssi);
+  Log.notice(F("BLE interval: %d" CR), BLEinterval);
+  Log.notice(F("minrssi: %d" CR), minRssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
   delay(100);
@@ -595,9 +597,10 @@ bool BTtoMQTT() {
             JsonObject& BLEdata = jsonBuffer.createObject();
             strupp(d[0].extract);
             String Id;
-            for (int i = 0; i < 12; i++) {
+            for (int i = 0; i < 12; i = i + 2) {
               Id += String(d[0].extract[i]);
-              if (((i - 1) % 2 == 0) && (i != 11))
+              Id += String(d[0].extract[i + 1]);
+              if (i != 6)
                 Id += ":";
             }
             Log.trace(F("Id %s" CR), (char*)Id.c_str());
@@ -687,7 +690,7 @@ void launch_discovery(JsonObject& BLEdata) {
 }
 
 void PublishDeviceData(JsonObject& BLEdata) {
-  if (abs((int)BLEdata["rssi"] | 0) < abs(Minrssi)) { // process only the devices close enough
+  if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
     JsonObject& BLEdataOut = process_bledata(BLEdata);
 #  ifdef ZmqttDiscovery
     launch_discovery(BLEdataOut);
@@ -1033,10 +1036,10 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
       // storing Min RSSI for further use if needed
-      Log.trace(F("Previous Minrssi: %d" CR), Minrssi);
+      Log.trace(F("Previous minrssi: %d" CR), minRssi);
       // set Min RSSI if present if not setting default value
-      Minrssi = (unsigned int)BTdata["minrssi"];
-      Log.notice(F("New Minrssi: %d" CR), Minrssi);
+      minRssi = abs((unsigned int)BTdata["minrssi"]);
+      Log.notice(F("New minrssi: %d" CR), minRssi);
     }
 #  ifdef ESP32
     if (BTdata.containsKey("low_power_mode")) {
