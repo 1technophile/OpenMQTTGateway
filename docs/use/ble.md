@@ -60,17 +60,17 @@ OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 thi
 ## Setting a white or black list
 A black list is a list of mac adresses that will never be published by OMG
 to set black list
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["012314551615","4C6577889C79","4C65A6663C79"]}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
 A white list is a list of mac adresses permitted to be published by OMG
 to set white list
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["012314551615","4C65A5553C79","4C65A6663C79"]}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
 Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list
 
 ::: tip
 So as to keep your white/black list persistent you can publish it with the retain option of MQTT (-r with mosquitto_pub or retain check box of MQTT Explorer)
-`mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["012314551615","4C65A5553C79","4C65A6663C79"]}'`
+`mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 :::
 
 ## Setting the time between scans and force a scan
