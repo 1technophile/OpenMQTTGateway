@@ -29,12 +29,16 @@ The boards below doesn't need hardware modification (or a lite one).
 The boards below need hardware modifications and electronic/hardware competencies. You have more possibilities of gateways combination compared to off the shelves ones.
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|Arduino UNO|X|X(limited compared to ESP)|X|-|X|X|
+|Arduino UNO|X|X(limited compared to ESP)|-|-|X|X|
 |Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
 |ESP32|X|X|X|X|not tested|X|X|
 |ESP8266|X|X|X|not tested|X|X|X|
 
-*Note that Pilight is only supported on ESP and Arduino UNO handle only 32bits values in our context.*
+::: INFO
+Pilight is only supported on ESP, Arduino UNO handle only 32bits values in our context.
+Setup based on HM10 doesn't support some BLE [devices](devices.md#for-ble-devices).
+:::
+*Note that *
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 
