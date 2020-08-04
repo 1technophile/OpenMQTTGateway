@@ -21,15 +21,18 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility|
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
-| INKBIRD |IBS-TH1|temperature/humidity/battery|
+| INKBIRD *|IBS-TH1|temperature/humidity/battery|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
-| XIAOMI Mi Scale v1|XMTZC04HM|weight|
-| XIAOMI Mi Scale v2|XMTZC05HM|weight|
-| XIAOMI Mi band ||steps|
+| XIAOMI Mi Scale v1 *|XMTZC04HM|weight|
+| XIAOMI Mi Scale v2 *|XMTZC05HM|weight|
+| XIAOMI Mi band * ||steps|
 
+::: INFO
+(*)Not supported with HM10.
+:::
 
 ![boards](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
 
