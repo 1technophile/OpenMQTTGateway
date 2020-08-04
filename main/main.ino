@@ -1366,10 +1366,12 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   // replace it by the new one
   receivedSignal[o].value = MQTTvalue;
   receivedSignal[o].time = now;
-  Log.trace(F("store code : %u / %u" CR), receivedSignal[o].value, receivedSignal[o].time);
+
+  // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
+  Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
   Log.trace(F("Col: val/timestamp" CR));
   for (int i = 0; i < struct_size; i++) {
-    Log.trace(F("mem code : %u / %u" CR), receivedSignal[i].value, receivedSignal[i].time);
+    Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
   }
 }
 
@@ -1379,7 +1381,7 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
 int getMin() {
   unsigned int minimum = receivedSignal[0].time;
   int minindex = 0;
-  for (int i = 0; i < struct_size; i++) {
+  for (int i = 1; i < struct_size; i++) {
     if (receivedSignal[i].time < minimum) {
       minimum = receivedSignal[i].time;
       minindex = i;
@@ -1410,16 +1412,14 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
-  if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
-  {
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
-    SIGNAL_SIZE_UL_ULL data = 0;
-    data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
-    if (data != 0) {
+  if (strstr(topicOri, subjectMultiGTWKey) != NULL) { // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
+    SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
+    if (data != 0 && !isAduplicateSignal(data)) {
       storeSignalValue(data);
     }
-#endif
   }
+#endif
 
   if (jsondata.success()) { // json object ok -> json decoding
     // log the received json
