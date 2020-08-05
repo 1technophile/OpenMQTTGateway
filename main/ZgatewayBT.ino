@@ -207,6 +207,21 @@ void MiJiaDiscovery(char* mac) {
   createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount);
 }
 
+void FormalDiscovery(char* mac) {
+#    define FormalparametersCount 5
+  Log.trace(F("FormalDiscovery" CR));
+  char* Formalsensor[FormalparametersCount][8] = {
+      {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "Formal-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "Formal-tempf", mac, "temperature", jsonTempf, "", "", "F"},
+      {"sensor", "Formal-hum", mac, "humidity", jsonHum, "", "", "%"},
+      {"sensor", "Formal-for", mac, "formaldehyde", jsonFor, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, Formalsensor, FormalparametersCount);
+}
+
 void LYWSD02Discovery(char* mac) {
 #    define LYWSD02parametersCount 5
   Log.trace(F("LYWSD02Discovery" CR));
@@ -319,6 +334,7 @@ void InkBirdDiscovery(char* mac) {
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
 void MiJiaDiscovery(char* mac) {}
+void FormalDiscovery(char* mac) {}
 void LYWSD02Discovery(char* mac) {}
 void CLEARGRASSTRHDiscovery(char* mac) {}
 void CLEARGRASSCGD1Discovery(char* mac) {}
@@ -678,6 +694,7 @@ void launch_discovery(JsonObject& BLEdata) {
     if (strcmp(BLEdata["model"].as<const char*>(), "HHCCJCY01HHCC") == 0) MiFloraDiscovery((char*)macWOdots.c_str());
     if (strcmp(BLEdata["model"].as<const char*>(), "VegTrug") == 0) VegTrugDiscovery((char*)macWOdots.c_str());
     if (strcmp(BLEdata["model"].as<const char*>(), "LYWSDCGQ") == 0) MiJiaDiscovery((char*)macWOdots.c_str());
+    if (strcmp(BLEdata["model"].as<const char*>(), "JQJCY01YM") == 0) FormalDiscovery((char*)macWOdots.c_str());
     if (strcmp(BLEdata["model"].as<const char*>(), "LYWSD02") == 0) LYWSD02Discovery((char*)macWOdots.c_str());
     if (strcmp(BLEdata["model"].as<const char*>(), "CGG1") == 0) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str());
     if (strcmp(BLEdata["model"].as<const char*>(), "CGP1W") == 0) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str());
@@ -738,6 +755,13 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       if (strstr(service_data, "20aa01") != NULL && strlen(service_data) > ServicedataMinLength) {
         Log.trace(F("LYWSDCGQ data reading" CR));
         BLEdata.set("model", "LYWSDCGQ");
+
+        return process_sensors(0, BLEdata);
+      }
+      Log.trace(F("Is it a JQJCY01YM?" CR));
+      if (strstr(service_data, "20df02") != NULL && strlen(service_data) > ServicedataMinLength) {
+        Log.trace(F("JQJCY01YM data reading" CR));
+        BLEdata.set("model", "JQJCY01YM");
 
         return process_sensors(0, BLEdata);
       }
@@ -866,8 +890,8 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
   // Mi Jia provides tem(perature), batt(erry) and hum(idity)
   // following the value of digit 23 + offset we determine the type of data we get from the sensor
   switch (servicedata[23 + offset]) {
-    case '9':
-      BLEdata.set("fer", (double)value);
+    case '0':
+      BLEdata.set("for", (double)value / 100);
       break;
     case '4':
       BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
@@ -882,6 +906,9 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
       break;
     case '8':
       BLEdata.set("moi", (double)value);
+      break;
+    case '9':
+      BLEdata.set("fer", (double)value);
       break;
     case 'a':
       BLEdata.set("batt", (double)value);
