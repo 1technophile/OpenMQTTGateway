@@ -604,7 +604,7 @@ bool BTtoMQTT() {
             for (int i = 0; i < 12; i = i + 2) {
               Id += String(d[0].extract[i]);
               Id += String(d[0].extract[i + 1]);
-              if (i != 6)
+              if (i != 10)
                 Id += ":";
             }
             Log.trace(F("Id %s" CR), (char*)Id.c_str());
