@@ -61,11 +61,9 @@ struct BLEdevice {
 #  define device_flags_isBlackL 1 << 2
 
 struct decompose {
-  char subject[4];
   int start;
   int len;
   bool reverse;
-  char extract[60];
 };
 
 vector<BLEdevice> devices;
@@ -402,9 +400,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           for (int i = 0; i < serviceDataLength; i++) {
             int a = serviceData[i];
             if (a < 16) {
-              returnedString = returnedString + "0";
+              returnedString += F("0");
             }
-            returnedString = returnedString + String(a, HEX);
+            returnedString += String(a, HEX);
           }
           char service_data[returnedString.length() + 1];
           returnedString.toCharArray(service_data, returnedString.length() + 1);
@@ -552,11 +550,12 @@ bool BTtoMQTT() { // for on demand BLE scans
 
 SoftwareSerial softserial(BT_RX, BT_TX);
 
-String returnedString = "";
+String returnedString((char*)0);
 unsigned long timebt = 0;
 
 // this struct define which parts of the hexadecimal chain we extract and what to do with these parts
-struct decompose d[6] = {{"mac", 16, 12, true}, {"typ", 28, 2, false}, {"rsi", 30, 2, false}, {"rdl", 32, 2, false}, {"sty", 44, 4, true}, {"rda", 48, 60, false}};
+// {"mac"}, {"typ"}, {"rsi"}, {"rdl"}, {"sty"}, {"rda"}
+struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
 
 void setupBT() {
   BLEinterval = TimeBtw_Read;
@@ -573,6 +572,9 @@ void setupBT() {
   softserial.print(F("AT+PIO11" CR)); // When not connected (as in BLE mode) the LED is off. When connected the LED is solid on.
 #    endif
   delay(100);
+#    if defined(ESP8266)
+  returnedString.reserve(512); //reserve memory space for BT Serial. (size should depend on available RAM)
+#    endif
   Log.trace(F("ZgatewayBT HM1X setup done " CR));
 }
 
@@ -581,73 +583,78 @@ bool BTtoMQTT() {
   while (softserial.available() > 0) {
     int a = softserial.read();
     if (a < 16) {
-      returnedString = returnedString + "0";
+      returnedString += "0";
     }
-    returnedString = returnedString + String(a, HEX);
+    returnedString += String(a, HEX);
   }
 
   if (millis() > (timebt + BLEinterval)) { //retrieving data
     timebt = millis();
-#    if defined(ESP8266)
-    yield();
-#    endif
-    if (returnedString != "") {
-      Log.verbose(F("returnedString: %s" CR), (char*)returnedString.c_str());
-      size_t pos = 0;
-      while ((pos = returnedString.lastIndexOf(BLEdelimiter)) != -1) {
-#    if defined(ESP8266)
-        yield();
-#    endif
-        String token = returnedString.substring(pos);
-        returnedString.remove(pos, returnedString.length());
-        char token_char[token.length() + 1];
-        token.toCharArray(token_char, token.length() + 1);
-        Log.trace(F("Token: %s" CR), token_char);
-        if (token.length() > 60) { // we extract data only if we have infos (BLEdelimiter length + 4)
-          for (int i = 0; i < 6; i++) {
-            extract_char(token_char, d[i].extract, d[i].start, d[i].len, d[i].reverse, false);
-            if (i == 3)
-              d[5].len = (int)strtol(d[i].extract, NULL, 16) * 2; // extracting the length of the rest data
-          }
+    returnedString.remove(0); //init data string
+    softserial.print(F(QUESTION_MSG)); //start new discovery
+    return false;
+  }
 
-          if ((strlen(d[0].extract)) == 12) // if a BLE device is detected we analyse it
-          {
-            Log.trace(F("Creating BLE buffer" CR));
-            StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-            JsonObject& BLEdata = jsonBuffer.createObject();
-            strupp(d[0].extract);
-            String Id;
-            for (int i = 0; i < 12; i = i + 2) {
-              Id += String(d[0].extract[i]);
-              Id += String(d[0].extract[i + 1]);
-              if (i != 10)
-                Id += ":";
-            }
-            Log.trace(F("Id %s" CR), (char*)Id.c_str());
-            BLEdata.set("id", (char*)Id.c_str());
-            BLEdevice* device = getDeviceByMac((char*)Id.c_str());
-
-            if (isBlack(device))
-              return false; //if black listed mac we go out
-            if (oneWhite && !isWhite(device))
-              return false; //if we have at least one white mac and this mac is not white we go out
-            int rssi = (int)strtol(d[2].extract, NULL, 16) - 256;
-            BLEdata.set("rssi", (int)rssi);
-#    ifdef subjectHomePresence
-            haRoomPresence(BLEdata); // this device has an rssi in consequence we can use it for home assistant room presence component
+#    if defined(ESP8266)
+  yield();
 #    endif
-            Log.trace(F("Service data: %s" CR), d[5].extract);
-            BLEdata.set("servicedata", d[5].extract);
-            PublishDeviceData(BLEdata);
-          }
-        }
-      }
-      returnedString = ""; //init data string
+  if (returnedString.length() > (BLEdelimiterLength + CRLR_Length)) { //packet has to be at least the (BLEdelimiter + 'CR LF') length
+    Log.verbose(F("returnedString: %s" CR), (char*)returnedString.c_str());
+    if (returnedString.equals(F(BLEEndOfDiscovery))) //OK+DISCE
+    {
+      returnedString.remove(0); //clear data string
       return false;
     }
-    softserial.print(F(QUESTION_MSG));
-    return false;
-  } else {
+    size_t pos = 0, eolPos = 0;
+    while ((pos = returnedString.indexOf(F(BLEdelimiter))) != -1 && (eolPos = returnedString.indexOf(F(CRLR))) != -1) {
+#    if defined(ESP8266)
+      yield();
+#    endif
+      String token = returnedString.substring(pos + BLEdelimiterLength, eolPos); //capture a BT device frame
+      returnedString.remove(0, eolPos + CRLR_Length); //remove frame from main buffer (including 'CR LF' chars)
+      Log.trace(F("Token: %s" CR), token.c_str());
+      if (token.length() > 32) { // we extract data only if we have size is at least the size of (MAC, TYPE, RSSI, and Rest Data Length)
+        String mac = F("");
+        mac.reserve(17);
+        for (int i = d[0].start; i < (d[0].start + d[0].len); i += 2) {
+          mac += token.substring((d[0].start + d[0].len) - i - 2, (d[0].start + d[0].len) - i);
+          if (i < (d[0].start + d[0].len) - 2)
+            mac += ":";
+        }
+        mac.toUpperCase();
+
+        String rssiStr = token.substring(d[2].start, (d[2].start + d[2].len));
+        int rssi = (int)strtol(rssiStr.c_str(), NULL, 16) - 256;
+
+        String restDataLengthStr = token.substring(d[3].start, (d[3].start + d[3].len));
+        int restDataLength = (int)strtol(restDataLengthStr.c_str(), NULL, 16) * 2;
+
+        String restData = F("");
+        if (restDataLength <= 60)
+          restData = token.substring(d[5].start, (d[5].start + restDataLength));
+
+        Log.trace(F("Creating BLE buffer" CR));
+        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject& BLEdata = jsonBuffer.createObject();
+
+        Log.trace(F("Id %s" CR), (char*)mac.c_str());
+        BLEdata.set("id", (char*)mac.c_str());
+        BLEdevice* device = getDeviceByMac((char*)mac.c_str());
+
+        if (isBlack(device))
+          return false; //if black listed mac we go out
+        if (oneWhite && !isWhite(device))
+          return false; //if we have at least one white mac and this mac is not white we go out
+
+        BLEdata.set("rssi", (int)rssi);
+#    ifdef subjectHomePresence
+        haRoomPresence(BLEdata); // this device has an rssi in consequence we can use it for home assistant room presence component
+#    endif
+        Log.trace(F("Service data: %s" CR), restData.c_str());
+        BLEdata.set("servicedata", restData.c_str());
+        PublishDeviceData(BLEdata);
+      }
+    }
     return false;
   }
 }

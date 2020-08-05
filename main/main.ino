@@ -193,7 +193,7 @@ PubSubClient client(eClient);
 //MQTT last attemps reconnection date
 unsigned long lastMQTTReconnectAttempt = 0;
 
-void revert_hex_data(char* in, char* out, int l) {
+void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
   int i = l - 2, j = 0;
   while (i != -2) {
@@ -207,24 +207,17 @@ void revert_hex_data(char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-void extract_char(char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
-  char tmp_subset[l + 1];
-  memcpy(tmp_subset, &token_char[start], l);
-  tmp_subset[l] = '\0';
+void extract_char(const char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
   if (isNumber) {
-    char tmp_subset2[l + 1];
     if (reverse)
-      revert_hex_data(tmp_subset, tmp_subset2, l + 1);
-    else
-      strncpy(tmp_subset2, tmp_subset, l + 1);
-    long long_value = strtoul(tmp_subset2, NULL, 16);
-    sprintf(tmp_subset2, "%ld", long_value);
-    strncpy(subset, tmp_subset2, l + 1);
+      revert_hex_data(token_char + start, subset, l + 1);
+    long long_value = strtoul(subset, NULL, 16);
+    sprintf(subset, "%ld", long_value);
   } else {
     if (reverse)
-      revert_hex_data(tmp_subset, subset, l + 1);
+      revert_hex_data(token_char + start, subset, l + 1);
     else
-      strncpy(subset, tmp_subset, l + 1);
+      strncpy(subset, token_char + start, l + 1);
   }
   subset[l] = '\0';
 }
