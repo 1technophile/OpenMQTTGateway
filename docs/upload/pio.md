@@ -25,12 +25,12 @@ default_envs = esp32dev-rf
 ;default_envs = ttgo-lora32-v1
 ```
 
-If you don't know which env to activate you can refer to [devices](../prerequisites/devices).
+If you don't know which `env` to activate you can refer to [devices](../prerequisites/devices).
 
-The different listed configurations represents some standard environments, to overload them with special parameters or modules you can modify the config files. The definitions coming from [platformio.ini](https://github.com/1technophile/OpenMQTTGateway/blob/development/platformio.ini) file and config files are cumulative.
+The different listed configurations represents some standard environments and boards, to overload them with special parameters or modules you can modify the config files ([config_RF.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_RF.h) for example). The definitions coming from [platformio.ini](https://github.com/1technophile/OpenMQTTGateway/blob/development/platformio.ini) file and config files are cumulative.
 The main config file is [User_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/User_config.h), added to it you have one config file per gateway, sensor or actuator, you will find them in the [main](https://github.com/1technophile/OpenMQTTGateway/tree/development/main) folder.
 
-If you want to add more sensors or gateways to one `default_envs` you can uncomment them into [User_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/d2dd6138558909b71cc44f69665340247bd5f356/main/User_config.h#L84) or add the modules directly into your environment definition of your .ini files.
+If you want to add more sensors or gateways to one `default_envs` you can add the modules directly into your environment definition of your .ini files or uncomment them into [User_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/d2dd6138558909b71cc44f69665340247bd5f356/main/User_config.h#L84).
 
 Example to add IR to `esp32dev-rf` add the `build_flags` below to the env definition:
 ``` ini
@@ -68,6 +68,7 @@ With some ESP it could be necessary to push the reset button when the upload beg
 
 If you want to erase the settings stored in the ESP memory use:
 `pio run --target erase`
+This can be usefull especialy before the first upload or when you change the board partitions sizing.
 
 Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
 ```
