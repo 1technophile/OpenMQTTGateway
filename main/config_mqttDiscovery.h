@@ -50,6 +50,7 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonLux      "{{ value_json.lux }}"
 #  define jsonPres     "{{ value_json.pres }}"
 #  define jsonFer      "{{ value_json.fer }}"
+#  define jsonFor      "{{ value_json.for }}"
 #  define jsonMoi      "{{ value_json.moi }}"
 #  define jsonHum      "{{ value_json.hum }}"
 #  define jsonTemp     "{{ value_json.tem }}" // remove for 0.9.6 release
@@ -76,6 +77,7 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonLux      "{{ value_json.lux | is_defined }}"
 #  define jsonPres     "{{ value_json.pres | is_defined }}"
 #  define jsonFer      "{{ value_json.fer | is_defined }}"
+#  define jsonFor      "{{ value_json.for | is_defined }}"
 #  define jsonMoi      "{{ value_json.moi | is_defined }}"
 #  define jsonHum      "{{ value_json.hum | is_defined }}"
 #  define jsonTemp     "{{ value_json.tem | is_defined }}" // remove for 0.9.6 release
