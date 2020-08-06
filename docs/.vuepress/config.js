@@ -98,6 +98,7 @@ module.exports = {
           children: [
             'participate/support',
             'participate/development',
+            'participate/adding-protocols',
             'participate/community',
             ['https://github.com/1technophile/OpenMQTTGateway/blob/development/LICENSE.txt','License']
           ]
