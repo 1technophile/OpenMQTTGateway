@@ -11,14 +11,18 @@ Download the binary corresponding to your board and gateway [here](https://githu
 https://www.espressif.com/en/products/hardware/esp32/resources
 * Uncompress the package
 * Execute `flash_download_tools`
+* Choose Developper mode
 * Choose ESP32 DownloadTool
 * Set the files and the address as below:
 ![Flash download tool](../img/OpenMQTTgateway_ESP32_binary_flash.png)
 And set the parameters used by arduino IDE, we are able to upload to ESP32 a binary file containing OpenMQTTGateway.
 * Set the config as above
 * Connect your ESP32 board and select the COM port 
-* Click on start
-The upload details appears in the rear shell windows, you can see also the progress bar changing
+* Click on erase if it is your first upload
+* If you see SYNC (above the START button) for more than 5 seconds, press the boot button of your ESP32
+* Once done you can click on START button
+* If you see SYNC (above the START button) for more than 5 seconds, press the boot button of your ESP32
+The upload details appears in the rear shell windows, you can see also the progress bar changing.
 * Once done the flash tool display "FINISH" like below
 ![Flash download tool 2](../img/OpenMQTTgateway_ESP32_binary_flash2.png)
 
