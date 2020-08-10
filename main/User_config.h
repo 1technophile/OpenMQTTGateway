@@ -28,7 +28,9 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "version_tag"
+#ifndef OMG_VERSION
+#  define OMG_VERSION "version_tag"
+#endif
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
@@ -54,7 +56,9 @@
 #  define Gateway_Short_Name "OMG"
 #endif
 
-#define Base_Topic "home/"
+#ifndef Base_Topic
+#  define Base_Topic "home/"
+#endif
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
@@ -84,10 +88,18 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #endif
 
-#define WifiManager_password            "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
-#define WifiManager_ssid                Gateway_Name //this is the network name of the initial setup access point
-#define WifiManager_ConfigPortalTimeOut 120
-#define WifiManager_TimeOut             5
+#ifndef WifiManager_password
+#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
+#endif
+#ifndef WifiManager_ssid
+#  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
+#endif
+#ifndef WifiManager_ConfigPortalTimeOut
+#  define WifiManager_ConfigPortalTimeOut 120
+#endif
+#ifndef WifiManager_TimeOut
+#  define WifiManager_TimeOut 5
+#endif
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
@@ -225,16 +237,32 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZradioCC1101  "CC1101" //ESP8266, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
-#define version_Topic           "/version"
-#define will_Topic              "/LWT"
-#define will_QoS                0
-#define will_Retain             true
-#define will_Message            "offline"
-#define Gateway_AnnouncementMsg "online"
+#ifndef version_Topic
+#  define version_Topic "/version"
+#endif
+#ifndef will_Topic
+#  define will_Topic "/LWT"
+#endif
+#ifndef will_QoS
+#  define will_QoS 0
+#endif
+#ifndef will_Retain
+#  define will_Retain true
+#endif
+#ifndef will_Message
+#  define will_Message "offline"
+#endif
+#ifndef Gateway_AnnouncementMsg
+#  define Gateway_AnnouncementMsg "online"
+#endif
 
-#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#ifndef jsonPublishing
+#  define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#endif
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
-#define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#ifndef jsonReceiving
+#  define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#endif
 
 //#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
 //example
@@ -243,9 +271,15 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define simpleReceiving true //comment if you don't want to use old way reception analysis
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
-#define ota_hostname Gateway_Name
-#define ota_password "OTAPASSWORD"
-#define ota_port     8266
+#ifndef ota_hostname
+#  define ota_hostname Gateway_Name
+#endif
+#ifndef ota_password
+#  define ota_password "OTAPASSWORD"
+#endif
+#ifndef ota_port
+#  define ota_port 8266
+#endif
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
 #ifndef led_receive
