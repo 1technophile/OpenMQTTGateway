@@ -89,16 +89,16 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #ifndef WifiManager_password
-#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
+#  define WifiManager_password            "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
 #endif
 #ifndef WifiManager_ssid
-#  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
+#  define WifiManager_ssid                Gateway_Name //this is the network name of the initial setup access point
 #endif
 #ifndef WifiManager_ConfigPortalTimeOut
 #  define WifiManager_ConfigPortalTimeOut 120
 #endif
 #ifndef WifiManager_TimeOut
-#  define WifiManager_TimeOut 5
+#  define WifiManager_TimeOut             5
 #endif
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
