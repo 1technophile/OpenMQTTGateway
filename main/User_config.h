@@ -278,7 +278,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  define ota_password "OTAPASSWORD"
 #endif
 #ifndef ota_port
-#  define ota_port     8266
+#  define ota_port 8266
 #endif
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
