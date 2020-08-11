@@ -350,10 +350,10 @@ void InkBirdDiscovery(char* mac) {}
     */
 // core task implementation thanks to https://techtutorialsx.com/2017/05/09/esp32-running-code-on-a-specific-core/
 
-#    include <BLEAdvertisedDevice.h>
-#    include <BLEDevice.h>
-#    include <BLEScan.h>
-#    include <BLEUtils.h>
+#    include <NimBLEDevice.h>
+#    include <NimBLEScan.h>
+#    include <NimBLEUtils.h>
+#    include <NimBLEadvertisedDevice.h>
 
 #    include "soc/timer_group_reg.h"
 #    include "soc/timer_group_struct.h"
@@ -364,37 +364,37 @@ static int taskCore = 0;
 bool ProcessLock = false;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
+  void onResult(BLEAdvertisedDevice* advertisedDevice) {
     Log.trace(F("Creating BLE buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& BLEdata = jsonBuffer.createObject();
-    String mac_adress = advertisedDevice.getAddress().toString().c_str();
+    String mac_adress = advertisedDevice->getAddress().toString().c_str();
     mac_adress.toUpperCase();
     BLEdata.set("id", (char*)mac_adress.c_str());
     Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
     BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
     if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
-      if (advertisedDevice.haveName())
-        BLEdata.set("name", (char*)advertisedDevice.getName().c_str());
-      if (advertisedDevice.haveManufacturerData()) {
-        char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice.getManufacturerData().data(), advertisedDevice.getManufacturerData().length());
+      if (advertisedDevice->haveName())
+        BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
+      if (advertisedDevice->haveManufacturerData()) {
+        char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
         Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
         BLEdata.set("manufacturerdata", manufacturerdata);
       }
-      if (advertisedDevice.haveRSSI())
-        BLEdata.set("rssi", (int)advertisedDevice.getRSSI());
-      if (advertisedDevice.haveTXPower())
-        BLEdata.set("txpower", (int8_t)advertisedDevice.getTXPower());
+      if (advertisedDevice->haveRSSI())
+        BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
+      if (advertisedDevice->haveTXPower())
+        BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
 #    ifdef subjectHomePresence
-      if (advertisedDevice.haveRSSI())
+      if (advertisedDevice->haveRSSI())
         haRoomPresence(BLEdata); // this device has an rssi in consequence we can use it for home assistant room presence component
 #    endif
-      if (advertisedDevice.haveServiceData()) {
-        int serviceDataCount = advertisedDevice.getServiceDataCount();
+      if (advertisedDevice->haveServiceData()) {
+        int serviceDataCount = advertisedDevice->getServiceDataCount();
         Log.trace(F("Get services data number: %d" CR), serviceDataCount);
         for (int j = 0; j < serviceDataCount; j++) {
-          std::string serviceData = advertisedDevice.getServiceData(j);
+          std::string serviceData = advertisedDevice->getServiceData(j);
           int serviceDataLength = serviceData.length();
           String returnedString = "";
           for (int i = 0; i < serviceDataLength; i++) {
@@ -409,7 +409,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           service_data[returnedString.length()] = '\0';
           Log.trace(F("Service data: %s" CR), service_data);
           BLEdata.set("servicedata", service_data);
-          std::string serviceDatauuid = advertisedDevice.getServiceDataUUID(j).toString();
+          std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
           PublishDeviceData(BLEdata);
@@ -430,12 +430,11 @@ void BLEscan() {
   Log.notice(F("Scan begin" CR));
   BLEDevice::init("");
   BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-  MyAdvertisedDeviceCallbacks myCallbacks;
-  pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration, false);
   Log.notice(F("Found %d devices, scan end deinit controller" CR), foundDevices.getCount());
-  esp_bt_controller_deinit();
+  BLEDevice::deinit(true);
 }
 
 void stopProcessing() {
