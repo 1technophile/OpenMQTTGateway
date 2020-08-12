@@ -87,6 +87,10 @@ Once done the previous value of interval will be recovered.
 
 The default value is set into config_BT.h
 
+::: info
+For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched immediately after each scan.
+:::
+
 ## Setting the minimum RSSI accepted to publish device data
 
 If you want to change the minimum RSSI value accepted for a device to be published, you can change it by MQTT. For example if you want to set -80
