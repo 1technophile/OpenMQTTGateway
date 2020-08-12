@@ -36,10 +36,23 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #    include "FreeRTOS.h"
 FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createOrUpdateDevice");
 // Headers used for deep sleep functions
+#    include <NimBLEAdvertisedDevice.h>
+#    include <NimBLEDevice.h>
+#    include <NimBLEScan.h>
+#    include <NimBLEUtils.h>
 #    include <driver/adc.h>
 #    include <esp_bt.h>
 #    include <esp_bt_main.h>
 #    include <esp_wifi.h>
+
+#    include "soc/timer_group_reg.h"
+#    include "soc/timer_group_struct.h"
+
+void notifyCB(
+    BLERemoteCharacteristic* pBLERemoteCharacteristic,
+    uint8_t* pData,
+    size_t length,
+    bool isNotify);
 #  endif
 
 #  if !defined(ESP32) && !defined(ESP8266)
@@ -335,6 +348,21 @@ void InkBirdDiscovery(char* mac) {
   createDiscoveryFromList(mac, InkBirdsensor, InkBirdparametersCount);
 }
 
+void LYWSD03MMCDiscovery(char* mac) {
+#    define LYWSD03MMCparametersCount 5
+  Log.trace(F("LYWSD03MMCDiscovery" CR));
+  char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][8] = {
+      {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "LYWSD03MMC-volt", mac, "voltage", jsonVolt, "", "", "V"},
+      {"sensor", "LYWSD03MMC-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "LYWSD03MMC-tempf", mac, "temperature", jsonTempf, "", "", "F"},
+      {"sensor", "LYWSD03MMC-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount);
+}
+
 #  else
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
@@ -348,6 +376,7 @@ void MiScaleDiscovery(char* mac) {}
 void MiLampDiscovery(char* mac) {}
 void MiBandDiscovery(char* mac) {}
 void InkBirdDiscovery(char* mac) {}
+void LYWSD03MMCDiscovery(char* mac) {}
 #  endif
 
 #  ifdef ESP32
@@ -356,14 +385,6 @@ void InkBirdDiscovery(char* mac) {}
        Ported to Arduino ESP32 by Evandro Copercini
     */
 // core task implementation thanks to https://techtutorialsx.com/2017/05/09/esp32-running-code-on-a-specific-core/
-
-#    include <NimBLEAdvertisedDevice.h>
-#    include <NimBLEDevice.h>
-#    include <NimBLEScan.h>
-#    include <NimBLEUtils.h>
-
-#    include "soc/timer_group_reg.h"
-#    include "soc/timer_group_struct.h"
 
 //core on which the BLE detection task will run
 static int taskCore = 0;
@@ -388,6 +409,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
         Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
         BLEdata.set("manufacturerdata", manufacturerdata);
+        free(manufacturerdata);
       }
       if (advertisedDevice->haveRSSI())
         BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
@@ -430,6 +452,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   }
 };
 
+/** 
+ * BLEscan used to retrieve BLE advertized data from devices without connection
+ */
 void BLEscan() {
   TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
   TIMERG0.wdt_feed = 1;
@@ -442,6 +467,93 @@ void BLEscan() {
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration, false);
   Log.notice(F("Found %d devices, scan end deinit controller" CR), foundDevices.getCount());
   BLEDevice::deinit(true);
+}
+
+/** 
+ * Callback used once connected to a  device
+ */
+void notifyCB(
+    BLERemoteCharacteristic* pBLERemoteCharacteristic,
+    uint8_t* pData,
+    size_t length,
+    bool isNotify) {
+  if (!ProcessLock) {
+    Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
+
+    if (length == 5) {
+      Log.trace(F("Device identified creating BLE buffer" CR));
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject& BLEdata = jsonBuffer.createObject();
+      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
+      mac_adress.toUpperCase();
+
+      BLEdata.set("id", (char*)mac_adress.c_str());
+      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
+      BLEdata.set("model", "LYWSD03MMC");
+      BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
+      BLEdata.set("tempf", (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01)));
+      BLEdata.set("hum", (float)(pData[2]));
+      BLEdata.set("volt", (float)(((pData[4] * 256) + pData[3]) / 1000.0));
+      BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
+
+      mac_adress.replace(":", "");
+      String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
+      pub((char*)mactopic.c_str(), BLEdata);
+    } else {
+      Log.warning(F("Device not identified" CR));
+    }
+  } else {
+    Log.trace(F("Callback process canceled by processLock" CR));
+  }
+  pBLERemoteCharacteristic->unsubscribe();
+}
+
+/** 
+ * BLEClient used to connect to BLE device and retrieve data with a service/characteristic request
+ */
+void BLEconnect() {
+  Log.notice(F("BLE Connect begin" CR));
+  BLEDevice::init("");
+  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+    if (p->sensorModel == LYWSD03MMC) {
+      Log.trace(F("Model to connect found" CR));
+      NimBLEClient* pClient;
+      pClient = BLEDevice::createClient();
+      BLEUUID serviceUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6");
+      BLEUUID charUUID("ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6");
+      BLEAddress sensorAddress(p->macAdr);
+      if (!pClient->connect(sensorAddress)) {
+        Log.warning(F("Failed to find client: %s" CR), p->macAdr);
+        NimBLEDevice::deleteClient(pClient);
+      } else {
+        BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
+        if (!pRemoteService) {
+          Log.warning(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
+          pClient->disconnect();
+        } else {
+          Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
+          // Obtain a reference to the characteristic in the service of the remote BLE server.
+          if (pClient->isConnected()) {
+            Log.trace(F("Client isConnected, freeHeap: %d" CR), ESP.getFreeHeap());
+            BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
+            if (!pRemoteCharacteristic) {
+              Log.warning(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
+              pClient->disconnect();
+            } else {
+              if (pRemoteCharacteristic->canNotify()) {
+                Log.trace(F("Registering notification" CR));
+                pRemoteCharacteristic->subscribe(true, notifyCB);
+              } else {
+                Log.warning(F("Failed registering notification" CR));
+                pClient->disconnect();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  Log.notice(F("BLE Connect end" CR));
 }
 
 void stopProcessing() {
@@ -471,6 +583,7 @@ void coreTask(void* pvParameters) {
         if (low_power_mode == 2)
           digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
         BLEscan();
+        BLEconnect();
         launch_discovery();
         dumpDevices();
         //only change LOW_POWER_LED if low power mode is enabled
@@ -482,6 +595,8 @@ void coreTask(void* pvParameters) {
       } else {
         delay(BLEinterval);
       }
+    } else {
+      Log.trace(F("BLE core task canceled by processLock" CR));
     }
   }
 }
@@ -718,6 +833,7 @@ void launch_discovery() {
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str());
+      if (p->sensorModel == LYWSD03MMC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
@@ -830,6 +946,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGD1);
         return process_cleargrass(BLEdata, false);
+      }
+      if (BLEdata.containsKey("name")) {
+        Log.trace(F("Is it a LYWSD03MMC?" CR));
+        if (strstr((const char*)BLEdata["name"], "LYWSD03MMC") != NULL) {
+          Log.trace(F("LYWSD03MMC add to list for future connect" CR));
+          if (device->sensorModel == -1)
+            createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
+        }
       }
       if (BLEdata.containsKey("servicedatauuid")) {
         const char* service_datauuid = (const char*)(BLEdata["servicedatauuid"] | "");
