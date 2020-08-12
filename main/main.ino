@@ -190,9 +190,6 @@ EthernetClient eClient;
 // client link to pubsub mqtt
 PubSubClient client(eClient);
 
-//MQTT last attemps reconnection date
-unsigned long lastMQTTReconnectAttempt = 0;
-
 void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
   int i = l - 2, j = 0;
@@ -564,8 +561,6 @@ void setup() {
   client.setCallback(callback);
 
   delay(1500);
-
-  lastMQTTReconnectAttempt = 0;
 
 #ifdef ZsensorBME280
   setupZsensorBME280();
