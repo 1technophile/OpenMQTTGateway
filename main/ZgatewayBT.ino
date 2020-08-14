@@ -88,6 +88,8 @@ static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
 
+bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
+
 BLEdevice* getDeviceByMac(const char* mac);
 void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model);
 
@@ -388,8 +390,6 @@ void LYWSD03MMCDiscovery(char* mac) {}
 
 //core on which the BLE detection task will run
 static int taskCore = 0;
-// Process lock when we want to use a critical function like OTA for example
-bool ProcessLock = false;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
@@ -464,13 +464,13 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-  BLEScanResults foundDevices = pBLEScan->start(Scan_duration, false);
+  BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
   Log.notice(F("Found %d devices, scan end deinit controller" CR), foundDevices.getCount());
   BLEDevice::deinit(true);
 }
 
 /** 
- * Callback used once connected to a  device
+ * Callback method to retrieve data from devices characteristics
  */
 void notifyCB(
     BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -509,7 +509,7 @@ void notifyCB(
 }
 
 /** 
- * BLEClient used to connect to BLE device and retrieve data with a service/characteristic request
+ * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 void BLEconnect() {
   Log.notice(F("BLE Connect begin" CR));
@@ -583,10 +583,12 @@ void coreTask(void* pvParameters) {
         if (low_power_mode == 2)
           digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
         BLEscan();
-        BLEconnect();
-        launch_discovery();
+        // Launching a connect every BLEscanBeforeConnect
+        if (!((millis() / (BLEinterval + Scan_duration)) % BLEscanBeforeConnect))
+          BLEconnect();
+        launchDiscovery();
         dumpDevices();
-        //only change LOW_POWER_LED if low power mode is enabled
+        // Only change LOW_POWER_LED if low power mode is enabled
         if (low_power_mode)
           digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
       }
@@ -647,7 +649,8 @@ void changelow_power_mode(int newLowPowerMode) {
 }
 
 void setupBT() {
-  Log.notice(F("BLE interval: %d" CR), BLEinterval);
+  Log.notice(F("BLE scans interval: %d" CR), BLEinterval);
+  Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
   Log.notice(F("minrssi: %d" CR), minRssi);
   Log.notice(F("Low Power Mode: %d" CR), low_power_mode);
 
@@ -681,8 +684,9 @@ unsigned long timebt = 0;
 struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
 
 void setupBT() {
-  BLEinterval = TimeBtw_Read;
+  BLEinterval = TimeBtwRead;
   Log.notice(F("BLE interval: %d" CR), BLEinterval);
+  Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
   Log.notice(F("minrssi: %d" CR), minRssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
@@ -814,7 +818,7 @@ boolean valid_service_data(const char* data) {
   return false;
 }
 
-void launch_discovery() {
+void launchDiscovery() {
   for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
     if (p->sensorModel != UNKNOWN_MODEL && !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
@@ -1207,14 +1211,27 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       // storing BLE interval for further use if needed
       unsigned int prevBLEinterval = BLEinterval;
       Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
-      // set BLE interval if present if not setting default value
       BLEinterval = (unsigned int)BTdata["interval"];
       Log.notice(F("New interval: %d ms" CR), BLEinterval);
       if (BLEinterval == 0) {
-        if (BTtoMQTT()) // as BLEinterval is = to 0 we can launch the loop and the scan will execute immediately
+        if (!ProcessLock) {
+          BTtoMQTT();
           Log.trace(F("Scan done" CR));
-        BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
+#  ifdef ESP32
+          BLEconnect();
+#  endif
+          BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
+        } else {
+          Log.trace(F("Cannot launch scan due to other process running" CR));
+        }
       }
+    }
+    // Number of scan before a connect set
+    if (BTdata.containsKey("scanbcnct")) {
+      Log.trace(F("BLE scans number before a connect setup" CR));
+      Log.trace(F("Previous number: %d ms" CR), BLEscanBeforeConnect);
+      BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
+      Log.notice(F("New scan number before connect: %d" CR), BLEscanBeforeConnect);
     }
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {

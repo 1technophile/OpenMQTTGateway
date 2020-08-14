@@ -29,27 +29,35 @@
 extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
+
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 #define MinimumRSSI        -100 //default minimum rssi value, all the devices below -90 will not be reported
-#define Scan_duration      10 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
-#define HM                 -10
-#define HMSerialSpeed      9600 // Communication speed with the HM module, softwareserial doesn't support 115200
-//#define HM-11 // uncomment this line if you use HM-11 and comment the line above
-//#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
-#define BLEdelimiter         "4f4b2b444953413a" // OK+DISA:
-#define BLEEndOfDiscovery    "4f4b2b4449534345" // OK+DISCE
-#define BLEdelimiterLength   16
-#define CRLR                 "0d0a"
-#define CRLR_Length          4
-#define ServicedataMinLength 29
 
-#ifndef TimeBtw_Read
-#  define TimeBtw_Read 55555 //define default time between 2 scans
+#ifndef Scan_duration
+#  define Scan_duration 10000 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
+#endif
+#ifndef ScanPerConnect
+#  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only)
+#endif
+#ifndef TimeBtwRead
+#  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
 
-unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
+#define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
+//#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
+
+#define BLEdelimiter       "4f4b2b444953413a" // OK+DISA:
+#define BLEEndOfDiscovery  "4f4b2b4449534345" // OK+DISCE
+#define BLEdelimiterLength 16
+#define CRLR               "0d0a"
+#define CRLR_Length        4
+
+#define ServicedataMinLength 29
+
+unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
+unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //time between 2 scans
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
