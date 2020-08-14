@@ -1,7 +1,7 @@
 # Wifi and MQTT configuration portal
 
 Once loaded into your board and if you don't use the manual configuration you have to set your network parameters with wifi manager portal.
-From your smartphone search for your OpenMQTTGateway wifi network and connect to it, a web page will appear
+From your smartphone search for your OpenMQTTGateway wifi network and connect to it with `WifiManager_password` (the default password is "your_password"), a web page will appear.
 
 ![Wifi manager menu](../img/OpenMQTTGateway_Wifi_Manager_menu.png)
 
@@ -22,8 +22,6 @@ From your smartphone search for your OpenMQTTGateway wifi network and connect to
 ![Wifi manager save](../img/OpenMQTTGateway_Wifi_Manager_save.png)
 
 The ESP restart and connect to your network. Note that your credentials are saved into the ESP memory, if you want to redo the configuration you have to erase the ESP memory with the flash download tool.
-
-_The default password for wifi manager is "your_password"_
 
 Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
 ```
