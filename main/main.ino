@@ -1293,6 +1293,7 @@ void stateMeasures() {
   SYSdata["lowpowermode"] = (int)low_power_mode;
 #    endif
   SYSdata["interval"] = BLEinterval;
+  SYSdata["scanbcnct"] = BLEscanBeforeConnect;
 #  endif
 #  ifdef ZgatewayRFM69
   modules = modules + ZgatewayRFM69;
