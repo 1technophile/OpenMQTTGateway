@@ -56,6 +56,17 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 
 #define ServicedataMinLength 29
 
+#define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
+//#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
+
+#define BLEdelimiter       "4f4b2b444953413a" // OK+DISA:
+#define BLEEndOfDiscovery  "4f4b2b4449534345" // OK+DISCE
+#define BLEdelimiterLength 16
+#define CRLR               "0d0a"
+#define CRLR_Length        4
+
+#define ServicedataMinLength 29
+
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //time between 2 scans
 
