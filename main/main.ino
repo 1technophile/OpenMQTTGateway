@@ -125,6 +125,9 @@ unsigned long timer_sys_measures = 0;
 #ifdef ZactuatorFASTLED
 #  include "config_FASTLED.h"
 #endif
+#ifdef ZactuatorPWMLED
+#include "config_PWMLED.h"
+#endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
 #  include "config_M5.h"
 #endif
@@ -629,6 +632,9 @@ void setup() {
 #endif
 #ifdef ZactuatorFASTLED
   setupFASTLED();
+#endif
+#ifdef ZactuatorPWMLED
+  setupPWMLED();
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
@@ -1202,6 +1208,9 @@ void loop() {
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
+#ifdef ZactuatorPWMLED
+      PWMLEDLoop();
+#endif
     } else {
       connectMQTT();
     }
@@ -1331,6 +1340,9 @@ void stateMeasures() {
 #  ifdef ZactuatorFASTLED
   modules = modules + ZactuatorFASTLED;
 #  endif
+#  ifdef ZactuatorPWMLED
+  modules = modules + ZactuatorPWMLED;
+#  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
   SYSdata["m5-batt-level"] = (int8_t)M5.Power.getBatteryLevel();
@@ -1456,6 +1468,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorFASTLED
     MQTTtoFASTLED(topicOri, jsondata);
 #  endif
+#  ifdef ZactuatorPWMLED
+    MQTTtoPWMLED(topicOri, jsondata);
+#  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     MQTTtoM5(topicOri, jsondata);
 #  endif
@@ -1491,6 +1506,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef ZactuatorFASTLED
     MQTTtoFASTLED(topicOri, datacallback);
+#  endif
+#  ifdef ZactuatorPWMLED
+    MQTTtoPWMLED(topicOri, datacallback);
 #  endif
 #endif
 #ifdef ZactuatorONOFF
