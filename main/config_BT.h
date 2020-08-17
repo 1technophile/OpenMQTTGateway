@@ -71,6 +71,24 @@ unsigned int BLEinterval = TimeBtw_Read; //time between 2 scans
 // if not commented Home presence integration with HOME ASSISTANT is activated
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
+enum ble_sensor_model {
+  UNKNOWN_MODEL = -1,
+  BEGINING = 0,
+  HHCCJCY01HHCC,
+  VEGTRUG,
+  LYWSDCGQ,
+  JQJCY01YM,
+  LYWSD02, //5
+  CGG1,
+  CGP1W,
+  MUE4094RT,
+  CGD1,
+  MIBAND, //10
+  XMTZC04HM,
+  XMTZC05HM,
+  INKBIRD,
+};
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)
 #  ifdef ESP8266
