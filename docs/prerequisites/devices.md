@@ -20,7 +20,8 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | Vegtrug ||temperature/moisture/luminance/fertility|
 | XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility|
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
-| XIAOMI Mi Jia 2 *|LYWSD03MMC|temperature/humidity/battery|
+| XIAOMI Mi Jia 2 *|LYWSD03MMC|temperature/humidity/battery/volt|
+| XIAOMI MHO-C401 *|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | INKBIRD *|IBS-TH1|temperature/humidity/battery|

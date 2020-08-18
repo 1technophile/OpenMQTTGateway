@@ -365,6 +365,21 @@ void LYWSD03MMCDiscovery(char* mac) {
   createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount);
 }
 
+void MHO_C401Discovery(char* mac) {
+#    define MHO_C401parametersCount 5
+  Log.trace(F("MHO_C401Discovery" CR));
+  char* MHO_C401sensor[MHO_C401parametersCount][8] = {
+      {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "MHO_C401-volt", mac, "voltage", jsonVolt, "", "", "V"},
+      {"sensor", "MHO_C401-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "MHO_C401-tempf", mac, "temperature", jsonTempf, "", "", "F"},
+      {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount);
+}
+
 #  else
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
@@ -379,6 +394,7 @@ void MiLampDiscovery(char* mac) {}
 void MiBandDiscovery(char* mac) {}
 void InkBirdDiscovery(char* mac) {}
 void LYWSD03MMCDiscovery(char* mac) {}
+void MHO_C401Discovery(char* mac) {}
 #  endif
 
 #  ifdef ESP32
@@ -486,10 +502,16 @@ void notifyCB(
       JsonObject& BLEdata = jsonBuffer.createObject();
       String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
       mac_adress.toUpperCase();
-
+      for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
+          if (p->sensorModel == LYWSD03MMC)
+            BLEdata.set("model", "LYWSD03MMC");
+          if (p->sensorModel == MHO_C401)
+            BLEdata.set("model", "MHO_C401");
+        }
+      }
       BLEdata.set("id", (char*)mac_adress.c_str());
       Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
-      BLEdata.set("model", "LYWSD03MMC");
       BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
       BLEdata.set("tempf", (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01)));
       BLEdata.set("hum", (float)(pData[2]));
@@ -515,7 +537,7 @@ void BLEconnect() {
   Log.notice(F("BLE Connect begin" CR));
   BLEDevice::init("");
   for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
-    if (p->sensorModel == LYWSD03MMC) {
+    if (p->sensorModel == LYWSD03MMC || p->sensorModel == MHO_C401) {
       Log.trace(F("Model to connect found" CR));
       NimBLEClient* pClient;
       pClient = BLEDevice::createClient();
@@ -838,6 +860,7 @@ void launchDiscovery() {
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == LYWSD03MMC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
+      if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
@@ -951,13 +974,17 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
           createOrUpdateDevice(mac, device_flags_init, CGD1);
         return process_cleargrass(BLEdata, false);
       }
-      if (BLEdata.containsKey("name")) {
-        Log.trace(F("Is it a LYWSD03MMC?" CR));
-        if (strstr((const char*)BLEdata["name"], "LYWSD03MMC") != NULL) {
-          Log.trace(F("LYWSD03MMC add to list for future connect" CR));
-          if (device->sensorModel == -1)
-            createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
-        }
+      Log.trace(F("Is it a MHO_C401?" CR));
+      if (strstr(service_data, "588703") != NULL) {
+        Log.trace(F("MHO_C401 add to list for future connect" CR));
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, MHO_C401);
+      }
+      Log.trace(F("Is it a LYWSD03MMC?" CR));
+      if (strstr(service_data, "585b05") != NULL) {
+        Log.trace(F("LYWSD03MMC add to list for future connect" CR));
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
       }
       if (BLEdata.containsKey("servicedatauuid")) {
         const char* service_datauuid = (const char*)(BLEdata["servicedatauuid"] | "");

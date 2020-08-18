@@ -96,6 +96,7 @@ enum ble_sensor_model {
   XMTZC05HM,
   INKBIRD,
   LYWSD03MMC,
+  MHO_C401,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
