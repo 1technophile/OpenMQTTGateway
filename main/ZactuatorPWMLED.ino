@@ -1,7 +1,52 @@
 /*
   OpenMQTTGateway - ESP8266 or Arduino program for home automation
 
-  This gateway enables to use RGBLED strips like WS2812
+  This actuator enables LEDs to be directly controlled from the PWM outputs
+  of ESP32 or ESP8266 microcontrollers.
+
+  It uses the highest resolution 16-bit duty cycles available, to try to
+  give good control over LEDs, particularly at low brightness settings.
+
+  It supports different gamma curves to try to give good perceptually
+  linear results, and it supports calibration of the min and max levels
+  for each channel.
+
+  In total it supports 5 channels denoted r, g, b, w0 and w1
+
+  Supported MQTT topics...
+
+  ".../commands/MQTTtoPWMLED/set" : Set the state of the LEDs.
+  All values support floating point for greater precision.
+  {
+    "r"  : 0-255,
+    "g"  : 0-255,
+    "b"  : 0-255,
+    "w0" : 0-255,
+    "w1" : 0-255,
+
+    "fade" : <fade time in seconds>
+  }
+
+  ".../commands/MQTTtoPWMLED/calibrate" : Set calibration data
+  All values support floating point for greater precision.
+  It can be convenient to use the 'retain' feature of MQTT to
+  store calibration data.
+  Gamma is a power value that is used help make the intensity
+  curves respond in a more perceptually linear way.
+  If you would like the values to remain linear, set the gamma
+  values to 1.0
+  Min and max set the levels that 0 and 255 will correspond to.
+  Be aware the the min and max values are in the current gamma space
+  before the conversion to linear - so if you change the gamma level
+  then you will probably need to tune the min and max values again
+  {
+    "gamma-r" : 0.5 - 4.0,
+    "min-r"   : 0.0 - 255.0,
+    "max-r"   : 0.0 - 255.0,
+
+    "gamma-g" : 0.5 - 4.0,
+    etc...
+  }
 
     Copyright: (c)
 
@@ -26,40 +71,48 @@
 
 #include "config_PWMLED.h"
 
-static long previousUpdate = 0;    // milliseconds
-static long currentUpdate = 0; // milliseconds
+static long previousUpdateTime = 0; // milliseconds
+static long currentUpdateTime = 0;  // milliseconds
 
-static const int kNumChannels = 5;
+static const int   kNumChannels = 5;
+static const char* channelJsonKeys[] = {"r", "g", "b", "w0", "w1"};
+static const int   channelPins[] = {PWMLED_R_PIN, PWMLED_G_PIN, PWMLED_B_PIN, PWMLED_W0_PIN, PWMLED_W1_PIN};
 
 // These are all in a perceptually linear colour space, but scaled 0-1
-static float previousValues[kNumChannels] = {};
 static float currentValues[kNumChannels] = {};
+static float fadeStartValues[kNumChannels] = {};
 static float targetValues[kNumChannels] = {};
 
-// Calibration data
+static long fadeStartUpdateTime = 0; // milliseconds
+static long fadeEndUpdateTime = 0; // milliseconds
+static bool fadeIsComplete = false;
+
+// Calibration data (initialised during setupPWMLED)
 static float calibrationMinLinear[kNumChannels];
 static float calibrationMaxLinear[kNumChannels];
 static float calibrationGamma[kNumChannels];
 
-static long previousValuesUpdate = 0; // milliseconds
-static long targetValuesUpdate = 0; // milliseconds
-static bool targetValuesAchieved = false;
-
-static const char* channelJsonKeys[] = {"r", "g", "b", "w0", "w1"};
-static const int channelPins[] = {PWMLED_R_PIN, PWMLED_G_PIN, PWMLED_B_PIN, PWMLED_W0_PIN, PWMLED_W1_PIN};
-
 void setupPWMLED()
 {
-  //Log.notice(F("PWMLED_DATA_PIN: %d" CR), PWMLED_DATA_PIN);
-  //Log.notice(F("PWMLED_NUM_LEDS: %d" CR), PWMLED_NUM_LEDS);
   Log.trace(F("ZactuatorPWMLED setup done " CR));
-  //FastLED.addLeds<PWMLED_TYPE, PWMLED_DATA_PIN>(leds, PWMLED_NUM_LEDS);
 
-  // Setup 5 PWM channels at the highest frequency we can for full 16-bit
+  // Setup the PWM channels at the highest frequency we can for full 16-bit
   // duty cycle control.  These channels will be assigned to the pins
   // for R, G, B, W0 and W1 outputs.
+
+  // PWM outputs vary the light intensity linearly, but our eyes don't
+  // perceive actual linear changes as linear.
+  // This manifests as a problem when trying to have fine control
+  // over LEDs at very low levels.
+  // Using an 8-bit duty cycle for example only allows for 256 different
+  // linear levels of brightness.  Perceptually, the difference in
+  // brightness between levels 1 and 2 is very large - so to get fine
+  // control at dark levels, it's important that we use as high 
+  // resolution PWM as we can.
   for(int i = 0; i < kNumChannels; ++i)
   {
+    // I think this is the fastest frequency that allows for a 16-bit
+    // duty cycle on an ESP32
     ledcSetup(i, 625.0, 16);
     ledcAttachPin(channelPins[i], i);
     calibrationMinLinear[i] = 0.f;
@@ -68,52 +121,55 @@ void setupPWMLED()
   }
 }
 
+// This applies a power curve to the input to try to make the inputs
+// be 'perceptually linear', as opposed to actually linear.
 static float perceptualToLinear(float perceptual, int channelIdx)
 {
   return pow(perceptual, calibrationGamma[channelIdx]);
 }
 
+// If we're currently fading between states, then update those states
 void PWMLEDLoop()
 {
-  previousUpdate = currentUpdate;
-  currentUpdate = millis();
+  previousUpdateTime = currentUpdateTime;
+  currentUpdateTime = millis();
 
-  if(targetValuesAchieved)
+  if(fadeIsComplete)
   {
-    // Bail
     return;
   }
 
-  // Calculate our current lerp through the current fade
-  long fadeTime = targetValuesUpdate - previousValuesUpdate;
-  float targetLerpValue = 1.f;
-  if(fadeTime > 0)
+  // Calculate our lerp value through the current fade
+  long totalFadeDuration = fadeEndUpdateTime - fadeStartUpdateTime;
+  float fadeLerpValue = 1.f;
+  if(totalFadeDuration > 0)
   {
-    targetLerpValue = (float) (currentUpdate - previousValuesUpdate) / (float) fadeTime;
+    fadeLerpValue = (float) (currentUpdateTime - fadeStartUpdateTime) / (float) totalFadeDuration;
   }
-  if(targetLerpValue >= 1.f)
+  if(fadeLerpValue >= 1.f)
   {
+    fadeIsComplete = true;
     for(int i = 0; i < kNumChannels; ++i)
     {
       currentValues[i] = targetValues[i];
     }
-    targetValuesAchieved = true;
   }
   else
   {
     for(int i = 0; i < kNumChannels; ++i)
     {
-      currentValues[i] = ((targetValues[i] - previousValues[i]) * targetLerpValue) + previousValues[i];
+      currentValues[i] = ((targetValues[i] - fadeStartValues[i]) * fadeLerpValue) + fadeStartValues[i];
     }
   }
 
-  // Now convert these perceptually linear values into an actually linear value
-  // and set the appropriate duty cycle for the output.
+  // Now convert these perceptually linear values into actually linear values
+  // and set the appropriate duty cycle for the outputs.
   for(int i = 0; i < kNumChannels; ++i)
   {
     float linear = perceptualToLinear(currentValues[i], i);
 
-    if(linear > 0.f) // We always treat zero as zero
+    // We always treat zero as zero so that it's truly off, regardless of the calibration data.
+    if(linear > 0.f)
     {
       // Remap according to the calibration
       linear = (linear * (calibrationMaxLinear[i] - calibrationMinLinear[i])) + calibrationMinLinear[i];
@@ -123,7 +179,6 @@ void PWMLEDLoop()
     ledcWrite(i, dutyCycle);
     //Log.notice(F("Setting channel %d : %d" CR),i,dutyCycle);
   }
-
 }
 
 boolean PWMLEDtoMQTT()
@@ -137,10 +192,10 @@ void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
   if (cmpToMainTopic(topicOri, subjectMQTTtoPWMLEDsetleds))
   {
     Log.trace(F("MQTTtoPWMLED JSON analysis" CR));
-    //Log.notice(F("MQTTtoPWMLED JSON analysis" CR));
+    // Parse the target value for each channel
     for(int i = 0; i < kNumChannels; ++i)
     {
-      previousValues[i] = currentValues[i];
+      fadeStartValues[i] = currentValues[i];
       JsonVariant value = jsonData[channelJsonKeys[i]];
       if(value.success())
       {
@@ -150,18 +205,21 @@ void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
         targetValues[i] = targetValue;
       }
     }
-    previousValuesUpdate = currentUpdate;
-    targetValuesUpdate = currentUpdate;
+    // Configure as an instantaneous change....
+    fadeStartUpdateTime = currentUpdateTime;
+    fadeEndUpdateTime = currentUpdateTime;
+    // ...unless there is a "fade" value in the JSON
     JsonVariant fade = jsonData["fade"];
     if(fade.success())
     {
       // "fade" json value is in seconds. Convert to milliseconds
-      targetValuesUpdate += (long) (fade.as<float>() * (1000.f));
+      fadeEndUpdateTime += (long) (fade.as<float>() * (1000.f));
     }
-    targetValuesAchieved = false;
+    fadeIsComplete = false; // The values will start to change during PWMLEDLoop
   }
   else if (cmpToMainTopic(topicOri, subjectMQTTtoPWMLEDcalibrateleds))
   {
+    // Read the optional calibration data for each channel
     for(int i = 0; i < kNumChannels; ++i)
     {
       char key[16];
@@ -195,6 +253,7 @@ void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
 #ifdef simpleReceiving
 void MQTTtoPWMLED(char *topicOri, char *datacallback)
 {
+  // We currently only support JSON
 }
 #endif
 

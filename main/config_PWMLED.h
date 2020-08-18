@@ -22,16 +22,19 @@
 */
 
 /*-------------------PWMLED topics & parameters----------------------*/
-//PWMLED MQTT Subjects
+
+#if !ESP32
+# error The PWM LED actuator only works on ESP32 currently. It should be possible to get working on devices that support a 16-bit PWM duty cycle though.
+#endif
+
+// PWMLED MQTT Subjects
 #define subjectMQTTtoPWMLED "/commands/MQTTtoPWMLED"
-#define subjectMQTTtoPWMLEDsetleds "/commands/MQTTtoPWMLED/set"             //set LEDs with JSON struct {"r":0-255,"g":0-255,"b":0-255,"w0":0-255,"w0":0-255,"fade":<fade time in seconds>}
-#define subjectMQTTtoPWMLEDcalibrateleds "/commands/MQTTtoPWMLED/calibrate" //set LED calibration JSON struct {"rmin":0-255,"rmax":0-255 etc. }
+#define subjectMQTTtoPWMLEDsetleds subjectMQTTtoPWMLED "/set"             //set LEDs with JSON struct {"r":0-255,"g":0-255,"b":0-255,"w0":0-255,"w0":0-255,"fade":<fade time in seconds>}
+#define subjectMQTTtoPWMLEDcalibrateleds subjectMQTTtoPWMLED "/calibrate" //set LED calibration JSON struct {"gamma-r":0.5-4.0,"min-r":0-255,"max-r":0-255 etc. }
 
 // Edit the following lines for your leds arrangement.
-
 #define PWMLED_R_PIN 25
 #define PWMLED_G_PIN 33
 #define PWMLED_B_PIN 32
 #define PWMLED_W0_PIN 23
 #define PWMLED_W1_PIN 22
-
