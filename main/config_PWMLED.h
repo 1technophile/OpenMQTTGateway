@@ -23,7 +23,7 @@
 
 /*-------------------PWMLED topics & parameters----------------------*/
 
-#if !ESP32
+#if defined(ZactuatorPWMLED) && !ESP32
 # error The PWM LED actuator only works on ESP32 currently. It should be possible to get working on devices that support a 16-bit PWM duty cycle though.
 #endif
 
