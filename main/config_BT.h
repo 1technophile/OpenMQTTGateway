@@ -39,7 +39,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #  define Scan_duration 10000 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #endif
 #ifndef ScanBeforeConnect
-#  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only)
+#  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
 #endif
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
@@ -57,7 +57,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #define ServicedataMinLength 29
 
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
-unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //time between 2 scans
+unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors

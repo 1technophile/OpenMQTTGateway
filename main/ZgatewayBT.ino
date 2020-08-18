@@ -88,6 +88,8 @@ static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
 
+unsigned int scanCount = 0;
+
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
@@ -481,7 +483,8 @@ void BLEscan() {
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
-  Log.notice(F("Found %d devices, scan end deinit controller" CR), foundDevices.getCount());
+  scanCount++;
+  Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
   BLEDevice::deinit(true);
 }
 
@@ -606,7 +609,7 @@ void coreTask(void* pvParameters) {
           digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
         BLEscan();
         // Launching a connect every BLEscanBeforeConnect
-        if (!((millis() / (BLEinterval + Scan_duration)) % BLEscanBeforeConnect))
+        if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
           BLEconnect();
         launchDiscovery();
         dumpDevices();
@@ -751,6 +754,8 @@ bool BTtoMQTT() {
     if (returnedString.equals(F(BLEEndOfDiscovery))) //OK+DISCE
     {
       returnedString.remove(0); //clear data string
+      scanCount++;
+      Log.notice(F("Scan number %d end " CR), scanCount);
       return false;
     }
     size_t pos = 0, eolPos = 0;
