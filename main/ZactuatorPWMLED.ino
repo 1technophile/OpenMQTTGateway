@@ -1,8 +1,8 @@
 /*
-  OpenMQTTGateway - ESP8266 or Arduino program for home automation
+  OpenMQTTGateway - ESP32, ESP8266 or Arduino program for home automation
 
   This actuator enables LEDs to be directly controlled from the PWM outputs
-  of ESP32 or ESP8266 microcontrollers.
+  of ESP32 microcontrollers.
 
   It uses the highest resolution 16-bit duty cycles available, to try to
   give good control over LEDs, particularly at low brightness settings.
