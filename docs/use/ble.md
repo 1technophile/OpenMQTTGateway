@@ -73,9 +73,10 @@ So as to keep your white/black list persistent you can publish it with the retai
 `mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 :::
 
-## Setting the time between scans and force a scan
+## Setting the time between BLE scans and force a scan
 
-If you want to change the time between readings you can change the interval by MQTT, if you want the BLE scan every 66seconds:
+If you want to change the time between readings you can change the interval by MQTT.
+For example, if you want the BLE to scan every 66 seconds:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":66000}'`
 
@@ -83,9 +84,21 @@ you can also force a scan to be done by the following command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":0}'`
 
-Once done the previous value of interval will be recovered.
+Once the forced scan has completed, the previous scan interval value will be restored. Forcing a scan command trigger also a BLE connect process after the scan (see below).
 
-The default value is set into config_BT.h
+The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
+
+::: info
+For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
+:::
+
+## Setting the number of scans between before connect attempt
+
+If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanbcnct":30}'`
+
+The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms :
 
 ## Setting the minimum RSSI accepted to publish device data
 
