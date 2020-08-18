@@ -38,7 +38,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #ifndef Scan_duration
 #  define Scan_duration 10000 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
 #endif
-#ifndef ScanPerConnect
+#ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only)
 #endif
 #ifndef TimeBtwRead

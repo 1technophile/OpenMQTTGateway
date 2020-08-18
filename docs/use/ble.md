@@ -75,7 +75,8 @@ So as to keep your white/black list persistent you can publish it with the retai
 
 ## Setting the time between BLE scans and force a scan
 
-If you want to change the time between readings you can change the interval by MQTT, if you want the BLE scan every 66seconds:
+If you want to change the time between readings you can change the interval by MQTT.
+For example, if you want the BLE to scan every 66 seconds:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":66000}'`
 
@@ -83,7 +84,7 @@ you can also force a scan to be done by the following command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":0}'`
 
-Once done the previous value of interval will be recovered. Forcing a scan command trigger also a BLE connect process after the scan (see below).
+Once the forced scan has completed, the previous scan interval value will be restored. Forcing a scan command trigger also a BLE connect process after the scan (see below).
 
 The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
 

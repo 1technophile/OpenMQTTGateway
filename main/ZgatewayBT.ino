@@ -506,7 +506,7 @@ void notifyCB(
         if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
           if (p->sensorModel == LYWSD03MMC)
             BLEdata.set("model", "LYWSD03MMC");
-          if (p->sensorModel == MHO_C401)
+          else if (p->sensorModel == MHO_C401)
             BLEdata.set("model", "MHO_C401");
         }
       }
@@ -706,7 +706,6 @@ unsigned long timebt = 0;
 struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
 
 void setupBT() {
-  BLEinterval = TimeBtwRead;
   Log.notice(F("BLE interval: %d" CR), BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
   Log.notice(F("minrssi: %d" CR), minRssi);
@@ -1256,7 +1255,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // Number of scan before a connect set
     if (BTdata.containsKey("scanbcnct")) {
       Log.trace(F("BLE scans number before a connect setup" CR));
-      Log.trace(F("Previous number: %d ms" CR), BLEscanBeforeConnect);
+      Log.trace(F("Previous number: %d" CR), BLEscanBeforeConnect);
       BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
       Log.notice(F("New scan number before connect: %d" CR), BLEscanBeforeConnect);
     }
