@@ -62,6 +62,9 @@ unsigned long timer_sys_measures = 0;
 #ifdef ZgatewayLORA
 #  include "config_LORA.h"
 #endif
+#ifdef ZgatewayESPNOW
+#  include "config_ESPNOW.h"
+#endif
 #ifdef ZgatewaySRFB
 #  include "config_SRFB.h"
 #endif
@@ -585,6 +588,9 @@ void setup() {
 #endif
 #ifdef ZgatewayLORA
   setupLORA();
+#endif
+#ifdef ZgatewayESPNOW
+  setupESPNOW();
 #endif
 #ifdef ZgatewayRF
   setupRF();
@@ -1274,6 +1280,9 @@ void stateMeasures() {
 #  endif
 #  ifdef ZgatewayLORA
   modules = modules + ZgatewayLORA;
+#  endif
+#  ifdef ZgatewayESPNOW
+  modules = modules + ZgatewayESPNOW;
 #  endif
 #  ifdef ZgatewayRF2
   modules = modules + ZgatewayRF2;

@@ -217,6 +217,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
 //#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
+//#define ZgatewayESPNOW "ESPNOW"    //ESP8266, ESP32
 //#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR04  "HCSR04"   //ESP8266, Arduino, ESP32
