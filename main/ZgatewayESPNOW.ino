@@ -29,26 +29,40 @@
 
 #ifdef ZgatewayESPNOW
 
-#  include <espnow.h>
+#  ifdef ESP8266
+#    include <espnow.h>
+#  elif ESP32
+#    include <esp_now.h>
+#  endif
+
+#  ifdef ESP8266
+void ESPNOWtoMQTT(uint8_t* mac, uint8_t* data, uint8_t len) {
+#  elif ESP32
+void ESPNOWtoMQTT(const unsigned char* mac, const unsigned char* data, int len) {
+#  endif
+  char cmac[18];
+  snprintf(cmac, sizeof(cmac), "%02x:%02x:%02x:%02x:%02x:%02x",
+           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject& ESPNOWdata = jsonBuffer.createObject();
+  Log.trace(F("Rcv. ESPNOW from %s" CR), cmac);
+  ESPNOWdata.set("id", cmac);
+  ESPNOWdata.set("message", *data);
+  pub(subjectESPNOWtoMQTT, ESPNOWdata);
+}
 
 /** 
  * Setup ESPNOW gateway in receiving mode, the emitter mode is setup when sending MQTTtoESPNOW commands
  */
 void setupESPNOW() {
+  WiFi.mode(WIFI_AP_STA);
   (esp_now_init() == 0) ? Log.trace(F("ZgatewayESPNOW setup done" CR)) : Log.error(F("ZgatewayESPNOW setup failed" CR));
+#  ifdef ESP32
+  esp_wifi_set_ps(WIFI_PS_NONE); // non sleep done, on ESP8266 the modem is per default in non sleep mode
+#  endif
   esp_now_register_recv_cb(ESPNOWtoMQTT);
+#  ifdef ESP8266
   esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+#  endif
 }
-
-void ESPNOWtoMQTT(uint8_t* mac_addr, uint8_t* data, uint8_t len) {
-  char macStr[18];
-  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& ESPNOWdata = jsonBuffer.createObject();
-  Log.trace(F("Rcv. ESPNOW" CR));
-  ESPNOWdata.set("message", *data);
-  pub(subjectESPNOWtoMQTT, ESPNOWdata);
-}
-
 #endif
