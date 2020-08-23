@@ -480,7 +480,8 @@ void BLEscan() {
   Log.notice(F("Scan begin" CR));
   BLEDevice::init("");
   BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  MyAdvertisedDeviceCallbacks myCallbacks;
+  pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
   pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
   scanCount++;
