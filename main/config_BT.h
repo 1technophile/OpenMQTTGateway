@@ -44,6 +44,9 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
+#ifndef PublishOnlySensors
+#  define PublishOnlySensors false //true if we publish all BLE devices discovered or false only the identified sensors (like temperature sensors)
+#endif
 
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
@@ -58,6 +61,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
+bool publishOnlySensors = PublishOnlySensors;
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
