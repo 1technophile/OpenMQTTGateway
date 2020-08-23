@@ -39,7 +39,7 @@ IRrecv irrecv(IR_RECEIVER_GPIO, 1024, 15U, true);
 #    else
 IRrecv irrecv(IR_RECEIVER_GPIO);
 #    endif
-IRsend irsend(IR_EMITTER_GPIO);
+IRsend irsend(IR_EMITTER_GPIO, IR_EMITTER_INVERTED);
 #  else
 #    include <IRremote.h>
 IRrecv irrecv(IR_RECEIVER_GPIO);

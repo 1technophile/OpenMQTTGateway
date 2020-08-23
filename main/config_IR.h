@@ -156,6 +156,12 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 //#define IR_PANASONIC
 #endif
 
+#ifndef IR_EMITTER_INVERTED
+#  if defined(ESP8266) || defined(ESP32)
+#    define IR_EMITTER_INVERTED false //set to true if yuou want to reverse the LED signal for the emitter
+#  endif
+#endif
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef IR_RECEIVER_GPIO
 #  ifdef ESP8266
