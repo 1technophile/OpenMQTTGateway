@@ -93,6 +93,9 @@ static float calibrationMinLinear[kNumChannels];
 static float calibrationMaxLinear[kNumChannels];
 static float calibrationGamma[kNumChannels];
 
+static const int   kNumDutyCycleBits = 16;
+static const float kUNormToDutyCycle = (float) ((1 << kNumDutyCycleBits) - 1);
+
 void setupPWM()
 {
   // Setup the PWM channels at the highest frequency we can for full 16-bit
@@ -110,10 +113,14 @@ void setupPWM()
   // resolution PWM as we can.
   for(int i = 0; i < kNumChannels; ++i)
   {
+#if ESP32
     // I think this is the fastest frequency that allows for a 16-bit
     // duty cycle on an ESP32
-    ledcSetup(i, 625.0, 16);
+    ledcSetup(i, 625.0, kNumDutyCycleBits);
     ledcAttachPin(channelPins[i], i);
+#else
+#   error TODO: Write code here for different microcontrollers
+#endif
     calibrationMinLinear[i] = 0.f;
     calibrationMaxLinear[i] = 1.f;
     calibrationGamma[i] = PWM_DEFAULT_GAMMA;
@@ -174,8 +181,12 @@ void PWMLoop()
       linear = (linear * (calibrationMaxLinear[i] - calibrationMinLinear[i])) + calibrationMinLinear[i];
     }
 
-    long dutyCycle = (long) (linear * 65535.f);
+    long dutyCycle = (long) (linear * kUNormToDutyCycle);
+#if ESP32
     ledcWrite(i, dutyCycle);
+#else
+#   error TODO: Write code here for different microcontrollers
+#endif
     //Log.notice(F("Setting channel %d : %d" CR),i,dutyCycle);
   }
 }
