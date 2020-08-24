@@ -225,11 +225,11 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 //#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
-//#define ZboardM5STACK "ZboardM5STACK"
-//#define ZradioCC1101  "CC1101" //ESP8266, ESP32
-//#define ZactuatorPWMLED "PWMLED"  //ESP32
+//#define ZboardM5STACK  "ZboardM5STACK"
+//#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
+//#define ZactuatorPWM   "PWM"      //ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef version_Topic
