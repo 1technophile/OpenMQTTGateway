@@ -8,14 +8,15 @@
   give good control over LEDs, particularly at low brightness settings.
 
   It supports different gamma curves to try to give good perceptually
-  linear results, and it supports calibration of the min and max levels
-  for each channel.
+  linear results when used to control LEDs, and it supports calibration
+  of the min and max levels for each channel.
 
-  In total it supports 5 channels denoted r, g, b, w0 and w1
+  It supports as many channels as the micro-controller can output PWM
+  signals for.  Each channel can be named in the config header.
 
   Supported MQTT topics...
 
-  ".../commands/MQTTtoPWMLED/set" : Set the state of the LEDs.
+  ".../commands/MQTTtoPWM/set" : Set the state of one or more channels.
   All values support floating point for greater precision.
   {
     "r"  : 0-255,
@@ -27,7 +28,7 @@
     "fade" : <fade time in seconds>
   }
 
-  ".../commands/MQTTtoPWMLED/calibrate" : Set calibration data
+  ".../commands/MQTTtoPWM/calibrate" : Set calibration data
   All values support floating point for greater precision.
   It can be convenient to use the 'retain' feature of MQTT to
   store calibration data.
@@ -87,21 +88,19 @@ static long fadeStartUpdateTime[kNumChannels] = {}; // milliseconds
 static long fadeEndUpdateTime[kNumChannels] = {}; // milliseconds
 static bool fadeIsComplete = false;
 
-// Calibration data (initialised during setupPWMLED)
+// Calibration data (initialised during setupPWM)
 static float calibrationMinLinear[kNumChannels];
 static float calibrationMaxLinear[kNumChannels];
 static float calibrationGamma[kNumChannels];
 
 void setupPWM()
 {
-  Log.trace(F("ZactuatorPWM setup done " CR));
-
   // Setup the PWM channels at the highest frequency we can for full 16-bit
-  // duty cycle control.  These channels will be assigned to the pins
-  // for R, G, B, W0 and W1 outputs.
+  // duty cycle control.  These channels will be assigned to the
+  // associated output pins.
 
-  // PWM outputs vary the light intensity linearly, but our eyes don't
-  // perceive actual linear changes as linear.
+  // PWM outputs vary the light intensity linearly when used to control
+  // LEDs. But our eyes don't perceive actual linear changes as linear.
   // This manifests as a problem when trying to have fine control
   // over LEDs at very low levels.
   // Using an 8-bit duty cycle for example only allows for 256 different
@@ -119,6 +118,8 @@ void setupPWM()
     calibrationMaxLinear[i] = 1.f;
     calibrationGamma[i] = PWM_DEFAULT_GAMMA;
   }
+
+  Log.trace(F("ZactuatorPWM setup done " CR));
 }
 
 // This applies a power curve to the input to try to make the inputs
@@ -139,7 +140,7 @@ void PWMLoop()
     return;
   }
 
-  fadeIsComplete = true;
+  fadeIsComplete = true; //< If any channel isn't finished, we'll set this to false
   for(int i = 0; i < kNumChannels; ++i)
   {
     // Calculate our lerp value through the current fade
@@ -187,7 +188,7 @@ boolean PWMtoMQTT()
 #ifdef jsonReceiving
 void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
 {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoPWMLEDsetleds))
+  if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset))
   {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));
     // Parse the target value for each channel
@@ -225,15 +226,15 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
         }
       }
     }
-    fadeIsComplete = false; // The values will start to change during PWMLEDLoop
+    fadeIsComplete = false; // The values will start to change during PWMLoop
   }
-  else if (cmpToMainTopic(topicOri, subjectMQTTtoPWMLEDcalibrateleds))
+  else if (cmpToMainTopic(topicOri, subjectMQTTtoPWMcalibrate))
   {
     // Read the optional calibration data for each channel
     for(int i = 0; i < kNumChannels; ++i)
     {
-      char key[16];
-      snprintf(key, 16, "gamma-%s", channelJsonKeys[i]);
+      char key[64];
+      snprintf(key, sizeof(key), "gamma-%s", channelJsonKeys[i]);
       JsonVariant value = jsonData[key];
       if(value.success())
       {
@@ -243,13 +244,13 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
         gamma = std::max(gamma, 0.5f);
         calibrationGamma[i] = gamma;
       }
-      snprintf(key, 16, "min-%s", channelJsonKeys[i]);
+      snprintf(key, sizeof(key), "min-%s", channelJsonKeys[i]);
       value = jsonData[key];
       if(value.success())
       {
         calibrationMinLinear[i] = perceptualToLinear(value.as<float>() * (1.f / 255.f), i);
       }
-      snprintf(key, 16, "max-%s", channelJsonKeys[i]);
+      snprintf(key, sizeof(key), "max-%s", channelJsonKeys[i]);
       value = jsonData[key];
       if(value.success())
       {
