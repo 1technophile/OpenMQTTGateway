@@ -17,13 +17,13 @@
   Supported MQTT topics...
 
   ".../commands/MQTTtoPWM/set" : Set the state of one or more channels.
-  All values support floating point for greater precision.
+  All values are floating point.
   {
-    "r"  : 0-255,
-    "g"  : 0-255,
-    "b"  : 0-255,
-    "w0" : 0-255,
-    "w1" : 0-255,
+    "r"  : 0.0 - 1.0,
+    "g"  : 0.0 - 1.0,
+    "b"  : 0.0 - 1.0,
+    "w0" : 0.0 - 1.0,
+    "w1" : 0.0 - 1.0,
 
     "fade" : <fade time in seconds>
   }
@@ -36,14 +36,14 @@
   curves respond in a more perceptually linear way.
   If you would like the values to remain linear, set the gamma
   values to 1.0
-  Min and max set the levels that 0 and 255 will correspond to.
+  Min and max set the levels that 0 and 1 will correspond to.
   Be aware the the min and max values are in the current gamma space
   before the conversion to linear - so if you change the gamma level
   then you will probably need to tune the min and max values again
   {
     "gamma-r" : 0.5 - 4.0,
-    "min-r"   : 0.0 - 255.0,
-    "max-r"   : 0.0 - 255.0,
+    "min-r"   : 0.0 - 1.0,
+    "max-r"   : 0.0 - 1.0,
 
     "gamma-g" : 0.5 - 4.0,
     etc...
@@ -199,7 +199,7 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
       JsonVariant value = jsonData[channelJsonKeys[i]];
       if(value.success())
       {
-        float targetValue = value.as<float>() * (1.f / 255.f);
+        float targetValue = value.as<float>();
         targetValue = std::min(targetValue, 1.f);
         targetValue = std::max(targetValue, 0.f);
         targetValues[i] = targetValue;
@@ -248,13 +248,13 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
       value = jsonData[key];
       if(value.success())
       {
-        calibrationMinLinear[i] = perceptualToLinear(value.as<float>() * (1.f / 255.f), i);
+        calibrationMinLinear[i] = perceptualToLinear(value.as<float>(), i);
       }
       snprintf(key, sizeof(key), "max-%s", channelJsonKeys[i]);
       value = jsonData[key];
       if(value.success())
       {
-        calibrationMaxLinear[i] = perceptualToLinear(value.as<float>() * (1.f / 255.f), i);
+        calibrationMaxLinear[i] = perceptualToLinear(value.as<float>(), i);
       }
     }
   }
