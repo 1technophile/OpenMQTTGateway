@@ -5,7 +5,7 @@
 For Arduino and ESP8266 you can use an HM10 or HM11 below.
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|HM 10 Keyes bluetooth module|Bluetooth|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|HM 10 Keyes bluetooth module|Bluetooth|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 ## Pinout
 |Module Pin|Board RX Pin|Board TX Pin|
