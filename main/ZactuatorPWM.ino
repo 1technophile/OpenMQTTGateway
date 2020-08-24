@@ -67,9 +67,9 @@
 */
 #include "User_config.h"
 
-#ifdef ZactuatorPWMLED
+#ifdef ZactuatorPWM
 
-#include "config_PWMLED.h"
+#include "config_PWM.h"
 
 static long previousUpdateTime = 0; // milliseconds
 static long currentUpdateTime = 0;  // milliseconds
@@ -92,9 +92,9 @@ static float calibrationMinLinear[kNumChannels];
 static float calibrationMaxLinear[kNumChannels];
 static float calibrationGamma[kNumChannels];
 
-void setupPWMLED()
+void setupPWM()
 {
-  Log.trace(F("ZactuatorPWMLED setup done " CR));
+  Log.trace(F("ZactuatorPWM setup done " CR));
 
   // Setup the PWM channels at the highest frequency we can for full 16-bit
   // duty cycle control.  These channels will be assigned to the pins
@@ -129,7 +129,7 @@ static float perceptualToLinear(float perceptual, int channelIdx)
 }
 
 // If we're currently fading between states, then update those states
-void PWMLEDLoop()
+void PWMLoop()
 {
   previousUpdateTime = currentUpdateTime;
   currentUpdateTime = millis();
@@ -179,17 +179,17 @@ void PWMLEDLoop()
   }
 }
 
-boolean PWMLEDtoMQTT()
+boolean PWMtoMQTT()
 {
   return false;
 }
 
 #ifdef jsonReceiving
-void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
+void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
 {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPWMLEDsetleds))
   {
-    Log.trace(F("MQTTtoPWMLED JSON analysis" CR));
+    Log.trace(F("MQTTtoPWM JSON analysis" CR));
     // Parse the target value for each channel
     int modifiedChannelBits = 0;
     for(int i = 0; i < kNumChannels; ++i)
@@ -261,7 +261,7 @@ void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
 #endif
 
 #ifdef simpleReceiving
-void MQTTtoPWMLED(char *topicOri, char *datacallback)
+void MQTTtoPWM(char *topicOri, char *datacallback)
 {
   // We currently only support JSON
 }
