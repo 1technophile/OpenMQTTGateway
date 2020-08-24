@@ -32,9 +32,16 @@
 #define subjectMQTTtoPWMLEDsetleds subjectMQTTtoPWMLED "/set"             //set LEDs with JSON struct {"r":0-255,"g":0-255,"b":0-255,"w0":0-255,"w0":0-255,"fade":<fade time in seconds>}
 #define subjectMQTTtoPWMLEDcalibrateleds subjectMQTTtoPWMLED "/calibrate" //set LED calibration JSON struct {"gamma-r":0.5-4.0,"min-r":0-255,"max-r":0-255 etc. }
 
-// Edit the following lines for your leds arrangement.
-#define PWMLED_R_PIN 25
-#define PWMLED_G_PIN 33
-#define PWMLED_B_PIN 32
-#define PWMLED_W0_PIN 23
-#define PWMLED_W1_PIN 22
+// Edit the following to declare the channel names and corresponding output pins
+#define PWM_CHANNEL_NAMES {"r", "g", "b", "w0", "w1"}
+#define PWM_CHANNEL_PINS  { 25,  33,  32,   23,   22}
+
+// Gamma defines a power curve that is applied to convert the input values
+// to the linear PWM outputs.
+// For LED control, the gamma can be used to make the inputs be more
+// perceptually linear.
+// For controlling other things that require strict linear control, set
+// the gamma to 1 and leave it alone.
+// This just defines the default gamma to use for all channels.
+// The gamma for each channel can be modified using the calibrate MQTT topic.
+#define PWM_DEFAULT_GAMMA 2.2f

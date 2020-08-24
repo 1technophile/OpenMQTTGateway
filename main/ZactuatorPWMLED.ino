@@ -74,17 +74,17 @@
 static long previousUpdateTime = 0; // milliseconds
 static long currentUpdateTime = 0;  // milliseconds
 
-static const int   kNumChannels = 5;
-static const char* channelJsonKeys[] = {"r", "g", "b", "w0", "w1"};
-static const int   channelPins[] = {PWMLED_R_PIN, PWMLED_G_PIN, PWMLED_B_PIN, PWMLED_W0_PIN, PWMLED_W1_PIN};
+static const char* channelJsonKeys[] = PWM_CHANNEL_NAMES;
+static const int   channelPins[] = PWM_CHANNEL_PINS;
+static const int   kNumChannels = sizeof(channelPins) / sizeof(int);
 
 // These are all in a perceptually linear colour space, but scaled 0-1
 static float currentValues[kNumChannels] = {};
 static float fadeStartValues[kNumChannels] = {};
 static float targetValues[kNumChannels] = {};
 
-static long fadeStartUpdateTime = 0; // milliseconds
-static long fadeEndUpdateTime = 0; // milliseconds
+static long fadeStartUpdateTime[kNumChannels] = {}; // milliseconds
+static long fadeEndUpdateTime[kNumChannels] = {}; // milliseconds
 static bool fadeIsComplete = false;
 
 // Calibration data (initialised during setupPWMLED)
@@ -117,7 +117,7 @@ void setupPWMLED()
     ledcAttachPin(channelPins[i], i);
     calibrationMinLinear[i] = 0.f;
     calibrationMaxLinear[i] = 1.f;
-    calibrationGamma[i] = 2.2f;
+    calibrationGamma[i] = PWM_DEFAULT_GAMMA;
   }
 }
 
@@ -139,26 +139,24 @@ void PWMLEDLoop()
     return;
   }
 
-  // Calculate our lerp value through the current fade
-  long totalFadeDuration = fadeEndUpdateTime - fadeStartUpdateTime;
-  float fadeLerpValue = 1.f;
-  if(totalFadeDuration > 0)
+  fadeIsComplete = true;
+  for(int i = 0; i < kNumChannels; ++i)
   {
-    fadeLerpValue = (float) (currentUpdateTime - fadeStartUpdateTime) / (float) totalFadeDuration;
-  }
-  if(fadeLerpValue >= 1.f)
-  {
-    fadeIsComplete = true;
-    for(int i = 0; i < kNumChannels; ++i)
+    // Calculate our lerp value through the current fade
+    long totalFadeDuration = fadeEndUpdateTime[i] - fadeStartUpdateTime[i];
+    float fadeLerpValue = 1.f;
+    if(totalFadeDuration > 0)
+    {
+      fadeLerpValue = (float) (currentUpdateTime - fadeStartUpdateTime[i]) / (float) totalFadeDuration;
+    }
+    if(fadeLerpValue >= 1.f)
     {
       currentValues[i] = targetValues[i];
     }
-  }
-  else
-  {
-    for(int i = 0; i < kNumChannels; ++i)
+    else
     {
       currentValues[i] = ((targetValues[i] - fadeStartValues[i]) * fadeLerpValue) + fadeStartValues[i];
+      fadeIsComplete = false;
     }
   }
 
@@ -193,6 +191,7 @@ void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
   {
     Log.trace(F("MQTTtoPWMLED JSON analysis" CR));
     // Parse the target value for each channel
+    int modifiedChannelBits = 0;
     for(int i = 0; i < kNumChannels; ++i)
     {
       fadeStartValues[i] = currentValues[i];
@@ -203,17 +202,28 @@ void MQTTtoPWMLED(char *topicOri, JsonObject &jsonData)
         targetValue = std::min(targetValue, 1.f);
         targetValue = std::max(targetValue, 0.f);
         targetValues[i] = targetValue;
+
+        // Initially configure as an instantaneous change....
+        fadeStartUpdateTime[i] = currentUpdateTime;
+        fadeEndUpdateTime[i] = currentUpdateTime;
+
+        modifiedChannelBits |= (1 << i);
       }
     }
-    // Configure as an instantaneous change....
-    fadeStartUpdateTime = currentUpdateTime;
-    fadeEndUpdateTime = currentUpdateTime;
     // ...unless there is a "fade" value in the JSON
     JsonVariant fade = jsonData["fade"];
     if(fade.success())
     {
       // "fade" json value is in seconds. Convert to milliseconds
-      fadeEndUpdateTime += (long) (fade.as<float>() * (1000.f));
+      long endUpdateTime = currentUpdateTime + (long) (fade.as<float>() * (1000.f));
+      // Set the fadeEndUpdateTime for the channels that were modified in the JSON
+      for(int i = 0; i < kNumChannels; ++i)
+      {
+        if(modifiedChannelBits & (1 << i))
+        {
+          fadeEndUpdateTime[i] = endUpdateTime;
+        }
+      }
     }
     fadeIsComplete = false; // The values will start to change during PWMLEDLoop
   }
