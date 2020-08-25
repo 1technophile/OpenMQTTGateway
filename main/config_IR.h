@@ -132,6 +132,11 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #  define IR_MULTIBRACKETS
 #  define IR_CARRIER_AC40
 #  define IR_CARRIER_AC64
+#  define IR_HITACHI_AC344
+#  define IR_CORONA_AC
+#  define IR_MIDEA24
+#  define IR_ZEPEAL
+#  define IR_SANYO_AC
 #elif __AVR_ATmega2560__
 #  define IR_COOLIX
 #  define IR_Whynter
