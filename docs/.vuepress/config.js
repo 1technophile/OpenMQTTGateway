@@ -28,7 +28,8 @@ module.exports = {
         { text: 'Blog', link: 'https://1technophile.blogspot.com'},
         { text: 'Docs', link: '/'},
         { text: 'Community', link: 'https://community.openmqttgateway.com', target:'_self', rel:''},
-        { text: 'Devices', link: 'https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079'}
+        { text: 'Devices', link: 'https://compatible.openmqttgateway.com/index.php/devices'},
+        { text: 'Boards', link: 'https://compatible.openmqttgateway.com/index.php/boards'}
       ],
       sidebar: [
         ['/','0 - What is it for 🏠'],
@@ -39,6 +40,7 @@ module.exports = {
           children: [
             'prerequisites/devices',
             'prerequisites/board',
+            'prerequisites/parts',
             'prerequisites/broker',
             'prerequisites/controller']
         },

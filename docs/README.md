@@ -6,7 +6,7 @@ OpenMQTTGateway support very mature technologies like basic 433mhz/315mhz protoc
 OMG support also up to date technologies like Bluetooth Low Energy (BLE) or LORA.
 
 To have an overview of the supported PIR, door, water, smoke sensors, sirens, rings, beacons, switchs & weather stations you can take a look to the 
-[compatible devices list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=2126158079)
+[compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
 
 With MQTT you can connect the compatible software you want, it can be an home automation controller (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or another software like Node-Red.
 

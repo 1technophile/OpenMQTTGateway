@@ -3,8 +3,8 @@
 
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|A6|GSM GPRS module|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|A7|GSM GPRS module with GPS|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|A6|GSM GPRS module|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|A7|GSM GPRS module with GPS|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 ## Hardware setup
 
