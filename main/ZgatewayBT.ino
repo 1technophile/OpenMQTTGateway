@@ -434,8 +434,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       if (advertisedDevice->haveTXPower())
         BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
 #    ifdef subjectHomePresence
-      if (advertisedDevice->haveRSSI())
-        haRoomPresence(BLEdata); // this device has an rssi in consequence we can use it for home assistant room presence component
+      if (advertisedDevice->haveRSSI() && !publishOnlySensors) {
+        haRoomPresence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
+      }
 #    endif
       if (advertisedDevice->haveServiceData()) {
         int serviceDataCount = advertisedDevice->getServiceDataCount();
@@ -677,6 +678,7 @@ void changelow_power_mode(int newLowPowerMode) {
 void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
+  Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   Log.notice(F("Low Power Mode: %d" CR), low_power_mode);
 
@@ -712,6 +714,7 @@ struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, 
 void setupBT() {
   Log.notice(F("BLE interval: %d" CR), BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
+  Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
@@ -802,7 +805,8 @@ bool BTtoMQTT() {
 
         BLEdata.set("rssi", (int)rssi);
 #    ifdef subjectHomePresence
-        haRoomPresence(BLEdata); // this device has an rssi in consequence we can use it for home assistant room presence component
+        if (!publishOnlySensors)
+          haRoomPresence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
 #    endif
         Log.trace(F("Service data: %s" CR), restData.c_str());
         BLEdata.set("servicedata", restData.c_str());
@@ -876,16 +880,18 @@ void launchDiscovery() {
 void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
     JsonObject& BLEdataOut = process_bledata(BLEdata);
+    if (!publishOnlySensors || BLEdataOut.containsKey("model")) {
 #  if !pubBLEServiceUUID
-    RemoveJsonPropertyIf(BLEdataOut, "servicedatauuid", BLEdataOut.containsKey("servicedatauuid"));
+      RemoveJsonPropertyIf(BLEdataOut, "servicedatauuid", BLEdataOut.containsKey("servicedatauuid"));
 #  endif
 #  if !pubKnownBLEServiceData
-    RemoveJsonPropertyIf(BLEdataOut, "servicedata", BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata"));
+      RemoveJsonPropertyIf(BLEdataOut, "servicedata", BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata"));
 #  endif
-    String mactopic = BLEdataOut["id"].as<const char*>();
-    mactopic.replace(":", "");
-    mactopic = subjectBTtoMQTT + String("/") + mactopic;
-    pub((char*)mactopic.c_str(), BLEdataOut);
+      String mactopic = BLEdataOut["id"].as<const char*>();
+      mactopic.replace(":", "");
+      mactopic = subjectBTtoMQTT + String("/") + mactopic;
+      pub((char*)mactopic.c_str(), BLEdataOut);
+    }
   } else {
     Log.trace(F("Low rssi, device filtered" CR));
   }
@@ -1264,6 +1270,13 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       Log.trace(F("Previous number: %d" CR), BLEscanBeforeConnect);
       BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
       Log.notice(F("New scan number before connect: %d" CR), BLEscanBeforeConnect);
+    }
+    // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
+    if (BTdata.containsKey("onlysensors")) {
+      Log.trace(F("Do we publish only sensors" CR));
+      Log.trace(F("Previous value: %T" CR), publishOnlySensors);
+      publishOnlySensors = (bool)BTdata["onlysensors"];
+      Log.notice(F("New value onlysensors: %T" CR), publishOnlySensors);
     }
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
