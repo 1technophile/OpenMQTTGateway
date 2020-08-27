@@ -151,7 +151,12 @@ unsigned long timer_led_measures = 0;
 #  include <FS.h>
 #  include <SPIFFS.h>
 #  include <esp_wifi.h>
-
+#  ifdef ESP32_ETHERNET
+#    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
+#    define ETH_PHY_POWER 12
+#    include <ETH.h>
+static bool esp32EthConnected = false;
+#  endif
 #  ifdef SECURE_CONNECTION
 #    include <WiFiClientSecure.h>
 WiFiClientSecure eClient;
@@ -191,6 +196,36 @@ EthernetClient eClient;
 
 // client link to pubsub mqtt
 PubSubClient client(eClient);
+
+#ifdef ESP32_ETHERNET
+void WiFiEvent(WiFiEvent_t event) {
+  switch (event) {
+    case SYSTEM_EVENT_ETH_START:
+      Log.trace(F("Ethernet Started" CR));
+      ETH.setHostname(gateway_name);
+      break;
+    case SYSTEM_EVENT_ETH_CONNECTED:
+      Log.notice(F("Ethernet Connected" CR));
+      break;
+    case SYSTEM_EVENT_ETH_GOT_IP:
+      Log.trace(F("OpenMQTTGateway mac: %s" CR), ETH.macAddress().c_str());
+      Log.trace(F("OpenMQTTGateway ip: %s" CR), ETH.localIP().toString().c_str());
+      Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
+      esp32EthConnected = true;
+      break;
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      Log.error(F("Ethernet Disconnected" CR));
+      esp32EthConnected = false;
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      Log.error(F("Ethernet Stopped" CR));
+      esp32EthConnected = false;
+      break;
+    default:
+      break;
+  }
+}
+#endif
 
 void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
@@ -521,14 +556,19 @@ void setup() {
 
   Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
 
-#  if defined(ESPWifiManualSetup)
+#  if defined(ESP32_ETHERNET)
+  WiFi.onEvent(WiFiEvent);
+  ETH.begin();
+  delay(3000); // Waiting for Ethernet to setup
+#  else // WIFI ESP32
+#    if defined(ESPWifiManualSetup)
   setup_wifi();
-#  else
+#    else
   setup_wifimanager(false);
-#  endif
-
+#    endif
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
+#  endif
 
   setOTA();
 #  ifdef SECURE_CONNECTION
@@ -1103,7 +1143,7 @@ void loop() {
   }
 
 #if defined(ESP8266) || defined(ESP32)
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED || esp32EthConnected) {
     ArduinoOTA.handle();
 #else
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
@@ -1206,16 +1246,17 @@ void loop() {
       connectMQTT();
     }
   } else { // disconnected from network
-#if defined(ESP8266) || defined(ESP32)
-    Log.warning(F("wifi disconnected" CR));
+    Log.warning(F("Network disconnected:" CR));
     digitalWrite(LED_INFO, LED_INFO_ON);
     delay(5000); // add a delay to avoid ESP32 crash and reset
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(5000);
+#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
+    Log.warning(F("wifi" CR));
     failure_number_ntwk++;
     disconnection_handling(failure_number_ntwk);
 #else
-    Log.warning(F("eth disconnected" CR));
+    Log.warning(F("ethernet" CR));
 #endif
   }
 // Function that doesn't need an active connection
@@ -1238,14 +1279,20 @@ void stateMeasures() {
   SYSdata["freemem"] = freeMem;
   long rssi = WiFi.RSSI();
   SYSdata["rssi"] = rssi;
+#    ifdef ESP32_ETHERNET
+  SYSdata["mac"] = (char*)ETH.macAddress().c_str();
+  SYSdata["ip"] = ip2CharArray(ETH.localIP());
+  ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
+  SYSdata["linkspeed"] = (int)ETH.linkSpeed();
+#    else
   String SSID = WiFi.SSID();
   SYSdata["SSID"] = SSID;
   SYSdata["ip"] = ip2CharArray(WiFi.localIP());
   String mac = WiFi.macAddress();
   SYSdata["mac"] = (char*)mac.c_str();
   SYSdata["wifiprt"] = (int)wifiProtocol;
-#  else
   SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
+#    endif
 #  endif
   String modules = "";
 #  ifdef ZgatewayRF
