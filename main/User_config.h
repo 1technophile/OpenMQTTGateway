@@ -174,17 +174,11 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 
 /*------------------DEEP SLEEP parameters ------------------*/
 //DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)
-//DEFAULT_LOW_POWER_MODE 1 to activate deep sleep with LCD ON when a function is processing,
-//DEFAULT_LOW_POWER_MODE 2 to activate deep sleep with LED ON when a function is processing (LCD is turned OFF)
+//DEFAULT_LOW_POWER_MODE 1 to activate deep sleep
+//DEFAULT_LOW_POWER_MODE 2 to activate deep sleep (LCD is turned OFF)
 #ifdef ESP32
 #  ifndef DEFAULT_LOW_POWER_MODE
 #    define DEFAULT_LOW_POWER_MODE 0
-#  endif
-#  ifndef LOW_POWER_LED
-#    define LOW_POWER_LED 2
-#  endif
-#  ifndef LOW_POWER_LED_OFF
-#    define LOW_POWER_LED_OFF 1
 #  endif
 int low_power_mode = DEFAULT_LOW_POWER_MODE;
 #endif
@@ -282,38 +276,47 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #endif
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifndef led_receive
+#ifndef LED_RECEIVE
 #  ifdef ESP8266
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  elif ESP32
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  else //arduino uno/nano
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  endif
 #endif
-#ifndef led_send
+#ifndef LED_RECEIVE_ON
+#  define LED_RECEIVE_ON HIGH
+#endif
+#ifndef LED_SEND
 #  ifdef ESP8266
-#    define led_send 42
+#    define LED_SEND 42
 #  elif ESP32
-#    define led_send 42
+#    define LED_SEND 42
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define led_send 42
+#    define LED_SEND 42
 #  else //arduino uno/nano
-#    define led_send 42
+#    define LED_SEND 42
 #  endif
 #endif
-#ifndef led_info
+#ifndef LED_SEND_ON
+#  define LED_SEND_ON HIGH
+#endif
+#ifndef LED_INFO
 #  ifdef ESP8266
-#    define led_info 44
+#    define LED_INFO 44
 #  elif ESP32
-#    define led_info 44
+#    define LED_INFO 44
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define led_info 44
+#    define LED_INFO 44
 #  else //arduino uno/nano
-#    define led_info 44
+#    define LED_INFO 44
 #  endif
+#endif
+#ifndef LED_INFO_ON
+#  define LED_INFO_ON HIGH
 #endif
 
 #ifdef ESP8266
@@ -366,6 +369,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define TimeLedON                    0.5 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"

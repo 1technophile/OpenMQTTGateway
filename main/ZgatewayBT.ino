@@ -527,7 +527,7 @@ void notifyCB(
       String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
       pub((char*)mactopic.c_str(), BLEdata);
     } else {
-      Log.warning(F("Device not identified" CR));
+      Log.notice(F("Device not identified" CR));
     }
   } else {
     Log.trace(F("Callback process canceled by processLock" CR));
@@ -550,12 +550,12 @@ void BLEconnect() {
       BLEUUID charUUID("ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6");
       BLEAddress sensorAddress(p->macAdr);
       if (!pClient->connect(sensorAddress)) {
-        Log.warning(F("Failed to find client: %s" CR), p->macAdr);
+        Log.notice(F("Failed to find client: %s" CR), p->macAdr);
         NimBLEDevice::deleteClient(pClient);
       } else {
         BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
         if (!pRemoteService) {
-          Log.warning(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
+          Log.notice(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
           pClient->disconnect();
         } else {
           Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
@@ -564,14 +564,14 @@ void BLEconnect() {
             Log.trace(F("Client isConnected, freeHeap: %d" CR), ESP.getFreeHeap());
             BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
             if (!pRemoteCharacteristic) {
-              Log.warning(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
+              Log.notice(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
               pClient->disconnect();
             } else {
               if (pRemoteCharacteristic->canNotify()) {
                 Log.trace(F("Registering notification" CR));
                 pRemoteCharacteristic->subscribe(true, notifyCB);
               } else {
-                Log.warning(F("Failed registering notification" CR));
+                Log.notice(F("Failed registering notification" CR));
                 pClient->disconnect();
               }
             }
@@ -606,18 +606,12 @@ void coreTask(void* pvParameters) {
       if (client.state() != 0) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
       } else {
-        pinMode(LOW_POWER_LED, OUTPUT);
-        if (low_power_mode == 2)
-          digitalWrite(LOW_POWER_LED, 1 - LOW_POWER_LED_OFF);
         BLEscan();
         // Launching a connect every BLEscanBeforeConnect
         if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
           BLEconnect();
         launchDiscovery();
         dumpDevices();
-        // Only change LOW_POWER_LED if low power mode is enabled
-        if (low_power_mode)
-          digitalWrite(LOW_POWER_LED, LOW_POWER_LED_OFF);
       }
       if (low_power_mode) {
         lowPowerESP32();

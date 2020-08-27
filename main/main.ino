@@ -144,6 +144,8 @@ bool connectedOnce = false; //indicate if we have been connected once to MQTT
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 
+unsigned long timer_led_measures = 0;
+
 #ifdef ESP32
 #  include <ArduinoOTA.h>
 #  include <FS.h>
@@ -236,9 +238,9 @@ void pub(char* topicori, char* payload, bool retainFlag) {
 
 void pub(char* topicori, JsonObject& data) {
   Log.notice(F("Subject: %s" CR), topicori);
+  digitalWrite(LED_RECEIVE, LED_RECEIVE_ON);
   logJson(data);
   if (client.connected()) {
-    digitalWrite(led_receive, HIGH);
     String topic = String(mqtt_topic) + String(topicori);
 #ifdef valueAsASubject
     SIGNAL_SIZE_UL_ULL value = data["value"];
@@ -463,7 +465,10 @@ void connectMQTT() {
 #elif defined(SECURE_CONNECTION) && defined(ESP8266)
     Log.warning(F("failed, ssl error code=%d" CR), eClient.getLastSSLError());
 #endif
-    delay(5000);
+    digitalWrite(LED_INFO, LED_INFO_ON);
+    delay(1000);
+    digitalWrite(LED_INFO, !LED_INFO_ON);
+    delay(4000);
 #if defined(ESP8266) || defined(ESP32)
     disconnection_handling(failure_number_mqtt);
 #endif
@@ -538,12 +543,12 @@ void setup() {
 #endif
 
   //setup LED status
-  pinMode(led_receive, OUTPUT);
-  pinMode(led_send, OUTPUT);
-  pinMode(led_info, OUTPUT);
-  digitalWrite(led_receive, LOW);
-  digitalWrite(led_send, LOW);
-  digitalWrite(led_info, LOW);
+  pinMode(LED_RECEIVE, OUTPUT);
+  pinMode(LED_SEND, OUTPUT);
+  pinMode(LED_INFO, OUTPUT);
+  digitalWrite(LED_RECEIVE, !LED_RECEIVE_ON);
+  digitalWrite(LED_SEND, !LED_SEND_ON);
+  digitalWrite(LED_INFO, !LED_INFO_ON);
 
 #if defined(MDNS_SD) && defined(ESP8266)
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
@@ -1087,11 +1092,15 @@ void loop() {
 #  endif
 #endif
 
-  digitalWrite(led_receive, LOW);
-  digitalWrite(led_info, LOW);
-  digitalWrite(led_send, LOW);
-
   unsigned long now = millis();
+
+  // Switch off of the LED after TimeLedON
+  if (now > (timer_led_measures + (TimeLedON * 1000))) {
+    timer_led_measures = millis();
+    digitalWrite(LED_RECEIVE, !LED_RECEIVE_ON);
+    digitalWrite(LED_INFO, !LED_INFO_ON);
+    digitalWrite(LED_SEND, !LED_SEND_ON);
+  }
 
 #if defined(ESP8266) || defined(ESP32)
   if (WiFi.status() == WL_CONNECTED) {
@@ -1104,7 +1113,7 @@ void loop() {
 #ifdef ZmqttDiscovery
       if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
 #endif
-
+      digitalWrite(LED_INFO, LED_INFO_ON);
       connectedOnce = true;
       failure_number_ntwk = 0;
 
@@ -1199,7 +1208,10 @@ void loop() {
   } else { // disconnected from network
 #if defined(ESP8266) || defined(ESP32)
     Log.warning(F("wifi disconnected" CR));
-    delay(10000); // add a delay to avoid ESP32 crash and reset
+    digitalWrite(LED_INFO, LED_INFO_ON);
+    delay(5000); // add a delay to avoid ESP32 crash and reset
+    digitalWrite(LED_INFO, !LED_INFO_ON);
+    delay(5000);
     failure_number_ntwk++;
     disconnection_handling(failure_number_ntwk);
 #else
@@ -1413,7 +1425,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   if (jsondata.success()) { // json object ok -> json decoding
     // log the received json
     logJson(jsondata);
-
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
 #endif
@@ -1452,8 +1463,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTtoONOFF(topicOri, jsondata);
 #  endif
 #endif
-
-    digitalWrite(led_send, HIGH);
+    digitalWrite(LED_SEND, LED_SEND_ON);
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
@@ -1486,11 +1496,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, datacallback);
 #endif
-
-    digitalWrite(led_send, HIGH);
   }
-  //YELLOW OFF
-  digitalWrite(led_send, HIGH);
 }
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
