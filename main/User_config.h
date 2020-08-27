@@ -79,6 +79,8 @@ const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
 #endif
 
+//#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on OLIMEX ESP32 Ethernet gateway
+
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
 #  ifndef wifi_ssid
 #    define wifi_ssid "wifi ssid"
