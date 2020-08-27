@@ -6,14 +6,17 @@
 
 So as to erase the flash memory on ESP boards you may do a long press to TRIGGER_GPIO button or connect the pin to the ground.
 
+One more option is enable the autoreset option (check inside `User_config.h`). If this feature is enabled (as default is disabled) the board try to connect the mqtt broker as usual but in case of ripetute failure, the reset of configuration is performed and it return on the initial state.
+
 ### Low power mode for ESP32
+
 OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT on a barebone ESP32:
 
-* Normal mode (per default)
+- Normal mode (per default)
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":0}'`
 
-* Low Power mode
+- Low Power mode
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
 
@@ -50,17 +53,18 @@ you can also revert it to the serial monitor:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoM5/config -m '{"log-display":false}'`
 
 ### Low power mode for M5 boards
+
 OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT or a button on M5 boards:
 
-* Normal mode (per default), screen ON
+- Normal mode (per default), screen ON
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":0}'`
 
-* Low Power mode, screen ON when processing only
+- Low Power mode, screen ON when processing only
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":1}'`
 
-* Low Power mode, screen OFF, LED ON when processing on M5StickC
+- Low Power mode, screen OFF, LED ON when processing on M5StickC
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
 
@@ -69,6 +73,7 @@ The low power mode can be changed also with a push to button B when the board is
 ### Erasing the flash
 
 So as to erase the flash memory on M5Stack boards you may do a long press to TRIGGER_GPIO button:
-* Button B on M5StickC (GPIO 37)
-* Button C on M5Stack (GPIO 37)
-* Button lateral on M5stick (GPIO 35)
+
+- Button B on M5StickC (GPIO 37)
+- Button C on M5Stack (GPIO 37)
+- Button lateral on M5stick (GPIO 35)

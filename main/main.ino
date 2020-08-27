@@ -681,7 +681,20 @@ void disconnection_handling(int failure_number) {
   Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
   if ((failure_number > maxConnectionRetry) && !connectedOnce) {
 #  ifndef ESPWifiManualSetup
-    Log.error(F("Failed connecting 1st time to mqtt, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
+#    if TRIGGER_GPIO
+    Log.error(F("Failed connecting mqtt broker, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
+#    else
+#      if AUTO_ERASING_ESP_CONFIG
+    if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_BG + ATTEMPTS_BEFORE_B)) {
+      Log.error(F("Failed connecting mqtt broker, try to erase config and restart" CR));
+      eraseAndRestart();
+    } else {
+      Log.warning(F("Failed connecting mqtt broker, wait for %d more attempts before the autoreset" CR), (maxConnectionRetry + ATTEMPTS_BEFORE_BG + ATTEMPTS_BEFORE_B - failure_number));
+    }
+#      else
+    Log.error(F("Failed connecting mqtt broker, you should erase the flash" CR));
+#      endif
+#    endif
 #  endif
   }
   if (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) {

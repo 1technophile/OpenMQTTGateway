@@ -322,6 +322,14 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 #endif
 
+#ifndef AUTO_ERASING_ESP_CONFIG
+/*
+ * Remove the comment to this parameter if you want to enable the auto-reset 
+ * of configurations that have exceeded the number of connection attempts
+ */
+#  define AUTO_ERASING_ESP_CONFIG true
+#endif
+
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
 //                        LED       Resistor 270-510R
 

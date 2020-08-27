@@ -5,28 +5,33 @@ From your smartphone search for your OpenMQTTGateway wifi network and connect to
 
 ![Wifi manager menu](../img/OpenMQTTGateway_Wifi_Manager_menu.png)
 
-* Click on Configure WiFi
+- Click on Configure WiFi
 
 ![Wifi manager parameters](../img/OpenMQTTGateway_Wifi_Manager_enter_parameters.png)
 
-* Select your wifi
-* Set your wifi password
-* Set your MQTT Server IP
-* Set your MQTT Server username (facultative)
-* Set your MQTT Server password (facultative)
-* Set your MQTT base topic if you need to change it (you must keep the / at the end)
-* Set your gateway name if you need to change it
+- Select your wifi
+- Set your wifi password
+- Set your MQTT Server IP
+- Set your MQTT Server username (facultative)
+- Set your MQTT Server password (facultative)
+- Set your MQTT base topic if you need to change it (you must keep the / at the end)
+- Set your gateway name if you need to change it
 
-* Click on save
+- Click on save
 
 ![Wifi manager save](../img/OpenMQTTGateway_Wifi_Manager_save.png)
 
 The ESP restart and connect to your network. Note that your credentials are saved into the ESP memory, if you want to redo the configuration you have to erase the ESP memory with the flash download tool.
 
 Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
+
 ```
-home/OpenMQTTGateway/LWT Online 
+home/OpenMQTTGateway/LWT Online
 home/OpenMQTTGateway/version
 ```
 
-Note that the web portal appears only on first boot, if you want to configure again the setting you can do a long press on TRIGGER_GPIO or [erase the settings](../use/gateway.md#erase-the-esp-settings).
+Note that the web portal appears only on first boot, if you want to configure again the setting you can:
+
+- [Erase the settings](../use/gateway.md#erase-the-esp-settings) if the device is already connected to the broker mqtt
+- Long press on TRIGGER_GPIO (please note that if you have ESP32 or ESP8266 you can configure it into `User_config.h` )
+- Wait the auto reset ( if it has been activated inside `User_config.h`, by default it is deactivated )
