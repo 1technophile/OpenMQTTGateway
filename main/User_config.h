@@ -327,7 +327,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
  * Remove the comment to this parameter if you want to enable the auto-reset 
  * of configurations that have exceeded the number of connection attempts
  */
-#  define AUTO_ERASING_ESP_CONFIG true
+//#  define AUTO_ERASING_ESP_CONFIG true
 #endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
