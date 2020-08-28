@@ -272,11 +272,4 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
 }
 #endif
 
-#ifdef simpleReceiving
-void MQTTtoPWM(char *topicOri, char *datacallback)
-{
-  // We currently only support JSON
-}
-#endif
-
 #endif

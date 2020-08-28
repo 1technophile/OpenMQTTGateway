@@ -1507,9 +1507,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorFASTLED
     MQTTtoFASTLED(topicOri, datacallback);
 #  endif
-#  ifdef ZactuatorPWM
-    MQTTtoPWM(topicOri, datacallback);
-#  endif
 #endif
 #ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, datacallback);
