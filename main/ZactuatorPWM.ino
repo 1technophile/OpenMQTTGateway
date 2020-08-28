@@ -1,10 +1,9 @@
 /*
   OpenMQTTGateway - ESP32, ESP8266 or Arduino program for home automation
 
-  This actuator enables LEDs to be directly controlled from the PWM outputs
-  of ESP32 microcontrollers.
+  This actuator enables control over the PWM outputs of microcontrollers.
 
-  It uses the highest resolution 16-bit duty cycles available, to try to
+  It uses the highest resolution duty cycles available, to try to
   give good control over LEDs, particularly at low brightness settings.
 
   It supports different gamma curves to try to give good perceptually
@@ -93,7 +92,21 @@ static float calibrationMinLinear[kNumChannels];
 static float calibrationMaxLinear[kNumChannels];
 static float calibrationGamma[kNumChannels];
 
-static const int   kNumDutyCycleBits = 16;
+#if defined(ESP32)
+// We use the highest resolution duty cycle mode (16-bit) for ESP32, which
+// gives us good control LEDs at the very dim end of the range.
+static const int kNumDutyCycleBits = 16;
+#elif defined(ESP8266)
+// ESP8266 has a 10-bit duty cycle, which is better than 8 bits, but still
+// not good enough to give really good dim control over LEDs.
+static const int kNumDutyCycleBits = 10;
+#else
+// Assume Arduino with 8-bit duty cycle.
+// With an 8-bit duty cycle, it's difficult to get good control over
+// LEDs at the dark end of the range.
+static const int kNumDutyCycleBits = 8;
+#endif
+
 static const float kUNormToDutyCycle = (float) ((1 << kNumDutyCycleBits) - 1);
 
 void setupPWM()
@@ -113,13 +126,12 @@ void setupPWM()
   // resolution PWM as we can.
   for(int i = 0; i < kNumChannels; ++i)
   {
-#if ESP32
+#if defined(ESP32)
+    // Configure the pin for PWM output.
     // I think this is the fastest frequency that allows for a 16-bit
     // duty cycle on an ESP32
     ledcSetup(i, 625.0, kNumDutyCycleBits);
     ledcAttachPin(channelPins[i], i);
-#else
-#   error TODO: Write code here for different microcontrollers
 #endif
     calibrationMinLinear[i] = 0.f;
     calibrationMaxLinear[i] = 1.f;
@@ -182,10 +194,10 @@ void PWMLoop()
     }
 
     long dutyCycle = (long) (linear * kUNormToDutyCycle);
-#if ESP32
+#if defined(ESP32)
     ledcWrite(i, dutyCycle);
 #else
-#   error TODO: Write code here for different microcontrollers
+    analogWrite(channelPins[i], dutyCycle);
 #endif
     //Log.notice(F("Setting channel %d : %d" CR),i,dutyCycle);
   }
@@ -211,8 +223,8 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
       if(value.success())
       {
         float targetValue = value.as<float>();
-        targetValue = std::min(targetValue, 1.f);
-        targetValue = std::max(targetValue, 0.f);
+        targetValue = min(targetValue, 1.f);
+        targetValue = max(targetValue, 0.f);
         targetValues[i] = targetValue;
 
         // Initially configure as an instantaneous change....
@@ -251,8 +263,8 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
       {
         float gamma = value.as<float>();
         // Sanity check
-        gamma = std::min(gamma, 4.f);
-        gamma = std::max(gamma, 0.5f);
+        gamma = min(gamma, 4.f);
+        gamma = max(gamma, 0.5f);
         calibrationGamma[i] = gamma;
       }
       snprintf(key, sizeof(key), "min-%s", channelJsonKeys[i]);

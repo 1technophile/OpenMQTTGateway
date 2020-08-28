@@ -23,10 +23,6 @@
 
 /*-------------------PWM topics & parameters----------------------*/
 
-#if defined(ZactuatorPWM) && !ESP32
-# error The PWM actuator only works on ESP32 currently. It should be possible to get working on devices that support a 16-bit PWM duty cycle though.
-#endif
-
 // PWM MQTT Subjects
 #define subjectMQTTtoPWM "/commands/MQTTtoPWM"
 #define subjectMQTTtoPWMset subjectMQTTtoPWM "/set"             //set channel(s) with JSON struct {"r":0-1,"g":0-1,"b":0-1,"w0":0-1,"w0":0-1,"fade":<fade time in seconds>}

@@ -229,7 +229,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STACK  "ZboardM5STACK"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
-//#define ZactuatorPWM   "PWM"      //ESP32
+//#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef version_Topic
