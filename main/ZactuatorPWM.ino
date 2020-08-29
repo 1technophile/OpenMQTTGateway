@@ -196,7 +196,7 @@ boolean PWMtoMQTT() {
 }
 
 #  ifdef jsonReceiving
-void MQTTtoPWM(char *topicOri, JsonObject &jsonData) {
+void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));
     // Parse the target value for each channel
