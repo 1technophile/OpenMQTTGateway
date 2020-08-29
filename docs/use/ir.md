@@ -10,12 +10,12 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 `mosquitto_sub -t +/# -v`
 And press your IR remote control in front of the receiver led you should see the following messages for example:
 
-```
+```json
 home/OpenMQTTGateway/IRtoMQTT {"value":875849879,"protocol":7,"protocol_name":SAMSUNG,"bits":32,"raw":"4534,4432,612,518,614,516,616,1618,618,1616,618,512,618,1618,608,524,612,518,616,514,618,512,616,1618,616,1618,618,514,616,1618,616,514,616,514,618,512,616,1618,618,1618,618,514,610,1622,616,514,618,514,614,516,616,1618,618,512,618,512,618,1616,550,580,618,1616,612,1624,618,1616,618"}
 ```
 
 With an hexadecimal value:
-```
+```json
 {"value":9938405643,"protocol":55,"bits":35,"hex":"0x25060090B","protocol_name":"TECO"}
 ```
 
@@ -50,9 +50,9 @@ If you don’t want to use special parameters for IR just use value key, the pro
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775}'`
 
-NOTE: on arduino Uno most of the protocols are not enable per default due to memory constraints (it is not the case for MEGA), to enable them go to [user_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/main/User_config.h) and uncomment the #define corresponding the protocols you want:
+NOTE: on arduino Uno most of the protocols are not enable per default due to memory constraints (it is not the case for MEGA), to enable them go to [User_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/main/User_config.h) and uncomment the #define corresponding the protocols you want:
 
-```C++
+```cpp
 //#define IR_COOLIX
 //#define IR_Whynter
 //#define IR_LG
@@ -92,7 +92,7 @@ mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"value":551489775,"
 
 ## Send raw IR data by MQTT
 
-2) If you use an arduino UNO enable `IR_Raw` by uncommenting the line 129 in user_config.h
+2) If you use an arduino UNO enable `IR_Raw` by uncommenting the line 129 in User_config.h
 `#define IR_Raw`
 If you are using the uno you will have to comment other gateway like ZgatewayRF, ZgatewayBT and ZgatewayIR to keep enough memory
 
@@ -103,16 +103,21 @@ mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"8850,4450,60
 
 With big raw array you may cross the limit of default payload size. In this case the gateway will not receive the message or will not send it to the broker.
 In this case the best way is to use hex values instead, but if you can't you may change the parameters below:
-In user_config.h replace:
-`#define JSON_MSG_BUFFER 512`
+In User_config.h replace:
+```cpp
+# define JSON_MSG_BUFFER 512
+# define mqtt_max_packet_size 1024
+```
 by
-`#define JSON_MSG_BUFFER 1280`
-
-And into platformio.ini
-`MQTT_MAX_PACKET_SIZE=1024`
-by
-`MQTT_MAX_PACKET_SIZE=1280`
+```cpp
+# define JSON_MSG_BUFFER 1280
+# define mqtt_max_packet_size 1280
+```
 
 ## Repeat the IR signal OpenMQTTGateway receive
 So as to repeat the IR signal received by the gateway once set the following parameter to true in [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L37)
 `#define repeatIRwMQTT true`
+
+## Raw IR signal forwarding
+So as to repeat the raw IR signal received by the gateway, uncomment and set the following parameter to true in [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/091b317660fd201a30e2cd0e15424a13c5a6bd71/config_IR.h#L39)
+`#define RawDirectForward true`

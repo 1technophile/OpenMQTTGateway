@@ -31,19 +31,16 @@ int InputStateGPIOKeyCode = 0x0f; // Set to 3 so that it reads on startup
 int lastInputStateGPIOKeyCode = 0x0f;
 int lastLatchStateGPIOKeyCode = 0;
 
-void setupGPIOKeyCode()
-{
-  pinMode(GPIOKeyCode_LATCH_PIN, INPUT_PULLUP); //
-  pinMode(GPIOKeyCode_D0_PIN, INPUT_PULLUP);    //
-  pinMode(GPIOKeyCode_D1_PIN, INPUT_PULLUP);    //
-  pinMode(GPIOKeyCode_D2_PIN, INPUT_PULLUP);    //
-  //pinMode(GPIOKeyCode_D3_PIN, INPUT_PULLUP);     //
+void setupGPIOKeyCode() {
+  pinMode(GPIOKeyCode_LATCH_GPIO, INPUT_PULLUP); //
+  pinMode(GPIOKeyCode_D0_GPIO, INPUT_PULLUP); //
+  pinMode(GPIOKeyCode_D1_GPIO, INPUT_PULLUP); //
+  pinMode(GPIOKeyCode_D2_GPIO, INPUT_PULLUP); //
+  //pinMode(GPIOKeyCode_D3_GPIO, INPUT_PULLUP);     //
 }
 
-void MeasureGPIOKeyCode()
-{
-
-  int latch = digitalRead(GPIOKeyCode_LATCH_PIN);
+void MeasureGPIOKeyCode() {
+  int latch = digitalRead(GPIOKeyCode_LATCH_GPIO);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
@@ -52,14 +49,13 @@ void MeasureGPIOKeyCode()
   {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
-#if defined(ESP8266) || defined(ESP32)
+#  if defined(ESP8266) || defined(ESP32)
     yield();
-#endif
+#  endif
     // if the Input state has changed:
-    if (latch > 0 && lastLatchStateGPIOKeyCode != latch)
-    {
-      int reading = digitalRead(GPIOKeyCode_D0_PIN) | (digitalRead(GPIOKeyCode_D1_PIN) << 1) | (digitalRead(GPIOKeyCode_D2_PIN) << 2);
-      //| digitalRead(GPIOKeyCode_D3_PIN) << 3;
+    if (latch > 0 && lastLatchStateGPIOKeyCode != latch) {
+      int reading = digitalRead(GPIOKeyCode_D0_GPIO) | (digitalRead(GPIOKeyCode_D1_GPIO) << 1) | (digitalRead(GPIOKeyCode_D2_GPIO) << 2);
+      //| digitalRead(GPIOKeyCode_D3_GPIO) << 3;
 
       char hex[3];
 
@@ -71,8 +67,7 @@ void MeasureGPIOKeyCode()
       lastLatchStateGPIOKeyCode = latch;
     }
 
-    if (latch != lastLatchStateGPIOKeyCode)
-    {
+    if (latch != lastLatchStateGPIOKeyCode) {
       lastLatchStateGPIOKeyCode = latch;
       Log.notice(F("GPIOKeyCode latch %d" CR), latch);
       if (latch == 0)

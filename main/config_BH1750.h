@@ -41,12 +41,12 @@
 extern void setupBH1750();
 extern void BH1750toMQTT();
 
-#define bh1750_always true // if false when the current value for light Level (Lux) is the same as previous one don't send it by MQTT
+#define bh1750_always            true // if false when the current value for light Level (Lux) is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingBH1750 30000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectBH1750toMQTT  "/BH1750toMQTT"
+#define subjectBH1750toMQTT "/BH1750toMQTT"
 //Time used to wait for an interval before resending measured values
 unsigned long timebh1750 = 0;
 int BH1750_i2c_addr = 0x23; // Light Sensor I2C Address

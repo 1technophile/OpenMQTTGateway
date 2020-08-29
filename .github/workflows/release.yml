@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    name: Build and upload Assets to Release
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install platformio
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      - name: Set version tag from git
+        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" main/User_config.h
+      - name: Run PlatformIO
+        run: platformio run
+      - name: Prepare Release Assets
+        run: |
+          sudo apt install rename
+          ./scripts/prepare_deploy.sh
+      - name: Get upload url
+        id: release-id
+        run: |
+          RELEASE_ID=$(jq --raw-output '.release.id' $GITHUB_EVENT_PATH)
+          echo "::set-output name=upload_url::https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets{?name,label}"
+      - name: Upload Release Assets
+        uses: bgpat/release-asset-action@03b0c30db1c4031ce3474740b0e4275cd7e126a3
+        with:
+          pattern: "toDeploy/*"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          release-url: ${{ steps.release-id.outputs.upload_url }}
+          allow-overwrite: true
+
+  documentation:
+    runs-on: ubuntu-latest
+    name: Create the documentation and deploy it to GitHub Pages
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+      - name: Install vuepress
+        run: npm install -g vuepress
+      - name: Set version tag from git
+        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" docs/.vuepress/config.js
+      - name: Build documentation
+        run: npm run docs:build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/.vuepress/dist
+          cname: docs.openmqttgateway.com

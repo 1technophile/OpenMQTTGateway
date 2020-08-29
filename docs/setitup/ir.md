@@ -2,11 +2,11 @@
 ## Compatible parts
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|IR diode|Emitting|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|IR receiver|Receiving|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|IR diode|Emitting|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|IR receiver|Receiving|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |transistor 2N2222|Amplify uC signal for the IR diode|-|
-|330 ohms resistor|-|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|220 ohms resistor|limit current to LED|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|330 ohms resistor|-|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|220 ohms resistor|limit current to LED|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 The IR setup can work with bc547 and a 4x3 LED-Matrix.
 

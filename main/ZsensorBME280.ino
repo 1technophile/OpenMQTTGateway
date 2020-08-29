@@ -40,17 +40,17 @@
 #include "User_config.h"
 
 #ifdef ZsensorBME280
-#include "Wire.h" // Library for communication with I2C / TWI devices
-#include <stdint.h>
-#include "SparkFunBME280.h"
+#  include <stdint.h>
+
+#  include "SparkFunBME280.h"
+#  include "Wire.h" // Library for communication with I2C / TWI devices
 
 //Global sensor object
 BME280 mySensor;
 
-void setupZsensorBME280()
-{
+void setupZsensorBME280() {
   mySensor.settings.commInterface = I2C_MODE;
-  mySensor.settings.I2CAddress = BME280_i2c_addr; 
+  mySensor.settings.I2CAddress = BME280_i2c_addr;
   Log.notice(F("Setup BME280 on adress: %H" CR), BME280_i2c_addr);
   //***Operation settings*****************************//
 
@@ -101,15 +101,11 @@ void setupZsensorBME280()
   mySensor.settings.humidOverSample = 1;
 
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
-  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): 0x %h" CR),mySensor.begin());
+  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): 0x %h" CR), mySensor.begin());
 }
 
-void MeasureTempHumAndPressure()
-{
-
-  if (millis() > (timebme280 + TimeBetweenReadingbme280))
-  {
-
+void MeasureTempHumAndPressure() {
+  if (millis() > (timebme280 + TimeBetweenReadingbme280)) {
     timebme280 = millis();
     static float persisted_bme_tempc;
     static float persisted_bme_tempf;
@@ -126,73 +122,52 @@ void MeasureTempHumAndPressure()
     float BmeAltiFt = mySensor.readFloatAltitudeFeet();
 
     // Check if reads failed and exit early (to try again).
-    if (isnan(BmeTempC) || isnan(BmeTempF) || isnan(BmeHum) || isnan(BmePa) || isnan(BmeAltiM) || isnan(BmeAltiFt))
-    {
+    if (isnan(BmeTempC) || isnan(BmeTempF) || isnan(BmeHum) || isnan(BmePa) || isnan(BmeAltiM) || isnan(BmeAltiFt)) {
       Log.error(F("Failed to read from BME280!" CR));
-    }
-    else
-    {
+    } else {
       Log.trace(F("Creating BME280 buffer" CR));
       StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject &BME280data = jsonBuffer.createObject();
+      JsonObject& BME280data = jsonBuffer.createObject();
       // Generate Temperature in degrees C
-      if (BmeTempC != persisted_bme_tempc || bme280_always)
-      {
+      if (BmeTempC != persisted_bme_tempc || bme280_always) {
         BME280data.set("tempc", (float)BmeTempC);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same Degrees C don't send it" CR));
       }
 
       // Generate Temperature in degrees F
-      if (BmeTempF != persisted_bme_tempf || bme280_always)
-      {
+      if (BmeTempF != persisted_bme_tempf || bme280_always) {
         BME280data.set("tempf", (float)BmeTempF);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same Degrees F don't send it" CR));
       }
 
       // Generate Humidity in percent
-      if (BmeHum != persisted_bme_hum || bme280_always)
-      {
+      if (BmeHum != persisted_bme_hum || bme280_always) {
         BME280data.set("hum", (float)BmeHum);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same Humidity don't send it" CR));
       }
 
       // Generate Pressure in Pa
-      if (BmePa != persisted_bme_pa || bme280_always)
-      {
+      if (BmePa != persisted_bme_pa || bme280_always) {
         BME280data.set("pa", (float)BmePa);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same Pressure don't send it" CR));
       }
 
       // Generate Altitude in Meter
-      if (BmeAltiM != persisted_bme_altim || bme280_always)
-      {
+      if (BmeAltiM != persisted_bme_altim || bme280_always) {
         Log.trace(F("Sending Altitude Meter to MQTT" CR));
         BME280data.set("altim", (float)BmeAltiM);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same Altitude Meter don't send it" CR));
       }
 
       // Generate Altitude in Feet
-      if (BmeAltiFt != persisted_bme_altift || bme280_always)
-      {
+      if (BmeAltiFt != persisted_bme_altift || bme280_always) {
         BME280data.set("altift", (float)BmeAltiFt);
-      }
-      else
-      {
+      } else {
         Log.trace(F("Same Altitude Feet don't send it" CR));
       }
       if (BME280data.size() > 0)

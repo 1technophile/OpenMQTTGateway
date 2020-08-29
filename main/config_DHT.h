@@ -30,22 +30,22 @@ extern void setupDHT();
 extern void DHTtoMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define DHTTOPIC    "/DHTtoMQTT/dht1"
-#define dht_always true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
+#define DHTTOPIC              "/DHTtoMQTT/dht1"
+#define dht_always            true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------DHT SENSOR TYPE-------------*/
 //#define DHT_SENSOR_TYPE DHT11 //uncomment for DHT11 Sensor
 //#define DHT_SENSOR_TYPE DHT21 //uncomment for DHT21 Sensor
 #define DHT_SENSOR_TYPE DHT22 //uncomment for DHT22 Sensor (default for backwards compatibility)
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifndef DHT_RECEIVER_PIN
-  #if defined(ESP8266)
-    #define DHT_RECEIVER_PIN 5 //5 = D1 you can put 14 = D5 if you don't use HCSR501 sensor and the RFM69
-  #elif defined(ESP32)
-    #define DHT_RECEIVER_PIN 16
-  #else
-    #define DHT_RECEIVER_PIN 8
-  #endif
+#ifndef DHT_RECEIVER_GPIO
+#  if defined(ESP8266)
+#    define DHT_RECEIVER_GPIO 5 //5 = D1 you can put 14 = D5 if you don't use HCSR501 sensor and the RFM69
+#  elif defined(ESP32)
+#    define DHT_RECEIVER_GPIO 16
+#  else
+#    define DHT_RECEIVER_GPIO 8
+#  endif
 #endif
 
 #endif

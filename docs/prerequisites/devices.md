@@ -1,7 +1,9 @@
 # Devices
-**A list of verified compatible devices is maintained [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit?usp=sharing).**
+
+You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported devices](https://compatible.openmqttgateway.com/index.php/devices/).
 
 Added to that is an overview of devices supported by OpenMQTTGateway:
+
 ## For radio frequency devices 
 OpenMQTTGateway can support a wide range of 433mhz/315mhz devices, all the ones with SC5262 / SC5272, HX2262 / HX2272, PT2262 / PT2272, EV1527, RT1527, FP1527, HS1527 chipsets are supported by the RF gateway. Added to that RF2 support Kaku and Pilight an [huge list](https://wiki.pilight.org/devices). 
 Note that for the moment RF, RF2 and Pilight can not be activated on the same boards together.
@@ -20,20 +22,29 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | Vegtrug ||temperature/moisture/luminance/fertility|
 | XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility|
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
+| XIAOMI Mi Jia 2 *|LYWSD03MMC|temperature/humidity/battery/volt|
+| XIAOMI MHO-C401 *|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
+| HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
+| INKBIRD *|IBS-TH1|temperature/humidity/battery|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
-| XIAOMI Mi Scale v1|XMTZC04HM|weight|
-| XIAOMI Mi Scale v2|XMTZC05HM|weight|
-| XIAOMI Mi band ||steps|
+| XIAOMI Mi Scale v1 *|XMTZC04HM|weight|
+| XIAOMI Mi Scale v2 *|XMTZC05HM|weight|
+| XIAOMI Mi band * ||steps|
 
+Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
-![boards](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
+::: INFO
+(*)Not supported with HM10.
+:::
+
+![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
 
 ## For infrared IR devices 
-the list of supported devices for ESP is [here](https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md), and [here](https://github.com/1technophile/OpenMQTTGateway/blob/6f73160d1421bebf2c1bbc9b8017978ff5b16520/main/config_IR.h#L123) for Arduino boards, as there is also the possibility of using raw and global caché (ESP)  sending possibilities of this gateway is huge!
+The list of supported devices for ESP is [here](https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md), and [here](https://github.com/1technophile/OpenMQTTGateway/blob/6f73160d1421bebf2c1bbc9b8017978ff5b16520/main/config_IR.h#L123) for Arduino boards, as there is also the possibility of using raw and global caché (ESP)  sending possibilities of this gateway is huge!
 
 ## LORA
- is more dedicated at this moment for tinkering and DIY and there is no Off the shelves devices compatible to my knowledge with this gateway.
+LORA is more dedicated at this moment for tinkering and DIY and there is no Off the shelves devices compatible to my knowledge with this gateway.

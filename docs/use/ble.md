@@ -5,7 +5,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 
 `    sudo mosquitto_sub -t +/# -v`
 
-_NOTE: HM-10 or HM-11 module needed if you are not using ESP32; configure in `user_config.h`_
+_NOTE: HM-10 or HM-11 module needed if you are not using ESP32; configure in `User_config.h`_
 
 The BT gateway module for OpenMQTTGateway enables the detection of BLE beacons and their signal strength.  Generally BLE devices will not broadcast if they are paired so you may need to ensure your beacons is unpaired before it will be seen by the gateway.
 
@@ -60,22 +60,23 @@ OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 thi
 ## Setting a white or black list
 A black list is a list of mac adresses that will never be published by OMG
 to set black list
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["012314551615","4C6577889C79","4C65A6663C79"]}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
 A white list is a list of mac adresses permitted to be published by OMG
 to set white list
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["012314551615","4C65A5553C79","4C65A6663C79"]}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
 Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list
 
 ::: tip
 So as to keep your white/black list persistent you can publish it with the retain option of MQTT (-r with mosquitto_pub or retain check box of MQTT Explorer)
-`mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["012314551615","4C65A5553C79","4C65A6663C79"]}'`
+`mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 :::
 
-## Setting the time between scans and force a scan
+## Setting the time between BLE scans and force a scan
 
-If you want to change the time between readings you can change the interval by MQTT, if you want the BLE scan every 66seconds:
+If you want to change the time between readings you can change the interval by MQTT.
+For example, if you want the BLE to scan every 66 seconds:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":66000}'`
 
@@ -83,9 +84,29 @@ you can also force a scan to be done by the following command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":0}'`
 
-Once done the previous value of interval will be recovered.
+Once the forced scan has completed, the previous scan interval value will be restored. Forcing a scan command trigger also a BLE connect process after the scan (see below).
 
-The default value is set into config_BT.h
+The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
+
+::: info
+For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
+:::
+
+## Setting the number of scans between before connect attempt
+
+If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanbcnct":30}'`
+
+The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
+
+## Setting if the gateway publish all the BLE devices scanned or only the detected sensors
+
+If you want to change this characteristic:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"onlysensors":true}'`
+
+The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
 
 ## Setting the minimum RSSI accepted to publish device data
 

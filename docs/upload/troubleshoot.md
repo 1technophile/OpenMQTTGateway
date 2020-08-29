@@ -1,8 +1,10 @@
 # Troubleshooting
 
 ## Compilation/build error
-This badge [![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=master)](https://travis-ci.com/1technophile/OpenMQTTGateway) show you the state of the compilation of the master and this one [![Build Status](https://travis-ci.com/1technophile/OpenMQTTGateway.svg?branch=development)](https://travis-ci.com/1technophile/OpenMQTTGateway) for the development branch. If you see a green badge this means that the code compilation is OK with the configuration given in the docs/platformio.ini. Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
-Verify especially that the libraries provided into the [the release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
+This badge [![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=master)](https://github.com/1technophile/OpenMQTTGateway/actions?query=branch%3Amaster+workflow%3ABuild) show you the state of the compilation of the master and this one [![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=development)](https://github.com/1technophile/OpenMQTTGateway/actions?query=branch%3Adevelopment+workflow%3ABuild) for the development branch.
+If you see a green badge this means that the code compilation is OK with the configuration given in the `docs/platformio.ini`.
+Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
+Verify especially that the libraries provided into the [release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
 
 ## ESP32 compilation errors related to wifi
 If you get one or several of the following errors:
@@ -29,10 +31,10 @@ Regarding the IR led emitter you can replace it with a normal led and see if it 
 
 try with D2 instead of D3
 and put
-define RF_RECEIVER_PIN 4 // D2 on nodemcu
+`#define RF_RECEIVER_GPIO 4 // D2 on nodemcu`
 in config_rf.h
 instead of
-define RF_RECEIVER_PIN 0 // D3 on nodemcu
+`#define RF_RECEIVER_GPIO 0 // D3 on nodemcu`
 
 ## Exception seen on serial monitor:
 Hey I got a callback 
@@ -43,11 +45,12 @@ Exception (2):
 
 → You are not using the last update of ESP8266 into board manager, go to your Arduino IDE and update it, should be at least 2.3.0
 
+## Repetitive MQTT disconnections or/and commands sent to the gateway not taken into account
+Most probably a network issue, don't use a guest network and if going through a firewall check its rules. To put aside gateway issue, try to connect to a local broker on the same network.
+
 ## You don't see the messages appearing on your broker but they appears on the serial monitor
-This is due to a too small mqtt packet size, open pubsubclient.h from pubsubclient library and set:
-try to modify in pubsubclient.h:
-`#define MQTT_MAX_PACKET_SIZE 1024`
-The other option is to use the [pubsubclient library](https://github.com/1technophile/OpenMQTTGateway/tree/master/lib/pubsubclient) provided in the OMG repository folder.
+This is due to a too small mqtt packet size, open User_config.h and set:
+`#define mqtt_max_packet_size 1024`
 
 ## Your Arduino with w5100 Ethernet shield does not connect to network until you press Reset button
 If you notice that your Arduino with w5100 Ethernet shield does not connect to network until you press its Reset button, but connects fine if you connect the Arduino with a USB cable to a computer/laptop with Arduino IDE running and open Serial Monitor, the problem is most likely the Ethernet shield and/or the power supply you're using.
@@ -59,3 +62,16 @@ This can be due to corruption of the ESP flash memory, try to erase flash and up
 
 If you didn't find your answer here post a question to the forum:
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
+
+## ESP does not connect to broker with TLS enabled
+If you get the following error:
+`W: failed, ssl error code=54` ("Certificate is expired or not yet valid.")
+
+This is most probable caused by the time of the esp is not correct/synchronized.
+The esp uses the Network Time Protocol (NTP) to get the current time from a time server.
+If you get this error ntp is not configured correctly in the gateway.
+Uncomment `//#    define NTP_SERVER "pool.ntp.org"` to set the `pool.ntp.org` as the time server.
+You can also choose any other ntp time server you like.
+
+It is normal that the time synchronization process takes some time and the MQTT connection will not be successful the first time.
+If you set the ntp server for the gateway and keep getting the errors you should check your certificate validity duration.

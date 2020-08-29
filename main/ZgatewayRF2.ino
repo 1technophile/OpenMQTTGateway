@@ -37,15 +37,14 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/
 
 #ifdef ZgatewayRF2
 
-#ifdef ZradioCC1101
-  #include <ELECHOUSE_CC1101_SRC_DRV.h>
-#endif
+#  ifdef ZradioCC1101
+#    include <ELECHOUSE_CC1101_SRC_DRV.h>
+#  endif
 
-#include <NewRemoteTransmitter.h>
-#include <NewRemoteReceiver.h>
+#  include <NewRemoteReceiver.h>
+#  include <NewRemoteTransmitter.h>
 
-struct RF2rxd
-{
+struct RF2rxd {
   unsigned int period;
   unsigned long address;
   unsigned long groupBit;
@@ -56,32 +55,28 @@ struct RF2rxd
 
 RF2rxd rf2rd;
 
-void setupRF2()
-{
-#ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
-  #ifdef ZradioCC1101 //receiving with CC1101
-    ELECHOUSE_cc1101.Init();
-    ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
-    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
-  #endif
-  NewRemoteReceiver::init(RF_RECEIVER_PIN, 2, rf2Callback);
-  Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
-  Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+void setupRF2() {
+#  ifndef ZgatewayRF //receiving with RF2 is not compatible with ZgatewayRF
+#    ifdef ZradioCC1101 //receiving with CC1101
+  ELECHOUSE_cc1101.Init();
+  ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
+  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
+#    endif
+  NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayRF2 setup done " CR));
-#endif
-  pinMode(RF_EMITTER_PIN, OUTPUT);
-  digitalWrite(RF_EMITTER_PIN, LOW);
+#  endif
+  pinMode(RF_EMITTER_GPIO, OUTPUT);
+  digitalWrite(RF_EMITTER_GPIO, LOW);
 }
 
-void RF2toMQTT()
-{
-
-  if (rf2rd.hasNewData)
-  {
+void RF2toMQTT() {
+  if (rf2rd.hasNewData) {
     Log.trace(F("Creating RF2 buffer" CR));
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject &RF2data = jsonBuffer.createObject();
+    JsonObject& RF2data = jsonBuffer.createObject();
 
     rf2rd.hasNewData = false;
 
@@ -96,9 +91,7 @@ void RF2toMQTT()
   }
 }
 
-void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType)
-{
-
+void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
   rf2rd.period = period;
   rf2rd.address = address;
   rf2rd.groupBit = groupBit;
@@ -107,13 +100,12 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
   rf2rd.hasNewData = true;
 }
 
-#ifdef simpleReceiving
-void MQTTtoRF2(char *topicOri, char *datacallback)
-{
-  #ifdef ZradioCC1101
-    NewRemoteReceiver::disable();
-    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
-  #endif
+#  ifdef simpleReceiving
+void MQTTtoRF2(char* topicOri, char* datacallback) {
+#    ifdef ZradioCC1101
+  NewRemoteReceiver::disable();
+  ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
+#    endif
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined
@@ -129,43 +121,37 @@ void MQTTtoRF2(char *topicOri, char *datacallback)
   int valueDIM = -1;
 
   int pos = topic.lastIndexOf(RF2codeKey);
-  if (pos != -1)
-  {
+  if (pos != -1) {
     pos = pos + +strlen(RF2codeKey);
     valueCODE = (topic.substring(pos, pos + 8)).toInt();
     Log.notice(F("RF2 code: %l" CR), valueCODE);
   }
   int pos2 = topic.lastIndexOf(RF2periodKey);
-  if (pos2 != -1)
-  {
+  if (pos2 != -1) {
     pos2 = pos2 + strlen(RF2periodKey);
     valuePERIOD = (topic.substring(pos2, pos2 + 3)).toInt();
     Log.notice(F("RF2 Period: %d" CR), valuePERIOD);
   }
   int pos3 = topic.lastIndexOf(RF2unitKey);
-  if (pos3 != -1)
-  {
+  if (pos3 != -1) {
     pos3 = pos3 + strlen(RF2unitKey);
     valueUNIT = (topic.substring(pos3, topic.indexOf("/", pos3))).toInt();
     Log.notice(F("Unit: %d" CR), valueUNIT);
   }
   int pos4 = topic.lastIndexOf(RF2groupKey);
-  if (pos4 != -1)
-  {
+  if (pos4 != -1) {
     pos4 = pos4 + strlen(RF2groupKey);
     valueGROUP = (topic.substring(pos4, pos4 + 1)).toInt();
-    Log.notice(F("RF2 Group: %d" CR),valueGROUP);
+    Log.notice(F("RF2 Group: %d" CR), valueGROUP);
   }
   int pos5 = topic.lastIndexOf(RF2dimKey);
-  if (pos5 != -1)
-  {
+  if (pos5 != -1) {
     isDimCommand = true;
     valueDIM = atoi(datacallback);
     Log.notice(F("RF2 Dim: %d" CR), valueDIM);
   }
 
-  if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT != -1) || (valuePERIOD != 0))
-  {
+  if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT != -1) || (valuePERIOD != 0)) {
     Log.trace(F("MQTTtoRF2" CR));
     if (valueCODE == 0)
       valueCODE = 8233378;
@@ -175,27 +161,18 @@ void MQTTtoRF2(char *topicOri, char *datacallback)
       valuePERIOD = 272;
     NewRemoteReceiver::disable();
     Log.trace(F("Creating transmitter" CR));
-    NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
+    NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_GPIO, valuePERIOD);
     Log.trace(F("Sending data" CR));
-    if (valueGROUP)
-    {
-      if (isDimCommand)
-      {
+    if (valueGROUP) {
+      if (isDimCommand) {
         transmitter.sendGroupDim(valueDIM);
-      }
-      else
-      {
+      } else {
         transmitter.sendGroup(boolSWITCHTYPE);
       }
-    }
-    else
-    {
-      if (isDimCommand)
-      {
+    } else {
+      if (isDimCommand) {
         transmitter.sendDim(valueUNIT, valueDIM);
-      }
-      else
-      {
+      } else {
         transmitter.sendUnit(valueUNIT, boolSWITCHTYPE);
       }
     }
@@ -218,38 +195,32 @@ void MQTTtoRF2(char *topicOri, char *datacallback)
     MQTTdimLevel = String(valueDIM);
     String MQTTRF2string;
     Log.trace(F("Adv data MQTTtoRF2 push state via RF2toMQTT" CR));
-    if (isDimCommand)
-    {
+    if (isDimCommand) {
       MQTTRF2string = subjectRF2toMQTT + String("/") + RF2codeKey + MQTTAddress + String("/") + RF2unitKey + MQTTunit + String("/") + RF2groupKey + MQTTgroupBit + String("/") + RF2dimKey + String("/") + RF2periodKey + MQTTperiod;
-      pub((char *)MQTTRF2string.c_str(), (char *)MQTTdimLevel.c_str());
-    }
-    else
-    {
+      pub((char*)MQTTRF2string.c_str(), (char*)MQTTdimLevel.c_str());
+    } else {
       MQTTRF2string = subjectRF2toMQTT + String("/") + RF2codeKey + MQTTAddress + String("/") + RF2unitKey + MQTTunit + String("/") + RF2groupKey + MQTTgroupBit + String("/") + RF2periodKey + MQTTperiod;
-      pub((char *)MQTTRF2string.c_str(), (char *)MQTTswitchType.c_str());
+      pub((char*)MQTTRF2string.c_str(), (char*)MQTTswitchType.c_str());
     }
   }
-  #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
-    NewRemoteReceiver::enable();
-  #endif
+#    ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY); // set Receive on
+  NewRemoteReceiver::enable();
+#    endif
 }
-#endif
+#  endif
 
-#ifdef jsonReceiving
-void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
-{ // json object decoding
-  #ifdef ZradioCC1101
-    NewRemoteReceiver::disable();
-    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
-  #endif
+#  ifdef jsonReceiving
+void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
+#    ifdef ZradioCC1101
+  NewRemoteReceiver::disable();
+  ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
+#    endif
 
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRF2))
-  {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
     Log.trace(F("MQTTtoRF2 json" CR));
     int boolSWITCHTYPE = RF2data["switchType"] | 99;
-    if (boolSWITCHTYPE != 99)
-    {
+    if (boolSWITCHTYPE != 99) {
       Log.trace(F("MQTTtoRF2 switch type ok" CR));
       bool isDimCommand = boolSWITCHTYPE == 2;
       unsigned long valueCODE = RF2data["address"];
@@ -257,8 +228,7 @@ void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
       int valuePERIOD = RF2data["period"];
       int valueGROUP = RF2data["group"];
       int valueDIM = RF2data["dim"] | -1;
-      if ((valueCODE != 0) || (valueUNIT != -1) || (valuePERIOD != 0))
-      {
+      if ((valueCODE != 0) || (valueUNIT != -1) || (valuePERIOD != 0)) {
         Log.trace(F("MQTTtoRF2" CR));
         if (valueCODE == 0)
           valueCODE = 8233378;
@@ -267,27 +237,18 @@ void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
         if (valuePERIOD == 0)
           valuePERIOD = 272;
         NewRemoteReceiver::disable();
-        NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_PIN, valuePERIOD);
+        NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_GPIO, valuePERIOD);
         Log.trace(F("Sending" CR));
-        if (valueGROUP)
-        {
-          if (isDimCommand)
-          {
+        if (valueGROUP) {
+          if (isDimCommand) {
             transmitter.sendGroupDim(valueDIM);
-          }
-          else
-          {
+          } else {
             transmitter.sendGroup(boolSWITCHTYPE);
           }
-        }
-        else
-        {
-          if (isDimCommand)
-          {
+        } else {
+          if (isDimCommand) {
             transmitter.sendDim(valueUNIT, valueDIM);
-          }
-          else
-          {
+          } else {
             transmitter.sendUnit(valueUNIT, boolSWITCHTYPE);
           }
         }
@@ -297,16 +258,14 @@ void MQTTtoRF2(char *topicOri, JsonObject &RF2data)
         // Publish state change back to MQTT
         pub(subjectGTWRF2toMQTT, RF2data);
       }
-    }
-    else
-    {
+    } else {
       Log.error(F("MQTTtoRF2 failed json read" CR));
     }
   }
-  #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
-    NewRemoteReceiver::enable();
-  #endif
+#    ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY); // set Receive on
+  NewRemoteReceiver::enable();
+#    endif
 }
-#endif
+#  endif
 #endif

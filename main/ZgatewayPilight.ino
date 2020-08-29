@@ -29,149 +29,129 @@
 
 #ifdef ZgatewayPilight
 
-#ifdef ZradioCC1101
-  #include <ELECHOUSE_CC1101_SRC_DRV.h>
-#endif
+#  ifdef ZradioCC1101
+#    include <ELECHOUSE_CC1101_SRC_DRV.h>
+#  endif
 
-#include <ESPiLight.h>
-ESPiLight rf(RF_EMITTER_PIN); // use -1 to disable transmitter
+#  include <ESPiLight.h>
+ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 
-void pilightCallback(const String &protocol, const String &message, int status,
-                     size_t repeats, const String &deviceID)
-{
-  if (status == VALID)
-  {
+void pilightCallback(const String& protocol, const String& message, int status,
+                     size_t repeats, const String& deviceID) {
+  if (status == VALID) {
     Log.trace(F("Creating RF PiLight buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject &RFPiLightdata = jsonBuffer.createObject();
+    JsonObject& RFPiLightdata = jsonBuffer.createObject();
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer2;
-    JsonObject &msg = jsonBuffer2.parseObject(message);
+    JsonObject& msg = jsonBuffer2.parseObject(message);
     RFPiLightdata.set("message", msg);
-    RFPiLightdata.set("protocol", (char *)protocol.c_str());
-    RFPiLightdata.set("length", (char *)deviceID.c_str());
+    RFPiLightdata.set("protocol", (char*)protocol.c_str());
+    RFPiLightdata.set("length", (char*)deviceID.c_str());
     RFPiLightdata.set("repeats", (int)repeats);
     RFPiLightdata.set("status", (int)status);
     pub(subjectPilighttoMQTT, RFPiLightdata);
-    if (repeatPilightwMQTT)
-    {
+    if (repeatPilightwMQTT) {
       Log.trace(F("Pub Pilight for rpt" CR));
       pub(subjectMQTTtoPilight, RFPiLightdata);
     }
   }
 }
 
-void setupPilight()
-{
-#ifndef ZgatewayRF &&ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
-  #ifdef ZradioCC1101 //receiving with CC1101
-    ELECHOUSE_cc1101.Init();
-    ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
-    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
-    rf.enableReceiver();
-  #endif
+void setupPilight() {
+#  ifndef ZgatewayRF&& ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
+#    ifdef ZradioCC1101 //receiving with CC1101
+  ELECHOUSE_cc1101.Init();
+  ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
+  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
+  rf.enableReceiver();
+#    endif
   rf.setCallback(pilightCallback);
-  rf.initReceiver(RF_RECEIVER_PIN);
-  pinMode(RF_EMITTER_PIN, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
-  Log.notice(F("RF_EMITTER_PIN: %d " CR), RF_EMITTER_PIN);
-  Log.notice(F("RF_RECEIVER_PIN: %d " CR), RF_RECEIVER_PIN);
+  rf.initReceiver(RF_RECEIVER_GPIO);
+  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   Log.trace(F("ZgatewayPilight setup done " CR));
-#else
+#  else
   Log.trace(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2" CR));
-#endif
+#  endif
 }
 
-void PilighttoMQTT()
-{
+void PilighttoMQTT() {
   rf.loop();
 }
 
-void MQTTtoPilight(char *topicOri, JsonObject &Pilightdata)
-{
-  #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY);           // set Transmit on
-    rf.disableReceiver();
-  #endif
+void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
+#  ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
+  rf.disableReceiver();
+#  endif
   int result = 0;
 
-  if (cmpToMainTopic(topicOri, subjectMQTTtoPilight))
-  {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoPilight)) {
     Log.trace(F("MQTTtoPilight json data analysis" CR));
-    const char *message = Pilightdata["message"];
-    const char *protocol = Pilightdata["protocol"];
-    const char *raw = Pilightdata["raw"];
-    if (raw)
-    {
+    const char* message = Pilightdata["message"];
+    const char* protocol = Pilightdata["protocol"];
+    const char* raw = Pilightdata["raw"];
+    if (raw) {
       int msgLength = 0;
       uint16_t codes[MAXPULSESTREAMLENGTH];
       msgLength = rf.stringToPulseTrain(
           raw,
           codes, MAXPULSESTREAMLENGTH);
-      if (msgLength > 0)
-      {
+      if (msgLength > 0) {
         rf.sendPulseTrain(codes, msgLength);
         Log.notice(F("MQTTtoPilight raw ok" CR));
         result = msgLength;
-      }
-      else
-      {
+      } else {
         Log.trace(F("MQTTtoPilight raw KO" CR));
-        switch (result)
-        {
-        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_C:
-          Log.trace(F("'c' not found in string, or has no data" CR));
-          break;
-        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_P:
-          Log.trace(F("'p' not found in string, or has no data" CR));
-          break;
-        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
-          Log.trace(F("';' or '@' not found in data string" CR));
-          break;
-        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_TYPE:
-          Log.trace(F("pulse type not defined" CR));
-          break;
+        switch (result) {
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_C:
+            Log.trace(F("'c' not found in string, or has no data" CR));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_P:
+            Log.trace(F("'p' not found in string, or has no data" CR));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
+            Log.trace(F("';' or '@' not found in data string" CR));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_TYPE:
+            Log.trace(F("pulse type not defined" CR));
+            break;
         }
       }
-    }
-    else if (message && protocol)
-    {
+    } else if (message && protocol) {
       Log.trace(F("MQTTtoPilight msg & protocol ok" CR));
       result = rf.send(protocol, message);
-    }
-    else
-    {
+    } else {
       Log.error(F("MQTTtoPilight failed json read" CR));
     }
 
-    if (result > 0)
-    {
+    if (result > 0) {
       Log.trace(F("Adv data MQTTtoPilight push state via PilighttoMQTT" CR));
       pub(subjectGTWPilighttoMQTT, Pilightdata);
-    }
-    else
-    {
-      switch (result)
-      {
-      case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
-        Log.error(F("protocol is not available" CR));
-        break;
-      case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
-        Log.error(F("message is invalid" CR));
-        break;
-      case ESPiLight::ERROR_INVALID_JSON:
-        Log.error(F("message is not a proper json object" CR));
-        break;
-      case ESPiLight::ERROR_NO_OUTPUT_PIN:
-        Log.error(F("no transmitter pin" CR));
-        break;
-      default:
-        Log.error(F("invalid json data, can't read raw or message/protocol" CR));
-        break;
+    } else {
+      switch (result) {
+        case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
+          Log.error(F("protocol is not available" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
+          Log.error(F("message is invalid" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_JSON:
+          Log.error(F("message is not a proper json object" CR));
+          break;
+        case ESPiLight::ERROR_NO_OUTPUT_PIN:
+          Log.error(F("no transmitter pin" CR));
+          break;
+        default:
+          Log.error(F("invalid json data, can't read raw or message/protocol" CR));
+          break;
       }
     }
   }
-  #ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);           // set Receive on
-    rf.enableReceiver();
-  #endif
+#  ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY); // set Receive on
+  rf.enableReceiver();
+#  endif
 }
 #endif
