@@ -69,7 +69,7 @@
 
 #ifdef ZactuatorPWM
 
-#include "config_PWM.h"
+#  include "config_PWM.h"
 
 static long previousUpdateTime = 0; // milliseconds
 static long currentUpdateTime = 0;  // milliseconds
@@ -92,25 +92,24 @@ static float calibrationMinLinear[kNumChannels];
 static float calibrationMaxLinear[kNumChannels];
 static float calibrationGamma[kNumChannels];
 
-#if defined(ESP32)
+#  if defined(ESP32)
 // We use the highest resolution duty cycle mode (16-bit) for ESP32, which
 // gives us good control LEDs at the very dim end of the range.
 static const int kNumDutyCycleBits = 16;
-#elif defined(ESP8266)
+#  elif defined(ESP8266)
 // ESP8266 has a 10-bit duty cycle, which is better than 8 bits, but still
 // not good enough to give really good dim control over LEDs.
 static const int kNumDutyCycleBits = 10;
-#else
+#  else
 // Assume Arduino with 8-bit duty cycle.
 // With an 8-bit duty cycle, it's difficult to get good control over
 // LEDs at the dark end of the range.
 static const int kNumDutyCycleBits = 8;
-#endif
+#  endif
 
-static const float kUNormToDutyCycle = (float) ((1 << kNumDutyCycleBits) - 1);
+static const float kUNormToDutyCycle = (float)((1 << kNumDutyCycleBits) - 1);
 
-void setupPWM()
-{
+void setupPWM() {
   // Setup the PWM channels at the highest frequency we can for full 16-bit
   // duty cycle control.  These channels will be assigned to the
   // associated output pins.
@@ -124,15 +123,14 @@ void setupPWM()
   // brightness between levels 1 and 2 is very large - so to get fine
   // control at dark levels, it's important that we use as high 
   // resolution PWM as we can.
-  for(int i = 0; i < kNumChannels; ++i)
-  {
-#if defined(ESP32)
+  for (int i = 0; i < kNumChannels; ++i) {
+#  if defined(ESP32)
     // Configure the pin for PWM output.
     // I think this is the fastest frequency that allows for a 16-bit
     // duty cycle on an ESP32
     ledcSetup(i, 625.0, kNumDutyCycleBits);
     ledcAttachPin(channelPins[i], i);
-#endif
+#  endif
     calibrationMinLinear[i] = 0.f;
     calibrationMaxLinear[i] = 1.f;
     calibrationGamma[i] = PWM_DEFAULT_GAMMA;
@@ -143,38 +141,30 @@ void setupPWM()
 
 // This applies a power curve to the input to try to make the inputs
 // be 'perceptually linear', as opposed to actually linear.
-static float perceptualToLinear(float perceptual, int channelIdx)
-{
+static float perceptualToLinear(float perceptual, int channelIdx) {
   return pow(perceptual, calibrationGamma[channelIdx]);
 }
 
 // If we're currently fading between states, then update those states
-void PWMLoop()
-{
+void PWMLoop() {
   previousUpdateTime = currentUpdateTime;
   currentUpdateTime = millis();
 
-  if(fadeIsComplete)
-  {
+  if (fadeIsComplete) {
     return;
   }
 
   fadeIsComplete = true; //< If any channel isn't finished, we'll set this to false
-  for(int i = 0; i < kNumChannels; ++i)
-  {
+  for (int i = 0; i < kNumChannels; ++i) {
     // Calculate our lerp value through the current fade
     long totalFadeDuration = fadeEndUpdateTime[i] - fadeStartUpdateTime[i];
     float fadeLerpValue = 1.f;
-    if(totalFadeDuration > 0)
-    {
-      fadeLerpValue = (float) (currentUpdateTime - fadeStartUpdateTime[i]) / (float) totalFadeDuration;
+    if (totalFadeDuration > 0) {
+      fadeLerpValue = (float)(currentUpdateTime - fadeStartUpdateTime[i]) / (float)totalFadeDuration;
     }
-    if(fadeLerpValue >= 1.f)
-    {
+    if (fadeLerpValue >= 1.f) {
       currentValues[i] = targetValues[i];
-    }
-    else
-    {
+    } else {
       currentValues[i] = ((targetValues[i] - fadeStartValues[i]) * fadeLerpValue) + fadeStartValues[i];
       fadeIsComplete = false;
     }
@@ -182,46 +172,39 @@ void PWMLoop()
 
   // Now convert these perceptually linear values into actually linear values
   // and set the appropriate duty cycle for the outputs.
-  for(int i = 0; i < kNumChannels; ++i)
-  {
+  for (int i = 0; i < kNumChannels; ++i)   {
     float linear = perceptualToLinear(currentValues[i], i);
 
     // We always treat zero as zero so that it's truly off, regardless of the calibration data.
-    if(linear > 0.f)
-    {
+    if (linear > 0.f) {
       // Remap according to the calibration
       linear = (linear * (calibrationMaxLinear[i] - calibrationMinLinear[i])) + calibrationMinLinear[i];
     }
 
-    long dutyCycle = (long) (linear * kUNormToDutyCycle);
-#if defined(ESP32)
+    long dutyCycle = (long)(linear * kUNormToDutyCycle);
+#  if defined(ESP32)
     ledcWrite(i, dutyCycle);
-#else
+#  else
     analogWrite(channelPins[i], dutyCycle);
-#endif
+#  endif
     //Log.notice(F("Setting channel %d : %d" CR),i,dutyCycle);
   }
 }
 
-boolean PWMtoMQTT()
-{
+boolean PWMtoMQTT() {
   return false;
 }
 
-#ifdef jsonReceiving
-void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
-{
-  if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset))
-  {
+#  ifdef jsonReceiving
+void MQTTtoPWM(char *topicOri, JsonObject &jsonData) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));
     // Parse the target value for each channel
     int modifiedChannelBits = 0;
-    for(int i = 0; i < kNumChannels; ++i)
-    {
+    for (int i = 0; i < kNumChannels; ++i) {
       fadeStartValues[i] = currentValues[i];
       JsonVariant value = jsonData[channelJsonKeys[i]];
-      if(value.success())
-      {
+      if (value.success()) {
         float targetValue = value.as<float>();
         targetValue = min(targetValue, 1.f);
         targetValue = max(targetValue, 0.f);
@@ -236,31 +219,24 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
     }
     // ...unless there is a "fade" value in the JSON
     JsonVariant fade = jsonData["fade"];
-    if(fade.success())
-    {
+    if (fade.success()) {
       // "fade" json value is in seconds. Convert to milliseconds
-      long endUpdateTime = currentUpdateTime + (long) (fade.as<float>() * (1000.f));
+      long endUpdateTime = currentUpdateTime + (long)(fade.as<float>() * (1000.f));
       // Set the fadeEndUpdateTime for the channels that were modified in the JSON
-      for(int i = 0; i < kNumChannels; ++i)
-      {
-        if(modifiedChannelBits & (1 << i))
-        {
+      for (int i = 0; i < kNumChannels; ++i) {
+        if (modifiedChannelBits & (1 << i)) {
           fadeEndUpdateTime[i] = endUpdateTime;
         }
       }
     }
     fadeIsComplete = false; // The values will start to change during PWMLoop
-  }
-  else if (cmpToMainTopic(topicOri, subjectMQTTtoPWMcalibrate))
-  {
+  } else if (cmpToMainTopic(topicOri, subjectMQTTtoPWMcalibrate)) {
     // Read the optional calibration data for each channel
-    for(int i = 0; i < kNumChannels; ++i)
-    {
+    for (int i = 0; i < kNumChannels; ++i) {
       char key[64];
       snprintf(key, sizeof(key), "gamma-%s", channelJsonKeys[i]);
       JsonVariant value = jsonData[key];
-      if(value.success())
-      {
+      if (value.success()) {
         float gamma = value.as<float>();
         // Sanity check
         gamma = min(gamma, 4.f);
@@ -269,19 +245,17 @@ void MQTTtoPWM(char *topicOri, JsonObject &jsonData)
       }
       snprintf(key, sizeof(key), "min-%s", channelJsonKeys[i]);
       value = jsonData[key];
-      if(value.success())
-      {
+      if (value.success()) {
         calibrationMinLinear[i] = perceptualToLinear(value.as<float>(), i);
       }
       snprintf(key, sizeof(key), "max-%s", channelJsonKeys[i]);
       value = jsonData[key];
-      if(value.success())
-      {
+      if (value.success()) {
         calibrationMaxLinear[i] = perceptualToLinear(value.as<float>(), i);
       }
     }
   }
 }
-#endif
+#  endif
 
 #endif

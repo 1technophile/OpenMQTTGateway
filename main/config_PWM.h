@@ -24,17 +24,17 @@
 /*-------------------PWM topics & parameters----------------------*/
 
 // PWM MQTT Subjects
-#define subjectMQTTtoPWM "/commands/MQTTtoPWM"
-#define subjectMQTTtoPWMset subjectMQTTtoPWM "/set"             //set channel(s) with JSON struct {"r":0-1,"g":0-1,"b":0-1,"w0":0-1,"w0":0-1,"fade":<fade time in seconds>}
+#define subjectMQTTtoPWM          "/commands/MQTTtoPWM"
+#define subjectMQTTtoPWMset       subjectMQTTtoPWM "/set"       //set channel(s) with JSON struct {"r":0-1,"g":0-1,"b":0-1,"w0":0-1,"w0":0-1,"fade":<fade time in seconds>}
 #define subjectMQTTtoPWMcalibrate subjectMQTTtoPWM "/calibrate" //set calibration data JSON struct {"gamma-r":0.5-4.0,"min-r":0-1,"max-r":0-1 etc. }
 
 // Edit the following, or declare them in the configuration env, to declare
 // the channel names and corresponding output pins
 #ifndef PWM_CHANNEL_NAMES
-# define PWM_CHANNEL_NAMES {"r", "g", "b", "w0", "w1"}
+#  define PWM_CHANNEL_NAMES {"r", "g", "b", "w0", "w1"}
 #endif
 #ifndef PWM_CHANNEL_PINS
-# define PWM_CHANNEL_PINS  { 25,  33,  32,   23,   22}
+#  define PWM_CHANNEL_PINS  { 25,  33,  32,   23,   22}
 #endif
 
 // Gamma defines a power curve that is applied to convert the input values
@@ -46,5 +46,5 @@
 // This just defines the default gamma to use for all channels.
 // The gamma for each channel can be modified using the calibrate MQTT topic.
 #ifndef PWM_DEFAULT_GAMMA
-# define PWM_DEFAULT_GAMMA 2.2f
+#  define PWM_DEFAULT_GAMMA 2.2f
 #endif

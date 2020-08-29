@@ -126,7 +126,7 @@ unsigned long timer_sys_measures = 0;
 #  include "config_FASTLED.h"
 #endif
 #ifdef ZactuatorPWM
-#include "config_PWM.h"
+#  include "config_PWM.h"
 #endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
 #  include "config_M5.h"
