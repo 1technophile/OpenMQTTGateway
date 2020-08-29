@@ -17,7 +17,7 @@
 
   ".../commands/MQTTtoPWM/set" : Set the state of one or more channels.
   All values are floating point.
-  {
+ {
     "r"  : 0.0 - 1.0,
     "g"  : 0.0 - 1.0,
     "b"  : 0.0 - 1.0,
@@ -39,7 +39,7 @@
   Be aware the the min and max values are in the current gamma space
   before the conversion to linear - so if you change the gamma level
   then you will probably need to tune the min and max values again
-  {
+ {
     "gamma-r" : 0.5 - 4.0,
     "min-r"   : 0.0 - 1.0,
     "max-r"   : 0.0 - 1.0,
@@ -121,7 +121,7 @@ void setupPWM() {
   // Using an 8-bit duty cycle for example only allows for 256 different
   // linear levels of brightness.  Perceptually, the difference in
   // brightness between levels 1 and 2 is very large - so to get fine
-  // control at dark levels, it's important that we use as high 
+  // control at dark levels, it's important that we use as high
   // resolution PWM as we can.
   for (int i = 0; i < kNumChannels; ++i) {
 #  if defined(ESP32)
@@ -172,7 +172,7 @@ void PWMLoop() {
 
   // Now convert these perceptually linear values into actually linear values
   // and set the appropriate duty cycle for the outputs.
-  for (int i = 0; i < kNumChannels; ++i)   {
+  for (int i = 0; i < kNumChannels; ++i) {
     float linear = perceptualToLinear(currentValues[i], i);
 
     // We always treat zero as zero so that it's truly off, regardless of the calibration data.
