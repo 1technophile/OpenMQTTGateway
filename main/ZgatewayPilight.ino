@@ -47,6 +47,7 @@ void pilightCallback(const String& protocol, const String& message, int status,
     RFPiLightdata.set("message", msg);
     RFPiLightdata.set("protocol", (char*)protocol.c_str());
     RFPiLightdata.set("length", (char*)deviceID.c_str());
+    RFPiLightdata.set("value", (char*)deviceID.c_str());
     RFPiLightdata.set("repeats", (int)repeats);
     RFPiLightdata.set("status", (int)status);
     pub(subjectPilighttoMQTT, RFPiLightdata);
