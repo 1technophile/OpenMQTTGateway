@@ -45,7 +45,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
 #ifndef PublishOnlySensors
-#  define PublishOnlySensors false //true if we publish all BLE devices discovered or false only the identified sensors (like temperature sensors)
+#  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
 #endif
 
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
