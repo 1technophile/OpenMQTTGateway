@@ -52,7 +52,7 @@ void pilightCallback(const String& protocol, const String& message, int status,
     if (!strlen(device_id)) {
       // deviceID returned from Pilight is only extracted from id field
       // but some device may use another name as unique identifier
-      char * choices[] = {"key", "unit", "systemcode", "unitcode", "programcode"};
+      char* choices[] = {"key", "unit", "systemcode", "unitcode", "programcode"};
 
       for (uint8_t i = 0; i < 5; i++) {
         if (msg[choices[i]]) {
