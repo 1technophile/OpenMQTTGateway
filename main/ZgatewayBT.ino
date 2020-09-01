@@ -382,6 +382,19 @@ void MHO_C401Discovery(char* mac) {
   createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount);
 }
 
+void INodeEMDiscovery(char* mac) {
+#    define INodeEMparametersCount 3
+  Log.trace(F("INodeEMDiscovery" CR));
+  char* INodeEMsensor[INodeEMparametersCount][8] = {
+      {"sensor", "iNodeEM-power", mac, "power", jsonPower, "", "", "W"},
+      {"sensor", "iNodeEM-energy", mac, "", jsonEnergy, "", "", "kWh"},
+      {"sensor", "iNodeEM-batt", mac, "battery", jsonBatt, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount);
+}
+
 #  else
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
@@ -397,6 +410,7 @@ void MiBandDiscovery(char* mac) {}
 void InkBirdDiscovery(char* mac) {}
 void LYWSD03MMCDiscovery(char* mac) {}
 void MHO_C401Discovery(char* mac) {}
+void INodeEMDiscovery(char* mac) {}
 #  endif
 
 #  ifdef ESP32
@@ -871,6 +885,7 @@ void launchDiscovery() {
       if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str());
+      if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
@@ -1060,6 +1075,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_inkbird(BLEdata);
       }
     }
+    Log.trace(F("Is it a iNode Energy Meter?" CR));
+    if (strlen(manufacturerdata) == 26 && ((long)value_from_service_data(manufacturerdata, 0, 4, true) & 0xFFF9) == 0x8290) {
+      Log.trace(F("iNode Energy Meter data reading" CR));
+      BLEdata.set("model", "INODE_EM");
+      if (device->sensorModel == -1)
+        createOrUpdateDevice(mac, device_flags_init, INODE_EM);
+      return process_inode_em(BLEdata);
+    }
 #  if !pubBLEManufacturerData
     Log.trace(F("Remove manufacturer data" CR));
     BLEdata.remove("manufacturerdata");
@@ -1232,6 +1255,22 @@ JsonObject& process_atc(JsonObject& BLEdata) {
   BLEdata.set("hum", (double)humidity);
   BLEdata.set("batt", (double)battery);
   BLEdata.set("volt", (double)voltage);
+
+  return BLEdata;
+}
+
+JsonObject& process_inode_em(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+
+  long impPerKWh = value_from_service_data(manufacturerdata, 16, 4, true) & 0x3FFF;
+  double power = ((double)value_from_service_data(manufacturerdata, 4, 4, true) / impPerKWh) * 60000;
+  double energy = (double)value_from_service_data(manufacturerdata, 8, 8, true) / impPerKWh;
+  long battery = ((value_from_service_data(manufacturerdata, 20, 2, true) >> 4) - 2) * 10;
+
+  //Set Json values
+  BLEdata.set("power", (double)power);
+  BLEdata.set("energy", (double)energy);
+  BLEdata.set("batt", battery);
 
   return BLEdata;
 }
