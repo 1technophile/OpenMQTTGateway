@@ -819,15 +819,22 @@ void RemoveJsonPropertyIf(JsonObject& obj, char* key, bool condition) {
   }
 }
 
-double value_from_service_data(const char* service_data, int offset, int data_length) {
-  char rev_data[data_length + 1];
+/** 
+ * Retrieve a long value from a char array extract representing hexadecimal data, reversed or not
+ */
+long value_from_service_data(const char* service_data, int offset, int data_length, bool reverse) {
   char data[data_length + 1];
-  memcpy(rev_data, &service_data[offset], data_length);
-  rev_data[data_length] = '\0';
-
-  // reverse data order
-  revert_hex_data(rev_data, data, data_length + 1);
-  double value = strtol(data, NULL, 16);
+  memcpy(data, &service_data[offset], data_length);
+  data[data_length] = '\0';
+  long value;
+  if (reverse) {
+    // reverse data order
+    char rev_data[data_length + 1];
+    revert_hex_data(data, rev_data, data_length + 1);
+    value = strtol(rev_data, NULL, 16);
+  } else {
+    value = strtol(data, NULL, 16);
+  }
   if (value > 65000 && data_length <= 4)
     value = value - 65535;
   Log.trace(F("value %D" CR), value);
@@ -862,7 +869,7 @@ void launchDiscovery() {
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == LYWSD03MMC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
+      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
@@ -991,6 +998,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
       }
+      Log.trace(F("Is it a custom LYWSD03MMC" CR));
+      if (strstr(service_data, "a4c138") != NULL) {
+        Log.trace(F("LYWSD03MMC ATC" CR));
+        BLEdata.set("model", "LYWSD03MMC_ATC");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC_ATC);
+        return process_atc(BLEdata);
+      }
       if (BLEdata.containsKey("servicedatauuid")) {
         const char* service_datauuid = (const char*)(BLEdata["servicedatauuid"] | "");
         Log.trace(F("servicedatauuid %s" CR), service_datauuid);
@@ -1072,7 +1087,7 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
   }
 
   double value = 9999;
-  value = value_from_service_data(servicedata, 28 + offset, data_length);
+  value = (double)value_from_service_data(servicedata, 28 + offset, data_length, true);
 
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
   // Mi Jia provides tem(perature), batt(erry) and hum(idity)
@@ -1103,12 +1118,12 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
       break;
     case 'd':
       // temperature
-      value = value_from_service_data(servicedata, 28 + offset, 4);
+      value = (double)value_from_service_data(servicedata, 28 + offset, 4, true);
       BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       // humidity
-      value = value_from_service_data(servicedata, 32 + offset, 4);
+      value = (double)value_from_service_data(servicedata, 32 + offset, 4, true);
       BLEdata.set("hum", (double)value / 10);
       break;
     default:
@@ -1121,7 +1136,7 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
 JsonObject& process_scale_v1(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double weight = value_from_service_data(servicedata, 2, 4) / 200;
+  double weight = (double)value_from_service_data(servicedata, 2, 4, true) / 200;
 
   //Set Json value
   BLEdata.set("weight", (double)weight);
@@ -1132,8 +1147,8 @@ JsonObject& process_scale_v1(JsonObject& BLEdata) {
 JsonObject& process_scale_v2(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double weight = value_from_service_data(servicedata, 22, 4) / 200;
-  double impedance = value_from_service_data(servicedata, 18, 4);
+  double weight = (double)value_from_service_data(servicedata, 22, 4, true) / 200;
+  double impedance = (double)value_from_service_data(servicedata, 18, 4, true);
 
   //Set Json values
   BLEdata.set("weight", (double)weight);
@@ -1145,9 +1160,9 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
 JsonObject& process_inkbird(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
 
-  double temperature = value_from_service_data(manufacturerdata, 0, 4) / 100;
-  double humidity = value_from_service_data(manufacturerdata, 4, 4) / 100;
-  double battery = value_from_service_data(manufacturerdata, 14, 2);
+  double temperature = (double)value_from_service_data(manufacturerdata, 0, 4, true) / 100;
+  double humidity = (double)value_from_service_data(manufacturerdata, 4, 4, true) / 100;
+  double battery = (double)value_from_service_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
   BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
@@ -1162,7 +1177,7 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
 JsonObject& process_miband(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double steps = value_from_service_data(servicedata, 0, 4);
+  double steps = (double)value_from_service_data(servicedata, 0, 4, true);
 
   //Set Json value
   BLEdata.set("steps", (double)steps);
@@ -1173,7 +1188,7 @@ JsonObject& process_miband(JsonObject& BLEdata) {
 JsonObject& process_milamp(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  long darkness = value_from_service_data(servicedata, 8, 2);
+  long darkness = (double)value_from_service_data(servicedata, 8, 2, true);
 
   //Set Json value
   BLEdata.set("presence", (bool)"true");
@@ -1187,18 +1202,36 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
 
   double value = 9999;
   // temperature
-  value = value_from_service_data(servicedata, 20, 4);
+  value = (double)value_from_service_data(servicedata, 20, 4, true);
   BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)value / 10);
   BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
   // humidity
-  value = value_from_service_data(servicedata, 24, 4);
+  value = (double)value_from_service_data(servicedata, 24, 4, true);
   BLEdata.set("hum", (double)value / 10);
   if (air) {
     // air pressure
-    value = value_from_service_data(servicedata, 32, 4);
+    value = (double)value_from_service_data(servicedata, 32, 4, true);
     BLEdata.set("pres", (double)value / 100);
   }
+
+  return BLEdata;
+}
+
+JsonObject& process_atc(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+
+  double temperature = (double)value_from_service_data(servicedata, 12, 4, false) / 10;
+  double humidity = (double)value_from_service_data(servicedata, 16, 2, false);
+  double battery = (double)value_from_service_data(servicedata, 18, 2, false);
+  double voltage = (double)value_from_service_data(servicedata, 20, 4, false) / 1000;
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("batt", (double)battery);
+  BLEdata.set("volt", (double)voltage);
 
   return BLEdata;
 }
