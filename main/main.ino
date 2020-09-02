@@ -155,6 +155,13 @@ unsigned long timer_led_measures = 0;
 #  include <SPIFFS.h>
 #  include <esp_wifi.h>
 
+#  ifdef ESP32_ETHERNET
+#    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
+#    define ETH_PHY_POWER 12
+#    include <ETH.h>
+void WiFiEvent(WiFiEvent_t event);
+static bool esp32EthConnected = false;
+#  endif
 #  ifdef SECURE_CONNECTION
 #    include <WiFiClientSecure.h>
 WiFiClientSecure eClient;
@@ -472,7 +479,7 @@ void connectMQTT() {
     delay(1000);
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(4000);
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
     disconnection_handling(failure_number_mqtt);
 #endif
   }
@@ -522,16 +529,18 @@ void setup() {
 #    endif
 #  endif
 
-  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
-
-#  if defined(ESPWifiManualSetup)
+#  ifdef ESP32_ETHERNET
+  setup_ethernet_esp32();
+#  else // WIFI ESP
+#    if defined(ESPWifiManualSetup)
   setup_wifi();
-#  else
+#    else
   setup_wifimanager(false);
-#  endif
-
+#    endif
+  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
+#  endif
 
   setOTA();
 #  ifdef SECURE_CONNECTION
@@ -1045,7 +1054,53 @@ void setup_wifimanager(bool reset_settings) {
     //end save
   }
 }
+#  ifdef ESP32_ETHERNET
+void setup_ethernet_esp32() {
+  bool ethBeginSuccess = false;
+  WiFi.onEvent(WiFiEvent);
+#    ifdef NetworkAdvancedSetup
+  Log.trace(F("Adv eth cfg" CR));
+  ETH.config(ip, gateway, subnet, Dns);
+  ethBeginSuccess = ETH.begin();
+#    else
+  Log.trace(F("Spl eth cfg" CR));
+  ethBeginSuccess = ETH.begin();
+#    endif
+  Log.trace(F("Connecting to Ethernet" CR));
+  while (!esp32EthConnected) {
+    delay(500);
+    Log.trace(F("." CR));
+  }
+}
 
+void WiFiEvent(WiFiEvent_t event) {
+  switch (event) {
+    case SYSTEM_EVENT_ETH_START:
+      Log.trace(F("Ethernet Started" CR));
+      ETH.setHostname(gateway_name);
+      break;
+    case SYSTEM_EVENT_ETH_CONNECTED:
+      Log.notice(F("Ethernet Connected" CR));
+      break;
+    case SYSTEM_EVENT_ETH_GOT_IP:
+      Log.trace(F("OpenMQTTGateway mac: %s" CR), ETH.macAddress().c_str());
+      Log.trace(F("OpenMQTTGateway ip: %s" CR), ETH.localIP().toString().c_str());
+      Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
+      esp32EthConnected = true;
+      break;
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      Log.error(F("Ethernet Disconnected" CR));
+      esp32EthConnected = false;
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      Log.error(F("Ethernet Stopped" CR));
+      esp32EthConnected = false;
+      break;
+    default:
+      break;
+  }
+}
+#  endif
 #else // Arduino case
 void setup_ethernet() {
 #  ifdef NetworkAdvancedSetup
@@ -1109,7 +1164,11 @@ void loop() {
   }
 
 #if defined(ESP8266) || defined(ESP32)
+#  ifdef ESP32_ETHERNET
+  if (esp32EthConnected) {
+#  else
   if (WiFi.status() == WL_CONNECTED) {
+#  endif
     ArduinoOTA.handle();
 #else
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
@@ -1215,16 +1274,17 @@ void loop() {
       connectMQTT();
     }
   } else { // disconnected from network
-#if defined(ESP8266) || defined(ESP32)
-    Log.warning(F("wifi disconnected" CR));
+    Log.warning(F("Network disconnected:" CR));
     digitalWrite(LED_INFO, LED_INFO_ON);
     delay(5000); // add a delay to avoid ESP32 crash and reset
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(5000);
+#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
+    Log.warning(F("wifi" CR));
     failure_number_ntwk++;
     disconnection_handling(failure_number_ntwk);
 #else
-    Log.warning(F("eth disconnected" CR));
+    Log.warning(F("ethernet" CR));
 #endif
   }
 // Function that doesn't need an active connection
@@ -1245,6 +1305,12 @@ void stateMeasures() {
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
+#    ifdef ESP32_ETHERNET
+  SYSdata["mac"] = (char*)ETH.macAddress().c_str();
+  SYSdata["ip"] = ip2CharArray(ETH.localIP());
+  ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
+  SYSdata["linkspeed"] = (int)ETH.linkSpeed();
+#    else
   long rssi = WiFi.RSSI();
   SYSdata["rssi"] = rssi;
   String SSID = WiFi.SSID();
@@ -1253,8 +1319,7 @@ void stateMeasures() {
   String mac = WiFi.macAddress();
   SYSdata["mac"] = (char*)mac.c_str();
   SYSdata["wifiprt"] = (int)wifiProtocol;
-#  else
-  SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
+#    endif
 #  endif
   String modules = "";
 #  ifdef ZgatewayRF
