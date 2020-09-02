@@ -72,11 +72,11 @@
 #  include "config_PWM.h"
 
 static long previousUpdateTime = 0; // milliseconds
-static long currentUpdateTime = 0;  // milliseconds
+static long currentUpdateTime = 0; // milliseconds
 
 static const char* channelJsonKeys[] = PWM_CHANNEL_NAMES;
-static const int   channelPins[] = PWM_CHANNEL_PINS;
-static const int   kNumChannels = sizeof(channelPins) / sizeof(int);
+static const int channelPins[] = PWM_CHANNEL_PINS;
+static const int kNumChannels = sizeof(channelPins) / sizeof(int);
 
 // These are all in a perceptually linear colour space, but scaled 0-1
 static float currentValues[kNumChannels] = {};
