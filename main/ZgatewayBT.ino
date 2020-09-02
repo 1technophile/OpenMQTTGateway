@@ -357,7 +357,7 @@ void LYWSD03MMCDiscovery(char* mac) {
   Log.trace(F("LYWSD03MMCDiscovery" CR));
   char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][8] = {
       {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "LYWSD03MMC-volt", mac, "voltage", jsonVolt, "", "", "V"},
+      {"sensor", "LYWSD03MMC-volt", mac, "", jsonVolt, "", "", "V"},
       {"sensor", "LYWSD03MMC-tempc", mac, "temperature", jsonTempc, "", "", "C"},
       {"sensor", "LYWSD03MMC-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "LYWSD03MMC-hum", mac, "humidity", jsonHum, "", "", "%"}
@@ -372,7 +372,7 @@ void MHO_C401Discovery(char* mac) {
   Log.trace(F("MHO_C401Discovery" CR));
   char* MHO_C401sensor[MHO_C401parametersCount][8] = {
       {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "MHO_C401-volt", mac, "voltage", jsonVolt, "", "", "V"},
+      {"sensor", "MHO_C401-volt", mac, "", jsonVolt, "", "", "V"},
       {"sensor", "MHO_C401-tempc", mac, "temperature", jsonTempc, "", "", "C"},
       {"sensor", "MHO_C401-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%"}
