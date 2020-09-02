@@ -253,10 +253,17 @@ void pub(char* topicori, JsonObject& data) {
   if (client.connected()) {
     String topic = String(mqtt_topic) + String(topicori);
 #ifdef valueAsASubject
+#  ifdef ZgatewayPilight
+    String value = data["value"];
+    if (value != 0) {
+      topic = topic + "/" + value;
+    }
+#  else
     SIGNAL_SIZE_UL_ULL value = data["value"];
     if (value != 0) {
       topic = topic + "/" + String(value);
     }
+#  endif
 #endif
 
 #ifdef jsonPublishing

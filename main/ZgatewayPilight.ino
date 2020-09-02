@@ -47,6 +47,22 @@ void pilightCallback(const String& protocol, const String& message, int status,
     RFPiLightdata.set("message", msg);
     RFPiLightdata.set("protocol", (char*)protocol.c_str());
     RFPiLightdata.set("length", (char*)deviceID.c_str());
+
+    const char* device_id = deviceID.c_str();
+    if (!strlen(device_id)) {
+      // deviceID returned from Pilight is only extracted from id field
+      // but some device may use another name as unique identifier
+      char* choices[] = {"key", "unit", "systemcode", "unitcode", "programcode"};
+
+      for (uint8_t i = 0; i < 5; i++) {
+        if (msg[choices[i]]) {
+          device_id = (const char*)msg[choices[i]];
+          break;
+        }
+      }
+    }
+
+    RFPiLightdata.set("value", device_id);
     RFPiLightdata.set("repeats", (int)repeats);
     RFPiLightdata.set("status", (int)status);
     pub(subjectPilighttoMQTT, RFPiLightdata);
