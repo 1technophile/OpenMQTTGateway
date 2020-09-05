@@ -395,6 +395,21 @@ void INodeEMDiscovery(char* mac) {
   createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount);
 }
 
+void ruuviDiscovery(char* mac) {
+#    define ruuviparametersCount 13
+  Log.trace(F("ruuviDiscovery" CR));
+  char* ruuvisensor[ruuviparametersCount][8] = {
+      {"sensor", "ruuvi-ver", mac, "version", jsonVer, "", "", ""},
+      {"sensor", "ruuvi-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "ruuvi-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "ruuvi-tempf", mac, "temperature", jsonTempf, "", "", "F"},
+      {"sensor", "ruuvi-hum", mac, "humidity", jsonHum, "", "", "%"},
+      {"sensor", "ruuvi-pres", mac, "pressure", jsonPres, "", "", "hPa"},
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, ruuvisensor, ruuviparametersCount);
+
 #  else
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
@@ -1272,6 +1287,26 @@ JsonObject& process_inode_em(JsonObject& BLEdata) {
   BLEdata.set("energy", (double)energy);
   BLEdata.set("batt", battery);
 
+  return BLEdata;
+}
+
+JsonObject& process_ruuvi(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+
+  double version = value_from_service_data(manufacturerdata, 5, 1);
+  double temperature = value_from_service_data(manufacturerdata, 6, 4) / 200;
+  double humidity = roundf((value_from_service_data(manufacturerdata, 10, 4) / 400)*100)/100;
+  double pressure = roundf(((value_from_service_data(manufacturerdata, 14, 4) + 50000) / 100)*100)/100;
+  double battery = value_from_service_data(manufacturerdata, 30, 2) + 1600;
+ 
+  //Set Json values
+  BLEdata.set("ver", (double)version);
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("pres", (double)pressure);
+  BLEdata.set("batt", (double)battery);
+  
   return BLEdata;
 }
 
