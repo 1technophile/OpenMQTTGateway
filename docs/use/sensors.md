@@ -53,3 +53,6 @@ You can have another PIN mirror the value of the PIR sensor output by adding the
 This can be useful if you would like to connect an LED to turn on when motion is detected.
 
 `#define HCSR501_LED_NOTIFY_GPIO 4`
+
+This notification pin can be inverted if driving directly or through a transistor/mosfet.
+`#define INVERT_LED_NOTIFY true`

@@ -63,7 +63,7 @@ void MeasureHCSR501() {
       }
     }
 #  ifdef HCSR501_LED_NOTIFY_GPIO
-    digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState);
+    digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState == HCSR501_LED_ON);
 #  endif
     if (HCSR501data.size() > 0)
       pub(subjectHCSR501toMQTT, HCSR501data);
