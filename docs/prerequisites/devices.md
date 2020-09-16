@@ -22,26 +22,26 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | Vegtrug ||temperature/moisture/luminance/fertility|
 | XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility|
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
-| XIAOMI Mi Jia 2 *|LYWSD03MMC|temperature/humidity/battery/volt|
-| XIAOMI Mi Jia 2 custom firmware **|LYWSD03MMC ATC|temperature/humidity/battery/volt|
-| XIAOMI MHO-C401 *|MHO-C401|temperature/humidity/battery/volt|
+| XIAOMI Mi Jia 2 (1)|LYWSD03MMC|temperature/humidity/battery/volt|
+| XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/volt|
+| XIAOMI MHO-C401 (1)|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
-| INKBIRD *|IBS-TH1|temperature/humidity/battery|
+| INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
-| XIAOMI Mi Scale v1 *|XMTZC04HM|weight|
-| XIAOMI Mi Scale v2 *|XMTZC05HM|weight|
-| XIAOMI Mi band * ||steps|
-| iNode Energy Meter * ||power,energy,battery|
+| XIAOMI Mi Scale v1 (1)|XMTZC04HM|weight|
+| XIAOMI Mi Scale v2 (1)|XMTZC05HM|weight|
+| XIAOMI Mi band (1)||steps|
+| iNode Energy Meter (1)||power,energy,battery|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
 ::: INFO
-(*) Not supported with HM10.
-(**) See https://github.com/atc1441/ATC_MiThermometer
+(1) Not supported with HM10.
+(2) See https://github.com/atc1441/ATC_MiThermometer
 :::
 
 ![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')

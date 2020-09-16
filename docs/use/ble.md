@@ -44,7 +44,8 @@ Note that the gateway return one or two measurement value each time. The differe
 * Steps
 * Weight
 * Impedance
-* Battery (mi jia only)
+* Battery
+* Voltage
 
 The infos will appear like this on your MQTT broker:
 
@@ -116,7 +117,7 @@ If you want to change the minimum RSSI value accepted for a device to be publish
 
 you can also accept all the devices by the following command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"minrssi":0}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"minrssi":-200}'`
 
 The default value is set into config_BT.h
 

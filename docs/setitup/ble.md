@@ -21,7 +21,7 @@ So as to communicate directly with the HM10 you may use [this program](https://g
 The baud rate of the HM10/11 module must be set to 9600 bauds , the command `AT+BAUD?` enables to know at which speed the module is set.
 So as to set it to 9600 that you may use `AT+BAUD0` command.
 
-The HM10/11 firmware version must be  >= v601, the command `AT+VERS?` enables to know the firmware version.
+The HM10/11 firmware version must be >= V709 the command `AT+VERS?` enables to know the firmware version.
 
 ## Arduino Hardware setup
 ![BLE Arduino](../img/OpenMQTTgateway_Arduino_Addon_BT.png)

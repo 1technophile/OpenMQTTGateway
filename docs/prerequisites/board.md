@@ -3,8 +3,8 @@ OpenMQTTGateway is not closed to one board or type of board, by using the power 
 
 You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported boards](https://compatible.openmqttgateway.com/index.php/boards/).
 
-Moreover it supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280, HTU21D
-Or can actutate things (LED chipsets, relays).
+Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280, HTU21D, AHTx0, DS1820
+or actuators; LED, relays, PWM.
 
 Here is some information to find the board suitable for your need, you have the choice between off the shelves boards and DIY setup.
 
@@ -15,6 +15,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |AVATTO / BAKEEY|![](../img/OpenMQTTGateway_boards_avatto_s06.png)|-|[X](https://1technophile.blogspot.com/2020/07/avatto-s06-ir-gateway-compatible-with.html)|-|-|-|-|-|
 |Sonoff RF Bridge (*) |![](../img/OpenMQTTGateway_boards_sonoff_rfbridge.png)|X|[mod](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
 |All bare ESP32|-|-|-|X|-|X|-|X|
+|OLIMEX ESP32 Ethernet|-|-|-|X|-|X|-|X|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
 |[M5Stick C](M5)|![](../img/OpenMQTTgateway_M5_StickC_Board_Display_Text.png)|-|send|X|-|X|X|X|
@@ -24,7 +25,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |Sonoff Basic|-|-|-|-|-|X|-|-|
 |RF WIFI GATEWAY|![](../img/OpenMQTTGateway_board_wifi_rf_gateway.png)|[receiving](https://1technophile.blogspot.com/2019/09/hack-of-rf-wifi-gateway-usb-stick.html)|-|-|-|-|-|-|
 
-'(*)' *So as to extend the number of RF protocols supported by the Sonoff RF Bridge you can apply an [hardware hack](https://1technophile.blogspot.com/2019/04/sonoff-rf-bridge-pilight-or-how-to.html), this way you will be able to use Pilight or RF2 gateway.*
+'(*)' *So as to extend the number of RF protocols supported by the Sonoff RF Bridge you can apply a [hardware hack](https://1technophile.blogspot.com/2019/04/sonoff-rf-bridge-pilight-or-how-to.html), this way you will be able to use RFm Pilight or RF2 gateway.*
 
 ## DIY boards
 The boards below need hardware [parts](parts.md) and electronic/hardware competencies. You have more possibilities of gateways combination, compared to off the shelves ones.
