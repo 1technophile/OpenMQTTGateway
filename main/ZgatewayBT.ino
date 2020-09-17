@@ -1349,7 +1349,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       // storing Min RSSI for further use if needed
       Log.trace(F("Previous minrssi: %d" CR), minRssi);
       // set Min RSSI if present if not setting default value
-      minRssi = abs((unsigned int)BTdata["minrssi"]);
+      minRssi = abs((int)BTdata["minrssi"]);
       Log.notice(F("New minrssi: %d" CR), minRssi);
     }
 #  ifdef ESP32
