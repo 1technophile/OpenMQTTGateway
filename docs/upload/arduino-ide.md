@@ -8,10 +8,10 @@
 * Unzip the libraries into your arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
 * If necessary replace the spaces into each library folder by _: example rename “ESP32 BLE Arduino” folder to “ESP32_BLE_Arduino”
 * Open the file main.ino from OpenMQTTGateway/main folder with the arduino IDE
-* Change the settings and the desired gateways into user_config.h (uncomment the modules you want)
+* Change the settings and the desired gateways into User_config.h (uncomment the modules you want)
 
 *Example for the use of RF gateway*
-```C++
+```cpp
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
 //#define ZgatewayIR     "IR"       //ESP8266, Arduino, Sonoff RF Bridge
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
@@ -27,4 +27,4 @@
 * Upload ➡️
 * You should see the logs into the serial monitor
 
-With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).

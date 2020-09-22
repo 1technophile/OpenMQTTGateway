@@ -9,11 +9,15 @@ rename 's/.pio-build-//' .*.bin
   echo "replace space by _ in folder names"
   find . -type d -name "* *" | while read FNAME; do mv "$FNAME" "${FNAME// /_}"; done
   echo "zipping libraries per board"
-  for i in */; do zip -r "${i%/}-libraries.zip" "$i"; done
-  ls -la
+  for i in */
+  do
+   zip -r "${i%/}-libraries.zip" "$i"
+  done
+  ls -lA
   mv *.zip ../../toDeploy
 )
-
+# remove binaries for *-all*, *-test* env and only zip containing *-test*
+rm -f *-all*.bin *-test*.bin *-test*.zip
 echo "zipping code and licence"
 zip -r OpenMQTTGateway_sources.zip main LICENSE.txt
 mv *.zip toDeploy

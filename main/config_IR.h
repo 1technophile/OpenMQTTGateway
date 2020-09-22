@@ -132,6 +132,11 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #  define IR_MULTIBRACKETS
 #  define IR_CARRIER_AC40
 #  define IR_CARRIER_AC64
+#  define IR_HITACHI_AC344
+#  define IR_CORONA_AC
+#  define IR_MIDEA24
+#  define IR_ZEPEAL
+#  define IR_SANYO_AC
 #elif __AVR_ATmega2560__
 #  define IR_COOLIX
 #  define IR_Whynter
@@ -154,6 +159,12 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 //#define IR_SAMSUNG
 //#define IR_Raw
 //#define IR_PANASONIC
+#endif
+
+#ifndef IR_EMITTER_INVERTED
+#  if defined(ESP8266) || defined(ESP32)
+#    define IR_EMITTER_INVERTED false //set to true if yuou want to reverse the LED signal for the emitter
+#  endif
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/

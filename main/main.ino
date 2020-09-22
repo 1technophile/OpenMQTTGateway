@@ -27,17 +27,27 @@
 */
 #include "User_config.h"
 
+// Macros and structure to enable the duplicates removing on the following gateways
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 // array to store previous received RFs, IRs codes and their timestamps
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define array_size 12
-unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-//Time used to wait for an interval before checking system measures
-unsigned long timer_sys_measures = 0;
-#else // boards with smaller memory
-#  define array_size 4
-unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+struct ReceivedSignal {
+  SIGNAL_SIZE_UL_ULL value;
+  uint32_t time;
+};
+#  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#    define struct_size 12
+ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+#  else // boards with smaller memory
+#    define struct_size 4
+ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+#  endif
 #endif
 
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+//Time used to wait for an interval before checking system measures
+unsigned long timer_sys_measures = 0;
+#  define ARDUINOJSON_USE_LONG_LONG 1
+#endif
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
@@ -88,6 +98,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #ifdef ZsensorHTU21
 #  include "config_HTU21.h"
 #endif
+#ifdef ZsensorAHTx0
+#  include "config_AHTx0.h"
+#endif
 #ifdef ZsensorHCSR04
 #  include "config_HCSR04.h"
 #endif
@@ -112,6 +125,9 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #ifdef ZactuatorFASTLED
 #  include "config_FASTLED.h"
 #endif
+#ifdef ZactuatorPWM
+#  include "config_PWM.h"
+#endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
 #  include "config_M5.h"
 #endif
@@ -120,19 +136,39 @@ unsigned long ReceivedSignal[array_size][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
+char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size * 2] = MQTT_PASS; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size] = MQTT_SERVER;
+char mqtt_port[6] = MQTT_PORT;
+char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
+char gateway_name[parameters_size * 2] = Gateway_Name;
+
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 
+unsigned long timer_led_measures = 0;
+
 #ifdef ESP32
 #  include <ArduinoOTA.h>
 #  include <FS.h>
-#  include <WiFi.h>
-#  include <WiFiUdp.h>
+#  include <SPIFFS.h>
+#  include <esp_wifi.h>
 
-#  include "SPIFFS.h"
-#  include "esp_wifi.h"
+#  ifdef ESP32_ETHERNET
+#    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
+#    define ETH_PHY_POWER 12
+#    include <ETH.h>
+void WiFiEvent(WiFiEvent_t event);
+static bool esp32EthConnected = false;
+#  endif
+#  ifdef SECURE_CONNECTION
+#    include <WiFiClientSecure.h>
+WiFiClientSecure eClient;
+#  else
+#    include <WiFi.h>
 WiFiClient eClient;
+#  endif
 #  include <Preferences.h>
 #  include <WiFiManager.h>
 Preferences preferences;
@@ -146,7 +182,12 @@ Preferences preferences;
 #  include <ESP8266WiFi.h>
 #  include <FS.h>
 #  include <WiFiManager.h>
+#  ifdef SECURE_CONNECTION
+WiFiClientSecure eClient;
+X509List caCert(certificate);
+#  else
 WiFiClient eClient;
+#  endif
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
 #  endif
@@ -155,13 +196,13 @@ WiFiClient eClient;
 EthernetClient eClient;
 #endif
 
+#define convertTemp_CtoF(c) ((c * 1.8) + 32)
+#define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
+
 // client link to pubsub mqtt
 PubSubClient client(eClient);
 
-//MQTT last attemps reconnection date
-unsigned long lastMQTTReconnectAttempt = 0;
-
-void revert_hex_data(char* in, char* out, int l) {
+void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
   int i = l - 2, j = 0;
   while (i != -2) {
@@ -175,24 +216,17 @@ void revert_hex_data(char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-void extract_char(char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
-  char tmp_subset[l + 1];
-  memcpy(tmp_subset, &token_char[start], l);
-  tmp_subset[l] = '\0';
+void extract_char(const char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
   if (isNumber) {
-    char tmp_subset2[l + 1];
     if (reverse)
-      revert_hex_data(tmp_subset, tmp_subset2, l + 1);
-    else
-      strncpy(tmp_subset2, tmp_subset, l + 1);
-    long long_value = strtoul(tmp_subset2, NULL, 16);
-    sprintf(tmp_subset2, "%ld", long_value);
-    strncpy(subset, tmp_subset2, l + 1);
+      revert_hex_data(token_char + start, subset, l + 1);
+    long long_value = strtoul(subset, NULL, 16);
+    sprintf(subset, "%ld", long_value);
   } else {
     if (reverse)
-      revert_hex_data(tmp_subset, subset, l + 1);
+      revert_hex_data(token_char + start, subset, l + 1);
     else
-      strncpy(subset, tmp_subset, l + 1);
+      strncpy(subset, token_char + start, l + 1);
   }
   subset[l] = '\0';
 }
@@ -214,15 +248,22 @@ void pub(char* topicori, char* payload, bool retainFlag) {
 
 void pub(char* topicori, JsonObject& data) {
   Log.notice(F("Subject: %s" CR), topicori);
+  digitalWrite(LED_RECEIVE, LED_RECEIVE_ON);
   logJson(data);
   if (client.connected()) {
-    digitalWrite(led_receive, HIGH);
     String topic = String(mqtt_topic) + String(topicori);
 #ifdef valueAsASubject
-    unsigned long value = data["value"];
+#  ifdef ZgatewayPilight
+    String value = data["value"];
+    if (value != 0) {
+      topic = topic + "/" + value;
+    }
+#  else
+    SIGNAL_SIZE_UL_ULL value = data["value"];
     if (value != 0) {
       topic = topic + "/" + String(value);
     }
+#  endif
 #endif
 
 #ifdef jsonPublishing
@@ -243,11 +284,11 @@ void pub(char* topicori, JsonObject& data) {
 #  if defined(ESP8266)
       yield();
 #  endif
-      if (p.value.is<unsigned long>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an unsigned long
+      if (p.value.is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
         if (strcmp(p.key, "value") == 0) { // if data is a value we don't integrate the name into the topic
-          pubMQTT(topic, p.value.as<unsigned long>());
+          pubMQTT(topic, p.value.as<SIGNAL_SIZE_UL_ULL>());
         } else { // if data is not a value we integrate the name into the topic
-          pubMQTT(topic + "/" + String(p.key), p.value.as<unsigned long>());
+          pubMQTT(topic + "/" + String(p.key), p.value.as<SIGNAL_SIZE_UL_ULL>());
         }
       } else if (p.value.is<int>()) {
         pubMQTT(topic + "/" + String(p.key), p.value.as<int>());
@@ -324,6 +365,12 @@ void pubMQTT(String topic, String payload) {
 void pubMQTT(String topic, int payload) {
   char val[12];
   sprintf(val, "%d", payload);
+  client.publish((char*)topic.c_str(), val);
+}
+
+void pubMQTT(String topic, unsigned long long payload) {
+  char val[21];
+  sprintf(val, "%llu", payload);
   client.publish((char*)topic.c_str(), val);
 }
 
@@ -430,8 +477,16 @@ void connectMQTT() {
     failure_number_mqtt++; // we count the failure
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
     Log.warning(F("failed, rc=%d" CR), client.state());
-    delay(5000);
-#if defined(ESP8266) || defined(ESP32)
+#if defined(SECURE_CONNECTION) && defined(ESP32)
+    Log.warning(F("failed, ssl error code=%d" CR), eClient.lastError(nullptr, 0));
+#elif defined(SECURE_CONNECTION) && defined(ESP8266)
+    Log.warning(F("failed, ssl error code=%d" CR), eClient.getLastSSLError());
+#endif
+    digitalWrite(LED_INFO, LED_INFO_ON);
+    delay(1000);
+    digitalWrite(LED_INFO, !LED_INFO_ON);
+    delay(4000);
+#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
     disconnection_handling(failure_number_mqtt);
 #endif
   }
@@ -481,19 +536,23 @@ void setup() {
 #    endif
 #  endif
 
-  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
-
-#  if defined(ESPWifiManualSetup)
+#  ifdef ESP32_ETHERNET
+  setup_ethernet_esp32();
+#  else // WIFI ESP
+#    if defined(ESPWifiManualSetup)
   setup_wifi();
-#  else
+#    else
   setup_wifimanager(false);
-#  endif
-
+#    endif
+  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
+#  endif
 
   setOTA();
-
+#  ifdef SECURE_CONNECTION
+  setupTLS();
+#  endif
 #else // In case of arduino platform
 
   //Launch serial for debugging purposes
@@ -503,12 +562,12 @@ void setup() {
 #endif
 
   //setup LED status
-  pinMode(led_receive, OUTPUT);
-  pinMode(led_send, OUTPUT);
-  pinMode(led_info, OUTPUT);
-  digitalWrite(led_receive, LOW);
-  digitalWrite(led_send, LOW);
-  digitalWrite(led_info, LOW);
+  pinMode(LED_RECEIVE, OUTPUT);
+  pinMode(LED_SEND, OUTPUT);
+  pinMode(LED_INFO, OUTPUT);
+  digitalWrite(LED_RECEIVE, !LED_RECEIVE_ON);
+  digitalWrite(LED_SEND, !LED_SEND_ON);
+  digitalWrite(LED_INFO, !LED_INFO_ON);
 
 #if defined(MDNS_SD) && defined(ESP8266)
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
@@ -517,15 +576,8 @@ void setup() {
   long port;
   port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
-#  ifdef mqtt_server_name // if name is defined we define the mqtt server by its name
-  IPAddress mqtt_server_ip;
-  WiFi.hostByName(mqtt_server_name, mqtt_server_ip);
-  client.setServer(mqtt_server_ip, port);
-  Log.trace(F("Mqtt server connection by host name: %s" CR), mqtt_server_ip.toString());
-#  else // if not by its IP adress
+  Log.trace(F("Mqtt server: %s" CR), mqtt_server);
   client.setServer(mqtt_server, port);
-  Log.trace(F("Mqtt server connection by IP: %s" CR), mqtt_server);
-#  endif
 #endif
 
   setup_parameters();
@@ -534,13 +586,14 @@ void setup() {
 
   delay(1500);
 
-  lastMQTTReconnectAttempt = 0;
-
 #ifdef ZsensorBME280
   setupZsensorBME280();
 #endif
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
+#endif
+#ifdef ZsensorAHTx0
+  setupZsensorAHTx0();
 #endif
 #ifdef ZsensorBH1750
   setupZsensorBH1750();
@@ -595,6 +648,9 @@ void setup() {
 #endif
 #ifdef ZactuatorFASTLED
   setupFASTLED();
+#endif
+#ifdef ZactuatorPWM
+  setupPWM();
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
@@ -708,10 +764,10 @@ void setOTA() {
 #  endif
   });
   ArduinoOTA.onEnd([]() {
+    Log.trace(F("\nOTA done" CR));
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-    Log.trace(F("\nOTA done" CR));
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     M5Display("OTA done", "", "");
 #  endif
@@ -737,16 +793,33 @@ void setOTA() {
   });
   ArduinoOTA.begin();
 }
+
+#  ifdef SECURE_CONNECTION
+void setupTLS() {
+#    if defined(NTP_SERVER)
+  configTime(0, 0, NTP_SERVER);
+#    endif
+#    if defined(ESP32)
+  eClient.setCACert(certificate);
+#    elif defined(ESP8266)
+  eClient.setTrustAnchors(&caCert);
+  eClient.setBufferSizes(512, 512);
+#    endif
+}
+#  endif
 #endif
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
+  char manual_wifi_ssid[] = wifi_ssid;
+  char manual_wifi_password[] = wifi_password;
+
   delay(10);
   WiFi.mode(WIFI_STA);
   if (wifiProtocol) forceWifiProtocol();
 
   // We start by connecting to a WiFi network
-  Log.trace(F("Connecting to %s" CR), wifi_ssid);
+  Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
 #  ifdef ESPWifiAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
@@ -755,9 +828,9 @@ void setup_wifi() {
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
   }
-  WiFi.begin(wifi_ssid, wifi_password);
+  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
 #  else
-  WiFi.begin(wifi_ssid, wifi_password);
+  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
 #  endif
 
   if (wifi_reconnect_bypass())
@@ -887,7 +960,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size);
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
-  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
+  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size * 2);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
 
@@ -988,7 +1061,53 @@ void setup_wifimanager(bool reset_settings) {
     //end save
   }
 }
+#  ifdef ESP32_ETHERNET
+void setup_ethernet_esp32() {
+  bool ethBeginSuccess = false;
+  WiFi.onEvent(WiFiEvent);
+#    ifdef NetworkAdvancedSetup
+  Log.trace(F("Adv eth cfg" CR));
+  ETH.config(ip, gateway, subnet, Dns);
+  ethBeginSuccess = ETH.begin();
+#    else
+  Log.trace(F("Spl eth cfg" CR));
+  ethBeginSuccess = ETH.begin();
+#    endif
+  Log.trace(F("Connecting to Ethernet" CR));
+  while (!esp32EthConnected) {
+    delay(500);
+    Log.trace(F("." CR));
+  }
+}
 
+void WiFiEvent(WiFiEvent_t event) {
+  switch (event) {
+    case SYSTEM_EVENT_ETH_START:
+      Log.trace(F("Ethernet Started" CR));
+      ETH.setHostname(gateway_name);
+      break;
+    case SYSTEM_EVENT_ETH_CONNECTED:
+      Log.notice(F("Ethernet Connected" CR));
+      break;
+    case SYSTEM_EVENT_ETH_GOT_IP:
+      Log.trace(F("OpenMQTTGateway mac: %s" CR), ETH.macAddress().c_str());
+      Log.trace(F("OpenMQTTGateway ip: %s" CR), ETH.localIP().toString().c_str());
+      Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
+      esp32EthConnected = true;
+      break;
+    case SYSTEM_EVENT_ETH_DISCONNECTED:
+      Log.error(F("Ethernet Disconnected" CR));
+      esp32EthConnected = false;
+      break;
+    case SYSTEM_EVENT_ETH_STOP:
+      Log.error(F("Ethernet Stopped" CR));
+      esp32EthConnected = false;
+      break;
+    default:
+      break;
+  }
+}
+#  endif
 #else // Arduino case
 void setup_ethernet() {
 #  ifdef NetworkAdvancedSetup
@@ -1041,14 +1160,22 @@ void loop() {
 #  endif
 #endif
 
-  digitalWrite(led_receive, LOW);
-  digitalWrite(led_info, LOW);
-  digitalWrite(led_send, LOW);
-
   unsigned long now = millis();
 
+  // Switch off of the LED after TimeLedON
+  if (now > (timer_led_measures + (TimeLedON * 1000))) {
+    timer_led_measures = millis();
+    digitalWrite(LED_RECEIVE, !LED_RECEIVE_ON);
+    digitalWrite(LED_INFO, !LED_INFO_ON);
+    digitalWrite(LED_SEND, !LED_SEND_ON);
+  }
+
 #if defined(ESP8266) || defined(ESP32)
+#  ifdef ESP32_ETHERNET
+  if (esp32EthConnected) {
+#  else
   if (WiFi.status() == WL_CONNECTED) {
+#  endif
     ArduinoOTA.handle();
 #else
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
@@ -1058,7 +1185,7 @@ void loop() {
 #ifdef ZmqttDiscovery
       if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
 #endif
-
+      digitalWrite(LED_INFO, LED_INFO_ON);
       connectedOnce = true;
       failure_number_ntwk = 0;
 
@@ -1075,6 +1202,9 @@ void loop() {
 #endif
 #ifdef ZsensorHTU21
       MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
+#endif
+#ifdef ZsensorAHTx0
+      MeasureAHTTempHum(); //Addon to measure Temperature, Humidity, of an 'AHTx0' sensor
 #endif
 #ifdef ZsensorHCSR04
       MeasureDistance(); //Addon to measure distance with a HC-SR04
@@ -1144,17 +1274,24 @@ void loop() {
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
+#ifdef ZactuatorPWM
+      PWMLoop();
+#endif
     } else {
       connectMQTT();
     }
   } else { // disconnected from network
-#if defined(ESP8266) || defined(ESP32)
-    Log.warning(F("wifi disconnected" CR));
-    delay(10000); // add a delay to avoid ESP32 crash and reset
+    Log.warning(F("Network disconnected:" CR));
+    digitalWrite(LED_INFO, LED_INFO_ON);
+    delay(5000); // add a delay to avoid ESP32 crash and reset
+    digitalWrite(LED_INFO, !LED_INFO_ON);
+    delay(5000);
+#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
+    Log.warning(F("wifi" CR));
     failure_number_ntwk++;
     disconnection_handling(failure_number_ntwk);
 #else
-    Log.warning(F("eth disconnected" CR));
+    Log.warning(F("ethernet" CR));
 #endif
   }
 // Function that doesn't need an active connection
@@ -1175,6 +1312,12 @@ void stateMeasures() {
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
+#    ifdef ESP32_ETHERNET
+  SYSdata["mac"] = (char*)ETH.macAddress().c_str();
+  SYSdata["ip"] = ip2CharArray(ETH.localIP());
+  ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
+  SYSdata["linkspeed"] = (int)ETH.linkSpeed();
+#    else
   long rssi = WiFi.RSSI();
   SYSdata["rssi"] = rssi;
   String SSID = WiFi.SSID();
@@ -1183,8 +1326,7 @@ void stateMeasures() {
   String mac = WiFi.macAddress();
   SYSdata["mac"] = (char*)mac.c_str();
   SYSdata["wifiprt"] = (int)wifiProtocol;
-#  else
-  SYSdata["ip"] = ip2CharArray(Ethernet.localIP());
+#    endif
 #  endif
   String modules = "";
 #  ifdef ZgatewayRF
@@ -1195,6 +1337,9 @@ void stateMeasures() {
 #  endif
 #  ifdef ZsensorHTU21
   modules = modules + ZsensorHTU21;
+#  endif
+#  ifdef ZsensorAHTx0
+  modules = modules + ZsensorAHTx0;
 #  endif
 #  ifdef ZsensorHCSR04
   modules = modules + ZsensorHCSR04;
@@ -1241,6 +1386,7 @@ void stateMeasures() {
   SYSdata["lowpowermode"] = (int)low_power_mode;
 #    endif
   SYSdata["interval"] = BLEinterval;
+  SYSdata["scanbcnct"] = BLEscanBeforeConnect;
 #  endif
 #  ifdef ZgatewayRFM69
   modules = modules + ZgatewayRFM69;
@@ -1266,6 +1412,9 @@ void stateMeasures() {
 #  ifdef ZactuatorFASTLED
   modules = modules + ZactuatorFASTLED;
 #  endif
+#  ifdef ZactuatorPWM
+  modules = modules + ZactuatorPWM;
+#  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
   SYSdata["m5-batt-level"] = (int8_t)M5.Power.getBatteryLevel();
@@ -1290,40 +1439,51 @@ void stateMeasures() {
 }
 #endif
 
-void storeValue(unsigned long MQTTvalue) {
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+/** 
+ * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
+ */
+void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   unsigned long now = millis();
   // find oldest value of the buffer
   int o = getMin();
   Log.trace(F("Min ind: %d" CR), o);
   // replace it by the new one
-  ReceivedSignal[o][0] = MQTTvalue;
-  ReceivedSignal[o][1] = now;
-  Log.trace(F("store code : %u / %u" CR), ReceivedSignal[o][0], ReceivedSignal[o][1]);
+  receivedSignal[o].value = MQTTvalue;
+  receivedSignal[o].time = now;
+
+  // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
+  Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
   Log.trace(F("Col: val/timestamp" CR));
-  for (int i = 0; i < array_size; i++) {
-    Log.trace(F("mem code : %u / %u" CR), ReceivedSignal[i][0], ReceivedSignal[i][1]);
+  for (int i = 0; i < struct_size; i++) {
+    Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
   }
 }
 
+/** 
+ * get oldest time index from the values array from RF, IR, SRFB or Weather stations so as to avoid duplicates
+ */
 int getMin() {
-  unsigned int minimum = ReceivedSignal[0][1];
+  unsigned int minimum = receivedSignal[0].time;
   int minindex = 0;
-  for (int i = 0; i < array_size; i++) {
-    if (ReceivedSignal[i][1] < minimum) {
-      minimum = ReceivedSignal[i][1];
+  for (int i = 1; i < struct_size; i++) {
+    if (receivedSignal[i].time < minimum) {
+      minimum = receivedSignal[i].time;
       minindex = i;
     }
   }
   return minindex;
 }
 
-bool isAduplicate(unsigned long value) {
+/** 
+ * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
+ */
+bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
   Log.trace(F("isAdupl?" CR));
-  // check if the value has been already sent during the last time_avoid_duplicate
-  for (int i = 0; i < array_size; i++) {
-    if (ReceivedSignal[i][0] == value) {
+  for (int i = 0; i < struct_size; i++) {
+    if (receivedSignal[i].value == value) {
       unsigned long now = millis();
-      if (now - ReceivedSignal[i][1] < time_avoid_duplicate) { // change
+      if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
         Log.notice(F("no pub. dupl" CR));
         return true;
       }
@@ -1331,32 +1491,24 @@ bool isAduplicate(unsigned long value) {
   }
   return false;
 }
+#endif
 
 void receivingMQTT(char* topicOri, char* datacallback) {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
-  if (strstr(topicOri, subjectMultiGTWKey) != NULL) // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
-  {
-    unsigned long data = 0;
-#ifdef jsonPublishing
-    if (jsondata.success())
-      data = jsondata["value"];
-#endif
-
-#ifdef simplePublishing
-    data = strtoul(datacallback, NULL, 10); // we will not be able to pass values > 4294967295
-#endif
-
-    if (data != 0) {
-      storeValue(data);
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+  if (strstr(topicOri, subjectMultiGTWKey) != NULL) { // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
+    SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
+    if (data != 0 && !isAduplicateSignal(data)) {
+      storeSignalValue(data);
     }
   }
+#endif
 
   if (jsondata.success()) { // json object ok -> json decoding
     // log the received json
     logJson(jsondata);
-
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
 #endif
@@ -1388,6 +1540,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorFASTLED
     MQTTtoFASTLED(topicOri, jsondata);
 #  endif
+#  ifdef ZactuatorPWM
+    MQTTtoPWM(topicOri, jsondata);
+#  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     MQTTtoM5(topicOri, jsondata);
 #  endif
@@ -1395,8 +1550,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTtoONOFF(topicOri, jsondata);
 #  endif
 #endif
-
-    digitalWrite(led_send, HIGH);
+    digitalWrite(LED_SEND, LED_SEND_ON);
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
@@ -1429,11 +1583,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, datacallback);
 #endif
-
-    digitalWrite(led_send, HIGH);
   }
-  //YELLOW OFF
-  digitalWrite(led_send, HIGH);
 }
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding

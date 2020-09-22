@@ -34,7 +34,6 @@
 
 #  include <EEPROM.h>
 #  include <RFM69.h> //https://www.github.com/lowpowerlab/rfm69
-#  include <SPI.h>
 
 char RadioConfig[128];
 

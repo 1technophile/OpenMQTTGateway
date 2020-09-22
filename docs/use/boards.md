@@ -4,10 +4,16 @@
 
 ### Erasing the flash
 
-So as to erase the flash memory on ESP boards you may do a long press to TRIGGER_GPIO button or connect the pin to the ground.
+So as to erase the flash memory on ESP boards you may do a long press to TRIGGER_GPIO button or connect the pin TRIGGER_GPIO to the ground during several seconds.
+
+On M5Stack boards you may do a long press to these buttons:
+* Button B on M5StickC (GPIO 37)
+* Button C on M5Stack (GPIO 37)
+* Button lateral on M5stick (GPIO 35)
+
 
 ### Low power mode for ESP32
-OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT on a barebone ESP32:
+OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT:
 
 * Normal mode (per default)
 
@@ -16,6 +22,10 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 * Low Power mode
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
+
+::: tip
+When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
+:::
 
 ::: warning
 If you change the default low power mode in config_BT.h to 2 and your credential are not set or not correct, the ESP32 will not connect to the broker and the only way to change the low power mode will be a new erase/upload.
@@ -46,13 +56,13 @@ you can also revert it to the serial monitor:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoM5/config -m '{"log-display":false}'`
 
 ### Low power mode for M5 boards
-OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT on a barebone ESP32:
+OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT or a button on M5 boards:
 
 * Normal mode (per default), screen ON
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":0}'`
 
-* Low Power mode, screen ON when processing
+* Low Power mode, screen ON when processing only
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":1}'`
 
@@ -61,10 +71,3 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC and middle button of M5stack).
-
-### Erasing the flash
-
-So as to erase the flash memory on M5Stack boards you may do a long press to TRIGGER_GPIO button:
-* Button B on M5StickC (GPIO 37)
-* Button C on M5Stack (GPIO 37)
-* Button lateral on M5stick (GPIO 35)

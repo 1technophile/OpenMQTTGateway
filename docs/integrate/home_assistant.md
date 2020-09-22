@@ -1,6 +1,6 @@
 # Integrate Home Assistant
 ## Auto discovery
-So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in user_config.h
+So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in User_config.h
 And enable discovery on your MQTT integration definition in HASS.
 
 OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
@@ -71,7 +71,7 @@ binary_sensor:
         name: "Bewegung_Schlafzimmer"
         #device_class: motion
         state_topic: "home/OpenMQTTGateway1/HCSR501toMQTT"
-        value_template: '{{ value_json["hcsr501"] }}'
+        value_template: '{{ value_json["presence"] }}'
         payload_on: "true"
         payload_off: "false"
 ```

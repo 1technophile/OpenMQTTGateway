@@ -2,11 +2,11 @@
 ## Compatible parts
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|SRX882 (recommended)|433Mhz Receiver|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|STX882 (recommended)|433Mhz Transmitter|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|XD RF 5V|433Mhz Receiver|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|FS1000A|433Mhz Transmitter|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|CC1101|433Mhz Transceiver|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|SRX882 (recommended)|433Mhz Receiver|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|STX882 (recommended)|433Mhz Transmitter|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|XD RF 5V|433Mhz Receiver|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|FS1000A|433Mhz Transmitter|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|CC1101|433Mhz Transceiver|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 ## Pinout
 |Board| Receiver Pin| Emitter Pin|

@@ -15,6 +15,12 @@ Generate your RF signals by pressing a remote button or other and you should see
 
 `home/OpenMQTTGateway/433toMQTT {"value":1315156,"protocol":1,"length":24,"delay":317}`
 
+### Disabling Transmit function to safe a PIN
+
+To disable transmit functions to allow the use of another pin, add the following to the config_rf.h file :
+
+`#define RF_DISABLE_TRANSMIT`
+
 ### Send data by MQTT to convert it on RF signal 
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156}'`
@@ -127,7 +133,7 @@ will make RF Bridge send a signal with the use of advanced parameters defined in
 RF2 gateway enables to send command to RF devices with the KAKU protocol. DIO chacon devices are an example.
 It uses the same pinout as the RF gateway and both gateways can be used on the same setup.
 
-Receiving RF codes with the KAKU protocol is not compatible with ZgatewayRF , so as to get the code of your remotes you should comment ZgatewayRF in user_config.h.
+Receiving RF codes with the KAKU protocol is not compatible with ZgatewayRF , so as to get the code of your remotes you should comment ZgatewayRF in User_config.h.
 Transmitting can be done with both ZgatewayRF and ZgatewayRF2
 
 ### Receiving data from KAKU signal

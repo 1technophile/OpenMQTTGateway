@@ -33,6 +33,10 @@
 void setupHCSR501() {
   Log.notice(F("HCSR501 pin: %d" CR), HCSR501_GPIO);
   pinMode(HCSR501_GPIO, INPUT); // declare HC SR-501 GPIO as input
+#  ifdef HCSR501_LED_NOTIFY_GPIO
+  pinMode(HCSR501_LED_NOTIFY_GPIO, OUTPUT);
+  digitalWrite(HCSR501_LED_NOTIFY_GPIO, LOW);
+#  endif
 }
 
 void MeasureHCSR501() {
@@ -48,16 +52,19 @@ void MeasureHCSR501() {
     if (PresenceValue == HIGH) {
       if (pirState == LOW) {
         //turned on
-        HCSR501data.set("hcsr501", "true");
+        HCSR501data.set("presence", "true");
         pirState = HIGH;
       }
     } else {
       if (pirState == HIGH) {
         // turned off
-        HCSR501data.set("hcsr501", "false");
+        HCSR501data.set("presence", "false");
         pirState = LOW;
       }
     }
+#  ifdef HCSR501_LED_NOTIFY_GPIO
+    digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState == HCSR501_LED_ON);
+#  endif
     if (HCSR501data.size() > 0)
       pub(subjectHCSR501toMQTT, HCSR501data);
   }

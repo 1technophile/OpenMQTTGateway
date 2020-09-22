@@ -28,7 +28,9 @@
 #ifndef user_config_h
 #define user_config_h
 /*-------------------VERSION----------------------*/
-#define OMG_VERSION "version_tag"
+#ifndef OMG_VERSION
+#  define OMG_VERSION "version_tag"
+#endif
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
 /*
@@ -54,9 +56,11 @@
 #  define Gateway_Short_Name "OMG"
 #endif
 
-#define Base_Topic "home/"
+#ifndef Base_Topic
+#  define Base_Topic "home/"
+#endif
 
-/*-------------DEFINE YOUR  NETWORK PARAMETERS BELOW----------------*/
+/*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
 //#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
 #ifdef NetworkAdvancedSetup // for arduino boards advanced config
@@ -69,21 +73,35 @@ const byte subnet[] = {255, 255, 255, 0};
 #endif
 
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
-//#define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+//#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #else // for arduino boards
 const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
 #endif
 
+//#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on OLIMEX ESP32 Ethernet gateway
+
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
-#  define wifi_ssid     "wifi ssid"
-#  define wifi_password "wifi password"
+#  ifndef wifi_ssid
+#    define wifi_ssid "wifi ssid"
+#  endif
+#  ifndef wifi_password
+#    define wifi_password "wifi password"
+#  endif
 #endif
 
-#define WifiManager_password            "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
-#define WifiManager_ssid                Gateway_Name //this is the network name of the initial setup access point
-#define WifiManager_ConfigPortalTimeOut 120
-#define WifiManager_TimeOut             5
+#ifndef WifiManager_password
+#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
+#endif
+#ifndef WifiManager_ssid
+#  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
+#endif
+#ifndef WifiManager_ConfigPortalTimeOut
+#  define WifiManager_ConfigPortalTimeOut 120
+#endif
+#ifndef WifiManager_TimeOut
+#  define WifiManager_TimeOut 5
+#endif
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
@@ -95,9 +113,8 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
-//#define mqtt_server_name "www.mqtt_broker.com" // instead of defining the server by its IP you can define it by its name, uncomment this line and set the correct MQTT server host name
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define parameters_size      20
+#  define parameters_size      30
 #  define mqtt_topic_max_size  100
 #  define mqtt_max_packet_size 1024
 #else
@@ -105,12 +122,52 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define mqtt_topic_max_size  50
 #  define mqtt_max_packet_size 128
 #endif
-char mqtt_user[parameters_size] = "your_username"; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = "your_password"; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = "192.168.1.17";
-char mqtt_port[6] = "1883";
-char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size * 2] = Gateway_Name;
+
+// activate the use of TLS for secure connection to the MQTT broker
+// MQTT_SERVER must be set to the Common Name (CN) of the broker's certificate
+//#define SECURE_CONNECTION
+
+#ifdef SECURE_CONNECTION
+#  define MQTT_DEFAULT_PORT "8883"
+#else
+#  define MQTT_DEFAULT_PORT "1883"
+#endif
+
+#ifndef MQTT_USER
+#  define MQTT_USER "your_username"
+#endif
+#ifndef MQTT_PASS
+#  define MQTT_PASS "your_password"
+#endif
+#ifndef MQTT_SERVER
+#  define MQTT_SERVER "192.168.1.17"
+#endif
+#ifndef MQTT_PORT
+#  define MQTT_PORT MQTT_DEFAULT_PORT
+#endif
+
+#ifdef SECURE_CONNECTION
+#  if defined(ESP8266) || defined(ESP32)
+#    if defined(ESP32)
+#      define CERT_ATTRIBUTE
+#    elif defined(ESP8266)
+#      define CERT_ATTRIBUTE PROGMEM
+#    endif
+
+// The root ca certificate used for validating the MQTT broker
+// The certificate must be in PEM ascii format
+const char* certificate CERT_ATTRIBUTE = R"EOF("
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+")EOF";
+
+// specify a NTP server here or else the NTP server from DHCP is used
+//#    define NTP_SERVER "pool.ntp.org"
+#  else
+#    error "only ESP8266 and ESP32 support SECURE_CONNECTION with TLS"
+#  endif
+#endif
 
 #if defined(ESP8266) || defined(ESP32)
 #  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
@@ -119,17 +176,11 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 
 /*------------------DEEP SLEEP parameters ------------------*/
 //DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)
-//DEFAULT_LOW_POWER_MODE 1 to activate deep sleep with LCD ON when a function is processing,
-//DEFAULT_LOW_POWER_MODE 2 to activate deep sleep with LED ON when a function is processing (LCD is turned OFF)
+//DEFAULT_LOW_POWER_MODE 1 to activate deep sleep
+//DEFAULT_LOW_POWER_MODE 2 to activate deep sleep (LCD is turned OFF)
 #ifdef ESP32
 #  ifndef DEFAULT_LOW_POWER_MODE
 #    define DEFAULT_LOW_POWER_MODE 0
-#  endif
-#  ifndef LOW_POWER_LED
-#    define LOW_POWER_LED 2
-#  endif
-#  ifndef LOW_POWER_LED_OFF
-#    define LOW_POWER_LED_OFF 1
 #  endif
 int low_power_mode = DEFAULT_LOW_POWER_MODE;
 #endif
@@ -176,22 +227,39 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 //#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#define ZactuatorFASTLED "FASTLED"  //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
-//#define ZboardM5STACK "ZboardM5STACK"
-//#define ZradioCC1101  "CC1101" //ESP8266, ESP32
+//#define ZboardM5STACK  "ZboardM5STACK"
+//#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
+//#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
-#define version_Topic           "/version"
-#define will_Topic              "/LWT"
-#define will_QoS                0
-#define will_Retain             true
-#define will_Message            "offline"
-#define Gateway_AnnouncementMsg "online"
+#ifndef version_Topic
+#  define version_Topic "/version"
+#endif
+#ifndef will_Topic
+#  define will_Topic "/LWT"
+#endif
+#ifndef will_QoS
+#  define will_QoS 0
+#endif
+#ifndef will_Retain
+#  define will_Retain true
+#endif
+#ifndef will_Message
+#  define will_Message "offline"
+#endif
+#ifndef Gateway_AnnouncementMsg
+#  define Gateway_AnnouncementMsg "online"
+#endif
 
-#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#ifndef jsonPublishing
+#  define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#endif
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
-#define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#ifndef jsonReceiving
+#  define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#endif
 
 //#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
 //example
@@ -200,43 +268,58 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define simpleReceiving true //comment if you don't want to use old way reception analysis
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
-#define ota_hostname Gateway_Name
-#define ota_password "OTAPASSWORD"
-#define ota_port     8266
+#ifndef ota_hostname
+#  define ota_hostname Gateway_Name
+#endif
+#ifndef ota_password
+#  define ota_password "OTAPASSWORD"
+#endif
+#ifndef ota_port
+#  define ota_port 8266
+#endif
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifndef led_receive
+#ifndef LED_RECEIVE
 #  ifdef ESP8266
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  elif ESP32
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  else //arduino uno/nano
-#    define led_receive 40
+#    define LED_RECEIVE 40
 #  endif
 #endif
-#ifndef led_send
+#ifndef LED_RECEIVE_ON
+#  define LED_RECEIVE_ON HIGH
+#endif
+#ifndef LED_SEND
 #  ifdef ESP8266
-#    define led_send 42
+#    define LED_SEND 42
 #  elif ESP32
-#    define led_send 42
+#    define LED_SEND 42
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define led_send 42
+#    define LED_SEND 42
 #  else //arduino uno/nano
-#    define led_send 42
+#    define LED_SEND 42
 #  endif
 #endif
-#ifndef led_info
+#ifndef LED_SEND_ON
+#  define LED_SEND_ON HIGH
+#endif
+#ifndef LED_INFO
 #  ifdef ESP8266
-#    define led_info 44
+#    define LED_INFO 44
 #  elif ESP32
-#    define led_info 44
+#    define LED_INFO 44
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define led_info 44
+#    define LED_INFO 44
 #  else //arduino uno/nano
-#    define led_info 44
+#    define LED_INFO 44
 #  endif
+#endif
+#ifndef LED_INFO_ON
+#  define LED_INFO_ON HIGH
 #endif
 
 #ifdef ESP8266
@@ -269,17 +352,27 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 // uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
-//variables to avoid duplicates
-#define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
-
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER           512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
-#  define ARDUINOJSON_USE_LONG_LONG 1
+#if defined(ESP8266) || defined(ESP32)
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define SIGNAL_SIZE_UL_ULL uint64_t
+#  define STRTO_UL_ULL       strtoull
+#elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define SIGNAL_SIZE_UL_ULL uint64_t
+#  define STRTO_UL_ULL       strtoul
 #else // boards with smaller memory
-#  define JSON_MSG_BUFFER 64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define SIGNAL_SIZE_UL_ULL uint32_t
+#  define STRTO_UL_ULL       strtoul
+#endif
+
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+// variable to avoid duplicates
+#  define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define TimeLedON                    0.5 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
