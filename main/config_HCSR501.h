@@ -33,6 +33,10 @@ extern void HCSR501toMQTT();
 #define subjectHCSR501toMQTT "/HCSR501toMQTT"
 //#define HCSR501_LED_NOTIFY_GPIO 4 //Uncomment this line to mirror the state of the PIR sensor to the specified GPIO
 
+#if defined(HCSR501_LED_NOTIFY_GPIO) && !defined(HCSR501_LED_ON)
+#  define HCSR501_LED_ON HIGH
+#endif
+
 #ifndef TimeBeforeStartHCSR501
 #  define TimeBeforeStartHCSR501 60000 //define the time necessary for HC SR501 init
 #endif
