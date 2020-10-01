@@ -419,7 +419,7 @@ void INodeEMDiscovery(char* mac) {
 void DT24Discovery(char* mac) {
 #    define DT24parametersCount 11
   Log.trace(F("DT24Discovery" CR));
-  char* INodeEMsensor[INodeEMparametersCount][8] = {
+  char* DT24sensor[DT24parametersCount][8] = {
       {"sensor", "DT24-type", mac, "type", jsonPower, "", "", "W"},
       {"sensor", "DT24-voltage", mac, "", jsonVolt, "", "", "V"},
       {"sensor", "DT24-amp", mac, "battery", jsonBatt, "", "", "%"},
@@ -435,7 +435,7 @@ void DT24Discovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount);
+  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount);
 }
 
 #  else
@@ -1162,7 +1162,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       }
       Log.trace(F("Is it a DT24-BLE?" CR));
       if (strcmp(name, "DT24-BLE") == 0) {
-        Log.trace(F("DT24-BLE data reading" CR));
+        Log.trace(F("DT24-BLE add to list for future connect" CR));
         BLEdata.set("model", "DT24-BLE");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, DT24-BLE);
