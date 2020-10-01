@@ -859,7 +859,7 @@ void saveConfigCallback() {
   shouldSaveConfig = true;
 }
 
-#  if TRIGGER_GPIO
+#  ifdef TRIGGER_GPIO
 void checkButton() { // code from tzapu/wifimanager examples
   // check for button press
   if (digitalRead(TRIGGER_GPIO) == LOW) {
@@ -900,7 +900,7 @@ void eraseAndRestart() {
 }
 
 void setup_wifimanager(bool reset_settings) {
-#  if TRIGGER_GPIO
+#  ifdef TRIGGER_GPIO
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
 #  endif
   delay(10);
