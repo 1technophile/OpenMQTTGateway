@@ -1,18 +1,18 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal/BLE  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal/BLE  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This gateway enables to:
  - publish MQTT data to a different topic related to BLE devices rssi signal
  - publish MQTT data related to mi flora temperature, moisture, fertility and lux
  - publish MQTT data related to mi jia indoor temperature & humidity sensor
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -395,6 +395,49 @@ void INodeEMDiscovery(char* mac) {
   createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount);
 }
 
+
+### DC Meter Report
+
+> There are currently no unpurchased product tests
+
+| Offset | Field            | Block size | Note                                |
+| -----: | ---------------- | ---------- | ----------------------------------- |
+|   `03` | Device Type      | 1 byte     | `01` [Device Type](#type-indicator) |
+|   `04` | Voltage          | 3 byte     | 24 bit BE (divide by 10)            |
+|   `07` | Amp              | 3 byte     | 24 bit BE (divide by 1000)          |
+|   `0A` | Watt             | 3 byte     | 24 bit BE (divide by 10)            |
+|   `0D` | W·h              | 4 byte     | 32 bit BE (divide by 100)           |
+|   `11` | Price (per kW·h) | 3 byte     | 24 bit BE (divide by 100)           |
+|   `14` |                  | 4 byte     | unknown value                       |
+|   `18` | Temperature      | 2 byte     | 16 bit BE                           |
+|   `1A` | Hour             | 2 byte     | 16 bit BE                           |
+|   `1C` | Minute           | 1 byte     |                                     |
+|   `1D` | Second           | 1 byte     |                                     |
+|   `1E` | Backlight        | 1 byte     |                                     |
+
+
+void DT24Discovery(char* mac) {
+#    define DT24parametersCount 11
+  Log.trace(F("DT24Discovery" CR));
+  char* INodeEMsensor[INodeEMparametersCount][8] = {
+      {"sensor", "DT24-type", mac, "type", jsonPower, "", "", "W"},
+      {"sensor", "DT24-voltage", mac, "", jsonVolt, "", "", "V"},
+      {"sensor", "DT24-amp", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-watt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-wattHour", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-price", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-unknown", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "%"},
+      {"sensor", "DT24-hour", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-minutes", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-second", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "DT24-light", mac, "battery", jsonBatt, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount);
+}
+
 #  else
 void MiFloraDiscovery(char* mac) {}
 void VegTrugDiscovery(char* mac) {}
@@ -485,7 +528,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   }
 };
 
-/** 
+/**
  * BLEscan used to retrieve BLE advertized data from devices without connection
  */
 void BLEscan() {
@@ -504,7 +547,7 @@ void BLEscan() {
   BLEDevice::deinit(true);
 }
 
-/** 
+/**
  * Callback method to retrieve data from devices characteristics
  */
 void notifyCB(
@@ -549,7 +592,7 @@ void notifyCB(
   pBLERemoteCharacteristic->unsubscribe();
 }
 
-/** 
+/**
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 void BLEconnect() {
@@ -593,6 +636,48 @@ void BLEconnect() {
         }
       }
     }
+
+    // This is an awful hack as I'm not a great C++ programmer
+
+    if (p->sensorModel == DT24-BLE) {
+      Log.trace(F("Model to connect found" CR));
+      NimBLEClient* pClient;
+      pClient = BLEDevice::createClient();
+      BLEUUID serviceUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
+      BLEUUID charUUID("0000ffe1-0000-1000-8000-00805f9b34fb");
+      BLEAddress sensorAddress(p->macAdr);
+      if (!pClient->connect(sensorAddress)) {
+        Log.notice(F("Failed to find client: %s" CR), p->macAdr);
+        NimBLEDevice::deleteClient(pClient);
+      } else {
+        BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
+        if (!pRemoteService) {
+          Log.notice(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
+          pClient->disconnect();
+        } else {
+          Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
+          // Obtain a reference to the characteristic in the service of the remote BLE server.
+          if (pClient->isConnected()) {
+            Log.trace(F("Client isConnected, freeHeap: %d" CR), ESP.getFreeHeap());
+            BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
+            if (!pRemoteCharacteristic) {
+              Log.notice(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
+              pClient->disconnect();
+            } else {
+              if (pRemoteCharacteristic->canNotify()) {
+                Log.trace(F("Registering notification" CR));
+                pRemoteCharacteristic->subscribe(true, notifyCB);
+              } else {
+                Log.notice(F("Failed registering notification" CR));
+                pClient->disconnect();
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // End of my awful hack
   }
   Log.notice(F("BLE Connect end" CR));
 }
@@ -833,7 +918,7 @@ void RemoveJsonPropertyIf(JsonObject& obj, char* key, bool condition) {
   }
 }
 
-/** 
+/**
  * Retrieve a long value from a char array extract representing hexadecimal data, reversed or not
  */
 long value_from_service_data(const char* service_data, int offset, int data_length, bool reverse) {
@@ -886,6 +971,7 @@ void launchDiscovery() {
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str());
       if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str());
+      if (p->sensorModel == DT24-BLE) DT24Discovery((char*)macWOdots.c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
@@ -1073,6 +1159,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, INKBIRD);
         return process_inkbird(BLEdata);
+      }
+      Log.trace(F("Is it a DT24-BLE?" CR));
+      if (strcmp(name, "DT24-BLE") == 0) {
+        Log.trace(F("DT24-BLE data reading" CR));
+        BLEdata.set("model", "DT24-BLE");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, DT24-BLE);
+        return process_dt24(BLEdata);
       }
     }
     Log.trace(F("Is it a iNode Energy Meter?" CR));

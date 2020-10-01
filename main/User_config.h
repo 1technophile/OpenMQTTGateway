@@ -1,17 +1,17 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This program enables to:
  - receive MQTT data from a topic and send signals corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received signals
-  
+
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -41,11 +41,11 @@
  * - mqtt_pass
  * - mqtt_server
  * - mqtt_port
- * 
+ *
  * To completely disable WifiManager, define ESPWifiManualSetup.
  * If you do so, please don't forget to set these variables before compiling
- * 
- * Otherwise you can provide these credentials on the web interface after connecting 
+ *
+ * Otherwise you can provide these credentials on the web interface after connecting
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
@@ -57,7 +57,7 @@
 #endif
 
 #ifndef Base_Topic
-#  define Base_Topic "home/"
+#  define Base_Topic "omg/"
 #endif
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
@@ -104,7 +104,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+// #define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 #define maxConnectionRetry     10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 #define maxConnectionRetryWifi 5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
 
@@ -134,13 +134,13 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #ifndef MQTT_USER
-#  define MQTT_USER "your_username"
+#  define MQTT_USER ""
 #endif
 #ifndef MQTT_PASS
-#  define MQTT_PASS "your_password"
+#  define MQTT_PASS ""
 #endif
 #ifndef MQTT_SERVER
-#  define MQTT_SERVER "192.168.1.17"
+#  define MQTT_SERVER "192.168.1.12"
 #endif
 #ifndef MQTT_PORT
 #  define MQTT_PORT MQTT_DEFAULT_PORT
@@ -208,7 +208,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
-//#define ZgatewayBT     "BT"       //ESP8266, ESP32
+#define ZgatewayBT     "BT"       //ESP8266, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
@@ -226,7 +226,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
-//#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
+#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STACK  "ZboardM5STACK"
@@ -283,7 +283,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  ifdef ESP8266
 #    define LED_RECEIVE 40
 #  elif ESP32
-#    define LED_RECEIVE 40
+#    define LED_RECEIVE 2
 #  elif __AVR_ATmega2560__ //arduino mega
 #    define LED_RECEIVE 40
 #  else //arduino uno/nano
@@ -297,7 +297,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #  ifdef ESP8266
 #    define LED_SEND 42
 #  elif ESP32
-#    define LED_SEND 42
+#    define LED_SEND 2
 #  elif __AVR_ATmega2560__ //arduino mega
 #    define LED_SEND 42
 #  else //arduino uno/nano
@@ -323,9 +323,9 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #endif
 
 #ifdef ESP8266
-//#  define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
+#define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
 #elif ESP32
-//#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
+#define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 #endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
@@ -378,6 +378,6 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
-#define LOG_LEVEL LOG_LEVEL_NOTICE
+#define LOG_LEVEL LOG_LEVEL_TRACE
 
 #endif
