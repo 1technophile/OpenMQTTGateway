@@ -395,7 +395,7 @@ void INodeEMDiscovery(char* mac) {
   createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount);
 }
 
-
+/*
 ### DC Meter Report
 
 > There are currently no unpurchased product tests
@@ -415,9 +415,10 @@ void INodeEMDiscovery(char* mac) {
 |   `1D` | Second           | 1 byte     |                                     |
 |   `1E` | Backlight        | 1 byte     |                                     |
 
+*/
 
 void DT24Discovery(char* mac) {
-#    define DT24parametersCount 11
+#    define DT24parametersCount 12
   Log.trace(F("DT24Discovery" CR));
   char* DT24sensor[DT24parametersCount][8] = {
       {"sensor", "DT24-type", mac, "type", jsonPower, "", "", "W"},
@@ -639,7 +640,7 @@ void BLEconnect() {
 
     // This is an awful hack as I'm not a great C++ programmer
 
-    if (p->sensorModel == DT24-BLE) {
+    if (p->sensorModel == DT24BLE) {
       Log.trace(F("Model to connect found" CR));
       NimBLEClient* pClient;
       pClient = BLEDevice::createClient();
@@ -971,7 +972,7 @@ void launchDiscovery() {
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str());
       if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == DT24-BLE) DT24Discovery((char*)macWOdots.c_str());
+      if (p->sensorModel == DT24BLE) DT24Discovery((char*)macWOdots.c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
@@ -1162,10 +1163,10 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       }
       Log.trace(F("Is it a DT24-BLE?" CR));
       if (strcmp(name, "DT24-BLE") == 0) {
-        Log.trace(F("DT24-BLE add to list for future connect" CR));
-        BLEdata.set("model", "DT24-BLE");
+        Log.trace(F("DT24-BLE data reading" CR));
+        BLEdata.set("model", "DT24BLE");
         if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, DT24-BLE);
+          createOrUpdateDevice(mac, device_flags_init, DT24BLE);
         return process_dt24(BLEdata);
       }
     }
@@ -1285,6 +1286,24 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
   BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("batt", (double)battery);
+
+  return BLEdata;
+}
+
+// DT24-BLE
+
+JsonObject& process_dt24(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+
+  double temperature = (double)value_from_service_data(manufacturerdata, 0, 4, true) / 100;
+  double humidity = (double)value_from_service_data(manufacturerdata, 4, 4, true) / 100;
+  double battery = (double)value_from_service_data(manufacturerdata, 14, 2, true);
+
+  //Set Json values
+  BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
+  BLEdata.set("tempc", (double)temperature);
   BLEdata.set("hum", (double)humidity);
   BLEdata.set("batt", (double)battery);
 
