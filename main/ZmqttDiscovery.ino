@@ -142,7 +142,7 @@ void pubMqttDiscovery() {
   );
 
 #  ifdef ZsensorBME280
-#    define BMEparametersCount 6
+#    define BMEparametersCount 5
   Log.trace(F("bme280Discovery" CR));
   char* BMEsensor[BMEparametersCount][8] = {
       {"sensor", "temp", "bme", "temperature", jsonTempc, "", "", "°C"},
@@ -165,7 +165,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorHTU21
-#    define HTUparametersCount 3
+#    define HTUparametersCount 2
   Log.trace(F("htu21Discovery" CR));
   char* HTUsensor[HTUparametersCount][8] = {
       {"sensor", "temp", "htu", "temperature", jsonTempc, "", "", "°C"},
@@ -185,7 +185,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorAHTx0
-#    define AHTparametersCount 3
+#    define AHTparametersCount 2
   Log.trace(F("AHTx0Discovery" CR));
   char* AHTsensor[AHTparametersCount][8] = {
       {"sensor", "temp", "aht", "temperature", jsonTempc, "", "", "°C"},
@@ -204,7 +204,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorDHT
-#    define DHTparametersCount 3
+#    define DHTparametersCount 2
   Log.trace(F("DHTDiscovery" CR));
   char* DHTsensor[DHTparametersCount][8] = {
       {"sensor", "temp", "dht", "temperature", jsonTempc, "", "", "°C"},

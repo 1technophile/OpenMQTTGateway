@@ -183,7 +183,7 @@ void strupp(char* beg) {
 
 #  ifdef ZmqttDiscovery
 void MiFloraDiscovery(char* mac) {
-#    define MiFloraparametersCount 6
+#    define MiFloraparametersCount 4
   Log.trace(F("MiFloraDiscovery" CR));
   char* MiFlorasensor[MiFloraparametersCount][8] = {
       {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx"},
@@ -197,7 +197,7 @@ void MiFloraDiscovery(char* mac) {
 }
 
 void VegTrugDiscovery(char* mac) {
-#    define VegTrugparametersCount 6
+#    define VegTrugparametersCount 4
   Log.trace(F("VegTrugDiscovery" CR));
   char* VegTrugsensor[VegTrugparametersCount][8] = {
       {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx"},
@@ -211,7 +211,7 @@ void VegTrugDiscovery(char* mac) {
 }
 
 void MiJiaDiscovery(char* mac) {
-#    define MiJiaparametersCount 5
+#    define MiJiaparametersCount 3
   Log.trace(F("MiJiaDiscovery" CR));
   char* MiJiasensor[MiJiaparametersCount][8] = {
       {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%"},
@@ -224,7 +224,7 @@ void MiJiaDiscovery(char* mac) {
 }
 
 void FormalDiscovery(char* mac) {
-#    define FormalparametersCount 5
+#    define FormalparametersCount 4
   Log.trace(F("FormalDiscovery" CR));
   char* Formalsensor[FormalparametersCount][8] = {
       {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%"},
@@ -238,7 +238,7 @@ void FormalDiscovery(char* mac) {
 }
 
 void LYWSD02Discovery(char* mac) {
-#    define LYWSD02parametersCount 5
+#    define LYWSD02parametersCount 3
   Log.trace(F("LYWSD02Discovery" CR));
   char* LYWSD02sensor[LYWSD02parametersCount][8] = {
       {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V"},
@@ -251,7 +251,7 @@ void LYWSD02Discovery(char* mac) {
 }
 
 void CLEARGRASSTRHDiscovery(char* mac) {
-#    define CLEARGRASSTRHparametersCount 5
+#    define CLEARGRASSTRHparametersCount 3
   Log.trace(F("CLEARGRASSTRHDiscovery" CR));
   char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
       {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V"},
@@ -264,7 +264,7 @@ void CLEARGRASSTRHDiscovery(char* mac) {
 }
 
 void CLEARGRASSCGD1Discovery(char* mac) {
-#    define CLEARGRASSCGD1parametersCount 5
+#    define CLEARGRASSCGD1parametersCount 3
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
       {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
@@ -277,7 +277,7 @@ void CLEARGRASSCGD1Discovery(char* mac) {
 }
 
 void CLEARGRASSTRHKPADiscovery(char* mac) {
-#    define CLEARGRASSTRHKPAparametersCount 5
+#    define CLEARGRASSTRHKPAparametersCount 3
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
       {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa"},
@@ -323,7 +323,7 @@ void MiBandDiscovery(char* mac) {
 }
 
 void InkBirdDiscovery(char* mac) {
-#    define InkBirdparametersCount 5
+#    define InkBirdparametersCount 3
   Log.trace(F("InkBirdDiscovery" CR));
   char* InkBirdsensor[InkBirdparametersCount][8] = {
       {"sensor", "InkBird-batt", mac, "battery", jsonBatt, "", "", "%"},
@@ -336,7 +336,7 @@ void InkBirdDiscovery(char* mac) {
 }
 
 void LYWSD03MMCDiscovery(char* mac) {
-#    define LYWSD03MMCparametersCount 5
+#    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
   char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][8] = {
       {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%"},
@@ -350,7 +350,7 @@ void LYWSD03MMCDiscovery(char* mac) {
 }
 
 void MHO_C401Discovery(char* mac) {
-#    define MHO_C401parametersCount 5
+#    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
   char* MHO_C401sensor[MHO_C401parametersCount][8] = {
       {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%"},
