@@ -73,7 +73,7 @@ const byte subnet[] = {255, 255, 255, 0};
 #endif
 
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
-//#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #else // for arduino boards
 const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
@@ -83,10 +83,10 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
 #  ifndef wifi_ssid
-#    define wifi_ssid "wifi ssid"
+#    define wifi_ssid "Homebase"
 #  endif
 #  ifndef wifi_password
-#    define wifi_password "wifi password"
+#    define wifi_password "turbocharge1"
 #  endif
 #endif
 
@@ -134,13 +134,13 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #ifndef MQTT_USER
-#  define MQTT_USER "your_username"
+#  define MQTT_USER "Gateway"
 #endif
 #ifndef MQTT_PASS
-#  define MQTT_PASS "your_password"
+#  define MQTT_PASS "GatePass73"
 #endif
 #ifndef MQTT_SERVER
-#  define MQTT_SERVER "192.168.1.17"
+#  define MQTT_SERVER "192.168.1.221"
 #endif
 #ifndef MQTT_PORT
 #  define MQTT_PORT MQTT_DEFAULT_PORT
@@ -232,7 +232,11 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZboardM5STACK  "ZboardM5STACK"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
 //#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+<<<<<<< Updated upstream
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
+=======
+#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
+>>>>>>> Stashed changes
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef version_Topic
@@ -266,7 +270,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //example
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-//#define simpleReceiving true //comment if you don't want to use old way reception analysis
+#define simpleReceiving true //comment if you don't want to use old way reception analysis
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #ifndef ota_hostname
