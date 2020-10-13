@@ -1452,7 +1452,12 @@ void stateMeasures() {
   SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
   SYSdata["modules"] = modules;
+
+#  ifdef useMultipleNode
+  pub((char *)(String(subjectSYStoMQTT) + "/" + getMacAddress()).c_str(), SYSdata);
+#  else
   pub(subjectSYStoMQTT, SYSdata);
+#  endif
 }
 #endif
 

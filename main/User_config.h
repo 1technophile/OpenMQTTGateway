@@ -377,6 +377,8 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
+#define useMultipleNode
+
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL LOG_LEVEL_NOTICE
 
