@@ -1,3 +1,4 @@
 .pio
 .vscode
 *_env.ini
+user_config.h
