@@ -485,10 +485,16 @@ void connectMQTT() {
 #endif
     Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
-    // Once connected, publish an announcement...
+
+    // Once connected, publish an announcement...and version
+#ifdef useMultipleNode
+    pub((char *)(String(will_Topic) + "/" + UniqueIdentifer).c_str(), Gateway_AnnouncementMsg, will_Retain);
+    pub((char *)(String(version_Topic) + "/" + UniqueIdentifer).c_str(), OMG_VERSION, will_Retain);
+#else
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
-    // publish version
     pub(version_Topic, OMG_VERSION, will_Retain);
+#endif
+
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);
@@ -1621,7 +1627,13 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 }
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
+#ifdef useMultipleNode
+  String topic = String(subjectMQTTtoSYSset) + "/" + UniqueIdentifer;
+#else
+  String topic = String(subjectMQTTtoSYSset);
+#endif
+
+  if (cmpToMainTopic(topicOri, (char*)topic.c_str())) {
     Log.trace(F("MQTTtoSYS json" CR));
 #if defined(ESP8266) || defined(ESP32)
     if (SYSdata.containsKey("cmd")) {
