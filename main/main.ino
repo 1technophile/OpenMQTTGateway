@@ -217,6 +217,14 @@ String getMacAddress() {
   return String(baseMacChr);
 }
 
+#ifdef useMultipleNode
+#  ifdef nodeUniqueidentifer
+#    define UniqueIdentifer String(nodeUniqueidentifer)
+#  else
+#    define UniqueIdentifer getMacAddress()
+#  endif
+#endif
+
 void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
   int i = l - 2, j = 0;
@@ -282,7 +290,7 @@ void pub(char* topicori, JsonObject& data) {
 #endif
 
 #ifdef useMultipleNode
-    data.set("node", getMacAddress());
+    data.set("node", UniqueIdentifer);
 #endif
 
 #ifdef jsonPublishing
@@ -469,7 +477,7 @@ void connectMQTT() {
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
 
-  String clientId = String(Gateway_Name) + String("_") + getMacAddress();
+  String clientId = String(Gateway_Name) + String("_") + UniqueIdentifer;
   if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     if (low_power_mode < 2)
@@ -1458,7 +1466,7 @@ void stateMeasures() {
   SYSdata["modules"] = modules;
 
 #  ifdef useMultipleNode
-  pub((char *)(String(subjectSYStoMQTT) + "/" + getMacAddress()).c_str(), SYSdata);
+  pub((char *)(String(subjectSYStoMQTT) + "/" + UniqueIdentifer).c_str(), SYSdata);
 #  else
   pub(subjectSYStoMQTT, SYSdata);
 #  endif

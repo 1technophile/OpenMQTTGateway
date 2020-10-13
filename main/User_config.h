@@ -378,6 +378,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
 #define useMultipleNode
+#define nodeUniqueidentifer     "OMG1" // Uncomment if you want to force an unique identifier, otherwise, the mac address will be used
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #define LOG_LEVEL LOG_LEVEL_NOTICE
