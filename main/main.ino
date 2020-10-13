@@ -281,6 +281,10 @@ void pub(char* topicori, JsonObject& data) {
 #  endif
 #endif
 
+#ifdef useMultipleNode
+    data.set("node", getMacAddress());
+#endif
+
 #ifdef jsonPublishing
     Log.trace(F("jsonPublishing" CR));
 #  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
