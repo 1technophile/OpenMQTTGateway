@@ -2,3 +2,4 @@
 .vscode
 *_env.ini
 main\User_config.h
+main/User_config.h
