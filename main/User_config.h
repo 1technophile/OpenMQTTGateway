@@ -377,6 +377,9 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 
+/* Multiple OpenMQTTGateway nodes on the same network
+ * If you want to use multiple OMG node, uncomment the useMultipleNode line.
+ */
 #define useMultipleNode
 #define nodeUniqueidentifer     "OMG1" // Uncomment if you want to force an unique identifier, otherwise, the mac address will be used
 
