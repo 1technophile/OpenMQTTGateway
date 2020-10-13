@@ -39,11 +39,12 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 #define subjectForwardMQTTtoRS232 "home/gateway2/commands/MQTTtoRS232"
 
 //Setup for RS232
+#define MAX_INPUT         50   // how much serial data we expect
 #define RS232Baud         9600 // The serial connection Baud
 #define RS232Pre          "00" // The prefix for the RS232 message
 #define RS232InPre        '0'  // Hacky way to get first character of prefix for incoming
-#define RS232Post         "\n" // The postfix for the RS232 message
-#define RS232InPost       '\n' // Hacky way to get first character of prefix for incoming
+#define RS232Post         "\r" // The postfix for the RS232 message
+#define RS232InPost       '\r' // Hacky way to get last character of postfix for incoming
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RS232_RX_GPIO

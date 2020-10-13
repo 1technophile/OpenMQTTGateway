@@ -31,8 +31,6 @@
 
 #include <SoftwareSerial.h>
 
-// how much serial data we expect before a newline
-const unsigned int MAX_INPUT = 50;
 SoftwareSerial RS232Serial(RS232_RX_GPIO, RS232_TX_GPIO); // RX, TX
 
 void setupRS232() {
@@ -49,47 +47,31 @@ void setupRS232() {
 }
 
 void RS232toMQTT() {
+  //This function is Blocking, but there should only ever be a few bytes, usually an ACK.
+  //It also doesn't strip the leading prefix
   if (RS232Serial.available()) {
+    Log.trace(F("RS232toMQTT" CR));
     static char RS232data[MAX_INPUT];
     static unsigned int input_pos = 0;
-    static byte inChar = RS232Serial.read();
-    switch (inChar)
-    {
-      case RS232InPost:   // end of transmission
-      
-       RS232data[input_pos] = 0;  // terminating null byte
-      
-       // terminator reached! process input_line here ...
-       Log.trace(F("End Rcv. RS232" CR));
-       pub(subjectRS232toMQTT, RS232data);
-       // reset buffer for next time
-       input_pos = 0;  
-       break;
-      case RS232InPre:   //Beginning of new transmission
-
-        input_pos = 0;
-        Log.trace(F("Begin Rcv. RS232" CR));
-        if (sizeof RS232Pre > 1){
-          for (int i = 1; i < sizeof RS232Pre; i++){
-            RS232Serial.read(); //discard extra bytes
-          }
-        }
-        break;
-
-      default:
-        // keep adding if not full ... allow for terminating null byte
-        if (input_pos < (MAX_INPUT - 1))
-          RS232data[input_pos++] = inChar;
-          Log.trace(F("." CR));
-        break;
-    }  // end of switch
+    static char inChar;
+    do {
+      if (RS232Serial.available()) {
+        inChar = RS232Serial.read();
+        RS232data[input_pos] = inChar;
+        input_pos++;
+        Log.trace(F("Received %c" CR), inChar);
+      }
+    } while (inChar != RS232InPost && input_pos < MAX_INPUT);
+    RS232data[input_pos] = 0;
+    input_pos = 0;
+    Log.trace(F("Publish %s" CR), RS232data);
+    pub(subjectRS232toMQTT, RS232data);
   }
 }
 
 
 #  ifdef simpleReceiving
 void MQTTtoRS232(char* topicOri, char* datacallback) {
-  Log.trace(F("simple" CR));
   if (cmpToMainTopic(topicOri, subjectMQTTtoRS232)) {
     Log.trace(F("MQTTtoRS232" CR));
     Log.trace(F("Prefix set: %s" CR), RS232Pre);
@@ -109,6 +91,7 @@ void MQTTtoRS232(char* topicOri, JsonObject& RS232data) {
     const char* data = RS232data["value"];
     const char* prefix = RS232data["prefix"] | RS232Pre;
     const char* postfix = RS232data["postfix"] | RS232Post;
+    Log.trace(F("Value set: %s" CR), data);
     Log.trace(F("Prefix set: %s" CR), prefix);
     Log.trace(F("Postfix set: %s" CR), postfix);
     RS232Serial.print(prefix);

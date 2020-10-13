@@ -1565,7 +1565,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef ZgatewayRS232
     Log.notice(F("Json method" CR));
-    //MQTTtoRS232(topicOri, jsondata);
+    MQTTtoRS232(topicOri, jsondata);
 #  endif
 #endif
     digitalWrite(LED_SEND, LED_SEND_ON);
