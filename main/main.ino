@@ -255,8 +255,9 @@ void pub(char* topicori, JsonObject& data) {
 #ifdef valueAsASubject
 #  ifdef ZgatewayPilight
     String value = data["value"];
+    String protocol = data["protocol"];
     if (value != 0) {
-      topic = topic + "/" + value;
+      topic = topic + "/" + protocol + "/" + value;
     }
 #  else
     SIGNAL_SIZE_UL_ULL value = data["value"];
