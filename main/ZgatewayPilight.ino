@@ -54,7 +54,7 @@ void pilightCallback(const String& protocol, const String& message, int status,
       // but some device may use another name as unique identifier
       char* choices[] = {"key", "unit", "device_id", "systemcode", "unitcode", "programcode"};
 
-      for (uint8_t i = 0; i < 5; i++) {
+      for (uint8_t i = 0; i < 6; i++) {
         if (msg[choices[i]]) {
           device_id = (const char*)msg[choices[i]];
           break;
