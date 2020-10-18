@@ -29,7 +29,7 @@
 
 #ifdef ZgatewayRS232
 
-#include <SoftwareSerial.h>
+#  include <SoftwareSerial.h>
 
 SoftwareSerial RS232Serial(RS232_RX_GPIO, RS232_TX_GPIO); // RX, TX
 
@@ -47,8 +47,7 @@ void setupRS232() {
 }
 
 void RS232toMQTT() {
-  //This function is Blocking, but there should only ever be a few bytes, usually an ACK.
-  //It also doesn't strip the leading prefix
+  //This function is Blocking, but there should only ever be a few bytes, usually an ACK or a NACK.
   if (RS232Serial.available()) {
     Log.trace(F("RS232toMQTT" CR));
     static char RS232data[MAX_INPUT];
@@ -65,25 +64,11 @@ void RS232toMQTT() {
     RS232data[input_pos] = 0;
     input_pos = 0;
     Log.trace(F("Publish %s" CR), RS232data);
-    pub(subjectRS232toMQTT, RS232data);
+    char* output = RS232data + sizeof(RS232Pre) - 1;
+    pub(subjectRS232toMQTT, output);
   }
 }
 
-
-#  ifdef simpleReceiving
-void MQTTtoRS232(char* topicOri, char* datacallback) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRS232)) {
-    Log.trace(F("MQTTtoRS232" CR));
-    Log.trace(F("Prefix set: %s" CR), RS232Pre);
-    Log.trace(F("Postfix set: %s" CR), RS232Post);
-    RS232Serial.print(RS232Pre);
-    RS232Serial.print(datacallback);
-    RS232Serial.print(RS232Post);
-  }
-}
-#  endif
-
-#  ifdef jsonReceiving
 void MQTTtoRS232(char* topicOri, JsonObject& RS232data) {
   Log.trace(F("json" CR));
   if (cmpToMainTopic(topicOri, subjectMQTTtoRS232)) {
@@ -99,5 +84,4 @@ void MQTTtoRS232(char* topicOri, JsonObject& RS232data) {
     RS232Serial.print(postfix);
   }
 }
-#  endif
 #endif

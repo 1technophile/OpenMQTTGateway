@@ -665,7 +665,6 @@ void setup() {
   setupDHT();
 #endif
 #ifdef ZgatewayRS232
-  Log.notice(F("Setting up RS232" CR));
   setupRS232();
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
@@ -1445,7 +1444,6 @@ void stateMeasures() {
   SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
 #  ifdef ZGatewayRS232
-  Log.notice(F("add module" CR);
   modules = modules + ZGatewayRS232;
 #  endif
   SYSdata["modules"] = modules;
@@ -1564,7 +1562,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTtoONOFF(topicOri, jsondata);
 #  endif
 #  ifdef ZgatewayRS232
-    Log.notice(F("Json method" CR));
     MQTTtoRS232(topicOri, jsondata);
 #  endif
 #endif
@@ -1596,12 +1593,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef ZactuatorFASTLED
     MQTTtoFASTLED(topicOri, datacallback);
-#  endif
-#  ifdef ZgatewayRS232
-    Log.notice(F("Simple method" CR));
-    Log.notice(F("topic %s" CR), topicOri);
-    Log.notice(F("data %s" CR), datacallback);
-    MQTTtoRS232(topicOri, datacallback);
 #  endif
 #endif
 #ifdef ZactuatorONOFF
