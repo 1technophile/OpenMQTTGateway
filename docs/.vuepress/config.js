@@ -53,7 +53,7 @@ module.exports = {
             'setitup/ir',
             'setitup/lora',
             'setitup/gsm',
-			'setitup/rs232',
+            'setitup/rs232',
             'setitup/sensors',
             'setitup/actuators'
           ]
@@ -79,7 +79,7 @@ module.exports = {
             'use/ir',
             'use/lora',
             'use/gsm',
-			'use/rs232',
+            'use/rs232',
             'use/rfm69',
             'use/sensors',
             'use/actuators',
