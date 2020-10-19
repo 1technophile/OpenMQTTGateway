@@ -131,6 +131,9 @@ unsigned long timer_sys_measures = 0;
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
 #  include "config_M5.h"
 #endif
+#if defined(ZgatewayRS232)
+#  include "config_RS232.h"
+#endif
 /*------------------------------------------------------------------------*/
 
 //adding this to bypass the problem of the arduino builder issue 50
@@ -661,6 +664,9 @@ void setup() {
 #endif
 #ifdef ZsensorDHT
   setupDHT();
+#endif
+#ifdef ZgatewayRS232
+  setupRS232();
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
@@ -1272,6 +1278,9 @@ void loop() {
       if (RFM69toMQTT())
         Log.trace(F("RFM69toMQTT OK" CR));
 #endif
+#ifdef ZgatewayRS232
+      RS232toMQTT();
+#endif
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
@@ -1435,6 +1444,9 @@ void stateMeasures() {
   SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
+#  ifdef ZGatewayRS232
+  modules = modules + ZGatewayRS232;
+#  endif
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
 }
@@ -1549,6 +1561,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);
+#  endif
+#  ifdef ZgatewayRS232
+    MQTTtoRS232(topicOri, jsondata);
 #  endif
 #endif
     digitalWrite(LED_SEND, LED_SEND_ON);
