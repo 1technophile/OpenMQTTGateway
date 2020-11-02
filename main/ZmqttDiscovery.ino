@@ -72,15 +72,17 @@ void createDiscovery(char* sensor_type,
   StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject& sensor = jsonBuffer.createObject();
 
-  //If a component cannot render it's state (f.i. KAKU relays) no state topic should be added.
-  //Without a state topic HA will use optimistic mode for the component by default.
-  //The Home Assistant UI for optimistic switches (separate on and off icons) allows for multiple 
-  // subsequent on commands. This is required for dimming on KAKU relays like the ACM-300.
-  if (st_topic[0]) { 
+  // If a component cannot render it's state (f.i. KAKU relays) no state topic
+  // should be added. Without a state topic HA will use optimistic mode for the
+  // component by default. The Home Assistant UI for optimistic switches
+  // (separate on and off icons) allows for multiple
+  // subsequent on commands. This is required for dimming on KAKU relays like
+  // the ACM-300.
+  if (st_topic[0]) {
     char state_topic[mqtt_topic_max_size];
     strcpy(state_topic, mqtt_topic);
     strcat(state_topic, st_topic);
-    sensor.set("stat_t", state_topic); //state_topic
+    sensor.set("stat_t", state_topic);  // state_topic
   }
 
   sensor.set("name", s_name); //name
