@@ -48,9 +48,13 @@ ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 unsigned long timer_sys_measures = 0;
 #  define ARDUINOJSON_USE_LONG_LONG 1
 #endif
+
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
+
+StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
+JsonArray& modules = modulesBuffer.createArray();
 
 // Modules config inclusion
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
@@ -592,81 +596,110 @@ void setup() {
 
 #ifdef ZsensorBME280
   setupZsensorBME280();
+  modules.add(ZsensorBME280);
 #endif
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
+  modules.add(ZsensorHTU21);
 #endif
 #ifdef ZsensorAHTx0
   setupZsensorAHTx0();
+  modules.add(ZsensorAHTx0);
 #endif
 #ifdef ZsensorBH1750
   setupZsensorBH1750();
+  modules.add(ZsensorBH1750);
 #endif
 #ifdef ZsensorTSL2561
   setupZsensorTSL2561();
+  modules.add(ZsensorTSL2561);
 #endif
 #ifdef Zgateway2G
   setup2G();
+  modules.add(Zgateway2G);
 #endif
 #ifdef ZgatewayIR
   setupIR();
+  modules.add(ZgatewayIR);
 #endif
 #ifdef ZgatewayLORA
   setupLORA();
+  modules.add(ZgatewayLORA);
 #endif
 #ifdef ZgatewayRF
   setupRF();
+  modules.add(ZgatewayRF);
 #endif
 #ifdef ZgatewayRF2
   setupRF2();
+  modules.add(ZgatewayRF2);
 #endif
 #ifdef ZgatewayPilight
   setupPilight();
+  modules.add(ZgatewayPilight);
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
+  modules.add(ZgatewayWeatherStation);
 #endif
 #ifdef ZgatewaySRFB
   setupSRFB();
+  modules.add(ZgatewaySRFB);
 #endif
 #ifdef ZgatewayBT
   setupBT();
+  modules.add(ZgatewayBT);
 #endif
 #ifdef ZgatewayRFM69
   setupRFM69();
+  modules.add(ZgatewayRFM69);
 #endif
 #ifdef ZsensorINA226
   setupINA226();
+  modules.add(ZsensorINA226);
 #endif
 #ifdef ZsensorHCSR501
   setupHCSR501();
+  modules.add(ZsensorHCSR501);
 #endif
 #ifdef ZsensorHCSR04
   setupHCSR04();
+  modules.add(ZsensorHCSR04);
 #endif
 #ifdef ZsensorGPIOInput
   setupGPIOInput();
+  modules.add(ZsensorGPIOInput);
 #endif
 #ifdef ZsensorGPIOKeyCode
   setupGPIOKeyCode();
+  modules.add(ZsensorGPIOKeyCode);
 #endif
 #ifdef ZactuatorFASTLED
   setupFASTLED();
+  modules.add(ZactuatorFASTLED);
 #endif
 #ifdef ZactuatorPWM
   setupPWM();
+  modules.add(ZactuatorPWM);
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
+  modules.add(ZsensorDS1820);
 #endif
 #ifdef ZsensorADC
   setupADC();
+  modules.add(ZsensorADC);
 #endif
 #ifdef ZsensorDHT
   setupDHT();
+  modules.add(ZsensorDHT);
 #endif
 #ifdef ZgatewayRS232
   setupRS232();
+  modules.add(ZgatewayRS232);
+#endif
+#ifdef ZmqttDiscovery
+  modules.add(ZmqttDiscovery);
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
@@ -1338,92 +1371,12 @@ void stateMeasures() {
   SYSdata["wifiprt"] = (int)wifiProtocol;
 #    endif
 #  endif
-  String modules = "";
-#  ifdef ZgatewayRF
-  modules = modules + ZgatewayRF;
-#  endif
-#  ifdef ZsensorBME280
-  modules = modules + ZsensorBME280;
-#  endif
-#  ifdef ZsensorHTU21
-  modules = modules + ZsensorHTU21;
-#  endif
-#  ifdef ZsensorAHTx0
-  modules = modules + ZsensorAHTx0;
-#  endif
-#  ifdef ZsensorHCSR04
-  modules = modules + ZsensorHCSR04;
-#  endif
-#  ifdef ZsensorBH1750
-  modules = modules + ZsensorBH1750;
-#  endif
-#  ifdef ZsensorTSL2561
-  modules = modules + ZsensorTSL2561;
-#  endif
-#  ifdef ZsensorDHT
-  modules = modules + ZsensorDHT;
-#  endif
-#  ifdef ZsensorDS1820
-  modules = modules + ZsensorDS1820;
-#  endif
-#  ifdef ZactuatorONOFF
-  modules = modules + ZactuatorONOFF;
-#  endif
-#  ifdef Zgateway2G
-  modules = modules + Zgateway2G;
-#  endif
-#  ifdef ZgatewayIR
-  modules = modules + ZgatewayIR;
-#  endif
-#  ifdef ZgatewayLORA
-  modules = modules + ZgatewayLORA;
-#  endif
-#  ifdef ZgatewayRF2
-  modules = modules + ZgatewayRF2;
-#  endif
-#  ifdef ZgatewayWeatherStation
-  modules = modules + ZgatewayWeatherStation;
-#  endif
-#  ifdef ZgatewayPilight
-  modules = modules + ZgatewayPilight;
-#  endif
-#  ifdef ZgatewaySRFB
-  modules = modules + ZgatewaySRFB;
-#  endif
 #  ifdef ZgatewayBT
-  modules = modules + ZgatewayBT;
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)low_power_mode;
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;
-#  endif
-#  ifdef ZgatewayRFM69
-  modules = modules + ZgatewayRFM69;
-#  endif
-#  ifdef ZsensorINA226
-  modules = modules + ZsensorINA226;
-#  endif
-#  ifdef ZsensorHCSR501
-  modules = modules + ZsensorHCSR501;
-#  endif
-#  ifdef ZsensorGPIOInput
-  modules = modules + ZsensorGPIOInput;
-#  endif
-#  ifdef ZsensorGPIOKeyCode
-  modules = modules + ZsensorGPIOKeyCode;
-#  endif
-#  ifdef ZsensorGPIOKeyCode
-  modules = modules + ZsensorGPIOKeyCode;
-#  endif
-#  ifdef ZmqttDiscovery
-  modules = modules + ZmqttDiscovery;
-#  endif
-#  ifdef ZactuatorFASTLED
-  modules = modules + ZactuatorFASTLED;
-#  endif
-#  ifdef ZactuatorPWM
-  modules = modules + ZactuatorPWM;
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
@@ -1444,10 +1397,7 @@ void stateMeasures() {
   SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
-#  ifdef ZGatewayRS232
-  modules = modules + ZGatewayRS232;
-#  endif
-  SYSdata["modules"] = modules;
+  SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
 }
 #endif
