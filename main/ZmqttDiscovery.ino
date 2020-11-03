@@ -82,7 +82,7 @@ void createDiscovery(char* sensor_type,
     char state_topic[mqtt_topic_max_size];
     strcpy(state_topic, mqtt_topic);
     strcat(state_topic, st_topic);
-    sensor.set("stat_t", state_topic);  // state_topic
+    sensor.set("stat_t", state_topic); // state_topic
   }
 
   sensor.set("name", s_name); //name

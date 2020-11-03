@@ -71,19 +71,19 @@ void setupRF2() {
   digitalWrite(RF_EMITTER_GPIO, LOW);
 }
 
-#  ifdef ZmqttDiscovery 
-//Regsiter for autodiscover in Home Assistant
+#  ifdef ZmqttDiscovery
+//Register for autodiscover in Home Assistant
 void RF2toMQTTdiscovery(JsonObject& data) {
   Log.trace(F("switchRF2Discovery" CR));
   String payloadonstr;
   String payloadoffstr;
 
-  int org_switchtype = data["switchType"];  // Store original switchvalue
-  data.set("switchType", 1);                // switchtype = 1 turns switch on.
+  int org_switchtype = data["switchType"]; // Store original switchvalue
+  data.set("switchType", 1); // switchtype = 1 turns switch on.
   data.printTo(payloadonstr);
-  data.set("switchType", 0);  // switchtype = 0 turns switch off.
+  data.set("switchType", 0); // switchtype = 0 turns switch off.
   data.printTo(payloadoffstr);
-  data.set("switchType", org_switchtype);  // Restore original switchvalue
+  data.set("switchType", org_switchtype); // Restore original switchvalue
 
   String switchname;
   switchname = "RF2_" + String((int)data["unit"]) + "_" +
