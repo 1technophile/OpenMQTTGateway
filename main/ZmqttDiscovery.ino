@@ -114,7 +114,11 @@ void createDiscovery(char* sensor_type,
   if (child_device) {
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
     JsonObject& device = jsonDeviceBuffer.createObject();
+    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    modules.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    Log.notice(F("Received json : %s" CR), JSONmessageBuffer);
     device.set("name", gateway_name);
+    device.set("model", JSONmessageBuffer);
     device.set("manufacturer", DEVICEMANUFACTURER);
     device.set("sw_version", OMG_VERSION);
     JsonArray& identifiers = device.createNestedArray("identifiers");
@@ -128,21 +132,63 @@ void createDiscovery(char* sensor_type,
 void pubMqttDiscovery() {
   Log.trace(F("omgStatusDiscovery" CR));
   createDiscovery("binary_sensor", //set Type
-                  will_Topic, Gateway_Name, (char*)getUniqueId("", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "SYS: Connectivity", (char*)getUniqueId("connectivity", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "connectivity", "", //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, false, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
   );
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: Uptime", (char*)getUniqueId("uptime", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
+                  "", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+
+#  if defined(ESP8266) || defined(ESP32)
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: Free memory", (char*)getUniqueId("freemem", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.freemem }}", //set availability_topic,device_class,value_template,
+                  "", "", "B", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: IP", (char*)getUniqueId("ip", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.ip }}", //set availability_topic,device_class,value_template,
+                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+#    ifndef ESP32_ETHERNET
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: Rssi", (char*)getUniqueId("rssi", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.rssi }}", //set availability_topic,device_class,value_template,
+                  "", "", "dB", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+#    endif
+#  endif
+#  ifdef ESP32
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: Low Power Mode", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.lowpowermode }}", //set availability_topic,device_class,value_template,
+                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+#  endif
   createDiscovery("switch", //set Type
-                  will_Topic, "restart OMG", (char*)getUniqueId("restart", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "SYS: Restart gateway", (char*)getUniqueId("restart", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"restart\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
   );
   createDiscovery("switch", //set Type
-                  will_Topic, "erase OMG", (char*)getUniqueId("erase", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "SYS: Erase credentials", (char*)getUniqueId("erase", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"erase\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
@@ -476,18 +522,34 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayBT
-  // Sensor to display BT received value
-  Log.trace(F("gatewayBTDiscovery" CR));
-  char* gatewayBT[8] = {"sensor", "gatewayBT", "", "", jsonId, "", "", ""};
-  //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-
-  Log.trace(F("CreateDiscoverySensor" CR));
-  //trc(gatewayBT[1]);
-  createDiscovery(gatewayBT[0],
-                  subjectBTtoMQTT, gatewayBT[1], (char*)getUniqueId(gatewayBT[1], gatewayBT[2]).c_str(),
-                  will_Topic, gatewayBT[3], gatewayBT[4],
-                  gatewayBT[5], gatewayBT[6], gatewayBT[7],
-                  0, "", "", true, "");
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "BT: Interval between scans", (char*)getUniqueId("interval", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.interval }}", //set availability_topic,device_class,value_template,
+                  "", "", "ms", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "BT: Connnect every X scan(s)", (char*)getUniqueId("scanbcnct", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
+                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+  createDiscovery("switch", //set Type
+                  will_Topic, "BT: Force scan", (char*)getUniqueId("force_scan", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "", //set availability_topic,device_class,value_template,
+                  "{\"interval\":0}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
+  createDiscovery("switch", //set Type
+                  "", "BT: Publish only sensors", (char*)getUniqueId("only_sensors", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "", //set availability_topic,device_class,value_template,
+                  "{\"onlysensors\":true}", "{\"onlysensors\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+  );
 #  endif
 }
 

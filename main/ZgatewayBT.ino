@@ -230,7 +230,7 @@ void FormalDiscovery(char* mac) {
       {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%"},
       {"sensor", "Formal-temp", mac, "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "Formal-hum", mac, "humidity", jsonHum, "", "", "%"},
-      {"sensor", "Formal-for", mac, "formaldehyde", jsonFor, "", "", "%"}
+      {"sensor", "Formal-for", mac, "", jsonFor, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
