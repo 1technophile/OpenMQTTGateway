@@ -1,9 +1,14 @@
 # Integrate Home Assistant
 ## Auto discovery
-So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in User_config.h
-And enable discovery on your MQTT integration definition in HASS.
+So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in User_config.h. Note that Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO.
+
+Once done, enable discovery on your MQTT integration definition in HASS.
 
 OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
+
+The gateway device will be available into Configuration->Devices section of Home Assistant.
+
+![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ## Manual integration examples
 From @123, @finity, @denniz03, @jrockstad
