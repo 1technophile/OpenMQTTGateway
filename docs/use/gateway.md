@@ -1,12 +1,19 @@
 # System commands (ESP only)
 
 ## Restart the ESP
-
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"restart"}'`
+
+::: tip
+With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+:::
 
 ## Erase the ESP settings
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"erase"}'`
+
+::: tip
+With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+:::
 
 # State LED usage
 
