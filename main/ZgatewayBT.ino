@@ -90,6 +90,7 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 unsigned int scanCount = 0;
 
+static TaskHandle_t xCoreTaskHandle;
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
@@ -586,6 +587,7 @@ void stopProcessing() {
 void startProcessing() {
   Log.notice(F("Start BLE processing" CR));
   ProcessLock = false;
+  vTaskResume(xCoreTaskHandle);
 }
 
 void coreTask(void* pvParameters) {
@@ -615,6 +617,7 @@ void coreTask(void* pvParameters) {
       }
     } else {
       Log.trace(F("BLE core task canceled by processLock" CR));
+      vTaskSuspend(xCoreTaskHandle);
     }
   }
 }
@@ -678,7 +681,7 @@ void setupBT() {
       10000, /* Stack size in words */
       NULL, /* Task input parameter */
       1, /* Priority of the task */
-      NULL, /* Task handle. */
+      &xCoreTaskHandle, /* Task handle. */
       taskCore); /* Core where the task should run */
   Log.trace(F("ZgatewayBT multicore ESP32 setup done " CR));
 }
