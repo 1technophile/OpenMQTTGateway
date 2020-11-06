@@ -90,7 +90,9 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 unsigned int scanCount = 0;
 
+#  ifdef ESP32
 static TaskHandle_t xCoreTaskHandle;
+#  endif
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
