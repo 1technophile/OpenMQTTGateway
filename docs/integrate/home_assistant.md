@@ -125,3 +125,34 @@ Sensor:
   value_template: '{{ value_json.batt | is_defined }}'
   expire_after: 21600 # 6 hours
   ```
+
+
+### Xiaomi Mi Scale V2 BLE (XMTZC05HM)
+
+```yaml
+sensor:
+  - platform: mqtt
+    name: "Weight"
+    state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your mqtt topic here
+    value_template: '{{ value_json["weight"] }}'
+    unit_of_measurement: "kg"
+    icon: mdi:weight-kilogram
+    
+  - platform: mqtt
+    name: "Impedance"
+    state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your mqtt topic here also
+    value_template: '{{ value_json["impedance"] }}'
+    unit_of_measurement: "Ohm"
+    icon: mdi:omega
+    
+  - platform: template
+    sensors:
+      body_mass_index:
+        friendly_name: 'Body Mass Index'
+        value_template: >-
+          {% set HEIGHT = (1.76)|float %} # replace your height in meters
+          {% set WEIGHT = states('sensor.xmtzc05hm_weight')|float %}
+          {{- (WEIGHT/(HEIGHT*HEIGHT))|float|round(1) -}}
+        icon_template: >
+          {{ 'mdi:human' }}
+```
