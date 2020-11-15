@@ -108,10 +108,21 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
     const char* raw = Pilightdata["raw"];
     if (raw) {
       uint16_t codes[MAXPULSESTREAMLENGTH];
-      int msgLength = rf.stringToPulseTrain(
-          raw, codes, MAXPULSESTREAMLENGTH);
+      int repeats = rf.stringToRepeats(raw);
+      if (repeats < 0) {
+        switch (repeats) {
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_R:
+            Log.trace(F("'r' not found in string, or has no data" CR));
+            break;
+          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
+            Log.trace(F("';' or '@' not found in data string" CR));
+            break;
+        }
+        repeats = 10;
+      }
+      int msgLength = rf.stringToPulseTrain(raw, codes, MAXPULSESTREAMLENGTH);
       if (msgLength > 0) {
-        rf.sendPulseTrain(codes, msgLength);
+        rf.sendPulseTrain(codes, msgLength, repeats);
         Log.notice(F("MQTTtoPilight raw ok" CR));
       } else {
         Log.trace(F("MQTTtoPilight raw KO" CR));
