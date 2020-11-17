@@ -48,13 +48,9 @@ ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 unsigned long timer_sys_measures = 0;
 #  define ARDUINOJSON_USE_LONG_LONG 1
 #endif
-
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
-
-StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
-JsonArray& modules = modulesBuffer.createArray();
 
 // Modules config inclusion
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
@@ -134,9 +130,6 @@ JsonArray& modules = modulesBuffer.createArray();
 #endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
 #  include "config_M5.h"
-#endif
-#if defined(ZgatewayRS232)
-#  include "config_RS232.h"
 #endif
 /*------------------------------------------------------------------------*/
 
@@ -262,9 +255,8 @@ void pub(char* topicori, JsonObject& data) {
 #ifdef valueAsASubject
 #  ifdef ZgatewayPilight
     String value = data["value"];
-    String protocol = data["protocol"];
     if (value != 0) {
-      topic = topic + "/" + protocol + "/" + value;
+      topic = topic + "/" + value;
     }
 #  else
     SIGNAL_SIZE_UL_ULL value = data["value"];
@@ -424,6 +416,76 @@ void pubMQTT(String topic, unsigned long payload) {
   client.publish((char*)topic.c_str(), val);
 }
 
+//RvS
+# ifdef SAFE_BLE_SCAN 
+struct msgtype {
+  char topic[32];
+  char payload[JSON_MSG_BUFFER];
+  bool retain;
+};
+
+// Message queue class to store MQTT messages (topic, payload, retain flag) for delayed publication
+class MsgQueue {
+  public:
+	/**
+	 * default Constructor
+	 */
+    MsgQueue(){
+      clear();
+    }
+
+    // report number of messages in the queue
+    byte count() {
+      return _count;
+    } 
+
+    // add message to the queue
+    void addmsg(char* topic, JsonObject& data, boolean retain) {
+      if (_count < BLE_MSG_QUEUE) {
+        strcpy(_messages[_count].topic, topic);
+        data.printTo(_messages[_count].payload, JSON_MSG_BUFFER);
+        Log.notice(F("Stored message with topic %s and payload %s" CR), _messages[_count].topic, _messages[_count].payload);
+        _count++;
+      } else {
+        Log.error("Ran out of space on the message queue!");
+      }
+    }
+
+    // publish all messages and clear the queue
+    void publish() {
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      for (int i = 0; i < _count; i++) {
+        jsonBuffer.clear();
+        JsonObject& data = jsonBuffer.parseObject(_messages[i].payload);
+        if (data.success()) {
+          if (_messages[i].retain) {
+            pub_custom_topic(_messages[i].topic, data, _messages[i].retain);
+          } else {
+            pub(_messages[i].topic, data);
+          }
+          Log.notice(F("Published topic %s" CR), _messages[i].topic);
+          logJson(data);        
+        } else {
+          Log.notice(F("Jsonobject failed to parse: %s" CR), _messages[i].payload);
+        }
+      }
+      // Clear the message queue
+      clear();
+    }
+
+  private:
+    // clear the message queue
+    void clear() {
+      _count = 0;
+    }
+
+    byte    _count;
+    msgtype _messages[BLE_MSG_QUEUE];
+};
+
+MsgQueue msgqueue; // global msgqueue created at compile time to avoid heap issues
+# endif
+
 void logJson(JsonObject& jsondata) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   char JSONmessageBuffer[jsondata.measureLength() + 1];
@@ -468,6 +530,14 @@ void connectMQTT() {
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
     // publish version
     pub(version_Topic, OMG_VERSION, will_Retain);
+
+    // RvS
+#ifdef ZgatewayBT && SAFE_BLE_SCAN
+    if (msgqueue.count() > 0) {
+      Log.notice(F("Publish all %d messages in the BLE message queue" CR), msgqueue.count()); 
+      msgqueue.publish();
+    } 
+#endif    
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);
@@ -596,110 +666,78 @@ void setup() {
 
 #ifdef ZsensorBME280
   setupZsensorBME280();
-  modules.add(ZsensorBME280);
 #endif
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
-  modules.add(ZsensorHTU21);
 #endif
 #ifdef ZsensorAHTx0
   setupZsensorAHTx0();
-  modules.add(ZsensorAHTx0);
 #endif
 #ifdef ZsensorBH1750
   setupZsensorBH1750();
-  modules.add(ZsensorBH1750);
 #endif
 #ifdef ZsensorTSL2561
   setupZsensorTSL2561();
-  modules.add(ZsensorTSL2561);
 #endif
 #ifdef Zgateway2G
   setup2G();
-  modules.add(Zgateway2G);
 #endif
 #ifdef ZgatewayIR
   setupIR();
-  modules.add(ZgatewayIR);
 #endif
 #ifdef ZgatewayLORA
   setupLORA();
-  modules.add(ZgatewayLORA);
 #endif
 #ifdef ZgatewayRF
   setupRF();
-  modules.add(ZgatewayRF);
 #endif
 #ifdef ZgatewayRF2
   setupRF2();
-  modules.add(ZgatewayRF2);
 #endif
 #ifdef ZgatewayPilight
   setupPilight();
-  modules.add(ZgatewayPilight);
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
-  modules.add(ZgatewayWeatherStation);
 #endif
 #ifdef ZgatewaySRFB
   setupSRFB();
-  modules.add(ZgatewaySRFB);
 #endif
 #ifdef ZgatewayBT
   setupBT();
-  modules.add(ZgatewayBT);
 #endif
 #ifdef ZgatewayRFM69
   setupRFM69();
-  modules.add(ZgatewayRFM69);
 #endif
 #ifdef ZsensorINA226
   setupINA226();
-  modules.add(ZsensorINA226);
 #endif
 #ifdef ZsensorHCSR501
   setupHCSR501();
-  modules.add(ZsensorHCSR501);
 #endif
 #ifdef ZsensorHCSR04
   setupHCSR04();
-  modules.add(ZsensorHCSR04);
 #endif
 #ifdef ZsensorGPIOInput
   setupGPIOInput();
-  modules.add(ZsensorGPIOInput);
 #endif
 #ifdef ZsensorGPIOKeyCode
   setupGPIOKeyCode();
-  modules.add(ZsensorGPIOKeyCode);
 #endif
 #ifdef ZactuatorFASTLED
   setupFASTLED();
-  modules.add(ZactuatorFASTLED);
 #endif
 #ifdef ZactuatorPWM
   setupPWM();
-  modules.add(ZactuatorPWM);
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
-  modules.add(ZsensorDS1820);
 #endif
 #ifdef ZsensorADC
   setupADC();
-  modules.add(ZsensorADC);
 #endif
 #ifdef ZsensorDHT
   setupDHT();
-  modules.add(ZsensorDHT);
-#endif
-#ifdef ZgatewayRS232
-  setupRS232();
-  modules.add(ZgatewayRS232);
-#endif
-#ifdef ZmqttDiscovery
-  modules.add(ZmqttDiscovery);
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
@@ -899,7 +937,7 @@ void saveConfigCallback() {
   shouldSaveConfig = true;
 }
 
-#  ifdef TRIGGER_GPIO
+#  if TRIGGER_GPIO
 void checkButton() { // code from tzapu/wifimanager examples
   // check for button press
   if (digitalRead(TRIGGER_GPIO) == LOW) {
@@ -940,7 +978,7 @@ void eraseAndRestart() {
 }
 
 void setup_wifimanager(bool reset_settings) {
-#  ifdef TRIGGER_GPIO
+#  if TRIGGER_GPIO
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
 #  endif
   delay(10);
@@ -1311,9 +1349,6 @@ void loop() {
       if (RFM69toMQTT())
         Log.trace(F("RFM69toMQTT OK" CR));
 #endif
-#ifdef ZgatewayRS232
-      RS232toMQTT();
-#endif
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
@@ -1371,12 +1406,92 @@ void stateMeasures() {
   SYSdata["wifiprt"] = (int)wifiProtocol;
 #    endif
 #  endif
+  String modules = "";
+#  ifdef ZgatewayRF
+  modules = modules + ZgatewayRF;
+#  endif
+#  ifdef ZsensorBME280
+  modules = modules + ZsensorBME280;
+#  endif
+#  ifdef ZsensorHTU21
+  modules = modules + ZsensorHTU21;
+#  endif
+#  ifdef ZsensorAHTx0
+  modules = modules + ZsensorAHTx0;
+#  endif
+#  ifdef ZsensorHCSR04
+  modules = modules + ZsensorHCSR04;
+#  endif
+#  ifdef ZsensorBH1750
+  modules = modules + ZsensorBH1750;
+#  endif
+#  ifdef ZsensorTSL2561
+  modules = modules + ZsensorTSL2561;
+#  endif
+#  ifdef ZsensorDHT
+  modules = modules + ZsensorDHT;
+#  endif
+#  ifdef ZsensorDS1820
+  modules = modules + ZsensorDS1820;
+#  endif
+#  ifdef ZactuatorONOFF
+  modules = modules + ZactuatorONOFF;
+#  endif
+#  ifdef Zgateway2G
+  modules = modules + Zgateway2G;
+#  endif
+#  ifdef ZgatewayIR
+  modules = modules + ZgatewayIR;
+#  endif
+#  ifdef ZgatewayLORA
+  modules = modules + ZgatewayLORA;
+#  endif
+#  ifdef ZgatewayRF2
+  modules = modules + ZgatewayRF2;
+#  endif
+#  ifdef ZgatewayWeatherStation
+  modules = modules + ZgatewayWeatherStation;
+#  endif
+#  ifdef ZgatewayPilight
+  modules = modules + ZgatewayPilight;
+#  endif
+#  ifdef ZgatewaySRFB
+  modules = modules + ZgatewaySRFB;
+#  endif
 #  ifdef ZgatewayBT
+  modules = modules + ZgatewayBT;
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)low_power_mode;
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;
+#  endif
+#  ifdef ZgatewayRFM69
+  modules = modules + ZgatewayRFM69;
+#  endif
+#  ifdef ZsensorINA226
+  modules = modules + ZsensorINA226;
+#  endif
+#  ifdef ZsensorHCSR501
+  modules = modules + ZsensorHCSR501;
+#  endif
+#  ifdef ZsensorGPIOInput
+  modules = modules + ZsensorGPIOInput;
+#  endif
+#  ifdef ZsensorGPIOKeyCode
+  modules = modules + ZsensorGPIOKeyCode;
+#  endif
+#  ifdef ZsensorGPIOKeyCode
+  modules = modules + ZsensorGPIOKeyCode;
+#  endif
+#  ifdef ZmqttDiscovery
+  modules = modules + ZmqttDiscovery;
+#  endif
+#  ifdef ZactuatorFASTLED
+  modules = modules + ZactuatorFASTLED;
+#  endif
+#  ifdef ZactuatorPWM
+  modules = modules + ZactuatorPWM;
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
@@ -1397,7 +1512,7 @@ void stateMeasures() {
   SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
-  SYSdata.set("modules", modules);
+  SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
 }
 #endif
@@ -1511,9 +1626,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);
-#  endif
-#  ifdef ZgatewayRS232
-    MQTTtoRS232(topicOri, jsondata);
 #  endif
 #endif
     digitalWrite(LED_SEND, LED_SEND_ON);

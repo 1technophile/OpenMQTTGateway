@@ -90,9 +90,6 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 unsigned int scanCount = 0;
 
-#  ifdef ESP32
-static TaskHandle_t xCoreTaskHandle;
-#  endif
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
@@ -165,6 +162,37 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 #  endif
 }
 
+// RvS
+// These are "safe" versions of pub() that store messages for delayed publication if
+// a MQTT connection is not immediately available
+void BLEpub(char* topicori, JsonObject& data) {
+#ifdef SAFE_BLE_SCAN
+  if (client.connected()) {
+    pub(topicori, data);
+  } else {
+    Log.warning(F("No MQTT connection store, topic %s for delayed publication" CR), topicori);
+    logJson(data);
+    msgqueue.addmsg(topicori, data, false);
+  }
+#else
+  pub(topicori, data);
+#endif
+}
+
+void BLEpub(char* topicori, JsonObject& data, bool retain) {
+#ifdef SAFE_BLE_SCAN
+  if (client.connected()) {
+    pub_custom_topic(topicori, data, retain);
+  } else {
+    Log.warning(F("No MQTT connection, store topic %s for delayed publication" CR), topicori);
+    logJson(data);    
+    msgqueue.addmsg(topicori, data, retain);
+  }
+#else
+  pub_custom_topic(topicori, data, retain);
+#endif
+}
+
 #  define isWhite(device)      device->isWhtL
 #  define isBlack(device)      device->isBlkL
 #  define isDiscovered(device) device->isDisc
@@ -186,11 +214,13 @@ void strupp(char* beg) {
 
 #  ifdef ZmqttDiscovery
 void MiFloraDiscovery(char* mac) {
-#    define MiFloraparametersCount 4
+#    define MiFloraparametersCount 6
   Log.trace(F("MiFloraDiscovery" CR));
   char* MiFlorasensor[MiFloraparametersCount][8] = {
       {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "MiFlora-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "MiFlora-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "MiFlora-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "MiFlora-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm"},
       {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -200,11 +230,13 @@ void MiFloraDiscovery(char* mac) {
 }
 
 void VegTrugDiscovery(char* mac) {
-#    define VegTrugparametersCount 4
+#    define VegTrugparametersCount 6
   Log.trace(F("VegTrugDiscovery" CR));
   char* VegTrugsensor[VegTrugparametersCount][8] = {
       {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "VegTrug-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "VegTrug-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "VegTrug-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "VegTrug-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm"},
       {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -214,11 +246,13 @@ void VegTrugDiscovery(char* mac) {
 }
 
 void MiJiaDiscovery(char* mac) {
-#    define MiJiaparametersCount 3
+#    define MiJiaparametersCount 5
   Log.trace(F("MiJiaDiscovery" CR));
   char* MiJiasensor[MiJiaparametersCount][8] = {
       {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "MiJia-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "MiJia-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "MiJia-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "MiJia-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "MiJia-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -227,13 +261,14 @@ void MiJiaDiscovery(char* mac) {
 }
 
 void FormalDiscovery(char* mac) {
-#    define FormalparametersCount 4
+#    define FormalparametersCount 5
   Log.trace(F("FormalDiscovery" CR));
   char* Formalsensor[FormalparametersCount][8] = {
       {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "Formal-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "Formal-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "Formal-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "Formal-hum", mac, "humidity", jsonHum, "", "", "%"},
-      {"sensor", "Formal-for", mac, "", jsonFor, "", "", "%"}
+      {"sensor", "Formal-for", mac, "formaldehyde", jsonFor, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -241,11 +276,13 @@ void FormalDiscovery(char* mac) {
 }
 
 void LYWSD02Discovery(char* mac) {
-#    define LYWSD02parametersCount 3
+#    define LYWSD02parametersCount 5
   Log.trace(F("LYWSD02Discovery" CR));
   char* LYWSD02sensor[LYWSD02parametersCount][8] = {
       {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "LYWSD02-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "LYWSD02-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "LYWSD02-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "LYWSD02-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "LYWSD02-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -254,11 +291,13 @@ void LYWSD02Discovery(char* mac) {
 }
 
 void CLEARGRASSTRHDiscovery(char* mac) {
-#    define CLEARGRASSTRHparametersCount 3
+#    define CLEARGRASSTRHparametersCount 5
   Log.trace(F("CLEARGRASSTRHDiscovery" CR));
   char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
       {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "CLEARGRASSTRH-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "CLEARGRASSTRH-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "CLEARGRASSTRH-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "CLEARGRASSTRH-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -267,11 +306,13 @@ void CLEARGRASSTRHDiscovery(char* mac) {
 }
 
 void CLEARGRASSCGD1Discovery(char* mac) {
-#    define CLEARGRASSCGD1parametersCount 3
+#    define CLEARGRASSCGD1parametersCount 5
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
       {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "CLEARGRASSCGD1-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "CLEARGRASSCGD1-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "CLEARGRASSCGD1-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -280,11 +321,13 @@ void CLEARGRASSCGD1Discovery(char* mac) {
 }
 
 void CLEARGRASSTRHKPADiscovery(char* mac) {
-#    define CLEARGRASSTRHKPAparametersCount 3
+#    define CLEARGRASSTRHKPAparametersCount 5
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
       {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa"},
-      {"sensor", "CLEARGRASSTRHKPA-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "CLEARGRASSTRHKPA-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "CLEARGRASSTRHKPA-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "CLEARGRASSTRHKPA-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -326,11 +369,13 @@ void MiBandDiscovery(char* mac) {
 }
 
 void InkBirdDiscovery(char* mac) {
-#    define InkBirdparametersCount 3
+#    define InkBirdparametersCount 5
   Log.trace(F("InkBirdDiscovery" CR));
   char* InkBirdsensor[InkBirdparametersCount][8] = {
       {"sensor", "InkBird-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "InkBird-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "InkBird-tem", mac, "temperature", jsonTempc, "", "", "C"}, // remove for 0.9.6 release
+      {"sensor", "InkBird-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "InkBird-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "InkBird-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -339,12 +384,13 @@ void InkBirdDiscovery(char* mac) {
 }
 
 void LYWSD03MMCDiscovery(char* mac) {
-#    define LYWSD03MMCparametersCount 4
+#    define LYWSD03MMCparametersCount 5
   Log.trace(F("LYWSD03MMCDiscovery" CR));
   char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][8] = {
       {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%"},
       {"sensor", "LYWSD03MMC-volt", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "LYWSD03MMC-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "LYWSD03MMC-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "LYWSD03MMC-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "LYWSD03MMC-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -353,12 +399,13 @@ void LYWSD03MMCDiscovery(char* mac) {
 }
 
 void MHO_C401Discovery(char* mac) {
-#    define MHO_C401parametersCount 4
+#    define MHO_C401parametersCount 5
   Log.trace(F("MHO_C401Discovery" CR));
   char* MHO_C401sensor[MHO_C401parametersCount][8] = {
       {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%"},
       {"sensor", "MHO_C401-volt", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "MHO_C401-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "MHO_C401-tempc", mac, "temperature", jsonTempc, "", "", "C"},
+      {"sensor", "MHO_C401-tempf", mac, "temperature", jsonTempf, "", "", "F"},
       {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -523,7 +570,7 @@ void notifyCB(
 
       mac_adress.replace(":", "");
       String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
-      pub((char*)mactopic.c_str(), BLEdata);
+      BLEpub((char*)mactopic.c_str(), BLEdata);
     } else {
       Log.notice(F("Device not identified" CR));
     }
@@ -589,7 +636,6 @@ void stopProcessing() {
 void startProcessing() {
   Log.notice(F("Start BLE processing" CR));
   ProcessLock = false;
-  vTaskResume(xCoreTaskHandle);
 }
 
 void coreTask(void* pvParameters) {
@@ -619,7 +665,6 @@ void coreTask(void* pvParameters) {
       }
     } else {
       Log.trace(F("BLE core task canceled by processLock" CR));
-      vTaskSuspend(xCoreTaskHandle);
     }
   }
 }
@@ -683,7 +728,7 @@ void setupBT() {
       10000, /* Stack size in words */
       NULL, /* Task input parameter */
       1, /* Priority of the task */
-      &xCoreTaskHandle, /* Task handle. */
+      NULL, /* Task handle. */
       taskCore); /* Core where the task should run */
   Log.trace(F("ZgatewayBT multicore ESP32 setup done " CR));
 }
@@ -892,7 +937,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
       String mactopic = BLEdataOut["id"].as<const char*>();
       mactopic.replace(":", "");
       mactopic = subjectBTtoMQTT + String("/") + mactopic;
-      pub((char*)mactopic.c_str(), BLEdataOut);
+      BLEpub((char*)mactopic.c_str(), BLEdataOut);
     }
   } else {
     Log.trace(F("Low rssi, device filtered" CR));
@@ -1279,7 +1324,7 @@ void haRoomPresence(JsonObject& HomePresence) {
   HomePresence["distance"] = distance;
   Log.trace(F("Ble distance %D" CR), distance);
   String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
-  pub_custom_topic((char*)topic.c_str(), HomePresence, false);
+  BLEpub((char*)topic.c_str(), HomePresence, false);
 }
 #  endif
 
