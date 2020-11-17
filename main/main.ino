@@ -48,7 +48,6 @@ ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 unsigned long timer_sys_measures = 0;
 #  define ARDUINOJSON_USE_LONG_LONG 1
 #endif
-
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
@@ -424,6 +423,76 @@ void pubMQTT(String topic, unsigned long payload) {
   client.publish((char*)topic.c_str(), val);
 }
 
+//RvS
+# ifdef SAFE_BLE_SCAN 
+struct msgtype {
+  char topic[32];
+  char payload[JSON_MSG_BUFFER];
+  bool retain;
+};
+
+// Message queue class to store MQTT messages (topic, payload, retain flag) for delayed publication
+class MsgQueue {
+  public:
+	/**
+	 * default Constructor
+	 */
+    MsgQueue(){
+      clear();
+    }
+
+    // report number of messages in the queue
+    byte count() {
+      return _count;
+    } 
+
+    // add message to the queue
+    void addmsg(char* topic, JsonObject& data, boolean retain) {
+      if (_count < BLE_MSG_QUEUE) {
+        strcpy(_messages[_count].topic, topic);
+        data.printTo(_messages[_count].payload, JSON_MSG_BUFFER);
+        Log.notice(F("Stored message with topic %s and payload %s" CR), _messages[_count].topic, _messages[_count].payload);
+        _count++;
+      } else {
+        Log.error("Ran out of space on the message queue!");
+      }
+    }
+
+    // publish all messages and clear the queue
+    void publish() {
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      for (int i = 0; i < _count; i++) {
+        jsonBuffer.clear();
+        JsonObject& data = jsonBuffer.parseObject(_messages[i].payload);
+        if (data.success()) {
+          if (_messages[i].retain) {
+            pub_custom_topic(_messages[i].topic, data, _messages[i].retain);
+          } else {
+            pub(_messages[i].topic, data);
+          }
+          Log.notice(F("Published topic %s" CR), _messages[i].topic);
+          logJson(data);        
+        } else {
+          Log.notice(F("Jsonobject failed to parse: %s" CR), _messages[i].payload);
+        }
+      }
+      // Clear the message queue
+      clear();
+    }
+
+  private:
+    // clear the message queue
+    void clear() {
+      _count = 0;
+    }
+
+    byte    _count;
+    msgtype _messages[BLE_MSG_QUEUE];
+};
+
+MsgQueue msgqueue; // global msgqueue created at compile time to avoid heap issues
+# endif
+
 void logJson(JsonObject& jsondata) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   char JSONmessageBuffer[jsondata.measureLength() + 1];
@@ -468,6 +537,16 @@ void connectMQTT() {
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
     // publish version
     pub(version_Topic, OMG_VERSION, will_Retain);
+
+    // RvS
+#ifdef ZgatewayBT
+#  ifdef SAFE_BLE_SCAN
+    if (msgqueue.count() > 0) {
+      Log.notice(F("Publish all %d messages in the BLE message queue" CR), msgqueue.count()); 
+      msgqueue.publish();
+    } 
+#  endif
+#endif    
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);
