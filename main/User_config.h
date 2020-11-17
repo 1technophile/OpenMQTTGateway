@@ -208,7 +208,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
-#define ZgatewayBT     "BT"       //ESP8266, ESP32
+//#define ZgatewayBT     "BT"       //ESP8266, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
@@ -232,6 +232,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZboardM5STACK  "ZboardM5STACK"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
 //#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+//#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef version_Topic
@@ -353,11 +354,11 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define valueAsASubject true
 
 #if defined(ESP8266) || defined(ESP32)
-#  define JSON_MSG_BUFFER    128 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoull
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER    128 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoul
 #else // boards with smaller memory
@@ -376,7 +377,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 // BLE scaning drops the secure MQTT connection defining SAFE_BLE_SCAN stores the bluettooth message for publication when MQTT connection is restored
 #  define SAFE_BLE_SCAN
 #  ifndef JSON_MSG_BUFFER
-#    define JSON_MSG_BUFFER 128  // JSON buffer size keep number as small as possible as it 
+#    define JSON_MSG_BUFFER 512  // JSON buffer size keep number as small as possible as it 
 #  endif
 #  ifndef BLE_MSG_QUEUE
 #    define BLE_MSG_QUEUE 32     // The BLE message queue memory size is BLE_MSG_QUEUE*(JSON_MSG_BUFFER+32) keep both parameters as small as possible
