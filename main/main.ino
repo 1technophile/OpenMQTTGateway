@@ -539,11 +539,13 @@ void connectMQTT() {
     pub(version_Topic, OMG_VERSION, will_Retain);
 
     // RvS
-#ifdef ZgatewayBT && SAFE_BLE_SCAN
+#ifdef ZgatewayBT
+#  ifdef SAFE_BLE_SCAN
     if (msgqueue.count() > 0) {
       Log.notice(F("Publish all %d messages in the BLE message queue" CR), msgqueue.count()); 
       msgqueue.publish();
     } 
+#  endif
 #endif    
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
