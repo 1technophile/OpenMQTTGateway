@@ -104,7 +104,9 @@ void _rfbDecode() {
     Log.trace(F("Creating SRFB buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& SRFBdata = jsonBuffer.createObject();
-    SRFBdata.set("raw", (char*)buffer);
+    char raw[18] = {0};
+    extract_char(buffer, raw, 0, 18, false, false);
+    SRFBdata.set("raw", (char*)raw);
 
     char Tsyn[4] = {0};
     extract_char(buffer, Tsyn, 0, 4, false, true);
