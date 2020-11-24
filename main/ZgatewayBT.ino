@@ -980,7 +980,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a CGD1?" CR));
-      if ((strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL) && (strlen(service_data) > ServicedataMinLength)) {
+      if (((strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL) && (strlen(service_data) > ServicedataMinLength)) || (strstr(service_data, "080cd0") != NULL && (strlen(service_data) > ServicedataMinLength - 6))) {
         Log.trace(F("CGD1 data reading" CR));
         BLEdata.set("model", "CGD1");
         if (device->sensorModel == -1)
