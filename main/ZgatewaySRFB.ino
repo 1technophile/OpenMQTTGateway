@@ -104,7 +104,7 @@ void _rfbDecode() {
     Log.trace(F("Creating SRFB buffer" CR));
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject& SRFBdata = jsonBuffer.createObject();
-    SRFBdata.set("raw", String(buffer).substring(0,18));
+    SRFBdata.set("raw", String(buffer).substring(0, 18));
 
     int val_Tsyn = (int)(int)value_from_hex_data(buffer, 0, 4, false, false);
     SRFBdata.set("delay", (int)val_Tsyn);
