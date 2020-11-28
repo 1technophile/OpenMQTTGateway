@@ -819,28 +819,6 @@ void RemoveJsonPropertyIf(JsonObject& obj, char* key, bool condition) {
   }
 }
 
-/** 
- * Retrieve a long value from a char array extract representing hexadecimal data, reversed or not
- */
-long value_from_service_data(const char* service_data, int offset, int data_length, bool reverse) {
-  char data[data_length + 1];
-  memcpy(data, &service_data[offset], data_length);
-  data[data_length] = '\0';
-  long value;
-  if (reverse) {
-    // reverse data order
-    char rev_data[data_length + 1];
-    revert_hex_data(data, rev_data, data_length + 1);
-    value = strtol(rev_data, NULL, 16);
-  } else {
-    value = strtol(data, NULL, 16);
-  }
-  if (value > 65000 && data_length <= 4)
-    value = value - 65535;
-  Log.trace(F("value %D" CR), value);
-  return value;
-}
-
 boolean valid_service_data(const char* data) {
   int size = strlen(data);
   for (int i = 0; i < size; ++i) {
@@ -1062,7 +1040,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       }
     }
     Log.trace(F("Is it a iNode Energy Meter?" CR));
-    if (strlen(manufacturerdata) == 26 && ((long)value_from_service_data(manufacturerdata, 0, 4, true) & 0xFFF9) == 0x8290) {
+    if (strlen(manufacturerdata) == 26 && ((long)value_from_hex_data(manufacturerdata, 0, 4, true) & 0xFFF9) == 0x8290) {
       Log.trace(F("iNode Energy Meter data reading" CR));
       BLEdata.set("model", "INODE_EM");
       if (device->sensorModel == -1)
@@ -1096,7 +1074,7 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
   }
 
   double value = 9999;
-  value = (double)value_from_service_data(servicedata, 28 + offset, data_length, true);
+  value = (double)value_from_hex_data(servicedata, 28 + offset, data_length, true);
 
   // Mi flora provides tem(perature), (earth) moi(sture), fer(tility) and lux (illuminance)
   // Mi Jia provides tem(perature), batt(erry) and hum(idity)
@@ -1127,12 +1105,12 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
       break;
     case 'd':
       // temperature
-      value = (double)value_from_service_data(servicedata, 28 + offset, 4, true);
+      value = (double)value_from_hex_data(servicedata, 28 + offset, 4, true);
       BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       // humidity
-      value = (double)value_from_service_data(servicedata, 32 + offset, 4, true);
+      value = (double)value_from_hex_data(servicedata, 32 + offset, 4, true);
       BLEdata.set("hum", (double)value / 10);
       break;
     default:
@@ -1145,7 +1123,7 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
 JsonObject& process_scale_v1(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double weight = (double)value_from_service_data(servicedata, 2, 4, true) / 200;
+  double weight = (double)value_from_hex_data(servicedata, 2, 4, true) / 200;
 
   //Set Json value
   BLEdata.set("weight", (double)weight);
@@ -1156,8 +1134,8 @@ JsonObject& process_scale_v1(JsonObject& BLEdata) {
 JsonObject& process_scale_v2(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double weight = (double)value_from_service_data(servicedata, 22, 4, true) / 200;
-  double impedance = (double)value_from_service_data(servicedata, 18, 4, true);
+  double weight = (double)value_from_hex_data(servicedata, 22, 4, true) / 200;
+  double impedance = (double)value_from_hex_data(servicedata, 18, 4, true);
 
   //Set Json values
   BLEdata.set("weight", (double)weight);
@@ -1169,9 +1147,9 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
 JsonObject& process_inkbird(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
 
-  double temperature = (double)value_from_service_data(manufacturerdata, 0, 4, true) / 100;
-  double humidity = (double)value_from_service_data(manufacturerdata, 4, 4, true) / 100;
-  double battery = (double)value_from_service_data(manufacturerdata, 14, 2, true);
+  double temperature = (double)value_from_hex_data(manufacturerdata, 0, 4, true) / 100;
+  double humidity = (double)value_from_hex_data(manufacturerdata, 4, 4, true) / 100;
+  double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
   BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
@@ -1186,7 +1164,7 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
 JsonObject& process_miband(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double steps = (double)value_from_service_data(servicedata, 0, 4, true);
+  double steps = (double)value_from_hex_data(servicedata, 0, 4, true);
 
   //Set Json value
   BLEdata.set("steps", (double)steps);
@@ -1197,7 +1175,7 @@ JsonObject& process_miband(JsonObject& BLEdata) {
 JsonObject& process_milamp(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  long darkness = (double)value_from_service_data(servicedata, 8, 2, true);
+  long darkness = (double)value_from_hex_data(servicedata, 8, 2, true);
 
   //Set Json value
   BLEdata.set("presence", (bool)"true");
@@ -1211,16 +1189,16 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
 
   double value = 9999;
   // temperature
-  value = (double)value_from_service_data(servicedata, 20, 4, true);
+  value = (double)value_from_hex_data(servicedata, 20, 4, true);
   BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)value / 10);
   BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
   // humidity
-  value = (double)value_from_service_data(servicedata, 24, 4, true);
+  value = (double)value_from_hex_data(servicedata, 24, 4, true);
   BLEdata.set("hum", (double)value / 10);
   if (air) {
     // air pressure
-    value = (double)value_from_service_data(servicedata, 32, 4, true);
+    value = (double)value_from_hex_data(servicedata, 32, 4, true);
     BLEdata.set("pres", (double)value / 100);
   }
 
@@ -1230,10 +1208,10 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
 JsonObject& process_atc(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double temperature = (double)value_from_service_data(servicedata, 12, 4, false) / 10;
-  double humidity = (double)value_from_service_data(servicedata, 16, 2, false);
-  double battery = (double)value_from_service_data(servicedata, 18, 2, false);
-  double voltage = (double)value_from_service_data(servicedata, 20, 4, false) / 1000;
+  double temperature = (double)value_from_hex_data(servicedata, 12, 4, false) / 10;
+  double humidity = (double)value_from_hex_data(servicedata, 16, 2, false);
+  double battery = (double)value_from_hex_data(servicedata, 18, 2, false);
+  double voltage = (double)value_from_hex_data(servicedata, 20, 4, false) / 1000;
 
   //Set Json values
   BLEdata.set("tempc", (double)temperature);
@@ -1248,10 +1226,10 @@ JsonObject& process_atc(JsonObject& BLEdata) {
 JsonObject& process_inode_em(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
 
-  long impPerKWh = value_from_service_data(manufacturerdata, 16, 4, true) & 0x3FFF;
-  double power = ((double)value_from_service_data(manufacturerdata, 4, 4, true) / impPerKWh) * 60000;
-  double energy = (double)value_from_service_data(manufacturerdata, 8, 8, true) / impPerKWh;
-  long battery = ((value_from_service_data(manufacturerdata, 20, 2, true) >> 4) - 2) * 10;
+  long impPerKWh = value_from_hex_data(manufacturerdata, 16, 4, true) & 0x3FFF;
+  double power = ((double)value_from_hex_data(manufacturerdata, 4, 4, true) / impPerKWh) * 60000;
+  double energy = (double)value_from_hex_data(manufacturerdata, 8, 8, true) / impPerKWh;
+  long battery = ((value_from_hex_data(manufacturerdata, 20, 2, true) >> 4) - 2) * 10;
 
   //Set Json values
   BLEdata.set("power", (double)power);

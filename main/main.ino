@@ -223,21 +223,27 @@ void revert_hex_data(const char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-void extract_char(const char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
-  if (isNumber) {
-    if (reverse)
-      revert_hex_data(token_char + start, subset, l + 1);
-    else
-      strncpy(subset, token_char + start, l + 1);
-    long long_value = strtoul(subset, NULL, 16);
-    sprintf(subset, "%ld", long_value);
+/** 
+ * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
+ * This value can represent a negative value if canBeNegative is set to true
+ */
+long value_from_hex_data(const char* service_data, int offset, int data_length, bool reverse, bool canBeNegative = true) {
+  char data[data_length + 1];
+  memcpy(data, &service_data[offset], data_length);
+  data[data_length] = '\0';
+  long value;
+  if (reverse) {
+    // reverse data order
+    char rev_data[data_length + 1];
+    revert_hex_data(data, rev_data, data_length + 1);
+    value = strtol(rev_data, NULL, 16);
   } else {
-    if (reverse)
-      revert_hex_data(token_char + start, subset, l + 1);
-    else
-      strncpy(subset, token_char + start, l + 1);
+    value = strtol(data, NULL, 16);
   }
-  subset[l] = '\0';
+  if (value > 65000 && data_length <= 4 && canBeNegative)
+    value = value - 65535;
+  Log.trace(F("value %D" CR), value);
+  return value;
 }
 
 char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
