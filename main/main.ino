@@ -759,19 +759,21 @@ void disconnection_handling(int failure_number) {
     Log.error(F("Failed connecting 1st time to mqtt, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
 #  endif
   }
-  if (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) {
-    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
+  if (failure_number % 100 > (maxConnectionRetry + 5 * ATTEMPTS_BEFORE_PRT_CHANGE))
+  {
+    wifiProtocol = 0;
+    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B))) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
+  } else if (failure_number % 100 > (maxConnectionRetry + 4 * ATTEMPTS_BEFORE_PRT_CHANGE))
   {
 #  ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
+    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N;
 #  elif ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11G;
+    wifiProtocol = WIFI_PHY_MODE_11N;
 #  endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
+    Log.warning(F("Wifi Protocol changed to WIFI_11N: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG))) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  } else if ((failure_number % 100 > (maxConnectionRetry + 3 * ATTEMPTS_BEFORE_PRT_CHANGE)))
   {
 #  ifdef ESP32
     wifiProtocol = WIFI_PROTOCOL_11B;
@@ -780,14 +782,19 @@ void disconnection_handling(int failure_number) {
 #  endif
     Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
     reinit_wifi();
-  } else if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG)) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
+  } else if ((failure_number % 100 > (maxConnectionRetry + 2 * ATTEMPTS_BEFORE_PRT_CHANGE)))
   {
 #  ifdef ESP32
-    wifiProtocol = 0;
+    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
 #  elif ESP8266
-    wifiProtocol = 0;
+    wifiProtocol = WIFI_PHY_MODE_11G;
 #  endif
-    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
+    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
+    reinit_wifi();
+  }
+
+  if (failure_number % 100 <= (maxConnectionRetry + ATTEMPTS_BEFORE_PRT_CHANGE)) {
+    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
     reinit_wifi();
   }
 }
