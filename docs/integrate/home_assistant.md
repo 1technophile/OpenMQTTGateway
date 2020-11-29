@@ -86,20 +86,17 @@ binary_sensor:
 ```yaml
 #switches
 switch:
-- platform: mqtt
-  name: kaku_a2
-  state_topic: "home/OpenMQTTGateway/commands/MQTTto433"
-  command_topic: "home/OpenMQTTGateway/commands/MQTTto433"
-  payload_on: "16405"
-  payload_off: "16404"
-  qos: "0"
-  retain: true
-
-#pushbullet
-notify:
-- platform: pushbullet
-  name: hassio
-  api_key: <api_key>
+  - platform: mqtt
+    name: Plug1
+    state_topic: "home/OpenMQTTGateway/SRFBtoMQTT"
+    command_topic: "home/OpenMQTTGateway/commands/MQTTtoSRFB"
+    value_template: "{{ value_json.value }}"
+    payload_on: '{"value":4546575}'
+    payload_off: '{"value":4546572}'
+    state_on: 4546575
+    state_off: 4546572
+    qos: "0"
+    retain: true
 ```
 
 ### Mijia Thermometer BLE
