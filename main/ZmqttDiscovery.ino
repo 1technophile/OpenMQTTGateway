@@ -80,9 +80,11 @@ void createDiscovery(char* sensor_type,
   // the ACM-300.
   if (st_topic[0]) {
     char state_topic[mqtt_topic_max_size];
-    strcpy(state_topic, mqtt_topic);
+    // If not an entity belonging to the gateway we put wild card for the location and gateway name
+    // allowing to have the entity detected by several gateways and a consistent discovery topic among the gateways
+    child_device ? strcpy(state_topic, mqtt_topic) : strcpy(state_topic, "+/+");
     strcat(state_topic, st_topic);
-    sensor.set("stat_t", state_topic); // state_topic
+    sensor.set("stat_t", state_topic);
   }
 
   sensor.set("name", s_name); //name
