@@ -369,7 +369,9 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 // variable to avoid duplicates
-#  define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+#  ifndef time_avoid_duplicate
+#    define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+#  endif
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
