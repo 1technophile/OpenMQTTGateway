@@ -424,7 +424,7 @@ void pubMQTT(String topic, unsigned long payload) {
 }
 
 //RvS
-# ifdef SAFE_BLE_SCAN 
+#ifdef SAFE_BLE_SCAN
 struct msgtype {
   char topic[32];
   char payload[JSON_MSG_BUFFER];
@@ -433,65 +433,65 @@ struct msgtype {
 
 // Message queue class to store MQTT messages (topic, payload, retain flag) for delayed publication
 class MsgQueue {
-  public:
-	/**
+public:
+  /**
 	 * default Constructor
 	 */
-    MsgQueue(){
-      clear();
+  MsgQueue() {
+    clear();
+  }
+
+  // report number of messages in the queue
+  byte count() {
+    return _count;
+  }
+
+  // add message to the queue
+  void addmsg(char* topic, JsonObject& data, boolean retain) {
+    if (_count < BLE_MSG_QUEUE) {
+      strcpy(_messages[_count].topic, topic);
+      data.printTo(_messages[_count].payload, JSON_MSG_BUFFER);
+      Log.notice(F("Stored message with topic %s and payload %s" CR), _messages[_count].topic, _messages[_count].payload);
+      _count++;
+    } else {
+      Log.error("Ran out of space on the message queue!");
     }
+  }
 
-    // report number of messages in the queue
-    byte count() {
-      return _count;
-    } 
-
-    // add message to the queue
-    void addmsg(char* topic, JsonObject& data, boolean retain) {
-      if (_count < BLE_MSG_QUEUE) {
-        strcpy(_messages[_count].topic, topic);
-        data.printTo(_messages[_count].payload, JSON_MSG_BUFFER);
-        Log.notice(F("Stored message with topic %s and payload %s" CR), _messages[_count].topic, _messages[_count].payload);
-        _count++;
-      } else {
-        Log.error("Ran out of space on the message queue!");
-      }
-    }
-
-    // publish all messages and clear the queue
-    void publish() {
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      for (int i = 0; i < _count; i++) {
-        jsonBuffer.clear();
-        JsonObject& data = jsonBuffer.parseObject(_messages[i].payload);
-        if (data.success()) {
-          if (_messages[i].retain) {
-            pub_custom_topic(_messages[i].topic, data, _messages[i].retain);
-          } else {
-            pub(_messages[i].topic, data);
-          }
-          Log.notice(F("Published topic %s" CR), _messages[i].topic);
-          logJson(data);        
+  // publish all messages and clear the queue
+  void publish() {
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    for (int i = 0; i < _count; i++) {
+      jsonBuffer.clear();
+      JsonObject& data = jsonBuffer.parseObject(_messages[i].payload);
+      if (data.success()) {
+        if (_messages[i].retain) {
+          pub_custom_topic(_messages[i].topic, data, _messages[i].retain);
         } else {
-          Log.notice(F("Jsonobject failed to parse: %s" CR), _messages[i].payload);
+          pub(_messages[i].topic, data);
         }
+        Log.notice(F("Published topic %s" CR), _messages[i].topic);
+        logJson(data);
+      } else {
+        Log.notice(F("Jsonobject failed to parse: %s" CR), _messages[i].payload);
       }
-      // Clear the message queue
-      clear();
     }
+    // Clear the message queue
+    clear();
+  }
 
-  private:
-    // clear the message queue
-    void clear() {
-      _count = 0;
-    }
+private:
+  // clear the message queue
+  void clear() {
+    _count = 0;
+  }
 
-    byte    _count;
-    msgtype _messages[BLE_MSG_QUEUE];
+  byte _count;
+  msgtype _messages[BLE_MSG_QUEUE];
 };
 
 MsgQueue msgqueue; // global msgqueue created at compile time to avoid heap issues
-# endif
+#endif
 
 void logJson(JsonObject& jsondata) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
@@ -542,11 +542,11 @@ void connectMQTT() {
 #ifdef ZgatewayBT
 #  ifdef SAFE_BLE_SCAN
     if (msgqueue.count() > 0) {
-      Log.notice(F("Publish all %d messages in the BLE message queue" CR), msgqueue.count()); 
+      Log.notice(F("Publish all %d messages in the BLE message queue" CR), msgqueue.count());
       msgqueue.publish();
-    } 
+    }
 #  endif
-#endif    
+#endif
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);

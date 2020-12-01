@@ -169,7 +169,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 // These are "safe" versions of pub() that store messages for delayed publication if
 // a MQTT connection is not immediately available
 void BLEpub(char* topicori, JsonObject& data) {
-#ifdef SAFE_BLE_SCAN
+#  ifdef SAFE_BLE_SCAN
   if (client.connected()) {
     pub(topicori, data);
   } else {
@@ -177,23 +177,23 @@ void BLEpub(char* topicori, JsonObject& data) {
     logJson(data);
     msgqueue.addmsg(topicori, data, false);
   }
-#else
+#  else
   pub(topicori, data);
-#endif
+#  endif
 }
 
 void BLEpub(char* topicori, JsonObject& data, bool retain) {
-#ifdef SAFE_BLE_SCAN
+#  ifdef SAFE_BLE_SCAN
   if (client.connected()) {
     pub_custom_topic(topicori, data, retain);
   } else {
     Log.warning(F("No MQTT connection, store topic %s for delayed publication" CR), topicori);
-    logJson(data);    
+    logJson(data);
     msgqueue.addmsg(topicori, data, retain);
   }
-#else
+#  else
   pub_custom_topic(topicori, data, retain);
-#endif
+#  endif
 }
 
 #  define isWhite(device)      device->isWhtL

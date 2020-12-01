@@ -377,10 +377,10 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 // BLE scaning drops the secure MQTT connection defining SAFE_BLE_SCAN stores the bluettooth message for publication when MQTT connection is restored
 #  define SAFE_BLE_SCAN
 #  ifndef JSON_MSG_BUFFER
-#    define JSON_MSG_BUFFER 512  // JSON buffer size keep number as small as possible as it 
+#    define JSON_MSG_BUFFER 512 // JSON buffer size keep number as small as possible as it
 #  endif
 #  ifndef BLE_MSG_QUEUE
-#    define BLE_MSG_QUEUE 32     // The BLE message queue memory size is BLE_MSG_QUEUE*(JSON_MSG_BUFFER+32) keep both parameters as small as possible
+#    define BLE_MSG_QUEUE 32 // The BLE message queue memory size is BLE_MSG_QUEUE*(JSON_MSG_BUFFER+32) keep both parameters as small as possible
 #  endif
 #endif
 
