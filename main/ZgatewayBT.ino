@@ -942,7 +942,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_milamp(BLEdata);
       }
       Log.trace(F("Is it a CGP1W?" CR));
-      if (strstr(service_data, "08094c") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if ((strstr(service_data, "08094c") != NULL || strstr(service_data, "080972") != NULL) && strlen(service_data) > ServicedataMinLength) {
         Log.trace(F("CGP1W data reading" CR));
         BLEdata.set("model", "CGP1W");
         if (device->sensorModel == -1)
