@@ -29,13 +29,15 @@
 
 extern String getUniqueId(String name, String sufix);
 extern void pubMqttDiscovery();
-extern void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount);
+extern void createDiscoveryFromList(char* mac, char* sensorList[][12], int sensorCount);
 extern void createDiscovery(char* sensor_type,
                             char* state_topic, char* s_name, char* unique_id,
                             char* availability_topic, char* device_class, char* value_template,
                             char* payload_on, char* payload_off, char* unit_of_meas,
                             int off_delay,
-                            char* payload_available, char* payload_not_avalaible, bool child_device, char* command_topic);
+                            char* payload_available, char* payload_not_avalaible, bool child_device, char* command_topic,
+                            char* device_name, char* device_manufacturer, char* device_model, char* device_mac
+			    );
 
 #define discovery_Topic "homeassistant"
 

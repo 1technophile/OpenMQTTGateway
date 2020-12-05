@@ -48,7 +48,7 @@ String getUniqueId(String name, String sufix) {
 }
 
 #  ifdef ZgatewayBT
-void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount) {
+void createDiscoveryFromList(char* mac, char* sensorList[][12], int sensorCount) {
   for (int i = 0; i < sensorCount; i++) {
     Log.trace(F("CreateDiscoverySensor %s" CR), sensorList[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
@@ -141,7 +141,6 @@ void createDiscovery(char* sensor_type,
       JsonArray& connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
       connection_mac.add(device_mac);
-      connections.add(connection_mac);
     }
     JsonArray& identifiers = device.createNestedArray("identifiers");
     identifiers.add(deviceid);
@@ -658,7 +657,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.interval }}", //set availability_topic,device_class,value_template,
                   "", "", "ms", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("sensor", //set Type
@@ -666,7 +665,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
                   "", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("switch", //set Type
@@ -674,7 +673,7 @@ void pubMqttDiscovery() {
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"interval\":0}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("switch", //set Type
@@ -682,7 +681,7 @@ void pubMqttDiscovery() {
                   "", "", "", //set availability_topic,device_class,value_template,
                   "{\"onlysensors\":true}", "{\"onlysensors\":false}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "" // device name, device manufacturer, device model, device mac
   );
 #  endif
