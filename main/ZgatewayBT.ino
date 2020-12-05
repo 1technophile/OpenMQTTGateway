@@ -654,7 +654,7 @@ void changelow_power_mode(int newLowPowerMode) {
 #      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
 #      endif
-#      ifdef ZboardM5STICKC
+#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
     M5.Axp.SetLDO2(true);
     M5.Lcd.begin();
 #      endif
