@@ -1388,22 +1388,22 @@ void stateMeasures() {
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
-  SYSdata["m5-batt-level"] = (int8_t)M5.Power.getBatteryLevel();
-  SYSdata["m5-is-charging"] = (bool)M5.Power.isCharging();
-  SYSdata["m5-is-chargefull"] = (bool)M5.Power.isChargeFull();
+  SYSdata["m5battlevel"] = (int8_t)M5.Power.getBatteryLevel();
+  SYSdata["m5ischarging"] = (bool)M5.Power.isCharging();
+  SYSdata["m5ischargefull"] = (bool)M5.Power.isChargeFull();
 #  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   M5.Axp.EnableCoulombcounter();
-  SYSdata["m5-bat-voltage"] = (float)M5.Axp.GetBatVoltage();
-  SYSdata["m5-bat-current"] = (float)M5.Axp.GetBatCurrent();
-  SYSdata["m5-vin-voltage"] = (float)M5.Axp.GetVinVoltage();
-  SYSdata["m5-vin-current"] = (float)M5.Axp.GetVinCurrent();
-  SYSdata["m5-vbus-voltage"] = (float)M5.Axp.GetVBusVoltage();
-  SYSdata["m5-vbus-current"] = (float)M5.Axp.GetVBusCurrent();
-  SYSdata["m5-temp-axp"] = (float)M5.Axp.GetTempInAXP192();
-  SYSdata["m5-bat-power"] = (float)M5.Axp.GetBatPower();
-  SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
-  SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
+  SYSdata["m5batvoltage"] = (float)M5.Axp.GetBatVoltage();
+  SYSdata["m5batcurrent"] = (float)M5.Axp.GetBatCurrent();
+  SYSdata["m5vinvoltage"] = (float)M5.Axp.GetVinVoltage();
+  SYSdata["m5vincurrent"] = (float)M5.Axp.GetVinCurrent();
+  SYSdata["m5vbusvoltage"] = (float)M5.Axp.GetVBusVoltage();
+  SYSdata["m5vbuscurrent"] = (float)M5.Axp.GetVBusCurrent();
+  SYSdata["m5tempaxp"] = (float)M5.Axp.GetTempInAXP192();
+  SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
+  SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
+  SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
