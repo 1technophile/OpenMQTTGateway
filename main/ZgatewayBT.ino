@@ -284,7 +284,7 @@ void CLEARGRASSTRHKPADiscovery(char* rawMac) {
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   String macWOdots = String(rawMac);
   macWOdots.replace(":", "");
-  char* mac = (char *)macWOdots.c_str();
+  char* mac = (char*)macWOdots.c_str();
   char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][12] = {
       {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa", "CLEARGRASSTRHKPA", "ClearGrass", "CGP1W", rawMac},
       {"sensor", "CLEARGRASSTRHKPA-temp", mac, "temperature", jsonTempc, "", "", "°C", "CLEARGRASSTRHKPA", "ClearGrass", "CGP1W", rawMac},
