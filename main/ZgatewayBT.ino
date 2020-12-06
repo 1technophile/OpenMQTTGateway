@@ -631,7 +631,7 @@ void lowPowerESP32() // low power mode
 }
 
 void deepSleep(uint64_t time_in_us) {
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   sleepScreen();
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
 #    endif
@@ -649,7 +649,7 @@ void deepSleep(uint64_t time_in_us) {
 
 void changelow_power_mode(int newLowPowerMode) {
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   if (low_power_mode == 2) {
 #      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
