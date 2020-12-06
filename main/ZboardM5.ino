@@ -28,9 +28,12 @@
 */
 #include "User_config.h"
 
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
 #  ifdef ZboardM5STICKC
 #    include <M5StickC.h>
+#  endif
+#  ifdef ZboardM5STICKCP
+#    include <M5StickCPlus.h>
 #  endif
 #  ifdef ZboardM5STACK
 #    include <M5Stack.h>
@@ -43,7 +46,7 @@ void setBrightness(int brightness) {
 #  ifdef ZboardM5STACK
   M5.Lcd.setBrightness(brightness * 2);
 #  endif
-#  ifdef ZboardM5STICKC
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   (!brightness) ? M5.Axp.ScreenBreath(0) : M5.Axp.ScreenBreath(7 + (int)brightness * 0.08);
 #  endif
 }
@@ -84,7 +87,7 @@ void sleepScreen() {
 #  ifdef ZboardM5STACK
   M5.begin(false, false, false); // M5.lcd.sleep() provokes a reset of the ESP
 #  endif
-#  ifdef ZboardM5STICKC
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   M5.Axp.ScreenBreath(0);
   M5.Axp.SetLDO2(false);
 #  endif
