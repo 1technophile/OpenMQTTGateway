@@ -110,7 +110,8 @@ void pubOneWire_HADiscovery() {
                     "temperature",
                     jsonTempc,
                     "", "", "°C",
-                    0, "", "", true, "");
+                    0, "", "", true, "",
+                    "", "", "", "");
   }
 #  endif
 }
