@@ -48,7 +48,8 @@ String getUniqueId(String name, String sufix) {
 }
 
 #  ifdef ZgatewayBT
-void createDiscoveryFromList(char* mac, char* sensorList[][12], int sensorCount) {
+void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount,
+                             char* device_name, char* device_manufacturer, char* device_model) {
   for (int i = 0; i < sensorCount; i++) {
     Log.trace(F("CreateDiscoverySensor %s" CR), sensorList[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
@@ -58,7 +59,7 @@ void createDiscoveryFromList(char* mac, char* sensorList[][12], int sensorCount)
                     will_Topic, sensorList[i][3], sensorList[i][4],
                     sensorList[i][5], sensorList[i][6], sensorList[i][7],
                     0, "", "", false, "",
-                    sensorList[i][8], sensorList[i][9], sensorList[i][10], sensorList[i][11]);
+                    device_name, device_manufacturer, device_model, mac);
   }
 }
 #  endif
@@ -142,13 +143,13 @@ void createDiscovery(char* sensor_type,
     }
     JsonArray& identifiers = device.createNestedArray("identifiers");
     identifiers.add(deviceid);
-    if (device_manufacturer != "") {
+    if (device_manufacturer) {
       device.set("manufacturer", device_manufacturer);
     }
-    if (device_model != "") {
+    if (device_model) {
       device.set("model", device_model);
     }
-    if (device_name != "") {
+    if (device_name) {
       device.set("name", device_name);
     }
     device.set("via_device", gateway_name); //device name of the board
