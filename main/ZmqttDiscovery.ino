@@ -143,13 +143,13 @@ void createDiscovery(char* sensor_type,
     }
     JsonArray& identifiers = device.createNestedArray("identifiers");
     identifiers.add(deviceid);
-    if (device_manufacturer) {
+    if (device_manufacturer[0]) {
       device.set("manufacturer", device_manufacturer);
     }
-    if (device_model) {
+    if (device_model[0]) {
       device.set("model", device_model);
     }
-    if (device_name) {
+    if (device_name[0]) {
       device.set("name", device_name);
     }
     device.set("via_device", gateway_name); //device name of the board

@@ -185,7 +185,7 @@ void strupp(char* beg) {
 }
 
 #  ifdef ZmqttDiscovery
-void MiFloraDiscovery(char* mac) {
+void MiFloraDiscovery(char* mac, char* sensorModel) {
 #    define MiFloraparametersCount 4
   Log.trace(F("MiFloraDiscovery" CR));
   char* MiFlorasensor[MiFloraparametersCount][8] = {
@@ -196,10 +196,10 @@ void MiFloraDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MiFlorasensor, MiFloraparametersCount, "Mi-Flora", "Xiaomi", "HHCCJCY01HHCC");
+  createDiscoveryFromList(mac, MiFlorasensor, MiFloraparametersCount, "Mi-Flora", "Xiaomi", sensorModel);
 }
 
-void VegTrugDiscovery(char* mac) {
+void VegTrugDiscovery(char* mac, char* sensorModel) {
 #    define VegTrugparametersCount 4
   Log.trace(F("VegTrugDiscovery" CR));
   char* VegTrugsensor[VegTrugparametersCount][8] = {
@@ -210,10 +210,10 @@ void VegTrugDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, VegTrugsensor, VegTrugparametersCount, "", "VEGTRUG", "");
+  createDiscoveryFromList(mac, VegTrugsensor, VegTrugparametersCount, "VegTrug", "VEGTRUG", sensorModel);
 }
 
-void MiJiaDiscovery(char* mac) {
+void MiJiaDiscovery(char* mac, char* sensorModel) {
 #    define MiJiaparametersCount 3
   Log.trace(F("MiJiaDiscovery" CR));
   char* MiJiasensor[MiJiaparametersCount][8] = {
@@ -223,10 +223,10 @@ void MiJiaDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount, "", "", "");
+  createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount, "MiJia", "", sensorModel);
 }
 
-void FormalDiscovery(char* mac) {
+void FormalDiscovery(char* mac, char* sensorModel) {
 #    define FormalparametersCount 4
   Log.trace(F("FormalDiscovery" CR));
   char* Formalsensor[FormalparametersCount][8] = {
@@ -237,10 +237,10 @@ void FormalDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, Formalsensor, FormalparametersCount, "", "", "");
+  createDiscoveryFromList(mac, Formalsensor, FormalparametersCount, "Formal", "", sensorModel);
 }
 
-void LYWSD02Discovery(char* mac) {
+void LYWSD02Discovery(char* mac, char* sensorModel) {
 #    define LYWSD02parametersCount 3
   Log.trace(F("LYWSD02Discovery" CR));
   char* LYWSD02sensor[LYWSD02parametersCount][8] = {
@@ -250,10 +250,10 @@ void LYWSD02Discovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, LYWSD02sensor, LYWSD02parametersCount, "", "Xiaomi", "LYWSD02MMC");
+  createDiscoveryFromList(mac, LYWSD02sensor, LYWSD02parametersCount, "LYWSD02", "Xiaomi", sensorModel);
 }
 
-void CLEARGRASSTRHDiscovery(char* mac) {
+void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSTRHparametersCount 3
   Log.trace(F("CLEARGRASSTRHDiscovery" CR));
   char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
@@ -263,10 +263,10 @@ void CLEARGRASSTRHDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, CLEARGRASSTRHsensor, CLEARGRASSTRHparametersCount, "", "ClearGrass", "");
+  createDiscoveryFromList(mac, CLEARGRASSTRHsensor, CLEARGRASSTRHparametersCount, "CLEARGRASSTRH", "ClearGrass", sensorModel);
 }
 
-void CLEARGRASSCGD1Discovery(char* mac) {
+void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSCGD1parametersCount 3
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
@@ -276,10 +276,10 @@ void CLEARGRASSCGD1Discovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount, "CLEARGRASSCGD1", "ClearGrass", "CGD1");
+  createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount, "CLEARGRASSCGD1", "ClearGrass", sensorModel);
 }
 
-void CLEARGRASSTRHKPADiscovery(char* mac) {
+void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSTRHKPAparametersCount 3
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
   char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
@@ -289,10 +289,11 @@ void CLEARGRASSTRHKPADiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, CLEARGRASSTRHKPAsensor, CLEARGRASSTRHKPAparametersCount, "CLEARGRASSTRHKPA", "ClearGrass", "CGP1W");
+  Log.trace(F("CLEARGRASSTRHKPADiscovery %s" CR), sensorModel);
+  createDiscoveryFromList(mac, CLEARGRASSTRHKPAsensor, CLEARGRASSTRHKPAparametersCount, "CLEARGRASSTRHKPA", "ClearGrass", sensorModel);
 }
 
-void MiScaleDiscovery(char* mac) {
+void MiScaleDiscovery(char* mac, char* sensorModel) {
 #    define MiScaleparametersCount 1
   Log.trace(F("MiScaleDiscovery" CR));
   char* MiScalesensor[MiScaleparametersCount][8] = {
@@ -300,10 +301,10 @@ void MiScaleDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MiScalesensor, MiScaleparametersCount, "", "Xiaomi", "");
+  createDiscoveryFromList(mac, MiScalesensor, MiScaleparametersCount, "MiScale", "Xiaomi", sensorModel);
 }
 
-void MiLampDiscovery(char* mac) {
+void MiLampDiscovery(char* mac, char* sensorModel) {
 #    define MiLampparametersCount 1
   Log.trace(F("MiLampDiscovery" CR));
   char* MiLampsensor[MiLampparametersCount][8] = {
@@ -311,10 +312,10 @@ void MiLampDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MiLampsensor, MiLampparametersCount, "", "Xiaomi", "");
+  createDiscoveryFromList(mac, MiLampsensor, MiLampparametersCount, "MiLamp", "Xiaomi", sensorModel);
 }
 
-void MiBandDiscovery(char* mac) {
+void MiBandDiscovery(char* mac, char* sensorModel) {
 #    define MiBandparametersCount 1
   Log.trace(F("MiBandDiscovery" CR));
   char* MiBandsensor[MiBandparametersCount][8] = {
@@ -322,10 +323,10 @@ void MiBandDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount, "", "Xiaomi", "");
+  createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount, "MiBand", "Xiaomi", sensorModel);
 }
 
-void InkBirdDiscovery(char* mac) {
+void InkBirdDiscovery(char* mac, char* sensorModel) {
 #    define InkBirdparametersCount 3
   Log.trace(F("InkBirdDiscovery" CR));
   char* InkBirdsensor[InkBirdparametersCount][8] = {
@@ -335,10 +336,10 @@ void InkBirdDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, InkBirdsensor, InkBirdparametersCount, "", "InkBird", "");
+  createDiscoveryFromList(mac, InkBirdsensor, InkBirdparametersCount, "", "InkBird", sensorModel);
 }
 
-void LYWSD03MMCDiscovery(char* mac) {
+void LYWSD03MMCDiscovery(char* mac, char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
   char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][8] = {
@@ -349,10 +350,10 @@ void LYWSD03MMCDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, "", "", "");
+  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, "LYWSD03MMC", "Xiaomi", sensorModel);
 }
 
-void MHO_C401Discovery(char* mac) {
+void MHO_C401Discovery(char* mac, char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
   char* MHO_C401sensor[MHO_C401parametersCount][8] = {
@@ -363,10 +364,10 @@ void MHO_C401Discovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, "", "", "");
+  createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, "MHO_C401", "Xiaomi", sensorModel);
 }
 
-void INodeEMDiscovery(char* mac) {
+void INodeEMDiscovery(char* mac, char* sensorModel) {
 #    define INodeEMparametersCount 3
   Log.trace(F("INodeEMDiscovery" CR));
   char* INodeEMsensor[INodeEMparametersCount][8] = {
@@ -376,25 +377,25 @@ void INodeEMDiscovery(char* mac) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount, "", "", "");
+  createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount, "INode-Energy-Meter", "INode", sensorModel);
 }
 
 #  else
-void MiFloraDiscovery(char* mac) {}
-void VegTrugDiscovery(char* mac) {}
-void MiJiaDiscovery(char* mac) {}
-void FormalDiscovery(char* mac) {}
-void LYWSD02Discovery(char* mac) {}
-void CLEARGRASSTRHDiscovery(char* mac) {}
-void CLEARGRASSCGD1Discovery(char* mac) {}
-void CLEARGRASSTRHKPADiscovery(char* mac) {}
-void MiScaleDiscovery(char* mac) {}
-void MiLampDiscovery(char* mac) {}
-void MiBandDiscovery(char* mac) {}
-void InkBirdDiscovery(char* mac) {}
-void LYWSD03MMCDiscovery(char* mac) {}
-void MHO_C401Discovery(char* mac) {}
-void INodeEMDiscovery(char* mac) {}
+void MiFloraDiscovery(char* mac, char* sensorModel) {}
+void VegTrugDiscovery(char* mac, char* sensorModel) {}
+void MiJiaDiscovery(char* mac, char* sensorModel) {}
+void FormalDiscovery(char* mac, char* sensorModel) {}
+void LYWSD02Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {}
+void MiScaleDiscovery(char* mac, char* sensorModel) {}
+void MiLampDiscovery(char* mac, char* sensorModel) {}
+void MiBandDiscovery(char* mac, char* sensorModel) {}
+void InkBirdDiscovery(char* mac, char* sensorModel) {}
+void LYWSD03MMCDiscovery(char* mac, char* sensorModel) {}
+void MHO_C401Discovery(char* mac, char* sensorModel) {}
+void INodeEMDiscovery(char* mac, char* sensorModel) {}
 #  endif
 
 #  ifdef ESP32
@@ -834,22 +835,22 @@ void launchDiscovery() {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       Log.trace(F("Launching discovery of %s" CR), p->macAdr);
-      if (p->sensorModel == HHCCJCY01HHCC) MiFloraDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == VEGTRUG) VegTrugDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == LYWSDCGQ) MiJiaDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == JQJCY01YM) FormalDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == LYWSD02) LYWSD02Discovery((char*)macWOdots.c_str());
-      if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str());
-      if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str());
+      if (p->sensorModel == HHCCJCY01HHCC) MiFloraDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == VEGTRUG) VegTrugDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == LYWSDCGQ) MiJiaDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == JQJCY01YM) FormalDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == LYWSD02) LYWSD02Discovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
       if ((p->sensorModel == XMTZC04HM) ||
-          (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str());
-      if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str());
-      if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str());
+          (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
