@@ -4,6 +4,14 @@ So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscov
 
 Once done, enable discovery on your MQTT integration definition in HASS.
 
+So as to create the MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
+
+![](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
+
+::: warning Note
+The max size of the username is 30 and 60 for the password.
+:::
+
 OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
 
 The gateway device will be available into Configuration->Devices section of Home Assistant.
