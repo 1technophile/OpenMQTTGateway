@@ -48,8 +48,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: "14.x"
-      - name: Install vuepress
-        run: npm install -g vuepress
+      - name: Install build dependencies
+        run: npm install
       - name: Set version tag from git
         run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" docs/.vuepress/config.js
       - name: Build documentation

@@ -8,7 +8,7 @@ So as to pilot the GPIO use the following commands with [simple receiving](../up
 OFF command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/setOFF -m 15`
 
-ON command
+ON command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/setON -m 15`
 
 or with [json receiving](../upload/pio.md#api)
@@ -16,7 +16,7 @@ or with [json receiving](../upload/pio.md#api)
 OFF command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":0}'`
 
-ON command
+ON command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":1}'`
 
 ## FASTLED
@@ -28,7 +28,7 @@ ON command
 2. Start fire animation (Fire2012)
 
 ### Hardware wiring
-Theoreticaly it should be possible to use every free IO pin. But after some tests only pin D2 works at WEMOS D1. Other platforms can work.
+Theoretically it should be possible to use every free IO pin. But after some tests only pin D2 works at WEMOS D1. Other platforms can work.
 The default setting use NEOPIXEL (WS2812B). The simplest wiring is direct connect D2 to data pin of LED stripe and connect VCC/GND to power source. You should also add an capacitor.
 
 ## PWM

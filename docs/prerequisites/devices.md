@@ -39,9 +39,9 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
-::: INFO
-(1) Not supported with HM10.
-(2) See https://github.com/atc1441/ATC_MiThermometer
+::: tip INFO
+- (1) Not supported with HM10.
+- (2) See https://github.com/atc1441/ATC_MiThermometer
 :::
 
 ![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
