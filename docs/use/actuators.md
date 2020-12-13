@@ -76,10 +76,10 @@ This means that input values are raised to the power 2.5 internally.
 This can be used to improve the linearity of inputs.
 
 ## Somfy RTS
-This actor allows to control Somfy RTS devices.
+This actuator allows to control Somfy RTS devices.
 
 ### Setup
-Before the module can be used virtual Somfy RTS remotes must be created.
+Before the module can be used, virtual Somfy RTS remotes must be created.
 This is done in `config_Somfy.h`.
 
 `SOMFY_REMOTE_NUM` must be set to the number of virtual Somfy RTS remotes you want to have.
