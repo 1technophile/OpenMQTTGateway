@@ -15,3 +15,9 @@
 
 Vcc pin of the board and the Module to a 5V supply source
 Ground pins of the board and the Module to the ground of the supply source.
+
+## Somfy RTS
+For this actor a 433.42 MHz RF transmitter is required.
+The standard 433.92 MHz transmitter don't work.
+The CC1101 Transceiver supports both 433.42 MHz and 433.92 MHz and can be used with the Somfy RTS actor.
+The wiring of the hardware is described in the [RF gateway](rf).
