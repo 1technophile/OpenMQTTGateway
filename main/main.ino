@@ -57,7 +57,7 @@ StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray& modules = modulesBuffer.createArray();
 
 // Modules config inclusion
-#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
@@ -131,6 +131,9 @@ JsonArray& modules = modulesBuffer.createArray();
 #endif
 #ifdef ZactuatorPWM
 #  include "config_PWM.h"
+#endif
+#ifdef ZactuatorSomfy
+#  include "config_Somfy.h"
 #endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
 #  include "config_M5.h"
@@ -689,6 +692,10 @@ void setup() {
 #ifdef ZactuatorPWM
   setupPWM();
   modules.add(ZactuatorPWM);
+#endif
+#ifdef ZactuatorSomfy
+  setupSomfy();
+  modules.add(ZactuatorSomfy);
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
@@ -1519,6 +1526,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);
+#  endif
+#  ifdef ZactuatorSomfy
+    MQTTtoSomfy(topicOri, jsondata);
 #  endif
 #  ifdef ZgatewayRS232
     MQTTtoRS232(topicOri, jsondata);
