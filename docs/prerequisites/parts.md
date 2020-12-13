@@ -15,6 +15,6 @@ Here is below the main parts reference.
 |SX1276|-|-|-|X|-|
 |A6/A7|-|-|-|-|X|
 
-::: INFO
+::: tip INFO
 There is a wide range of parts available that may be compatible with OpenMQTTGateway, the ones [listed](https://compatible.openmqttgateway.com/index.php/parts/) are the ones tested and for which you can ask for support. Indeed for other parts we may not have it so as to reproduce the issue, or in the worst case they may not be compatible.
 :::
