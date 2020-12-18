@@ -835,22 +835,22 @@ void launchDiscovery() {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       Log.trace(F("Launching discovery of %s" CR), p->macAdr);
-      if (p->sensorModel == HHCCJCY01HHCC) MiFloraDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == VEGTRUG) VegTrugDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == LYWSDCGQ) MiJiaDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == JQJCY01YM) FormalDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == LYWSD02) LYWSD02Discovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+      if (p->sensorModel == HHCCJCY01HHCC) MiFloraDiscovery((char*)macWOdots.c_str(), "HHCCJCY01HHCC");
+      if (p->sensorModel == VEGTRUG) VegTrugDiscovery((char*)macWOdots.c_str(), "VEGTRUG");
+      if (p->sensorModel == LYWSDCGQ) MiJiaDiscovery((char*)macWOdots.c_str(), "LYWSDCGQ");
+      if (p->sensorModel == JQJCY01YM) FormalDiscovery((char*)macWOdots.c_str(), "JQJCY01YM");
+      if (p->sensorModel == LYWSD02) LYWSD02Discovery((char*)macWOdots.c_str(), "LYWSD02");
+      if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str(), "CGG1");
+      if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
+      if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
+      if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
+      if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
-          (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
-      if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str(), (char*)String(p->sensorModel).c_str());
+          (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), "XMTZC0xHM");
+      if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str(), "INKBIRD");
+      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), "LYWSD03MMC");
+      if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str(), "MHO_C401");
+      if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str(), "INODE_EM");
       createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
     } else {
       Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
