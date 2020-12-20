@@ -29,7 +29,8 @@
 
 extern String getUniqueId(String name, String sufix);
 extern void pubMqttDiscovery();
-extern void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount);
+extern void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount,
+                                    char* device_name, char* device_manufacturer, char* device_model);
 extern void createDiscovery(char* sensor_type,
                             char* state_topic, char* s_name, char* unique_id,
                             char* availability_topic, char* device_class, char* value_template,
