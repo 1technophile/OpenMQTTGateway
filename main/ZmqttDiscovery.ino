@@ -221,28 +221,32 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5batvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat current", (char*)getUniqueId("m5batcurrent", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.m5batcurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Vin voltage", (char*)getUniqueId("m5vinvoltage", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.m5vinvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Vin current", (char*)getUniqueId("m5vincurrent", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.m5vincurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
 #    endif
 #    ifdef ZboardM5STACK
@@ -251,21 +255,24 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("binary_sensor", //set Type
                   subjectSYStoMQTT, "SYS: Is Charging", (char*)getUniqueId("m5ischarging", "").c_str(), //set state_topic,name,uniqueId
                   "", "{{ value_json.m5ischarging }}", "", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
   createDiscovery("binary_sensor", //set Type
                   subjectSYStoMQTT, "SYS: Is Charge Full", (char*)getUniqueId("m5ischargefull", "").c_str(), //set state_topic,name,uniqueId
                   "", "{{ value_json.m5ischargefull }}", "", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "" //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", "", "" // device name, device manufacturer, device model, device mac
   );
 #    endif
 #  endif
