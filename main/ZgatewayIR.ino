@@ -179,6 +179,8 @@ void IRtoMQTT() {
   }
 }
 
+bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, const char* hex, unsigned int valueBITS, uint16_t valueRPT);  
+
 #  ifdef jsonReceiving
 void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoIR)) {
