@@ -569,6 +569,8 @@ void BLEconnect() {
               if (pRemoteCharacteristic->canNotify()) {
                 Log.trace(F("Registering notification" CR));
                 pRemoteCharacteristic->subscribe(true, notifyCB);
+                delay(BLE_CNCT_TIMEOUT);
+                pClient->disconnect();
               } else {
                 Log.notice(F("Failed registering notification" CR));
                 pClient->disconnect();

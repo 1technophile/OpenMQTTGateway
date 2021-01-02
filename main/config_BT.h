@@ -56,6 +56,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #define BLEdelimiterLength 16
 #define CRLR               "0d0a"
 #define CRLR_Length        4
+#define BLE_CNCT_TIMEOUT   3000
 
 #define ServicedataMinLength 29
 
