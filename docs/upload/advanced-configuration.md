@@ -32,3 +32,23 @@ If you have no ntp server in your local network (included in the router) or not 
 This is related to the `W: failed, ssl error code=54` error message, which indicate that the time of the esp is not correct.
 
 You can know compile and upload to your board and the gateway should connect with TLS to your broker.
+
+## Add the reveived "value" at the end of the topic
+For the gateways that publish a "value" parameter on the json (RF, IR...), it is possible to concatenate this parameter at the end of the topic.
+So as to activate this function you need to uncomment the line below in User_config.h
+
+``` cpp
+//#define valueAsASubject true 
+```
+
+Per default you see the following data:
+```
+home/OpenMQTTGateway/SRFBtoMQTT {"raw":"2B660186042E00E7E5","value":"59365","delay":"1111","val_Thigh":"390","val_Tlow":"1070"}
+```
+
+With the line uncommented you will see:
+```
+home/OpenMQTTGateway/SRFBtoMQTT/59365 {"raw":"2B660186042E00E7E5","value":"59365","delay":"1111","val_Thigh":"390","val_Tlow":"1070"}
+```
+
+It can be usefull to avoid warning or errors on certain controllers.
