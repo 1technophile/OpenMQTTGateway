@@ -78,7 +78,6 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #define subjectMQTTtoPilight    "/commands/MQTTtoPilight"
 #define subjectPilighttoMQTT    "/PilighttoMQTT"
 #define subjectGTWPilighttoMQTT "/PilighttoMQTT"
-#define PilightRAW              "RAW"
 #define repeatPilightwMQTT      false // do we repeat a received signal by using mqtt with Pilight gateway
 
 /*-------------------CC1101 frequency----------------------*/

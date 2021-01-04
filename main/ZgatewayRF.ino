@@ -37,7 +37,7 @@
 
 RCSwitch mySwitch = RCSwitch();
 
-#  ifdef ZmqttDiscovery
+#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT)
 void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creation from received RF values
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
@@ -50,7 +50,8 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creat
                   subjectRFtoMQTT, switchRF[1], (char*)getUniqueId(switchRF[1], switchRF[2]).c_str(),
                   will_Topic, switchRF[3], switchRF[4],
                   switchRF[5], switchRF[6], switchRF[7],
-                  0, "", "", true, subjectMQTTtoRF);
+                  0, "", "", true, subjectMQTTtoRF,
+                  "", "", "", "");
 }
 #  endif
 
@@ -90,7 +91,7 @@ void RFtoMQTT() {
     mySwitch.resetAvailable();
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
-#  ifdef ZmqttDiscovery //component creation for HA
+#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) //component creation for HA
       RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       pub(subjectRFtoMQTT, RFdata);

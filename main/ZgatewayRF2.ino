@@ -71,6 +71,51 @@ void setupRF2() {
   digitalWrite(RF_EMITTER_GPIO, LOW);
 }
 
+#  ifdef ZmqttDiscovery
+//Register for autodiscover in Home Assistant
+void RF2toMQTTdiscovery(JsonObject& data) {
+  Log.trace(F("switchRF2Discovery" CR));
+  String payloadonstr;
+  String payloadoffstr;
+
+  int org_switchtype = data["switchType"]; // Store original switchvalue
+  data.set("switchType", 1); // switchtype = 1 turns switch on.
+  data.printTo(payloadonstr);
+  data.set("switchType", 0); // switchtype = 0 turns switch off.
+  data.printTo(payloadoffstr);
+  data.set("switchType", org_switchtype); // Restore original switchvalue
+
+  String switchname;
+  switchname = "RF2_" + String((int)data["unit"]) + "_" +
+               String((int)data["groupbit"]) + "_" +
+               String((unsigned long)data["address"]);
+
+  char* switchRF[8] = {"switch",
+                       (char*)switchname.c_str(),
+                       "",
+                       "",
+                       "",
+                       (char*)payloadonstr.c_str(),
+                       (char*)payloadoffstr.c_str(),
+                       ""};
+  // component type,name,availability topic,device class,value template,payload
+  // on, payload off, unit of measurement
+
+  Log.trace(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
+
+  // As RF2 433Mhz switches do not render their state, no state topic should be
+  // provided in the discovery. This will cause the switch to be in optimistic
+  // mode in HA with separate on and off icons.
+  // The two separate on/off icons allow for subsequent on commands to support
+  // the dimming feature of KAKU switches like ACM-300.
+  createDiscovery(switchRF[0], "", switchRF[1],
+                  (char*)getUniqueId(switchRF[1], "").c_str(), will_Topic,
+                  switchRF[3], switchRF[4], switchRF[5], switchRF[6],
+                  switchRF[7], 0, "", "", true, subjectMQTTtoRF2,
+                  "", "", "", "");
+}
+#  endif
+
 void RF2toMQTT() {
   if (rf2rd.hasNewData) {
     Log.trace(F("Creating RF2 buffer" CR));
@@ -86,6 +131,9 @@ void RF2toMQTT() {
     RF2data.set("period", (int)rf2rd.period);
     RF2data.set("address", (unsigned long)rf2rd.address);
     RF2data.set("switchType", (int)rf2rd.switchType);
+#  ifdef ZmqttDiscovery //component creation for HA
+    RF2toMQTTdiscovery(RF2data);
+#  endif
 
     pub(subjectRF2toMQTT, RF2data);
   }

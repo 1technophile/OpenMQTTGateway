@@ -28,7 +28,7 @@
 #include "User_config.h"
 
 // Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
   SIGNAL_SIZE_UL_ULL value;
@@ -48,12 +48,16 @@ ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 unsigned long timer_sys_measures = 0;
 #  define ARDUINOJSON_USE_LONG_LONG 1
 #endif
+
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
 
+StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
+JsonArray& modules = modulesBuffer.createArray();
+
 // Modules config inclusion
-#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
@@ -131,8 +135,14 @@ unsigned long timer_sys_measures = 0;
 #ifdef ZactuatorPWM
 #  include "config_PWM.h"
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#ifdef ZactuatorSomfy
+#  include "config_Somfy.h"
+#endif
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
 #  include "config_M5.h"
+#endif
+#if defined(ZgatewayRS232)
+#  include "config_RS232.h"
 #endif
 /*------------------------------------------------------------------------*/
 
@@ -219,19 +229,27 @@ void revert_hex_data(const char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-void extract_char(const char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
-  if (isNumber) {
-    if (reverse)
-      revert_hex_data(token_char + start, subset, l + 1);
-    long long_value = strtoul(subset, NULL, 16);
-    sprintf(subset, "%ld", long_value);
+/** 
+ * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
+ * This value can represent a negative value if canBeNegative is set to true
+ */
+long value_from_hex_data(const char* service_data, int offset, int data_length, bool reverse, bool canBeNegative = true) {
+  char data[data_length + 1];
+  memcpy(data, &service_data[offset], data_length);
+  data[data_length] = '\0';
+  long value;
+  if (reverse) {
+    // reverse data order
+    char rev_data[data_length + 1];
+    revert_hex_data(data, rev_data, data_length + 1);
+    value = strtol(rev_data, NULL, 16);
   } else {
-    if (reverse)
-      revert_hex_data(token_char + start, subset, l + 1);
-    else
-      strncpy(subset, token_char + start, l + 1);
+    value = strtol(data, NULL, 16);
   }
-  subset[l] = '\0';
+  if (value > 65000 && data_length <= 4 && canBeNegative)
+    value = value - 65535;
+  Log.trace(F("value %D" CR), value);
+  return value;
 }
 
 char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
@@ -258,8 +276,9 @@ void pub(char* topicori, JsonObject& data) {
 #ifdef valueAsASubject
 #  ifdef ZgatewayPilight
     String value = data["value"];
+    String protocol = data["protocol"];
     if (value != 0) {
-      topic = topic + "/" + value;
+      topic = topic + "/" + protocol + "/" + value;
     }
 #  else
     SIGNAL_SIZE_UL_ULL value = data["value"];
@@ -453,7 +472,7 @@ void connectMQTT() {
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     if (low_power_mode < 2)
       M5Display("MQTT connected", "", "");
 #endif
@@ -534,7 +553,7 @@ void setup() {
   preferences.begin(Gateway_Short_Name, false);
   low_power_mode = preferences.getUInt("low_power_mode", DEFAULT_LOW_POWER_MODE);
   preferences.end();
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   setupM5();
 #    endif
 #  endif
@@ -591,78 +610,114 @@ void setup() {
 
 #ifdef ZsensorBME280
   setupZsensorBME280();
+  modules.add(ZsensorBME280);
 #endif
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
+  modules.add(ZsensorHTU21);
 #endif
 #ifdef ZsensorAHTx0
   setupZsensorAHTx0();
+  modules.add(ZsensorAHTx0);
 #endif
 #ifdef ZsensorBH1750
   setupZsensorBH1750();
+  modules.add(ZsensorBH1750);
 #endif
 #ifdef ZsensorTSL2561
   setupZsensorTSL2561();
+  modules.add(ZsensorTSL2561);
 #endif
 #ifdef Zgateway2G
   setup2G();
+  modules.add(Zgateway2G);
 #endif
 #ifdef ZgatewayIR
   setupIR();
+  modules.add(ZgatewayIR);
 #endif
 #ifdef ZgatewayLORA
   setupLORA();
+  modules.add(ZgatewayLORA);
 #endif
 #ifdef ZgatewayRF
   setupRF();
+  modules.add(ZgatewayRF);
 #endif
 #ifdef ZgatewayRF2
   setupRF2();
+  modules.add(ZgatewayRF2);
 #endif
 #ifdef ZgatewayPilight
   setupPilight();
+  modules.add(ZgatewayPilight);
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
+  modules.add(ZgatewayWeatherStation);
 #endif
 #ifdef ZgatewaySRFB
   setupSRFB();
+  modules.add(ZgatewaySRFB);
 #endif
 #ifdef ZgatewayBT
   setupBT();
+  modules.add(ZgatewayBT);
 #endif
 #ifdef ZgatewayRFM69
   setupRFM69();
+  modules.add(ZgatewayRFM69);
 #endif
 #ifdef ZsensorINA226
   setupINA226();
+  modules.add(ZsensorINA226);
 #endif
 #ifdef ZsensorHCSR501
   setupHCSR501();
+  modules.add(ZsensorHCSR501);
 #endif
 #ifdef ZsensorHCSR04
   setupHCSR04();
+  modules.add(ZsensorHCSR04);
 #endif
 #ifdef ZsensorGPIOInput
   setupGPIOInput();
+  modules.add(ZsensorGPIOInput);
 #endif
 #ifdef ZsensorGPIOKeyCode
   setupGPIOKeyCode();
+  modules.add(ZsensorGPIOKeyCode);
 #endif
 #ifdef ZactuatorFASTLED
   setupFASTLED();
+  modules.add(ZactuatorFASTLED);
 #endif
 #ifdef ZactuatorPWM
   setupPWM();
+  modules.add(ZactuatorPWM);
+#endif
+#ifdef ZactuatorSomfy
+  setupSomfy();
+  modules.add(ZactuatorSomfy);
 #endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
+  modules.add(ZsensorDS1820);
 #endif
 #ifdef ZsensorADC
   setupADC();
+  modules.add(ZsensorADC);
 #endif
 #ifdef ZsensorDHT
   setupDHT();
+  modules.add(ZsensorDHT);
+#endif
+#ifdef ZgatewayRS232
+  setupRS232();
+  modules.add(ZgatewayRS232);
+#endif
+#ifdef ZmqttDiscovery
+  modules.add(ZmqttDiscovery);
 #endif
 #ifdef ZsensorSHTC3
   setupSHTC3();
@@ -765,7 +820,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     M5Display("OTA in progress", "", "");
 #  endif
   });
@@ -774,7 +829,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     M5Display("OTA done", "", "");
 #  endif
   });
@@ -865,7 +920,7 @@ void saveConfigCallback() {
   shouldSaveConfig = true;
 }
 
-#  if TRIGGER_GPIO
+#  ifdef TRIGGER_GPIO
 void checkButton() { // code from tzapu/wifimanager examples
   // check for button press
   if (digitalRead(TRIGGER_GPIO) == LOW) {
@@ -906,7 +961,7 @@ void eraseAndRestart() {
 }
 
 void setup_wifimanager(bool reset_settings) {
-#  if TRIGGER_GPIO
+#  ifdef TRIGGER_GPIO
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
 #  endif
   delay(10);
@@ -1004,7 +1059,7 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (low_power_mode < 2) {
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
       M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
 #    endif
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
@@ -1031,7 +1086,7 @@ void setup_wifimanager(bool reset_settings) {
     }
   }
 
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   if (low_power_mode < 2)
     M5Display("Wifi connected", "", "");
 #  endif
@@ -1280,6 +1335,9 @@ void loop() {
       if (RFM69toMQTT())
         Log.trace(F("RFM69toMQTT OK" CR));
 #endif
+#ifdef ZgatewayRS232
+      RS232toMQTT();
+#endif
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
@@ -1304,7 +1362,7 @@ void loop() {
 #endif
   }
 // Function that doesn't need an active connection
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   loopM5();
 #endif
 }
@@ -1337,118 +1395,38 @@ void stateMeasures() {
   SYSdata["wifiprt"] = (int)wifiProtocol;
 #    endif
 #  endif
-  String modules = "";
-#  ifdef ZgatewayRF
-  modules = modules + ZgatewayRF;
-#  endif
-#  ifdef ZsensorBME280
-  modules = modules + ZsensorBME280;
-#  endif
-#  ifdef ZsensorHTU21
-  modules = modules + ZsensorHTU21;
-#  endif
-#  ifdef ZsensorAHTx0
-  modules = modules + ZsensorAHTx0;
-#  endif
-#  ifdef ZsensorHCSR04
-  modules = modules + ZsensorHCSR04;
-#  endif
-#  ifdef ZsensorBH1750
-  modules = modules + ZsensorBH1750;
-#  endif
-#  ifdef ZsensorTSL2561
-  modules = modules + ZsensorTSL2561;
-#  endif
-#  ifdef ZsensorDHT
-  modules = modules + ZsensorDHT;
-#  endif
-#  ifdef ZsensorDS1820
-  modules = modules + ZsensorDS1820;
-#  endif
-#  ifdef ZactuatorONOFF
-  modules = modules + ZactuatorONOFF;
-#  endif
-#  ifdef Zgateway2G
-  modules = modules + Zgateway2G;
-#  endif
-#  ifdef ZgatewayIR
-  modules = modules + ZgatewayIR;
-#  endif
-#  ifdef ZgatewayLORA
-  modules = modules + ZgatewayLORA;
-#  endif
-#  ifdef ZgatewayRF2
-  modules = modules + ZgatewayRF2;
-#  endif
-#  ifdef ZgatewayWeatherStation
-  modules = modules + ZgatewayWeatherStation;
-#  endif
-#  ifdef ZgatewayPilight
-  modules = modules + ZgatewayPilight;
-#  endif
-#  ifdef ZgatewaySRFB
-  modules = modules + ZgatewaySRFB;
-#  endif
 #  ifdef ZgatewayBT
-  modules = modules + ZgatewayBT;
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)low_power_mode;
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;
 #  endif
-#  ifdef ZgatewayRFM69
-  modules = modules + ZgatewayRFM69;
-#  endif
-#  ifdef ZsensorINA226
-  modules = modules + ZsensorINA226;
-#  endif
-#  ifdef ZsensorHCSR501
-  modules = modules + ZsensorHCSR501;
-#  endif
-#  ifdef ZsensorGPIOInput
-  modules = modules + ZsensorGPIOInput;
-#  endif
-#  ifdef ZsensorGPIOKeyCode
-  modules = modules + ZsensorGPIOKeyCode;
-#  endif
-#  ifdef ZsensorGPIOKeyCode
-  modules = modules + ZsensorGPIOKeyCode;
-#  endif
-#  ifdef ZmqttDiscovery
-  modules = modules + ZmqttDiscovery;
-#  endif
-#  ifdef ZactuatorFASTLED
-  modules = modules + ZactuatorFASTLED;
-#  endif
-#  ifdef ZactuatorPWM
-  modules = modules + ZactuatorPWM;
-#  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
-  SYSdata["m5-batt-level"] = (int8_t)M5.Power.getBatteryLevel();
-  SYSdata["m5-is-charging"] = (bool)M5.Power.isCharging();
-  SYSdata["m5-is-chargefull"] = (bool)M5.Power.isChargeFull();
+  SYSdata["m5battlevel"] = (int8_t)M5.Power.getBatteryLevel();
+  SYSdata["m5ischarging"] = (bool)M5.Power.isCharging();
+  SYSdata["m5ischargefull"] = (bool)M5.Power.isChargeFull();
 #  endif
-#  ifdef ZboardM5STICKC
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   M5.Axp.EnableCoulombcounter();
-  SYSdata["m5-bat-voltage"] = (float)M5.Axp.GetBatVoltage();
-  SYSdata["m5-bat-current"] = (float)M5.Axp.GetBatCurrent();
-  SYSdata["m5-vin-voltage"] = (float)M5.Axp.GetVinVoltage();
-  SYSdata["m5-vin-current"] = (float)M5.Axp.GetVinCurrent();
-  SYSdata["m5-vbus-voltage"] = (float)M5.Axp.GetVBusVoltage();
-  SYSdata["m5-vbus-current"] = (float)M5.Axp.GetVBusCurrent();
-  SYSdata["m5-temp-axp"] = (float)M5.Axp.GetTempInAXP192();
-  SYSdata["m5-bat-power"] = (float)M5.Axp.GetBatPower();
-  SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
-  SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
+  SYSdata["m5batvoltage"] = (float)M5.Axp.GetBatVoltage();
+  SYSdata["m5batcurrent"] = (float)M5.Axp.GetBatCurrent();
+  SYSdata["m5vinvoltage"] = (float)M5.Axp.GetVinVoltage();
+  SYSdata["m5vincurrent"] = (float)M5.Axp.GetVinCurrent();
+  SYSdata["m5vbusvoltage"] = (float)M5.Axp.GetVBusVoltage();
+  SYSdata["m5vbuscurrent"] = (float)M5.Axp.GetVBusCurrent();
+  SYSdata["m5tempaxp"] = (float)M5.Axp.GetTempInAXP192();
+  SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
+  SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
+  SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
-  SYSdata["modules"] = modules;
+  SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
 }
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 /** 
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
@@ -1506,7 +1484,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) { // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
     SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
     if (data != 0 && !isAduplicateSignal(data)) {
@@ -1552,11 +1530,17 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorPWM
     MQTTtoPWM(topicOri, jsondata);
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     MQTTtoM5(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);
+#  endif
+#  ifdef ZactuatorSomfy
+    MQTTtoSomfy(topicOri, jsondata);
+#  endif
+#  ifdef ZgatewayRS232
+    MQTTtoRS232(topicOri, jsondata);
 #  endif
 #endif
     digitalWrite(LED_SEND, LED_SEND_ON);
