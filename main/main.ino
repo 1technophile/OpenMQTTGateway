@@ -111,6 +111,9 @@ JsonArray& modules = modulesBuffer.createArray();
 #ifdef ZsensorDHT
 #  include "config_DHT.h"
 #endif
+#ifdef ZsensorSHTC3
+#  include "config_SHTC3.h"
+#endif
 #ifdef ZsensorDS1820
 #  include "config_DS1820.h"
 #endif
@@ -716,6 +719,9 @@ void setup() {
 #ifdef ZmqttDiscovery
   modules.add(ZmqttDiscovery);
 #endif
+#ifdef ZsensorSHTC3
+  setupSHTC3();
+#endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
 }
@@ -1271,6 +1277,9 @@ void loop() {
       MeasureLightIntensityTSL2561();
 #endif
 #ifdef ZsensorDHT
+      MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+#endif
+#ifdef ZsensorSHTC3
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
 #endif
 #ifdef ZsensorDS1820
