@@ -233,6 +233,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZboardM5STACK  "ZboardM5STACK"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
 //#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+//#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
 
