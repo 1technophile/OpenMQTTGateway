@@ -140,7 +140,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define MQTT_PASS ""
 #endif
 #ifndef MQTT_SERVER
-#  define MQTT_SERVER "192.168.1.12"
+#  define MQTT_SERVER "mqtt.local"
 #endif
 #ifndef MQTT_PORT
 #  define MQTT_PORT MQTT_DEFAULT_PORT
@@ -208,7 +208,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
-#define ZgatewayBT     "BT"       //ESP8266, ESP32
+//#define ZgatewayBT     "BT"       //ESP8266, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
@@ -226,7 +226,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
-#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STACK  "ZboardM5STACK"
