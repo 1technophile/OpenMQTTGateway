@@ -68,6 +68,7 @@ struct BLEdevice {
   bool isWhtL;
   bool isBlkL;
   ble_sensor_model sensorModel;
+  uint8_t deviceData[20];
 };
 
 #  define device_flags_init     0 << 0
@@ -418,21 +419,15 @@ void INodeEMDiscovery(char* mac) {
 */
 
 void DT24Discovery(char* mac) {
-#    define DT24parametersCount 12
+#    define DT24parametersCount 5
   Log.trace(F("DT24Discovery" CR));
   char* DT24sensor[DT24parametersCount][8] = {
-      {"sensor", "DT24-type", mac, "type", jsonPower, "", "", "W"},
-      {"sensor", "DT24-voltage", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "DT24-amp", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-watt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-wattHour", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-price", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-unknown", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "%"},
-      {"sensor", "DT24-hour", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-minutes", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-second", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "DT24-light", mac, "battery", jsonBatt, "", "", "%"}
+      {"sensor", "_energy_voltage", mac, "power", jsonVolt, "", "", "V"},
+      {"sensor", "_energy_current", mac, "power", jsonCurrent, "", "", "A"},
+      {"sensor", "_energy_power", mac, "power", jsonPower, "", "", "W"},
+      {"sensor", "_energy_total", mac, "power", jsonEnergy, "", "", "Wh"},
+      {"sensor", "temperature", mac, "temperature", jsonTempc, "", "", "C"},
+
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -558,6 +553,21 @@ void notifyCB(
     bool isNotify) {
   if (!ProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
+    Log.trace(F("Callback length from %d characteristic" CR), length);
+
+    // int serviceDataLength = serviceData.length();
+    String returnedString = "";
+    for (int i = 0; i < length; i++) {
+      int a = pData[i];
+      if (a < 16) {
+        returnedString += F("0");
+      }
+      returnedString += String(a, HEX);
+    }
+    char characteristicData[returnedString.length() + 1];
+    returnedString.toCharArray(characteristicData, returnedString.length() + 1);
+    characteristicData[returnedString.length()] = '\0';
+    Log.trace(F("Characteristic data: %s" CR), characteristicData);
 
     if (length == 5) {
       Log.trace(F("Device identified creating BLE buffer" CR));
@@ -573,6 +583,7 @@ void notifyCB(
             BLEdata.set("model", "MHO_C401");
         }
       }
+
       BLEdata.set("id", (char*)mac_adress.c_str());
       Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
       BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
@@ -584,13 +595,103 @@ void notifyCB(
       mac_adress.replace(":", "");
       String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
       pub((char*)mactopic.c_str(), BLEdata);
+    } else if ( length == 20 ) {
+      // DT24-BLE
+      Log.trace(F("Device identified creating BLE buffer" CR));
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject& BLEdata = jsonBuffer.createObject();
+      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
+      mac_adress.toUpperCase();
+      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
+
+      for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
+          // update device data buffer
+          memcpy(p->deviceData, pData, sizeof p->deviceData);
+        }
+      }
+
+      /*
+      BLEdata.set("model", "DT24-BLE");
+      BLEdata.set("id", (char*)mac_adress.c_str());
+
+      BLEdata.set("voltage", (float)(((pData[4] * 256 * 256) + (pData[5] * 256) + pData[6]) / 10.0));
+      BLEdata.set("amps", (float)(((pData[7] * 256 * 256) + (pData[8] * 256) + pData[9]) / 1000.0));
+      BLEdata.set("watts", (float)(((pData[10] * 256 * 256) + (pData[11] * 256) + pData[12]) / 10.0));
+      BLEdata.set("wattHours", (float)(((pData[13] * 256 * 256 * 256) + (pData[14] * 256 * 256) + (pData[15] * 256) + pData[16]) / 100.0));
+      BLEdata.set("price", (float)(((pData[17] * 256 * 256) + (pData[18] * 256) + pData[19]) / 100.0));
+      BLEdata.set("characteristicData", (char*)characteristicData);
+
+      mac_adress.replace(":", "");
+      String mactopic = subjectBTtoMQTT + String("/") + mac_adress + String("/a");
+      pub((char*)mactopic.c_str(), BLEdata);
+      */
+    } else if ( length == 16 ) {
+      // DT24-BLE
+      Log.trace(F("Device identified creating BLE buffer" CR));
+      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
+      mac_adress.toUpperCase();
+      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
+      JsonObject& BLEdata = jsonBuffer.createObject();
+
+      String returnedString = "";
+      for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
+          // update device data buffer
+          BLEdata.set("volt", (float)(((p->deviceData[4] * 256 * 256) + (p->deviceData[5] * 256) + p->deviceData[6]) / 10.0));
+          BLEdata.set("current", (float)(((p->deviceData[7] * 256 * 256) + (p->deviceData[8] * 256) + p->deviceData[9]) / 1000.0));
+          BLEdata.set("power", (float)(((p->deviceData[10] * 256 * 256) + (p->deviceData[11] * 256) + p->deviceData[12]) / 10.0));
+          BLEdata.set("energy", (float)(((p->deviceData[13] * 256 * 256 * 256) + (p->deviceData[14] * 256 * 256) + (p->deviceData[15] * 256) + p->deviceData[16]) / 100.0));
+          BLEdata.set("price", (float)(((p->deviceData[17] * 256 * 256) + (p->deviceData[18] * 256) + p->deviceData[19]) / 100.0));
+
+          for (int i = 0; i < 20; i++) {    // The 20 is hard coded, very naughty
+            int a = p->deviceData[i];
+            if (a < 16) {
+              returnedString += F("0");
+            }
+            returnedString += String(a, HEX);
+          }
+        }
+      }
+
+      for (int i = 0; i < length; i++) {
+        int a = pData[i];
+        if (a < 16) {
+          returnedString += F("0");
+        }
+        returnedString += String(a, HEX);
+      }
+      char characteristicData[returnedString.length() + 1];
+      returnedString.toCharArray(characteristicData, returnedString.length() + 1);
+      characteristicData[returnedString.length()] = '\0';
+      Log.trace(F("Characteristic data: %s" CR), characteristicData);
+
+      BLEdata.set("model", "DT24-BLE");
+      BLEdata.set("id", (char*)mac_adress.c_str());
+
+      BLEdata.set("tempc", (float)(((pData[4] * 256) + pData[5])));
+      BLEdata.set("hour", (float)(((pData[6] * 256) + pData[7])));
+      BLEdata.set("minute", (float)(pData[8]));
+      BLEdata.set("seconds", (float)(pData[9]));
+      BLEdata.set("backlight", (float)(pData[10]));
+      BLEdata.set("unknown1", (float)(((pData[11] * 256 * 256 * 256) + (pData[12] * 256 * 256) + (pData[13] * 256) + pData[14]) / 100.0));
+      BLEdata.set("unknown2", (float)(pData[15]));
+      BLEdata.set("characteristicData", (char*)characteristicData);
+
+      mac_adress.replace(":", "");
+      String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
+      pub((char*)mactopic.c_str(), BLEdata);
+      // Log.trace(F("Characteristic data: %s" CR), characteristicData);
     } else {
+
       Log.notice(F("Device not identified" CR));
     }
   } else {
     Log.trace(F("Callback process canceled by processLock" CR));
   }
-  pBLERemoteCharacteristic->unsubscribe();
+  // Why ?
+  // pBLERemoteCharacteristic->unsubscribe();
 }
 
 /**
@@ -644,8 +745,8 @@ void BLEconnect() {
       Log.trace(F("Model to connect found" CR));
       NimBLEClient* pClient;
       pClient = BLEDevice::createClient();
-      BLEUUID serviceUUID("0000ffe0-0000-1000-8000-00805f9b34fb");
-      BLEUUID charUUID("0000ffe1-0000-1000-8000-00805f9b34fb");
+      BLEUUID serviceUUID("ffe0");
+      BLEUUID charUUID("ffe1");
       BLEAddress sensorAddress(p->macAdr);
       if (!pClient->connect(sensorAddress)) {
         Log.notice(F("Failed to find client: %s" CR), p->macAdr);
@@ -1167,7 +1268,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         BLEdata.set("model", "DT24BLE");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, DT24BLE);
-        return process_dt24(BLEdata);
+        // return process_dt24(BLEdata);
       }
     }
     Log.trace(F("Is it a iNode Energy Meter?" CR));
@@ -1297,6 +1398,7 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
 JsonObject& process_dt24(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
 
+  /*
   double temperature = (double)value_from_service_data(manufacturerdata, 0, 4, true) / 100;
   double humidity = (double)value_from_service_data(manufacturerdata, 4, 4, true) / 100;
   double battery = (double)value_from_service_data(manufacturerdata, 14, 2, true);
@@ -1306,6 +1408,7 @@ JsonObject& process_dt24(JsonObject& BLEdata) {
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("hum", (double)humidity);
   BLEdata.set("batt", (double)battery);
+  */
 
   return BLEdata;
 }

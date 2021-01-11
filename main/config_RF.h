@@ -46,6 +46,7 @@ extern void setupPilight();
 extern void PilighttoMQTT();
 extern void MQTTtoPilight(char* topicOri, char* datacallback);
 extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
+extern void disablePilight();
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys

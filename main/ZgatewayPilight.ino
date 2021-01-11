@@ -165,3 +165,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
 #  endif
 }
 #endif
+
+void disablePiLight() { // Receiving a signal breaks OTA Updates
+  rf.disableReceiver();
+}

@@ -762,6 +762,9 @@ void setOTA() {
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
     M5Display("OTA in progress", "", "");
 #  endif
+#  if defined(ZgatewayPilight)  // Receiving a signal breaks OTA Updates
+    disablePiLight();
+#  endif
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
