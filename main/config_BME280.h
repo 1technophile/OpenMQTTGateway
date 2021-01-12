@@ -41,8 +41,17 @@
 extern void setupBME280();
 extern void BME280toMQTT();
 
-#define bme280_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingbme280 30000
+#define bme280_always true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
+#ifndef TimeBetweenReadingbme280
+#  define TimeBetweenReadingbme280 30000
+#endif
+
+#ifndef I2C_SCL
+#  define I2C_SCL D1
+#endif
+#ifndef I2C_SDA
+#  define I2C_SDA D2
+#endif
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
