@@ -493,7 +493,7 @@ void connectMQTT() {
 #ifdef ZgatewayIR
       client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
 #endif
-      Log.trace(F("Subscription OK to the subjects" CR));
+      Log.trace(F("Subscription OK to the subjects %s" CR), topic2);
     }
   } else {
     failure_number_mqtt++; // we count the failure
