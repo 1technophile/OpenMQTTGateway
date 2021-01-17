@@ -36,7 +36,9 @@
 #  include <RCSwitch.h> // library for controling Radio frequency switch
 
 RCSwitch mySwitch = RCSwitch();
+#  ifdef ZradioCC1101
 float valueMhz = CC1101_FREQUENCY;
+#  endif
 
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT)
 void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creation from received RF values
@@ -77,7 +79,11 @@ void setupRF() {
 
 void RFtoMQTT() {
   if (mySwitch.available()) {
+#  ifdef ZradioCC1101 //receiving with CC1101
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
+#  else
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+#  endif
     StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject& RFdata = jsonBuffer.createObject();
     Log.trace(F("Rcv. RF" CR));
@@ -217,7 +223,9 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
         Log.error(F("MQTTtoRF Fail json" CR));
       }
 #    else
+#      ifndef ARDUINO_AVR_UNO // Space issues with the UNO
       pub(subjectGTWRFtoMQTT, "{Status: 'error'}"); // Fail feedback
+#      endif
       Log.error(F("MQTTtoRF Fail json" CR));
 #    endif
     }
@@ -231,6 +239,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #  endif
 #endif
 
+#ifdef ZradioCC1101
 bool validFrequency(float mhz) {
   //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
   if (mhz >= 300 && mhz <= 348)
@@ -241,3 +250,4 @@ bool validFrequency(float mhz) {
     return true;
   return false;
 }
+#endif
