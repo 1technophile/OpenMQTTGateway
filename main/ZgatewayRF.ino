@@ -189,9 +189,8 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       float trMhz = RFdata["mhz"] | CC1101_FREQUENCY;
       if (validFrequency(trMhz)) {
         ELECHOUSE_cc1101.SetTx(trMhz);
-        Log.notice(F("RF mhz: %s" CR), String(trMhz));
+        Log.notice(F("RF mhz: %d" CR), (int)trMhz); // this is a float but no easy way to convert
         mySwitch.disableReceive();
-        Log.notice(F("Receive Off: %s" CR), String(valueMhz));
         mySwitch.enableTransmit(RF_EMITTER_GPIO);
       }
 #    endif
@@ -211,7 +210,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       if (tempMhz != 0 && validFrequency(tempMhz)) {
         valueMhz = tempMhz;
         ELECHOUSE_cc1101.Init();
-        Log.notice(F("RF mhz: %s" CR), String(valueMhz));
+        Log.notice(F("RF mhz: %d" CR), (int)valueMhz);
         pub(subjectGTWRFtoMQTT, RFdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       } else {
         pub(subjectGTWRFtoMQTT, "{'Status': 'Error'}"); // Fail feedback
@@ -227,7 +226,6 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
   ELECHOUSE_cc1101.SetRx(valueMhz);
   mySwitch.disableTransmit();
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
-  Log.notice(F("Receive On: %s" CR), String(valueMhz));
 #    endif
 }
 #  endif
