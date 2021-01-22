@@ -82,7 +82,13 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 
 /*-------------------CC1101 frequency----------------------*/
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
-#define CC1101_FREQUENCY 433.92
+#ifndef CC1101_FREQUENCY
+#  define CC1101_FREQUENCY 433.92
+#endif
+// Allow ZGatewayRF Module to change receive frequency of CC1101 Transceiver module
+#ifdef ZradioCC1101
+float receiveMhz = CC1101_FREQUENCY;
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RF_RECEIVER_GPIO

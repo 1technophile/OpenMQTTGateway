@@ -61,6 +61,20 @@ You can add a "repeat" key/value to the MQTTto433 JSON message to override the d
 Example:
 `home/OpenMQTTGateway/commands/MQTTto433 {"value":1315156,"protocol":1,"length":24,"delay":317, "repeat":10}`
 
+### Set Transmit and Receive Frequency of CC1101 Transceiver Module
+
+Default transmit frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by including the frequency in the transmit message.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board.
+
+`home/OpenMQTTGateway/commands/MQTTto433 {"value":1150,"protocol":6,"length":12,"delay":450,"repeat":8,"mhz":303.732}`
+
+Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board
+
+`home/OpenMQTTGateway/commands/MQTTto433 {"mhz":315.026}`
+
+Messages received will include the frequency, and when transmitting on a different frequency the module return to the receive frequency afterwards.  ie transmit messages on 303.732 Mhz then receive messages on 433.92 Mhz 
+
+`{"value":4534142,"protocol":6,"length":26,"delay":356,"mhz":315.026}`
+
 ## Pilight gateway
 
 ### Receiving data from RF signal
