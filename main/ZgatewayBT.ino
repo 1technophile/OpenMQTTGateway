@@ -943,7 +943,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_milamp(BLEdata);
       }
       Log.trace(F("Is it a CGP1W?" CR));
-      if ((strstr(service_data, "08094c") != NULL || strstr(service_data, "080972") != NULL) && strlen(service_data) > ServicedataMinLength) {
+      if ((strncmp(service_data, "0809", 4) == 0) && strlen(service_data) > ServicedataMinLength) {
         Log.trace(F("CGP1W data reading" CR));
         BLEdata.set("model", "CGP1W");
         if (device->sensorModel == -1)
@@ -953,6 +953,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGG1" CR));
       if (strstr(service_data, "080774") != NULL) {
         Log.trace(F("CGG1 method 2" CR));
+        BLEdata.set("model", "CGG1");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGG1);
+        return process_cleargrass(BLEdata, false);
+      }
+      Log.trace(F("Is it a CGG1" CR));
+      if (strncmp(service_data, "8816", 4) == 0) {
+        Log.trace(F("CGG1 method 3" CR));
         BLEdata.set("model", "CGG1");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGG1);
