@@ -4,6 +4,14 @@ So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscov
 
 Once done, enable discovery on your MQTT integration definition in HASS.
 
+So as to create the MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
+
+![](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
+
+::: warning Note
+The max size of the username is 30 and 60 for the password.
+:::
+
 OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
 
 The gateway device will be available into Configuration->Devices section of Home Assistant.
@@ -86,20 +94,17 @@ binary_sensor:
 ```yaml
 #switches
 switch:
-- platform: mqtt
-  name: kaku_a2
-  state_topic: "home/OpenMQTTGateway/commands/MQTTto433"
-  command_topic: "home/OpenMQTTGateway/commands/MQTTto433"
-  payload_on: "16405"
-  payload_off: "16404"
-  qos: "0"
-  retain: true
-
-#pushbullet
-notify:
-- platform: pushbullet
-  name: hassio
-  api_key: <api_key>
+  - platform: mqtt
+    name: Plug1
+    state_topic: "home/OpenMQTTGateway/SRFBtoMQTT"
+    command_topic: "home/OpenMQTTGateway/commands/MQTTtoSRFB"
+    value_template: "{{ value_json.value }}"
+    payload_on: '{"value":4546575}'
+    payload_off: '{"value":4546572}'
+    state_on: 4546575
+    state_off: 4546572
+    qos: "0"
+    retain: true
 ```
 
 ### Mijia Thermometer BLE

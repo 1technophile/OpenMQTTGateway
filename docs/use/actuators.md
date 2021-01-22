@@ -8,7 +8,7 @@ So as to pilot the GPIO use the following commands with [simple receiving](../up
 OFF command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/setOFF -m 15`
 
-ON command
+ON command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/setON -m 15`
 
 or with [json receiving](../upload/pio.md#api)
@@ -16,7 +16,7 @@ or with [json receiving](../upload/pio.md#api)
 OFF command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":0}'`
 
-ON command
+ON command:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":1}'`
 
 ## FASTLED
@@ -28,7 +28,7 @@ ON command
 2. Start fire animation (Fire2012)
 
 ### Hardware wiring
-Theoreticaly it should be possible to use every free IO pin. But after some tests only pin D2 works at WEMOS D1. Other platforms can work.
+Theoretically it should be possible to use every free IO pin. But after some tests only pin D2 works at WEMOS D1. Other platforms can work.
 The default setting use NEOPIXEL (WS2812B). The simplest wiring is direct connect D2 to data pin of LED stripe and connect VCC/GND to power source. You should also add an capacitor.
 
 ## PWM
@@ -74,3 +74,42 @@ After this calibration, if you set the `r` channel to 0.0, it will be remapped t
 Also, the gamma curve for this channel will be set to 2.5.
 This means that input values are raised to the power 2.5 internally.
 This can be used to improve the linearity of inputs.
+
+## Somfy RTS
+This actuator allows to control Somfy RTS devices.
+
+### Setup
+Before the module can be used, virtual Somfy RTS remotes must be created.
+This is done in `config_Somfy.h`.
+
+`SOMFY_REMOTE_NUM` must be set to the number of virtual Somfy RTS remotes you want to have.
+Then create for each of the virtual Somfy RTS remotes a unique 3-byte code and add them to `somfyRemotes`.
+After a remote is setup, the order and codes should not be changed, else the setup process for all remotes have to be repeated.
+Adding new codes at the end of the list is no problem.
+Example of three virtual Somfy RTS remote codes:
+```C
+const uint32_t somfyRemotes[SOMFY_REMOTE_NUM] = {0x5184c8, 0xba24d0, 0xb77753};
+```
+
+Next the virtual Somfy RTS remotes must be paired with the Somfy RTS devices you want to control.
+The next section describes how the PROG command/button of the virtual remote can be used.
+Use the manual of the device you want to control for instructions on how to pair the virtual remote with the device.
+
+### Commands
+Commands must be send to the `commands/MQTTtoSomfy` subtopic.
+Only json messages are supported.
+The json message must contain two properties:
+* remote: the index of the remote which is used to send the command (index start at zero)
+* command: the command which should be send with the remote as string, see [table of command names](https://github.com/Legion2/Somfy_Remote_Lib#available-commands).
+
+::: tip NOTE
+The middle button on physical Somfy RTS Remote controls is called "My".
+:::
+
+Send PROG command with remote 0:
+
+`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":0,"command":"Prog"}'`
+
+Send Up command with remote 1:
+
+`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":1,"command":"Up"}'`

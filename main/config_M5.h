@@ -29,6 +29,9 @@
 #ifdef ZboardM5STICKC
 #  include <M5StickC.h>
 #endif
+#ifdef ZboardM5STICKCP
+#  include <M5StickCPlus.h>
+#endif
 #ifdef ZboardM5STACK
 #  include <M5Stack.h>
 #endif

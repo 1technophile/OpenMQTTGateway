@@ -28,7 +28,7 @@
 #include "User_config.h"
 
 // Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
   SIGNAL_SIZE_UL_ULL value;
@@ -57,7 +57,7 @@ StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray& modules = modulesBuffer.createArray();
 
 // Modules config inclusion
-#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight)
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
@@ -111,6 +111,9 @@ JsonArray& modules = modulesBuffer.createArray();
 #ifdef ZsensorDHT
 #  include "config_DHT.h"
 #endif
+#ifdef ZsensorSHTC3
+#  include "config_SHTC3.h"
+#endif
 #ifdef ZsensorDS1820
 #  include "config_DS1820.h"
 #endif
@@ -132,7 +135,10 @@ JsonArray& modules = modulesBuffer.createArray();
 #ifdef ZactuatorPWM
 #  include "config_PWM.h"
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#ifdef ZactuatorSomfy
+#  include "config_Somfy.h"
+#endif
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
 #  include "config_M5.h"
 #endif
 #if defined(ZgatewayRS232)
@@ -223,19 +229,27 @@ void revert_hex_data(const char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-void extract_char(const char* token_char, char* subset, int start, int l, bool reverse, bool isNumber) {
-  if (isNumber) {
-    if (reverse)
-      revert_hex_data(token_char + start, subset, l + 1);
-    long long_value = strtoul(subset, NULL, 16);
-    sprintf(subset, "%ld", long_value);
+/** 
+ * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
+ * This value can represent a negative value if canBeNegative is set to true
+ */
+long value_from_hex_data(const char* service_data, int offset, int data_length, bool reverse, bool canBeNegative = true) {
+  char data[data_length + 1];
+  memcpy(data, &service_data[offset], data_length);
+  data[data_length] = '\0';
+  long value;
+  if (reverse) {
+    // reverse data order
+    char rev_data[data_length + 1];
+    revert_hex_data(data, rev_data, data_length + 1);
+    value = strtol(rev_data, NULL, 16);
   } else {
-    if (reverse)
-      revert_hex_data(token_char + start, subset, l + 1);
-    else
-      strncpy(subset, token_char + start, l + 1);
+    value = strtol(data, NULL, 16);
   }
-  subset[l] = '\0';
+  if (value > 65000 && data_length <= 4 && canBeNegative)
+    value = value - 65535;
+  Log.trace(F("value %D" CR), value);
+  return value;
 }
 
 char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
@@ -458,7 +472,7 @@ void connectMQTT() {
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     if (low_power_mode < 2)
       M5Display("MQTT connected", "", "");
 #endif
@@ -479,7 +493,7 @@ void connectMQTT() {
 #ifdef ZgatewayIR
       client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
 #endif
-      Log.trace(F("Subscription OK to the subjects" CR));
+      Log.trace(F("Subscription OK to the subjects %s" CR), topic2);
     }
   } else {
     failure_number_mqtt++; // we count the failure
@@ -539,7 +553,7 @@ void setup() {
   preferences.begin(Gateway_Short_Name, false);
   low_power_mode = preferences.getUInt("low_power_mode", DEFAULT_LOW_POWER_MODE);
   preferences.end();
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   setupM5();
 #    endif
 #  endif
@@ -682,6 +696,10 @@ void setup() {
   setupPWM();
   modules.add(ZactuatorPWM);
 #endif
+#ifdef ZactuatorSomfy
+  setupSomfy();
+  modules.add(ZactuatorSomfy);
+#endif
 #ifdef ZsensorDS1820
   setupZsensorDS1820();
   modules.add(ZsensorDS1820);
@@ -700,6 +718,9 @@ void setup() {
 #endif
 #ifdef ZmqttDiscovery
   modules.add(ZmqttDiscovery);
+#endif
+#ifdef ZsensorSHTC3
+  setupSHTC3();
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
@@ -799,7 +820,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     M5Display("OTA in progress", "", "");
 #  endif
   });
@@ -808,7 +829,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     M5Display("OTA done", "", "");
 #  endif
   });
@@ -1038,7 +1059,7 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (low_power_mode < 2) {
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
       M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
 #    endif
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
@@ -1065,7 +1086,7 @@ void setup_wifimanager(bool reset_settings) {
     }
   }
 
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   if (low_power_mode < 2)
     M5Display("Wifi connected", "", "");
 #  endif
@@ -1258,6 +1279,9 @@ void loop() {
 #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
 #endif
+#ifdef ZsensorSHTC3
+      MeasureTempAndHum(); //Addon to measure the temperature with a DHT
+#endif
 #ifdef ZsensorDS1820
       MeasureDS1820Temp(); //Addon to measure the temperature with DS1820 sensor(s)
 #endif
@@ -1338,7 +1362,7 @@ void loop() {
 #endif
   }
 // Function that doesn't need an active connection
-#if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   loopM5();
 #endif
 }
@@ -1380,29 +1404,29 @@ void stateMeasures() {
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
-  SYSdata["m5-batt-level"] = (int8_t)M5.Power.getBatteryLevel();
-  SYSdata["m5-is-charging"] = (bool)M5.Power.isCharging();
-  SYSdata["m5-is-chargefull"] = (bool)M5.Power.isChargeFull();
+  SYSdata["m5battlevel"] = (int8_t)M5.Power.getBatteryLevel();
+  SYSdata["m5ischarging"] = (bool)M5.Power.isCharging();
+  SYSdata["m5ischargefull"] = (bool)M5.Power.isChargeFull();
 #  endif
-#  ifdef ZboardM5STICKC
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
   M5.Axp.EnableCoulombcounter();
-  SYSdata["m5-bat-voltage"] = (float)M5.Axp.GetBatVoltage();
-  SYSdata["m5-bat-current"] = (float)M5.Axp.GetBatCurrent();
-  SYSdata["m5-vin-voltage"] = (float)M5.Axp.GetVinVoltage();
-  SYSdata["m5-vin-current"] = (float)M5.Axp.GetVinCurrent();
-  SYSdata["m5-vbus-voltage"] = (float)M5.Axp.GetVBusVoltage();
-  SYSdata["m5-vbus-current"] = (float)M5.Axp.GetVBusCurrent();
-  SYSdata["m5-temp-axp"] = (float)M5.Axp.GetTempInAXP192();
-  SYSdata["m5-bat-power"] = (float)M5.Axp.GetBatPower();
-  SYSdata["m5-bat-chargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
-  SYSdata["m5-aps-voltage"] = (float)M5.Axp.GetAPSVoltage();
+  SYSdata["m5batvoltage"] = (float)M5.Axp.GetBatVoltage();
+  SYSdata["m5batcurrent"] = (float)M5.Axp.GetBatCurrent();
+  SYSdata["m5vinvoltage"] = (float)M5.Axp.GetVinVoltage();
+  SYSdata["m5vincurrent"] = (float)M5.Axp.GetVinCurrent();
+  SYSdata["m5vbusvoltage"] = (float)M5.Axp.GetVBusVoltage();
+  SYSdata["m5vbuscurrent"] = (float)M5.Axp.GetVBusCurrent();
+  SYSdata["m5tempaxp"] = (float)M5.Axp.GetTempInAXP192();
+  SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
+  SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
+  SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
 }
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
 /** 
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
@@ -1460,7 +1484,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) { // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
     SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
     if (data != 0 && !isAduplicateSignal(data)) {
@@ -1506,11 +1530,14 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorPWM
     MQTTtoPWM(topicOri, jsondata);
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     MQTTtoM5(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
     MQTTtoONOFF(topicOri, jsondata);
+#  endif
+#  ifdef ZactuatorSomfy
+    MQTTtoSomfy(topicOri, jsondata);
 #  endif
 #  ifdef ZgatewayRS232
     MQTTtoRS232(topicOri, jsondata);
