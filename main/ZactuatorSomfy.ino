@@ -71,7 +71,8 @@ void MQTTtoSomfy(char* topicOri, JsonObject& jsonData) {
     SomfyRemote somfyRemote(RF_EMITTER_GPIO, somfyRemotes[remoteIndex], &rollingCodeStorage);
     somfyRemote.sendCommand(command);
 #    ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY); // set Receive on
+    ELECHOUSE_cc1101.SpiStrobe(CC1101_SIDLE); // Idle receiver prior to setting a new frequency
+    ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
 #    endif
   }
 }
