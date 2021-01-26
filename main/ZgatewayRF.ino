@@ -167,7 +167,6 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
     pub(subjectGTWRFtoMQTT, datacallback); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
-  ELECHOUSE_cc1101.SpiStrobe(CC1101_SIDLE); // Idle receiver prior to setting a new frequency
   ELECHOUSE_cc1101.SetRx(receiveMhz);
   mySwitch.disableTransmit();
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
@@ -223,7 +222,6 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
     }
   }
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
-  ELECHOUSE_cc1101.SpiStrobe(CC1101_SIDLE); // Idle receiver prior to setting a new frequency
   ELECHOUSE_cc1101.SetRx(receiveMhz);
   mySwitch.disableTransmit();
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
