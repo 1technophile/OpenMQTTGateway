@@ -945,16 +945,12 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGG1" CR));
       // One type of the advertising packet format started with 50204703 or 50304703, where 4703 is a type of a sensor
       // Another type of the advertising packet started with 0807 or 8816
-      if ((strncmp(service_data, "4703", 4) == 2 && strlen(service_data) > ServicedataMinLength)
-          || (strncmp(service_data, "0807", 4) == 0)
-          || (strncmp(service_data, "8816", 4) == 0)) {
+      if ((strncmp(service_data, "4703", 4) == 2 && strlen(service_data) > ServicedataMinLength) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
         Log.trace(F("CGG1 data reading" CR));
         BLEdata.set("model", "CGG1");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGG1);
-        
-        return strncmp(service_data, "4703", 4) == 2 ?
-          process_sensors(0, BLEdata) : process_cleargrass(BLEdata, false);
+        return strncmp(service_data, "4703", 4) == 2 ? process_sensors(0, BLEdata) : process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a CGD1?" CR));
       if (((strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL) && (strlen(service_data) > ServicedataMinLength)) || (strstr(service_data, "080cd0") != NULL && (strlen(service_data) > ServicedataMinLength - 6))) {
