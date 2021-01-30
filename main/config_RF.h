@@ -66,7 +66,7 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 //433Mhz newremoteswitch MQTT Subjects and keys
 #define subjectMQTTtoRF2    "/commands/MQTTtoRF2"
 #define subjectRF2toMQTT    "/RF2toMQTT"
-#define subjectGTWRF2toMQTT "/433toMQTT"
+#define subjectGTWRF2toMQTT "/RF2toMQTT"
 #define RF2codeKey          "ADDRESS_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey        "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
 #define RF2unitKey          "UNIT_" // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
