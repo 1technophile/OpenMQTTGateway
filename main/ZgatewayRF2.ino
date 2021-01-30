@@ -132,7 +132,8 @@ void RF2toMQTT() {
     RF2data.set("address", (unsigned long)rf2rd.address);
     RF2data.set("switchType", (int)rf2rd.switchType);
 #  ifdef ZmqttDiscovery //component creation for HA
-    RF2toMQTTdiscovery(RF2data);
+    if (disc)
+      RF2toMQTTdiscovery(RF2data);
 #  endif
 
     pub(subjectRF2toMQTT, RF2data);
