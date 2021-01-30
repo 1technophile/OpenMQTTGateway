@@ -24,8 +24,8 @@ switched ON when network and MQTT connection are OK
 1s ON, 4s OFF when MQTT is disconnected
 
 * LED_RECEIVE
-Blink for `TimeLedON` 0.5s when the gateway receive a signal from one of its module so as to send to MQTT
+Blink for `TimeLedON` 1s when the gateway receive a signal from one of its module so as to send to MQTT
 
 * LED_SEND
-Blink for `TimeLedON` 0.5s when the gateway send a signal with one of its module from an MQTT command
+Blink for `TimeLedON` 1s when the gateway send a signal with one of its module from an MQTT command
 
