@@ -159,7 +159,9 @@ char gateway_name[parameters_size * 2] = Gateway_Name;
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
-
+#ifdef ZmqttDiscovery
+bool disc = true; // Auto discovery with Home Assistant convention
+#endif
 unsigned long timer_led_measures = 0;
 
 #ifdef ESP32
@@ -716,9 +718,6 @@ void setup() {
   setupRS232();
   modules.add(ZgatewayRS232);
 #endif
-#ifdef ZmqttDiscovery
-  modules.add(ZmqttDiscovery);
-#endif
 #ifdef ZsensorSHTC3
   setupSHTC3();
 #endif
@@ -1243,14 +1242,16 @@ void loop() {
 #endif
     failure_number_ntwk = 0;
     if (client.connected()) {
-#ifdef ZmqttDiscovery
-      if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
-#endif
       digitalWrite(LED_INFO, LED_INFO_ON);
       connectedOnce = true;
       failure_number_ntwk = 0;
 
       client.loop();
+
+#ifdef ZmqttDiscovery
+      if (disc)
+        if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
+#endif
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
@@ -1533,7 +1534,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     MQTTtoM5(topicOri, jsondata);
 #  endif
-#  ifdef ZactuatorONOFF // outside the jsonpublishing macro due to the fact that we need to use simplepublishing with HA discovery
+#  ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorSomfy
@@ -1596,9 +1597,19 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  ifndef ESPWifiManualSetup
         setup_wifimanager(true);
 #  endif
-      } else {
-        Log.warning(F("wrong command" CR));
       }
+    }
+#endif
+#ifdef ZmqttDiscovery
+    if (SYSdata.containsKey("discovery")) {
+      if (SYSdata.is<bool>("discovery")) {
+        disc = SYSdata["discovery"];
+        if (disc)
+          pubMqttDiscovery();
+      } else {
+        Log.error(F("Discovery command not a boolean" CR));
+      }
+      Log.notice(F("Discovery state: %T" CR), disc);
     }
 #endif
   }
