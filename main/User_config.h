@@ -182,7 +182,7 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 #  ifndef DEFAULT_LOW_POWER_MODE
 #    define DEFAULT_LOW_POWER_MODE 0
 #  endif
-int low_power_mode = DEFAULT_LOW_POWER_MODE;
+int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
 // WIFI mode, uncomment to force a wifi mode, if not uncommented the ESP will connect without a mode forced

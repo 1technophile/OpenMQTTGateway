@@ -616,7 +616,7 @@ void coreTask(void* pvParameters) {
           launchDiscovery();
         dumpDevices();
       }
-      if (low_power_mode) {
+      if (lowpowermode) {
         lowPowerESP32();
       } else {
         delay(BLEinterval);
@@ -651,10 +651,10 @@ void deepSleep(uint64_t time_in_us) {
   esp_deep_sleep(time_in_us);
 }
 
-void changelow_power_mode(int newLowPowerMode) {
+void changelowpowermode(int newLowPowerMode) {
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
 #    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
-  if (low_power_mode == 2) {
+  if (lowpowermode == 2) {
 #      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
 #      endif
@@ -667,9 +667,9 @@ void changelow_power_mode(int newLowPowerMode) {
   sprintf(lpm, "%d", newLowPowerMode);
   M5Display("Changing LOW POWER mode to:", lpm, "");
 #    endif
-  low_power_mode = newLowPowerMode;
+  lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putUInt("low_power_mode", low_power_mode);
+  preferences.putUInt("lowpowermode", lowpowermode);
   preferences.end();
 }
 
@@ -678,7 +678,7 @@ void setupBT() {
   Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
-  Log.notice(F("Low Power Mode: %d" CR), low_power_mode);
+  Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
@@ -1315,8 +1315,8 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       Log.notice(F("New minrssi: %d" CR), minRssi);
     }
 #  ifdef ESP32
-    if (BTdata.containsKey("low_power_mode")) {
-      changelow_power_mode((int)BTdata["low_power_mode"]);
+    if (BTdata.containsKey("lowpowermode")) {
+      changelowpowermode((int)BTdata["lowpowermode"]);
     }
 #  endif
   }
