@@ -475,7 +475,7 @@ void connectMQTT() {
   client.setBufferSize(mqtt_max_packet_size);
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
-    if (low_power_mode < 2)
+    if (lowpowermode < 2)
       M5Display("MQTT connected", "", "");
 #endif
     Log.notice(F("Connected to broker" CR));
@@ -553,7 +553,7 @@ void setup() {
 #    endif
 #  elif ESP32
   preferences.begin(Gateway_Short_Name, false);
-  low_power_mode = preferences.getUInt("low_power_mode", DEFAULT_LOW_POWER_MODE);
+  lowpowermode = preferences.getUInt("lowpowermode", DEFAULT_LOW_POWER_MODE);
   preferences.end();
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   setupM5();
@@ -873,7 +873,6 @@ void setupTLS() {
 void setup_wifi() {
   char manual_wifi_ssid[] = wifi_ssid;
   char manual_wifi_password[] = wifi_password;
-
   delay(10);
   WiFi.mode(WIFI_STA);
   if (wifiProtocol) forceWifiProtocol();
@@ -893,14 +892,15 @@ void setup_wifi() {
   WiFi.begin(manual_wifi_ssid, manual_wifi_password);
 #  endif
 
-  if (wifi_reconnect_bypass())
-    Log.notice(F("Connected with saved credentials" CR));
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Log.trace(F("." CR));
     failure_number_ntwk++;
     disconnection_handling(failure_number_ntwk);
+#  if defined(ESP32) && defined(ZgatewayBT)
+    if (failure_number_ntwk > maxConnectionRetryWifi)
+      lowPowerESP32();
+#  endif
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
 }
@@ -1057,7 +1057,7 @@ void setup_wifimanager(bool reset_settings) {
   if (!wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
   {
 #  ifdef ESP32
-    if (low_power_mode < 2) {
+    if (lowpowermode < 2) {
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
       M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
 #    endif
@@ -1086,7 +1086,7 @@ void setup_wifimanager(bool reset_settings) {
   }
 
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
-  if (low_power_mode < 2)
+  if (lowpowermode < 2)
     M5Display("Wifi connected", "", "");
 #  endif
 
@@ -1243,16 +1243,24 @@ void loop() {
     failure_number_ntwk = 0;
     if (client.connected()) {
       digitalWrite(LED_INFO, LED_INFO_ON);
-      connectedOnce = true;
       failure_number_ntwk = 0;
 
       client.loop();
 
 #ifdef ZmqttDiscovery
-      if (disc)
-        if (!connectedOnce) pubMqttDiscovery(); // at first connection we publish the discovery payloads
+      if (disc) {
+        if (!connectedOnce) {
+#  if defined(ZgatewayBT) && defined(ESP32)
+          stopProcessing(); // Avoid publication concurrency issues on ESP32 BLE
+#  endif
+          pubMqttDiscovery(); // at first connection we publish the discovery payloads
+#  if defined(ZgatewayBT) && defined(ESP32)
+          startProcessing();
+#  endif
+        }
+      }
 #endif
-
+      connectedOnce = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
@@ -1398,7 +1406,7 @@ void stateMeasures() {
 #  endif
 #  ifdef ZgatewayBT
 #    ifdef ESP32
-  SYSdata["lowpowermode"] = (int)low_power_mode;
+  SYSdata["lowpowermode"] = (int)lowpowermode;
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;

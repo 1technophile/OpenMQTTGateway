@@ -37,7 +37,7 @@ extern void createDiscovery(char* sensor_type,
                             char* payload_on, char* payload_off, char* unit_of_meas,
                             int off_delay,
                             char* payload_available, char* payload_not_avalaible, bool gateway_entity, char* command_topic,
-                            char* device_name, char* device_manufacturer, char* device_model, char* device_mac);
+                            char* device_name, char* device_manufacturer, char* device_model, char* device_mac, bool retainCmd);
 
 #define discovery_Topic "homeassistant"
 
