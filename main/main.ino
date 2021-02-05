@@ -1431,7 +1431,13 @@ void stateMeasures() {
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
   SYSdata.set("modules", modules);
+#  if defined(ZgatewayBT) && defined(ESP32)
+  stopProcessing();
+#  endif
   pub(subjectSYStoMQTT, SYSdata);
+#  if defined(ZgatewayBT) && defined(ESP32)
+  startProcessing();
+#  endif
 }
 #endif
 

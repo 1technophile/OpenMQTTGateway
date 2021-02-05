@@ -93,7 +93,6 @@ unsigned int scanCount = 0;
 #  ifdef ESP32
 static TaskHandle_t xCoreTaskHandle;
 #  endif
-bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
 void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model);
@@ -497,39 +496,35 @@ void notifyCB(
     uint8_t* pData,
     size_t length,
     bool isNotify) {
-  if (!ProcessLock) {
-    Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
+  Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
 
-    if (length == 5) {
-      Log.trace(F("Device identified creating BLE buffer" CR));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& BLEdata = jsonBuffer.createObject();
-      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
-      mac_adress.toUpperCase();
-      for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
-        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
-          if (p->sensorModel == LYWSD03MMC)
-            BLEdata.set("model", "LYWSD03MMC");
-          else if (p->sensorModel == MHO_C401)
-            BLEdata.set("model", "MHO_C401");
-        }
+  if (length == 5) {
+    Log.trace(F("Device identified creating BLE buffer" CR));
+    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject& BLEdata = jsonBuffer.createObject();
+    String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
+    mac_adress.toUpperCase();
+    for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+      if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
+        if (p->sensorModel == LYWSD03MMC)
+          BLEdata.set("model", "LYWSD03MMC");
+        else if (p->sensorModel == MHO_C401)
+          BLEdata.set("model", "MHO_C401");
       }
-      BLEdata.set("id", (char*)mac_adress.c_str());
-      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
-      BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
-      BLEdata.set("tempf", (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01)));
-      BLEdata.set("hum", (float)(pData[2]));
-      BLEdata.set("volt", (float)(((pData[4] * 256) + pData[3]) / 1000.0));
-      BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
-
-      mac_adress.replace(":", "");
-      String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
-      pub((char*)mactopic.c_str(), BLEdata);
-    } else {
-      Log.notice(F("Device not identified" CR));
     }
+    BLEdata.set("id", (char*)mac_adress.c_str());
+    Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
+    BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
+    BLEdata.set("tempf", (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01)));
+    BLEdata.set("hum", (float)(pData[2]));
+    BLEdata.set("volt", (float)(((pData[4] * 256) + pData[3]) / 1000.0));
+    BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
+
+    mac_adress.replace(":", "");
+    String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
+    pub((char*)mactopic.c_str(), BLEdata);
   } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
+    Log.notice(F("Device not identified" CR));
   }
   pBLERemoteCharacteristic->unsubscribe();
 }
@@ -586,44 +581,38 @@ void BLEconnect() {
 
 void stopProcessing() {
   Log.notice(F("Stop BLE processing" CR));
-  ProcessLock = true;
+  vTaskSuspend(xCoreTaskHandle);
 }
 
 void startProcessing() {
   Log.notice(F("Start BLE processing" CR));
-  ProcessLock = false;
   vTaskResume(xCoreTaskHandle);
 }
 
 void coreTask(void* pvParameters) {
   while (true) {
     Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
-    if (!ProcessLock) {
-      int n = 0;
-      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout) {
-        n++;
-        Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
-        delay(1000);
-      }
-      if (client.state() != 0) {
-        Log.warning(F("MQTT client disconnected no BLE scan" CR));
-      } else {
-        BLEscan();
-        // Launching a connect every BLEscanBeforeConnect
-        if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
-          BLEconnect();
-        if (disc)
-          launchDiscovery();
-        dumpDevices();
-      }
-      if (lowpowermode) {
-        lowPowerESP32();
-      } else {
-        delay(BLEinterval);
-      }
+    int n = 0;
+    while (client.state() != 0 && n <= InitialMQTTConnectionTimeout) {
+      n++;
+      Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
+      delay(1000);
+    }
+    if (client.state() != 0) {
+      Log.warning(F("MQTT client disconnected no BLE scan" CR));
     } else {
-      Log.trace(F("BLE core task canceled by processLock" CR));
-      vTaskSuspend(xCoreTaskHandle);
+      BLEscan();
+      // Launching a connect every BLEscanBeforeConnect
+      if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
+        BLEconnect();
+      if (disc)
+        launchDiscovery();
+      dumpDevices();
+    }
+    if (lowpowermode) {
+      lowPowerESP32();
+    } else {
+      delay(BLEinterval);
     }
   }
 }
@@ -1280,16 +1269,12 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       BLEinterval = (unsigned int)BTdata["interval"];
       Log.notice(F("New interval: %d ms" CR), BLEinterval);
       if (BLEinterval == 0) {
-        if (!ProcessLock) {
-          BTtoMQTT();
-          Log.trace(F("Scan done" CR));
+        BTtoMQTT();
+        Log.trace(F("Scan done" CR));
 #  ifdef ESP32
-          BLEconnect();
+        BLEconnect();
 #  endif
-          BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
-        } else {
-          Log.trace(F("Cannot launch scan due to other process running" CR));
-        }
+        BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
       }
     }
     // Number of scan before a connect set
