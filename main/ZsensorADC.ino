@@ -64,16 +64,16 @@ void MeasureADC() {
         ADCdata.set("adc", (int)val);
 #  if defined(ADC_DIVIDER)
         float volt = 0;
-#  if defined(ESP32)
+#    if defined(ESP32)
         // Convert the analog reading (which goes from 0 - 4095) to a voltage (0 - 3.3V):
         volt = val * (3.3 / 4096.0);
-#  elif defined(ESP8266)
+#    elif defined(ESP8266)
         // Convert the analog reading (which goes from 0 - 1024) to a voltage (0 - 3.3V):
         volt = val * (3.3 / 1024.0);
-#  else
+#    else
         // Asume 5V and 10bits ADC 
         volt = val * (5.0 / 1024.0);
-#  endif
+#    endif
         volt *= ADC_DIVIDER;
         // let's give 2 decimal point
         val = (volt * 100);
