@@ -71,14 +71,14 @@ void MeasureADC() {
         // Convert the analog reading (which goes from 0 - 1024) to a voltage (0 - 3.3V):
         volt = val * (3.3 / 1024.0);
 #    else
-        // Asume 5V and 10bits ADC 
+        // Asume 5V and 10bits ADC
         volt = val * (5.0 / 1024.0);
 #    endif
         volt *= ADC_DIVIDER;
         // let's give 2 decimal point
         val = (volt * 100);
-        volt = (float) val / 100.0;
-        ADCdata.set("volt", (float) volt);
+        volt = (float)val / 100.0;
+        ADCdata.set("volt", (float)volt);
 #  endif
         pub(ADCTOPIC, ADCdata);
         persistedadc = val;
