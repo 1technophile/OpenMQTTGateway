@@ -139,7 +139,7 @@ JsonObject& getBTJsonObject() {
 // should run from the BT core
 void pubBT(JsonObject& data) {
   int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst);
-  atomic_store_explicit(&jsonBTBufferQueueLast, (last + 1)%(2*BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+  atomic_store_explicit(&jsonBTBufferQueueLast, (last + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
 }
 
 // should run from the main core
@@ -149,7 +149,7 @@ void emptyBTQueue() {
     int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
     if (last == next) break;
     if (first) {
-      int diff = ( 2 * BTQueueSize + last - next) % (2 * BTQueueSize);
+      int diff = (2 * BTQueueSize + last - next) % (2 * BTQueueSize);
       btQueueLengthSum += diff;
       btQueueLengthCount++;
       first = false;
