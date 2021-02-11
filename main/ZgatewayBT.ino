@@ -876,7 +876,7 @@ bool BTtoMQTT() {
           restData = token.substring(d[5].start, (d[5].start + restDataLength));
 
         Log.trace(F("Creating BLE buffer" CR));
-        JsonObject& BLEdata = getBTJsonObject;
+        JsonObject& BLEdata = getBTJsonObject();
 
         Log.trace(F("Id %s" CR), (char*)mac.c_str());
         BLEdata.set("id", (char*)mac.c_str());
