@@ -55,7 +55,7 @@ extern int btQueueLengthCount;
 #endif
 
 #ifndef BTQueueSize
-#  define BTQueueSize 4  // lockless queue size for multi core cases (ESP32 currently)
+#  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
 #endif
 
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200

@@ -1412,7 +1412,7 @@ void stateMeasures() {
   SYSdata["btqblck"] = btQueueBlocked;
   SYSdata["btqsum"] = btQueueLengthSum;
   SYSdata["btqsnd"] = btQueueLengthCount;
-  SYSdata["btqavg"] = (btQueueLengthCount>0 ? btQueueLengthSum/(float) btQueueLengthCount : 0);
+  SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;

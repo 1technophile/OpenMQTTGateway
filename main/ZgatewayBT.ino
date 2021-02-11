@@ -44,11 +44,10 @@ FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createO
 #    include <esp_bt.h>
 #    include <esp_bt_main.h>
 #    include <esp_wifi.h>
+#    include <stdatomic.h>
 
 #    include "soc/timer_group_reg.h"
 #    include "soc/timer_group_struct.h"
-
-#    include <stdatomic.h>
 
 void notifyCB(
     BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -100,15 +99,15 @@ void pubBTMainCore(JsonObject& data) {
 }
 
 class JsonBundle {
-  public:
-    StaticJsonBuffer<JSON_MSG_BUFFER> buffer;
-    JsonObject* object;
+public:
+  StaticJsonBuffer<JSON_MSG_BUFFER> buffer;
+  JsonObject* object;
 
-    JsonObject& createObject() {
-      buffer.clear();
-      object = &buffer.createObject();
-      return *object;
-    }
+  JsonObject& createObject() {
+    buffer.clear();
+    object = &buffer.createObject();
+    return *object;
+  }
 };
 
 #  ifdef ESP32
@@ -124,13 +123,13 @@ int btQueueLengthCount = 0;
 
 JsonObject& getBTJsonObject() {
   int next, last;
-  for(bool blocked = false;;) {
+  for (bool blocked = false;;) {
     next = atomic_load_explicit(&jsonBTBufferQueueNext, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
-    last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst); // use namespace std -> ambiguous error...    
-    if ((2*BTQueueSize + last - next)%(2*BTQueueSize) != BTQueueSize) break;
+    last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    if ((2 * BTQueueSize + last - next) % (2 * BTQueueSize) != BTQueueSize) break;
     if (!blocked) {
       blocked = true;
-      btQueueBlocked ++;
+      btQueueBlocked++;
     }
     delay(1);
   }
@@ -144,25 +143,25 @@ void pubBT(JsonObject& data) {
 }
 
 // should run from the main core
-void emptyBTQueue() {  
-  for(bool first = true;;) {
+void emptyBTQueue() {
+  for (bool first = true;;) {
     int next = atomic_load_explicit(&jsonBTBufferQueueNext, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
     int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
     if (last == next) break;
     if (first) {
-      int diff = (2*BTQueueSize + last - next)%(2*BTQueueSize);
+      int diff = ( 2 * BTQueueSize + last - next) % (2 * BTQueueSize);
       btQueueLengthSum += diff;
-      btQueueLengthCount ++;
+      btQueueLengthCount++;
       first = false;
     }
     pubBTMainCore(*jsonBTBufferQueue[next % BTQueueSize].object);
-    atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1)%(2*BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
   }
 }
 
 #  else
 
-JsonBundle  jsonBTBuffer;
+JsonBundle jsonBTBuffer;
 
 JsonObject& getBTJsonObject() {
   return jsonBTBuffer.createObject();
@@ -698,10 +697,10 @@ void coreTask(void* pvParameters) {
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
         if (scan == 1) BTforceScan();
       } else {
-        for (int interval = BLEinterval, waitms; interval>0; interval-=waitms) {
+        for (int interval = BLEinterval, waitms; interval > 0; interval -= waitms) {
           int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst);
           if (scan == 1) BTforceScan(); // should we break after this?
-          delay(waitms = interval>100 ? 100 : interval); // 100ms
+          delay(waitms = interval > 100 ? 100 : interval); // 100ms
         }
       }
     } else {
@@ -1371,11 +1370,11 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       Log.trace(F("BLE interval setup" CR));
       unsigned int interval = BTdata["interval"];
       if (interval == 0) {
-#ifdef ESP32
+#  ifdef ESP32
         atomic_store_explicit(&forceBTScan, 1, ::memory_order_seq_cst); // ask the other core to do the scan for us
-#else
+#  else
         BTforceScan();
-#endif        
+#  endif
       } else {
         Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
         BLEinterval = interval;
