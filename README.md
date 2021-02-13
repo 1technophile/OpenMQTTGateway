@@ -7,7 +7,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/943c9b639b68441dae8e29ee39977ab2)](https://www.codacy.com/app/1technophile/OpenMQTTGateway?utm_source=github.com&utm_medium=referral&utm_content=1technophile/OpenMQTTGateway&utm_campaign=badger)
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
 
-**Questions, support please don't open an issue, go first to the [docs](https://docs.openmqttgateway.com) and if you not find your answer go to [the community forum](https://community.openmqttgateway.com)**
+** For Questions or Support please don't open an issue, first go to the [docs](https://docs.openmqttgateway.com) and if you don't find your answer there you could ask someone in [the community forum](https://community.openmqttgateway.com)**
 
 [![](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.png)](https://community.openmqttgateway.com)
 

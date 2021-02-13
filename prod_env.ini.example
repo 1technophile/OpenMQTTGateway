@@ -57,3 +57,24 @@ build_flags =
   '-DZactuatorONOFF="ONOFF"'
   '-DGateway_Name="OpenMQTTGateway_ESP8266_ONOFFRF"'
 board_build.flash_mode = dout
+
+[env:esp32-lolin32lite-ble-lp]
+platform = ${com.esp32_platform}
+board = lolin32
+board_build.partitions = min_spiffs.csv
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.ble}
+build_flags =
+  ${com-esp.build_flags}
+  '-DZgatewayBT="BT"'
+  '-DLED_RECEIVE=22'
+  '-DLED_RECEIVE_ON=0'
+  '-DGateway_Name="OpenMQTTGateway_LOLIN32LITE_LP"'
+  '-DESPWifiManualSetup=true'
+  '-Dwifi_ssid="MyWiFiAP"'
+  '-Dwifi_password="MyWiFiAPPassword"'
+  '-DMQTT_USER="lolin-esp32"'
+  '-DMQTT_PASS="abcdefghi"'
+  '-DMQTT_SERVER="192.168.1.17"'
+  '-DDEFAULT_LOW_POWER_MODE=2'

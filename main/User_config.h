@@ -182,7 +182,7 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 #  ifndef DEFAULT_LOW_POWER_MODE
 #    define DEFAULT_LOW_POWER_MODE 0
 #  endif
-int low_power_mode = DEFAULT_LOW_POWER_MODE;
+int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
 // WIFI mode, uncomment to force a wifi mode, if not uncommented the ESP will connect without a mode forced
@@ -378,7 +378,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
-#define TimeLedON                    0.5 // time LED are ON
+#define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"

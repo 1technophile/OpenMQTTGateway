@@ -2,13 +2,13 @@ OpenMQTTGateway project goal is to concentrate in one gateway different technolo
 
 ![Overview](./img/OpenMQTTGateway.png)
 
-OpenMQTTGateway support very mature technologies like basic 433mhz/315mhz protocols & infrared (IR) so as to make your old dumb devices "smart" and avoid you to throw then away. These devices have also the advantages of having a lower cost compared to Zwave or more sophisticated protocols.
-OMG support also up to date technologies like Bluetooth Low Energy (BLE) or LORA.
+OpenMQTTGateway supports very mature technologies like basic 433mhz/315mhz protocols & infrared (IR) so you can make your old dumb devices "smart" and avoid throwing them away. These devices also have the advantages of having a lower cost compared to Zwave or more sophisticated protocols.
+OMG also supports up to date technologies like Bluetooth Low Energy (BLE) or LORA.
 
-To have an overview of the supported PIR, door, water, smoke sensors, sirens, rings, beacons, switchs & weather stations you can take a look to the 
+To have an overview of the supported PIR, door, water, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
 [compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
 
-With MQTT you can connect the compatible software you want, it can be an home automation controller (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or another software like Node-Red.
+With MQTT you can connect the compatible software you want, integrating in home automation controllers like (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or another software like Node-Red.
 
 # Use cases
 With OpenMQTTGateway and a controller you can for example:

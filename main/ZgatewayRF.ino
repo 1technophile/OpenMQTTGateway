@@ -51,7 +51,7 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creat
                   will_Topic, switchRF[3], switchRF[4],
                   switchRF[5], switchRF[6], switchRF[7],
                   0, "", "", true, subjectMQTTtoRF,
-                  "", "", "", "");
+                  "", "", "", "", false);
 }
 #  endif
 
@@ -98,7 +98,8 @@ void RFtoMQTT() {
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) //component creation for HA
-      RFtoMQTTdiscovery(MQTTvalue);
+      if (disc)
+        RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       pub(subjectRFtoMQTT, RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's

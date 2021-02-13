@@ -93,7 +93,7 @@ Once the forced scan has completed, the previous scan interval value will be res
 
 The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
 
-::: tip INFO
+::: tip
 For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
 :::
 

@@ -102,7 +102,7 @@ The json message must contain two properties:
 * remote: the index of the remote which is used to send the command (index start at zero)
 * command: the command which should be send with the remote as string, see [table of command names](https://github.com/Legion2/Somfy_Remote_Lib#available-commands).
 
-::: tip NOTE
+::: tip
 The middle button on physical Somfy RTS Remote controls is called "My".
 :::
 

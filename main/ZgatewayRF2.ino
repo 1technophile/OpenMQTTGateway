@@ -112,7 +112,7 @@ void RF2toMQTTdiscovery(JsonObject& data) {
                   (char*)getUniqueId(switchRF[1], "").c_str(), will_Topic,
                   switchRF[3], switchRF[4], switchRF[5], switchRF[6],
                   switchRF[7], 0, "", "", true, subjectMQTTtoRF2,
-                  "", "", "", "");
+                  "", "", "", "", false);
 }
 #  endif
 
@@ -132,7 +132,8 @@ void RF2toMQTT() {
     RF2data.set("address", (unsigned long)rf2rd.address);
     RF2data.set("switchType", (int)rf2rd.switchType);
 #  ifdef ZmqttDiscovery //component creation for HA
-    RF2toMQTTdiscovery(RF2data);
+    if (disc)
+      RF2toMQTTdiscovery(RF2data);
 #  endif
 
     pub(subjectRF2toMQTT, RF2data);

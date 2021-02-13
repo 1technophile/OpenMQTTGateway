@@ -100,18 +100,21 @@ void setupZsensorDS1820() {
 void pubOneWire_HADiscovery() {
   // If zmqttDiscovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
 #  ifdef ZmqttDiscovery
-  Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
-  for (int index = 0; index < ds1820_count; index++) {
-    createDiscovery("sensor",
-                    (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
-                    (char*)("DS12B20_" + String(index + 1) + "_c").c_str(),
-                    (char*)(ds1820_addr[index] + "_c").c_str(),
-                    will_Topic,
-                    "temperature",
-                    jsonTempc,
-                    "", "", "°C",
-                    0, "", "", true, "",
-                    "", "", "", "");
+  // If zmqtt discovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
+  if (disc) {
+    Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
+    for (int index = 0; index < ds1820_count; index++) {
+      createDiscovery("sensor",
+                      (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
+                      (char*)("DS12B20_" + String(index + 1) + "_c").c_str(),
+                      (char*)(ds1820_addr[index] + "_c").c_str(),
+                      will_Topic,
+                      "temperature",
+                      jsonTempc,
+                      "", "", "°C",
+                      0, "", "", true, "",
+                      "", "", "", "", false);
+    }
   }
 #  endif
 }

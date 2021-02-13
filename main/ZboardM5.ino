@@ -57,8 +57,8 @@ void setupM5() {
   // M5 stack 320*240
   // M5StickC 160*80
   // M5Stick LCD not supported
-  Log.notice(F("Low power set to: %d" CR), low_power_mode);
-  switch (low_power_mode) // if LOW POWER the intro is bypassed and the brightness set to sleep brightness
+  Log.notice(F("Low power set to: %d" CR), lowpowermode);
+  switch (lowpowermode) // if LOW POWER the intro is bypassed and the brightness set to sleep brightness
   {
     case 0:
       wakeScreen(NORMAL_LCD_BRIGHTNESS);
@@ -106,30 +106,30 @@ void loopM5() {
   static int previousBtnState;
   int currentBtnState = digitalRead(SLEEP_BUTTON);
   if (currentBtnState != previousBtnState && currentBtnState == 0) {
-    int newlow_power_mode = low_power_mode;
-    (low_power_mode == 2) ? newlow_power_mode = 0 : newlow_power_mode = newlow_power_mode + 1;
-    changelow_power_mode(newlow_power_mode);
+    int newlowpowermode = lowpowermode;
+    (lowpowermode == 2) ? newlowpowermode = 0 : newlowpowermode = newlowpowermode + 1;
+    changelowpowermode(newlowpowermode);
   }
   previousBtnState = currentBtnState;
   static int previousLogLevel;
   switch (Log.getLastMsgLevel()) {
     case 1:
     case 2:
-      if (low_power_mode != 2) {
+      if (lowpowermode != 2) {
         wakeScreen(NORMAL_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(TFT_RED); // FATAL, ERROR
         M5.Lcd.setTextColor(TFT_BLACK, TFT_RED);
       }
       break;
     case 3:
-      if (low_power_mode != 2) {
+      if (lowpowermode != 2) {
         wakeScreen(NORMAL_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(TFT_ORANGE); // WARNING
         M5.Lcd.setTextColor(TFT_BLACK, TFT_ORANGE);
       }
       break;
     default:
-      if (previousLogLevel != Log.getLastMsgLevel() && low_power_mode != 2) {
+      if (previousLogLevel != Log.getLastMsgLevel() && lowpowermode != 2) {
         wakeScreen(SLEEP_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(TFT_WHITE);
         drawLogo(M5.Lcd.width() * 0.1875, (M5.Lcd.width() / 2) - M5.Lcd.width() * 0.24, M5.Lcd.height() * 0.5, true, true, true, true, true, true);
@@ -218,7 +218,7 @@ void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circl
 }
 
 void M5Display(char* line1, char* line2, char* line3) {
-  if (low_power_mode == 2) digitalWrite(LED_INFO, LED_INFO_ON);
+  if (lowpowermode == 2) digitalWrite(LED_INFO, LED_INFO_ON);
   wakeScreen(NORMAL_LCD_BRIGHTNESS);
   M5.Lcd.fillScreen(TFT_WHITE);
   drawLogo(M5.Lcd.width() * 0.1875, (M5.Lcd.width() / 2) - M5.Lcd.width() * 0.24, M5.Lcd.height() * 0.5, true, true, true, true, true, true);

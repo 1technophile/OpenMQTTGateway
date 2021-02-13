@@ -569,6 +569,8 @@ void BLEconnect() {
               if (pRemoteCharacteristic->canNotify()) {
                 Log.trace(F("Registering notification" CR));
                 pRemoteCharacteristic->subscribe(true, notifyCB);
+                delay(BLE_CNCT_TIMEOUT);
+                pClient->disconnect();
               } else {
                 Log.notice(F("Failed registering notification" CR));
                 pClient->disconnect();
@@ -610,10 +612,11 @@ void coreTask(void* pvParameters) {
         // Launching a connect every BLEscanBeforeConnect
         if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
           BLEconnect();
-        launchDiscovery();
+        if (disc)
+          launchDiscovery();
         dumpDevices();
       }
-      if (low_power_mode) {
+      if (lowpowermode) {
         lowPowerESP32();
       } else {
         delay(BLEinterval);
@@ -648,10 +651,10 @@ void deepSleep(uint64_t time_in_us) {
   esp_deep_sleep(time_in_us);
 }
 
-void changelow_power_mode(int newLowPowerMode) {
+void changelowpowermode(int newLowPowerMode) {
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
 #    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
-  if (low_power_mode == 2) {
+  if (lowpowermode == 2) {
 #      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
 #      endif
@@ -664,9 +667,9 @@ void changelow_power_mode(int newLowPowerMode) {
   sprintf(lpm, "%d", newLowPowerMode);
   M5Display("Changing LOW POWER mode to:", lpm, "");
 #    endif
-  low_power_mode = newLowPowerMode;
+  lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putUInt("low_power_mode", low_power_mode);
+  preferences.putUInt("lowpowermode", lowpowermode);
   preferences.end();
 }
 
@@ -675,7 +678,7 @@ void setupBT() {
   Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
-  Log.notice(F("Low Power Mode: %d" CR), low_power_mode);
+  Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
@@ -926,14 +929,6 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
           createOrUpdateDevice(mac, device_flags_init, LYWSD02);
         return process_sensors(2, BLEdata);
       }
-      Log.trace(F("Is it a CGG1?" CR));
-      if (strstr(service_data, "304703") != NULL && strlen(service_data) > ServicedataMinLength) {
-        Log.trace(F("CGG1 data reading method 1" CR));
-        BLEdata.set("model", "CGG1");
-        if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, CGG1);
-        return process_sensors(0, BLEdata);
-      }
       Log.trace(F("Is it a MUE4094RT?" CR));
       if (strstr(service_data, "4030dd") != NULL) {
         Log.trace(F("MUE4094RT data reading" CR));
@@ -943,7 +938,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_milamp(BLEdata);
       }
       Log.trace(F("Is it a CGP1W?" CR));
-      if ((strstr(service_data, "08094c") != NULL || strstr(service_data, "080972") != NULL) && strlen(service_data) > ServicedataMinLength) {
+      if ((strncmp(service_data, "0809", 4) == 0) && strlen(service_data) > ServicedataMinLength) {
         Log.trace(F("CGP1W data reading" CR));
         BLEdata.set("model", "CGP1W");
         if (device->sensorModel == -1)
@@ -951,12 +946,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_cleargrass(BLEdata, true);
       }
       Log.trace(F("Is it a CGG1" CR));
-      if (strstr(service_data, "080774") != NULL) {
-        Log.trace(F("CGG1 method 2" CR));
+      // One type of the advertising packet format started with 50204703 or 50304703, where 4703 is a type of a sensor
+      // Another type of the advertising packet started with 0807 or 8816
+      if ((strncmp(&service_data[2], "4703", 4) == 0 && strlen(service_data) > ServicedataMinLength) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
+        Log.trace(F("CGG1 data reading" CR));
         BLEdata.set("model", "CGG1");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGG1);
-        return process_cleargrass(BLEdata, false);
+        return strncmp(&service_data[2], "4703", 4) == 0 ? process_sensors(0, BLEdata) : process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a CGD1?" CR));
       if (((strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL) && (strlen(service_data) > ServicedataMinLength)) || (strstr(service_data, "080cd0") != NULL && (strlen(service_data) > ServicedataMinLength - 6))) {
@@ -1318,8 +1315,8 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       Log.notice(F("New minrssi: %d" CR), minRssi);
     }
 #  ifdef ESP32
-    if (BTdata.containsKey("low_power_mode")) {
-      changelow_power_mode((int)BTdata["low_power_mode"]);
+    if (BTdata.containsKey("lowpowermode")) {
+      changelowpowermode((int)BTdata["lowpowermode"]);
     }
 #  endif
   }

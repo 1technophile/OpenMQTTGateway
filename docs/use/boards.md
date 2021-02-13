@@ -17,14 +17,21 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 * Normal mode (per default)
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":0}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":0}'`
 
 * Low Power mode
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":2}'`
 
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
+A low power mode switch is automaticaly created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
+In low power mode you should use ESPWifiManualSetup so as to rely on the credentials entered into User_config.h.
+So as to do that uncomment the line below in User_config.h
+``` c
+//#  define ESPWifiManualSetup true
+```
+For platformio and example of environment is available into [prod_env.ini.example](https://github.com/1technophile/OpenMQTTGateway/blob/development/prod_env.ini.example)
 :::
 
 ::: warning
@@ -60,14 +67,14 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 * Normal mode (per default), screen ON
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":0}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":0}'`
 
 * Low Power mode, screen ON when processing only
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":1}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":1}'`
 
 * Low Power mode, screen OFF, LED ON when processing on M5StickC or M5stickC Plus
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"low_power_mode":2}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":2}'`
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC, M5stickC Plus and middle button of M5stack).
