@@ -21,7 +21,7 @@ The gateway device will be available into Configuration->Devices section of Home
 ![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ## Manual integration examples
-From @123, @finity, @denniz03, @jrockstad
+From @123, @finity, @denniz03, @jrockstad, @anarchking
 
 ### Door sensor
 ```yaml
