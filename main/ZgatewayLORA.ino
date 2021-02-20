@@ -78,10 +78,28 @@ void LORAtoMQTT() {
     LORAdata.set("pferror", (float)LoRa.packetFrequencyError());
     LORAdata.set("packetSize", (int)packetSize);
     LORAdata.set("message", (char*)packet.c_str());
-    pub(subjectLORAtoMQTT, LORAdata);
+
+    // convert string to char array
+    // Length (with one extra character for the null terminator)
+    int str_len = packet.length() + 1;
+    // Prepare the character array (the buffer)
+    char packetchar[str_len];
+    // Copy it over
+    packet.toCharArray(packetchar, str_len);
+    
+    // Get the sensor name.
+    // I suppose this message format, where the first field is the sensor name.
+    // example: "message":"ttgo,124,21,20,0,36.0", here the sensor is "ttgo"
+    String sensorName = strtok(packetchar, ",");
+    
+    char topicWithSensorName[20];
+    sprintf(topicWithSensorName, "%s/%s", subjectLORAtoMQTT, sensorName);
+
+    pub(topicWithSensorName, LORAdata);
+
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
-      pub(subjectMQTTtoLORA, LORAdata);
+      pub(topicWithSensorName, LORAdata);
     }
   }
 }
