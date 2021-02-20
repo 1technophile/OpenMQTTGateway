@@ -42,7 +42,12 @@ void setupLORA() {
     while (1)
       ;
   }
+
+  LoRa.setSpreadingFactor(LORA_SPREADING_FACTOR);
+  LoRa.setSyncWord(LORA_SYNC_WORD);
+
   LoRa.receive();
+
   Log.notice(F("LORA_SCK: %d" CR), LORA_SCK);
   Log.notice(F("LORA_MISO: %d" CR), LORA_MISO);
   Log.notice(F("LORA_MOSI: %d" CR), LORA_MOSI);
