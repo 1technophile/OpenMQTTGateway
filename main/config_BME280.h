@@ -44,6 +44,11 @@ extern void BME280toMQTT();
 #define bme280_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingbme280 30000
 
+//If you need custom I2C Pins for BME280 you can change it here
+// https://community.openmqttgateway.com/t/feature-suggest-customizeable-pins-e-g-for-bme280/652
+#define I2CPIN1 21
+#define I2CPIN2 13
+
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define BMETOPIC "/CLIMAtoMQTT/bme"
@@ -51,5 +56,7 @@ extern void BME280toMQTT();
 //Time used to wait for an interval before resending measured values
 unsigned long timebme280 = 0;
 int BME280_i2c_addr = 0x76; // Bosch BME280 I2C Address
+
+
 
 #endif
