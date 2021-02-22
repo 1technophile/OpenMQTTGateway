@@ -551,7 +551,7 @@ void pubMqttDiscovery() {
 #  ifdef ZgatewayRF2
   // Sensor to display RF received value
   Log.trace(F("gatewayRF2Discovery" CR));
-  char* gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", jsonVal, "", "", ""};
+  char* gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", jsonAddress, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));

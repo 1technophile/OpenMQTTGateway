@@ -75,6 +75,7 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonAdc      "{{ value_json.adc }}"
 #  define jsonPa       "{{ float(value_json.pa) * 0.01 }}"
 #  define jsonId       "{{ value_json.id }}"
+#  define jsonAddress  "{{ value_json.address }}"
 #else // Home assistant autodiscovery value key definition
 #  define jsonBatt     "{{ value_json.batt | is_defined }}"
 #  define jsonLux      "{{ value_json.lux | is_defined }}"
@@ -103,6 +104,7 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonAdc      "{{ value_json.adc | is_defined }}"
 #  define jsonPa       "{{ float(value_json.pa) * 0.01 | is_defined }}"
 #  define jsonId       "{{ value_json.id | is_defined }}"
+#  define jsonAddress  "{{ value_json.address | is_defined }}"
 #endif
 
 #endif
