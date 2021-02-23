@@ -92,10 +92,18 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 unsigned int scanCount = 0;
 
 void pubBTMainCore(JsonObject& data) {
-  String mac_address = data["id"].as<const char*>();
-  mac_address.replace(":", "");
-  String mactopic = subjectBTtoMQTT + String("/") + mac_address;
-  pub((char*)mactopic.c_str(), data);
+  if (abs((int)data["rssi"] | 0) < minRssi) {
+    String mac_address = data["id"].as<const char*>();
+    mac_address.replace(":", "");
+    String mactopic = subjectBTtoMQTT + String("/") + mac_address;
+    pub((char*)mactopic.c_str(), data);
+  }
+  if (data.containsKey("distance")) {
+    data.remove("servicedatauuid");
+    data.remove("servicedata");
+    String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
+    pub_custom_topic((char*)topic.c_str(), data, false);
+  }
 }
 
 class JsonBundle {
@@ -538,11 +546,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
-          PublishDeviceData(BLEdata);
         }
-      } else {
-        PublishDeviceData(BLEdata); // publish device even if there is no service data
       }
+      PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
     } else {
       Log.trace(F("Filtered mac device" CR));
     }
@@ -663,6 +669,7 @@ void BLEconnect() {
 void stopProcessing() {
   Log.notice(F("Stop BLE processing" CR));
   ProcessLock = true;
+  delay(Scan_duration < 2000 ? Scan_duration : 2000);
 }
 
 void startProcessing() {
@@ -676,14 +683,14 @@ void coreTask(void* pvParameters) {
     Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
     if (!ProcessLock) {
       int n = 0;
-      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout) {
+      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !ProcessLock) {
         n++;
         Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
         delay(1000);
       }
       if (client.state() != 0) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
-      } else {
+      } else if (!ProcessLock) {
         BLEscan();
         // Launching a connect every BLEscanBeforeConnect
         if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
@@ -948,16 +955,18 @@ void launchDiscovery() {
 
 void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
-    JsonObject& BLEdataOut = process_bledata(BLEdata);
-    if (!publishOnlySensors || BLEdataOut.containsKey("model")) {
+    process_bledata(BLEdata);
+    if (!publishOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
 #  if !pubBLEServiceUUID
-      RemoveJsonPropertyIf(BLEdataOut, "servicedatauuid", BLEdataOut.containsKey("servicedatauuid"));
+      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("servicedatauuid"));
 #  endif
 #  if !pubKnownBLEServiceData
-      RemoveJsonPropertyIf(BLEdataOut, "servicedata", BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata"));
+      RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
 #  endif
-      pubBT(BLEdataOut);
+      pubBT(BLEdata);
     }
+  } else if (BLEdata.containsKey("distance")) {
+    pubBT(BLEdata);
   } else {
     Log.trace(F("Low rssi, device filtered" CR));
   }
@@ -1336,8 +1345,6 @@ void haRoomPresence(JsonObject& HomePresence) {
   }
   HomePresence["distance"] = distance;
   Log.trace(F("Ble distance %D" CR), distance);
-  String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
-  pub_custom_topic((char*)topic.c_str(), HomePresence, false);
 }
 #  endif
 

@@ -1250,13 +1250,7 @@ void loop() {
 #ifdef ZmqttDiscovery
       if (disc) {
         if (!connectedOnce) {
-#  if defined(ZgatewayBT) && defined(ESP32)
-          stopProcessing(); // Avoid publication concurrency issues on ESP32 BLE
-#  endif
           pubMqttDiscovery(); // at first connection we publish the discovery payloads
-#  if defined(ZgatewayBT) && defined(ESP32)
-          startProcessing();
-#  endif
         }
       }
 #endif
