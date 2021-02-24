@@ -203,8 +203,8 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
 
-#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
-#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+//#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
+//#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
