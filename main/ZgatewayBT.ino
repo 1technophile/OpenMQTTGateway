@@ -505,8 +505,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   std::string convertServiceData(std::string deviceServiceData) {
     int serviceDataLength = (int)deviceServiceData.length();
     char spr[2 * serviceDataLength + 1];
-    for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char) deviceServiceData[i]);
-    spr[2*serviceDataLength] = 0;
+    for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
+    spr[2 * serviceDataLength] = 0;
     Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
     return spr;
   }
@@ -544,7 +544,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         for (int j = 0; j < serviceDataCount; j++) {
           std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
           Log.trace(F("Service data: %s" CR), service_data.c_str());
-          BLEdata.set("servicedata", (char*) service_data.c_str());
+          BLEdata.set("servicedata", (char*)service_data.c_str());
           std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
@@ -571,9 +571,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 
             int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
             int size1 = jsonBTBufferQueue[last].buffer.size();
-            BLEdataLocal.set("servicedata", (char*) service_data.c_str());
+            BLEdataLocal.set("servicedata", (char*)service_data.c_str());
             int size2 = jsonBTBufferQueue[last].buffer.size();
-            BLEdataLocal.set("servicedatauuid", (char*) serviceDatauuid.c_str());
+            BLEdataLocal.set("servicedatauuid", (char*)serviceDatauuid.c_str());
             int size3 = jsonBTBufferQueue[last].buffer.size();
             Log.trace("Buffersize for %d : %d -> %d -> %d" CR, j, size1, size2, size3);
             PublishDeviceData(BLEdataLocal);
