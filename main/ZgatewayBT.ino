@@ -91,14 +91,14 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 unsigned int scanCount = 0;
 
-void pubBTMainCore(JsonObject& data) {
+void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi) {
     String mac_address = data["id"].as<const char*>();
     mac_address.replace(":", "");
     String mactopic = subjectBTtoMQTT + String("/") + mac_address;
     pub((char*)mactopic.c_str(), data);
   }
-  if (data.containsKey("distance")) {
+  if (haPresenceEnabled && data.containsKey("distance")) {
     data.remove("servicedatauuid");
     data.remove("servicedata");
     String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
@@ -110,13 +110,17 @@ class JsonBundle {
 public:
   StaticJsonBuffer<JSON_MSG_BUFFER> buffer;
   JsonObject* object;
+  bool haPresence;
 
-  JsonObject& createObject() {
+  JsonObject& createObject(const char* json = NULL, bool haPresenceEnabled = true) {
     buffer.clear();
-    object = &buffer.createObject();
+    haPresence = haPresenceEnabled;
+    object = &(json == NULL ? buffer.createObject() : buffer.parseObject(json));
     return *object;
   }
 };
+
+void PublishDeviceData(JsonObject& BLEdata, bool processBLEData = true);
 
 #  ifdef ESP32
 static TaskHandle_t xCoreTaskHandle;
@@ -129,7 +133,7 @@ int btQueueBlocked = 0;
 int btQueueLengthSum = 0;
 int btQueueLengthCount = 0;
 
-JsonObject& getBTJsonObject() {
+JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true) {
   int next, last;
   for (bool blocked = false;;) {
     next = atomic_load_explicit(&jsonBTBufferQueueNext, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
@@ -141,7 +145,7 @@ JsonObject& getBTJsonObject() {
     }
     delay(1);
   }
-  return jsonBTBufferQueue[last % BTQueueSize].createObject();
+  return jsonBTBufferQueue[last % BTQueueSize].createObject(json, haPresenceEnabled);
 }
 
 // should run from the BT core
@@ -162,7 +166,8 @@ void emptyBTQueue() {
       btQueueLengthCount++;
       first = false;
     }
-    pubBTMainCore(*jsonBTBufferQueue[next % BTQueueSize].object);
+    JsonBundle& bundle = jsonBTBufferQueue[next % BTQueueSize];
+    pubBTMainCore(*bundle.object, bundle.haPresence);
     atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
   }
 }
@@ -171,7 +176,7 @@ void emptyBTQueue() {
 
 JsonBundle jsonBTBuffer;
 
-JsonObject& getBTJsonObject() {
+JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true) {
   return jsonBTBuffer.createObject();
 }
 
@@ -497,6 +502,15 @@ void INodeEMDiscovery(char* mac, char* sensorModel) {}
 static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+  std::string convertServiceData(std::string deviceServiceData) {
+    int serviceDataLength = (int)deviceServiceData.length();
+    char spr[2 * serviceDataLength + 1];
+    for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char) deviceServiceData[i]);
+    spr[2*serviceDataLength] = 0;
+    Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
+    return spr;
+  }
+
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
     Log.trace(F("Creating BLE buffer" CR));
     JsonObject& BLEdata = getBTJsonObject();
@@ -528,27 +542,48 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         int serviceDataCount = advertisedDevice->getServiceDataCount();
         Log.trace(F("Get services data number: %d" CR), serviceDataCount);
         for (int j = 0; j < serviceDataCount; j++) {
-          std::string serviceData = advertisedDevice->getServiceData(j);
-          int serviceDataLength = serviceData.length();
-          String returnedString = "";
-          for (int i = 0; i < serviceDataLength; i++) {
-            int a = serviceData[i];
-            if (a < 16) {
-              returnedString += F("0");
-            }
-            returnedString += String(a, HEX);
-          }
-          char service_data[returnedString.length() + 1];
-          returnedString.toCharArray(service_data, returnedString.length() + 1);
-          service_data[returnedString.length()] = '\0';
-          Log.trace(F("Service data: %s" CR), service_data);
-          BLEdata.set("servicedata", service_data);
+          std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+          Log.trace(F("Service data: %s" CR), service_data.c_str());
+          BLEdata.set("servicedata", (char*) service_data.c_str());
           std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
+          process_bledata(BLEdata); // this will force to resolve all the service data
         }
+
+        if (serviceDataCount > 1) {
+          BLEdata.remove("servicedata");
+          BLEdata.remove("servicedatauuid");
+
+          int msglen = BLEdata.measureLength() + 1;
+          char jsonmsg[msglen];
+          char jsonmsgb[msglen];
+          BLEdata.printTo(jsonmsgb, sizeof(jsonmsgb));
+          for (int j = 0; j < serviceDataCount; j++) {
+            strcpy(jsonmsg, jsonmsgb); // the parse _destroys_ the message buffer
+            JsonObject& BLEdataLocal = getBTJsonObject(jsonmsg, j == 0); // note, that first time we will get here the BLEdata itself; haPresence for the first msg
+            if (!BLEdataLocal.containsKey("id")) { // would crash without id
+              Log.trace("Json parsing error for %s" CR, jsonmsgb);
+              break;
+            }
+            std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+            std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
+
+            int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
+            int size1 = jsonBTBufferQueue[last].buffer.size();
+            BLEdataLocal.set("servicedata", (char*) service_data.c_str());
+            int size2 = jsonBTBufferQueue[last].buffer.size();
+            BLEdataLocal.set("servicedatauuid", (char*) serviceDatauuid.c_str());
+            int size3 = jsonBTBufferQueue[last].buffer.size();
+            Log.trace("Buffersize for %d : %d -> %d -> %d" CR, j, size1, size2, size3);
+            PublishDeviceData(BLEdataLocal);
+          }
+        } else {
+          PublishDeviceData(BLEdata, false); // easy case
+        }
+      } else {
+        PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
       }
-      PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
     } else {
       Log.trace(F("Filtered mac device" CR));
     }
@@ -953,9 +988,9 @@ void launchDiscovery() {
   }
 }
 
-void PublishDeviceData(JsonObject& BLEdata) {
+void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
-    process_bledata(BLEdata);
+    if (processBLEData) process_bledata(BLEdata);
     if (!publishOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
 #  if !pubBLEServiceUUID
       RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("servicedatauuid"));
