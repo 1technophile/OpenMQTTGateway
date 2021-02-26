@@ -730,8 +730,10 @@ void coreTask(void* pvParameters) {
         // Launching a connect every BLEscanBeforeConnect
         if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
           BLEconnect();
+#    ifdef ZmqttDiscovery
         if (disc)
           launchDiscovery();
+#    endif
         dumpDevices();
       }
       if (lowpowermode) {
