@@ -1250,13 +1250,7 @@ void loop() {
 #ifdef ZmqttDiscovery
       if (disc) {
         if (!connectedOnce) {
-#  if defined(ZgatewayBT) && defined(ESP32)
-          stopProcessing(); // Avoid publication concurrency issues on ESP32 BLE
-#  endif
           pubMqttDiscovery(); // at first connection we publish the discovery payloads
-#  if defined(ZgatewayBT) && defined(ESP32)
-          startProcessing();
-#  endif
         }
       }
 #endif
@@ -1328,6 +1322,8 @@ void loop() {
 #  ifndef ESP32
       if (BTtoMQTT())
         Log.trace(F("BTtoMQTT OK" CR));
+#  else
+      emptyBTQueue();
 #  endif
 #endif
 #ifdef ZgatewaySRFB
@@ -1407,6 +1403,10 @@ void stateMeasures() {
 #  ifdef ZgatewayBT
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
+  SYSdata["btqblck"] = btQueueBlocked;
+  SYSdata["btqsum"] = btQueueLengthSum;
+  SYSdata["btqsnd"] = btQueueLengthCount;
+  SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;
