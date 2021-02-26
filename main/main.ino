@@ -879,7 +879,7 @@ void setup_wifi() {
 
   // We start by connecting to a WiFi network
   Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
-#  ifdef ESPWifiAdvancedSetup
+#  ifdef NetworkAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
   IPAddress subnet_adress(subnet);

@@ -62,8 +62,8 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
-#ifdef NetworkAdvancedSetup // for arduino boards advanced config
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and mac only
+#ifdef NetworkAdvancedSetup
 #  if defined(ESP8266) || defined(ESP32)
 const byte ip[] = {192, 168, 1, 99}; //ip adress of the gateway, already defined for arduino below
 #  endif
