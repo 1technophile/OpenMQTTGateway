@@ -30,6 +30,12 @@ extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 
+#ifdef ESP32
+extern int btQueueBlocked;
+extern int btQueueLengthSum;
+extern int btQueueLengthCount;
+#endif
+
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
@@ -46,6 +52,10 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #endif
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
+#endif
+
+#ifndef BTQueueSize
+#  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
 #endif
 
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
