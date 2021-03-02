@@ -1319,6 +1319,10 @@ void loop() {
       PilighttoMQTT();
 #endif
 #ifdef ZgatewayBT
+#  ifdef ZmqttDiscovery
+      if (disc)
+        launchBTDiscovery();
+#  endif
 #  ifndef ESP32
       if (BTtoMQTT())
         Log.trace(F("BTtoMQTT OK" CR));
