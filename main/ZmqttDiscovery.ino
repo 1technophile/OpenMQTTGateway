@@ -137,7 +137,7 @@ void createDiscovery(char* sensor_type,
     deviceid[12] = '\0';
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
     JsonObject& device = jsonDeviceBuffer.createObject();
-    if (device_mac != "") {
+    if (device_mac[0] != 0) {
       JsonArray& connections = device.createNestedArray("connections");
       JsonArray& connection_mac = connections.createNestedArray();
       connection_mac.add("mac");

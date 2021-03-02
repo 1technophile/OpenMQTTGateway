@@ -82,7 +82,8 @@ struct decompose {
   bool reverse;
 };
 
-vector<BLEdevice> devices;
+vector<BLEdevice*> devices;
+int newDevices = 0;
 
 static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, UNKNOWN_MODEL};
 static bool oneWhite = false;
@@ -194,9 +195,9 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 BLEdevice* getDeviceByMac(const char* mac) {
   Log.trace(F("getDeviceByMac %s" CR), mac);
 
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
-    if ((strcmp(p->macAdr, mac) == 0)) {
-      return &(*p);
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+    if ((strcmp((*it)->macAdr, mac) == 0)) {
+      return *it;
     }
   }
   return &NO_DEVICE_FOUND;
@@ -234,7 +235,8 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     if (model != UNKNOWN_MODEL) device->sensorModel = model;
-    devices.push_back(*device);
+    devices.push_back(device);
+    newDevices++;
   } else {
     Log.trace(F("update %s" CR), mac);
 
@@ -263,7 +265,8 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 #  define isDiscovered(device) device->isDisc
 
 void dumpDevices() {
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+    BLEdevice* p = *it;
     Log.trace(F("macAdr %s" CR), p->macAdr);
     Log.trace(F("isDisc %d" CR), p->isDisc);
     Log.trace(F("isWhtL %d" CR), p->isWhtL);
@@ -625,7 +628,8 @@ void notifyCB(
       JsonObject& BLEdata = getBTJsonObject();
       String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
       mac_adress.toUpperCase();
-      for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+        BLEdevice* p = *it;
         if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
           if (p->sensorModel == LYWSD03MMC)
             BLEdata.set("model", "LYWSD03MMC");
@@ -657,7 +661,8 @@ void notifyCB(
 void BLEconnect() {
   Log.notice(F("BLE Connect begin" CR));
   BLEDevice::init("");
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+    BLEdevice* p = *it;
     if (p->sensorModel == LYWSD03MMC || p->sensorModel == MHO_C401) {
       Log.trace(F("Model to connect found" CR));
       NimBLEClient* pClient;
@@ -730,10 +735,6 @@ void coreTask(void* pvParameters) {
         // Launching a connect every BLEscanBeforeConnect
         if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
           BLEconnect();
-#    ifdef ZmqttDiscovery
-        if (disc)
-          launchDiscovery();
-#    endif
         dumpDevices();
       }
       if (lowpowermode) {
@@ -961,8 +962,22 @@ boolean valid_service_data(const char* data) {
   return false;
 }
 
-void launchDiscovery() {
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+// This function always should be called from the main core as it generates direct mqtt messages
+void launchBTDiscovery() {
+  if (newDevices == 0)
+    return;
+#  ifdef ESP32
+  if (!semaphoreCreateOrUpdateDevice.take(1000, "launchBTDiscovery"))
+    return;
+  newDevices = 0;
+  vector<BLEdevice*> localDevices = devices;
+  semaphoreCreateOrUpdateDevice.give();
+  for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
+#  else
+  newDevices = 0;
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+#  endif
+    BLEdevice* p = *it;
     if (p->sensorModel != UNKNOWN_MODEL && !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
@@ -983,9 +998,14 @@ void launchDiscovery() {
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str(), "INODE_EM");
-      createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
+      p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
-      Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
+      if (!isDiscovered(p)) {
+        Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
+        p->isDisc = true;
+      } else {
+        Log.trace(F("Device already discovered %s" CR), p->macAdr);
+      }
     }
   }
 }
@@ -1416,8 +1436,16 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     WorBupdated |= updateWorB(BTdata, true);
     WorBupdated |= updateWorB(BTdata, false);
 
-    if (WorBupdated)
+    if (WorBupdated) {
+#  ifdef ESP32
+      if (!semaphoreCreateOrUpdateDevice.take(1000, "dumpDevices")) {
+        dumpDevices();
+        semaphoreCreateOrUpdateDevice.give();
+      }
+#  else
       dumpDevices();
+#  endif
+    }
 
     // Scan interval set
     if (BTdata.containsKey("interval")) {
