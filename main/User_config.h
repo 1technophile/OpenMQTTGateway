@@ -185,21 +185,6 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
-// WIFI mode, uncomment to force a wifi mode, if not uncommented the ESP will connect without a mode forced
-// if there is a reconnection issue it will try to connect with G mode and if not working with B mode
-#ifdef ESP32
-#  include "esp_wifi.h"
-uint8_t wifiProtocol = 0; // default mode, automatic selection
-    //uint8_t wifiProtocol = WIFI_PROTOCOL_11B;
-    //uint8_t wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // can't have only one https://github.com/espressif/esp-idf/issues/702
-    //uint8_t wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N; // can't have only one https://github.com/espressif/esp-idf/issues/702
-#elif ESP8266
-uint8_t wifiProtocol = 0; // default mode, automatic selection
-    //uint8_t wifiProtocol = WIFI_PHY_MODE_11B;
-    //uint8_t wifiProtocol = WIFI_PHY_MODE_11G;
-    //uint8_t wifiProtocol = WIFI_PHY_MODE_11N;
-#endif
-
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
 
