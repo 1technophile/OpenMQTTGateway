@@ -1230,7 +1230,6 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
       BLEdata.set("for", (double)value / 100);
       break;
     case '4':
-      BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       break;
@@ -1252,7 +1251,6 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
     case 'd':
       // temperature
       value = (double)value_from_hex_data(servicedata, 28 + offset, 4, true);
-      BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       // humidity
@@ -1308,7 +1306,6 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
   double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
-  BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
   BLEdata.set("hum", (double)humidity);
@@ -1346,7 +1343,6 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
   double value = 9999;
   // temperature
   value = (double)value_from_hex_data(servicedata, 20, 4, true);
-  BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)value / 10);
   BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
   // humidity

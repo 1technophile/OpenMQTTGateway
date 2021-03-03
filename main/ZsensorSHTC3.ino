@@ -55,7 +55,6 @@ void MeasureTempAndHum() {
           Log.trace(F("Same hum don't send it" CR));
         }
         if (t != persistedt || shtc3_always) {
-          SHTC3data.set("temp", (float)t); // remove for 0.9.6 release
           SHTC3data.set("tempc", (float)t);
           SHTC3data.set("tempf", mySHTC3.toDegF());
         } else {
