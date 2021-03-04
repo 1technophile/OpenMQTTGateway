@@ -49,7 +49,7 @@ Note that the gateway return one or two measurement value each time. The differe
 
 The infos will appear like this on your MQTT broker:
 
-`home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tem":"19.2"}`
+`home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tempc":"19.2","tempf":"66.56"}`
 
 More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html)  (especially about how it was implemented with HM10)
 
