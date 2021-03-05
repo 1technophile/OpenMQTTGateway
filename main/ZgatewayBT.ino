@@ -366,13 +366,24 @@ void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSCGD1parametersCount 3
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
       {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
   createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount, "CLEARGRASSCGD1", "ClearGrass", sensorModel);
+}
+
+void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGDK2parametersCount 3
+  Log.trace(F("CLEARGRASSCGDK2Discovery" CR));
+  char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][8] = {
+      {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "CLEARGRASSCGDK2-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
 }
 
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {
@@ -990,6 +1001,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str(), "CGG1");
       if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
       if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
+      if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery((char*)macWOdots.c_str(), "CGDK2");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
@@ -1109,6 +1121,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         BLEdata.set("model", "CGD1");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGD1);
+        return process_cleargrass(BLEdata, false);
+      }
+      Log.trace(F("Is it a CGDK2?" CR));
+      if (strncmp(&service_data[0], "8810", 4) == 0 && strlen(service_data) > ServicedataMinLength) {
+        Log.trace(F("CGDK2 data reading" CR));
+        BLEdata.set("model", "CGDK2");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGDK2);
         return process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a MHO_C401?" CR));

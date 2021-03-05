@@ -115,7 +115,8 @@ enum ble_sensor_model {
   LYWSD03MMC,
   MHO_C401,
   LYWSD03MMC_ATC,
-  INODE_EM
+  INODE_EM,
+  CGDK2
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
