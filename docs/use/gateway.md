@@ -15,6 +15,10 @@ With Home Assistant, this command is directly avalaible through MQTT auto discov
 With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
+## Retrieve current status of the ESP
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"status"}'`
+
 ## Auto discovery
 You can deactivate the MQTT auto discovery function, this function enable to create automaticaly devices/entities with Home Assistant convention.
 ### Deactivate

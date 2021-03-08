@@ -352,6 +352,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 // key used for launching commands to the gateway
 #define restartCmd "restart"
 #define eraseCmd   "erase"
+#define statusCmd  "status"
 
 // uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
