@@ -48,7 +48,7 @@ void rtl_433_Callback(char* message) {
 
   pub(subjectRTL_433toMQTT, RFrtl_433_ESPdata);
 #  ifdef MEMORY_DEBUG
-    Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
+  Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
 #  endif
 }
 
@@ -72,23 +72,23 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
     int debug = RTLdata["debug"] | -1;
     int status = RTLdata["status"] | -1;
     if (tempMhz != 0 && validFrequency((int)tempMhz)) {
-    //  activeReceiver = RTL; // Enable RTL_433 Gateway
+      //  activeReceiver = RTL; // Enable RTL_433 Gateway
       receiveMhz = tempMhz;
       Log.notice(F("RTL_433 Receive mhz: %F" CR), receiveMhz);
-      pub(subjectRTL_433toMQTT, RTLdata); 
-    } else if (minimumRssi != 0) {      
+      pub(subjectRTL_433toMQTT, RTLdata);
+    } else if (minimumRssi != 0) {
       Log.notice(F("RTL_433 minimum RSSI: %d" CR), minimumRssi);
       rtl_433.setMinimumRSSI(minimumRssi);
-      pub(subjectRTL_433toMQTT, RTLdata); 
-    } else if (debug >= 0 && debug <= 4) {      
+      pub(subjectRTL_433toMQTT, RTLdata);
+    } else if (debug >= 0 && debug <= 4) {
       Log.notice(F("RTL_433 set debug: %d" CR), debug);
       rtl_433.setDebug(debug);
       rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
-      pub(subjectRTL_433toMQTT, RTLdata); 
-    } else if (status >= 0 ) {      
+      pub(subjectRTL_433toMQTT, RTLdata);
+    } else if (status >= 0) {
       Log.notice(F("RTL_433 get status: %d" CR), status);
       rtl_433.getStatus(status);
-      pub(subjectRTL_433toMQTT, RTLdata); 
+      pub(subjectRTL_433toMQTT, RTLdata);
     } else {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRTL_433 Fail json" CR));
