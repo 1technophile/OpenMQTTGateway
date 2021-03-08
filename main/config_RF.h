@@ -96,8 +96,8 @@ int minimumRssi = 0;
 
 /*-------------------RTL_433 topics & parameters----------------------*/
 //433Mhz RTL_433 MQTT Subjects and keys
-#define subjectMQTTtoRTL_433    "/commands/MQTTtoRTL_433"
-#define subjectRTL_433toMQTT    "/RTL_433toMQTT"
+#define subjectMQTTtoRTL_433 "/commands/MQTTtoRTL_433"
+#define subjectRTL_433toMQTT "/RTL_433toMQTT"
 
 /*-------------------CC1101 frequency----------------------*/
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
