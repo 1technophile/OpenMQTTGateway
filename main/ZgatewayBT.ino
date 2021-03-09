@@ -363,16 +363,27 @@ void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {
 }
 
 void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {
-#    define CLEARGRASSCGD1parametersCount 3
+#    define CLEARGRASSCGD1parametersCount 2
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
       {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
   createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount, "CLEARGRASSCGD1", "ClearGrass", sensorModel);
+}
+
+void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGDK2parametersCount 2
+  Log.trace(F("CLEARGRASSCGDK2Discovery" CR));
+  char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][8] = {
+      {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "CLEARGRASSCGDK2-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
 }
 
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {
@@ -990,6 +1001,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str(), "CGG1");
       if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
       if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
+      if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery((char*)macWOdots.c_str(), "CGDK2");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
@@ -1111,6 +1123,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
           createOrUpdateDevice(mac, device_flags_init, CGD1);
         return process_cleargrass(BLEdata, false);
       }
+      Log.trace(F("Is it a CGDK2?" CR));
+      if (strncmp(&service_data[0], "8810", 4) == 0 && strlen(service_data) > ServicedataMinLength) {
+        Log.trace(F("CGDK2 data reading" CR));
+        BLEdata.set("model", "CGDK2");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGDK2);
+        return process_cleargrass(BLEdata, false);
+      }
       Log.trace(F("Is it a MHO_C401?" CR));
       if (strstr(service_data, "588703") != NULL) {
         Log.trace(F("MHO_C401 add to list for future connect" CR));
@@ -1230,7 +1250,6 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
       BLEdata.set("for", (double)value / 100);
       break;
     case '4':
-      BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       break;
@@ -1252,7 +1271,6 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
     case 'd':
       // temperature
       value = (double)value_from_hex_data(servicedata, 28 + offset, 4, true);
-      BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       // humidity
@@ -1308,7 +1326,6 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
   double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
-  BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
   BLEdata.set("hum", (double)humidity);
@@ -1346,7 +1363,6 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
   double value = 9999;
   // temperature
   value = (double)value_from_hex_data(servicedata, 20, 4, true);
-  BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)value / 10);
   BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
   // humidity
