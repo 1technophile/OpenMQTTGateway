@@ -363,7 +363,7 @@ void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {
 }
 
 void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {
-#    define CLEARGRASSCGD1parametersCount 3
+#    define CLEARGRASSCGD1parametersCount 2
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
       {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
@@ -375,7 +375,7 @@ void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {
 }
 
 void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
-#    define CLEARGRASSCGDK2parametersCount 3
+#    define CLEARGRASSCGDK2parametersCount 2
   Log.trace(F("CLEARGRASSCGDK2Discovery" CR));
   char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][8] = {
       {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
