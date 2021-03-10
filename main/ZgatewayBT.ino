@@ -1007,7 +1007,7 @@ void launchBTDiscovery() {
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), "XMTZC0xHM");
       if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str(), "INKBIRD");
-      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), "LYWSD03MMC");
+      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str(), "INODE_EM");
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
@@ -1048,6 +1048,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
     Log.trace(F("Checking BLE service data validity" CR));
     const char* service_data = (const char*)(BLEdata["servicedata"] | "");
     if (valid_service_data(service_data)) {
+      int service_len = strlen(service_data);
       Log.trace(F("Searching BLE device data %s size %d" CR), service_data, strlen(service_data));
       Log.trace(F("Is it a mi flora ?" CR));
       if (strstr(service_data, "209800") != NULL) {
@@ -1143,7 +1144,15 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
       }
-      Log.trace(F("Is it a custom LYWSD03MMC" CR));
+      Log.trace(F("Is it a custom (pvvx) LYWSD03MMC?" CR));
+      if (service_len >= 30 && strncmp(service_data + 6, "38c1a4", 6) == 0) {
+        Log.trace(F("LYWSD03MMC PVVX" CR));
+        BLEdata.set("model", "LYWSD03MMC_PVVX");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC_PVVX);
+        return process_pvvx(BLEdata);
+      }
+      Log.trace(F("Is it a custom (atc1441) LYWSD03MMC?" CR));
       if (strstr(service_data, "a4c138") != NULL) {
         Log.trace(F("LYWSD03MMC ATC" CR));
         BLEdata.set("model", "LYWSD03MMC_ATC");
@@ -1384,6 +1393,24 @@ JsonObject& process_atc(JsonObject& BLEdata) {
   double humidity = (double)value_from_hex_data(servicedata, 16, 2, false);
   double battery = (double)value_from_hex_data(servicedata, 18, 2, false);
   double voltage = (double)value_from_hex_data(servicedata, 20, 4, false) / 1000;
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("batt", (double)battery);
+  BLEdata.set("volt", (double)voltage);
+
+  return BLEdata;
+}
+
+JsonObject& process_pvvx(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+
+  double temperature = (double)value_from_hex_data(servicedata, 12, 4, true) / 100;
+  double humidity = (double)value_from_hex_data(servicedata, 16, 4, true) / 100;
+  double battery = (double)value_from_hex_data(servicedata, 24, 2, false);
+  double voltage = (double)value_from_hex_data(servicedata, 20, 4, true) / 1000;
 
   //Set Json values
   BLEdata.set("tempc", (double)temperature);
