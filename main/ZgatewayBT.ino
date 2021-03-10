@@ -964,8 +964,7 @@ void RemoveJsonPropertyIf(JsonObject& obj, char* key, bool condition) {
   }
 }
 
-boolean valid_service_data(const char* data) {
-  int size = strlen(data);
+boolean valid_service_data(const char* data, int size) {
   for (int i = 0; i < size; ++i) {
     if (data[i] != 48) // 48 correspond to 0 in ASCII table
       return true;
@@ -1047,8 +1046,8 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
   if (BLEdata.containsKey("servicedata")) {
     Log.trace(F("Checking BLE service data validity" CR));
     const char* service_data = (const char*)(BLEdata["servicedata"] | "");
-    if (valid_service_data(service_data)) {
-      int service_len = strlen(service_data);
+    int service_len = strlen(service_data);
+    if (valid_service_data(service_data, service_len)) {
       Log.trace(F("Searching BLE device data %s size %d" CR), service_data, strlen(service_data));
       Log.trace(F("Is it a mi flora ?" CR));
       if (strstr(service_data, "209800") != NULL) {
@@ -1059,7 +1058,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(2, BLEdata);
       }
       Log.trace(F("Is it a vegtrug ?" CR));
-      if (strstr(service_data, "20bc03") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "20bc03") != NULL) {
         Log.trace(F("vegtrug data reading" CR));
         BLEdata.set("model", "VEGTRUG");
         if (device->sensorModel == -1)
@@ -1067,7 +1066,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(2, BLEdata);
       }
       Log.trace(F("Is it a LYWSDCGQ?" CR));
-      if (strstr(service_data, "20aa01") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "20aa01") != NULL) {
         Log.trace(F("LYWSDCGQ data reading" CR));
         BLEdata.set("model", "LYWSDCGQ");
         if (device->sensorModel == -1)
@@ -1075,7 +1074,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(0, BLEdata);
       }
       Log.trace(F("Is it a JQJCY01YM?" CR));
-      if (strstr(service_data, "20df02") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "20df02") != NULL) {
         Log.trace(F("JQJCY01YM data reading" CR));
         BLEdata.set("model", "JQJCY01YM");
         if (device->sensorModel == -1)
@@ -1083,7 +1082,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(0, BLEdata);
       }
       Log.trace(F("Is it a LYWSD02?" CR));
-      if (strstr(service_data, "205b04") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "205b04") != NULL) {
         Log.trace(F("LYWSD02 data reading" CR));
         BLEdata.set("model", "LYWSD02");
         if (device->sensorModel == -1)
@@ -1099,7 +1098,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_milamp(BLEdata);
       }
       Log.trace(F("Is it a CGP1W?" CR));
-      if ((strncmp(service_data, "0809", 4) == 0) && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strncmp(service_data, "0809", 4) == 0) {
         Log.trace(F("CGP1W data reading" CR));
         BLEdata.set("model", "CGP1W");
         if (device->sensorModel == -1)
@@ -1109,7 +1108,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGG1" CR));
       // One type of the advertising packet format started with 50204703 or 50304703, where 4703 is a type of a sensor
       // Another type of the advertising packet started with 0807 or 8816
-      if ((strncmp(&service_data[2], "4703", 4) == 0 && strlen(service_data) > ServicedataMinLength) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
+      if ((service_len > ServicedataMinLength && strncmp(&service_data[2], "4703", 4) == 0) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
         Log.trace(F("CGG1 data reading" CR));
         BLEdata.set("model", "CGG1");
         if (device->sensorModel == -1)
@@ -1117,7 +1116,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return strncmp(&service_data[2], "4703", 4) == 0 ? process_sensors(0, BLEdata) : process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a CGD1?" CR));
-      if (((strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL) && (strlen(service_data) > ServicedataMinLength)) || (strstr(service_data, "080cd0") != NULL && (strlen(service_data) > ServicedataMinLength - 6))) {
+      if ((service_len > ServicedataMinLength && (strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL)) || (service_len > ServicedataMinLength - 6 && strstr(service_data, "080cd0") != NULL)) {
         Log.trace(F("CGD1 data reading" CR));
         BLEdata.set("model", "CGD1");
         if (device->sensorModel == -1)
@@ -1125,7 +1124,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a CGDK2?" CR));
-      if (strncmp(&service_data[0], "8810", 4) == 0 && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strncmp(&service_data[0], "8810", 4) == 0) {
         Log.trace(F("CGDK2 data reading" CR));
         BLEdata.set("model", "CGDK2");
         if (device->sensorModel == -1)
