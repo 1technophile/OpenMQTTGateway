@@ -168,7 +168,6 @@ unsigned long timer_led_measures = 0;
 #  include <ArduinoOTA.h>
 #  include <FS.h>
 #  include <SPIFFS.h>
-#  include <esp_wifi.h>
 
 #  ifdef ESP32_ETHERNET
 #    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
@@ -510,9 +509,6 @@ void connectMQTT() {
     delay(1000);
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(4000);
-#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
-    disconnection_handling(failure_number_mqtt);
-#endif
   }
 }
 
@@ -568,7 +564,6 @@ void setup() {
 #    else
   setup_wifimanager(false);
 #    endif
-  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
 #  endif
@@ -750,64 +745,6 @@ bool wifi_reconnect_bypass() {
   }
 }
 
-// the 2 methods below are used to recover wifi connection by changing the protocols
-void forceWifiProtocol() {
-#  ifdef ESP32
-  Log.warning(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
-  esp_wifi_set_protocol(WIFI_IF_STA, wifiProtocol);
-#  elif ESP8266
-  Log.warning(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
-  WiFi.setPhyMode((WiFiPhyMode_t)wifiProtocol);
-#  endif
-}
-
-void reinit_wifi() {
-  delay(10);
-  WiFi.mode(WIFI_STA);
-  if (wifiProtocol) forceWifiProtocol();
-  WiFi.begin();
-}
-
-void disconnection_handling(int failure_number) {
-  Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
-  if ((failure_number > maxConnectionRetry) && !connectedOnce) {
-#  ifndef ESPWifiManualSetup
-    Log.error(F("Failed connecting 1st time to mqtt, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
-#  endif
-  }
-  if (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) {
-    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
-    reinit_wifi();
-  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B))) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
-  {
-#  ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
-#  elif ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11G;
-#  endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
-    reinit_wifi();
-  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG))) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
-  {
-#  ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B;
-#  elif ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11B;
-#  endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
-    reinit_wifi();
-  } else if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG)) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
-  {
-#  ifdef ESP32
-    wifiProtocol = 0;
-#  elif ESP8266
-    wifiProtocol = 0;
-#  endif
-    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
-    reinit_wifi();
-  }
-}
-
 void setOTA() {
   // Port defaults to 8266
   ArduinoOTA.setPort(ota_port);
@@ -879,7 +816,6 @@ void setup_wifi() {
   char manual_wifi_password[] = wifi_password;
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (wifiProtocol) forceWifiProtocol();
 
   // We start by connecting to a WiFi network
   Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
@@ -900,7 +836,6 @@ void setup_wifi() {
     delay(500);
     Log.trace(F("." CR));
     failure_number_ntwk++;
-    disconnection_handling(failure_number_ntwk);
 #  if defined(ESP32) && defined(ZgatewayBT)
     if (failure_number_ntwk > maxConnectionRetryWifi)
       lowPowerESP32();
@@ -969,7 +904,6 @@ void setup_wifimanager(bool reset_settings) {
 #  endif
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (wifiProtocol) forceWifiProtocol();
 
   if (reset_settings)
     eraseAndRestart();
@@ -1370,9 +1304,8 @@ void loop() {
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(5000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
+    WiFi.reconnect();
     Log.warning(F("wifi" CR));
-    failure_number_ntwk++;
-    disconnection_handling(failure_number_ntwk);
 #else
     Log.warning(F("ethernet" CR));
 #endif
@@ -1411,7 +1344,6 @@ void stateMeasures() {
   SYSdata["ip"] = ip2CharArray(WiFi.localIP());
   String mac = WiFi.macAddress();
   SYSdata["mac"] = (char*)mac.c_str();
-  SYSdata["wifiprt"] = (int)wifiProtocol;
 #    endif
 #  endif
 #  ifdef ZgatewayBT
