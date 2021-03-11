@@ -57,7 +57,7 @@ StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray& modules = modulesBuffer.createArray();
 
 // Modules config inclusion
-#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy)
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
@@ -721,6 +721,10 @@ void setup() {
 #ifdef ZsensorSHTC3
   setupSHTC3();
 #endif
+#ifdef ZgatewayRTL_433
+  setupRTL_433();
+  modules.add(ZgatewayRTL_433);
+#endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
 }
@@ -1353,6 +1357,9 @@ void loop() {
 #ifdef ZactuatorPWM
       PWMLoop();
 #endif
+#ifdef ZgatewayRTL_433
+      RTL_433Loop();
+#endif
     } else {
       connectMQTT();
     }
@@ -1388,6 +1395,9 @@ void stateMeasures() {
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
+#    ifdef ESP32
+  SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
+#    endif
 #    ifdef ESP32_ETHERNET
   SYSdata["mac"] = (char*)ETH.macAddress().c_str();
   SYSdata["ip"] = ip2CharArray(ETH.localIP());
@@ -1433,6 +1443,14 @@ void stateMeasures() {
   SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
+#  endif
+#  ifdef ZradioCC1101
+  SYSdata["mhz"] = (int)receiveMhz;
+#  endif
+#  if defined(ZgatewayRTL_433)
+  SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+  SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+  SYSdata["RTLCnt"] = (int)getRTLMessageCount();
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
@@ -1511,6 +1529,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     logJson(jsondata);
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
+#endif
+#ifdef ZgatewayRTL_433 // ZgatewayRTL_433 is only defined with json publishing due to its numerous parameters
+    MQTTtoRTL_433(topicOri, jsondata);
 #endif
 #ifdef jsonReceiving
 #  ifdef ZgatewayLORA
@@ -1609,6 +1630,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  ifndef ESPWifiManualSetup
         setup_wifimanager(true);
 #  endif
+      } else if (strstr(cmd, statusCmd) != NULL) { //erase and restart
+        stateMeasures();
       }
     }
 #endif

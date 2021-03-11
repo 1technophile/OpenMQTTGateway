@@ -47,6 +47,20 @@ extern void PilighttoMQTT();
 extern void MQTTtoPilight(char* topicOri, char* datacallback);
 extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #endif
+#ifdef ZgatewayRTL_433
+extern void RTL_433Loop();
+extern void setupRTL_433();
+extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata);
+extern void enableRTLreceive();
+extern void disableRTLreceive();
+extern int getRTLMinimumRSSI();
+extern int getRTLCurrentRSSI();
+extern int getRTLMessageCount();
+/**
+ * minimumRssi minimum RSSI value to enable receiver
+ */
+int minimumRssi = 0;
+#endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTtoRF    "/commands/MQTTto433"
@@ -79,6 +93,11 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #define subjectPilighttoMQTT    "/PilighttoMQTT"
 #define subjectGTWPilighttoMQTT "/PilighttoMQTT"
 #define repeatPilightwMQTT      false // do we repeat a received signal by using mqtt with Pilight gateway
+
+/*-------------------RTL_433 topics & parameters----------------------*/
+//433Mhz RTL_433 MQTT Subjects and keys
+#define subjectMQTTtoRTL_433 "/commands/MQTTtoRTL_433"
+#define subjectRTL_433toMQTT "/RTL_433toMQTT"
 
 /*-------------------CC1101 frequency----------------------*/
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
