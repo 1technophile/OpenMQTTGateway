@@ -1261,7 +1261,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, 
 #    ifdef IR_MILESTAG2
   if (strcmp(protocol_name, "MILESTAG2") == 0) {
     Log.notice(F("Sending IR signal with %s" CR), protocol_name);
-      if (valueRPT == repeatIRwNumber)
+    if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kMilesMinRepeat);
     if (valueBITS == 0)
       valueBITS = kMilesTag2ShotBits;
