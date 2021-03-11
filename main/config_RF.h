@@ -48,14 +48,14 @@ extern void MQTTtoPilight(char* topicOri, char* datacallback);
 extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #endif
 #ifdef ZgatewayRTL_433
-extern void rtl_433loop();
-extern void rtl_433setup();
+extern void RTL_433Loop();
+extern void setupRTL_433();
 extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata);
 extern void enableRTLreceive();
 extern void disableRTLreceive();
-extern int getMinimumRSSI();
-extern int getCurrentRSSI();
-extern int getMessageCount();
+extern int getRTLMinimumRSSI();
+extern int getRTLCurrentRSSI();
+extern int getRTLMessageCount();
 /**
  * minimumRssi minimum RSSI value to enable receiver
  */

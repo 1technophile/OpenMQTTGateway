@@ -33,7 +33,6 @@
 #  include <rtl_433_ESP.h>
 
 #  define CC1101_FREQUENCY 433.92
-#  define JSON_MSG_BUFFER  512
 #  define ONBOARD_LED      2
 
 char messageBuffer[JSON_MSG_BUFFER];
@@ -52,7 +51,7 @@ void rtl_433_Callback(char* message) {
 #  endif
 }
 
-void rtl_433setup() {
+void setupRTL_433() {
   rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
   rtl_433.setCallback(rtl_433_Callback, messageBuffer, JSON_MSG_BUFFER);
   Log.notice(F("ZgatewayRTL_433 command topic: %s%s" CR), mqtt_topic, subjectMQTTtoRTL_433);
@@ -60,14 +59,14 @@ void rtl_433setup() {
   Log.trace(F("ZgatewayRTL_433 setup done " CR));
 }
 
-void rtl_433loop() {
+void RTL_433Loop() {
   rtl_433.loop();
 }
 
 extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRTL_433)) {
     Log.trace(F("MQTTtoRTL_433 %s" CR), topicOri);
-    float tempMhz = RTLdata["mhz"];
+    float tempMhz = RTLdata["mhz"] | 0;
     int minimumRssi = RTLdata["rssi"] | 0;
     int debug = RTLdata["debug"] | -1;
     int status = RTLdata["status"] | -1;
@@ -93,22 +92,12 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRTL_433 Fail json" CR));
     }
-    // enableActiveReceiver();
   }
 }
 
 extern void enableRTLreceive() {
   Log.trace(F("enableRTLreceive: %F" CR), receiveMhz);
-#  ifdef ZgatewayRF
-  disableRFReceive();
-#  endif
-#  ifdef ZgatewayPilight
-  disablePilightReceive();
-#  endif
-
-#  ifdef ZradioCC1101
   ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
-#  endif
   rtl_433.enableReceiver(RF_RECEIVER_GPIO);
   // rtl_433.initReceiver(RF_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
@@ -120,15 +109,15 @@ extern void disableRTLreceive() {
   rtl_433.disableReceiver();
 }
 
-extern int getMinimumRSSI() {
+extern int getRTLMinimumRSSI() {
   return rtl_433.minimumRssi;
 }
 
-extern int getCurrentRSSI() {
+extern int getRTLCurrentRSSI() {
   return rtl_433.currentRssi;
 }
 
-extern int getMessageCount() {
+extern int getRTLMessageCount() {
   return rtl_433.messageCount;
 }
 

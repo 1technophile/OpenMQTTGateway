@@ -161,8 +161,6 @@ int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ZmqttDiscovery
 bool disc = true; // Auto discovery with Home Assistant convention
-#else
-bool disc = false; // Auto discovery with Home Assistant convention
 #endif
 unsigned long timer_led_measures = 0;
 
@@ -724,7 +722,7 @@ void setup() {
   setupSHTC3();
 #endif
 #ifdef ZgatewayRTL_433
-  rtl_433setup();
+  setupRTL_433();
   modules.add(ZgatewayRTL_433);
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
@@ -1360,7 +1358,7 @@ void loop() {
       PWMLoop();
 #endif
 #ifdef ZgatewayRTL_433
-      rtl_433loop();
+      RTL_433Loop();
 #endif
     } else {
       connectMQTT();
@@ -1450,9 +1448,9 @@ void stateMeasures() {
   SYSdata["mhz"] = (int)receiveMhz;
 #  endif
 #  if defined(ZgatewayRTL_433)
-  SYSdata["minimumRssi"] = (int)getMinimumRSSI();
-  SYSdata["currentRssi"] = (int)getCurrentRSSI();
-  SYSdata["messageCount"] = (int)getMessageCount();
+  SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+  SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+  SYSdata["RTLCnt"] = (int)getRTLMessageCount();
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
