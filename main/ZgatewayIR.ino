@@ -1185,6 +1185,99 @@ bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, 
     return true;
   }
 #    endif
+#    ifdef IR_VOLTAS
+  if (strcmp(protocol_name, "VOLTAS") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kVoltasStateLength;
+    irsend.sendVoltas(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_METZ
+  if (strcmp(protocol_name, "METZ") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kMetzMinRepeat);
+    if (valueBITS == 0)
+      valueBITS = kMetzBits;
+    irsend.sendMetz(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_TRANSCOLD
+  if (strcmp(protocol_name, "TRANSCOLD") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kTranscoldDefaultRepeat);
+    if (valueBITS == 0)
+      valueBITS = kTranscoldBits;
+    irsend.sendTranscold(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_TECHNIBEL_AC
+  if (strcmp(protocol_name, "TECHNIBELAC") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kTechnibelAcDefaultRepeat);
+    if (valueBITS == 0)
+      valueBITS = kTechnibelAcBits;
+    irsend.sendTechnibelAc(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_MIRAGE
+  if (strcmp(protocol_name, "MIRAGE") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kMirageMinRepeat);
+    if (valueBITS == 0)
+      valueBITS = kMirageStateLength;
+    irsend.sendMirage(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_ELITESCREENS
+  if (strcmp(protocol_name, "ELITESCREENS") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kEliteScreensDefaultRepeat);
+    if (valueBITS == 0)
+      valueBITS = kEliteScreensBits;
+    irsend.sendElitescreens(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_PANASONIC_AC32
+  if (strcmp(protocol_name, "PANASONIC_AC32") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kPioneerBits;
+    irsend.sendPanasonicAC32(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_MILESTAG2
+  if (strcmp(protocol_name, "MILESTAG2") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueRPT == repeatIRwNumber)
+      valueRPT = std::max(valueRPT, kMilesMinRepeat);
+    if (valueBITS == 0)
+      valueBITS = kMilesTag2ShotBits;
+    irsend.sendMilestag2(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_ECOCLIM
+  if (strcmp(protocol_name, "ECOCLIM") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kEcoclimBits;
+    irsend.sendEcoclim(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
   Log.warning(F("Unknown IR protocol" CR));
   return false;
 #  endif
