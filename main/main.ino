@@ -837,7 +837,7 @@ void setup_wifi() {
     Log.trace(F("." CR));
     failure_number_ntwk++;
 #  if defined(ESP32) && defined(ZgatewayBT)
-    if (failure_number_ntwk > maxConnectionRetryWifi)
+    if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
       lowPowerESP32();
 #  endif
   }
@@ -1304,7 +1304,9 @@ void loop() {
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(5000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
+#  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
     WiFi.reconnect();
+#  endif
     Log.warning(F("wifi" CR));
 #else
     Log.warning(F("ethernet" CR));
