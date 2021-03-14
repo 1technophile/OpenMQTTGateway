@@ -1358,6 +1358,7 @@ void stateMeasures() {
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;
+  SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();

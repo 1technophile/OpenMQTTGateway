@@ -90,8 +90,6 @@ static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
 
-unsigned int scanCount = 0;
-
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi) {
     String mac_address = data["id"].as<const char*>();
