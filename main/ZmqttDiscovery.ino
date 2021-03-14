@@ -709,6 +709,14 @@ void pubMqttDiscovery() {
                   "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible,is a gateway entity, command topic
                   "", "", "", "", true // device name, device manufacturer, device model, device mac, retain
   );
+  createDiscovery("switch", //set Type
+                  "", "BT: Connect to devices", (char*)getUniqueId("bleconnect", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "", //set availability_topic,device_class,value_template,
+                  "{\"bleconnect\":true}", "{\"bleconnect\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", true // device name, device manufacturer, device model, device mac, retain
+  );
 #    endif
 #  endif
 }

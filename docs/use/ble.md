@@ -93,6 +93,12 @@ Once the forced scan has completed, the previous scan interval value will be res
 
 The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
 
+If you want to scan continuously for BLE devices, for example for beacon location you can set the interval to 1ms:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":1}'`
+
+In this case you should deactivate the BLE connection mechanism to avoid concurrency between scan and connections (see chapter below, bleconnect).
+
 ::: tip
 For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
 :::
@@ -105,7 +111,7 @@ If you want to change the number of BLE scans that are done before a BLE connect
 
 The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
 
-## Setting if the gateway publish all the BLE devices scanned or only the detected sensors
+## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors
 
 If you want to change this characteristic:
 
@@ -116,6 +122,16 @@ With Home Assistant, this command is directly avalaible through MQTT auto discov
 :::
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
+
+## Setting if the gateway connects to BLE devices eligibles on ESP32
+
+If you want to change this characteristic:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"bleconnect":false}'`
+
+::: tip
+With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+:::
 
 ## Setting the minimum RSSI accepted to publish device data
 

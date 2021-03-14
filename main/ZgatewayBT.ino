@@ -744,7 +744,7 @@ void coreTask(void* pvParameters) {
       } else if (!ProcessLock) {
         BLEscan();
         // Launching a connect every BLEscanBeforeConnect
-        if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
+        if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
           BLEconnect();
         dumpDevices();
       }
@@ -1462,7 +1462,8 @@ void BTforceScan() {
     BTtoMQTT();
     Log.trace(F("Scan done" CR));
 #  ifdef ESP32
-    BLEconnect();
+    if (bleConnect)
+      BLEconnect();
 #  endif
   } else {
     Log.trace(F("Cannot launch scan due to other process running" CR));
@@ -1519,6 +1520,15 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       publishOnlySensors = (bool)BTdata["onlysensors"];
       Log.notice(F("New value onlysensors: %T" CR), publishOnlySensors);
     }
+#  ifdef ESP32
+    // Attempts to connect to elligible devices or not
+    if (BTdata.containsKey("bleconnect")) {
+      Log.trace(F("Do we initiate a connection to retrieve data" CR));
+      Log.trace(F("Previous value: %T" CR), bleConnect);
+      bleConnect = (bool)BTdata["bleconnect"];
+      Log.notice(F("New value bleConnect: %T" CR), bleConnect);
+    }
+#  endif
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
       // storing Min RSSI for further use if needed
