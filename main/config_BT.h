@@ -78,6 +78,7 @@ bool bleConnect = AttemptBLECOnnect;
 
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
+unsigned long scanCount = 0;
 bool publishOnlySensors = PublishOnlySensors;
 
 #ifndef pubKnownBLEServiceData
