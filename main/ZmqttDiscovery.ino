@@ -174,7 +174,7 @@ void pubMqttDiscovery() {
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Uptime", (char*)getUniqueId("uptime", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
-                  "", "", "m", //set,payload_on,payload_off,unit_of_meas,
+                  "", "", "min", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false // device name, device manufacturer, device model, device mac, retain
