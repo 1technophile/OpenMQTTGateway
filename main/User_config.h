@@ -343,15 +343,15 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define valueAsASubject true
 
 #if defined(ESP8266) || defined(ESP32)
-#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    768 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoull
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoul
 #else // boards with smaller memory
-#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher
 #  define SIGNAL_SIZE_UL_ULL uint32_t
 #  define STRTO_UL_ULL       strtoul
 #endif
