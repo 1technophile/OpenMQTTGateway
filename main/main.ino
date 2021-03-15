@@ -57,7 +57,7 @@ StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray& modules = modulesBuffer.createArray();
 
 // Modules config inclusion
-#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy)
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
@@ -168,7 +168,6 @@ unsigned long timer_led_measures = 0;
 #  include <ArduinoOTA.h>
 #  include <FS.h>
 #  include <SPIFFS.h>
-#  include <esp_wifi.h>
 
 #  ifdef ESP32_ETHERNET
 #    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
@@ -510,9 +509,6 @@ void connectMQTT() {
     delay(1000);
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(4000);
-#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
-    disconnection_handling(failure_number_mqtt);
-#endif
   }
 }
 
@@ -568,7 +564,6 @@ void setup() {
 #    else
   setup_wifimanager(false);
 #    endif
-  Log.trace(F("OpenMQTTGateway Wifi protocol used: %d" CR), wifiProtocol);
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
 #  endif
@@ -721,6 +716,10 @@ void setup() {
 #ifdef ZsensorSHTC3
   setupSHTC3();
 #endif
+#ifdef ZgatewayRTL_433
+  setupRTL_433();
+  modules.add(ZgatewayRTL_433);
+#endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
 }
@@ -743,64 +742,6 @@ bool wifi_reconnect_bypass() {
     return true;
   } else {
     return false;
-  }
-}
-
-// the 2 methods below are used to recover wifi connection by changing the protocols
-void forceWifiProtocol() {
-#  ifdef ESP32
-  Log.warning(F("ESP32: Forcing to wifi %d" CR), wifiProtocol);
-  esp_wifi_set_protocol(WIFI_IF_STA, wifiProtocol);
-#  elif ESP8266
-  Log.warning(F("ESP8266: Forcing to wifi %d" CR), wifiProtocol);
-  WiFi.setPhyMode((WiFiPhyMode_t)wifiProtocol);
-#  endif
-}
-
-void reinit_wifi() {
-  delay(10);
-  WiFi.mode(WIFI_STA);
-  if (wifiProtocol) forceWifiProtocol();
-  WiFi.begin();
-}
-
-void disconnection_handling(int failure_number) {
-  Log.warning(F("disconnection_handling, failed %d times" CR), failure_number);
-  if ((failure_number > maxConnectionRetry) && !connectedOnce) {
-#  ifndef ESPWifiManualSetup
-    Log.error(F("Failed connecting 1st time to mqtt, you should put TRIGGER_GPIO to LOW or erase the flash" CR));
-#  endif
-  }
-  if (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) {
-    Log.warning(F("Attempt to reinit wifi: %d" CR), wifiProtocol);
-    reinit_wifi();
-  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_BG)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B))) // After maxConnectionRetry + ATTEMPTS_BEFORE_BG try to connect with BG protocol
-  {
-#  ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G;
-#  elif ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11G;
-#  endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11G: %d" CR), wifiProtocol);
-    reinit_wifi();
-  } else if ((failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B)) && (failure_number <= (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG))) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
-  {
-#  ifdef ESP32
-    wifiProtocol = WIFI_PROTOCOL_11B;
-#  elif ESP8266
-    wifiProtocol = WIFI_PHY_MODE_11B;
-#  endif
-    Log.warning(F("Wifi Protocol changed to WIFI_11B: %d" CR), wifiProtocol);
-    reinit_wifi();
-  } else if (failure_number > (maxConnectionRetry + ATTEMPTS_BEFORE_B + ATTEMPTS_BEFORE_BG)) // After maxConnectionRetry + ATTEMPTS_BEFORE_B try to connect with B protocol
-  {
-#  ifdef ESP32
-    wifiProtocol = 0;
-#  elif ESP8266
-    wifiProtocol = 0;
-#  endif
-    Log.warning(F("Wifi Protocol reverted to normal mode: %d" CR), wifiProtocol);
-    reinit_wifi();
   }
 }
 
@@ -875,11 +816,10 @@ void setup_wifi() {
   char manual_wifi_password[] = wifi_password;
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (wifiProtocol) forceWifiProtocol();
 
   // We start by connecting to a WiFi network
   Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
-#  ifdef ESPWifiAdvancedSetup
+#  ifdef NetworkAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
   IPAddress subnet_adress(subnet);
@@ -896,9 +836,8 @@ void setup_wifi() {
     delay(500);
     Log.trace(F("." CR));
     failure_number_ntwk++;
-    disconnection_handling(failure_number_ntwk);
 #  if defined(ESP32) && defined(ZgatewayBT)
-    if (failure_number_ntwk > maxConnectionRetryWifi)
+    if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
       lowPowerESP32();
 #  endif
   }
@@ -965,7 +904,6 @@ void setup_wifimanager(bool reset_settings) {
 #  endif
   delay(10);
   WiFi.mode(WIFI_STA);
-  if (wifiProtocol) forceWifiProtocol();
 
   if (reset_settings)
     eraseAndRestart();
@@ -1250,13 +1188,7 @@ void loop() {
 #ifdef ZmqttDiscovery
       if (disc) {
         if (!connectedOnce) {
-#  if defined(ZgatewayBT) && defined(ESP32)
-          stopProcessing(); // Avoid publication concurrency issues on ESP32 BLE
-#  endif
           pubMqttDiscovery(); // at first connection we publish the discovery payloads
-#  if defined(ZgatewayBT) && defined(ESP32)
-          startProcessing();
-#  endif
         }
       }
 #endif
@@ -1325,9 +1257,15 @@ void loop() {
       PilighttoMQTT();
 #endif
 #ifdef ZgatewayBT
+#  ifdef ZmqttDiscovery
+      if (disc)
+        launchBTDiscovery();
+#  endif
 #  ifndef ESP32
       if (BTtoMQTT())
         Log.trace(F("BTtoMQTT OK" CR));
+#  else
+      emptyBTQueue();
 #  endif
 #endif
 #ifdef ZgatewaySRFB
@@ -1353,6 +1291,9 @@ void loop() {
 #ifdef ZactuatorPWM
       PWMLoop();
 #endif
+#ifdef ZgatewayRTL_433
+      RTL_433Loop();
+#endif
     } else {
       connectMQTT();
     }
@@ -1363,9 +1304,10 @@ void loop() {
     digitalWrite(LED_INFO, !LED_INFO_ON);
     delay(5000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
+#  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
+    WiFi.reconnect();
+#  endif
     Log.warning(F("wifi" CR));
-    failure_number_ntwk++;
-    disconnection_handling(failure_number_ntwk);
 #else
     Log.warning(F("ethernet" CR));
 #endif
@@ -1380,14 +1322,17 @@ void loop() {
 void stateMeasures() {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& SYSdata = jsonBuffer.createObject();
-  unsigned long uptime = millis() / 1000;
+  unsigned long uptime = millis() / 60000; //minutes uptime
   SYSdata["uptime"] = uptime;
   SYSdata["version"] = OMG_VERSION;
-  Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime);
+  Log.trace(F("retrieving value of system characteristics Uptime (min):%u" CR), uptime);
 #  if defined(ESP8266) || defined(ESP32)
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
+#    ifdef ESP32
+  SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
+#    endif
 #    ifdef ESP32_ETHERNET
   SYSdata["mac"] = (char*)ETH.macAddress().c_str();
   SYSdata["ip"] = ip2CharArray(ETH.localIP());
@@ -1401,15 +1346,19 @@ void stateMeasures() {
   SYSdata["ip"] = ip2CharArray(WiFi.localIP());
   String mac = WiFi.macAddress();
   SYSdata["mac"] = (char*)mac.c_str();
-  SYSdata["wifiprt"] = (int)wifiProtocol;
 #    endif
 #  endif
 #  ifdef ZgatewayBT
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
+  SYSdata["btqblck"] = btQueueBlocked;
+  SYSdata["btqsum"] = btQueueLengthSum;
+  SYSdata["btqsnd"] = btQueueLengthCount;
+  SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
   SYSdata["interval"] = BLEinterval;
   SYSdata["scanbcnct"] = BLEscanBeforeConnect;
+  SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
@@ -1429,6 +1378,14 @@ void stateMeasures() {
   SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
+#  endif
+#  ifdef ZradioCC1101
+  SYSdata["mhz"] = (int)receiveMhz;
+#  endif
+#  if defined(ZgatewayRTL_433)
+  SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+  SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+  SYSdata["RTLCnt"] = (int)getRTLMessageCount();
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);
@@ -1507,6 +1464,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     logJson(jsondata);
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
+#endif
+#ifdef ZgatewayRTL_433 // ZgatewayRTL_433 is only defined with json publishing due to its numerous parameters
+    MQTTtoRTL_433(topicOri, jsondata);
 #endif
 #ifdef jsonReceiving
 #  ifdef ZgatewayLORA
@@ -1605,6 +1565,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  ifndef ESPWifiManualSetup
         setup_wifimanager(true);
 #  endif
+      } else if (strstr(cmd, statusCmd) != NULL) { //erase and restart
+        stateMeasures();
       }
     }
 #endif

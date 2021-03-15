@@ -21,7 +21,7 @@ The gateway device will be available into Configuration->Devices section of Home
 ![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ## Manual integration examples
-From @123, @finity, @denniz03, @jrockstad
+From @123, @finity, @denniz03, @jrockstad, @anarchking
 
 ### Door sensor
 ```yaml
@@ -162,4 +162,16 @@ sensor:
           {{- (WEIGHT/(HEIGHT*HEIGHT))|float|round(1) -}}
         icon_template: >
           {{ 'mdi:human' }}
+```
+
+### MQTT Room Presence
+
+```yaml
+sensor:
+  - platform: mqtt_room
+    device_id: XX:XX:XX:XX:XX:XX   #Mac Address of device wanting to track
+    name: you_are_in    # home assistant will show a sensor named (you are in) with its value being the name you gave the gateway
+    state_topic: "home/home_presence"
+    #timeout:
+    #away_timeout:
 ```

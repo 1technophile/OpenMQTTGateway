@@ -62,8 +62,8 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters for arduino boards, not uncommented you can set the IP and mac only
-#ifdef NetworkAdvancedSetup // for arduino boards advanced config
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and mac only
+#ifdef NetworkAdvancedSetup
 #  if defined(ESP8266) || defined(ESP32)
 const byte ip[] = {192, 168, 1, 99}; //ip adress of the gateway, already defined for arduino below
 #  endif
@@ -183,21 +183,6 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 #    define DEFAULT_LOW_POWER_MODE 0
 #  endif
 int lowpowermode = DEFAULT_LOW_POWER_MODE;
-#endif
-
-// WIFI mode, uncomment to force a wifi mode, if not uncommented the ESP will connect without a mode forced
-// if there is a reconnection issue it will try to connect with G mode and if not working with B mode
-#ifdef ESP32
-#  include "esp_wifi.h"
-uint8_t wifiProtocol = 0; // default mode, automatic selection
-    //uint8_t wifiProtocol = WIFI_PROTOCOL_11B;
-    //uint8_t wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // can't have only one https://github.com/espressif/esp-idf/issues/702
-    //uint8_t wifiProtocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N; // can't have only one https://github.com/espressif/esp-idf/issues/702
-#elif ESP8266
-uint8_t wifiProtocol = 0; // default mode, automatic selection
-    //uint8_t wifiProtocol = WIFI_PHY_MODE_11B;
-    //uint8_t wifiProtocol = WIFI_PHY_MODE_11G;
-    //uint8_t wifiProtocol = WIFI_PHY_MODE_11N;
 #endif
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
@@ -352,6 +337,7 @@ uint8_t wifiProtocol = 0; // default mode, automatic selection
 // key used for launching commands to the gateway
 #define restartCmd "restart"
 #define eraseCmd   "erase"
+#define statusCmd  "status"
 
 // uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true

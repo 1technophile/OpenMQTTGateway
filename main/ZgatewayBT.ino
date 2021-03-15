@@ -44,6 +44,7 @@ FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createO
 #    include <esp_bt.h>
 #    include <esp_bt_main.h>
 #    include <esp_wifi.h>
+#    include <stdatomic.h>
 
 #    include "soc/timer_group_reg.h"
 #    include "soc/timer_group_struct.h"
@@ -81,18 +82,109 @@ struct decompose {
   bool reverse;
 };
 
-vector<BLEdevice> devices;
+vector<BLEdevice*> devices;
+int newDevices = 0;
 
 static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, UNKNOWN_MODEL};
 static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
 
-unsigned int scanCount = 0;
+void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
+  if (abs((int)data["rssi"] | 0) < minRssi) {
+    String mac_address = data["id"].as<const char*>();
+    mac_address.replace(":", "");
+    String mactopic = subjectBTtoMQTT + String("/") + mac_address;
+    pub((char*)mactopic.c_str(), data);
+  }
+  if (haPresenceEnabled && data.containsKey("distance")) {
+    data.remove("servicedatauuid");
+    data.remove("servicedata");
+    String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
+    pub_custom_topic((char*)topic.c_str(), data, false);
+  }
+}
+
+class JsonBundle {
+public:
+  StaticJsonBuffer<JSON_MSG_BUFFER> buffer;
+  JsonObject* object;
+  bool haPresence;
+
+  JsonObject& createObject(const char* json = NULL, bool haPresenceEnabled = true) {
+    buffer.clear();
+    haPresence = haPresenceEnabled;
+    object = &(json == NULL ? buffer.createObject() : buffer.parseObject(json));
+    return *object;
+  }
+};
+
+void PublishDeviceData(JsonObject& BLEdata, bool processBLEData = true);
 
 #  ifdef ESP32
 static TaskHandle_t xCoreTaskHandle;
+
+atomic_int forceBTScan;
+
+JsonBundle jsonBTBufferQueue[BTQueueSize];
+atomic_int jsonBTBufferQueueNext, jsonBTBufferQueueLast;
+int btQueueBlocked = 0;
+int btQueueLengthSum = 0;
+int btQueueLengthCount = 0;
+
+JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true) {
+  int next, last;
+  for (bool blocked = false;;) {
+    next = atomic_load_explicit(&jsonBTBufferQueueNext, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    if ((2 * BTQueueSize + last - next) % (2 * BTQueueSize) != BTQueueSize) break;
+    if (!blocked) {
+      blocked = true;
+      btQueueBlocked++;
+    }
+    delay(1);
+  }
+  return jsonBTBufferQueue[last % BTQueueSize].createObject(json, haPresenceEnabled);
+}
+
+// should run from the BT core
+void pubBT(JsonObject& data) {
+  int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst);
+  atomic_store_explicit(&jsonBTBufferQueueLast, (last + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+}
+
+// should run from the main core
+void emptyBTQueue() {
+  for (bool first = true;;) {
+    int next = atomic_load_explicit(&jsonBTBufferQueueNext, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    if (last == next) break;
+    if (first) {
+      int diff = (2 * BTQueueSize + last - next) % (2 * BTQueueSize);
+      btQueueLengthSum += diff;
+      btQueueLengthCount++;
+      first = false;
+    }
+    JsonBundle& bundle = jsonBTBufferQueue[next % BTQueueSize];
+    pubBTMainCore(*bundle.object, bundle.haPresence);
+    atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+  }
+}
+
+#  else
+
+JsonBundle jsonBTBuffer;
+
+JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true) {
+  return jsonBTBuffer.createObject();
+}
+
+void pubBT(JsonObject& data) {
+  pubBTMainCore(data);
+}
+
 #  endif
+
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
@@ -101,9 +193,9 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 BLEdevice* getDeviceByMac(const char* mac) {
   Log.trace(F("getDeviceByMac %s" CR), mac);
 
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
-    if ((strcmp(p->macAdr, mac) == 0)) {
-      return &(*p);
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+    if ((strcmp((*it)->macAdr, mac) == 0)) {
+      return *it;
     }
   }
   return &NO_DEVICE_FOUND;
@@ -141,7 +233,8 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     if (model != UNKNOWN_MODEL) device->sensorModel = model;
-    devices.push_back(*device);
+    devices.push_back(device);
+    newDevices++;
   } else {
     Log.trace(F("update %s" CR), mac);
 
@@ -170,7 +263,8 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 #  define isDiscovered(device) device->isDisc
 
 void dumpDevices() {
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+    BLEdevice* p = *it;
     Log.trace(F("macAdr %s" CR), p->macAdr);
     Log.trace(F("isDisc %d" CR), p->isDisc);
     Log.trace(F("isWhtL %d" CR), p->isWhtL);
@@ -267,16 +361,27 @@ void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {
 }
 
 void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {
-#    define CLEARGRASSCGD1parametersCount 3
+#    define CLEARGRASSCGD1parametersCount 2
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
   char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGD1-batt", mac, "battery", jsonBatt, "", "", "V"},
       {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
   createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount, "CLEARGRASSCGD1", "ClearGrass", sensorModel);
+}
+
+void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGDK2parametersCount 2
+  Log.trace(F("CLEARGRASSCGDK2Discovery" CR));
+  char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][8] = {
+      {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "CLEARGRASSCGDK2-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
 }
 
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {
@@ -409,10 +514,18 @@ void INodeEMDiscovery(char* mac, char* sensorModel) {}
 static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+  std::string convertServiceData(std::string deviceServiceData) {
+    int serviceDataLength = (int)deviceServiceData.length();
+    char spr[2 * serviceDataLength + 1];
+    for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
+    spr[2 * serviceDataLength] = 0;
+    Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
+    return spr;
+  }
+
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
     Log.trace(F("Creating BLE buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& BLEdata = jsonBuffer.createObject();
+    JsonObject& BLEdata = getBTJsonObject();
     String mac_adress = advertisedDevice->getAddress().toString().c_str();
     mac_adress.toUpperCase();
     BLEdata.set("id", (char*)mac_adress.c_str());
@@ -441,28 +554,47 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         int serviceDataCount = advertisedDevice->getServiceDataCount();
         Log.trace(F("Get services data number: %d" CR), serviceDataCount);
         for (int j = 0; j < serviceDataCount; j++) {
-          std::string serviceData = advertisedDevice->getServiceData(j);
-          int serviceDataLength = serviceData.length();
-          String returnedString = "";
-          for (int i = 0; i < serviceDataLength; i++) {
-            int a = serviceData[i];
-            if (a < 16) {
-              returnedString += F("0");
-            }
-            returnedString += String(a, HEX);
-          }
-          char service_data[returnedString.length() + 1];
-          returnedString.toCharArray(service_data, returnedString.length() + 1);
-          service_data[returnedString.length()] = '\0';
-          Log.trace(F("Service data: %s" CR), service_data);
-          BLEdata.set("servicedata", service_data);
+          std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+          Log.trace(F("Service data: %s" CR), service_data.c_str());
+          BLEdata.set("servicedata", (char*)service_data.c_str());
           std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
-          PublishDeviceData(BLEdata);
+          process_bledata(BLEdata); // this will force to resolve all the service data
+        }
+
+        if (serviceDataCount > 1) {
+          BLEdata.remove("servicedata");
+          BLEdata.remove("servicedatauuid");
+
+          int msglen = BLEdata.measureLength() + 1;
+          char jsonmsg[msglen];
+          char jsonmsgb[msglen];
+          BLEdata.printTo(jsonmsgb, sizeof(jsonmsgb));
+          for (int j = 0; j < serviceDataCount; j++) {
+            strcpy(jsonmsg, jsonmsgb); // the parse _destroys_ the message buffer
+            JsonObject& BLEdataLocal = getBTJsonObject(jsonmsg, j == 0); // note, that first time we will get here the BLEdata itself; haPresence for the first msg
+            if (!BLEdataLocal.containsKey("id")) { // would crash without id
+              Log.trace("Json parsing error for %s" CR, jsonmsgb);
+              break;
+            }
+            std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+            std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
+
+            int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
+            int size1 = jsonBTBufferQueue[last].buffer.size();
+            BLEdataLocal.set("servicedata", (char*)service_data.c_str());
+            int size2 = jsonBTBufferQueue[last].buffer.size();
+            BLEdataLocal.set("servicedatauuid", (char*)serviceDatauuid.c_str());
+            int size3 = jsonBTBufferQueue[last].buffer.size();
+            Log.trace("Buffersize for %d : %d -> %d -> %d" CR, j, size1, size2, size3);
+            PublishDeviceData(BLEdataLocal);
+          }
+        } else {
+          PublishDeviceData(BLEdata, false); // easy case
         }
       } else {
-        PublishDeviceData(BLEdata); // publish device even if there is no service data
+        PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
       }
     } else {
       Log.trace(F("Filtered mac device" CR));
@@ -502,11 +634,11 @@ void notifyCB(
 
     if (length == 5) {
       Log.trace(F("Device identified creating BLE buffer" CR));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& BLEdata = jsonBuffer.createObject();
+      JsonObject& BLEdata = getBTJsonObject();
       String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
       mac_adress.toUpperCase();
-      for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+        BLEdevice* p = *it;
         if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
           if (p->sensorModel == LYWSD03MMC)
             BLEdata.set("model", "LYWSD03MMC");
@@ -522,9 +654,7 @@ void notifyCB(
       BLEdata.set("volt", (float)(((pData[4] * 256) + pData[3]) / 1000.0));
       BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
 
-      mac_adress.replace(":", "");
-      String mactopic = subjectBTtoMQTT + String("/") + mac_adress;
-      pub((char*)mactopic.c_str(), BLEdata);
+      pubBT(BLEdata);
     } else {
       Log.notice(F("Device not identified" CR));
     }
@@ -540,7 +670,8 @@ void notifyCB(
 void BLEconnect() {
   Log.notice(F("BLE Connect begin" CR));
   BLEDevice::init("");
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+    BLEdevice* p = *it;
     if (p->sensorModel == LYWSD03MMC || p->sensorModel == MHO_C401) {
       Log.trace(F("Model to connect found" CR));
       NimBLEClient* pClient;
@@ -587,6 +718,7 @@ void BLEconnect() {
 void stopProcessing() {
   Log.notice(F("Stop BLE processing" CR));
   ProcessLock = true;
+  delay(Scan_duration < 2000 ? Scan_duration : 2000);
 }
 
 void startProcessing() {
@@ -600,26 +732,30 @@ void coreTask(void* pvParameters) {
     Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
     if (!ProcessLock) {
       int n = 0;
-      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout) {
+      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !ProcessLock) {
         n++;
         Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
         delay(1000);
       }
       if (client.state() != 0) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
-      } else {
+      } else if (!ProcessLock) {
         BLEscan();
         // Launching a connect every BLEscanBeforeConnect
-        if (!(scanCount % BLEscanBeforeConnect) || scanCount == 1)
+        if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
           BLEconnect();
-        if (disc)
-          launchDiscovery();
         dumpDevices();
       }
       if (lowpowermode) {
         lowPowerESP32();
+        int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
+        if (scan == 1) BTforceScan();
       } else {
-        delay(BLEinterval);
+        for (int interval = BLEinterval, waitms; interval > 0; interval -= waitms) {
+          int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst);
+          if (scan == 1) BTforceScan(); // should we break after this?
+          delay(waitms = interval > 100 ? 100 : interval); // 100ms
+        }
       }
     } else {
       Log.trace(F("BLE core task canceled by processLock" CR));
@@ -679,6 +815,10 @@ void setupBT() {
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
+
+  atomic_init(&forceBTScan, 0); // in theory, we don't need this
+  atomic_init(&jsonBTBufferQueueNext, 0); // in theory, we don't need this
+  atomic_init(&jsonBTBufferQueueLast, 0); // in theory, we don't need this
 
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
@@ -789,8 +929,7 @@ bool BTtoMQTT() {
           restData = token.substring(d[5].start, (d[5].start + restDataLength));
 
         Log.trace(F("Creating BLE buffer" CR));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-        JsonObject& BLEdata = jsonBuffer.createObject();
+        JsonObject& BLEdata = getBTJsonObject();
 
         Log.trace(F("Id %s" CR), (char*)mac.c_str());
         BLEdata.set("id", (char*)mac.c_str());
@@ -823,8 +962,7 @@ void RemoveJsonPropertyIf(JsonObject& obj, char* key, bool condition) {
   }
 }
 
-boolean valid_service_data(const char* data) {
-  int size = strlen(data);
+boolean valid_service_data(const char* data, int size) {
   for (int i = 0; i < size; ++i) {
     if (data[i] != 48) // 48 correspond to 0 in ASCII table
       return true;
@@ -832,8 +970,22 @@ boolean valid_service_data(const char* data) {
   return false;
 }
 
-void launchDiscovery() {
-  for (vector<BLEdevice>::iterator p = devices.begin(); p != devices.end(); ++p) {
+// This function always should be called from the main core as it generates direct mqtt messages
+void launchBTDiscovery() {
+  if (newDevices == 0)
+    return;
+#  ifdef ESP32
+  if (!semaphoreCreateOrUpdateDevice.take(1000, "launchBTDiscovery"))
+    return;
+  newDevices = 0;
+  vector<BLEdevice*> localDevices = devices;
+  semaphoreCreateOrUpdateDevice.give();
+  for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
+#  else
+  newDevices = 0;
+  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+#  endif
+    BLEdevice* p = *it;
     if (p->sensorModel != UNKNOWN_MODEL && !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
@@ -846,36 +998,41 @@ void launchDiscovery() {
       if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery((char*)macWOdots.c_str(), "CGG1");
       if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
       if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
+      if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery((char*)macWOdots.c_str(), "CGDK2");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), "XMTZC0xHM");
       if (p->sensorModel == INKBIRD) InkBirdDiscovery((char*)macWOdots.c_str(), "INKBIRD");
-      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), "LYWSD03MMC");
+      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery((char*)macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery((char*)macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery((char*)macWOdots.c_str(), "INODE_EM");
-      createOrUpdateDevice(p->macAdr, device_flags_isDisc, p->sensorModel);
+      p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
-      Log.trace(F("Device already discovered or UNKNOWN_MODEL" CR));
+      if (!isDiscovered(p)) {
+        Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
+        p->isDisc = true;
+      } else {
+        Log.trace(F("Device already discovered %s" CR), p->macAdr);
+      }
     }
   }
 }
 
-void PublishDeviceData(JsonObject& BLEdata) {
+void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
-    JsonObject& BLEdataOut = process_bledata(BLEdata);
-    if (!publishOnlySensors || BLEdataOut.containsKey("model")) {
+    if (processBLEData) process_bledata(BLEdata);
+    if (!publishOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
 #  if !pubBLEServiceUUID
-      RemoveJsonPropertyIf(BLEdataOut, "servicedatauuid", BLEdataOut.containsKey("servicedatauuid"));
+      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("servicedatauuid"));
 #  endif
 #  if !pubKnownBLEServiceData
-      RemoveJsonPropertyIf(BLEdataOut, "servicedata", BLEdataOut.containsKey("model") && BLEdataOut.containsKey("servicedata"));
+      RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
 #  endif
-      String mactopic = BLEdataOut["id"].as<const char*>();
-      mactopic.replace(":", "");
-      mactopic = subjectBTtoMQTT + String("/") + mactopic;
-      pub((char*)mactopic.c_str(), BLEdataOut);
+      pubBT(BLEdata);
     }
+  } else if (BLEdata.containsKey("distance")) {
+    pubBT(BLEdata);
   } else {
     Log.trace(F("Low rssi, device filtered" CR));
   }
@@ -887,7 +1044,8 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
   if (BLEdata.containsKey("servicedata")) {
     Log.trace(F("Checking BLE service data validity" CR));
     const char* service_data = (const char*)(BLEdata["servicedata"] | "");
-    if (valid_service_data(service_data)) {
+    int service_len = strlen(service_data);
+    if (valid_service_data(service_data, service_len)) {
       Log.trace(F("Searching BLE device data %s size %d" CR), service_data, strlen(service_data));
       Log.trace(F("Is it a mi flora ?" CR));
       if (strstr(service_data, "209800") != NULL) {
@@ -898,7 +1056,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(2, BLEdata);
       }
       Log.trace(F("Is it a vegtrug ?" CR));
-      if (strstr(service_data, "20bc03") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "20bc03") != NULL) {
         Log.trace(F("vegtrug data reading" CR));
         BLEdata.set("model", "VEGTRUG");
         if (device->sensorModel == -1)
@@ -906,7 +1064,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(2, BLEdata);
       }
       Log.trace(F("Is it a LYWSDCGQ?" CR));
-      if (strstr(service_data, "20aa01") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "20aa01") != NULL) {
         Log.trace(F("LYWSDCGQ data reading" CR));
         BLEdata.set("model", "LYWSDCGQ");
         if (device->sensorModel == -1)
@@ -914,7 +1072,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(0, BLEdata);
       }
       Log.trace(F("Is it a JQJCY01YM?" CR));
-      if (strstr(service_data, "20df02") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "20df02") != NULL) {
         Log.trace(F("JQJCY01YM data reading" CR));
         BLEdata.set("model", "JQJCY01YM");
         if (device->sensorModel == -1)
@@ -922,7 +1080,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_sensors(0, BLEdata);
       }
       Log.trace(F("Is it a LYWSD02?" CR));
-      if (strstr(service_data, "205b04") != NULL && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strstr(service_data, "205b04") != NULL) {
         Log.trace(F("LYWSD02 data reading" CR));
         BLEdata.set("model", "LYWSD02");
         if (device->sensorModel == -1)
@@ -938,7 +1096,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return process_milamp(BLEdata);
       }
       Log.trace(F("Is it a CGP1W?" CR));
-      if ((strncmp(service_data, "0809", 4) == 0) && strlen(service_data) > ServicedataMinLength) {
+      if (service_len > ServicedataMinLength && strncmp(service_data, "0809", 4) == 0) {
         Log.trace(F("CGP1W data reading" CR));
         BLEdata.set("model", "CGP1W");
         if (device->sensorModel == -1)
@@ -948,7 +1106,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGG1" CR));
       // One type of the advertising packet format started with 50204703 or 50304703, where 4703 is a type of a sensor
       // Another type of the advertising packet started with 0807 or 8816
-      if ((strncmp(&service_data[2], "4703", 4) == 0 && strlen(service_data) > ServicedataMinLength) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
+      if ((service_len > ServicedataMinLength && strncmp(&service_data[2], "4703", 4) == 0) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
         Log.trace(F("CGG1 data reading" CR));
         BLEdata.set("model", "CGG1");
         if (device->sensorModel == -1)
@@ -956,11 +1114,19 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         return strncmp(&service_data[2], "4703", 4) == 0 ? process_sensors(0, BLEdata) : process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a CGD1?" CR));
-      if (((strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL) && (strlen(service_data) > ServicedataMinLength)) || (strstr(service_data, "080cd0") != NULL && (strlen(service_data) > ServicedataMinLength - 6))) {
+      if ((service_len > ServicedataMinLength && (strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL)) || (service_len > ServicedataMinLength - 6 && strstr(service_data, "080cd0") != NULL)) {
         Log.trace(F("CGD1 data reading" CR));
         BLEdata.set("model", "CGD1");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGD1);
+        return process_cleargrass(BLEdata, false);
+      }
+      Log.trace(F("Is it a CGDK2?" CR));
+      if (service_len > ServicedataMinLength && strncmp(&service_data[0], "8810", 4) == 0) {
+        Log.trace(F("CGDK2 data reading" CR));
+        BLEdata.set("model", "CGDK2");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGDK2);
         return process_cleargrass(BLEdata, false);
       }
       Log.trace(F("Is it a MHO_C401?" CR));
@@ -975,7 +1141,15 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
       }
-      Log.trace(F("Is it a custom LYWSD03MMC" CR));
+      Log.trace(F("Is it a custom (pvvx) LYWSD03MMC?" CR));
+      if (service_len >= 30 && strncmp(service_data + 6, "38c1a4", 6) == 0) {
+        Log.trace(F("LYWSD03MMC PVVX" CR));
+        BLEdata.set("model", "LYWSD03MMC_PVVX");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC_PVVX);
+        return process_pvvx(BLEdata);
+      }
+      Log.trace(F("Is it a custom (atc1441) LYWSD03MMC?" CR));
       if (strstr(service_data, "a4c138") != NULL) {
         Log.trace(F("LYWSD03MMC ATC" CR));
         BLEdata.set("model", "LYWSD03MMC_ATC");
@@ -1082,7 +1256,6 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
       BLEdata.set("for", (double)value / 100);
       break;
     case '4':
-      BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       break;
@@ -1104,7 +1277,6 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
     case 'd':
       // temperature
       value = (double)value_from_hex_data(servicedata, 28 + offset, 4, true);
-      BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
       BLEdata.set("tempc", (double)value / 10);
       BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
       // humidity
@@ -1121,10 +1293,20 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
 JsonObject& process_scale_v1(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  double weight = (double)value_from_hex_data(servicedata, 2, 4, true) / 200;
-
-  //Set Json value
-  BLEdata.set("weight", (double)weight);
+  if (servicedata[0] == '2') { // stabilized
+    double weight = 0;
+    if (servicedata[1] == '2') { //kg
+      weight = (double)value_from_hex_data(servicedata, 2, 4, true) / 200;
+      BLEdata.set("unit", "kg");
+    } else if (servicedata[1] == '3') { //lbs
+      weight = (double)value_from_hex_data(servicedata, 2, 4, true) / 100;
+      BLEdata.set("unit", "lbs");
+    } else { //unknown unit
+      BLEdata.set("unit", "unknown");
+    }
+    //Set Json value
+    BLEdata.set("weight", (double)weight);
+  }
 
   return BLEdata;
 }
@@ -1150,7 +1332,6 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
   double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
-  BLEdata.set("tem", (double)temperature); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
   BLEdata.set("hum", (double)humidity);
@@ -1188,7 +1369,6 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
   double value = 9999;
   // temperature
   value = (double)value_from_hex_data(servicedata, 20, 4, true);
-  BLEdata.set("tem", (double)value / 10); // remove for 0.9.6 release
   BLEdata.set("tempc", (double)value / 10);
   BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
   // humidity
@@ -1210,6 +1390,24 @@ JsonObject& process_atc(JsonObject& BLEdata) {
   double humidity = (double)value_from_hex_data(servicedata, 16, 2, false);
   double battery = (double)value_from_hex_data(servicedata, 18, 2, false);
   double voltage = (double)value_from_hex_data(servicedata, 20, 4, false) / 1000;
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("batt", (double)battery);
+  BLEdata.set("volt", (double)voltage);
+
+  return BLEdata;
+}
+
+JsonObject& process_pvvx(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+
+  double temperature = (double)value_from_hex_data(servicedata, 12, 4, true) / 100;
+  double humidity = (double)value_from_hex_data(servicedata, 16, 4, true) / 100;
+  double battery = (double)value_from_hex_data(servicedata, 24, 2, false);
+  double voltage = (double)value_from_hex_data(servicedata, 20, 4, true) / 1000;
 
   //Set Json values
   BLEdata.set("tempc", (double)temperature);
@@ -1254,10 +1452,21 @@ void haRoomPresence(JsonObject& HomePresence) {
   }
   HomePresence["distance"] = distance;
   Log.trace(F("Ble distance %D" CR), distance);
-  String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
-  pub_custom_topic((char*)topic.c_str(), HomePresence, false);
 }
 #  endif
+
+void BTforceScan() {
+  if (!ProcessLock) {
+    BTtoMQTT();
+    Log.trace(F("Scan done" CR));
+#  ifdef ESP32
+    if (bleConnect)
+      BLEconnect();
+#  endif
+  } else {
+    Log.trace(F("Cannot launch scan due to other process running" CR));
+  }
+}
 
 void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoBTset)) {
@@ -1268,28 +1477,31 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     WorBupdated |= updateWorB(BTdata, true);
     WorBupdated |= updateWorB(BTdata, false);
 
-    if (WorBupdated)
+    if (WorBupdated) {
+#  ifdef ESP32
+      if (!semaphoreCreateOrUpdateDevice.take(1000, "dumpDevices")) {
+        dumpDevices();
+        semaphoreCreateOrUpdateDevice.give();
+      }
+#  else
       dumpDevices();
+#  endif
+    }
 
     // Scan interval set
     if (BTdata.containsKey("interval")) {
       Log.trace(F("BLE interval setup" CR));
-      // storing BLE interval for further use if needed
-      unsigned int prevBLEinterval = BLEinterval;
-      Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
-      BLEinterval = (unsigned int)BTdata["interval"];
-      Log.notice(F("New interval: %d ms" CR), BLEinterval);
-      if (BLEinterval == 0) {
-        if (!ProcessLock) {
-          BTtoMQTT();
-          Log.trace(F("Scan done" CR));
+      unsigned int interval = BTdata["interval"];
+      if (interval == 0) {
 #  ifdef ESP32
-          BLEconnect();
+        atomic_store_explicit(&forceBTScan, 1, ::memory_order_seq_cst); // ask the other core to do the scan for us
+#  else
+        BTforceScan();
 #  endif
-          BLEinterval = prevBLEinterval; // as 0 was just used as a command we recover previous scan duration
-        } else {
-          Log.trace(F("Cannot launch scan due to other process running" CR));
-        }
+      } else {
+        Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
+        BLEinterval = interval;
+        Log.notice(F("New interval: %d ms" CR), BLEinterval);
       }
     }
     // Number of scan before a connect set
@@ -1306,6 +1518,15 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       publishOnlySensors = (bool)BTdata["onlysensors"];
       Log.notice(F("New value onlysensors: %T" CR), publishOnlySensors);
     }
+#  ifdef ESP32
+    // Attempts to connect to elligible devices or not
+    if (BTdata.containsKey("bleconnect")) {
+      Log.trace(F("Do we initiate a connection to retrieve data" CR));
+      Log.trace(F("Previous value: %T" CR), bleConnect);
+      bleConnect = (bool)BTdata["bleconnect"];
+      Log.notice(F("New value bleConnect: %T" CR), bleConnect);
+    }
+#  endif
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
       // storing Min RSSI for further use if needed

@@ -29,6 +29,18 @@
 extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
+extern void emptyBTQueue();
+extern void launchBTDiscovery();
+
+#ifdef ESP32
+extern int btQueueBlocked;
+extern int btQueueLengthSum;
+extern int btQueueLengthCount;
+#  ifndef AttemptBLECOnnect
+#    define AttemptBLECOnnect true //do we by default attempt a BLE connection to sensors with ESP32
+#  endif
+bool bleConnect = AttemptBLECOnnect;
+#endif
 
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
@@ -48,6 +60,10 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
 #endif
 
+#ifndef BTQueueSize
+#  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
+#endif
+
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
 
@@ -62,6 +78,7 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
+unsigned long scanCount = 0;
 bool publishOnlySensors = PublishOnlySensors;
 
 #ifndef pubKnownBLEServiceData
@@ -103,7 +120,9 @@ enum ble_sensor_model {
   LYWSD03MMC,
   MHO_C401,
   LYWSD03MMC_ATC,
-  INODE_EM
+  INODE_EM,
+  CGDK2,
+  LYWSD03MMC_PVVX,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/

@@ -137,7 +137,7 @@ void createDiscovery(char* sensor_type,
     deviceid[12] = '\0';
     StaticJsonBuffer<JSON_MSG_BUFFER> jsonDeviceBuffer;
     JsonObject& device = jsonDeviceBuffer.createObject();
-    if (device_mac != "") {
+    if (device_mac[0] != 0) {
       JsonArray& connections = device.createNestedArray("connections");
       JsonArray& connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
@@ -174,7 +174,7 @@ void pubMqttDiscovery() {
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Uptime", (char*)getUniqueId("uptime", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
-                  "", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  "", "", "min", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false // device name, device manufacturer, device model, device mac, retain
@@ -551,7 +551,7 @@ void pubMqttDiscovery() {
 #  ifdef ZgatewayRF2
   // Sensor to display RF received value
   Log.trace(F("gatewayRF2Discovery" CR));
-  char* gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", jsonVal, "", "", ""};
+  char* gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", jsonAddress, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySensor" CR));
@@ -707,6 +707,14 @@ void pubMqttDiscovery() {
                   "{\"lowpowermode\":2}", "{\"lowpowermode\":0}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
                   "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible,is a gateway entity, command topic
+                  "", "", "", "", true // device name, device manufacturer, device model, device mac, retain
+  );
+  createDiscovery("switch", //set Type
+                  "", "BT: Connect to devices", (char*)getUniqueId("bleconnect", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "", //set availability_topic,device_class,value_template,
+                  "{\"bleconnect\":true}", "{\"bleconnect\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", true // device name, device manufacturer, device model, device mac, retain
   );
 #    endif
