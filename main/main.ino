@@ -1322,10 +1322,10 @@ void loop() {
 void stateMeasures() {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& SYSdata = jsonBuffer.createObject();
-  unsigned long uptime = millis() / 1000;
+  unsigned long uptime = millis() / 60000; //minutes uptime
   SYSdata["uptime"] = uptime;
   SYSdata["version"] = OMG_VERSION;
-  Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime);
+  Log.trace(F("retrieving value of system characteristics Uptime (min):%u" CR), uptime);
 #  if defined(ESP8266) || defined(ESP32)
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
