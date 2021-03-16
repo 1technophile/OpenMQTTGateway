@@ -384,6 +384,17 @@ void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
   createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
 }
 
+void CLEARGRASSCGH1Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGH1parametersCount 1
+  Log.trace(F("CLEARGRASSCGH1Discovery" CR));
+  char* CLEARGRASSCGH1sensor[CLEARGRASSCGH1parametersCount][8] = {
+      {"binary_sensor", "CLEARGRASSCGH1-open", mac, "door", jsonOpen, "True", "False", ""},
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGH1sensor, CLEARGRASSCGH1parametersCount, "CLEARGRASSCGH1", "ClearGrass", sensorModel);
+}
+
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSTRHKPAparametersCount 3
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
@@ -999,6 +1010,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
       if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
       if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery((char*)macWOdots.c_str(), "CGDK2");
+      if (p->sensorModel == CGH1) CLEARGRASSCGH1Discovery((char*)macWOdots.c_str(), "CGH1");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
@@ -1128,6 +1140,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGDK2);
         return process_cleargrass(BLEdata, false);
+      }
+      Log.trace(F("Is it a CGH1?" CR));
+      if (service_len > ServicedataMinLength && (strncmp(&service_data[0], "c804", 4) == 0 || strncmp(&service_data[0], "8804", 4) == 0 || strncmp(&service_data[0], "0804", 4) == 0 || strncmp(&service_data[0], "4804", 4) == 0)) {
+        Log.trace(F("CGH1 data reading" CR));
+        BLEdata.set("model", "CGH1");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGH1);
+        return process_cgh1(BLEdata);
       }
       Log.trace(F("Is it a MHO_C401?" CR));
       if (strstr(service_data, "588703") != NULL) {
@@ -1379,6 +1399,23 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
     value = (double)value_from_hex_data(servicedata, 32, 4, true);
     BLEdata.set("pres", (double)value / 100);
   }
+
+  return BLEdata;
+}
+
+JsonObject& process_cgh1(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+  int value = -1;
+  if (strncmp(&servicedata[0], "0804", 4) == 0 || strncmp(&servicedata[0], "8804", 4) == 0) { // state
+    value = value_from_hex_data(servicedata, 33, 1, false);
+  } else if (strncmp(&servicedata[0], "4804", 4) == 0 || strncmp(&servicedata[0], "c804", 4) == 0) { // action
+    value = value_from_hex_data(servicedata, 21, 1, false);
+  }
+
+  if (value == 0)
+    BLEdata.set("open", true);
+  if (value == 1)
+    BLEdata.set("open", false);
 
   return BLEdata;
 }

@@ -74,7 +74,7 @@ bool bleConnect = AttemptBLECOnnect;
 #define CRLR_Length        4
 #define BLE_CNCT_TIMEOUT   3000
 
-#define ServicedataMinLength 29
+#define ServicedataMinLength 27
 
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
@@ -123,6 +123,7 @@ enum ble_sensor_model {
   INODE_EM,
   CGDK2,
   LYWSD03MMC_PVVX,
+  CGH1,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/

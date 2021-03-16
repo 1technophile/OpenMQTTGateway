@@ -30,6 +30,7 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | Qingping |CGDK2|temperature/humidity|
+| Qingping |CGH1|open|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
