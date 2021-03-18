@@ -622,10 +622,12 @@ void BLEscan() {
   TIMERG0.wdt_wprotect = 0;
   Log.notice(F("Scan begin" CR));
   BLEDevice::init("");
-  BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+  BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+  pBLEScan->setActiveScan(ActiveBLEScan);
+  pBLEScan->setInterval(BLEScanInterval);
+  pBLEScan->setWindow(BLEScanWindow);
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
