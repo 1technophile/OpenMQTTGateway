@@ -1318,12 +1318,26 @@ void loop() {
 #endif
 }
 
+/** 
+ * Calculate uptime and take into account the millis() rollover
+ */
+unsigned long uptime() {
+  static unsigned long lastUptime = 0;
+  static unsigned long uptimeAdd = 0;
+  unsigned long uptime = millis() / 1000 + uptimeAdd;
+  if (uptime < lastUptime) {
+    uptime += 4294967;
+    uptimeAdd += 4294967;
+  }
+  lastUptime = uptime;
+  return uptime;
+}
+
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& SYSdata = jsonBuffer.createObject();
-  unsigned long uptime = millis() / 60000; //minutes uptime
-  SYSdata["uptime"] = uptime;
+  SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
   Log.trace(F("retrieving value of system characteristics Uptime (min):%u" CR), uptime);
 #  if defined(ESP8266) || defined(ESP32)
