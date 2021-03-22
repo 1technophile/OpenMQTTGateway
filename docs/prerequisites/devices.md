@@ -29,6 +29,8 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | ClearGrass |CGG1|temperature/humidity/battery|
+| Qingping |CGDK2|temperature/humidity|
+| Qingping |CGH1|open|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
@@ -39,9 +41,9 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
-::: INFO
-(1) Not supported with HM10.
-(2) See https://github.com/atc1441/ATC_MiThermometer
+::: tip
+- (1) Not supported with HM10.
+- (2) See https://github.com/atc1441/ATC_MiThermometer
 :::
 
 ![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')

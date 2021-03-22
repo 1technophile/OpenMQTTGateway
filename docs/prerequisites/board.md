@@ -36,7 +36,7 @@ The boards below need hardware [parts](parts.md) and electronic/hardware compete
 |ESP32|X|X|X|X|not tested|X|X|
 |ESP8266|X|X|X|not tested|X|X|X|
 
-::: INFO
+::: tip
 Pilight is only supported on ESP, Arduino UNO handle only 32bits values in our context.
 Setup based on HM10 doesn't support some BLE [devices](devices.md#for-ble-devices).
 :::
