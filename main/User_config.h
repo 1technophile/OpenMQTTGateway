@@ -342,8 +342,12 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 // uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
-#if defined(ESP8266) || defined(ESP32)
-#  define JSON_MSG_BUFFER    768 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#if defined(ESP32)
+#  define JSON_MSG_BUFFER    768
+#  define SIGNAL_SIZE_UL_ULL uint64_t
+#  define STRTO_UL_ULL       strtoull
+#elif defined(ESP8266)
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoull
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
