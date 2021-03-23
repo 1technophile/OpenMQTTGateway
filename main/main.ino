@@ -1339,7 +1339,7 @@ void stateMeasures() {
   JsonObject& SYSdata = jsonBuffer.createObject();
   SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
-  Log.trace(F("retrieving value of system characteristics Uptime (min):%u" CR), uptime);
+  Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime());
 #  if defined(ESP8266) || defined(ESP32)
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
