@@ -48,7 +48,16 @@ bool bleConnect = AttemptBLECOnnect;
 #define MinimumRSSI        -100 //default minimum rssi value, all the devices below -90 will not be reported
 
 #ifndef Scan_duration
-#  define Scan_duration 10000 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
+#  define Scan_duration 10000 //define the time for a scan
+#endif
+#ifndef BLEScanInterval
+#  define BLEScanInterval 52 // How often the scan occurs / switches channels; in milliseconds,
+#endif
+#ifndef BLEScanWindow
+#  define BLEScanWindow 30 // How long to scan during the interval; in milliseconds.
+#endif
+#ifndef ActiveBLEScan
+#  define ActiveBLEScan true // Set active scanning, this will get more data from the advertiser.
 #endif
 #ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
