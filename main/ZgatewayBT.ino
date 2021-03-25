@@ -617,9 +617,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
  * BLEscan used to retrieve BLE advertized data from devices without connection
  */
 void BLEscan() {
-  TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
-  TIMERG0.wdt_feed = 1;
-  TIMERG0.wdt_wprotect = 0;
+  disableCore0WDT();
   Log.notice(F("Scan begin" CR));
   BLEDevice::init("");
   BLEScan* pBLEScan = BLEDevice::getScan();
@@ -632,6 +630,7 @@ void BLEscan() {
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
   BLEDevice::deinit(true);
+  enableCore0WDT();
 }
 
 /** 
