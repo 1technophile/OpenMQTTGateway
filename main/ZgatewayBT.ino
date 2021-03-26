@@ -755,12 +755,10 @@ void startProcessing() {
 
 void coreTask(void* pvParameters) {
   while (true) {
-    Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
     if (!ProcessLock) {
       int n = 0;
       while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !ProcessLock) {
         n++;
-        Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
         delay(1000);
       }
       if (client.state() != 0) {
