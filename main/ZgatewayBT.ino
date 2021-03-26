@@ -384,6 +384,18 @@ void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
   createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
 }
 
+void CLEARGRASSCGPR1Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGPR1parametersCount 2
+  Log.trace(F("CLEARGRASSCGPR1Discovery" CR));
+  char* CLEARGRASSCGPR1sensor[CLEARGRASSCGPR1parametersCount][8] = {
+      {"sensor", "CLEARGRASSCGPR1-pres", mac, "", jsonPres, "", "", ""},
+      {"sensor", "CLEARGRASSCGPR1-lux", mac, "illuminance", jsonLux, "", "", "lx"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGPR1sensor, CLEARGRASSCGPR1parametersCount, "CLEARGRASSCGPR1", "ClearGrass", sensorModel);
+}
+
 void CLEARGRASSCGH1Discovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSCGH1parametersCount 1
   Log.trace(F("CLEARGRASSCGH1Discovery" CR));
@@ -504,6 +516,8 @@ void FormalDiscovery(char* mac, char* sensorModel) {}
 void LYWSD02Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {}
 void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGPR1Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {}
 void MiScaleDiscovery(char* mac, char* sensorModel) {}
 void MiLampDiscovery(char* mac, char* sensorModel) {}
@@ -1011,6 +1025,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
       if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
       if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery((char*)macWOdots.c_str(), "CGDK2");
+      if (p->sensorModel == CGPR1) CLEARGRASSCGPR1Discovery((char*)macWOdots.c_str(), "CGPR1");
       if (p->sensorModel == CGH1) CLEARGRASSCGH1Discovery((char*)macWOdots.c_str(), "CGH1");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
@@ -1141,6 +1156,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGDK2);
         return process_cleargrass(BLEdata, false);
+      }
+      Log.trace(F("Is it a CGPR1?" CR));
+      if (service_len > ServicedataMinLength && strncmp(&service_data[0], "4812", 4) == 0 || strncmp(&service_data[0], "0812", 4) == 0) {
+        Log.trace(F("CGPR1 data reading" CR));
+        BLEdata.set("model", "CGPR1");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGPR1);
+        return process_cgpr1(BLEdata);
       }
       Log.trace(F("Is it a CGH1?" CR));
       if (service_len > ServicedataMinLength && (strncmp(&service_data[0], "c804", 4) == 0 || strncmp(&service_data[0], "8804", 4) == 0 || strncmp(&service_data[0], "0804", 4) == 0 || strncmp(&service_data[0], "4804", 4) == 0)) {
@@ -1399,6 +1422,24 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
     // air pressure
     value = (double)value_from_hex_data(servicedata, 32, 4, true);
     BLEdata.set("pres", (double)value / 100);
+  }
+
+  return BLEdata;
+}
+
+JsonObject& process_cgpr1(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+  int value = -1;
+  if (strncmp(&servicedata[0], "0812", 4) == 0) { // lux
+    value = value_from_hex_data(servicedata, 33, 4, true);
+    if (value >= 0)
+      BLEdata.set("lux", value);
+  } else if (strncmp(&servicedata[0], "4812", 4) == 0) { // presence
+    value = value_from_hex_data(servicedata, 21, 1, false);
+    if (value == 0)
+      BLEdata.set("pres", false);
+    if (value == 1)
+      BLEdata.set("pres", true);
   }
 
   return BLEdata;
