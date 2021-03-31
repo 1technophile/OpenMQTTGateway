@@ -24,6 +24,7 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
 | XIAOMI Mi Jia 2 (1)|LYWSD03MMC|temperature/humidity/battery/volt|
 | XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/volt|
+| XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/volt|
 | XIAOMI MHO-C401 (1)|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
@@ -45,6 +46,7 @@ Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/
 ::: tip
 - (1) Not supported with HM10.
 - (2) See https://github.com/atc1441/ATC_MiThermometer
+- (3) See https://github.com/pvvx/ATC_MiThermometer
 :::
 
 ![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
