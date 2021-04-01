@@ -32,9 +32,6 @@
 
 #  include <rtl_433_ESP.h>
 
-#  define CC1101_FREQUENCY 433.92
-#  define ONBOARD_LED      2
-
 char messageBuffer[JSON_MSG_BUFFER];
 
 rtl_433_ESP rtl_433(-1); // use -1 to disable transmitter
