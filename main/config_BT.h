@@ -62,6 +62,9 @@ bool bleConnect = AttemptBLECOnnect;
 #ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
 #endif
+#ifndef BLEScanDuplicateCacheSize
+#  define BLEScanDuplicateCacheSize 200
+#endif
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
