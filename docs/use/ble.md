@@ -133,6 +133,13 @@ If you want to change this characteristic:
 With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
+## Setting if the gateway publish into Home Assistant Home presence topic
+
+If you want to publish to Home Assistant presence topic, you can activate this function by the HASS interface (this command is auto discovered), [here is a yaml example](../integrate/home_assistant.md#mqtt-room-presence).
+Or by an MQTT command.
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
+
 ## Setting the minimum RSSI accepted to publish device data
 
 If you want to change the minimum RSSI value accepted for a device to be published, you can change it by MQTT. For example if you want to set -80
