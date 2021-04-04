@@ -2,9 +2,11 @@
 ## Auto discovery
 Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
 
-Once done, enable discovery on your MQTT integration definition in HASS.
+First enable discovery on your MQTT integration in HASS.
 
-So as to create the MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
+![](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
+
+The gateway will need an MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
 
 ![](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
 
@@ -12,11 +14,11 @@ So as to create the MQTT username and password, you have to create a new user(re
 The max size of the username is 30 and 60 for the password.
 :::
 
-OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
+OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automaticaly.
 
-::: tip
-The gateway device will be available into Configuration->Devices section of Home Assistant.
-:::
+![](../img/OpenMQTTGateway_auto_discovery_Gateway_Home_Assistant.gif)
+
+![](../img/OpenMQTTGateway_auto_discovery_BLE_Sensor_Home_Assistant.gif)
 
 ![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 

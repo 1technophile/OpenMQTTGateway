@@ -6,11 +6,10 @@
 
 So as to erase the flash memory on ESP boards you may do a long press to TRIGGER_GPIO button or connect the pin TRIGGER_GPIO to the ground during several seconds.
 
-On M5Stack boards you may do a long press to these buttons:
+On M5Stack boards you may do a long press to these buttons in low power mode 0 (see below how to go to low power mode 0):
 * Button B on M5StickC and M5StickC Plus (GPIO 37)
 * Button C on M5Stack (GPIO 37)
 * Button lateral on M5stick (GPIO 35)
-
 
 ### Low power mode for ESP32
 OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT:
@@ -78,3 +77,4 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":2}'`
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC, M5stickC Plus and middle button of M5stack).
+If you are already in low power mode 1 or 2 with M5Stack you can wake up the board by pressing the red button.
