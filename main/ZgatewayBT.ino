@@ -98,8 +98,10 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
     pub((char*)mactopic.c_str(), data);
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
-    data.remove("servicedatauuid");
-    data.remove("servicedata");
+    if (data.containsKey("servicedatauuid"))
+      data.remove("servicedatauuid");
+    if (data.containsKey("servicedata"))
+      data.remove("servicedata");
     String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
     pub_custom_topic((char*)topic.c_str(), data, false);
   }
@@ -168,6 +170,7 @@ void emptyBTQueue() {
     JsonBundle& bundle = jsonBTBufferQueue[next % BTQueueSize];
     pubBTMainCore(*bundle.object, bundle.haPresence);
     atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    vTaskDelay(1);
   }
 }
 
@@ -570,11 +573,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
       if (advertisedDevice->haveTXPower())
         BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
-#    ifdef subjectHomePresence
-      if (advertisedDevice->haveRSSI() && !publishOnlySensors) {
-        haRoomPresence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
+      if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
+        hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
       }
-#    endif
       if (advertisedDevice->haveServiceData()) {
         int serviceDataCount = advertisedDevice->getServiceDataCount();
         Log.trace(F("Get services data number: %d" CR), serviceDataCount);
@@ -966,10 +967,8 @@ bool BTtoMQTT() {
           return false; //if we have at least one white mac and this mac is not white we go out
 
         BLEdata.set("rssi", (int)rssi);
-#    ifdef subjectHomePresence
-        if (!publishOnlySensors)
-          haRoomPresence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
-#    endif
+        if (!publishOnlySensors && hassPresence)
+          hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         Log.trace(F("Service data: %s" CR), restData.c_str());
         BLEdata.set("servicedata", restData.c_str());
         PublishDeviceData(BLEdata);
@@ -1513,8 +1512,7 @@ JsonObject& process_inode_em(JsonObject& BLEdata) {
   return BLEdata;
 }
 
-#  ifdef subjectHomePresence
-void haRoomPresence(JsonObject& HomePresence) {
+void hass_presence(JsonObject& HomePresence) {
   int BLErssi = HomePresence["rssi"];
   Log.trace(F("BLErssi %d" CR), BLErssi);
   int txPower = HomePresence["txpower"] | 0;
@@ -1531,7 +1529,6 @@ void haRoomPresence(JsonObject& HomePresence) {
   HomePresence["distance"] = distance;
   Log.trace(F("Ble distance %D" CR), distance);
 }
-#  endif
 
 void BTforceScan() {
   if (!ProcessLock) {
@@ -1604,6 +1601,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       bleConnect = (bool)BTdata["bleconnect"];
       Log.notice(F("New value bleConnect: %T" CR), bleConnect);
     }
+    if (BTdata.containsKey("lowpowermode")) {
+      changelowpowermode((int)BTdata["lowpowermode"]);
+    }
 #  endif
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
@@ -1613,11 +1613,14 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       minRssi = abs((int)BTdata["minrssi"]);
       Log.notice(F("New minrssi: %d" CR), minRssi);
     }
-#  ifdef ESP32
-    if (BTdata.containsKey("lowpowermode")) {
-      changelowpowermode((int)BTdata["lowpowermode"]);
+    // Home Assistant presence message
+    if (BTdata.containsKey("hasspresence")) {
+      // storing Min RSSI for further use if needed
+      Log.trace(F("Previous hasspresence: %T" CR), hassPresence);
+      // set Min RSSI if present if not setting default value
+      hassPresence = (bool)BTdata["hasspresence"];
+      Log.notice(F("New hasspresence: %T" CR), hassPresence);
     }
-#  endif
   }
 }
 #endif

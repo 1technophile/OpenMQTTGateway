@@ -168,6 +168,8 @@ sensor:
 
 ### MQTT Room Presence
 
+The publication into presence topic needs to be activated [here is the command](../use/ble.md)
+
 ```yaml
 sensor:
   - platform: mqtt_room
