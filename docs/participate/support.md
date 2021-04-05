@@ -1,3 +1,5 @@
+# Supporting the project
+
 If you like the project and/or used it please consider supporting it! It can be done in different ways:
 * Helping other users in the [community](https://community.openmqttgateway.com)
 * [Contribute](development) to the [code](https://github.com/1technophile/OpenMQTTGateway) or the [documentation](https://docs.openmqttgateway.com)

@@ -100,26 +100,21 @@ void setupZsensorDS1820() {
 void pubOneWire_HADiscovery() {
   // If zmqttDiscovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
 #  ifdef ZmqttDiscovery
-  Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
-  for (int index = 0; index < ds1820_count; index++) {
-    createDiscovery("sensor",
-                    (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
-                    (char*)("DS12B20_" + String(index + 1) + "_f").c_str(),
-                    (char*)(ds1820_addr[index] + "_f").c_str(),
-                    will_Topic,
-                    "temperature",
-                    jsonTempf,
-                    "", "", "F",
-                    0, "", "", true, "");
-    createDiscovery("sensor",
-                    (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
-                    (char*)("DS12B20_" + String(index + 1) + "_c").c_str(),
-                    (char*)(ds1820_addr[index] + "_c").c_str(),
-                    will_Topic,
-                    "temperature",
-                    jsonTempc,
-                    "", "", "C",
-                    0, "", "", true, "");
+  // If zmqtt discovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
+  if (disc) {
+    Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
+    for (int index = 0; index < ds1820_count; index++) {
+      createDiscovery("sensor",
+                      (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
+                      (char*)("DS12B20_" + String(index + 1) + "_c").c_str(),
+                      (char*)(ds1820_addr[index] + "_c").c_str(),
+                      will_Topic,
+                      "temperature",
+                      jsonTempc,
+                      "", "", "°C",
+                      0, "", "", true, "",
+                      "", "", "", "", false);
+    }
   }
 #  endif
 }
@@ -152,24 +147,6 @@ void MeasureDS1820Temp() {
         if (current_temp[i] == -127) {
           Log.error(F("DS1820: Device %s currently disconnected!" CR), (char*)ds1820_addr[i].c_str());
         } else if (DS1820_ALWAYS || current_temp[i] != persisted_temp[i]) {
-          // remove for 0.9.6 release -- BEGIN (Additional BREAKING CHANGE - Unit will be removed)
-          if (DS1820_FAHRENHEIT) {
-            Log.notice(F("DS1820: Temperature %s %d F" CR),
-                       (char*)ds1820_addr[i].c_str(),
-                       DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("unit", "F");
-          } else {
-            Log.notice(F("DS1820: Temperature %s %d C" CR),
-                       (char*)ds1820_addr[i].c_str(),
-                       current_temp[i]);
-            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("unit", "F");
-            DS1820data.set("temp", (float)current_temp[i]);
-            DS1820data.set("unit", "C");
-          }
-          // remove for 0.9.6 release -- END
-
           DS1820data.set("tempc", (float)DallasTemperature::toFahrenheit(current_temp[i]));
           DS1820data.set("tempf", (float)current_temp[i]);
 

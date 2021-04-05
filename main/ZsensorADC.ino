@@ -54,10 +54,32 @@ void MeasureADC() {
     } else {
       if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC) {
         Log.trace(F("Creating ADC buffer" CR));
+#  if defined(ADC_DIVIDER)
+        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(2);
+#  else
         const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
+#  endif
         StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
         JsonObject& ADCdata = jsonBuffer.createObject();
         ADCdata.set("adc", (int)val);
+#  if defined(ADC_DIVIDER)
+        float volt = 0;
+#    if defined(ESP32)
+        // Convert the analog reading (which goes from 0 - 4095) to a voltage (0 - 3.3V):
+        volt = val * (3.3 / 4096.0);
+#    elif defined(ESP8266)
+        // Convert the analog reading (which goes from 0 - 1024) to a voltage (0 - 3.3V):
+        volt = val * (3.3 / 1024.0);
+#    else
+        // Asume 5V and 10bits ADC
+        volt = val * (5.0 / 1024.0);
+#    endif
+        volt *= ADC_DIVIDER;
+        // let's give 2 decimal point
+        val = (volt * 100);
+        volt = (float)val / 100.0;
+        ADCdata.set("volt", (float)volt);
+#  endif
         pub(ADCTOPIC, ADCdata);
         persistedadc = val;
       }

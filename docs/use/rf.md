@@ -61,6 +61,20 @@ You can add a "repeat" key/value to the MQTTto433 JSON message to override the d
 Example:
 `home/OpenMQTTGateway/commands/MQTTto433 {"value":1315156,"protocol":1,"length":24,"delay":317, "repeat":10}`
 
+### Set Transmit and Receive Frequency of CC1101 Transceiver Module
+
+Default transmit frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by including the frequency in the transmit message.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board.
+
+`home/OpenMQTTGateway/commands/MQTTto433 {"value":1150,"protocol":6,"length":12,"delay":450,"repeat":8,"mhz":303.732}`
+
+Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board
+
+`home/OpenMQTTGateway/commands/MQTTto433 {"mhz":315.026}`
+
+Messages received will include the frequency, and when transmitting on a different frequency the module return to the receive frequency afterwards.  ie transmit messages on 303.732 Mhz then receive messages on 433.92 Mhz 
+
+`{"value":4534142,"protocol":6,"length":26,"delay":356,"mhz":315.026}`
+
 ## Pilight gateway
 
 ### Receiving data from RF signal
@@ -73,16 +87,31 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ![](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
 
-### Send data by MQTT to convert it on RF signal 
-**ON**
+### Send data by MQTT to transmit a RF signal
 
+#### Using a known protocol
+**ON**
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"message":"{\"systemcode\":12,\"unitcode\":22,\"on\":1}","protocol":"elro_400_switch"}'`
 
 **OFF**
-
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"message":"{\"systemcode\":12,\"unitcode\":22,\"off\":1}","protocol":"elro_400_switch"}'`
 
-Theses commands will send by RF the signals to actuate an elro_400 switch
+These commands will transmit by RF the signals to actuate an elro_400 switch.
+
+#### Using a raw signal
+You can transmit raw signal data by using the "raw" protocol. This uses the Pilight pulse train string format. One such example string, representing a transmission for Nexus protocol weather stations, looks like this: `c:03020202010102020102010101010101010202020201020102020202020101010201010202;p:500,1000,2000,4000;r:12@`. This string represents pulses and gaps directly.
+
+Each number in the list after `p:` that ends with `;` stands for **p**ulse and gap lengths in microseconds (µs). In this example, we have a list containing lengths of 500µs, 1000µs, 2000µs, and 4000µs.
+
+Each number after `c:` and ended by `;` represents a **c**ode that references the `p:` list by index. In this example, the first 4 numbers after `c:` are 0, 3, 0, and 2, which reference `p:`[0] = 500, `p:`[3] = 4000, `p:`[0] = 500, and `p:`[2] = 2000, respectively. In the language of digital radio transceiving, the most basic unit is usually a pulse and gap pair; in other words, 0s and 1s are represented by a pulse followed by a gap (lack of pulse) and the time lengths of these pulses and gaps. Different protocols have different pulse lengths and gap lengths representing 0, and a different one representing 1. Because of this pulse-gap nature, the codes in `c:` must be taken as pairs; the first number in a pair represents the length of the pulse, and the second number the subsequent gap. In this example, the first pair, 03, represents a pulse of 500µs followed by a gap of 4000µs. The next pair, 02, represents a pulse of 500µs followed by a gap of 2000µs.
+
+The number after `r:` represents how many times the message in the string is to be **r**epeated. The `r:` block is optional. The default number of repeats if `r:` is not specified is 10. Greater than about 100 repeats will cause a crash due to memory usage. If this example were written without specifying repeats, it would look like this: `{"raw":"c:03020202010102020102010101010101010202020201020102020202020101010201010202;p:500,1000,2000,4000@"}`
+
+The entire string must end in a `@`. Each block must end in a `;`, but if it is the last block in the string, the `@` replaces the `;`. Since the `r:` block is optional, this last block could be either `p:` or `r:`.
+
+The JSON for the MQTT message to `home/OpenMQTTGateway/commands/MQTTtoPilight` should specify the pulse train string as the value for the "raw" key: `{"raw":"c:03020202010102020102010101010101010202020201020102020202020101010201010202;p:500,1000,2000,4000;r:12@"}`.
+
+e.g. `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"raw":"c:03020202010102020102010101010101010202020201020102020202020101010201010202;p:500,1000,2000,4000;r:12@"}'`
 
 ## RF with SONOFF RF BRIDGE
 ### Receiving data from RF signal
@@ -155,3 +184,128 @@ Once you get the infos publish the parameters with mqtt like that for off:
 for on:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"adress":8233228,"switchType":1}"`
+
+## rtl_433 device decoders
+
+This feature is only available on a ESP32 based device with a CC1101 transceiver connected due to the resource requirements of the rtl_433 device decoders.  At the present time only Pulse Position Modulation (OOK_PPM) and Pulse Width Modulation (OOK_PWM) based decoders are available.
+
+```
+Registering protocol [1] "Silvercrest Remote Control"
+Registering protocol [2] "Rubicson Temperature Sensor"
+Registering protocol [3] "Prologue, FreeTec NC-7104, NC-7159-675 temperature sensor"
+Registering protocol [4] "Waveman Switch Transmitter"
+Registering protocol [8] "LaCrosse TX Temperature / Humidity Sensor"
+Registering protocol [11] "Acurite 609TXC Temperature and Humidity Sensor"
+Registering protocol [15] "KlikAanKlikUit Wireless Switch"
+Registering protocol [16] "AlectoV1 Weather Sensor (Alecto WS3500 WS4500 Ventus W155/W044 Oregon)"
+Registering protocol [17] "Cardin S466-TX2"
+Registering protocol [18] "Fine Offset Electronics, WH2, WH5, Telldus Temperature/Humidity/Rain Sensor"
+Registering protocol [19] "Nexus, FreeTec NC-7345, NX-3980, Solight TE82S, TFA 30.3209 temperature/humidity sensor"
+Registering protocol [21] "Calibeur RF-104 Sensor"
+Registering protocol [25] "Globaltronics GT-WT-02 Sensor"
+Registering protocol [29] "Chuango Security Technology"
+Registering protocol [30] "Generic Remote SC226x EV1527"
+Registering protocol [31] "TFA-Twin-Plus-30.3049, Conrad KW9010, Ea2 BL999"
+Registering protocol [32] "Fine Offset Electronics WH1080/WH3080 Weather Station"
+Registering protocol [34] "LaCrosse WS-2310 / WS-3600 Weather Station"
+Registering protocol [35] "Esperanza EWS"
+Registering protocol [38] "Generic temperature sensor 1"
+Registering protocol [39] "WG-PB12V1 Temperature Sensor"
+Registering protocol [40] "Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas"
+Registering protocol [41] "Acurite 986 Refrigerator / Freezer Thermometer"
+Registering protocol [46] "HT680 Remote control"
+Registering protocol [47] "Conrad S3318P, FreeTec NC-5849-913 temperature humidity sensor"
+Registering protocol [48] "Akhan 100F14 remote keyless entry"
+Registering protocol [49] "Quhwa"
+Registering protocol [51] "Skylink HA-434TL motion sensor"
+Registering protocol [53] "Springfield Temperature and Soil Moisture"
+Registering protocol [54] "Oregon Scientific SL109H Remote Thermal Hygro Sensor"
+Registering protocol [55] "Acurite 606TX Temperature Sensor"
+Registering protocol [56] "TFA pool temperature sensor"
+Registering protocol [57] "Kedsum Temperature & Humidity Sensor, Pearl NC-7415"
+Registering protocol [58] "Blyss DC5-UK-WH"
+Registering protocol [68] "Kerui PIR / Contact Sensor"
+Registering protocol [69] "Fine Offset WH1050 Weather Station"
+Registering protocol [73] "LaCrosse TX141-Bv2, TX141TH-Bv2, TX141-Bv3, TX141W, TX145wsdth sensor"
+Registering protocol [74] "Acurite 00275rm,00276rm Temp/Humidity with optional probe"
+Registering protocol [79] "Fine Offset Electronics, WH0530 Temperature/Rain Sensor"
+Registering protocol [84] "Thermopro TP11 Thermometer"
+Registering protocol [85] "Solight TE44/TE66, EMOS E0107T, NX-6876-917"
+Registering protocol [86] "Wireless Smoke and Heat Detector GS 558"
+Registering protocol [87] "Generic wireless motion sensor"
+Registering protocol [91] "inFactory, nor-tec, FreeTec NC-3982-913 temperature humidity sensor"
+Registering protocol [92] "FT-004-B Temperature Sensor"
+Registering protocol [94] "Philips outdoor temperature sensor (type AJ3650)"
+Registering protocol [96] "Nexa"
+Registering protocol [97] "Thermopro TP08/TP12/TP20 thermometer"
+Registering protocol [99] "X10 Security"
+Registering protocol [100] "Interlogix GE UTC Security Devices"
+Registering protocol [108] "Hyundai WS SENZOR Remote Temperature Sensor"
+Registering protocol [109] "WT0124 Pool Thermometer"
+Registering protocol [112] "Ambient Weather TX-8300 Temperature/Humidity Sensor"
+Registering protocol [114] "Maverick et73"
+Registering protocol [115] "Honeywell ActivLink, Wireless Doorbell"
+Registering protocol [121] "Opus/Imagintronix XT300 Soil Moisture"
+Registering protocol [124] "LaCrosse/ELV/Conrad WS7000/WS2500 weather sensors"
+Registering protocol [125] "TS-FT002 Wireless Ultrasonic Tank Liquid Level Meter With Temperature Sensor"
+Registering protocol [126] "Companion WTR001 Temperature Sensor"
+Registering protocol [127] "Ecowitt Wireless Outdoor Thermometer WH53/WH0280/WH0281A"
+Registering protocol [131] "Microchip HCS200 KeeLoq Hopping Encoder based remotes"
+Registering protocol [133] "Rubicson 48659 Thermometer"
+Registering protocol [135] "Philips outdoor temperature sensor (type AJ7010)"
+Registering protocol [137] "Globaltronics QUIGG GT-TMBBQ-05"
+Registering protocol [138] "Globaltronics GT-WT-03 Sensor"
+Registering protocol [141] "Auriol HG02832, HG05124A-DCF, Rubicson 48957 temperature/humidity sensor"
+Registering protocol [145] "WS2032 weather station"
+Registering protocol [146] "Auriol AFW2A1 temperature/humidity sensor"
+Registering protocol [147] "TFA Drop Rain Gauge 30.3233.01"
+Registering protocol [151] "Visonic powercode"
+Registering protocol [152] "Eurochron EFTH-800 temperature and humidity sensor"
+Registering protocol [157] "Missil ML0757 weather station"
+Registering protocol [163] "Acurite 590TX Temperature with optional Humidity"
+Registering protocol [164] "Burnhard BBQ thermometer"
+Registering protocol [165] "TFA Dostmann 30.3221.02 T/H Outdoor Sensor"
+Registering protocol [167] "BlueLine Power Monitor"
+Registering protocol [174] "Bresser Thermo-/Hygro-Sensor 3CH"
+Registering protocol [178] "Proove / Nexa / KlikAanKlikUit Wireless Switch"
+```
+
+### Change receive frequency
+
+Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board
+
+`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"mhz":315.026}`
+
+### Minimum Signal Strength
+
+Default minimum signal strength to enable the receiver is -82, and this setting can be changed with the following command.
+
+`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"rssi":-75}`
+
+### Enable rtl_433 device decoder verbose debug
+
+This function does not work when all available decoders are enabled and triggers an out of memory restart.
+
+`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"debug":4}`
+
+### Retrieve current status of receiver
+
+`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"status":-1}`
+
+```
+{"model":"status",
+"protocol":"debug",
+"debug":0,                  - rtl_433 verbose setting
+"duration":11799327,        - duration of current signal
+"Gap length":-943575,       - duration of gap between current signal
+"signalRssi":-38,           - most recent received signal strength
+"train":1,                  - signal processing train #
+"messageCount":3,           - total number of signals received
+"_enabledReceiver":1,       - which recevier is enabled
+"receiveMode":0,            - is the receiver currently receiving a signal
+"currentRssi":-89,          - current rssi level
+"minimumRssi":-82,          - minimum rssi level to start signal processing
+"pulses":0,                 - how many pulses have been recieved in the current signal
+"StackHighWaterMark":5528,  - ESP32 Stack
+"freeMem":112880}           - ESP32 memory available
+```

@@ -1,12 +1,29 @@
 # Integrate Home Assistant
 ## Auto discovery
-So as to enable HASS auto discovery with MQTT you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in User_config.h
-And enable discovery on your MQTT integration definition in HASS.
+Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
 
-OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
+First enable discovery on your MQTT integration in HASS.
+
+![](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
+
+The gateway will need an MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
+
+![](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
+
+::: warning Note
+The max size of the username is 30 and 60 for the password.
+:::
+
+OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automaticaly.
+
+![](../img/OpenMQTTGateway_auto_discovery_Gateway_Home_Assistant.gif)
+
+![](../img/OpenMQTTGateway_auto_discovery_BLE_Sensor_Home_Assistant.gif)
+
+![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ## Manual integration examples
-From @123, @finity, @denniz03, @jrockstad
+From @123, @finity, @denniz03, @jrockstad, @anarchking
 
 ### Door sensor
 ```yaml
@@ -81,20 +98,17 @@ binary_sensor:
 ```yaml
 #switches
 switch:
-- platform: mqtt
-  name: kaku_a2
-  state_topic: "home/OpenMQTTGateway/commands/MQTTto433"
-  command_topic: "home/OpenMQTTGateway/commands/MQTTto433"
-  payload_on: "16405"
-  payload_off: "16404"
-  qos: "0"
-  retain: true
-
-#pushbullet
-notify:
-- platform: pushbullet
-  name: hassio
-  api_key: <api_key>
+  - platform: mqtt
+    name: Plug1
+    state_topic: "home/OpenMQTTGateway/SRFBtoMQTT"
+    command_topic: "home/OpenMQTTGateway/commands/MQTTtoSRFB"
+    value_template: "{{ value_json.value }}"
+    payload_on: '{"value":4546575}'
+    payload_off: '{"value":4546572}'
+    state_on: 4546575
+    state_off: 4546572
+    qos: "0"
+    retain: true
 ```
 
 ### Mijia Thermometer BLE
@@ -120,3 +134,48 @@ Sensor:
   value_template: '{{ value_json.batt | is_defined }}'
   expire_after: 21600 # 6 hours
   ```
+
+
+### Xiaomi Mi Scale V2 BLE (XMTZC05HM)
+
+```yaml
+sensor:
+  - platform: mqtt
+    name: "Weight"
+    state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your mqtt topic here
+    value_template: '{{ value_json["weight"] }}'
+    unit_of_measurement: "kg"
+    icon: mdi:weight-kilogram
+    
+  - platform: mqtt
+    name: "Impedance"
+    state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your mqtt topic here also
+    value_template: '{{ value_json["impedance"] }}'
+    unit_of_measurement: "Ohm"
+    icon: mdi:omega
+    
+  - platform: template
+    sensors:
+      body_mass_index:
+        friendly_name: 'Body Mass Index'
+        value_template: >-
+          {% set HEIGHT = (1.76)|float %} # replace your height in meters
+          {% set WEIGHT = states('sensor.xmtzc05hm_weight')|float %}
+          {{- (WEIGHT/(HEIGHT*HEIGHT))|float|round(1) -}}
+        icon_template: >
+          {{ 'mdi:human' }}
+```
+
+### MQTT Room Presence
+
+The publication into presence topic needs to be activated [here is the command](../use/ble.md)
+
+```yaml
+sensor:
+  - platform: mqtt_room
+    device_id: XX:XX:XX:XX:XX:XX   #Mac Address of device wanting to track
+    name: you_are_in    # home assistant will show a sensor named (you are in) with its value being the name you gave the gateway
+    state_topic: "home/home_presence"
+    #timeout:
+    #away_timeout:
+```

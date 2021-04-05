@@ -47,6 +47,20 @@ extern void PilighttoMQTT();
 extern void MQTTtoPilight(char* topicOri, char* datacallback);
 extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #endif
+#ifdef ZgatewayRTL_433
+extern void RTL_433Loop();
+extern void setupRTL_433();
+extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata);
+extern void enableRTLreceive();
+extern void disableRTLreceive();
+extern int getRTLMinimumRSSI();
+extern int getRTLCurrentRSSI();
+extern int getRTLMessageCount();
+/**
+ * minimumRssi minimum RSSI value to enable receiver
+ */
+int minimumRssi = 0;
+#endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTtoRF    "/commands/MQTTto433"
@@ -66,7 +80,7 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 //433Mhz newremoteswitch MQTT Subjects and keys
 #define subjectMQTTtoRF2    "/commands/MQTTtoRF2"
 #define subjectRF2toMQTT    "/RF2toMQTT"
-#define subjectGTWRF2toMQTT "/433toMQTT"
+#define subjectGTWRF2toMQTT "/RF2toMQTT"
 #define RF2codeKey          "ADDRESS_" // code will be defined if a subject contains RF2codeKey followed by a value of 7 digits
 #define RF2periodKey        "PERIOD_" // period  will be defined if a subject contains RF2periodKey followed by a value of 3 digits
 #define RF2unitKey          "UNIT_" // number of your unit value  will be defined if a subject contains RF2unitKey followed by a value of 1-2 digits
@@ -78,12 +92,22 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #define subjectMQTTtoPilight    "/commands/MQTTtoPilight"
 #define subjectPilighttoMQTT    "/PilighttoMQTT"
 #define subjectGTWPilighttoMQTT "/PilighttoMQTT"
-#define PilightRAW              "RAW"
 #define repeatPilightwMQTT      false // do we repeat a received signal by using mqtt with Pilight gateway
+
+/*-------------------RTL_433 topics & parameters----------------------*/
+//433Mhz RTL_433 MQTT Subjects and keys
+#define subjectMQTTtoRTL_433 "/commands/MQTTtoRTL_433"
+#define subjectRTL_433toMQTT "/RTL_433toMQTT"
 
 /*-------------------CC1101 frequency----------------------*/
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
-#define CC1101_FREQUENCY 433.92
+#ifndef CC1101_FREQUENCY
+#  define CC1101_FREQUENCY 433.92
+#endif
+// Allow ZGatewayRF Module to change receive frequency of CC1101 Transceiver module
+#ifdef ZradioCC1101
+float receiveMhz = CC1101_FREQUENCY;
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RF_RECEIVER_GPIO
