@@ -29,6 +29,12 @@
 
 #ifdef ZgatewayRF
 
+#  include <vector>
+using namespace std;
+
+static vector<SIGNAL_SIZE_UL_ULL> whitelisted_devices;
+static vector<SIGNAL_SIZE_UL_ULL> blacklisted_devices;
+
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
@@ -36,6 +42,27 @@
 #  include <RCSwitch.h> // library for controling Radio frequency switch
 
 RCSwitch mySwitch = RCSwitch();
+
+#  define isWhitelistedDevice(id) checkIfDevicePresentInList(id, whitelisted_devices)
+#  define isBlacklistedDevice(id) checkIfDevicePresentInList(id, blacklisted_devices)
+
+bool checkIfDevicePresentInList(SIGNAL_SIZE_UL_ULL id, vector<SIGNAL_SIZE_UL_ULL>& list) {
+  for (size_t i = 0; i < list.size(); i++) {
+    if (list[i] == id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void refreshDevicesList(vector<SIGNAL_SIZE_UL_ULL>& dev_list, const char* key, JsonObject& data) {
+  dev_list.clear();
+
+  for (int i = 0; i < data[key].size(); i++) {
+    const char* id = data[key][i];
+    dev_list.push_back(STRTO_UL_ULL(id, NULL, 10));
+  }
+}
 
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT)
 void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creation from received RF values
@@ -95,6 +122,16 @@ void RFtoMQTT() {
     RFdata.set("mhz", receiveMhz);
 #  endif
     mySwitch.resetAvailable();
+
+    // if there are no whitelisted devices then proceed as usual
+    if (!whitelisted_devices.empty() && !isWhitelistedDevice(MQTTvalue)) {
+      return;
+    }
+
+    // if there are no blacklisted devices then proceed as usual
+    if (!blacklisted_devices.empty() && isBlacklistedDevice(MQTTvalue)) {
+      return;
+    }
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) //component creation for HA
@@ -177,7 +214,18 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 
 #  ifdef jsonReceiving
 void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
+    const char* whiteListJsonKey = "white-list";
+    const char* blackListJsonKey = "black-list";
+
+    if (RFdata.containsKey(whiteListJsonKey)) {
+      refreshDevicesList(whitelisted_devices, whiteListJsonKey, RFdata);
+    } else if (RFdata.containsKey(blackListJsonKey)) {
+      refreshDevicesList(blacklisted_devices, blackListJsonKey, RFdata);
+    } else {
+      pub(subjectGTWRFtoMQTT, "{\"Status\": \"config error\"}"); // Fail feedback
+    }
+  } else if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));
     SIGNAL_SIZE_UL_ULL data = RFdata["value"];
     if (data != 0) {

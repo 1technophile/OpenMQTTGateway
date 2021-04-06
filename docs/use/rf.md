@@ -75,6 +75,28 @@ Messages received will include the frequency, and when transmitting on a differe
 
 `{"value":4534142,"protocol":6,"length":26,"delay":356,"mhz":315.026}`
 
+### Whitelisting/Blacklisting devices
+
+This happens based on the unique numeric id that is sent by each RF device. To configure whitelisting one has to write a specific json message on the designated MQTT config topic (a list of numeric id's):
+
+Whitelisting example:
+
+`home/OpenMQTTGateway_ESP32_RF/commands/MQTTto433/config {"white-list": ["110355","110361","110365"]}`
+
+Blacklisting example:
+
+`home/OpenMQTTGateway_ESP32_RF/commands/MQTTto433/config {"black-list": ["931859","931865"]}`
+
+If one needs to disable whitelisting and/or blacklisting just send an empty list like this for each in turn:
+
+Empty the whitelist (also disables whitelisting):
+
+`home/OpenMQTTGateway_ESP32_RF/commands/MQTTto433/config {"white-list": []}`
+
+Empty the blacklist (also disables blacklisting):
+
+`home/OpenMQTTGateway_ESP32_RF/commands/MQTTto433/config {"black-list": []}`
+
 ## Pilight gateway
 
 ### Receiving data from RF signal
