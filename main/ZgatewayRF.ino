@@ -30,18 +30,18 @@
 #ifdef ZgatewayRF
 
 #  ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
-#  include <vector>
+#    include <vector>
 using namespace std;
 
 static vector<SIGNAL_SIZE_UL_ULL> whitelisted_devices;
 static vector<SIGNAL_SIZE_UL_ULL> blacklisted_devices;
 
-#define isWhitelistedDevice(id) checkIfDevicePresentInList(id, whitelisted_devices)
-#define isBlacklistedDevice(id) checkIfDevicePresentInList(id, blacklisted_devices)
+#    define isWhitelistedDevice(id) checkIfDevicePresentInList(id, whitelisted_devices)
+#    define isBlacklistedDevice(id) checkIfDevicePresentInList(id, blacklisted_devices)
 #  endif
 
 #  ifdef ZradioCC1101
-#  include <ELECHOUSE_CC1101_SRC_DRV.h>
+#    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
 
 #  include <RCSwitch.h> // library for controling Radio frequency switch
@@ -156,11 +156,11 @@ void RFtoMQTT() {
 
 #  ifdef simpleReceiving
 void MQTTtoRF(char* topicOri, char* datacallback) {
-#  ifdef ZradioCC1101 // set Receive off and Transmitt on
+#    ifdef ZradioCC1101 // set Receive off and Transmitt on
   ELECHOUSE_cc1101.SetTx(receiveMhz);
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
-#  endif
+#    endif
   SIGNAL_SIZE_UL_ULL data = STRTO_UL_ULL(datacallback, NULL, 10); // we will not be able to pass values > 4294967295 on Arduino boards
 
   // RF DATA ANALYSIS
@@ -208,17 +208,17 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
     // Acknowledgement to the GTWRF topic
     pub(subjectGTWRFtoMQTT, datacallback); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
-#  ifdef ZradioCC1101 // set Receive on and Transmitt off
+#    ifdef ZradioCC1101 // set Receive on and Transmitt off
   ELECHOUSE_cc1101.SetRx(receiveMhz);
   mySwitch.disableTransmit();
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
-#  endif
+#    endif
 }
 #  endif
 
 #  ifdef jsonReceiving
 void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
-#  ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
+#    ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
     const char* whiteListJsonKey = "white-list";
     const char* blackListJsonKey = "black-list";
@@ -230,9 +230,9 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
     } else {
       pub(subjectGTWRFtoMQTT, "{\"Status\": \"config error\"}"); // Fail feedback
     }
-  } else 
-#  endif
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
+  } else
+#    endif
+      if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));
     SIGNAL_SIZE_UL_ULL data = RFdata["value"];
     if (data != 0) {
@@ -243,7 +243,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       Log.notice(F("RF Protocol:%d" CR), valuePRT);
       Log.notice(F("RF Pulse Lgth: %d" CR), valuePLSL);
       Log.notice(F("Bits nb: %d" CR), valueBITS);
-#  ifdef ZradioCC1101 // set Receive off and Transmitt on
+#    ifdef ZradioCC1101 // set Receive off and Transmitt on
       float trMhz = RFdata["mhz"] | CC1101_FREQUENCY;
       if (validFrequency((int)trMhz)) {
         ELECHOUSE_cc1101.SetTx(trMhz);
@@ -251,7 +251,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
         mySwitch.disableReceive();
         mySwitch.enableTransmit(RF_EMITTER_GPIO);
       }
-#  endif
+#    endif
       mySwitch.setRepeatTransmit(valueRPT);
       mySwitch.setProtocol(valuePRT, valuePLSL);
       mySwitch.send(data, valueBITS);
@@ -259,7 +259,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       pub(subjectGTWRFtoMQTT, RFdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); // Restore the default value
     } else {
-#  ifdef ZradioCC1101 // set Receive on and Transmitt off
+#    ifdef ZradioCC1101 // set Receive on and Transmitt off
       float tempMhz = RFdata["mhz"];
       if (tempMhz != 0 && validFrequency((int)tempMhz)) {
         receiveMhz = tempMhz;
@@ -274,17 +274,17 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       pub(subjectGTWRFtoMQTT, "{\"Status\": \"error\"}"); // Fail feedback
 #      endif
       Log.error(F("MQTTtoRF Fail json" CR));
-#  endif
+#    endif
     }
   }
-#  ifdef ZradioCC1101 // set Receive on and Transmitt off
+#    ifdef ZradioCC1101 // set Receive on and Transmitt off
   ELECHOUSE_cc1101.SetRx(receiveMhz);
   mySwitch.disableTransmit();
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
-#  endif
+#    endif
 }
 #  endif
-#  endif
+#endif
 
 #ifdef ZradioCC1101
 bool validFrequency(int mhz) {
@@ -297,4 +297,4 @@ bool validFrequency(int mhz) {
     return true;
   return false;
 }
-#  endif
+#endif
