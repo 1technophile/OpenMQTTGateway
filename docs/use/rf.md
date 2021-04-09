@@ -101,7 +101,7 @@ Empty the blacklist (also disables blacklisting):
 
 * The json message size is limited! This means that for each list (black/white) there's a limit and the **JSON_MSG_BUFFER** size must be adjusted in `User_config.h` accordingly for the corresponding platform **if and only if** it has enough **RAM** resources. One can evaluate the buffer size using the [ArduinoJson assistant](https://arduinojson.org/v5/assistant).
 * Only `ESP32/ESP8266/ATMEGA1280/ATMEGA2560` MCUs are supported by this feature
-* Only `ZgatewayRF` is supported for now by this feature for now (`-DZgatewayRF="RF"` build flag)
+* Only `ZgatewayRF` is supported by this feature for now (`-DZgatewayRF="RF"` build flag)
 
 ## Pilight gateway
 
