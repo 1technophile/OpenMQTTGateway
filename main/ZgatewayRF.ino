@@ -29,7 +29,7 @@
 
 #ifdef ZgatewayRF
 
-#  ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
+#  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // no whitelist/blacklist support for Arduino UNO - doesn't fit
 #    include <vector>
 using namespace std;
 
@@ -48,7 +48,7 @@ static vector<SIGNAL_SIZE_UL_ULL> blacklisted_devices;
 
 RCSwitch mySwitch = RCSwitch();
 
-#  ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
+#  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // no whitelist/blacklist support for Arduino UNO - doesn't fit
 bool checkIfDevicePresentInList(SIGNAL_SIZE_UL_ULL id, vector<SIGNAL_SIZE_UL_ULL>& list) {
   for (size_t i = 0; i < list.size(); i++) {
     if (list[i] == id) {
@@ -126,7 +126,7 @@ void RFtoMQTT() {
     RFdata.set("mhz", receiveMhz);
 #  endif
     mySwitch.resetAvailable();
-#  ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
+#  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // no whitelist/blacklist support for Arduino UNO - doesn't fit
     // if there are no whitelisted devices then proceed as usual
     if (!whitelisted_devices.empty() && !isWhitelistedDevice(MQTTvalue)) {
       return;
@@ -218,7 +218,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 
 #  ifdef jsonReceiving
 void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
-#    ifndef ARDUINO_AVR_UNO // no whitelist/blacklist support for Arduino UNO - doesn't fit
+#    if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // no whitelist/blacklist support for Arduino UNO - doesn't fit
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
     const char* whiteListJsonKey = "white-list";
     const char* blackListJsonKey = "black-list";
@@ -270,7 +270,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
         Log.error(F("MQTTtoRF Fail json" CR));
       }
 #    else
-#      ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+#      if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__) // Space issues with the UNO
       pub(subjectGTWRFtoMQTT, "{\"Status\": \"error\"}"); // Fail feedback
 #      endif
       Log.error(F("MQTTtoRF Fail json" CR));
