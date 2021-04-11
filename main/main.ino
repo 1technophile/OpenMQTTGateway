@@ -63,6 +63,9 @@ JsonArray& modules = modulesBuffer.createArray();
 #ifdef ZgatewayWeatherStation
 #  include "config_WeatherStation.h"
 #endif
+#ifdef ZgatewayGFSunInverter
+#  include "config_GFSunInverter.h"
+#endif
 #ifdef ZgatewayLORA
 #  include "config_LORA.h"
 #endif
@@ -652,6 +655,10 @@ void setup() {
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
   modules.add(ZgatewayWeatherStation);
+#endif
+#ifdef ZgatewayGFSunInverter
+  setupGFSunInverter();
+  modules.add(ZgatewayGFSunInverter);
 #endif
 #ifdef ZgatewaySRFB
   setupSRFB();
@@ -1252,6 +1259,9 @@ void loop() {
 #endif
 #ifdef ZgatewayWeatherStation
       ZgatewayWeatherStationtoMQTT();
+#endif
+#ifdef ZgatewayGFSunInverter
+      ZgatewayGFSunInverterMQTT();
 #endif
 #ifdef ZgatewayPilight
       PilighttoMQTT();
