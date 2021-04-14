@@ -290,7 +290,7 @@ This function does not work when all available decoders are enabled and triggers
 
 ### Retrieve current status of receiver
 
-`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"status":-1}`
+`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"status":1}`
 
 ```
 {"model":"status",
