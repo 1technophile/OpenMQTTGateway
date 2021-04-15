@@ -99,6 +99,9 @@ JsonArray& modules = modulesBuffer.createArray();
 #ifdef ZsensorBME280
 #  include "config_BME280.h"
 #endif
+#ifdef ZsensorCCS811
+#  include "config_CCS811.h"
+#endif
 #ifdef ZsensorHTU21
 #  include "config_HTU21.h"
 #endif
@@ -608,6 +611,10 @@ void setup() {
 #ifdef ZsensorBME280
   setupZsensorBME280();
   modules.add(ZsensorBME280);
+#endif
+#ifdef ZsensorCCS811
+  setupZsensorCCS811();
+  modules.add(ZsensorCCS811);
 #endif
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
@@ -1201,6 +1208,9 @@ void loop() {
 #endif
 #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
+#endif
+#ifdef ZsensorCCS811
+      MeasureMeasureCO2AndTVOC(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
 #endif
 #ifdef ZsensorHTU21
       MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
