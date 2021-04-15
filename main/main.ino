@@ -1210,7 +1210,7 @@ void loop() {
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
 #endif
 #ifdef ZsensorCCS811
-      MeasureMeasureCO2AndTVOC(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
+      MeasureCO2AndTVOC(); //Addon to measure CO2 and TVOC with a CCS811
 #endif
 #ifdef ZsensorHTU21
       MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
