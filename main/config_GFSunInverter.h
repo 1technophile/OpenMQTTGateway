@@ -31,18 +31,17 @@
 #include <ArduinoJson.h>
 #include <GfSun2000.h>
 
-
 extern void setupGFSunInverter();
 extern void ZgatewayGFSunInverterMQTT();
+
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectRFtoMQTT "/GFSuntoMQTT"
 #ifndef GFSUNINVERTER_DELAY
-#define GFSUNINVERTER_DELAY 10000
+#  define GFSUNINVERTER_DELAY 10000
 #endif
 
 // Enable to publish a whole dbus registry
 // #define GFSUNINVERTER_DEVEL 1
-
 
 #endif
