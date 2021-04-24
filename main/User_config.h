@@ -193,6 +193,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
+//#define ZgatewayGFSunInverter "GFSunInverter"   //ESP32
 //#define ZgatewayBT     "BT"       //ESP8266, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge

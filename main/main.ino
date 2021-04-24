@@ -56,12 +56,22 @@ unsigned long timer_sys_measures = 0;
 StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray& modules = modulesBuffer.createArray();
 
+#ifndef ZgatewayGFSunInverter
+// Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
+// Unfortunately it ignores #if directives.
+// This is a simple workaround for this problem.
+struct GfSun2000Data {};
+#endif
+
 // Modules config inclusion
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
 #  include "config_WeatherStation.h"
+#endif
+#ifdef ZgatewayGFSunInverter
+#  include "config_GFSunInverter.h"
 #endif
 #ifdef ZgatewayLORA
 #  include "config_LORA.h"
@@ -652,6 +662,10 @@ void setup() {
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
   modules.add(ZgatewayWeatherStation);
+#endif
+#ifdef ZgatewayGFSunInverter
+  setupGFSunInverter();
+  modules.add(ZgatewayGFSunInverter);
 #endif
 #ifdef ZgatewaySRFB
   setupSRFB();
@@ -1252,6 +1266,9 @@ void loop() {
 #endif
 #ifdef ZgatewayWeatherStation
       ZgatewayWeatherStationtoMQTT();
+#endif
+#ifdef ZgatewayGFSunInverter
+      ZgatewayGFSunInverterMQTT();
 #endif
 #ifdef ZgatewayPilight
       PilighttoMQTT();
