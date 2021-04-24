@@ -521,6 +521,7 @@ void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {}
 void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSCGPR1Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGH1Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {}
 void MiScaleDiscovery(char* mac, char* sensorModel) {}
 void MiLampDiscovery(char* mac, char* sensorModel) {}
