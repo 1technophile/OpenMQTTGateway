@@ -191,6 +191,8 @@ static bool esp32EthConnected = false;
 WiFiClientSecure eClient;
 #  else
 #    include <WiFi.h>
+#    include <WiFiMulti.h>
+WiFiMulti wifiMulti;
 WiFiClient eClient;
 #  endif
 #  include <Preferences.h>
@@ -204,6 +206,7 @@ Preferences preferences;
 #  include <DNSServer.h>
 #  include <ESP8266WebServer.h>
 #  include <ESP8266WiFi.h>
+#  include <ESP8266WiFiMulti.h>
 #  include <FS.h>
 #  include <WiFiManager.h>
 #  ifdef SECURE_CONNECTION
@@ -211,6 +214,7 @@ WiFiClientSecure eClient;
 X509List caCert(certificate);
 #  else
 WiFiClient eClient;
+ESP8266WiFiMulti wifiMulti;
 #  endif
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
@@ -601,6 +605,20 @@ void setup() {
 #if defined(MDNS_SD) && defined(ESP8266)
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
   connectMQTTmdns();
+#elif defined(MDNS_SD) && defined(ESP32)
+  long port;
+  port = strtol(mqtt_port, NULL, 10);
+  if (strstr(mqtt_server, ".local")) {
+    Log.trace(F("Mqtt Server MDNS Lookup: %s" CR), mqtt_server);
+    char* p = strstr(mqtt_server, ".local"); // remove .local from name as per https://github.com/espressif/arduino-esp32/issues/3822#issuecomment-782884685
+    if (p) // if found truncate at period
+      *p = 0;
+    IPAddress ipaddr = MDNS.queryHost(mqtt_server, 10000 /* ms */); // OTA Framework initialize mDNS
+    (String() + ipaddr[0] + "." + ipaddr[1] + "." + ipaddr[2] + "." + ipaddr[3]).toCharArray(mqtt_server, 30);
+  }
+  Log.trace(F("Mqtt server: %s" CR), mqtt_server);
+  Log.trace(F("Port: %l" CR), port);
+  client.setServer(mqtt_server, port);
 #else
   long port;
   port = strtol(mqtt_port, NULL, 10);
@@ -826,13 +844,18 @@ void setupTLS() {
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
-  char manual_wifi_ssid[] = wifi_ssid;
-  char manual_wifi_password[] = wifi_password;
-  delay(10);
   WiFi.mode(WIFI_STA);
+  Serial.setDebugOutput(true);
+  wifiMulti.addAP(wifi_ssid, wifi_password);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid);
+#  ifdef wifi_ssid1
+  wifiMulti.addAP(wifi_ssid1, wifi_password1);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid1);
+#  endif
+  delay(10);
 
   // We start by connecting to a WiFi network
-  Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
+
 #  ifdef NetworkAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
@@ -841,11 +864,10 @@ void setup_wifi() {
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
   }
-  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
-#  else
-  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
+
 #  endif
 
+  wifiMulti.run();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Log.trace(F("." CR));
