@@ -602,23 +602,9 @@ void setup() {
   digitalWrite(LED_SEND, !LED_SEND_ON);
   digitalWrite(LED_INFO, !LED_INFO_ON);
 
-#if defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
   connectMQTTmdns();
-#elif defined(MDNS_SD) && defined(ESP32)
-  long port;
-  port = strtol(mqtt_port, NULL, 10);
-  if (strstr(mqtt_server, ".local")) {
-    Log.trace(F("Mqtt Server MDNS Lookup: %s" CR), mqtt_server);
-    char* p = strstr(mqtt_server, ".local"); // remove .local from name as per https://github.com/espressif/arduino-esp32/issues/3822#issuecomment-782884685
-    if (p) // if found truncate at period
-      *p = 0;
-    IPAddress ipaddr = MDNS.queryHost(mqtt_server, 10000 /* ms */); // OTA Framework initialize mDNS
-    (String() + ipaddr[0] + "." + ipaddr[1] + "." + ipaddr[2] + "." + ipaddr[3]).toCharArray(mqtt_server, 30);
-  }
-  Log.trace(F("Mqtt server: %s" CR), mqtt_server);
-  Log.trace(F("Port: %l" CR), port);
-  client.setServer(mqtt_server, port);
 #else
   long port;
   port = strtol(mqtt_port, NULL, 10);
@@ -867,8 +853,7 @@ void setup_wifi() {
 
 #  endif
 
-  wifiMulti.run();
-  while (WiFi.status() != WL_CONNECTED) {
+  while (wifiMulti.run() != WL_CONNECTED) {
     delay(500);
     Log.trace(F("." CR));
     failure_number_ntwk++;
@@ -1159,14 +1144,8 @@ void setup_ethernet() {
 }
 #endif
 
-#if defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
 void connectMQTTmdns() {
-  if (!MDNS.begin("ESP_MQTT")) {
-    Log.error(F("Error setting up MDNS responder!" CR));
-    while (1) {
-      delay(1000);
-    }
-  }
   Log.trace(F("Browsing for MQTT service" CR));
   int n = MDNS.queryService("mqtt", "tcp");
   if (n == 0) {
