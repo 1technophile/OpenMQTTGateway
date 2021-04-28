@@ -831,7 +831,6 @@ void setupTLS() {
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
   WiFi.mode(WIFI_STA);
-  Serial.setDebugOutput(true);
   wifiMulti.addAP(wifi_ssid, wifi_password);
   Log.trace(F("Connecting to %s" CR), wifi_ssid);
 #  ifdef wifi_ssid1
