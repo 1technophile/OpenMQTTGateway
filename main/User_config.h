@@ -327,7 +327,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifdef ZgatewaySRFB
 #  define SERIAL_BAUD 19200
 #else
-#  define SERIAL_BAUD 115200
+#  ifndef SERIAL_BAUD
+#    define SERIAL_BAUD 115200
+#  endif
 #endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
