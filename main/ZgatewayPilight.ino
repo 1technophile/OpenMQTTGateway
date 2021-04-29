@@ -106,6 +106,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
     const char* message = Pilightdata["message"];
     const char* protocol = Pilightdata["protocol"];
     const char* raw = Pilightdata["raw"];
+    float tempMhz = Pilightdata["mhz"];
     if (raw) {
       uint16_t codes[MAXPULSESTREAMLENGTH];
       int repeats = rf.stringToRepeats(raw);
@@ -166,13 +167,43 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
             Log.error(F("Invalid JSON: can't read message/protocol" CR));
         }
       }
-    } else {
-      Log.error(F("MQTTtoPilight failed json read" CR));
-    }
-  }
 #  ifdef ZradioCC1101
-  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY); // set Receive on
-  rf.enableReceiver();
+    } else if (tempMhz != 0 && validFrequency((int)tempMhz)) {
+      activeReceiver = ACTIVE_PILIGHT; // Enable PILIGHT Gateway
+      receiveMhz = tempMhz;
+      Log.notice(F("PiLight Receive mhz: %F" CR), receiveMhz);
+      pub(subjectGTWPilighttoMQTT, Pilightdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
 #  endif
+    } else {
+      pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
+      Log.error(F("MQTTtoPilight Fail json" CR));
+    }
+    enableActiveReceiver();
+  }
 }
+
+extern void disablePilightReceive() {
+  Log.trace(F("disablePilightReceive" CR));
+  rf.initReceiver(-1);
+  rf.disableReceiver();
+};
+
+extern void enablePilightReceive() {
+  Log.trace(F("enablePilightReceive" CR));
+#  ifdef ZgatewayRF
+  disableRFReceive();
+// enablePilightReceive();
+#  endif
+#  ifdef ZgatewayRTL_433
+  disableRTLreceive();
+#  endif
+
+#  ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
+#  endif
+  rf.enableReceiver();
+  rf.setCallback(pilightCallback);
+  rf.initReceiver(RF_RECEIVER_GPIO);
+  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+};
 #endif

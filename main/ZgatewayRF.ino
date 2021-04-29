@@ -229,17 +229,34 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #    endif
 }
 #  endif
-#endif
 
-#ifdef ZradioCC1101
-bool validFrequency(int mhz) {
-  //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
-  if (mhz >= 300 && mhz <= 348)
-    return true;
-  if (mhz >= 387 && mhz <= 464)
-    return true;
-  if (mhz >= 779 && mhz <= 928)
-    return true;
-  return false;
+int receiveInterupt = -1;
+
+void disableRFReceive() {
+  Log.trace(F("disableRFReceive" CR));
+#  ifdef ZgatewayPilight
+// enablePilightReceive();
+#  endif
+  if (receiveInterupt != -1) {
+    receiveInterupt = -1;
+    mySwitch.disableReceive();
+  }
+}
+
+void enableRFReceive() {
+  Log.trace(F("enableRFReceive" CR));
+#  ifdef ZgatewayPilight
+  disablePilightReceive();
+#  endif
+#  ifdef ZgatewayRTL_433
+  disableRTLreceive();
+#  endif
+
+#  ifdef ZradioCC1101 // set Receive on and Transmitt off
+  ELECHOUSE_cc1101.SetRx(receiveMhz);
+  #  endif
+  mySwitch.disableTransmit();
+  receiveInterupt = RF_RECEIVER_GPIO;
+  mySwitch.enableReceive(RF_RECEIVER_GPIO);
 }
 #endif
