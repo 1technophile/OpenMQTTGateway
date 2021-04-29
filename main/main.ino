@@ -654,6 +654,7 @@ void setup() {
 #ifdef ZgatewayRF
   setupRF();
   modules.add(ZgatewayRF);
+  activeReceiver = ACTIVE_RF;
 #endif
 #ifdef ZgatewayRF2
   setupRF2();
@@ -662,6 +663,7 @@ void setup() {
 #ifdef ZgatewayPilight
   setupPilight();
   modules.add(ZgatewayPilight);
+  activeReceiver = ACTIVE_PILIGHT;
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
@@ -737,6 +739,10 @@ void setup() {
 #ifdef ZgatewayRTL_433
   setupRTL_433();
   modules.add(ZgatewayRTL_433);
+  activeReceiver = ACTIVE_RTL;
+#endif
+#if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight)
+  enableActiveReceiver();
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
   Log.notice(F("Setup OpenMQTTGateway end" CR));
@@ -1409,6 +1415,9 @@ void stateMeasures() {
   SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
+#  endif
+#  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433)
+  SYSdata["actRec"] = (int)activeReceiver;
 #  endif
 #  ifdef ZradioCC1101
   SYSdata["mhz"] = (int)receiveMhz;
