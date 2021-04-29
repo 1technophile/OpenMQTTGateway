@@ -191,6 +191,8 @@ static bool esp32EthConnected = false;
 WiFiClientSecure eClient;
 #  else
 #    include <WiFi.h>
+#    include <WiFiMulti.h>
+WiFiMulti wifiMulti;
 WiFiClient eClient;
 #  endif
 #  include <Preferences.h>
@@ -204,6 +206,7 @@ Preferences preferences;
 #  include <DNSServer.h>
 #  include <ESP8266WebServer.h>
 #  include <ESP8266WiFi.h>
+#  include <ESP8266WiFiMulti.h>
 #  include <FS.h>
 #  include <WiFiManager.h>
 #  ifdef SECURE_CONNECTION
@@ -211,6 +214,7 @@ WiFiClientSecure eClient;
 X509List caCert(certificate);
 #  else
 WiFiClient eClient;
+ESP8266WiFiMulti wifiMulti;
 #  endif
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
@@ -598,7 +602,7 @@ void setup() {
   digitalWrite(LED_SEND, !LED_SEND_ON);
   digitalWrite(LED_INFO, !LED_INFO_ON);
 
-#if defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
   connectMQTTmdns();
 #else
@@ -826,13 +830,17 @@ void setupTLS() {
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
-  char manual_wifi_ssid[] = wifi_ssid;
-  char manual_wifi_password[] = wifi_password;
-  delay(10);
   WiFi.mode(WIFI_STA);
+  wifiMulti.addAP(wifi_ssid, wifi_password);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid);
+#  ifdef wifi_ssid1
+  wifiMulti.addAP(wifi_ssid1, wifi_password1);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid1);
+#  endif
+  delay(10);
 
   // We start by connecting to a WiFi network
-  Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
+
 #  ifdef NetworkAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
@@ -841,12 +849,10 @@ void setup_wifi() {
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
   }
-  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
-#  else
-  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
+
 #  endif
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while (wifiMulti.run() != WL_CONNECTED) {
     delay(500);
     Log.trace(F("." CR));
     failure_number_ntwk++;
@@ -1137,14 +1143,8 @@ void setup_ethernet() {
 }
 #endif
 
-#if defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
 void connectMQTTmdns() {
-  if (!MDNS.begin("ESP_MQTT")) {
-    Log.error(F("Error setting up MDNS responder!" CR));
-    while (1) {
-      delay(1000);
-    }
-  }
   Log.trace(F("Browsing for MQTT service" CR));
   int n = MDNS.queryService("mqtt", "tcp");
   if (n == 0) {
