@@ -531,7 +531,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // In order to republish this payload, a copy must be made
   // as the orignal payload buffer will be overwritten whilst
   // constructing the PUBLISH packet.
-  Log.trace(F("Hey I got a callback " CR));
+  Log.trace(F("Hey I got a callback %s" CR), topic);
   // Allocate the correct amount of memory for the payload copy
   byte* p = (byte*)malloc(length + 1);
   // Copy the payload to the new buffer
@@ -568,6 +568,7 @@ void setup() {
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   setupM5();
 #    endif
+  Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
 #  ifdef ESP32_ETHERNET
@@ -654,16 +655,23 @@ void setup() {
 #ifdef ZgatewayRF
   setupRF();
   modules.add(ZgatewayRF);
-  activeReceiver = ACTIVE_RF;
+#  define ACTIVE_RECEIVER ACTIVE_RF
 #endif
 #ifdef ZgatewayRF2
   setupRF2();
   modules.add(ZgatewayRF2);
+  #  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_RF2
 #endif
 #ifdef ZgatewayPilight
   setupPilight();
   modules.add(ZgatewayPilight);
-  activeReceiver = ACTIVE_PILIGHT;
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_PILIGHT
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
@@ -739,13 +747,25 @@ void setup() {
 #ifdef ZgatewayRTL_433
   setupRTL_433();
   modules.add(ZgatewayRTL_433);
-  activeReceiver = ACTIVE_RTL;
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_RTL
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight)
+#  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive
+  activeReceiver = DEFAULT_RECEIVER;
+#  else
+  activeReceiver = ACTIVE_RECEIVER;
+#  endif
   enableActiveReceiver();
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
-  Log.notice(F("Setup OpenMQTTGateway end" CR));
+
+  char jsonChar[100];
+  modules.printTo((char*)jsonChar, modules.measureLength() + 1);
+  Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
+  Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
 }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1416,16 +1436,18 @@ void stateMeasures() {
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
-#  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433)
+#  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
   SYSdata["actRec"] = (int)activeReceiver;
 #  endif
 #  ifdef ZradioCC1101
-  SYSdata["mhz"] = (int)receiveMhz;
+  SYSdata["mhz"] = (float)receiveMhz;
 #  endif
 #  if defined(ZgatewayRTL_433)
-  SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
-  SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
-  SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+  if (activeReceiver == ACTIVE_RTL) {
+    SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+    SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+    SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+  }
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);

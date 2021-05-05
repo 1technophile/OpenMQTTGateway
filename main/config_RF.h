@@ -42,6 +42,8 @@ extern void setupRF2();
 extern void RF2toMQTT();
 extern void MQTTtoRF2(char* topicOri, char* datacallback);
 extern void MQTTtoRF2(char* topicOri, JsonObject& RFdata);
+extern void disableRF2Receive();
+extern void enableRF2Receive();
 #endif
 #ifdef ZgatewayPilight
 extern void setupPilight();
@@ -140,21 +142,23 @@ float receiveMhz = CC1101_FREQUENCY;
 #  endif
 #endif
 
-#if defined(ZgatewayRF)  || defined(ZgatewayPilight) ||  defined(ZgatewayRTL_433)
+#if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
 /**
  * Active Receiver Module
  * 1 = ZgatewayPilight
  * 2 = ZgatewayRF
  * 3 = ZgatewayRTL_433
+ * 4 = ZgatewayRF2
  */
 int activeReceiver = 0;
 #  define ACTIVE_RECERROR 0
-#  define ACTIVE_PILIGHT 1
-#  define ACTIVE_RF      2
-#  define ACTIVE_RTL     3
+#  define ACTIVE_PILIGHT  1
+#  define ACTIVE_RF       2
+#  define ACTIVE_RTL      3
+#  define ACTIVE_RF2      4
 
 #  ifdef ZradioCC1101
-bool validFrequency(int mhz) {
+bool validFrequency(float mhz) {
   //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
   if (mhz >= 300 && mhz <= 348)
     return true;
@@ -168,7 +172,7 @@ bool validFrequency(int mhz) {
 
 int currentReceiver = -1;
 
-extern void stateMeasures();  // Send a status message 
+extern void stateMeasures(); // Send a status message
 
 void enableActiveReceiver() {
   // if (currentReceiver != activeReceiver) {
@@ -189,8 +193,14 @@ void enableActiveReceiver() {
       enableRTLreceive();
       break;
 #  endif
+#  ifdef ZgatewayRF2
+    case ACTIVE_RF2:
+      enableRF2Receive();
+      break;
+#  endif
+    default:
+      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
   }
-  stateMeasures();  // Send a status message 
   currentReceiver = activeReceiver;
 }
 #endif
