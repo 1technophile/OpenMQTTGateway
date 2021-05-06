@@ -41,7 +41,19 @@ void rtl_433_Callback(char* message) {
   DynamicJsonBuffer jsonBuffer2(JSON_MSG_BUFFER);
   JsonObject& RFrtl_433_ESPdata = jsonBuffer2.parseObject(message);
 
-  pub(subjectRTL_433toMQTT, RFrtl_433_ESPdata);
+  String topic = String(subjectRTL_433toMQTT);
+#  ifdef valueAsASubject
+  String model = RFrtl_433_ESPdata["model"];
+  String id = RFrtl_433_ESPdata["id"];
+  if (model != 0) {
+    topic = topic + "/" + model;
+    if (id != 0) {
+      topic = topic + "/" + id;
+    }
+  }
+#  endif
+
+  pub((char*)topic.c_str(), RFrtl_433_ESPdata);
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
 #  endif
