@@ -198,8 +198,10 @@ void enableActiveReceiver() {
       enableRF2Receive();
       break;
 #  endif
+#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
     default:
       Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
+#  endif
   }
   currentReceiver = activeReceiver;
 }

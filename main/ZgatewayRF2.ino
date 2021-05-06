@@ -334,7 +334,7 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
 #  endif
 
 void disableRF2Receive() {
-  Log.trace(F("disableRF2Receive: %d" CR), NewRemoteReceiver::_interrupt);
+  Log.trace(F("disableRF2Receive" CR));
   NewRemoteReceiver::deinit();
   NewRemoteReceiver::init(-1, 2, rf2Callback); // mark _interupt with -1
   NewRemoteReceiver::deinit();

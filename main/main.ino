@@ -660,7 +660,7 @@ void setup() {
 #ifdef ZgatewayRF2
   setupRF2();
   modules.add(ZgatewayRF2);
-  #  ifdef ACTIVE_RECEIVER
+#  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
 #  endif
 #  define ACTIVE_RECEIVER ACTIVE_RF2
@@ -668,6 +668,7 @@ void setup() {
 #ifdef ZgatewayPilight
   setupPilight();
   modules.add(ZgatewayPilight);
+  disablePilightReceive();
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
 #  endif
@@ -752,7 +753,7 @@ void setup() {
 #  endif
 #  define ACTIVE_RECEIVER ACTIVE_RTL
 #endif
-#if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight)
+#if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRF2)
 #  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive
   activeReceiver = DEFAULT_RECEIVER;
 #  else
@@ -762,9 +763,11 @@ void setup() {
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
 
+#ifndef ARDUINO_AVR_UNO // Space issues with the UNO
   char jsonChar[100];
   modules.printTo((char*)jsonChar, modules.measureLength() + 1);
   Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
+#endif
   Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
 }
 
