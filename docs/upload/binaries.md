@@ -1,6 +1,6 @@
-# Upload Binaries
+# (Option 1) Upload ready-to-go binaries
 This section is useful if you want to directly flash your ESP from your desktop. Once flashed you can change  wifi and broker settings.
-Nevertheless you will not be able to change advanced parameters, if you want to do so refer to [Upload from PlatformIO][pio] section.
+Nevertheless you will not be able to change advanced parameters; if you want to do so, refer to [Upload your configurations](builds.md) section.
 
 Download the binary corresponding to your board and gateway [here](https://github.com/1technophile/OpenMQTTGateway/releases) from github and uncompress it.
 
