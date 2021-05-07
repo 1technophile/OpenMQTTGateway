@@ -63,8 +63,7 @@ module.exports = {
           sidebarDepth: 1,    // optional, defaults to 1
           children: [
             'upload/binaries',
-            'upload/pio',
-            'upload/arduino-ide',
+            'upload/builds',
             'upload/portal',
             'upload/advanced-configuration',
             'upload/troubleshoot'
