@@ -42,7 +42,7 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creat
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
   Log.trace(F("switchRFDiscovery" CR));
-  char* switchRF[8] = {"switch", val, "", "", "", val, "", ""};
+  char* switchRF[8] = {"switch", val, "", "", jsonVal, val, "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   Log.trace(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
