@@ -37,22 +37,72 @@
 
 RCSwitch mySwitch = RCSwitch();
 
+//SOME CONVERSION function from https://github.com/sui77/rc-switch/tree/master/examples/ReceiveDemo_Advanced
+static const char* bin2tristate(const char* bin) {
+  static char returnValue[50];
+  int pos = 0;
+  int pos2 = 0;
+  while (bin[pos] != '\0' && bin[pos + 1] != '\0') {
+    if (bin[pos] == '0' && bin[pos + 1] == '0') {
+      returnValue[pos2] = '0';
+    } else if (bin[pos] == '1' && bin[pos + 1] == '1') {
+      returnValue[pos2] = '1';
+    } else if (bin[pos] == '0' && bin[pos + 1] == '1') {
+      returnValue[pos2] = 'F';
+    } else {
+      return "-";
+    }
+    pos = pos + 2;
+    pos2++;
+  }
+  returnValue[pos2] = '\0';
+  return returnValue;
+}
+
+static char* dec2binWzerofill(unsigned long Dec, unsigned int bitLength) {
+  static char bin[64];
+  unsigned int i = 0;
+
+  while (Dec > 0) {
+    bin[32 + i++] = ((Dec & 1) > 0) ? '1' : '0';
+    Dec = Dec >> 1;
+  }
+
+  for (unsigned int j = 0; j < bitLength; j++) {
+    if (j >= bitLength - i) {
+      bin[j] = bin[31 + i - (j - (bitLength - i))];
+    } else {
+      bin[j] = '0';
+    }
+  }
+  bin[bitLength] = '\0';
+
+  return bin;
+}
+
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery)
-void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creation from received RF values
+
+void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) {
+  //on the fly switch creation from received RF values
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
-  Log.trace(F("switchRFDiscovery" CR));
-  char* switchRF[8] = {"switch", val, "", "", "", val, "", ""};
-  //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-
+  Log.trace(F("RF Entity Discovered, create HA Discovery CFG" CR));
+  char* switchRF[2] = {val, "RF"};
   Log.trace(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
-  createDiscovery(switchRF[0],
-                  subjectRFtoMQTT, switchRF[1], (char*)getUniqueId(switchRF[1], switchRF[2]).c_str(),
-                  will_Topic, switchRF[3], switchRF[4],
-                  switchRF[5], switchRF[6], switchRF[7],
-                  0, "", "", true, subjectMQTTtoRF,
-                  "", "", "", "", false,
-                  stateClassNone);
+#    ifdef valueAsASubject
+  String discovery_topic = String(subjectRFtoMQTT) + "/" + String(switchRF[0]);
+#    else
+  String discovery_topic = String(subjectRFtoMQTT);
+#    endif
+
+  String theUniqueId = getUniqueId("-" + String(switchRF[0]), "-" + String(switchRF[1]));
+
+  announceDeviceTrigger(
+      (char*)theUniqueId.c_str(),
+      (char*)discovery_topic.c_str(),
+      "", "",
+      true,
+      "", "", "", "");
 }
 #  endif
 
@@ -78,9 +128,9 @@ void setupRF() {
 void RFtoMQTT() {
   if (mySwitch.available()) {
 #  ifdef ZradioCC1101 //receiving with CC1101
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(8);
 #  else
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
+    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(7);
 #  endif
     StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
     JsonObject RFdata = jsonBuffer.to<JsonObject>();
@@ -89,10 +139,23 @@ void RFtoMQTT() {
     Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
 #  endif
     SIGNAL_SIZE_UL_ULL MQTTvalue = mySwitch.getReceivedValue();
+    int length = mySwitch.getReceivedBitlength();
+    const char* binary = dec2binWzerofill(MQTTvalue, length);
+
     RFdata["value"] = (SIGNAL_SIZE_UL_ULL)MQTTvalue;
     RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
     RFdata["length"] = (int)mySwitch.getReceivedBitlength();
     RFdata["delay"] = (int)mySwitch.getReceivedDelay();
+    RFdata["tre_state"] = bin2tristate(binary);
+    RFdata["binary"] = binary;
+
+    unsigned int* raw = mySwitch.getReceivedRawdata();
+    String rawDump = "";
+    for (unsigned int i = 0; i <= length * 2; i++) {
+      rawDump = rawDump + String(raw[i]) + ",";
+    }
+    RFdata["raw"] = rawDump.c_str();
+
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
     RFdata["mhz"] = receiveMhz;
 #  endif

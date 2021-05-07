@@ -31,6 +31,33 @@ extern String getUniqueId(String name, String sufix);
 extern void pubMqttDiscovery();
 extern void createDiscoveryFromList(const char* mac, const char* sensorList[][8], int sensorCount,
                                     const char* device_name, const char* device_manufacturer, const char* device_model);
+
+/**
+ * @brief Generate message and publish it on an mqtt discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
+ * 
+ * @param sensor_type the Type
+ * @param st_topic set state topic,
+ * @param s_name set name,
+ * @param unique_id set niqueId
+ * @param availability_topic set availability_topic,
+ * @param device_class set device_class,
+ * @param value_template set value_template,
+ * @param payload_on set payload_on,
+ * @param payload_off set payload_off,
+ * @param unit_of_meas set unit_of_meas,
+ * @param off_delay set off_delay
+ * @param payload_available set payload_avalaible,
+ * @param payload_not_avalaible set payload_not_avalaible
+ * @param gateway_entity set is a gateway entity, 
+ * @param cmd_topic set command topic
+ * @param device_name set device name, 
+ * @param device_manufacturer set device manufacturer, 
+ * @param device_model set device model, 
+ * @param device_mac set device mac, 
+ * @param retainCmd set retain
+ * @param state_class set state class
+ * 
+ * */
 extern void createDiscovery(const char* sensor_type,
                             const char* state_topic, const char* s_name, const char* unique_id,
                             const char* availability_topic, const char* device_class, const char* value_template,
@@ -39,6 +66,29 @@ extern void createDiscovery(const char* sensor_type,
                             const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* command_topic,
                             const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
                             const char* state_class);
+
+/**
+ * @brief Create a message for Discovery Device Trigger. For HA @see https://www.home-assistant.io/integrations/device_trigger.mqtt/
+ * 
+ * @param unique_id             Valid only if gateway entry is false, The IDs that uniquely identify the device. For example a serial number.
+ * @param topic                 The Topic  where the trigger will publish the content
+ * @param type                  The type of the trigger, e.g. button_short_press. Entries supported by the HA Frontend: button_short_press, button_short_release, button_long_press, button_long_release, button_double_press, button_triple_press, button_quadruple_press, button_quintuple_press. If set to an unsupported value, will render as subtype type, e.g. button_1 spammed with type set to spammed and subtype set to button_1
+ * @param subtype               The subtype of the trigger, e.g. button_1. Entries supported by the HA frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6. If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
+ * @param use_gateway_info      Boolean where true mean use the OMG information as Device Information
+ * @param device_name           The name of the device.
+ * @param device_manufacturer   The manufacturer of the device.
+ * @param device_model          The model of the device.
+ * @param device_mac            The connection of the device to the outside world
+ */
+void announceDeviceTrigger(char* unique_id,
+                           char* topic,
+                           char* type,
+                           char* subtype,
+                           bool use_gateway_info,
+                           char* device_name,
+                           char* device_manufacturer,
+                           char* device_model,
+                           char* device_mac);
 
 #define discovery_Topic "homeassistant"
 
