@@ -140,6 +140,7 @@ enum ble_sensor_model {
   LYWSD03MMC_PVVX,
   CGH1,
   CGPR1,
+  WS02,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/

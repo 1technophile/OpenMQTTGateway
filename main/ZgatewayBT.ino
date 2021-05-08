@@ -511,6 +511,19 @@ void INodeEMDiscovery(char* mac, char* sensorModel) {
   createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount, "INode-Energy-Meter", "INode", sensorModel);
 }
 
+void WS02Discovery(char* mac, char* sensorModel) {
+#    define WS02parametersCount 3
+  Log.trace(F("WS02Discovery" CR));
+  char* WS02sensor[WS02parametersCount][8] = {
+      {"sensor", "WS02-volt", mac, "", jsonVolt, "", "", "V"},
+      {"sensor", "WS02-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "WS02-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, WS02sensor, WS02parametersCount, "WS02", "SensorBlue", sensorModel);
+}
+
 #  else
 void MiFloraDiscovery(char* mac, char* sensorModel) {}
 void VegTrugDiscovery(char* mac, char* sensorModel) {}
@@ -530,6 +543,7 @@ void InkBirdDiscovery(char* mac, char* sensorModel) {}
 void LYWSD03MMCDiscovery(char* mac, char* sensorModel) {}
 void MHO_C401Discovery(char* mac, char* sensorModel) {}
 void INodeEMDiscovery(char* mac, char* sensorModel) {}
+void WS02Discovery(char* mac, char* sensorModel) {}
 #  endif
 
 #  ifdef ESP32
@@ -1027,6 +1041,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGPR1) CLEARGRASSCGPR1Discovery((char*)macWOdots.c_str(), "CGPR1");
       if (p->sensorModel == CGH1) CLEARGRASSCGH1Discovery((char*)macWOdots.c_str(), "CGH1");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
+      if (p->sensorModel == WS02) WS02Discovery((char*)macWOdots.c_str(), "WS02");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), "XMTZC0xHM");
@@ -1261,6 +1276,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       if (device->sensorModel == -1)
         createOrUpdateDevice(mac, device_flags_init, INODE_EM);
       return process_inode_em(BLEdata);
+    }
+    Log.trace(F("Is it a WS02?" CR));
+    if (strlen(manufacturerdata) >= 40 && (strstr(manufacturerdata, "100000001a11") != NULL)) {
+      Log.trace(F("WS02 data reading data reading" CR));
+      BLEdata.set("model", "WS02");
+      if (device->sensorModel == -1)
+        createOrUpdateDevice(mac, device_flags_init, WS02);
+      return process_ws02(BLEdata);
     }
 #  if !pubBLEManufacturerData
     Log.trace(F("Remove manufacturer data" CR));
@@ -1509,6 +1532,22 @@ JsonObject& process_inode_em(JsonObject& BLEdata) {
   BLEdata.set("power", (double)power);
   BLEdata.set("energy", (double)energy);
   BLEdata.set("batt", battery);
+
+  return BLEdata;
+}
+
+JsonObject& process_ws02(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata "].as<const char*>();
+
+  double temperature = (double)value_from_hex_data(manufacturerdata, 20, 4, true) / 16;
+  double humidity = (double)value_from_hex_data(manufacturerdata, 24, 4, true) / 16;
+  double voltage = (double)value_from_hex_data(manufacturerdata, 16, 4, true) / 1000;
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("volt", (double)voltage);
 
   return BLEdata;
 }
