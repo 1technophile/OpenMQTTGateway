@@ -1,11 +1,9 @@
 
 # RF gateways  (433mhz/315mhz)
 
-Note that for the moment RF, RF2, RTL_433 and Pilight can not be activated on the same boards together.
+## Changing Active Receiver Modules
 
 With version 0.9.7 the ability to switch active signal receiver and decoder is supported between RF, RF2, RTL_433 and Pilight receiver modules.
-
-## Changing Active Receiver Modules
 
 ### Switching Active Receiver Module
 

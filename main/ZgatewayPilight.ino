@@ -78,7 +78,6 @@ void setupPilight() {
   ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
-  // rf.enableReceiver();
 #  endif
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_GPIO);
