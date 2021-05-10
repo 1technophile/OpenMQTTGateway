@@ -57,10 +57,8 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creat
 
 void setupRF() {
 //RF init parameters
-#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
-#  endif
 #  ifdef ZradioCC1101 //receiving with CC1101
   ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.SetRx(receiveMhz);
@@ -249,18 +247,18 @@ void enableRFReceive() {
 #  ifdef ZradioCC1101
   Log.notice(F("Switching to RF Receiver: %F" CR), receiveMhz);
 #  else
-#    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
   Log.notice(F("Switching to RF Receiver" CR));
+#  endif
+#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+#    ifdef ZgatewayPilight
+  disablePilightReceive();
+#    endif
+#    ifdef ZgatewayRTL_433
+  disableRTLreceive();
 #    endif
 #  endif
-#  ifdef ZgatewayPilight
-  disablePilightReceive();
-#  endif
-#  ifdef ZgatewayRTL_433
-  disableRTLreceive();
-#  endif
-#  ifdef ZgatewayRTL_433
-  disableRTLreceive();
+#  ifdef ZgatewayRF2
+  disableRF2receive();
 #  endif
 
 #  ifdef ZradioCC1101 // set Receive on and Transmitt off
