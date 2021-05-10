@@ -1,8 +1,19 @@
 # Integrate Home Assistant
-## Auto discovery
-Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
 
-First enable discovery on your MQTT integration in HASS.
+Home Assistant provide the [MQTT integration](https://www.home-assistant.io/integrations/mqtt/) and through this integration it is possible to exploit and manage the messages published by OpenMqttGateway.
+
+Once this integration on home assistant is configured with the same mqtt broker, it is possible to create devices manually or through the autodiscovery function.
+
+
+## Auto discovery
+
+From Home Assistant site 
+
+> The discovery of MQTT devices will enable one to use MQTT devices with only minimal configuration effort on the side of Home Assistant. The configuration is done on the device itself and the topic used by the device.
+
+On OpenMqttGateway the Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation. Here are a few tips for activating discovery on Home Assistant, but for detailed configuration please refer to the Home Assistant website. 
+
+Enable discovery on your MQTT integration in HASS.
 
 ![](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
 
@@ -21,6 +32,43 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 ![](../img/OpenMQTTGateway_auto_discovery_BLE_Sensor_Home_Assistant.gif)
 
 ![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
+
+
+### Example with "DIGOO DG-HOSA 433MHz PIR Detector"
+
+With OpenMqttGateway [configured to receive RF signals](./setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](./use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a movement. 
+
+With autodiscovery enabled, HomeAssistant will discover a new switch identified by the value field given in the mqtt argument. 
+
+
+![](../img/HA_discovery_new_switch.png)
+
+
+With this configuration we receive from the broker only the close signal, which produces the change of state of the switch to "on". One way to reset the status is to setup one [automation](https://www.home-assistant.io/docs/automation/basics/) like this
+
+```yaml
+alias: Reset Pirs
+description: ''
+trigger:
+  - platform: state
+    entity_id:
+      - switch.2708742
+    to: 'on'
+condition: []
+action:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - service: switch.turn_off
+    target:
+      entity_id: '{{ trigger.entity_id }}'
+mode: parallel
+max: 100
+
+```
+
 
 ## Manual integration examples
 From @123, @finity, @denniz03, @jrockstad, @anarchking
