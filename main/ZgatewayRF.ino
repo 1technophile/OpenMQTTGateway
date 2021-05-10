@@ -258,7 +258,7 @@ void enableRFReceive() {
 #    endif
 #  endif
 #  ifdef ZgatewayRF2
-  disableRF2receive();
+  disableRF2Receive();
 #  endif
 
 #  ifdef ZradioCC1101 // set Receive on and Transmitt off
