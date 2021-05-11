@@ -27,7 +27,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
-
 #ifdef ZgatewayRTL_433
 
 #  include <rtl_433_ESP.h>
@@ -42,7 +41,19 @@ void rtl_433_Callback(char* message) {
   DynamicJsonBuffer jsonBuffer2(JSON_MSG_BUFFER);
   JsonObject& RFrtl_433_ESPdata = jsonBuffer2.parseObject(message);
 
-  pub(subjectRTL_433toMQTT, RFrtl_433_ESPdata);
+  String topic = String(subjectRTL_433toMQTT);
+#  ifdef valueAsASubject
+  String model = RFrtl_433_ESPdata["model"];
+  String id = RFrtl_433_ESPdata["id"];
+  if (model != 0) {
+    topic = topic + "/" + model;
+    if (id != 0) {
+      topic = topic + "/" + id;
+    }
+  }
+#  endif
+
+  pub((char*)topic.c_str(), RFrtl_433_ESPdata);
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
 #  endif
@@ -51,9 +62,8 @@ void rtl_433_Callback(char* message) {
 void setupRTL_433() {
   rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
   rtl_433.setCallback(rtl_433_Callback, messageBuffer, JSON_MSG_BUFFER);
-  Log.notice(F("ZgatewayRTL_433 command topic: %s%s" CR), mqtt_topic, subjectMQTTtoRTL_433);
-  enableRTLreceive();
-  Log.trace(F("ZgatewayRTL_433 setup done " CR));
+  Log.trace(F("ZgatewayRTL_433 command topic: %s%s" CR), mqtt_topic, subjectMQTTtoRTL_433);
+  Log.notice(F("ZgatewayRTL_433 setup done " CR));
 }
 
 void RTL_433Loop() {
@@ -62,41 +72,59 @@ void RTL_433Loop() {
 
 extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRTL_433)) {
-    Log.trace(F("MQTTtoRTL_433 %s" CR), topicOri);
-    float tempMhz = RTLdata["mhz"] | 0;
-    int minimumRssi = RTLdata["rssi"] | 0;
-    int debug = RTLdata["debug"] | -1;
-    int status = RTLdata["status"] | -1;
-    if (tempMhz != 0 && validFrequency((int)tempMhz)) {
-      //  activeReceiver = RTL; // Enable RTL_433 Gateway
+    float tempMhz = RTLdata["mhz"];
+    bool success = false;
+    if (RTLdata.containsKey("mhz") && validFrequency(tempMhz)) {
       receiveMhz = tempMhz;
       Log.notice(F("RTL_433 Receive mhz: %F" CR), receiveMhz);
-      pub(subjectRTL_433toMQTT, RTLdata);
-    } else if (minimumRssi != 0) {
+      success = true;
+    }
+    if (RTLdata.containsKey("active")) {
+      Log.trace(F("RTL_433 active:" CR));
+      activeReceiver = ACTIVE_RTL; // Enable RTL_433 Gateway
+      success = true;
+    }
+    if (RTLdata.containsKey("rssi")) {
+      int minimumRssi = RTLdata["rssi"] | 0;
       Log.notice(F("RTL_433 minimum RSSI: %d" CR), minimumRssi);
       rtl_433.setMinimumRSSI(minimumRssi);
-      pub(subjectRTL_433toMQTT, RTLdata);
-    } else if (debug >= 0 && debug <= 4) {
+      success = true;
+    }
+    if (RTLdata.containsKey("debug")) {
+      int debug = RTLdata["debug"] | -1;
       Log.notice(F("RTL_433 set debug: %d" CR), debug);
       rtl_433.setDebug(debug);
       rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
-      pub(subjectRTL_433toMQTT, RTLdata);
-    } else if (status >= 0) {
-      Log.notice(F("RTL_433 get status: %d" CR), status);
-      rtl_433.getStatus(status);
+      success = true;
+    }
+    if (RTLdata.containsKey("status")) {
+      Log.notice(F("RTL_433 get status:" CR));
+      rtl_433.getStatus(1);
+      success = true;
+    }
+    if (success) {
       pub(subjectRTL_433toMQTT, RTLdata);
     } else {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRTL_433 Fail json" CR));
     }
+    enableActiveReceiver();
   }
 }
 
 extern void enableRTLreceive() {
-  Log.trace(F("enableRTLreceive: %F" CR), receiveMhz);
+  Log.notice(F("Switching to RTL_433 Receiver: %FMhz" CR), receiveMhz);
+#  ifdef ZgatewayRF
+  disableRFReceive();
+#  endif
+#  ifdef ZgatewayRF2
+  disableRF2Receive();
+#  endif
+#  ifdef ZgatewayPilight
+  disablePilightReceive();
+#  endif
   ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
   rtl_433.enableReceiver(RF_RECEIVER_GPIO);
-  // rtl_433.initReceiver(RF_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
 }
 
