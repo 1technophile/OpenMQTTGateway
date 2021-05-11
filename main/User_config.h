@@ -193,6 +193,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 //#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
+//#define ZgatewayGFSunInverter "GFSunInverter"   //ESP32
 //#define ZgatewayBT     "BT"       //ESP8266, ESP32
 //#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
@@ -326,7 +327,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifdef ZgatewaySRFB
 #  define SERIAL_BAUD 19200
 #else
-#  define SERIAL_BAUD 115200
+#  ifndef SERIAL_BAUD
+#    define SERIAL_BAUD 115200
+#  endif
 #endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
@@ -342,16 +345,20 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 // uncomment the line below to integrate msg value into the subject when receiving
 //#define valueAsASubject true
 
-#if defined(ESP8266) || defined(ESP32)
-#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#if defined(ESP32)
+#  define JSON_MSG_BUFFER    768
+#  define SIGNAL_SIZE_UL_ULL uint64_t
+#  define STRTO_UL_ULL       strtoull
+#elif defined(ESP8266)
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoull
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoul
 #else // boards with smaller memory
-#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher it is causing unexpected behaviour on ESP8266
+#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher
 #  define SIGNAL_SIZE_UL_ULL uint32_t
 #  define STRTO_UL_ULL       strtoul
 #endif

@@ -56,12 +56,22 @@ unsigned long timer_sys_measures = 0;
 StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray& modules = modulesBuffer.createArray();
 
+#ifndef ZgatewayGFSunInverter
+// Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
+// Unfortunately it ignores #if directives.
+// This is a simple workaround for this problem.
+struct GfSun2000Data {};
+#endif
+
 // Modules config inclusion
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 #  include "config_RF.h"
 #endif
 #ifdef ZgatewayWeatherStation
 #  include "config_WeatherStation.h"
+#endif
+#ifdef ZgatewayGFSunInverter
+#  include "config_GFSunInverter.h"
 #endif
 #ifdef ZgatewayLORA
 #  include "config_LORA.h"
@@ -181,6 +191,8 @@ static bool esp32EthConnected = false;
 WiFiClientSecure eClient;
 #  else
 #    include <WiFi.h>
+#    include <WiFiMulti.h>
+WiFiMulti wifiMulti;
 WiFiClient eClient;
 #  endif
 #  include <Preferences.h>
@@ -194,6 +206,7 @@ Preferences preferences;
 #  include <DNSServer.h>
 #  include <ESP8266WebServer.h>
 #  include <ESP8266WiFi.h>
+#  include <ESP8266WiFiMulti.h>
 #  include <FS.h>
 #  include <WiFiManager.h>
 #  ifdef SECURE_CONNECTION
@@ -201,6 +214,7 @@ WiFiClientSecure eClient;
 X509List caCert(certificate);
 #  else
 WiFiClient eClient;
+ESP8266WiFiMulti wifiMulti;
 #  endif
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
@@ -517,7 +531,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // In order to republish this payload, a copy must be made
   // as the orignal payload buffer will be overwritten whilst
   // constructing the PUBLISH packet.
-  Log.trace(F("Hey I got a callback " CR));
+  Log.trace(F("Hey I got a callback %s" CR), topic);
   // Allocate the correct amount of memory for the payload copy
   byte* p = (byte*)malloc(length + 1);
   // Copy the payload to the new buffer
@@ -554,6 +568,7 @@ void setup() {
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
   setupM5();
 #    endif
+  Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
 #  ifdef ESP32_ETHERNET
@@ -588,7 +603,7 @@ void setup() {
   digitalWrite(LED_SEND, !LED_SEND_ON);
   digitalWrite(LED_INFO, !LED_INFO_ON);
 
-#if defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
   connectMQTTmdns();
 #else
@@ -640,18 +655,32 @@ void setup() {
 #ifdef ZgatewayRF
   setupRF();
   modules.add(ZgatewayRF);
+#  define ACTIVE_RECEIVER ACTIVE_RF
 #endif
 #ifdef ZgatewayRF2
   setupRF2();
   modules.add(ZgatewayRF2);
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_RF2
 #endif
 #ifdef ZgatewayPilight
   setupPilight();
   modules.add(ZgatewayPilight);
+  disablePilightReceive();
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_PILIGHT
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
   modules.add(ZgatewayWeatherStation);
+#endif
+#ifdef ZgatewayGFSunInverter
+  setupGFSunInverter();
+  modules.add(ZgatewayGFSunInverter);
 #endif
 #ifdef ZgatewaySRFB
   setupSRFB();
@@ -719,9 +748,27 @@ void setup() {
 #ifdef ZgatewayRTL_433
   setupRTL_433();
   modules.add(ZgatewayRTL_433);
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_RTL
+#endif
+#if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRF2)
+#  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive
+  activeReceiver = DEFAULT_RECEIVER;
+#  else
+  activeReceiver = ACTIVE_RECEIVER;
+#  endif
+  enableActiveReceiver();
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
-  Log.notice(F("Setup OpenMQTTGateway end" CR));
+
+#ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+  char jsonChar[100];
+  modules.printTo((char*)jsonChar, modules.measureLength() + 1);
+  Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
+#endif
+  Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
 }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -812,13 +859,17 @@ void setupTLS() {
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
-  char manual_wifi_ssid[] = wifi_ssid;
-  char manual_wifi_password[] = wifi_password;
-  delay(10);
   WiFi.mode(WIFI_STA);
+  wifiMulti.addAP(wifi_ssid, wifi_password);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid);
+#  ifdef wifi_ssid1
+  wifiMulti.addAP(wifi_ssid1, wifi_password1);
+  Log.trace(F("Connecting to %s" CR), wifi_ssid1);
+#  endif
+  delay(10);
 
   // We start by connecting to a WiFi network
-  Log.trace(F("Connecting to %s" CR), manual_wifi_ssid);
+
 #  ifdef NetworkAdvancedSetup
   IPAddress ip_adress(ip);
   IPAddress gateway_adress(gateway);
@@ -827,12 +878,10 @@ void setup_wifi() {
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
   }
-  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
-#  else
-  WiFi.begin(manual_wifi_ssid, manual_wifi_password);
+
 #  endif
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while (wifiMulti.run() != WL_CONNECTED) {
     delay(500);
     Log.trace(F("." CR));
     failure_number_ntwk++;
@@ -1123,14 +1172,8 @@ void setup_ethernet() {
 }
 #endif
 
-#if defined(MDNS_SD) && defined(ESP8266)
+#if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
 void connectMQTTmdns() {
-  if (!MDNS.begin("ESP_MQTT")) {
-    Log.error(F("Error setting up MDNS responder!" CR));
-    while (1) {
-      delay(1000);
-    }
-  }
   Log.trace(F("Browsing for MQTT service" CR));
   int n = MDNS.queryService("mqtt", "tcp");
   if (n == 0) {
@@ -1253,6 +1296,9 @@ void loop() {
 #ifdef ZgatewayWeatherStation
       ZgatewayWeatherStationtoMQTT();
 #endif
+#ifdef ZgatewayGFSunInverter
+      ZgatewayGFSunInverterMQTT();
+#endif
 #ifdef ZgatewayPilight
       PilighttoMQTT();
 #endif
@@ -1318,14 +1364,28 @@ void loop() {
 #endif
 }
 
+/** 
+ * Calculate uptime and take into account the millis() rollover
+ */
+unsigned long uptime() {
+  static unsigned long lastUptime = 0;
+  static unsigned long uptimeAdd = 0;
+  unsigned long uptime = millis() / 1000 + uptimeAdd;
+  if (uptime < lastUptime) {
+    uptime += 4294967;
+    uptimeAdd += 4294967;
+  }
+  lastUptime = uptime;
+  return uptime;
+}
+
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& SYSdata = jsonBuffer.createObject();
-  unsigned long uptime = millis() / 60000; //minutes uptime
-  SYSdata["uptime"] = uptime;
+  SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
-  Log.trace(F("retrieving value of system characteristics Uptime (min):%u" CR), uptime);
+  Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime());
 #  if defined(ESP8266) || defined(ESP32)
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
@@ -1379,13 +1439,18 @@ void stateMeasures() {
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
+#  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
+  SYSdata["actRec"] = (int)activeReceiver;
+#  endif
 #  ifdef ZradioCC1101
-  SYSdata["mhz"] = (int)receiveMhz;
+  SYSdata["mhz"] = (float)receiveMhz;
 #  endif
 #  if defined(ZgatewayRTL_433)
-  SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
-  SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
-  SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+  if (activeReceiver == ACTIVE_RTL) {
+    SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+    SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+    SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+  }
 #  endif
   SYSdata.set("modules", modules);
   pub(subjectSYStoMQTT, SYSdata);

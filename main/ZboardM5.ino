@@ -112,31 +112,28 @@ void loopM5() {
   }
   previousBtnState = currentBtnState;
   static int previousLogLevel;
-  switch (Log.getLastMsgLevel()) {
-    case 1:
-    case 2:
-      if (lowpowermode != 2) {
+  int currentLogLevel = Log.getLastMsgLevel();
+  if (previousLogLevel != currentLogLevel && lowpowermode != 2) {
+    switch (currentLogLevel) {
+      case 1:
+      case 2:
         wakeScreen(NORMAL_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(TFT_RED); // FATAL, ERROR
         M5.Lcd.setTextColor(TFT_BLACK, TFT_RED);
-      }
-      break;
-    case 3:
-      if (lowpowermode != 2) {
+        break;
+      case 3:
         wakeScreen(NORMAL_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(TFT_ORANGE); // WARNING
         M5.Lcd.setTextColor(TFT_BLACK, TFT_ORANGE);
-      }
-      break;
-    default:
-      if (previousLogLevel != Log.getLastMsgLevel() && lowpowermode != 2) {
+        break;
+      default:
         wakeScreen(SLEEP_LCD_BRIGHTNESS);
         M5.Lcd.fillScreen(TFT_WHITE);
         drawLogo(M5.Lcd.width() * 0.1875, (M5.Lcd.width() / 2) - M5.Lcd.width() * 0.24, M5.Lcd.height() * 0.5, true, true, true, true, true, true);
-      }
-      break;
+        break;
+    }
   }
-  previousLogLevel = Log.getLastMsgLevel();
+  previousLogLevel = currentLogLevel;
 }
 
 void MQTTtoM5(char* topicOri, JsonObject& M5data) { // json object decoding

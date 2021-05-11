@@ -174,7 +174,7 @@ void pubMqttDiscovery() {
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Uptime", (char*)getUniqueId("uptime", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
-                  "", "", "min", //set,payload_on,payload_off,unit_of_meas,
+                  "", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false // device name, device manufacturer, device model, device mac, retain
@@ -696,6 +696,14 @@ void pubMqttDiscovery() {
                   "", "BT: Publish only sensors", (char*)getUniqueId("only_sensors", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "", //set availability_topic,device_class,value_template,
                   "{\"onlysensors\":true}", "{\"onlysensors\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", true // device name, device manufacturer, device model, device mac, retain
+  );
+  createDiscovery("switch", //set Type
+                  "", "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "", //set availability_topic,device_class,value_template,
+                  "{\"hasspresence\":true}", "{\"hasspresence\":false}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", true // device name, device manufacturer, device model, device mac, retain

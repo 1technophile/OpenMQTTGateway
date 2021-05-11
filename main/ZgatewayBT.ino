@@ -98,8 +98,10 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
     pub((char*)mactopic.c_str(), data);
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
-    data.remove("servicedatauuid");
-    data.remove("servicedata");
+    if (data.containsKey("servicedatauuid"))
+      data.remove("servicedatauuid");
+    if (data.containsKey("servicedata"))
+      data.remove("servicedata");
     String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
     pub_custom_topic((char*)topic.c_str(), data, false);
   }
@@ -168,6 +170,7 @@ void emptyBTQueue() {
     JsonBundle& bundle = jsonBTBufferQueue[next % BTQueueSize];
     pubBTMainCore(*bundle.object, bundle.haPresence);
     atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
+    vTaskDelay(1);
   }
 }
 
@@ -384,6 +387,29 @@ void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {
   createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
 }
 
+void CLEARGRASSCGPR1Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGPR1parametersCount 2
+  Log.trace(F("CLEARGRASSCGPR1Discovery" CR));
+  char* CLEARGRASSCGPR1sensor[CLEARGRASSCGPR1parametersCount][8] = {
+      {"sensor", "CLEARGRASSCGPR1-pres", mac, "", jsonPres, "", "", ""},
+      {"sensor", "CLEARGRASSCGPR1-lux", mac, "illuminance", jsonLux, "", "", "lx"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGPR1sensor, CLEARGRASSCGPR1parametersCount, "CLEARGRASSCGPR1", "ClearGrass", sensorModel);
+}
+
+void CLEARGRASSCGH1Discovery(char* mac, char* sensorModel) {
+#    define CLEARGRASSCGH1parametersCount 1
+  Log.trace(F("CLEARGRASSCGH1Discovery" CR));
+  char* CLEARGRASSCGH1sensor[CLEARGRASSCGH1parametersCount][8] = {
+      {"binary_sensor", "CLEARGRASSCGH1-open", mac, "door", jsonOpen, "True", "False", ""},
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, CLEARGRASSCGH1sensor, CLEARGRASSCGH1parametersCount, "CLEARGRASSCGH1", "ClearGrass", sensorModel);
+}
+
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {
 #    define CLEARGRASSTRHKPAparametersCount 3
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
@@ -485,6 +511,19 @@ void INodeEMDiscovery(char* mac, char* sensorModel) {
   createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount, "INode-Energy-Meter", "INode", sensorModel);
 }
 
+void WS02Discovery(char* mac, char* sensorModel) {
+#    define WS02parametersCount 3
+  Log.trace(F("WS02Discovery" CR));
+  char* WS02sensor[WS02parametersCount][8] = {
+      {"sensor", "WS02-volt", mac, "", jsonVolt, "", "", "V"},
+      {"sensor", "WS02-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "WS02-hum", mac, "humidity", jsonHum, "", "", "%"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, WS02sensor, WS02parametersCount, "WS02", "SensorBlue", sensorModel);
+}
+
 #  else
 void MiFloraDiscovery(char* mac, char* sensorModel) {}
 void VegTrugDiscovery(char* mac, char* sensorModel) {}
@@ -493,6 +532,9 @@ void FormalDiscovery(char* mac, char* sensorModel) {}
 void LYWSD02Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSTRHDiscovery(char* mac, char* sensorModel) {}
 void CLEARGRASSCGD1Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGDK2Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGPR1Discovery(char* mac, char* sensorModel) {}
+void CLEARGRASSCGH1Discovery(char* mac, char* sensorModel) {}
 void CLEARGRASSTRHKPADiscovery(char* mac, char* sensorModel) {}
 void MiScaleDiscovery(char* mac, char* sensorModel) {}
 void MiLampDiscovery(char* mac, char* sensorModel) {}
@@ -501,6 +543,7 @@ void InkBirdDiscovery(char* mac, char* sensorModel) {}
 void LYWSD03MMCDiscovery(char* mac, char* sensorModel) {}
 void MHO_C401Discovery(char* mac, char* sensorModel) {}
 void INodeEMDiscovery(char* mac, char* sensorModel) {}
+void WS02Discovery(char* mac, char* sensorModel) {}
 #  endif
 
 #  ifdef ESP32
@@ -545,11 +588,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
       if (advertisedDevice->haveTXPower())
         BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
-#    ifdef subjectHomePresence
-      if (advertisedDevice->haveRSSI() && !publishOnlySensors) {
-        haRoomPresence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
+      if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
+        hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
       }
-#    endif
       if (advertisedDevice->haveServiceData()) {
         int serviceDataCount = advertisedDevice->getServiceDataCount();
         Log.trace(F("Get services data number: %d" CR), serviceDataCount);
@@ -606,19 +647,21 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
  * BLEscan used to retrieve BLE advertized data from devices without connection
  */
 void BLEscan() {
-  TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
-  TIMERG0.wdt_feed = 1;
-  TIMERG0.wdt_wprotect = 0;
+  disableCore0WDT();
   Log.notice(F("Scan begin" CR));
+  BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
   BLEDevice::init("");
-  BLEScan* pBLEScan = BLEDevice::getScan(); //create new scan
+  BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+  pBLEScan->setActiveScan(ActiveBLEScan);
+  pBLEScan->setInterval(BLEScanInterval);
+  pBLEScan->setWindow(BLEScanWindow);
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
   BLEDevice::deinit(true);
+  enableCore0WDT();
 }
 
 /** 
@@ -729,12 +772,10 @@ void startProcessing() {
 
 void coreTask(void* pvParameters) {
   while (true) {
-    Log.trace(F("BT Task running on core: %d" CR), xPortGetCoreID());
     if (!ProcessLock) {
       int n = 0;
       while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !ProcessLock) {
         n++;
-        Log.trace(F("Wait for MQTT on core: %d attempt: %d" CR), xPortGetCoreID(), n);
         delay(1000);
       }
       if (client.state() != 0) {
@@ -941,10 +982,8 @@ bool BTtoMQTT() {
           return false; //if we have at least one white mac and this mac is not white we go out
 
         BLEdata.set("rssi", (int)rssi);
-#    ifdef subjectHomePresence
-        if (!publishOnlySensors)
-          haRoomPresence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
-#    endif
+        if (!publishOnlySensors && hassPresence)
+          hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         Log.trace(F("Service data: %s" CR), restData.c_str());
         BLEdata.set("servicedata", restData.c_str());
         PublishDeviceData(BLEdata);
@@ -999,7 +1038,10 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery((char*)macWOdots.c_str(), "CGP1W");
       if (p->sensorModel == MUE4094RT) MiLampDiscovery((char*)macWOdots.c_str(), "MUE4094RT");
       if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery((char*)macWOdots.c_str(), "CGDK2");
+      if (p->sensorModel == CGPR1) CLEARGRASSCGPR1Discovery((char*)macWOdots.c_str(), "CGPR1");
+      if (p->sensorModel == CGH1) CLEARGRASSCGH1Discovery((char*)macWOdots.c_str(), "CGH1");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery((char*)macWOdots.c_str(), "CGD1");
+      if (p->sensorModel == WS02) WS02Discovery((char*)macWOdots.c_str(), "WS02");
       if (p->sensorModel == MIBAND) MiBandDiscovery((char*)macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery((char*)macWOdots.c_str(), "XMTZC0xHM");
@@ -1129,6 +1171,22 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
           createOrUpdateDevice(mac, device_flags_init, CGDK2);
         return process_cleargrass(BLEdata, false);
       }
+      Log.trace(F("Is it a CGPR1?" CR));
+      if (service_len > ServicedataMinLength && strncmp(&service_data[0], "4812", 4) == 0 || strncmp(&service_data[0], "0812", 4) == 0) {
+        Log.trace(F("CGPR1 data reading" CR));
+        BLEdata.set("model", "CGPR1");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGPR1);
+        return process_cgpr1(BLEdata);
+      }
+      Log.trace(F("Is it a CGH1?" CR));
+      if (service_len > ServicedataMinLength && (strncmp(&service_data[0], "c804", 4) == 0 || strncmp(&service_data[0], "8804", 4) == 0 || strncmp(&service_data[0], "0804", 4) == 0 || strncmp(&service_data[0], "4804", 4) == 0)) {
+        Log.trace(F("CGH1 data reading" CR));
+        BLEdata.set("model", "CGH1");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, CGH1);
+        return process_cgh1(BLEdata);
+      }
       Log.trace(F("Is it a MHO_C401?" CR));
       if (strstr(service_data, "588703") != NULL) {
         Log.trace(F("MHO_C401 add to list for future connect" CR));
@@ -1218,6 +1276,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       if (device->sensorModel == -1)
         createOrUpdateDevice(mac, device_flags_init, INODE_EM);
       return process_inode_em(BLEdata);
+    }
+    Log.trace(F("Is it a WS02?" CR));
+    if (strlen(manufacturerdata) >= 40 && (strstr(manufacturerdata, "100000001a11") != NULL)) {
+      Log.trace(F("WS02 data reading data reading" CR));
+      BLEdata.set("model", "WS02");
+      if (device->sensorModel == -1)
+        createOrUpdateDevice(mac, device_flags_init, WS02);
+      return process_ws02(BLEdata);
     }
 #  if !pubBLEManufacturerData
     Log.trace(F("Remove manufacturer data" CR));
@@ -1383,6 +1449,41 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
   return BLEdata;
 }
 
+JsonObject& process_cgpr1(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+  int value = -1;
+  if (strncmp(&servicedata[0], "0812", 4) == 0) { // lux
+    value = value_from_hex_data(servicedata, 33, 4, true);
+    if (value >= 0)
+      BLEdata.set("lux", value);
+  } else if (strncmp(&servicedata[0], "4812", 4) == 0) { // presence
+    value = value_from_hex_data(servicedata, 21, 1, false);
+    if (value == 0)
+      BLEdata.set("pres", false);
+    if (value == 1)
+      BLEdata.set("pres", true);
+  }
+
+  return BLEdata;
+}
+
+JsonObject& process_cgh1(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+  int value = -1;
+  if (strncmp(&servicedata[0], "0804", 4) == 0 || strncmp(&servicedata[0], "8804", 4) == 0) { // state
+    value = value_from_hex_data(servicedata, 33, 1, false);
+  } else if (strncmp(&servicedata[0], "4804", 4) == 0 || strncmp(&servicedata[0], "c804", 4) == 0) { // action
+    value = value_from_hex_data(servicedata, 21, 1, false);
+  }
+
+  if (value == 0)
+    BLEdata.set("open", true);
+  if (value == 1)
+    BLEdata.set("open", false);
+
+  return BLEdata;
+}
+
 JsonObject& process_atc(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
@@ -1435,8 +1536,23 @@ JsonObject& process_inode_em(JsonObject& BLEdata) {
   return BLEdata;
 }
 
-#  ifdef subjectHomePresence
-void haRoomPresence(JsonObject& HomePresence) {
+JsonObject& process_ws02(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata "].as<const char*>();
+
+  double temperature = (double)value_from_hex_data(manufacturerdata, 20, 4, true) / 16;
+  double humidity = (double)value_from_hex_data(manufacturerdata, 24, 4, true) / 16;
+  double voltage = (double)value_from_hex_data(manufacturerdata, 16, 4, true) / 1000;
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("hum", (double)humidity);
+  BLEdata.set("volt", (double)voltage);
+
+  return BLEdata;
+}
+
+void hass_presence(JsonObject& HomePresence) {
   int BLErssi = HomePresence["rssi"];
   Log.trace(F("BLErssi %d" CR), BLErssi);
   int txPower = HomePresence["txpower"] | 0;
@@ -1453,7 +1569,6 @@ void haRoomPresence(JsonObject& HomePresence) {
   HomePresence["distance"] = distance;
   Log.trace(F("Ble distance %D" CR), distance);
 }
-#  endif
 
 void BTforceScan() {
   if (!ProcessLock) {
@@ -1526,6 +1641,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       bleConnect = (bool)BTdata["bleconnect"];
       Log.notice(F("New value bleConnect: %T" CR), bleConnect);
     }
+    if (BTdata.containsKey("lowpowermode")) {
+      changelowpowermode((int)BTdata["lowpowermode"]);
+    }
 #  endif
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
@@ -1535,11 +1653,14 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       minRssi = abs((int)BTdata["minrssi"]);
       Log.notice(F("New minrssi: %d" CR), minRssi);
     }
-#  ifdef ESP32
-    if (BTdata.containsKey("lowpowermode")) {
-      changelowpowermode((int)BTdata["lowpowermode"]);
+    // Home Assistant presence message
+    if (BTdata.containsKey("hasspresence")) {
+      // storing Min RSSI for further use if needed
+      Log.trace(F("Previous hasspresence: %T" CR), hassPresence);
+      // set Min RSSI if present if not setting default value
+      hassPresence = (bool)BTdata["hasspresence"];
+      Log.notice(F("New hasspresence: %T" CR), hassPresence);
     }
-#  endif
   }
 }
 #endif

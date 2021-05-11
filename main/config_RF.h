@@ -34,18 +34,24 @@ extern void setupRF();
 extern void RFtoMQTT();
 extern void MQTTtoRF(char* topicOri, char* datacallback);
 extern void MQTTtoRF(char* topicOri, JsonObject& RFdata);
+extern void disableRFReceive();
+extern void enableRFReceive();
 #endif
 #ifdef ZgatewayRF2
 extern void setupRF2();
 extern void RF2toMQTT();
 extern void MQTTtoRF2(char* topicOri, char* datacallback);
 extern void MQTTtoRF2(char* topicOri, JsonObject& RFdata);
+extern void disableRF2Receive();
+extern void enableRF2Receive();
 #endif
 #ifdef ZgatewayPilight
 extern void setupPilight();
 extern void PilighttoMQTT();
 extern void MQTTtoPilight(char* topicOri, char* datacallback);
 extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
+extern void disablePilightReceive();
+extern void enablePilightReceive();
 #endif
 #ifdef ZgatewayRTL_433
 extern void RTL_433Loop();
@@ -134,6 +140,71 @@ float receiveMhz = CC1101_FREQUENCY;
 //RF PIN definition
 #    define RF_EMITTER_GPIO 4 //4 = D4 on arduino
 #  endif
+#endif
+
+#if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
+/**
+ * Active Receiver Module
+ * 1 = ZgatewayPilight
+ * 2 = ZgatewayRF
+ * 3 = ZgatewayRTL_433
+ * 4 = ZgatewayRF2
+ */
+int activeReceiver = 0;
+#  define ACTIVE_RECERROR 0
+#  define ACTIVE_PILIGHT  1
+#  define ACTIVE_RF       2
+#  define ACTIVE_RTL      3
+#  define ACTIVE_RF2      4
+
+#  ifdef ZradioCC1101
+bool validFrequency(float mhz) {
+  //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
+  if (mhz >= 300 && mhz <= 348)
+    return true;
+  if (mhz >= 387 && mhz <= 464)
+    return true;
+  if (mhz >= 779 && mhz <= 928)
+    return true;
+  return false;
+}
+#  endif
+
+int currentReceiver = -1;
+
+extern void stateMeasures(); // Send a status message
+
+void enableActiveReceiver() {
+  // if (currentReceiver != activeReceiver) {
+  Log.trace(F("enableActiveReceiver: %d" CR), activeReceiver);
+  switch (activeReceiver) {
+#  ifdef ZgatewayPilight
+    case ACTIVE_PILIGHT:
+      enablePilightReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF
+    case ACTIVE_RF:
+      enableRFReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRTL_433
+    case ACTIVE_RTL:
+      enableRTLreceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF2
+    case ACTIVE_RF2:
+      enableRF2Receive();
+      break;
+#  endif
+#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+    default:
+      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
+#  endif
+  }
+  currentReceiver = activeReceiver;
+}
 #endif
 
 #endif

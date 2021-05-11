@@ -74,22 +74,18 @@ void pilightCallback(const String& protocol, const String& message, int status,
 }
 
 void setupPilight() {
-#  ifndef ZgatewayRF&& ZgatewayRF2 //receiving with Pilight is not compatible with ZgatewayRF or RF2 or RF315 as far as I can tell
-#    ifdef ZradioCC1101 //receiving with CC1101
+#  ifdef ZradioCC1101 //receiving with CC1101
   ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.setMHZ(CC1101_FREQUENCY);
   ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY);
-  rf.enableReceiver();
-#    endif
+#  endif
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+  Log.trace(F("ZgatewayPilight command topic: %s%s" CR), mqtt_topic, subjectMQTTtoPilight);
   Log.trace(F("ZgatewayPilight setup done " CR));
-#  else
-  Log.trace(F("ZgatewayPilight setup cannot be done, comment first ZgatewayRF && ZgatewayRF2" CR));
-#  endif
 }
 
 void PilighttoMQTT() {
@@ -97,15 +93,12 @@ void PilighttoMQTT() {
 }
 
 void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
-#  ifdef ZradioCC1101
-  ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
-  rf.disableReceiver();
-#  endif
   if (cmpToMainTopic(topicOri, subjectMQTTtoPilight)) {
-    Log.trace(F("MQTTtoPilight json data analysis" CR));
     const char* message = Pilightdata["message"];
     const char* protocol = Pilightdata["protocol"];
     const char* raw = Pilightdata["raw"];
+    float tempMhz = Pilightdata["mhz"];
+    bool success = false;
     if (raw) {
       uint16_t codes[MAXPULSESTREAMLENGTH];
       int repeats = rf.stringToRepeats(raw);
@@ -122,8 +115,13 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       }
       int msgLength = rf.stringToPulseTrain(raw, codes, MAXPULSESTREAMLENGTH);
       if (msgLength > 0) {
+#  ifdef ZradioCC1101
+        ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
+        rf.disableReceiver();
+#  endif
         rf.sendPulseTrain(codes, msgLength, repeats);
         Log.notice(F("MQTTtoPilight raw ok" CR));
+        success = true;
       } else {
         Log.trace(F("MQTTtoPilight raw KO" CR));
         switch (msgLength) {
@@ -142,12 +140,18 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
         }
         Log.error(F("Invalid JSON: raw data malformed" CR));
       }
-    } else if (message && protocol) {
+    }
+    if (message && protocol) {
       Log.trace(F("MQTTtoPilight msg & protocol ok" CR));
+#  ifdef ZradioCC1101
+      ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
+      rf.disableReceiver();
+#  endif
       int msgLength = rf.send(protocol, message);
       if (msgLength > 0) {
         Log.trace(F("Adv data MQTTtoPilight push state via PilighttoMQTT" CR));
         pub(subjectGTWPilighttoMQTT, Pilightdata);
+        success = true;
       } else {
         switch (msgLength) {
           case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
@@ -166,13 +170,56 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
             Log.error(F("Invalid JSON: can't read message/protocol" CR));
         }
       }
-    } else {
-      Log.error(F("MQTTtoPilight failed json read" CR));
     }
-  }
+    if (Pilightdata.containsKey("active")) {
+      Log.trace(F("PiLight active:" CR));
+      activeReceiver = ACTIVE_PILIGHT; // Enable PILIGHT Gateway
+      success = true;
+    }
 #  ifdef ZradioCC1101
-  ELECHOUSE_cc1101.SetRx(CC1101_FREQUENCY); // set Receive on
-  rf.enableReceiver();
+    if (Pilightdata.containsKey("mhz") && validFrequency(tempMhz)) {
+      receiveMhz = tempMhz;
+      Log.notice(F("PiLight Receive mhz: %F" CR), receiveMhz);
+      success = true;
+    }
 #  endif
+    if (success) {
+      pub(subjectGTWPilighttoMQTT, Pilightdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    } else {
+      pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
+      Log.error(F("MQTTtoPilight Fail json" CR));
+    }
+    enableActiveReceiver();
+  }
 }
+
+extern void disablePilightReceive() {
+  Log.trace(F("disablePilightReceive" CR));
+  rf.initReceiver(-1);
+  rf.disableReceiver();
+};
+
+extern void enablePilightReceive() {
+#  ifdef ZradioCC1101
+  Log.notice(F("Switching to Pilight Receiver: %F" CR), receiveMhz);
+#  else
+  Log.notice(F("Switching to Pilight Receiver" CR));
+#  endif
+#  ifdef ZgatewayRF
+  disableRFReceive();
+#  endif
+#  ifdef ZgatewayRF2
+  disableRF2Receive();
+#  endif
+#  ifdef ZgatewayRTL_433
+  disableRTLreceive();
+#  endif
+
+#  ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
+#  endif
+  rf.setCallback(pilightCallback);
+  rf.initReceiver(RF_RECEIVER_GPIO);
+  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+};
 #endif
