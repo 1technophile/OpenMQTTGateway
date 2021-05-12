@@ -689,7 +689,6 @@ void notifyCB(
   } else {
     Log.trace(F("Callback process canceled by processLock" CR));
   }
-  pBLERemoteCharacteristic->unsubscribe();
 }
 
 /** 
@@ -709,12 +708,10 @@ void BLEconnect() {
       BLEAddress sensorAddress(p->macAdr);
       if (!pClient->connect(sensorAddress)) {
         Log.notice(F("Failed to find client: %s" CR), p->macAdr);
-        NimBLEDevice::deleteClient(pClient);
       } else {
         BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
         if (!pRemoteService) {
           Log.notice(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
-          pClient->disconnect();
         } else {
           Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
           // Obtain a reference to the characteristic in the service of the remote BLE server.
@@ -723,21 +720,19 @@ void BLEconnect() {
             BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
             if (!pRemoteCharacteristic) {
               Log.notice(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
-              pClient->disconnect();
             } else {
               if (pRemoteCharacteristic->canNotify()) {
                 Log.trace(F("Registering notification" CR));
                 pRemoteCharacteristic->subscribe(true, notifyCB);
                 delay(BLE_CNCT_TIMEOUT);
-                pClient->disconnect();
               } else {
                 Log.notice(F("Failed registering notification" CR));
-                pClient->disconnect();
               }
             }
           }
         }
       }
+      NimBLEDevice::deleteClient(pClient);
     }
   }
   Log.notice(F("BLE Connect end" CR));
