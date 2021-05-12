@@ -634,8 +634,6 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 void BLEscan() {
   disableCore0WDT();
   Log.notice(F("Scan begin" CR));
-  BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
-  BLEDevice::init("");
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
@@ -645,7 +643,6 @@ void BLEscan() {
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
-  BLEDevice::deinit(true);
   enableCore0WDT();
 }
 
@@ -697,7 +694,6 @@ void notifyCB(
  */
 void BLEconnect() {
   Log.notice(F("BLE Connect begin" CR));
-  BLEDevice::init("");
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     if (p->sensorModel == LYWSD03MMC || p->sensorModel == MHO_C401) {
@@ -803,10 +799,7 @@ void deepSleep(uint64_t time_in_us) {
 #    endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
-  esp_bluedroid_disable();
-  esp_bluedroid_deinit();
-  esp_bt_controller_disable();
-  esp_bt_controller_deinit();
+  BLEDevice::deinit(true);
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
   adc_power_off();
   esp_wifi_stop();
@@ -845,6 +838,9 @@ void setupBT() {
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
   atomic_init(&jsonBTBufferQueueNext, 0); // in theory, we don't need this
   atomic_init(&jsonBTBufferQueueLast, 0); // in theory, we don't need this
+
+  BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
+  BLEDevice::init("");
 
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
