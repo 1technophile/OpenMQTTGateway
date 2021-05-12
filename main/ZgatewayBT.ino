@@ -557,48 +557,69 @@ void WS02Discovery(const char* mac, const char* sensorModel) {}
 static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  std::string convertServiceData(std::string deviceServiceData) {
-    int serviceDataLength = (int)deviceServiceData.length();
-    char spr[2 * serviceDataLength + 1];
-    for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
-    spr[2 * serviceDataLength] = 0;
-    Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
-    return spr;
-  }
-
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
+    Log.notice(F("Device detected: %s" CR), advertisedDevice->getAddress().toString().c_str());
+  }
+};
+
+std::string convertServiceData(std::string deviceServiceData) {
+  int serviceDataLength = (int)deviceServiceData.length();
+  char spr[2 * serviceDataLength + 1];
+  for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
+  spr[2 * serviceDataLength] = 0;
+  Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
+  return spr;
+}
+
+/**
+ * BLEscan used to retrieve BLE advertized data from devices without connection
+ */
+void BLEscan() {
+  disableCore0WDT();
+  Log.notice(F("Scan begin" CR));
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  MyAdvertisedDeviceCallbacks myCallbacks;
+  pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+  pBLEScan->setActiveScan(ActiveBLEScan);
+  pBLEScan->setInterval(BLEScanInterval);
+  pBLEScan->setWindow(BLEScanWindow);
+  BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
+  scanCount++;
+  Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
+  enableCore0WDT();
+
+  for (auto it : foundDevices) {
     Log.trace(F("Creating BLE buffer" CR));
     JsonObject& BLEdata = getBTJsonObject();
-    String mac_adress = advertisedDevice->getAddress().toString().c_str();
+    String mac_adress = it->getAddress().toString().c_str();
     mac_adress.toUpperCase();
     BLEdata.set("id", (char*)mac_adress.c_str());
-    Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
     BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
     if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
-      if (advertisedDevice->haveName())
-        BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
-      if (advertisedDevice->haveManufacturerData()) {
-        char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
+      if (it->haveName())
+        BLEdata.set("name", (char*)it->getName().c_str());
+      if (it->haveManufacturerData()) {
+        char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)it->getManufacturerData().data(), it->getManufacturerData().length());
         Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
         BLEdata.set("manufacturerdata", manufacturerdata);
         free(manufacturerdata);
       }
-      if (advertisedDevice->haveRSSI())
-        BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
-      if (advertisedDevice->haveTXPower())
-        BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
-      if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
+      if (it->haveRSSI())
+        BLEdata.set("rssi", (int)it->getRSSI());
+      if (it->haveTXPower())
+        BLEdata.set("txpower", (int8_t)it->getTXPower());
+      if (it->haveRSSI() && !publishOnlySensors && hassPresence) {
         hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
       }
-      if (advertisedDevice->haveServiceData()) {
-        int serviceDataCount = advertisedDevice->getServiceDataCount();
+      if (it->haveServiceData()) {
+        int serviceDataCount = it->getServiceDataCount();
         Log.trace(F("Get services data number: %d" CR), serviceDataCount);
         for (int j = 0; j < serviceDataCount; j++) {
-          std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+          std::string service_data = convertServiceData(it->getServiceData(j));
           Log.trace(F("Service data: %s" CR), service_data.c_str());
           BLEdata.set("servicedata", (char*)service_data.c_str());
-          std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
+          std::string serviceDatauuid = it->getServiceDataUUID(j).toString();
           Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
           BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
           process_bledata(BLEdata); // this will force to resolve all the service data
@@ -619,8 +640,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
               Log.trace("Json parsing error for %s" CR, jsonmsgb);
               break;
             }
-            std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
-            std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
+            std::string service_data = convertServiceData(it->getServiceData(j));
+            std::string serviceDatauuid = it->getServiceDataUUID(j).toString();
 
             int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
             int size1 = jsonBTBufferQueue[last].buffer.size();
@@ -641,24 +662,6 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       Log.trace(F("Filtered mac device" CR));
     }
   }
-};
-
-/** 
- * BLEscan used to retrieve BLE advertized data from devices without connection
- */
-void BLEscan() {
-  disableCore0WDT();
-  Log.notice(F("Scan begin" CR));
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  MyAdvertisedDeviceCallbacks myCallbacks;
-  pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  pBLEScan->setActiveScan(ActiveBLEScan);
-  pBLEScan->setInterval(BLEScanInterval);
-  pBLEScan->setWindow(BLEScanWindow);
-  BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
-  scanCount++;
-  Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
-  enableCore0WDT();
 }
 
 /** 
