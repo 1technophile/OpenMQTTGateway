@@ -277,12 +277,12 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
 
-void pub(char* topicori, char* payload, bool retainFlag) {
+void pub(const char* topicori, const char* payload, bool retainFlag) {
   String topic = String(mqtt_topic) + String(topicori);
-  pubMQTT((char*)topic.c_str(), payload, retainFlag);
+  pubMQTT(topic.c_str(), payload, retainFlag);
 }
 
-void pub(char* topicori, JsonObject& data) {
+void pub(const char* topicori, JsonObject& data) {
   Log.notice(F("Subject: %s" CR), topicori);
   digitalWrite(LED_RECEIVE, LED_RECEIVE_ON);
   logJson(data);
@@ -341,7 +341,7 @@ void pub(char* topicori, JsonObject& data) {
   }
 }
 
-void pub(char* topicori, char* payload) {
+void pub(const char* topicori, const char* payload) {
   if (client.connected()) {
     String topic = String(mqtt_topic) + String(topicori);
     Log.trace(F("Pub ack %s into: %s" CR), payload, topic.c_str());
@@ -351,7 +351,7 @@ void pub(char* topicori, char* payload) {
   }
 }
 
-void pub_custom_topic(char* topicori, JsonObject& data, boolean retain) {
+void pub_custom_topic(const char* topicori, JsonObject& data, boolean retain) {
   if (client.connected()) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
     char JSONmessageBuffer[data.measureLength() + 1];
@@ -367,90 +367,90 @@ void pub_custom_topic(char* topicori, JsonObject& data, boolean retain) {
 }
 
 // Low level MQTT functions
-void pubMQTT(char* topic, char* payload) {
+void pubMQTT(const char* topic, const char* payload) {
   client.publish(topic, payload);
 }
 
-void pubMQTT(char* topicori, char* payload, bool retainFlag) {
+void pubMQTT(const char* topicori, const char* payload, bool retainFlag) {
   client.publish(topicori, payload, retainFlag);
 }
 
-void pubMQTT(String topic, char* payload) {
-  client.publish((char*)topic.c_str(), payload);
+void pubMQTT(String topic, const char* payload) {
+  client.publish(topic.c_str(), payload);
 }
 
-void pubMQTT(char* topic, unsigned long payload) {
+void pubMQTT(const char* topic, unsigned long payload) {
   char val[11];
   sprintf(val, "%lu", payload);
   client.publish(topic, val);
 }
 
-void pubMQTT(char* topic, unsigned long long payload) {
+void pubMQTT(const char* topic, unsigned long long payload) {
   char val[21];
   sprintf(val, "%llu", payload);
   client.publish(topic, val);
 }
 
-void pubMQTT(char* topic, String payload) {
-  client.publish(topic, (char*)payload.c_str());
+void pubMQTT(const char* topic, String payload) {
+  client.publish(topic, payload.c_str());
 }
 
 void pubMQTT(String topic, String payload) {
-  client.publish((char*)topic.c_str(), (char*)payload.c_str());
+  client.publish(topic.c_str(), payload.c_str());
 }
 
 void pubMQTT(String topic, int payload) {
   char val[12];
   sprintf(val, "%d", payload);
-  client.publish((char*)topic.c_str(), val);
+  client.publish(topic.c_str(), val);
 }
 
 void pubMQTT(String topic, unsigned long long payload) {
   char val[21];
   sprintf(val, "%llu", payload);
-  client.publish((char*)topic.c_str(), val);
+  client.publish(topic.c_str(), val);
 }
 
 void pubMQTT(String topic, float payload) {
   char val[12];
   dtostrf(payload, 3, 1, val);
-  client.publish((char*)topic.c_str(), val);
+  client.publish(topic.c_str(), val);
 }
 
-void pubMQTT(char* topic, float payload) {
+void pubMQTT(const char* topic, float payload) {
   char val[12];
   dtostrf(payload, 3, 1, val);
   client.publish(topic, val);
 }
 
-void pubMQTT(char* topic, int payload) {
+void pubMQTT(const char* topic, int payload) {
   char val[6];
   sprintf(val, "%d", payload);
   client.publish(topic, val);
 }
 
-void pubMQTT(char* topic, unsigned int payload) {
+void pubMQTT(const char* topic, unsigned int payload) {
   char val[6];
   sprintf(val, "%u", payload);
   client.publish(topic, val);
 }
 
-void pubMQTT(char* topic, long payload) {
+void pubMQTT(const char* topic, long payload) {
   char val[11];
-  sprintf(val, "%l", payload);
+  sprintf(val, "%ld", payload);
   client.publish(topic, val);
 }
 
-void pubMQTT(char* topic, double payload) {
+void pubMQTT(const char* topic, double payload) {
   char val[16];
-  sprintf(val, "%d", payload);
+  sprintf(val, "%f", payload);
   client.publish(topic, val);
 }
 
 void pubMQTT(String topic, unsigned long payload) {
   char val[11];
   sprintf(val, "%lu", payload);
-  client.publish((char*)topic.c_str(), val);
+  client.publish(topic.c_str(), val);
 }
 
 void logJson(JsonObject& jsondata) {
@@ -463,7 +463,7 @@ void logJson(JsonObject& jsondata) {
   Log.notice(F("Received json : %s" CR), JSONmessageBuffer);
 }
 
-bool cmpToMainTopic(char* topicOri, char* toAdd) {
+bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
   strcat(topic, toAdd);
