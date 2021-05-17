@@ -48,14 +48,14 @@ String getUniqueId(String name, String sufix) {
 }
 
 #  ifdef ZgatewayBT
-void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount,
-                             char* device_name, char* device_manufacturer, char* device_model) {
+void createDiscoveryFromList(const char* mac, const char* sensorList[][8], int sensorCount,
+                             const char* device_name, const char* device_manufacturer, const char* device_model) {
   for (int i = 0; i < sensorCount; i++) {
     Log.trace(F("CreateDiscoverySensor %s" CR), sensorList[i][1]);
     String discovery_topic = String(subjectBTtoMQTT) + "/" + String(mac);
     String unique_id = String(mac) + "-" + sensorList[i][1];
     createDiscovery(sensorList[i][0],
-                    (char*)discovery_topic.c_str(), sensorList[i][1], (char*)unique_id.c_str(),
+                    discovery_topic.c_str(), sensorList[i][1], unique_id.c_str(),
                     will_Topic, sensorList[i][3], sensorList[i][4],
                     sensorList[i][5], sensorList[i][6], sensorList[i][7],
                     0, "", "", false, "",
@@ -64,13 +64,13 @@ void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount,
 }
 #  endif
 
-void createDiscovery(char* sensor_type,
-                     char* st_topic, char* s_name, char* unique_id,
-                     char* availability_topic, char* device_class, char* value_template,
-                     char* payload_on, char* payload_off, char* unit_of_meas,
+void createDiscovery(const char* sensor_type,
+                     const char* st_topic, const char* s_name, const char* unique_id,
+                     const char* availability_topic, const char* device_class, const char* value_template,
+                     const char* payload_on, const char* payload_off, const char* unit_of_meas,
                      int off_delay,
-                     char* payload_available, char* payload_not_avalaible, bool gateway_entity, char* cmd_topic,
-                     char* device_name, char* device_manufacturer, char* device_model, char* device_mac, bool retainCmd) {
+                     const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* cmd_topic,
+                     const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd) {
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
   StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
   JsonObject& sensor = jsonBuffer.createObject();
