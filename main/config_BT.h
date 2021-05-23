@@ -131,7 +131,7 @@ enum ble_sensor_model {
   MIBAND, //10
   XMTZC04HM,
   XMTZC05HM,
-  INKBIRD,
+  IBSTH1,
   LYWSD03MMC,
   MHO_C401,
   LYWSD03MMC_ATC,
@@ -141,6 +141,7 @@ enum ble_sensor_model {
   CGH1,
   CGPR1,
   WS02,
+  IBSTH2,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
