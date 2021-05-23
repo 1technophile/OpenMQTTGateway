@@ -482,6 +482,21 @@ void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, InkBirdTH2sensor, InkBirdTH2parametersCount, "", "Inkbird", sensorModel);
 }
 
+void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
+#    define InkBird4XSparametersCount 5
+  Log.trace(F("InkBird4XSDiscovery" CR));
+  const char* InkBird4XSsensor[InkBird4XSparametersCount][8] = {
+      {"sensor", "InkBird4XS-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "InkBird4XS-temp1", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "InkBird4XS-temp2", mac, "temperature", jsonTempc2, "", "", "°C"},
+      {"sensor", "InkBird4XS-temp3", mac, "temperature", jsonTempc3, "", "", "°C"},
+      {"sensor", "InkBird4XS-temp4", mac, "temperature", jsonTempc4, "", "", "°C"},
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, InkBird4XSsensor, InkBird4XSparametersCount, "", "Inkbird", sensorModel);
+}
+
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
@@ -553,6 +568,7 @@ void MiLampDiscovery(const char* mac, const char* sensorModel) {}
 void MiBandDiscovery(const char* mac, const char* sensorModel) {}
 void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {}
 void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {}
+void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {}
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
@@ -1056,6 +1072,7 @@ void launchBTDiscovery() {
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery(macWOdots.c_str(), "XMTZC0xHM");
       if (p->sensorModel == IBSTH1) InkBirdTH1Discovery(macWOdots.c_str(), "IBS-TH1");
       if (p->sensorModel == IBSTH2) InkBirdTH2Discovery(macWOdots.c_str(), "IBS-TH2");
+      if (p->sensorModel == IBT4XS) InkBird4XSDiscovery(macWOdots.c_str(), "IBT-4XS");
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery(macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery(macWOdots.c_str(), "INODE_EM");
@@ -1286,6 +1303,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
           createOrUpdateDevice(mac, device_flags_init, IBSTH2);
         return process_inkbird_th2(BLEdata);
       }
+      Log.trace(F("Is it a INKBIRD IBT-4XS?" CR));
+      if (strcmp(name, "iBBQ") == 0) {
+        Log.trace(F("INKBIRD IBT-4XS data reading" CR));
+        BLEdata.set("model", "IBT-4XS");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, IBT4XS);
+        return process_inkbird_4xs(BLEdata);
+      }
     }
     Log.trace(F("Is it a iNode Energy Meter?" CR));
     if (strlen(manufacturerdata) == 26 && ((long)value_from_hex_data(manufacturerdata, 0, 4, true) & 0xFFF9) == 0x8290) {
@@ -1437,6 +1462,31 @@ JsonObject& process_inkbird_th2(JsonObject& BLEdata) {
 
   return BLEdata;
 }
+
+JsonObject& process_inkbird_4xs(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+
+  double temperature = (double)value_from_hex_data(manufacturerdata, 20, 4, true) / 10;
+  double temperature2 = (double)value_from_hex_data(manufacturerdata, 24, 4, true) / 10;
+  double temperature3 = (double)value_from_hex_data(manufacturerdata, 28, 4, true) / 10;
+  double temperature4 = (double)value_from_hex_data(manufacturerdata, 32, 4, true) / 10;
+  double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+  BLEdata.set("tempc2", (double)temperature2);
+  BLEdata.set("tempf2", (double)convertTemp_CtoF(temperature2));
+  BLEdata.set("tempc3", (double)temperature3);
+  BLEdata.set("tempf3", (double)convertTemp_CtoF(temperature3));
+  BLEdata.set("tempc4", (double)temperature4);
+  BLEdata.set("tempf4", (double)convertTemp_CtoF(temperature4));
+  BLEdata.set("batt", (double)battery);
+
+  return BLEdata;
+}
+
+//0000000010082c40abe6fa00fa00fa00fa00 25
 
 JsonObject& process_miband(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
