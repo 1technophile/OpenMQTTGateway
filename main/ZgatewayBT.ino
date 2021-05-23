@@ -457,17 +457,29 @@ void MiBandDiscovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount, "MiBand", "Xiaomi", sensorModel);
 }
 
-void InkBirdDiscovery(const char* mac, const char* sensorModel) {
-#    define InkBirdparametersCount 3
-  Log.trace(F("InkBirdDiscovery" CR));
-  const char* InkBirdsensor[InkBirdparametersCount][8] = {
-      {"sensor", "InkBird-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "InkBird-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "InkBird-hum", mac, "humidity", jsonHum, "", "", "%"}
+void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {
+#    define InkBirdTH1parametersCount 3
+  Log.trace(F("InkBirdTH1Discovery" CR));
+  const char* InkBirdTH1sensor[InkBirdTH1parametersCount][8] = {
+      {"sensor", "InkBirdTH1-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "InkBirdTH1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "InkBirdTH1-hum", mac, "humidity", jsonHum, "", "", "%"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, InkBirdsensor, InkBirdparametersCount, "", "InkBird", sensorModel);
+  createDiscoveryFromList(mac, InkBirdTH1sensor, InkBirdTH1parametersCount, "", "Inkbird", sensorModel);
+}
+
+void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
+#    define InkBirdTH2parametersCount 2
+  Log.trace(F("InkBirdTH2Discovery" CR));
+  const char* InkBirdTH2sensor[InkBirdTH2parametersCount][8] = {
+      {"sensor", "InkBirdTH2-batt", mac, "battery", jsonBatt, "", "", "%"},
+      {"sensor", "InkBirdTH2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, InkBirdTH2sensor, InkBirdTH2parametersCount, "", "Inkbird", sensorModel);
 }
 
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
@@ -539,7 +551,8 @@ void CLEARGRASSTRHKPADiscovery(const char* mac, const char* sensorModel) {}
 void MiScaleDiscovery(const char* mac, const char* sensorModel) {}
 void MiLampDiscovery(const char* mac, const char* sensorModel) {}
 void MiBandDiscovery(const char* mac, const char* sensorModel) {}
-void InkBirdDiscovery(const char* mac, const char* sensorModel) {}
+void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {}
+void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {}
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
@@ -1041,7 +1054,8 @@ void launchBTDiscovery() {
       if (p->sensorModel == MIBAND) MiBandDiscovery(macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery(macWOdots.c_str(), "XMTZC0xHM");
-      if (p->sensorModel == INKBIRD) InkBirdDiscovery(macWOdots.c_str(), "INKBIRD");
+      if (p->sensorModel == IBSTH1) InkBirdTH1Discovery(macWOdots.c_str(), "IBS-TH1");
+      if (p->sensorModel == IBSTH2) InkBirdTH2Discovery(macWOdots.c_str(), "IBS-TH2");
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery(macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery(macWOdots.c_str(), "INODE_EM");
@@ -1256,13 +1270,21 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
     if (BLEdata.containsKey("name")) {
       const char* name = (const char*)(BLEdata["name"] | "");
       Log.trace(F("name %s" CR), name);
-      Log.trace(F("Is it a INKBIRD?" CR));
+      Log.trace(F("Is it a INKBIRD IBS-TH1?" CR));
       if (strcmp(name, "sps") == 0) {
-        Log.trace(F("INKBIRD data reading" CR));
-        BLEdata.set("model", "INKBIRD");
+        Log.trace(F("INKBIRD TH1 data reading" CR));
+        BLEdata.set("model", "IBS-TH1");
         if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, INKBIRD);
-        return process_inkbird(BLEdata);
+          createOrUpdateDevice(mac, device_flags_init, IBSTH1);
+        return process_inkbird_th1(BLEdata);
+      }
+      Log.trace(F("Is it a INKBIRD IBS-TH2?" CR));
+      if (strcmp(name, "tps") == 0) {
+        Log.trace(F("INKBIRD TH2 data reading" CR));
+        BLEdata.set("model", "IBS-TH2");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, IBSTH2);
+        return process_inkbird_th2(BLEdata);
       }
     }
     Log.trace(F("Is it a iNode Energy Meter?" CR));
@@ -1386,7 +1408,7 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
   return BLEdata;
 }
 
-JsonObject& process_inkbird(JsonObject& BLEdata) {
+JsonObject& process_inkbird_th1(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
 
   double temperature = (double)value_from_hex_data(manufacturerdata, 0, 4, true) / 100;
@@ -1397,6 +1419,20 @@ JsonObject& process_inkbird(JsonObject& BLEdata) {
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
   BLEdata.set("hum", (double)humidity);
+  BLEdata.set("batt", (double)battery);
+
+  return BLEdata;
+}
+
+JsonObject& process_inkbird_th2(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+
+  double temperature = (double)value_from_hex_data(manufacturerdata, 0, 4, true) / 100;
+  double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
+
+  //Set Json values
+  BLEdata.set("tempc", (double)temperature);
+  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
   BLEdata.set("batt", (double)battery);
 
   return BLEdata;
