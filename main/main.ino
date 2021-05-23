@@ -508,6 +508,9 @@ void connectMQTT() {
 #ifdef ZgatewayIR
       client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
 #endif
+#ifdef MQTT_HTTPS_FW_UPDATE
+      client.subscribe(subjectFWUpdate);
+#endif
       Log.trace(F("Subscription OK to the subjects %s" CR), topic2);
     }
   } else {
@@ -539,8 +542,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // Conversion to a printable string
   p[length] = '\0';
   //launch the function to treat received data if this data concern OpenMQTTGateway
-  if ((strstr(topic, subjectMultiGTWKey) != NULL) || (strstr(topic, subjectGTWSendKey) != NULL))
+  if ((strstr(topic, subjectMultiGTWKey) != NULL) ||
+      (strstr(topic, subjectGTWSendKey) != NULL) ||
+      (strstr(topic, subjectFWUpdate) != NULL))
     receivingMQTT(topic, (char*)p);
+
   // Free the memory
   free(p);
 }
@@ -1576,6 +1582,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZgatewayRS232
     MQTTtoRS232(topicOri, jsondata);
 #  endif
+#  ifdef MQTT_HTTPS_FW_UPDATE
+    MQTTHttpsFWUpdate(topicOri, jsondata);
+#  endif
 #endif
     digitalWrite(LED_SEND, LED_SEND_ON);
 
@@ -1612,6 +1621,131 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #endif
   }
 }
+
+#ifdef MQTT_HTTPS_FW_UPDATE
+#  ifndef NTP_SERVER
+#    error no NTP_SERVER defined
+#  endif
+#  include <WiFiClientSecure.h>
+#  ifdef ESP32
+#    include "Ota_github.h"
+#    include "zzHTTPUpdate.h"
+#  elif ESP8266
+#    include <ESP8266httpUpdate.h>
+#  endif
+void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
+  if (strstr(topicOri, subjectFWUpdate) != NULL) {
+    const char* version = HttpsFwUpdateData["version"];
+    if (version && ((strlen(version) != strlen(OMG_VERSION)) || strcmp(version, OMG_VERSION) != 0)) {
+      const char* url = HttpsFwUpdateData["url"];
+      if (url) {
+        if (!strstr((url + (strlen(url) - 5)), ".bin")) {
+          Log.error(F("Invalid firmware extension" CR));
+          return;
+        }
+      } else {
+        Log.error(F("Invalid URL" CR));
+        return;
+      }
+
+#  if MQTT_HTTPS_FW_UPDATE_USE_PASSWORD > 0
+#    ifndef SECURE_CONNECTION
+#      warning using a password with an unsecure MQTT connection will send it as clear text!!!
+#    endif
+      const char* pwd = HttpsFwUpdateData["password"];
+      if (pwd) {
+        if (strcmp(pwd, ota_password) != 0) {
+          Log.error(F("Invalid OTA password" CR));
+          return;
+        }
+      } else {
+        Log.error(F("No password sent" CR));
+        return;
+      }
+#  endif
+
+      Log.warning(F("Starting firmware update" CR));
+
+#  if defined(ZgatewayBT) && defined(ESP32)
+      stopProcessing();
+#  endif
+
+      t_httpUpdate_return result = HTTP_UPDATE_FAILED;
+      if (strstr(url, "http:")) {
+        WiFiClient update_client;
+#  ifdef ESP32
+        httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        result = httpUpdate.update(update_client, url);
+#  elif ESP8266
+        ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        result = ESPhttpUpdate.update(update_client, url);
+#  endif
+
+      } else {
+        WiFiClientSecure update_client;
+#  ifdef SECURE_CONNECTION
+        client.disconnect();
+        update_client = eClient;
+#  else
+        configTime(0, 0, NTP_SERVER);
+        time_t now = time(nullptr);
+        uint8_t count = 0;
+        Log.trace(F("Waiting for NTP time sync" CR));
+        while ((now < 8 * 3600 * 2) && count++ < 60) {
+          vTaskDelay(500);
+          now = time(nullptr);
+        }
+
+        if (count >= 60) {
+          Log.error(F("Unable to update - invalid time" CR));
+#    if defined(ZgatewayBT) && defined(ESP32)
+          startProcessing();
+#    endif
+          return;
+        }
+#  endif
+#  ifdef ESP32
+        if (strstr(url, "github") != 0) {
+          update_client.setCACert(_github_cert);
+        } else {
+          update_client.setCACert(https_fw_server_cert);
+        }
+        update_client.setTimeout(12);
+        httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        result = httpUpdate.update(update_client, url);
+#  elif ESP8266
+        update_client.setInsecure(); // TODO: replace with cert checking
+        update_client.setTimeout(12000);
+        ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        result = ESPhttpUpdate.update(update_client, url);
+#  endif
+      }
+
+      switch (result) {
+        case HTTP_UPDATE_FAILED:
+#  ifdef ESP32
+          Log.error(F("HTTP_UPDATE_FAILED Error (%d): %s\n" CR), httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+#  elif ESP8266
+          Log.error(F("HTTP_UPDATE_FAILED Error (%d): %s\n" CR), ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+#  endif
+          break;
+
+        case HTTP_UPDATE_NO_UPDATES:
+          Log.notice(F("HTTP_UPDATE_NO_UPDATES" CR));
+          break;
+
+        case HTTP_UPDATE_OK:
+          Log.notice(F("HTTP_UPDATE_OK" CR));
+          break;
+      }
+
+#  if defined(ZgatewayBT) && defined(ESP32)
+      startProcessing();
+#  endif
+    }
+  }
+}
+#endif
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
