@@ -1486,8 +1486,6 @@ JsonObject& process_inkbird_4xs(JsonObject& BLEdata) {
   return BLEdata;
 }
 
-//0000000010082c40abe6fa00fa00fa00fa00 25
-
 JsonObject& process_miband(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
