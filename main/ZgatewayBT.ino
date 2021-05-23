@@ -467,7 +467,7 @@ void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, InkBirdTH1sensor, InkBirdTH1parametersCount, "", "Inkbird", sensorModel);
+  createDiscoveryFromList(mac, InkBirdTH1sensor, InkBirdTH1parametersCount, "IBS-TH1", "Inkbird", sensorModel);
 }
 
 void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
@@ -479,7 +479,7 @@ void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, InkBirdTH2sensor, InkBirdTH2parametersCount, "", "Inkbird", sensorModel);
+  createDiscoveryFromList(mac, InkBirdTH2sensor, InkBirdTH2parametersCount, "IBS-TH2", "Inkbird", sensorModel);
 }
 
 void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
@@ -494,7 +494,7 @@ void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, InkBird4XSsensor, InkBird4XSparametersCount, "", "Inkbird", sensorModel);
+  createDiscoveryFromList(mac, InkBird4XSsensor, InkBird4XSparametersCount, "IBT-4XS", "Inkbird", sensorModel);
 }
 
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
