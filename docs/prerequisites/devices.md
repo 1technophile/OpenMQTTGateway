@@ -30,7 +30,7 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH2|temperature/battery|
-| INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4/battery|
+| INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | Qingping |CGDK2|temperature/humidity|
 | Qingping |CGH1|open|

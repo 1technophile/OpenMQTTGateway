@@ -483,10 +483,9 @@ void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
 }
 
 void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
-#    define InkBird4XSparametersCount 5
+#    define InkBird4XSparametersCount 4
   Log.trace(F("InkBird4XSDiscovery" CR));
   const char* InkBird4XSsensor[InkBird4XSparametersCount][8] = {
-      {"sensor", "InkBird4XS-batt", mac, "battery", jsonBatt, "", "", "%"},
       {"sensor", "InkBird4XS-temp1", mac, "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "InkBird4XS-temp2", mac, "temperature", jsonTempc2, "", "", "°C"},
       {"sensor", "InkBird4XS-temp3", mac, "temperature", jsonTempc3, "", "", "°C"},
@@ -1470,7 +1469,6 @@ JsonObject& process_inkbird_4xs(JsonObject& BLEdata) {
   double temperature2 = (double)value_from_hex_data(manufacturerdata, 24, 4, true) / 10;
   double temperature3 = (double)value_from_hex_data(manufacturerdata, 28, 4, true) / 10;
   double temperature4 = (double)value_from_hex_data(manufacturerdata, 32, 4, true) / 10;
-  double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
   BLEdata.set("tempc", (double)temperature);
@@ -1481,7 +1479,6 @@ JsonObject& process_inkbird_4xs(JsonObject& BLEdata) {
   BLEdata.set("tempf3", (double)convertTemp_CtoF(temperature3));
   BLEdata.set("tempc4", (double)temperature4);
   BLEdata.set("tempf4", (double)convertTemp_CtoF(temperature4));
-  BLEdata.set("batt", (double)battery);
 
   return BLEdata;
 }
