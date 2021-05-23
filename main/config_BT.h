@@ -142,6 +142,7 @@ enum ble_sensor_model {
   CGPR1,
   WS02,
   IBSTH2,
+  IBT4XS,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
