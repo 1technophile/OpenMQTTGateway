@@ -67,9 +67,11 @@ void MQTTtoSomfy(char* topicOri, JsonObject& jsonData) {
     const String commandData = jsonData["command"];
     const Command command = getSomfyCommand(commandData);
 
+    const int repeat = jsonData["repeat"] | 4;
+
     EEPROMRollingCodeStorage rollingCodeStorage(EEPROM_ADDRESS_START + remoteIndex * 2);
     SomfyRemote somfyRemote(RF_EMITTER_GPIO, somfyRemotes[remoteIndex], &rollingCodeStorage);
-    somfyRemote.sendCommand(command);
+    somfyRemote.sendCommand(command, repeat);
 #    ifdef ZradioCC1101
     ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
 #    endif
