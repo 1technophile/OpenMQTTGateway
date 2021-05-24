@@ -191,10 +191,10 @@ static bool esp32EthConnected = false;
 WiFiClientSecure eClient;
 #  else
 #    include <WiFi.h>
-#    include <WiFiMulti.h>
-WiFiMulti wifiMulti;
 WiFiClient eClient;
 #  endif
+#  include <WiFiMulti.h>
+WiFiMulti wifiMulti;
 #  include <Preferences.h>
 #  include <WiFiManager.h>
 Preferences preferences;
@@ -214,8 +214,8 @@ WiFiClientSecure eClient;
 X509List caCert(certificate);
 #  else
 WiFiClient eClient;
-ESP8266WiFiMulti wifiMulti;
 #  endif
+ESP8266WiFiMulti wifiMulti;
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
 #  endif
