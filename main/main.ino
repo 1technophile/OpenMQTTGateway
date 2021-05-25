@@ -272,7 +272,7 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 }
 
 void pub(const char* topicori, const char* payload, bool retainFlag) {
-  String topic = String(mqtt_topic) + String(topicori);
+  String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
   pubMQTT(topic.c_str(), payload, retainFlag);
 }
 
@@ -281,7 +281,7 @@ void pub(const char* topicori, JsonObject& data) {
   digitalWrite(LED_RECEIVE, LED_RECEIVE_ON);
   logJson(data);
   if (client.connected()) {
-    String topic = String(mqtt_topic) + String(topicori);
+    String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #ifdef valueAsASubject
 #  ifdef ZgatewayPilight
     String value = data["value"];
@@ -337,7 +337,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 void pub(const char* topicori, const char* payload) {
   if (client.connected()) {
-    String topic = String(mqtt_topic) + String(topicori);
+    String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
     Log.trace(F("Pub ack %s into: %s" CR), payload, topic.c_str());
     pubMQTT(topic, payload);
   } else {
@@ -460,6 +460,7 @@ void logJson(JsonObject& jsondata) {
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
+  strcat(topic, gateway_name);
   strcat(topic, toAdd);
   if (strstr(topicOri, topic) != NULL) {
     return true;
@@ -478,6 +479,7 @@ void connectMQTT() {
   Log.warning(F("MQTT connection..." CR));
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
+  strcat(topic, gateway_name);
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
@@ -494,6 +496,7 @@ void connectMQTT() {
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);
+    strcat(topic2, gateway_name);
     strcat(topic2, subjectMQTTtoX);
     if (client.subscribe(topic2)) {
 #ifdef ZgatewayRF
@@ -543,10 +546,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // Free the memory
   free(p);
-}
-
-void setup_parameters() {
-  strcat(mqtt_topic, gateway_name);
 }
 
 void setup() {
@@ -622,8 +621,6 @@ void setup() {
   client.setClient(*(Client*)eClient);
   client.setServer(mqtt_server, port);
 #endif
-
-  setup_parameters();
 
   client.setCallback(callback);
 
@@ -961,6 +958,29 @@ void eraseAndRestart() {
 #  endif
 }
 
+void saveMqttConfig() {
+  Log.trace(F("saving config" CR));
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& json = jsonBuffer.createObject();
+  json["mqtt_server"] = mqtt_server;
+  json["mqtt_port"] = mqtt_port;
+  json["mqtt_user"] = mqtt_user;
+  json["mqtt_pass"] = mqtt_pass;
+  json["mqtt_topic"] = mqtt_topic;
+  json["gateway_name"] = gateway_name;
+  json["mqtt_broker_secure"] = mqtt_secure;
+  json["mqtt_broker_cert"] = mqtt_cert;
+
+  File configFile = SPIFFS.open("/config.json", "w");
+  if (!configFile) {
+    Log.error(F("failed to open config file for writing" CR));
+  }
+
+  json.printTo(Serial);
+  json.printTo(configFile);
+  configFile.close();
+}
+
 void setup_wifimanager(bool reset_settings) {
 #  ifdef TRIGGER_GPIO
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
@@ -1128,27 +1148,7 @@ void setup_wifimanager(bool reset_settings) {
     }
 
     //save the custom parameters to FS
-    Log.trace(F("saving config" CR));
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& json = jsonBuffer.createObject();
-    json["mqtt_server"] = mqtt_server;
-    json["mqtt_port"] = mqtt_port;
-    json["mqtt_user"] = mqtt_user;
-    json["mqtt_pass"] = mqtt_pass;
-    json["mqtt_topic"] = mqtt_topic;
-    json["gateway_name"] = gateway_name;
-    json["mqtt_secure"] = mqtt_secure;
-    json["mqtt_cert"] = mqtt_cert;
-
-    File configFile = SPIFFS.open("/config.json", "w");
-    if (!configFile) {
-      Log.error(F("failed to open config file for writing" CR));
-    }
-
-    json.printTo(Serial);
-    json.printTo(configFile);
-    configFile.close();
-    //end save
+    saveMqttConfig();
   }
 }
 #  ifdef ESP32_ETHERNET
@@ -1809,7 +1809,107 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
+
+    if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
+#  if defined(ZgatewayBT) && defined(ESP32)
+      stopProcessing();
+#  endif
+      String prev_ssid = WiFi.SSID();
+      String prev_pass = WiFi.psk();
+      client.disconnect();
+      WiFi.disconnect(true);
+
+      Log.warning(F("Attempting connection to new AP" CR));
+      WiFi.begin((const char*)SYSdata["wifi_ssid"], (const char*)SYSdata["wifi_pass"]);
+      WiFi.waitForConnectResult();
+
+      if (WiFi.status() != WL_CONNECTED) {
+        Log.error(F("Failed to connect to new AP; falling back" CR));
+        WiFi.disconnect(true);
+        WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
+        if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+#  if defined(ESP8266)
+          ESP.reset();
+#  else
+          ESP.restart();
+#  endif
+        }
+      }
+#  if defined(ZgatewayBT) && defined(ESP32)
+      startProcessing();
+#  endif
+    }
+
+    if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
+#  if defined(ZgatewayBT) && defined(ESP32)
+      stopProcessing();
+#  endif
+      client.disconnect();
+      bool update_server = false;
+      void* prev_client = nullptr;
+
+      if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port")) {
+        if (!SYSdata.containsKey("mqtt_secure")) {
+          Log.warning(F("mqtt_server provided without mqtt_secure defined - ignoring command" CR));
+          return;
+        }
+        update_server = true;
+
+        if (SYSdata.get<bool>("mqtt_secure") != mqtt_secure) {
+          prev_client = eClient;
+          if (!mqtt_secure) {
+            eClient = new WiFiClientSecure;
+            setupTLS();
+          } else {
+            Log.warning(F("Switching to unsecure MQTT broker" CR));
+            eClient = new WiFiClient;
+          }
+
+          client.setClient(*(Client*)eClient);
+        }
+
+        client.setServer(SYSdata.get<const char*>("mqtt_server"), SYSdata.get<unsigned int>("mqtt_port"));
+      }
+
+      String prev_user = mqtt_user;
+      String prev_pass = mqtt_pass;
+      strcpy(mqtt_user, SYSdata["mqtt_user"]);
+      strcpy(mqtt_pass, SYSdata["mqtt_pass"]);
+
+      connectMQTT();
+
+      if (client.connected()) {
+        if (update_server) {
+          strcpy(mqtt_server, SYSdata["mqtt_server"]);
+          strcpy(mqtt_port, SYSdata["mqtt_port"]);
+          if (prev_client != nullptr) {
+            mqtt_secure = !mqtt_secure;
+            delete prev_client;
+          }
+        }
+#  ifndef ESPWifiManualSetup
+        saveMqttConfig();
+#  endif
+      } else {
+        if (update_server) {
+          if (prev_client != nullptr) {
+            delete eClient;
+            eClient = prev_client;
+            client.setClient(*(Client*)eClient);
+          }
+          uint16_t port = strtol(mqtt_port, NULL, 10);
+          client.setServer(mqtt_server, port);
+        }
+        strcpy(mqtt_user, prev_user.c_str());
+        strcpy(mqtt_pass, prev_pass.c_str());
+        connectMQTT();
+      }
+#  if defined(ZgatewayBT) && defined(ESP32)
+      startProcessing();
+#  endif
+    }
 #endif
+
 #ifdef ZmqttDiscovery
     if (SYSdata.containsKey("discovery")) {
       if (SYSdata.is<bool>("discovery")) {

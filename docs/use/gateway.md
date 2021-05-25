@@ -33,6 +33,31 @@ If you want the settings to be kept upon gateway restart, you can publish the co
 Auto discovery is enable by default on release binaries, on platformio (except for UNO). With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
 :::
 
+## Change the WiFi credentials
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"wifi_ssid":"ssid", "wifi_pass":"password"}'`
+
+::: tip
+If the new connection fails the gateway will fallback to the previous connection.
+:::
+
+## Change the MQTT broker credentials
+```
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
+'{
+  "mqtt_user": "user_name",
+  "mqtt_pass": "password",
+  "mqtt_server": "host",
+  "mqtt_port": "port",
+  "mqtt_secure": "false"
+}'
+```
+::: tip
+Server, port, and secure_flag are only required if changing connection to another broker.  
+If the new connection fails the gateway will fallback to the previous connection.
+:::
+
+
 # Firmware update from MQTT (ESP only)
 
 The gateway can be updated through an MQTT message by providing a JSON formatted message with a version number, OTA password (optional, see below), and URL to fetch the update from.  
