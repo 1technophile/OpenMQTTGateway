@@ -173,6 +173,9 @@ int failure_number_mqtt = 0; // number of failure connecting to MQTT
 bool disc = true; // Auto discovery with Home Assistant convention
 #endif
 unsigned long timer_led_measures = 0;
+static void* eClient = nullptr;
+static bool mqtt_secure = MQTT_SECURE_DEFAULT;
+static String mqtt_cert = "";
 
 #ifdef ESP32
 #  include <ArduinoOTA.h>
@@ -186,13 +189,8 @@ unsigned long timer_led_measures = 0;
 void WiFiEvent(WiFiEvent_t event);
 static bool esp32EthConnected = false;
 #  endif
-#  ifdef SECURE_CONNECTION
-#    include <WiFiClientSecure.h>
-WiFiClientSecure eClient;
-#  else
-#    include <WiFi.h>
-WiFiClient eClient;
-#  endif
+
+#  include <WiFiClientSecure.h>
 #  include <WiFiMulti.h>
 WiFiMulti wifiMulti;
 #  include <Preferences.h>
@@ -201,6 +199,7 @@ Preferences preferences;
 #  ifdef MDNS_SD
 #    include <ESPmDNS.h>
 #  endif
+
 #elif defined(ESP8266)
 #  include <ArduinoOTA.h>
 #  include <DNSServer.h>
@@ -209,26 +208,21 @@ Preferences preferences;
 #  include <ESP8266WiFiMulti.h>
 #  include <FS.h>
 #  include <WiFiManager.h>
-#  ifdef SECURE_CONNECTION
-WiFiClientSecure eClient;
-X509List caCert(certificate);
-#  else
-WiFiClient eClient;
-#  endif
+X509List caCert;
 ESP8266WiFiMulti wifiMulti;
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
 #  endif
+
 #else
 #  include <Ethernet.h>
-EthernetClient eClient;
 #endif
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 
 // client link to pubsub mqtt
-PubSubClient client(eClient);
+PubSubClient client;
 
 void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
@@ -517,10 +511,10 @@ void connectMQTT() {
     failure_number_mqtt++; // we count the failure
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
     Log.warning(F("failed, rc=%d" CR), client.state());
-#if defined(SECURE_CONNECTION) && defined(ESP32)
-    Log.warning(F("failed, ssl error code=%d" CR), eClient.lastError(nullptr, 0));
-#elif defined(SECURE_CONNECTION) && defined(ESP8266)
-    Log.warning(F("failed, ssl error code=%d" CR), eClient.getLastSSLError());
+#if defined(ESP32)
+    Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->lastError(nullptr, 0));
+#elif defined(ESP8266)
+    Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
     digitalWrite(LED_INFO, LED_INFO_ON);
     delay(1000);
@@ -590,9 +584,6 @@ void setup() {
 #  endif
 
   setOTA();
-#  ifdef SECURE_CONNECTION
-  setupTLS();
-#  endif
 #else // In case of arduino platform
 
   //Launch serial for debugging purposes
@@ -617,6 +608,18 @@ void setup() {
   port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
   Log.trace(F("Mqtt server: %s" CR), mqtt_server);
+#  if defined(ESP8266) || defined(ESP32)
+  if (mqtt_secure) {
+    eClient = new WiFiClientSecure;
+    setupTLS();
+  } else {
+    eClient = new WiFiClient;
+  }
+#  else
+  eClient = new EthernetClient;
+#  endif
+
+  client.setClient(*(Client*)eClient);
   client.setServer(mqtt_server, port);
 #endif
 
@@ -848,19 +851,24 @@ void setOTA() {
   ArduinoOTA.begin();
 }
 
-#  ifdef SECURE_CONNECTION
 void setupTLS() {
-#    if defined(NTP_SERVER)
   configTime(0, 0, NTP_SERVER);
-#    endif
-#    if defined(ESP32)
-  eClient.setCACert(certificate);
-#    elif defined(ESP8266)
-  eClient.setTrustAnchors(&caCert);
-  eClient.setBufferSizes(512, 512);
-#    endif
-}
+  WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
+  if (mqtt_cert.length() > 0) {
+#  if defined(ESP32)
+    sClient->setCACert(mqtt_cert.c_str());
+  } else {
+    sClient->setCACert(certificate);
+  }
+#  elif defined(ESP8266)
+    caCert.append(mqtt_cert.c_str());
+  } else {
+    caCert.append(certificate);
+  }
+  sClient->setTrustAnchors(&caCert);
+  sClient->setBufferSizes(512, 512);
 #  endif
+}
 #endif
 
 #if defined(ESPWifiManualSetup)
@@ -904,7 +912,7 @@ void setup_wifi() {
 WiFiManager wifiManager;
 
 //flag for saving data
-bool shouldSaveConfig = true;
+bool shouldSaveConfig = false;
 //do we have been connected once to mqtt
 
 //callback notifying us of the need to save config
@@ -999,6 +1007,10 @@ void setup_wifimanager(bool reset_settings) {
           strcpy(mqtt_pass, json["mqtt_pass"]);
         if (json.containsKey("mqtt_topic"))
           strcpy(mqtt_topic, json["mqtt_topic"]);
+        if (json.containsKey("mqtt_secure"))
+          mqtt_secure = json.get<bool>("mqtt_secure");
+        if (json.containsKey("mqtt_cert"))
+          mqtt_cert = json.get<const char*>("mqtt_cert");
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
       } else {
@@ -1015,6 +1027,8 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size * 2);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
+  WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
+  WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
 
   //WiFiManager
@@ -1041,6 +1055,8 @@ void setup_wifimanager(bool reset_settings) {
   wifiManager.addParameter(&custom_mqtt_port);
   wifiManager.addParameter(&custom_mqtt_user);
   wifiManager.addParameter(&custom_mqtt_pass);
+  wifiManager.addParameter(&custom_mqtt_secure);
+  wifiManager.addParameter(&custom_mqtt_cert);
   wifiManager.addParameter(&custom_gateway_name);
   wifiManager.addParameter(&custom_mqtt_topic);
 
@@ -1083,16 +1099,35 @@ void setup_wifimanager(bool reset_settings) {
     M5Display("Wifi connected", "", "");
 #  endif
 
-  //read updated parameters
-  strcpy(mqtt_server, custom_mqtt_server.getValue());
-  strcpy(mqtt_port, custom_mqtt_port.getValue());
-  strcpy(mqtt_user, custom_mqtt_user.getValue());
-  strcpy(mqtt_pass, custom_mqtt_pass.getValue());
-  strcpy(mqtt_topic, custom_mqtt_topic.getValue());
-  strcpy(gateway_name, custom_gateway_name.getValue());
-
-  //save the custom parameters to FS
   if (shouldSaveConfig) {
+    //read updated parameters
+    strcpy(mqtt_server, custom_mqtt_server.getValue());
+    strcpy(mqtt_port, custom_mqtt_port.getValue());
+    strcpy(mqtt_user, custom_mqtt_user.getValue());
+    strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+    strcpy(mqtt_topic, custom_mqtt_topic.getValue());
+    strcpy(gateway_name, custom_gateway_name.getValue());
+    mqtt_secure = *custom_mqtt_secure.getValue();
+
+    int cert_len = strlen(custom_mqtt_cert.getValue());
+    if (cert_len) {
+      char* cert_in = (char*)custom_mqtt_cert.getValue();
+      while (*cert_in == ' ' || *cert_in == '\t') {
+        cert_in++;
+      }
+
+      char* cert_begin = cert_in;
+      while (*cert_in != NULL) {
+        if (*cert_in == ' ' && (strncmp((cert_in + 1), "CERTIFICATE", 11) != 0)) {
+          *cert_in = '\n';
+        }
+        cert_in++;
+      }
+
+      mqtt_cert = cert_begin;
+    }
+
+    //save the custom parameters to FS
     Log.trace(F("saving config" CR));
     DynamicJsonBuffer jsonBuffer;
     JsonObject& json = jsonBuffer.createObject();
@@ -1102,6 +1137,8 @@ void setup_wifimanager(bool reset_settings) {
     json["mqtt_pass"] = mqtt_pass;
     json["mqtt_topic"] = mqtt_topic;
     json["gateway_name"] = gateway_name;
+    json["mqtt_secure"] = mqtt_secure;
+    json["mqtt_cert"] = mqtt_cert;
 
     File configFile = SPIFFS.open("/config.json", "w");
     if (!configFile) {
@@ -1623,12 +1660,11 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 }
 
 #ifdef MQTT_HTTPS_FW_UPDATE
-#  ifndef NTP_SERVER
-#    error no NTP_SERVER defined
-#  endif
 #  include <WiFiClientSecure.h>
+
+#  include "Ota_github.h"
+
 #  ifdef ESP32
-#    include "Ota_github.h"
 #    include "zzHTTPUpdate.h"
 #  elif ESP8266
 #    include <ESP8266httpUpdate.h>
@@ -1649,9 +1685,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       }
 
 #  if MQTT_HTTPS_FW_UPDATE_USE_PASSWORD > 0
-#    ifndef SECURE_CONNECTION
-#      warning using a password with an unsecure MQTT connection will send it as clear text!!!
-#    endif
       const char* pwd = HttpsFwUpdateData["password"];
       if (pwd) {
         if (strcmp(pwd, ota_password) != 0) {
@@ -1683,38 +1716,46 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
       } else {
         WiFiClientSecure update_client;
-#  ifdef SECURE_CONNECTION
-        client.disconnect();
-        update_client = eClient;
-#  else
-        configTime(0, 0, NTP_SERVER);
-        time_t now = time(nullptr);
-        uint8_t count = 0;
-        Log.trace(F("Waiting for NTP time sync" CR));
-        while ((now < 8 * 3600 * 2) && count++ < 60) {
-          vTaskDelay(500);
-          now = time(nullptr);
+        if (mqtt_secure) {
+          client.disconnect();
+          update_client = *(WiFiClientSecure*)eClient;
+        } else {
+          configTime(0, 0, NTP_SERVER);
+          time_t now = time(nullptr);
+          uint8_t count = 0;
+          Log.trace(F("Waiting for NTP time sync" CR));
+          while ((now < 8 * 3600 * 2) && count++ < 60) {
+            delay(500);
+            now = time(nullptr);
+          }
+
+          if (count >= 60) {
+            Log.error(F("Unable to update - invalid time" CR));
+#  if defined(ZgatewayBT) && defined(ESP32)
+            startProcessing();
+#  endif
+            return;
+          }
         }
 
-        if (count >= 60) {
-          Log.error(F("Unable to update - invalid time" CR));
-#    if defined(ZgatewayBT) && defined(ESP32)
-          startProcessing();
-#    endif
-          return;
-        }
-#  endif
 #  ifdef ESP32
         if (strstr(url, "github") != 0) {
           update_client.setCACert(_github_cert);
         } else {
           update_client.setCACert(https_fw_server_cert);
         }
+
         update_client.setTimeout(12);
         httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
         result = httpUpdate.update(update_client, url);
 #  elif ESP8266
-        update_client.setInsecure(); // TODO: replace with cert checking
+        if (strstr(url, "github") != 0) {
+          caCert.append(_github_cert);
+        } else {
+          caCert.append(https_fw_server_cert);
+        }
+
+        update_client.setTrustAnchors(&caCert);
         update_client.setTimeout(12000);
         ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
         result = ESPhttpUpdate.update(update_client, url);

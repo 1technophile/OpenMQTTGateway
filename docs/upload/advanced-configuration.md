@@ -13,7 +13,7 @@ The MQTT broker is configured for TLS and you have access to the CA certificate 
 You are using ESP8266 or ESP32, for other boards TLS is not supported.
 
 ### Configure secure connection in the gateway
-To enable the secure connection and use TLS uncomment `//#define SECURE_CONNECTION` in `User_config.h`.
+To enable the secure connection and use TLS set the `#define MQTT_DEFAULT_SECURE` to true.
 Set `MQTT_SERVER` to the Common Name (CN) of the certificate of the broker.
 This can be the hostname or the ip of the broker.
 
@@ -27,9 +27,6 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 -----END CERTIFICATE-----
 ")EOF";
 ```
-
-If you have no ntp server in your local network (included in the router) or not using dhcp, you should uncomment `//#    define NTP_SERVER "pool.ntp.org"` to use a ntp server for time synchronization.
-This is related to the `W: failed, ssl error code=54` error message, which indicate that the time of the esp is not correct.
 
 You can know compile and upload to your board and the gateway should connect with TLS to your broker.
 

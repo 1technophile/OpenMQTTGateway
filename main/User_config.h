@@ -80,6 +80,10 @@ const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
 #endif
 
+#ifndef NTP_SERVER
+#  define NTP_SERVER "pool.ntp.org"
+#endif
+
 #ifdef MQTT_HTTPS_FW_UPDATE
 #  if defined(ESP8266) || defined(ESP32)
 //If used, this should be set to the root CA certificate of the server hosting the firmware.
@@ -89,7 +93,6 @@ const char* https_fw_server_cert PROGMEM = R"EOF("
 ...
 -----END CERTIFICATE-----
 ")EOF";
-#    define NTP_SERVER "pool.ntp.org"
 #    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
 #      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #    endif
@@ -142,16 +145,6 @@ const char* https_fw_server_cert PROGMEM = R"EOF("
 #  define mqtt_max_packet_size 128
 #endif
 
-// activate the use of TLS for secure connection to the MQTT broker
-// MQTT_SERVER must be set to the Common Name (CN) of the broker's certificate
-//#define SECURE_CONNECTION
-
-#ifdef SECURE_CONNECTION
-#  define MQTT_DEFAULT_PORT "8883"
-#else
-#  define MQTT_DEFAULT_PORT "1883"
-#endif
-
 #ifndef MQTT_USER
 #  define MQTT_USER "your_username"
 #endif
@@ -162,11 +155,13 @@ const char* https_fw_server_cert PROGMEM = R"EOF("
 #  define MQTT_SERVER "192.168.1.17"
 #endif
 #ifndef MQTT_PORT
-#  define MQTT_PORT MQTT_DEFAULT_PORT
+#  define MQTT_PORT "1883"
+#endif
+#ifndef MQTT_SECURE_DEFAULT
+#  define MQTT_SECURE_DEFAULT false
 #endif
 
-#ifdef SECURE_CONNECTION
-#  if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32)
 // The root ca certificate used for validating the MQTT broker
 // The certificate must be in PEM ascii format
 const char* certificate PROGMEM = R"EOF("
@@ -175,16 +170,6 @@ const char* certificate PROGMEM = R"EOF("
 -----END CERTIFICATE-----
 ")EOF";
 
-// specify a NTP server here or else the NTP server from DHCP is used
-#    ifndef NTP_SERVER
-//#    define NTP_SERVER "pool.ntp.org"
-#    endif
-#  else
-#    error "only ESP8266 and ESP32 support SECURE_CONNECTION with TLS"
-#  endif
-#endif
-
-#if defined(ESP8266) || defined(ESP32)
 #  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
 #  define ATTEMPTS_BEFORE_B  20 // Number of wifi connection attempts before going to B protocol
 #endif
