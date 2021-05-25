@@ -74,9 +74,28 @@ const byte subnet[] = {255, 255, 255, 0};
 
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
 //#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
+//#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via mqtt message.
 #else // for arduino boards
 const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
+#endif
+
+#ifdef MQTT_HTTPS_FW_UPDATE
+#  if defined(ESP8266) || defined(ESP32)
+//If used, this should be set to the root CA certificate of the server hosting the firmware.
+// The certificate must be in PEM ascii format
+const char* https_fw_server_cert PROGMEM = R"EOF("
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+")EOF";
+#    define NTP_SERVER "pool.ntp.org"
+#    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
+#      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
+#    endif
+#  else
+#    error "only ESP8266 and ESP32 support MQTT_HTTPS_FW_UPDATE"
+#  endif
 #endif
 
 //#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on OLIMEX ESP32 Ethernet gateway
@@ -148,22 +167,18 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 #ifdef SECURE_CONNECTION
 #  if defined(ESP8266) || defined(ESP32)
-#    if defined(ESP32)
-#      define CERT_ATTRIBUTE
-#    elif defined(ESP8266)
-#      define CERT_ATTRIBUTE PROGMEM
-#    endif
-
 // The root ca certificate used for validating the MQTT broker
 // The certificate must be in PEM ascii format
-const char* certificate CERT_ATTRIBUTE = R"EOF("
+const char* certificate PROGMEM = R"EOF("
 -----BEGIN CERTIFICATE-----
 ...
 -----END CERTIFICATE-----
 ")EOF";
 
 // specify a NTP server here or else the NTP server from DHCP is used
+#    ifndef NTP_SERVER
 //#    define NTP_SERVER "pool.ntp.org"
+#    endif
 #  else
 #    error "only ESP8266 and ESP32 support SECURE_CONNECTION with TLS"
 #  endif
@@ -336,6 +351,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #define subjectMQTTtoX     "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 #define subjectGTWSendKey  "MQTTto"
+#define subjectFWUpdate    "firmware_update"
 
 // key used for launching commands to the gateway
 #define restartCmd "restart"
