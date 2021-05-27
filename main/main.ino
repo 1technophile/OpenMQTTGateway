@@ -1784,7 +1784,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   }
 }
 
-#if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#if defined(valueAsASubject) && !defined(ZgatewayPilight)
+#  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String toString(uint64_t input) {
   String result = "";
   uint8_t base = 10;
@@ -1802,11 +1803,12 @@ String toString(uint64_t input) {
   return result;
 }
 
-#else
+#  else
 
 String toString(uint32_t input) {
   String result = String(input);
 
   return result;
 }
+#  endif
 #endif
