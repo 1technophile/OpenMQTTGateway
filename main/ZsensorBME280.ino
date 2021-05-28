@@ -51,7 +51,7 @@ BME280 mySensor;
 void setupZsensorBME280() {
   mySensor.settings.commInterface = I2C_MODE;
   mySensor.settings.I2CAddress = BME280_i2c_addr;
-  Log.notice(F("Setup BME280 on adress: %H" CR), BME280_i2c_addr);
+  Log.notice(F("Setup BME280 on adress: %X" CR), BME280_i2c_addr);
   //***Operation settings*****************************//
 
   // runMode Setting - Values:
@@ -101,7 +101,7 @@ void setupZsensorBME280() {
   mySensor.settings.humidOverSample = 1;
 
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
-  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): 0x %h" CR), mySensor.begin());
+  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): %X" CR), mySensor.begin());
 }
 
 void MeasureTempHumAndPressure() {
