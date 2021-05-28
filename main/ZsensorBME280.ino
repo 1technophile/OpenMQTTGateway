@@ -101,7 +101,14 @@ void setupZsensorBME280() {
   mySensor.settings.humidOverSample = 1;
 
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
-  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): %X" CR), mySensor.begin());
+
+  int ret = mySensor.begin();
+  if (ret == 0x60) {
+    Log.notice(F("Bosch BME280 successfully Initialized: %X" CR), ret);
+  }
+  else {
+    Log.notice(F("Bosch BME280 failed: %X" CR), ret);
+  }
 }
 
 void MeasureTempHumAndPressure() {
