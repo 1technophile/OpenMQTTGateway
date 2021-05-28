@@ -49,6 +49,8 @@
 BME280 mySensor;
 
 void setupZsensorBME280() {
+  Wire.begin(BME280_PIN_SDA, BME280_PIN_SCL);
+  
   mySensor.settings.commInterface = I2C_MODE;
   mySensor.settings.I2CAddress = BME280_i2c_addr;
   Log.notice(F("Setup BME280 on adress: %X" CR), BME280_i2c_addr);
