@@ -106,7 +106,7 @@ void setupZsensorBME280() {
 
   int ret = mySensor.begin();
   if (ret == 0x60) {
-    Log.notice(F("Bosch BME280 successfully Initialized: %X" CR), ret);
+    Log.notice(F("Bosch BME280 successfully initialized: %X" CR), ret);
   } else {
     Log.notice(F("Bosch BME280 failed: %X" CR), ret);
   }
