@@ -50,12 +50,12 @@ BME280 mySensor;
 
 void setupZsensorBME280() {
 
+# if defined(ESP8266) || defined(ESP32)
   // Allow custom pins on ESP Platforms
-  #if defined(ESP8266) || defined(ESP32)
-    Wire.setPins(BME280_PIN_SDA, BME280_PIN_SCL);
-  #endif
-
+  Wire.begin(BME280_PIN_SDA, BME280_PIN_SCL);
+# else
   Wire.begin();
+# endif
 
   mySensor.settings.commInterface = I2C_MODE;
   mySensor.settings.I2CAddress = BME280_i2c_addr;
