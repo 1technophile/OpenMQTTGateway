@@ -298,7 +298,7 @@ void pub(const char* topicori, JsonObject& data) {
 #  else
     SIGNAL_SIZE_UL_ULL value = data["value"];
     if (value != 0) {
-      topic = topic + "/" + String(value);
+      topic = topic + "/" + toString(value);
     }
 #  endif
 #endif
@@ -1783,3 +1783,32 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
   }
 }
+
+#if defined(valueAsASubject) && !defined(ZgatewayPilight)
+#  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+String toString(uint64_t input) {
+  String result = "";
+  uint8_t base = 10;
+
+  do {
+    char c = input % base;
+    input /= base;
+
+    if (c < 10)
+      c += '0';
+    else
+      c += 'A' - 10;
+    result = c + result;
+  } while (input);
+  return result;
+}
+
+#  else
+
+String toString(uint32_t input) {
+  String result = String(input);
+
+  return result;
+}
+#  endif
+#endif

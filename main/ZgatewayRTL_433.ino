@@ -28,6 +28,9 @@
 */
 #include "User_config.h"
 #ifdef ZgatewayRTL_433
+#  ifndef ZradioCC1101
+#    error "CC1101 is the only supported receiver module for RTL_433 and needs to be enabled."
+#  endif
 
 #  include <rtl_433_ESP.h>
 
