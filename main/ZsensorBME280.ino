@@ -50,7 +50,7 @@ BME280 mySensor;
 
 void setupZsensorBME280() {
   Wire.begin(BME280_PIN_SDA, BME280_PIN_SCL);
-  
+
   mySensor.settings.commInterface = I2C_MODE;
   mySensor.settings.I2CAddress = BME280_i2c_addr;
   Log.notice(F("Setup BME280 on adress: %X" CR), BME280_i2c_addr);
@@ -107,8 +107,7 @@ void setupZsensorBME280() {
   int ret = mySensor.begin();
   if (ret == 0x60) {
     Log.notice(F("Bosch BME280 successfully Initialized: %X" CR), ret);
-  }
-  else {
+  } else {
     Log.notice(F("Bosch BME280 failed: %X" CR), ret);
   }
 }
