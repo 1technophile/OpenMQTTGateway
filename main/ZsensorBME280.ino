@@ -49,7 +49,6 @@
 BME280 mySensor;
 
 void setupZsensorBME280() {
-
 #  if defined(ESP8266) || defined(ESP32)
   // Allow custom pins on ESP Platforms
   Wire.begin(BME280_PIN_SDA, BME280_PIN_SCL);
