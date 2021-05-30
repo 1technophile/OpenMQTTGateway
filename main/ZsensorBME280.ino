@@ -49,9 +49,16 @@
 BME280 mySensor;
 
 void setupZsensorBME280() {
+#  if defined(ESP8266) || defined(ESP32)
+  // Allow custom pins on ESP Platforms
+  Wire.begin(BME280_PIN_SDA, BME280_PIN_SCL);
+#  else
+  Wire.begin();
+#  endif
+
   mySensor.settings.commInterface = I2C_MODE;
   mySensor.settings.I2CAddress = BME280_i2c_addr;
-  Log.notice(F("Setup BME280 on adress: %H" CR), BME280_i2c_addr);
+  Log.notice(F("Setup BME280 on adress: %X" CR), BME280_i2c_addr);
   //***Operation settings*****************************//
 
   // runMode Setting - Values:
@@ -101,7 +108,13 @@ void setupZsensorBME280() {
   mySensor.settings.humidOverSample = 1;
 
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
-  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): 0x %h" CR), mySensor.begin());
+
+  int ret = mySensor.begin();
+  if (ret == 0x60) {
+    Log.notice(F("Bosch BME280 successfully initialized: %X" CR), ret);
+  } else {
+    Log.notice(F("Bosch BME280 failed: %X" CR), ret);
+  }
 }
 
 void MeasureTempHumAndPressure() {
