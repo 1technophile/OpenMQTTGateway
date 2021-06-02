@@ -143,6 +143,7 @@ enum ble_sensor_model {
   WS02,
   IBSTH2,
   IBT4XS,
+  DT24,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
