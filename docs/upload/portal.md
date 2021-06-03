@@ -14,6 +14,9 @@ From your smartphone search for your OpenMQTTGateway wifi network and connect to
 * Select your wifi
 * Set your wifi password
 * Set your MQTT Server IP
+* Set your MQTT Server Port
+* Set the MQTT secure connection box to select whether or not the connection should be secure
+* Copy/paste the MQTT server certificate in the MQTT server cert box (only required if using a secure connection), be sure to include the `-----BEGIN CERIFICATE-----` and `-----END CERTIFICATE-----` markers  
 * Set your MQTT Server username (facultative)
 * Set your MQTT Server password (facultative)
 * Set your MQTT base topic if you need to change it (you must keep the / at the end)
