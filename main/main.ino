@@ -174,8 +174,10 @@ bool disc = true; // Auto discovery with Home Assistant convention
 #endif
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
+#if defined(ESP8266) || defined(ESP32)
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static String mqtt_cert = "";
+#endif
 
 #ifdef ESP32
 #  include <ArduinoOTA.h>
@@ -1660,10 +1662,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 }
 
 #ifdef MQTT_HTTPS_FW_UPDATE
-#  include <WiFiClientSecure.h>
-
-#  include "Ota_github.h"
-
 #  ifdef ESP32
 #    include "zzHTTPUpdate.h"
 #  elif ESP8266
@@ -1739,22 +1737,12 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         }
 
 #  ifdef ESP32
-        if (strstr(url, "github") != 0) {
-          update_client.setCACert(_github_cert);
-        } else {
-          update_client.setCACert(https_fw_server_cert);
-        }
-
+        update_client.setCACert(OTAserver_cert);
         update_client.setTimeout(12);
         httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
         result = httpUpdate.update(update_client, url);
 #  elif ESP8266
-        if (strstr(url, "github") != 0) {
-          caCert.append(_github_cert);
-        } else {
-          caCert.append(https_fw_server_cert);
-        }
-
+        caCert.append(OTAserver_cert);
         update_client.setTrustAnchors(&caCert);
         update_client.setTimeout(12000);
         ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);

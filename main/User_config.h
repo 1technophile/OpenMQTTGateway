@@ -74,31 +74,9 @@ const byte subnet[] = {255, 255, 255, 0};
 
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
 //#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
-//#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via mqtt message.
 #else // for arduino boards
 const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
-#endif
-
-#ifndef NTP_SERVER
-#  define NTP_SERVER "pool.ntp.org"
-#endif
-
-#ifdef MQTT_HTTPS_FW_UPDATE
-#  if defined(ESP8266) || defined(ESP32)
-//If used, this should be set to the root CA certificate of the server hosting the firmware.
-// The certificate must be in PEM ascii format
-const char* https_fw_server_cert PROGMEM = R"EOF("
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
-")EOF";
-#    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
-#      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
-#    endif
-#  else
-#    error "only ESP8266 and ESP32 support MQTT_HTTPS_FW_UPDATE"
-#  endif
 #endif
 
 //#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on OLIMEX ESP32 Ethernet gateway
@@ -157,9 +135,6 @@ const char* https_fw_server_cert PROGMEM = R"EOF("
 #ifndef MQTT_PORT
 #  define MQTT_PORT "1883"
 #endif
-#ifndef MQTT_SECURE_DEFAULT
-#  define MQTT_SECURE_DEFAULT false
-#endif
 
 #if defined(ESP8266) || defined(ESP32)
 // The root ca certificate used for validating the MQTT broker
@@ -172,6 +147,51 @@ const char* certificate PROGMEM = R"EOF("
 
 #  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
 #  define ATTEMPTS_BEFORE_B  20 // Number of wifi connection attempts before going to B protocol
+
+#  ifndef NTP_SERVER
+#    define NTP_SERVER "pool.ntp.org"
+#  endif
+
+#  ifndef MQTT_SECURE_DEFAULT
+#    define MQTT_SECURE_DEFAULT false
+#  endif
+
+//#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via mqtt message.
+
+#  ifdef MQTT_HTTPS_FW_UPDATE
+// If used, this should be set to the root CA certificate of the server hosting the firmware.
+// The certificate must be in PEM ascii format.
+// The default certificate is for github.
+const char* OTAserver_cert PROGMEM = R"EOF("
+-----BEGIN CERTIFICATE-----
+MIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFzc3VyYW5j
+ZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAwMFowbDEL
+MAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3
+LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNlcnQgSGlnaCBBc3N1cmFuY2Ug
+RVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMbM5XPm
++9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9ppkCxxLeyj9CYpKlBWTrT3JTW
+PNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8OkhPhPYlG++MXs2ziS4wblCJEM
+xChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ckRZqnrG0AFFoEt7oT61EKmEFB
+Ik5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhakaHPQNAQTXKFx01p8VdteZOE3
+hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDirCmTCv2ZdlYTBoSUeh10aUAsg
+EsxBu24LUTi4S8sCAwEAAaNjMGEwDgYDVR0PAQH/BAQDAgGGMA8GA1UdEwEB/wQF
+MAMBAf8wHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoIAu9jZCvDMB8GA1UdIwQYMBaA
+FLE+w2kD+L9HAdSYJhoIAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQAcGgaX3Nec
+nzyIZgYIVyHbIUf4KmeqvxgydkAQV8GK83rZEWWONfqe/EW1ntlMMUu4kehDLI6z
+eM7b41N5cdblIZQB2lWHmiRk9opmzN6cN82oNLFpmyPInngiK3BD41VHMWEZ71jF
+hS9OMPagMRYjyOfiZRYzy78aG6A9+MpeizGLYAiJLQwGXFK3xPkKmNEVX58Svnw2
+Yzi9RKR/5CYrCsSXaQ3pjOLAEFe4yHYSkVXySGnYvCoCWw9E1CAx2/S6cCZdkGCe
+vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
++OkuE6N36B9K
+-----END CERTIFICATE-----
+")EOF";
+
+#    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
+#      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
+#    endif
+#  endif
 #endif
 
 /*------------------DEEP SLEEP parameters ------------------*/
