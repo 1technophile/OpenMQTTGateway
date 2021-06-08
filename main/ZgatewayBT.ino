@@ -565,6 +565,20 @@ void DT24Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel);
 }
 
+void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {
+#    define EddystoneTLMparametersCount 4
+  Log.trace(F("EddystoneTLMDiscovery" CR));
+  const char* EddystoneTLMsensor[EddystoneTLMparametersCount][8] = {
+      {"sensor", "EddystoneTLM-volt", mac, "", jsonVolt, "", "", "V"},
+      {"sensor", "EddystoneTLM-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "EddystoneTLM-count", mac, "", jsonCount, "", "", ""},
+      {"sensor", "EddystoneTLM-time", mac, "", jsonTime, "", "", ""}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, EddystoneTLMsensor, EddystoneTLMparametersCount, "EddystoneTLM", "SensorBlue", sensorModel);
+}
+
 #  else
 void MiFloraDiscovery(const char* mac, const char* sensorModel) {}
 void VegTrugDiscovery(const char* mac, const char* sensorModel) {}
@@ -588,6 +602,7 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
 void WS02Discovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel) {}
+void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {}
 #  endif
 
 #  ifdef ESP32
@@ -1146,6 +1161,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == CGH1) CLEARGRASSCGH1Discovery(macWOdots.c_str(), "CGH1");
       if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery(macWOdots.c_str(), "CGD1");
       if (p->sensorModel == WS02) WS02Discovery(macWOdots.c_str(), "WS02");
+      if (p->sensorModel == EDDYSTONE_TLM) EddystoneTLMDiscovery(macWOdots.c_str(), "EDDYSTONE_TLM");
       if (p->sensorModel == MIBAND) MiBandDiscovery(macWOdots.c_str(), "MIBAND");
       if ((p->sensorModel == XMTZC04HM) ||
           (p->sensorModel == XMTZC05HM)) MiScaleDiscovery(macWOdots.c_str(), "XMTZC0xHM");
@@ -1349,6 +1365,15 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
             createOrUpdateDevice(mac, device_flags_init, XMTZC05HM);
           return process_scale_v2(BLEdata);
         }
+        // || strstr(service_datauuid, "0x2080") != NULL
+        Log.trace(F("Is it an EddystoneTLM?" CR));
+        if (strncmp(&service_data[0], "20", 2) == 0 && strstr(service_datauuid, "0xfeaa") != NULL) {
+          Log.trace(F("Eddystone TLM" CR));
+          BLEdata.set("model", "EDDYSTONE_TLM");
+          if (device->sensorModel == -1)
+            createOrUpdateDevice(mac, device_flags_init, EDDYSTONE_TLM);
+          return process_eddystonetlm(BLEdata);
+        }
       }
     } else {
       Log.trace(F("Non valid service data, removing it" CR));
@@ -1517,6 +1542,18 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
   //Set Json values
   BLEdata.set("weight", (double)weight);
   BLEdata.set("impedance", (double)impedance);
+
+  return BLEdata;
+}
+
+JsonObject& process_eddystonetlm(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+
+  BLEdata.set("volt", (float)value_from_hex_data(servicedata, 4, 4, false) / 1000);
+  BLEdata.set("tempc", (float)value_from_hex_data(servicedata, 8, 2, false));
+  BLEdata.set("tempf", (float)convertTemp_CtoF(value_from_hex_data(servicedata, 8, 2, false)));
+  BLEdata.set("count", value_from_hex_data(servicedata, 12, 8, false));
+  BLEdata.set("time", value_from_hex_data(servicedata, 20, 8, false) / 100);
 
   return BLEdata;
 }

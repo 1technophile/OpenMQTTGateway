@@ -144,6 +144,7 @@ enum ble_sensor_model {
   IBSTH2,
   IBT4XS,
   DT24,
+  EDDYSTONE_TLM,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/

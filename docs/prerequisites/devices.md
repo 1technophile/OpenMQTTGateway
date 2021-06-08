@@ -44,6 +44,7 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | iNode Energy Meter (1)||power/energy/battery|
 | Thermobeacon|WS02|temperature/humidity/volt|
 | ATorch Battery Capacity Monitor|DT24|volt/amp/watt|
+| Eddystone TLM|protocol|temperature/count/volt/time|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
