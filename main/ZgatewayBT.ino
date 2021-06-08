@@ -550,6 +550,21 @@ void WS02Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, WS02sensor, WS02parametersCount, "WS02", "SensorBlue", sensorModel);
 }
 
+void DT24Discovery(const char* mac, const char* sensorModel) {
+#    define DT24parametersCount 5
+  Log.trace(F("DT24Discovery" CR));
+  const char* DT24sensor[DT24parametersCount][8] = {
+      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V"},
+      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A"},
+      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W"},
+      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh"},
+      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", ""}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel);
+}
+
 #  else
 void MiFloraDiscovery(const char* mac, const char* sensorModel) {}
 void VegTrugDiscovery(const char* mac, const char* sensorModel) {}
@@ -572,6 +587,7 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
 void WS02Discovery(const char* mac, const char* sensorModel) {}
+void DT24Discovery(const char* mac, const char* sensorModel) {}
 #  endif
 
 #  ifdef ESP32
@@ -700,6 +716,8 @@ void notifyCB(
   if (!ProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
 
+    // This logic needs refactoring and should be changed to a device/model approach based on the sensor macAdr lookup.  Growing this beyond 2 devices will get too cumbersome
+
     if (length == 5) {
       Log.trace(F("Device identified creating BLE buffer" CR));
       JsonObject& BLEdata = getBTJsonObject();
@@ -723,6 +741,34 @@ void notifyCB(
       BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
 
       pubBT(BLEdata);
+    } else if (length == 20) {
+      // DT24-BLE data format
+      // https://github.com/NiceLabs/atorch-console/blob/master/docs/protocol-design.md#dc-meter-report
+      // Data comes as two packets ( 20 and 16 ), and am only processing first
+      Log.trace(F("Device identified creating BLE buffer" CR));
+      JsonObject& BLEdata = getBTJsonObject();
+      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
+      mac_adress.toUpperCase();
+      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+        BLEdevice* p = *it;
+        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
+          if (p->sensorModel == LYWSD03MMC)
+            BLEdata.set("model", "LYWSD03MMC");
+          else if (p->sensorModel == MHO_C401)
+            BLEdata.set("model", "MHO_C401");
+          else if (p->sensorModel == DT24)
+            BLEdata.set("model", "DT24");
+        }
+      }
+      BLEdata.set("id", (char*)mac_adress.c_str());
+      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
+      BLEdata.set("volt", (float)(((pData[4] * 256 * 256) + (pData[5] * 256) + pData[6]) / 10.0));
+      BLEdata.set("amp", (float)(((pData[7] * 256 * 256) + (pData[8] * 256) + pData[9]) / 1000.0));
+      BLEdata.set("watt", (float)(((pData[10] * 256 * 256) + (pData[11] * 256) + pData[12]) / 10.0));
+      BLEdata.set("watt hour", (float)(((pData[13] * 256 * 256 * 256) + (pData[14] * 256 * 256) + (pData[15] * 256) + pData[16]) / 100.0));
+      BLEdata.set("price", (float)(((pData[17] * 256 * 256) + (pData[18] * 256) + pData[19]) / 100.0));
+
+      pubBT(BLEdata);
     } else {
       Log.notice(F("Device not identified" CR));
     }
@@ -744,6 +790,40 @@ void BLEconnect() {
       pClient = BLEDevice::createClient();
       BLEUUID serviceUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6");
       BLEUUID charUUID("ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6");
+      BLEAddress sensorAddress(p->macAdr);
+      if (!pClient->connect(sensorAddress)) {
+        Log.notice(F("Failed to find client: %s" CR), p->macAdr);
+      } else {
+        BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
+        if (!pRemoteService) {
+          Log.notice(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
+        } else {
+          Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
+          // Obtain a reference to the characteristic in the service of the remote BLE server.
+          if (pClient->isConnected()) {
+            Log.trace(F("Client isConnected, freeHeap: %d" CR), ESP.getFreeHeap());
+            BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
+            if (!pRemoteCharacteristic) {
+              Log.notice(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
+            } else {
+              if (pRemoteCharacteristic->canNotify()) {
+                Log.trace(F("Registering notification" CR));
+                pRemoteCharacteristic->subscribe(true, notifyCB);
+                delay(BLE_CNCT_TIMEOUT);
+              } else {
+                Log.notice(F("Failed registering notification" CR));
+              }
+            }
+          }
+        }
+      }
+      NimBLEDevice::deleteClient(pClient);
+    } else if (p->sensorModel == DT24) {
+      Log.trace(F("Model to connect found: %s" CR), p->macAdr);
+      NimBLEClient* pClient;
+      pClient = BLEDevice::createClient();
+      BLEUUID serviceUUID("ffe0");
+      BLEUUID charUUID("ffe1");
       BLEAddress sensorAddress(p->macAdr);
       if (!pClient->connect(sensorAddress)) {
         Log.notice(F("Failed to find client: %s" CR), p->macAdr);
@@ -1075,6 +1155,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery(macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery(macWOdots.c_str(), "INODE_EM");
+      if (p->sensorModel == DT24) DT24Discovery(macWOdots.c_str(), "DT24-BLE");
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       if (!isDiscovered(p)) {
@@ -1309,6 +1390,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, IBT4XS);
         return process_inkbird_4xs(BLEdata);
+      }
+      Log.trace(F("Is it a DT24?" CR));
+      if (strcmp(name, "DT24-BLE") == 0) {
+        Log.trace(F("DT24 data reading data reading" CR));
+        BLEdata.set("model", "DT24");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_init, DT24);
+        return BLEdata;
       }
     }
     Log.trace(F("Is it a iNode Energy Meter?" CR));
