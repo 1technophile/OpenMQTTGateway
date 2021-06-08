@@ -716,6 +716,8 @@ void notifyCB(
   if (!ProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
 
+    // This logic needs refactoring and should be changed to a device/model approach based on the sensor macAdr lookup.  Growing this beyond 2 devices will get too cumbersome
+
     if (length == 5) {
       Log.trace(F("Device identified creating BLE buffer" CR));
       JsonObject& BLEdata = getBTJsonObject();
