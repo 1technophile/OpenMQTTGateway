@@ -43,6 +43,7 @@ OpenMQTTGateway is able to scan all the BLE devices that advertise their data so
 | XIAOMI Mi band (1)||steps|
 | iNode Energy Meter (1)||power/energy/battery|
 | Thermobeacon|WS02|temperature/humidity/volt|
+| ATorch Battery Capacity Monitor|DT24|volt/amp/watt|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 

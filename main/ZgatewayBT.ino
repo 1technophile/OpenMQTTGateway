@@ -550,6 +550,21 @@ void WS02Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, WS02sensor, WS02parametersCount, "WS02", "SensorBlue", sensorModel);
 }
 
+void DT24Discovery(const char* mac, const char* sensorModel) {
+#    define DT24parametersCount 5
+  Log.trace(F("DT24Discovery" CR));
+  const char* DT24sensor[DT24parametersCount][8] = {
+      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V"},
+      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A"},
+      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W"},
+      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh"},
+      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", ""}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel);
+}
+
 #  else
 void MiFloraDiscovery(const char* mac, const char* sensorModel) {}
 void VegTrugDiscovery(const char* mac, const char* sensorModel) {}
@@ -572,6 +587,7 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
 void WS02Discovery(const char* mac, const char* sensorModel) {}
+void DT24Discovery(const char* mac, const char* sensorModel) {}
 #  endif
 
 #  ifdef ESP32
@@ -1137,6 +1153,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
       if (p->sensorModel == MHO_C401) MHO_C401Discovery(macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery(macWOdots.c_str(), "INODE_EM");
+      if (p->sensorModel == DT24) DT24Discovery(macWOdots.c_str(), "DT24-BLE");
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       if (!isDiscovered(p)) {
