@@ -40,6 +40,12 @@ extern int btQueueLengthCount;
 #    define AttemptBLECOnnect true //do we by default attempt a BLE connection to sensors with ESP32
 #  endif
 bool bleConnect = AttemptBLECOnnect;
+
+// Sets whether to filter publishing of scanned devices that require a connection.
+// Default (1) prevents overwriting the publication of the device connection data with the advertised data.
+#  ifndef BLE_FILTER_CONNECTABLE
+#    define BLE_FILTER_CONNECTABLE 1
+#  endif
 #endif
 
 /*----------------------BT topics & parameters-------------------------*/
@@ -160,5 +166,17 @@ enum ble_sensor_model {
 #    define BT_TX 6 //arduino TX connect HM-10 or 11 RX
 #  endif
 #endif
+
+/*---------------INTERNAL USE: DO NOT MODIFY--------------*/
+struct BLEdevice {
+  char macAdr[18];
+  bool isDisc;
+  bool isWhtL;
+  bool isBlkL;
+  bool connect;
+  ble_sensor_model sensorModel;
+};
+
+JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true);
 
 #endif
