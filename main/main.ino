@@ -601,6 +601,18 @@ void setup() {
   digitalWrite(LED_SEND, !LED_SEND_ON);
   digitalWrite(LED_INFO, !LED_INFO_ON);
 
+#if defined(ESP8266) || defined(ESP32)
+  if (mqtt_secure) {
+    eClient = new WiFiClientSecure;
+    setupTLS();
+  } else {
+    eClient = new WiFiClient;
+  }
+#else
+  eClient = new EthernetClient;
+#endif
+  client.setClient(*(Client*)eClient);
+
 #if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
   connectMQTTmdns();
@@ -609,18 +621,6 @@ void setup() {
   port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
   Log.trace(F("Mqtt server: %s" CR), mqtt_server);
-#  if defined(ESP8266) || defined(ESP32)
-  if (mqtt_secure) {
-    eClient = new WiFiClientSecure;
-    setupTLS();
-  } else {
-    eClient = new WiFiClient;
-  }
-#  else
-  eClient = new EthernetClient;
-#  endif
-
-  client.setClient(*(Client*)eClient);
   client.setServer(mqtt_server, port);
 #endif
 
