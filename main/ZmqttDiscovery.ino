@@ -85,7 +85,12 @@ void createDiscovery(const char* sensor_type,
     char state_topic[mqtt_topic_max_size];
     // If not an entity belonging to the gateway we put wild card for the location and gateway name
     // allowing to have the entity detected by several gateways and a consistent discovery topic among the gateways
-    gateway_entity ? strcpy(state_topic, mqtt_topic) : strcpy(state_topic, "+/+");
+    if (gateway_entity) {
+      strcpy(state_topic, mqtt_topic);
+      strcat(state_topic, gateway_name);
+    } else {
+      strcpy(state_topic, "+/+");
+    }
     strcat(state_topic, st_topic);
     sensor.set("stat_t", state_topic);
   }
@@ -114,6 +119,7 @@ void createDiscovery(const char* sensor_type,
   if (cmd_topic[0]) {
     char command_topic[mqtt_topic_max_size];
     strcpy(command_topic, mqtt_topic);
+    strcat(command_topic, gateway_name);
     strcat(command_topic, cmd_topic);
     sensor.set("cmd_t", command_topic); //command_topic
   }

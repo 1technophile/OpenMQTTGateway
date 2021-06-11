@@ -65,7 +65,7 @@ void rtl_433_Callback(char* message) {
 void setupRTL_433() {
   rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
   rtl_433.setCallback(rtl_433_Callback, messageBuffer, JSON_MSG_BUFFER);
-  Log.trace(F("ZgatewayRTL_433 command topic: %s%s" CR), mqtt_topic, subjectMQTTtoRTL_433);
+  Log.trace(F("ZgatewayRTL_433 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRTL_433);
   Log.notice(F("ZgatewayRTL_433 setup done " CR));
 }
 

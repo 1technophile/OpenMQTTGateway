@@ -84,7 +84,7 @@ void setupPilight() {
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
-  Log.trace(F("ZgatewayPilight command topic: %s%s" CR), mqtt_topic, subjectMQTTtoPilight);
+  Log.trace(F("ZgatewayPilight command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoPilight);
   Log.trace(F("ZgatewayPilight setup done " CR));
 }
 
