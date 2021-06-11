@@ -64,7 +64,7 @@ void setupRF2() {
   NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
-  Log.trace(F("ZgatewayRF2 command topic: %s%s" CR), mqtt_topic, subjectMQTTtoRF2);
+  Log.trace(F("ZgatewayRF2 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF2);
   Log.trace(F("ZgatewayRF2 setup done " CR));
   pinMode(RF_EMITTER_GPIO, OUTPUT);
   digitalWrite(RF_EMITTER_GPIO, LOW);
