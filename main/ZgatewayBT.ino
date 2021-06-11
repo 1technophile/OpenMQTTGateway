@@ -778,9 +778,9 @@ void notifyCB(
       BLEdata.set("id", (char*)mac_adress.c_str());
       Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
       BLEdata.set("volt", (float)(((pData[4] * 256 * 256) + (pData[5] * 256) + pData[6]) / 10.0));
-      BLEdata.set("amp", (float)(((pData[7] * 256 * 256) + (pData[8] * 256) + pData[9]) / 1000.0));
-      BLEdata.set("watt", (float)(((pData[10] * 256 * 256) + (pData[11] * 256) + pData[12]) / 10.0));
-      BLEdata.set("watt hour", (float)(((pData[13] * 256 * 256 * 256) + (pData[14] * 256 * 256) + (pData[15] * 256) + pData[16]) / 100.0));
+      BLEdata.set("current", (float)(((pData[7] * 256 * 256) + (pData[8] * 256) + pData[9]) / 1000.0));
+      BLEdata.set("power", (float)(((pData[10] * 256 * 256) + (pData[11] * 256) + pData[12]) / 10.0));
+      BLEdata.set("energy", (float)(((pData[13] * 256 * 256 * 256) + (pData[14] * 256 * 256) + (pData[15] * 256) + pData[16]) / 100.0));
       BLEdata.set("price", (float)(((pData[17] * 256 * 256) + (pData[18] * 256) + pData[19]) / 100.0));
 
       pubBT(BLEdata);
