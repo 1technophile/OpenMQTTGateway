@@ -25,10 +25,10 @@ Connect the Emitter and Receiver to a 5V (**3.3V** for CC1101) supply source, an
 |Board|Receiver Pin(GDO2)|Emitter Pin(GDO0)|SCK|VCC|MOSI|MISO|CSN|GND
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |ESP8266|D2/**D3**/D1/D8|**RX**/D2|D5|**3V3**|D7|D6|D8|GND
-|ESP32|**27**/26|12|D18|**3V3**|D23|D19|D5|GND
+|ESP32|**D27**|D12|D18|**3V3**|D23|D19|D5|GND
 
 To use the CC1101 module, `ZradioCC1101` must be uncomment in the `User_config.h` or added to the `build_flags`.
-More information about the [CC1101 wiring](https://github.com/LSatan/SmartRC-CC1101-Driver-Lib#wiring).
+More information about the [CC1101 wiring](https://github.com/LSatan/SmartRC-CC1101-Driver-Lib#wiring). ( Please note that with OMG we are recommending CC1101 GDO2 to be connected to ESP32 D27 and GDO0 to be connected to D12, this is different than the LSatan diagram. This is due to the ESP32 using D2 as part of the boot process. )
 
 
 ## Arduino Hardware setup
