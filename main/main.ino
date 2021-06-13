@@ -1867,10 +1867,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
     }
 
+#  ifdef MQTTsetWIFI
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();
-#  endif
+#    endif
       String prev_ssid = WiFi.SSID();
       String prev_pass = WiFi.psk();
       client.disconnect();
@@ -1885,19 +1886,25 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         WiFi.disconnect(true);
         WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-#  if defined(ESP8266)
+#    if defined(ESP8266)
           ESP.reset();
-#  else
+#    else
           ESP.restart();
-#  endif
+#    endif
         }
       }
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
       startProcessing();
-#  endif
+#    endif
     }
+#  endif
 
+#  ifdef MQTTsetMQTT
     if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
+#    if defined(ZgatewayBT) && defined(ESP32)
+      stopProcessing();
+#    endif
+      client.disconnect();
       bool update_server = false;
       bool secure_connect = SYSdata.get<bool>("mqtt_secure");
       void* prev_client = nullptr;
@@ -1909,7 +1916,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
           Log.error(F("mqtt_server provided without mqtt_secure defined - ignoring command" CR));
           return;
         }
-#  if MQTT_SECURE_SELF_SIGNED
+#    if MQTT_SECURE_SELF_SIGNED
         if (use_ss_cert) {
           cert_index = SYSdata.get<uint8_t>("mqtt_cert_index");
           if (cert_index >= sizeof(certs_array) / sizeof(ss_certs)) {
@@ -1917,11 +1924,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
             return;
           }
         }
-#  endif
+#    endif
 
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
         stopProcessing();
-#  endif
+#    endif
         client.disconnect();
         update_server = true;
         if (secure_connect != mqtt_secure) {
@@ -1942,9 +1949,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
         client.setServer(SYSdata.get<const char*>("mqtt_server"), SYSdata.get<unsigned int>("mqtt_port"));
       } else {
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
         stopProcessing();
-#  endif
+#    endif
         client.disconnect();
       }
 
@@ -1965,9 +1972,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
             delete prev_client;
           }
         }
-#  ifndef ESPWifiManualSetup
+#    ifndef ESPWifiManualSetup
         saveMqttConfig();
-#  endif
+#    endif
       } else {
         if (update_server) {
           if (prev_client != nullptr) {
@@ -1985,10 +1992,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
       startProcessing();
-#  endif
+#    endif
     }
+#  endif
 #endif
 
 #ifdef ZmqttDiscovery
