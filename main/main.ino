@@ -1798,10 +1798,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
     }
 
+#  ifdef MQTTsetWIFI
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();
-#  endif
+#    endif
       String prev_ssid = WiFi.SSID();
       String prev_pass = WiFi.psk();
       client.disconnect();
@@ -1816,22 +1817,24 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         WiFi.disconnect(true);
         WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-#  if defined(ESP8266)
+#    if defined(ESP8266)
           ESP.reset();
-#  else
+#    else
           ESP.restart();
-#  endif
+#    endif
         }
       }
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
       startProcessing();
-#  endif
+#    endif
     }
-
-    if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
-#  if defined(ZgatewayBT) && defined(ESP32)
-      stopProcessing();
 #  endif
+
+#  ifdef MQTTsetMQTT
+    if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
+#    if defined(ZgatewayBT) && defined(ESP32)
+      stopProcessing();
+#    endif
       client.disconnect();
       bool update_server = false;
       void* prev_client = nullptr;
@@ -1875,9 +1878,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
             delete prev_client;
           }
         }
-#  ifndef ESPWifiManualSetup
+#    ifndef ESPWifiManualSetup
         saveMqttConfig();
-#  endif
+#    endif
       } else {
         if (update_server) {
           if (prev_client != nullptr) {
@@ -1892,10 +1895,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         strcpy(mqtt_pass, prev_pass.c_str());
         connectMQTT();
       }
-#  if defined(ZgatewayBT) && defined(ESP32)
+#    if defined(ZgatewayBT) && defined(ESP32)
       startProcessing();
-#  endif
+#    endif
     }
+#  endif
 #endif
 
 #ifdef ZmqttDiscovery

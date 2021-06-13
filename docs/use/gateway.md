@@ -41,6 +41,11 @@ Auto discovery is enable by default on release binaries, on platformio (except f
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
+Define 'MQTTsetWIFI' to activate this
+```
+build_flags = '-DMQTTsetWIFI'
+```
+
 ## Change the MQTT broker credentials
 ```
 mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
@@ -57,6 +62,10 @@ Server, port, and secure_flag are only required if changing connection to anothe
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
+Define 'MQTTsetMQTT' to activate this
+```
+build_flags = '-DMQTTsetMQTT'
+```
 
 # Firmware update from MQTT (ESP only)
 
