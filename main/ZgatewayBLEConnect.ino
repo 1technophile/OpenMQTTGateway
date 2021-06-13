@@ -4,7 +4,6 @@
 #    include "ArduinoJson.h"
 #    include "ArduinoLog.h"
 #    include "ZgatewayBLEConnect.h"
-#    include "config_BT.h"
 
 #    define convertTemp_CtoF(c) ((c * 1.8) + 32)
 
@@ -33,6 +32,57 @@ NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& ser
   }
 
   return pRemoteCharacteristic;
+}
+
+bool zBLEConnect::writeData(BLEAction* action) {
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
+
+  if (pChar && pChar->canWrite()) {
+    return pChar->writeValue(action->value);
+  }
+  return false;
+}
+
+bool zBLEConnect::readData(BLEAction* action) {
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
+
+  if (pChar && pChar->canRead()) {
+    action->value = pChar->readValue();
+    if (action->value != "") {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
+  bool result = false;
+  if (actions.size() > 0) {
+    for (auto& it : actions) {
+      if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
+        JsonObject& BLEresult = getBTJsonObject();
+        BLEresult.set("id", it.addr);
+        BLEresult.set("service", (char*)it.service.toString().c_str());
+        BLEresult.set("characteristic", (char*)it.characteristic.toString().c_str());
+
+        if (it.write) {
+          Log.trace(F("processing BLE write" CR));
+          BLEresult.set("write", it.value.c_str());
+          result = writeData(&it);
+        } else {
+          Log.trace(F("processing BLE read" CR));
+          result = readData(&it);
+          BLEresult.set("read", it.value.c_str());
+        }
+
+        it.complete = true;
+        BLEresult.set("success", result);
+        pubBT(BLEresult);
+      }
+    }
+  }
+
+  return result;
 }
 
 /*-----------------------LYWSD03MMC && MHO_C401 HANDLING-----------------------*/
@@ -158,5 +208,6 @@ void DT24_connect::publishData() {
     }
   }
 }
+
 #  endif //ZgatewayBT
 #endif //ESP32

@@ -46,6 +46,7 @@ bool bleConnect = AttemptBLECOnnect;
 #  ifndef BLE_FILTER_CONNECTABLE
 #    define BLE_FILTER_CONNECTABLE 1
 #  endif
+#  include "NimBLEDevice.h"
 #endif
 
 /*----------------------BT topics & parameters-------------------------*/
@@ -168,6 +169,18 @@ enum ble_sensor_model {
 #endif
 
 /*---------------INTERNAL USE: DO NOT MODIFY--------------*/
+#ifdef ESP32
+struct BLEAction {
+  std::string value;
+  char addr[18];
+  NimBLEUUID service;
+  NimBLEUUID characteristic;
+  bool write;
+  bool complete;
+  uint8_t ttl;
+};
+#endif
+
 struct BLEdevice {
   char macAdr[18];
   bool isDisc;
