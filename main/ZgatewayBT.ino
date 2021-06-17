@@ -46,14 +46,10 @@ FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createO
 #    include <esp_wifi.h>
 #    include <stdatomic.h>
 
+#    include "ZgatewayBLEConnect.h"
 #    include "soc/timer_group_reg.h"
 #    include "soc/timer_group_struct.h"
 
-void notifyCB(
-    BLERemoteCharacteristic* pBLERemoteCharacteristic,
-    uint8_t* pData,
-    size_t length,
-    bool isNotify);
 #  endif
 
 #  if !defined(ESP32) && !defined(ESP8266)
@@ -63,18 +59,11 @@ void notifyCB(
 #  include <vector>
 using namespace std;
 
-struct BLEdevice {
-  char macAdr[18];
-  bool isDisc;
-  bool isWhtL;
-  bool isBlkL;
-  ble_sensor_model sensorModel;
-};
-
 #  define device_flags_init     0 << 0
 #  define device_flags_isDisc   1 << 0
 #  define device_flags_isWhiteL 1 << 1
 #  define device_flags_isBlackL 1 << 2
+#  define device_flags_connect  1 << 3
 
 struct decompose {
   int start;
@@ -85,7 +74,7 @@ struct decompose {
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
-static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, UNKNOWN_MODEL};
+static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, false, UNKNOWN_MODEL};
 static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
@@ -134,7 +123,7 @@ int btQueueBlocked = 0;
 int btQueueLengthSum = 0;
 int btQueueLengthCount = 0;
 
-JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true) {
+JsonObject& getBTJsonObject(const char* json, bool haPresenceEnabled) {
   int next, last;
   for (bool blocked = false;;) {
     next = atomic_load_explicit(&jsonBTBufferQueueNext, ::memory_order_seq_cst); // use namespace std -> ambiguous error...
@@ -178,7 +167,7 @@ void emptyBTQueue() {
 
 JsonBundle jsonBTBuffer;
 
-JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true) {
+JsonObject& getBTJsonObject(const char* json, bool haPresenceEnabled) {
   return jsonBTBuffer.createObject();
 }
 
@@ -235,6 +224,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
     device->isDisc = flags & device_flags_isDisc;
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
+    device->connect = flags & device_flags_connect;
     if (model != UNKNOWN_MODEL) device->sensorModel = model;
     devices.push_back(device);
     newDevices++;
@@ -634,6 +624,13 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
     BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
+#    if BLE_FILTER_CONNECTABLE
+    if (device->connect) {
+      Log.notice(F("Filtered connectable device" CR));
+      return;
+    }
+#    endif
+
     if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
       if (advertisedDevice->haveName())
         BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
@@ -716,80 +713,8 @@ void BLEscan() {
   pBLEScan->setWindow(BLEScanWindow);
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
   scanCount++;
-  Log.notice(F("Found %d devices, scan number %d end deinit controller" CR), foundDevices.getCount(), scanCount);
+  Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
   enableCore0WDT();
-}
-
-/** 
- * Callback method to retrieve data from devices characteristics
- */
-void notifyCB(
-    BLERemoteCharacteristic* pBLERemoteCharacteristic,
-    uint8_t* pData,
-    size_t length,
-    bool isNotify) {
-  if (!ProcessLock) {
-    Log.trace(F("Callback from %s characteristic" CR), pBLERemoteCharacteristic->getUUID().toString().c_str());
-
-    // This logic needs refactoring and should be changed to a device/model approach based on the sensor macAdr lookup.  Growing this beyond 2 devices will get too cumbersome
-
-    if (length == 5) {
-      Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject& BLEdata = getBTJsonObject();
-      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
-      mac_adress.toUpperCase();
-      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-        BLEdevice* p = *it;
-        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
-          if (p->sensorModel == LYWSD03MMC)
-            BLEdata.set("model", "LYWSD03MMC");
-          else if (p->sensorModel == MHO_C401)
-            BLEdata.set("model", "MHO_C401");
-        }
-      }
-      BLEdata.set("id", (char*)mac_adress.c_str());
-      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
-      BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
-      BLEdata.set("tempf", (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01)));
-      BLEdata.set("hum", (float)(pData[2]));
-      BLEdata.set("volt", (float)(((pData[4] * 256) + pData[3]) / 1000.0));
-      BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
-
-      pubBT(BLEdata);
-    } else if (length == 20) {
-      // DT24-BLE data format
-      // https://github.com/NiceLabs/atorch-console/blob/master/docs/protocol-design.md#dc-meter-report
-      // Data comes as two packets ( 20 and 16 ), and am only processing first
-      Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject& BLEdata = getBTJsonObject();
-      String mac_adress = pBLERemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str();
-      mac_adress.toUpperCase();
-      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-        BLEdevice* p = *it;
-        if ((strcmp(p->macAdr, (char*)mac_adress.c_str()) == 0)) {
-          if (p->sensorModel == LYWSD03MMC)
-            BLEdata.set("model", "LYWSD03MMC");
-          else if (p->sensorModel == MHO_C401)
-            BLEdata.set("model", "MHO_C401");
-          else if (p->sensorModel == DT24)
-            BLEdata.set("model", "DT24");
-        }
-      }
-      BLEdata.set("id", (char*)mac_adress.c_str());
-      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_adress.c_str());
-      BLEdata.set("volt", (float)(((pData[4] * 256 * 256) + (pData[5] * 256) + pData[6]) / 10.0));
-      BLEdata.set("current", (float)(((pData[7] * 256 * 256) + (pData[8] * 256) + pData[9]) / 1000.0));
-      BLEdata.set("power", (float)(((pData[10] * 256 * 256) + (pData[11] * 256) + pData[12]) / 10.0));
-      BLEdata.set("energy", (float)(((pData[13] * 256 * 256 * 256) + (pData[14] * 256 * 256) + (pData[15] * 256) + pData[16]) / 100.0));
-      BLEdata.set("price", (float)(((pData[17] * 256 * 256) + (pData[18] * 256) + pData[19]) / 100.0));
-
-      pubBT(BLEdata);
-    } else {
-      Log.notice(F("Device not identified" CR));
-    }
-  } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
-  }
 }
 
 /** 
@@ -799,74 +724,24 @@ void BLEconnect() {
   Log.notice(F("BLE Connect begin" CR));
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
-    if (p->sensorModel == LYWSD03MMC || p->sensorModel == MHO_C401) {
-      Log.trace(F("Model to connect found" CR));
-      NimBLEClient* pClient;
-      pClient = BLEDevice::createClient();
-      BLEUUID serviceUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6");
-      BLEUUID charUUID("ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6");
-      BLEAddress sensorAddress(p->macAdr);
-      if (!pClient->connect(sensorAddress)) {
-        Log.notice(F("Failed to find client: %s" CR), p->macAdr);
-      } else {
-        BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
-        if (!pRemoteService) {
-          Log.notice(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
-        } else {
-          Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
-          // Obtain a reference to the characteristic in the service of the remote BLE server.
-          if (pClient->isConnected()) {
-            Log.trace(F("Client isConnected, freeHeap: %d" CR), ESP.getFreeHeap());
-            BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
-            if (!pRemoteCharacteristic) {
-              Log.notice(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
-            } else {
-              if (pRemoteCharacteristic->canNotify()) {
-                Log.trace(F("Registering notification" CR));
-                pRemoteCharacteristic->subscribe(true, notifyCB);
-                delay(BLE_CNCT_TIMEOUT);
-              } else {
-                Log.notice(F("Failed registering notification" CR));
-              }
-            }
-          }
-        }
-      }
-      NimBLEDevice::deleteClient(pClient);
-    } else if (p->sensorModel == DT24) {
+    if (p->connect) {
       Log.trace(F("Model to connect found: %s" CR), p->macAdr);
-      NimBLEClient* pClient;
-      pClient = BLEDevice::createClient();
-      BLEUUID serviceUUID("ffe0");
-      BLEUUID charUUID("ffe1");
-      BLEAddress sensorAddress(p->macAdr);
-      if (!pClient->connect(sensorAddress)) {
-        Log.notice(F("Failed to find client: %s" CR), p->macAdr);
-      } else {
-        BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
-        if (!pRemoteService) {
-          Log.notice(F("Failed to find service UUID: %s" CR), serviceUUID.toString().c_str());
-        } else {
-          Log.trace(F("Found service: %s" CR), serviceUUID.toString().c_str());
-          // Obtain a reference to the characteristic in the service of the remote BLE server.
-          if (pClient->isConnected()) {
-            Log.trace(F("Client isConnected, freeHeap: %d" CR), ESP.getFreeHeap());
-            BLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
-            if (!pRemoteCharacteristic) {
-              Log.notice(F("Failed to find characteristic UUID: %s" CR), charUUID.toString().c_str());
-            } else {
-              if (pRemoteCharacteristic->canNotify()) {
-                Log.trace(F("Registering notification" CR));
-                pRemoteCharacteristic->subscribe(true, notifyCB);
-                delay(BLE_CNCT_TIMEOUT);
-              } else {
-                Log.notice(F("Failed registering notification" CR));
-              }
-            }
-          }
+      NimBLEAddress addr(std::string(p->macAdr));
+      switch (p->sensorModel) {
+        case LYWSD03MMC:
+        case MHO_C401: {
+          LYWSD03MMC_connect BLEclient(addr);
+          BLEclient.publishData();
+          break;
         }
+        case DT24: {
+          DT24_connect BLEclient(addr);
+          BLEclient.publishData();
+          break;
+        }
+        default:
+          break;
       }
-      NimBLEDevice::deleteClient(pClient);
     }
   }
   Log.notice(F("BLE Connect end" CR));
@@ -1314,13 +1189,13 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       if (strstr(service_data, "588703") != NULL) {
         Log.trace(F("MHO_C401 add to list for future connect" CR));
         if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, MHO_C401);
+          createOrUpdateDevice(mac, device_flags_connect, MHO_C401);
       }
       Log.trace(F("Is it a LYWSD03MMC?" CR));
       if (strstr(service_data, "585b05") != NULL) {
         Log.trace(F("LYWSD03MMC add to list for future connect" CR));
         if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC);
+          createOrUpdateDevice(mac, device_flags_connect, LYWSD03MMC);
       }
       Log.trace(F("Is it a custom (pvvx) LYWSD03MMC?" CR));
       if (service_len >= 30 && strncmp(service_data + 6, "38c1a4", 6) == 0) {
@@ -1421,7 +1296,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         Log.trace(F("DT24 data reading data reading" CR));
         BLEdata.set("model", "DT24");
         if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, DT24);
+          createOrUpdateDevice(mac, device_flags_connect, DT24);
         return BLEdata;
       }
     }
