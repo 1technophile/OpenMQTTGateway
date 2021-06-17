@@ -45,5 +45,14 @@ public:
   GENERIC_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
 };
 
+class HHCCJCY01HHCC_connect : public zBLEConnect {
+  std::vector<uint8_t> m_data;
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  HHCCJCY01HHCC_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  void publishData() override;
+};
+
 #endif //ESP32
 #endif //zBLEConnect_h

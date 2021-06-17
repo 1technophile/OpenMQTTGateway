@@ -253,5 +253,38 @@ void DT24_connect::publishData() {
   }
 }
 
+/*-----------------------HHCCJCY01HHCC HANDLING-----------------------*/
+void HHCCJCY01HHCC_connect::publishData() {
+  NimBLEUUID serviceUUID("00001204-0000-1000-8000-00805f9b34fb");
+  NimBLEUUID charUUID("00001a00-0000-1000-8000-00805f9b34fb");
+  NimBLEUUID charUUID2("00001a02-0000-1000-8000-00805f9b34fb");
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
+
+  if (pChar) {
+    Log.trace(F("Read mode" CR));
+    uint8_t buf[2] = {0xA0, 0x1F};
+    pChar->writeValue(buf, 2, true);
+    int batteryValue = -1;
+    NimBLERemoteCharacteristic* pChar2 = getCharacteristic(serviceUUID, charUUID2);
+    if (pChar2) {
+      std::string value;
+      value = pChar2->readValue();
+      const char* val2 = value.c_str();
+      batteryValue = val2[0];
+      JsonObject& BLEdata = getBTJsonObject();
+      String mac_address = m_pClient->getPeerAddress().toString().c_str();
+      mac_address.toUpperCase();
+      BLEdata.set("model", "HHCCJCY01HHCC");
+      BLEdata.set("id", (char*)mac_address.c_str());
+      BLEdata.set("batt", (int)batteryValue);
+      pubBT(BLEdata);
+    } else {
+      Log.notice(F("Failed getting characteristic" CR));
+    }
+  } else {
+    Log.notice(F("Failed getting characteristic" CR));
+  }
+}
+
 #  endif //ZgatewayBT
 #endif //ESP32
