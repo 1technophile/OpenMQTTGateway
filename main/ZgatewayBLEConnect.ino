@@ -126,6 +126,8 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       BLEdata.set("power", (float)(((m_data[10] * 256 * 256) + (m_data[11] * 256) + m_data[12]) / 10.0));
       BLEdata.set("energy", (float)(((m_data[13] * 256 * 256 * 256) + (m_data[14] * 256 * 256) + (m_data[15] * 256) + m_data[16]) / 100.0));
       BLEdata.set("price", (float)(((m_data[17] * 256 * 256) + (m_data[18] * 256) + m_data[19]) / 100.0));
+      BLEdata.set("tempc", (float)(m_data[24] * 256) + m_data[25]);
+      BLEdata.set("tempf", (float)(convertTemp_CtoF((m_data[24] * 256) + m_data[25])));
 
       pubBT(BLEdata);
     } else {
