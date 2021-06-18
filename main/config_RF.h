@@ -80,6 +80,7 @@ int minimumRssi = 0;
 #define subjectMultiGTWRF "+/+/433toMQTT"
 //RF number of signal repetition - Can be overridden by specifying "repeat" in a JSON message.
 #define RF_EMITTER_REPEAT 20
+#define RF2_EMITTER_REPEAT 4  // Actual repeats is 2^R, where R is the here configured amount
 //#define RF_DISABLE_TRANSMIT //Uncomment this line to disable RF transmissions. (RF Receive will work as normal.)
 
 /*-------------------RF2 topics & parameters----------------------*/
