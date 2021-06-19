@@ -541,14 +541,15 @@ void WS02Discovery(const char* mac, const char* sensorModel) {
 }
 
 void DT24Discovery(const char* mac, const char* sensorModel) {
-#    define DT24parametersCount 5
+#    define DT24parametersCount 6
   Log.trace(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][8] = {
       {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V"},
       {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A"},
       {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W"},
       {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh"},
-      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", ""}
+      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", ""},
+      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "°C"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
