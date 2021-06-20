@@ -72,7 +72,9 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
         } else {
           Log.trace(F("processing BLE read" CR));
           result = readData(&it);
-          BLEresult.set("read", it.value.c_str());
+          char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
+          BLEresult.set("read", (pHex != nullptr) ? pHex : "invalid data");
+          free(pHex);
         }
 
         it.complete = true;

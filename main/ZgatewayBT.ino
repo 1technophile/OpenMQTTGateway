@@ -746,6 +746,11 @@ void BLEconnect() {
           BLEclient.publishData();
           break;
         }
+        case GENERIC: {
+          GENERIC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
+          break;
+        }
         default:
           break;
       }
@@ -1692,6 +1697,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
     action.characteristic = NimBLEUUID((const char*)BTdata["ble_write_char"]);
     action.value = std::string((const char*)BTdata["ble_write_value"]);
     action.write = true;
+    Log.trace(F("BLE ACTION Write" CR));
   } else if (BTdata.containsKey("ble_read_address") &&
              BTdata.containsKey("ble_read_service") &&
              BTdata.containsKey("ble_read_char")) {
@@ -1699,10 +1705,11 @@ void MQTTtoBTAction(JsonObject& BTdata) {
     action.service = NimBLEUUID((const char*)BTdata["ble_read_service"]);
     action.characteristic = NimBLEUUID((const char*)BTdata["ble_read_char"]);
     action.write = false;
+    Log.trace(F("BLE ACTION Read" CR));
   } else {
     return;
   }
-
+  createOrUpdateDevice(action.addr, device_flags_connect, GENERIC);
   BLEactions.push_back(action);
 #  endif
 }

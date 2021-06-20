@@ -38,5 +38,12 @@ public:
   void publishData() override;
 };
 
+class GENERIC_connect : public zBLEConnect {
+  std::vector<uint8_t> m_data;
+
+public:
+  GENERIC_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+};
+
 #endif //ESP32
 #endif //zBLEConnect_h
