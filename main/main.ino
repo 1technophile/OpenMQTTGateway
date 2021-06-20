@@ -156,6 +156,8 @@ struct GfSun2000Data {};
 #endif
 /*------------------------------------------------------------------------*/
 
+void setupTLS(bool self_signed = false, uint8_t index = 0);
+
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
@@ -175,7 +177,8 @@ bool disc = true; // Auto discovery with Home Assistant convention
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 #if defined(ESP8266) || defined(ESP32)
-static bool mqtt_secure = MQTT_SECURE_DEFAULT;
+static bool mqtt_secure = (MQTT_SECURE_DEFAULT || MQTT_SECURE_SELF_SIGNED);
+static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
 #endif
 
@@ -211,6 +214,10 @@ Preferences preferences;
 #  include <FS.h>
 #  include <WiFiManager.h>
 X509List caCert;
+#  if MQTT_SECURE_SELF_SIGNED_CLIENT
+X509List* pClCert = nullptr;
+PrivateKey* pClKey = nullptr;
+#  endif
 ESP8266WiFiMulti wifiMulti;
 #  ifdef MDNS_SD
 #    include <ESP8266mDNS.h>
@@ -604,7 +611,7 @@ void setup() {
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
     eClient = new WiFiClientSecure;
-    setupTLS();
+    setupTLS(MQTT_SECURE_SELF_SIGNED, mqtt_ss_index);
   } else {
     eClient = new WiFiClient;
   }
@@ -850,23 +857,51 @@ void setOTA() {
   ArduinoOTA.begin();
 }
 
-void setupTLS() {
+void setupTLS(bool self_signed, uint8_t index) {
   configTime(0, 0, NTP_SERVER);
   WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
-  if (mqtt_cert.length() > 0) {
-#  if defined(ESP32)
-    sClient->setCACert(mqtt_cert.c_str());
-  } else {
-    sClient->setCACert(certificate);
-  }
-#  elif defined(ESP8266)
-    caCert.append(mqtt_cert.c_str());
-  } else {
-    caCert.append(certificate);
-  }
-  sClient->setTrustAnchors(&caCert);
-  sClient->setBufferSizes(512, 512);
+#  if MQTT_SECURE_SELF_SIGNED
+  if (self_signed) {
+#    if defined(ESP32)
+    sClient->setCACert(certs_array[index].server_cert);
+#      if MQTT_SECURE_SELF_SIGNED_CLIENT
+    sClient->setCertificate(certs_array[index].client_cert);
+    sClient->setPrivateKey(certs_array[index].client_key);
+#      endif
+#    elif defined(ESP8266)
+    caCert.append(certs_array[index].server_cert);
+    sClient->setTrustAnchors(&caCert);
+    sClient->setBufferSizes(512, 512);
+#      if MQTT_SECURE_SELF_SIGNED_CLIENT
+    if (pClCert != nullptr) {
+      delete pClCert;
+    }
+    if (pClKey != nullptr) {
+      delete pClKey;
+    }
+    pClCert = new X509List(certs_array[index].client_cert);
+    pClKey = new PrivateKey(certs_array[index].client_key);
+    sClient->setClientRSACert(pClCert, pClKey);
+#      endif
+#    endif
+  } else
 #  endif
+  {
+    if (mqtt_cert.length() > 0) {
+#  if defined(ESP32)
+      sClient->setCACert(mqtt_cert.c_str());
+    } else {
+      sClient->setCACert(certificate);
+    }
+#  elif defined(ESP8266)
+      caCert.append(mqtt_cert.c_str());
+    } else {
+      caCert.append(certificate);
+    }
+    sClient->setTrustAnchors(&caCert);
+    sClient->setBufferSizes(512, 512);
+#  endif
+  }
 }
 #endif
 
@@ -972,6 +1007,7 @@ void saveMqttConfig() {
   json["gateway_name"] = gateway_name;
   json["mqtt_broker_secure"] = mqtt_secure;
   json["mqtt_broker_cert"] = mqtt_cert;
+  json["mqtt_ss_index"] = mqtt_ss_index;
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -1033,6 +1069,8 @@ void setup_wifimanager(bool reset_settings) {
           mqtt_secure = json.get<bool>("mqtt_secure");
         if (json.containsKey("mqtt_cert"))
           mqtt_cert = json.get<const char*>("mqtt_cert");
+        if (json.containsKey("mqtt_ss_index"))
+          mqtt_ss_index = json.get<uint8_t>("mqtt_ss_index");
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
       } else {
@@ -1834,26 +1872,42 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  endif
       client.disconnect();
       bool update_server = false;
+      bool secure_connect = SYSdata.get<bool>("mqtt_secure");
       void* prev_client = nullptr;
+      bool use_ss_cert = SYSdata.containsKey("mqtt_ss_cert");
+      uint8_t cert_index = mqtt_ss_index;
 
       if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port")) {
         if (!SYSdata.containsKey("mqtt_secure")) {
           Log.warning(F("mqtt_server provided without mqtt_secure defined - ignoring command" CR));
           return;
         }
+#  if MQTT_SECURE_SELF_SIGNED
+        if (use_ss_cert) {
+          cert_index = SYSdata.get<uint8_t>("mqtt_ss_cert");
+          if (cert_index >= sizeof(certs_array) / sizeof(ss_certs)) {
+            Log.warning(F("mqtt_ss_cert index invalid - ignoring command" CR));
+            return;
+          }
+        }
+#  endif
+
         update_server = true;
 
-        if (SYSdata.get<bool>("mqtt_secure") != mqtt_secure) {
+        if (secure_connect != mqtt_secure) {
           prev_client = eClient;
           if (!mqtt_secure) {
             eClient = new WiFiClientSecure;
-            setupTLS();
           } else {
             Log.warning(F("Switching to unsecure MQTT broker" CR));
             eClient = new WiFiClient;
           }
 
           client.setClient(*(Client*)eClient);
+        }
+
+        if (secure_connect) {
+          setupTLS(use_ss_cert, cert_index);
         }
 
         client.setServer(SYSdata.get<const char*>("mqtt_server"), SYSdata.get<unsigned int>("mqtt_port"));
@@ -1870,6 +1924,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         if (update_server) {
           strcpy(mqtt_server, SYSdata["mqtt_server"]);
           strcpy(mqtt_port, SYSdata["mqtt_port"]);
+          mqtt_ss_index = cert_index;
           if (prev_client != nullptr) {
             mqtt_secure = !mqtt_secure;
             delete prev_client;
@@ -1890,6 +1945,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         strcpy(mqtt_user, prev_user.c_str());
         strcpy(mqtt_pass, prev_pass.c_str());
+        if (mqtt_secure) {
+          setupTLS(MQTT_SECURE_SELF_SIGNED, mqtt_ss_index);
+        }
         connectMQTT();
       }
 #  if defined(ZgatewayBT) && defined(ESP32)
