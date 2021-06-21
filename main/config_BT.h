@@ -171,6 +171,13 @@ enum ble_sensor_model {
 
 /*---------------INTERNAL USE: DO NOT MODIFY--------------*/
 #ifdef ESP32
+enum ble_val_type {
+  BLE_VAL_STRING = 0,
+  BLE_VAL_HEX,
+  BLE_VAL_INT,
+  BLE_VAL_FLOAT,
+};
+
 struct BLEAction {
   std::string value;
   char addr[18];
@@ -179,6 +186,7 @@ struct BLEAction {
   bool write;
   bool complete;
   uint8_t ttl;
+  ble_val_type value_type;
 };
 #endif
 

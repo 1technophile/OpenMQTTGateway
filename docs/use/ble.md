@@ -152,6 +152,55 @@ you can also accept all the devices by the following command:
 
 The default value is set into config_BT.h
 
+## Read/write BLE characteristics over MQTT (ESP32 only)
+
+The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.   
+
+### Example write command
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "ble_write_address":"AA:BB:CC:DD:EE:FF",
+  "ble_write_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_write_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_write_value":"TEST",
+  "value_type":"STRING",
+  "ttl":4 }'
+```
+Response:
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "characteristic":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "write":"TEST",
+  "success":true
+}
+```
+### Example read commnad
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "ble_read_address":"AA:BB:CC:DD:EE:FF",
+  "ble_read_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_read_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "value_type":"STRING",
+  "ttl": 2 }'
+```
+Response:
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "characteristic":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "read":"TEST",
+  "success":true
+}
+```
+
+::: tip
+The `ttl` parameter is the number of attempts to connect (defaults to 1), which occur after the BLE scan completes.  
+`value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
+:::
+
 ## Other
 
 To check your hm10 firmware version upload a serial sketch to the nodemcu (this will enable communication directly with the hm10) and launch the command:

@@ -36,9 +36,29 @@ NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& ser
 
 bool zBLEConnect::writeData(BLEAction* action) {
   NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
-
   if (pChar && pChar->canWrite()) {
-    return pChar->writeValue(action->value);
+    switch (action->value_type) {
+      case BLE_VAL_HEX: {
+        int len = action->value.length();
+        if (len % 2) {
+          Log.error(F("Invalid HEX value length" CR));
+          return false;
+        }
+
+        std::vector<uint8_t> buf;
+        for (auto i = 0; i < len; i += 2) {
+          std::string temp = action->value.substr(i, 2);
+          buf.push_back((uint8_t)strtoul(temp.c_str(), nullptr, 16));
+        }
+        return pChar->writeValue((const uint8_t*)&buf[0], buf.size());
+      }
+      case BLE_VAL_INT:
+        return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0));
+      case BLE_VAL_FLOAT:
+        return pChar->writeValue(strtod(action->value.c_str(), nullptr));
+      default:
+        return pChar->writeValue(action->value);
+    }
   }
   return false;
 }
@@ -72,9 +92,29 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
         } else {
           Log.trace(F("processing BLE read" CR));
           result = readData(&it);
-          char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
-          BLEresult.set("read", (pHex != nullptr) ? pHex : "invalid data");
-          free(pHex);
+          if (result) {
+            switch (it.value_type) {
+              case BLE_VAL_HEX: {
+                char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
+                BLEresult.set("read", pHex);
+                free(pHex);
+                break;
+              }
+              case BLE_VAL_INT: {
+                int ival = *(int*)it.value.data();
+                BLEresult.set<int>("read", ival);
+                break;
+              }
+              case BLE_VAL_FLOAT: {
+                float fval = *(double*)it.value.data();
+                BLEresult.set<float>("read", fval);
+                break;
+              }
+              default:
+                BLEresult.set("read", it.value.c_str());
+                break;
+            }
+          }
         }
 
         it.complete = true;

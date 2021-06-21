@@ -1686,6 +1686,22 @@ void MQTTtoBTAction(JsonObject& BTdata) {
 #  ifdef ESP32
   BLEAction action;
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
+  action.value_type = BLE_VAL_STRING;
+  if (BTdata.containsKey("value_type")) {
+    String vt = BTdata["value_type"];
+    vt.toUpperCase();
+    if (vt == "HEX")
+      action.value_type = BLE_VAL_HEX;
+    else if (vt == "INT")
+      action.value_type = BLE_VAL_INT;
+    else if (vt == "FLOAT")
+      action.value_type = BLE_VAL_FLOAT;
+    else if (vt != "STRING") {
+      Log.error(F("BLE value type invalid %s" CR), vt.c_str());
+      return;
+    }
+  }
+
   Log.trace(F("BLE ACTION TTL = %u" CR), action.ttl);
   action.complete = false;
   if (BTdata.containsKey("ble_write_address") &&
