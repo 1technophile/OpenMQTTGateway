@@ -103,7 +103,7 @@ In this case you should deactivate the BLE connection mechanism to avoid concurr
 For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
 :::
 
-## Setting the number of scans between before connect attempt
+## Setting the number of scans between connection attempts
 
 If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
 
@@ -151,6 +151,58 @@ you can also accept all the devices by the following command:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"minrssi":-200}'`
 
 The default value is set into config_BT.h
+
+## Read/write BLE characteristics over MQTT (ESP32 only)
+
+The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
+::: tip
+These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)
+:::
+
+### Example write command
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "ble_write_address":"AA:BB:CC:DD:EE:FF",
+  "ble_write_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_write_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_write_value":"TEST",
+  "value_type":"STRING",
+  "ttl":4 }'
+```
+Response:
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "characteristic":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "write":"TEST",
+  "success":true
+}
+```
+### Example read commnad
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "ble_read_address":"AA:BB:CC:DD:EE:FF",
+  "ble_read_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_read_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "value_type":"STRING",
+  "ttl": 2 }'
+```
+Response:
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "characteristic":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "read":"TEST",
+  "success":true
+}
+```
+
+::: tip
+The `ttl` parameter is the number of attempts to connect (defaults to 1), which occur after the BLE scan completes.  
+`value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
+:::
 
 ## Other
 

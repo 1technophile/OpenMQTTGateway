@@ -4,7 +4,6 @@
 #    include "ArduinoJson.h"
 #    include "ArduinoLog.h"
 #    include "ZgatewayBLEConnect.h"
-#    include "config_BT.h"
 
 #    define convertTemp_CtoF(c) ((c * 1.8) + 32)
 
@@ -33,6 +32,99 @@ NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& ser
   }
 
   return pRemoteCharacteristic;
+}
+
+bool zBLEConnect::writeData(BLEAction* action) {
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
+  if (pChar && pChar->canWrite()) {
+    switch (action->value_type) {
+      case BLE_VAL_HEX: {
+        int len = action->value.length();
+        if (len % 2) {
+          Log.error(F("Invalid HEX value length" CR));
+          return false;
+        }
+
+        std::vector<uint8_t> buf;
+        for (auto i = 0; i < len; i += 2) {
+          std::string temp = action->value.substr(i, 2);
+          buf.push_back((uint8_t)strtoul(temp.c_str(), nullptr, 16));
+        }
+        return pChar->writeValue((const uint8_t*)&buf[0], buf.size());
+      }
+      case BLE_VAL_INT:
+        return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0));
+      case BLE_VAL_FLOAT:
+        return pChar->writeValue(strtod(action->value.c_str(), nullptr));
+      default:
+        return pChar->writeValue(action->value);
+    }
+  }
+  return false;
+}
+
+bool zBLEConnect::readData(BLEAction* action) {
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
+
+  if (pChar && pChar->canRead()) {
+    action->value = pChar->readValue();
+    if (action->value != "") {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
+  bool result = false;
+  if (actions.size() > 0) {
+    for (auto& it : actions) {
+      if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
+        JsonObject& BLEresult = getBTJsonObject();
+        BLEresult.set("id", it.addr);
+        BLEresult.set("service", (char*)it.service.toString().c_str());
+        BLEresult.set("characteristic", (char*)it.characteristic.toString().c_str());
+
+        if (it.write) {
+          Log.trace(F("processing BLE write" CR));
+          BLEresult.set("write", it.value.c_str());
+          result = writeData(&it);
+        } else {
+          Log.trace(F("processing BLE read" CR));
+          result = readData(&it);
+          if (result) {
+            switch (it.value_type) {
+              case BLE_VAL_HEX: {
+                char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
+                BLEresult.set("read", pHex);
+                free(pHex);
+                break;
+              }
+              case BLE_VAL_INT: {
+                int ival = *(int*)it.value.data();
+                BLEresult.set<int>("read", ival);
+                break;
+              }
+              case BLE_VAL_FLOAT: {
+                float fval = *(double*)it.value.data();
+                BLEresult.set<float>("read", fval);
+                break;
+              }
+              default:
+                BLEresult.set("read", it.value.c_str());
+                break;
+            }
+          }
+        }
+
+        it.complete = true;
+        BLEresult.set("success", result);
+        pubBT(BLEresult);
+      }
+    }
+  }
+
+  return result;
 }
 
 /*-----------------------LYWSD03MMC && MHO_C401 HANDLING-----------------------*/
@@ -160,5 +252,6 @@ void DT24_connect::publishData() {
     }
   }
 }
+
 #  endif //ZgatewayBT
 #endif //ESP32

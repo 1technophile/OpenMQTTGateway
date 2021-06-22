@@ -71,6 +71,10 @@ struct decompose {
   bool reverse;
 };
 
+#  ifdef ESP32
+vector<BLEAction> BLEactions;
+#  endif
+
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
@@ -728,20 +732,37 @@ void BLEconnect() {
     if (p->connect) {
       Log.trace(F("Model to connect found: %s" CR), p->macAdr);
       NimBLEAddress addr(std::string(p->macAdr));
+
       switch (p->sensorModel) {
         case LYWSD03MMC:
         case MHO_C401: {
           LYWSD03MMC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
           BLEclient.publishData();
           break;
         }
         case DT24: {
           DT24_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
           BLEclient.publishData();
+          break;
+        }
+        case GENERIC: {
+          GENERIC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
           break;
         }
         default:
           break;
+      }
+      if (BLEactions.size() > 0) {
+        std::vector<BLEAction> swap;
+        for (auto& it : BLEactions) {
+          if (!it.complete && --it.ttl) {
+            swap.push_back(it);
+          }
+        }
+        std::swap(BLEactions, swap);
       }
     }
   }
@@ -1662,6 +1683,54 @@ void BTforceScan() {
   }
 }
 
+void MQTTtoBTAction(JsonObject& BTdata) {
+#  ifdef ESP32
+  BLEAction action;
+  action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
+  action.value_type = BLE_VAL_STRING;
+  if (BTdata.containsKey("value_type")) {
+    String vt = BTdata["value_type"];
+    vt.toUpperCase();
+    if (vt == "HEX")
+      action.value_type = BLE_VAL_HEX;
+    else if (vt == "INT")
+      action.value_type = BLE_VAL_INT;
+    else if (vt == "FLOAT")
+      action.value_type = BLE_VAL_FLOAT;
+    else if (vt != "STRING") {
+      Log.error(F("BLE value type invalid %s" CR), vt.c_str());
+      return;
+    }
+  }
+
+  Log.trace(F("BLE ACTION TTL = %u" CR), action.ttl);
+  action.complete = false;
+  if (BTdata.containsKey("ble_write_address") &&
+      BTdata.containsKey("ble_write_service") &&
+      BTdata.containsKey("ble_write_char") &&
+      BTdata.containsKey("ble_write_value")) {
+    strcpy(action.addr, (const char*)BTdata["ble_write_address"]);
+    action.service = NimBLEUUID((const char*)BTdata["ble_write_service"]);
+    action.characteristic = NimBLEUUID((const char*)BTdata["ble_write_char"]);
+    action.value = std::string((const char*)BTdata["ble_write_value"]);
+    action.write = true;
+    Log.trace(F("BLE ACTION Write" CR));
+  } else if (BTdata.containsKey("ble_read_address") &&
+             BTdata.containsKey("ble_read_service") &&
+             BTdata.containsKey("ble_read_char")) {
+    strcpy(action.addr, (const char*)BTdata["ble_read_address"]);
+    action.service = NimBLEUUID((const char*)BTdata["ble_read_service"]);
+    action.characteristic = NimBLEUUID((const char*)BTdata["ble_read_char"]);
+    action.write = false;
+    Log.trace(F("BLE ACTION Read" CR));
+  } else {
+    return;
+  }
+  createOrUpdateDevice(action.addr, device_flags_connect, GENERIC);
+  BLEactions.push_back(action);
+#  endif
+}
+
 void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoBTset)) {
     Log.trace(F("MQTTtoBT json set" CR));
@@ -1723,6 +1792,8 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     if (BTdata.containsKey("lowpowermode")) {
       changelowpowermode((int)BTdata["lowpowermode"]);
     }
+
+    MQTTtoBTAction(BTdata);
 #  endif
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {

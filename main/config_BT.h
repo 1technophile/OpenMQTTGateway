@@ -46,6 +46,7 @@ bool bleConnect = AttemptBLECOnnect;
 #  ifndef BLE_FILTER_CONNECTABLE
 #    define BLE_FILTER_CONNECTABLE 1
 #  endif
+#  include "NimBLEDevice.h"
 #endif
 
 /*----------------------BT topics & parameters-------------------------*/
@@ -151,6 +152,7 @@ enum ble_sensor_model {
   IBT4XS,
   DT24,
   EDDYSTONE_TLM,
+  GENERIC,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
@@ -168,6 +170,26 @@ enum ble_sensor_model {
 #endif
 
 /*---------------INTERNAL USE: DO NOT MODIFY--------------*/
+#ifdef ESP32
+enum ble_val_type {
+  BLE_VAL_STRING = 0,
+  BLE_VAL_HEX,
+  BLE_VAL_INT,
+  BLE_VAL_FLOAT,
+};
+
+struct BLEAction {
+  std::string value;
+  char addr[18];
+  NimBLEUUID service;
+  NimBLEUUID characteristic;
+  bool write;
+  bool complete;
+  uint8_t ttl;
+  ble_val_type value_type;
+};
+#endif
+
 struct BLEdevice {
   char macAdr[18];
   bool isDisc;
