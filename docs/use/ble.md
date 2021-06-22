@@ -103,7 +103,7 @@ In this case you should deactivate the BLE connection mechanism to avoid concurr
 For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
 :::
 
-## Setting the number of scans between before connect attempt
+## Setting the number of scans between connection attempts
 
 If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
 
@@ -154,7 +154,10 @@ The default value is set into config_BT.h
 
 ## Read/write BLE characteristics over MQTT (ESP32 only)
 
-The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.   
+The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
+::: tip
+These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)
+:::
 
 ### Example write command
 ```
