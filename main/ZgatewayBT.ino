@@ -84,7 +84,7 @@ static bool oneWhite = false;
 int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
-  if (abs((int)data["rssi"] | 0) < minRssi) {
+  if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String mac_address = data["id"].as<const char*>();
     mac_address.replace(":", "");
     String mactopic = subjectBTtoMQTT + String("/") + mac_address;
@@ -750,6 +750,11 @@ void BLEconnect() {
         case GENERIC: {
           GENERIC_connect BLEclient(addr);
           BLEclient.processActions(BLEactions);
+        }
+        case HHCCJCY01HHCC: {
+          HHCCJCY01HHCC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
+          BLEclient.publishData();
           break;
         }
         default:
@@ -1114,7 +1119,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         Log.trace(F("mi flora data reading" CR));
         BLEdata.set("model", "HHCCJCY01HHCC");
         if (device->sensorModel == -1)
-          createOrUpdateDevice(mac, device_flags_init, HHCCJCY01HHCC);
+          createOrUpdateDevice(mac, device_flags_connect, HHCCJCY01HHCC);
         return process_sensors(2, BLEdata);
       }
       Log.trace(F("Is it a vegtrug ?" CR));
