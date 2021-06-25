@@ -192,6 +192,51 @@ vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
 #      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #    endif
 #  endif
+
+#  ifndef MQTT_SECURE_SELF_SIGNED
+#    define MQTT_SECURE_SELF_SIGNED 0
+#  endif
+
+#  ifndef MQTT_SECURE_SELF_SIGNED_CLIENT
+#    define MQTT_SECURE_SELF_SIGNED_CLIENT 1
+#  endif
+
+#  ifndef MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT
+#    define MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT 0
+#  endif
+
+#  if MQTT_SECURE_SELF_SIGNED
+const char* ss_server_cert PROGMEM = R"EOF("
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+")EOF";
+
+const char* ss_client_cert PROGMEM = R"EOF("
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+")EOF";
+
+const char* ss_client_key PROGMEM = R"EOF("
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+")EOF";
+
+struct ss_certs {
+  const char* server_cert;
+  const char* client_cert;
+  const char* client_key;
+};
+
+struct ss_certs certs_array[2] = {
+    {ss_server_cert, ss_client_cert, ss_client_key},
+    {ss_server_cert, ss_client_cert, ss_client_key}};
+
+static_assert(MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT < (sizeof(certs_array) / sizeof(ss_certs)),
+              "Invalid MQTT self signed default index");
+#  endif
 #endif
 
 /*------------------DEEP SLEEP parameters ------------------*/
