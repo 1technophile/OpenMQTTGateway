@@ -46,6 +46,8 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Thermobeacon|WS02|temperature/humidity/volt|
 | ATorch Battery Capacity Monitor (c)|DT24|volt/amp/watt|
 | Eddystone TLM|protocol|temperature/count/volt/time|
+| Mokosmart (1)|M1|x_axis/y_axis/z_axis/battery|
+| Mokosmart (1)|H4|temperature/humidity/volt|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
