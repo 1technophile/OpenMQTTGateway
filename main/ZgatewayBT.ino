@@ -34,7 +34,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #  ifdef ESP32
 #    include "FreeRTOS.h"
-FreeRTOS::Semaphore semaphoreCreateOrUpdateDevice = FreeRTOS::Semaphore("createOrUpdateDevice");
+SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
 // Headers used for deep sleep functions
 #    include <NimBLEAdvertisedDevice.h>
 #    include <NimBLEDevice.h>
@@ -215,8 +215,10 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
 
 void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model) {
 #  ifdef ESP32
-  if (!semaphoreCreateOrUpdateDevice.take(30000, "createOrUpdateDevice"))
+  if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
+    Log.error(F("Semaphore NOT taken" CR));
     return;
+  }
 #  endif
 
   BLEdevice* device = getDeviceByMac(mac);
@@ -251,7 +253,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
   oneWhite = oneWhite || device->isWhtL;
 
 #  ifdef ESP32
-  semaphoreCreateOrUpdateDevice.give();
+  xSemaphoreGive(semaphoreCreateOrUpdateDevice);
 #  endif
 }
 
@@ -878,6 +880,9 @@ void setupBT() {
   atomic_init(&jsonBTBufferQueueNext, 0); // in theory, we don't need this
   atomic_init(&jsonBTBufferQueueLast, 0); // in theory, we don't need this
 
+  semaphoreCreateOrUpdateDevice = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphoreCreateOrUpdateDevice);
+
   BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
   BLEDevice::init("");
 
@@ -1035,11 +1040,13 @@ void launchBTDiscovery() {
   if (newDevices == 0)
     return;
 #  ifdef ESP32
-  if (!semaphoreCreateOrUpdateDevice.take(1000, "launchBTDiscovery"))
+  if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000) == pdFALSE)) {
+    Log.error(F("Semaphore NOT taken" CR));
     return;
+  }
   newDevices = 0;
   vector<BLEdevice*> localDevices = devices;
-  semaphoreCreateOrUpdateDevice.give();
+  xSemaphoreGive(semaphoreCreateOrUpdateDevice);
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
 #  else
   newDevices = 0;
@@ -1747,9 +1754,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
 
     if (WorBupdated) {
 #  ifdef ESP32
-      if (!semaphoreCreateOrUpdateDevice.take(1000, "dumpDevices")) {
+      if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000) == pdTRUE)) {
         dumpDevices();
-        semaphoreCreateOrUpdateDevice.give();
+        xSemaphoreGive(semaphoreCreateOrUpdateDevice);
       }
 #  else
       dumpDevices();
