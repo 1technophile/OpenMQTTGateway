@@ -267,10 +267,7 @@ void HHCCJCY01HHCC_connect::publishData() {
     int batteryValue = -1;
     NimBLERemoteCharacteristic* pChar2 = getCharacteristic(serviceUUID, charUUID2);
     if (pChar2) {
-      std::string value;
-      value = pChar2->readValue();
-      const char* val2 = value.c_str();
-      batteryValue = val2[0];
+      batteryValue = pChar2->readValue<int>();
       JsonObject& BLEdata = getBTJsonObject();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
@@ -281,6 +278,34 @@ void HHCCJCY01HHCC_connect::publishData() {
     } else {
       Log.notice(F("Failed getting characteristic" CR));
     }
+  } else {
+    Log.notice(F("Failed getting characteristic" CR));
+  }
+}
+
+/*-----------------------MEATER HANDLING-----------------------*/
+void MEATER_connect::publishData() {
+  NimBLEUUID serviceUUID("a75cc7fc-c956-488f-ac2a-2dbc08b63a04");
+  NimBLEUUID charUUID("7edda774-045e-4bbf-909b-45d1991a2876");
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
+
+  if (pChar) {
+    Log.trace(F("Read mode" CR));
+    char* val = NimBLEUtils::buildHexData(nullptr, (uint8_t*)pChar->readValue().c_str(), pChar->readValue().length());
+    Log.notice(F("readValue %s" CR), val);
+    double temp_meat = (double)value_from_hex_data(val, 0, 4, true) / 16;
+    int ambient = (double)value_from_hex_data(val, 4, 4, true);
+    int offset = (double)value_from_hex_data(val, 8, 4, true);
+    double temp_ambient = temp_meat + (max(0, (ambient - offset)) * 6.33) / 16;
+    JsonObject& BLEdata = getBTJsonObject();
+    String mac_address = m_pClient->getPeerAddress().toString().c_str();
+    mac_address.toUpperCase();
+    BLEdata.set("model", "MEATER");
+    BLEdata.set("id", (char*)mac_address.c_str());
+    BLEdata.set("tempc", (double)temp_meat);
+    BLEdata.set("tempc2", (double)temp_ambient);
+    pubBT(BLEdata);
+
   } else {
     Log.notice(F("Failed getting characteristic" CR));
   }

@@ -154,6 +154,7 @@ enum ble_sensor_model {
   EDDYSTONE_TLM,
   MOKOBEACON,
   MOKOBEACONXPRO,
+  MEATER,
   GENERIC,
 };
 

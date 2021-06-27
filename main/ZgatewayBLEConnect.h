@@ -54,5 +54,14 @@ public:
   void publishData() override;
 };
 
+class MEATER_connect : public zBLEConnect {
+  std::vector<uint8_t> m_data;
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  MEATER_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  void publishData() override;
+};
+
 #endif //ESP32
 #endif //zBLEConnect_h
