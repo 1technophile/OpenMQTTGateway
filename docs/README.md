@@ -20,10 +20,11 @@ With OpenMQTTGateway and a controller you can for example:
 * Detect opened door or windows and alert yourself when leaving home
 * Detect water leakage or smoke
 * Actionate a siren if something is going wrong
+
 The limit is your imagination 😀
 
 # Functions
-Behind the scene you will find functionnalities dedicated to gateways like:
+Behind the scene you will find functionalities dedicated to gateways like:
 * Deduplication
 * Simple and lite API
 * Strong integrations with libraries used
@@ -32,5 +33,5 @@ Behind the scene you will find functionnalities dedicated to gateways like:
 * Whitelist & Blacklist management
 
 ::: warning Note
-The material and information contained in this documentation is for general information purposes only. You should not rely upon the material or information on this documentation as a basis for making any business, legal or any other decisions. There is no warranty given on this documentation content. If you decide to follow the informations and materials given it is at your own risk.I will not be liable for any false, inaccurate, inappropriate or incomplete information presented on this website.
+The material and information contained in this documentation is for general information purposes only. You should not rely upon the material or information on this documentation as a basis for making any business, legal or any other decisions. There is no warranty given on this documentation content. If you decide to follow the information and materials given it is at your own risk. I will not be liable for any false, inaccurate, inappropriate or incomplete information presented on this website.
 :::
