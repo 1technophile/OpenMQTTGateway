@@ -49,6 +49,23 @@ unsigned long timer_sys_measures = 0;
 #  define ARDUINOJSON_USE_LONG_LONG 1
 #endif
 
+struct status_led_params {
+  uint32_t on_ms;
+  uint32_t off_ms;
+  uint32_t count;
+  uint8_t pin;
+  bool on_val;
+  bool active;
+} status_led[3];
+
+enum status_led_type {
+  LED_INFO_PARAMS = 0,
+  LED_SEND_RECEIVE_PARAMS,
+  LED_ERROR_PARAMS,
+};
+
+#define STATUS_LED_BLINK_FOREVER 0xffffffff
+
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
@@ -286,10 +303,10 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
 }
 
 void pub(const char* topicori, JsonObject& data) {
-  Log.notice(F("Subject: %s" CR), topicori);
-  digitalWrite(LED_RECEIVE, LED_RECEIVE_ON);
   logJson(data);
   if (client.connected()) {
+    Log.notice(F("Subject: %s" CR), topicori);
+    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
     String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #ifdef valueAsASubject
 #  ifdef ZgatewayPilight
@@ -557,11 +574,87 @@ void callback(char* topic, byte* payload, unsigned int length) {
   free(p);
 }
 
+void statusLedTask(void* led_parameters) {
+  status_led_params* params = (status_led_params*)led_parameters;
+
+  while (params->active && params->count) {
+    digitalWrite(params->pin, params->on_val);
+    delay(params->on_ms);
+    digitalWrite(params->pin, !params->on_val);
+    if (params->count != STATUS_LED_BLINK_FOREVER) {
+      --params->count;
+    }
+    // Don't delay if the operation has ended
+    if (!params->count || !params->active) {
+      break;
+    }
+    delay(params->off_ms);
+  }
+
+  vTaskDelete(NULL);
+}
+
+void startStatusLedBlink(uint8_t led_pin, uint32_t on_ms, uint32_t off_ms, uint32_t count) {
+  TaskHandle_t xledTaskHandle = NULL;
+  status_led_type led_type;
+
+  if (led_pin == LED_SEND_RECEIVE) {
+    led_type = LED_SEND_RECEIVE_PARAMS;
+  } else if (led_pin == LED_ERROR) {
+    led_type = LED_ERROR_PARAMS;
+  } else if (led_pin == LED_INFO) {
+    led_type = LED_INFO_PARAMS;
+  } else {
+    Log.error(F("LED start pin invalid" CR));
+    return;
+  }
+
+  if (!status_led[led_type].active) {
+    status_led[led_type].on_ms = on_ms;
+    status_led[led_type].off_ms = on_ms;
+    status_led[led_type].count = count;
+    status_led[led_type].active = true;
+    xTaskCreatePinnedToCore(statusLedTask, "ledTask", 512, &status_led[led_type], 1, &xledTaskHandle, 1);
+  }
+}
+
+void endStatusLedBlink(uint8_t led_pin) {
+  status_led_type led_type;
+
+  if (led_pin == LED_SEND_RECEIVE) {
+    led_type = LED_SEND_RECEIVE_PARAMS;
+  } else if (led_pin == LED_ERROR) {
+    led_type = LED_ERROR_PARAMS;
+  } else if (led_pin == LED_INFO) {
+    led_type = LED_INFO_PARAMS;
+  } else {
+    Log.error(F("LED end pin invalid" CR));
+    return;
+  }
+
+  status_led[led_type].active = false;
+}
+
 void setup() {
   //Launch serial for debugging purposes
   Serial.begin(SERIAL_BAUD);
   Log.begin(LOG_LEVEL, &Serial);
   Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
+
+  //setup LED status
+  pinMode(LED_SEND_RECEIVE, OUTPUT);
+  pinMode(LED_ERROR, OUTPUT);
+  pinMode(LED_INFO, OUTPUT);
+  digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
+  digitalWrite(LED_ERROR, !LED_ERROR_ON);
+  digitalWrite(LED_INFO, !LED_INFO_ON);
+
+  status_led[LED_INFO_PARAMS].pin = LED_INFO;
+  status_led[LED_INFO_PARAMS].on_val = LED_INFO_ON;
+  status_led[LED_SEND_RECEIVE_PARAMS].pin = LED_SEND_RECEIVE;
+  status_led[LED_SEND_RECEIVE_PARAMS].on_val = LED_SEND_RECEIVE_ON;
+  status_led[LED_ERROR_PARAMS].pin = LED_ERROR;
+  status_led[LED_ERROR_PARAMS].on_val = LED_ERROR_ON;
 
 #if defined(ESP8266) || defined(ESP32)
 #  ifdef ESP8266
@@ -599,14 +692,6 @@ void setup() {
   //Begining ethernet connection in case of Arduino + W5100
   setup_ethernet();
 #endif
-
-  //setup LED status
-  pinMode(LED_RECEIVE, OUTPUT);
-  pinMode(LED_SEND, OUTPUT);
-  pinMode(LED_INFO, OUTPUT);
-  digitalWrite(LED_RECEIVE, !LED_RECEIVE_ON);
-  digitalWrite(LED_SEND, !LED_SEND_ON);
-  digitalWrite(LED_INFO, !LED_INFO_ON);
 
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
@@ -819,6 +904,8 @@ void setOTA() {
 
   ArduinoOTA.onStart([]() {
     Log.trace(F("Start OTA, lock other functions" CR));
+    digitalWrite(LED_ERROR, LED_ERROR_ON);
+    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
@@ -1137,6 +1224,7 @@ void setup_wifimanager(bool reset_settings) {
     }
 #  endif
 
+    startStatusLedBlink(LED_INFO, 2000, 2000, STATUS_LED_BLINK_FOREVER);
     Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
@@ -1152,6 +1240,7 @@ void setup_wifimanager(bool reset_settings) {
 #  endif
       delay(5000);
     }
+    endStatusLedBlink(LED_INFO);
   }
 
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
@@ -1283,15 +1372,13 @@ void loop() {
   checkButton(); // check if a reset of wifi/mqtt settings is asked
 #  endif
 #endif
-
   unsigned long now = millis();
 
   // Switch off of the LED after TimeLedON
   if (now > (timer_led_measures + (TimeLedON * 1000))) {
     timer_led_measures = millis();
-    digitalWrite(LED_RECEIVE, !LED_RECEIVE_ON);
     digitalWrite(LED_INFO, !LED_INFO_ON);
-    digitalWrite(LED_SEND, !LED_SEND_ON);
+    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
   }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1306,6 +1393,7 @@ void loop() {
 #endif
     failure_number_ntwk = 0;
     if (client.connected()) {
+      endStatusLedBlink(LED_ERROR);
       digitalWrite(LED_INFO, LED_INFO_ON);
       failure_number_ntwk = 0;
 
@@ -1424,14 +1512,12 @@ void loop() {
       RTL_433Loop();
 #endif
     } else {
+      startStatusLedBlink(LED_ERROR, 2000, 10000, STATUS_LED_BLINK_FOREVER);
       connectMQTT();
     }
   } else { // disconnected from network
     Log.warning(F("Network disconnected:" CR));
-    digitalWrite(LED_INFO, LED_INFO_ON);
-    delay(5000); // add a delay to avoid ESP32 crash and reset
-    digitalWrite(LED_INFO, !LED_INFO_ON);
-    delay(5000);
+    startStatusLedBlink(LED_ERROR, 2000, 2000, STATUS_LED_BLINK_FOREVER);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
 #  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
     WiFi.reconnect();
@@ -1663,7 +1749,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
 #endif
-    digitalWrite(LED_SEND, LED_SEND_ON);
+    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
@@ -1774,6 +1860,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           }
         }
 
+        digitalWrite(LED_ERROR, LED_ERROR_ON);
+        digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
 #  ifdef ESP32
         update_client.setCACert(OTAserver_cert);
         update_client.setTimeout(12);

@@ -334,33 +334,19 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifndef LED_RECEIVE
+#ifndef LED_SEND_RECEIVE
 #  ifdef ESP8266
-#    define LED_RECEIVE 40
+#    define LED_SEND_RECEIVE 40
 #  elif ESP32
-#    define LED_RECEIVE 40
+#    define LED_SEND_RECEIVE 40
 #  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_RECEIVE 40
+#    define LED_SEND_RECEIVE 40
 #  else //arduino uno/nano
-#    define LED_RECEIVE 40
+#    define LED_SEND_RECEIVE 40
 #  endif
 #endif
-#ifndef LED_RECEIVE_ON
-#  define LED_RECEIVE_ON HIGH
-#endif
-#ifndef LED_SEND
-#  ifdef ESP8266
-#    define LED_SEND 42
-#  elif ESP32
-#    define LED_SEND 42
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_SEND 42
-#  else //arduino uno/nano
-#    define LED_SEND 42
-#  endif
-#endif
-#ifndef LED_SEND_ON
-#  define LED_SEND_ON HIGH
+#ifndef LED_SEND_RECEIVE_ON
+#  define LED_SEND_RECEIVE_ON HIGH
 #endif
 #ifndef LED_INFO
 #  ifdef ESP8266
@@ -375,6 +361,20 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 #ifndef LED_INFO_ON
 #  define LED_INFO_ON HIGH
+#endif
+#ifndef LED_ERROR
+#  ifdef ESP8266
+#    define LED_ERROR 44
+#  elif ESP32
+#    define LED_ERROR 44
+#  elif __AVR_ATmega2560__ //arduino mega
+#    define LED_ERROR 44
+#  else //arduino uno/nano
+#    define LED_ERROR 44
+#  endif
+#endif
+#ifndef LED_ERROR_ON
+#  define LED_ERROR_ON HIGH
 #endif
 
 #ifdef ESP8266
