@@ -1117,10 +1117,21 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
   BLEdevice* device = getDeviceByMac(mac);
   if (BLEdata.containsKey("servicedata")) {
     Log.trace(F("Checking BLE service data validity" CR));
+    const char* service_uuid = (const char*)BLEdata["servicedatauuid"];
     const char* service_data = (const char*)(BLEdata["servicedata"] | "");
     int service_len = strlen(service_data);
     if (valid_service_data(service_data, service_len)) {
       Log.trace(F("Searching BLE device data %s size %d" CR), service_data, strlen(service_data));
+      Log.trace(F("Is it a mokoBeacon?" CR));
+      if (strcmp(service_uuid, "0xff01") == NULL) {
+        createOrUpdateDevice(mac, device_flags_init, MOKOBEACON);
+        return process_mokobeacon(BLEdata);
+      }
+      Log.trace(F("Is it a mokoBeaconX Pro?" CR));
+      if (strcmp(service_uuid, "0xfeab") == NULL) {
+        createOrUpdateDevice(mac, device_flags_init, MOKOBEACONXPRO);
+        return process_mokobeaconXPro(BLEdata);
+      }
       Log.trace(F("Is it a mi flora ?" CR));
       if (strstr(service_data, "209800") != NULL) {
         Log.trace(F("mi flora data reading" CR));
@@ -1661,6 +1672,60 @@ JsonObject& process_ws02(JsonObject& BLEdata) {
   BLEdata.set("hum", (double)humidity);
   BLEdata.set("volt", (double)voltage);
 
+  return BLEdata;
+}
+
+JsonObject& process_mokobeacon(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+
+  long battery = value_from_hex_data(servicedata, 0, 2, false);
+  int x_axis = (int)value_from_hex_data(servicedata, 14, 4, false);
+  int y_axis = (int)value_from_hex_data(servicedata, 18, 4, false);
+  int z_axis = (int)value_from_hex_data(servicedata, 22, 4, false);
+
+  BLEdata.set("x_axis", x_axis);
+  BLEdata.set("y_axis", y_axis);
+  BLEdata.set("z_axis", z_axis);
+  BLEdata.set("batt", battery);
+
+  return BLEdata;
+}
+
+JsonObject& process_mokobeaconXPro(JsonObject& BLEdata) {
+  const char* servicedata = BLEdata["servicedata"].as<const char*>();
+  int length = strlen(servicedata);
+
+  if (length >= 24) {
+    if (strncmp(servicedata, "40", 2) == NULL) {
+      double voltage = (double)value_from_hex_data(servicedata, 6, 4, false) / 1000;
+      BLEdata.set("volt", (double)voltage);
+
+    } else if (strncmp(servicedata, "60", 2) == NULL) {
+      int x_axis = (int)value_from_hex_data(servicedata, 12, 4, false);
+      int y_axis = (int)value_from_hex_data(servicedata, 16, 4, false);
+      int z_axis = (int)value_from_hex_data(servicedata, 20, 4, false);
+      if (length > 24) {
+        double voltage = (double)value_from_hex_data(servicedata, 24, 4, false) / 1000;
+        BLEdata.set("volt", (double)voltage);
+      }
+
+      BLEdata.set("x_axis", x_axis);
+      BLEdata.set("y_axis", y_axis);
+      BLEdata.set("z_axis", z_axis);
+      return BLEdata;
+
+    } else if (strncmp(servicedata, "70", 2) == NULL) {
+      double temperature = (double)value_from_hex_data(servicedata, 6, 4, false) / 10;
+      double humidity = (double)value_from_hex_data(servicedata, 10, 4, false) / 10;
+      double voltage = (double)value_from_hex_data(servicedata, 14, 4, false) / 1000;
+
+      BLEdata.set("tempc", (double)temperature);
+      BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
+      BLEdata.set("hum", (double)humidity);
+      BLEdata.set("volt", (double)voltage);
+      return BLEdata;
+    }
+  }
   return BLEdata;
 }
 

@@ -152,6 +152,8 @@ enum ble_sensor_model {
   IBT4XS,
   DT24,
   EDDYSTONE_TLM,
+  MOKOBEACON,
+  MOKOBEACONXPRO,
   GENERIC,
 };
 
