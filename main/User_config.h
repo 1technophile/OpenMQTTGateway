@@ -198,7 +198,7 @@ vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
 #  endif
 
 #  ifndef MQTT_SECURE_SELF_SIGNED_CLIENT
-#    define MQTT_SECURE_SELF_SIGNED_CLIENT 1
+#    define MQTT_SECURE_SELF_SIGNED_CLIENT 1 // If using a self signed certificate for the broker and not using client certificates set this to false or 0
 #  endif
 
 #  ifndef MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT
@@ -219,9 +219,9 @@ const char* ss_client_cert PROGMEM = R"EOF("
 ")EOF";
 
 const char* ss_client_key PROGMEM = R"EOF("
------BEGIN CERTIFICATE-----
+-----BEGIN RSA PRIVATE KEY-----
 ...
------END CERTIFICATE-----
+-----END RSA PRIVATE KEY-----
 ")EOF";
 
 struct ss_certs {
