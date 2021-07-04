@@ -186,6 +186,8 @@ static String mqtt_cert = "";
 #  include <ArduinoOTA.h>
 #  include <FS.h>
 #  include <SPIFFS.h>
+#  include <nvs.h>
+#  include <nvs_flash.h>
 
 #  ifdef ESP32_ETHERNET
 #    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
@@ -978,19 +980,14 @@ void checkButton() {}
 #  endif
 
 void eraseAndRestart() {
-#  if defined(ESP8266)
-  WiFi.disconnect(true);
-#  else
-  WiFi.disconnect(true, true);
-#  endif
-
   Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
 
 #  if defined(ESP8266)
-  ESP.eraseConfig();
+  SPIFFS.format();
   delay(5000);
   ESP.reset();
 #  else
+  nvs_flash_erase();
   ESP.restart();
 #  endif
 }
