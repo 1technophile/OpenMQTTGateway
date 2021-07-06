@@ -35,12 +35,11 @@ struct ReceivedSignal {
   uint32_t time;
 };
 #  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#    define struct_size 12
-ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #  else // boards with smaller memory
-#    define struct_size 4
-ReceivedSignal receivedSignal[struct_size] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
+ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #  endif
+#  define struct_size (sizeof(receivedSignal) / sizeof(ReceivedSignal))
 #endif
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
