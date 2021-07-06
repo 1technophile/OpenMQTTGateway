@@ -48,6 +48,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Eddystone TLM|protocol|temperature/count/volt/time|
 | Mokosmart (1)|M1|x_axis/y_axis/z_axis/battery|
 | Mokosmart (1)|H4|temperature/humidity/volt|
+| MEATER (1)(c)|MEATER|probe temperature/ambient temperature|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 

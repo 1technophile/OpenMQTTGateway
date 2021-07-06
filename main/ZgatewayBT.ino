@@ -562,6 +562,18 @@ void DT24Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel);
 }
 
+void MEATERDiscovery(const char* mac, const char* sensorModel) {
+#    define MEATERparametersCount 2
+  Log.trace(F("MEATERDiscovery" CR));
+  const char* MEATERsensor[MEATERparametersCount][8] = {
+      {"sensor", "MEATER-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+      {"sensor", "MEATER-temp2", mac, "temperature", jsonTempc2, "", "", "°C"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, MEATERsensor, MEATERparametersCount, "MEATER", "Apption_Labs", sensorModel);
+}
+
 void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {
 #    define EddystoneTLMparametersCount 4
   Log.trace(F("EddystoneTLMDiscovery" CR));
@@ -599,6 +611,7 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
 void WS02Discovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel) {}
+void MEATERDiscovery(const char* mac, const char* sensorModel) {}
 void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {}
 #  endif
 
@@ -1088,6 +1101,7 @@ void launchBTDiscovery() {
       if (p->sensorModel == MHO_C401) MHO_C401Discovery(macWOdots.c_str(), "MHO_C401");
       if (p->sensorModel == INODE_EM) INodeEMDiscovery(macWOdots.c_str(), "INODE_EM");
       if (p->sensorModel == DT24) DT24Discovery(macWOdots.c_str(), "DT24-BLE");
+      if (p->sensorModel == MEATER) MEATERDiscovery(macWOdots.c_str(), "MEATER");
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       if (!isDiscovered(p)) {
