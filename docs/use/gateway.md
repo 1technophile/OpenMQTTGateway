@@ -57,6 +57,27 @@ Server, port, and secure_flag are only required if changing connection to anothe
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
+## Switching brokers and using self signed and client certificates
+
+In the `user_config.h` file it is possible to specify multiple MQTT brokers and client certificates. These are commonly self signed and are supported by defining `MQTT_SECURE_SELF_SIGNED` as true or 1.  
+Additonally, support for multiple brokers and client certificates has been added. To use this, it is required that the server certificate, client certificate, and client key are provided as their own constatnt string value as demonstrated in the file.  
+To add more than one broker and switch between them it is necessary to provide all of the relevant certificates/keys and add their respective variable names in the `certs_array` structure, as shown in `user_config.h`, and changing the array size to the number of different connections -1.  
+
+To switch between these servers with an MQTT command message, the format is as follows:
+```
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
+'{
+  "mqtt_user": "user",
+  "mqtt_pass": "password",
+  "mqtt_server": "host",
+  "mqtt_port": "port",
+  "mqtt_secure": "true",
+  "mqtt_cert_index":0
+ }'
+ ```
+::: tip
+The `mqtt_cert_index` value corresponds to the 0 to X index of the `certs_array` in `user_config.h`.
+:::
 
 # Firmware update from MQTT (ESP only)
 

@@ -868,6 +868,7 @@ void setupTLS(bool self_signed, uint8_t index) {
   WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
 #  if MQTT_SECURE_SELF_SIGNED
   if (self_signed) {
+    Log.notice(F("Using self signed cert index %u" CR), index);
 #    if defined(ESP32)
     sClient->setCACert(certs_array[index].server_cert);
 #      if MQTT_SECURE_SELF_SIGNED_CLIENT
@@ -1881,33 +1882,32 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 
     if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
-#  if defined(ZgatewayBT) && defined(ESP32)
-      stopProcessing();
-#  endif
-      client.disconnect();
       bool update_server = false;
       bool secure_connect = SYSdata.get<bool>("mqtt_secure");
       void* prev_client = nullptr;
-      bool use_ss_cert = SYSdata.containsKey("mqtt_ss_cert");
+      bool use_ss_cert = SYSdata.containsKey("mqtt_cert_index");
       uint8_t cert_index = mqtt_ss_index;
 
       if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port")) {
         if (!SYSdata.containsKey("mqtt_secure")) {
-          Log.warning(F("mqtt_server provided without mqtt_secure defined - ignoring command" CR));
+          Log.error(F("mqtt_server provided without mqtt_secure defined - ignoring command" CR));
           return;
         }
 #  if MQTT_SECURE_SELF_SIGNED
         if (use_ss_cert) {
-          cert_index = SYSdata.get<uint8_t>("mqtt_ss_cert");
+          cert_index = SYSdata.get<uint8_t>("mqtt_cert_index");
           if (cert_index >= sizeof(certs_array) / sizeof(ss_certs)) {
-            Log.warning(F("mqtt_ss_cert index invalid - ignoring command" CR));
+            Log.error(F("mqtt_cert_index invalid - ignoring command" CR));
             return;
           }
         }
 #  endif
 
+#  if defined(ZgatewayBT) && defined(ESP32)
+        stopProcessing();
+#  endif
+        client.disconnect();
         update_server = true;
-
         if (secure_connect != mqtt_secure) {
           prev_client = eClient;
           if (!mqtt_secure) {
@@ -1925,6 +1925,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
 
         client.setServer(SYSdata.get<const char*>("mqtt_server"), SYSdata.get<unsigned int>("mqtt_port"));
+      } else {
+#  if defined(ZgatewayBT) && defined(ESP32)
+        stopProcessing();
+#  endif
+        client.disconnect();
       }
 
       String prev_user = mqtt_user;

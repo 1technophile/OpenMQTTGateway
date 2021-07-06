@@ -623,85 +623,87 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   }
 
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
-    Log.trace(F("Creating BLE buffer" CR));
-    JsonObject& BLEdata = getBTJsonObject();
-    String mac_adress = advertisedDevice->getAddress().toString().c_str();
-    mac_adress.toUpperCase();
-    BLEdata.set("id", (char*)mac_adress.c_str());
-    Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
-    BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
+    if (!ProcessLock) {
+      Log.trace(F("Creating BLE buffer" CR));
+      JsonObject& BLEdata = getBTJsonObject();
+      String mac_adress = advertisedDevice->getAddress().toString().c_str();
+      mac_adress.toUpperCase();
+      BLEdata.set("id", (char*)mac_adress.c_str());
+      Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
+      BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
 #    if BLE_FILTER_CONNECTABLE
-    if (device->connect) {
-      Log.notice(F("Filtered connectable device" CR));
-      return;
-    }
+      if (device->connect) {
+        Log.notice(F("Filtered connectable device" CR));
+        return;
+      }
 #    endif
 
-    if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
-      if (advertisedDevice->haveName())
-        BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
-      if (advertisedDevice->haveManufacturerData()) {
-        char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
-        Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
-        BLEdata.set("manufacturerdata", manufacturerdata);
-        free(manufacturerdata);
-      }
-      if (advertisedDevice->haveRSSI())
-        BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
-      if (advertisedDevice->haveTXPower())
-        BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
-      if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
-        hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
-      }
-      if (advertisedDevice->haveServiceData()) {
-        int serviceDataCount = advertisedDevice->getServiceDataCount();
-        Log.trace(F("Get services data number: %d" CR), serviceDataCount);
-        for (int j = 0; j < serviceDataCount; j++) {
-          std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
-          Log.trace(F("Service data: %s" CR), service_data.c_str());
-          BLEdata.set("servicedata", (char*)service_data.c_str());
-          std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
-          Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
-          BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
-          process_bledata(BLEdata); // this will force to resolve all the service data
+      if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+        if (advertisedDevice->haveName())
+          BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
+        if (advertisedDevice->haveManufacturerData()) {
+          char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
+          Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
+          BLEdata.set("manufacturerdata", manufacturerdata);
+          free(manufacturerdata);
         }
-
-        if (serviceDataCount > 1) {
-          BLEdata.remove("servicedata");
-          BLEdata.remove("servicedatauuid");
-
-          int msglen = BLEdata.measureLength() + 1;
-          char jsonmsg[msglen];
-          char jsonmsgb[msglen];
-          BLEdata.printTo(jsonmsgb, sizeof(jsonmsgb));
+        if (advertisedDevice->haveRSSI())
+          BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
+        if (advertisedDevice->haveTXPower())
+          BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
+        if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
+          hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
+        }
+        if (advertisedDevice->haveServiceData()) {
+          int serviceDataCount = advertisedDevice->getServiceDataCount();
+          Log.trace(F("Get services data number: %d" CR), serviceDataCount);
           for (int j = 0; j < serviceDataCount; j++) {
-            strcpy(jsonmsg, jsonmsgb); // the parse _destroys_ the message buffer
-            JsonObject& BLEdataLocal = getBTJsonObject(jsonmsg, j == 0); // note, that first time we will get here the BLEdata itself; haPresence for the first msg
-            if (!BLEdataLocal.containsKey("id")) { // would crash without id
-              Log.trace("Json parsing error for %s" CR, jsonmsgb);
-              break;
-            }
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+            Log.trace(F("Service data: %s" CR), service_data.c_str());
+            BLEdata.set("servicedata", (char*)service_data.c_str());
             std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
+            Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
+            BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
+            process_bledata(BLEdata); // this will force to resolve all the service data
+          }
 
-            int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
-            int size1 = jsonBTBufferQueue[last].buffer.size();
-            BLEdataLocal.set("servicedata", (char*)service_data.c_str());
-            int size2 = jsonBTBufferQueue[last].buffer.size();
-            BLEdataLocal.set("servicedatauuid", (char*)serviceDatauuid.c_str());
-            int size3 = jsonBTBufferQueue[last].buffer.size();
-            Log.trace("Buffersize for %d : %d -> %d -> %d" CR, j, size1, size2, size3);
-            PublishDeviceData(BLEdataLocal);
+          if (serviceDataCount > 1) {
+            BLEdata.remove("servicedata");
+            BLEdata.remove("servicedatauuid");
+
+            int msglen = BLEdata.measureLength() + 1;
+            char jsonmsg[msglen];
+            char jsonmsgb[msglen];
+            BLEdata.printTo(jsonmsgb, sizeof(jsonmsgb));
+            for (int j = 0; j < serviceDataCount; j++) {
+              strcpy(jsonmsg, jsonmsgb); // the parse _destroys_ the message buffer
+              JsonObject& BLEdataLocal = getBTJsonObject(jsonmsg, j == 0); // note, that first time we will get here the BLEdata itself; haPresence for the first msg
+              if (!BLEdataLocal.containsKey("id")) { // would crash without id
+                Log.trace("Json parsing error for %s" CR, jsonmsgb);
+                break;
+              }
+              std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
+              std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
+
+              int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
+              int size1 = jsonBTBufferQueue[last].buffer.size();
+              BLEdataLocal.set("servicedata", (char*)service_data.c_str());
+              int size2 = jsonBTBufferQueue[last].buffer.size();
+              BLEdataLocal.set("servicedatauuid", (char*)serviceDatauuid.c_str());
+              int size3 = jsonBTBufferQueue[last].buffer.size();
+              Log.trace("Buffersize for %d : %d -> %d -> %d" CR, j, size1, size2, size3);
+              PublishDeviceData(BLEdataLocal);
+            }
+          } else {
+            PublishDeviceData(BLEdata, false); // easy case
           }
         } else {
-          PublishDeviceData(BLEdata, false); // easy case
+          PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
         }
       } else {
-        PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
+        Log.trace(F("Filtered mac device" CR));
       }
-    } else {
-      Log.trace(F("Filtered mac device" CR));
     }
   }
 };
