@@ -281,6 +281,16 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
 
+template <class T> void logJson(T msg, JsonObject& jsondata) {
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  char JSONmessageBuffer[jsondata.measureLength() + 1];
+#else
+  char JSONmessageBuffer[JSON_MSG_BUFFER];
+#endif
+  jsondata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+  Log.notice(msg, JSONmessageBuffer);
+}
+
 void pub(const char* topicori, const char* payload, bool retainFlag) {
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
   pubMQTT(topic.c_str(), payload, retainFlag);
@@ -289,7 +299,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
 void pub(const char* topicori, JsonObject& data) {
   Log.notice(F("Subject: %s" CR), topicori);
   digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
-  logJson("TX: ", data);
+  logJson(F("TX: %s" CR), data);
   if (client.connected()) {
     String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #ifdef valueAsASubject
@@ -457,19 +467,7 @@ void pubMQTT(String topic, unsigned long payload) {
   client.publish(topic.c_str(), val);
 }
 
-void logJson(const char* comment, JsonObject& jsondata) {
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  char JSONmessageBuffer[jsondata.measureLength() + 1];
-#else
-  char JSONmessageBuffer[JSON_MSG_BUFFER];
-#endif
-  jsondata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-  Log.notice("%s%s\n", comment, JSONmessageBuffer);
-}
 
-void logJson(JsonObject& jsondata) {
-  logJson("Json: ", jsondata);
-}
 
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   char topic[mqtt_topic_max_size];
@@ -1619,7 +1617,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
   if (jsondata.success()) { // json object ok -> json decoding
     // log the received json
-    logJson("RX: ", jsondata);
+    logJson(F("RX: %s" CR), jsondata);
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
 #endif
