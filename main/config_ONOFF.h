@@ -36,6 +36,15 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 
 #define ONKey  "setON"
 #define OFFKey "setOFF"
+#ifndef ACTUATOR_ON
+#  define ACTUATOR_ON LOW
+#endif
+#ifndef ACTUATOR_ONOFF_DEFAULT
+#  define ACTUATOR_ONOFF_DEFAULT !ACTUATOR_ON
+#endif
+#ifndef ACTUATOR_BUTTON_TRIGGER_LEVEL
+#  define ACTUATOR_BUTTON_TRIGGER_LEVEL LOW
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 // default pin, if not set into the MQTT json
