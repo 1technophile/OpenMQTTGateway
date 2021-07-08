@@ -73,6 +73,12 @@ void MeasureGPIOInput() {
       }
       if (GPIOdata.size() > 0)
         pub(subjectGPIOInputtoMQTT, GPIOdata);
+
+#  ifdef ZactuatorONOFF
+      if (InputState == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
+        ActuatorButtonTrigger();
+      }
+#  endif
     }
   }
 
