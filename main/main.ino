@@ -969,6 +969,9 @@ void saveConfigCallback() {
 
 #  ifdef TRIGGER_GPIO
 void checkButton() { // code from tzapu/wifimanager examples
+#    if defined(INPUT_GPIO) && defined(ZsensorGPIOInput) && INPUT_GPIO == TRIGGER_GPIO
+  MeasureGPIOInput();
+#    else
   // check for button press
   if (digitalRead(TRIGGER_GPIO) == LOW) {
     // poor mans debounce/press-hold, code not ideal for production
@@ -984,6 +987,7 @@ void checkButton() { // code from tzapu/wifimanager examples
       }
     }
   }
+#    endif
 }
 #  else
 void checkButton() {}
