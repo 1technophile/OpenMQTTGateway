@@ -281,7 +281,8 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
 
-template <class T> void logJson(T msg, JsonObject& jsondata) {
+template <class T>
+void logJson(T msg, JsonObject& jsondata) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   char JSONmessageBuffer[jsondata.measureLength() + 1];
 #else
@@ -466,8 +467,6 @@ void pubMQTT(String topic, unsigned long payload) {
   sprintf(val, "%lu", payload);
   client.publish(topic.c_str(), val);
 }
-
-
 
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   char topic[mqtt_topic_max_size];
