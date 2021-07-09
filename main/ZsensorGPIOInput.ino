@@ -29,7 +29,9 @@
 #include "User_config.h"
 
 #ifdef ZsensorGPIOInput
-
+#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
+unsigned long resetTime = 0;
+#  endif
 unsigned long lastDebounceTime = 0;
 int InputState = 3; // Set to 3 so that it reads on startup
 int lastInputState = 3;
@@ -57,6 +59,19 @@ void MeasureGPIOInput() {
     // delay, so take it as the actual current state:
 #  if defined(ESP8266) || defined(ESP32)
     yield();
+#  endif
+#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
+    if (reading == LOW) {
+      if (resetTime == 0) {
+        resetTime = millis();
+      } else if ((millis() - resetTime) > 10000) {
+        Log.trace(F("Button Held" CR));
+        Log.notice(F("Erasing ESP Config, restarting" CR));
+        setup_wifimanager(true);
+      }
+    } else {
+      resetTime = 0;
+    }
 #  endif
     // if the Input state has changed:
     if (reading != InputState) {
