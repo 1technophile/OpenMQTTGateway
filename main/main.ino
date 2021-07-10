@@ -1100,6 +1100,8 @@ void setup_wifimanager(bool reset_settings) {
     }
   }
 
+  wifiManager.setDebugOutput(WM_DEBUG_LEVEL);
+
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
