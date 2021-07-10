@@ -1363,6 +1363,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         createOrUpdateDevice(mac, device_flags_init, WS02);
       return process_ws02(BLEdata);
     }
+    Log.trace(F("Is it an iBeacon? %u" CR), strlen(manufacturerdata));
+    if (strlen(manufacturerdata) == 50 && strncmp(&manufacturerdata[0], "4c00", 4) == NULL) {
+      Log.trace(F("iBeacon data reading" CR));
+      BLEdata.set("model", "IBEACON");
+      if (device->sensorModel == -1)
+        createOrUpdateDevice(mac, device_flags_init, IBEACON);
+      return process_ibeacon(BLEdata);
+    }
 #  if !pubBLEManufacturerData
     Log.trace(F("Remove manufacturer data" CR));
     BLEdata.remove("manufacturerdata");
@@ -1729,6 +1737,19 @@ JsonObject& process_mokobeaconXPro(JsonObject& BLEdata) {
     }
   }
   return BLEdata;
+}
+
+JsonObject& process_ibeacon(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"].as<const char*>();
+  char mfid[5] = {NULL};
+  char proxUUID[33] = {NULL};
+  strncpy(&mfid[0], manufacturerdata, 4);
+  strncpy(&proxUUID[0], manufacturerdata + 8, 32);
+  BLEdata.set("MFID:", mfid);
+  BLEdata.set("UUID:", proxUUID);
+  BLEdata.set("Major:", (uint16_t)value_from_hex_data(manufacturerdata, 40, 4, false, false));
+  BLEdata.set("Minor:", (uint16_t)value_from_hex_data(manufacturerdata, 44, 4, false, false));
+  BLEdata.set("Power:", (int8_t)value_from_hex_data(manufacturerdata, 48, 4, false));
 }
 
 void hass_presence(JsonObject& HomePresence) {
