@@ -49,6 +49,10 @@
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
+
+// Uncomment to use the mac address in the format of 112233445566 as the gateway name
+// Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
+//#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
 #  define Gateway_Name "OpenMQTTGateway"
 #endif

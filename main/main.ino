@@ -166,7 +166,10 @@ char mqtt_server[parameters_size] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
 char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
 char gateway_name[parameters_size * 2] = Gateway_Name;
-
+#ifdef USE_MAC_AS_GATEWAY_NAME
+#  undef WifiManager_ssid
+char WifiManager_ssid[20];
+#endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
@@ -586,6 +589,13 @@ void setup() {
   setupM5();
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
+#  endif
+
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+  String s = WiFi.macAddress();
+  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
+          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+  sprintf(WifiManager_ssid, "%s_%s", Gateway_Short_Name, gateway_name);
 #  endif
 
 #  ifdef ESP32_ETHERNET
