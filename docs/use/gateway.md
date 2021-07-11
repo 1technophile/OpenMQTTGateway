@@ -41,11 +41,6 @@ Auto discovery is enable by default on release binaries, on platformio (except f
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
-Define 'MQTTsetWIFI' to activate this
-```
-build_flags = '-DMQTTsetWIFI'
-```
-
 ## Change the MQTT broker credentials
 ```
 mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
@@ -57,11 +52,12 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
   "mqtt_secure": "false"
 }'
 ```
-
-Define 'MQTTsetMQTT' to activate this
+::: info
+By default this function is not available on the pre built binary of RFBridge, in order to have less code size and enable to have OTA update working properly. So as to enable it remove from the rf bridge env:
 ```
-build_flags = '-DMQTTsetMQTT'
-```
+build_flags = '-UMQTTsetMQTT'
+``` 
+:::
 
 ::: tip
 Server, port, and secure_flag are only required if changing connection to another broker.  
