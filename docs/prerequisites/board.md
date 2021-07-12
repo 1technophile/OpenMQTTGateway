@@ -31,7 +31,7 @@ The boards below doesn't need hardware modification (or a lite one).
 The boards below need hardware [parts](parts.md) and electronic/hardware competencies. You have more possibilities of gateways combination, compared to off the shelves ones.
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|Arduino UNO|X|X(limited compared to ESP)|-|-|X|X|
+|Arduino UNO|X|X(limited compared to ESP)|-|-|-|X|X|
 |Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
 |ESP32|X|X|X|X|not tested|X|X|
 |ESP8266|X|X|X|not tested|X|X|X|
