@@ -42,9 +42,9 @@ extern int btQueueLengthCount;
 bool bleConnect = AttemptBLECOnnect;
 
 // Sets whether to filter publishing of scanned devices that require a connection.
-// Default (1) prevents overwriting the publication of the device connection data with the advertised data.
+// Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
 #  ifndef BLE_FILTER_CONNECTABLE
-#    define BLE_FILTER_CONNECTABLE 1
+#    define BLE_FILTER_CONNECTABLE 0
 #  endif
 #  include "NimBLEDevice.h"
 #endif
