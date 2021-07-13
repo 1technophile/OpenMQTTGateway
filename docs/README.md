@@ -5,19 +5,19 @@ OpenMQTTGateway project goal is to concentrate in one gateway different technolo
 OpenMQTTGateway supports very mature technologies like basic 433mhz/315mhz protocols & infrared (IR) so you can make your old dumb devices "smart" and avoid throwing them away. These devices also have the advantages of having a lower cost compared to Zwave or more sophisticated protocols.
 OMG also supports up to date technologies like Bluetooth Low Energy (BLE) or LORA.
 
-To have an overview of the supported PIR, door, water, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
+To have an overview of the supported PIR, door, water, temperature, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
 [compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
 
-With MQTT you can connect the compatible software you want, integrating in home automation controllers like (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or another software like Node-Red.
+With MQTT you can connect the compatible software you want, integrating in home automation controllers like (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or Internet of Things software like Node-Red.
 
 # Use cases
 With OpenMQTTGateway and a controller you can for example:
-* Monitor your garden with a Mi Flora sensor and control an irrigation valve depending on the soil moisture,
+* Monitor a garden with a Mi Flora sensor and control an irrigation valve depending on the soil moisture,
 * Trigger a fan depending on the temperature and humidity thanks to a Mi Jia sensor,
-* Alert yourself by a controller notification if the temperature of your fridge is too high,
-* Detect your beacon/smartwatch so as to trigger a special scenario when you come home,
+* Alert yourself by a controller notification if the temperature of a fridge is too high,
+* Detect a beacon/smartwatch so as to trigger a special scenario when you come home,
 * [Lose weight with the help of a complete log system](https://www.youtube.com/watch?v=noUROhtf0E0&t=18s), video from [@Andreas Spiess](https://www.youtube.com/channel/UCu7_D0o48KbfhpEohoP7YSQ)
-* Detect opened door or windows and alert yourself when leaving home
+* Detect opened door or windows and alert yourself when leaving
 * Detect water leakage or smoke
 * Actionate a siren if something is going wrong
 
