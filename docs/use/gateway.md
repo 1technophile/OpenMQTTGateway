@@ -52,6 +52,17 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
   "mqtt_secure": "false"
 }'
 ```
+::: info
+By default this function is not available on the pre built binary of RFBridge, in order to have less code size and enable to have OTA update working properly. So as to enable it remove from the rf bridge env:
+```
+build_flags = '-UMQTTsetMQTT'
+``` 
+Arduino boards does not have this function per default also, to add it:
+```
+build_flags = '-DMQTTsetMQTT'
+``` 
+:::
+
 ::: tip
 Server, port, and secure_flag are only required if changing connection to another broker.  
 If the new connection fails the gateway will fallback to the previous connection.
