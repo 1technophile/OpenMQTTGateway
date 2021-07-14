@@ -1899,10 +1899,6 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
 #  ifdef MQTTsetMQTT
     if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
-#    if defined(ZgatewayBT) && defined(ESP32)
-      stopProcessing();
-#    endif
-      client.disconnect();
       bool update_server = false;
       bool secure_connect = SYSdata.get<bool>("mqtt_secure");
       void* prev_client = nullptr;
