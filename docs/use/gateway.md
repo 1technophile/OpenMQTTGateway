@@ -57,6 +57,10 @@ By default this function is not available on the pre built binary of RFBridge, i
 ```
 build_flags = '-UMQTTsetMQTT'
 ``` 
+Arduino boards does not have this function per default also, to add it:
+```
+build_flags = '-DMQTTsetMQTT'
+``` 
 :::
 
 ::: tip
