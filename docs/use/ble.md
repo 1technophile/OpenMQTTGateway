@@ -1,4 +1,10 @@
 # BLE gateway
+
+::: warning
+We strongly encourage the use of a white-list (see below) so as to collect data from your devices only and not from other MAC addresses.
+By default the gateway scans the advertizing BLE devices nearby with their MAC addresses. Depending on your country, it may be illegal to monitor networks for MAC addresses, especially on networks that you do not own. Please check your country's laws (for US Section 18 U.S. Code § 2511) - [discussion here](https://github.com/schollz/howmanypeoplearearound/issues/4).
+:::
+
 ## Receiving signals from BLE beacon devices for Presence detection
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
