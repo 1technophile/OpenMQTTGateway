@@ -13,10 +13,10 @@ Prerequisites: node-red, node-red-dashboard
 ![](../img/OpenMQTTgateway_NODERED-integration.png)
 
 ::: tip
-The "+" enables to process the data from all the gateways whatever name they have. So you may setup several OpenMQTTGateway you will not have to change the Node-Red configuration.
+The "+" enables to process the data from all the gateways whatever name they have. So you may setup several OpenMQTTGateway, you will not have to change the Node-Red configuration.
 :::
 
-This configuration enables to process all the data coming from the sensor
+This configuration enables to process all the data coming from the sensor.
 
 * Click on done
 * So as to monitor the traffic coming; you can add a debug node with *msg.payload* as Output
@@ -57,7 +57,7 @@ You can now add widget so as to display the value processed above
 * Deploy
 * Go to your `node-red url`/ui
 
-You should see the gauge whit the last value displayed
+You should see the gauge with the last value displayed
 
 ![](../img/OpenMQTTgateway_NODERED-gauge-dashboard.png)
 
