@@ -49,7 +49,7 @@ You can now add widget so as to display the value processed above
 
 * Add a `gauge` node
 * Add a group and organize your dashboard
-* Add your value format to process the payload *{{msg.payload}}*
+* Add your value format to process the payload like below
 
 ![](../img/OpenMQTTgateway_NODERED-gauge.png)
 
