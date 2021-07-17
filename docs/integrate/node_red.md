@@ -19,7 +19,7 @@ The "+" enables to process the data from all the gateways whatever name they hav
 This configuration enables to process all the data coming from the sensor
 
 * Click on done
-* So as to monitor the traffic coming; you can add a debug node with `msg.payload` as Output
+* So as to monitor the traffic coming; you can add a debug node with *msg.payload* as Output
 
 ![](../img/OpenMQTTgateway_NODERED-integration-debug.png)
 
@@ -38,7 +38,7 @@ We need to process the json message so as to extract the value that we want to d
 
 * Add a `change` node
 * Configure it as `Move`
-* Add the msg value you would like to process example `msg.payload.tempc` and the target `msg.payload`
+* Add the msg value you would like to process example *msg.payload.tempc* and the target *msg.payload*
 
 ![](../img/OpenMQTTgateway_NODERED-integration-process.png)
 
@@ -49,7 +49,7 @@ You can now add widget so as to display the value processed above
 
 * Add a `gauge` node
 * Add a group and organize your dashboard
-* Add your value format to process the payload `{{msg.payload}}`
+* Add your value format to process the payload *{{msg.payload}}*
 
 ![](../img/OpenMQTTgateway_NODERED-gauge.png)
 
