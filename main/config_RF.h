@@ -81,6 +81,7 @@ int minimumRssi = 0;
 //RF number of signal repetition - Can be overridden by specifying "repeat" in a JSON message.
 #define RF_EMITTER_REPEAT 20
 //#define RF_DISABLE_TRANSMIT //Uncomment this line to disable RF transmissions. (RF Receive will work as normal.)
+//#define RFmqttDiscovery true //uncomment this line so as to create a discovery switch for each RF signal received
 
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
