@@ -12,14 +12,16 @@ With MQTT you can connect the compatible software you want, integrating in home 
 
 # Use cases
 With OpenMQTTGateway and a controller you can for example:
-* Monitor a garden with a Mi Flora sensor and control an irrigation valve depending on the soil moisture,
-* Trigger a fan depending on the temperature and humidity thanks to a Mi Jia sensor,
+* Monitor a garden with a Mi Flora BLE sensor and control an irrigation valve depending on the soil moisture,
+* Trigger a fan depending on the temperature and humidity thanks to a Mi Jia BLE sensor,
 * Alert yourself by a controller notification if the temperature of a fridge is too high,
 * Detect a beacon/smartwatch so as to trigger a special scenario when you come home,
 * [Lose weight with the help of a complete log system](https://www.youtube.com/watch?v=noUROhtf0E0&t=18s), video from [@Andreas Spiess](https://www.youtube.com/channel/UCu7_D0o48KbfhpEohoP7YSQ)
-* Detect opened door or windows and alert yourself when leaving
-* Detect water leakage or smoke
+* Detect opened door or windows through 433mhz or BLE and alert yourself when leaving
+* Detect water leakage or smoke remotely
 * Actionate a siren if something is going wrong
+* Detect if your far mailbox has been opened by the postman with LORA
+* Make smart your old TV or AC system through infrared control
 
 The limit is your imagination 😀
 
@@ -31,6 +33,8 @@ Behind the scene you will find functionalities dedicated to gateways like:
 * Signal forward/repeat
 * First configuration with web portal
 * Whitelist & Blacklist management
+* Secure connections
+* Over the air updates
 
 ::: warning Note
 The material and information contained in this documentation is for general information purposes only. You should not rely upon the material or information on this documentation as a basis for making any business, legal or any other decisions. There is no warranty given on this documentation content. If you decide to follow the information and materials given it is at your own risk. I will not be liable for any false, inaccurate, inappropriate or incomplete information presented on this website.
