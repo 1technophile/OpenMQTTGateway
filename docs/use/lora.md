@@ -1,7 +1,7 @@
 # LORA gateway
 
-Tutorial on how to leverage LORA for a mailbox sensor:
-<iframe width="560" height="315" src="https://www.youtube.com/watch?v=6DftaHxDawM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+Tutorial on how to leverage LORA for a mailbox sensor from [PricelessToolkit](https://www.youtube.com/channel/UCz75N6inuLHXnRC5tqagNLw):
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6DftaHxDawM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ## Receiving data from LORA signal
 
