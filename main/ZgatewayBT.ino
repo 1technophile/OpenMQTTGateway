@@ -279,9 +279,10 @@ void strupp(char* beg) {
 
 #  ifdef ZmqttDiscovery
 void MiFloraDiscovery(const char* mac, const char* sensorModel) {
-#    define MiFloraparametersCount 4
+#    define MiFloraparametersCount 5
   Log.trace(F("MiFloraDiscovery" CR));
   const char* MiFlorasensor[MiFloraparametersCount][8] = {
+      {"sensor", "MiFlora-batt", mac, "battery", jsonBatt, "", "", "%"},
       {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx"},
       {"sensor", "MiFlora-temp", mac, "temperature", jsonTempc, "", "", "°C"},
       {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm"},
