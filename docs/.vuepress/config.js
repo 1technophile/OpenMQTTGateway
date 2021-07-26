@@ -15,7 +15,8 @@ module.exports = {
       ['link', { rel: "apple-touch-icon", sizes: "180x180", href: "/img/apple-touch-icon.png"}],
       ['link', { rel: 'mask-icon', href: '/icons/safari-pinned-tab.svg', color: '#3eaf7c' }],
       ['meta', { name: 'msapplication-TileImage', content: '/icons/msapplication-icon-144x144.png' }],
-      ['meta', { name: 'msapplication-TileColor', content: '#000000' }]
+      ['meta', { name: 'msapplication-TileColor', content: '#000000' }],
+      ['script', {type: 'module', src: 'https://unpkg.com/esp-web-tools@3.4.2/dist/web/install-button.js?module'}]
     ],
     themeConfig: {
       smoothScroll: true,
@@ -62,6 +63,7 @@ module.exports = {
           title: '3 - Upload ➡️',   // required
           sidebarDepth: 1,    // optional, defaults to 1
           children: [
+            'upload/web-install',
             'upload/binaries',
             'upload/builds',
             'upload/portal',
