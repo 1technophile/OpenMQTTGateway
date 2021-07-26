@@ -36,7 +36,7 @@ NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& ser
 
 bool zBLEConnect::writeData(BLEAction* action) {
   NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
-  if (pChar && pChar->canWrite()) {
+  if (pChar && (pChar->canWrite() || pChar->canWriteNoResponse())) {
     switch (action->value_type) {
       case BLE_VAL_HEX: {
         int len = action->value.length();
