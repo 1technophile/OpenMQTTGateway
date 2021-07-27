@@ -23,7 +23,7 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 ![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ## Manual integration examples
-From @123, @finity, @denniz03, @jrockstad, @anarchking
+From @123, @finity, @denniz03, @jrockstad, @anarchking, @dkluivingh
 
 ### Door sensor
 ```yaml
@@ -178,4 +178,20 @@ sensor:
     state_topic: "home/home_presence"
     #timeout:
     #away_timeout:
+```
+
+### Temperature sensor
+
+```yaml
+sensor:
+  - platform: mqtt
+    name: outdoor temp
+    state_topic: "home/OpenMQTTGateway/433toMQTT"
+    unit_of_measurement: '°C'
+    value_template: >
+      {% if value_json is defined and value_json.sensor == 125 %}
+      {{ value_json.tempc }}
+      {% else %}
+      {{ states('sensor.outdoor_temp') }}
+       {% endif %}
 ```
