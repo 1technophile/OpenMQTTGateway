@@ -49,6 +49,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Ibeacon|protocol|UUID/MFID/Major/Minor/Power|
 | Mokosmart (1)|M1|x_axis/y_axis/z_axis/battery|
 | Mokosmart (1)|H4|temperature/humidity/volt|
+| TPMS|TPMS|temperature/pressure/battery/alarm/count|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
