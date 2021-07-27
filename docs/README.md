@@ -22,6 +22,7 @@ With OpenMQTTGateway and a controller you can for example:
 * Actionate a siren if something is going wrong
 * Detect if your far mailbox has been opened by the postman with LORA
 * Make smart your old TV or AC system through infrared control
+* Monitor vehicle tire pressure
 
 The limit is your imagination 😀
 
