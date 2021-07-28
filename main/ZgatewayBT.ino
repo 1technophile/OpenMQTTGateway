@@ -771,6 +771,7 @@ void BLEconnect() {
         case GENERIC: {
           GENERIC_connect BLEclient(addr);
           BLEclient.processActions(BLEactions);
+          break;
         }
         case HHCCJCY01HHCC: {
           HHCCJCY01HHCC_connect BLEclient(addr);
