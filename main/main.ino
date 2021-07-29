@@ -185,6 +185,7 @@ static void* eClient = nullptr;
 static bool mqtt_secure = (MQTT_SECURE_DEFAULT || MQTT_SECURE_SELF_SIGNED);
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
+static String ota_server_cert = "";
 #endif
 
 #ifdef ESP32
@@ -1034,6 +1035,7 @@ void saveMqttConfig() {
   json["mqtt_broker_secure"] = mqtt_secure;
   json["mqtt_broker_cert"] = mqtt_cert;
   json["mqtt_ss_index"] = mqtt_ss_index;
+  json["ota_server_cert"] = ota_server_cert;
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -1099,6 +1101,8 @@ void setup_wifimanager(bool reset_settings) {
           mqtt_ss_index = json.get<uint8_t>("mqtt_ss_index");
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
+        if (json.containsKey("ota_server_cert"))
+          ota_server_cert = json.get<const char*>("ota_server_cert");
       } else {
         Log.warning(F("failed to load json config" CR));
       }
@@ -1772,6 +1776,17 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       stopProcessing();
 #  endif
 
+      const char* ota_cert = HttpsFwUpdateData["server_cert"];
+      if (!ota_cert) {
+        if (ota_server_cert.length() > 0) {
+          Log.error(F("using stored cert" CR));
+          ota_cert = ota_server_cert.c_str();
+        } else {
+          Log.error(F("using config cert" CR));
+          ota_cert = OTAserver_cert;
+        }
+      }
+
       t_httpUpdate_return result = HTTP_UPDATE_FAILED;
       if (strstr(url, "http:")) {
         WiFiClient update_client;
@@ -1808,15 +1823,17 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         }
 
 #  ifdef ESP32
-        update_client.setCACert(OTAserver_cert);
+        update_client.setCACert(ota_cert);
         update_client.setTimeout(12);
         httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        httpUpdate.rebootOnUpdate(false);
         result = httpUpdate.update(update_client, url);
 #  elif ESP8266
-        caCert.append(OTAserver_cert);
+        caCert.append(ota_cert);
         update_client.setTrustAnchors(&caCert);
         update_client.setTimeout(12000);
         ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        ESPhttpUpdate.rebootOnUpdate(false);
         result = ESPhttpUpdate.update(update_client, url);
 #  endif
       }
@@ -1836,6 +1853,15 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
         case HTTP_UPDATE_OK:
           Log.notice(F("HTTP_UPDATE_OK" CR));
+          ota_server_cert = ota_cert;
+#  ifndef ESPWifiManualSetup
+          saveMqttConfig();
+#  endif
+#  ifdef ESP32
+          ESP.restart();
+#  elif ESP8266
+          ESP.reset();
+#  endif
           break;
       }
 
