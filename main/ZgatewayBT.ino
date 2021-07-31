@@ -685,36 +685,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
             process_bledata(BLEdata); // this will force to resolve all the service data
           }
 
-          if (serviceDataCount > 1) {
-            BLEdata.remove("servicedata");
-            BLEdata.remove("servicedatauuid");
-
-            int msglen = BLEdata.measureLength() + 1;
-            char jsonmsg[msglen];
-            char jsonmsgb[msglen];
-            BLEdata.printTo(jsonmsgb, sizeof(jsonmsgb));
-            for (int j = 0; j < serviceDataCount; j++) {
-              strcpy(jsonmsg, jsonmsgb); // the parse _destroys_ the message buffer
-              JsonObject& BLEdataLocal = getBTJsonObject(jsonmsg, j == 0); // note, that first time we will get here the BLEdata itself; haPresence for the first msg
-              if (!BLEdataLocal.containsKey("id")) { // would crash without id
-                Log.trace("Json parsing error for %s" CR, jsonmsgb);
-                break;
-              }
-              std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
-              std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
-
-              int last = atomic_load_explicit(&jsonBTBufferQueueLast, ::memory_order_seq_cst) % BTQueueSize;
-              int size1 = jsonBTBufferQueue[last].buffer.size();
-              BLEdataLocal.set("servicedata", (char*)service_data.c_str());
-              int size2 = jsonBTBufferQueue[last].buffer.size();
-              BLEdataLocal.set("servicedatauuid", (char*)serviceDatauuid.c_str());
-              int size3 = jsonBTBufferQueue[last].buffer.size();
-              Log.trace("Buffersize for %d : %d -> %d -> %d" CR, j, size1, size2, size3);
-              PublishDeviceData(BLEdataLocal);
-            }
-          } else {
-            PublishDeviceData(BLEdata, false); // easy case
-          }
+          PublishDeviceData(BLEdata, false);
         } else {
           PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
         }
