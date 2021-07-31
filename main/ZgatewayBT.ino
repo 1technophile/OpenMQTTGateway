@@ -1752,11 +1752,13 @@ JsonObject& process_ibeacon(JsonObject& BLEdata) {
   char proxUUID[33] = {NULL};
   strncpy(&mfid[0], manufacturerdata, 4);
   strncpy(&proxUUID[0], manufacturerdata + 8, 32);
-  BLEdata.set("MFID:", mfid);
-  BLEdata.set("UUID:", proxUUID);
-  BLEdata.set("Major:", (uint16_t)value_from_hex_data(manufacturerdata, 40, 4, false, false));
-  BLEdata.set("Minor:", (uint16_t)value_from_hex_data(manufacturerdata, 44, 4, false, false));
-  BLEdata.set("Power:", (int8_t)value_from_hex_data(manufacturerdata, 48, 4, false));
+  BLEdata.set("mfid", mfid);
+  BLEdata.set("uuid", proxUUID);
+  BLEdata.set("major", (uint16_t)value_from_hex_data(manufacturerdata, 40, 4, false, false));
+  BLEdata.set("minor", (uint16_t)value_from_hex_data(manufacturerdata, 44, 4, false, false));
+  BLEdata.set("power", (int8_t)value_from_hex_data(manufacturerdata, 48, 4, false));
+
+  return BLEdata;
 }
 
 JsonObject& process_tpms(JsonObject& BLEdata) {
