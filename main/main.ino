@@ -182,7 +182,7 @@ bool disc = true; // Auto discovery with Home Assistant convention
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 #if defined(ESP8266) || defined(ESP32)
-static bool mqtt_secure = (MQTT_SECURE_DEFAULT || MQTT_SECURE_SELF_SIGNED);
+static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
 static String ota_server_cert = "";
@@ -641,8 +641,7 @@ void setup() {
   Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
   connectMQTTmdns();
 #else
-  long port;
-  port = strtol(mqtt_port, NULL, 10);
+  uint16_t port = strtol(mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
   Log.trace(F("Mqtt server: %s" CR), mqtt_server);
   client.setServer(mqtt_server, port);
@@ -1093,10 +1092,10 @@ void setup_wifimanager(bool reset_settings) {
           strcpy(mqtt_pass, json["mqtt_pass"]);
         if (json.containsKey("mqtt_topic"))
           strcpy(mqtt_topic, json["mqtt_topic"]);
-        if (json.containsKey("mqtt_secure"))
-          mqtt_secure = json.get<bool>("mqtt_secure");
-        if (json.containsKey("mqtt_cert"))
-          mqtt_cert = json.get<const char*>("mqtt_cert");
+        if (json.containsKey("mqtt_broker_secure"))
+          mqtt_secure = json.get<bool>("mqtt_broker_secure");
+        if (json.containsKey("mqtt_broker_cert"))
+          mqtt_cert = json.get<const char*>("mqtt_broker_cert");
         if (json.containsKey("mqtt_ss_index"))
           mqtt_ss_index = json.get<uint8_t>("mqtt_ss_index");
         if (json.containsKey("gateway_name"))
@@ -1508,6 +1507,8 @@ void stateMeasures() {
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
+  SYSdata["mqttport"] = mqtt_port;
+  SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
