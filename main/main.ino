@@ -182,7 +182,7 @@ bool disc = true; // Auto discovery with Home Assistant convention
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 #if defined(ESP8266) || defined(ESP32)
-static bool mqtt_secure = (MQTT_SECURE_DEFAULT || MQTT_SECURE_SELF_SIGNED);
+static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
 static String ota_server_cert = "";
@@ -1508,6 +1508,8 @@ void stateMeasures() {
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
+  SYSdata["mqttport"] = mqtt_port;
+  SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
