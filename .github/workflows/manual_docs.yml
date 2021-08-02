@@ -20,8 +20,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
           npm install
+      - name: get lastest release tag
+        id: last_release
+        uses: InsonusK/get-latest-release@v1.0.1
+        with:
+          myToken: ${{ github.token }}
+          view_top: 1
       - name: Set version tag from git
-        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" docs/.vuepress/config.js
+        run: sed -i "s/version_tag/${{steps.last_release.outputs.tag_name}}/g" docs/.vuepress/config.js
       - name: Build documentation
         run: |
           python ./scripts/gen_wu.py ${GITHUB_REPOSITORY}
