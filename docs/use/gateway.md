@@ -135,6 +135,11 @@ vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
 
 A bash script is available [here](ota_command_cert.zip) to simplify the use of the `server_cert` parameter.  
 
+::: warning
+The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above WiFi and MQTT broker credentials and the Firmware update via MQTT options disabled. This is due to the restricted available flash, so as to still be able to use OTA firmware updates for these boards.
+:::
+
+
 # State LED usage
 
 The gateway can support up to 3 LED to display its operating state:
