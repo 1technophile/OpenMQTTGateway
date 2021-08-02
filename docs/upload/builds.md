@@ -1,4 +1,4 @@
-# (Option 2) Upload your configurations
+# (Option 3) Upload your configurations
 
 ## Introduction
 
