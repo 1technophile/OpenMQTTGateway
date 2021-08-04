@@ -29,8 +29,9 @@ module.exports = {
         { text: 'Blog', link: 'https://1technophile.blogspot.com'},
         { text: 'Docs', link: '/'},
         { text: 'Community', link: 'https://community.openmqttgateway.com', target:'_self', rel:''},
-        { text: 'Devices', link: 'https://compatible.openmqttgateway.com/index.php/devices'},
-        { text: 'Boards', link: 'https://compatible.openmqttgateway.com/index.php/boards'}
+        { text: 'Devices', link: 'https://compatible.openmqttgateway.com/index.php/devices', target:'_self', rel:''},
+        { text: 'Boards', link: 'https://compatible.openmqttgateway.com/index.php/boards', target:'_self', rel:''},
+        { text: 'Upload', link: '/upload/web-install.html'}
       ],
       sidebar: [
         ['/','0 - What is it for 🏠'],
