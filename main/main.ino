@@ -1113,6 +1113,7 @@ void setup_wifimanager(bool reset_settings) {
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
+#  ifndef WIFIMNG_HIDE_MQTT_CONFIG
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size);
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
@@ -1121,7 +1122,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
-
+#  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
 
@@ -1141,6 +1142,7 @@ void setup_wifimanager(bool reset_settings) {
   wifiManager.setSTAStaticIPConfig(ip_adress, gateway_adress, subnet_adress);
 #  endif
 
+#  ifndef WIFIMNG_HIDE_MQTT_CONFIG
   //add all your parameters here
   wifiManager.addParameter(&custom_mqtt_server);
   wifiManager.addParameter(&custom_mqtt_port);
@@ -1150,7 +1152,7 @@ void setup_wifimanager(bool reset_settings) {
   wifiManager.addParameter(&custom_mqtt_cert);
   wifiManager.addParameter(&custom_gateway_name);
   wifiManager.addParameter(&custom_mqtt_topic);
-
+#  endif
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
 
@@ -1196,6 +1198,7 @@ void setup_wifimanager(bool reset_settings) {
 
   if (shouldSaveConfig) {
     //read updated parameters
+#  ifndef WIFIMNG_HIDE_MQTT_CONFIG
     strcpy(mqtt_server, custom_mqtt_server.getValue());
     strcpy(mqtt_port, custom_mqtt_port.getValue());
     strcpy(mqtt_user, custom_mqtt_user.getValue());
@@ -1221,7 +1224,7 @@ void setup_wifimanager(bool reset_settings) {
 
       mqtt_cert = cert_begin;
     }
-
+#  endif
     //save the custom parameters to FS
     saveMqttConfig();
   }
