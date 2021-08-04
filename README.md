@@ -16,9 +16,9 @@ The documentation is [here](https://docs.openmqttgateway.com)
 
 The reference sheet, with the list of all functions, pinouts is [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=0)
 
-## Download
+## Upload
 
-Download OpenMQTTGateway from the [releases page](https://github.com/1technophile/OpenMQTTGateway/releases)
+Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgateway.com/upload/web-install.html) (no additional software required) or [build your own configuration](https://docs.openmqttgateway.com/upload/builds.html) with [PlatformIO](https://platformio.org/) or [Arduino IDE](https://www.arduino.cc/en/software)
 
 ## Compatible items
 
