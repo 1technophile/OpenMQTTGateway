@@ -68,6 +68,18 @@ Server, port, and secure_flag are only required if changing connection to anothe
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
+## Change the MQTT main topic and or gateway name
+```
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
+'{
+  "mqtt_topic": "topic/",
+  "gateway_name: "name"
+}'
+```
+::: info
+This will change the subscribed and published mqtt_topic/gateway_name that the gateway uses. No parameters are manditory, the current topic or gateway name will be used if not supplied.
+:::
+
 ## Switching brokers and using self signed and client certificates
 
 In the `user_config.h` file it is possible to specify multiple MQTT brokers and client certificates. These are commonly self signed and are supported by defining `MQTT_SECURE_SELF_SIGNED` as true or 1.  

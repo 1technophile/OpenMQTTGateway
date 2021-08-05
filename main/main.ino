@@ -2026,6 +2026,18 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #    endif
     }
 #  endif
+    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
+      if (SYSdata.containsKey("mqtt_topic")) {
+        strncpy(mqtt_topic, SYSdata["mqtt_topic"], mqtt_topic_max_size);
+      }
+      if (SYSdata.containsKey("gateway_name")) {
+        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size * 2);
+      }
+#  ifndef ESPWifiManualSetup
+      saveMqttConfig();
+#  endif
+      client.disconnect(); // reconnects in loop using the new topic/name
+    }
 #endif
 
 #ifdef ZmqttDiscovery
