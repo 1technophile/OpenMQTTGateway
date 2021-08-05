@@ -72,12 +72,12 @@ If the new connection fails the gateway will fallback to the previous connection
 ```
 mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
 '{
-  "mqtt_topic": "topic",
+  "mqtt_topic": "topic/",
   "gateway_name: "name"
 }'
 ```
 ::: info
-This will change the subscribed and published topic/gateway_name that the gateway uses. No parameters are manditory, the current topic or gateway name will be used if not supplied.
+This will change the subscribed and published mqtt_topic/gateway_name that the gateway uses. No parameters are manditory, the current topic or gateway name will be used if not supplied.
 :::
 
 ## Switching brokers and using self signed and client certificates
