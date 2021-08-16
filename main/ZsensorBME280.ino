@@ -107,13 +107,11 @@ void setupZsensorBME280() {
   //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
   mySensor.settings.humidOverSample = 1;
 
-#  ifdef BME280Correction
-  // tempCorrection - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit tempaeratures are adjusted.
+  // tempCorrection - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit temperatures are adjusted.
+  // -------------------------
   // Value is a float
   // ie Compiler Directive '-DBME280Correction=-3.4'
-
   mySensor.settings.tempCorrection = BME280Correction;
-#  endif
 
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
 
