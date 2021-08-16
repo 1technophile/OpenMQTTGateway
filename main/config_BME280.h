@@ -65,12 +65,13 @@ int BME280_PIN_SCL = SCL; // PIN SCL
 // Temperature correction for BME280 devices
 
 #ifndef BME280Correction
-  // tempCorrection - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit temperatures are adjusted.
-  // -------------------------
-  // Value is a float
-  // ie Compiler Directive '-DBME280Correction=-3.4'
+    
+// BME280Correction - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit temperatures are adjusted.
+// -------------------------
+// Value is a float
+// ie Compiler Directive '-DBME280Correction=-3.4'
 
-  #define BME280Correction 0
+#  define BME280Correction 0
 #endif
 
 #endif
