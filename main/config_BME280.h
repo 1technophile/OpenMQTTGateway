@@ -70,7 +70,7 @@ int BME280_PIN_SCL = SCL; // PIN SCL
   // Value is a float
   // ie Compiler Directive '-DBME280Correction=-3.4'
 
-  #define BME280Correction 0;
+  #define BME280Correction 0
 #  endif
 
 #endif
