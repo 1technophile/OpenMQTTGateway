@@ -85,12 +85,24 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 //#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on ESP32 Ethernet gateway and adapt the settings to your board below, the default parameter are for OLIMEX ESP32 Gateway
 #ifdef ESP32_ETHERNET
-#  define ETH_PHY_ADDR  0
-#  define ETH_PHY_TYPE  ETH_PHY_LAN8720
-#  define ETH_PHY_POWER 12
-#  define ETH_PHY_MDC   23
-#  define ETH_PHY_MDIO  18
-#  define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
+#  ifndef ETH_PHY_ADDR
+#    define ETH_PHY_ADDR 0
+#  endif
+#  ifndef ETH_PHY_TYPE
+#    define ETH_PHY_TYPE ETH_PHY_LAN8720
+#  endif
+#  ifndef ETH_PHY_POWER
+#    define ETH_PHY_POWER 12
+#  endif
+#  ifndef ETH_PHY_MDC
+#    define ETH_PHY_MDC 23
+#  endif
+#  ifndef ETH_PHY_MDIO
+#    define ETH_PHY_MDIO 18
+#  endif
+#  ifndef ETH_CLK_MODE
+#    define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
+#  endif
 #endif
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
