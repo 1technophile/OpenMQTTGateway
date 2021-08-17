@@ -196,8 +196,6 @@ static String ota_server_cert = "";
 #  include <nvs_flash.h>
 
 #  ifdef ESP32_ETHERNET
-#    define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
-#    define ETH_PHY_POWER 12
 #    include <ETH.h>
 void WiFiEvent(WiFiEvent_t event);
 static bool esp32EthConnected = false;
