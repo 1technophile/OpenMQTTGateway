@@ -16,6 +16,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |Sonoff RF Bridge (*) |![](../img/OpenMQTTGateway_boards_sonoff_rfbridge.png)|X|[mod](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
 |All bare ESP32|-|-|-|X|-|X|-|X|
 |OLIMEX ESP32 Ethernet|-|-|-|X|-|X|-|X|
+|ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
 |[M5Stick C](M5)|![](../img/OpenMQTTgateway_M5_StickC_Board_Display_Text.png)|-|send|X|-|X|X|X|
