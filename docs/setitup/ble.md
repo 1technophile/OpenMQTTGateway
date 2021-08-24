@@ -15,8 +15,8 @@ For Arduino and ESP8266 you can use an HM10 or HM11 below.
 ## Pinout
 |Module Pin|Board RX Pin|Board TX Pin|
 |-|:-:|:-:|
-|Arduino|D6 to HM10 TX|D5 to HM10 RX|
-|ESP8266|D6 to HM10 TX|D7 to HM10 RX|
+|Arduino|D6 to HM10 RX|D5 to HM10 TX|
+|ESP8266|D6 to HM10 RX|D7 to HM10 TX|
 
 Vcc pin of the board and the HM10 Module to a 5V supply source.
 Ground pins of the board and the HM10 Module to the ground of the supply source.
