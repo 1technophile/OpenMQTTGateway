@@ -53,8 +53,8 @@ void MeasureINA226() {
   if (millis() > (timeINA226 + TimeBetweenReadingINA226)) { //retrieving value of temperature and humidity of the box from DHT every xUL
     timeINA226 = millis();
     Log.trace(F("Creating INA226 buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& INA226data = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject INA226data = jsonBuffer.to<JsonObject>();
     // Topic on which we will send data
     Log.trace(F("Retrieving electrical data" CR));
     // Bus Spannung, read-only, 16Bit, 0...40.96V max., LSB 1.25mV
@@ -75,9 +75,9 @@ void MeasureINA226() {
     dtostrf(volt, 6, 3, volt_c);
     dtostrf(current, 6, 3, current_c);
     dtostrf(power, 6, 3, power_c);
-    INA226data.set("volt", (char*)volt_c);
-    INA226data.set("current", (char*)current_c);
-    INA226data.set("power", (char*)power_c);
+    INA226data["volt"] = (char*)volt_c;
+    INA226data["current"] = (char*)current_c;
+    INA226data["power"] = (char*)power_c;
     pub(subjectINA226toMQTT, INA226data);
   }
 }

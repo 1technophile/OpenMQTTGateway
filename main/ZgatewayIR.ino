@@ -115,20 +115,20 @@ void IRtoMQTT() {
 
   if (irrecv.decode(&results)) {
     Log.trace(F("Creating IR buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& IRdata = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject IRdata = jsonBuffer.to<JsonObject>();
 
     Log.trace(F("Rcv. IR" CR));
 #  ifdef ESP32
     Log.trace(F("IR Task running on core :%d" CR), xPortGetCoreID());
 #  endif
-    IRdata.set("value", (SIGNAL_SIZE_UL_ULL)(results.value));
-    IRdata.set("protocol", (int)(results.decode_type));
-    IRdata.set("bits", (int)(results.bits));
+    IRdata["value"] = (SIGNAL_SIZE_UL_ULL)(results.value);
+    IRdata["protocol"] = (int)(results.decode_type);
+    IRdata["bits"] = (int)(results.bits);
 #  if defined(ESP8266) || defined(ESP32) //resultToHexidecimal is only available with IRremoteESP8266
     String hex = resultToHexidecimal(&results);
-    IRdata.set("hex", (char*)hex.c_str());
-    IRdata.set("protocol_name", (char*)(typeToString(results.decode_type, false)).c_str());
+    IRdata["hex"] = (const char*)hex.c_str();
+    IRdata["protocol_name"] = (const char*)(typeToString(results.decode_type, false)).c_str();
 #  endif
     String rawCode = "";
     // Dump data
@@ -144,7 +144,7 @@ void IRtoMQTT() {
         rawCode = rawCode + ","; // ',' not needed on last one
     }
     //trc(rawCode);
-    IRdata.set("raw", rawCode);
+    IRdata["raw"] = rawCode;
 // if needed we directly resend the raw code
 #  ifdef RawDirectForward
 #    if defined(ESP8266) || defined(ESP32)
@@ -162,9 +162,9 @@ void IRtoMQTT() {
     Log.trace(F("raw redirected" CR));
 #  endif
     irrecv.resume(); // Receive the next value
-    SIGNAL_SIZE_UL_ULL MQTTvalue = IRdata.get<SIGNAL_SIZE_UL_ULL>("value");
+    SIGNAL_SIZE_UL_ULL MQTTvalue = IRdata["value"].as<SIGNAL_SIZE_UL_ULL>();
     //trc(MQTTvalue);
-    if ((pubIRunknownPrtcl == false && IRdata.get<int>("protocol") == -1)) { // don't publish unknown IR protocol
+    if ((pubIRunknownPrtcl == false && IRdata["protocol"].as<int>() == -1)) { // don't publish unknown IR protocol
       Log.notice(F("--no pub unknwn prt--" CR));
     } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
       Log.trace(F("Adv data IRtoMQTT" CR));

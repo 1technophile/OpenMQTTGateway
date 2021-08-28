@@ -145,32 +145,32 @@ void MeasureTempHumAndPressure() {
       Log.error(F("Failed to read from BME280!" CR));
     } else {
       Log.trace(F("Creating BME280 buffer" CR));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& BME280data = jsonBuffer.createObject();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject BME280data = jsonBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
       if (BmeTempC != persisted_bme_tempc || bme280_always) {
-        BME280data.set("tempc", (float)BmeTempC);
+        BME280data["tempc"] = (float)BmeTempC;
       } else {
         Log.trace(F("Same Degrees C don't send it" CR));
       }
 
       // Generate Temperature in degrees F
       if (BmeTempF != persisted_bme_tempf || bme280_always) {
-        BME280data.set("tempf", (float)BmeTempF);
+        BME280data["tempf"] = (float)BmeTempF;
       } else {
         Log.trace(F("Same Degrees F don't send it" CR));
       }
 
       // Generate Humidity in percent
       if (BmeHum != persisted_bme_hum || bme280_always) {
-        BME280data.set("hum", (float)BmeHum);
+        BME280data["hum"] = (float)BmeHum;
       } else {
         Log.trace(F("Same Humidity don't send it" CR));
       }
 
       // Generate Pressure in Pa
       if (BmePa != persisted_bme_pa || bme280_always) {
-        BME280data.set("pa", (float)BmePa);
+        BME280data["pa"] = (float)BmePa;
       } else {
         Log.trace(F("Same Pressure don't send it" CR));
       }
@@ -178,14 +178,14 @@ void MeasureTempHumAndPressure() {
       // Generate Altitude in Meter
       if (BmeAltiM != persisted_bme_altim || bme280_always) {
         Log.trace(F("Sending Altitude Meter to MQTT" CR));
-        BME280data.set("altim", (float)BmeAltiM);
+        BME280data["altim"] = (float)BmeAltiM;
       } else {
         Log.trace(F("Same Altitude Meter don't send it" CR));
       }
 
       // Generate Altitude in Feet
       if (BmeAltiFt != persisted_bme_altift || bme280_always) {
-        BME280data.set("altift", (float)BmeAltiFt);
+        BME280data["altift"] = (float)BmeAltiFt;
       } else {
         Log.trace(F("Same Altitude Feet don't send it" CR));
       }

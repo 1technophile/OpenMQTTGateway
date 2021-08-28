@@ -80,14 +80,14 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
   if (actions.size() > 0) {
     for (auto& it : actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
-        JsonObject& BLEresult = getBTJsonObject();
-        BLEresult.set("id", it.addr);
-        BLEresult.set("service", (char*)it.service.toString().c_str());
-        BLEresult.set("characteristic", (char*)it.characteristic.toString().c_str());
+        JsonObject BLEresult = getBTJsonObject();
+        BLEresult["id"] = it.addr;
+        BLEresult["service"] = (char*)it.service.toString().c_str();
+        BLEresult["characteristic"] = (char*)it.characteristic.toString().c_str();
 
         if (it.write) {
           Log.trace(F("processing BLE write" CR));
-          BLEresult.set("write", it.value.c_str());
+          BLEresult["write"] = it.value.c_str();
           result = writeData(&it);
         } else {
           Log.trace(F("processing BLE read" CR));
@@ -96,29 +96,29 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
             switch (it.value_type) {
               case BLE_VAL_HEX: {
                 char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
-                BLEresult.set("read", pHex);
+                BLEresult["read"] = pHex;
                 free(pHex);
                 break;
               }
               case BLE_VAL_INT: {
                 int ival = *(int*)it.value.data();
-                BLEresult.set<int>("read", ival);
+                BLEresult["read"] = ival;
                 break;
               }
               case BLE_VAL_FLOAT: {
                 float fval = *(double*)it.value.data();
-                BLEresult.set<float>("read", fval);
+                BLEresult["read"] = fval;
                 break;
               }
               default:
-                BLEresult.set("read", it.value.c_str());
+                BLEresult["read"] = it.value.c_str();
                 break;
             }
           }
         }
 
         it.complete = true;
-        BLEresult.set("success", result);
+        BLEresult["success"] = result;
         pubBT(BLEresult);
       }
     }
@@ -137,25 +137,25 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
 
     if (length == 5) {
       Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject& BLEdata = getBTJsonObject();
+      JsonObject BLEdata = getBTJsonObject();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
       for (std::vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
         if ((strcmp(p->macAdr, (char*)mac_address.c_str()) == 0)) {
           if (p->sensorModel == LYWSD03MMC)
-            BLEdata.set("model", "LYWSD03MMC");
+            BLEdata["model"] = "LYWSD03MMC";
           else if (p->sensorModel == MHO_C401)
-            BLEdata.set("model", "MHO_C401");
+            BLEdata["model"] = "MHO_C401";
         }
       }
-      BLEdata.set("id", (char*)mac_address.c_str());
+      BLEdata["id"] = (char*)mac_address.c_str();
       Log.trace(F("Device identified in CB: %s" CR), (char*)mac_address.c_str());
-      BLEdata.set("tempc", (float)((pData[0] | (pData[1] << 8)) * 0.01));
-      BLEdata.set("tempf", (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01)));
-      BLEdata.set("hum", (float)(pData[2]));
-      BLEdata.set("volt", (float)(((pData[4] * 256) + pData[3]) / 1000.0));
-      BLEdata.set("batt", (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100));
+      BLEdata["tempc"] = (float)((pData[0] | (pData[1] << 8)) * 0.01);
+      BLEdata["tempf"] = (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01));
+      BLEdata["hum"] = (float)(pData[2]);
+      BLEdata["volt"] = (float)(((pData[4] * 256) + pData[3]) / 1000.0);
+      BLEdata["batt"] = (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100);
 
       pubBT(BLEdata);
     } else {
@@ -210,16 +210,16 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       JsonObject& BLEdata = getBTJsonObject();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
-      BLEdata.set("model", "DT24");
-      BLEdata.set("id", (char*)mac_address.c_str());
+      BLEdata["model"] = "DT24";
+      BLEdata["id"] = (char*)mac_address.c_str();
       Log.trace(F("Device identified in CB: %s" CR), (char*)mac_address.c_str());
-      BLEdata.set("volt", (float)(((m_data[4] * 256 * 256) + (m_data[5] * 256) + m_data[6]) / 10.0));
-      BLEdata.set("current", (float)(((m_data[7] * 256 * 256) + (m_data[8] * 256) + m_data[9]) / 1000.0));
-      BLEdata.set("power", (float)(((m_data[10] * 256 * 256) + (m_data[11] * 256) + m_data[12]) / 10.0));
-      BLEdata.set("energy", (float)(((m_data[13] * 256 * 256 * 256) + (m_data[14] * 256 * 256) + (m_data[15] * 256) + m_data[16]) / 100.0));
-      BLEdata.set("price", (float)(((m_data[17] * 256 * 256) + (m_data[18] * 256) + m_data[19]) / 100.0));
-      BLEdata.set("tempc", (float)(m_data[24] * 256) + m_data[25]);
-      BLEdata.set("tempf", (float)(convertTemp_CtoF((m_data[24] * 256) + m_data[25])));
+      BLEdata["volt"] = (float)(((m_data[4] * 256 * 256) + (m_data[5] * 256) + m_data[6]) / 10.0);
+      BLEdata["current"] = (float)(((m_data[7] * 256 * 256) + (m_data[8] * 256) + m_data[9]) / 1000.0);
+      BLEdata["power"] = (float)(((m_data[10] * 256 * 256) + (m_data[11] * 256) + m_data[12]) / 10.0);
+      BLEdata["energy"] = (float)(((m_data[13] * 256 * 256 * 256) + (m_data[14] * 256 * 256) + (m_data[15] * 256) + m_data[16]) / 100.0);
+      BLEdata["price"] = (float)(((m_data[17] * 256 * 256) + (m_data[18] * 256) + m_data[19]) / 100.0);
+      BLEdata["tempc"] = (float)(m_data[24] * 256) + m_data[25];
+      BLEdata["tempf"] = (float)(convertTemp_CtoF((m_data[24] * 256) + m_data[25]));
 
       pubBT(BLEdata);
     } else {
@@ -274,9 +274,9 @@ void HHCCJCY01HHCC_connect::publishData() {
       JsonObject& BLEdata = getBTJsonObject();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
-      BLEdata.set("model", "HHCCJCY01HHCC");
-      BLEdata.set("id", (char*)mac_address.c_str());
-      BLEdata.set("batt", (int)batteryValue);
+      BLEdata["model"] = "HHCCJCY01HHCC";
+      BLEdata["id"] = (char*)mac_address.c_str();
+      BLEdata["batt"] = (int)batteryValue;
       pubBT(BLEdata);
     } else {
       Log.notice(F("Failed getting characteristic" CR));

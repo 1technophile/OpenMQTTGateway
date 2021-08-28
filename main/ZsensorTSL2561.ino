@@ -90,8 +90,8 @@ void MeasureLightIntensityTSL2561() {
     timetsl2561 = millis();
 
     Log.trace(F("Creating TSL2561 buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& TSL2561data = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject TSL2561data = jsonBuffer.to<JsonObject>();
 
     sensors_event_t event;
     tsl.getEvent(&event);
@@ -101,9 +101,9 @@ void MeasureLightIntensityTSL2561() {
       if (persisted_lux != event.light || tsl2561_always) {
         persisted_lux = event.light;
 
-        TSL2561data.set("lux", (float)event.light);
-        TSL2561data.set("ftcd", (float)(event.light) / 10.764);
-        TSL2561data.set("wattsm2", (float)(event.light) / 683.0);
+        TSL2561data["lux"] = (float)event.light;
+        TSL2561data["ftcd"] = (float)(event.light) / 10.764;
+        TSL2561data["wattsm2"] = (float)(event.light) / 683.0;
 
         pub(subjectTSL12561toMQTT, TSL2561data);
       } else {

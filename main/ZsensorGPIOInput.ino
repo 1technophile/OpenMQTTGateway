@@ -78,13 +78,13 @@ void MeasureGPIOInput() {
       InputState = reading;
       Log.trace(F("Creating GPIOInput buffer" CR));
       const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
-      StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-      JsonObject& GPIOdata = jsonBuffer.createObject();
+      StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+      JsonObject GPIOdata = jsonBuffer.to<JsonObject>();
       if (InputState == HIGH) {
-        GPIOdata.set("gpio", "HIGH");
+        GPIOdata["gpio"] = "HIGH";
       }
       if (InputState == LOW) {
-        GPIOdata.set("gpio", "LOW");
+        GPIOdata["gpio"] = "LOW";
       }
       if (GPIOdata.size() > 0)
         pub(subjectGPIOInputtoMQTT, GPIOdata);
