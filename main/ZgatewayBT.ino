@@ -1770,7 +1770,7 @@ JsonObject& process_tpms(JsonObject& BLEdata) {
   int battery = (int)value_from_hex_data(manufacturerdata, 32, 2, true);
   int alarm = (int)value_from_hex_data(manufacturerdata, 35, 1, false);
 
-  BLEdata.set("count", (int)id);
+  BLEdata.set("count", (int)(id + 1));
   BLEdata.set("pres", (double)pressure);
   BLEdata.set("tempc", (double)temperature);
   BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
