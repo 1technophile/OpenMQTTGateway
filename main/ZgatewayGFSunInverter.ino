@@ -30,33 +30,33 @@
 GfSun2000 GF = GfSun2000();
 
 void GFSunInverterDataHandler(GfSun2000Data data) {
-  StaticJsonBuffer<2 * JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& jdata = jsonBuffer.createObject();
+  StaticJsonDocument<2 * JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jdata = jsonBuffer.to<JsonObject>();
 
-  jdata.set("device_id", (char*)data.deviceID);
+  jdata["device_id"] = (char*)data.deviceID;
   Log.trace(F("Device ID     : %s\n" CR), data.deviceID);
-  jdata.set("ac_voltage", data.ACVoltage);
+  jdata["ac_voltage"] = data.ACVoltage;
   Log.trace(F("AC Voltage    : %.1f\tV\n" CR), data.ACVoltage);
-  jdata.set("dc_voltage", data.DCVoltage);
+  jdata["dc_voltage"] = data.DCVoltage;
   Log.trace(F("DC Voltage    : %.1f\tV\n" CR), data.DCVoltage);
-  jdata.set("power", data.averagePower);
+  jdata["power"] = data.averagePower;
   Log.trace(F("Output Power  : %.1f\tW (5min avg)\n" CR), data.averagePower);
-  jdata.set("c_energy", data.customEnergyCounter);
+  jdata["c_energy"] = data.customEnergyCounter;
   Log.trace(F("Custom Energy : %.1f\tkW/h (can be reseted)\n" CR), data.customEnergyCounter);
-  jdata.set("t_energy", data.totalEnergyCounter);
+  jdata["t_energy"] = data.totalEnergyCounter;
   Log.trace(F("Total Energy  : %.1f\tkW/h\n" CR), data.totalEnergyCounter);
 
 #  ifdef GFSUNINVERTER_DEVEL
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer2;
-  JsonObject& jregister = jsonBuffer2.createObject();
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
+  JsonObject jregister = jsonBuffer2.to<JsonObject>();
   char buffer[4];
   std::map<int16_t, int16_t>::iterator itr;
   for (itr = data.modbusRegistry.begin(); itr != data.modbusRegistry.end(); ++itr) {
     Log.notice("%d: %d\n", itr->first, itr->second);
     sprintf(buffer, "%d", itr->first);
-    jregister.set(buffer, itr->second);
+    jregister[buffer] = itr->second;
   }
-  jdata.set("register", jregister);
+  jdata["register"] = jregister;
 #  endif
   pub(subjectRFtoMQTT, jdata);
 }
@@ -65,11 +65,11 @@ void GFSunInverterErrorHandler(int errorId, char* errorMessage) {
   char buffer[50];
   sprintf(buffer, "Error response: %02X - %s\n", errorId, errorMessage);
   Log.error(buffer);
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& jdata = jsonBuffer.createObject();
-  jdata.set("status", "error");
-  jdata.set("msg", errorMessage);
-  jdata.set("id", errorId);
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jdata = jsonBuffer.to<JsonObject>();
+  jdata["status"] = "error";
+  jdata["msg"] = errorMessage;
+  jdata["id"] = errorId;
   pub(subjectRFtoMQTT, jdata);
 }
 

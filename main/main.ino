@@ -52,8 +52,8 @@ unsigned long timer_sys_measures = 0;
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
 
-StaticJsonBuffer<JSON_MSG_BUFFER> modulesBuffer;
-JsonArray& modules = modulesBuffer.createArray();
+StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
+JsonArray modules = modulesBuffer.to<JsonArray>();
 
 #ifndef ZgatewayGFSunInverter
 // Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
@@ -315,33 +315,33 @@ void pub(const char* topicori, JsonObject& data) {
 #ifdef jsonPublishing
     Log.trace(F("jsonPublishing" CR));
 #  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-    char JSONmessageBuffer[data.measureLength() + 1];
+    char JSONmessageBuffer[measureJson(data) + 1];
 #  else
     char JSONmessageBuffer[JSON_MSG_BUFFER];
 #  endif
-    data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    serializeJson(data, JSONmessageBuffer, sizeof(JSONmessageBuffer));
     pubMQTT(topic, JSONmessageBuffer);
 #endif
 
 #ifdef simplePublishing
     Log.trace(F("simplePublishing" CR));
     // Loop through all the key-value pairs in obj
-    for (JsonPair& p : data) {
+    for (JsonPair p : data) {
 #  if defined(ESP8266)
       yield();
 #  endif
-      if (p.value.is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key, "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
-        if (strcmp(p.key, "value") == 0) { // if data is a value we don't integrate the name into the topic
-          pubMQTT(topic, p.value.as<SIGNAL_SIZE_UL_ULL>());
+      if (p.value().is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key().c_str(), "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
+        if (strcmp(p.key().c_str(), "value") == 0) { // if data is a value we don't integrate the name into the topic
+          pubMQTT(topic, p.value().as<SIGNAL_SIZE_UL_ULL>());
         } else { // if data is not a value we integrate the name into the topic
-          pubMQTT(topic + "/" + String(p.key), p.value.as<SIGNAL_SIZE_UL_ULL>());
+          pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<SIGNAL_SIZE_UL_ULL>());
         }
-      } else if (p.value.is<int>()) {
-        pubMQTT(topic + "/" + String(p.key), p.value.as<int>());
-      } else if (p.value.is<float>()) {
-        pubMQTT(topic + "/" + String(p.key), p.value.as<float>());
-      } else if (p.value.is<char*>()) {
-        pubMQTT(topic + "/" + String(p.key), p.value.as<const char*>());
+      } else if (p.value().is<int>()) {
+        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<int>());
+      } else if (p.value().is<float>()) {
+        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<float>());
+      } else if (p.value().is<char*>()) {
+        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<const char*>());
       }
     }
 #endif
@@ -363,11 +363,11 @@ void pub(const char* topicori, const char* payload) {
 void pub_custom_topic(const char* topicori, JsonObject& data, boolean retain) {
   if (client.connected()) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-    char JSONmessageBuffer[data.measureLength() + 1];
+    char JSONmessageBuffer[measureJson(data) + 1];
 #else
     char JSONmessageBuffer[JSON_MSG_BUFFER];
 #endif
-    data.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    serializeJson(data, JSONmessageBuffer, sizeof(JSONmessageBuffer));
     Log.trace(F("Pub json :%s into custom topic: %s" CR), JSONmessageBuffer, topicori);
     pubMQTT(topicori, JSONmessageBuffer, retain);
   } else {
@@ -464,11 +464,11 @@ void pubMQTT(String topic, unsigned long payload) {
 
 void logJson(JsonObject& jsondata) {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  char JSONmessageBuffer[jsondata.measureLength() + 1];
+  char JSONmessageBuffer[measureJson(jsondata) + 1];
 #else
   char JSONmessageBuffer[JSON_MSG_BUFFER];
 #endif
-  jsondata.printTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+  serializeJson(jsondata, JSONmessageBuffer, sizeof(JSONmessageBuffer));
   Log.notice(F("Received json : %s" CR), JSONmessageBuffer);
 }
 
@@ -798,7 +798,7 @@ void setup() {
 
 #ifndef ARDUINO_AVR_UNO // Space issues with the UNO
   char jsonChar[100];
-  modules.printTo((char*)jsonChar, modules.measureLength() + 1);
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
   Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
 #endif
   Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
@@ -1021,8 +1021,7 @@ void eraseAndRestart() {
 
 void saveMqttConfig() {
   Log.trace(F("saving config" CR));
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
+  DynamicJsonDocument json(512 + ota_server_cert.length() + mqtt_cert.length());
   json["mqtt_server"] = mqtt_server;
   json["mqtt_port"] = mqtt_port;
   json["mqtt_user"] = mqtt_user;
@@ -1039,8 +1038,8 @@ void saveMqttConfig() {
     Log.error(F("failed to open config file for writing" CR));
   }
 
-  json.printTo(Serial);
-  json.printTo(configFile);
+  serializeJsonPretty(json, Serial);
+  serializeJson(json, configFile);
   configFile.close();
 }
 
@@ -1071,15 +1070,14 @@ void setup_wifimanager(bool reset_settings) {
     File configFile = SPIFFS.open("/config.json", "r");
     if (configFile) {
       Log.trace(F("opened config file" CR));
-      size_t size = configFile.size();
-      // Allocate a buffer to store contents of the file.
-      std::unique_ptr<char[]> buf(new char[size]);
-      configFile.readBytes(buf.get(), size);
-      DynamicJsonBuffer jsonBuffer;
-      JsonObject& json = jsonBuffer.parseObject(buf.get());
-      json.printTo(Serial);
-      if (json.success()) {
-        Log.trace(F("\nparsed json" CR));
+      DynamicJsonDocument json(configFile.size() * 2);
+      auto error = deserializeJson(json, configFile);
+      if (error) {
+        Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
+      }
+      serializeJsonPretty(json, Serial);
+      if (!json.isNull()) {
+        Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
         if (json.containsKey("mqtt_server"))
           strcpy(mqtt_server, json["mqtt_server"]);
         if (json.containsKey("mqtt_port"))
@@ -1091,18 +1089,19 @@ void setup_wifimanager(bool reset_settings) {
         if (json.containsKey("mqtt_topic"))
           strcpy(mqtt_topic, json["mqtt_topic"]);
         if (json.containsKey("mqtt_broker_secure"))
-          mqtt_secure = json.get<bool>("mqtt_broker_secure");
+          mqtt_secure = json["mqtt_broker_secure"].as<bool>();
         if (json.containsKey("mqtt_broker_cert"))
-          mqtt_cert = json.get<const char*>("mqtt_broker_cert");
+          mqtt_cert = json["mqtt_broker_cert"].as<const char*>();
         if (json.containsKey("mqtt_ss_index"))
-          mqtt_ss_index = json.get<uint8_t>("mqtt_ss_index");
+          mqtt_ss_index = json["mqtt_ss_index"].as<uint8_t>();
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
         if (json.containsKey("ota_server_cert"))
-          ota_server_cert = json.get<const char*>("ota_server_cert");
+          ota_server_cert = json["ota_server_cert"].as<const char*>();
       } else {
         Log.warning(F("failed to load json config" CR));
       }
+      configFile.close();
     }
   }
 
@@ -1499,8 +1498,8 @@ unsigned long uptime() {
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& SYSdata = jsonBuffer.createObject();
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
   Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime());
@@ -1572,7 +1571,7 @@ void stateMeasures() {
     SYSdata["RTLCnt"] = (int)getRTLMessageCount();
   }
 #  endif
-  SYSdata.set("modules", modules);
+  SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
 }
 #endif
@@ -1632,19 +1631,24 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
 #endif
 
 void receivingMQTT(char* topicOri, char* datacallback) {
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jsondata = jsonBuffer.to<JsonObject>();
+  auto error = deserializeJson(jsonBuffer, datacallback);
+  if (error) {
+    Log.error(F("deserialize MQTT data failed: %s" CR), error.c_str());
+    return;
+  }
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) { // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
-    SIGNAL_SIZE_UL_ULL data = jsondata.success() ? jsondata["value"] : STRTO_UL_ULL(datacallback, NULL, 10);
+    SIGNAL_SIZE_UL_ULL data = jsondata.isNull() ? STRTO_UL_ULL(datacallback, NULL, 10) : jsondata["value"];
     if (data != 0 && !isAduplicateSignal(data)) {
       storeSignalValue(data);
     }
   }
 #endif
 
-  if (jsondata.success()) { // json object ok -> json decoding
+  if (!jsondata.isNull()) { // json object ok -> json decoding
     // log the received json
     logJson(jsondata);
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
@@ -1933,7 +1937,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  ifdef MQTTsetMQTT
     if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
       bool update_server = false;
-      bool secure_connect = SYSdata.get<bool>("mqtt_secure");
+      bool secure_connect = SYSdata["mqtt_secure"].as<bool>();
       void* prev_client = nullptr;
       bool use_ss_cert = SYSdata.containsKey("mqtt_cert_index");
       uint8_t cert_index = mqtt_ss_index;
@@ -1974,7 +1978,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
           setupTLS(use_ss_cert, cert_index);
         }
 
-        client.setServer(SYSdata.get<const char*>("mqtt_server"), SYSdata.get<unsigned int>("mqtt_port"));
+        client.setServer(SYSdata["mqtt_server"].as<const char*>(), SYSdata["mqtt_port"].as<unsigned int>());
       } else {
 #    if defined(ZgatewayBT) && defined(ESP32)
         stopProcessing();
@@ -2040,7 +2044,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
 #ifdef ZmqttDiscovery
     if (SYSdata.containsKey("discovery")) {
-      if (SYSdata.is<bool>("discovery")) {
+      if (SYSdata["discovery"].is<bool>()) {
         disc = SYSdata["discovery"];
         if (disc)
           pubMqttDiscovery();

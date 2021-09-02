@@ -142,8 +142,8 @@ bool RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone()) {
     Log.trace(F("Creating RFM69 buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& RFM69data = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject RFM69data = jsonBuffer.to<JsonObject>();
     uint8_t data[RF69_MAX_DATA_LEN + 1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;
     uint8_t DATALEN = radio.DATALEN;
@@ -164,9 +164,9 @@ bool RFM69toMQTT(void) {
 
     char buff[sizeof(subjectRFM69toMQTT) + 4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
-    RFM69data.set("data", (char*)data);
-    RFM69data.set("rssi", (int)radio.RSSI);
-    RFM69data.set("senderid", (int)radio.SENDERID);
+    RFM69data["data"] = (char*)data;
+    RFM69data["rssi"] = (int)radio.RSSI;
+    RFM69data["senderid"] = (int)radio.SENDERID;
     pub(buff, RFM69data);
 
     return true;

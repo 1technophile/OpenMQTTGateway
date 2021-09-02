@@ -59,9 +59,9 @@ void MeasureADC() {
 #  else
         const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
 #  endif
-        StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-        JsonObject& ADCdata = jsonBuffer.createObject();
-        ADCdata.set("adc", (int)val);
+        StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+        JsonObject ADCdata = jsonBuffer.to<JsonObject>();
+        ADCdata["adc"] = (int)val;
 #  if defined(ADC_DIVIDER)
         float volt = 0;
 #    if defined(ESP32)
@@ -78,7 +78,7 @@ void MeasureADC() {
         // let's give 2 decimal point
         val = (volt * 100);
         volt = (float)val / 100.0;
-        ADCdata.set("volt", (float)volt);
+        ADCdata["volt"] = (float)volt;
 #  endif
         pub(ADCTOPIC, ADCdata);
         persistedadc = val;

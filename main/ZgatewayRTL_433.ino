@@ -41,8 +41,13 @@ rtl_433_ESP rtl_433(-1); // use -1 to disable transmitter
 #  include <ELECHOUSE_CC1101_SRC_DRV.h>
 
 void rtl_433_Callback(char* message) {
-  DynamicJsonBuffer jsonBuffer2(JSON_MSG_BUFFER);
-  JsonObject& RFrtl_433_ESPdata = jsonBuffer2.parseObject(message);
+  DynamicJsonDocument jsonBuffer2(JSON_MSG_BUFFER);
+  JsonObject RFrtl_433_ESPdata = jsonBuffer2.to<JsonObject>();
+  auto error = deserializeJson(jsonBuffer2, message);
+  if (error) {
+    Log.error(F("deserializeJson() failed: %s" CR), error.c_str());
+    return;
+  }
 
   String topic = String(subjectRTL_433toMQTT);
 #  ifdef valueAsASubject

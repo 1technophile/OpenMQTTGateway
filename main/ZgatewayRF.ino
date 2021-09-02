@@ -81,19 +81,19 @@ void RFtoMQTT() {
 #  else
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
 #  endif
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RFdata = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RFdata = jsonBuffer.to<JsonObject>();
     Log.trace(F("Rcv. RF" CR));
 #  ifdef ESP32
     Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
 #  endif
     SIGNAL_SIZE_UL_ULL MQTTvalue = mySwitch.getReceivedValue();
-    RFdata.set("value", (SIGNAL_SIZE_UL_ULL)MQTTvalue);
-    RFdata.set("protocol", (int)mySwitch.getReceivedProtocol());
-    RFdata.set("length", (int)mySwitch.getReceivedBitlength());
-    RFdata.set("delay", (int)mySwitch.getReceivedDelay());
+    RFdata["value"] = (SIGNAL_SIZE_UL_ULL)MQTTvalue;
+    RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
+    RFdata["length"] = (int)mySwitch.getReceivedBitlength();
+    RFdata["delay"] = (int)mySwitch.getReceivedDelay();
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
-    RFdata.set("mhz", receiveMhz);
+    RFdata["mhz"] = receiveMhz;
 #  endif
     mySwitch.resetAvailable();
 

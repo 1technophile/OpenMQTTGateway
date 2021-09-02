@@ -102,15 +102,22 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
 
 class JsonBundle {
 public:
-  StaticJsonBuffer<JSON_MSG_BUFFER> buffer;
-  JsonObject* object;
+  StaticJsonDocument<JSON_MSG_BUFFER> buffer;
+  JsonObject object;
   bool haPresence;
 
   JsonObject& createObject(const char* json = NULL, bool haPresenceEnabled = true) {
     buffer.clear();
     haPresence = haPresenceEnabled;
-    object = &(json == NULL ? buffer.createObject() : buffer.parseObject(json));
-    return *object;
+    object = buffer.to<JsonObject>();
+
+    if (json != nullptr) {
+      auto error = deserializeJson(buffer, json);
+      if (error) {
+        Log.error(F("deserialize object failed: %s" CR), error.c_str());
+      }
+    }
+    return object;
   }
 };
 
@@ -161,7 +168,7 @@ void emptyBTQueue() {
       first = false;
     }
     JsonBundle& bundle = jsonBTBufferQueue[next % BTQueueSize];
-    pubBTMainCore(*bundle.object, bundle.haPresence);
+    pubBTMainCore(bundle.object, bundle.haPresence);
     atomic_store_explicit(&jsonBTBufferQueueNext, (next + 1) % (2 * BTQueueSize), ::memory_order_seq_cst); // use namespace std -> ambiguous error...
     vTaskDelay(1);
   }
@@ -645,7 +652,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       JsonObject& BLEdata = getBTJsonObject();
       String mac_adress = advertisedDevice->getAddress().toString().c_str();
       mac_adress.toUpperCase();
-      BLEdata.set("id", (char*)mac_adress.c_str());
+      BLEdata["id"] = (char*)mac_adress.c_str();
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
@@ -658,17 +665,17 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 
       if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
         if (advertisedDevice->haveName())
-          BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
+          BLEdata["name"] = (char*)advertisedDevice->getName().c_str();
         if (advertisedDevice->haveManufacturerData()) {
           char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
           Log.trace(F("Manufacturer Data: %s" CR), manufacturerdata);
-          BLEdata.set("manufacturerdata", manufacturerdata);
+          BLEdata["manufacturerdata"] = manufacturerdata;
           free(manufacturerdata);
         }
         if (advertisedDevice->haveRSSI())
-          BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
+          BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
-          BLEdata.set("txpower", (int8_t)advertisedDevice->getTXPower());
+          BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
         if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         }
@@ -678,10 +685,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           for (int j = 0; j < serviceDataCount; j++) {
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
             Log.trace(F("Service data: %s" CR), service_data.c_str());
-            BLEdata.set("servicedata", (char*)service_data.c_str());
+            BLEdata["servicedata"] = (char*)service_data.c_str();
             std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
             Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
-            BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
+            BLEdata["servicedatauuid"] = (char*)serviceDatauuid.c_str();
             process_bledata(BLEdata); // this will force to resolve all the service data
           }
 
@@ -990,7 +997,7 @@ bool BTtoMQTT() {
         JsonObject& BLEdata = getBTJsonObject();
 
         Log.trace(F("Id %s" CR), (char*)mac.c_str());
-        BLEdata.set("id", (char*)mac.c_str());
+        BLEdata["id"] = (const char*)mac.c_str();
         BLEdevice* device = getDeviceByMac((char*)mac.c_str());
 
         if (isBlack(device))
@@ -998,11 +1005,11 @@ bool BTtoMQTT() {
         if (oneWhite && !isWhite(device))
           return false; //if we have at least one white mac and this mac is not white we go out
 
-        BLEdata.set("rssi", (int)rssi);
+        BLEdata["rssi"] = (int)rssi;
         if (!publishOnlySensors && hassPresence)
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         Log.trace(F("Service data: %s" CR), restData.c_str());
-        BLEdata.set("servicedata", restData.c_str());
+        BLEdata["servicedata"] = restData.c_str();
         PublishDeviceData(BLEdata);
       }
     }
@@ -1127,7 +1134,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a mi flora ?" CR));
       if (strstr(service_data, "209800") != NULL) {
         Log.trace(F("mi flora data reading" CR));
-        BLEdata.set("model", "HHCCJCY01HHCC");
+        BLEdata["model"] = "HHCCJCY01HHCC";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_connect, HHCCJCY01HHCC);
         return process_sensors(2, BLEdata);
@@ -1135,7 +1142,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a vegtrug ?" CR));
       if (service_len > ServicedataMinLength && strstr(service_data, "20bc03") != NULL) {
         Log.trace(F("vegtrug data reading" CR));
-        BLEdata.set("model", "VEGTRUG");
+        BLEdata["model"] = "VEGTRUG";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, VEGTRUG);
         return process_sensors(2, BLEdata);
@@ -1143,7 +1150,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a LYWSDCGQ?" CR));
       if (service_len > ServicedataMinLength && strstr(service_data, "20aa01") != NULL) {
         Log.trace(F("LYWSDCGQ data reading" CR));
-        BLEdata.set("model", "LYWSDCGQ");
+        BLEdata["model"] = "LYWSDCGQ";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSDCGQ);
         return process_sensors(0, BLEdata);
@@ -1151,7 +1158,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a JQJCY01YM?" CR));
       if (service_len > ServicedataMinLength && strstr(service_data, "20df02") != NULL) {
         Log.trace(F("JQJCY01YM data reading" CR));
-        BLEdata.set("model", "JQJCY01YM");
+        BLEdata["model"] = "JQJCY01YM";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, JQJCY01YM);
         return process_sensors(0, BLEdata);
@@ -1159,7 +1166,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a LYWSD02?" CR));
       if (service_len > ServicedataMinLength && strstr(service_data, "205b04") != NULL) {
         Log.trace(F("LYWSD02 data reading" CR));
-        BLEdata.set("model", "LYWSD02");
+        BLEdata["model"] = "LYWSD02";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSD02);
         return process_sensors(2, BLEdata);
@@ -1167,7 +1174,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a MUE4094RT?" CR));
       if (strstr(service_data, "4030dd") != NULL) {
         Log.trace(F("MUE4094RT data reading" CR));
-        BLEdata.set("model", "MUE4094RT");
+        BLEdata["model"] = "MUE4094RT";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, MUE4094RT);
         return process_milamp(BLEdata);
@@ -1175,7 +1182,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGP1W?" CR));
       if (service_len > ServicedataMinLength && strncmp(service_data, "0809", 4) == 0) {
         Log.trace(F("CGP1W data reading" CR));
-        BLEdata.set("model", "CGP1W");
+        BLEdata["model"] = "CGP1W";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGP1W);
         return process_cleargrass(BLEdata, true);
@@ -1185,7 +1192,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       // Another type of the advertising packet started with 0807 or 8816
       if ((service_len > ServicedataMinLength && strncmp(&service_data[2], "4703", 4) == 0) || (strncmp(service_data, "0807", 4) == 0) || (strncmp(service_data, "8816", 4) == 0)) {
         Log.trace(F("CGG1 data reading" CR));
-        BLEdata.set("model", "CGG1");
+        BLEdata["model"] = "CGG1";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGG1);
         return strncmp(&service_data[2], "4703", 4) == 0 ? process_sensors(0, BLEdata) : process_cleargrass(BLEdata, false);
@@ -1193,7 +1200,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGD1?" CR));
       if ((service_len > ServicedataMinLength && (strstr(service_data, "080caf") != NULL || strstr(service_data, "080c09") != NULL)) || (service_len > ServicedataMinLength - 6 && strstr(service_data, "080cd0") != NULL)) {
         Log.trace(F("CGD1 data reading" CR));
-        BLEdata.set("model", "CGD1");
+        BLEdata["model"] = "CGD1";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGD1);
         return process_cleargrass(BLEdata, false);
@@ -1201,7 +1208,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGDK2?" CR));
       if (service_len > ServicedataMinLength && strncmp(&service_data[0], "8810", 4) == 0) {
         Log.trace(F("CGDK2 data reading" CR));
-        BLEdata.set("model", "CGDK2");
+        BLEdata["model"] = "CGDK2";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGDK2);
         return process_cleargrass(BLEdata, false);
@@ -1209,7 +1216,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGPR1?" CR));
       if ((service_len > ServicedataMinLength) && (strncmp(&service_data[0], "4812", 4) == 0 || strncmp(&service_data[0], "0812", 4) == 0)) {
         Log.trace(F("CGPR1 data reading" CR));
-        BLEdata.set("model", "CGPR1");
+        BLEdata["model"] = "CGPR1";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGPR1);
         return process_cgpr1(BLEdata);
@@ -1217,7 +1224,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a CGH1?" CR));
       if (service_len > ServicedataMinLength && (strncmp(&service_data[0], "c804", 4) == 0 || strncmp(&service_data[0], "8804", 4) == 0 || strncmp(&service_data[0], "0804", 4) == 0 || strncmp(&service_data[0], "4804", 4) == 0)) {
         Log.trace(F("CGH1 data reading" CR));
-        BLEdata.set("model", "CGH1");
+        BLEdata["model"] = "CGH1";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, CGH1);
         return process_cgh1(BLEdata);
@@ -1237,7 +1244,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a custom (pvvx) LYWSD03MMC?" CR));
       if (service_len >= 30 && strncmp(service_data + 6, "38c1a4", 6) == 0) {
         Log.trace(F("LYWSD03MMC PVVX" CR));
-        BLEdata.set("model", "LYWSD03MMC_PVVX");
+        BLEdata["model"] = "LYWSD03MMC_PVVX";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC_PVVX);
         return process_pvvx(BLEdata);
@@ -1245,7 +1252,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a custom (atc1441) LYWSD03MMC?" CR));
       if (strstr(service_data, "a4c138") != NULL) {
         Log.trace(F("LYWSD03MMC ATC" CR));
-        BLEdata.set("model", "LYWSD03MMC_ATC");
+        BLEdata["model"] = "LYWSD03MMC_ATC";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, LYWSD03MMC_ATC);
         return process_atc(BLEdata);
@@ -1256,7 +1263,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         Log.trace(F("Is it a MiBand?" CR));
         if (strstr(service_datauuid, "fee0") != NULL) {
           Log.trace(F("Mi Band data reading" CR));
-          BLEdata.set("model", "MIBAND");
+          BLEdata["model"] = "MIBAND";
           if (device->sensorModel == -1)
             createOrUpdateDevice(mac, device_flags_init, MIBAND);
           return process_miband(BLEdata);
@@ -1264,7 +1271,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         Log.trace(F("Is it a XMTZC04HM?" CR));
         if (strstr(service_datauuid, "181d") != NULL) {
           Log.trace(F("XMTZC04HM data reading" CR));
-          BLEdata.set("model", "XMTZC04HM");
+          BLEdata["model"] = "XMTZC04HM";
           if (device->sensorModel == -1)
             createOrUpdateDevice(mac, device_flags_init, XMTZC04HM);
           return process_scale_v1(BLEdata);
@@ -1272,7 +1279,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         Log.trace(F("Is it a XMTZC05HM?" CR));
         if (strstr(service_datauuid, "181b") != NULL) {
           Log.trace(F("XMTZC05HM data reading" CR));
-          BLEdata.set("model", "XMTZC05HM");
+          BLEdata["model"] = "XMTZC05HM";
           if (device->sensorModel == -1)
             createOrUpdateDevice(mac, device_flags_init, XMTZC05HM);
           return process_scale_v2(BLEdata);
@@ -1281,7 +1288,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         Log.trace(F("Is it an EddystoneTLM?" CR));
         if (strncmp(&service_data[0], "20", 2) == 0 && strstr(service_datauuid, "0xfeaa") != NULL) {
           Log.trace(F("Eddystone TLM" CR));
-          BLEdata.set("model", "EDDYSTONE_TLM");
+          BLEdata["model"] = "EDDYSTONE_TLM";
           if (device->sensorModel == -1)
             createOrUpdateDevice(mac, device_flags_init, EDDYSTONE_TLM);
           return process_eddystonetlm(BLEdata);
@@ -1307,7 +1314,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a INKBIRD IBS-TH1?" CR));
       if (strcmp(name, "sps") == 0) {
         Log.trace(F("INKBIRD TH1 data reading" CR));
-        BLEdata.set("model", "IBS-TH1");
+        BLEdata["model"] = "IBS-TH1";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, IBSTH1);
         return process_inkbird_th1(BLEdata);
@@ -1315,7 +1322,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a INKBIRD IBS-TH2?" CR));
       if (strcmp(name, "tps") == 0) {
         Log.trace(F("INKBIRD TH2 data reading" CR));
-        BLEdata.set("model", "IBS-TH2");
+        BLEdata["model"] = "IBS-TH2";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, IBSTH2);
         return process_inkbird_th2(BLEdata);
@@ -1323,7 +1330,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a INKBIRD IBT-4XS?" CR));
       if (strcmp(name, "iBBQ") == 0) {
         Log.trace(F("INKBIRD IBT-4XS data reading" CR));
-        BLEdata.set("model", "IBT-4XS");
+        BLEdata["model"] = "IBT-4XS";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, IBT4XS);
         return process_inkbird_4xs(BLEdata);
@@ -1331,7 +1338,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a DT24?" CR));
       if (strcmp(name, "DT24-BLE") == 0) {
         Log.trace(F("DT24 data reading data reading" CR));
-        BLEdata.set("model", "DT24");
+        BLEdata["model"] = "DT24";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_connect, DT24);
         return BLEdata;
@@ -1339,7 +1346,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
       Log.trace(F("Is it a TPMS? %u" CR), strlen(manufacturerdata));
       if (strlen(manufacturerdata) == 36 && strstr(name, "TPMS") != NULL) {
         Log.trace(F("TPMS data reading" CR));
-        BLEdata.set("model", "TPMS");
+        BLEdata["model"] = "TPMS";
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_init, TPMS);
         return process_tpms(BLEdata);
@@ -1348,7 +1355,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
     Log.trace(F("Is it a iNode Energy Meter?" CR));
     if (strlen(manufacturerdata) == 26 && ((long)value_from_hex_data(manufacturerdata, 0, 4, true) & 0xFFF9) == 0x8290) {
       Log.trace(F("iNode Energy Meter data reading" CR));
-      BLEdata.set("model", "INODE_EM");
+      BLEdata["model"] = "INODE_EM";
       if (device->sensorModel == -1)
         createOrUpdateDevice(mac, device_flags_init, INODE_EM);
       return process_inode_em(BLEdata);
@@ -1356,7 +1363,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
     Log.trace(F("Is it a WS02?" CR));
     if (strlen(manufacturerdata) >= 40 && (strstr(manufacturerdata, "100000001a11") != NULL)) {
       Log.trace(F("WS02 data reading data reading" CR));
-      BLEdata.set("model", "WS02");
+      BLEdata["model"] = "WS02";
       if (device->sensorModel == -1)
         createOrUpdateDevice(mac, device_flags_init, WS02);
       return process_ws02(BLEdata);
@@ -1364,7 +1371,7 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
     Log.trace(F("Is it an iBeacon? %u" CR), strlen(manufacturerdata));
     if (strlen(manufacturerdata) == 50 && strncmp(&manufacturerdata[0], "4c00", 4) == NULL) {
       Log.trace(F("iBeacon data reading" CR));
-      BLEdata.set("model", "IBEACON");
+      BLEdata["model"] = "IBEACON";
       if (device->sensorModel == -1)
         createOrUpdateDevice(mac, device_flags_init, IBEACON);
       return process_ibeacon(BLEdata);
@@ -1403,35 +1410,35 @@ JsonObject& process_sensors(int offset, JsonObject& BLEdata) {
   // following the value of digit 23 + offset we determine the type of data we get from the sensor
   switch (servicedata[23 + offset]) {
     case '0':
-      BLEdata.set("for", (double)value / 100);
+      BLEdata["for"] = (double)value / 100;
       break;
     case '4':
-      BLEdata.set("tempc", (double)value / 10);
-      BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
+      BLEdata["tempc"] = (double)value / 10;
+      BLEdata["tempf"] = (double)convertTemp_CtoF(value / 10);
       break;
     case '6':
-      BLEdata.set("hum", (double)value / 10);
+      BLEdata["hum"] = (double)value / 10;
       break;
     case '7':
-      BLEdata.set("lux", (double)value);
+      BLEdata["lux"] = (double)value;
       break;
     case '8':
-      BLEdata.set("moi", (double)value);
+      BLEdata["moi"] = (double)value;
       break;
     case '9':
-      BLEdata.set("fer", (double)value);
+      BLEdata["fer"] = (double)value;
       break;
     case 'a':
-      BLEdata.set("batt", (double)value);
+      BLEdata["batt"] = (double)value;
       break;
     case 'd':
       // temperature
       value = (double)value_from_hex_data(servicedata, 28 + offset, 4, true);
-      BLEdata.set("tempc", (double)value / 10);
-      BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
+      BLEdata["tempc"], (double)value / 10;
+      BLEdata["tempf"], (double)convertTemp_CtoF(value / 10);
       // humidity
       value = (double)value_from_hex_data(servicedata, 32 + offset, 4, true);
-      BLEdata.set("hum", (double)value / 10);
+      BLEdata["hum"] = (double)value / 10;
       break;
     default:
       Log.trace(F("can't read values" CR));
@@ -1447,15 +1454,15 @@ JsonObject& process_scale_v1(JsonObject& BLEdata) {
     double weight = 0;
     if (servicedata[1] == '2') { //kg
       weight = (double)value_from_hex_data(servicedata, 2, 4, true) / 200;
-      BLEdata.set("unit", "kg");
+      BLEdata["unit"] = "kg";
     } else if (servicedata[1] == '3') { //lbs
       weight = (double)value_from_hex_data(servicedata, 2, 4, true) / 100;
-      BLEdata.set("unit", "lbs");
+      BLEdata["unit"] = "lbs";
     } else { //unknown unit
-      BLEdata.set("unit", "unknown");
+      BLEdata["unit"] = "unknown";
     }
     //Set Json value
-    BLEdata.set("weight", (double)weight);
+    BLEdata["weight"] = (double)weight;
   }
 
   return BLEdata;
@@ -1467,18 +1474,18 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
   double weight = 0;
   if (servicedata[1] == '2') { //kg
     weight = (double)value_from_hex_data(servicedata, 22, 4, true) / 200;
-    BLEdata.set("unit", "kg");
+    BLEdata["unit"] = "kg";
   } else if (servicedata[1] == '3') { //lbs
     weight = (double)value_from_hex_data(servicedata, 22, 4, true) / 100;
-    BLEdata.set("unit", "lbs");
+    BLEdata["unit"] = "lbs";
   } else { //unknown unit
-    BLEdata.set("unit", "unknown");
+    BLEdata["unit"] = "unknown";
   }
   double impedance = (double)value_from_hex_data(servicedata, 18, 4, true);
 
   //Set Json values
-  BLEdata.set("weight", (double)weight);
-  BLEdata.set("impedance", (double)impedance);
+  BLEdata["weight"] = (double)weight;
+  BLEdata["impedance"] = (double)impedance;
 
   return BLEdata;
 }
@@ -1486,11 +1493,11 @@ JsonObject& process_scale_v2(JsonObject& BLEdata) {
 JsonObject& process_eddystonetlm(JsonObject& BLEdata) {
   const char* servicedata = BLEdata["servicedata"].as<const char*>();
 
-  BLEdata.set("volt", (float)value_from_hex_data(servicedata, 4, 4, false) / 1000);
-  BLEdata.set("tempc", (float)value_from_hex_data(servicedata, 8, 2, false));
-  BLEdata.set("tempf", (float)convertTemp_CtoF(value_from_hex_data(servicedata, 8, 2, false)));
-  BLEdata.set("count", value_from_hex_data(servicedata, 12, 8, false));
-  BLEdata.set("time", value_from_hex_data(servicedata, 20, 8, false) / 100);
+  BLEdata["volt"] = (float)value_from_hex_data(servicedata, 4, 4, false) / 1000;
+  BLEdata["tempc"] = (float)value_from_hex_data(servicedata, 8, 2, false);
+  BLEdata["tempf"] = (float)convertTemp_CtoF(value_from_hex_data(servicedata, 8, 2, false));
+  BLEdata["count"] = value_from_hex_data(servicedata, 12, 8, false);
+  BLEdata["time"] = value_from_hex_data(servicedata, 20, 8, false) / 100;
 
   return BLEdata;
 }
@@ -1503,10 +1510,10 @@ JsonObject& process_inkbird_th1(JsonObject& BLEdata) {
   double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("hum", (double)humidity);
-  BLEdata.set("batt", (double)battery);
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["hum"] = (double)humidity;
+  BLEdata["batt"] = (double)battery;
 
   return BLEdata;
 }
@@ -1518,9 +1525,9 @@ JsonObject& process_inkbird_th2(JsonObject& BLEdata) {
   double battery = (double)value_from_hex_data(manufacturerdata, 14, 2, true);
 
   //Set Json values
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("batt", (double)battery);
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["batt"] = (double)battery;
 
   return BLEdata;
 }
@@ -1534,14 +1541,14 @@ JsonObject& process_inkbird_4xs(JsonObject& BLEdata) {
   double temperature4 = (double)value_from_hex_data(manufacturerdata, 32, 4, true) / 10;
 
   //Set Json values
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("tempc2", (double)temperature2);
-  BLEdata.set("tempf2", (double)convertTemp_CtoF(temperature2));
-  BLEdata.set("tempc3", (double)temperature3);
-  BLEdata.set("tempf3", (double)convertTemp_CtoF(temperature3));
-  BLEdata.set("tempc4", (double)temperature4);
-  BLEdata.set("tempf4", (double)convertTemp_CtoF(temperature4));
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["tempc2"] = (double)temperature2;
+  BLEdata["tempf2"] = (double)convertTemp_CtoF(temperature2);
+  BLEdata["tempc3"] = (double)temperature3;
+  BLEdata["tempf3"] = (double)convertTemp_CtoF(temperature3);
+  BLEdata["tempc4"] = (double)temperature4;
+  BLEdata["tempf4"] = (double)convertTemp_CtoF(temperature4);
 
   return BLEdata;
 }
@@ -1552,7 +1559,7 @@ JsonObject& process_miband(JsonObject& BLEdata) {
   double steps = (double)value_from_hex_data(servicedata, 0, 4, true);
 
   //Set Json value
-  BLEdata.set("steps", (double)steps);
+  BLEdata["steps"] = (double)steps;
 
   return BLEdata;
 }
@@ -1563,8 +1570,8 @@ JsonObject& process_milamp(JsonObject& BLEdata) {
   long darkness = (double)value_from_hex_data(servicedata, 8, 2, true);
 
   //Set Json value
-  BLEdata.set("presence", (bool)"true");
-  BLEdata.set("darkness", (long)darkness);
+  BLEdata["presence"] = (bool)"true";
+  BLEdata["darkness"] = (long)darkness;
 
   return BLEdata;
 }
@@ -1575,15 +1582,15 @@ JsonObject& process_cleargrass(JsonObject& BLEdata, boolean air) {
   double value = 9999;
   // temperature
   value = (double)value_from_hex_data(servicedata, 20, 4, true);
-  BLEdata.set("tempc", (double)value / 10);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(value / 10));
+  BLEdata["tempc"] = (double)value / 10;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(value / 10);
   // humidity
   value = (double)value_from_hex_data(servicedata, 24, 4, true);
-  BLEdata.set("hum", (double)value / 10);
+  BLEdata["hum"] = (double)value / 10;
   if (air) {
     // air pressure
     value = (double)value_from_hex_data(servicedata, 32, 4, true);
-    BLEdata.set("pres", (double)value / 100);
+    BLEdata["pres"] = (double)value / 100;
   }
 
   return BLEdata;
@@ -1595,13 +1602,13 @@ JsonObject& process_cgpr1(JsonObject& BLEdata) {
   if (strncmp(&servicedata[0], "0812", 4) == 0) { // lux
     value = value_from_hex_data(servicedata, 33, 4, true);
     if (value >= 0)
-      BLEdata.set("lux", value);
+      BLEdata["lux"] = value;
   } else if (strncmp(&servicedata[0], "4812", 4) == 0) { // presence
     value = value_from_hex_data(servicedata, 21, 1, false);
     if (value == 0)
-      BLEdata.set("pres", false);
+      BLEdata["pres"] = false;
     if (value == 1)
-      BLEdata.set("pres", true);
+      BLEdata["pres"] = true;
   }
 
   return BLEdata;
@@ -1617,9 +1624,9 @@ JsonObject& process_cgh1(JsonObject& BLEdata) {
   }
 
   if (value == 0)
-    BLEdata.set("open", true);
+    BLEdata["open"] = true;
   if (value == 1)
-    BLEdata.set("open", false);
+    BLEdata["open"] = false;
 
   return BLEdata;
 }
@@ -1633,11 +1640,11 @@ JsonObject& process_atc(JsonObject& BLEdata) {
   double voltage = (double)value_from_hex_data(servicedata, 20, 4, false) / 1000;
 
   //Set Json values
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("hum", (double)humidity);
-  BLEdata.set("batt", (double)battery);
-  BLEdata.set("volt", (double)voltage);
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["hum"] = (double)humidity;
+  BLEdata["batt"] = (double)battery;
+  BLEdata["volt"] = (double)voltage;
 
   return BLEdata;
 }
@@ -1651,11 +1658,11 @@ JsonObject& process_pvvx(JsonObject& BLEdata) {
   double voltage = (double)value_from_hex_data(servicedata, 20, 4, true) / 1000;
 
   //Set Json values
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("hum", (double)humidity);
-  BLEdata.set("batt", (double)battery);
-  BLEdata.set("volt", (double)voltage);
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["hum"] = (double)humidity;
+  BLEdata["batt"] = (double)battery;
+  BLEdata["volt"] = (double)voltage;
 
   return BLEdata;
 }
@@ -1669,9 +1676,9 @@ JsonObject& process_inode_em(JsonObject& BLEdata) {
   long battery = ((value_from_hex_data(manufacturerdata, 20, 2, true) >> 4) - 2) * 10;
 
   //Set Json values
-  BLEdata.set("power", (double)power);
-  BLEdata.set("energy", (double)energy);
-  BLEdata.set("batt", battery);
+  BLEdata["power"] = (double)power;
+  BLEdata["energy"] = (double)energy;
+  BLEdata["batt"] = battery;
 
   return BLEdata;
 }
@@ -1684,10 +1691,10 @@ JsonObject& process_ws02(JsonObject& BLEdata) {
   double voltage = (double)value_from_hex_data(manufacturerdata, 16, 4, true) / 1000;
 
   //Set Json values
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("hum", (double)humidity);
-  BLEdata.set("volt", (double)voltage);
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["hum"] = (double)humidity;
+  BLEdata["volt"] = (double)voltage;
 
   return BLEdata;
 }
@@ -1700,10 +1707,10 @@ JsonObject& process_mokobeacon(JsonObject& BLEdata) {
   int y_axis = (int)value_from_hex_data(servicedata, 18, 4, false);
   int z_axis = (int)value_from_hex_data(servicedata, 22, 4, false);
 
-  BLEdata.set("x_axis", x_axis);
-  BLEdata.set("y_axis", y_axis);
-  BLEdata.set("z_axis", z_axis);
-  BLEdata.set("batt", battery);
+  BLEdata["x_axis"] = x_axis;
+  BLEdata["y_axis"] = y_axis;
+  BLEdata["z_axis"] = z_axis;
+  BLEdata["batt"] = battery;
 
   return BLEdata;
 }
@@ -1715,7 +1722,7 @@ JsonObject& process_mokobeaconXPro(JsonObject& BLEdata) {
   if (length >= 24) {
     if (strncmp(servicedata, "40", 2) == NULL) {
       double voltage = (double)value_from_hex_data(servicedata, 6, 4, false) / 1000;
-      BLEdata.set("volt", (double)voltage);
+      BLEdata["volt"] = (double)voltage;
 
     } else if (strncmp(servicedata, "60", 2) == NULL) {
       int x_axis = (int)value_from_hex_data(servicedata, 12, 4, false);
@@ -1723,12 +1730,12 @@ JsonObject& process_mokobeaconXPro(JsonObject& BLEdata) {
       int z_axis = (int)value_from_hex_data(servicedata, 20, 4, false);
       if (length > 24) {
         double voltage = (double)value_from_hex_data(servicedata, 24, 4, false) / 1000;
-        BLEdata.set("volt", (double)voltage);
+        BLEdata["volt"] = (double)voltage;
       }
 
-      BLEdata.set("x_axis", x_axis);
-      BLEdata.set("y_axis", y_axis);
-      BLEdata.set("z_axis", z_axis);
+      BLEdata["x_axis"] = x_axis;
+      BLEdata["y_axis"] = y_axis;
+      BLEdata["z_axis"] = z_axis;
       return BLEdata;
 
     } else if (strncmp(servicedata, "70", 2) == NULL) {
@@ -1736,10 +1743,10 @@ JsonObject& process_mokobeaconXPro(JsonObject& BLEdata) {
       double humidity = (double)value_from_hex_data(servicedata, 10, 4, false) / 10;
       double voltage = (double)value_from_hex_data(servicedata, 14, 4, false) / 1000;
 
-      BLEdata.set("tempc", (double)temperature);
-      BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-      BLEdata.set("hum", (double)humidity);
-      BLEdata.set("volt", (double)voltage);
+      BLEdata["tempc"] = (double)temperature;
+      BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+      BLEdata["hum"] = (double)humidity;
+      BLEdata["volt"] = (double)voltage;
       return BLEdata;
     }
   }
@@ -1752,11 +1759,11 @@ JsonObject& process_ibeacon(JsonObject& BLEdata) {
   char proxUUID[33] = {NULL};
   strncpy(&mfid[0], manufacturerdata, 4);
   strncpy(&proxUUID[0], manufacturerdata + 8, 32);
-  BLEdata.set("mfid", mfid);
-  BLEdata.set("uuid", proxUUID);
-  BLEdata.set("major", (uint16_t)value_from_hex_data(manufacturerdata, 40, 4, false, false));
-  BLEdata.set("minor", (uint16_t)value_from_hex_data(manufacturerdata, 44, 4, false, false));
-  BLEdata.set("power", (int8_t)value_from_hex_data(manufacturerdata, 48, 4, false));
+  BLEdata["mfid"] = mfid;
+  BLEdata["uuid"] = proxUUID;
+  BLEdata["major"] = (uint16_t)value_from_hex_data(manufacturerdata, 40, 4, false, false);
+  BLEdata["minor"] = (uint16_t)value_from_hex_data(manufacturerdata, 44, 4, false, false);
+  BLEdata["power"] = (int8_t)value_from_hex_data(manufacturerdata, 48, 4, false);
 
   return BLEdata;
 }
@@ -1770,15 +1777,15 @@ JsonObject& process_tpms(JsonObject& BLEdata) {
   int battery = (int)value_from_hex_data(manufacturerdata, 32, 2, true);
   int alarm = (int)value_from_hex_data(manufacturerdata, 35, 1, false);
 
-  BLEdata.set("count", (int)(id + 1));
-  BLEdata.set("pres", (double)pressure);
-  BLEdata.set("tempc", (double)temperature);
-  BLEdata.set("tempf", (double)convertTemp_CtoF(temperature));
-  BLEdata.set("batt", (int)battery);
+  BLEdata["count"] = (int)id + 1;
+  BLEdata["pres"] = (double)pressure;
+  BLEdata["tempc"] = (double)temperature;
+  BLEdata["tempf"] = (double)convertTemp_CtoF(temperature);
+  BLEdata["batt"] = (int)battery;
   if (alarm == 1)
-    BLEdata.set("alarm", true);
+    BLEdata["alarm"] = true;
   if (alarm == 0)
-    BLEdata.set("alarm", false);
+    BLEdata["alarm"] = false;
 
   return BLEdata;
 }

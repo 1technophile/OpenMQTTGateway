@@ -80,14 +80,14 @@ bool _2GtoMQTT() {
   // Get the memory locations of unread SMS messages.
   unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
   Log.trace(F("Creating SMS  buffer" CR));
-  StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject& SMSdata = jsonBuffer.createObject();
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject SMSdata = jsonBuffer.to<JsonObject>();
   for (int i = 0; i < unreadSMSNum; i++) {
     Log.notice(F("New  message at index: %d" CR), unreadSMSNum);
     sms = A6l.readSMS(unreadSMSLocs[i]);
-    SMSdata.set("message", (char*)sms.message.c_str());
-    SMSdata.set("date", (char*)sms.date.c_str());
-    SMSdata.set("phone", (char*)sms.number.c_str());
+    SMSdata["message"] = (const char*)sms.message.c_str();
+    SMSdata["date"] = (const char*)sms.date.c_str();
+    SMSdata["phone"] = (const char*)sms.number.c_str();
     A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
     Log.trace(F("Adv data 2GtoMQTT" CR));
     pub(subject2GtoMQTT, SMSdata);
