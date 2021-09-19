@@ -238,7 +238,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     device->connect = flags & device_flags_connect;
-    if (model != UNKNOWN_MODEL) device->sensorModel = model;
+    device->sensorModel = model;
     devices.push_back(device);
     newDevices++;
   } else {
@@ -246,6 +246,9 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
 
     if (flags & device_flags_isDisc) {
       device->isDisc = true;
+    }
+    if (flags & device_flags_connect) {
+      device->connect = true;
     }
 
     if (model != UNKNOWN_MODEL) device->sensorModel = model;
