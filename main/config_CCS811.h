@@ -42,14 +42,19 @@ extern void setupCCS811();
 extern void CCS811toMQTT();
 
 #define ccs811_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingccs811 30000
+#define TimeBetweenReadingccs811 40000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define CCSTOPIC "/CLIMAtoMQTT/ccs"
 
 //Time used to wait for an interval before resending measured values
-unsigned long timeccs811 = 0;
-int CCS811_i2c_addr = 0x5A; // CCS811 I2C Address 0x5A or 0X5B
+unsigned long timeccs811 = 150;
+//int CCS811_i2c_addr = 0x5A; // CCS811 I2C Address 0x5A or 0X5B
+int CCS811_i2c_addr = 0x5B;
+
+// Only supported for ESP
+int CCS811_PIN_SDA = SDA; // PIN SDA  - Change here for Lolin32Lite
+int CCS811_PIN_SCL = SCL; // PIN SCL
 
 #endif

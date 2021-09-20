@@ -4,19 +4,29 @@
   and ZsenzorBME280.ino
 */
 #include "User_config.h"
-#include "Adafruit_CCS811.h"
- 
+
+#ifdef ZsensorCCS811
+# include <stdint.h>
+
+# include "Adafruit_CCS811.h"
+# include "Wire.h" // Library for communication with I2C / TWI devices
+
 Adafruit_CCS811 ccs;
- 
+
 void setupZsensorCCS811() {
+#  if defined(ESP8266) || defined(ESP32)
+  // Allow custom pins on ESP Platforms
+  Wire.begin(CCS811_PIN_SDA, CCS811_PIN_SCL);
+#  else
+  Wire.begin();
+#  endif
+
   Serial.begin(115200);
   Serial.println("CCS811 test..."); 
   if(!ccs.begin()){
-    Serial.println("Failed to start sensor! Please check your wiring.");
-    while(1);
-  }
-  // Wait for the sensor to be ready
-  while(!ccs.available());
+    Serial.println("Failed to start CCS811 sensor!.");
+   }
+  // Don't wait for the sensor to be ready.
 }
  
 void MeasureCO2AndTVOC() {
@@ -61,5 +71,6 @@ void MeasureCO2AndTVOC() {
       while(1);
     }
   }
-  delay(3000);
 }
+
+#endif
