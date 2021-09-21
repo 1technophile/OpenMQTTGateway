@@ -529,13 +529,13 @@ void connectMQTT() {
     failure_number_mqtt++; // we count the failure
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
     Log.warning(F("failed, rc=%d" CR), client.state());
-    if (mqtt_secure) {
 #if defined(ESP32)
+    if (mqtt_secure)
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->lastError(nullptr, 0));
 #elif defined(ESP8266)
+    if (mqtt_secure)
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
-    }
     digitalWrite(LED_ERROR, LED_ERROR_ON);
     delay(2000);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
