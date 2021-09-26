@@ -139,39 +139,21 @@ void MeasureDS1820Temp() {
       Log.error(F("DS1820: Failed to identify any temperature sensors on 1-wire bus during setup!" CR));
     } else {
       Log.trace(F("DS1820: Reading temperature(s) from %d sensor(s)..." CR), ds1820_count);
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& DS1820data = jsonBuffer.createObject();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject DS1820data = jsonBuffer.to<JsonObject>();
 
       for (uint8_t i = 0; i < ds1820_count; i++) {
         current_temp[i] = round(ds1820.getTempC(ds1820_devices[i]) * 10) / 10.0;
         if (current_temp[i] == -127) {
           Log.error(F("DS1820: Device %s currently disconnected!" CR), (char*)ds1820_addr[i].c_str());
         } else if (DS1820_ALWAYS || current_temp[i] != persisted_temp[i]) {
-          // remove for 0.9.6 release -- BEGIN (Additional BREAKING CHANGE - Unit will be removed)
-          if (DS1820_FAHRENHEIT) {
-            Log.notice(F("DS1820: Temperature %s %d F" CR),
-                       (char*)ds1820_addr[i].c_str(),
-                       DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("unit", "F");
-          } else {
-            Log.notice(F("DS1820: Temperature %s %d C" CR),
-                       (char*)ds1820_addr[i].c_str(),
-                       current_temp[i]);
-            DS1820data.set("temp", (float)DallasTemperature::toFahrenheit(current_temp[i]));
-            DS1820data.set("unit", "F");
-            DS1820data.set("temp", (float)current_temp[i]);
-            DS1820data.set("unit", "C");
-          }
-          // remove for 0.9.6 release -- END
-
-          DS1820data.set("tempc", (float)DallasTemperature::toFahrenheit(current_temp[i]));
-          DS1820data.set("tempf", (float)current_temp[i]);
+          DS1820data["tempc"] = (float)DallasTemperature::toFahrenheit(current_temp[i]);
+          DS1820data["tempf"] = (float)current_temp[i];
 
           if (DS1820_DETAILS) {
-            DS1820data.set("type", ds1820_type[i]);
-            DS1820data.set("res", ds1820_resolution[i] + String("bit" CR));
-            DS1820data.set("addr", ds1820_addr[i]);
+            DS1820data["type"] = ds1820_type[i];
+            DS1820data["res"] = ds1820_resolution[i] + String("bit" CR);
+            DS1820data["addr"] = ds1820_addr[i];
           }
           pub((char*)(String(OW_TOPIC) + "/" + ds1820_addr[i]).c_str(), DS1820data);
           delay(10);

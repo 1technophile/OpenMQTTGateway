@@ -76,4 +76,15 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
 }
 #  endif
 
+void ActuatorButtonTrigger() {
+  uint8_t level = !digitalRead(ACTUATOR_ONOFF_GPIO);
+  char* level_string = "ON";
+  if (level != ACTUATOR_ON) {
+    level_string = "OFF";
+  }
+  Log.trace(F("Actuator triggered %s by button" CR), level_string);
+  digitalWrite(ACTUATOR_ONOFF_GPIO, level);
+  pub(subjectGTWONOFFtoMQTT, level_string);
+}
+
 #endif

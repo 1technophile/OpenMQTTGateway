@@ -42,4 +42,7 @@ extern void GPIOInputtoMQTT();
 #  endif
 #endif
 
+#define INPUT_GPIO_ON_VALUE  "HIGH"
+#define INPUT_GPIO_OFF_VALUE "LOW"
+
 #endif

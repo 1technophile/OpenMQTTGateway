@@ -102,6 +102,9 @@ The json message must contain two properties:
 * remote: the index of the remote which is used to send the command (index start at zero)
 * command: the command which should be send with the remote as string, see [table of command names](https://github.com/Legion2/Somfy_Remote_Lib#available-commands).
 
+Optionally it can contain the following property:
+* repeat: the number how often the command is repeated, default 4. Should be used to simulate long button presses, by increasing the repeat number, e.g. 20.
+
 ::: tip
 The middle button on physical Somfy RTS Remote controls is called "My".
 :::

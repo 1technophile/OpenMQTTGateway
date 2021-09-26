@@ -29,15 +29,15 @@
 
 extern String getUniqueId(String name, String sufix);
 extern void pubMqttDiscovery();
-extern void createDiscoveryFromList(char* mac, char* sensorList[][8], int sensorCount,
-                                    char* device_name, char* device_manufacturer, char* device_model);
-extern void createDiscovery(char* sensor_type,
-                            char* state_topic, char* s_name, char* unique_id,
-                            char* availability_topic, char* device_class, char* value_template,
-                            char* payload_on, char* payload_off, char* unit_of_meas,
+extern void createDiscoveryFromList(const char* mac, const char* sensorList[][8], int sensorCount,
+                                    const char* device_name, const char* device_manufacturer, const char* device_model);
+extern void createDiscovery(const char* sensor_type,
+                            const char* state_topic, const char* s_name, const char* unique_id,
+                            const char* availability_topic, const char* device_class, const char* value_template,
+                            const char* payload_on, const char* payload_off, const char* unit_of_meas,
                             int off_delay,
-                            char* payload_available, char* payload_not_avalaible, bool gateway_entity, char* command_topic,
-                            char* device_name, char* device_manufacturer, char* device_model, char* device_mac, bool retainCmd);
+                            const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* command_topic,
+                            const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd);
 
 #define discovery_Topic "homeassistant"
 
@@ -55,13 +55,15 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonFor      "{{ value_json.for }}"
 #  define jsonMoi      "{{ value_json.moi }}"
 #  define jsonHum      "{{ value_json.hum }}"
-#  define jsonTemp     "{{ value_json.tem }}" // remove for 0.9.6 release
 #  define jsonStep     "{{ value_json.steps }}"
 #  define jsonWeight   "{{ value_json.weight }}"
 #  define jsonPresence "{{ value_json.presence }}"
 #  define jsonAltim    "{{ value_json.altim }}"
 #  define jsonAltif    "{{ value_json.altift }}"
 #  define jsonTempc    "{{ value_json.tempc }}"
+#  define jsonTempc2   "{{ value_json.tempc2 }}"
+#  define jsonTempc3   "{{ value_json.tempc3 }}"
+#  define jsonTempc4   "{{ value_json.tempc4 }}"
 #  define jsonTempf    "{{ value_json.tempf }}"
 #  define jsonMsg      "{{ value_json.message }}"
 #  define jsonVal      "{{ value_json.value }}"
@@ -76,6 +78,10 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonPa       "{{ float(value_json.pa) * 0.01 }}"
 #  define jsonId       "{{ value_json.id }}"
 #  define jsonAddress  "{{ value_json.address }}"
+#  define jsonOpen     "{{ value_json.open }}"
+#  define jsonTime     "{{ value_json.time }}"
+#  define jsonCount    "{{ value_json.count }}"
+#  define jsonAlarm    "{{ value_json.alarm }}"
 #else // Home assistant autodiscovery value key definition
 #  define jsonBatt     "{{ value_json.batt | is_defined }}"
 #  define jsonLux      "{{ value_json.lux | is_defined }}"
@@ -84,13 +90,15 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonFor      "{{ value_json.for | is_defined }}"
 #  define jsonMoi      "{{ value_json.moi | is_defined }}"
 #  define jsonHum      "{{ value_json.hum | is_defined }}"
-#  define jsonTemp     "{{ value_json.tem | is_defined }}" // remove for 0.9.6 release
 #  define jsonStep     "{{ value_json.steps | is_defined }}"
 #  define jsonWeight   "{{ value_json.weight | is_defined }}"
 #  define jsonPresence "{{ value_json.presence | is_defined }}"
 #  define jsonAltim    "{{ value_json.altim | is_defined }}"
 #  define jsonAltif    "{{ value_json.altift | is_defined }}"
 #  define jsonTempc    "{{ value_json.tempc | is_defined }}"
+#  define jsonTempc2   "{{ value_json.tempc2 | is_defined }}"
+#  define jsonTempc3   "{{ value_json.tempc3 | is_defined }}"
+#  define jsonTempc4   "{{ value_json.tempc4 | is_defined }}"
 #  define jsonTempf    "{{ value_json.tempf | is_defined }}"
 #  define jsonMsg      "{{ value_json.message | is_defined }}"
 #  define jsonVal      "{{ value_json.value | is_defined }}"
@@ -105,6 +113,10 @@ extern void createDiscovery(char* sensor_type,
 #  define jsonPa       "{{ float(value_json.pa) * 0.01 | is_defined }}"
 #  define jsonId       "{{ value_json.id | is_defined }}"
 #  define jsonAddress  "{{ value_json.address | is_defined }}"
+#  define jsonOpen     "{{ value_json.open | is_defined }}"
+#  define jsonTime     "{{ value_json.time | is_defined }}"
+#  define jsonCount    "{{ value_json.count | is_defined }}"
+#  define jsonAlarm    "{{ value_json.alarm | is_defined }}"
 #endif
 
 #endif

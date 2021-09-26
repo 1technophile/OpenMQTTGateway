@@ -1,4 +1,10 @@
 # BLE gateway
+
+::: warning
+We strongly encourage the use of a white-list (see below) so as to collect data from your devices only and not from other MAC addresses.
+By default the gateway scans the advertizing BLE devices nearby with their MAC addresses. Depending on your country, it may be illegal to monitor networks for MAC addresses, especially on networks that you do not own. Please check your country's laws (for US Section 18 U.S. Code § 2511) - [discussion here](https://github.com/schollz/howmanypeoplearearound/issues/4).
+:::
+
 ## Receiving signals from BLE beacon devices for Presence detection
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
@@ -26,7 +32,7 @@ Note that you can find apps to simulate beacons and do some tests like [Beacon s
 IOS version >=10 devices advertise without an extra app a mac address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
 
 
-## Receiving signals Mi Flora/ Mi jia device/ LYWDS02, ClearGrass or Mi scale
+## Receiving signals from BLE devices Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale and [many more](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 So as to receive BLE sensors data you need either a simple ESP32 either an ESP8266/arduino + HM10/11 with firmware >= v601
 The mi flora supported firmware is >3.1.8
 
@@ -46,10 +52,12 @@ Note that the gateway return one or two measurement value each time. The differe
 * Impedance
 * Battery
 * Voltage
+* Open
+* Presence
 
 The infos will appear like this on your MQTT broker:
 
-`home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tem":"19.2"}`
+`home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tempc":"19.2","tempf":"66.56"}`
 
 More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html)  (especially about how it was implemented with HM10)
 
@@ -93,11 +101,17 @@ Once the forced scan has completed, the previous scan interval value will be res
 
 The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
 
+If you want to scan continuously for BLE devices, for example for beacon location you can set the interval to 1ms:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":1}'`
+
+In this case you should deactivate the BLE connection mechanism to avoid concurrency between scan and connections (see chapter below, bleconnect).
+
 ::: tip
 For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
 :::
 
-## Setting the number of scans between before connect attempt
+## Setting the number of scans between connection attempts
 
 If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
 
@@ -105,7 +119,7 @@ If you want to change the number of BLE scans that are done before a BLE connect
 
 The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
 
-## Setting if the gateway publish all the BLE devices scanned or only the detected sensors
+## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors
 
 If you want to change this characteristic:
 
@@ -116,6 +130,23 @@ With Home Assistant, this command is directly avalaible through MQTT auto discov
 :::
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
+
+## Setting if the gateway connects to BLE devices eligibles on ESP32
+
+If you want to change this characteristic:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"bleconnect":false}'`
+
+::: tip
+With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+:::
+
+## Setting if the gateway publish into Home Assistant Home presence topic
+
+If you want to publish to Home Assistant presence topic, you can activate this function by the HASS interface (this command is auto discovered), [here is a yaml example](../integrate/home_assistant.md#mqtt-room-presence).
+Or by an MQTT command.
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
 
 ## Setting the minimum RSSI accepted to publish device data
 
@@ -128,6 +159,58 @@ you can also accept all the devices by the following command:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"minrssi":-200}'`
 
 The default value is set into config_BT.h
+
+## Read/write BLE characteristics over MQTT (ESP32 only)
+
+The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
+::: tip
+These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)
+:::
+
+### Example write command
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "ble_write_address":"AA:BB:CC:DD:EE:FF",
+  "ble_write_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_write_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_write_value":"TEST",
+  "value_type":"STRING",
+  "ttl":4 }'
+```
+Response:
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "characteristic":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "write":"TEST",
+  "success":true
+}
+```
+### Example read commnad
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "ble_read_address":"AA:BB:CC:DD:EE:FF",
+  "ble_read_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "ble_read_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "value_type":"STRING",
+  "ttl": 2 }'
+```
+Response:
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+  "characteristic":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
+  "read":"TEST",
+  "success":true
+}
+```
+
+::: tip
+The `ttl` parameter is the number of attempts to connect (defaults to 1), which occur after the BLE scan completes.  
+`value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
+:::
 
 ## Other
 

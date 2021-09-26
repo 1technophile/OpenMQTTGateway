@@ -37,10 +37,10 @@ void PairedDeviceAdded(byte newID) {
   Serial.println(newID, DEC);
 #  endif
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(2);
-  StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-  JsonObject& RFdata = jsonBuffer.createObject();
-  RFdata.set("sensor", newID);
-  RFdata.set("action", "paired");
+  StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+  JsonObject RFdata = jsonBuffer.to<JsonObject>();
+  RFdata["sensor"] = newID;
+  RFdata["action"] = "paired";
   pub(subjectRFtoMQTT, RFdata);
   wsdr.pair(NULL, PairedDeviceAdded);
 }
@@ -56,11 +56,11 @@ void sendWindSpeedData(byte id, float wind_speed, byte battery_status) {
   unsigned long MQTTvalue = 10000 + round(wind_speed);
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RFdata = jsonBuffer.createObject();
-    RFdata.set("sensor", id);
-    RFdata.set("wind_speed", wind_speed);
-    RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RFdata = jsonBuffer.to<JsonObject>();
+    RFdata["sensor"] = id;
+    RFdata["wind_speed"] = wind_speed;
+    RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     pub(subjectRFtoMQTT, RFdata);
     Log.trace(F("Store wind speed val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
@@ -71,11 +71,11 @@ void sendRainData(byte id, float rain_volume, byte battery_status) {
   unsigned long MQTTvalue = 11000 + round(rain_volume * 10.0);
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RFdata = jsonBuffer.createObject();
-    RFdata.set("sensor", id);
-    RFdata.set("rain_volume", rain_volume);
-    RFdata.set("battery", bitRead(battery_status, 1) == 0 ? "OK" : "Low");
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RFdata = jsonBuffer.to<JsonObject>();
+    RFdata["sensor"] = id;
+    RFdata["rain_volume"] = rain_volume;
+    RFdata["battery"] = bitRead(battery_status, 1) == 0 ? "OK" : "Low";
     pub(subjectRFtoMQTT, RFdata);
     Log.trace(F("Store rain_volume: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
@@ -86,12 +86,12 @@ void sendWindData(byte id, int wind_direction, float wind_gust, byte battery_sta
   unsigned long MQTTvalue = 20000 + round(wind_gust * 10.0) + wind_direction;
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RFdata = jsonBuffer.createObject();
-    RFdata.set("sensor", id);
-    RFdata.set("wind_direction", wind_direction);
-    RFdata.set("wind_gust", wind_gust);
-    RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RFdata = jsonBuffer.to<JsonObject>();
+    RFdata["sensor"] = id;
+    RFdata["wind_direction"] = wind_direction;
+    RFdata["wind_gust"] = wind_gust;
+    RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     pub(subjectRFtoMQTT, RFdata);
     Log.trace(F("Store wind data val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
@@ -102,14 +102,13 @@ void sendTemperatureData(byte id, float temperature, int humidity, byte battery_
   unsigned long MQTTvalue = 40000 + abs(round(temperature * 100.0)) + humidity;
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RFdata = jsonBuffer.createObject();
-    RFdata.set("sensor", id);
-    RFdata.set("temperature", temperature); // remove for 0.9.6 release
-    RFdata.set("tempc", temperature);
-    RFdata.set("tempf", wsdr.convertCtoF(temperature));
-    RFdata.set("humidity", humidity);
-    RFdata.set("battery", bitRead(battery_status, 0) == 0 ? "OK" : "Low");
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RFdata = jsonBuffer.to<JsonObject>();
+    RFdata["sensor"] = id;
+    RFdata["tempc"] = temperature;
+    RFdata["tempf"] = wsdr.convertCtoF(temperature);
+    RFdata["humidity"] = humidity;
+    RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     pub(subjectRFtoMQTT, RFdata);
     Log.trace(F("Store temp val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);

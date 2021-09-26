@@ -55,8 +55,8 @@ void setupLORA() {
 void LORAtoMQTT() {
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& LORAdata = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject LORAdata = jsonBuffer.to<JsonObject>();
     Log.trace(F("Rcv. LORA" CR));
 #  ifdef ESP32
     String taskMessage = "LORA Task running on core ";
@@ -68,11 +68,11 @@ void LORAtoMQTT() {
     for (int i = 0; i < packetSize; i++) {
       packet += (char)LoRa.read();
     }
-    LORAdata.set("rssi", (int)LoRa.packetRssi());
-    LORAdata.set("snr", (float)LoRa.packetSnr());
-    LORAdata.set("pferror", (float)LoRa.packetFrequencyError());
-    LORAdata.set("packetSize", (int)packetSize);
-    LORAdata.set("message", (char*)packet.c_str());
+    LORAdata["rssi"] = (int)LoRa.packetRssi();
+    LORAdata["snr"] = (float)LoRa.packetSnr();
+    LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
+    LORAdata["packetSize"] = (int)packetSize;
+    LORAdata["message"] = (char*)packet.c_str();
     pub(subjectLORAtoMQTT, LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));

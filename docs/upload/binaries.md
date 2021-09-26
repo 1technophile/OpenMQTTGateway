@@ -1,11 +1,11 @@
-# Upload Binaries
+# (Option 2) Upload ready-to-go binaries
 This section is useful if you want to directly flash your ESP from your desktop. Once flashed you can change  wifi and broker settings.
-Nevertheless you will not be able to change advanced parameters, if you want to do so refer to [Upload from PlatformIO][pio] section.
+Nevertheless you will not be able to change advanced parameters; if you want to do so, refer to [Upload your configurations](builds.md) section.
 
 Download the binary corresponding to your board and gateway [here](https://github.com/1technophile/OpenMQTTGateway/releases) from github and uncompress it.
 
 ## ESP32
-* Download the bootloader [here](https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/bin/bootloader_dio_80m.bin)
+* Download the bootloader [here](https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/esp32/bin/bootloader_dio_80m.bin)
 * Download the boot_app0 from [here](https://github.com/espressif/arduino-esp32/raw/master/tools/partitions/boot_app0.bin)
 * Download the flash tool utility from espressif:
 https://www.espressif.com/en/products/hardware/esp32/resources
@@ -39,3 +39,5 @@ The upload details appears.
 With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
 
 Note that to reset the wifi and mqtt settings you can check *yes, wipes all data*
+
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fdocs.openmqttgateway.com%2Fupload%2Fbinaries.html&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)

@@ -36,6 +36,17 @@ extern void launchBTDiscovery();
 extern int btQueueBlocked;
 extern int btQueueLengthSum;
 extern int btQueueLengthCount;
+#  ifndef AttemptBLECOnnect
+#    define AttemptBLECOnnect true //do we by default attempt a BLE connection to sensors with ESP32
+#  endif
+bool bleConnect = AttemptBLECOnnect;
+
+// Sets whether to filter publishing of scanned devices that require a connection.
+// Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
+#  ifndef BLE_FILTER_CONNECTABLE
+#    define BLE_FILTER_CONNECTABLE 0
+#  endif
+#  include "NimBLEDevice.h"
 #endif
 
 /*----------------------BT topics & parameters-------------------------*/
@@ -44,16 +55,31 @@ extern int btQueueLengthCount;
 #define MinimumRSSI        -100 //default minimum rssi value, all the devices below -90 will not be reported
 
 #ifndef Scan_duration
-#  define Scan_duration 10000 //define the time for a scan --WARNING-- changing this value can lead to instability on ESP32
+#  define Scan_duration 10000 //define the time for a scan
+#endif
+#ifndef BLEScanInterval
+#  define BLEScanInterval 52 // How often the scan occurs / switches channels; in milliseconds,
+#endif
+#ifndef BLEScanWindow
+#  define BLEScanWindow 30 // How long to scan during the interval; in milliseconds.
+#endif
+#ifndef ActiveBLEScan
+#  define ActiveBLEScan true // Set active scanning, this will get more data from the advertiser.
 #endif
 #ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
+#endif
+#ifndef BLEScanDuplicateCacheSize
+#  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
+#endif
+#ifndef HassPresence
+#  define HassPresence false //false if we publish into Home Assistant presence topic
 #endif
 
 #ifndef BTQueueSize
@@ -70,11 +96,13 @@ extern int btQueueLengthCount;
 #define CRLR_Length        4
 #define BLE_CNCT_TIMEOUT   3000
 
-#define ServicedataMinLength 29
+#define ServicedataMinLength 27
 
 unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
+unsigned long scanCount = 0;
 bool publishOnlySensors = PublishOnlySensors;
+bool hassPresence = HassPresence;
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
@@ -93,7 +121,6 @@ bool publishOnlySensors = PublishOnlySensors;
 #endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
-// if not commented Home presence integration with HOME ASSISTANT is activated
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 enum ble_sensor_model {
@@ -111,11 +138,25 @@ enum ble_sensor_model {
   MIBAND, //10
   XMTZC04HM,
   XMTZC05HM,
-  INKBIRD,
+  IBSTH1,
   LYWSD03MMC,
-  MHO_C401,
+  MHO_C401, //15
   LYWSD03MMC_ATC,
-  INODE_EM
+  INODE_EM,
+  CGDK2,
+  LYWSD03MMC_PVVX,
+  CGH1, //20
+  CGPR1,
+  WS02,
+  IBSTH2,
+  IBT4XS,
+  DT24, //25
+  EDDYSTONE_TLM,
+  MOKOBEACON,
+  MOKOBEACONXPRO,
+  IBEACON,
+  TPMS,
+  GENERIC,
 };
 
 /*-------------------PIN DEFINITIONS----------------------*/
@@ -131,5 +172,37 @@ enum ble_sensor_model {
 #    define BT_TX 6 //arduino TX connect HM-10 or 11 RX
 #  endif
 #endif
+
+/*---------------INTERNAL USE: DO NOT MODIFY--------------*/
+#ifdef ESP32
+enum ble_val_type {
+  BLE_VAL_STRING = 0,
+  BLE_VAL_HEX,
+  BLE_VAL_INT,
+  BLE_VAL_FLOAT,
+};
+
+struct BLEAction {
+  std::string value;
+  char addr[18];
+  NimBLEUUID service;
+  NimBLEUUID characteristic;
+  bool write;
+  bool complete;
+  uint8_t ttl;
+  ble_val_type value_type;
+};
+#endif
+
+struct BLEdevice {
+  char macAdr[18];
+  bool isDisc;
+  bool isWhtL;
+  bool isBlkL;
+  bool connect;
+  ble_sensor_model sensorModel;
+};
+
+JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true);
 
 #endif

@@ -49,9 +49,16 @@
 BME280 mySensor;
 
 void setupZsensorBME280() {
+#  if defined(ESP8266) || defined(ESP32)
+  // Allow custom pins on ESP Platforms
+  Wire.begin(BME280_PIN_SDA, BME280_PIN_SCL);
+#  else
+  Wire.begin();
+#  endif
+
   mySensor.settings.commInterface = I2C_MODE;
   mySensor.settings.I2CAddress = BME280_i2c_addr;
-  Log.notice(F("Setup BME280 on adress: %H" CR), BME280_i2c_addr);
+  Log.notice(F("Setup BME280 on adress: %X" CR), BME280_i2c_addr);
   //***Operation settings*****************************//
 
   // runMode Setting - Values:
@@ -100,8 +107,20 @@ void setupZsensorBME280() {
   //  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
   mySensor.settings.humidOverSample = 1;
 
+  // tempCorrection - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit temperatures are adjusted.
+  // -------------------------
+  // Value is a float
+  // ie Compiler Directive '-DBME280Correction=-3.4'
+  mySensor.settings.tempCorrection = BME280Correction;
+
   delay(10); // Gives the Sensor enough time to turn on (The BME280 requires 2ms to start up)
-  Log.notice(F("Bosch BME280 Initialized - Result of .begin(): 0x %h" CR), mySensor.begin());
+
+  int ret = mySensor.begin();
+  if (ret == 0x60) {
+    Log.notice(F("Bosch BME280 successfully initialized: %X" CR), ret);
+  } else {
+    Log.notice(F("Bosch BME280 failed: %X" CR), ret);
+  }
 }
 
 void MeasureTempHumAndPressure() {
@@ -126,32 +145,32 @@ void MeasureTempHumAndPressure() {
       Log.error(F("Failed to read from BME280!" CR));
     } else {
       Log.trace(F("Creating BME280 buffer" CR));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& BME280data = jsonBuffer.createObject();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject BME280data = jsonBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
       if (BmeTempC != persisted_bme_tempc || bme280_always) {
-        BME280data.set("tempc", (float)BmeTempC);
+        BME280data["tempc"] = (float)BmeTempC;
       } else {
         Log.trace(F("Same Degrees C don't send it" CR));
       }
 
       // Generate Temperature in degrees F
       if (BmeTempF != persisted_bme_tempf || bme280_always) {
-        BME280data.set("tempf", (float)BmeTempF);
+        BME280data["tempf"] = (float)BmeTempF;
       } else {
         Log.trace(F("Same Degrees F don't send it" CR));
       }
 
       // Generate Humidity in percent
       if (BmeHum != persisted_bme_hum || bme280_always) {
-        BME280data.set("hum", (float)BmeHum);
+        BME280data["hum"] = (float)BmeHum;
       } else {
         Log.trace(F("Same Humidity don't send it" CR));
       }
 
       // Generate Pressure in Pa
       if (BmePa != persisted_bme_pa || bme280_always) {
-        BME280data.set("pa", (float)BmePa);
+        BME280data["pa"] = (float)BmePa;
       } else {
         Log.trace(F("Same Pressure don't send it" CR));
       }
@@ -159,14 +178,14 @@ void MeasureTempHumAndPressure() {
       // Generate Altitude in Meter
       if (BmeAltiM != persisted_bme_altim || bme280_always) {
         Log.trace(F("Sending Altitude Meter to MQTT" CR));
-        BME280data.set("altim", (float)BmeAltiM);
+        BME280data["altim"] = (float)BmeAltiM;
       } else {
         Log.trace(F("Same Altitude Meter don't send it" CR));
       }
 
       // Generate Altitude in Feet
       if (BmeAltiFt != persisted_bme_altift || bme280_always) {
-        BME280data.set("altift", (float)BmeAltiFt);
+        BME280data["altift"] = (float)BmeAltiFt;
       } else {
         Log.trace(F("Same Altitude Feet don't send it" CR));
       }

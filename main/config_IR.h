@@ -137,6 +137,15 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #  define IR_MIDEA24
 #  define IR_ZEPEAL
 #  define IR_SANYO_AC
+#  define IR_VOLTAS
+#  define IR_METZ
+#  define IR_TRANSCOLD
+#  define IR_TECHNIBEL_AC
+#  define IR_MIRAGE
+#  define IR_ELITESCREENS
+#  define IR_PANASONIC_AC32
+#  define IR_MILESTAG2
+#  define IR_ECOCLIM
 #elif __AVR_ATmega2560__
 #  define IR_COOLIX
 #  define IR_Whynter

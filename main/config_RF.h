@@ -34,18 +34,38 @@ extern void setupRF();
 extern void RFtoMQTT();
 extern void MQTTtoRF(char* topicOri, char* datacallback);
 extern void MQTTtoRF(char* topicOri, JsonObject& RFdata);
+extern void disableRFReceive();
+extern void enableRFReceive();
 #endif
 #ifdef ZgatewayRF2
 extern void setupRF2();
 extern void RF2toMQTT();
 extern void MQTTtoRF2(char* topicOri, char* datacallback);
 extern void MQTTtoRF2(char* topicOri, JsonObject& RFdata);
+extern void disableRF2Receive();
+extern void enableRF2Receive();
 #endif
 #ifdef ZgatewayPilight
 extern void setupPilight();
 extern void PilighttoMQTT();
 extern void MQTTtoPilight(char* topicOri, char* datacallback);
 extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
+extern void disablePilightReceive();
+extern void enablePilightReceive();
+#endif
+#ifdef ZgatewayRTL_433
+extern void RTL_433Loop();
+extern void setupRTL_433();
+extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata);
+extern void enableRTLreceive();
+extern void disableRTLreceive();
+extern int getRTLMinimumRSSI();
+extern int getRTLCurrentRSSI();
+extern int getRTLMessageCount();
+/**
+ * minimumRssi minimum RSSI value to enable receiver
+ */
+int minimumRssi = 0;
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
@@ -61,6 +81,7 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 //RF number of signal repetition - Can be overridden by specifying "repeat" in a JSON message.
 #define RF_EMITTER_REPEAT 20
 //#define RF_DISABLE_TRANSMIT //Uncomment this line to disable RF transmissions. (RF Receive will work as normal.)
+//#define RFmqttDiscovery true //uncomment this line so as to create a discovery switch for each RF signal received
 
 /*-------------------RF2 topics & parameters----------------------*/
 //433Mhz newremoteswitch MQTT Subjects and keys
@@ -79,6 +100,11 @@ extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
 #define subjectPilighttoMQTT    "/PilighttoMQTT"
 #define subjectGTWPilighttoMQTT "/PilighttoMQTT"
 #define repeatPilightwMQTT      false // do we repeat a received signal by using mqtt with Pilight gateway
+
+/*-------------------RTL_433 topics & parameters----------------------*/
+//433Mhz RTL_433 MQTT Subjects and keys
+#define subjectMQTTtoRTL_433 "/commands/MQTTtoRTL_433"
+#define subjectRTL_433toMQTT "/RTL_433toMQTT"
 
 /*-------------------CC1101 frequency----------------------*/
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
@@ -115,6 +141,71 @@ float receiveMhz = CC1101_FREQUENCY;
 //RF PIN definition
 #    define RF_EMITTER_GPIO 4 //4 = D4 on arduino
 #  endif
+#endif
+
+#if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
+/**
+ * Active Receiver Module
+ * 1 = ZgatewayPilight
+ * 2 = ZgatewayRF
+ * 3 = ZgatewayRTL_433
+ * 4 = ZgatewayRF2
+ */
+int activeReceiver = 0;
+#  define ACTIVE_RECERROR 0
+#  define ACTIVE_PILIGHT  1
+#  define ACTIVE_RF       2
+#  define ACTIVE_RTL      3
+#  define ACTIVE_RF2      4
+
+#  ifdef ZradioCC1101
+bool validFrequency(float mhz) {
+  //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
+  if (mhz >= 300 && mhz <= 348)
+    return true;
+  if (mhz >= 387 && mhz <= 464)
+    return true;
+  if (mhz >= 779 && mhz <= 928)
+    return true;
+  return false;
+}
+#  endif
+
+int currentReceiver = -1;
+
+extern void stateMeasures(); // Send a status message
+
+void enableActiveReceiver() {
+  // if (currentReceiver != activeReceiver) {
+  Log.trace(F("enableActiveReceiver: %d" CR), activeReceiver);
+  switch (activeReceiver) {
+#  ifdef ZgatewayPilight
+    case ACTIVE_PILIGHT:
+      enablePilightReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF
+    case ACTIVE_RF:
+      enableRFReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRTL_433
+    case ACTIVE_RTL:
+      enableRTLreceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF2
+    case ACTIVE_RF2:
+      enableRF2Receive();
+      break;
+#  endif
+#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+    default:
+      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
+#  endif
+  }
+  currentReceiver = activeReceiver;
+}
 #endif
 
 #endif

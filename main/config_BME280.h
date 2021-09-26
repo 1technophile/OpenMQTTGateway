@@ -41,15 +41,37 @@
 extern void setupBME280();
 extern void BME280toMQTT();
 
-#define bme280_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
-#define TimeBetweenReadingbme280 30000
+#ifndef bme280_always
+#  define bme280_always true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
+#endif
+#ifndef TimeBetweenReadingbme280
+#  define TimeBetweenReadingbme280 30000
+#endif
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define BMETOPIC "/CLIMAtoMQTT/bme"
+#ifndef BMETOPIC
+#  define BMETOPIC "/CLIMAtoMQTT/bme"
+#endif
 
 //Time used to wait for an interval before resending measured values
 unsigned long timebme280 = 0;
 int BME280_i2c_addr = 0x76; // Bosch BME280 I2C Address
+
+// Only supported for ESP
+int BME280_PIN_SDA = SDA; // PIN SDA
+int BME280_PIN_SCL = SCL; // PIN SCL
+
+// Temperature correction for BME280 devices
+
+#ifndef BME280Correction
+
+// BME280Correction - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit temperatures are adjusted.
+// -------------------------
+// Value is a float
+// ie Compiler Directive '-DBME280Correction=-3.4'
+
+#  define BME280Correction 0
+#endif
 
 #endif

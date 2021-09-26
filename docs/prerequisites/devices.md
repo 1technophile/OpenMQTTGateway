@@ -13,35 +13,50 @@ Note that for the moment RF, RF2 and Pilight can not be activated on the same bo
 ![boards](../img/OpenMQTTGateway_devices_rf3.png ':size=250%')
 
 ## For BLE devices 
-OpenMQTTGateway is able to scan all the BLE devices that advertise their data so as to do presence detection. Added to that it can retrieve the measures from the devices below.
+OpenMQTTGateway is able to scan all the BLE devices that advertise their data so as to do presence detection. 
+Added to that it retrieves the measures from the devices below. By default the data are read from the advertisements (no impact on device battery life). When a (c) is present after the model name, this means that the gateway connects to it so as to retrieve data. For some devices we may connect only to retrieve one or several parameters (the rest being advertised), in this case the (c) is placed with the parameter.
 
 |Devices|Model|Measurements|
 |-|:-:|:-:|
 | BLE watches with fixed mac||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
 | Vegtrug ||temperature/moisture/luminance/fertility|
-| XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility|
+| XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
-| XIAOMI Mi Jia 2 (1)|LYWSD03MMC|temperature/humidity/battery/volt|
+| XIAOMI Mi Jia 2 (1)(c)|LYWSD03MMC|temperature/humidity/battery/volt|
 | XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/volt|
-| XIAOMI MHO-C401 (1)|MHO-C401|temperature/humidity/battery/volt|
+| XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/volt|
+| XIAOMI MHO-C401 (1)(c)|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
+| INKBIRD (1)|IBS-TH2|temperature/battery|
+| INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
 | ClearGrass |CGG1|temperature/humidity/battery|
+| Qingping |CGDK2|temperature/humidity|
+| Qingping |CGH1|open|
+| Qingping |CGPR1|presence/luminance|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
 | XIAOMI Mi Scale v1 (1)|XMTZC04HM|weight|
 | XIAOMI Mi Scale v2 (1)|XMTZC05HM|weight|
 | XIAOMI Mi band (1)||steps|
-| iNode Energy Meter (1)||power,energy,battery|
+| iNode Energy Meter (1)||power/energy/battery|
+| Thermobeacon|WS02|temperature/humidity/volt|
+| ATorch Battery Capacity Monitor (c)|DT24|volt/amp/watt|
+| Eddystone TLM|protocol|temperature/count/volt/time|
+| Ibeacon|protocol|UUID/MFID/Major/Minor/Power|
+| Mokosmart (1)|M1|x_axis/y_axis/z_axis/battery|
+| Mokosmart (1)|H4|temperature/humidity/volt|
+| TPMS|TPMS|temperature/pressure/battery/alarm/count|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
 ::: tip
 - (1) Not supported with HM10.
 - (2) See https://github.com/atc1441/ATC_MiThermometer
+- (3) See https://github.com/pvvx/ATC_MiThermometer
 :::
 
 ![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
