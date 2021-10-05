@@ -1951,7 +1951,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
 #    if MQTT_SECURE_SELF_SIGNED
         if (use_ss_cert) {
-          cert_index = SYSdata.get<uint8_t>("mqtt_cert_index");
+          cert_index = SYSdata["mqtt_cert_index"].as<uint8_t>();
           if (cert_index >= sizeof(certs_array) / sizeof(ss_certs)) {
             Log.error(F("mqtt_cert_index invalid - ignoring command" CR));
             return;
