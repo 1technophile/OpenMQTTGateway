@@ -27,6 +27,16 @@ Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgate
 
 * [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, HM10, RF, IR emitters and receivers...
 
+## Compatible controllers, saas or software
+
+* [Home Assistant](https://docs.openmqttgateway.com/integrate/home_assistant.html)
+
+* [OpenHAB](https://docs.openmqttgateway.com/integrate/openhab2.html)
+
+* [NodeRed](https://docs.openmqttgateway.com/integrate/node_red.html)
+
+* [AWS-IOT](https://docs.openmqttgateway.com/upload/aws-iot.html)
+
 ## Contributors ✨
 
 Thanks goes to these wonderful [people](https://github.com/1technophile/OpenMQTTGateway/graphs/contributors) who helped OpenMQTTGateway on Github and to the users contributions into the [community](https://community.openmqttgateway.com/).

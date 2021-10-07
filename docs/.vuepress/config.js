@@ -95,7 +95,8 @@ module.exports = {
           children: [
             'integrate/openhab2',
             'integrate/home_assistant',
-            'integrate/node_red'
+            'integrate/node_red',
+            'integrate/aws_iot'
           ]
         },
         {

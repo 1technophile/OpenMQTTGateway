@@ -161,11 +161,11 @@ void setupTLS(bool self_signed = false, uint8_t index = 0);
 void callback(char* topic, byte* payload, unsigned int length);
 
 char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size * 2] = MQTT_PASS; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size] = MQTT_PASS; // not compulsory only if your broker needs authentication
 char mqtt_server[parameters_size] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
 char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size * 2] = Gateway_Name;
+char gateway_name[parameters_size] = Gateway_Name;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
@@ -398,7 +398,11 @@ void pubMQTT(const char* topic, const char* payload) {
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (client.connected()) {
     Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
+#if AWS_IOT
+    client.publish(topic, payload); // AWS IOT doesn't support retain flag for the moment
+#else
     client.publish(topic, payload, retainFlag);
+#endif
   } else {
     Log.warning(F("Client not connected, aborting thes publication" CR));
   }
@@ -507,7 +511,11 @@ void connectMQTT() {
   strcat(topic, gateway_name);
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
+#if AWS_IOT
+  if (client.connect(gateway_name, mqtt_user, mqtt_pass)) { // AWS doesn't support will topic for the moment
+#else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
+#endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
     if (lowpowermode < 2)
       M5Display("MQTT connected", "", "");
