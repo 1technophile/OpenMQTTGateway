@@ -113,7 +113,9 @@ void pubOneWire_HADiscovery() {
                       jsonTempc,
                       "", "", "°C",
                       0, "", "", true, "",
-                      "", "", "", "", false);
+                      "", "", "", "", false,
+                      stateClassMeasurement // state class
+      );
     }
   }
 #  endif

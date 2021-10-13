@@ -51,7 +51,8 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creat
                   will_Topic, switchRF[3], switchRF[4],
                   switchRF[5], switchRF[6], switchRF[7],
                   0, "", "", true, subjectMQTTtoRF,
-                  "", "", "", "", false);
+                  "", "", "", "", false,
+                  stateClassNone);
 }
 #  endif
 
