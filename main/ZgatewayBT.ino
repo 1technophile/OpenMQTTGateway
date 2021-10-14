@@ -291,12 +291,12 @@ void strupp(char* beg) {
 void MiFloraDiscovery(const char* mac, const char* sensorModel) {
 #    define MiFloraparametersCount 5
   Log.trace(F("MiFloraDiscovery" CR));
-  const char* MiFlorasensor[MiFloraparametersCount][8] = {
-      {"sensor", "MiFlora-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "MiFlora-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm"},
-      {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%"}
+  const char* MiFlorasensor[MiFloraparametersCount][9] = {
+      {"sensor", "MiFlora-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
+      {"sensor", "MiFlora-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
+      {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -306,11 +306,11 @@ void MiFloraDiscovery(const char* mac, const char* sensorModel) {
 void VegTrugDiscovery(const char* mac, const char* sensorModel) {
 #    define VegTrugparametersCount 4
   Log.trace(F("VegTrugDiscovery" CR));
-  const char* VegTrugsensor[VegTrugparametersCount][8] = {
-      {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "VegTrug-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm"},
-      {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%"}
+  const char* VegTrugsensor[VegTrugparametersCount][9] = {
+      {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
+      {"sensor", "VegTrug-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
+      {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -320,10 +320,10 @@ void VegTrugDiscovery(const char* mac, const char* sensorModel) {
 void MiJiaDiscovery(const char* mac, const char* sensorModel) {
 #    define MiJiaparametersCount 3
   Log.trace(F("MiJiaDiscovery" CR));
-  const char* MiJiasensor[MiJiaparametersCount][8] = {
-      {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "MiJia-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "MiJia-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* MiJiasensor[MiJiaparametersCount][9] = {
+      {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "MiJia-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "MiJia-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -333,11 +333,11 @@ void MiJiaDiscovery(const char* mac, const char* sensorModel) {
 void FormalDiscovery(const char* mac, const char* sensorModel) {
 #    define FormalparametersCount 4
   Log.trace(F("FormalDiscovery" CR));
-  const char* Formalsensor[FormalparametersCount][8] = {
-      {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "Formal-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "Formal-hum", mac, "humidity", jsonHum, "", "", "%"},
-      {"sensor", "Formal-for", mac, "", jsonFor, "", "", "%"}
+  const char* Formalsensor[FormalparametersCount][9] = {
+      {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "Formal-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "Formal-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement},
+      {"sensor", "Formal-for", mac, "", jsonFor, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -347,10 +347,10 @@ void FormalDiscovery(const char* mac, const char* sensorModel) {
 void LYWSD02Discovery(const char* mac, const char* sensorModel) {
 #    define LYWSD02parametersCount 3
   Log.trace(F("LYWSD02Discovery" CR));
-  const char* LYWSD02sensor[LYWSD02parametersCount][8] = {
-      {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "LYWSD02-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "LYWSD02-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* LYWSD02sensor[LYWSD02parametersCount][9] = {
+      {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V", stateClassMeasurement},
+      {"sensor", "LYWSD02-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "LYWSD02-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -360,10 +360,10 @@ void LYWSD02Discovery(const char* mac, const char* sensorModel) {
 void CLEARGRASSTRHDiscovery(const char* mac, const char* sensorModel) {
 #    define CLEARGRASSTRHparametersCount 3
   Log.trace(F("CLEARGRASSTRHDiscovery" CR));
-  const char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][8] = {
-      {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V"},
-      {"sensor", "CLEARGRASSTRH-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][9] = {
+      {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V", stateClassMeasurement},
+      {"sensor", "CLEARGRASSTRH-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -373,9 +373,9 @@ void CLEARGRASSTRHDiscovery(const char* mac, const char* sensorModel) {
 void CLEARGRASSCGD1Discovery(const char* mac, const char* sensorModel) {
 #    define CLEARGRASSCGD1parametersCount 2
   Log.trace(F("CLEARGRASSCGD1Discovery" CR));
-  const char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][9] = {
+      {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -385,9 +385,9 @@ void CLEARGRASSCGD1Discovery(const char* mac, const char* sensorModel) {
 void CLEARGRASSCGDK2Discovery(const char* mac, const char* sensorModel) {
 #    define CLEARGRASSCGDK2parametersCount 2
   Log.trace(F("CLEARGRASSCGDK2Discovery" CR));
-  const char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSCGDK2-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][9] = {
+      {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "CLEARGRASSCGDK2-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -397,9 +397,9 @@ void CLEARGRASSCGDK2Discovery(const char* mac, const char* sensorModel) {
 void CLEARGRASSCGPR1Discovery(const char* mac, const char* sensorModel) {
 #    define CLEARGRASSCGPR1parametersCount 2
   Log.trace(F("CLEARGRASSCGPR1Discovery" CR));
-  const char* CLEARGRASSCGPR1sensor[CLEARGRASSCGPR1parametersCount][8] = {
-      {"sensor", "CLEARGRASSCGPR1-pres", mac, "", jsonPres, "", "", ""},
-      {"sensor", "CLEARGRASSCGPR1-lux", mac, "illuminance", jsonLux, "", "", "lx"}
+  const char* CLEARGRASSCGPR1sensor[CLEARGRASSCGPR1parametersCount][9] = {
+      {"sensor", "CLEARGRASSCGPR1-pres", mac, "", jsonPres, "", "", "", stateClassMeasurement},
+      {"sensor", "CLEARGRASSCGPR1-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -409,8 +409,8 @@ void CLEARGRASSCGPR1Discovery(const char* mac, const char* sensorModel) {
 void CLEARGRASSCGH1Discovery(const char* mac, const char* sensorModel) {
 #    define CLEARGRASSCGH1parametersCount 1
   Log.trace(F("CLEARGRASSCGH1Discovery" CR));
-  const char* CLEARGRASSCGH1sensor[CLEARGRASSCGH1parametersCount][8] = {
-      {"binary_sensor", "CLEARGRASSCGH1-open", mac, "door", jsonOpen, "True", "False", ""},
+  const char* CLEARGRASSCGH1sensor[CLEARGRASSCGH1parametersCount][9] = {
+      {"binary_sensor", "CLEARGRASSCGH1-open", mac, "door", jsonOpen, "True", "False", "", stateClassNone},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -420,10 +420,10 @@ void CLEARGRASSCGH1Discovery(const char* mac, const char* sensorModel) {
 void CLEARGRASSTRHKPADiscovery(const char* mac, const char* sensorModel) {
 #    define CLEARGRASSTRHKPAparametersCount 3
   Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
-  const char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][8] = {
-      {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa"},
-      {"sensor", "CLEARGRASSTRHKPA-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][9] = {
+      {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa", stateClassMeasurement},
+      {"sensor", "CLEARGRASSTRHKPA-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -434,8 +434,8 @@ void CLEARGRASSTRHKPADiscovery(const char* mac, const char* sensorModel) {
 void MiScaleDiscovery(const char* mac, const char* sensorModel) {
 #    define MiScaleparametersCount 1
   Log.trace(F("MiScaleDiscovery" CR));
-  const char* MiScalesensor[MiScaleparametersCount][8] = {
-      {"sensor", "MiScale-weight", mac, "", jsonWeight, "", "", "kg"},
+  const char* MiScalesensor[MiScaleparametersCount][9] = {
+      {"sensor", "MiScale-weight", mac, "", jsonWeight, "", "", "kg", stateClassMeasurement},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -445,8 +445,8 @@ void MiScaleDiscovery(const char* mac, const char* sensorModel) {
 void MiLampDiscovery(const char* mac, const char* sensorModel) {
 #    define MiLampparametersCount 1
   Log.trace(F("MiLampDiscovery" CR));
-  const char* MiLampsensor[MiLampparametersCount][8] = {
-      {"sensor", "MiLamp-presence", mac, "", jsonPresence, "", "", "d"},
+  const char* MiLampsensor[MiLampparametersCount][9] = {
+      {"sensor", "MiLamp-presence", mac, "", jsonPresence, "", "", "d", stateClassNone},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -456,8 +456,8 @@ void MiLampDiscovery(const char* mac, const char* sensorModel) {
 void MiBandDiscovery(const char* mac, const char* sensorModel) {
 #    define MiBandparametersCount 1
   Log.trace(F("MiBandDiscovery" CR));
-  const char* MiBandsensor[MiBandparametersCount][8] = {
-      {"sensor", "MiBand-steps", mac, "", jsonStep, "", "", "nb"},
+  const char* MiBandsensor[MiBandparametersCount][9] = {
+      {"sensor", "MiBand-steps", mac, "", jsonStep, "", "", "nb", stateClassNone},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -467,10 +467,10 @@ void MiBandDiscovery(const char* mac, const char* sensorModel) {
 void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {
 #    define InkBirdTH1parametersCount 3
   Log.trace(F("InkBirdTH1Discovery" CR));
-  const char* InkBirdTH1sensor[InkBirdTH1parametersCount][8] = {
-      {"sensor", "InkBirdTH1-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "InkBirdTH1-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "InkBirdTH1-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* InkBirdTH1sensor[InkBirdTH1parametersCount][9] = {
+      {"sensor", "InkBirdTH1-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "InkBirdTH1-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "InkBirdTH1-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -480,9 +480,9 @@ void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {
 void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
 #    define InkBirdTH2parametersCount 2
   Log.trace(F("InkBirdTH2Discovery" CR));
-  const char* InkBirdTH2sensor[InkBirdTH2parametersCount][8] = {
-      {"sensor", "InkBirdTH2-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "InkBirdTH2-temp", mac, "temperature", jsonTempc, "", "", "°C"},
+  const char* InkBirdTH2sensor[InkBirdTH2parametersCount][9] = {
+      {"sensor", "InkBirdTH2-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "InkBirdTH2-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -492,11 +492,11 @@ void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
 void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
 #    define InkBird4XSparametersCount 4
   Log.trace(F("InkBird4XSDiscovery" CR));
-  const char* InkBird4XSsensor[InkBird4XSparametersCount][8] = {
-      {"sensor", "InkBird4XS-temp1", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "InkBird4XS-temp2", mac, "temperature", jsonTempc2, "", "", "°C"},
-      {"sensor", "InkBird4XS-temp3", mac, "temperature", jsonTempc3, "", "", "°C"},
-      {"sensor", "InkBird4XS-temp4", mac, "temperature", jsonTempc4, "", "", "°C"},
+  const char* InkBird4XSsensor[InkBird4XSparametersCount][9] = {
+      {"sensor", "InkBird4XS-temp1", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "InkBird4XS-temp2", mac, "temperature", jsonTempc2, "", "", "°C", stateClassMeasurement},
+      {"sensor", "InkBird4XS-temp3", mac, "temperature", jsonTempc3, "", "", "°C", stateClassMeasurement},
+      {"sensor", "InkBird4XS-temp4", mac, "temperature", jsonTempc4, "", "", "°C", stateClassMeasurement},
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -506,11 +506,11 @@ void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
-  const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][8] = {
-      {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "LYWSD03MMC-volt", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "LYWSD03MMC-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "LYWSD03MMC-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
+      {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "LYWSD03MMC-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "LYWSD03MMC-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "LYWSD03MMC-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -520,11 +520,11 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
-  const char* MHO_C401sensor[MHO_C401parametersCount][8] = {
-      {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "MHO_C401-volt", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "MHO_C401-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
+      {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "MHO_C401-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "MHO_C401-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -534,10 +534,10 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 void INodeEMDiscovery(const char* mac, const char* sensorModel) {
 #    define INodeEMparametersCount 3
   Log.trace(F("INodeEMDiscovery" CR));
-  const char* INodeEMsensor[INodeEMparametersCount][8] = {
-      {"sensor", "iNodeEM-power", mac, "power", jsonPower, "", "", "W"},
-      {"sensor", "iNodeEM-energy", mac, "", jsonEnergy, "", "", "kWh"},
-      {"sensor", "iNodeEM-batt", mac, "battery", jsonBatt, "", "", "%"}
+  const char* INodeEMsensor[INodeEMparametersCount][9] = {
+      {"sensor", "iNodeEM-power", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
+      {"sensor", "iNodeEM-energy", mac, "", jsonEnergy, "", "", "kWh", stateClassMeasurement},
+      {"sensor", "iNodeEM-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -547,10 +547,10 @@ void INodeEMDiscovery(const char* mac, const char* sensorModel) {
 void WS02Discovery(const char* mac, const char* sensorModel) {
 #    define WS02parametersCount 3
   Log.trace(F("WS02Discovery" CR));
-  const char* WS02sensor[WS02parametersCount][8] = {
-      {"sensor", "WS02-volt", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "WS02-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "WS02-hum", mac, "humidity", jsonHum, "", "", "%"}
+  const char* WS02sensor[WS02parametersCount][9] = {
+      {"sensor", "WS02-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "WS02-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "WS02-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -560,13 +560,13 @@ void WS02Discovery(const char* mac, const char* sensorModel) {
 void DT24Discovery(const char* mac, const char* sensorModel) {
 #    define DT24parametersCount 6
   Log.trace(F("DT24Discovery" CR));
-  const char* DT24sensor[DT24parametersCount][8] = {
-      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V"},
-      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A"},
-      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W"},
-      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh"},
-      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", ""},
-      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "°C"}
+  const char* DT24sensor[DT24parametersCount][9] = {
+      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
+      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
+      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
+      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", "", stateClassNone},
+      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -576,11 +576,11 @@ void DT24Discovery(const char* mac, const char* sensorModel) {
 void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {
 #    define EddystoneTLMparametersCount 4
   Log.trace(F("EddystoneTLMDiscovery" CR));
-  const char* EddystoneTLMsensor[EddystoneTLMparametersCount][8] = {
-      {"sensor", "EddystoneTLM-volt", mac, "", jsonVolt, "", "", "V"},
-      {"sensor", "EddystoneTLM-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "EddystoneTLM-count", mac, "", jsonCount, "", "", ""},
-      {"sensor", "EddystoneTLM-time", mac, "", jsonTime, "", "", ""}
+  const char* EddystoneTLMsensor[EddystoneTLMparametersCount][9] = {
+      {"sensor", "EddystoneTLM-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "EddystoneTLM-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "EddystoneTLM-count", mac, "", jsonCount, "", "", "", stateClassTotal},
+      {"sensor", "EddystoneTLM-time", mac, "", jsonTime, "", "", "", stateClassNone}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -590,12 +590,12 @@ void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {
 void TPMSDiscovery(const char* mac, const char* sensorModel) {
 #    define TPMSparametersCount 5
   Log.trace(F("TPMSDiscovery" CR));
-  const char* TPMSsensor[TPMSparametersCount][8] = {
-      {"sensor", "TPMS-batt", mac, "battery", jsonBatt, "", "", "%"},
-      {"sensor", "TPMS-temp", mac, "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "TPMS-pres", mac, "pressure", jsonPres, "", "", "kPa"},
-      {"sensor", "TPMS-count", mac, "", jsonCount, "", "", ""},
-      {"sensor", "TPMS-alarm", mac, "", jsonAlarm, "", "", ""}
+  const char* TPMSsensor[TPMSparametersCount][9] = {
+      {"sensor", "TPMS-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "TPMS-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "TPMS-pres", mac, "pressure", jsonPres, "", "", "kPa", stateClassMeasurement},
+      {"sensor", "TPMS-count", mac, "", jsonCount, "", "", "", stateClassTotal},
+      {"sensor", "TPMS-alarm", mac, "", jsonAlarm, "", "", "", stateClassNone}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
