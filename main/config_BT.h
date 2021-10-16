@@ -116,6 +116,10 @@ bool hassPresence = HassPresence;
 #  define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
 #endif
 
+#ifndef pubUnknownBLEManufacturerData
+#  define pubUnknownBLEManufacturerData true // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+#endif
+
 #ifndef pubBLEServiceUUID
 #  define pubBLEServiceUUID false // define true if you want to publish the service UUID data
 #endif
