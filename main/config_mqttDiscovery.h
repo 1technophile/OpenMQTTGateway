@@ -69,22 +69,21 @@ extern void createDiscovery(const char* sensor_type,
 
 /**
  * @brief Create a message for Discovery Device Trigger. For HA @see https://www.home-assistant.io/integrations/device_trigger.mqtt/
- * 
- * @param unique_id             Valid only if gateway entry is false, The IDs that uniquely identify the device. For example a serial number.
+ * @param use_gateway_info      Boolean where true mean use the OMG information as Device Information
  * @param topic                 The Topic  where the trigger will publish the content
  * @param type                  The type of the trigger, e.g. button_short_press. Entries supported by the HA Frontend: button_short_press, button_short_release, button_long_press, button_long_release, button_double_press, button_triple_press, button_quadruple_press, button_quintuple_press. If set to an unsupported value, will render as subtype type, e.g. button_1 spammed with type set to spammed and subtype set to button_1
  * @param subtype               The subtype of the trigger, e.g. button_1. Entries supported by the HA frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6. If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
- * @param use_gateway_info      Boolean where true mean use the OMG information as Device Information
- * @param device_name           The name of the device.
- * @param device_manufacturer   The manufacturer of the device.
- * @param device_model          The model of the device.
- * @param device_mac            The connection of the device to the outside world
+ * @param unique_id             Valid only if gateway entry is false, The IDs that uniquely identify the device. For example a serial number.
+ * @param device_name           Valid only if gateway entry is false, The name of the device.
+ * @param device_manufacturer   Valid only if gateway entry is false, The manufacturer of the device.
+ * @param device_model          Valid only if gateway entry is false, The model of the device.
+ * @param device_mac            Valid only if gateway entry is false, The connection of the device to the outside world
  */
-void announceDeviceTrigger(char* unique_id,
+void announceDeviceTrigger(bool use_gateway_info,
                            char* topic,
                            char* type,
                            char* subtype,
-                           bool use_gateway_info,
+                           char* unique_id,
                            char* device_name,
                            char* device_manufacturer,
                            char* device_model,
