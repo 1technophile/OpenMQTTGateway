@@ -94,7 +94,7 @@ void announceDeviceTrigger(bool use_gateway_info,
 #define DEVICEMANUFACTURER "OMG_community"
 
 /*-------------- Auto discovery macros-----------------*/
-// Set the line below to true so as to have autodiscovery working with OpenHAB
+// Set the line below to true so as to have auto working with OpenHAB
 #define OpenHABDiscovery false
 
 #if OpenHABDiscovery // OpenHAB autodiscovery value key definition (is defined command is not supported by OpenHAB)

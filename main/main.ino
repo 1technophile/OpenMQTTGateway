@@ -286,190 +286,200 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
 
+/**
+ * @brief Publish the payload on default MQTT topic.
+ * 
+ * @param topicori suffix to add on default MQTT Topic
+ * @param payload  the message to sends
+ * @param retainFlag true if you what a retain 
+ */
 void pub(const char* topicori, const char* payload, bool retainFlag) {
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
   pubMQTT(topic.c_str(), payload, retainFlag);
 }
 
+/**
+ * @brief Publish the payload on default MQTT topic
+ * 
+ * @param topicori suffix to add on default MQTT Topic
+ * @param data The Json Object that rapresent the message
+ */
 void pub(const char* topicori, JsonObject& data) {
-  Log.notice(F("Subject: %s" CR), topicori);
+  String dataAsString = "";
+  serializeJson(data, dataAsString);
+  Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
-  logJson(data);
-  if (client.connected()) {
-    String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #ifdef valueAsASubject
 #  ifdef ZgatewayPilight
-    String value = data["value"];
-    String protocol = data["protocol"];
-    if (value != 0) {
-      topic = topic + "/" + protocol + "/" + value;
-    }
+  String value = data["value"];
+  String protocol = data["protocol"];
+  if (value != 0) {
+    topic = topic + "/" + protocol + "/" + value;
+  }
 #  else
-    SIGNAL_SIZE_UL_ULL value = data["value"];
-    if (value != 0) {
-      topic = topic + "/" + toString(value);
-    }
+  SIGNAL_SIZE_UL_ULL value = data["value"];
+  if (value != 0) {
+    topic = topic + "/" + toString(value);
+  }
 #  endif
 #endif
 
 #ifdef jsonPublishing
-    Log.trace(F("jsonPublishing" CR));
-#  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-    char JSONmessageBuffer[measureJson(data) + 1];
-#  else
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
-#  endif
-    serializeJson(data, JSONmessageBuffer, sizeof(JSONmessageBuffer));
-    pubMQTT(topic, JSONmessageBuffer);
+  Log.trace(F("jsonPubl - ON" CR));
+  pubMQTT(topic, dataAsString.c_str());
 #endif
 
 #ifdef simplePublishing
-    Log.trace(F("simplePublishing" CR));
-    // Loop through all the key-value pairs in obj
-    for (JsonPair p : data) {
+  Log.trace(F("simplePub - ON" CR));
+  // Loop through all the key-value pairs in obj
+  for (JsonPair p : data) {
 #  if defined(ESP8266)
-      yield();
+    yield();
 #  endif
-      if (p.value().is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key().c_str(), "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
-        if (strcmp(p.key().c_str(), "value") == 0) { // if data is a value we don't integrate the name into the topic
-          pubMQTT(topic, p.value().as<SIGNAL_SIZE_UL_ULL>());
-        } else { // if data is not a value we integrate the name into the topic
-          pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<SIGNAL_SIZE_UL_ULL>());
-        }
-      } else if (p.value().is<int>()) {
-        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<int>());
-      } else if (p.value().is<float>()) {
-        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<float>());
-      } else if (p.value().is<char*>()) {
-        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<const char*>());
+    if (p.value().is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key().c_str(), "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
+      if (strcmp(p.key().c_str(), "value") == 0) { // if data is a value we don't integrate the name into the topic
+        pubMQTT(topic, p.value().as<SIGNAL_SIZE_UL_ULL>());
+      } else { // if data is not a value we integrate the name into the topic
+        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<SIGNAL_SIZE_UL_ULL>());
       }
+    } else if (p.value().is<int>()) {
+      pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<int>());
+    } else if (p.value().is<float>()) {
+      pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<float>());
+    } else if (p.value().is<char*>()) {
+      pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<const char*>());
     }
-#endif
-  } else {
-    Log.warning(F("client not connected can't pub" CR));
   }
+#endif
 }
 
+/**
+ * @brief Publish the payload on default MQTT topic
+ * 
+ * @param topicori suffix to add on default MQTT Topic
+ * @param payload the message to sends
+ */
 void pub(const char* topicori, const char* payload) {
-  if (client.connected()) {
-    String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
-    Log.trace(F("Pub ack %s into: %s" CR), payload, topic.c_str());
-    pubMQTT(topic, payload);
-  } else {
-    Log.warning(F("client not connected can't pub" CR));
-  }
+  String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  pubMQTT(topic, payload);
 }
 
-void pub_custom_topic(const char* topicori, JsonObject& data, boolean retain) {
-  if (client.connected()) {
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-    char JSONmessageBuffer[measureJson(data) + 1];
-#else
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
-#endif
-    serializeJson(data, JSONmessageBuffer, sizeof(JSONmessageBuffer));
-    Log.trace(F("Pub json :%s into custom topic: %s" CR), JSONmessageBuffer, topicori);
-    pubMQTT(topicori, JSONmessageBuffer, retain);
-  } else {
-    Log.warning(F("client not connected can't pub" CR));
-  }
+/**
+ * @brief Publish the payload on the topic with a retantion
+ * 
+ * @param topic  The topic where to publish
+ * @param data   The Json Object that rapresent the message
+ * @param retain true if you what a retain 
+ */
+void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
+  String buffer = "";
+  serializeJson(data, buffer);
+  pubMQTT(topic, buffer.c_str(), retain);
 }
 
-// Low level MQTT functions
+/**
+ * @brief Low level MQTT functions without retain
+ * 
+ * @param topic  the topic
+ * @param payload  the payload
+ */
 void pubMQTT(const char* topic, const char* payload) {
-  client.publish(topic, payload);
+  pubMQTT(topic, payload, false);
 }
 
-void pubMQTT(const char* topicori, const char* payload, bool retainFlag) {
-  client.publish(topicori, payload, retainFlag);
+/**
+ * @brief Very Low level MQTT functions with retain Flag
+ * 
+ * @param topic the topic 
+ * @param payload the payload
+ * @param retainFlag  true if retain the retain Flag
+ */
+void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
+  if (client.connected()) {
+    Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
+    client.publish(topic, payload, retainFlag);
+  } else {
+    Log.warning(F("Client not connected, aborting thes publication" CR));
+  }
 }
 
 void pubMQTT(String topic, const char* payload) {
-  client.publish(topic.c_str(), payload);
+  pubMQTT(topic.c_str(), payload);
 }
 
 void pubMQTT(const char* topic, unsigned long payload) {
   char val[11];
   sprintf(val, "%lu", payload);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(const char* topic, unsigned long long payload) {
   char val[21];
   sprintf(val, "%llu", payload);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(const char* topic, String payload) {
-  client.publish(topic, payload.c_str());
+  pubMQTT(topic, payload.c_str());
 }
 
 void pubMQTT(String topic, String payload) {
-  client.publish(topic.c_str(), payload.c_str());
+  pubMQTT(topic.c_str(), payload.c_str());
 }
 
 void pubMQTT(String topic, int payload) {
   char val[12];
   sprintf(val, "%d", payload);
-  client.publish(topic.c_str(), val);
+  pubMQTT(topic.c_str(), val);
 }
 
 void pubMQTT(String topic, unsigned long long payload) {
   char val[21];
   sprintf(val, "%llu", payload);
-  client.publish(topic.c_str(), val);
+  pubMQTT(topic.c_str(), val);
 }
 
 void pubMQTT(String topic, float payload) {
   char val[12];
   dtostrf(payload, 3, 1, val);
-  client.publish(topic.c_str(), val);
+  pubMQTT(topic.c_str(), val);
 }
 
 void pubMQTT(const char* topic, float payload) {
   char val[12];
   dtostrf(payload, 3, 1, val);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(const char* topic, int payload) {
-  char val[6];
+  char val[12];
   sprintf(val, "%d", payload);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(const char* topic, unsigned int payload) {
-  char val[6];
+  char val[12];
   sprintf(val, "%u", payload);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(const char* topic, long payload) {
   char val[11];
   sprintf(val, "%ld", payload);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(const char* topic, double payload) {
   char val[16];
   sprintf(val, "%f", payload);
-  client.publish(topic, val);
+  pubMQTT(topic, val);
 }
 
 void pubMQTT(String topic, unsigned long payload) {
   char val[11];
   sprintf(val, "%lu", payload);
-  client.publish(topic.c_str(), val);
-}
-
-void logJson(JsonObject& jsondata) {
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-  char JSONmessageBuffer[measureJson(jsondata) + 1];
-#else
-  char JSONmessageBuffer[JSON_MSG_BUFFER];
-#endif
-  serializeJson(jsondata, JSONmessageBuffer, sizeof(JSONmessageBuffer));
-  Log.notice(F("Received json : %s" CR), JSONmessageBuffer);
+  pubMQTT(topic.c_str(), val);
 }
 
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
@@ -1652,7 +1662,10 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
   if (!jsondata.isNull()) { // json object ok -> json decoding
     // log the received json
-    logJson(jsondata);
+    String buffer = "";
+    serializeJson(jsondata, buffer);
+    Log.notice(F("[ MQTT->OMG ]: %s" CR), buffer.c_str());
+
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
 #endif
