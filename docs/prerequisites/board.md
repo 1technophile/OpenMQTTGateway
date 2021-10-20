@@ -16,6 +16,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |Sonoff RF Bridge (*) |![](../img/OpenMQTTGateway_boards_sonoff_rfbridge.png)|X|[mod](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
 |All bare ESP32|-|-|-|X|-|X|-|X|
 |OLIMEX ESP32 Ethernet|-|-|-|X|-|X|-|X|
+|ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
 |[M5Stick C](M5)|![](../img/OpenMQTTgateway_M5_StickC_Board_Display_Text.png)|-|send|X|-|X|X|X|
@@ -31,7 +32,7 @@ The boards below doesn't need hardware modification (or a lite one).
 The boards below need hardware [parts](parts.md) and electronic/hardware competencies. You have more possibilities of gateways combination, compared to off the shelves ones.
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|Arduino UNO|X|X(limited compared to ESP)|-|-|X|X|
+|Arduino UNO|X|X(limited compared to ESP)|-|-|-|X|X|
 |Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
 |ESP32|X|X|X|X|not tested|X|X|
 |ESP8266|X|X|X|not tested|X|X|X|

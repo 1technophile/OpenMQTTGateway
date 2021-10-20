@@ -83,20 +83,20 @@ void MeasureTempHum() {
       Log.error(F("Failed to read from sensor HTU21!" CR));
     } else {
       Log.notice(F("Creating HTU21 buffer" CR));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& HTU21data = jsonBuffer.createObject();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject HTU21data = jsonBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
       if (HtuTempC != persisted_htu_tempc || htu21_always) {
         float HtuTempF = (HtuTempC * 1.8) + 32;
-        HTU21data.set("tempc", (float)HtuTempC);
-        HTU21data.set("tempf", (float)HtuTempF);
+        HTU21data["tempc"] = (float)HtuTempC;
+        HTU21data["tempf"] = (float)HtuTempF;
       } else {
         Log.notice(F("Same Temp. Don't send it" CR));
       }
 
       // Generate Humidity in percent
       if (HtuHum != persisted_htu_hum || htu21_always) {
-        HTU21data.set("hum", (float)HtuHum);
+        HTU21data["hum"] = (float)HtuHum;
       } else {
         Log.notice(F("Same Humidity. Don't send it" CR));
       }

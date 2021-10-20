@@ -78,3 +78,50 @@ build_flags =
   '-DMQTT_PASS="abcdefghi"'
   '-DMQTT_SERVER="192.168.1.17"'
   '-DDEFAULT_LOW_POWER_MODE=2'
+
+;hacked Sonoff RF-Bridge
+[env:sonoff-rfbridge-hacked]
+platform = ${com.esp8266_platform}
+board = esp8285
+lib_deps = 
+	${com-esp.lib_deps}
+	${libraries.esppilight}
+build_flags = 
+	${com-esp.build_flags}
+	'-DZgatewayPilight="Pilight"'
+	'-DRF_RECEIVER_GPIO=4'
+	'-DRF_EMITTER_GPIO=5'
+	'-DLED_INFO=13'
+	'-DLED_INFO_ON=0'
+	'-DZsensorGPIOInput="GPIOInput"'
+	'-DINPUT_GPIO=0'
+	'-DGateway_Name="OpenMQTTGateway_SRFB_Direct"'
+board_build.flash_mode = dout
+board_build.ldscript = eagle.flash.1m64.ld ;this frees more space for firmware uplad via OTA.
+
+;hacked Sonoff RF-Bridge OTA flash
+[env:sonoff-rfbridge-hacked-ota]
+upload_protocol = espota
+upload_port = <ip> ;change this to the ip address of you SRFB
+upload_speed = 512000
+upload_flags = 
+    --auth=OTAPASSWORD
+    --port=8266
+platform = ${com.esp8266_platform}
+board = esp8285
+lib_deps = 
+	${com-esp.lib_deps}
+	${libraries.esppilight}
+build_flags = 
+	${com-esp.build_flags}
+	'-DZgatewayPilight="Pilight"'
+	'-DRF_RECEIVER_GPIO=4'
+	'-DRF_EMITTER_GPIO=5'
+	'-DLED_INFO=13'
+	'-DLED_INFO_ON=0'
+	'-DZsensorGPIOInput="GPIOInput"'
+	'-DINPUT_GPIO=0'
+	'-DGateway_Name="OpenMQTTGateway_SRFB_Direct"'
+board_build.flash_mode = dout
+extra_scripts = scripts/compressFirmware.py
+board_build.ldscript = eagle.flash.1m64.ld ;this frees more space for firmware uplad. Should also be uses for initial flash via serial

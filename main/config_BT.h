@@ -42,9 +42,9 @@ extern int btQueueLengthCount;
 bool bleConnect = AttemptBLECOnnect;
 
 // Sets whether to filter publishing of scanned devices that require a connection.
-// Default (1) prevents overwriting the publication of the device connection data with the advertised data.
+// Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
 #  ifndef BLE_FILTER_CONNECTABLE
-#    define BLE_FILTER_CONNECTABLE 1
+#    define BLE_FILTER_CONNECTABLE 0
 #  endif
 #  include "NimBLEDevice.h"
 #endif
@@ -140,20 +140,22 @@ enum ble_sensor_model {
   XMTZC05HM,
   IBSTH1,
   LYWSD03MMC,
-  MHO_C401,
+  MHO_C401, //15
   LYWSD03MMC_ATC,
   INODE_EM,
   CGDK2,
   LYWSD03MMC_PVVX,
-  CGH1,
+  CGH1, //20
   CGPR1,
   WS02,
   IBSTH2,
   IBT4XS,
-  DT24,
+  DT24, //25
   EDDYSTONE_TLM,
   MOKOBEACON,
   MOKOBEACONXPRO,
+  IBEACON,
+  TPMS,
   GENERIC,
 };
 

@@ -1,4 +1,10 @@
 # BLE gateway
+
+::: warning
+We strongly encourage the use of a white-list (see below) so as to collect data from your devices only and not from other MAC addresses.
+By default the gateway scans the advertizing BLE devices nearby with their MAC addresses. Depending on your country, it may be illegal to monitor networks for MAC addresses, especially on networks that you do not own. Please check your country's laws (for US Section 18 U.S. Code § 2511) - [discussion here](https://github.com/schollz/howmanypeoplearearound/issues/4).
+:::
+
 ## Receiving signals from BLE beacon devices for Presence detection
 
 Subscribe to all the messages with mosquitto or open your MQTT client software:
@@ -26,7 +32,7 @@ Note that you can find apps to simulate beacons and do some tests like [Beacon s
 IOS version >=10 devices advertise without an extra app a mac address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
 
 
-## Receiving signals Mi Flora/ Mi jia device/ LYWDS02, ClearGrass or Mi scale
+## Receiving signals from BLE devices Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale and [many more](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 So as to receive BLE sensors data you need either a simple ESP32 either an ESP8266/arduino + HM10/11 with firmware >= v601
 The mi flora supported firmware is >3.1.8
 
@@ -46,6 +52,8 @@ Note that the gateway return one or two measurement value each time. The differe
 * Impedance
 * Battery
 * Voltage
+* Open
+* Presence
 
 The infos will appear like this on your MQTT broker:
 

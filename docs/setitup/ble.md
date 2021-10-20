@@ -2,6 +2,11 @@
 ## Compatible parts
 **The ESP32 has an integrated BLE module**, with this board the BLE gateway don't need any additional hardware. Making it the **advised board for BLE**.
 
+You can use a barebone ESP32 or some nice looking products like the ones below (from M5Stack):
+
+![](../img/OpenMQTTgateway_M5_Atom_Board.png)
+![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)
+
 For Arduino and ESP8266 you can use an HM10 or HM11 below.
 |Module|Purpose|Where to Buy|
 |-|-|-|
@@ -10,8 +15,8 @@ For Arduino and ESP8266 you can use an HM10 or HM11 below.
 ## Pinout
 |Module Pin|Board RX Pin|Board TX Pin|
 |-|:-:|:-:|
-|Arduino|D6 to HM10 TX|D5 to HM10 RX|
-|ESP8266|D6 to HM10 TX|D7 to HM10 RX|
+|Arduino|D6 to HM10 RX|D5 to HM10 TX|
+|ESP8266|D6 to HM10 RX|D7 to HM10 TX|
 
 Vcc pin of the board and the HM10 Module to a 5V supply source.
 Ground pins of the board and the HM10 Module to the ground of the supply source.

@@ -1,4 +1,78 @@
-# Integrate Node Red
+# Integrate Node-Red
+
+## Integrate BLE sensors, devices and display a dashboard
+
+Prerequisites: node-red, node-red-dashboard
+
+### Broker connection
+* Add a new `mqtt in` node
+* Click 2 times on it
+* Add a new broker or connect to an existing one (server field)
+* Set the topic like below with the MAC address at the end being the one of the device you want to integrate
+
+![](../img/OpenMQTTgateway_NODERED-integration.png)
+
+::: tip
+The "+" enables to process the data from all the gateways whatever name they have. So you may setup several OpenMQTTGateway, you will not have to change the Node-Red configuration.
+:::
+
+This configuration enables to process all the data coming from the sensor.
+
+* Click on done
+* So as to monitor the traffic coming; you can add a debug node with *msg.payload* as Output
+
+![](../img/OpenMQTTgateway_NODERED-integration-debug.png)
+
+* Link it to the `mqtt in` node
+
+![](../img/OpenMQTTgateway_NODERED-integration-debug2.png)
+
+* Deploy
+* Open the debug panel
+* You should see messages coming when the gateway will receive data
+
+![](../img/OpenMQTTgateway_NODERED-integration-debug3.png)
+
+### Json message processing
+We need to process the json message so as to extract the value that we want to display.
+
+* Add a `change` node
+* Configure it as `Move`
+* Add the msg value you would like to process example *msg.payload.tempc* and the target *msg.payload*
+
+![](../img/OpenMQTTgateway_NODERED-integration-process.png)
+
+* Connect the `change` node to the `mqtt in` node
+
+### Dashboard
+You can now add widget so as to display the value processed above
+
+* Add a `gauge` node
+* Add a group and organize your dashboard
+* Add your value format to process the payload like below
+
+![](../img/OpenMQTTgateway_NODERED-gauge.png)
+
+* Click on Done
+* Deploy
+* Go to your `node-red url`/ui
+
+You should see the gauge with the last value displayed
+
+![](../img/OpenMQTTgateway_NODERED-gauge-dashboard.png)
+
+You can also add easily a chart node:
+
+![](../img/OpenMQTTgateway_NODERED-chart.png)
+
+![](../img/OpenMQTTgateway_NODERED-chart-dashboard.png)
+
+Or a function with a notification:
+
+![](../img/OpenMQTTgateway_NODERED-flow-BLE-temperature.png)
+
+
+## Integrate RF
 Here is a simple set of flows for integrating OpenMQTTGateway with NodeRED via an ESP8266 module.
 
 In this example I have used a Wemos D1 Mini with some cheap RF modules.

@@ -37,7 +37,7 @@
 
 RCSwitch mySwitch = RCSwitch();
 
-#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT)
+#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery)
 void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creation from received RF values
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
@@ -51,7 +51,8 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) { //on the fly switch creat
                   will_Topic, switchRF[3], switchRF[4],
                   switchRF[5], switchRF[6], switchRF[7],
                   0, "", "", true, subjectMQTTtoRF,
-                  "", "", "", "", false);
+                  "", "", "", "", false,
+                  stateClassNone);
 }
 #  endif
 
@@ -81,24 +82,24 @@ void RFtoMQTT() {
 #  else
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
 #  endif
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RFdata = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RFdata = jsonBuffer.to<JsonObject>();
     Log.trace(F("Rcv. RF" CR));
 #  ifdef ESP32
     Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
 #  endif
     SIGNAL_SIZE_UL_ULL MQTTvalue = mySwitch.getReceivedValue();
-    RFdata.set("value", (SIGNAL_SIZE_UL_ULL)MQTTvalue);
-    RFdata.set("protocol", (int)mySwitch.getReceivedProtocol());
-    RFdata.set("length", (int)mySwitch.getReceivedBitlength());
-    RFdata.set("delay", (int)mySwitch.getReceivedDelay());
+    RFdata["value"] = (SIGNAL_SIZE_UL_ULL)MQTTvalue;
+    RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
+    RFdata["length"] = (int)mySwitch.getReceivedBitlength();
+    RFdata["delay"] = (int)mySwitch.getReceivedDelay();
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
-    RFdata.set("mhz", receiveMhz);
+    RFdata["mhz"] = receiveMhz;
 #  endif
     mySwitch.resetAvailable();
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
-#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) //component creation for HA
+#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery) //component creation for HA
       if (disc)
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
@@ -118,9 +119,9 @@ void RFtoMQTT() {
 void MQTTtoRF(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   ELECHOUSE_cc1101.SetTx(receiveMhz);
+#    endif
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
-#    endif
   SIGNAL_SIZE_UL_ULL data = STRTO_UL_ULL(datacallback, NULL, 10); // we will not be able to pass values > 4294967295 on Arduino boards
 
   // RF DATA ANALYSIS
@@ -194,10 +195,10 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       if (validFrequency((int)trMhz)) {
         ELECHOUSE_cc1101.SetTx(trMhz);
         Log.notice(F("Transmit mhz: %F" CR), trMhz);
-        mySwitch.disableReceive();
-        mySwitch.enableTransmit(RF_EMITTER_GPIO);
       }
 #    endif
+      mySwitch.disableReceive();
+      mySwitch.enableTransmit(RF_EMITTER_GPIO);
       mySwitch.setRepeatTransmit(valueRPT);
       mySwitch.setProtocol(valuePRT, valuePLSL);
       mySwitch.send(data, valueBITS);

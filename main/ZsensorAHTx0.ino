@@ -86,20 +86,20 @@ void MeasureAHTTempHum() {
       Log.error(F("Failed to read from sensor AHTx0!" CR));
     } else {
       Log.notice(F("Creating AHTx0 buffer" CR));
-      StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject& AHTx0data = jsonBuffer.createObject();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject AHTx0data = jsonBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
       if (ahtTempC.temperature != persisted_aht_tempc || AHTx0_always) {
         float ahtTempF = convertTemp_CtoF(ahtTempC.temperature);
-        AHTx0data.set("tempc", (float)ahtTempC.temperature);
-        AHTx0data.set("tempf", (float)ahtTempF);
+        AHTx0data["tempc"] = (float)ahtTempC.temperature;
+        AHTx0data["tempf"] = (float)ahtTempF;
       } else {
         Log.notice(F("Same Temp. Don't send it" CR));
       }
 
       // Generate Humidity in percent
       if (ahtHum.relative_humidity != persisted_aht_hum || AHTx0_always) {
-        AHTx0data.set("hum", (float)ahtHum.relative_humidity);
+        AHTx0data["hum"] = (float)ahtHum.relative_humidity;
       } else {
         Log.notice(F("Same Humidity. Don't send it" CR));
       }

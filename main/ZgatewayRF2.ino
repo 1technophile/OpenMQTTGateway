@@ -78,11 +78,11 @@ void RF2toMQTTdiscovery(JsonObject& data) {
   String payloadoffstr;
 
   int org_switchtype = data["switchType"]; // Store original switchvalue
-  data.set("switchType", 1); // switchtype = 1 turns switch on.
-  data.printTo(payloadonstr);
-  data.set("switchType", 0); // switchtype = 0 turns switch off.
-  data.printTo(payloadoffstr);
-  data.set("switchType", org_switchtype); // Restore original switchvalue
+  data["switchType"] = 1; // switchtype = 1 turns switch on.
+  serializeJson(data, payloadonstr);
+  data["switchType"] = 0; // switchtype = 0 turns switch off.
+  serializeJson(data, payloadonstr);
+  data["switchType"] = org_switchtype; // Restore original switchvalue
 
   String switchname;
   switchname = "RF2_" + String((int)data["unit"]) + "_" +
@@ -111,7 +111,8 @@ void RF2toMQTTdiscovery(JsonObject& data) {
                   (char*)getUniqueId(switchRF[1], "").c_str(), will_Topic,
                   switchRF[3], switchRF[4], switchRF[5], switchRF[6],
                   switchRF[7], 0, "", "", true, subjectMQTTtoRF2,
-                  "", "", "", "", false);
+                  "", "", "", "", false,
+                  stateClassNone);
 }
 #  endif
 
@@ -119,17 +120,17 @@ void RF2toMQTT() {
   if (rf2rd.hasNewData) {
     Log.trace(F("Creating RF2 buffer" CR));
     const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-    JsonObject& RF2data = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    JsonObject RF2data = jsonBuffer.to<JsonObject>();
 
     rf2rd.hasNewData = false;
 
     Log.trace(F("Rcv. RF2" CR));
-    RF2data.set("unit", (int)rf2rd.unit);
-    RF2data.set("groupBit", (int)rf2rd.groupBit);
-    RF2data.set("period", (int)rf2rd.period);
-    RF2data.set("address", (unsigned long)rf2rd.address);
-    RF2data.set("switchType", (int)rf2rd.switchType);
+    RF2data["unit"] = (int)rf2rd.unit;
+    RF2data["groupBit"] = (int)rf2rd.groupBit;
+    RF2data["period"] = (int)rf2rd.period;
+    RF2data["address"] = (unsigned long)rf2rd.address;
+    RF2data["switchType"] = (int)rf2rd.switchType;
 #  ifdef ZmqttDiscovery //component creation for HA
     if (disc)
       RF2toMQTTdiscovery(RF2data);

@@ -102,21 +102,21 @@ void _rfbDecode() {
     _rfbToChar(&_uartbuf[1], buffer);
 
     Log.trace(F("Creating SRFB buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& SRFBdata = jsonBuffer.createObject();
-    SRFBdata.set("raw", String(buffer).substring(0, 18));
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject SRFBdata = jsonBuffer.to<JsonObject>();
+    SRFBdata["raw"] = String(buffer).substring(0, 18);
 
     int val_Tsyn = (int)(int)value_from_hex_data(buffer, 0, 4, false, false);
-    SRFBdata.set("delay", (int)val_Tsyn);
+    SRFBdata["delay"] = (int)val_Tsyn;
 
     int val_Tlow = (int)value_from_hex_data(buffer, 4, 4, false, false);
-    SRFBdata.set("val_Tlow", (int)val_Tlow);
+    SRFBdata["val_Tlow"] = (int)val_Tlow;
 
     int val_Thigh = (int)value_from_hex_data(buffer, 8, 4, false, false);
-    SRFBdata.set("val_Thigh", (int)val_Thigh);
+    SRFBdata["val_Thigh"] = (int)val_Thigh;
 
     unsigned long MQTTvalue = (unsigned long)value_from_hex_data(buffer, 12, 8, false, false);
-    SRFBdata.set("value", (unsigned long)MQTTvalue);
+    SRFBdata["value"] = (unsigned long)MQTTvalue;
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
       Log.trace(F("Adv data SRFBtoMQTT" CR));

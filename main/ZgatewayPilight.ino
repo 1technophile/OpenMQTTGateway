@@ -40,13 +40,18 @@ void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
   if (status == VALID) {
     Log.trace(F("Creating RF PiLight buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& RFPiLightdata = jsonBuffer.createObject();
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer2;
-    JsonObject& msg = jsonBuffer2.parseObject(message);
-    RFPiLightdata.set("message", msg);
-    RFPiLightdata.set("protocol", (char*)protocol.c_str());
-    RFPiLightdata.set("length", (char*)deviceID.c_str());
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject RFPiLightdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
+    JsonObject msg = jsonBuffer2.to<JsonObject>();
+    auto error = deserializeJson(jsonBuffer2, message);
+    if (error) {
+      Log.error(F("deserializeJson() failed: %s" CR), error.c_str());
+      return;
+    }
+    RFPiLightdata["message"] = msg;
+    RFPiLightdata["protocol"] = (const char*)protocol.c_str();
+    RFPiLightdata["length"] = (const char*)deviceID.c_str();
 
     const char* device_id = deviceID.c_str();
     if (!strlen(device_id)) {
@@ -62,9 +67,9 @@ void pilightCallback(const String& protocol, const String& message, int status,
       }
     }
 
-    RFPiLightdata.set("value", device_id);
-    RFPiLightdata.set("repeats", (int)repeats);
-    RFPiLightdata.set("status", (int)status);
+    RFPiLightdata["value"] = device_id;
+    RFPiLightdata["repeats"] = (int)repeats;
+    RFPiLightdata["status"] = (int)status;
     pub(subjectPilighttoMQTT, RFPiLightdata);
     if (repeatPilightwMQTT) {
       Log.trace(F("Pub Pilight for rpt" CR));

@@ -29,7 +29,6 @@
 #  include <esp_ota_ops.h> // get running partition
 #  include <esp_partition.h>
 
-
 // To do extern "C" uint32_t _SPIFFS_start;
 // To do extern "C" uint32_t _SPIFFS_end;
 

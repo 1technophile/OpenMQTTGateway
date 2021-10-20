@@ -49,6 +49,10 @@
  * to the access point with your password (SSID: WifiManager_ssid, password: WifiManager_password)
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
+
+// Uncomment to use the mac address in the format of 112233445566 as the gateway name
+// Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
+//#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
 #  define Gateway_Name "OpenMQTTGateway"
 #endif
@@ -79,7 +83,27 @@ const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
 #endif
 
-//#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on OLIMEX ESP32 Ethernet gateway
+//#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on ESP32 Ethernet gateway and adapt the settings to your board below, the default parameter are for OLIMEX ESP32 Gateway
+#ifdef ESP32_ETHERNET
+#  ifndef ETH_PHY_ADDR
+#    define ETH_PHY_ADDR 0
+#  endif
+#  ifndef ETH_PHY_TYPE
+#    define ETH_PHY_TYPE ETH_PHY_LAN8720
+#  endif
+#  ifndef ETH_PHY_POWER
+#    define ETH_PHY_POWER 12
+#  endif
+#  ifndef ETH_PHY_MDC
+#    define ETH_PHY_MDC 23
+#  endif
+#  ifndef ETH_PHY_MDIO
+#    define ETH_PHY_MDIO 18
+#  endif
+#  ifndef ETH_CLK_MODE
+#    define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
+#  endif
+#endif
 
 #if defined(ESPWifiManualSetup) // for nodemcu, weemos and esp8266
 #  ifndef wifi_ssid
@@ -102,6 +126,10 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #ifndef WifiManager_TimeOut
 #  define WifiManager_TimeOut 5
 #endif
+#ifndef WM_DEBUG_LEVEL
+#  define WM_DEBUG_LEVEL 1 // valid values are: DEBUG_ERROR = 0, DEBUG_NOTIFY = 1, DEBUG_VERBOSE = 2, DEBUG_DEV = 3, DEBUG_MAX = 4
+#endif
+//#define WIFIMNG_HIDE_MQTT_CONFIG //Uncomment so as to hide MQTT setting from Wifi manager page
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
@@ -114,9 +142,13 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define parameters_size      30
-#  define mqtt_topic_max_size  100
-#  define mqtt_max_packet_size 1024
+#  define parameters_size     30
+#  define mqtt_topic_max_size 100
+#  ifdef MQTT_HTTPS_FW_UPDATE
+#    define mqtt_max_packet_size 2048
+#  else
+#    define mqtt_max_packet_size 1024
+#  endif
 #else
 #  define parameters_size      15
 #  define mqtt_topic_max_size  50

@@ -44,8 +44,8 @@ void MeasureDistance() {
   if (millis() > (timeHCSR04 + TimeBetweenReadingHCSR04)) {
     timeHCSR04 = millis();
     Log.trace(F("Creating HCSR04 buffer" CR));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& HCSR04data = jsonBuffer.createObject();
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject HCSR04data = jsonBuffer.to<JsonObject>();
     digitalWrite(HCSR04_TRI_GPIO, LOW);
     delayMicroseconds(2);
     digitalWrite(HCSR04_TRI_GPIO, HIGH);
@@ -57,15 +57,15 @@ void MeasureDistance() {
     } else {
       static unsigned int distance = 99999;
       unsigned int d = duration / 58.2;
-      HCSR04data.set("distance", (int)d);
+      HCSR04data["distance"] = (int)d;
       if (d > distance) {
-        HCSR04data.set("direction", "away");
+        HCSR04data["direction"] = "away";
         Log.trace(F("HC SR04 Distance changed" CR));
       } else if (d < distance) {
-        HCSR04data.set("direction", "towards");
+        HCSR04data["direction"] = "towards";
         Log.trace(F("HC SR04 Distance changed" CR));
       } else if (HCSR04_always) {
-        HCSR04data.set("direction", "static");
+        HCSR04data["direction"] = "static";
         Log.trace(F("HC SR04 Distance hasn't changed" CR));
       }
       distance = d;
