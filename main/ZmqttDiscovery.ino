@@ -136,12 +136,9 @@ void announceDeviceTrigger(bool use_gateway_info,
   if (topic[0]) {
     char state_topic[mqtt_topic_max_size];
 
-    if (use_gateway_info) {
-      strcpy(state_topic, mqtt_topic);
-      strcat(state_topic, gateway_name);
-    } else {
-      strcpy(state_topic, "+/+");
-    }
+    strcpy(state_topic, mqtt_topic);
+    strcat(state_topic, gateway_name);
+
     strcat(state_topic, topic);
     sensor["topic"] = state_topic;
   }
