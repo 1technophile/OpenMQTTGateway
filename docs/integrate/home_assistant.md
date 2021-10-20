@@ -36,26 +36,11 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 
 ## MQTT Device Trigger and RF
 
-With OpenMqttGateway [configured to receive RF signals](./setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](./use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a movement. 
+With OpenMqttGateway [configured to receive RF signals](./setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](./use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a signal. 
 
 With autodiscovery enabled, HomeAssistant will discover a [MQTT Device Trigger](https://www.home-assistant.io/integrations/device_trigger.mqtt/) identified by the value field given in the mqtt argument. 
 
-### Example with "DIGOO DG-HOSA 433MHz PIR Detector"
 
-With this configuration we receive from the broker only the close signal, which produces the change of state of the switch to "on". 
-
-```yaml
-binary_sensor:
-  - platform: mqtt
-    unique_id: pir.15961350
-    name: "Pir.Bagno"
-    device_class: motion
-    state_topic: "home/+/433toMQTT/15961350"
-    value_template: "{{ value_json.value }}"
-    payload_on: "15961350"
-    off_delay: 30
-
-```
 
 
 ## Manual integration examples
