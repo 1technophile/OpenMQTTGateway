@@ -181,13 +181,13 @@ int currentReceiver = -1;
 extern void stateMeasures(); // Send a status message
 
 void enableActiveReceiver(bool isBoot) {
-  
+
 // Save currently active receiver and restore after reboot.
 // Only works with ESP and if there is no conflict.
 #  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
 #    if defined(ESP8266) || defined(ESP32)
-#      define _ACTIVE_RECV_MAGIC 0xA1B2C3D4 
-  
+#      define _ACTIVE_RECV_MAGIC 0xA1B2C3D4
+
   struct {
     uint64_t magic;
     int receiver;
