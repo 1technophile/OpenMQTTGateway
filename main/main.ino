@@ -794,7 +794,7 @@ void setup() {
 #  else
   activeReceiver = ACTIVE_RECEIVER;
 #  endif
-  enableActiveReceiver();
+  enableActiveReceiver(true);
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
 
