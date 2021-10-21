@@ -30,7 +30,7 @@
 #include <ArduinoJson.h>
 
 #if defined(ESP8266) || defined(ESP32)
-#include <EEPROM.h>
+#  include <EEPROM.h>
 #endif
 
 #ifdef ZgatewayRF
@@ -188,21 +188,21 @@ void enableActiveReceiver(bool isBoot) {
 #    if defined(ESP8266) || defined(ESP32)
 #      define _ACTIVE_RECV_MAGIC 0xA1B2C3D4 
   
-       struct {
-         uint64_t magic;
-         int receiver;
-       } data;
+  struct {
+    uint64_t magic;
+    int receiver;
+  } data;
 
-       EEPROM.begin(sizeof(data));
-       EEPROM.get(0, data);
-       if (isBoot && data.magic == _ACTIVE_RECV_MAGIC) {
-         activeReceiver = data.receiver;
-       } else {
-         data.magic = _ACTIVE_RECV_MAGIC;
-         data.receiver = activeReceiver;
-         EEPROM.put(0, data);
-       }
-       EEPROM.end();
+  EEPROM.begin(sizeof(data));
+  EEPROM.get(0, data);
+  if (isBoot && data.magic == _ACTIVE_RECV_MAGIC) {
+    activeReceiver = data.receiver;
+  } else {
+    data.magic = _ACTIVE_RECV_MAGIC;
+    data.receiver = activeReceiver;
+    EEPROM.put(0, data);
+  }
+  EEPROM.end();
 #    endif
 #  endif
 
