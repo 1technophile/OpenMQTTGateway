@@ -90,7 +90,116 @@ void createDiscoveryFromList(const char* mac,
 #  endif
 
 /**
- * Generate message and publish it on an mqtt discovery  exploiter @see https://www.home-assistant.io/docs/mqtt/discovery/
+ * @brief Create a message for Discovery Device Trigger. For HA @see https://www.home-assistant.io/integrations/device_trigger.mqtt/
+ * @param use_gateway_info      Boolean where true mean use the OMG information as Device Information
+ * @param topic                 The Topic  where the trigger will publish the content
+ * @param type                  The type of the trigger, e.g. button_short_press. Entries supported by the HA Frontend: button_short_press, button_short_release, button_long_press, button_long_release, button_double_press, button_triple_press, button_quadruple_press, button_quintuple_press. If set to an unsupported value, will render as subtype type, e.g. button_1 spammed with type set to spammed and subtype set to button_1
+ * @param subtype               The subtype of the trigger, e.g. button_1. Entries supported by the HA frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6. If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
+ * @param unique_id             Valid only if gateway entry is false, The IDs that uniquely identify the device. For example a serial number.
+ * @param device_name           Valid only if gateway entry is false, The name of the device.
+ * @param device_manufacturer   Valid only if gateway entry is false, The manufacturer of the device.
+ * @param device_model          Valid only if gateway entry is false, The model of the device.
+ * @param device_mac            Valid only if gateway entry is false, The connection of the device to the outside world
+ */
+void announceDeviceTrigger(bool use_gateway_info,
+                           char* topic,
+                           char* type,
+                           char* subtype,
+                           char* unique_id,
+                           char* device_name,
+                           char* device_manufacturer,
+                           char* device_model,
+                           char* device_mac) {
+  //Create The Json
+  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
+  StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+  JsonObject sensor = jsonBuffer.to<JsonObject>();
+
+  // SET Default Configuration
+  sensor["automation_type"] = "trigger"; // The type of automation, must be ‘trigger’.
+
+  //SET TYPE
+  if (type[0] != 0) {
+    sensor["type"] = type;
+  } else {
+    sensor["type"] = "button_short_press";
+  }
+
+  //SET SUBTYPE
+  if (subtype[0] != 0) {
+    sensor["subtype"] = subtype;
+  } else {
+    sensor["subtype"] = "turn_on";
+  }
+
+  /* Set The topic */
+  if (topic[0]) {
+    char state_topic[mqtt_topic_max_size];
+
+    strcpy(state_topic, mqtt_topic);
+    strcat(state_topic, gateway_name);
+
+    strcat(state_topic, topic);
+    sensor["topic"] = state_topic;
+  }
+
+  /* Set The Devices */
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
+  JsonObject device = jsonDeviceBuffer.to<JsonObject>();
+  JsonArray identifiers = device.createNestedArray("identifiers");
+
+  if (use_gateway_info) {
+    char JSONmessageBuffer[JSON_MSG_BUFFER];
+    serializeJson(modules, JSONmessageBuffer, sizeof(JSONmessageBuffer));
+    Log.notice(F("Received json : %s" CR), JSONmessageBuffer);
+
+    device["name"] = gateway_name;
+    device["model"] = JSONmessageBuffer;
+    device["manufacturer"] = DEVICEMANUFACTURER;
+    device["sw_version"] = OMG_VERSION;
+    identifiers.add(getMacAddress());
+
+  } else {
+    char deviceid[13];
+    memcpy(deviceid, &unique_id[0], 12);
+    deviceid[12] = '\0';
+
+    identifiers.add(deviceid);
+
+    /*Set Connection */
+    if (device_mac[0] != 0) {
+      JsonArray connections = device.createNestedArray("connections");
+      JsonArray connection_mac = connections.createNestedArray();
+      connection_mac.add("mac");
+      connection_mac.add(device_mac);
+    }
+
+    //Set manufacturer
+    if (device_manufacturer[0]) {
+      device["manufacturer"] = device_manufacturer;
+    }
+
+    //Set name
+    if (device_name[0]) {
+      device["name"] = device_name;
+    }
+
+    // set The Model
+    if (device_model[0]) {
+      device["model"] = device_model;
+    }
+
+    device["via_device"] = gateway_name; //device name of the board
+  }
+  sensor["device"] = device; //device representing the board
+
+  /* Publish on the topic */
+  String topic_to_publish = String(discovery_Topic) + "/device_automation/" + String(unique_id) + "/config";
+  pub_custom_topic((char*)topic_to_publish.c_str(), sensor, true);
+}
+
+/**
+ * @brief Generate message and publish it on an mqtt discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
  * 
  * @param sensor_type the Type
  * @param st_topic set state topic,
@@ -634,6 +743,7 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device mac, retain
                   stateClassNone //State Class
   );
+
 #  endif
 
 #  ifdef ZgatewayRF2
