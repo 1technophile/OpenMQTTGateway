@@ -1133,12 +1133,6 @@ void process_bledata(JsonObject& BLEdata) {
     Log.trace(F("1decoder found device: %s" CR), BLEdata["model"].as<const char*>());
   } else {
     Log.trace(F("No device found " CR));
-#  ifdef ESP32
-    taskYIELD();
-#  endif
-#  if defined(ESP8266)
-    yield();
-#  endif
   }
 }
 
