@@ -194,7 +194,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilight Fail json" CR));
     }
-    enableActiveReceiver();
+    enableActiveReceiver(false);
   }
 }
 

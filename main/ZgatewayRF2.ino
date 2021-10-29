@@ -329,7 +329,7 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
 #    endif
       Log.error(F("MQTTtoRF2 failed json read" CR));
     }
-    enableActiveReceiver();
+    enableActiveReceiver(false);
   }
 }
 #  endif

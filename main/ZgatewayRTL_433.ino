@@ -116,7 +116,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRTL_433 Fail json" CR));
     }
-    enableActiveReceiver();
+    enableActiveReceiver(false);
   }
 }
 

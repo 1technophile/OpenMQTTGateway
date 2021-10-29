@@ -29,6 +29,10 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+#if defined(ESP8266) || defined(ESP32)
+#  include <EEPROM.h>
+#endif
+
 #ifdef ZgatewayRF
 extern void setupRF();
 extern void RFtoMQTT();
@@ -176,7 +180,31 @@ int currentReceiver = -1;
 
 extern void stateMeasures(); // Send a status message
 
-void enableActiveReceiver() {
+void enableActiveReceiver(bool isBoot) {
+// Save currently active receiver and restore after reboot.
+// Only works with ESP and if there is no conflict.
+#  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
+#    if defined(ESP8266) || defined(ESP32)
+#      define _ACTIVE_RECV_MAGIC 0xA1B2C3D4
+
+  struct {
+    uint64_t magic;
+    int receiver;
+  } data;
+
+  EEPROM.begin(sizeof(data));
+  EEPROM.get(0, data);
+  if (isBoot && data.magic == _ACTIVE_RECV_MAGIC) {
+    activeReceiver = data.receiver;
+  } else {
+    data.magic = _ACTIVE_RECV_MAGIC;
+    data.receiver = activeReceiver;
+    EEPROM.put(0, data);
+  }
+  EEPROM.end();
+#    endif
+#  endif
+
   // if (currentReceiver != activeReceiver) {
   Log.trace(F("enableActiveReceiver: %d" CR), activeReceiver);
   switch (activeReceiver) {
