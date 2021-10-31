@@ -102,7 +102,6 @@ void pubOneWire_HADiscovery() {
 #  ifdef ZmqttDiscovery
   // If zmqtt discovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
   if (disc) {
-    //Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
     for (int index = 0; index < ds1820_count; index++) {
       createDiscovery("sensor",
                       (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
