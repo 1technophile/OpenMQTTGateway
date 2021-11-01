@@ -29,8 +29,31 @@
 
 extern String getUniqueId(String name, String sufix);
 extern void pubMqttDiscovery();
-extern void createDiscoveryFromList(const char* mac, const char* sensorList[][8], int sensorCount,
-                                    const char* device_name, const char* device_manufacturer, const char* device_model);
+
+/**
+ * Create a discover messages form a list of attribute
+ * 
+ * @param mac the mac adres
+ * @param sensorList[][0] = component type
+ * @param sensorList[][1] = name
+ * @param sensorList[][2] = availability topic
+ * @param sensorList[][3] = device class
+ * @param sensorList[][4] = value template
+ * @param sensorList[][5] = payload on
+ * @param sensorList[][6] = payload off
+ * @param sensorList[][7] = unit of measurement
+ * @param sensorList[][8] = unit of measurement
+ * @param sensorCount number of sensor
+ * @param device_name name of sensors
+ * @param device_manufacturer name of manufacturer
+ * @param device_model the model
+ * */
+extern void createDiscoveryFromList(const char* mac,
+                                    const char* sensorList[][9],
+                                    int sensorCount,
+                                    const char* device_name,
+                                    const char* device_manufacturer,
+                                    const char* device_model);
 
 /**
  * @brief Generate message and publish it on an mqtt discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
