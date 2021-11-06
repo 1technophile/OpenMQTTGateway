@@ -100,15 +100,7 @@ void createDiscoveryFromList(const char* mac,
  * @param device_model          Valid only if gateway entry is false, The model of the device.
  * @param device_mac            Valid only if gateway entry is false, The connection of the device to the outside world
  */
-void announceDeviceTrigger(bool use_gateway_info,
-                           char* topic,
-                           char* type,
-                           char* subtype,
-                           char* unique_id,
-                           char* device_name,
-                           char* device_manufacturer,
-                           char* device_model,
-                           char* device_mac) {
+void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char* subtype, char* unique_id, char* device_name, char* device_manufacturer, char* device_model, char* device_mac) {
   //Create The Json
   const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
   StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
@@ -286,44 +278,52 @@ void createDiscovery(const char* sensor_type,
     sensor["cmd_t"] = command_topic; //command_topic
   }
 
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
+  JsonObject device = jsonDeviceBuffer.to<JsonObject>();
+  JsonArray identifiers = device.createNestedArray("identifiers");
+
   if (gateway_entity) {
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
-    JsonObject device = jsonDeviceBuffer.to<JsonObject>();
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
-    serializeJson(modules, JSONmessageBuffer, sizeof(JSONmessageBuffer));
-    device["name"] = gateway_name;
-    device["model"] = JSONmessageBuffer;
+    //device representing the board
+    String model = "";
+    serializeJson(modules, model);
+    device["name"] = String(gateway_name);
+    device["model"] = model;
     device["manufacturer"] = DEVICEMANUFACTURER;
     device["sw_version"] = OMG_VERSION;
-    JsonArray identifiers = device.createNestedArray("identifiers");
-    identifiers.add(getMacAddress());
-    sensor["device"] = device; //device representing the board
+    identifiers.add(String(getMacAddress()));
   } else {
+    //Device representing the actual sensor/switch device
+    //The Device ID
     char deviceid[13];
     memcpy(deviceid, &unique_id[0], 12);
     deviceid[12] = '\0';
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
-    JsonObject device = jsonDeviceBuffer.to<JsonObject>();
+    identifiers.add(deviceid);
+
+    //The Connections
     if (device_mac[0] != 0) {
       JsonArray connections = device.createNestedArray("connections");
       JsonArray connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
       connection_mac.add(device_mac);
     }
-    JsonArray identifiers = device.createNestedArray("identifiers");
-    identifiers.add(deviceid);
+
     if (device_manufacturer[0]) {
       device["manufacturer"] = device_manufacturer;
     }
+
     if (device_model[0]) {
       device["model"] = device_model;
     }
+
     if (device_name[0]) {
       device["name"] = device_name;
     }
-    device["via_device"] = gateway_name; //device name of the board
-    sensor["device"] = device; //device representing the actual sensor/switch device
+
+    device["via_device"] = String(gateway_name); //device name of the board
   }
+
+  sensor["device"] = device;
+
   String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
   Log.trace(F("Announce Device %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   pub_custom_topic((char*)topic.c_str(), sensor, true);
