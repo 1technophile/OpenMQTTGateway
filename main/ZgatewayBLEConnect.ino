@@ -143,9 +143,9 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
       for (std::vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
         if ((strcmp(p->macAdr, (char*)mac_address.c_str()) == 0)) {
-          if (p->sensorModel == LYWSD03MMC)
+          if (p->sensorModel_id.compare("LYWSD03MMC") == 0)
             BLEdata["model"] = "LYWSD03MMC";
-          else if (p->sensorModel == MHO_C401)
+          else if (p->sensorModel_id.compare("MHO_C401") == 0)
             BLEdata["model"] = "MHO_C401";
         }
       }
