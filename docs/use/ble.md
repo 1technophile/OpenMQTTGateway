@@ -187,7 +187,7 @@ Response:
   "success":true
 }
 ```
-### Example read commnad
+### Example read command
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
   "ble_read_address":"AA:BB:CC:DD:EE:FF",
