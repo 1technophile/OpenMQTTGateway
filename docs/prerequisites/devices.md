@@ -28,10 +28,13 @@ Added to that it retrieves the measures from the devices below. By default the d
 | XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/volt|
 | XIAOMI MHO-C401 (1)(c)|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
+| GOVEE |H5075|temperature/humidity/battery|
+| GOVEE |H5072|temperature/humidity/battery|
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH2|temperature/battery|
 | INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
+| INKBIRD (1)|IBT-2X|temperature1/temperature2|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | Qingping |CGDK2|temperature/humidity|
 | Qingping |CGH1|open|
