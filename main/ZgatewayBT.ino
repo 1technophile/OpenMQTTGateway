@@ -449,7 +449,7 @@ void BLEconnect() {
         BLEclient.processActions(BLEactions);
         BLEclient.publishData();
       }
-      if (p->sensorModel_id.compare("DT24") == 0) {
+      if (p->sensorModel_id.compare("DT24-BLE") == 0) {
         DT24_connect BLEclient(addr);
         BLEclient.processActions(BLEactions);
         BLEclient.publishData();
@@ -790,7 +790,7 @@ void launchBTDiscovery() {
         }
       } else {
         // Discovery of sensors from which we retrieve data only by connect
-        if (p->sensorModel_id.compare("DT24") == 0) {
+        if (p->sensorModel_id.compare("DT24-BLE") == 0) {
           DT24Discovery(macWOdots.c_str(), p->sensorModel_id.c_str());
         }
         if (p->sensorModel_id.compare("LYWSD03MMC") == 0) {
