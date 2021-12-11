@@ -52,10 +52,6 @@ SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
 
 #  endif
 
-#  if !defined(ESP32) && !defined(ESP8266)
-#    include <ArduinoSTL.h>
-#  endif
-
 #  include <decoder.h>
 
 #  include <vector>
@@ -83,7 +79,7 @@ vector<BLEAction> BLEactions;
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
-static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, false, UNKNOWN_MODEL};
+static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, false, ""};
 static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
@@ -197,7 +193,7 @@ void pubBT(JsonObject& data) {
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
-void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model);
+void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model);
 
 BLEdevice* getDeviceByMac(const char* mac) {
   Log.trace(F("getDeviceByMac %s" CR), mac);
@@ -220,13 +216,13 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
 
   for (int i = 0; i < size; i++) {
     const char* mac = BTdata[jsonKey][i];
-    createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL), UNKNOWN_MODEL);
+    createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL), "");
   }
 
   return true;
 }
 
-void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model) {
+void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model) {
 #  ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
@@ -244,7 +240,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     device->connect = flags & device_flags_connect;
-    device->sensorModel = model;
+    device->sensorModel_id = model;
     devices.push_back(device);
     newDevices++;
   } else {
@@ -257,7 +253,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, ble_sensor_model model
       device->connect = true;
     }
 
-    if (model != UNKNOWN_MODEL) device->sensorModel = model;
+    if (model.compare("") == 0) device->sensorModel_id = model;
 
     if (flags & device_flags_isWhiteL || flags & device_flags_isBlackL) {
       device->isWhtL = flags & device_flags_isWhiteL;
@@ -284,7 +280,8 @@ void dumpDevices() {
     Log.trace(F("isDisc %d" CR), p->isDisc);
     Log.trace(F("isWhtL %d" CR), p->isWhtL);
     Log.trace(F("isBlkL %d" CR), p->isBlkL);
-    Log.trace(F("sensorModel %d" CR), p->sensorModel);
+    Log.trace(F("connect %d" CR), p->connect);
+    Log.trace(F("sensorModel_id %s" CR), p->sensorModel_id.c_str());
   }
 }
 
@@ -294,219 +291,20 @@ void strupp(char* beg) {
 }
 
 #  ifdef ZmqttDiscovery
-void MiFloraDiscovery(const char* mac, const char* sensorModel) {
-#    define MiFloraparametersCount 5
-  Log.trace(F("MiFloraDiscovery" CR));
-  const char* MiFlorasensor[MiFloraparametersCount][9] = {
-      {"sensor", "MiFlora-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "MiFlora-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
-      {"sensor", "MiFlora-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "MiFlora-fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
-      {"sensor", "MiFlora-moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
+void DT24Discovery(const char* mac, const char* sensorModel_id) {
+#    define DT24parametersCount 6
+  Log.trace(F("DT24Discovery" CR));
+  const char* DT24sensor[DT24parametersCount][9] = {
+      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
+      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
+      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
+      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", "", stateClassNone},
+      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MiFlorasensor, MiFloraparametersCount, "Mi-Flora", "Xiaomi", sensorModel);
-}
-
-void VegTrugDiscovery(const char* mac, const char* sensorModel) {
-#    define VegTrugparametersCount 4
-  Log.trace(F("VegTrugDiscovery" CR));
-  const char* VegTrugsensor[VegTrugparametersCount][9] = {
-      {"sensor", "VegTrug-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
-      {"sensor", "VegTrug-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "VegTrug-fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
-      {"sensor", "VegTrug-moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, VegTrugsensor, VegTrugparametersCount, "VegTrug", "VEGTRUG", sensorModel);
-}
-
-void MiJiaDiscovery(const char* mac, const char* sensorModel) {
-#    define MiJiaparametersCount 3
-  Log.trace(F("MiJiaDiscovery" CR));
-  const char* MiJiasensor[MiJiaparametersCount][9] = {
-      {"sensor", "MiJia-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "MiJia-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "MiJia-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, MiJiasensor, MiJiaparametersCount, "MiJia", "", sensorModel);
-}
-
-void FormalDiscovery(const char* mac, const char* sensorModel) {
-#    define FormalparametersCount 4
-  Log.trace(F("FormalDiscovery" CR));
-  const char* Formalsensor[FormalparametersCount][9] = {
-      {"sensor", "Formal-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "Formal-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "Formal-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement},
-      {"sensor", "Formal-for", mac, "", jsonFor, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, Formalsensor, FormalparametersCount, "Formal", "", sensorModel);
-}
-
-void LYWSD02Discovery(const char* mac, const char* sensorModel) {
-#    define LYWSD02parametersCount 3
-  Log.trace(F("LYWSD02Discovery" CR));
-  const char* LYWSD02sensor[LYWSD02parametersCount][9] = {
-      {"sensor", "LYWSD02-batt", mac, "battery", jsonBatt, "", "", "V", stateClassMeasurement},
-      {"sensor", "LYWSD02-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "LYWSD02-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, LYWSD02sensor, LYWSD02parametersCount, "LYWSD02", "Xiaomi", sensorModel);
-}
-
-void CLEARGRASSTRHDiscovery(const char* mac, const char* sensorModel) {
-#    define CLEARGRASSTRHparametersCount 3
-  Log.trace(F("CLEARGRASSTRHDiscovery" CR));
-  const char* CLEARGRASSTRHsensor[CLEARGRASSTRHparametersCount][9] = {
-      {"sensor", "CLEARGRASSTRH-batt", mac, "battery", jsonBatt, "", "", "V", stateClassMeasurement},
-      {"sensor", "CLEARGRASSTRH-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "CLEARGRASSTRH-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, CLEARGRASSTRHsensor, CLEARGRASSTRHparametersCount, "CLEARGRASSTRH", "ClearGrass", sensorModel);
-}
-
-void CLEARGRASSCGD1Discovery(const char* mac, const char* sensorModel) {
-#    define CLEARGRASSCGD1parametersCount 2
-  Log.trace(F("CLEARGRASSCGD1Discovery" CR));
-  const char* CLEARGRASSCGD1sensor[CLEARGRASSCGD1parametersCount][9] = {
-      {"sensor", "CLEARGRASSCGD1-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "CLEARGRASSCGD1-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, CLEARGRASSCGD1sensor, CLEARGRASSCGD1parametersCount, "CLEARGRASSCGD1", "ClearGrass", sensorModel);
-}
-
-void CLEARGRASSCGDK2Discovery(const char* mac, const char* sensorModel) {
-#    define CLEARGRASSCGDK2parametersCount 2
-  Log.trace(F("CLEARGRASSCGDK2Discovery" CR));
-  const char* CLEARGRASSCGDK2sensor[CLEARGRASSCGDK2parametersCount][9] = {
-      {"sensor", "CLEARGRASSCGDK2-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "CLEARGRASSCGDK2-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, CLEARGRASSCGDK2sensor, CLEARGRASSCGDK2parametersCount, "CLEARGRASSCGDK2", "ClearGrass", sensorModel);
-}
-
-void CLEARGRASSCGPR1Discovery(const char* mac, const char* sensorModel) {
-#    define CLEARGRASSCGPR1parametersCount 2
-  Log.trace(F("CLEARGRASSCGPR1Discovery" CR));
-  const char* CLEARGRASSCGPR1sensor[CLEARGRASSCGPR1parametersCount][9] = {
-      {"sensor", "CLEARGRASSCGPR1-pres", mac, "", jsonPres, "", "", "", stateClassMeasurement},
-      {"sensor", "CLEARGRASSCGPR1-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, CLEARGRASSCGPR1sensor, CLEARGRASSCGPR1parametersCount, "CLEARGRASSCGPR1", "ClearGrass", sensorModel);
-}
-
-void CLEARGRASSCGH1Discovery(const char* mac, const char* sensorModel) {
-#    define CLEARGRASSCGH1parametersCount 1
-  Log.trace(F("CLEARGRASSCGH1Discovery" CR));
-  const char* CLEARGRASSCGH1sensor[CLEARGRASSCGH1parametersCount][9] = {
-      {"binary_sensor", "CLEARGRASSCGH1-open", mac, "door", jsonOpen, "True", "False", "", stateClassNone},
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, CLEARGRASSCGH1sensor, CLEARGRASSCGH1parametersCount, "CLEARGRASSCGH1", "ClearGrass", sensorModel);
-}
-
-void CLEARGRASSTRHKPADiscovery(const char* mac, const char* sensorModel) {
-#    define CLEARGRASSTRHKPAparametersCount 3
-  Log.trace(F("CLEARGRASSTRHKPADiscovery" CR));
-  const char* CLEARGRASSTRHKPAsensor[CLEARGRASSTRHKPAparametersCount][9] = {
-      {"sensor", "CLEARGRASSTRHKPA-pres", mac, "pressure", jsonPres, "", "", "kPa", stateClassMeasurement},
-      {"sensor", "CLEARGRASSTRHKPA-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "CLEARGRASSTRHKPA-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  Log.trace(F("CLEARGRASSTRHKPADiscovery %s" CR), sensorModel);
-  createDiscoveryFromList(mac, CLEARGRASSTRHKPAsensor, CLEARGRASSTRHKPAparametersCount, "CLEARGRASSTRHKPA", "ClearGrass", sensorModel);
-}
-
-void MiScaleDiscovery(const char* mac, const char* sensorModel) {
-#    define MiScaleparametersCount 1
-  Log.trace(F("MiScaleDiscovery" CR));
-  const char* MiScalesensor[MiScaleparametersCount][9] = {
-      {"sensor", "MiScale-weight", mac, "", jsonWeight, "", "", "kg", stateClassMeasurement},
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, MiScalesensor, MiScaleparametersCount, "MiScale", "Xiaomi", sensorModel);
-}
-
-void MiLampDiscovery(const char* mac, const char* sensorModel) {
-#    define MiLampparametersCount 1
-  Log.trace(F("MiLampDiscovery" CR));
-  const char* MiLampsensor[MiLampparametersCount][9] = {
-      {"sensor", "MiLamp-presence", mac, "", jsonPresence, "", "", "d", stateClassNone},
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, MiLampsensor, MiLampparametersCount, "MiLamp", "Xiaomi", sensorModel);
-}
-
-void MiBandDiscovery(const char* mac, const char* sensorModel) {
-#    define MiBandparametersCount 1
-  Log.trace(F("MiBandDiscovery" CR));
-  const char* MiBandsensor[MiBandparametersCount][9] = {
-      {"sensor", "MiBand-steps", mac, "", jsonStep, "", "", "nb", stateClassNone},
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, MiBandsensor, MiBandparametersCount, "MiBand", "Xiaomi", sensorModel);
-}
-
-void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {
-#    define InkBirdTH1parametersCount 3
-  Log.trace(F("InkBirdTH1Discovery" CR));
-  const char* InkBirdTH1sensor[InkBirdTH1parametersCount][9] = {
-      {"sensor", "InkBirdTH1-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "InkBirdTH1-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "InkBirdTH1-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, InkBirdTH1sensor, InkBirdTH1parametersCount, "IBS-TH1", "Inkbird", sensorModel);
-}
-
-void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {
-#    define InkBirdTH2parametersCount 2
-  Log.trace(F("InkBirdTH2Discovery" CR));
-  const char* InkBirdTH2sensor[InkBirdTH2parametersCount][9] = {
-      {"sensor", "InkBirdTH2-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "InkBirdTH2-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, InkBirdTH2sensor, InkBirdTH2parametersCount, "IBS-TH2", "Inkbird", sensorModel);
-}
-
-void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {
-#    define InkBird4XSparametersCount 4
-  Log.trace(F("InkBird4XSDiscovery" CR));
-  const char* InkBird4XSsensor[InkBird4XSparametersCount][9] = {
-      {"sensor", "InkBird4XS-temp1", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "InkBird4XS-temp2", mac, "temperature", jsonTempc2, "", "", "°C", stateClassMeasurement},
-      {"sensor", "InkBird4XS-temp3", mac, "temperature", jsonTempc3, "", "", "°C", stateClassMeasurement},
-      {"sensor", "InkBird4XS-temp4", mac, "temperature", jsonTempc4, "", "", "°C", stateClassMeasurement},
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, InkBird4XSsensor, InkBird4XSparametersCount, "IBT-4XS", "Inkbird", sensorModel);
+  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel_id);
 }
 
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
@@ -537,102 +335,10 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, "MHO_C401", "Xiaomi", sensorModel);
 }
 
-void INodeEMDiscovery(const char* mac, const char* sensorModel) {
-#    define INodeEMparametersCount 3
-  Log.trace(F("INodeEMDiscovery" CR));
-  const char* INodeEMsensor[INodeEMparametersCount][9] = {
-      {"sensor", "iNodeEM-power", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
-      {"sensor", "iNodeEM-energy", mac, "", jsonEnergy, "", "", "kWh", stateClassMeasurement},
-      {"sensor", "iNodeEM-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, INodeEMsensor, INodeEMparametersCount, "INode-Energy-Meter", "INode", sensorModel);
-}
-
-void WS02Discovery(const char* mac, const char* sensorModel) {
-#    define WS02parametersCount 3
-  Log.trace(F("WS02Discovery" CR));
-  const char* WS02sensor[WS02parametersCount][9] = {
-      {"sensor", "WS02-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "WS02-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "WS02-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, WS02sensor, WS02parametersCount, "WS02", "SensorBlue", sensorModel);
-}
-
-void DT24Discovery(const char* mac, const char* sensorModel) {
-#    define DT24parametersCount 6
-  Log.trace(F("DT24Discovery" CR));
-  const char* DT24sensor[DT24parametersCount][9] = {
-      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
-      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
-      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
-      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", "", stateClassNone},
-      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel);
-}
-
-void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {
-#    define EddystoneTLMparametersCount 4
-  Log.trace(F("EddystoneTLMDiscovery" CR));
-  const char* EddystoneTLMsensor[EddystoneTLMparametersCount][9] = {
-      {"sensor", "EddystoneTLM-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "EddystoneTLM-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "EddystoneTLM-count", mac, "", jsonCount, "", "", "", stateClassTotal},
-      {"sensor", "EddystoneTLM-time", mac, "", jsonTime, "", "", "", stateClassNone}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, EddystoneTLMsensor, EddystoneTLMparametersCount, "EddystoneTLM", "SensorBlue", sensorModel);
-}
-
-void TPMSDiscovery(const char* mac, const char* sensorModel) {
-#    define TPMSparametersCount 5
-  Log.trace(F("TPMSDiscovery" CR));
-  const char* TPMSsensor[TPMSparametersCount][9] = {
-      {"sensor", "TPMS-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "TPMS-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "TPMS-pres", mac, "pressure", jsonPres, "", "", "kPa", stateClassMeasurement},
-      {"sensor", "TPMS-count", mac, "", jsonCount, "", "", "", stateClassTotal},
-      {"sensor", "TPMS-alarm", mac, "", jsonAlarm, "", "", "", stateClassNone}
-      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
-  };
-
-  createDiscoveryFromList(mac, TPMSsensor, TPMSparametersCount, "TPMS", "TPMS", sensorModel);
-}
-
 #  else
-void MiFloraDiscovery(const char* mac, const char* sensorModel) {}
-void VegTrugDiscovery(const char* mac, const char* sensorModel) {}
-void MiJiaDiscovery(const char* mac, const char* sensorModel) {}
-void FormalDiscovery(const char* mac, const char* sensorModel) {}
-void LYWSD02Discovery(const char* mac, const char* sensorModel) {}
-void CLEARGRASSTRHDiscovery(const char* mac, const char* sensorModel) {}
-void CLEARGRASSCGD1Discovery(const char* mac, const char* sensorModel) {}
-void CLEARGRASSCGDK2Discovery(const char* mac, const char* sensorModel) {}
-void CLEARGRASSCGPR1Discovery(const char* mac, const char* sensorModel) {}
-void CLEARGRASSCGH1Discovery(const char* mac, const char* sensorModel) {}
-void CLEARGRASSTRHKPADiscovery(const char* mac, const char* sensorModel) {}
-void MiScaleDiscovery(const char* mac, const char* sensorModel) {}
-void MiLampDiscovery(const char* mac, const char* sensorModel) {}
-void MiBandDiscovery(const char* mac, const char* sensorModel) {}
-void InkBirdTH1Discovery(const char* mac, const char* sensorModel) {}
-void InkBirdTH2Discovery(const char* mac, const char* sensorModel) {}
-void InkBird4XSDiscovery(const char* mac, const char* sensorModel) {}
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
-void INodeEMDiscovery(const char* mac, const char* sensorModel) {}
-void WS02Discovery(const char* mac, const char* sensorModel) {}
-void DT24Discovery(const char* mac, const char* sensorModel) {}
-void EddystoneTLMDiscovery(const char* mac, const char* sensorModel) {}
-void TPMSDiscovery(const char* mac, const char* sensorModel) {}
+void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 #  endif
 
 #  ifdef ESP32
@@ -738,34 +444,24 @@ void BLEconnect() {
     if (p->connect) {
       Log.trace(F("Model to connect found: %s" CR), p->macAdr);
       NimBLEAddress addr(std::string(p->macAdr));
-
-      switch (p->sensorModel) {
-        case LYWSD03MMC:
-        case MHO_C401: {
-          LYWSD03MMC_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          BLEclient.publishData();
-          break;
-        }
-        case DT24: {
-          DT24_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          BLEclient.publishData();
-          break;
-        }
-        case GENERIC: {
-          GENERIC_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          break;
-        }
-        case HHCCJCY01HHCC: {
-          HHCCJCY01HHCC_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          BLEclient.publishData();
-          break;
-        }
-        default:
-          break;
+      if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
+        LYWSD03MMC_connect BLEclient(addr);
+        BLEclient.processActions(BLEactions);
+        BLEclient.publishData();
+      }
+      if (p->sensorModel_id.compare("DT24-BLE") == 0) {
+        DT24_connect BLEclient(addr);
+        BLEclient.processActions(BLEactions);
+        BLEclient.publishData();
+      }
+      if (p->sensorModel_id.compare("GENERIC") == 0) {
+        GENERIC_connect BLEclient(addr);
+        BLEclient.processActions(BLEactions);
+      }
+      if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
+        HHCCJCY01HHCC_connect BLEclient(addr);
+        BLEclient.processActions(BLEactions);
+        BLEclient.publishData();
       }
       if (BLEactions.size() > 0) {
         std::vector<BLEAction> swap;
@@ -1040,11 +736,12 @@ boolean valid_service_data(const char* data, int size) {
   return false;
 }
 
+#  ifdef ZmqttDiscovery
 // This function always should be called from the main core as it generates direct mqtt messages
 void launchBTDiscovery() {
   if (newDevices == 0)
     return;
-#  ifdef ESP32
+#    ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000) == pdFALSE)) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
@@ -1053,40 +750,56 @@ void launchBTDiscovery() {
   vector<BLEdevice*> localDevices = devices;
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
-#  else
+#    else
   newDevices = 0;
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-#  endif
+#    endif
     BLEdevice* p = *it;
-    if (p->sensorModel != UNKNOWN_MODEL && !isDiscovered(p)) {
+    Log.trace(F("Device mac %s" CR), p->macAdr);
+    if (p->sensorModel_id.compare("") != 0 && !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-      Log.trace(F("Launching discovery of %s" CR), p->macAdr);
-      if (p->sensorModel == HHCCJCY01HHCC) MiFloraDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
-      if (p->sensorModel == VEGTRUG) VegTrugDiscovery(macWOdots.c_str(), "VEGTRUG");
-      if (p->sensorModel == LYWSDCGQ) MiJiaDiscovery(macWOdots.c_str(), "LYWSDCGQ");
-      if (p->sensorModel == JQJCY01YM) FormalDiscovery(macWOdots.c_str(), "JQJCY01YM");
-      if (p->sensorModel == LYWSD02) LYWSD02Discovery(macWOdots.c_str(), "LYWSD02");
-      if (p->sensorModel == CGG1) CLEARGRASSTRHDiscovery(macWOdots.c_str(), "CGG1");
-      if (p->sensorModel == CGP1W) CLEARGRASSTRHKPADiscovery(macWOdots.c_str(), "CGP1W");
-      if (p->sensorModel == MUE4094RT) MiLampDiscovery(macWOdots.c_str(), "MUE4094RT");
-      if (p->sensorModel == CGDK2) CLEARGRASSCGDK2Discovery(macWOdots.c_str(), "CGDK2");
-      if (p->sensorModel == CGPR1) CLEARGRASSCGPR1Discovery(macWOdots.c_str(), "CGPR1");
-      if (p->sensorModel == CGH1) CLEARGRASSCGH1Discovery(macWOdots.c_str(), "CGH1");
-      if (p->sensorModel == CGD1) CLEARGRASSCGD1Discovery(macWOdots.c_str(), "CGD1");
-      if (p->sensorModel == WS02) WS02Discovery(macWOdots.c_str(), "WS02");
-      if (p->sensorModel == EDDYSTONE_TLM) EddystoneTLMDiscovery(macWOdots.c_str(), "EDDYSTONE_TLM");
-      if (p->sensorModel == MIBAND) MiBandDiscovery(macWOdots.c_str(), "MIBAND");
-      if ((p->sensorModel == XMTZC04HM) ||
-          (p->sensorModel == XMTZC05HM)) MiScaleDiscovery(macWOdots.c_str(), "XMTZC0xHM");
-      if (p->sensorModel == IBSTH1) InkBirdTH1Discovery(macWOdots.c_str(), "IBS-TH1");
-      if (p->sensorModel == IBSTH2) InkBirdTH2Discovery(macWOdots.c_str(), "IBS-TH2");
-      if (p->sensorModel == IBT4XS) InkBird4XSDiscovery(macWOdots.c_str(), "IBT-4XS");
-      if (p->sensorModel == LYWSD03MMC || p->sensorModel == LYWSD03MMC_ATC || p->sensorModel == LYWSD03MMC_PVVX) LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
-      if (p->sensorModel == MHO_C401) MHO_C401Discovery(macWOdots.c_str(), "MHO_C401");
-      if (p->sensorModel == INODE_EM) INodeEMDiscovery(macWOdots.c_str(), "INODE_EM");
-      if (p->sensorModel == DT24) DT24Discovery(macWOdots.c_str(), "DT24-BLE");
-      if (p->sensorModel == TPMS) TPMSDiscovery(macWOdots.c_str(), "TPMS");
+      Log.trace(F("Looking for Model_id: %s" CR), p->sensorModel_id.c_str());
+      std::string properties = decoder.getTheengProperties(p->sensorModel_id.c_str());
+      Log.trace(F("properties: %s" CR), properties);
+      std::string brand = decoder.getTheengAttribute(p->sensorModel_id.c_str(), "brand");
+      std::string model = decoder.getTheengAttribute(p->sensorModel_id.c_str(), "model");
+      if (!properties.empty()) {
+        Log.trace(F("1decoder found properties: %s" CR), properties);
+        StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+        deserializeJson(jsonBuffer, properties);
+        for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
+          Log.trace("Key: %s", prop.key().c_str());
+          Log.trace("Unit: %s", prop.value()["unit"].as<const char*>());
+          Log.trace("Name: %s", prop.value()["name"].as<const char*>());
+          String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
+          String entity_name = String(p->sensorModel_id.c_str()) + "-" + String(prop.key().c_str());
+          String unique_id = macWOdots + "-" + entity_name;
+#    if OpenHABDiscovery
+          String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
+#    else
+          String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
+#    endif
+          createDiscovery("sensor",
+                          discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                          will_Topic, prop.value()["name"], value_template.c_str(),
+                          "", "", prop.value()["unit"],
+                          0, "", "", false, "",
+                          model.c_str(), brand.c_str(), p->sensorModel_id.c_str(), macWOdots.c_str(), false,
+                          stateClassMeasurement);
+        }
+      } else {
+        // Discovery of sensors from which we retrieve data only by connect
+        if (p->sensorModel_id.compare("DT24-BLE") == 0) {
+          DT24Discovery(macWOdots.c_str(), p->sensorModel_id.c_str());
+        }
+        if (p->sensorModel_id.compare("LYWSD03MMC") == 0) {
+          LYWSD03MMCDiscovery(macWOdots.c_str(), p->sensorModel_id.c_str());
+        }
+        if (p->sensorModel_id.compare("MHO-C401") == 0) {
+          MHO_C401Discovery(macWOdots.c_str(), p->sensorModel_id.c_str());
+        }
+      }
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       if (!isDiscovered(p)) {
@@ -1098,6 +811,7 @@ void launchBTDiscovery() {
     }
   }
 }
+#  endif
 
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
@@ -1130,8 +844,21 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
 }
 
 void process_bledata(JsonObject& BLEdata) {
-  if (decoder.decodeBLEJson(BLEdata)) {
-    Log.trace(F("1decoder found device: %s" CR), BLEdata["model"].as<const char*>());
+  const char* mac = BLEdata["id"].as<const char*>();
+  if (decoder.decodeBLEJson(BLEdata)) { // Broadcaster devices
+    std::string model_id = BLEdata["model_id"];
+    Log.trace(F("Decoder found device: %s" CR), model_id);
+    if (model_id.compare("HHCCJCY01HHCC") == 0) {
+      createOrUpdateDevice(mac, device_flags_connect, model_id); // Device that broadcast and can be connected
+    } else {
+      createOrUpdateDevice(mac, device_flags_init, model_id);
+    }
+  } else if (BLEdata.containsKey("name")) { // Connectable devices
+    std::string name = BLEdata["name"];
+    if (name.compare("LYWSD03MMC") == 0 || name.compare("DT24-BLE") == 0 || name.compare("MHO-C401") == 0) {
+      Log.trace(F("Connectable device found: %s" CR), name);
+      createOrUpdateDevice(mac, device_flags_connect, name);
+    }
   } else {
     Log.trace(F("No device found " CR));
   }
@@ -1211,7 +938,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   } else {
     return;
   }
-  createOrUpdateDevice(action.addr, device_flags_connect, GENERIC);
+  createOrUpdateDevice(action.addr, device_flags_connect, "GENERIC");
   BLEactions.push_back(action);
 #  endif
 }

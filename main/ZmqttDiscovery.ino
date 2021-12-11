@@ -102,8 +102,7 @@ void createDiscoveryFromList(const char* mac,
  */
 void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char* subtype, char* unique_id, char* device_name, char* device_manufacturer, char* device_model, char* device_mac) {
   //Create The Json
-  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
-  StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
   // SET Default Configuration
@@ -223,8 +222,7 @@ void createDiscovery(const char* sensor_type,
                      const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* cmd_topic,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
                      const char* state_class) {
-  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(14) + JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(1);
-  StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
   // If a component cannot render it's state (f.i. KAKU relays) no state topic

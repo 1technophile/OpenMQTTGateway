@@ -127,42 +127,6 @@ bool hassPresence = HassPresence;
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
-enum ble_sensor_model {
-  UNKNOWN_MODEL = -1,
-  BEGINING = 0,
-  HHCCJCY01HHCC,
-  VEGTRUG,
-  LYWSDCGQ,
-  JQJCY01YM,
-  LYWSD02, //5
-  CGG1,
-  CGP1W,
-  MUE4094RT,
-  CGD1,
-  MIBAND, //10
-  XMTZC04HM,
-  XMTZC05HM,
-  IBSTH1,
-  LYWSD03MMC,
-  MHO_C401, //15
-  LYWSD03MMC_ATC,
-  INODE_EM,
-  CGDK2,
-  LYWSD03MMC_PVVX,
-  CGH1, //20
-  CGPR1,
-  WS02,
-  IBSTH2,
-  IBT4XS,
-  DT24, //25
-  EDDYSTONE_TLM,
-  MOKOBEACON,
-  MOKOBEACONXPRO,
-  IBEACON,
-  TPMS,
-  GENERIC,
-};
-
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)
 #  ifdef ESP8266
@@ -204,7 +168,7 @@ struct BLEdevice {
   bool isWhtL;
   bool isBlkL;
   bool connect;
-  ble_sensor_model sensorModel;
+  std::string sensorModel_id;
 };
 
 JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true);
