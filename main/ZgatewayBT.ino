@@ -384,6 +384,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         if (advertisedDevice->haveManufacturerData()) {
           char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
           BLEdata["manufacturerdata"] = manufacturerdata;
+          free(manufacturerdata);
         }
         if (advertisedDevice->haveRSSI())
           BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
