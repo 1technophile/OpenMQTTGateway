@@ -35,6 +35,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #  ifdef ESP32
 #    include "FreeRTOS.h"
 SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
+QueueHandle_t BLEQueue;
 // Headers used for deep sleep functions
 #    include <NimBLEAdvertisedDevice.h>
 #    include <NimBLEDevice.h>
@@ -127,6 +128,7 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData = true);
 
 #  ifdef ESP32
 static TaskHandle_t xCoreTaskHandle;
+static TaskHandle_t xProcBLETaskHandle;
 
 atomic_int forceBTScan;
 
@@ -352,16 +354,28 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  std::string convertServiceData(std::string deviceServiceData) {
-    int serviceDataLength = (int)deviceServiceData.length();
-    char spr[2 * serviceDataLength + 1];
-    for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
-    spr[2 * serviceDataLength] = 0;
-    Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
-    return spr;
-  }
-
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
+    if (xQueueSend(BLEQueue, &advertisedDevice, 0) != pdTRUE) {
+      Log.error(F("BLEQueue full" CR));
+    }
+  }
+};
+
+std::string convertServiceData(std::string deviceServiceData) {
+  int serviceDataLength = (int)deviceServiceData.length();
+  char spr[2 * serviceDataLength + 1];
+  for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
+  spr[2 * serviceDataLength] = 0;
+  Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
+  return spr;
+}
+
+void procBLETask(void* pvParameters) {
+  BLEAdvertisedDevice* advertisedDevice = nullptr;
+
+  for (;;) {
+    xQueueReceive(BLEQueue, &advertisedDevice, portMAX_DELAY);
+
     if (!ProcessLock) {
       Log.trace(F("Creating BLE buffer" CR));
       JsonObject& BLEdata = getBTJsonObject();
@@ -374,7 +388,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 #    if BLE_FILTER_CONNECTABLE
       if (device->connect) {
         Log.notice(F("Filtered connectable device" CR));
-        return;
+        continue;
       }
 #    endif
 
@@ -415,12 +429,16 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       }
     }
   }
-};
+}
 
 /** 
  * BLEscan used to retrieve BLE advertized data from devices without connection
  */
 void BLEscan() {
+  // Don't start the next scan until processing of previous results is complete.
+  while (uxQueueMessagesWaiting(BLEQueue)) {
+    yield();
+  }
   disableCore0WDT();
   Log.notice(F("Scan begin" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
@@ -433,6 +451,7 @@ void BLEscan() {
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
   enableCore0WDT();
+  Log.trace(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
 }
 
 /** 
@@ -585,14 +604,25 @@ void setupBT() {
   semaphoreCreateOrUpdateDevice = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
 
+  BLEQueue = xQueueCreate(32, sizeof(NimBLEAdvertisedDevice*));
+
   BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
   BLEDevice::init("");
+
+  xTaskCreatePinnedToCore(
+      procBLETask, /* Function to implement the task */
+      "procBLETask", /* Name of the task */
+      5120, /* Stack size in bytes */
+      NULL, /* Task input parameter */
+      2, /* Priority of the task (set higher than core task) */
+      &xProcBLETaskHandle, /* Task handle. */
+      1); /* Core where the task should run */
 
   // we setup a task with priority one to avoid conflict with other gateways
   xTaskCreatePinnedToCore(
       coreTask, /* Function to implement the task */
       "coreTask", /* Name of the task */
-      10000, /* Stack size in words */
+      10000, /* Stack size in bytes */
       NULL, /* Task input parameter */
       1, /* Priority of the task */
       &xCoreTaskHandle, /* Task handle. */
