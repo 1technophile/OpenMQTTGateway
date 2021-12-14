@@ -792,11 +792,10 @@ void launchBTDiscovery() {
       macWOdots.replace(":", "");
       Log.trace(F("Looking for Model_id: %s" CR), p->sensorModel_id.c_str());
       std::string properties = decoder.getTheengProperties(p->sensorModel_id.c_str());
-      Log.trace(F("properties: %s" CR), properties);
+      Log.trace(F("properties: %s" CR), properties.c_str());
       std::string brand = decoder.getTheengAttribute(p->sensorModel_id.c_str(), "brand");
       std::string model = decoder.getTheengAttribute(p->sensorModel_id.c_str(), "model");
       if (!properties.empty()) {
-        Log.trace(F("1decoder found properties: %s" CR), properties);
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         deserializeJson(jsonBuffer, properties);
         for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
@@ -878,7 +877,7 @@ void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   if (decoder.decodeBLEJson(BLEdata)) { // Broadcaster devices
     std::string model_id = BLEdata["model_id"];
-    Log.trace(F("Decoder found device: %s" CR), model_id);
+    Log.trace(F("Decoder found device: %s" CR), model_id.c_str());
     if (model_id.compare("HHCCJCY01HHCC") == 0) {
       createOrUpdateDevice(mac, device_flags_connect, model_id); // Device that broadcast and can be connected
     } else {
@@ -887,7 +886,7 @@ void process_bledata(JsonObject& BLEdata) {
   } else if (BLEdata.containsKey("name")) { // Connectable devices
     std::string name = BLEdata["name"];
     if (name.compare("LYWSD03MMC") == 0 || name.compare("DT24-BLE") == 0 || name.compare("MHO-C401") == 0) {
-      Log.trace(F("Connectable device found: %s" CR), name);
+      Log.trace(F("Connectable device found: %s" CR), name.c_str());
       createOrUpdateDevice(mac, device_flags_connect, name);
     }
   } else {
