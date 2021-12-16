@@ -119,8 +119,7 @@ void RF2toMQTTdiscovery(JsonObject& data) {
 void RF2toMQTT() {
   if (rf2rd.hasNewData) {
     Log.trace(F("Creating RF2 buffer" CR));
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(5);
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject RF2data = jsonBuffer.to<JsonObject>();
 
     rf2rd.hasNewData = false;

@@ -36,8 +36,7 @@ void PairedDeviceAdded(byte newID) {
   Serial.print("ZgatewayWeatherStation: New device paired ");
   Serial.println(newID, DEC);
 #  endif
-  const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(2);
-  StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject RFdata = jsonBuffer.to<JsonObject>();
   RFdata["sensor"] = newID;
   RFdata["action"] = "paired";
@@ -55,8 +54,7 @@ void setupWeatherStation() {
 void sendWindSpeedData(byte id, float wind_speed, byte battery_status) {
   unsigned long MQTTvalue = 10000 + round(wind_speed);
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject RFdata = jsonBuffer.to<JsonObject>();
     RFdata["sensor"] = id;
     RFdata["wind_speed"] = wind_speed;
@@ -70,8 +68,7 @@ void sendWindSpeedData(byte id, float wind_speed, byte battery_status) {
 void sendRainData(byte id, float rain_volume, byte battery_status) {
   unsigned long MQTTvalue = 11000 + round(rain_volume * 10.0);
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(3);
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject RFdata = jsonBuffer.to<JsonObject>();
     RFdata["sensor"] = id;
     RFdata["rain_volume"] = rain_volume;
@@ -85,8 +82,7 @@ void sendRainData(byte id, float rain_volume, byte battery_status) {
 void sendWindData(byte id, int wind_direction, float wind_gust, byte battery_status) {
   unsigned long MQTTvalue = 20000 + round(wind_gust * 10.0) + wind_direction;
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject RFdata = jsonBuffer.to<JsonObject>();
     RFdata["sensor"] = id;
     RFdata["wind_direction"] = wind_direction;
@@ -101,8 +97,7 @@ void sendWindData(byte id, int wind_direction, float wind_gust, byte battery_sta
 void sendTemperatureData(byte id, float temperature, int humidity, byte battery_status) {
   unsigned long MQTTvalue = 40000 + abs(round(temperature * 100.0)) + humidity;
   if (!isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(4);
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject RFdata = jsonBuffer.to<JsonObject>();
     RFdata["sensor"] = id;
     RFdata["tempc"] = temperature;

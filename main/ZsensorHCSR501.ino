@@ -41,8 +41,7 @@ void setupHCSR501() {
 
 void MeasureHCSR501() {
   if (millis() > TimeBeforeStartHCSR501) { //let time to init the PIR sensor
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject HCSR501data = jsonBuffer.to<JsonObject>();
     static int pirState = LOW;
     int PresenceValue = digitalRead(HCSR501_GPIO);
