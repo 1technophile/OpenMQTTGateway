@@ -30,11 +30,13 @@ Added to that it retrieves the measures from the devices below. By default the d
 | XIAOMI Mi Lamp |MUE4094RT|presence|
 | GOVEE |H5075|temperature/humidity/battery|
 | GOVEE |H5072|temperature/humidity/battery|
+| GOVEE |H5102|temperature/humidity/battery|
 | HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH2|temperature/battery|
-| INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
 | INKBIRD (1)|IBT-2X|temperature1/temperature2|
+| INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
+| INKBIRD (1)|IBT-6XS|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6|
 | ClearGrass |CGG1|temperature/humidity/battery|
 | Qingping |CGDK2|temperature/humidity|
 | Qingping |CGH1|open|
