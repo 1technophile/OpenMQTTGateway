@@ -180,6 +180,35 @@ int currentReceiver = -1;
 
 extern void stateMeasures(); // Send a status message
 
+#  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
+#    if defined(ESP8266) || defined(ESP32)
+// Check if a receiver is available
+bool validReceiver(int receiver) {
+  switch (receiver) {
+#  ifdef ZgatewayPilight
+    case ACTIVE_PILIGHT:
+      return true;
+#  endif
+#  ifdef ZgatewayRF
+    case ACTIVE_RF:
+      return true;
+#  endif
+#  ifdef ZgatewayRTL_433
+    case ACTIVE_RTL:
+      return true;
+#  endif
+#  ifdef ZgatewayRF2
+    case ACTIVE_RF2:
+      return true;
+#  endif
+    default:
+      Log.error(F("ERROR: stored receiver %d not available" CR), receiver);
+  }
+  return false;
+}
+#    endif
+#  endif
+
 void enableActiveReceiver(bool isBoot) {
 // Save currently active receiver and restore after reboot.
 // Only works with ESP and if there is no conflict.
@@ -194,7 +223,7 @@ void enableActiveReceiver(bool isBoot) {
 
   EEPROM.begin(sizeof(data));
   EEPROM.get(0, data);
-  if (isBoot && data.magic == _ACTIVE_RECV_MAGIC) {
+  if (isBoot && data.magic == _ACTIVE_RECV_MAGIC && validReceiver(data.receiver)) {
     activeReceiver = data.receiver;
   } else {
     data.magic = _ACTIVE_RECV_MAGIC;
