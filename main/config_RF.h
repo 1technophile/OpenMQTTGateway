@@ -185,22 +185,22 @@ extern void stateMeasures(); // Send a status message
 // Check if a receiver is available
 bool validReceiver(int receiver) {
   switch (receiver) {
-#  ifdef ZgatewayPilight
+#      ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
       return true;
-#  endif
-#  ifdef ZgatewayRF
+#      endif
+#      ifdef ZgatewayRF
     case ACTIVE_RF:
       return true;
-#  endif
-#  ifdef ZgatewayRTL_433
+#      endif
+#      ifdef ZgatewayRTL_433
     case ACTIVE_RTL:
       return true;
-#  endif
-#  ifdef ZgatewayRF2
+#      endif
+#      ifdef ZgatewayRF2
     case ACTIVE_RF2:
       return true;
-#  endif
+#      endif
     default:
       Log.error(F("ERROR: stored receiver %d not available" CR), receiver);
   }
