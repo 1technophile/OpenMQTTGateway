@@ -127,12 +127,7 @@ void setupRF() {
 
 void RFtoMQTT() {
   if (mySwitch.available()) {
-#  ifdef ZradioCC1101 //receiving with CC1101
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(8);
-#  else
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(7);
-#  endif
-    StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject RFdata = jsonBuffer.to<JsonObject>();
     Log.trace(F("Rcv. RF" CR));
 #  ifdef ESP32
