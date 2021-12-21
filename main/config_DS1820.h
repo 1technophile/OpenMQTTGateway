@@ -34,10 +34,10 @@ extern void pubOneWire_HADiscovery();
 #define OW_TOPIC            "/OneWiretoMQTT/ds1820"
 #define OW_MAX_SENSORS      8 // query max. sensors on 1-wire bus
 #define DS1820_ALWAYS       true // if false only published current temperature if has changed from previous reading
-#define DS1820_INTERVAL_SEC 60 // time between DS1820 readings (seconds)
+#define DS1820_INTERVAL_SEC 60UL // time between DS1820 readings (seconds)
 #define DS1820_RESOLUTION   10 // conversion times: 9 bit (93.75 ms), 10 bit (187.5 ms), 11 bit (375 ms), 12 bit (750 ms)
 #define DS1820_DETAILS      true // publish extented info for each sensor (resolution, address, type)
-#define DS1820_CONV_TIME    2000 // trigger conversion before requesting temperature readings (ms)
+#define DS1820_CONV_TIME    2000UL // trigger conversion before requesting temperature readings (ms)
 /*-------------------PIN DEFINITIONS----------------------*/
 
 #ifndef DS1820_OWBUS_GPIO
