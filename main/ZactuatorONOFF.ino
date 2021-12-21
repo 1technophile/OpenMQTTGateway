@@ -51,7 +51,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
         digitalWrite(gpio, HIGH);
         delay(500);
         digitalWrite(gpio, LOW);
-      } else if(ONOFFdata["cmd"] == "low_pulse") {
+      } else if (ONOFFdata["cmd"] == "low_pulse") {
         Log.notice(F("MQTTtoONOFF low_pulse ok" CR));
         Log.notice(F("GPIO number: %d" CR), gpio);
         digitalWrite(gpio, LOW);
