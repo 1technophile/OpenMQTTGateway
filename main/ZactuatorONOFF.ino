@@ -44,7 +44,20 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic
       pub(subjectGTWONOFFtoMQTT, ONOFFdata);
     } else {
-      Log.error(F("MQTTtoONOFF failed json read" CR));
+      if (ONOFFdata["cmd"] == "high_pulse"){
+        Log.info(F("MQTTtoONOFF high_pulse" CR));
+        pinMode(gpio, OUTPUT);
+        digitalWrite(gpio, HIGH);
+        delay(500);
+        digitalWrite(gpio, LOW);
+      }else if(ONOFFdata["cmd"] == "low_pulse"){
+        Log.info(F("MQTTtoONOFF low_pulse" CR));
+        digitalWrite(gpio, LOW);
+        delay(500);
+        digitalWrite(gpio, HIGH);
+      }else{
+        Log.error(F("MQTTtoONOFF failed json read" CR));
+      }
     }
   }
 }
