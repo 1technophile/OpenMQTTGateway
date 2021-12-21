@@ -128,11 +128,11 @@ void MeasureDS1820Temp() {
 
   // trigger temperature conversion some time before actually
   // calling getTempC() to make reading temperatures non-blocking
-  if (!triggeredConversion && ( (millis()-timeDS1820) > (DS1820_INTERVAL_SEC * 1000UL - DS1820_CONV_TIME))) {
+  if (!triggeredConversion && ((millis() - timeDS1820) > (DS1820_INTERVAL_SEC * 1000UL - DS1820_CONV_TIME))) {
     Log.trace(F("DS1820: Trigger temperature conversion..." CR));
     ds1820.requestTemperatures();
     triggeredConversion = true;
-  } else if (triggeredConversion && ((millis()-timeDS1820) > DS1820_INTERVAL_SEC * 1000UL)) {
+  } else if (triggeredConversion && ((millis() - timeDS1820) > DS1820_INTERVAL_SEC * 1000UL)) {
     timeDS1820 = millis();
     triggeredConversion = false;
 
