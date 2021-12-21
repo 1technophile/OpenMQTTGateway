@@ -148,8 +148,8 @@ void MeasureDS1820Temp() {
         if (current_temp[i] == -127) {
           Log.error(F("DS1820: Device %s currently disconnected!" CR), (char*)ds1820_addr[i].c_str());
         } else if (DS1820_ALWAYS || current_temp[i] != persisted_temp[i]) {
-          DS1820data["tempc"] = (float)DallasTemperature::toFahrenheit(current_temp[i]);
-          DS1820data["tempf"] = (float)current_temp[i];
+          DS1820data["tempf"] = (float)DallasTemperature::toFahrenheit(current_temp[i]);
+          DS1820data["tempc"] = (float)current_temp[i];
 
           if (DS1820_DETAILS) {
             DS1820data["type"] = ds1820_type[i];
