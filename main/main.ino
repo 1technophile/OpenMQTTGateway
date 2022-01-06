@@ -317,7 +317,7 @@ void pub(const char* topicori, JsonObject& data) {
 #  ifdef ZgatewayPilight
   String value = data["value"];
   String protocol = data["protocol"];
-  if (value != 0) {
+  if (value != "null" && value != 0) {
     topic = topic + "/" + protocol + "/" + value;
   }
 #  else
@@ -561,6 +561,9 @@ void connectMQTT() {
     delay(2000);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
     delay(5000);
+    if (failure_number_mqtt > maxConnectionRetryWifi) {
+      watchdogReboot(1);
+    }
   }
 }
 
@@ -984,6 +987,10 @@ void setup_wifi() {
 #  if defined(ESP32) && defined(ZgatewayBT)
     if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
       lowPowerESP32();
+#  else
+    if (failure_number_ntwk > maxConnectionRetryWifi) {
+      watchdogReboot(2);
+    }
 #  endif
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
@@ -2111,3 +2118,18 @@ String toString(uint32_t input) {
 }
 #  endif
 #endif
+
+/* 
+  Reboot for repeated connection issues
+  Reason Codes
+  1 - Repeated MQTT Connection Failure
+  2 - Repeated WiFi Connection Failure
+*/
+    
+void watchdogReboot(byte reason) {
+  Log.warning(F("Rebooting for reason code %d" CR), reason);
+#if defined(ESP32) || defined(ESP8266)
+  ESP.restart();
+#else // Insert other architectures here
+#endif
+}
