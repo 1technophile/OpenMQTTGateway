@@ -2119,13 +2119,13 @@ String toString(uint32_t input) {
 #  endif
 #endif
 
-/* 
+/*
   Reboot for repeated connection issues
   Reason Codes
   1 - Repeated MQTT Connection Failure
   2 - Repeated WiFi Connection Failure
 */
-    
+
 void watchdogReboot(byte reason) {
   Log.warning(F("Rebooting for reason code %d" CR), reason);
 #if defined(ESP32) || defined(ESP8266)
