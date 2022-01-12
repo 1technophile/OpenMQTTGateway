@@ -247,7 +247,8 @@ void createDiscovery(const char* sensor_type,
 
   // We check if the class belongs to HAAS class list
   bool HASSClass = false;
-  for (int i = 0; i < 14; i++) { // see class list and size into config_mqttDiscovery.h
+  int num_classes = sizeof(availableHASSClasses) / sizeof(availableHASSClasses[0]);
+  for (int i = 0; i < num_classes; i++) { // see class list and size into config_mqttDiscovery.h
     if (strcmp(availableHASSClasses[i], device_class) == 0) {
       HASSClass = true;
     }
