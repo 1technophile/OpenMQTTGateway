@@ -1206,7 +1206,7 @@ void setup_wifimanager(bool reset_settings) {
     if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
       Log.warning(F("failed to connect and hit timeout" CR));
       delay(3000);
-//reset and try again
+      //reset and try again
       watchdogReboot(3);
       delay(5000);
     }
@@ -2124,7 +2124,7 @@ String toString(uint32_t input) {
 */
 void watchdogReboot(byte reason) {
   Log.warning(F("Rebooting for reason code %d" CR), reason);
-#if defined(ESP32) 
+#if defined(ESP32)
   ESP.restart();
 #elif defined(ESP8266)
   ESP.reset();
