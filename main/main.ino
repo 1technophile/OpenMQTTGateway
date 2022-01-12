@@ -1207,11 +1207,7 @@ void setup_wifimanager(bool reset_settings) {
       Log.warning(F("failed to connect and hit timeout" CR));
       delay(3000);
 //reset and try again
-#  if defined(ESP8266)
-      ESP.reset();
-#  else
-      ESP.restart();
-#  endif
+      watchdogReboot(3);
       delay(5000);
     }
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
@@ -2124,11 +2120,14 @@ String toString(uint32_t input) {
   Reason Codes
   1 - Repeated MQTT Connection Failure
   2 - Repeated WiFi Connection Failure
+  3 - Failed WiFi configuration portal
 */
 void watchdogReboot(byte reason) {
   Log.warning(F("Rebooting for reason code %d" CR), reason);
-#if defined(ESP32) || defined(ESP8266)
+#if defined(ESP32) 
   ESP.restart();
+#elif defined(ESP8266)
+  ESP.reset();
 #else // Insert other architectures here
 #endif
 }
