@@ -196,4 +196,21 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define stateClassTotalIncreasing "total_increasing"
 #endif
 
+// From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
+// List of classes available in Home Assistant
+const char* availableHASSClasses[] = {"battery",
+                                      "carbon_monoxide",
+                                      "carbon_dioxide",
+                                      "humidity",
+                                      "illuminance",
+                                      "signal_strength",
+                                      "temperature",
+                                      "timestamp",
+                                      "pressure",
+                                      "power",
+                                      "current",
+                                      "energy",
+                                      "power_factor",
+                                      "voltage"};
+
 #endif
