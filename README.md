@@ -35,7 +35,7 @@ Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgate
 
 * [NodeRed](https://docs.openmqttgateway.com/integrate/node_red.html)
 
-* [AWS-IOT](https://docs.openmqttgateway.com/upload/aws-iot.html)
+* [AWS-IOT](https://docs.openmqttgateway.com/upload/aws_iot.html)
 
 ## Contributors ✨
 
