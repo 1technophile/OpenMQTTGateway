@@ -1140,7 +1140,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size * 2);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
-#    ifdef ESP32
+#    ifdef ESP32 // not enough memory on ESP8266
   WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
 #    endif
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
@@ -1171,7 +1171,7 @@ void setup_wifimanager(bool reset_settings) {
   wifiManager.addParameter(&custom_mqtt_user);
   wifiManager.addParameter(&custom_mqtt_pass);
   wifiManager.addParameter(&custom_mqtt_secure);
-#    ifdef ESP32
+#    ifdef ESP32 // not enough memory on ESP8266
   wifiManager.addParameter(&custom_mqtt_cert);
 #    endif
   wifiManager.addParameter(&custom_gateway_name);
@@ -1231,7 +1231,7 @@ void setup_wifimanager(bool reset_settings) {
     strcpy(gateway_name, custom_gateway_name.getValue());
     mqtt_secure = *custom_mqtt_secure.getValue();
 
-#    ifdef ESP32
+#    ifdef ESP32 // not enough memory on ESP8266
     int cert_len = strlen(custom_mqtt_cert.getValue());
     if (cert_len) {
       char* cert_in = (char*)custom_mqtt_cert.getValue();
