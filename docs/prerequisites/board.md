@@ -18,6 +18,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |OLIMEX ESP32 Ethernet|-|-|-|X|-|X|-|X|
 |ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
+|[M5Tough](M5)|-|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
 |[M5Stick C](M5)|![](../img/OpenMQTTgateway_M5_StickC_Board_Display_Text.png)|-|send|X|-|X|X|X|
 |[M5Atom](M5)||-|send|X|-|X|X|X|

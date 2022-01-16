@@ -150,7 +150,7 @@ struct GfSun2000Data {};
 #ifdef ZactuatorSomfy
 #  include "config_Somfy.h"
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
 #endif
 #if defined(ZgatewayRS232)
@@ -519,9 +519,9 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     if (lowpowermode < 2)
-      M5Display("MQTT connected", "", "");
+      M5Print("MQTT connected", "", "");
 #endif
     Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
@@ -610,7 +610,7 @@ void setup() {
   preferences.begin(Gateway_Short_Name, false);
   lowpowermode = preferences.getUInt("lowpowermode", DEFAULT_LOW_POWER_MODE);
   preferences.end();
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
@@ -865,8 +865,8 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
-    M5Display("OTA in progress", "", "");
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
+    M5Print("OTA in progress", "", "");
 #  endif
   });
   ArduinoOTA.onEnd([]() {
@@ -876,8 +876,8 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
-    M5Display("OTA done", "", "");
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
+    M5Print("OTA done", "", "");
 #  endif
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
@@ -1184,8 +1184,8 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (lowpowermode < 2) {
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
-      M5Display("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
+      M5Print("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
 #    endif
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
@@ -1215,9 +1215,9 @@ void setup_wifimanager(bool reset_settings) {
     digitalWrite(LED_INFO, !LED_INFO_ON);
   }
 
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   if (lowpowermode < 2)
-    M5Display("Wifi connected", "", "");
+    M5Print("Wifi connected", "", "");
 #  endif
 
   if (shouldSaveConfig) {
@@ -1505,7 +1505,7 @@ void loop() {
 #endif
   }
 // Function that doesn't need an active connection
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
 }
@@ -1574,7 +1574,7 @@ void stateMeasures() {
   SYSdata["m5ischarging"] = (bool)M5.Power.isCharging();
   SYSdata["m5ischargefull"] = (bool)M5.Power.isChargeFull();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   M5.Axp.EnableCoulombcounter();
   SYSdata["m5batvoltage"] = (float)M5.Axp.GetBatVoltage();
   SYSdata["m5batcurrent"] = (float)M5.Axp.GetBatCurrent();
@@ -1720,7 +1720,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorPWM
     MQTTtoPWM(topicOri, jsondata);
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     MQTTtoM5(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorONOFF

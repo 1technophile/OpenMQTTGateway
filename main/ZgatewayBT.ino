@@ -551,7 +551,7 @@ void lowPowerESP32() // low power mode
 }
 
 void deepSleep(uint64_t time_in_us) {
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   sleepScreen();
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
 #    endif
@@ -570,19 +570,19 @@ void deepSleep(uint64_t time_in_us) {
 
 void changelowpowermode(int newLowPowerMode) {
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   if (lowpowermode == 2) {
 #      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
 #      endif
-#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
     M5.Axp.SetLDO2(true);
     M5.Lcd.begin();
 #      endif
   }
   char lpm[2];
   sprintf(lpm, "%d", newLowPowerMode);
-  M5Display("Changing LOW POWER mode to:", lpm, "");
+  M5Print("Changing LOW POWER mode to:", lpm, "");
 #    endif
   lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
