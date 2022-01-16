@@ -145,7 +145,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define parameters_size     60
 #  define mqtt_topic_max_size 100
 #  ifdef MQTT_HTTPS_FW_UPDATE
-#    define mqtt_max_packet_size 2048
+#    define mqtt_max_packet_size 2560
 #  else
 #    define mqtt_max_packet_size 1024
 #  endif
