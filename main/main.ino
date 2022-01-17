@@ -985,16 +985,19 @@ void setup_wifi() {
     Log.trace(F("." CR));
     failure_number_ntwk++;
 #  if defined(ESP32) && defined(ZgatewayBT)
-    if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
-      lowPowerESP32();
-#  elif defined(ESP32)
-    if (failure_number_ntwk > maxRetryWatchDog && !lowpowermode) {
-      watchdogReboot(2);
-    }
-#  else
+    if (lowpowermode) {
+      if (failure_number_ntwk > maxConnectionRetryWifi) {
+        lowPowerESP32();
+      }
+    } else {
       if (failure_number_ntwk > maxRetryWatchDog) {
         watchdogReboot(2);
       }
+    }
+#  else
+    if (failure_number_ntwk > maxRetryWatchDog) {
+      watchdogReboot(2);
+    }
 #  endif
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
