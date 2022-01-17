@@ -135,7 +135,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 //#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
 #define maxConnectionRetry     10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 #define maxConnectionRetryWifi 5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
-#define maxRetryWatchDog 11 //maximum Wifi or mqtt re-connection attempts before restarting
+#define maxRetryWatchDog  11 //maximum Wifi or mqtt re-connection attempts before restarting
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
