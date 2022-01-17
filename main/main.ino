@@ -561,7 +561,7 @@ void connectMQTT() {
     delay(2000);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
     delay(5000);
-    if (failure_number_mqtt > maxConnectionRetryWifi) {
+    if (failure_number_mqtt > maxRetryWatchDog) {
       watchdogReboot(1);
     }
   }
@@ -988,7 +988,7 @@ void setup_wifi() {
     if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
       lowPowerESP32();
 #  else
-    if (failure_number_ntwk > maxConnectionRetryWifi) {
+    if (failure_number_ntwk > maxRetryWatchDog) {
       watchdogReboot(2);
     }
 #  endif
