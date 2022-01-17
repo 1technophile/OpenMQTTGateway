@@ -317,7 +317,7 @@ void pub(const char* topicori, JsonObject& data) {
 #  ifdef ZgatewayPilight
   String value = data["value"];
   String protocol = data["protocol"];
-  if (value != 0) {
+  if (value != "null" && value != 0) {
     topic = topic + "/" + protocol + "/" + value;
   }
 #  else
@@ -561,6 +561,9 @@ void connectMQTT() {
     delay(2000);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
     delay(5000);
+    if (failure_number_mqtt > maxRetryWatchDog) {
+      watchdogReboot(1);
+    }
   }
 }
 
@@ -982,8 +985,19 @@ void setup_wifi() {
     Log.trace(F("." CR));
     failure_number_ntwk++;
 #  if defined(ESP32) && defined(ZgatewayBT)
-    if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
-      lowPowerESP32();
+    if (lowpowermode) {
+      if (failure_number_ntwk > maxConnectionRetryWifi) {
+        lowPowerESP32();
+      }
+    } else {
+      if (failure_number_ntwk > maxRetryWatchDog) {
+        watchdogReboot(2);
+      }
+    }
+#  else
+    if (failure_number_ntwk > maxRetryWatchDog) {
+      watchdogReboot(2);
+    }
 #  endif
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
@@ -1203,12 +1217,8 @@ void setup_wifimanager(bool reset_settings) {
     if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
       Log.warning(F("failed to connect and hit timeout" CR));
       delay(3000);
-//reset and try again
-#  if defined(ESP8266)
-      ESP.reset();
-#  else
-      ESP.restart();
-#  endif
+      //reset and try again
+      watchdogReboot(3);
       delay(5000);
     }
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
@@ -2117,3 +2127,20 @@ String toString(uint32_t input) {
 }
 #  endif
 #endif
+
+/*
+  Reboot for repeated connection issues
+  Reason Codes
+  1 - Repeated MQTT Connection Failure
+  2 - Repeated WiFi Connection Failure
+  3 - Failed WiFiManager configuration portal
+*/
+void watchdogReboot(byte reason) {
+  Log.warning(F("Rebooting for reason code %d" CR), reason);
+#if defined(ESP32)
+  ESP.restart();
+#elif defined(ESP8266)
+  ESP.reset();
+#else // Insert other architectures here
+#endif
+}
