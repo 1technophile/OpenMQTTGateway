@@ -144,10 +144,12 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 #  define parameters_size     60
 #  define mqtt_topic_max_size 100
-#  ifdef MQTT_HTTPS_FW_UPDATE
-#    define mqtt_max_packet_size 2048
-#  else
-#    define mqtt_max_packet_size 1024
+#  ifndef mqtt_max_packet_size
+#    ifdef MQTT_HTTPS_FW_UPDATE
+#      define mqtt_max_packet_size 2560
+#    else
+#      define mqtt_max_packet_size 1024
+#    endif
 #  endif
 #else
 #  define parameters_size      30
