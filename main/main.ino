@@ -988,7 +988,7 @@ void setup_wifi() {
     if (failure_number_ntwk > maxConnectionRetryWifi && lowpowermode)
       lowPowerESP32();
 #  else
-    if (failure_number_ntwk > maxRetryWatchDog) {
+    if (failure_number_ntwk > maxRetryWatchDog && !lowpowermode) {
       watchdogReboot(2);
     }
 #  endif
