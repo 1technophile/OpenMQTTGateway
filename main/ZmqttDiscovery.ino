@@ -398,7 +398,7 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device mac
                   stateClassNone //State Class
   );
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat voltage", (char*)getUniqueId("m5batvoltage", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.m5batvoltage }}", //set availability_topic,device_class,value_template,

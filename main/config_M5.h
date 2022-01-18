@@ -35,13 +35,22 @@
 #ifdef ZboardM5STACK
 #  include <M5Stack.h>
 #endif
+#ifdef ZboardM5TOUGH
+#  include <M5Tough.h>
+#endif
 
 extern void setupM5();
 extern void loopM5();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*---------------DEFINE SCREEN BRIGHTNESS------------------*/
-#ifndef SLEEP_LCD_BRIGHTNESS
-#  define SLEEP_LCD_BRIGHTNESS 2 // 0 to 100
+#ifdef ZboardM5TOUGH // Sleep brightness doesn't seem to work for the moment on Tough
+#  ifndef SLEEP_LCD_BRIGHTNESS
+#    define SLEEP_LCD_BRIGHTNESS 15 // 0 to 100
+#  endif
+#else
+#  ifndef SLEEP_LCD_BRIGHTNESS
+#    define SLEEP_LCD_BRIGHTNESS 2 // 0 to 100
+#  endif
 #endif
 #ifndef NORMAL_LCD_BRIGHTNESS
 #  define NORMAL_LCD_BRIGHTNESS 100 // 0 to 100

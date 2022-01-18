@@ -28,7 +28,7 @@
 */
 #include "User_config.h"
 
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK)
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  ifdef ZboardM5STICKC
 #    include <M5StickC.h>
 #  endif
@@ -38,15 +38,18 @@
 #  ifdef ZboardM5STACK
 #    include <M5Stack.h>
 #  endif
+#  ifdef ZboardM5TOUGH
+#    include <M5Tough.h>
+#  endif
 void logToLCD(bool display) {
   display ? Log.begin(LOG_LEVEL_LCD, &M5.Lcd) : Log.begin(LOG_LEVEL, &Serial); // Log on LCD following LOG_LEVEL_LCD
 }
 
 void setBrightness(int brightness) {
-#  ifdef ZboardM5STACK
+#  if defined(ZboardM5STACK)
   M5.Lcd.setBrightness(brightness * 2);
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   (!brightness) ? M5.Axp.ScreenBreath(0) : M5.Axp.ScreenBreath(7 + (int)brightness * 0.08);
 #  endif
 }
@@ -84,10 +87,10 @@ void setupM5() {
 
 void sleepScreen() {
   Log.trace(F("Screen going to sleep" CR));
-#  ifdef ZboardM5STACK
+#  if defined(ZboardM5STACK)
   M5.begin(false, false, false); // M5.lcd.sleep() provokes a reset of the ESP
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP)
+#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   M5.Axp.ScreenBreath(0);
   M5.Axp.SetLDO2(false);
 #  endif
@@ -214,7 +217,7 @@ void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circl
   }
 }
 
-void M5Display(char* line1, char* line2, char* line3) {
+void M5Print(char* line1, char* line2, char* line3) {
   if (lowpowermode == 2) digitalWrite(LED_INFO, LED_INFO_ON);
   wakeScreen(NORMAL_LCD_BRIGHTNESS);
   M5.Lcd.fillScreen(TFT_WHITE);

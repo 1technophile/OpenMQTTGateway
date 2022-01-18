@@ -320,7 +320,8 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STICKCP "M5StickCP"
-//#define ZboardM5STACK  "ZboardM5STACK"
+//#define ZboardM5STACK  "M5STACK"
+//#define ZboardM5TOUGH  "M5TOUGH"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
 //#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
