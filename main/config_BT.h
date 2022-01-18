@@ -168,7 +168,16 @@ struct BLEdevice {
   bool isWhtL;
   bool isBlkL;
   bool connect;
-  std::string sensorModel_id;
+  int sensorModel_id;
+};
+
+class BLEconectable {
+public:
+  enum id {
+    LYWSD03MMC = 1000,
+    MHO_C401,
+    DT24_BLE,
+  };
 };
 
 JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true);
