@@ -82,12 +82,12 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
         JsonObject BLEresult = getBTJsonObject();
         BLEresult["id"] = it.addr;
-        BLEresult["service"] = (char*)it.service.toString().c_str();
-        BLEresult["characteristic"] = (char*)it.characteristic.toString().c_str();
+        BLEresult["service"] = it.service.toString();
+        BLEresult["characteristic"] = it.characteristic.toString();
 
         if (it.write) {
           Log.trace(F("processing BLE write" CR));
-          BLEresult["write"] = it.value.c_str();
+          BLEresult["write"] = it.value;
           result = writeData(&it);
         } else {
           Log.trace(F("processing BLE read" CR));

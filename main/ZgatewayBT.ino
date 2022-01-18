@@ -255,7 +255,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model) {
       device->connect = true;
     }
 
-    if (model.compare("") == 0) device->sensorModel_id = model;
+    if (!model.empty()) device->sensorModel_id = model;
 
     if (flags & device_flags_isWhiteL || flags & device_flags_isBlackL) {
       device->isWhtL = flags & device_flags_isWhiteL;
@@ -458,43 +458,42 @@ void BLEscan() {
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 void BLEconnect() {
-  Log.notice(F("BLE Connect begin" CR));
-  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-    BLEdevice* p = *it;
-    if (p->connect) {
-      Log.trace(F("Model to connect found: %s" CR), p->macAdr);
-      NimBLEAddress addr(std::string(p->macAdr));
-      if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
-        LYWSD03MMC_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-        BLEclient.publishData();
-      }
-      if (p->sensorModel_id.compare("DT24-BLE") == 0) {
-        DT24_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-        BLEclient.publishData();
-      }
-      if (p->sensorModel_id.compare("GENERIC") == 0) {
-        GENERIC_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-      }
-      if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
-        HHCCJCY01HHCC_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-        BLEclient.publishData();
-      }
-      if (BLEactions.size() > 0) {
-        std::vector<BLEAction> swap;
-        for (auto& it : BLEactions) {
-          if (!it.complete && --it.ttl) {
-            swap.push_back(it);
-          }
+  if (!ProcessLock) {
+    Log.notice(F("BLE Connect begin" CR));
+    for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+      BLEdevice* p = *it;
+      if (p->connect) {
+        Log.trace(F("Model to connect found: %s" CR), p->macAdr);
+        NimBLEAddress addr(std::string(p->macAdr));
+        if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
+          LYWSD03MMC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
+          BLEclient.publishData();
+        } else if (p->sensorModel_id.compare("DT24-BLE") == 0) {
+          DT24_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
+          BLEclient.publishData();
+        } else if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
+          HHCCJCY01HHCC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
+          BLEclient.publishData();
+        } else {
+          GENERIC_connect BLEclient(addr);
+          BLEclient.processActions(BLEactions);
         }
-        std::swap(BLEactions, swap);
+        if (BLEactions.size() > 0) {
+          std::vector<BLEAction> swap;
+          for (auto& it : BLEactions) {
+            if (!it.complete && --it.ttl) {
+              swap.push_back(it);
+            }
+          }
+          std::swap(BLEactions, swap);
+        }
       }
     }
+    Log.notice(F("BLE Connect end" CR));
   }
-  Log.notice(F("BLE Connect end" CR));
 }
 
 void stopProcessing() {
@@ -968,8 +967,31 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   } else {
     return;
   }
-  createOrUpdateDevice(action.addr, device_flags_connect, "GENERIC");
+
+  createOrUpdateDevice(action.addr, device_flags_connect, "");
   BLEactions.push_back(action);
+
+  if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
+    // Immediate action; we need to prevent the normal connection action and stop scanning
+    ProcessLock = true;
+    vTaskSuspend(xCoreTaskHandle);
+
+    NimBLEScan* pScan = NimBLEDevice::getScan();
+    if (pScan->isScanning()) {
+      pScan->stop();
+    }
+
+    // swap the devices vector so only this device is processed
+    std::vector<BLEdevice*> swap;
+    swap.push_back(getDeviceByMac(action.addr));
+    std::swap(devices, swap);
+    // Unlock here to allow the action to be performed
+    ProcessLock = false;
+    BLEconnect();
+    // back to normal
+    std::swap(devices, swap);
+    vTaskResume(xCoreTaskHandle);
+  }
 #  endif
 }
 
