@@ -50,14 +50,14 @@ bool zBLEConnect::writeData(BLEAction* action) {
           std::string temp = action->value.substr(i, 2);
           buf.push_back((uint8_t)strtoul(temp.c_str(), nullptr, 16));
         }
-        return pChar->writeValue((const uint8_t*)&buf[0], buf.size());
+        return pChar->writeValue((const uint8_t*)&buf[0], buf.size(), !pChar->canWrite());
       }
       case BLE_VAL_INT:
-        return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0));
+        return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0), !pChar->canWrite());
       case BLE_VAL_FLOAT:
-        return pChar->writeValue(strtod(action->value.c_str(), nullptr));
+        return pChar->writeValue(strtod(action->value.c_str(), nullptr), !pChar->canWrite());
       default:
-        return pChar->writeValue(action->value);
+        return pChar->writeValue(action->value, !pChar->canWrite());
     }
   }
   return false;
