@@ -461,7 +461,7 @@ void BLEscan() {
 void BLEconnect() {
   if (!ProcessLock) {
     Log.notice(F("BLE Connect begin" CR));
-    while (BLEactions.size() > 0) {
+    do {
       for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
         if (p->connect) {
@@ -506,7 +506,7 @@ void BLEconnect() {
           }
         }
       }
-    }
+    } while (BLEactions.size() > 0);
     Log.notice(F("BLE Connect end" CR));
   }
 }
