@@ -460,38 +460,49 @@ void BLEscan() {
 void BLEconnect() {
   if (!ProcessLock) {
     Log.notice(F("BLE Connect begin" CR));
-    for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-      BLEdevice* p = *it;
-      if (p->connect) {
-        Log.trace(F("Model to connect found: %s" CR), p->macAdr);
-        NimBLEAddress addr(std::string(p->macAdr));
-        if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
-          LYWSD03MMC_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          BLEclient.publishData();
-        } else if (p->sensorModel_id.compare("DT24-BLE") == 0) {
-          DT24_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          BLEclient.publishData();
-        } else if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
-          HHCCJCY01HHCC_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          BLEclient.publishData();
-        } else {
-          GENERIC_connect BLEclient(addr);
-          BLEclient.processActions(BLEactions);
-          // If we don't regularly connect to this, disable connections so advertisements
-          // won't be filtered if BLE_FILTER_CONNECTABLE is set.
-          p->connect = false;
-        }
-        if (BLEactions.size() > 0) {
-          std::vector<BLEAction> swap;
-          for (auto& it : BLEactions) {
-            if (!it.complete && --it.ttl) {
-              swap.push_back(it);
+    while (BLEactions.size() > 0) {
+      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+        BLEdevice* p = *it;
+        if (p->connect) {
+          Log.trace(F("Model to connect found: %s" CR), p->macAdr);
+          NimBLEAddress addr(std::string(p->macAdr));
+          if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
+            LYWSD03MMC_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
+          } else if (p->sensorModel_id.compare("DT24-BLE") == 0) {
+            DT24_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
+          } else if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
+            HHCCJCY01HHCC_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
+          } else {
+            GENERIC_connect BLEclient(addr);
+            if (BLEclient.processActions(BLEactions)) {
+              // If we don't regularly connect to this, disable connections so advertisements
+              // won't be filtered if BLE_FILTER_CONNECTABLE is set.
+              p->connect = false;
             }
           }
-          std::swap(BLEactions, swap);
+          if (BLEactions.size() > 0) {
+            std::vector<BLEAction> swap;
+            for (auto& it : BLEactions) {
+              if (!it.complete && --it.ttl) {
+                swap.push_back(it);
+              } else if (memcmp(it.addr, p->macAdr, sizeof(it.addr)) == 0) {
+                if (p->sensorModel_id != "DT24-BLE" &&
+                    p->sensorModel_id != "HHCCJCY01HHCC" &&
+                    p->sensorModel_id != "LYWSD03MMC" &&
+                    p->sensorModel_id != "MHO-C401") {
+                  // if irregulary connected to and connection failed clear the connect flag.
+                  p->connect = false;
+                }
+              }
+            }
+            std::swap(BLEactions, swap);
+          }
         }
       }
     }
@@ -977,12 +988,12 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
     // Immediate action; we need to prevent the normal connection action and stop scanning
     ProcessLock = true;
-    vTaskSuspend(xCoreTaskHandle);
-
     NimBLEScan* pScan = NimBLEDevice::getScan();
     if (pScan->isScanning()) {
       pScan->stop();
     }
+
+    vTaskSuspend(xCoreTaskHandle);
 
     // swap the devices vector so only this device is processed
     std::vector<BLEdevice*> swap;

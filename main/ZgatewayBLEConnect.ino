@@ -117,9 +117,11 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
           }
         }
 
-        it.complete = true;
+        it.complete = result;
         BLEresult["success"] = result;
-        pubBT(BLEresult);
+        if (result || it.ttl <= 1) {
+          pubBT(BLEresult);
+        }
       }
     }
   }
