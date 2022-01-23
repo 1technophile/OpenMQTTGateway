@@ -12,7 +12,10 @@ class zBLEConnect {
 public:
   NimBLEClient* m_pClient;
   TaskHandle_t m_taskHandle = nullptr;
-  zBLEConnect(NimBLEAddress& addr) { m_pClient = NimBLEDevice::createClient(addr); }
+  zBLEConnect(NimBLEAddress& addr) {
+    m_pClient = NimBLEDevice::createClient(addr);
+    m_pClient->setConnectTimeout(5);
+  }
   virtual ~zBLEConnect() { NimBLEDevice::deleteClient(m_pClient); }
   virtual bool writeData(BLEAction* action);
   virtual bool readData(BLEAction* action);
