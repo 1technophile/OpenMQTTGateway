@@ -35,6 +35,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #  ifdef ESP32
 #    include "FreeRTOS.h"
 SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
+SemaphoreHandle_t semaphoreBLEOperation;
 QueueHandle_t BLEQueue;
 // Headers used for deep sleep functions
 #    include <NimBLEAdvertisedDevice.h>
@@ -533,11 +534,16 @@ void coreTask(void* pvParameters) {
       if (client.state() != 0) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
       } else if (!ProcessLock) {
-        BLEscan();
-        // Launching a connect every BLEscanBeforeConnect
-        if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
-          BLEconnect();
-        dumpDevices();
+        if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+          BLEscan();
+          // Launching a connect every BLEscanBeforeConnect
+          if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+            BLEconnect();
+          dumpDevices();
+          xSemaphoreGive(semaphoreBLEOperation);
+        } else {
+          Log.error(F("Failed to start scan - BLE busy" CR));
+        }
       }
       if (lowpowermode) {
         lowPowerESP32();
@@ -616,6 +622,9 @@ void setupBT() {
 
   semaphoreCreateOrUpdateDevice = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
+
+  semaphoreBLEOperation = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphoreBLEOperation);
 
   BLEQueue = xQueueCreate(32, sizeof(NimBLEAdvertisedDevice*));
 
@@ -983,7 +992,6 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   }
 
   createOrUpdateDevice(action.addr, device_flags_connect, "");
-  BLEactions.push_back(action);
 
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
     // Immediate action; we need to prevent the normal connection action and stop scanning
@@ -993,18 +1001,32 @@ void MQTTtoBTAction(JsonObject& BTdata) {
       pScan->stop();
     }
 
-    vTaskSuspend(xCoreTaskHandle);
+    if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
+      // swap the vectors so only this device is processed
+      std::vector<BLEdevice*> dev_swap;
+      dev_swap.push_back(getDeviceByMac(action.addr));
+      std::swap(devices, dev_swap);
 
-    // swap the devices vector so only this device is processed
-    std::vector<BLEdevice*> swap;
-    swap.push_back(getDeviceByMac(action.addr));
-    std::swap(devices, swap);
-    // Unlock here to allow the action to be performed
-    ProcessLock = false;
-    BLEconnect();
-    // back to normal
-    std::swap(devices, swap);
-    vTaskResume(xCoreTaskHandle);
+      std::vector<BLEAction> act_swap;
+      act_swap.push_back(action);
+      std::swap(BLEactions, act_swap);
+
+      // Unlock here to allow the action to be performed
+      ProcessLock = false;
+      BLEconnect();
+      // back to normal
+      std::swap(devices, dev_swap);
+      std::swap(BLEactions, act_swap);
+      xSemaphoreGive(semaphoreBLEOperation);
+    } else {
+      Log.error(F("BLE busy - command not sent" CR));
+      JsonObject result = getBTJsonObject();
+      result["id"] = action.addr;
+      result["success"] = false;
+      pubBT(result);
+    }
+  } else {
+    BLEactions.push_back(action);
   }
 #  endif
 }
