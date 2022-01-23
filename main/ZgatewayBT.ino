@@ -1017,6 +1017,9 @@ void MQTTtoBTAction(JsonObject& BTdata) {
       // back to normal
       std::swap(devices, dev_swap);
       std::swap(BLEactions, act_swap);
+      // If we stopped the scheduled connect for this action, do the scheduled now
+      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+        BLEconnect();
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
       Log.error(F("BLE busy - command not sent" CR));
