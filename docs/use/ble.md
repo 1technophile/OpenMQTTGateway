@@ -164,7 +164,8 @@ The default value is set into config_BT.h
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
 ::: tip
-These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)
+These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)  
+This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
 :::
 
 ### Example write command
@@ -175,7 +176,8 @@ mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
   "ble_write_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
   "ble_write_value":"TEST",
   "value_type":"STRING",
-  "ttl":4 }'
+  "ttl":4,
+  "immediate":true }'
 ```
 Response:
 ```
