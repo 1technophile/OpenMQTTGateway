@@ -480,6 +480,9 @@ void BLEconnect() {
         } else {
           GENERIC_connect BLEclient(addr);
           BLEclient.processActions(BLEactions);
+          // If we don't regularly connect to this, disable connections so advertisements
+          // won't be filtered if BLE_FILTER_CONNECTABLE is set.
+          p->connect = false;
         }
         if (BLEactions.size() > 0) {
           std::vector<BLEAction> swap;
