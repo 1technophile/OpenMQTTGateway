@@ -35,6 +35,7 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #  ifdef ESP32
 #    include "FreeRTOS.h"
 SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
+SemaphoreHandle_t semaphoreBLEOperation;
 QueueHandle_t BLEQueue;
 // Headers used for deep sleep functions
 #    include <NimBLEAdvertisedDevice.h>
@@ -255,7 +256,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model) {
       device->connect = true;
     }
 
-    if (model.compare("") == 0) device->sensorModel_id = model;
+    if (!model.empty()) device->sensorModel_id = model;
 
     if (flags & device_flags_isWhiteL || flags & device_flags_isBlackL) {
       device->isWhtL = flags & device_flags_isWhiteL;
@@ -458,43 +459,56 @@ void BLEscan() {
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 void BLEconnect() {
-  Log.notice(F("BLE Connect begin" CR));
-  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-    BLEdevice* p = *it;
-    if (p->connect) {
-      Log.trace(F("Model to connect found: %s" CR), p->macAdr);
-      NimBLEAddress addr(std::string(p->macAdr));
-      if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
-        LYWSD03MMC_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-        BLEclient.publishData();
-      }
-      if (p->sensorModel_id.compare("DT24-BLE") == 0) {
-        DT24_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-        BLEclient.publishData();
-      }
-      if (p->sensorModel_id.compare("GENERIC") == 0) {
-        GENERIC_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-      }
-      if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
-        HHCCJCY01HHCC_connect BLEclient(addr);
-        BLEclient.processActions(BLEactions);
-        BLEclient.publishData();
-      }
-      if (BLEactions.size() > 0) {
-        std::vector<BLEAction> swap;
-        for (auto& it : BLEactions) {
-          if (!it.complete && --it.ttl) {
-            swap.push_back(it);
+  if (!ProcessLock) {
+    Log.notice(F("BLE Connect begin" CR));
+    do {
+      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+        BLEdevice* p = *it;
+        if (p->connect) {
+          Log.trace(F("Model to connect found: %s" CR), p->macAdr);
+          NimBLEAddress addr(std::string(p->macAdr));
+          if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
+            LYWSD03MMC_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
+          } else if (p->sensorModel_id.compare("DT24-BLE") == 0) {
+            DT24_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
+          } else if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
+            HHCCJCY01HHCC_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
+          } else {
+            GENERIC_connect BLEclient(addr);
+            if (BLEclient.processActions(BLEactions)) {
+              // If we don't regularly connect to this, disable connections so advertisements
+              // won't be filtered if BLE_FILTER_CONNECTABLE is set.
+              p->connect = false;
+            }
+          }
+          if (BLEactions.size() > 0) {
+            std::vector<BLEAction> swap;
+            for (auto& it : BLEactions) {
+              if (!it.complete && --it.ttl) {
+                swap.push_back(it);
+              } else if (memcmp(it.addr, p->macAdr, sizeof(it.addr)) == 0) {
+                if (p->sensorModel_id != "DT24-BLE" &&
+                    p->sensorModel_id != "HHCCJCY01HHCC" &&
+                    p->sensorModel_id != "LYWSD03MMC" &&
+                    p->sensorModel_id != "MHO-C401") {
+                  // if irregulary connected to and connection failed clear the connect flag.
+                  p->connect = false;
+                }
+              }
+            }
+            std::swap(BLEactions, swap);
           }
         }
-        std::swap(BLEactions, swap);
       }
-    }
+    } while (BLEactions.size() > 0);
+    Log.notice(F("BLE Connect end" CR));
   }
-  Log.notice(F("BLE Connect end" CR));
 }
 
 void stopProcessing() {
@@ -520,11 +534,16 @@ void coreTask(void* pvParameters) {
       if (client.state() != 0) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
       } else if (!ProcessLock) {
-        BLEscan();
-        // Launching a connect every BLEscanBeforeConnect
-        if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
-          BLEconnect();
-        dumpDevices();
+        if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+          BLEscan();
+          // Launching a connect every BLEscanBeforeConnect
+          if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+            BLEconnect();
+          dumpDevices();
+          xSemaphoreGive(semaphoreBLEOperation);
+        } else {
+          Log.error(F("Failed to start scan - BLE busy" CR));
+        }
       }
       if (lowpowermode) {
         lowPowerESP32();
@@ -603,6 +622,9 @@ void setupBT() {
 
   semaphoreCreateOrUpdateDevice = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
+
+  semaphoreBLEOperation = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphoreBLEOperation);
 
   BLEQueue = xQueueCreate(32, sizeof(NimBLEAdvertisedDevice*));
 
@@ -968,8 +990,47 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   } else {
     return;
   }
-  createOrUpdateDevice(action.addr, device_flags_connect, "GENERIC");
-  BLEactions.push_back(action);
+
+  createOrUpdateDevice(action.addr, device_flags_connect, "");
+
+  if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
+    // Immediate action; we need to prevent the normal connection action and stop scanning
+    ProcessLock = true;
+    NimBLEScan* pScan = NimBLEDevice::getScan();
+    if (pScan->isScanning()) {
+      pScan->stop();
+    }
+
+    if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
+      // swap the vectors so only this device is processed
+      std::vector<BLEdevice*> dev_swap;
+      dev_swap.push_back(getDeviceByMac(action.addr));
+      std::swap(devices, dev_swap);
+
+      std::vector<BLEAction> act_swap;
+      act_swap.push_back(action);
+      std::swap(BLEactions, act_swap);
+
+      // Unlock here to allow the action to be performed
+      ProcessLock = false;
+      BLEconnect();
+      // back to normal
+      std::swap(devices, dev_swap);
+      std::swap(BLEactions, act_swap);
+      // If we stopped the scheduled connect for this action, do the scheduled now
+      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+        BLEconnect();
+      xSemaphoreGive(semaphoreBLEOperation);
+    } else {
+      Log.error(F("BLE busy - command not sent" CR));
+      JsonObject result = getBTJsonObject();
+      result["id"] = action.addr;
+      result["success"] = false;
+      pubBT(result);
+    }
+  } else {
+    BLEactions.push_back(action);
+  }
 #  endif
 }
 

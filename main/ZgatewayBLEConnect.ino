@@ -50,14 +50,14 @@ bool zBLEConnect::writeData(BLEAction* action) {
           std::string temp = action->value.substr(i, 2);
           buf.push_back((uint8_t)strtoul(temp.c_str(), nullptr, 16));
         }
-        return pChar->writeValue((const uint8_t*)&buf[0], buf.size(), !pChar->canWrite());
+        return pChar->writeValue((const uint8_t*)&buf[0], buf.size(), !pChar->canWriteNoResponse());
       }
       case BLE_VAL_INT:
-        return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0), !pChar->canWrite());
+        return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0), !pChar->canWriteNoResponse());
       case BLE_VAL_FLOAT:
-        return pChar->writeValue(strtod(action->value.c_str(), nullptr), !pChar->canWrite());
+        return pChar->writeValue(strtod(action->value.c_str(), nullptr), !pChar->canWriteNoResponse());
       default:
-        return pChar->writeValue(action->value, !pChar->canWrite());
+        return pChar->writeValue(action->value, !pChar->canWriteNoResponse());
     }
   }
   return false;
@@ -82,12 +82,12 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
         JsonObject BLEresult = getBTJsonObject();
         BLEresult["id"] = it.addr;
-        BLEresult["service"] = (char*)it.service.toString().c_str();
-        BLEresult["characteristic"] = (char*)it.characteristic.toString().c_str();
+        BLEresult["service"] = it.service.toString();
+        BLEresult["characteristic"] = it.characteristic.toString();
 
         if (it.write) {
           Log.trace(F("processing BLE write" CR));
-          BLEresult["write"] = it.value.c_str();
+          BLEresult["write"] = it.value;
           result = writeData(&it);
         } else {
           Log.trace(F("processing BLE read" CR));
@@ -117,9 +117,11 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
           }
         }
 
-        it.complete = true;
+        it.complete = result;
         BLEresult["success"] = result;
-        pubBT(BLEresult);
+        if (result || it.ttl <= 1) {
+          pubBT(BLEresult);
+        }
       }
     }
   }
