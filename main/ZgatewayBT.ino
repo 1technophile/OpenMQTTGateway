@@ -795,7 +795,7 @@ void launchBTDiscovery() {
   if (newDevices == 0)
     return;
 #    ifdef ESP32
-  if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000) == pdFALSE)) {
+  if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
   }
@@ -1045,7 +1045,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
 
     if (WorBupdated) {
 #  ifdef ESP32
-      if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000) == pdTRUE)) {
+      if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdTRUE) {
         dumpDevices();
         xSemaphoreGive(semaphoreCreateOrUpdateDevice);
       }
