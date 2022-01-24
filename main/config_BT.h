@@ -153,6 +153,7 @@ enum ble_val_type {
 struct BLEAction {
   std::string value;
   char addr[18];
+  int addr_type;
   NimBLEUUID service;
   NimBLEUUID characteristic;
   bool write;
@@ -164,6 +165,7 @@ struct BLEAction {
 
 struct BLEdevice {
   char macAdr[18];
+  int macType;
   bool isDisc;
   bool isWhtL;
   bool isBlkL;
