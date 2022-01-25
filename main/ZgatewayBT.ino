@@ -201,7 +201,7 @@ void pubBT(JsonObject& data) {
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
-void createOrUpdateDevice(const char* mac, uint8_t flags, int model);
+void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
 
 BLEdevice* getDeviceByMac(const char* mac) {
   Log.trace(F("getDeviceByMac %s" CR), mac);
@@ -231,7 +231,7 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
   return true;
 }
 
-void createOrUpdateDevice(const char* mac, uint8_t flags, int model) {
+void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type) {
 #  ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
@@ -249,21 +249,26 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model) {
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     device->connect = flags & device_flags_connect;
+    device->macType = mac_type;
     device->sensorModel_id = model;
     devices.push_back(device);
     newDevices++;
   } else {
     Log.trace(F("update %s" CR), mac);
 
+    device->macType = mac_type;
+
     if (flags & device_flags_isDisc) {
       device->isDisc = true;
     }
+
     if (flags & device_flags_connect) {
       device->connect = true;
     }
 
-    if (model != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL)
+    if (model != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL) {
       device->sensorModel_id = model;
+    }
 
     if (flags & device_flags_isWhiteL || flags & device_flags_isBlackL) {
       device->isWhtL = flags & device_flags_isWhiteL;
@@ -287,6 +292,7 @@ void dumpDevices() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     Log.trace(F("macAdr %s" CR), p->macAdr);
+    Log.trace(F("macType %d" CR), p->macType);
     Log.trace(F("isDisc %d" CR), p->isDisc);
     Log.trace(F("isWhtL %d" CR), p->isWhtL);
     Log.trace(F("isBlkL %d" CR), p->isBlkL);
@@ -390,6 +396,7 @@ void procBLETask(void* pvParameters) {
       String mac_adress = advertisedDevice->getAddress().toString().c_str();
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
+      BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
@@ -473,7 +480,7 @@ void BLEconnect() {
         BLEdevice* p = *it;
         if (p->connect) {
           Log.trace(F("Model to connect found: %s" CR), p->macAdr);
-          NimBLEAddress addr(std::string(p->macAdr));
+          NimBLEAddress addr((const char*)p->macAdr, p->macType);
           if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC ||
               p->sensorModel_id == BLEconectable::id::MHO_C401) {
             LYWSD03MMC_connect BLEclient(addr);
@@ -908,12 +915,13 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
 void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = decoder.decodeBLEJson(BLEdata);
+  int mac_type = BLEdata["mac_type"].as<int>();
   if (model_id >= 0) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
-      createOrUpdateDevice(mac, device_flags_connect, model_id); // Device that broadcast and can be connected
+      createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
     } else {
-      createOrUpdateDevice(mac, device_flags_init, model_id);
+      createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
     }
   } else if (BLEdata.containsKey("name")) { // Connectable devices
     std::string name = BLEdata["name"];
@@ -926,7 +934,7 @@ void process_bledata(JsonObject& BLEdata) {
 
     if (model_id > 0) {
       Log.trace(F("Connectable device found: %s" CR), name.c_str());
-      createOrUpdateDevice(mac, device_flags_connect, model_id);
+      createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
     }
   } else {
     Log.trace(F("No device found " CR));
@@ -968,6 +976,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
 #  ifdef ESP32
   BLEAction action;
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
+  action.addr_type = BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0;
   action.value_type = BLE_VAL_STRING;
   if (BTdata.containsKey("value_type")) {
     String vt = BTdata["value_type"];
@@ -1009,7 +1018,8 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   }
 
   createOrUpdateDevice(action.addr, device_flags_connect,
-                       TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL);
+                       TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL,
+                       action.addr_type);
 
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
     // Immediate action; we need to prevent the normal connection action and stop scanning

@@ -166,6 +166,9 @@ The gateway can read and write BLE characteristics from devices and provide the 
 ::: tip
 These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)  
 This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
+
+**Note** Some devices need to have the mac address type specified. You can find this type by checking the log/mqtt data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
+To specify the MAC address type add the parameter `"mac_type"` to the command. For example `"mac_type": 1` to connect with a device with the MAC address type of 1.
 :::
 
 ### Example write command
