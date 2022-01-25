@@ -81,7 +81,12 @@ vector<BLEAction> BLEactions;
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
-static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, false, false, false, false, ""};
+static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
 static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
@@ -196,7 +201,7 @@ void pubBT(JsonObject& data) {
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 BLEdevice* getDeviceByMac(const char* mac);
-void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model);
+void createOrUpdateDevice(const char* mac, uint8_t flags, int model);
 
 BLEdevice* getDeviceByMac(const char* mac) {
   Log.trace(F("getDeviceByMac %s" CR), mac);
@@ -219,13 +224,14 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
 
   for (int i = 0; i < size; i++) {
     const char* mac = BTdata[jsonKey][i];
-    createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL), "");
+    createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL),
+                         TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL);
   }
 
   return true;
 }
 
-void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model) {
+void createOrUpdateDevice(const char* mac, uint8_t flags, int model) {
 #  ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
@@ -256,7 +262,8 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, std::string model) {
       device->connect = true;
     }
 
-    if (!model.empty()) device->sensorModel_id = model;
+    if (model != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL)
+      device->sensorModel_id = model;
 
     if (flags & device_flags_isWhiteL || flags & device_flags_isBlackL) {
       device->isWhtL = flags & device_flags_isWhiteL;
@@ -284,7 +291,7 @@ void dumpDevices() {
     Log.trace(F("isWhtL %d" CR), p->isWhtL);
     Log.trace(F("isBlkL %d" CR), p->isBlkL);
     Log.trace(F("connect %d" CR), p->connect);
-    Log.trace(F("sensorModel_id %s" CR), p->sensorModel_id.c_str());
+    Log.trace(F("sensorModel_id %d" CR), p->sensorModel_id);
   }
 }
 
@@ -467,15 +474,16 @@ void BLEconnect() {
         if (p->connect) {
           Log.trace(F("Model to connect found: %s" CR), p->macAdr);
           NimBLEAddress addr(std::string(p->macAdr));
-          if (p->sensorModel_id.compare("LYWSD03MMC") == 0 || p->sensorModel_id.compare("MHO-C401") == 0) {
+          if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC ||
+              p->sensorModel_id == BLEconectable::id::MHO_C401) {
             LYWSD03MMC_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
-          } else if (p->sensorModel_id.compare("DT24-BLE") == 0) {
+          } else if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
             DT24_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
-          } else if (p->sensorModel_id.compare("HHCCJCY01HHCC") == 0) {
+          } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
             HHCCJCY01HHCC_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
@@ -493,10 +501,10 @@ void BLEconnect() {
               if (!it.complete && --it.ttl) {
                 swap.push_back(it);
               } else if (memcmp(it.addr, p->macAdr, sizeof(it.addr)) == 0) {
-                if (p->sensorModel_id != "DT24-BLE" &&
-                    p->sensorModel_id != "HHCCJCY01HHCC" &&
-                    p->sensorModel_id != "LYWSD03MMC" &&
-                    p->sensorModel_id != "MHO-C401") {
+                if (p->sensorModel_id != BLEconectable::id::DT24_BLE &&
+                    p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
+                    p->sensorModel_id != BLEconectable::id::LYWSD03MMC &&
+                    p->sensorModel_id != BLEconectable::id::MHO_C401) {
                   // if irregulary connected to and connection failed clear the connect flag.
                   p->connect = false;
                 }
@@ -809,14 +817,16 @@ void launchBTDiscovery() {
 #    endif
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
-    if (p->sensorModel_id.compare("") != 0 && !isDiscovered(p)) {
+    if (p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
+        p->sensorModel_id < BLEconectable::id::MIN && !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-      Log.trace(F("Looking for Model_id: %s" CR), p->sensorModel_id.c_str());
-      std::string properties = decoder.getTheengProperties(p->sensorModel_id.c_str());
+      Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
+      std::string properties = decoder.getTheengProperties(p->sensorModel_id);
       Log.trace(F("properties: %s" CR), properties.c_str());
-      std::string brand = decoder.getTheengAttribute(p->sensorModel_id.c_str(), "brand");
-      std::string model = decoder.getTheengAttribute(p->sensorModel_id.c_str(), "model");
+      std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
+      std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
+      std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
       if (!properties.empty()) {
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         deserializeJson(jsonBuffer, properties);
@@ -825,7 +835,7 @@ void launchBTDiscovery() {
           Log.trace("Unit: %s", prop.value()["unit"].as<const char*>());
           Log.trace("Name: %s", prop.value()["name"].as<const char*>());
           String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
-          String entity_name = String(p->sensorModel_id.c_str()) + "-" + String(prop.key().c_str());
+          String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
           String unique_id = macWOdots + "-" + entity_name;
 #    if OpenHABDiscovery
           String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
@@ -837,19 +847,19 @@ void launchBTDiscovery() {
                           will_Topic, prop.value()["name"], value_template.c_str(),
                           "", "", prop.value()["unit"],
                           0, "", "", false, "",
-                          model.c_str(), brand.c_str(), p->sensorModel_id.c_str(), macWOdots.c_str(), false,
+                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                           stateClassMeasurement);
         }
       } else {
         // Discovery of sensors from which we retrieve data only by connect
-        if (p->sensorModel_id.compare("DT24-BLE") == 0) {
-          DT24Discovery(macWOdots.c_str(), p->sensorModel_id.c_str());
+        if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
+          DT24Discovery(macWOdots.c_str(), "DT24-BLE");
         }
-        if (p->sensorModel_id.compare("LYWSD03MMC") == 0) {
-          LYWSD03MMCDiscovery(macWOdots.c_str(), p->sensorModel_id.c_str());
+        if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
+          LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
         }
-        if (p->sensorModel_id.compare("MHO-C401") == 0) {
-          MHO_C401Discovery(macWOdots.c_str(), p->sensorModel_id.c_str());
+        if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
+          MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
         }
       }
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
@@ -897,19 +907,26 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
 
 void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
-  if (decoder.decodeBLEJson(BLEdata)) { // Broadcaster devices
-    std::string model_id = BLEdata["model_id"];
-    Log.trace(F("Decoder found device: %s" CR), model_id.c_str());
-    if (model_id.compare("HHCCJCY01HHCC") == 0) {
+  int model_id = decoder.decodeBLEJson(BLEdata);
+  if (model_id >= 0) { // Broadcaster devices
+    Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
+    if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
       createOrUpdateDevice(mac, device_flags_connect, model_id); // Device that broadcast and can be connected
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id);
     }
   } else if (BLEdata.containsKey("name")) { // Connectable devices
     std::string name = BLEdata["name"];
-    if (name.compare("LYWSD03MMC") == 0 || name.compare("DT24-BLE") == 0 || name.compare("MHO-C401") == 0) {
+    if (name.compare("LYWSD03MMC") == 0)
+      model_id = BLEconectable::id::LYWSD03MMC;
+    else if (name.compare("DT24-BLE") == 0)
+      model_id = BLEconectable::id::DT24_BLE;
+    else if (name.compare("MHO-C401") == 0)
+      model_id = BLEconectable::id::MHO_C401;
+
+    if (model_id > 0) {
       Log.trace(F("Connectable device found: %s" CR), name.c_str());
-      createOrUpdateDevice(mac, device_flags_connect, name);
+      createOrUpdateDevice(mac, device_flags_connect, model_id);
     }
   } else {
     Log.trace(F("No device found " CR));
@@ -991,7 +1008,8 @@ void MQTTtoBTAction(JsonObject& BTdata) {
     return;
   }
 
-  createOrUpdateDevice(action.addr, device_flags_connect, "");
+  createOrUpdateDevice(action.addr, device_flags_connect,
+                       TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL);
 
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
     // Immediate action; we need to prevent the normal connection action and stop scanning
