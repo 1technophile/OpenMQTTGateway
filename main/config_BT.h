@@ -174,9 +174,11 @@ struct BLEdevice {
 class BLEconectable {
 public:
   enum id {
-    LYWSD03MMC = 1000,
+    MIN = 1000,
+    LYWSD03MMC,
     MHO_C401,
     DT24_BLE,
+    MAX,
   };
 };
 

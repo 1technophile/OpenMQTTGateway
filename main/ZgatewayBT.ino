@@ -817,7 +817,8 @@ void launchBTDiscovery() {
 #    endif
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
-    if (p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL && !isDiscovered(p)) {
+    if (p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
+        p->sensorModel_id < BLEconectable::id::MIN && !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
