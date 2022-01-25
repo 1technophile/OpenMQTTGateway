@@ -43,7 +43,7 @@ String getMacAddress() {
 }
 
 String getUniqueId(String name, String sufix) {
-  String uniqueId = (String)getMacAddress() + name + sufix;
+  String uniqueId = (String)getMacAddress() + "-" + name + sufix;
   return String(uniqueId);
 }
 
