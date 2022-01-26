@@ -1047,7 +1047,7 @@ void eraseAndRestart() {
   Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
 
 #  if defined(ESP8266)
-  SPIFFS.format();
+  wifiManager.erase();
   delay(5000);
   ESP.reset();
 #  else
