@@ -190,11 +190,12 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonTime                  "{{ value_json.time | is_defined }}"
 #  define jsonCount                 "{{ value_json.count | is_defined }}"
 #  define jsonAlarm                 "{{ value_json.alarm | is_defined }}"
-#  define stateClassNone            ""
-#  define stateClassMeasurement     "measurement"
-#  define stateClassTotal           "total"
-#  define stateClassTotalIncreasing "total_increasing"
 #endif
+
+#define stateClassNone            ""
+#define stateClassMeasurement     "measurement"
+#define stateClassTotal           "total"
+#define stateClassTotalIncreasing "total_increasing"
 
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
 // List of classes available in Home Assistant
