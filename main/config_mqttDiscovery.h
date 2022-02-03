@@ -118,7 +118,9 @@ void announceDeviceTrigger(bool use_gateway_info,
 
 /*-------------- Auto discovery macros-----------------*/
 // Set the line below to true so as to have autodiscovery working with OpenHAB
-#define OpenHABDiscovery false
+#ifndef OpenHABDiscovery
+#  define OpenHABDiscovery false
+#endif
 
 #if OpenHABDiscovery // OpenHAB autodiscovery value key definition (is defined command is not supported by OpenHAB)
 #  define jsonBatt     "{{ value_json.batt }}"
