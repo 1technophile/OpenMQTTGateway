@@ -36,6 +36,7 @@ The table below describes the libraries and the modules of each board configurat
 |esp32feather-ble|ESP32 Feather Adafruit|BLE for the Adafruit Feather board|-|-|X|-|
 |heltec-wifi-lora32-868|ESP32 HELTEC LORA V2|LORA communication 868Mhz  using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa) |-|-|-|X|
 |heltec-wifi-lora32-915|ESP32 HELTEC LORA V2|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
+|tinypico-ble|ESP32 TinyPICO|BLE Gateway|-|-|X|-|
 |ttgo-lora32-v1-868|ESP32 TTGO LORA V1|LORA communication 868Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-lora32-v1-915|ESP32 TTGO LORA V1|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-tbeam|ESP32 TTGO T BEAM|BLE gateway with battery holder|-|-|X|-|
