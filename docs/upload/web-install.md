@@ -19,7 +19,9 @@ The table below describes the libraries and the modules of each board configurat
 |esp32-m5stick-c-ble|M5Stick C Orange|Expandable mobule with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
 |esp32-m5stick-cp-ble|M5Stick C Plus Orange|Expandable mobule with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
 |esp32-m5tough-ble|M5Tough rugged|Expandable mobule with BLE gateway and display, suitable for outdoor|-|-|X|-|
-|esp32-olimex-gtw-ble-eth|Olimex Ethernet Gateway (non POE) using ethernet|BLE gateway with external antenna as an option|-|-|X|-|
+|esp32-olimex-gtw-ble-eth|Olimex Ethernet Gateway (non POE)|BLE gateway with external antenna as an option|-|-|X|-|
+|esp32-olimex-gtw-ble-poe|Olimex Ethernet Gateway (POE)|BLE gateway with external antenna as an option|-|-|X|-|
+|esp32-olimex-gtw-ble-poe-iso|Olimex Ethernet Gateway (POE + ISO)|BLE gateway with external antenna as an option|-|-|X|-|
 |esp32-olimex-gtw-ble-wifi|Olimex Ethernet Gateway (non POE) using wifi| BLE gateway|-|-|X|-|
 |esp32dev-ble-cont|ESP32 dev board|BLE gateway with continuous scanning, suitable in particular for door and window BLE sensors (and all the others)|-|-|X|-|
 |esp32dev-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
