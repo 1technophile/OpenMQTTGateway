@@ -254,6 +254,15 @@ void createDiscovery(const char* sensor_type,
     }
   }
 
+  // We check if the class belongs to HAAS class list
+  bool HASSUnit = false;
+  int num_units = sizeof(availableHASSUnits) / sizeof(availableHASSUnits[0]);
+  for (int i = 0; i < num_units; i++) { // see class list and size into config_mqttDiscovery.h
+    if (strcmp(availableHASSUnits[i], unit_of_meas) == 0) {
+      HASSUnit = true;
+    }
+  }
+
   sensor["name"] = s_name; //name
   sensor["uniq_id"] = unique_id; //unique_id
   if (retainCmd)
@@ -266,7 +275,7 @@ void createDiscovery(const char* sensor_type,
     sensor["pl_on"] = payload_on; // payload_on
   if (payload_off[0])
     sensor["pl_off"] = payload_off; //payload_off
-  if (unit_of_meas[0] && HASSClass)
+  if (unit_of_meas[0] && HASSUnit)
     sensor["unit_of_meas"] = unit_of_meas; //unit_of_measurement*/
   if (off_delay != 0)
     sensor["off_delay"] = off_delay; //off_delay
