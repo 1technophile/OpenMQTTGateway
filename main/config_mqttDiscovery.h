@@ -216,4 +216,24 @@ const char* availableHASSClasses[] = {"battery",
                                       "power_factor",
                                       "voltage"};
 
+// From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L379
+// List of units available in Home Assistant
+const char* availableHASSUnits[] = {"W",
+                                    "kW",
+                                    "V",
+                                    "A",
+                                    "W",
+                                    "°C",
+                                    "°F",
+                                    "ms",
+                                    "s",
+                                    "hPa"
+                                    "kg",
+                                    "lb",
+                                    "µS/cm",
+                                    "lx",
+                                    "%",
+                                    "dB",
+                                    "B"};
+
 #endif
