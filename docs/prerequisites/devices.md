@@ -54,10 +54,11 @@ Added to that it retrieves the measures from the devices below. By default the d
 | XIAOMI Mi Jia 2 (1)(c)|LYWSD03MMC|temperature/humidity/battery/volt|
 | XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/volt|
 | XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/volt|
-| XIAOMI MHO-C401 (1)(c)|MHO-C401|temperature/humidity/battery/volt|
 | XIAOMI Mi Lamp |MUE4094RT|presence|
 | XIAOMI Mi Scale v1 (1)|XMTZC04HM|weight|
 | XIAOMI Mi Scale v2 (1)|XMTZC05HM|weight|
+| XIAOMI Mi Temp/Humidity v1 (1)(c)|MHO-C401|temperature/humidity/battery/volt|
+| XIAOMI Mi Temp/Humidity v2 (1)(c)|XMWSDJ04MMC|temperature/humidity/battery/volt|
 | XIAOMI Mi band (1)||steps|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)

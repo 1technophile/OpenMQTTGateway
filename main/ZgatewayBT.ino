@@ -351,10 +351,25 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, "MHO_C401", "Xiaomi", sensorModel);
 }
 
+void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
+#    define XMWSDJ04MMCparametersCount 4
+  Log.trace(F("XMWSDJ04MMCDiscovery" CR));
+  const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
+      {"sensor", "XMWSDJ04MMC-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "XMWSDJ04MMC-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "XMWSDJ04MMC-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "XMWSDJ04MMC-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, XMWSDJ04MMCsensor, XMWSDJ04MMCparametersCount, "XMWSDJ04MMC", "Xiaomi", sensorModel);
+}
+
 #  else
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
+void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
 #  endif
 
 #  ifdef ESP32
@@ -494,6 +509,10 @@ void BLEconnect() {
             HHCCJCY01HHCC_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
+          } else if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
+            XMWSDJ04MMC_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
           } else {
             GENERIC_connect BLEclient(addr);
             if (BLEclient.processActions(BLEactions)) {
@@ -511,7 +530,8 @@ void BLEconnect() {
                 if (p->sensorModel_id != BLEconectable::id::DT24_BLE &&
                     p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
                     p->sensorModel_id != BLEconectable::id::LYWSD03MMC &&
-                    p->sensorModel_id != BLEconectable::id::MHO_C401) {
+                    p->sensorModel_id != BLEconectable::id::MHO_C401 &&
+                    p->sensorModel_id != BLEconectable::id::XMWSDJ04MMC) {
                   // if irregulary connected to and connection failed clear the connect flag.
                   p->connect = false;
                 }
@@ -869,6 +889,9 @@ void launchBTDiscovery() {
         if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
           MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
         }
+        if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
+          XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
+        }
       }
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
@@ -932,6 +955,8 @@ void process_bledata(JsonObject& BLEdata) {
       model_id = BLEconectable::id::DT24_BLE;
     else if (name.compare("MHO-C401") == 0)
       model_id = BLEconectable::id::MHO_C401;
+    else if (name.compare("XMWSDJ04MMC") == 0)
+      model_id = BLEconectable::id::XMWSDJ04MMC;
 
     if (model_id > 0) {
       Log.trace(F("Connectable device found: %s" CR), name.c_str());

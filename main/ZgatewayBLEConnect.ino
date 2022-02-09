@@ -288,5 +288,59 @@ void HHCCJCY01HHCC_connect::publishData() {
   }
 }
 
+/*-----------------------XMWSDJ04MMC HANDLING-----------------------*/
+void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
+  if (m_taskHandle == nullptr) {
+    return; // unexpected notification
+  }
+  if (!ProcessLock) {
+    Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
+
+    if (length == 6) {
+      Log.trace(F("Device identified creating BLE buffer" CR));
+      JsonObject BLEdata = getBTJsonObject();
+      String mac_address = m_pClient->getPeerAddress().toString().c_str();
+      mac_address.toUpperCase();
+      BLEdata["model"] = "XMWSDJ04MMC";
+      BLEdata["id"] = (char*)mac_address.c_str();
+      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_address.c_str());
+      BLEdata["tempc"] = (float)((pData[0] | (pData[1] << 8)) * 0.1);
+      BLEdata["tempf"] = (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.1));
+      BLEdata["hum"] = (float)((pData[2] | (pData[3] << 8)) * 0.1);
+      BLEdata["volt"] = (float)((pData[4] | (pData[5] << 8)) / 1000.0);
+      BLEdata["batt"] = (float)((((pData[4] | (pData[5] << 8)) / 1000.0) - 2.1) * 100);
+
+      pubBT(BLEdata);
+    } else {
+      Log.notice(F("Invalid notification data" CR));
+      return;
+    }
+  } else {
+    Log.trace(F("Callback process canceled by processLock" CR));
+  }
+
+  xTaskNotifyGive(m_taskHandle);
+}
+
+void XMWSDJ04MMC_connect::publishData() {
+  NimBLEUUID serviceUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6");
+  NimBLEUUID charUUID("ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6");
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
+
+  if (pChar && pChar->canNotify()) {
+    Log.trace(F("Registering notification" CR));
+    if (pChar->subscribe(true, std::bind(&XMWSDJ04MMC_connect::notifyCB, this,
+                                         std::placeholders::_1, std::placeholders::_2,
+                                         std::placeholders::_3, std::placeholders::_4))) {
+      m_taskHandle = xTaskGetCurrentTaskHandle();
+      if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(BLE_CNCT_TIMEOUT)) == pdFALSE) {
+        m_taskHandle = nullptr;
+      }
+    } else {
+      Log.notice(F("Failed registering notification" CR));
+    }
+  }
+}
+
 #  endif //ZgatewayBT
 #endif //ESP32
