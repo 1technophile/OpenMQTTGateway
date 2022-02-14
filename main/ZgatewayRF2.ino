@@ -81,7 +81,7 @@ void RF2toMQTTdiscovery(JsonObject& data) {
   data["switchType"] = 1; // switchtype = 1 turns switch on.
   serializeJson(data, payloadonstr);
   data["switchType"] = 0; // switchtype = 0 turns switch off.
-  serializeJson(data, payloadonstr);
+  serializeJson(data, payloadoffstr);
   data["switchType"] = org_switchtype; // Restore original switchvalue
 
   String switchname;
