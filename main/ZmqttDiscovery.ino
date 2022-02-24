@@ -245,38 +245,35 @@ void createDiscovery(const char* sensor_type,
     sensor["stat_t"] = state_topic;
   }
 
-  // We check if the class belongs to HAAS class list
-  bool HASSClass = false;
-  int num_classes = sizeof(availableHASSClasses) / sizeof(availableHASSClasses[0]);
-  for (int i = 0; i < num_classes; i++) { // see class list and size into config_mqttDiscovery.h
-    if (strcmp(availableHASSClasses[i], device_class) == 0) {
-      HASSClass = true;
+  if (device_class[0]) {
+    // We check if the class belongs to HAAS classes list
+    int num_classes = sizeof(availableHASSClasses) / sizeof(availableHASSClasses[0]);
+    for (int i = 0; i < num_classes; i++) { // see class list and size into config_mqttDiscovery.h
+      if (strcmp(availableHASSClasses[i], device_class) == 0) {
+        sensor["dev_cla"] = device_class; //device_class
+      }
     }
   }
 
-  // We check if the class belongs to HAAS class list
-  bool HASSUnit = false;
-  int num_units = sizeof(availableHASSUnits) / sizeof(availableHASSUnits[0]);
-  for (int i = 0; i < num_units; i++) { // see class list and size into config_mqttDiscovery.h
-    if (strcmp(availableHASSUnits[i], unit_of_meas) == 0) {
-      HASSUnit = true;
+  if (unit_of_meas[0]) {
+    // We check if the class belongs to HAAS units list
+    int num_units = sizeof(availableHASSUnits) / sizeof(availableHASSUnits[0]);
+    for (int i = 0; i < num_units; i++) { // see units list and size into config_mqttDiscovery.h
+      if (strcmp(availableHASSUnits[i], unit_of_meas) == 0) {
+        sensor["unit_of_meas"] = unit_of_meas; //unit_of_measurement*/
+      }
     }
   }
-
   sensor["name"] = s_name; //name
   sensor["uniq_id"] = unique_id; //unique_id
   if (retainCmd)
     sensor["retain"] = retainCmd; // Retain command
-  if (device_class[0] && HASSClass)
-    sensor["dev_cla"] = device_class; //device_class
   if (value_template[0])
     sensor["val_tpl"] = value_template; //value_template
   if (payload_on[0])
     sensor["pl_on"] = payload_on; // payload_on
   if (payload_off[0])
     sensor["pl_off"] = payload_off; //payload_off
-  if (unit_of_meas[0] && HASSUnit)
-    sensor["unit_of_meas"] = unit_of_meas; //unit_of_measurement*/
   if (off_delay != 0)
     sensor["off_delay"] = off_delay; //off_delay
   if (payload_available[0])
