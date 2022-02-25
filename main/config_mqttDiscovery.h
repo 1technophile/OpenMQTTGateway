@@ -227,7 +227,7 @@ const char* availableHASSUnits[] = {"W",
                                     "°F",
                                     "ms",
                                     "s",
-                                    "hPa"
+                                    "hPa",
                                     "kg",
                                     "lb",
                                     "µS/cm",
