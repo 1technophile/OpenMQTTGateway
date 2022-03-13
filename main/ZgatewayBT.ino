@@ -844,7 +844,11 @@ void launchBTDiscovery() {
 #    endif
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
-    if (!isDiscovered(p)) {
+    // Do not launch discovery for the devices already discovered or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
+    if (!isDiscovered(p) &&
+        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
+        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       if (p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
@@ -899,7 +903,7 @@ void launchBTDiscovery() {
       }
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
-      Log.trace(F("Device already discovered %s" CR), p->macAdr);
+      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), p->macAdr);
     }
   }
 }
