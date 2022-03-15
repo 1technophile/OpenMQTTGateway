@@ -914,7 +914,7 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
     if (processBLEData) process_bledata(BLEdata);
     if (!publishOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
 #  if !pubBLEServiceUUID
-      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("servicedatauuid"));
+      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
 #  endif
 #  if !pubKnownBLEServiceData
       RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
