@@ -8,13 +8,17 @@ OMG also supports up to date technologies like Bluetooth Low Energy (BLE) or LOR
 To have an overview of the supported PIR, door, water, temperature, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
 [compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
 
+You can run OpenMQTTGateway on a wide variety of [boards](https://compatible.openmqttgateway.com/index.php/boards/), ESP32, ESP8266, Arduino MEGA, UNO (with limitation).
+BLE to MQTT gateway can also run on Raspberry Pi, Windows or Unix computers thanks to [Theengs Gateway](https://theengs.github.io/gateway/).
+
 With MQTT you can connect the compatible software you want, integrating in home automation controllers like (OpenHAB, Home Assistant, Jeedom, FHEM, Domoticz...) or Internet of Things software like Node-Red.
 
 # Use cases
 With OpenMQTTGateway and a controller you can for example:
 * Monitor a garden with a Mi Flora BLE sensor and control an irrigation valve depending on the soil moisture,
-* Trigger a fan depending on the temperature and humidity thanks to a Mi Jia BLE sensor,
-* Alert yourself by a controller notification if the temperature of a fridge is too high,
+* Trigger a fan depending on the temperature and humidity thanks to a Mi Jia/LYWSD03MMC BLE sensor,
+* Follow your meat temperature when cooking with an Inkbird IBBQ
+* Alert yourself by a controller notification if the temperature of a fridge or freezer is too high,
 * Detect a beacon/smartwatch so as to trigger a special scenario when you come home,
 * [Lose weight with the help of a complete log system](https://www.youtube.com/watch?v=noUROhtf0E0&t=18s), video from [@Andreas Spiess](https://www.youtube.com/channel/UCu7_D0o48KbfhpEohoP7YSQ)
 * Detect opened door or windows through 433mhz or BLE and alert yourself when leaving
