@@ -6,7 +6,11 @@ You can take a look to the [OpenMQTTGateway compatible website](https://compatib
 Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280, HTU21D, AHTx0, DS1820
 or actuators; LED, relays, PWM.
 
-Here is some information to find the board suitable for your need, you have the choice between off the shelves boards and DIY setup.
+::: tip Running on a computer
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
+:::
+
+Here is some information to find the boards suitable for your need, you have the choice between off the shelves boards and DIY setup.
 
 ## Off the shelves boards
 The boards below doesn't need hardware modification (or a lite one).
