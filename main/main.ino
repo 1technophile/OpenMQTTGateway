@@ -1556,7 +1556,7 @@ void stateMeasures() {
   SYSdata["rssi"] = rssi;
   String SSID = WiFi.SSID();
   SYSdata["SSID"] = SSID;
-  String BSSID = WiFi.BSSID();
+  String BSSID = WiFi.BSSIDstr();
   SYSdata["BSSID"] = BSSID;
   SYSdata["ip"] = ip2CharArray(WiFi.localIP());
   String mac = WiFi.macAddress();
