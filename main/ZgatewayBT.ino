@@ -1,18 +1,18 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal/BLE  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal/BLE  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This gateway enables to:
  - publish MQTT data to a different topic related to BLE devices rssi signal
  - publish MQTT data related to mi flora temperature, moisture, fertility and lux
  - publish MQTT data related to mi jia indoor temperature & humidity sensor
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -461,7 +461,7 @@ void procBLETask(void* pvParameters) {
   }
 }
 
-/** 
+/**
  * BLEscan used to retrieve BLE advertized data from devices without connection
  */
 void BLEscan() {
@@ -484,7 +484,7 @@ void BLEscan() {
   Log.trace(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
 }
 
-/** 
+/**
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 void BLEconnect() {
@@ -513,6 +513,9 @@ void BLEconnect() {
             XMWSDJ04MMC_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
+          } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1) {
+            SBS1_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
           } else {
             GENERIC_connect BLEclient(addr);
             if (BLEclient.processActions(BLEactions)) {
@@ -874,13 +877,25 @@ void launchBTDiscovery() {
 #    else
             String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
 #    endif
-            createDiscovery("sensor",
-                            discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                            will_Topic, prop.value()["name"], value_template.c_str(),
-                            "", "", prop.value()["unit"],
-                            0, "", "", false, "",
-                            model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                            stateClassMeasurement);
+            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && !strcmp(prop.key().c_str(), "state")) {
+              String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
+              String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
+              createDiscovery("switch", //set Type
+                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                              will_Topic, "switch", value_template.c_str(),
+                              payload_on.c_str(), payload_off.c_str(), "", 0,
+                              Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
+                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                              stateClassNone, "off", "on");
+            } else {
+              createDiscovery("sensor",
+                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                              will_Topic, prop.value()["name"], value_template.c_str(),
+                              "", "", prop.value()["unit"],
+                              0, "", "", false, "",
+                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                              stateClassMeasurement);
+            }
           }
         }
       } else if (p->sensorModel_id > BLEconectable::id::MIN &&
@@ -1001,9 +1016,80 @@ void BTforceScan() {
   }
 }
 
+#  ifdef ESP32
+void immediateBTAction(void* pvParameters) {
+  if (BLEactions.size()) {
+    // Immediate action; we need to prevent the normal connection action and stop scanning
+    ProcessLock = true;
+    NimBLEScan* pScan = NimBLEDevice::getScan();
+    if (pScan->isScanning()) {
+      pScan->stop();
+    }
+
+    if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
+      // swap the vectors so only this device is processed
+      std::vector<BLEdevice*> dev_swap;
+      dev_swap.push_back(getDeviceByMac(BLEactions.back().addr));
+      std::swap(devices, dev_swap);
+
+      std::vector<BLEAction> act_swap;
+      act_swap.push_back(BLEactions.back());
+      BLEactions.pop_back();
+      std::swap(BLEactions, act_swap);
+
+      // Unlock here to allow the action to be performed
+      ProcessLock = false;
+      BLEconnect();
+      // back to normal
+      std::swap(devices, dev_swap);
+      std::swap(BLEactions, act_swap);
+
+      // If we stopped the scheduled connect for this action, do the scheduled now
+      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+        BLEconnect();
+      xSemaphoreGive(semaphoreBLEOperation);
+    } else {
+      Log.error(F("BLE busy - command not sent" CR));
+      JsonObject result = getBTJsonObject();
+      result["id"] = BLEactions.back().addr;
+      result["success"] = false;
+      pubBT(result);
+      BLEactions.pop_back();
+      ProcessLock = false;
+    }
+  }
+  vTaskDelete(NULL);
+}
+
+void startBTActionTask() {
+  TaskHandle_t th;
+  xTaskCreatePinnedToCore(
+      immediateBTAction, /* Function to implement the task */
+      "imActTask", /* Name of the task */
+      5120, /* Stack size in bytes */
+      NULL, /* Task input parameter */
+      3, /* Priority of the task (set higher than core task) */
+      &th, /* Task handle. */
+      1); /* Core where the task should run */
+}
+#  endif
+
 void MQTTtoBTAction(JsonObject& BTdata) {
 #  ifdef ESP32
   BLEAction action;
+  memset(&action, 0, sizeof(BLEAction));
+  if (BTdata.containsKey("SBS1")) {
+    strcpy(action.addr, (const char*)BTdata["mac"]);
+    action.write = true;
+    action.value = BTdata["SBS1"].as<std::string>();
+    action.ttl = 1;
+    createOrUpdateDevice(action.addr, device_flags_connect,
+                         TheengsDecoder::BLE_ID_NUM::SBS1, 1);
+    BLEactions.push_back(action);
+    startBTActionTask();
+    return;
+  }
+
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
   action.addr_type = BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0;
   action.value_type = BLE_VAL_STRING;
@@ -1050,43 +1136,9 @@ void MQTTtoBTAction(JsonObject& BTdata) {
                        TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL,
                        action.addr_type);
 
+  BLEactions.push_back(action);
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
-    // Immediate action; we need to prevent the normal connection action and stop scanning
-    ProcessLock = true;
-    NimBLEScan* pScan = NimBLEDevice::getScan();
-    if (pScan->isScanning()) {
-      pScan->stop();
-    }
-
-    if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
-      // swap the vectors so only this device is processed
-      std::vector<BLEdevice*> dev_swap;
-      dev_swap.push_back(getDeviceByMac(action.addr));
-      std::swap(devices, dev_swap);
-
-      std::vector<BLEAction> act_swap;
-      act_swap.push_back(action);
-      std::swap(BLEactions, act_swap);
-
-      // Unlock here to allow the action to be performed
-      ProcessLock = false;
-      BLEconnect();
-      // back to normal
-      std::swap(devices, dev_swap);
-      std::swap(BLEactions, act_swap);
-      // If we stopped the scheduled connect for this action, do the scheduled now
-      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
-        BLEconnect();
-      xSemaphoreGive(semaphoreBLEOperation);
-    } else {
-      Log.error(F("BLE busy - command not sent" CR));
-      JsonObject result = getBTJsonObject();
-      result["id"] = action.addr;
-      result["success"] = false;
-      pubBT(result);
-    }
-  } else {
-    BLEactions.push_back(action);
+    startBTActionTask();
   }
 #  endif
 }

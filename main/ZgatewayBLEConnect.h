@@ -66,5 +66,14 @@ public:
   void publishData() override;
 };
 
+class SBS1_connect : public zBLEConnect {
+  uint8_t m_notifyVal;
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  SBS1_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  bool processActions(std::vector<BLEAction>& actions) override;
+};
+
 #endif //ESP32
 #endif //zBLEConnect_h
