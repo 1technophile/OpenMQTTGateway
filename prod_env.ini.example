@@ -57,9 +57,9 @@ build_flags =
   ${com-esp.build_flags}
   '-DZgatewayRF="RF"'
   '-DRFReceiveProtocol1=1'
-  '-DRFReceiveBitlength1=24' ; accept RF data with RF Protocol=1 AND RF BitLength=24
-  '-DRFReceiveProtocol2=3'   ; also accept all RF data with RF Protocol=3 without regard to RF BitLength
-  '-DRFReceiveBitlength3=48' ; also accept all RF data with BitLength=48 without regard to RF Protocol
+  '-DRFReceiveBitlength1=24' ; accept RF data with RF Protocol=1 AND RF Bitlength=24
+  '-DRFReceiveProtocol2=3'   ; also accept all RF data with RF Protocol=3 without regard to RF Bitlength
+  '-DRFReceiveBitlength3=48' ; also accept all RF data with Bitlength=48 without regard to RF Protocol
   '-DGateway_Name="OpenMQTTGateway_ESP32_RFSimpleFilter"'
 upload_protocol = espota
 upload_port = 192.168.1.144

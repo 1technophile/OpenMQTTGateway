@@ -160,7 +160,7 @@ void RFtoMQTT() {
 // RF simple filter to restrict reporting of RFdata if RFReceiveProtocol1, 
 // RFReceiveBitLength1, RFReceiveProtocol2, RFReceiveBitlength2, RFReceiveProtocol3,
 // RFReceiveBitlength3, RFReceiveProtocol4 and/or RFReceiveProtocol4 are defined
-// This filters by one or more RF Protocols and/or RF BitLengths not by RF values
+// This filters by one or more RF Protocols and/or RF Bitlengths not by RF values
 //
 #  if defined RFReceiveProtocol1 || defined RFReceiveBitlength1 || defined RFReceiveProtocol2 || defined RFReceiveBitlength2 || defined RFReceiveProtocol3 || defined RFReceiveBitlength3 || defined RFReceiveProtocol4 || defined RFReceiveBitlength4
     while (true) {
