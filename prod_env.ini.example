@@ -2,6 +2,7 @@
 default_envs = 
   esp32dev-ble-1
   esp32dev-ble-2
+  esp32dev-rf-simple-filter
   env:nodemcuv2-ONOFFPILIGHT
 
 ;esp32 1
@@ -38,6 +39,30 @@ build_flags =
   ;-DCORE_DEBUG_LEVEL=4
 upload_protocol = espota
 upload_port = 192.168.1.111
+upload_flags =
+  --auth=OTAPASSWORD
+upload_speed = 512000
+monitor_speed = 115200
+
+;esp32 3
+[env:esp32dev-rf-simple-filter]
+platform = ${com.esp32_platform}
+board = esp32dev
+board_build.partitions = min_spiffs.csv
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.rc-switch}
+  ${libraries.wifimanager32}
+build_flags = 
+  ${com-esp.build_flags}
+  '-DZgatewayRF="RF"'
+  '-DRFReceiveProtocol1=1'
+  '-DRFReceiveBitlength1=24' ; accept RF data with RF Protocol=1 AND RF BitLength=24
+  '-DRFReceiveProtocol2=3'   ; also accept all RF data with RF Protocol=3 without regard to RF BitLength
+  '-DRFReceiveBitlength3=48' ; also accept all RF data with BitLength=48 without regard to RF Protocol
+  '-DGateway_Name="OpenMQTTGateway_ESP32_RFSimpleFilter"'
+upload_protocol = espota
+upload_port = 192.168.1.144
 upload_flags =
   --auth=OTAPASSWORD
 upload_speed = 512000
