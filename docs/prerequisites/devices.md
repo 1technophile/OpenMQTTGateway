@@ -27,6 +27,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
 | Clock |LYWDS02|temperature/humidity|
 | Eddystone TLM|protocol|temperature/count/volt/time|
+| GOVEE |H5055|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6/battery|
 | GOVEE |H5075|temperature/humidity/battery|
 | GOVEE |H5072|temperature/humidity/battery|
 | GOVEE |H5102|temperature/humidity/battery|
@@ -45,11 +46,13 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Qingping |CGPR1|presence/luminance|
 | RuuviTag Raw V1|RuuviTag|temperature/humidity/pressure/acceleration/volt|
 | RuuviTag Raw V2|RuuviTag|temperature/humidity/pressure/acceleration/volt/TX power/movement/counter/sequence number|
+| Switchbot |S1|mode/state/battery (no control for the moment)|
 | Thermobeacon|WS02|temperature/humidity/volt|
 | Thermobeacon|WS08|temperature/humidity/volt|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
 | Vegtrug ||temperature/moisture/luminance/fertility|
 | XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
+| XIAOMI Ropot |HHCCPOT002|temperature/moisture/fertility|
 | XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
 | XIAOMI Mi Jia 2 (1)(c)|LYWSD03MMC|temperature/humidity/battery/volt|
 | XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/volt|
