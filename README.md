@@ -39,7 +39,7 @@ If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspb
 
 * [NodeRed](https://docs.openmqttgateway.com/integrate/node_red.html)
 
-* [AWS-IOT](https://docs.openmqttgateway.com/upload/aws_iot.html)
+* [AWS-IOT](https://docs.openmqttgateway.com/integrate/aws_iot.html)
 
 ## Contributors ✨
 
