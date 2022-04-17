@@ -226,5 +226,6 @@ extern void enablePilightReceive() {
   rf.setCallback(pilightCallback);
   rf.initReceiver(RF_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+  rf.enableReceiver();
 };
 #endif
