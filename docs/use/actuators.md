@@ -31,6 +31,14 @@ Goes ON for half a second, then back to OFF:
 Goes OFF for half a second, then back to ON:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse}"'`
 
+To specify activations other than half a second, include pulse_length and the time in ms.
+
+Goes ON for 25 ms, then back to OFF:
+`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"high_pulse","pulse_length":25}'`
+
+Goes OFF for 25 ms, then back to ON:
+`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse","pulse_length":25}'`
+
 Be aware that outputs are OFF by default when the board first start.
 
 ## FASTLED
