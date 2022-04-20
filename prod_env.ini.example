@@ -51,8 +51,8 @@ board = esp32dev
 board_build.partitions = min_spiffs.csv
 lib_deps =
   ${com-esp.lib_deps}
-  ${libraries.rc-switch}
   ${libraries.wifimanager32}
+  ${libraries.rc-switch}
 build_flags = 
   ${com-esp.build_flags}
   '-DZgatewayRF="RF"'

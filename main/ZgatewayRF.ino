@@ -157,59 +157,59 @@ void RFtoMQTT() {
     mySwitch.resetAvailable();
 
 //
-// RF simple filter to restrict reporting of RFdata if RFReceiveProtocol1, 
+// RF simple filter to restrict reporting of RFdata if RFReceiveProtocol1,
 // RFReceiveBitLength1, RFReceiveProtocol2, RFReceiveBitlength2, RFReceiveProtocol3,
 // RFReceiveBitlength3, RFReceiveProtocol4 and/or RFReceiveProtocol4 are defined
 // This filters by one or more RF Protocols and/or RF Bitlengths not by RF values
 //
 #  if defined RFReceiveProtocol1 || defined RFReceiveBitlength1 || defined RFReceiveProtocol2 || defined RFReceiveBitlength2 || defined RFReceiveProtocol3 || defined RFReceiveBitlength3 || defined RFReceiveProtocol4 || defined RFReceiveBitlength4
     while (true) {
-#  if defined RFReceiveProtocol1 && defined RFReceiveBitlength1
+#    if defined RFReceiveProtocol1 && defined RFReceiveBitlength1
       // RFReceiveProtocol1 and RFReceiveBitlength1 must both match if both are defined
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol1 && mySwitch.getReceivedBitlength() == RFReceiveBitlength1)
         break;
-#  elif defined RFReceiveProtocol1 // RFReceiveProtocol1 is defined without RFReceiveBitlength1
+#    elif defined RFReceiveProtocol1 // RFReceiveProtocol1 is defined without RFReceiveBitlength1
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol1)
         break;
-#  elif defined RFReceiveBitlength1 // RFReceiveBitlength1 is defined without RFReceiveProtocol1
+#    elif defined RFReceiveBitlength1 // RFReceiveBitlength1 is defined without RFReceiveProtocol1
       if (mySwitch.getReceivedBitlength() == RFReceiveBitlength1)
         break;
-#  endif
-#  if defined RFReceiveProtocol2 && defined RFReceiveBitlength2
+#    endif
+#    if defined RFReceiveProtocol2 && defined RFReceiveBitlength2
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol2 && mySwitch.getReceivedBitlength() == RFReceiveBitlength2)
         break;
-#  elif defined RFReceiveProtocol2
+#    elif defined RFReceiveProtocol2
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol2)
         break;
-#  elif defined RFReceiveBitlength2
+#    elif defined RFReceiveBitlength2
       if (mySwitch.getReceivedBitlength() == RFReceiveBitlength2)
         break;
-#  endif
-#  if defined RFReceiveProtocol3 && defined RFReceiveBitlength3
+#    endif
+#    if defined RFReceiveProtocol3 && defined RFReceiveBitlength3
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol3 && mySwitch.getReceivedBitlength() == RFReceiveBitlength3)
         break;
-#  elif defined RFReceiveProtocol3
-     if (mySwitch.getReceivedProtocol() == RFReceiveProtocol3)
+#    elif defined RFReceiveProtocol3
+      if (mySwitch.getReceivedProtocol() == RFReceiveProtocol3)
         break;
-#  elif defined RFReceiveBitlength3
+#    elif defined RFReceiveBitlength3
       if (mySwitch.getReceivedBitlength() == RFReceiveBitlength3)
         break;
-#  endif
-#  if defined RFReceiveProtocol4 && defined RFReceiveBitlength4
+#    endif
+#    if defined RFReceiveProtocol4 && defined RFReceiveBitlength4
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol4 && mySwitch.getReceivedBitlength() == ZRFReceiveBitlength4)
         break;
-#  elif defined RFReceiveProtocol4
+#    elif defined RFReceiveProtocol4
       if (mySwitch.getReceivedProtocol() == RFReceiveProtocol4)
         break;
-#  elif defined RFReceiveBitlength4
+#    elif defined RFReceiveBitlength4
       if (mySwitch.getReceivedBitlength() == RFReceiveBitlength4)
         break;
-#  endif
-      // if reach here, no matches were found, so don't report as a RF switch
-      Log.trace(F("ZgatewayRF ignoring RFdata, didn't pass the RF simple filters" CR));
+#    endif
+      // If reach here, nothing matched, don't report as a RF switch, just return
+      Log.notice(F("ZgatewayRF ignoring RF Value %u, RF Protocol %u, RF Bitlength %u" CR), (unsigned long)MQTTvalue, (int)mySwitch.getReceivedProtocol(), (int)mySwitch.getReceivedBitlength());
       return;
     }
-#   endif
+#  endif
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery) //component creation for HA
