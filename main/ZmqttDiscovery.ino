@@ -221,7 +221,7 @@ void createDiscovery(const char* sensor_type,
                      int off_delay,
                      const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* cmd_topic,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
-                     const char* state_class) {
+                     const char* state_class, const char* state_off, const char* state_on) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
@@ -282,6 +282,10 @@ void createDiscovery(const char* sensor_type,
     sensor["pl_not_avail"] = payload_not_avalaible; //payload_off
   if (state_class[0])
     sensor["state_class"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
+  if (state_on != nullptr)
+    sensor["stat_on"] = state_on;
+  if (state_off != nullptr)
+    sensor["stat_off"] = state_off;
 
   if (cmd_topic[0]) {
     char command_topic[mqtt_topic_max_size];

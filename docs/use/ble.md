@@ -217,6 +217,29 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
 :::
 
+## Switchbot S1 control (ESP32 only)
+
+Switchbot S1 devices are automatically discovered and available as a device in the configuration menu of home assistant.
+
+::: tip If the switchbot mode is changed the ESP32 must be restarted. :::
+
+The device can also be controlled over MQTT with a simplified BLE write command.
+
+### Example command to set the Switchbot state to ON:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "SBS1":"on",
+  "mac":"AA:BB:CC:DD:EE:FF"
+}'
+```
+Response (assuming success):
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "state":"on"
+}
+```
+
 ## Other
 
 To check your hm10 firmware version upload a serial sketch to the nodemcu (this will enable communication directly with the hm10) and launch the command:

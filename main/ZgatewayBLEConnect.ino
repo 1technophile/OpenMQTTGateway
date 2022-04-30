@@ -342,5 +342,77 @@ void XMWSDJ04MMC_connect::publishData() {
   }
 }
 
+/*-----------------------SBS1 HANDLING-----------------------*/
+void SBS1_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
+  if (m_taskHandle == nullptr) {
+    return; // unexpected notification
+  }
+  if (!ProcessLock) {
+    Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
+
+    if (length) {
+      m_notifyVal = *pData;
+    } else {
+      Log.notice(F("Invalid notification data" CR));
+      return;
+    }
+  } else {
+    Log.trace(F("Callback process canceled by processLock" CR));
+  }
+
+  xTaskNotifyGive(m_taskHandle);
+}
+
+bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
+  NimBLEUUID serviceUUID("cba20d00-224d-11e6-9fb8-0002a5d5c51b");
+  NimBLEUUID charUUID("cba20002-224d-11e6-9fb8-0002a5d5c51b");
+  NimBLEUUID notifyCharUUID("cba20003-224d-11e6-9fb8-0002a5d5c51b");
+  static byte ON[] = {0x57, 0x01, 0x01};
+  static byte OFF[] = {0x57, 0x01, 0x02};
+
+  bool result = false;
+  if (actions.size() > 0) {
+    for (auto& it : actions) {
+      if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
+        NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
+        NimBLERemoteCharacteristic* pNotifyChar = getCharacteristic(serviceUUID, notifyCharUUID);
+
+        if (it.write && pChar && pNotifyChar) {
+          Log.trace(F("processing Switchbot %s" CR), it.value.c_str());
+          if (pNotifyChar->subscribe(true,
+                                     std::bind(&SBS1_connect::notifyCB,
+                                               this, std::placeholders::_1, std::placeholders::_2,
+                                               std::placeholders::_3, std::placeholders::_4),
+                                     true)) {
+            if (it.value == "on") {
+              result = pChar->writeValue(ON, 3, false);
+            } else {
+              result = pChar->writeValue(OFF, 3, false);
+            }
+
+            if (result) {
+              m_taskHandle = xTaskGetCurrentTaskHandle();
+              if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(BLE_CNCT_TIMEOUT)) == pdFALSE) {
+                m_taskHandle = nullptr;
+              }
+              result = m_notifyVal == 0x01;
+            }
+          }
+        }
+
+        it.complete = result;
+        if (result || it.ttl <= 1) {
+          JsonObject BLEresult = getBTJsonObject();
+          BLEresult["id"] = it.addr;
+          BLEresult["state"] = result ? it.value : it.value == "on" ? "off" : "on";
+          pubBT(BLEresult);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 #  endif //ZgatewayBT
 #endif //ESP32
