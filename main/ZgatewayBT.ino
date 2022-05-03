@@ -341,10 +341,10 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
-      {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "MHO_C401-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "MHO_C401-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -355,11 +355,11 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 #    define HHCCJCY01HHCCparametersCount 5
   Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
   const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
-      {"sensor", "HHCCJCY01HHCC-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "HHCCJCY01HHCC-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "HHCCJCY01HHCC-lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
-      {"sensor", "HHCCJCY01HHCC-fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
-      {"sensor", "HHCCJCY01HHCC-moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
+      {"sensor", "fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
+      {"sensor", "moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -370,10 +370,10 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define XMWSDJ04MMCparametersCount 4
   Log.trace(F("XMWSDJ04MMCDiscovery" CR));
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
-      {"sensor", "XMWSDJ04MMC-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "XMWSDJ04MMC-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "XMWSDJ04MMC-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "XMWSDJ04MMC-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
