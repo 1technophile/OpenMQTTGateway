@@ -311,12 +311,12 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 6
   Log.trace(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][9] = {
-      {"sensor", "DT24-volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "DT24-amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
-      {"sensor", "DT24-watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
-      {"sensor", "DT24-watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
-      {"sensor", "DT24-price", mac, "", jsonMsg, "", "", "", stateClassNone},
-      {"sensor", "DT24-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement}
+      {"sensor", "volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
+      {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
+      {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
+      {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -327,10 +327,10 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
-      {"sensor", "LYWSD03MMC-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "LYWSD03MMC-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "LYWSD03MMC-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "LYWSD03MMC-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
