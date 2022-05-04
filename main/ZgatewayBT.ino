@@ -341,24 +341,39 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
-      {"sensor", "MHO_C401-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "MHO_C401-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "MHO_C401-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "MHO_C401-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
   createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, "MHO_C401", "Xiaomi", sensorModel);
 }
 
+void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
+#    define HHCCJCY01HHCCparametersCount 5
+  Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
+  const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
+      {"sensor", "fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
+      {"sensor", "moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, HHCCJCY01HHCCsensor, HHCCJCY01HHCCparametersCount, "HHCCJCY01HHCC", "Xiaomi", sensorModel);
+}
+
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define XMWSDJ04MMCparametersCount 4
   Log.trace(F("XMWSDJ04MMCDiscovery" CR));
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
-      {"sensor", "XMWSDJ04MMC-batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "XMWSDJ04MMC-volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "XMWSDJ04MMC-temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "XMWSDJ04MMC-hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -368,6 +383,7 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #  else
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
+void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
 #  endif
@@ -855,7 +871,8 @@ void launchBTDiscovery() {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       if (p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
-          p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX) {
+          p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
+          p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
         Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
         std::string properties = decoder.getTheengProperties(p->sensorModel_id);
         Log.trace(F("properties: %s" CR), properties.c_str());
@@ -899,8 +916,9 @@ void launchBTDiscovery() {
           }
         }
       } else if (p->sensorModel_id > BLEconectable::id::MIN &&
-                 p->sensorModel_id < BLEconectable::id::MAX) {
-        // Discovery of sensors from which we retrieve data only by connect
+                     p->sensorModel_id < BLEconectable::id::MAX ||
+                 p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+        // Discovery of sensors from which we retrieve data by connect
         if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
           DT24Discovery(macWOdots.c_str(), "DT24-BLE");
         }
@@ -912,6 +930,9 @@ void launchBTDiscovery() {
         }
         if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
           XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
+        }
+        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+          HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
         }
       } else {
         Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
