@@ -14,7 +14,7 @@ Note that for the moment RF, RF2 and Pilight can not be activated on the same bo
 
 ## For BLE devices 
 OpenMQTTGateway is able to scan all the BLE devices that advertise their data so as to do presence detection. 
-Added to that it retrieves the measures from the devices below. By default the data are read from the advertisements (no impact on device battery life). When a (c) is present after the model name, this means that the gateway connects to it so as to retrieve data. For some devices we may connect only to retrieve one or several parameters (the rest being advertised), in this case the (c) is placed with the parameter.
+Added to that it retrieves the measures from the devices below. By default the data are read from the advertisements (no impact on device battery life). When a (c) is present after the model name, this means that the gateway connects to it so as to retrieve data or control the device. For some devices we may connect only to retrieve one or several parameters (the rest being advertised), in this case the (c) is placed with the parameter.
 
 |Devices|Model|Measurements|
 |-|:-:|:-:|
@@ -46,7 +46,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Qingping |CGPR1|presence/luminance|
 | RuuviTag Raw V1|RuuviTag|temperature/humidity/pressure/acceleration/volt|
 | RuuviTag Raw V2|RuuviTag|temperature/humidity/pressure/acceleration/volt/TX power/movement/counter/sequence number|
-| Switchbot |S1|mode/state/battery (no control for the moment)|
+| Switchbot(c)|S1|mode/state/battery|
 | Thermobeacon|WS02|temperature/humidity/volt|
 | Thermobeacon|WS08|temperature/humidity/volt|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
