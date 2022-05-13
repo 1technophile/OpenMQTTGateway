@@ -1,17 +1,17 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
   This gateway enables to:
  - receive MQTT data from a topic and send IR signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received IR signal
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -1137,8 +1137,6 @@ bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, 
 #    ifdef IR_HITACHI_AC344
   if (strcmp(protocol_name, "HITACHI_AC344") == 0) {
     Log.notice(F("Sending IR signal with %s" CR), protocol_name);
-    if (valueRPT == repeatIRwNumber)
-      valueRPT = std::max(valueRPT, kHitachiAcDefaultRepeat);
     if (valueBITS == 0)
       valueBITS = kHitachiAc344StateLength;
     irsend.sendHitachiAc344(dataarray, valueBITS, valueRPT);
@@ -1275,6 +1273,123 @@ bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, 
     if (valueBITS == 0)
       valueBITS = kEcoclimBits;
     irsend.sendEcoclim(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_XMP
+  if (strcmp(protocol_name, "XMP") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kXmpBits;
+    irsend.sendXmp(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_KELON168
+  if (strcmp(protocol_name, "KELON168") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kKelon168Bits;
+    irsend.sendKelon168(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_TEKNOPOINT
+  if (strcmp(protocol_name, "TEKNOPOINT") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kTeknopointBits;
+    irsend.sendTeknopoint(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_HAIER_AC176
+  if (strcmp(protocol_name, "HAIER_AC176") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kHaierAC176Bits;
+    irsend.sendHaierAC176(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_BOSE
+  if (strcmp(protocol_name, "BOSE") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kBoseBits;
+    irsend.sendBose(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_SANYO_AC88
+  if (strcmp(protocol_name, "SANYO_AC88") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kSanyoAc88Bits;
+    irsend.sendSanyoAc88(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_TROTEC_3550
+  if (strcmp(protocol_name, "TROTEC_3550") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kTrotecBits;
+    irsend.sendTrotec3550(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_ARRIS
+  if (strcmp(protocol_name, "ARRIS") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kArrisBits;
+    irsend.sendArris(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_RHOSS
+  if (strcmp(protocol_name, "RHOSS") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kRhossBits;
+    irsend.sendRhoss(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_AIRTON
+  if (strcmp(protocol_name, "AIRTON") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kAirtonBits;
+    irsend.sendAirton(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_COOLIX48
+  if (strcmp(protocol_name, "COOLIX48") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kCoolix48Bits;
+    irsend.sendCoolix48(data, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_HITACHI_AC264
+  if (strcmp(protocol_name, "HITACHI_AC264") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kHitachiAc264Bits;
+    irsend.sendHitachiAc264(dataarray, valueBITS, valueRPT);
+    return true;
+  }
+#    endif
+#    ifdef IR_HITACHI_AC296
+  if (strcmp(protocol_name, "HITACHI_AC296") == 0) {
+    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    if (valueBITS == 0)
+      valueBITS = kHitachiAc296Bits;
+    irsend.sendHitachiAc296(dataarray, valueBITS, valueRPT);
     return true;
   }
 #    endif
