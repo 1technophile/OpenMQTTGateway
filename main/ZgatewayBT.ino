@@ -66,7 +66,9 @@ using namespace std;
 #  define device_flags_isBlackL 1 << 2
 #  define device_flags_connect  1 << 3
 
+#  ifndef MQTTDecodeTopic
 TheengsDecoder decoder;
+#  endif
 
 struct decompose {
   int start;
@@ -95,7 +97,16 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String mac_address = data["id"].as<const char*>();
     mac_address.replace(":", "");
+#  ifdef MQTTDecodeTopic
+    String mactopic;
+    if (data.containsKey("model")) {
+      mactopic = subjectBTtoMQTT + String("/") + mac_address;
+    } else {
+      mactopic = String("/") + MQTTDecodeTopic;
+    }
+#  else
     String mactopic = subjectBTtoMQTT + String("/") + mac_address;
+#  endif
     pub((char*)mactopic.c_str(), data);
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
@@ -870,6 +881,7 @@ void launchBTDiscovery() {
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
+#    ifndef MQTTDecodeTopic
       if (p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
           p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
           p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
@@ -889,11 +901,11 @@ void launchBTDiscovery() {
             String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
-#    if OpenHABDiscovery
+#      if OpenHABDiscovery
             String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
-#    else
+#      else
             String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-#    endif
+#      endif
             if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && !strcmp(prop.key().c_str(), "state")) {
               String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
               String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
@@ -915,29 +927,33 @@ void launchBTDiscovery() {
             }
           }
         }
-      } else if (p->sensorModel_id > BLEconectable::id::MIN &&
-                     p->sensorModel_id < BLEconectable::id::MAX ||
-                 p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
-        // Discovery of sensors from which we retrieve data by connect
-        if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
-          DT24Discovery(macWOdots.c_str(), "DT24-BLE");
+      } else
+#    endif
+      {
+        if (p->sensorModel_id > BLEconectable::id::MIN &&
+                p->sensorModel_id < BLEconectable::id::MAX ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+          // Discovery of sensors from which we retrieve data only by connect
+          if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
+            DT24Discovery(macWOdots.c_str(), "DT24-BLE");
+          }
+          if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
+            LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
+          }
+          if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
+            MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
+          }
+          if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
+            XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
+          }
+          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+            HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
+          }
+        } else {
+          Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
         }
-        if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
-          LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
-        }
-        if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
-          MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
-        }
-        if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
-          XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
-        }
-        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
-          HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
-        }
-      } else {
-        Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
+        p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
       }
-      p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), p->macAdr);
     }
@@ -977,8 +993,10 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
 
 void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
-  int model_id = decoder.decodeBLEJson(BLEdata);
+  int model_id = -1;
   int mac_type = BLEdata["mac_type"].as<int>();
+#  ifndef MQTTDecodeTopic
+  model_id = decoder.decodeBLEJson(BLEdata);
   if (model_id >= 0) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
@@ -986,22 +1004,37 @@ void process_bledata(JsonObject& BLEdata) {
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
     }
-  } else if (BLEdata.containsKey("name")) { // Connectable devices
-    std::string name = BLEdata["name"];
-    if (name.compare("LYWSD03MMC") == 0)
-      model_id = BLEconectable::id::LYWSD03MMC;
-    else if (name.compare("DT24-BLE") == 0)
-      model_id = BLEconectable::id::DT24_BLE;
-    else if (name.compare("MHO-C401") == 0)
-      model_id = BLEconectable::id::MHO_C401;
-    else if (name.compare("XMWSDJ04MMC") == 0)
-      model_id = BLEconectable::id::XMWSDJ04MMC;
+  } else
+#  endif
+  {
+    if (BLEdata.containsKey("name")) { // Connectable devices
+      std::string name = BLEdata["name"];
+      if (name.compare("LYWSD03MMC") == 0)
+        model_id = BLEconectable::id::LYWSD03MMC;
+      else if (name.compare("DT24-BLE") == 0)
+        model_id = BLEconectable::id::DT24_BLE;
+      else if (name.compare("MHO-C401") == 0)
+        model_id = BLEconectable::id::MHO_C401;
+      else if (name.compare("XMWSDJ04MMC") == 0)
+        model_id = BLEconectable::id::XMWSDJ04MMC;
 
-    if (model_id > 0) {
-      Log.trace(F("Connectable device found: %s" CR), name.c_str());
-      createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+      if (model_id > 0) {
+        Log.trace(F("Connectable device found: %s" CR), name.c_str());
+        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+      }
     }
-  } else {
+#  ifdef MQTTDecodeTopic
+    else if (model_id < 0 && BLEdata.containsKey("servicedata")) {
+      const char* service_data = (const char*)(BLEdata["servicedata"] | "");
+      if (strstr(service_data, "209800") != NULL) {
+        model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
+        Log.trace(F("Connectable device found: HHCCJCY01HHCC" CR));
+        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+      }
+    }
+#  endif
+  }
+  if (model_id < 0) {
     Log.trace(F("No device found " CR));
   }
 }
