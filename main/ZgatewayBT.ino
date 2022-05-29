@@ -93,16 +93,27 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
-    String mac_address = data["id"].as<const char*>();
-    mac_address.replace(":", "");
-    String mactopic = subjectBTtoMQTT + String("/") + mac_address;
-    pub((char*)mactopic.c_str(), data);
-  }
+    String topic = data["id"].as<const char*>();
+    topic.replace(":", "");
+#  ifdef useBeaconUuidForTopic
+    if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
+      topic = data["uuid"].as<const char*>();
+    }
+#  endif
+    topic = subjectBTtoMQTT + String("/") + topic;
+    pub((char*)topic.c_str(), data);
+  }
   if (haPresenceEnabled && data.containsKey("distance")) {
     if (data.containsKey("servicedatauuid"))
       data.remove("servicedatauuid");
     if (data.containsKey("servicedata"))
       data.remove("servicedata");
+#  ifdef useBeaconUuidForPresence
+    if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
+      data["mac"] = data["id"];
+      data["id"] = data["uuid"];
+    }
+#  endif
     String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
     Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
     pub_custom_topic((char*)topic.c_str(), data, false);
