@@ -95,7 +95,7 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
     topic.replace(":", "");
-#  ifdef useBeaconUuidForTopic
+#  if useBeaconUuidForTopic
     if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
       topic = data["uuid"].as<const char*>();
     }
@@ -108,7 +108,7 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       data.remove("servicedatauuid");
     if (data.containsKey("servicedata"))
       data.remove("servicedata");
-#  ifdef useBeaconUuidForPresence
+#  if useBeaconUuidForPresence
     if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
       data["mac"] = data["id"];
       data["id"] = data["uuid"];
