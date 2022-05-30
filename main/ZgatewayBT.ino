@@ -94,7 +94,7 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
-    topic.replace(":", "");
+    topic.replace(":", "");
 #  ifdef useBeaconUuidForTopic
     if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
       topic = data["uuid"].as<const char*>();
