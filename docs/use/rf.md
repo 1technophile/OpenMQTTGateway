@@ -1,5 +1,4 @@
 
-
 # RF gateways  (433mhz/315mhz)
 
 ## Changing Active Receiver Modules
