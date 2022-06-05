@@ -122,6 +122,29 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ![](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
 
+### Limit Protocols
+It is possible to limit the protocols that Pilight will respond to, this can help reduce noise from unwanted devices and in some cases disable conflicting protocols.
+
+#### Available protocols
+To list the available protocols on the Serial - 
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"available":true}'`
+#### Limit protocols
+To limit the protocols, send a JSON array of protocols as below - 
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols -m '{"limit": ["array", "of", "protocols"]}'`
+
+eg: `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"limit":["tfa", "ev1527"}'`
+
+#### Reset protocols
+To reset and listen to all protocols -
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols -m '{"reset": true}`'
+
+#### Enabled protocols
+To list the enabled protocols on the Serial - 
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"enabled":true}'`
+
 ### Send data by MQTT to transmit a RF signal
 
 #### Using a known protocol

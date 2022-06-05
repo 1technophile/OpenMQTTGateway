@@ -101,10 +101,11 @@ int minimumRssi = 0;
 
 /*-------------------ESPPiLight topics & parameters----------------------*/
 //433Mhz Pilight MQTT Subjects and keys
-#define subjectMQTTtoPilight    "/commands/MQTTtoPilight"
-#define subjectPilighttoMQTT    "/PilighttoMQTT"
-#define subjectGTWPilighttoMQTT "/PilighttoMQTT"
-#define repeatPilightwMQTT      false // do we repeat a received signal by using mqtt with Pilight gateway
+#define subjectMQTTtoPilight         "/commands/MQTTtoPilight"
+#define subjectMQTTtoPilightProtocol "/commands/MQTTtoPilight/protocols"
+#define subjectPilighttoMQTT         "/PilighttoMQTT"
+#define subjectGTWPilighttoMQTT      "/PilighttoMQTT"
+#define repeatPilightwMQTT           false // do we repeat a received signal by using mqtt with Pilight gateway
 
 /*-------------------RTL_433 topics & parameters----------------------*/
 //433Mhz RTL_433 MQTT Subjects and keys
