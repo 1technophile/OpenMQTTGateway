@@ -109,25 +109,25 @@ void savePilightConfig() {
 }
 
 void loadPilightConfig() {
-    Log.trace(F("reading Pilight config file" CR));
-    File configFile = SPIFFS.open("/pilight.json", "r");
-    if (configFile) {
-      Log.trace(F("opened Pilight config file" CR));
-      DynamicJsonDocument json(configFile.size() * 4);
-      auto error = deserializeJson(json, configFile);
-      if (error) {
-        Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
-      }
-      serializeJson(json, Serial);
-      if (!json.isNull()) {
-        String rflimit;
-        serializeJson(json, rflimit);
-        rf.limitProtocols(rflimit);
-      } else {
-        Log.warning(F("failed to load json config" CR));
-      }
-      configFile.close();
+  Log.trace(F("reading Pilight config file" CR));
+  File configFile = SPIFFS.open("/pilight.json", "r");
+  if (configFile) {
+    Log.trace(F("opened Pilight config file" CR));
+    DynamicJsonDocument json(configFile.size() * 4);
+    auto error = deserializeJson(json, configFile);
+    if (error) {
+      Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
     }
+    serializeJson(json, Serial);
+    if (!json.isNull()) {
+      String rflimit;
+      serializeJson(json, rflimit);
+      rf.limitProtocols(rflimit);
+    } else {
+      Log.warning(F("failed to load json config" CR));
+    }
+    configFile.close();
+  }
 }
 
 void PilighttoMQTT() {
@@ -150,11 +150,11 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       success = true;
     }
     if (Pilightdata.containsKey("enabled")) {
-      Log.notice(F("PiLight protocols enabled: %s" CR),  rf.enabledProtocols().c_str());
+      Log.notice(F("PiLight protocols enabled: %s" CR), rf.enabledProtocols().c_str());
       success = true;
     }
     if (Pilightdata.containsKey("available")) {
-      Log.notice(F("PiLight protocols available: %s" CR),  rf.availableProtocols().c_str());
+      Log.notice(F("PiLight protocols available: %s" CR), rf.availableProtocols().c_str());
       success = true;
     }
 
