@@ -150,11 +150,11 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       success = true;
     }
     if (Pilightdata.containsKey("enabled")) {
-      Log.trace(F("PiLight protocols enabled: %s" CR),  rf.enabledProtocols().c_str());
+      Log.notice(F("PiLight protocols enabled: %s" CR),  rf.enabledProtocols().c_str());
       success = true;
     }
     if (Pilightdata.containsKey("available")) {
-      Log.trace(F("PiLight protocols available: %s" CR),  rf.availableProtocols().c_str());
+      Log.notice(F("PiLight protocols available: %s" CR),  rf.availableProtocols().c_str());
       success = true;
     }
 
