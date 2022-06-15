@@ -97,16 +97,17 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String mac_address = data["id"].as<const char*>();
     mac_address.replace(":", "");
-#  ifdef MQTTDecodeTopic
     String mactopic;
+#  ifdef MQTTDecodeTopic
     if (data.containsKey("model")) {
-      mactopic = subjectBTtoMQTT + String("/") + mac_address;
+      mactopic = mac_address;
     } else {
-      mactopic = String("/") + MQTTDecodeTopic;
+      mactopic = MQTTDecodeTopic;
     }
 #  else
-    String mactopic = subjectBTtoMQTT + String("/") + mac_address;
+    mactopic = mac_address;
 #  endif
+    mactopic = subjectBTtoMQTT + String("/") + mactopic;
     pub((char*)mactopic.c_str(), data);
   }
   if (haPresenceEnabled && data.containsKey("distance")) {

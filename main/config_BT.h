@@ -53,7 +53,7 @@ bool bleConnect = AttemptBLECOnnect;
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 // Uncomment to send undecoded device data to another gateway device for decoding
-// #define MQTTDecodeTopic    "BTtoMQTT/undecoded"
+// #define MQTTDecodeTopic    "undecoded"
 
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 
