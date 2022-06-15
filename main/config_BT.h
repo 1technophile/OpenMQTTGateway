@@ -127,6 +127,10 @@ bool hassPresence = HassPresence;
 #  define pubBLEServiceUUID false // define true if you want to publish the service UUID data
 #endif
 
+#ifndef useBeaconUuidForTopic
+#  define useBeaconUuidForTopic false // define true to use iBeacon UUID as topic, instead of sender (random) mac address
+#endif
+
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 

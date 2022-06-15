@@ -97,9 +97,13 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
     topic.replace(":", ""); // Initially publish topic ends with mac address
+#  if useBeaconUuidForTopic
+    if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
+      topic = data["uuid"].as<const char*>(); // If model_id is IBEACON, use uuid as topic
+#  endif
 #  ifdef MQTTDecodeTopic
     if (!data.containsKey("model"))
-      topic = MQTTDecodeTopic; // If MQTTDecodeTopic and no model, topic is changed
+      topic = MQTTDecodeTopic; // If external decoder, topic is MQTTDecodeTopic
 #  endif
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
