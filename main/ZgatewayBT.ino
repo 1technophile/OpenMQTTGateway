@@ -95,20 +95,14 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
-    String mac_address = data["id"].as<const char*>();
-    mac_address.replace(":", "");
-    String mactopic;
+    String topic = data["id"].as<const char*>();
+    topic.replace(":", ""); // Initially publish topic ends with mac address
 #  ifdef MQTTDecodeTopic
-    if (data.containsKey("model")) {
-      mactopic = mac_address;
-    } else {
-      mactopic = MQTTDecodeTopic;
-    }
-#  else
-    mactopic = mac_address;
+    if (!data.containsKey("model"))
+      topic = MQTTDecodeTopic; // If MQTTDecodeTopic and no model, topic is changed
 #  endif
-    mactopic = subjectBTtoMQTT + String("/") + mactopic;
-    pub((char*)mactopic.c_str(), data);
+    topic = subjectBTtoMQTT + String("/") + topic;
+    pub((char*)topic.c_str(), data);
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
     if (data.containsKey("servicedatauuid"))
