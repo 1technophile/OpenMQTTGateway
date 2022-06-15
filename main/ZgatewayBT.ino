@@ -114,6 +114,12 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       data.remove("servicedatauuid");
     if (data.containsKey("servicedata"))
       data.remove("servicedata");
+#  if useBeaconUuidForPresence
+    if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
+      data["mac"] = data["id"];
+      data["id"] = data["uuid"];
+    }
+#  endif
     String topic = String(Base_Topic) + "home_presence/" + String(gateway_name);
     Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
     pub_custom_topic((char*)topic.c_str(), data, false);
