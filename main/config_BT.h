@@ -53,7 +53,7 @@ bool bleConnect = AttemptBLECOnnect;
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 // Uncomment to send undecoded device data to another gateway device for decoding
-// #define MQTTDecodeTopic    "BTtoMQTT/undecoded"
+// #define MQTTDecodeTopic    "undecoded"
 
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 
@@ -127,8 +127,16 @@ bool hassPresence = HassPresence;
 #  define pubBLEServiceUUID false // define true if you want to publish the service UUID data
 #endif
 
+#ifndef useBeaconUuidForTopic
+#  define useBeaconUuidForTopic false // define true to use iBeacon UUID as topic, instead of sender (random) mac address
+#endif
+
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
 #define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
+
+#ifndef useBeaconUuidForPresence
+#  define useBeaconUuidForPresence false // //define true to use iBeacon UUID as for presence, instead of sender mac (random) address
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)
