@@ -328,7 +328,7 @@ void pub(const char* topicori, JsonObject& data) {
 #  endif
 #endif
 
-#if jsonPublishing
+#ifdef jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
   pubMQTT(topic, dataAsString.c_str());
 #endif
