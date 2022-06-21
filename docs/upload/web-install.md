@@ -26,6 +26,7 @@ The table below describes the libraries and the modules of each board configurat
 |esp32-olimex-gtw-ble-wifi|Olimex Ethernet Gateway (non POE) using wifi| BLE gateway|-|-|X|-|
 |esp32dev-ble-cont|ESP32 dev board|BLE gateway with continuous scanning, suitable in particular for door and window BLE sensors (and all the others)|-|-|X|-|
 |esp32dev-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
+|esp32dev-ble-mqtt-decode|ESP32 dev board|BLE gateway with the decoding offloaded to [Theengs Gateway](https://gateway.theengs.io/)|-|-|X|-|
 |esp32dev-gf-sun-inverter|ESP32 dev board|RS232 reading of GridFree Sun Inverter|-|-|-|-|
 |esp32dev-ir|ESP32 dev board|Infrared (Emitting and receiving) using [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266)|-|X|-|-|
 |esp32dev-multi_receiver|ESP32 dev board|Multi RF library with the possibility to switch between [ESPilight](https://github.com/puuu/ESPiLight), [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP), [NewRemoteSwitch](https://github.com/1technophile/NewRemoteSwitch) and [RCSwitch](https://github.com/1technophile/rc-switch), need CC1101|X|-|-|-|
