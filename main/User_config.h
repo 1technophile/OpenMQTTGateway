@@ -353,18 +353,22 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
 #ifndef jsonPublishing
-#  define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#  define jsonPublishing true //define false if you don't want to use Json publishing (one topic for all the parameters)
 #endif
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
 #ifndef jsonReceiving
-#  define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#  define jsonReceiving true //define false if you don't want to use Json  reception analysis
 #endif
 
-//#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+#ifndef simplePublishing
+#  define simplePublishing false //define true if you want to use simple publishing (one topic for one parameter)
+#endif
 //example
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-//#define simpleReceiving true //comment if you don't want to use old way reception analysis
+#ifndef simpleReceiving
+#  define simpleReceiving false //define true if you want to use old way reception analysis
+#endif
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #ifndef ota_hostname

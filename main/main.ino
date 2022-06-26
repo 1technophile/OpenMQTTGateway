@@ -328,12 +328,12 @@ void pub(const char* topicori, JsonObject& data) {
 #  endif
 #endif
 
-#ifdef jsonPublishing
+#if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
   pubMQTT(topic, dataAsString.c_str());
 #endif
 
-#ifdef simplePublishing
+#if simplePublishing
   Log.trace(F("simplePub - ON" CR));
   // Loop through all the key-value pairs in obj
   for (JsonPair p : data) {
@@ -1696,7 +1696,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #ifdef ZgatewayRTL_433 // ZgatewayRTL_433 is only defined with json publishing due to its numerous parameters
     MQTTtoRTL_433(topicOri, jsondata);
 #endif
-#ifdef jsonReceiving
+#if jsonReceiving
 #  ifdef ZgatewayLORA
     MQTTtoLORA(topicOri, jsondata);
 #  endif
@@ -1747,7 +1747,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
-#ifdef simpleReceiving
+#if simpleReceiving
 #  ifdef ZgatewayLORA
     MQTTtoLORA(topicOri, datacallback);
 #  endif

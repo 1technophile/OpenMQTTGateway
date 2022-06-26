@@ -173,7 +173,7 @@ void RFtoMQTT() {
   }
 }
 
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoRF(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   ELECHOUSE_cc1101.SetTx(receiveMhz);
@@ -235,7 +235,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 }
 #  endif
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));

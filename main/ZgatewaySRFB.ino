@@ -166,7 +166,7 @@ bool _rfbToChar(byte* in, char* out) {
   return true;
 }
 
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoSRFB(char* topicOri, char* datacallback) {
   // RF DATA ANALYSIS
   String topic = topicOri;
@@ -262,7 +262,7 @@ void MQTTtoSRFB(char* topicOri, char* datacallback) {
   }
 }
 #  endif
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoSRFB(char* topicOri, JsonObject& SRFBdata) {
   // RF DATA ANALYSIS
   const char* raw = SRFBdata["raw"];

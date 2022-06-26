@@ -96,8 +96,8 @@ build_flags =
   '-DLED_RECEIVE_ON=LOW'             ; Comment 2
   '-DRF_RECEIVER_GPIO=13'
   '-DRF_EMITTER_GPIO=15'
-  '-UsimpleReceiving'                ; Disable HA discovery
-  '-UZmqttDiscovery'
+  '-DsimpleReceiving=false'          
+  '-UZmqttDiscovery'                 ; Disable HA discovery
 monitor_speed = 115200
 
 [env:nodemcuv2-pilight-bme280-ota]
@@ -108,7 +108,7 @@ upload_flags =
   --auth=otapassword
   --port=8266
 ```
-The first new environment we create, `nodemcuv2-pilight-bme280`, inherits the default `nodemcuv2-pilight` environment in `platformio.ini` with the `extends = env:nodemcuv2-pilight` line. In the `lib_deps` section, it imports all the `lib_deps` of `nodemcuv2-pilight` with the `${env:nodemcuv2-pilight.lib_deps}` line, and adds BME280 on top of it. (Since the environment we're extending already has this `lib_deps` attribute, specifying it again would normally replace it completely with our new attribute; instead, to keep its value but simply append to it, we import the original in the beginning of our `lib_deps` attribute.) In the `build_flags` section, it again imports all the `build_flags` of `nodemcuv2-pilight` and many of its own overrides, e.g. changing `Base_Topic` found in `User_config.h` from the default to "rf/" by using the `'-DBase_Topic="rf/"'` line. It also unsets previously set configurations (i.e. `simpleReceiving`) by using `'-UsimpleReceiving'`. This environment will work over serial upload.
+The first new environment we create, `nodemcuv2-pilight-bme280`, inherits the default `nodemcuv2-pilight` environment in `platformio.ini` with the `extends = env:nodemcuv2-pilight` line. In the `lib_deps` section, it imports all the `lib_deps` of `nodemcuv2-pilight` with the `${env:nodemcuv2-pilight.lib_deps}` line, and adds BME280 on top of it. (Since the environment we're extending already has this `lib_deps` attribute, specifying it again would normally replace it completely with our new attribute; instead, to keep its value but simply append to it, we import the original in the beginning of our `lib_deps` attribute.) In the `build_flags` section, it again imports all the `build_flags` of `nodemcuv2-pilight` and many of its own overrides, e.g. changing `Base_Topic` found in `User_config.h` from the default to "rf/" by using the `'-DBase_Topic="rf/"'` line. It also unsets previously set configurations (i.e. `mqttDiscovery`) by using `'-UZmqttDiscovery'`. This environment will work over serial upload.
 
 The second new environment, `nodemcuv2-pilight-bme280-ota`, inherits everything we specified in the first environment (with the line `extends = env:nodemcuv2-pilight-bme280`), but modifies it to upload over OTA (Wi-Fi). We also specified this as the `default_env` in the beginning of the file, so PlatformIO will choose this environment to build and upload if we don't specify otherwise.
 
@@ -230,14 +230,14 @@ Per default Json reception and Json publication is activated, the previous simpl
 
 You can deactivate Json or simple mode following theses instructions:
 ```cpp
-#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#define jsonPublishing true //define false if you don't want to use Json publishing (one topic for all the parameters)
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
-//#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+#define simplePublishing false //define true if you want to use simple publishing (one topic for one parameter)
 //example 
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-#define simpleReceiving true //comment if you don't want to use old way reception analysis
-#define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#define simpleReceiving false //define true if you want to use old way reception analysis
+#define jsonReceiving true //define false if you don't want to use Json  reception analysis
 ```
 
 If you are using platformio you can also comment the definitions above and define your parameters into platformio.ini file by setting the following `build_flags`:
