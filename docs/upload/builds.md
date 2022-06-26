@@ -29,8 +29,6 @@ lib_deps =
   ${libraries.arduinolog}
 build_flags =
   -w ; supress all warnings
-  '-DjsonPublishing=true'
-  '-DjsonReceiving=true'
 ;  '-DLOG_LEVEL=LOG_LEVEL_TRACE'  ; Enable trace level logging
 monitor_speed = 115200
 ```
@@ -236,7 +234,7 @@ You can deactivate Json or simple mode following theses instructions:
 //example 
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-#define simpleReceiving false //define true if you want to use old way reception analysis
+#define simpleReceiving true //define false if you don't want to use old way reception analysis
 #define jsonReceiving true //define false if you don't want to use Json  reception analysis
 ```
 

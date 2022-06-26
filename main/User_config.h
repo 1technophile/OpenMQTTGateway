@@ -367,7 +367,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
 #ifndef simpleReceiving
-#  define simpleReceiving false //define true if you want to use old way reception analysis
+#  define simpleReceiving true //define false if you don't want to use old way reception analysis
 #endif
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
