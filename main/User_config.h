@@ -54,14 +54,14 @@
 // Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
 //#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
-#  define Gateway_Name "OpenMQTTGateway"
+#  define Gateway_Name "OpenMQTTGatewayEsp32"
 #endif
 #ifndef Gateway_Short_Name
-#  define Gateway_Short_Name "OMG"
+#  define Gateway_Short_Name "OMGE_Ep32"
 #endif
 
 #ifndef Base_Topic
-#  define Base_Topic "home/"
+#  define Base_Topic "homeEsp32/"
 #endif
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
@@ -115,7 +115,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #ifndef WifiManager_password
-#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
+#  define WifiManager_password "alamakotaakotmaale" //this is going to be the WPA2-PSK password for the initial setup access point
 #endif
 #ifndef WifiManager_ssid
 #  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
@@ -159,13 +159,13 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 #ifndef MQTT_USER
-#  define MQTT_USER "your_username"
+#  define MQTT_USER "mqtt"
 #endif
 #ifndef MQTT_PASS
-#  define MQTT_PASS "your_password"
+#  define MQTT_PASS "mqtt"
 #endif
 #ifndef MQTT_SERVER
-#  define MQTT_SERVER "192.168.1.17"
+#  define MQTT_SERVER "10.0.0.61"
 #endif
 #ifndef MQTT_PORT
 #  define MQTT_PORT "1883"
@@ -296,38 +296,38 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
 
-//#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
-//#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
-//#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
-//#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
-//#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
+#define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
+#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
+#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
+#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
 //#define ZgatewayGFSunInverter "GFSunInverter"   //ESP32
-//#define ZgatewayBT     "BT"       //ESP8266, ESP32
-//#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
+#define ZgatewayBT     "BT"       //ESP8266, ESP32
+#define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
-//#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
-//#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
+#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR04  "HCSR04"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-//#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
+#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
 //#define ZsensorHTU21   "HTU21"    //ESP8266, Arduino, ESP32
-//#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
-//#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
-//#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
-//#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
+#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
+#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
+#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STICKCP "M5StickCP"
 //#define ZboardM5STACK  "M5STACK"
 //#define ZboardM5TOUGH  "M5TOUGH"
-//#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
-//#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
+#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
@@ -371,7 +371,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define ota_hostname Gateway_Name
 #endif
 #ifndef ota_password
-#  define ota_password "OTAPASSWORD"
+#  define ota_password "alamakotaakotmaale"
 #endif
 #ifndef ota_port
 #  define ota_port 8266
