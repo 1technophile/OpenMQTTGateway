@@ -61,7 +61,7 @@
 #endif
 
 #ifndef Base_Topic
-#  define Base_Topic "homeEsp32/"
+#  define Base_Topic "home/"
 #endif
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
@@ -298,16 +298,16 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
 #define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
-#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
-#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
-#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
+//#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
+//#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
+//#define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
 //#define ZgatewayGFSunInverter "GFSunInverter"   //ESP32
 #define ZgatewayBT     "BT"       //ESP8266, ESP32
 #define ZgatewayRF2    "RF2"      //ESP8266, Arduino, ESP32
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
 #define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
-#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+//#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR04  "HCSR04"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
@@ -321,13 +321,13 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 #define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
-#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STICKCP "M5StickCP"
 //#define ZboardM5STACK  "M5STACK"
 //#define ZboardM5TOUGH  "M5TOUGH"
 #define ZradioCC1101   "CC1101"   //ESP8266, ESP32
-#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+//#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
