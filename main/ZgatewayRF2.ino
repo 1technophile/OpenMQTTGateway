@@ -148,7 +148,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
   rf2rd.hasNewData = true;
 }
 
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoRF2(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101
   NewRemoteReceiver::disable();
@@ -258,7 +258,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
 }
 #  endif
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {

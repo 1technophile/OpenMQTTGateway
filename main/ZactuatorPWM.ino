@@ -195,7 +195,7 @@ boolean PWMtoMQTT() {
   return false;
 }
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));

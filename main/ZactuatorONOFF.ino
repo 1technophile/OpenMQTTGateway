@@ -30,7 +30,7 @@
 
 #ifdef ZactuatorONOFF
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
@@ -70,7 +70,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
 }
 #  endif
 
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));

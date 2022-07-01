@@ -175,7 +175,7 @@ bool RFM69toMQTT(void) {
   }
 }
 
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoRFM69(char* topicOri, char* datacallback) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     Log.trace(F("MQTTtoRFM69 data analysis" CR));
@@ -204,7 +204,7 @@ void MQTTtoRFM69(char* topicOri, char* datacallback) {
   }
 }
 #  endif
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoRFM69(char* topicOri, JsonObject& RFM69data) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     const char* data = RFM69data["data"];

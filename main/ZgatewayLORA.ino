@@ -81,7 +81,7 @@ void LORAtoMQTT() {
   }
 }
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
@@ -115,7 +115,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
   }
 }
 #  endif
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
