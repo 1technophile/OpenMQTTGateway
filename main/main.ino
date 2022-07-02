@@ -54,7 +54,7 @@ unsigned long timer_sys_measures = 0;
 #include <PubSubClient.h>
 
 #include <string>
-#include <RCSwitch.h>
+//#include <RCSwitch.h>
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
