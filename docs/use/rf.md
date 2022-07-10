@@ -7,7 +7,7 @@ With version 0.9.7 the ability to switch active signal receiver and decoder is s
 
 ### Switching Active Receiver Module
 
-Switching of the active receiver module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active receiver module.
+Switching of the active receiver module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active receiver module.
 
 To enable the RF Gateway module send a json message to the RF Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 
@@ -356,11 +356,11 @@ This function does not work when all available decoders are enabled and triggers
 "signalRssi":-38,           - most recent received signal strength
 "train":1,                  - signal processing train #
 "messageCount":3,           - total number of signals received
-"_enabledReceiver":1,       - which recevier is enabled
+"_enabledReceiver":1,       - which receiver is enabled
 "receiveMode":0,            - is the receiver currently receiving a signal
 "currentRssi":-89,          - current rssi level
 "minimumRssi":-82,          - minimum rssi level to start signal processing
-"pulses":0,                 - how many pulses have been recieved in the current signal
+"pulses":0,                 - how many pulses have been received in the current signal
 "StackHighWaterMark":5528,  - ESP32 Stack
 "freeMem":112880}           - ESP32 memory available
 ```
