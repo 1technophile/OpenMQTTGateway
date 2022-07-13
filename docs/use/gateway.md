@@ -73,7 +73,7 @@ If the new connection fails the gateway will fallback to the previous connection
 mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
 '{
   "mqtt_topic": "topic/",
-  "gateway_name: "name"
+  "gateway_name": "name"
 }'
 ```
 ::: info
