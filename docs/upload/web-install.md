@@ -44,6 +44,7 @@ The table below describes the libraries and the modules of each board configurat
 |ttgo-lora32-v1-868|ESP32 TTGO LORA V1|LORA communication 868Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-lora32-v1-915|ESP32 TTGO LORA V1|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-tbeam|ESP32 TTGO T BEAM|BLE gateway with battery holder|-|-|X|-|
+|esp32dev-ble-datatest|ESP32 dev board|Default BLE gateway with additional servicedata, manufacturerdata and service uuid for analysing decoding issues|-|-|X|-|
 |**ESP8266**|
 |nodemcuv2-2g|ESP8266 board|SMS gateway, need A6/A7 GSM module|-|-|-|-|
 |nodemcuv2-ble|ESP8266 board|BLE gateway, need HM10 Module|-|-|X|-|
