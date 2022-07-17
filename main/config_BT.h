@@ -132,7 +132,7 @@ bool hassPresence = HassPresence;
 #endif
 
 /*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
-#define subjectHomePresence "home_presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
+#define subjectHomePresence "presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 #ifndef useBeaconUuidForPresence
 #  define useBeaconUuidForPresence false // //define true to use iBeacon UUID as for presence, instead of sender mac (random) address
