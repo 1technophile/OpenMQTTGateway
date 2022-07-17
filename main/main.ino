@@ -490,15 +490,19 @@ void pubMQTT(String topic, unsigned long payload) {
 }
 
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
-  char topic[mqtt_topic_max_size];
-  strcpy(topic, mqtt_topic);
-  strcat(topic, gateway_name);
-  strcat(topic, toAdd);
-  if (strstr(topicOri, topic) != NULL) {
-    return true;
-  } else {
+  // Is string "<mqtt_topic><gateway_name><toAdd>" equal to "<topicOri>"?
+  // Compare first part with first chunk
+  if (strncmp(topicOri, mqtt_topic, strlen(mqtt_topic)) != 0)
     return false;
-  }
+  // Move pointer of sizeof chunk
+  topicOri += strlen(mqtt_topic);
+  // And so on...
+  if (strncmp(topicOri, gateway_name, strlen(gateway_name)) != 0)
+    return false;
+  topicOri += strlen(gateway_name);
+  if (strncmp(topicOri, toAdd, strlen(toAdd)) != 0)
+    return false;
+  return true;
 }
 
 void connectMQTT() {
