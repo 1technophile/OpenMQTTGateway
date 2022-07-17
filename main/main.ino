@@ -163,12 +163,12 @@ void setupTLS(bool self_signed = false, uint8_t index = 0);
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
-char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = MQTT_PASS; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = MQTT_SERVER;
+char mqtt_user[parameters_size + 1] = MQTT_USER; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size + 1] = MQTT_PASS; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size + 1] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
-char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size] = Gateway_Name;
+char mqtt_topic[parameters_size + 1] = Base_Topic;
+char gateway_name[parameters_size + 1] = Gateway_Name;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
@@ -1152,11 +1152,11 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size);
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
-  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size * 2);
+  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
-  WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
+  WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
 #  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -2069,10 +2069,10 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  endif
     if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
       if (SYSdata.containsKey("mqtt_topic")) {
-        strncpy(mqtt_topic, SYSdata["mqtt_topic"], mqtt_topic_max_size);
+        strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
       if (SYSdata.containsKey("gateway_name")) {
-        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size * 2);
+        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
       }
 #  ifndef ESPWifiManualSetup
       saveMqttConfig();
