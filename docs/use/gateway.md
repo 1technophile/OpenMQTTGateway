@@ -4,7 +4,7 @@
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"restart"}'`
 
 ::: tip
-With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
 ## Erase the ESP settings
@@ -12,7 +12,7 @@ With Home Assistant, this command is directly avalaible through MQTT auto discov
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"erase"}'`
 
 ::: tip
-With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
 ## Retrieve current status of the ESP
@@ -20,7 +20,7 @@ With Home Assistant, this command is directly avalaible through MQTT auto discov
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"status"}'`
 
 ## Auto discovery
-You can deactivate the MQTT auto discovery function, this function enable to create automaticaly devices/entities with Home Assistant convention.
+You can deactivate the MQTT auto discovery function, this function enables to automatically create devices/entities with Home Assistant convention.
 ### Deactivate
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"discovery":false}'`
 
@@ -77,13 +77,13 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
 }'
 ```
 ::: info
-This will change the subscribed and published mqtt_topic/gateway_name that the gateway uses. No parameters are manditory, the current topic or gateway name will be used if not supplied.
+This will change the subscribed and published mqtt_topic/gateway_name that the gateway uses. No parameters are mandatory, the current topic or gateway name will be used if not supplied.
 :::
 
 ## Switching brokers and using self signed and client certificates
 
 In the `user_config.h` file it is possible to specify multiple MQTT brokers and client certificates. These are commonly self signed and are supported by defining `MQTT_SECURE_SELF_SIGNED` as true or 1.  
-Additonally, support for multiple brokers and client certificates has been added. To use this, it is required that the server certificate, client certificate, and client key are provided as their own constatnt string value as demonstrated in the file.  
+Additionally, support for multiple brokers and client certificates has been added. To use this, it is required that the server certificate, client certificate, and client key are provided as their own constant string value as demonstrated in the file.  
 To add more than one broker and switch between them it is necessary to provide all of the relevant certificates/keys and add their respective variable names in the `certs_array` structure, as shown in `user_config.h`, and changing the array size to the number of different connections -1.  
 
 To switch between these servers with an MQTT command message, the format is as follows:
@@ -111,7 +111,7 @@ To enable this functionality, `MQTT_HTTPS_FW_UPDATE` will need to be defined or 
 ::: tip
 If using an unsecure MQTT broker it is **highly recommended** to disable the password checking by setting the macro `MQTT_HTTPS_FW_UPDATE_USE_PASSWORD` to 0 (default is 1 (enabled)), otherwise a clear text password may be sent over the network.  
 
-The `server_cert` parameter is optional. If the update server has changed or certificate updated or not set in `user_config.h` then you can provide the certifiate here.
+The `server_cert` parameter is optional. If the update server has changed or certificate updated or not set in `user_config.h` then you can provide the certificate here.
 :::
 
 ### Example firmware update message:

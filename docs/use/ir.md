@@ -33,7 +33,7 @@ With the IR gateway you need to put on the topic the protocol_name you want to u
 
 Exhaustive list [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1910001295)
 
-For example if I want to send a command to a sony TV you can use the following command:
+For example if I want to send a command to a Sony TV you can use the following command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775,"protocol_name":"SONY"}'`
 

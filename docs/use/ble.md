@@ -25,7 +25,7 @@ home/OpenMQTTGateway/BTtoMQTT/C7FaaD132C00 {"id":"c7:fa:ad:13:2c:00","rssi":-68,
 ```
 
 The subtopic after `home/BTtoMQTT/` is the MAC address of the Bluetooth low energy beacon.  The rssi value is the [RSSI signal level](https://www.metageek.com/training/resources/understanding-rssi.html) from which you may deduce the relative distance to the device.
-Consider the distance as a beta featuer as currently we are not retrieving the emitting power of the beacon to make it more accurate.
+Consider the distance as a beta feature as currently we are not retrieving the emitting power of the beacon to make it more accurate.
 
 Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
 
@@ -67,11 +67,11 @@ OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 thi
 :::
 
 ## Setting a white or black list
-A black list is a list of mac adresses that will never be published by OMG
+A black list is a list of mac addresses that will never be published by OMG
 to set black list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
-A white list is a list of mac adresses permitted to be published by OMG
+A white list is a list of mac addresses permitted to be published by OMG
 to set white list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
@@ -126,7 +126,7 @@ If you want to change this characteristic:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"onlysensors":true}'`
 
 ::: tip
-With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
@@ -138,7 +138,7 @@ If you want to change this characteristic:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"bleconnect":false}'`
 
 ::: tip
-With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
 ## Setting if the gateway publish into Home Assistant Home presence topic
@@ -217,15 +217,15 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
 :::
 
-## Switchbot S1 control (ESP32 only)
+## SwitchBot Bot control (ESP32 only)
 
-Switchbot S1 devices are automatically discovered and available as a device in the configuration menu of home assistant.
+SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
-::: tip If the switchbot mode is changed the ESP32 must be restarted. :::
+::: tip If the SwitchBot mode is changed the ESP32 must be restarted. :::
 
 The device can also be controlled over MQTT with a simplified BLE write command.
 
-### Example command to set the Switchbot state to ON:
+### Example command to set the SwitchBot state to ON:
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
   "SBS1":"on",
