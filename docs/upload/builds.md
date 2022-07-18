@@ -161,7 +161,7 @@ With some ESP it could be necessary to push the reset button when the upload beg
 
 If you want to erase the settings stored in the ESP memory use:
 `pio run --target erase`
-This can be usefull especialy before the first upload or when you change the board partitions sizing.
+This can be useful especially before the first upload or when you change the board partitions sizing.
 
 Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
 ```
@@ -169,7 +169,7 @@ home/OpenMQTTGateway/LWT Online
 home/OpenMQTTGateway/version
 ```
 
-With PIO you can also upload the firmware through Over the Air, so as to do that you can add the upload options flags used below, `upload_port` is the IP adress of your ESP:
+With PIO you can also upload the firmware through Over the Air, so as to do that you can add the upload options flags used below, `upload_port` is the IP address of your ESP:
 
 ``` ini
 [env:esp32-ble]
@@ -193,13 +193,13 @@ upload_flags =
 ## Configure & Upload with Arduino IDE
 
 * Download the [CODE](https://github.com/1technophile/OpenMQTTGateway/releases) from github
-* First download the last version of the Arduino IDE from the arduino [website](https://www.arduino.cc/en/Main/Software)
+* First download the last version of the Arduino IDE from the Arduino [website](https://www.arduino.cc/en/Main/Software)
 * Add ESP32 boards by following this [tutorial](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
 * Add ESP8266 boards by following this [tutorial](https://github.com/esp8266/Arduino#installing-with-boards-manager)
 * Download the libraries package corresponding to your board and module wished into the same page (example esp32-m5stick-c-ble-libraries.zip)
-* Unzip the libraries into your arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
+* Unzip the libraries into your Arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
 * If necessary replace the spaces into each library folder by _: example rename “ESP32 BLE Arduino” folder to “ESP32_BLE_Arduino”
-* Open the file main.ino from OpenMQTTGateway/main folder with the arduino IDE
+* Open the file main.ino from OpenMQTTGateway/main folder with the Arduino IDE
 * Change the settings and the desired gateways into `User_config.h` (uncomment the modules you want)
 
 *Example for the use of RF gateway:*
@@ -212,13 +212,13 @@ upload_flags =
 //#define ZgatewayBT "BT" //ESP8266, ESP32
 ```
 
-* Change the pins or parameters corresponding to the modules choosen, for RF you can change the pins into config_RF.h
+* Change the pins or parameters corresponding to the modules chosen, for RF you can change the pins in config_RF.h
 * Choose the board on the Arduino IDE
 * Select the port corresponding to the board
 * Note that for using BLE on ESP32 you will need to select *Minimal SPIFFS* into Tools->Partition Scheme
 * Open the serial monitor and set 115200 bauds
 * Upload ➡️
-* You should see the logs into the serial monitor
+* You should see the logs in the serial monitor
 
 With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
 
@@ -259,7 +259,7 @@ If you want to use HASS MQTT discovery you need to have
 uncommented.
 Added to that auto discovery box should be selected into your Home Assistant MQTT integration configuration.
 
-With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
 
 ::: warning Note
 simpleReceiving on Arduino boards doesn't accept 64 bits MQTT values, you can only send 32bits values from the MQTT broker.

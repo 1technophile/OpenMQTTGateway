@@ -241,7 +241,7 @@ Once you get the infos publish the parameters with mqtt like that for off:
 
 for on:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"adress":8233228,"switchType":1}"`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"address":8233228,"switchType":1}"`
 
 ## rtl_433 device decoders
 

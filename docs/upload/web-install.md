@@ -15,11 +15,11 @@ The table below describes the libraries and the modules of each board configurat
 |**ESP32**|
 |esp32-lolin32lite-ble|ESP32 Lolin lite|Suitable for low power with BLE gateway, [tutorial](https://1technophile.blogspot.com/2021/04/low-power-esp32-ble-gateway.html)|-|-|X|-|
 |esp32-m5atom|M5Atom|Compact enclosure ESP32 with BLE gateway|-|(Emit)|X|-|
-|esp32-m5stack-ble|M5Stack Core|Expandable mobule with BLE gateway, display, and little IR emitter|-|-|X|-|
-|esp32-m5stick-ble|M5Stick Grey|Expandable mobule with BLE gateway and little IR emitter|-|(Emit)|X|-|
-|esp32-m5stick-c-ble|M5Stick C Orange|Expandable mobule with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
-|esp32-m5stick-cp-ble|M5Stick C Plus Orange|Expandable mobule with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
-|esp32-m5tough-ble|M5Tough rugged|Expandable mobule with BLE gateway and display, suitable for outdoor|-|-|X|-|
+|esp32-m5stack-ble|M5Stack Core|Expandable module with BLE gateway, display, and little IR emitter|-|-|X|-|
+|esp32-m5stick-ble|M5Stick Grey|Expandable module with BLE gateway and little IR emitter|-|(Emit)|X|-|
+|esp32-m5stick-c-ble|M5Stick C Orange|Expandable module with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
+|esp32-m5stick-cp-ble|M5Stick C Plus Orange|Expandable module with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
+|esp32-m5tough-ble|M5Tough rugged|Expandable module with BLE gateway and display, suitable for outdoor|-|-|X|-|
 |esp32-olimex-gtw-ble-eth|Olimex Ethernet Gateway (non POE)|BLE gateway with external antenna as an option|-|-|X|-|
 |esp32-olimex-gtw-ble-poe|Olimex Ethernet Gateway (POE)|BLE gateway with external antenna as an option|-|-|X|-|
 |esp32-olimex-gtw-ble-poe-iso|Olimex Ethernet Gateway (POE + ISO)|BLE gateway with external antenna as an option|-|-|X|-|

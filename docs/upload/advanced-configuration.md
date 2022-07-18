@@ -30,7 +30,7 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 
 You can know compile and upload to your board and the gateway should connect with TLS to your broker.
 
-## Add the reveived "value" at the end of the topic
+## Add the received "value" at the end of the topic
 For the gateways that publish a "value" parameter on the json (RF, IR...), it is possible to concatenate this parameter at the end of the topic.
 So as to activate this function you need to uncomment the line below in User_config.h
 
@@ -48,7 +48,7 @@ With the line uncommented you will see:
 home/OpenMQTTGateway/SRFBtoMQTT/59365 {"raw":"2B660186042E00E7E5","value":"59365","delay":"1111","val_Thigh":"390","val_Tlow":"1070"}
 ```
 
-It can be usefull to avoid warning or errors on certain controllers.
+It can be useful to avoid warning or errors on certain controllers.
 
 ## Auto discovery
 Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in User_config.h. 
@@ -71,7 +71,7 @@ So as to create the MQTT username and password, you have to create a new user(re
 The max size of the username is 30 and 60 for the password.
 :::
 
-OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automaticaly.
+OMG will use the auto discovery functionality of home assistant to create sensors and gateways into your HASS instance automatically.
 
 The gateway device will be available into Configuration->Devices section of Home Assistant.
 
