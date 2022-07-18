@@ -51,7 +51,7 @@ Be aware that outputs are OFF by default when the board first start.
 
 ### Hardware wiring
 Theoretically it should be possible to use every free IO pin. But after some tests only pin D2 works at WEMOS D1. Other platforms can work.
-The default setting use NEOPIXEL (WS2812B). The simplest wiring is direct connect D2 to data pin of LED stripe and connect VCC/GND to power source. You should also add an capacitor.
+The default setting use NEOPIXEL (WS2812B). The simplest wiring is direct connect D2 to data pin of LED stripe and connect VCC/GND to power source. You should also add a capacitor.
 
 ## PWM
 This module allows control over PWM outputs.
@@ -65,7 +65,7 @@ You would typically connect a PWM output to a transistor or MOSFET to allow cont
 
 ### Configuration
 In order to use the PWM actuator, you need to configure which pins the PWM output channels will be connected to.
-There are a couple of `#define`s that achieve this.
+There are a couple of `#defines that achieve this.
 They can be defined in the `build_flags` section of the env, or by directly editing `config_PWM.h`.
 
 ```c
