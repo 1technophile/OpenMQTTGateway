@@ -96,7 +96,7 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
-    topic.replace(":", ""); // Initially publish topic ends with mac address
+    topic.replace(":", ""); // Initially publish topic ends with MAC address
 #  if useBeaconUuidForTopic
     if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
       topic = data["uuid"].as<const char*>(); // If model_id is IBEACON, use uuid as topic
@@ -454,7 +454,7 @@ void procBLETask(void* pvParameters) {
       }
 #    endif
 
-      if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+      if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed MAC we go AND if we have no white MAC or this MAC is  white we go out
         if (advertisedDevice->haveName())
           BLEdata["name"] = (char*)advertisedDevice->getName().c_str();
         if (advertisedDevice->haveManufacturerData()) {
@@ -487,7 +487,7 @@ void procBLETask(void* pvParameters) {
           PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
         }
       } else {
-        Log.trace(F("Filtered mac device" CR));
+        Log.trace(F("Filtered MAC device" CR));
       }
     }
   }
@@ -827,9 +827,9 @@ bool BTtoMQTT() {
         BLEdevice* device = getDeviceByMac((char*)mac.c_str());
 
         if (isBlack(device))
-          return false; //if black listed mac we go out
+          return false; //if black listed MAC we go out
         if (oneWhite && !isWhite(device))
-          return false; //if we have at least one white mac and this mac is not white we go out
+          return false; //if we have at least one white MAC and this MAC is not white we go out
 
         BLEdata["rssi"] = (int)rssi;
         if (!publishOnlySensors && hassPresence)

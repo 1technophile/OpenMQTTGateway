@@ -78,8 +78,8 @@ https://github.com/marcelstoer/nodemcu-pyflasher/releases
 * Click on *FlashNodeMCU*
 The upload details appears.
 
-With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
-Note that to reset the wifi and mqtt settings you can check *yes, wipes all data*
+Note that to reset the wifi and MQTT settings you can check *yes, wipes all data*
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fdocs.openmqttgateway.com%2Fupload%2Fbinaries.html&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)

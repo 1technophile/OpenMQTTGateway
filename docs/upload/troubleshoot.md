@@ -23,9 +23,9 @@ More info on [this topic](https://community.openmqttgateway.com/t/esp32-compilat
 
 → Verify your wiring
 
-→ To eliminate issues of OpenMqttGateway or you home controller try uploading basic examples from the libraries directly (like [SendDemo](https://github.com/sui77/rc-switch/tree/master/examples/SendDemo) for RF or IRSendDemo for IR) and execute them. If it doesn't work this means that you have mostly an issue related with your hardware or due to IDE/library version used.
+→ To eliminate issues of OpenMQTTGateway or you home controller try uploading basic examples from the libraries directly (like [SendDemo](https://github.com/sui77/rc-switch/tree/master/examples/SendDemo) for RF or IRSendDemo for IR) and execute them. If it doesn't work this means that you have mostly an issue related with your hardware or due to IDE/library version used.
 
-Regarding the IR led emitter you can replace it with a normal led and see if it light on when you send an mqtt command
+Regarding the IR led emitter you can replace it with a normal led and see if it lights up when you send an MQTT command
 
 → If you are only unable to receive RF on nodemcu (or if it only works when a serial connection is active):
 
@@ -49,7 +49,7 @@ Exception (2):
 Most probably a network issue, don't use a guest network and if going through a firewall check its rules. To put aside gateway issue, try to connect to a local broker on the same network.
 
 ## You don't see the messages appearing on your broker but they appears on the serial monitor
-This is due to a too small mqtt packet size, open User_config.h and set:
+This is due to a too small MQTT packet size, open User_config.h and set:
 `#define mqtt_max_packet_size 1024`
 
 ## Your Arduino with w5100 Ethernet shield does not connect to network until you press Reset button

@@ -41,13 +41,13 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #define subjectMultiGTWIR "+/+/IRtoMQTT"
 #define IRbitsKey         "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey          "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
-#define repeatIRwMQTT     false // do we repeat a received signal by using mqtt, we send a command signal to subjectForwardMQTTtoIR
+#define repeatIRwMQTT     false // do we repeat a received signal by using MQTT, we send a command signal to subjectForwardMQTTtoIR
 #define repeatIRwNumber   0 // default repeat of the signal
 //#define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
 //#define DumpMode true // uncomment so as to see big dumps of IR codes
 
-#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
+#define pubIRunknownPrtcl false // key to avoid MQTT publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress  0x4004 // Panasonic address (Pre data)
 
 #if defined(ESP8266) || defined(ESP32) //IR supported protocols on ESP8266, all supported per default
