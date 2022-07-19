@@ -33,7 +33,7 @@ IOS version >=10 devices advertise without an extra app a mac address, neverthel
 
 
 ## Receiving signals from BLE devices Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale and [many more](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
-So as to receive BLE sensors data you need either a simple ESP32 either an ESP8266/arduino + HM10/11 with firmware >= v601
+So as to receive BLE sensors data you need either a simple ESP32 either an ESP8266/Arduino + HM10/11 with firmware >= v601
 The mi flora supported firmware is >3.1.8
 
 Verify that your sensor is working with the App and update it with the last software version.

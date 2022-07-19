@@ -4,7 +4,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 `    sudo mosquitto_sub -t +/# -v`
 
 ### ADC
-The value is between 0 and 1024 and is tranmitted via Mqtt when it changes.
+The value is between 0 and 1024 and is transmitted via Mqtt when it changes.
 `home/OpenMQTTGateway/ADCtoMQTT {"value":543}`
 
 ### DHT

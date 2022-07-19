@@ -29,4 +29,4 @@ Connect the Emitter and Receiver to a 5V supply source, and the ground of your s
 ![IR](../img/OpenMQTTgateway_ESP32_Addon_IR.png)
 
 ## Credits
-This gateway exists thanks to the work done on [IRRemote](https://github.com/z3t0/Arduino-IRremote) and [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266) libraries. Thanks for the works of contributors and especialy [@crankyoldgit](https://github.com/crankyoldgit) for its active contributions.
+This gateway exists thanks to the work done on [IRRemote](https://github.com/z3t0/Arduino-IRremote) and [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266) libraries. Thanks for the works of contributors and especially [@crankyoldgit](https://github.com/crankyoldgit) for its active contributions.

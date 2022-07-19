@@ -53,7 +53,7 @@ Setup based on HM10 doesn't support some BLE [devices](devices.md#for-ble-device
 
 Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection. 
 
-The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to arduino Uno & Mega.
+The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to Arduino Uno & Mega.
 
 Choosing your board depends heavily on the technologies you want to use with it.
 To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).
