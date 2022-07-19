@@ -19,7 +19,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 |Devices|Model|Measurements|
 |-|:-:|:-:|
 | ATorch Battery Capacity Monitor (c)|DT24|volt/amp/watt|
-| BLE watches with fixed mac||rssi for presence detection|
+| BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
 | BlueMaestro|TempoDisc|temperature/humidity/duepoint/voltage|
 | ClearGrass |CGG1|temperature/humidity/battery|

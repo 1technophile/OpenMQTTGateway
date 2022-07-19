@@ -15,7 +15,7 @@ You are using ESP8266 or ESP32, for other boards TLS is not supported.
 ### Configure secure connection in the gateway
 To enable the secure connection and use TLS set the `#define MQTT_DEFAULT_SECURE` to true.
 Set `MQTT_SERVER` to the Common Name (CN) of the certificate of the broker.
-This can be the hostname or the ip of the broker.
+This can be the hostname or the IP of the broker.
 
 The CA certificate should be in PEM ascii format.
 If your CA certificate is not in the correct format or you don't know the format, use `openssl` to convert the certificate to the correct format.

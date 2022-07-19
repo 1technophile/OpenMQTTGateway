@@ -239,7 +239,7 @@ ESP8266WiFiMulti wifiMulti;
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 
-// client link to pubsub mqtt
+// client link to pubsub MQTT
 PubSubClient client;
 
 void revert_hex_data(const char* in, char* out, int l) {
@@ -666,7 +666,7 @@ void setup() {
   client.setClient(*(Client*)eClient);
 
 #if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
-  Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
+  Log.trace(F("Connecting to MQTT by mDNS without MQTT hostname" CR));
   connectMQTTmdns();
 #else
   uint16_t port = strtol(mqtt_port, NULL, 10);
@@ -1013,7 +1013,7 @@ WiFiManager wifiManager;
 
 //flag for saving data
 bool shouldSaveConfig = false;
-//do we have been connected once to mqtt
+//do we have been connected once to MQTT
 
 //callback notifying us of the need to save config
 void saveConfigCallback() {
@@ -1172,7 +1172,7 @@ void setup_wifimanager(bool reset_settings) {
   //set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
-//set static ip
+//set static IP
 #  ifdef NetworkAdvancedSetup
   Log.trace(F("Adv wifi cfg" CR));
   IPAddress gateway_adress(gateway);
@@ -1293,8 +1293,8 @@ void WiFiEvent(WiFiEvent_t event) {
       Log.notice(F("Ethernet Connected" CR));
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
-      Log.trace(F("OpenMQTTGateway mac: %s" CR), ETH.macAddress().c_str());
-      Log.trace(F("OpenMQTTGateway ip: %s" CR), ETH.localIP().toString().c_str());
+      Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
+      Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
       Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
       esp32EthConnected = true;
       break;

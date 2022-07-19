@@ -220,7 +220,7 @@ upload_flags =
 * Upload ➡️
 * You should see the logs in the serial monitor
 
-With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
 ## API
 With the V0.9 we added the support of json for receiving and publishing.
@@ -259,7 +259,7 @@ If you want to use HASS MQTT discovery you need to have
 uncommented.
 Added to that auto discovery box should be selected into your Home Assistant MQTT integration configuration.
 
-With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
 ::: warning Note
 simpleReceiving on Arduino boards doesn't accept 64 bits MQTT values, you can only send 32bits values from the MQTT broker.

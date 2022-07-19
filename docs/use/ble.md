@@ -29,7 +29,7 @@ Consider the distance as a beta feature as currently we are not retrieving the e
 
 Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
 
-IOS version >=10 devices advertise without an extra app a mac address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
+iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
 
 
 ## Receiving signals from BLE devices Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale and [many more](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
@@ -67,11 +67,11 @@ OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 thi
 :::
 
 ## Setting a white or black list
-A black list is a list of mac addresses that will never be published by OMG
+A black list is a list of MAC addresses that will never be published by OMG
 to set black list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
-A white list is a list of mac addresses permitted to be published by OMG
+A white list is a list of MAC addresses permitted to be published by OMG
 to set white list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
@@ -167,7 +167,7 @@ The gateway can read and write BLE characteristics from devices and provide the 
 These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)  
 This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
 
-**Note** Some devices need to have the mac address type specified. You can find this type by checking the log/mqtt data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
+**Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
 To specify the MAC address type add the parameter `"mac_type"` to the command. For example `"mac_type": 1` to connect with a device with the MAC address type of 1.
 :::
 

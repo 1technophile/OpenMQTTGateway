@@ -235,7 +235,7 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ### Send data by MQTT to convert it on KAKU signal 
 
-Once you get the infos publish the parameters with mqtt like that for off:
+Once you get the infos publish the parameters with MQTT like that for off:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"address":8233228,"switchType":0}"`
 

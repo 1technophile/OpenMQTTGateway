@@ -105,7 +105,7 @@ int minimumRssi = 0;
 #define subjectMQTTtoPilightProtocol "/commands/MQTTtoPilight/protocols"
 #define subjectPilighttoMQTT         "/PilighttoMQTT"
 #define subjectGTWPilighttoMQTT      "/PilighttoMQTT"
-#define repeatPilightwMQTT           false // do we repeat a received signal by using mqtt with Pilight gateway
+#define repeatPilightwMQTT           false // do we repeat a received signal by using MQTT with Pilight gateway
 
 /*-------------------RTL_433 topics & parameters----------------------*/
 //433Mhz RTL_433 MQTT Subjects and keys

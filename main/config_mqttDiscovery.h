@@ -33,7 +33,7 @@ extern void pubMqttDiscovery();
 /**
  * Create a discover messages form a list of attribute
  * 
- * @param mac the mac adres
+ * @param mac the MAC address
  * @param sensorList[][0] = component type
  * @param sensorList[][1] = name
  * @param sensorList[][2] = availability topic
@@ -56,7 +56,7 @@ extern void createDiscoveryFromList(const char* mac,
                                     const char* device_model);
 
 /**
- * @brief Generate message and publish it on an mqtt discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
+ * @brief Generate message and publish it on an MQTT discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
  * 
  * @param sensor_type the Type
  * @param st_topic set state topic,
@@ -76,7 +76,7 @@ extern void createDiscoveryFromList(const char* mac,
  * @param device_name set device name, 
  * @param device_manufacturer set device manufacturer, 
  * @param device_model set device model, 
- * @param device_mac set device mac, 
+ * @param device_mac set device MAC, 
  * @param retainCmd set retain
  * @param state_class set state class
  * 
