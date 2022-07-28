@@ -1,4 +1,9 @@
 # (Option 1) Upload from the web
+
+::: tip Running on a tablet or phone
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
+:::
+
 You can upload the firmware to your ESP device directly from here.
 1. Plug in your ESP to a USB port.
 2. Select the firmware in the box below.

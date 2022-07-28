@@ -32,7 +32,7 @@ module.exports = {
         { text: 'Devices', link: 'https://compatible.openmqttgateway.com/index.php/devices', target:'_self', rel:''},
         { text: 'Boards', link: 'https://compatible.openmqttgateway.com/index.php/boards', target:'_self', rel:''},
         { text: 'Upload', link: '/upload/web-install.html'},
-        { text: 'BLE2MQTT for servers', link: 'https://gateway.theengs.io/'}
+        { text: 'Theengs🆕', link: 'https://app.theengs.io/'}
       ],
       sidebar: [
         ['/','0 - What is it for 🏠'],
