@@ -7,7 +7,11 @@ Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, AD
 or actuators; LED, relays, PWM.
 
 ::: tip Running on a computer
-If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can use [Theengs Gateway](https://gateway.theengs.io/).
+:::
+
+::: tip Running on a tablet or phone
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
 :::
 
 Here is some information to find the boards suitable for your need, you have the choice between off the shelves boards and DIY setup.
