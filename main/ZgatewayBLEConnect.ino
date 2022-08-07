@@ -21,6 +21,7 @@ NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& ser
     Log.error(F("Connect to: %s failed" CR), m_pClient->getPeerAddress().toString().c_str());
   } else {
     if (secure && !m_pClient->getConnInfo().isEncrypted()) {
+      NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_DISPLAY);
       NimBLEDevice::setSecurityAuth(true, true, true);
       m_callbacks.m_passkey = passkey;
       m_pClient->secureConnection();
