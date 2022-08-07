@@ -29,7 +29,7 @@ public:
   zBLEConnect(NimBLEAddress& addr) {
     m_pClient = NimBLEDevice::createClient(addr);
     m_pClient->setConnectTimeout(5);
-    m_pClient->setClientCallbacks(&m_callbacks);
+    m_pClient->setClientCallbacks(&m_callbacks, false);
   }
   virtual ~zBLEConnect() { NimBLEDevice::deleteClient(m_pClient); }
   virtual bool writeData(BLEAction* action);
