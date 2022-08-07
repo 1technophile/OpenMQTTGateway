@@ -11,13 +11,25 @@ extern bool ProcessLock;
 extern std::vector<BLEdevice*> devices;
 
 NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& service,
-                                                           const NimBLEUUID& characteristic) {
+                                                           const NimBLEUUID& characteristic,
+                                                           bool secure,
+                                                           uint32_t passkey) {
   BLERemoteCharacteristic* pRemoteCharacteristic = nullptr;
   if (!m_pClient) {
     Log.error(F("No BLE client" CR));
   } else if (!m_pClient->isConnected() && !m_pClient->connect()) {
     Log.error(F("Connect to: %s failed" CR), m_pClient->getPeerAddress().toString().c_str());
   } else {
+    if (secure && !m_pClient->getConnInfo().isEncrypted()) {
+      NimBLEDevice::setSecurityAuth(true, true, true);
+      m_callbacks.m_passkey = passkey;
+      m_pClient->secureConnection();
+      if (!m_pClient->getConnInfo().isEncrypted()) {
+        Log.error(F("Failed to secure connection to %s" CR), m_pClient->getPeerAddress().toString().c_str());
+        return pRemoteCharacteristic;
+      }
+    }
+
     BLERemoteService* pRemoteService = m_pClient->getService(service);
     if (!pRemoteService) {
       Log.notice(F("Failed to find service UUID: %s" CR), service.toString().c_str());
@@ -35,7 +47,11 @@ NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& ser
 }
 
 bool zBLEConnect::writeData(BLEAction* action) {
-  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service,
+                                                        action->characteristic,
+                                                        action->secure,
+                                                        action->passkey);
+
   if (pChar && (pChar->canWrite() || pChar->canWriteNoResponse())) {
     switch (action->value_type) {
       case BLE_VAL_HEX: {
@@ -64,7 +80,10 @@ bool zBLEConnect::writeData(BLEAction* action) {
 }
 
 bool zBLEConnect::readData(BLEAction* action) {
-  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service, action->characteristic);
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(action->service,
+                                                        action->characteristic,
+                                                        action->secure,
+                                                        action->passkey);
 
   if (pChar && pChar->canRead()) {
     action->value = pChar->readValue();

@@ -1149,6 +1149,8 @@ void MQTTtoBTAction(JsonObject& BTdata) {
     return;
   }
 
+  action.secure = BTdata.containsKey("secure") ? BTdata["secure"].as<bool>() : 0;
+  action.passkey = BTdata.containsKey("passkey") ? BTdata["passkey"].as<uint32_t>() : 123456;
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
   action.addr_type = BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0;
   action.value_type = BLE_VAL_STRING;

@@ -8,20 +8,38 @@
 
 extern void pubBT(JsonObject& data);
 
+class ClientCallbacks : public NimBLEClientCallbacks {
+  uint32_t onPassKeyRequest() {
+    return m_passkey;
+  }
+
+  bool onConfirmPIN(uint32_t pass_key) {
+    return true;
+  }
+
+  friend class zBLEConnect;
+  uint32_t m_passkey;
+};
+
 class zBLEConnect {
 public:
   NimBLEClient* m_pClient;
+  ClientCallbacks m_callbacks;
   TaskHandle_t m_taskHandle = nullptr;
   zBLEConnect(NimBLEAddress& addr) {
     m_pClient = NimBLEDevice::createClient(addr);
     m_pClient->setConnectTimeout(5);
+    m_pClient->setClientCallbacks(&m_callbacks);
   }
   virtual ~zBLEConnect() { NimBLEDevice::deleteClient(m_pClient); }
   virtual bool writeData(BLEAction* action);
   virtual bool readData(BLEAction* action);
   virtual bool processActions(std::vector<BLEAction>& actions);
   virtual void publishData() {}
-  virtual NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID& service, const NimBLEUUID& characteristic);
+  virtual NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID& service,
+                                                        const NimBLEUUID& characteristic,
+                                                        bool secure = false,
+                                                        uint32_t passkey = 123456);
 };
 
 class LYWSD03MMC_connect : public zBLEConnect {
