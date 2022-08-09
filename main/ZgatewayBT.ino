@@ -84,6 +84,7 @@ vector<BLEdevice*> devices;
 int newDevices = 0;
 
 static BLEdevice NO_DEVICE_FOUND = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                                    0,
                                     false,
                                     false,
                                     false,
