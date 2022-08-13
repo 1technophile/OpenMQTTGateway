@@ -98,7 +98,8 @@ module.exports = {
             'integrate/openhab3',
             'integrate/home_assistant',
             'integrate/node_red',
-            'integrate/aws_iot'
+            'integrate/aws_iot',
+            'integrate/jeedom'
           ]
         },
         {
