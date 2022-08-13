@@ -1,30 +1,30 @@
 # Integrate OPENHAB3
 
 This tutorial will show how to integrate the BLE gateway to OpenHAB3 leveraging the auto discovery functionnality.
-After this tutorial, you should see your Bluetooth Low Energy devices into OpenHAB3 without any file based manual configuration.
+After this tutorial, you should see your Bluetooth Low Energy devices in OpenHAB3 without any file based manual configuration.
 
 ## Prerequisites
-* OpenHAB 3.3 or more
+* OpenHAB 3.3 or higher
 * MQTT broker installed with or without authentication
-* A location defined into the "Model" section under "Settings"
+* A location defined in the "Model" section under "Settings"
 
 ## IP address (if your broker is installed on the same server as OpenHAB)
-The goal is to disable the IP v6 address of the broker server, so that the gateway can connect through IPv4.
-1. From the administration click on settings
+The goal is to disable the IPv6 address of the broker server, so that the gateway can connect through IPv4.
+1. From the Administration click on Settings
 2. Click on Network Settings
 3. Click on Show Advanced
-4. Disable IP v6
+4. Disable IPv6
 5. Click on Save
 
 ![](../img/OpenMQTTGateway-OpenHAB-Theengs-mqtt-ip.png)
 
 ::: warning Note
-If the broker is installed into another server you will also need to configure it with an IPv4 address.
+If the broker is installed on another server you will also need to configure it with an IPv4 address.
 :::
 
 ## Install the MQTT binding
-1. From the administration click on settings
-2. Click on bindings
+1. From the Administration click on Settings
+2. Click on Bindings
 3. Install the MQTT binding (you can search at the bottom right)
 
 ![](../img/OpenMQTTGateway-OpenHAB-Theengs-mqtt-binding.png)
@@ -55,28 +55,28 @@ If the broker is installed into another server you will also need to configure i
 Bravo👏, second step done! Now let's add the Jinja transformation service.
 
 ## Install Jinja Transformation
-1. From the administration click on settings
-2. Click on bindings
+1. From the Administration click on Settings
+2. Click on Bindings
 3. Install Jinja Transformation (you can search at the bottom right)
 
 ![](../img/OpenMQTTGateway-OpenHAB-Theengs-mqtt-jinja.png)
 
 Second step done!
 
-## Upload OMG to an ESP32
-[Upload OMG from the web](../upload/web-install.md) by selecting `esp32dev-ble-openhab`
+## Upload OpenMQTTGateway to an ESP32
+[Upload OpenMQTTGateway from the web](../upload/web-install.md) by selecting `esp32dev-ble-openhab`
 
-Or use another upload methods from the Upload section.
+Or use another upload method from the Upload section.
 
-## Configure OMG from the web portal
+## Configure OpenMQTTGateway from the web portal
 [Wifi and MQTT configuration](../upload/portal.md)
 
-Or Use another upload methods from the Upload section that requires credentials before the build.
+Or use another upload method from the Upload section that requires credentials before the build.
 
-You should see the gateway connected to your broker by checking with an MQTT client like MQTT explorer.
+You should see the gateway connected to your broker by checking with an MQTT client like MQTT Explorer.
 
 ## Adding the things
-1. From the administration click on "Things" under "Settings", you should see a number in the INBOX button
+1. From the Administration click on "Things" under "Settings", you should see a number in the INBOX button
 
 ![](../img/OpenMQTTGateway-OpenHAB-Theengs-mqtt-things.png)
 
