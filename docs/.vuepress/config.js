@@ -95,6 +95,7 @@ module.exports = {
           sidebarDepth: 1,    // optional, defaults to 1
           children: [
             'integrate/openhab2',
+            'integrate/openhab3',
             'integrate/home_assistant',
             'integrate/node_red',
             'integrate/aws_iot',

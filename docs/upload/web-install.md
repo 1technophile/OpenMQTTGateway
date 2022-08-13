@@ -31,6 +31,7 @@ The table below describes the libraries and the modules of each board configurat
 |esp32-olimex-gtw-ble-wifi|Olimex Ethernet Gateway (non POE) using wifi| BLE gateway|-|-|X|-|
 |esp32dev-ble-cont|ESP32 dev board|BLE gateway with continuous scanning, suitable in particular for door and window BLE sensors (and all the others)|-|-|X|-|
 |esp32dev-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
+|esp32dev-ble-openhab|ESP32 dev board|BLE gateway with one scan every 55s per default and OpenHAB discovery|-|-|X|-|
 |esp32dev-ble-mqtt-undecoded|ESP32 dev board|BLE gateway with the decoding offloaded to [Theengs Gateway](https://gateway.theengs.io/)|-|-|X|-|
 |esp32dev-gf-sun-inverter|ESP32 dev board|RS232 reading of GridFree Sun Inverter|-|-|-|-|
 |esp32dev-ir|ESP32 dev board|Infrared (Emitting and receiving) using [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266)|-|X|-|-|
