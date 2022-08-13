@@ -35,7 +35,7 @@ Otherwise, if you already use the "MQTT" plugin OR the "MQTT Manager" plugin OR 
 
 * Dependencies and Daemon are now OK,
 
-![](../img/Integrate_Jeedom_Daemon-OK.png)
+![](../img/Integrate_Jeedom_Install-Daemon-OK.png)
 
 -> If you checked "Install Mosquitto locally", Then you can skip to "[Creation of the OMG device](#creation-of-the-omg-device)" step, jMQTT has automagically created a Broker called "local" for you.
 
