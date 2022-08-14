@@ -63,7 +63,6 @@ extern int btQueueLengthCount;
 
 
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
-int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 #ifndef Scan_duration
 #  define Scan_duration 10000 //define the time for a scan
@@ -152,12 +151,14 @@ struct BTConfig_s {
   unsigned int           BLEscanBeforeConnect;            // Number of BLE scans between connection cycles
   bool                   pubOnlySensors;                  // Publish only the identified sensors (like temperature sensors)
   bool                   presenceEnable;                  // Publish into Home Assistant presence topic
+  int                    minRssi;                         // Minimum rssi value, all the devices below will not be reported
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
   .BLEscanBeforeConnect        = ScanBeforeConnect,
   .pubOnlySensors              = PublishOnlySensors,
   .presenceEnable              = HassPresence,
+  .minRssi                     = abs(MinimumRSSI),
 };
 
 // Global struct to store live BT configuration data

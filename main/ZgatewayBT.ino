@@ -96,7 +96,7 @@ static BLEdevice NO_DEVICE_FOUND = {{0},
 static bool oneWhite = false;
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
-  if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
+  if (abs((int)data["rssi"] | 0) < BTConfig.minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
     topic.replace(":", ""); // Initially publish topic ends with MAC address
 #  if useBeaconUuidForTopic
@@ -685,7 +685,7 @@ void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
-  Log.notice(F("minrssi: %d" CR), minRssi);
+  Log.notice(F("minrssi: %d" CR), BTConfig.minRssi);
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
@@ -746,7 +746,7 @@ void setupBT() {
   Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
-  Log.notice(F("minrssi: %d" CR), minRssi);
+  Log.notice(F("minrssi: %d" CR), BTConfig.minRssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
   delay(100);
@@ -969,7 +969,7 @@ void launchBTDiscovery() {
 #  endif
 
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
-  if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
+  if (abs((int)BLEdata["rssi"] | 0) < BTConfig.minRssi) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
 #  if !pubBLEServiceUUID
@@ -1271,10 +1271,10 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
       // storing Min RSSI for further use if needed
-      Log.trace(F("Previous minrssi: %d" CR), minRssi);
+      Log.trace(F("Previous minrssi: %d" CR), BTConfig.minRssi);
       // set Min RSSI if present if not setting default value
-      minRssi = abs((int)BTdata["minrssi"]);
-      Log.notice(F("New minrssi: %d" CR), minRssi);
+      BTConfig.minRssi = abs((int)BTdata["minrssi"]);
+      Log.notice(F("New minrssi: %d" CR), BTConfig.minRssi);
     }
     // Home Assistant presence message
     if (BTdata.containsKey("hasspresence")) {
