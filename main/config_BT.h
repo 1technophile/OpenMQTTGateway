@@ -91,7 +91,6 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
 #endif
-bool publishOnlySensors = PublishOnlySensors;
 
 #ifndef HassPresence
 #  define HassPresence false //false if we publish into Home Assistant presence topic
@@ -152,10 +151,12 @@ struct BTConfig_s {
   bool                   bleConnect;                      // Attempt a BLE connection to sensors with ESP32
   unsigned int           BLEinterval;                     // Time between 2 scans
   unsigned int           BLEscanBeforeConnect;            // Number of BLE scans between connection cycles
+  bool                   pubOnlySensors;                  // Publish only the identified sensors (like temperature sensors)
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
   .BLEscanBeforeConnect        = ScanBeforeConnect,
+  .pubOnlySensors              = PublishOnlySensors,
 };
 
 // Global struct to store live BT configuration data

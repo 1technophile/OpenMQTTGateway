@@ -468,7 +468,7 @@ void procBLETask(void* pvParameters) {
           BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
           BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
-        if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
+        if (advertisedDevice->haveRSSI() && !BTConfig.pubOnlySensors && hassPresence) {
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
@@ -684,7 +684,7 @@ void changelowpowermode(int newLowPowerMode) {
 void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
-  Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
+  Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
@@ -745,7 +745,7 @@ struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, 
 void setupBT() {
   Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
-  Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
+  Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
@@ -834,7 +834,7 @@ bool BTtoMQTT() {
           return false; //if we have at least one white MAC and this MAC is not white we go out
 
         BLEdata["rssi"] = (int)rssi;
-        if (!publishOnlySensors && hassPresence)
+        if (!BTConfig.pubOnlySensors && hassPresence)
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         Log.trace(F("Service data: %s" CR), restData.c_str());
         BLEdata["servicedata"] = restData.c_str();
@@ -971,7 +971,7 @@ void launchBTDiscovery() {
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
-    if (!publishOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
+    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
 #  if !pubBLEServiceUUID
       RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
 #  endif
@@ -1250,9 +1250,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
     if (BTdata.containsKey("onlysensors")) {
       Log.trace(F("Do we publish only sensors" CR));
-      Log.trace(F("Previous value: %T" CR), publishOnlySensors);
-      publishOnlySensors = (bool)BTdata["onlysensors"];
-      Log.notice(F("New value onlysensors: %T" CR), publishOnlySensors);
+      Log.trace(F("Previous value: %T" CR), BTConfig.pubOnlySensors);
+      BTConfig.pubOnlySensors = (bool)BTdata["onlysensors"];
+      Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
     }
 #  ifdef ESP32
     // Attempts to connect to elligible devices or not
