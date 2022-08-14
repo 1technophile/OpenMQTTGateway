@@ -59,6 +59,10 @@ extern int btQueueLengthCount;
 #  else
 #    define UseExtDecoder false
 #  endif
+#else
+#  if UseExtDecoder
+#    define MQTTDecodeTopic "undecoded"
+#  endif
 #endif
 
 
@@ -153,6 +157,7 @@ struct BTConfig_s {
   bool                   presenceEnable;                  // Publish into Home Assistant presence topic
   String                 presenceTopic;                   // Home Assistant presence topic to publish on
   int                    minRssi;                         // Minimum rssi value, all the devices below will not be reported
+  String                 extDecoderTopic;                 // Topic to send undecoded device data on
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
@@ -161,6 +166,7 @@ struct BTConfig_s {
   .presenceEnable              = HassPresence,
   .presenceTopic               = subjectHomePresence,
   .minRssi                     = abs(MinimumRSSI),
+  .extDecoderTopic             = MQTTDecodeTopic,
 };
 
 // Global struct to store live BT configuration data

@@ -105,7 +105,7 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
 #  endif
 #  if UseExtDecoder
     if (!data.containsKey("model"))
-      topic = MQTTDecodeTopic; // If external decoder, topic is MQTTDecodeTopic
+      topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
 #  endif
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
