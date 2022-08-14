@@ -468,7 +468,7 @@ void procBLETask(void* pvParameters) {
           BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
           BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
-        if (advertisedDevice->haveRSSI() && !BTConfig.pubOnlySensors && hassPresence) {
+        if (advertisedDevice->haveRSSI() && !BTConfig.pubOnlySensors && BTConfig.presenceEnable) {
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
@@ -834,7 +834,7 @@ bool BTtoMQTT() {
           return false; //if we have at least one white MAC and this MAC is not white we go out
 
         BLEdata["rssi"] = (int)rssi;
-        if (!BTConfig.pubOnlySensors && hassPresence)
+        if (!BTConfig.pubOnlySensors && BTConfig.presenceEnable)
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         Log.trace(F("Service data: %s" CR), restData.c_str());
         BLEdata["servicedata"] = restData.c_str();
@@ -1279,10 +1279,10 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // Home Assistant presence message
     if (BTdata.containsKey("hasspresence")) {
       // storing Min RSSI for further use if needed
-      Log.trace(F("Previous hasspresence: %T" CR), hassPresence);
+      Log.trace(F("Previous hasspresence: %T" CR), BTConfig.presenceEnable);
       // set Min RSSI if present if not setting default value
-      hassPresence = (bool)BTdata["hasspresence"];
-      Log.notice(F("New hasspresence: %T" CR), hassPresence);
+      BTConfig.presenceEnable = (bool)BTdata["hasspresence"];
+      Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
     }
   }
 }

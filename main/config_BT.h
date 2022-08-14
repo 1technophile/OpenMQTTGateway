@@ -95,7 +95,6 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 #ifndef HassPresence
 #  define HassPresence false //false if we publish into Home Assistant presence topic
 #endif
-bool hassPresence = HassPresence;
 
 #ifndef BTQueueSize
 #  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
@@ -152,11 +151,13 @@ struct BTConfig_s {
   unsigned int           BLEinterval;                     // Time between 2 scans
   unsigned int           BLEscanBeforeConnect;            // Number of BLE scans between connection cycles
   bool                   pubOnlySensors;                  // Publish only the identified sensors (like temperature sensors)
+  bool                   presenceEnable;                  // Publish into Home Assistant presence topic
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
   .BLEscanBeforeConnect        = ScanBeforeConnect,
   .pubOnlySensors              = PublishOnlySensors,
+  .presenceEnable              = HassPresence,
 };
 
 // Global struct to store live BT configuration data
