@@ -36,10 +36,10 @@ extern void launchBTDiscovery();
 extern int btQueueBlocked;
 extern int btQueueLengthSum;
 extern int btQueueLengthCount;
-#  ifndef AttemptBLECOnnect
-#    define AttemptBLECOnnect true //do we by default attempt a BLE connection to sensors with ESP32
+#  ifndef AttemptBLEConnect
+#    define AttemptBLEConnect true //do we by default attempt a BLE connection to sensors with ESP32
 #  endif
-bool bleConnect = AttemptBLECOnnect;
+bool bleConnect = AttemptBLEConnect;
 
 // Sets whether to filter publishing of scanned devices that require a connection.
 // Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
