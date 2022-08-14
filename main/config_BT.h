@@ -36,15 +36,6 @@ extern void launchBTDiscovery();
 extern int btQueueBlocked;
 extern int btQueueLengthSum;
 extern int btQueueLengthCount;
-#  ifndef AttemptBLEConnect
-#    define AttemptBLEConnect true //do we by default attempt a BLE connection to sensors with ESP32
-#  endif
-
-// Sets whether to filter publishing of scanned devices that require a connection.
-// Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
-#  ifndef BLE_FILTER_CONNECTABLE
-#    define BLE_FILTER_CONNECTABLE 0
-#  endif
 #  include "NimBLEDevice.h"
 #endif
 
@@ -64,6 +55,13 @@ extern int btQueueLengthCount;
 #  define MQTTDecodeTopic "undecoded"
 #endif
 
+#ifndef AttemptBLEConnect
+#  define AttemptBLEConnect true //do we by default attempt a BLE connection to sensors with ESP32
+#endif
+
+#ifndef BLE_FILTER_CONNECTABLE
+#  define BLE_FILTER_CONNECTABLE 0 // Sets whether to filter publishing of scanned devices that require a connection.
+#endif // Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
 
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 
@@ -111,8 +109,6 @@ extern int btQueueLengthCount;
 #define CRLR               "0d0a"
 #define CRLR_Length        4
 #define BLE_CNCT_TIMEOUT   3000
-
-#define ServicedataMinLength 27
 
 unsigned long scanCount = 0;
 
