@@ -151,6 +151,7 @@ struct BTConfig_s {
   unsigned int           BLEscanBeforeConnect;            // Number of BLE scans between connection cycles
   bool                   pubOnlySensors;                  // Publish only the identified sensors (like temperature sensors)
   bool                   presenceEnable;                  // Publish into Home Assistant presence topic
+  String                 presenceTopic;                   // Home Assistant presence topic to publish on
   int                    minRssi;                         // Minimum rssi value, all the devices below will not be reported
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
@@ -158,6 +159,7 @@ struct BTConfig_s {
   .BLEscanBeforeConnect        = ScanBeforeConnect,
   .pubOnlySensors              = PublishOnlySensors,
   .presenceEnable              = HassPresence,
+  .presenceTopic               = subjectHomePresence,
   .minRssi                     = abs(MinimumRSSI),
 };
 

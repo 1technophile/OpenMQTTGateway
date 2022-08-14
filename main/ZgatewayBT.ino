@@ -121,7 +121,7 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       data["id"] = data["uuid"];
     }
 #  endif
-    String topic = String(mqtt_topic) + subjectHomePresence + String(gateway_name);
+    String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
     Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
     pub_custom_topic((char*)topic.c_str(), data, false);
   }
