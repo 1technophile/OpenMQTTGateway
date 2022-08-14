@@ -151,6 +151,7 @@ struct BTConfig_s {
   bool                   pubOnlySensors;                  // Publish only the identified sensors (like temperature sensors)
   bool                   presenceEnable;                  // Publish into Home Assistant presence topic
   String                 presenceTopic;                   // Home Assistant presence topic to publish on
+  bool                   presenceUseBeaconUuid;           // Use iBeacon UUID as for presence, instead of sender MAC (random) address
   int                    minRssi;                         // Minimum rssi value, all the devices below will not be reported
   bool                   extDecoderEnable;                // Send undecoded device data to another gateway device for decoding
   String                 extDecoderTopic;                 // Topic to send undecoded device data on
@@ -160,6 +161,7 @@ struct BTConfig_s {
   bool                   pubKnownManufData;               // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
   bool                   pubUnknownManufData;             // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
   bool                   pubServiceDataUUID;              // Publish the service UUID data
+  bool                   pubBeaconUuidForTopic;           // Use iBeacon UUID as topic, instead of sender (random) MAC address
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
@@ -167,6 +169,7 @@ struct BTConfig_s {
   .pubOnlySensors              = PublishOnlySensors,
   .presenceEnable              = HassPresence,
   .presenceTopic               = subjectHomePresence,
+  .presenceUseBeaconUuid       = useBeaconUuidForPresence,
   .minRssi                     = abs(MinimumRSSI),
   .extDecoderEnable            = UseExtDecoder,
   .extDecoderTopic             = MQTTDecodeTopic,
@@ -176,6 +179,7 @@ struct BTConfig_s {
   .pubKnownManufData           = pubBLEManufacturerData,
   .pubUnknownManufData         = pubUnknownBLEManufacturerData,
   .pubServiceDataUUID          = pubBLEServiceUUID,
+  .pubBeaconUuidForTopic       = useBeaconUuidForTopic,
 };
 
 // Global struct to store live BT configuration data
