@@ -445,12 +445,10 @@ void procBLETask(void* pvParameters) {
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
-#    if BLE_FILTER_CONNECTABLE
-      if (device->connect) {
+      if (BTConfig.filterConnectable && device->connect) {
         Log.notice(F("Filtered connectable device" CR));
         continue;
       }
-#    endif
 
       if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed MAC we go AND if we have no white MAC or this MAC is  white we go out
         if (advertisedDevice->haveName())

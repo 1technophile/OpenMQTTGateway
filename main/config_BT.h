@@ -154,6 +154,7 @@ struct BTConfig_s {
   int                    minRssi;                         // Minimum rssi value, all the devices below will not be reported
   bool                   extDecoderEnable;                // Send undecoded device data to another gateway device for decoding
   String                 extDecoderTopic;                 // Topic to send undecoded device data on
+  bool                   filterConnectable;               // Sets whether to filter publishing of scanned devices that require a connection.
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
@@ -164,6 +165,7 @@ struct BTConfig_s {
   .minRssi                     = abs(MinimumRSSI),
   .extDecoderEnable            = UseExtDecoder,
   .extDecoderTopic             = MQTTDecodeTopic,
+  .filterConnectable           = BLE_FILTER_CONNECTABLE,
 };
 
 // Global struct to store live BT configuration data
