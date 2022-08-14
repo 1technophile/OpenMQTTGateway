@@ -80,7 +80,6 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 #ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
 #endif
-unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
 
 #ifndef BLEScanDuplicateCacheSize
 #  define BLEScanDuplicateCacheSize 200
@@ -152,8 +151,10 @@ unsigned long scanCount = 0;
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct BTConfig_s {
   bool                   bleConnect;                      // Attempt a BLE connection to sensors with ESP32
+  unsigned int           BLEscanBeforeConnect;            // Number of BLE scans between connection cycles
 } BTConfig_default = {
-  .bleConnect                  = AttemptBLEConnect
+  .bleConnect                  = AttemptBLEConnect,
+  .BLEscanBeforeConnect        = ScanBeforeConnect,
 };
 
 // Global struct to store live BT configuration data

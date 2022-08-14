@@ -609,7 +609,7 @@ void coreTask(void* pvParameters) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
           // Launching a connect every BLEscanBeforeConnect
-          if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
+          if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
             BLEconnect();
           dumpDevices();
           xSemaphoreGive(semaphoreBLEOperation);
@@ -683,7 +683,7 @@ void changelowpowermode(int newLowPowerMode) {
 
 void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
+  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
@@ -744,7 +744,7 @@ struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, 
 
 void setupBT() {
   Log.notice(F("BLE interval: %d" CR), BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
+  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
   softserial.begin(HMSerialSpeed);
@@ -1106,7 +1106,7 @@ void immediateBTAction(void* pvParameters) {
       std::swap(BLEactions, act_swap);
 
       // If we stopped the scheduled connect for this action, do the scheduled now
-      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
+      if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
         BLEconnect();
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
@@ -1243,9 +1243,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // Number of scan before a connect set
     if (BTdata.containsKey("scanbcnct")) {
       Log.trace(F("BLE scans number before a connect setup" CR));
-      Log.trace(F("Previous number: %d" CR), BLEscanBeforeConnect);
-      BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
-      Log.notice(F("New scan number before connect: %d" CR), BLEscanBeforeConnect);
+      Log.trace(F("Previous number: %d" CR), BTConfig.BLEscanBeforeConnect);
+      BTConfig.BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
+      Log.notice(F("New scan number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
     }
     // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
     if (BTdata.containsKey("onlysensors")) {
