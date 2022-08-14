@@ -69,9 +69,7 @@ BTConfig_s BTConfig = BTConfig_default;
 #  define device_flags_isBlackL 1 << 2
 #  define device_flags_connect  1 << 3
 
-#  if !UseExtDecoder
 TheengsDecoder decoder;
-#  endif
 
 struct decompose {
   int start;
@@ -103,10 +101,8 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
     if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
       topic = data["uuid"].as<const char*>(); // If model_id is IBEACON, use uuid as topic
 #  endif
-#  if UseExtDecoder
-    if (!data.containsKey("model"))
+    if (BTConfig.extDecoderEnable && !data.containsKey("model"))
       topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
-#  endif
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
   }
@@ -888,8 +884,8 @@ void launchBTDiscovery() {
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-#    if !UseExtDecoder
-      if (p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
+      if (!BTConfig.extDecoderEnable && // Do not decode if an external decoter is configured
+          p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
           p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
           p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
         Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
@@ -908,11 +904,11 @@ void launchBTDiscovery() {
             String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
-#      if OpenHABDiscovery
+#    if OpenHABDiscovery
             String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
-#      else
+#    else
             String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-#      endif
+#    endif
             if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && !strcmp(prop.key().c_str(), "state")) {
               String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
               String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
@@ -934,9 +930,7 @@ void launchBTDiscovery() {
             }
           }
         }
-      } else
-#    endif
-      {
+      } else {
         if (p->sensorModel_id > BLEconectable::id::MIN &&
                 p->sensorModel_id < BLEconectable::id::MAX ||
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
@@ -1000,10 +994,8 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
 
 void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
-  int model_id = -1;
+  int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
-#  if !UseExtDecoder
-  model_id = decoder.decodeBLEJson(BLEdata);
   if (model_id >= 0) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
@@ -1011,9 +1003,7 @@ void process_bledata(JsonObject& BLEdata) {
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
     }
-  } else
-#  endif
-  {
+  } else {
     if (BLEdata.containsKey("name")) { // Connectable devices
       std::string name = BLEdata["name"];
       if (name.compare("LYWSD03MMC") == 0)
@@ -1029,9 +1019,7 @@ void process_bledata(JsonObject& BLEdata) {
         Log.trace(F("Connectable device found: %s" CR), name.c_str());
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       }
-    }
-#  if UseExtDecoder
-    else if (model_id < 0 && BLEdata.containsKey("servicedata")) {
+    } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
       const char* service_data = (const char*)(BLEdata["servicedata"] | "");
       if (strstr(service_data, "209800") != NULL) {
         model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
@@ -1039,7 +1027,6 @@ void process_bledata(JsonObject& BLEdata) {
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       }
     }
-#  endif
   }
   if (model_id < 0) {
     Log.trace(F("No device found " CR));
