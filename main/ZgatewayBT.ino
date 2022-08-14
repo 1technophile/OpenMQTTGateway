@@ -622,7 +622,7 @@ void coreTask(void* pvParameters) {
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
         if (scan == 1) BTforceScan();
       } else {
-        for (int interval = BLEinterval, waitms; interval > 0; interval -= waitms) {
+        for (int interval = BTConfig.BLEinterval, waitms; interval > 0; interval -= waitms) {
           int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst);
           if (scan == 1) BTforceScan(); // should we break after this?
           delay(waitms = interval > 100 ? 100 : interval); // 100ms
@@ -637,8 +637,8 @@ void coreTask(void* pvParameters) {
 
 void lowPowerESP32() // low power mode
 {
-  Log.trace(F("Going to deep sleep for: %l s" CR), (BLEinterval / 1000));
-  deepSleep(BLEinterval * 1000);
+  Log.trace(F("Going to deep sleep for: %l s" CR), (BTConfig.BLEinterval / 1000));
+  deepSleep(BTConfig.BLEinterval * 1000);
 }
 
 void deepSleep(uint64_t time_in_us) {
@@ -682,7 +682,7 @@ void changelowpowermode(int newLowPowerMode) {
 }
 
 void setupBT() {
-  Log.notice(F("BLE scans interval: %d" CR), BLEinterval);
+  Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
@@ -743,7 +743,7 @@ unsigned long timebt = 0;
 struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
 
 void setupBT() {
-  Log.notice(F("BLE interval: %d" CR), BLEinterval);
+  Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
   Log.notice(F("minrssi: %d" CR), minRssi);
@@ -774,7 +774,7 @@ bool BTtoMQTT() {
     returnedString += String(a, HEX);
   }
 
-  if (millis() > (timebt + BLEinterval)) { //retrieving data
+  if (millis() > (timebt + BTConfig.BLEinterval)) { //retrieving data
     timebt = millis();
     returnedString.remove(0); //init data string
     softserial.print(F(QUESTION_MSG)); //start new discovery
@@ -1235,9 +1235,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
         BTforceScan();
 #  endif
       } else {
-        Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
-        BLEinterval = interval;
-        Log.notice(F("New interval: %d ms" CR), BLEinterval);
+        Log.trace(F("Previous interval: %d ms" CR), BTConfig.BLEinterval);
+        BTConfig.BLEinterval = interval;
+        Log.notice(F("New interval: %d ms" CR), BTConfig.BLEinterval);
       }
     }
     // Number of scan before a connect set

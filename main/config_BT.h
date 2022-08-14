@@ -87,7 +87,6 @@ int minRssi = abs(MinimumRSSI); //minimum rssi value
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
-unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
 
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
@@ -151,9 +150,11 @@ unsigned long scanCount = 0;
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct BTConfig_s {
   bool                   bleConnect;                      // Attempt a BLE connection to sensors with ESP32
+  unsigned int           BLEinterval;                     // Time between 2 scans
   unsigned int           BLEscanBeforeConnect;            // Number of BLE scans between connection cycles
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
+  .BLEinterval                 = TimeBtwRead,
   .BLEscanBeforeConnect        = ScanBeforeConnect,
 };
 
