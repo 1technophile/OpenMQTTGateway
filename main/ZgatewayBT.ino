@@ -66,7 +66,7 @@ using namespace std;
 #  define device_flags_isBlackL 1 << 2
 #  define device_flags_connect  1 << 3
 
-#  ifndef MQTTDecodeTopic
+#  if !UseExtDecoder
 TheengsDecoder decoder;
 #  endif
 
@@ -100,7 +100,7 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
     if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
       topic = data["uuid"].as<const char*>(); // If model_id is IBEACON, use uuid as topic
 #  endif
-#  ifdef MQTTDecodeTopic
+#  if UseExtDecoder
     if (!data.containsKey("model"))
       topic = MQTTDecodeTopic; // If external decoder, topic is MQTTDecodeTopic
 #  endif
@@ -885,7 +885,7 @@ void launchBTDiscovery() {
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-#    ifndef MQTTDecodeTopic
+#    if !UseExtDecoder
       if (p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
           p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
           p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
@@ -999,7 +999,7 @@ void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = -1;
   int mac_type = BLEdata["mac_type"].as<int>();
-#  ifndef MQTTDecodeTopic
+#  if !UseExtDecoder
   model_id = decoder.decodeBLEJson(BLEdata);
   if (model_id >= 0) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
@@ -1027,7 +1027,7 @@ void process_bledata(JsonObject& BLEdata) {
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       }
     }
-#  ifdef MQTTDecodeTopic
+#  if UseExtDecoder
     else if (model_id < 0 && BLEdata.containsKey("servicedata")) {
       const char* service_data = (const char*)(BLEdata["servicedata"] | "");
       if (strstr(service_data, "209800") != NULL) {
