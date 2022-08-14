@@ -964,24 +964,20 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < BTConfig.minRssi) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
-#  if !pubBLEServiceUUID
-      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
-#  endif
-#  if !pubKnownBLEServiceData
-      RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
-#  endif
-#  if !pubBLEManufacturerData
-      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
-#  endif
+      if (!BTConfig.pubServiceDataUUID)
+        RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
+      if (!BTConfig.pubKnownServiceData)
+        RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
+      if (!BTConfig.pubKnownManufData)
+        RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
       pubBT(BLEdata);
     } else {
-#  if !pubUnknownBLEServiceData
-      Log.trace(F("Unknown service data, removing it" CR));
-      RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("servicedata"));
-#  endif
-#  if !pubUnknownBLEManufacturerData
-      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
-#  endif
+      if (!BTConfig.pubUnknownServiceData) {
+        Log.trace(F("Unknown service data, removing it" CR));
+        RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("servicedata"));
+      }
+      if (!BTConfig.pubUnknownManufData)
+        RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
     }
   } else if (BLEdata.containsKey("distance")) {
     pubBT(BLEdata);

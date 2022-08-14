@@ -155,6 +155,11 @@ struct BTConfig_s {
   bool                   extDecoderEnable;                // Send undecoded device data to another gateway device for decoding
   String                 extDecoderTopic;                 // Topic to send undecoded device data on
   bool                   filterConnectable;               // Sets whether to filter publishing of scanned devices that require a connection.
+  bool                   pubKnownServiceData;             // Publish service data belonging to recognised sensors
+  bool                   pubUnknownServiceData;           // Publish service data belonging to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+  bool                   pubKnownManufData;               // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+  bool                   pubUnknownManufData;             // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+  bool                   pubServiceDataUUID;              // Publish the service UUID data
 } BTConfig_default = {
   .bleConnect                  = AttemptBLEConnect,
   .BLEinterval                 = TimeBtwRead,
@@ -166,6 +171,11 @@ struct BTConfig_s {
   .extDecoderEnable            = UseExtDecoder,
   .extDecoderTopic             = MQTTDecodeTopic,
   .filterConnectable           = BLE_FILTER_CONNECTABLE,
+  .pubKnownServiceData         = pubKnownBLEServiceData,
+  .pubUnknownServiceData       = pubUnknownBLEServiceData,
+  .pubKnownManufData           = pubBLEManufacturerData,
+  .pubUnknownManufData         = pubUnknownBLEManufacturerData,
+  .pubServiceDataUUID          = pubBLEServiceUUID,
 };
 
 // Global struct to store live BT configuration data
