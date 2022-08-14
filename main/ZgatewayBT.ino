@@ -92,8 +92,6 @@ static BLEdevice NO_DEVICE_FOUND = {{0},
                                     TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
 static bool oneWhite = false;
 
-int minRssi = abs(MinimumRSSI); //minimum rssi value
-
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();

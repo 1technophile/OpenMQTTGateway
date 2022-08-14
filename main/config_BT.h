@@ -49,13 +49,14 @@ bool bleConnect = AttemptBLECOnnect;
 #  include "NimBLEDevice.h"
 #endif
 
-/*----------------------BT topics & parameters-------------------------*/
+/*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 // Uncomment to send undecoded device data to another gateway device for decoding
 // #define MQTTDecodeTopic    "undecoded"
 
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
+int minRssi = abs(MinimumRSSI); //minimum rssi value
 
 #ifndef Scan_duration
 #  define Scan_duration 10000 //define the time for a scan
@@ -72,18 +73,25 @@ bool bleConnect = AttemptBLECOnnect;
 #ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
 #endif
+unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
+
 #ifndef BLEScanDuplicateCacheSize
 #  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
+unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
+
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
 #endif
+bool publishOnlySensors = PublishOnlySensors;
+
 #ifndef HassPresence
 #  define HassPresence false //false if we publish into Home Assistant presence topic
 #endif
+bool hassPresence = HassPresence;
 
 #ifndef BTQueueSize
 #  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
@@ -101,11 +109,7 @@ bool bleConnect = AttemptBLECOnnect;
 
 #define ServicedataMinLength 27
 
-unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
-unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
 unsigned long scanCount = 0;
-bool publishOnlySensors = PublishOnlySensors;
-bool hassPresence = HassPresence;
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
@@ -131,7 +135,7 @@ bool hassPresence = HassPresence;
 #  define useBeaconUuidForTopic false // define true to use iBeacon UUID as topic, instead of sender (random) MAC address
 #endif
 
-/*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
+/*--------------HOME ASSISTANT ROOM PRESENCE--------------*/
 #define subjectHomePresence "presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 #ifndef useBeaconUuidForPresence
