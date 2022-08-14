@@ -97,7 +97,7 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < BTConfig.minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
     topic.replace(":", ""); // Initially publish topic ends with MAC address
-    if (BTConfig.pubBeaconUuidForTopic && data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
+    if (BTConfig.pubBeaconUuidForTopic && !BTConfig.extDecoderEnable && data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
       topic = data["uuid"].as<const char*>(); // If model_id is IBEACON, use uuid as topic
     if (BTConfig.extDecoderEnable && !data.containsKey("model"))
       topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
