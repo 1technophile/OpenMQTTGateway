@@ -39,7 +39,6 @@ extern int btQueueLengthCount;
 #  ifndef AttemptBLEConnect
 #    define AttemptBLEConnect true //do we by default attempt a BLE connection to sensors with ESP32
 #  endif
-bool bleConnect = AttemptBLEConnect;
 
 // Sets whether to filter publishing of scanned devices that require a connection.
 // Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
@@ -149,6 +148,16 @@ unsigned long scanCount = 0;
 #ifndef useBeaconUuidForPresence
 #  define useBeaconUuidForPresence false // //define true to use iBeacon UUID as for presence, instead of sender MAC (random) address
 #endif
+
+/*----------------CONFIGURABLE PARAMETERS-----------------*/
+struct BTConfig_s {
+  bool                   bleConnect;                      // Attempt a BLE connection to sensors with ESP32
+} BTConfig_default = {
+  .bleConnect                  = AttemptBLEConnect
+};
+
+// Global struct to store live BT configuration data
+extern BTConfig_s BTConfig;
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)

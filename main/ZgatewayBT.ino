@@ -60,6 +60,9 @@ QueueHandle_t BLEQueue;
 
 using namespace std;
 
+// Global struct to store live BT configuration data
+BTConfig_s BTConfig = BTConfig_default;
+
 #  define device_flags_init     0 << 0
 #  define device_flags_isDisc   1 << 0
 #  define device_flags_isWhiteL 1 << 1
@@ -606,7 +609,7 @@ void coreTask(void* pvParameters) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
           // Launching a connect every BLEscanBeforeConnect
-          if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+          if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
             BLEconnect();
           dumpDevices();
           xSemaphoreGive(semaphoreBLEOperation);
@@ -1066,7 +1069,7 @@ void BTforceScan() {
     BTtoMQTT();
     Log.trace(F("Scan done" CR));
 #  ifdef ESP32
-    if (bleConnect)
+    if (BTConfig.bleConnect)
       BLEconnect();
 #  endif
   } else {
@@ -1103,7 +1106,7 @@ void immediateBTAction(void* pvParameters) {
       std::swap(BLEactions, act_swap);
 
       // If we stopped the scheduled connect for this action, do the scheduled now
-      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
         BLEconnect();
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
@@ -1255,9 +1258,9 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // Attempts to connect to elligible devices or not
     if (BTdata.containsKey("bleconnect")) {
       Log.trace(F("Do we initiate a connection to retrieve data" CR));
-      Log.trace(F("Previous value: %T" CR), bleConnect);
-      bleConnect = (bool)BTdata["bleconnect"];
-      Log.notice(F("New value bleConnect: %T" CR), bleConnect);
+      Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
+      BTConfig.bleConnect = (bool)BTdata["bleconnect"];
+      Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
     }
     if (BTdata.containsKey("lowpowermode")) {
       changelowpowermode((int)BTdata["lowpowermode"]);
