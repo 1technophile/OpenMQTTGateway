@@ -36,24 +36,32 @@ extern void launchBTDiscovery();
 extern int btQueueBlocked;
 extern int btQueueLengthSum;
 extern int btQueueLengthCount;
-#  ifndef AttemptBLECOnnect
-#    define AttemptBLECOnnect true //do we by default attempt a BLE connection to sensors with ESP32
-#  endif
-bool bleConnect = AttemptBLECOnnect;
-
-// Sets whether to filter publishing of scanned devices that require a connection.
-// Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
-#  ifndef BLE_FILTER_CONNECTABLE
-#    define BLE_FILTER_CONNECTABLE 0
-#  endif
 #  include "NimBLEDevice.h"
 #endif
 
-/*----------------------BT topics & parameters-------------------------*/
+/*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 // Uncomment to send undecoded device data to another gateway device for decoding
 // #define MQTTDecodeTopic    "undecoded"
+#ifndef UseExtDecoder
+#  ifdef MQTTDecodeTopic
+#    define UseExtDecoder true
+#  else
+#    define UseExtDecoder false
+#  endif
+#endif
+#ifndef MQTTDecodeTopic
+#  define MQTTDecodeTopic "undecoded"
+#endif
+
+#ifndef AttemptBLEConnect
+#  define AttemptBLEConnect true //do we by default attempt a BLE connection to sensors with ESP32
+#endif
+
+#ifndef BLE_FILTER_CONNECTABLE
+#  define BLE_FILTER_CONNECTABLE 0 // Sets whether to filter publishing of scanned devices that require a connection.
+#endif // Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
 
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
 
@@ -72,15 +80,18 @@ bool bleConnect = AttemptBLECOnnect;
 #ifndef ScanBeforeConnect
 #  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
 #endif
+
 #ifndef BLEScanDuplicateCacheSize
 #  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans
 #endif
+
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
 #endif
+
 #ifndef HassPresence
 #  define HassPresence false //false if we publish into Home Assistant presence topic
 #endif
@@ -99,13 +110,7 @@ bool bleConnect = AttemptBLECOnnect;
 #define CRLR_Length        4
 #define BLE_CNCT_TIMEOUT   3000
 
-#define ServicedataMinLength 27
-
-unsigned int BLEinterval = TimeBtwRead; //time between 2 scans
-unsigned int BLEscanBeforeConnect = ScanBeforeConnect; //Number of BLE scans between connection cycles
 unsigned long scanCount = 0;
-bool publishOnlySensors = PublishOnlySensors;
-bool hassPresence = HassPresence;
 
 #ifndef pubKnownBLEServiceData
 #  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
@@ -131,12 +136,54 @@ bool hassPresence = HassPresence;
 #  define useBeaconUuidForTopic false // define true to use iBeacon UUID as topic, instead of sender (random) MAC address
 #endif
 
-/*-------------------HOME ASSISTANT ROOM PRESENCE ----------------------*/
+/*--------------HOME ASSISTANT ROOM PRESENCE--------------*/
 #define subjectHomePresence "presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
 #ifndef useBeaconUuidForPresence
 #  define useBeaconUuidForPresence false // //define true to use iBeacon UUID as for presence, instead of sender MAC (random) address
 #endif
+
+/*----------------CONFIGURABLE PARAMETERS-----------------*/
+struct BTConfig_s {
+  bool bleConnect; // Attempt a BLE connection to sensors with ESP32
+  unsigned int BLEinterval; // Time between 2 scans
+  unsigned int BLEscanBeforeConnect; // Number of BLE scans between connection cycles
+  bool pubOnlySensors; // Publish only the identified sensors (like temperature sensors)
+  bool presenceEnable; // Publish into Home Assistant presence topic
+  String presenceTopic; // Home Assistant presence topic to publish on
+  bool presenceUseBeaconUuid; // Use iBeacon UUID as for presence, instead of sender MAC (random) address
+  int minRssi; // Minimum rssi value, all the devices below will not be reported
+  bool extDecoderEnable; // Send undecoded device data to another gateway device for decoding
+  String extDecoderTopic; // Topic to send undecoded device data on
+  bool filterConnectable; // Sets whether to filter publishing of scanned devices that require a connection.
+  bool pubKnownServiceData; // Publish service data belonging to recognised sensors
+  bool pubUnknownServiceData; // Publish service data belonging to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
+  bool pubKnownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+  bool pubUnknownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
+  bool pubServiceDataUUID; // Publish the service UUID data
+  bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
+} BTConfig_default = {
+    .bleConnect = AttemptBLEConnect,
+    .BLEinterval = TimeBtwRead,
+    .BLEscanBeforeConnect = ScanBeforeConnect,
+    .pubOnlySensors = PublishOnlySensors,
+    .presenceEnable = HassPresence,
+    .presenceTopic = subjectHomePresence,
+    .presenceUseBeaconUuid = useBeaconUuidForPresence,
+    .minRssi = abs(MinimumRSSI),
+    .extDecoderEnable = UseExtDecoder,
+    .extDecoderTopic = MQTTDecodeTopic,
+    .filterConnectable = BLE_FILTER_CONNECTABLE,
+    .pubKnownServiceData = pubKnownBLEServiceData,
+    .pubUnknownServiceData = pubUnknownBLEServiceData,
+    .pubKnownManufData = pubBLEManufacturerData,
+    .pubUnknownManufData = pubUnknownBLEManufacturerData,
+    .pubServiceDataUUID = pubBLEServiceUUID,
+    .pubBeaconUuidForTopic = useBeaconUuidForTopic,
+};
+
+// Global struct to store live BT configuration data
+extern BTConfig_s BTConfig;
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if !defined(BT_RX) || !defined(BT_TX)

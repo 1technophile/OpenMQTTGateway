@@ -60,15 +60,16 @@ QueueHandle_t BLEQueue;
 
 using namespace std;
 
+// Global struct to store live BT configuration data
+BTConfig_s BTConfig = BTConfig_default;
+
 #  define device_flags_init     0 << 0
 #  define device_flags_isDisc   1 << 0
 #  define device_flags_isWhiteL 1 << 1
 #  define device_flags_isBlackL 1 << 2
 #  define device_flags_connect  1 << 3
 
-#  ifndef MQTTDecodeTopic
 TheengsDecoder decoder;
-#  endif
 
 struct decompose {
   int start;
@@ -92,20 +93,14 @@ static BLEdevice NO_DEVICE_FOUND = {{0},
                                     TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
 static bool oneWhite = false;
 
-int minRssi = abs(MinimumRSSI); //minimum rssi value
-
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
-  if (abs((int)data["rssi"] | 0) < minRssi && data.containsKey("id")) {
+  if (abs((int)data["rssi"] | 0) < BTConfig.minRssi && data.containsKey("id")) {
     String topic = data["id"].as<const char*>();
     topic.replace(":", ""); // Initially publish topic ends with MAC address
-#  if useBeaconUuidForTopic
-    if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
+    if (BTConfig.pubBeaconUuidForTopic && !BTConfig.extDecoderEnable && data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON")
       topic = data["uuid"].as<const char*>(); // If model_id is IBEACON, use uuid as topic
-#  endif
-#  ifdef MQTTDecodeTopic
-    if (!data.containsKey("model"))
-      topic = MQTTDecodeTopic; // If external decoder, topic is MQTTDecodeTopic
-#  endif
+    if (BTConfig.extDecoderEnable && !data.containsKey("model"))
+      topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
   }
@@ -114,13 +109,11 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       data.remove("servicedatauuid");
     if (data.containsKey("servicedata"))
       data.remove("servicedata");
-#  if useBeaconUuidForPresence
-    if (data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
+    if (BTConfig.presenceUseBeaconUuid && data.containsKey("model_id") && data["model_id"].as<String>() == "IBEACON") {
       data["mac"] = data["id"];
       data["id"] = data["uuid"];
     }
-#  endif
-    String topic = String(mqtt_topic) + subjectHomePresence + String(gateway_name);
+    String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
     Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
     pub_custom_topic((char*)topic.c_str(), data, false);
   }
@@ -448,12 +441,10 @@ void procBLETask(void* pvParameters) {
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
-#    if BLE_FILTER_CONNECTABLE
-      if (device->connect) {
+      if (BTConfig.filterConnectable && device->connect) {
         Log.notice(F("Filtered connectable device" CR));
         continue;
       }
-#    endif
 
       if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed MAC we go AND if we have no white MAC or this MAC is  white we go out
         if (advertisedDevice->haveName())
@@ -467,7 +458,7 @@ void procBLETask(void* pvParameters) {
           BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
           BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
-        if (advertisedDevice->haveRSSI() && !publishOnlySensors && hassPresence) {
+        if (advertisedDevice->haveRSSI() && !BTConfig.pubOnlySensors && BTConfig.presenceEnable) {
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
@@ -608,7 +599,7 @@ void coreTask(void* pvParameters) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
           // Launching a connect every BLEscanBeforeConnect
-          if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+          if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
             BLEconnect();
           dumpDevices();
           xSemaphoreGive(semaphoreBLEOperation);
@@ -621,7 +612,7 @@ void coreTask(void* pvParameters) {
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
         if (scan == 1) BTforceScan();
       } else {
-        for (int interval = BLEinterval, waitms; interval > 0; interval -= waitms) {
+        for (int interval = BTConfig.BLEinterval, waitms; interval > 0; interval -= waitms) {
           int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst);
           if (scan == 1) BTforceScan(); // should we break after this?
           delay(waitms = interval > 100 ? 100 : interval); // 100ms
@@ -636,8 +627,8 @@ void coreTask(void* pvParameters) {
 
 void lowPowerESP32() // low power mode
 {
-  Log.trace(F("Going to deep sleep for: %l s" CR), (BLEinterval / 1000));
-  deepSleep(BLEinterval * 1000);
+  Log.trace(F("Going to deep sleep for: %l s" CR), (BTConfig.BLEinterval / 1000));
+  deepSleep(BTConfig.BLEinterval * 1000);
 }
 
 void deepSleep(uint64_t time_in_us) {
@@ -681,10 +672,10 @@ void changelowpowermode(int newLowPowerMode) {
 }
 
 void setupBT() {
-  Log.notice(F("BLE scans interval: %d" CR), BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
-  Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
-  Log.notice(F("minrssi: %d" CR), minRssi);
+  Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
+  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
+  Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  Log.notice(F("minrssi: %d" CR), BTConfig.minRssi);
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
@@ -742,10 +733,10 @@ unsigned long timebt = 0;
 struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
 
 void setupBT() {
-  Log.notice(F("BLE interval: %d" CR), BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BLEscanBeforeConnect);
-  Log.notice(F("Publishing only BLE sensors: %T" CR), publishOnlySensors);
-  Log.notice(F("minrssi: %d" CR), minRssi);
+  Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
+  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
+  Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  Log.notice(F("minrssi: %d" CR), BTConfig.minRssi);
   softserial.begin(HMSerialSpeed);
   softserial.print(F("AT+ROLE1" CR));
   delay(100);
@@ -773,7 +764,7 @@ bool BTtoMQTT() {
     returnedString += String(a, HEX);
   }
 
-  if (millis() > (timebt + BLEinterval)) { //retrieving data
+  if (millis() > (timebt + BTConfig.BLEinterval)) { //retrieving data
     timebt = millis();
     returnedString.remove(0); //init data string
     softserial.print(F(QUESTION_MSG)); //start new discovery
@@ -833,7 +824,7 @@ bool BTtoMQTT() {
           return false; //if we have at least one white MAC and this MAC is not white we go out
 
         BLEdata["rssi"] = (int)rssi;
-        if (!publishOnlySensors && hassPresence)
+        if (!BTConfig.pubOnlySensors && BTConfig.presenceEnable)
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         Log.trace(F("Service data: %s" CR), restData.c_str());
         BLEdata["servicedata"] = restData.c_str();
@@ -887,8 +878,8 @@ void launchBTDiscovery() {
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-#    ifndef MQTTDecodeTopic
-      if (p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
+      if (!BTConfig.extDecoderEnable && // Do not decode if an external decoter is configured
+          p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
           p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
           p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
         Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
@@ -907,11 +898,11 @@ void launchBTDiscovery() {
             String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
-#      if OpenHABDiscovery
+#    if OpenHABDiscovery
             String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
-#      else
+#    else
             String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-#      endif
+#    endif
             if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && !strcmp(prop.key().c_str(), "state")) {
               String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
               String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
@@ -933,9 +924,7 @@ void launchBTDiscovery() {
             }
           }
         }
-      } else
-#    endif
-      {
+      } else {
         if (p->sensorModel_id > BLEconectable::id::MIN &&
                 p->sensorModel_id < BLEconectable::id::MAX ||
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
@@ -968,27 +957,23 @@ void launchBTDiscovery() {
 #  endif
 
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
-  if (abs((int)BLEdata["rssi"] | 0) < minRssi) { // process only the devices close enough
+  if (abs((int)BLEdata["rssi"] | 0) < BTConfig.minRssi) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
-    if (!publishOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
-#  if !pubBLEServiceUUID
-      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
-#  endif
-#  if !pubKnownBLEServiceData
-      RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
-#  endif
-#  if !pubBLEManufacturerData
-      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
-#  endif
+    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
+      if (!BTConfig.pubServiceDataUUID)
+        RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
+      if (!BTConfig.pubKnownServiceData)
+        RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
+      if (!BTConfig.pubKnownManufData)
+        RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
       pubBT(BLEdata);
     } else {
-#  if !pubUnknownBLEServiceData
-      Log.trace(F("Unknown service data, removing it" CR));
-      RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("servicedata"));
-#  endif
-#  if !pubUnknownBLEManufacturerData
-      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
-#  endif
+      if (!BTConfig.pubUnknownServiceData) {
+        Log.trace(F("Unknown service data, removing it" CR));
+        RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("servicedata"));
+      }
+      if (!BTConfig.pubUnknownManufData)
+        RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
     }
   } else if (BLEdata.containsKey("distance")) {
     pubBT(BLEdata);
@@ -999,10 +984,8 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
 
 void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
-  int model_id = -1;
+  int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
-#  ifndef MQTTDecodeTopic
-  model_id = decoder.decodeBLEJson(BLEdata);
   if (model_id >= 0) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
@@ -1010,9 +993,7 @@ void process_bledata(JsonObject& BLEdata) {
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
     }
-  } else
-#  endif
-  {
+  } else {
     if (BLEdata.containsKey("name")) { // Connectable devices
       std::string name = BLEdata["name"];
       if (name.compare("LYWSD03MMC") == 0)
@@ -1028,9 +1009,7 @@ void process_bledata(JsonObject& BLEdata) {
         Log.trace(F("Connectable device found: %s" CR), name.c_str());
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       }
-    }
-#  ifdef MQTTDecodeTopic
-    else if (model_id < 0 && BLEdata.containsKey("servicedata")) {
+    } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
       const char* service_data = (const char*)(BLEdata["servicedata"] | "");
       if (strstr(service_data, "209800") != NULL) {
         model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
@@ -1038,7 +1017,6 @@ void process_bledata(JsonObject& BLEdata) {
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       }
     }
-#  endif
   }
   if (model_id < 0) {
     Log.trace(F("No device found " CR));
@@ -1068,7 +1046,7 @@ void BTforceScan() {
     BTtoMQTT();
     Log.trace(F("Scan done" CR));
 #  ifdef ESP32
-    if (bleConnect)
+    if (BTConfig.bleConnect)
       BLEconnect();
 #  endif
   } else {
@@ -1105,7 +1083,7 @@ void immediateBTAction(void* pvParameters) {
       std::swap(BLEactions, act_swap);
 
       // If we stopped the scheduled connect for this action, do the scheduled now
-      if ((!(scanCount % BLEscanBeforeConnect) || scanCount == 1) && bleConnect)
+      if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
         BLEconnect();
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
@@ -1234,32 +1212,32 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
         BTforceScan();
 #  endif
       } else {
-        Log.trace(F("Previous interval: %d ms" CR), BLEinterval);
-        BLEinterval = interval;
-        Log.notice(F("New interval: %d ms" CR), BLEinterval);
+        Log.trace(F("Previous interval: %d ms" CR), BTConfig.BLEinterval);
+        BTConfig.BLEinterval = interval;
+        Log.notice(F("New interval: %d ms" CR), BTConfig.BLEinterval);
       }
     }
     // Number of scan before a connect set
     if (BTdata.containsKey("scanbcnct")) {
       Log.trace(F("BLE scans number before a connect setup" CR));
-      Log.trace(F("Previous number: %d" CR), BLEscanBeforeConnect);
-      BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
-      Log.notice(F("New scan number before connect: %d" CR), BLEscanBeforeConnect);
+      Log.trace(F("Previous number: %d" CR), BTConfig.BLEscanBeforeConnect);
+      BTConfig.BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
+      Log.notice(F("New scan number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
     }
     // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
     if (BTdata.containsKey("onlysensors")) {
       Log.trace(F("Do we publish only sensors" CR));
-      Log.trace(F("Previous value: %T" CR), publishOnlySensors);
-      publishOnlySensors = (bool)BTdata["onlysensors"];
-      Log.notice(F("New value onlysensors: %T" CR), publishOnlySensors);
+      Log.trace(F("Previous value: %T" CR), BTConfig.pubOnlySensors);
+      BTConfig.pubOnlySensors = (bool)BTdata["onlysensors"];
+      Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
     }
 #  ifdef ESP32
     // Attempts to connect to elligible devices or not
     if (BTdata.containsKey("bleconnect")) {
       Log.trace(F("Do we initiate a connection to retrieve data" CR));
-      Log.trace(F("Previous value: %T" CR), bleConnect);
-      bleConnect = (bool)BTdata["bleconnect"];
-      Log.notice(F("New value bleConnect: %T" CR), bleConnect);
+      Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
+      BTConfig.bleConnect = (bool)BTdata["bleconnect"];
+      Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
     }
     if (BTdata.containsKey("lowpowermode")) {
       changelowpowermode((int)BTdata["lowpowermode"]);
@@ -1270,18 +1248,18 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
       // storing Min RSSI for further use if needed
-      Log.trace(F("Previous minrssi: %d" CR), minRssi);
+      Log.trace(F("Previous minrssi: %d" CR), BTConfig.minRssi);
       // set Min RSSI if present if not setting default value
-      minRssi = abs((int)BTdata["minrssi"]);
-      Log.notice(F("New minrssi: %d" CR), minRssi);
+      BTConfig.minRssi = abs((int)BTdata["minrssi"]);
+      Log.notice(F("New minrssi: %d" CR), BTConfig.minRssi);
     }
     // Home Assistant presence message
     if (BTdata.containsKey("hasspresence")) {
       // storing Min RSSI for further use if needed
-      Log.trace(F("Previous hasspresence: %T" CR), hassPresence);
+      Log.trace(F("Previous hasspresence: %T" CR), BTConfig.presenceEnable);
       // set Min RSSI if present if not setting default value
-      hassPresence = (bool)BTdata["hasspresence"];
-      Log.notice(F("New hasspresence: %T" CR), hassPresence);
+      BTConfig.presenceEnable = (bool)BTdata["hasspresence"];
+      Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
     }
   }
 }

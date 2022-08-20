@@ -1575,8 +1575,8 @@ void stateMeasures() {
   SYSdata["btqsnd"] = btQueueLengthCount;
   SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
-  SYSdata["interval"] = BLEinterval;
-  SYSdata["scanbcnct"] = BLEscanBeforeConnect;
+  SYSdata["interval"] = BTConfig.BLEinterval;
+  SYSdata["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
   SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
