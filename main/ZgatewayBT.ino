@@ -111,6 +111,7 @@ void BTConfig_init() {
   BTConfig.pubUnknownManufData = pubUnknownBLEManufacturerData;
   BTConfig.pubServiceDataUUID = pubBLEServiceUUID;
   BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
+  BTConfig.ignoreWBlist = false;
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
@@ -223,6 +224,12 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     Log.trace(F("Previous value: %T" CR), BTConfig.pubBeaconUuidForTopic);
     BTConfig.pubBeaconUuidForTopic = (bool)BTdata["pubBeaconUuidForTopic"];
     Log.notice(F("New value pubBeaconUuidForTopic: %T" CR), BTConfig.pubBeaconUuidForTopic);
+  }
+  // Disable Whitelist & Blacklist
+  if (BTdata.containsKey("ignoreWBlist")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.ignoreWBlist);
+    BTConfig.ignoreWBlist = (bool)BTdata["ignoreWBlist"];
+    Log.notice(F("New value ignoreWBlist: %T" CR), BTConfig.ignoreWBlist);
   }
 }
 
@@ -578,7 +585,7 @@ void procBLETask(void* pvParameters) {
         continue;
       }
 
-      if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed MAC we go AND if we have no white MAC or this MAC is  white we go out
+      if (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(device)) && !isBlack(device))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)
         if (advertisedDevice->haveName())
           BLEdata["name"] = (char*)advertisedDevice->getName().c_str();
         if (advertisedDevice->haveManufacturerData()) {
@@ -951,10 +958,10 @@ bool BTtoMQTT() {
         BLEdata["id"] = (const char*)mac.c_str();
         BLEdevice* device = getDeviceByMac((char*)mac.c_str());
 
-        if (isBlack(device))
+        if (!BTConfig.ignoreWBlist && isBlack(device))
           return false; //if black listed MAC we go out
-        if (oneWhite && !isWhite(device))
-          return false; //if we have at least one white MAC and this MAC is not white we go out
+        if (!BTConfig.ignoreWBlist && oneWhite && !isWhite(device))
+          return false; //if WBlist is enabled AND we have at least one white MAC AND this MAC is not white we go out
 
         BLEdata["rssi"] = (int)rssi;
         if (!BTConfig.pubOnlySensors && BTConfig.presenceEnable)

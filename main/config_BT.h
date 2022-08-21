@@ -162,6 +162,7 @@ struct BTConfig_s {
   bool pubUnknownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
   bool pubServiceDataUUID; // Publish the service UUID data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
+  bool ignoreWBlist; // Disable Whitelist & Blacklist
 };
 
 // Global struct to store live BT configuration data
