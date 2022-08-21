@@ -63,7 +63,7 @@ extern int btQueueLengthCount;
 #  define BLE_FILTER_CONNECTABLE 0 // Sets whether to filter publishing of scanned devices that require a connection.
 #endif // Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
 
-#define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
+#define MinimumRSSI -100 //default minimum rssi value, all the devices below -100 will not be reported
 
 #ifndef Scan_duration
 #  define Scan_duration 10000 //define the time for a scan

@@ -1016,7 +1016,7 @@ void launchBTDiscovery() {
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-      if (!BTConfig.extDecoderEnable && // Do not decode if an external decoter is configured
+      if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
           p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
           p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
           p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
@@ -1098,20 +1098,13 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < BTConfig.minRssi) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
-      if (!BTConfig.pubServiceDataUUID)
-        RemoveJsonPropertyIf(BLEdata, "servicedatauuid", BLEdata.containsKey("model") && BLEdata.containsKey("servicedatauuid"));
-      if (!BTConfig.pubKnownServiceData)
-        RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("model") && BLEdata.containsKey("servicedata"));
-      if (!BTConfig.pubKnownManufData)
-        RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
+      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", !BTConfig.pubServiceDataUUID && BLEdata.containsKey("model"));
+      RemoveJsonPropertyIf(BLEdata, "servicedata", !BTConfig.pubKnownServiceData && BLEdata.containsKey("model"));
+      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", !BTConfig.pubKnownManufData && BLEdata.containsKey("model"));
       pubBT(BLEdata);
     } else {
-      if (!BTConfig.pubUnknownServiceData) {
-        Log.trace(F("Unknown service data, removing it" CR));
-        RemoveJsonPropertyIf(BLEdata, "servicedata", BLEdata.containsKey("servicedata"));
-      }
-      if (!BTConfig.pubUnknownManufData)
-        RemoveJsonPropertyIf(BLEdata, "manufacturerdata", BLEdata.containsKey("model") && BLEdata.containsKey("manufacturerdata"));
+      RemoveJsonPropertyIf(BLEdata, "servicedata", !BTConfig.pubUnknownServiceData);
+      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", !BTConfig.pubUnknownManufData && BLEdata.containsKey("model"));
     }
   } else if (BLEdata.containsKey("distance")) {
     pubBT(BLEdata);
@@ -1156,7 +1149,7 @@ void process_bledata(JsonObject& BLEdata) {
       }
     }
   }
-  if (model_id < 0) {
+  if (!BTConfig.extDecoderEnable && model_id < 0) {
     Log.trace(F("No device found " CR));
   }
 }
