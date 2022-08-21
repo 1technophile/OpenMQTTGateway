@@ -113,6 +113,118 @@ void BTConfig_init() {
   BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
 }
 
+void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
+  // Attempts to connect to elligible devices or not
+  if (BTdata.containsKey("bleconnect")) {
+    Log.trace(F("Do we initiate a connection to retrieve data" CR));
+    Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
+    BTConfig.bleConnect = (bool)BTdata["bleconnect"];
+    Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
+  }
+  // Scan interval set
+  if (BTdata.containsKey("interval") && BTdata["interval"] != 0) {
+    Log.trace(F("Previous interval: %d ms" CR), BTConfig.BLEinterval);
+    BTConfig.BLEinterval = BTdata["interval"];
+    Log.notice(F("New interval: %d ms" CR), BTConfig.BLEinterval);
+  }
+
+  // Number of scan before a connect set
+  if (BTdata.containsKey("scanbcnct")) {
+    Log.trace(F("BLE scans number before a connect setup" CR));
+    Log.trace(F("Previous number: %d" CR), BTConfig.BLEscanBeforeConnect);
+    BTConfig.BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
+    Log.notice(F("New scan number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
+  }
+  // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
+  if (BTdata.containsKey("onlysensors")) {
+    Log.trace(F("Do we publish only sensors" CR));
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubOnlySensors);
+    BTConfig.pubOnlySensors = (bool)BTdata["onlysensors"];
+    Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
+  }
+  // Home Assistant presence message
+  if (BTdata.containsKey("hasspresence") || BTdata.containsKey("presenceEnable")) { // TODO Check if should be only hasspresence or presenceEnable ; or split in 2
+    // storing Min RSSI for further use if needed
+    Log.trace(F("Previous hasspresence: %T" CR), BTConfig.presenceEnable);
+    // set Min RSSI if present if not setting default value
+    BTConfig.presenceEnable = (BTdata.containsKey("hasspresence")) ? ((bool)BTdata["hasspresence"]) : ((bool)BTdata["presenceEnable"]);
+    Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
+  }
+  // Home Assistant presence message topic
+  if (BTdata.containsKey("presenceTopic")) {
+    Log.trace(F("Previous value: %s" CR), BTConfig.presenceTopic);
+    strncpy(BTConfig.presenceTopic, BTdata["presenceTopic"], parameters_size);
+    Log.notice(F("New value presenceTopic: %s" CR), BTConfig.presenceTopic);
+  }
+  // Home Assistant presence message use iBeacon UUID
+  if (BTdata.containsKey("presenceUseBeaconUuid")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.presenceUseBeaconUuid);
+    BTConfig.presenceUseBeaconUuid = (bool)BTdata["presenceUseBeaconUuid"];
+    Log.notice(F("New value presenceUseBeaconUuid: %T" CR), BTConfig.presenceUseBeaconUuid);
+  }
+  // MinRSSI set
+  if (BTdata.containsKey("minrssi")) {
+    // storing Min RSSI for further use if needed
+    Log.trace(F("Previous minrssi: %d" CR), BTConfig.minRssi);
+    // set Min RSSI if present if not setting default value
+    BTConfig.minRssi = abs((int)BTdata["minrssi"]);
+    Log.notice(F("New minrssi: %d" CR), BTConfig.minRssi);
+  }
+  // Send undecoded device data
+  if (BTdata.containsKey("extDecoderEnable")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.extDecoderEnable);
+    BTConfig.extDecoderEnable = (bool)BTdata["extDecoderEnable"];
+    Log.notice(F("New value extDecoderEnable: %T" CR), BTConfig.extDecoderEnable);
+  }
+  // Topic to send undecoded device data
+  if (BTdata.containsKey("extDecoderTopic")) {
+    Log.trace(F("Previous value: %s" CR), BTConfig.extDecoderTopic);
+    strncpy(BTConfig.extDecoderTopic, BTdata["extDecoderTopic"], parameters_size);
+    Log.notice(F("New value extDecoderTopic: %s" CR), BTConfig.extDecoderTopic);
+  }
+  // Sets whether to filter publishing
+  if (BTdata.containsKey("filterConnectable")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.filterConnectable);
+    BTConfig.filterConnectable = (bool)BTdata["filterConnectable"];
+    Log.notice(F("New value filterConnectable: %T" CR), BTConfig.filterConnectable);
+  }
+  // Publish service data belonging to recognised sensors
+  if (BTdata.containsKey("pubKnownServiceData")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubKnownServiceData);
+    BTConfig.pubKnownServiceData = (bool)BTdata["pubKnownServiceData"];
+    Log.notice(F("New value pubKnownServiceData: %T" CR), BTConfig.pubKnownServiceData);
+  }
+  // Publish service data belonging to unrecognised sensors
+  if (BTdata.containsKey("pubUnknownServiceData")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubUnknownServiceData);
+    BTConfig.pubUnknownServiceData = (bool)BTdata["pubUnknownServiceData"];
+    Log.notice(F("New value pubUnknownServiceData: %T" CR), BTConfig.pubUnknownServiceData);
+  }
+  // Publish known manufacturer's data
+  if (BTdata.containsKey("pubKnownManufData")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubKnownManufData);
+    BTConfig.pubKnownManufData = (bool)BTdata["pubKnownManufData"];
+    Log.notice(F("New value pubKnownManufData: %T" CR), BTConfig.pubKnownManufData);
+  }
+  // Publish unknown manufacturer's data
+  if (BTdata.containsKey("pubUnknownManufData")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubUnknownManufData);
+    BTConfig.pubUnknownManufData = (bool)BTdata["pubUnknownManufData"];
+    Log.notice(F("New value pubUnknownManufData: %T" CR), BTConfig.pubUnknownManufData);
+  }
+  // Publish the service UUID data
+  if (BTdata.containsKey("pubServiceDataUUID")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubServiceDataUUID);
+    BTConfig.pubServiceDataUUID = (bool)BTdata["pubServiceDataUUID"];
+    Log.notice(F("New value pubServiceDataUUID: %T" CR), BTConfig.pubServiceDataUUID);
+  }
+  // Use iBeacon UUID as topic, instead of sender (random) MAC address
+  if (BTdata.containsKey("pubBeaconUuidForTopic")) {
+    Log.trace(F("Previous value: %T" CR), BTConfig.pubBeaconUuidForTopic);
+    BTConfig.pubBeaconUuidForTopic = (bool)BTdata["pubBeaconUuidForTopic"];
+    Log.notice(F("New value pubBeaconUuidForTopic: %T" CR), BTConfig.pubBeaconUuidForTopic);
+  }
+}
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < BTConfig.minRssi && data.containsKey("id")) {
@@ -1222,59 +1334,19 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
 #  endif
     }
 
-    // Attempts to connect to elligible devices or not
-    if (BTdata.containsKey("bleconnect")) {
-      Log.trace(F("Do we initiate a connection to retrieve data" CR));
-      Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
-      BTConfig.bleConnect = (bool)BTdata["bleconnect"];
-      Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
-    }
-    // Scan interval set
-    if (BTdata.containsKey("interval")) {
-      Log.trace(F("BLE interval setup" CR));
-      unsigned int interval = BTdata["interval"];
-      if (interval == 0) {
+    // Force scan now
+    if (BTdata.containsKey("interval") && BTdata["interval"] == 0) {
+      Log.notice(F("BLE forced scan" CR));
 #  ifdef ESP32
-        atomic_store_explicit(&forceBTScan, 1, ::memory_order_seq_cst); // ask the other core to do the scan for us
+      atomic_store_explicit(&forceBTScan, 1, ::memory_order_seq_cst); // ask the other core to do the scan for us
 #  else
-        BTforceScan();
+      BTforceScan();
 #  endif
-      } else {
-        Log.trace(F("Previous interval: %d ms" CR), BTConfig.BLEinterval);
-        BTConfig.BLEinterval = interval;
-        Log.notice(F("New interval: %d ms" CR), BTConfig.BLEinterval);
-      }
     }
-    // Number of scan before a connect set
-    if (BTdata.containsKey("scanbcnct")) {
-      Log.trace(F("BLE scans number before a connect setup" CR));
-      Log.trace(F("Previous number: %d" CR), BTConfig.BLEscanBeforeConnect);
-      BTConfig.BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
-      Log.notice(F("New scan number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
-    }
-    // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
-    if (BTdata.containsKey("onlysensors")) {
-      Log.trace(F("Do we publish only sensors" CR));
-      Log.trace(F("Previous value: %T" CR), BTConfig.pubOnlySensors);
-      BTConfig.pubOnlySensors = (bool)BTdata["onlysensors"];
-      Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
-    }
-    // MinRSSI set
-    if (BTdata.containsKey("minrssi")) {
-      // storing Min RSSI for further use if needed
-      Log.trace(F("Previous minrssi: %d" CR), BTConfig.minRssi);
-      // set Min RSSI if present if not setting default value
-      BTConfig.minRssi = abs((int)BTdata["minrssi"]);
-      Log.notice(F("New minrssi: %d" CR), BTConfig.minRssi);
-    }
-    // Home Assistant presence message
-    if (BTdata.containsKey("hasspresence")) {
-      // storing Min RSSI for further use if needed
-      Log.trace(F("Previous hasspresence: %T" CR), BTConfig.presenceEnable);
-      // set Min RSSI if present if not setting default value
-      BTConfig.presenceEnable = (bool)BTdata["hasspresence"];
-      Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
-    }
+
+    // Load config from json if available
+    BTConfig_fromJson(BTdata);
+
 #  ifdef ESP32
     if (BTdata.containsKey("lowpowermode")) {
       changelowpowermode((int)BTdata["lowpowermode"]);
