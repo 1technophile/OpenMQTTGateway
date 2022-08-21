@@ -1222,6 +1222,13 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
 #  endif
     }
 
+    // Attempts to connect to elligible devices or not
+    if (BTdata.containsKey("bleconnect")) {
+      Log.trace(F("Do we initiate a connection to retrieve data" CR));
+      Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
+      BTConfig.bleConnect = (bool)BTdata["bleconnect"];
+      Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
+    }
     // Scan interval set
     if (BTdata.containsKey("interval")) {
       Log.trace(F("BLE interval setup" CR));
@@ -1252,20 +1259,6 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       BTConfig.pubOnlySensors = (bool)BTdata["onlysensors"];
       Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
     }
-#  ifdef ESP32
-    // Attempts to connect to elligible devices or not
-    if (BTdata.containsKey("bleconnect")) {
-      Log.trace(F("Do we initiate a connection to retrieve data" CR));
-      Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
-      BTConfig.bleConnect = (bool)BTdata["bleconnect"];
-      Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
-    }
-    if (BTdata.containsKey("lowpowermode")) {
-      changelowpowermode((int)BTdata["lowpowermode"]);
-    }
-
-    MQTTtoBTAction(BTdata);
-#  endif
     // MinRSSI set
     if (BTdata.containsKey("minrssi")) {
       // storing Min RSSI for further use if needed
@@ -1282,6 +1275,13 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
       BTConfig.presenceEnable = (bool)BTdata["hasspresence"];
       Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
     }
+#  ifdef ESP32
+    if (BTdata.containsKey("lowpowermode")) {
+      changelowpowermode((int)BTdata["lowpowermode"]);
+    }
+
+    MQTTtoBTAction(BTdata);
+#  endif
   }
 }
 #endif
