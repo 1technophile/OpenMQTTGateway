@@ -231,7 +231,6 @@ void pubBT(JsonObject& data) {
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
-BLEdevice* getDeviceByMac(const char* mac);
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
 
 BLEdevice* getDeviceByMac(const char* mac) {
@@ -646,8 +645,7 @@ void coreTask(void* pvParameters) {
   }
 }
 
-void lowPowerESP32() // low power mode
-{
+void lowPowerESP32() { // low power mode
   Log.trace(F("Going to deep sleep for: %l s" CR), (BTConfig.BLEinterval / 1000));
   deepSleep(BTConfig.BLEinterval * 1000);
 }
