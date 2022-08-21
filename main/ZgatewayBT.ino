@@ -61,7 +61,7 @@ QueueHandle_t BLEQueue;
 using namespace std;
 
 // Global struct to store live BT configuration data
-BTConfig_s BTConfig = BTConfig_default;
+BTConfig_s BTConfig;
 
 #  define device_flags_init     0 << 0
 #  define device_flags_isDisc   1 << 0
@@ -92,6 +92,27 @@ static BLEdevice NO_DEVICE_FOUND = {{0},
                                     false,
                                     TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
 static bool oneWhite = false;
+
+void BTConfig_init() {
+  BTConfig.bleConnect = AttemptBLEConnect;
+  BTConfig.BLEinterval = TimeBtwRead;
+  BTConfig.BLEscanBeforeConnect = ScanBeforeConnect;
+  BTConfig.pubOnlySensors = PublishOnlySensors;
+  BTConfig.presenceEnable = HassPresence;
+  BTConfig.presenceTopic = subjectHomePresence;
+  BTConfig.presenceUseBeaconUuid = useBeaconUuidForPresence;
+  BTConfig.minRssi = abs(MinimumRSSI);
+  BTConfig.extDecoderEnable = UseExtDecoder;
+  BTConfig.extDecoderTopic = MQTTDecodeTopic;
+  BTConfig.filterConnectable = BLE_FILTER_CONNECTABLE;
+  BTConfig.pubKnownServiceData = pubKnownBLEServiceData;
+  BTConfig.pubUnknownServiceData = pubUnknownBLEServiceData;
+  BTConfig.pubKnownManufData = pubBLEManufacturerData;
+  BTConfig.pubUnknownManufData = pubUnknownBLEManufacturerData;
+  BTConfig.pubServiceDataUUID = pubBLEServiceUUID;
+  BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
+}
+
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < BTConfig.minRssi && data.containsKey("id")) {
@@ -672,6 +693,7 @@ void changelowpowermode(int newLowPowerMode) {
 }
 
 void setupBT() {
+  BTConfig_init();
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
@@ -733,6 +755,7 @@ unsigned long timebt = 0;
 struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
 
 void setupBT() {
+  BTConfig_init();
   Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);

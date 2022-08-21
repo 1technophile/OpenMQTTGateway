@@ -162,24 +162,6 @@ struct BTConfig_s {
   bool pubUnknownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
   bool pubServiceDataUUID; // Publish the service UUID data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
-} BTConfig_default = {
-    .bleConnect = AttemptBLEConnect,
-    .BLEinterval = TimeBtwRead,
-    .BLEscanBeforeConnect = ScanBeforeConnect,
-    .pubOnlySensors = PublishOnlySensors,
-    .presenceEnable = HassPresence,
-    .presenceTopic = subjectHomePresence,
-    .presenceUseBeaconUuid = useBeaconUuidForPresence,
-    .minRssi = abs(MinimumRSSI),
-    .extDecoderEnable = UseExtDecoder,
-    .extDecoderTopic = MQTTDecodeTopic,
-    .filterConnectable = BLE_FILTER_CONNECTABLE,
-    .pubKnownServiceData = pubKnownBLEServiceData,
-    .pubUnknownServiceData = pubUnknownBLEServiceData,
-    .pubKnownManufData = pubBLEManufacturerData,
-    .pubUnknownManufData = pubUnknownBLEManufacturerData,
-    .pubServiceDataUUID = pubBLEServiceUUID,
-    .pubBeaconUuidForTopic = useBeaconUuidForTopic,
 };
 
 // Global struct to store live BT configuration data
