@@ -144,11 +144,9 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
   }
   // Home Assistant presence message
-  if (BTdata.containsKey("hasspresence") || BTdata.containsKey("presenceEnable")) { // TODO Check if should be only hasspresence or presenceEnable ; or split in 2
-    // storing Min RSSI for further use if needed
+  if (BTdata.containsKey("hasspresence")) {
     Log.trace(F("Previous hasspresence: %T" CR), BTConfig.presenceEnable);
-    // set Min RSSI if present if not setting default value
-    BTConfig.presenceEnable = (BTdata.containsKey("hasspresence")) ? ((bool)BTdata["hasspresence"]) : ((bool)BTdata["presenceEnable"]);
+    BTConfig.presenceEnable = (bool)BTdata["hasspresence"];
     Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
   }
   // Home Assistant presence message topic
