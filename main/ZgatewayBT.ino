@@ -165,9 +165,35 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   BTConfig_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
   // Disable Whitelist & Blacklist
   BTConfig_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
-}
 
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jo = jsonBuffer.to<JsonObject>();
+  jo["bleconnect"] = BTConfig.bleConnect;
+  jo["interval"] = BTConfig.BLEinterval;
+  jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+  jo["onlysensors"] = BTConfig.pubOnlySensors;
+  jo["hasspresence"] = BTConfig.presenceEnable;
+  jo["presenceTopic"] = BTConfig.presenceTopic;
+  jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+  jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
+  jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
+  jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
+  jo["filterConnectable"] = BTConfig.filterConnectable;
+  jo["pubKnownServiceData"] = BTConfig.pubKnownServiceData;
+  jo["pubUnknownServiceData"] = BTConfig.pubUnknownServiceData;
+  jo["pubKnownManufData"] = BTConfig.pubKnownManufData;
+  jo["pubUnknownManufData"] = BTConfig.pubUnknownManufData;
+  jo["pubServiceDataUUID"] = BTConfig.pubServiceDataUUID;
+  jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+  jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
+
+  if (startup) {
+    Log.notice(F("BT config: "));
+    serializeJsonPretty(jsonBuffer, Serial);
+    Serial.println();
+    return; // Do not try to erase/write/send config at startup
   }
+  pub("/commands/BTtoMQTT/config", jo);
 }
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
