@@ -114,120 +114,59 @@ void BTConfig_init() {
   BTConfig.ignoreWBlist = false;
 }
 
+// DO NOT put a SPACE between `template` AND `<` OR IT WON'T COMPILE: (OpenMQTTGateway/main/main.ino:x:y: error: 'T' has not been declared)
+template<typename T>
+void BTConfig_update(JsonObject& data, const char* key, T& var) {
+  if (data.containsKey(key)) {
+    if (var != data[key].as<T>()) {
+      var = data[key].as<T>();
+      Log.notice(F("BT config %s changed: %s" CR), key, data[key].as<String>());
+    } else {
+      Log.notice(F("BT config %s unchanged: %s" CR), key, data[key].as<String>());
+    }
+  }
+}
+
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to elligible devices or not
-  if (BTdata.containsKey("bleconnect")) {
-    Log.trace(F("Do we initiate a connection to retrieve data" CR));
-    Log.trace(F("Previous value: %T" CR), BTConfig.bleConnect);
-    BTConfig.bleConnect = (bool)BTdata["bleconnect"];
-    Log.notice(F("New value bleConnect: %T" CR), BTConfig.bleConnect);
-  }
+  BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
   // Scan interval set
-  if (BTdata.containsKey("interval") && BTdata["interval"] != 0) {
-    Log.trace(F("Previous interval: %d ms" CR), BTConfig.BLEinterval);
-    BTConfig.BLEinterval = BTdata["interval"];
-    Log.notice(F("New interval: %d ms" CR), BTConfig.BLEinterval);
-  }
-
+  if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
+    BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
   // Number of scan before a connect set
-  if (BTdata.containsKey("scanbcnct")) {
-    Log.trace(F("BLE scans number before a connect setup" CR));
-    Log.trace(F("Previous number: %d" CR), BTConfig.BLEscanBeforeConnect);
-    BTConfig.BLEscanBeforeConnect = (unsigned int)BTdata["scanbcnct"];
-    Log.notice(F("New scan number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
-  }
+  BTConfig_update(BTdata, "scanbcnct", BTConfig.BLEscanBeforeConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
-  if (BTdata.containsKey("onlysensors")) {
-    Log.trace(F("Do we publish only sensors" CR));
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubOnlySensors);
-    BTConfig.pubOnlySensors = (bool)BTdata["onlysensors"];
-    Log.notice(F("New value onlysensors: %T" CR), BTConfig.pubOnlySensors);
-  }
+  BTConfig_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
   // Home Assistant presence message
-  if (BTdata.containsKey("hasspresence")) {
-    Log.trace(F("Previous hasspresence: %T" CR), BTConfig.presenceEnable);
-    BTConfig.presenceEnable = (bool)BTdata["hasspresence"];
-    Log.notice(F("New hasspresence: %T" CR), BTConfig.presenceEnable);
-  }
+  BTConfig_update(BTdata, "hasspresence", BTConfig.presenceEnable);
   // Home Assistant presence message topic
-  if (BTdata.containsKey("presenceTopic")) {
-    Log.trace(F("Previous value: %s" CR), BTConfig.presenceTopic);
-    strncpy(BTConfig.presenceTopic, BTdata["presenceTopic"], parameters_size);
-    Log.notice(F("New value presenceTopic: %s" CR), BTConfig.presenceTopic);
-  }
+  BTConfig_update(BTdata, "presenceTopic", BTConfig.presenceTopic);
   // Home Assistant presence message use iBeacon UUID
-  if (BTdata.containsKey("presenceUseBeaconUuid")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.presenceUseBeaconUuid);
-    BTConfig.presenceUseBeaconUuid = (bool)BTdata["presenceUseBeaconUuid"];
-    Log.notice(F("New value presenceUseBeaconUuid: %T" CR), BTConfig.presenceUseBeaconUuid);
-  }
+  BTConfig_update(BTdata, "presenceUseBeaconUuid", BTConfig.presenceUseBeaconUuid);
   // MinRSSI set
-  if (BTdata.containsKey("minrssi")) {
-    // storing Min RSSI for further use if needed
-    Log.trace(F("Previous minrssi: %d" CR), BTConfig.minRssi);
-    // set Min RSSI if present if not setting default value
-    BTConfig.minRssi = abs((int)BTdata["minrssi"]);
-    Log.notice(F("New minrssi: %d" CR), BTConfig.minRssi);
-  }
+  BTConfig_update(BTdata, "minrssi", BTConfig.minRssi);
   // Send undecoded device data
-  if (BTdata.containsKey("extDecoderEnable")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.extDecoderEnable);
-    BTConfig.extDecoderEnable = (bool)BTdata["extDecoderEnable"];
-    Log.notice(F("New value extDecoderEnable: %T" CR), BTConfig.extDecoderEnable);
-  }
+  BTConfig_update(BTdata, "extDecoderEnable", BTConfig.extDecoderEnable);
   // Topic to send undecoded device data
-  if (BTdata.containsKey("extDecoderTopic")) {
-    Log.trace(F("Previous value: %s" CR), BTConfig.extDecoderTopic);
-    strncpy(BTConfig.extDecoderTopic, BTdata["extDecoderTopic"], parameters_size);
-    Log.notice(F("New value extDecoderTopic: %s" CR), BTConfig.extDecoderTopic);
-  }
+  BTConfig_update(BTdata, "extDecoderTopic", BTConfig.extDecoderTopic);
   // Sets whether to filter publishing
-  if (BTdata.containsKey("filterConnectable")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.filterConnectable);
-    BTConfig.filterConnectable = (bool)BTdata["filterConnectable"];
-    Log.notice(F("New value filterConnectable: %T" CR), BTConfig.filterConnectable);
-  }
+  BTConfig_update(BTdata, "filterConnectable", BTConfig.filterConnectable);
   // Publish service data belonging to recognised sensors
-  if (BTdata.containsKey("pubKnownServiceData")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubKnownServiceData);
-    BTConfig.pubKnownServiceData = (bool)BTdata["pubKnownServiceData"];
-    Log.notice(F("New value pubKnownServiceData: %T" CR), BTConfig.pubKnownServiceData);
-  }
+  BTConfig_update(BTdata, "pubKnownServiceData", BTConfig.pubKnownServiceData);
   // Publish service data belonging to unrecognised sensors
-  if (BTdata.containsKey("pubUnknownServiceData")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubUnknownServiceData);
-    BTConfig.pubUnknownServiceData = (bool)BTdata["pubUnknownServiceData"];
-    Log.notice(F("New value pubUnknownServiceData: %T" CR), BTConfig.pubUnknownServiceData);
-  }
+  BTConfig_update(BTdata, "pubUnknownServiceData", BTConfig.pubUnknownServiceData);
   // Publish known manufacturer's data
-  if (BTdata.containsKey("pubKnownManufData")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubKnownManufData);
-    BTConfig.pubKnownManufData = (bool)BTdata["pubKnownManufData"];
-    Log.notice(F("New value pubKnownManufData: %T" CR), BTConfig.pubKnownManufData);
-  }
+  BTConfig_update(BTdata, "pubKnownManufData", BTConfig.pubKnownManufData);
   // Publish unknown manufacturer's data
-  if (BTdata.containsKey("pubUnknownManufData")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubUnknownManufData);
-    BTConfig.pubUnknownManufData = (bool)BTdata["pubUnknownManufData"];
-    Log.notice(F("New value pubUnknownManufData: %T" CR), BTConfig.pubUnknownManufData);
-  }
+  BTConfig_update(BTdata, "pubUnknownManufData", BTConfig.pubUnknownManufData);
   // Publish the service UUID data
-  if (BTdata.containsKey("pubServiceDataUUID")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubServiceDataUUID);
-    BTConfig.pubServiceDataUUID = (bool)BTdata["pubServiceDataUUID"];
-    Log.notice(F("New value pubServiceDataUUID: %T" CR), BTConfig.pubServiceDataUUID);
-  }
+  BTConfig_update(BTdata, "pubServiceDataUUID", BTConfig.pubServiceDataUUID);
   // Use iBeacon UUID as topic, instead of sender (random) MAC address
-  if (BTdata.containsKey("pubBeaconUuidForTopic")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.pubBeaconUuidForTopic);
-    BTConfig.pubBeaconUuidForTopic = (bool)BTdata["pubBeaconUuidForTopic"];
-    Log.notice(F("New value pubBeaconUuidForTopic: %T" CR), BTConfig.pubBeaconUuidForTopic);
-  }
+  BTConfig_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
   // Disable Whitelist & Blacklist
-  if (BTdata.containsKey("ignoreWBlist")) {
-    Log.trace(F("Previous value: %T" CR), BTConfig.ignoreWBlist);
-    BTConfig.ignoreWBlist = (bool)BTdata["ignoreWBlist"];
-    Log.notice(F("New value ignoreWBlist: %T" CR), BTConfig.ignoreWBlist);
+  BTConfig_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
+}
+
   }
 }
 
