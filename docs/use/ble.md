@@ -251,6 +251,28 @@ If you want to change the default behaviour:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubServiceDataUUID":true}'`
 
+## Store BLE configuration into the gateway
+
+Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
+
+To store the running configuration into the gateway, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"save":true}'`
+
+At any time, you can reload the stored configuration with the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"load":true}'`
+
+If you want to erase the stored configuration, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"erase":true}'`
+Note that it will not change the running configuration, only ensure default configuration is used at next startup.
+
+By the way, if you want to load the default built-in configuration, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
+Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
+
 ## Read/write BLE characteristics over MQTT (ESP32 only)
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
