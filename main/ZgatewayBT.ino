@@ -194,6 +194,44 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     return; // Do not try to erase/write/send config at startup
   }
   pub("/commands/BTtoMQTT/config", jo);
+
+  if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
+    // Erase config from NVS (non-volatile storage)
+    preferences.begin(Gateway_Short_Name, false);
+    preferences.remove("BTConfig");
+    preferences.end();
+    Log.notice(F("BT config erased" CR));
+    return; // Erase prevails on save, so skiping save
+  }
+
+  if (BTdata.containsKey("save") && BTdata["save"].as<bool>()) {
+    // Save config into NVS (non-volatile storage)
+    String conf = "";
+    serializeJson(jsonBuffer, conf);
+    preferences.begin(Gateway_Short_Name, false);
+    preferences.putString("BTConfig", conf);
+    preferences.end();
+    Log.notice(F("BT config saved" CR));
+  }
+}
+
+void BTConfig_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  auto error = deserializeJson(jsonBuffer, preferences.getString("BTConfig", "{}"));
+  preferences.end();
+  Log.notice(F("BT config loaded" CR));
+  if (error) {
+    Log.error(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    return;
+  }
+  if (jsonBuffer.isNull()) {
+    Log.warning(F("BT config is null" CR));
+    return;
+  }
+  JsonObject jo = jsonBuffer.as<JsonObject>();
+  BTConfig_fromJson(jo, true); // Never send mqtt message with config
+  Log.notice(F("BT config loaded" CR));
 }
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
@@ -774,6 +812,7 @@ void changelowpowermode(int newLowPowerMode) {
 
 void setupBT() {
   BTConfig_init();
+  BTConfig_load();
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
@@ -836,6 +875,7 @@ struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, 
 
 void setupBT() {
   BTConfig_init();
+  BTConfig_load();
   Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
@@ -1305,6 +1345,20 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
 #  else
       BTforceScan();
 #  endif
+    }
+
+    /*
+     * Configuration modifications priorities:
+     *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
+     *  Then parameters included in json are taken in account
+     *  Finally `erase=true` and `save=true` commands are executed (if both are present, ERASE prevails on SAVE)
+     */
+    if (BTdata.containsKey("init") && BTdata["init"].as<bool>()) {
+      // Restore the default (initial) configuration
+      BTConfig_init();
+    } else if (BTdata.containsKey("load") && BTdata["load"].as<bool>()) {
+      // Load the saved configuration, if not initialised
+      BTConfig_load();
     }
 
     // Load config from json if available
