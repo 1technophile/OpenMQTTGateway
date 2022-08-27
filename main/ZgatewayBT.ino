@@ -201,7 +201,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     preferences.remove("BTConfig");
     preferences.end();
     Log.notice(F("BT config erased" CR));
-    return; // Erase prevails on save, so skiping save
+    return; // Erase prevails on save, so skipping save
   }
 
   if (BTdata.containsKey("save") && BTdata["save"].as<bool>()) {
@@ -351,6 +351,7 @@ void pubBT(JsonObject& data) {
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
+BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
 
 BLEdevice* getDeviceByMac(const char* mac) {
