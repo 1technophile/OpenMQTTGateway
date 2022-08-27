@@ -114,8 +114,9 @@ void BTConfig_init() {
   BTConfig.ignoreWBlist = false;
 }
 
-// DO NOT put a SPACE between `template` AND `<` OR IT WON'T COMPILE: (OpenMQTTGateway/main/main.ino:x:y: error: 'T' has not been declared)
-template<typename T>
+template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
+void BTConfig_update(JsonObject& data, const char* key, T& var);
+template <typename T>
 void BTConfig_update(JsonObject& data, const char* key, T& var) {
   if (data.containsKey(key)) {
     if (var != data[key].as<T>()) {
@@ -351,9 +352,9 @@ void pubBT(JsonObject& data) {
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
-BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
 
+BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 BLEdevice* getDeviceByMac(const char* mac) {
   Log.trace(F("getDeviceByMac %s" CR), mac);
 
