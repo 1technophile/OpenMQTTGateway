@@ -456,8 +456,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #define eraseCmd   "erase"
 #define statusCmd  "status"
 
-// uncomment the line below to integrate msg value into the subject when receiving
-//#define valueAsASubject true
+#ifndef valueAsATopic
+#  define valueAsATopic false // define true to integrate msg value into the subject when receiving
+#endif
 
 #if defined(ESP32)
 #  define JSON_MSG_BUFFER    768

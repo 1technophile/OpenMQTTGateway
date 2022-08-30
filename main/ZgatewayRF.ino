@@ -89,7 +89,7 @@ void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   Log.trace(F("RF Entity Discovered, create HA Discovery CFG" CR));
   char* switchRF[2] = {val, "RF"};
   Log.trace(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
-#    ifdef valueAsASubject
+#    if valueAsATopic
   String discovery_topic = String(subjectRFtoMQTT) + "/" + String(switchRF[0]);
 #    else
   String discovery_topic = String(subjectRFtoMQTT);

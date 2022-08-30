@@ -313,7 +313,7 @@ void pub(const char* topicori, JsonObject& data) {
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
-#ifdef valueAsASubject
+#if valueAsATopic
 #  ifdef ZgatewayPilight
   String value = data["value"];
   String protocol = data["protocol"];
@@ -2100,7 +2100,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   }
 }
 
-#if defined(valueAsASubject) && !defined(ZgatewayPilight)
+#if valueAsATopic && !defined(ZgatewayPilight)
 #  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String toString(uint64_t input) {
   String result = "";
