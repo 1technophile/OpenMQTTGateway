@@ -196,6 +196,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   }
   pub("/commands/BTtoMQTT/config", jo);
 
+#  if defined(ESP32)
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
@@ -214,8 +215,10 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     preferences.end();
     Log.notice(F("BT config saved" CR));
   }
+#  endif
 }
 
+#  if defined(ESP32)
 void BTConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
@@ -234,6 +237,7 @@ void BTConfig_load() {
   BTConfig_fromJson(jo, true); // Never send mqtt message with config
   Log.notice(F("BT config loaded" CR));
 }
+#  endif
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < abs(BTConfig.minRssi) && data.containsKey("id")) {
@@ -877,7 +881,6 @@ struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, 
 
 void setupBT() {
   BTConfig_init();
-  BTConfig_load();
   Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
@@ -1358,10 +1361,13 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     if (BTdata.containsKey("init") && BTdata["init"].as<bool>()) {
       // Restore the default (initial) configuration
       BTConfig_init();
-    } else if (BTdata.containsKey("load") && BTdata["load"].as<bool>()) {
+    }
+#  ifdef ESP32
+    else if (BTdata.containsKey("load") && BTdata["load"].as<bool>()) {
       // Load the saved configuration, if not initialised
       BTConfig_load();
     }
+#  endif
 
     // Load config from json if available
     BTConfig_fromJson(BTdata);
