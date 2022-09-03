@@ -19,6 +19,8 @@ Added to that it retrieves the measures from the devices below. By default the d
 |Devices|Model|Measurements|
 |-|:-:|:-:|
 | Amazfit|Smart Watch/Band (1)|steps, activity heart rate (when activated in the Zepp Life settings)|
+| April Brother|ABTemp|uuid/mfid/major/txpower @ 1 m/temperature/battery|
+| April Brother|N03|temperature/humidity/luminance/battery|
 | ATorch Battery Capacity Monitor (c)|DT24|voltage/amp/watt|
 | BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
@@ -33,7 +35,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | GOVEE|H5072|temperature/humidity/battery|
 | GOVEE|H5102|temperature/humidity/battery|
 | HONEYWELL|JQJCY01YM|formaldehyde/temperature/humidity/battery|
-| iBeacon|protocol|uuid/mfid/major/minor/power/voltage|
+| iBeacon|protocol|uuid/mfid/major/minor/txpower @ 1 m/voltage|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH2/P01B|temperature/battery|
 | INKBIRD (1)|IBT-2X|temperature1/temperature2|
@@ -45,6 +47,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Qingping|CGDK2|temperature/humidity|
 | Qingping|CGH1|open|
 | Qingping|CGPR1|presence/luminance|
+| Qingping|CGDN1|temperature/humidity/PM2.5/PM10/carbon dioxide|
 | RDL52832||mfid/uuid/minor/major/txpower @ 1 m/temperature/humidity/acceleration|
 | RBaron|b-parasite|moisture/temperature/humidity/luminance (v1.1.0+)/voltage|
 | RuuviTag Raw V1|RuuviTag|temperature/humidity/pressure/acceleration/voltage|
@@ -55,8 +58,8 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Switchbot|Contact Sensor|contact/movement/scope tested/light level/battery|
 | Switchbot|Curtain|motion state/position/light level/battery/calibration state|
 | Switchbot|Meter (Plus)|temperature/humidity/battery|
-| Thermobeacon|WS02|temperature/humidity/voltage|
-| Thermobeacon|WS08|temperature/humidity/voltage|
+| Thermobeacon|WS02|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
+| Thermobeacon|WS08|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
 | Vegtrug||temperature/moisture/luminance/fertility|
 | XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
