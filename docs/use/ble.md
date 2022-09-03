@@ -75,7 +75,13 @@ A white list is a list of MAC addresses permitted to be published by OMG
 to set white list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
-Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list
+Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list, or temporarily disable it:
+
+to temporarily disable white/black list
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"ignoreWBlist":true}'`
+
+to enable white/black list back
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"ignoreWBlist":false}'`
 
 ::: tip
 So as to keep your white/black list persistent you can publish it with the retain option of MQTT (-r with mosquitto_pub or retain check box of MQTT Explorer)
@@ -148,6 +154,41 @@ Or by an MQTT command.
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
 
+To change presence publication topic, use this MQTT command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceTopic":"presence/"}'`
+
+To use iBeacon UUID for presence, instead of sender (random) MAC address, use this MQTT command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceUseBeaconUuid":true}'`
+
+This will change usual payload for iBeacon from:
+`{"id":"60:87:57:4C:9B:C2","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}`
+To:
+`{"id":"1de4b189115e45f6b44e509352269977","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66,"mac":"60:87:57:4C:9B:C2"}`
+Note: the MAC address is put in "mac" field.
+
+## Setting if the gateway uses iBeacon UUID as topic, instead of (random) MAC address
+
+By default, iBeacon are published like other devices, using a topic based on the MAC address of the sender.
+But modern phones randomize their Bluetooth MAC address making it difficult to track iBeacon.
+
+For example, the 2 following messages corresponds to the same iBeacon, but with different MAC and topics:
+```
+home/OpenMQTTGateway/BTtoMQTT/58782076BC24 {"id":"58:78:20:76:BC:24","mac_type":1,"rssi":-79,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+home/OpenMQTTGateway/BTtoMQTT/5210A84690AC {"id":"52:10:A8:46:90:AC","mac_type":1,"rssi":-77,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+```
+
+To use iBeacon UUID as topic, use this MQTT command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubBeaconUuidForTopic":true}'`
+
+Resulting in such messages (for the same iBeacon as previously):
+```
+home/OpenMQTTGateway/BTtoMQTT/1de4b189115e45f6b44e509352269977 {"id":"52:10:A8:46:90:AC","mac_type":1,"rssi":-76,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+home/OpenMQTTGateway/BTtoMQTT/1de4b189115e45f6b44e509352269977 {"id":"7B:63:C6:82:DC:57","mac_type":1,"rssi":-83,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+```
+
 ## Setting the minimum RSSI accepted to publish device data
 
 If you want to change the minimum RSSI value accepted for a device to be published, you can change it by MQTT. For example if you want to set -80
@@ -160,11 +201,83 @@ you can also accept all the devices by the following command:
 
 The default value is set into config_BT.h
 
+## ADVANCED: Setting up an external decoder
+
+This advanced option is used to publish raw radio frames on a specific topic to be decoded by an external decoder instead of the integrated one.
+
+To enable external decoder:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"extDecoderEnable":true}'`
+
+To change the default external decoder topic to "undecoded":
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"extDecoderTopic":"undecoded"}'`
+
+## ADVANCED: Filtering out connectable devices
+
+[With OpenHAB integration](../integrate/openhab2.md), this configuration is highly recommended, otherwise you may encounter incomplete data.
+
+If you want to enable this feature:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
+
+## ADVANCED: Publishing known service data
+
+If you want to enable this feature:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownServiceData":true}'`
+
+## ADVANCED: Publishing unknown service data
+
+If you want to change the default behaviour, in case you are having too heavy service data:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownServiceData":false}'`
+
+## ADVANCED: Publishing known manufacturer's data
+
+If you want to change the default behaviour:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownManufData":true}'`
+
+## ADVANCED: Publishing unknown manufacturer's data
+
+If you want to change the default behaviour, in case you are having too heavy service data:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownManufData":false}'`
+
+## ADVANCED: Publishing the service UUID data
+
+If you want to change the default behaviour:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubServiceDataUUID":true}'`
+
+## Store BLE configuration into the gateway (only with ESP32 boards)
+
+Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
+
+To store the running configuration into the gateway, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"save":true}'`
+
+At any time, you can reload the stored configuration with the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"load":true}'`
+
+If you want to erase the stored configuration, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"erase":true}'`
+Note that it will not change the running configuration, only ensure default configuration is used at next startup.
+
+By the way, if you want to load the default built-in configuration (on any board, not only ESP32), use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
+Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
+
 ## Read/write BLE characteristics over MQTT (ESP32 only)
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
 ::: tip
-These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)  
+These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this](#setting-the-number-of-scans-between-connection-attempts).
 This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
 
 **Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  

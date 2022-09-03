@@ -63,7 +63,7 @@ extern int btQueueLengthCount;
 #  define BLE_FILTER_CONNECTABLE 0 // Sets whether to filter publishing of scanned devices that require a connection.
 #endif // Setting this to 1 prevents overwriting the publication of the device connection data with the advertised data (Recommended for use with OpenHAB).
 
-#define MinimumRSSI -100 //default minimum rssi value, all the devices below -90 will not be reported
+#define MinimumRSSI -100 //default minimum rssi value, all the devices below -100 will not be reported
 
 #ifndef Scan_duration
 #  define Scan_duration 10000 //define the time for a scan
@@ -162,24 +162,7 @@ struct BTConfig_s {
   bool pubUnknownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
   bool pubServiceDataUUID; // Publish the service UUID data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
-} BTConfig_default = {
-    .bleConnect = AttemptBLEConnect,
-    .BLEinterval = TimeBtwRead,
-    .BLEscanBeforeConnect = ScanBeforeConnect,
-    .pubOnlySensors = PublishOnlySensors,
-    .presenceEnable = HassPresence,
-    .presenceTopic = subjectHomePresence,
-    .presenceUseBeaconUuid = useBeaconUuidForPresence,
-    .minRssi = abs(MinimumRSSI),
-    .extDecoderEnable = UseExtDecoder,
-    .extDecoderTopic = MQTTDecodeTopic,
-    .filterConnectable = BLE_FILTER_CONNECTABLE,
-    .pubKnownServiceData = pubKnownBLEServiceData,
-    .pubUnknownServiceData = pubUnknownBLEServiceData,
-    .pubKnownManufData = pubBLEManufacturerData,
-    .pubUnknownManufData = pubUnknownBLEManufacturerData,
-    .pubServiceDataUUID = pubBLEServiceUUID,
-    .pubBeaconUuidForTopic = useBeaconUuidForTopic,
+  bool ignoreWBlist; // Disable Whitelist & Blacklist
 };
 
 // Global struct to store live BT configuration data
