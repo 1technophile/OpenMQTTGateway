@@ -32,10 +32,12 @@ You can know compile and upload to your board and the gateway should connect wit
 
 ## Add the received "value" at the end of the topic
 For the gateways that publish a "value" parameter on the json (RF, IR...), it is possible to concatenate this parameter at the end of the topic.
-So as to activate this function you need to uncomment the line below in User_config.h
+So as to activate this function you need to set `valueAsATopic` to true in User_config.h
 
 ``` cpp
-//#define valueAsASubject true 
+#ifndef valueAsATopic
+#  define valueAsATopic false // define true to integrate msg value into the subject when receiving
+#endif
 ```
 
 Per default you see the following data:
