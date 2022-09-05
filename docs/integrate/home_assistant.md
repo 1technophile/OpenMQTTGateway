@@ -196,7 +196,7 @@ sensor:
   - platform: mqtt_room
     device_id: XX:XX:XX:XX:XX:XX   #Mac Address of device wanting to track
     name: you_are_in    # home assistant will show a sensor named (you are in) with its value being the name you gave the gateway
-    state_topic: "home/home_presence"
+    state_topic: "home/presence"
     #timeout:
     #away_timeout:
 ```
