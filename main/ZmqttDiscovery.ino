@@ -333,7 +333,8 @@ void createDiscovery(const char* sensor_type,
     }
 
     if (device_name[0]) {
-      device["name"] = device_name;
+      // generate unique device name by adding the second half of the device_mac
+      device["name"] = device["name"] = device_name + String("-") + String(device_mac + 6);
     }
 
     device["via_device"] = String(gateway_name); //device name of the board
