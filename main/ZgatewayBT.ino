@@ -1044,7 +1044,11 @@ void launchBTDiscovery() {
             Log.trace("Unit: %s", prop.value()["unit"].as<const char*>());
             Log.trace("Name: %s", prop.value()["name"].as<const char*>());
             String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
+            # ifdef ZmqttDiscoveryUniqueEntityNames
+            String entity_name = String(model_id.c_str()) + "-" + String(macWOdots.begin() + 6) + "-" + String(prop.key().c_str());
+            # else
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+            # endif
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
 #    if OpenHABDiscovery
             String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
