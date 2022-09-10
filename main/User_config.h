@@ -320,8 +320,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
-//#define ZmqttDiscovery "HADiscovery" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
-//#define ZmqttDiscoveryUniqueEntityNames "HADiscoveryUnique" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
+//#define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STICKCP "M5StickCP"
