@@ -342,7 +342,13 @@ void createDiscovery(const char* sensor_type,
 
   sensor["device"] = device;
 
+  # ifdef ZmqttDiscoveryMultiLevelTopic
+  *strchr(unique_id, '-') = '/';
+  # endif
   String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
+  # ifdef ZmqttDiscoveryMultiLevelTopic
+  *strchr(unique_id, '/') = '-';
+  # endif
   Log.trace(F("Announce Device %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   pub_custom_topic((char*)topic.c_str(), sensor, true);
 }
