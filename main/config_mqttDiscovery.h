@@ -237,9 +237,16 @@ const char* availableHASSUnits[] = {"W",
                                     "µS/cm",
                                     "ppm",
                                     "μg/m³",
+                                    "m³",
+                                    "mg/m³",
+                                    "m/s²",
                                     "lx",
+                                    "Ω",
                                     "%",
+                                    "bar",
+                                    "bpm",
                                     "dB",
+                                    "dBm",
                                     "B"};
 
 #endif
