@@ -113,6 +113,11 @@ void announceDeviceTrigger(bool use_gateway_info,
                            char* device_mac);
 
 #define discovery_Topic "homeassistant"
+// discovery_republish_on_reconnect false to publish discovery topics over MQTT only with first connect
+// discovery_republish_on_reconnect true to always republish discovery topics over MQTT when connection is re-established
+#ifndef discovery_republish_on_reconnect
+#  define discovery_republish_on_reconnect false
+#endif
 
 #define DEVICEMANUFACTURER "OMG_community"
 
