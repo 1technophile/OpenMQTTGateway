@@ -89,7 +89,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
     }
     if (RTLdata.containsKey("rssi")) {
       int rssiThreshold = RTLdata["rssi"] | 0;
-      Log.notice(F("RTL_433 RSSI Threshold Delta: %d " CR), rssiThreshold ); 
+      Log.notice(F("RTL_433 RSSI Threshold Delta: %d " CR), rssiThreshold);
       rtl_433.setRSSIThreshold(rssiThreshold);
       success = true;
     }
@@ -119,7 +119,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRTL_433 Fail json" CR));
     }
-    enableActiveReceiver(false); 
+    enableActiveReceiver(false);
   }
 }
 
