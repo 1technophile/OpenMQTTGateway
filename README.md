@@ -28,7 +28,7 @@ Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgate
 *Running on a computer*
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
 
-* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, HM10, RF, IR emitters and receivers...
+* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, RF, IR emitters and receivers...
 
 ## Compatible controllers, saas or software
 
