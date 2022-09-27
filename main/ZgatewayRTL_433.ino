@@ -45,7 +45,7 @@ void rtl_433_Callback(char* message) {
   }
 
   String topic = String(subjectRTL_433toMQTT);
-#  ifdef valueAsASubject
+#  ifdef valueAsATopic
   String model = RFrtl_433_ESPdata["model"];
   String id = RFrtl_433_ESPdata["id"];
   if (model != 0) {
