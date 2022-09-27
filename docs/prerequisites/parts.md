@@ -10,7 +10,6 @@ Here is below the main parts reference.
 |-|:-:|:-:|:-:|:-:|:-:|
 |SRX882 / STX882|X|-||-|-|
 |CC1101|X|-|-|-|-|
-|HM10|-|-|X|-|-|
 |38KHz IR emitter and receiver|-|X|-|-|-|
 |SX1276|-|-|-|X|-|
 |A6/A7|-|-|-|-|X|

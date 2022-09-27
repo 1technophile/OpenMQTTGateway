@@ -53,7 +53,6 @@ The table below describes the libraries and the modules of each board configurat
 |esp32dev-ble-datatest|ESP32 dev board|Default BLE gateway with additional servicedata, manufacturerdata and service uuid for analysing decoding issues|-|-|X|-|
 |**ESP8266**|
 |nodemcuv2-2g|ESP8266 board|SMS gateway, need A6/A7 GSM module|-|-|-|-|
-|nodemcuv2-ble|ESP8266 board|BLE gateway, need HM10 Module|-|-|X|-|
 |nodemcuv2-ir|ESP8266 board|Infrared gateway using [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266)|-|X|-|-|
 |nodemcuv2-rf-cc1101|ESP8266 board|RF gateway using [RCSwitch](https://github.com/1technophile/rc-switch) library, need CC1101|X|-|-|-|
 |nodemcuv2-rf|ESP8266 board|RF gateway using [RCSwitch](https://github.com/1technophile/rc-switch) library|X|-|-|-|

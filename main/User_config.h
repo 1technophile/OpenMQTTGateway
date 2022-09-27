@@ -478,7 +478,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define STRTO_UL_ULL       strtoul
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // variable to avoid duplicates
 #  ifndef time_avoid_duplicate
 #    define time_avoid_duplicate 3000 // if you want to avoid duplicate MQTT message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
@@ -495,5 +495,10 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef LOG_LEVEL
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
+
+/*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
+// The real definitions are in config_M5.h / config_HELTEC.h
+#define displayPrint(...)   // only print if not in low power mode
+#define lpDisplayPrint(...) // print in low power mode
 
 #endif
