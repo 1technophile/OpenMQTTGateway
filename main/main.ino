@@ -1609,14 +1609,18 @@ void stateMeasures() {
 #  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
   SYSdata["actRec"] = (int)activeReceiver;
 #  endif
-#  ifdef ZradioCC1101
+#  if defined(ZradioCC1101) || defined(ZradioSX127x)
   SYSdata["mhz"] = (float)receiveMhz;
 #  endif
 #  if defined(ZgatewayRTL_433)
   if (activeReceiver == ACTIVE_RTL) {
-    SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+    SYSdata["RTLRssiThresh"] = (int)getRTLrssiThreshold();
     SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+    SYSdata["RTLAVGRssi"] = (int)getRTLAverageRSSI();
     SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+#    ifdef ZradioSX127x
+    SYSdata["RTLOOKThresh"] = (int)getOOKThresh();
+#    endif
   }
 #  endif
   SYSdata["modules"] = modules;
