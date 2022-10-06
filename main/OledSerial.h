@@ -38,6 +38,14 @@
 
 class OledSerial : public Stream {
 private:
+  void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
+
+/*
+Display OpenMQTTGateway logo
+*/
+
+  void displayIntro(int scale, int displayWidth, int displayHeight);
+
 public:
   OledSerial(int uart_nr);
 
@@ -73,19 +81,8 @@ public:
 protected:
   int _uart_nr;
   uart_t* _uart;
-  //  uint8_t _tx_pin;
-  //  uint8_t _rx_pin;
 };
 
-void displayIntro(int i, int X, int Y);
-void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
-
-// extern void serialEventRun(void) __attribute__((weak));
-
-#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 extern OledSerial Oled;
-// extern OledSerial Oled1;
-// extern OledSerial Oled2;
-#endif
 
 #endif // OledSerial_h

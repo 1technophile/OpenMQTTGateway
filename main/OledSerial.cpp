@@ -28,7 +28,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "OledSerial.h"
 
 #include <inttypes.h>
@@ -42,12 +41,9 @@
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 OledSerial Oled(0);
-// OledSerial Oled1(1);
-// OledSerial Oled2(2);
 #endif
 
 OledSerial::OledSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
-
 
 void OledSerial::begin() {
   Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Disable*/, false /*Serial Enable*/); // User OMG serial support
@@ -79,7 +75,6 @@ int OledSerial::read(void) {
   return -1;
 }
 
-
 void OledSerial::flush(void) {
   // uartFlush(_uart);
 }
@@ -96,28 +91,32 @@ size_t OledSerial::write(uint8_t c) {
 }
 
 size_t OledSerial::write(const uint8_t* buffer, size_t size) {
-  // uartWriteBuf(_uart, buffer, size);
-  Serial.print("!");
   Heltec.display->clear();
   Heltec.display->setColor(WHITE);
   Heltec.display->setFont(ArialMT_Plain_10);
-
-  // Heltec.display->print(buffer, size);
+  while (size) {
+    Heltec.display->print((char)*buffer++);
+    size--;
+  }
   Heltec.display->drawLogBuffer(0, 0);
   Heltec.display->display();
   return size;
 }
 
-void displayIntro(int i, int X, int Y) {
-  drawLogo(i, X, Y, false, true, false, false, false, false); // Circle 2
-  drawLogo(i, X, Y, false, false, true, false, false, false); // Circle 3
-  drawLogo(i, X, Y, false, true, true, true, false, false); // Line 1
-  drawLogo(i, X, Y, false, true, true, false, true, false); // Line 2
-  drawLogo(i, X, Y, true, true, true, true, true, false); // Circle 1
-  drawLogo(i, X, Y, true, true, true, true, true, true); // Name
+/*
+Display OpenMQTTGateway logo
+*/
+
+void OledSerial::displayIntro(int scale, int displayWidth, int displayHeight) {
+  drawLogo(scale, displayWidth, displayHeight, false, true, false, false, false, false); // Circle 2
+  drawLogo(scale, displayWidth, displayHeight, false, false, true, false, false, false); // Circle 3
+  drawLogo(scale, displayWidth, displayHeight, false, true, true, true, false, false); // Line 1
+  drawLogo(scale, displayWidth, displayHeight, false, true, true, false, true, false); // Line 2
+  drawLogo(scale, displayWidth, displayHeight, true, true, true, true, true, false); // Circle 1
+  drawLogo(scale, displayWidth, displayHeight, true, true, true, true, true, true); // Name
 }
 
-void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name) {
+void OledSerial::drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name) {
   int circle1T = logoSize / 15;
   int circle2T = logoSize / 25;
   int circle3T = logoSize / 30;

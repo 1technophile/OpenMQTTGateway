@@ -528,8 +528,6 @@ void connectMQTT() {
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
 
-    OLEDPrint("MQTT connected:", "", "");
-
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     if (lowpowermode < 2)
       M5Print("MQTT connected", "", "");
@@ -1235,8 +1233,6 @@ void setup_wifimanager(bool reset_settings) {
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
     digitalWrite(LED_INFO, !LED_INFO_ON);
   }
-
-  OLEDPrint("Wifi connected", "", "");
 
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   if (lowpowermode < 2)

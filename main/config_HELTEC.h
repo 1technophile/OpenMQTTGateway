@@ -30,35 +30,22 @@
 #ifndef config_HELTEC_h
 #define config_HELTEC_h
 #ifdef ZboardHELTEC
-#define OLED_WIDTH 128
-#define OLED_HEIGHT 64
+#  define OLED_WIDTH  128
+#  define OLED_HEIGHT 64
 #endif
 
-#define OLEDPrint(a,b,c) HELTECPrint((String) a)
+// #define OLEDPrint(a,b,c) HELTECPrint((String) a)
 
 extern void setupHELTEC();
 extern void loopHELTEC();
-/*----------------------------USER PARAMETERS-----------------------------*/
-/*---------------DEFINE SCREEN BRIGHTNESS------------------*/
-#ifdef ZboardHELTECTOUGH // Sleep brightness doesn't seem to work for the moment on Tough
-#  ifndef SLEEP_LCD_BRIGHTNESS
-#    define SLEEP_LCD_BRIGHTNESS 15 // 0 to 100
-#  endif
-#else
-#  ifndef SLEEP_LCD_BRIGHTNESS
-#    define SLEEP_LCD_BRIGHTNESS 2 // 0 to 100
-#  endif
-#endif
-#ifndef NORMAL_LCD_BRIGHTNESS
-#  define NORMAL_LCD_BRIGHTNESS 100 // 0 to 100
-#endif
-/*---------------DEFINE SLEEP BUTTON------------------*/
-#ifndef SLEEP_BUTTON
-#  define SLEEP_BUTTON 33
-#endif
+
 /*-------------------DEFINE LOG LEVEL----------------------*/
-#define LOG_LEVEL_LCD LOG_LEVEL_TRACE // if we go down below warning the size of the text to display can make the HELTEC restarting
-#define LOG_TO_LCD    true //set to false if you want to use serial monitor for the log per default instead of the HELTEC screen
+#ifndef LOG_LEVEL_LCD
+#  define LOG_LEVEL_LCD LOG_LEVEL_NOTICE // if we go down below warning the size of the text to display can make the HELTEC restarting
+#endif
+#ifndef LOG_TO_LCD
+#  define LOG_TO_LCD false //set to false if you want to use serial monitor for the log per default instead of the HELTEC screen
+#endif
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 #define subjectMQTTtoHELTECset "/commands/MQTTtoHELTEC/config"
 

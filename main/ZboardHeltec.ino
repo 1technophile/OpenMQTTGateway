@@ -33,6 +33,7 @@
 #  include "OledSerial.h"
 #  include "config_HELTEC.h"
 
+
 void logToLCD(bool display) {
   display ? Log.begin(LOG_LEVEL_LCD, &Oled) : Log.begin(LOG_LEVEL, &Serial); // Log on LCD following LOG_LEVEL_LCD
 }
