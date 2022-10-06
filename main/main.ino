@@ -153,6 +153,9 @@ struct GfSun2000Data {};
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
 #endif
+#if defined(ZboardHELTEC)
+#  include "config_HELTEC.h"
+#endif
 #if defined(ZgatewayRS232)
 #  include "config_RS232.h"
 #endif
@@ -524,6 +527,9 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
+
+    OLEDPrint("MQTT connected:", "", "");
+
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     if (lowpowermode < 2)
       M5Print("MQTT connected", "", "");
@@ -620,6 +626,9 @@ void setup() {
   preferences.end();
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
+#    endif
+#    if defined(ZboardHELTEC)
+  setupHELTEC();
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
@@ -1227,6 +1236,8 @@ void setup_wifimanager(bool reset_settings) {
     digitalWrite(LED_INFO, !LED_INFO_ON);
   }
 
+  OLEDPrint("Wifi connected", "", "");
+
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   if (lowpowermode < 2)
     M5Print("Wifi connected", "", "");
@@ -1524,6 +1535,11 @@ void loop() {
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
+#endif
+
+// Function that doesn't need an active connection
+#if defined(ZboardHELTEC)
+  loopHELTEC();
 #endif
 }
 
