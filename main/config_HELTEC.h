@@ -27,14 +27,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef config_HELTEC_h
 #define config_HELTEC_h
 
 #ifdef ZboardHELTEC
-#  define OLED_WIDTH  128
-#  define OLED_HEIGHT 64
-# define OLED_TEXT_WIDTH 40
-#define OLED_TEXT_HEIGHT 5 
+#  define OLED_WIDTH       128
+#  define OLED_HEIGHT      64
+#  define OLED_TEXT_WIDTH  40
+#  define OLED_TEXT_HEIGHT 5
 #endif
 
 extern void setupHELTEC();
