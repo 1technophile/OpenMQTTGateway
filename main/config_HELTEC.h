@@ -29,24 +29,68 @@
 */
 #ifndef config_HELTEC_h
 #define config_HELTEC_h
+
 #ifdef ZboardHELTEC
 #  define OLED_WIDTH  128
 #  define OLED_HEIGHT 64
+# define OLED_TEXT_WIDTH 40
+#define OLED_TEXT_HEIGHT 5 
 #endif
-
-// #define OLEDPrint(a,b,c) HELTECPrint((String) a)
 
 extern void setupHELTEC();
 extern void loopHELTEC();
+size_t OledPrint(String msg);
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL_LCD
-#  define LOG_LEVEL_LCD LOG_LEVEL_NOTICE // if we go down below warning the size of the text to display can make the HELTEC restarting
+#  define LOG_LEVEL_LCD LOG_LEVEL_NOTICE // Default to only display Notice level messages
 #endif
 #ifndef LOG_TO_LCD
-#  define LOG_TO_LCD false //set to false if you want to use serial monitor for the log per default instead of the HELTEC screen
+#  define LOG_TO_LCD false // Default to not display log messages on display
 #endif
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 #define subjectMQTTtoHELTECset "/commands/MQTTtoHELTEC/config"
+
+// This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
+
+class OledSerial : public Stream {
+private:
+  void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
+  void displayIntro(int scale, int displayWidth, int displayHeight);
+
+public:
+  OledSerial(int);
+  void begin();
+
+  int available(void); // Dummy functions
+  int peek(void); // Dummy functions
+  int read(void); // Dummy functions
+  void flush(void); // Dummy functions
+
+  size_t write(uint8_t);
+  size_t write(const uint8_t* buffer, size_t size);
+  inline size_t write(const char* buffer, size_t size) {
+    return write((uint8_t*)buffer, size);
+  }
+  inline size_t write(const char* s) {
+    return write((uint8_t*)s, strlen(s));
+  }
+  inline size_t write(unsigned long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(unsigned int n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(int n) {
+    return write((uint8_t)n);
+  }
+
+protected:
+};
+
+extern OledSerial Oled;
 
 #endif
