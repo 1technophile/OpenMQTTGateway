@@ -72,18 +72,30 @@ size_t OledPrint(String msg) {
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
 OledSerial Oled(0); // Not sure about this, came from Hardwareserial
-OledSerial::OledSerial(int x) {} // Not sure about this, came from Hardwareserial
+OledSerial::OledSerial(int x) {
+  pinMode(RST_OLED, OUTPUT);
+  digitalWrite(RST_OLED, LOW);
+  delay(50);
+  digitalWrite(RST_OLED, HIGH);
+
+#  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
+  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
+#  elif defined(Wireless_Stick)
+  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_64_32);
+#  endif
+} // Not sure about this, came from Hardwareserial
 
 void OledSerial::begin() {
-  Heltec.begin(); // User OMG serial support
-  Heltec.display->flipScreenVertically();
-  Heltec.display->setFont(ArialMT_Plain_10);
+  // Heltec.begin(); // User OMG serial support
+  display->init();
+  display->flipScreenVertically();
+  display->setFont(ArialMT_Plain_10);
 
-  Heltec.display->setColor(WHITE);
-  Heltec.display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
-  Heltec.display->display();
+  display->setColor(WHITE);
+  display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
+  display->display();
   displayIntro(OLED_WIDTH * 0.24, (OLED_WIDTH / 2) - OLED_WIDTH * 0.2, (OLED_HEIGHT / 2) + OLED_HEIGHT * 0.2);
-  Heltec.display->setLogBuffer(OLED_TEXT_HEIGHT, OLED_TEXT_WIDTH);
+  display->setLogBuffer(OLED_TEXT_HEIGHT, OLED_TEXT_WIDTH);
   delay(1000);
 }
 
@@ -102,28 +114,28 @@ void OledSerial::flush(void) {
 }
 
 size_t OledSerial::write(uint8_t c) {
-  Heltec.display->clear();
-  Heltec.display->setColor(WHITE);
-  Heltec.display->setFont(ArialMT_Plain_10);
+  display->clear();
+  display->setColor(WHITE);
+  display->setFont(ArialMT_Plain_10);
 
-  Heltec.display->print((char)c);
-  Heltec.display->drawLogBuffer(0, 0);
-  Heltec.display->display();
+  display->print((char)c);
+  display->drawLogBuffer(0, 0);
+  display->display();
   return 1;
 }
 
 size_t OledSerial::write(const uint8_t* buffer, size_t size) {
-  Heltec.display->clear();
-  Heltec.display->setColor(WHITE);
-  Heltec.display->setFont(ArialMT_Plain_10);
+  display->clear();
+  display->setColor(WHITE);
+  display->setFont(ArialMT_Plain_10);
   if (size > OLED_TEXT_WIDTH)
     size = OLED_TEXT_WIDTH; // Too wide for the display
   while (size) {
-    Heltec.display->print((char)*buffer++);
+    display->print((char)*buffer++);
     size--;
   }
-  Heltec.display->drawLogBuffer(0, 0);
-  Heltec.display->display();
+  display->drawLogBuffer(0, 0);
+  display->display();
   return size;
 }
 
@@ -151,92 +163,54 @@ void OledSerial::drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1
   int circle2Y = circle1Y - (logoSize * 0.8);
 
   if (line1) {
-    Heltec.display->setColor(BLACK);
-    Heltec.display->drawLine(circle1X - 2, circle1Y, circle2X - 2, circle2Y);
-    Heltec.display->drawLine(circle1X - 1, circle1Y, circle2X - 1, circle2Y);
-    Heltec.display->drawLine(circle1X, circle1Y, circle2X, circle2Y);
-    Heltec.display->drawLine(circle1X + 1, circle1Y, circle2X + 1, circle2Y);
-    Heltec.display->drawLine(circle1X + 2, circle1Y, circle2X + 2, circle2Y);
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
+    display->setColor(BLACK);
+    display->drawLine(circle1X - 2, circle1Y, circle2X - 2, circle2Y);
+    display->drawLine(circle1X - 1, circle1Y, circle2X - 1, circle2Y);
+    display->drawLine(circle1X, circle1Y, circle2X, circle2Y);
+    display->drawLine(circle1X + 1, circle1Y, circle2X + 1, circle2Y);
+    display->drawLine(circle1X + 2, circle1Y, circle2X + 2, circle2Y);
+    display->setColor(WHITE);
+    display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
   }
   if (line2) {
-    Heltec.display->setColor(BLACK);
-    Heltec.display->drawLine(circle1X - 2, circle1Y, circle3X - 2, circle3Y);
-    Heltec.display->drawLine(circle1X - 1, circle1Y, circle3X - 1, circle3Y);
-    Heltec.display->drawLine(circle1X, circle1Y, circle3X, circle3Y);
-    Heltec.display->drawLine(circle1X + 1, circle1Y, circle3X + 1, circle3Y);
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
+    display->setColor(BLACK);
+    display->drawLine(circle1X - 2, circle1Y, circle3X - 2, circle3Y);
+    display->drawLine(circle1X - 1, circle1Y, circle3X - 1, circle3Y);
+    display->drawLine(circle1X, circle1Y, circle3X, circle3Y);
+    display->drawLine(circle1X + 1, circle1Y, circle3X + 1, circle3Y);
+    display->setColor(WHITE);
+    display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
   }
   if (circle1) {
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle1X, circle1Y, logoSize / 2); // , WHITE);
-    Heltec.display->setColor(BLACK);
-    Heltec.display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T); // , TFT_GREEN);
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2); // , WHITE);
+    display->setColor(WHITE);
+    display->fillCircle(circle1X, circle1Y, logoSize / 2); // , WHITE);
+    display->setColor(BLACK);
+    display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T); // , TFT_GREEN);
+    display->setColor(WHITE);
+    display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2); // , WHITE);
   }
   if (circle2) {
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle2X, circle2Y, logoSize / 3); // , WHITE);
-    Heltec.display->setColor(BLACK);
-    Heltec.display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T); // , TFT_ORANGE);
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
+    display->setColor(WHITE);
+    display->fillCircle(circle2X, circle2Y, logoSize / 3); // , WHITE);
+    display->setColor(BLACK);
+    display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T); // , TFT_ORANGE);
+    display->setColor(WHITE);
+    display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
   }
   if (circle3) {
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle3X, circle3Y, logoSize / 4); // , WHITE);
-    Heltec.display->setColor(BLACK);
-    Heltec.display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T); // , TFT_PINK);
-    Heltec.display->setColor(WHITE);
-    Heltec.display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
+    display->setColor(WHITE);
+    display->fillCircle(circle3X, circle3Y, logoSize / 4); // , WHITE);
+    display->setColor(BLACK);
+    display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T); // , TFT_PINK);
+    display->setColor(WHITE);
+    display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
   }
   if (name) {
-    Heltec.display->setColor(BLACK);
-    Heltec.display->drawString(circle1X + (circle1X * 0.27), circle1Y, "penMQTTGateway");
+    display->setColor(BLACK);
+    display->drawString(circle1X + (circle1X * 0.27), circle1Y, "penMQTTGateway");
   }
-  Heltec.display->display();
+  display->display();
   delay(50);
 }
-
-// Copy and paste from the heltecautomation/Heltec ESP32 Dev-Boards@^1.1.1 package, and removed the lora components
-
-Heltec_ESP32::Heltec_ESP32() {
-  // Need to reset display prior to initial configuration
-  pinMode(RST_OLED, OUTPUT);
-  digitalWrite(RST_OLED, LOW);
-  delay(50);
-  digitalWrite(RST_OLED, HIGH);
-
-#  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
-  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
-#  elif defined(Wireless_Stick)
-  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_64_32);
-#  endif
-}
-
-Heltec_ESP32::~Heltec_ESP32() {
-  delete display;
-}
-
-void Heltec_ESP32::begin() {
-  VextON();
-  display->init();
-}
-
-void Heltec_ESP32::VextON(void) {
-  pinMode(Vext, OUTPUT);
-  digitalWrite(Vext, LOW);
-}
-
-void Heltec_ESP32::VextOFF(void) //Vext default OFF
-{
-  pinMode(Vext, OUTPUT);
-  digitalWrite(Vext, HIGH);
-}
-
-Heltec_ESP32 Heltec;
 
 #endif

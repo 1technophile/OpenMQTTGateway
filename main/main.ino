@@ -627,6 +627,7 @@ void setup() {
 #    endif
 #    if defined(ZboardHELTEC)
   setupHELTEC();
+  modules.add(ZboardHELTEC);
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
