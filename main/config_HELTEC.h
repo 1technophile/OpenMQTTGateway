@@ -33,6 +33,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+
 #include "SSD1306Wire.h"
 
 #ifdef ZboardHELTEC
