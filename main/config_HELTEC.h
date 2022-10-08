@@ -94,4 +94,26 @@ protected:
 
 extern OledSerial Oled;
 
+// Copy and paste from the heltecautomation/Heltec ESP32 Dev-Boards@^1.1.1 package, removed the lora components and simplified
+
+#include <Arduino.h>
+#include <Wire.h>
+#include "SSD1306Wire.h"
+
+class Heltec_ESP32 {
+
+ public:
+    Heltec_ESP32();
+	~Heltec_ESP32();
+
+    void begin();
+
+    SSD1306Wire *display;
+
+    void VextON(void);
+    void VextOFF(void);
+};
+
+extern Heltec_ESP32 Heltec;
+
 #endif

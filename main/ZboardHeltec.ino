@@ -32,7 +32,7 @@
 #if defined(ZboardHELTEC)
 #  include "ArduinoLog.h"
 #  include "config_HELTEC.h"
-#  include "heltec.h"
+// #  include "heltec.h"
 
 void logToLCD(bool display) {
   display ? Log.begin(LOG_LEVEL_LCD, &Oled) : Log.begin(LOG_LEVEL, &Serial); // Log on LCD following LOG_LEVEL_LCD
@@ -75,7 +75,8 @@ OledSerial Oled(0); // Not sure about this, came from Hardwareserial
 OledSerial::OledSerial(int x) {} // Not sure about this, came from Hardwareserial
 
 void OledSerial::begin() {
-  Heltec.begin(true /*DisplayEnable Enable*/, false /*LoRa Disable*/, false /*Serial Enable*/); // User OMG serial support
+  Heltec.begin(); // User OMG serial support
+  Heltec.display->flipScreenVertically();
   Heltec.display->setFont(ArialMT_Plain_10);
 
   Heltec.display->setColor(WHITE);
@@ -199,5 +200,43 @@ void OledSerial::drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1
   Heltec.display->display();
   delay(50);
 }
+
+// Copy and paste from the heltecautomation/Heltec ESP32 Dev-Boards@^1.1.1 package, and removed the lora components
+
+Heltec_ESP32::Heltec_ESP32() {
+  // Need to reset display prior to initial configuration
+  pinMode(RST_OLED, OUTPUT);
+  digitalWrite(RST_OLED, LOW);
+  delay(50);
+  digitalWrite(RST_OLED, HIGH);
+
+#  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
+  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
+#  elif defined(Wireless_Stick)
+  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_64_32);
+#  endif
+}
+
+Heltec_ESP32::~Heltec_ESP32() {
+  delete display;
+}
+
+void Heltec_ESP32::begin() {
+  VextON();
+  display->init();
+}
+
+void Heltec_ESP32::VextON(void) {
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, LOW);
+}
+
+void Heltec_ESP32::VextOFF(void) //Vext default OFF
+{
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, HIGH);
+}
+
+Heltec_ESP32 Heltec;
 
 #endif
