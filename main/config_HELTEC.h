@@ -98,20 +98,20 @@ extern OledSerial Oled;
 
 #include <Arduino.h>
 #include <Wire.h>
+
 #include "SSD1306Wire.h"
 
 class Heltec_ESP32 {
+public:
+  Heltec_ESP32();
+  ~Heltec_ESP32();
 
- public:
-    Heltec_ESP32();
-	~Heltec_ESP32();
+  void begin();
 
-    void begin();
+  SSD1306Wire* display;
 
-    SSD1306Wire *display;
-
-    void VextON(void);
-    void VextOFF(void);
+  void VextON(void);
+  void VextOFF(void);
 };
 
 extern Heltec_ESP32 Heltec;
