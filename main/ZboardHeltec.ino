@@ -95,7 +95,7 @@ void OledSerial::begin() {
   display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
   display->display();
   displayIntro(OLED_WIDTH * 0.24, (OLED_WIDTH / 2) - OLED_WIDTH * 0.2, (OLED_HEIGHT / 2) + OLED_HEIGHT * 0.2);
-  display->setLogBuffer(OLED_TEXT_HEIGHT, OLED_TEXT_WIDTH);
+  display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);
   delay(1000);
 }
 
@@ -118,7 +118,7 @@ size_t OledSerial::write(uint8_t c) {
   display->setColor(WHITE);
   display->setFont(ArialMT_Plain_10);
 
-  display->print((char)c);
+  display->write((char)c);
   display->drawLogBuffer(0, 0);
   display->display();
   return 1;
@@ -128,10 +128,8 @@ size_t OledSerial::write(const uint8_t* buffer, size_t size) {
   display->clear();
   display->setColor(WHITE);
   display->setFont(ArialMT_Plain_10);
-  if (size > OLED_TEXT_WIDTH)
-    size = OLED_TEXT_WIDTH; // Too wide for the display
   while (size) {
-    display->print((char)*buffer++);
+    display->write((char)*buffer++);
     size--;
   }
   display->drawLogBuffer(0, 0);

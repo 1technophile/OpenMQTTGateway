@@ -39,8 +39,8 @@
 #ifdef ZboardHELTEC
 #  define OLED_WIDTH       128
 #  define OLED_HEIGHT      64
-#  define OLED_TEXT_WIDTH  40
-#  define OLED_TEXT_HEIGHT 5
+#  define OLED_TEXT_BUFFER 1000
+#  define OLED_TEXT_ROWS   5
 #endif
 
 extern void setupHELTEC();
