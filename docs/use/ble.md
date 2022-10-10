@@ -33,7 +33,7 @@ iOS version >=10 devices advertise without an extra app MAC address, nevertheles
 
 
 ## Receiving signals from BLE devices Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale and [many more](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
-So as to receive BLE sensors data you need either a simple ESP32 either an ESP8266/Arduino + HM10/11 with firmware >= v601
+So as to receive BLE sensors data you need a simple ESP32
 The mi flora supported firmware is >3.1.8
 
 Verify that your sensor is working with the App and update it with the last software version.
@@ -59,11 +59,10 @@ The infos will appear like this on your MQTT broker:
 
 `home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tempc":"19.2","tempf":"66.56"}`
 
-More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html)  (especially about how it was implemented with HM10)
+More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html) 
 
 ::: tip
-The HM10 module doesn't read enough information (servicedata UUID is missing) to support Mi Scale and Mi Band. They are supported nevertheless with ESP32.
-OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 this field can be longer compared to ESP32 if the device is not recognised.
+OpenMQTTGateway publish the servicedata field of your BLE devices.
 :::
 
 ## Setting a white or black list
@@ -352,10 +351,3 @@ Response (assuming success):
   "state":"on"
 }
 ```
-
-## Other
-
-To check your hm10 firmware version upload a serial sketch to the nodemcu (this will enable communication directly with the hm10) and launch the command:
-`AT+VERR?`
-
-More info about HM-10 is [available here](http://www.martyncurrey.com/hm-10-bluetooth-4ble-modules/)
