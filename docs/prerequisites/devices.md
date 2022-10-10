@@ -35,6 +35,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | GOVEE|H5072|temperature/humidity/battery|
 | GOVEE|H5102|temperature/humidity/battery|
 | HONEYWELL|JQJCY01YM|formaldehyde/temperature/humidity/battery|
+| Hydractiva Digital | Amphiro/Oras|sessions/time/litres/temperature/energy|
 | iBeacon|protocol|uuid/mfid/major/minor/txpower @ 1 m/voltage|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
 | INKBIRD (1)|IBS-TH2/P01B|temperature/battery|
@@ -42,6 +43,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
 | INKBIRD (1)|IBT-6XS|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6|
 | iNode|Energy Meter (1)|Current average and aggregate kW(h)/m³/battery|
+| Oria/Brifit/SigmaWit/SensorPro|TH Sensor|temperature/humidity/battery|
 | Mokosmart (1)|M1|x_axis/y_axis/z_axis/battery|
 | Mokosmart (1)|H4|temperature/humidity/voltage|
 | Qingping|CGDK2|temperature/humidity|
@@ -60,6 +62,8 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Switchbot|Meter (Plus)|temperature/humidity/battery|
 | Thermobeacon|WS02|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
 | Thermobeacon|WS08|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
+| ThermoPro|TP357|temperature/humidity|
+| ThermoPro|TP358|temperature/humidity|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
 | Vegtrug||temperature/moisture/luminance/fertility|
 | XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
