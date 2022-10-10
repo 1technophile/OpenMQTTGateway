@@ -400,6 +400,7 @@ void pubMqttDiscovery() {
 #    endif
 #  endif
 #  ifdef ESP32
+#    ifdef ZgatewayBT
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Low Power Mode", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.lowpowermode }}", //set availability_topic,device_class,value_template,
@@ -409,6 +410,7 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC
                   stateClassNone //State Class
   );
+#    endif
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat voltage", (char*)getUniqueId("m5batvoltage", "").c_str(), //set state_topic,name,uniqueId
