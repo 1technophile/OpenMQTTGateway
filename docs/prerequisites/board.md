@@ -44,13 +44,13 @@ The boards below need hardware [parts](parts.md) and electronic/hardware compete
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |Arduino UNO|X|X(limited compared to ESP)|-|-|-|X|X|
-|Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
+|Arduino MEGA|X|X(limited compared to ESP)|-|-|-|X|X|
 |ESP32|X|X|X|X|not tested|X|X|
-|ESP8266|X|X|X|not tested|X|X|X|
+|ESP8266|X|X|-|not tested|X|X|X|
 
 ::: tip
 Pilight is only supported on ESP, Arduino UNO handle only 32bits values in our context.
-Setup based on HM10 doesn't support some BLE [devices](devices.md#for-ble-devices).
+HM10 is no longer supported by OpenMQTTGateway
 :::
 
 ![boards](../img/OpenMQTTGateway_boards.png)
