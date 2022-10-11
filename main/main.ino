@@ -28,7 +28,7 @@
 #include "User_config.h"
 
 // Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
   SIGNAL_SIZE_UL_ULL value;
@@ -152,6 +152,9 @@ struct GfSun2000Data {};
 #endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
+#endif
+#if defined(ZboardHELTEC)
+#  include "config_HELTEC.h"
 #endif
 #if defined(ZgatewayRS232)
 #  include "config_RS232.h"
@@ -620,6 +623,10 @@ void setup() {
   preferences.end();
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
+#    endif
+#    if defined(ZboardHELTEC)
+  setupHELTEC();
+  modules.add(ZboardHELTEC);
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
@@ -1525,6 +1532,9 @@ void loop() {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
+#if defined(ZboardHELTEC)
+  loopHELTEC();
+#endif
 }
 
 /** 
@@ -1628,7 +1638,7 @@ void stateMeasures() {
 }
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 /** 
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
@@ -1673,7 +1683,7 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
     if (receivedSignal[i].value == value) {
       unsigned long now = millis();
       if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
-        Log.notice(F("no pub. dupl" CR));
+        Log.trace(F("no pub. dupl" CR));
         return true;
       }
     }

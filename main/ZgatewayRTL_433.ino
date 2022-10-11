@@ -44,6 +44,7 @@ void rtl_433_Callback(char* message) {
     return;
   }
 
+  unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round(RFrtl_433_ESPdata["temperature_C"]);
   String topic = String(subjectRTL_433toMQTT);
 #  ifdef valueAsATopic
   String model = RFrtl_433_ESPdata["model"];
@@ -56,7 +57,10 @@ void rtl_433_Callback(char* message) {
   }
 #  endif
 
-  pub((char*)topic.c_str(), RFrtl_433_ESPdata);
+  if (!isAduplicateSignal(MQTTvalue)) {
+    pub((char*)topic.c_str(), RFrtl_433_ESPdata);
+    storeSignalValue(MQTTvalue);
+  }
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
 #  endif
