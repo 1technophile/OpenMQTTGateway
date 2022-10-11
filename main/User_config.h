@@ -496,4 +496,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
 
+/*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
+// The real definitions are in config_M5.h / config_HELTEC.h
+#define displayPrint(...)   // only print if not in low power mode
+#define lpDisplayPrint(...) // print in low power mode
+
 #endif

@@ -49,13 +49,23 @@ size_t OledPrint(String msg);
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL_LCD
-#  define LOG_LEVEL_LCD LOG_LEVEL_NOTICE // Default to only display Notice level messages
+#  define LOG_LEVEL_LCD LOG_LEVEL_WARNING // Default to only display Notice level messages
 #endif
 #ifndef LOG_TO_LCD
 #  define LOG_TO_LCD false // Default to not display log messages on display
 #endif
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 #define subjectMQTTtoHELTECset "/commands/MQTTtoHELTEC/config"
+
+// Simple construct for displaying message in lcd and oled displays
+
+#define displayPrint(...) \
+  if (lowpowermode < 2) return heltecPrint(__VA_ARGS__) // only print if not in low power mode
+#define lpDisplayPrint(...) heltecPrint(__VA_ARGS__) // print in low power mode
+
+void heltecPrint(char*, char*, char*);
+void heltecPrint(char*, char*);
+void heltecPrint(char*);
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 

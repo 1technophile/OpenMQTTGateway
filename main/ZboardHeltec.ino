@@ -63,10 +63,21 @@ void MQTTtoHELTEC(char* topicOri, JsonObject& HELTECdata) { // json object decod
   }
 }
 
-// Simple method to display message on oled
+// Simple print methonds
 
-size_t OledPrint(String msg) {
-  return Oled.print(msg);
+void heltecPrint(char* line1, char* line2, char* line3) {
+  Oled.println(line1);
+  Oled.println(line2);
+  Oled.println(line3);
+}
+
+void heltecPrint(char* line1, char* line2) {
+  Oled.println(line1);
+  Oled.println(line2);
+}
+
+void heltecPrint(char* line1) {
+  Oled.println(line1);
 }
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
