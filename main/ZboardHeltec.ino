@@ -49,6 +49,30 @@ void setupHELTEC() {
 }
 
 void loopHELTEC() {
+  static int previousLogLevel;
+  int currentLogLevel = Log.getLastMsgLevel();
+  if (previousLogLevel != currentLogLevel && lowpowermode != 2) {
+    switch (currentLogLevel) {
+      case 1:
+      case 2:
+        //        wakeScreen(NORMAL_LCD_BRIGHTNESS);
+        //        M5.Lcd.fillScreen(TFT_RED); // FATAL, ERROR
+        //        M5.Lcd.setTextColor(TFT_BLACK, TFT_RED);
+        break;
+      case 3:
+        //        wakeScreen(NORMAL_LCD_BRIGHTNESS);
+        //        M5.Lcd.fillScreen(TFT_ORANGE); // WARNING
+        //        M5.Lcd.setTextColor(TFT_BLACK, TFT_ORANGE);
+        break;
+      default:
+        //        wakeScreen(SLEEP_LCD_BRIGHTNESS);
+        //       M5.Lcd.fillScreen(TFT_WHITE);
+        Oled.fillScreen(WHITE);
+        Oled.drawLogo((int)OLED_WIDTH * 0.24, (int)(OLED_WIDTH / 2) - OLED_WIDTH * 0.2, (int)(OLED_HEIGHT / 2) + OLED_HEIGHT * 0.2, true, true, true, true, true, true); // Name
+        break;
+    }
+  }
+  previousLogLevel = currentLogLevel;
 }
 
 void MQTTtoHELTEC(char* topicOri, JsonObject& HELTECdata) { // json object decoding
@@ -69,15 +93,18 @@ void heltecPrint(char* line1, char* line2, char* line3) {
   Oled.println(line1);
   Oled.println(line2);
   Oled.println(line3);
+  delay(2000);
 }
 
 void heltecPrint(char* line1, char* line2) {
   Oled.println(line1);
   Oled.println(line2);
+  delay(2000);
 }
 
 void heltecPrint(char* line1) {
   Oled.println(line1);
+  delay(2000);
 }
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
@@ -122,6 +149,12 @@ int OledSerial::read(void) {
 }
 
 void OledSerial::flush(void) {
+}
+
+void OledSerial::fillScreen(OLEDDISPLAY_COLOR color) {
+  display->clear();
+  display->setColor(color);
+  display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
 }
 
 size_t OledSerial::write(uint8_t c) {

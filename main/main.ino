@@ -1743,6 +1743,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     MQTTtoM5(topicOri, jsondata);
 #  endif
+#  if defined(ZboardHELTEC)
+    MQTTtoHELTEC(topicOri, jsondata);
+#  endif
 #  ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, jsondata);
 #  endif

@@ -60,7 +60,7 @@ size_t OledPrint(String msg);
 // Simple construct for displaying message in lcd and oled displays
 
 #define displayPrint(...) \
-  if (lowpowermode < 2) return heltecPrint(__VA_ARGS__) // only print if not in low power mode
+  if (lowpowermode < 2) heltecPrint(__VA_ARGS__) // only print if not in low power mode
 #define lpDisplayPrint(...) heltecPrint(__VA_ARGS__) // print in low power mode
 
 void heltecPrint(char*, char*, char*);
@@ -71,12 +71,13 @@ void heltecPrint(char*);
 
 class OledSerial : public Stream {
 private:
-  void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
+  
   void displayIntro(int scale, int displayWidth, int displayHeight);
 
 public:
   OledSerial(int);
   void begin();
+  void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
 
   SSD1306Wire* display;
 
@@ -84,6 +85,8 @@ public:
   int peek(void); // Dummy functions
   int read(void); // Dummy functions
   void flush(void); // Dummy functions
+
+  void fillScreen(OLEDDISPLAY_COLOR);  // fillScreen display and set color
 
   size_t write(uint8_t);
   size_t write(const uint8_t* buffer, size_t size);
