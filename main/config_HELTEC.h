@@ -71,7 +71,6 @@ void heltecPrint(char*);
 
 class OledSerial : public Stream {
 private:
-  
   void displayIntro(int scale, int displayWidth, int displayHeight);
 
 public:
@@ -86,7 +85,7 @@ public:
   int read(void); // Dummy functions
   void flush(void); // Dummy functions
 
-  void fillScreen(OLEDDISPLAY_COLOR);  // fillScreen display and set color
+  void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
 
   size_t write(uint8_t);
   size_t write(const uint8_t* buffer, size_t size);
