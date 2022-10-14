@@ -153,6 +153,9 @@ struct GfSun2000Data {};
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
 #endif
+#if defined(ZboardHELTEC)
+#  include "config_HELTEC.h"
+#endif
 #if defined(ZgatewayRS232)
 #  include "config_RS232.h"
 #endif
@@ -524,10 +527,8 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    if (lowpowermode < 2)
-      M5Print("MQTT connected", "", "");
-#endif
+
+    displayPrint("MQTT connected");
     Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
@@ -620,6 +621,10 @@ void setup() {
   preferences.end();
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
+#    endif
+#    if defined(ZboardHELTEC)
+  setupHELTEC();
+  modules.add(ZboardHELTEC);
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
@@ -873,9 +878,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    M5Print("OTA in progress", "", "");
-#  endif
+    lpDisplayPrint("OTA in progress");
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
@@ -884,9 +887,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    M5Print("OTA done", "", "");
-#  endif
+    lpDisplayPrint("OTA done");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
@@ -1200,9 +1201,7 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (lowpowermode < 2) {
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-      M5Print("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
-#    endif
+      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
       lowPowerESP32();
@@ -1227,10 +1226,7 @@ void setup_wifimanager(bool reset_settings) {
     digitalWrite(LED_INFO, !LED_INFO_ON);
   }
 
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-  if (lowpowermode < 2)
-    M5Print("Wifi connected", "", "");
-#  endif
+  displayPrint("Wifi connected");
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -1525,6 +1521,11 @@ void loop() {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
+
+// Function that doesn't need an active connection
+#if defined(ZboardHELTEC)
+  loopHELTEC();
+#endif
 }
 
 /** 
@@ -1741,6 +1742,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     MQTTtoM5(topicOri, jsondata);
+#  endif
+#  if defined(ZboardHELTEC)
+    MQTTtoHELTEC(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, jsondata);
