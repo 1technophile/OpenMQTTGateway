@@ -102,7 +102,6 @@ void pubOneWire_HADiscovery() {
 #  ifdef ZmqttDiscovery
   // If zmqtt discovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
   if (disc) {
-    Log.notice(F("CreateDiscoverySensor - Found %d" CR), ds1820_count);
     for (int index = 0; index < ds1820_count; index++) {
       createDiscovery("sensor",
                       (char*)(String(OW_TOPIC) + "/" + ds1820_addr[index]).c_str(),
@@ -129,11 +128,11 @@ void MeasureDS1820Temp() {
 
   // trigger temperature conversion some time before actually
   // calling getTempC() to make reading temperatures non-blocking
-  if (!triggeredConversion && (millis() > (timeDS1820 + (DS1820_INTERVAL_SEC * 1000) - DS1820_CONV_TIME))) {
+  if (!triggeredConversion && ((millis() - timeDS1820) > (DS1820_INTERVAL_SEC * 1000UL - DS1820_CONV_TIME))) {
     Log.trace(F("DS1820: Trigger temperature conversion..." CR));
     ds1820.requestTemperatures();
     triggeredConversion = true;
-  } else if (triggeredConversion && (millis() > (timeDS1820 + (DS1820_INTERVAL_SEC * 1000)))) {
+  } else if (triggeredConversion && ((millis() - timeDS1820) > DS1820_INTERVAL_SEC * 1000UL)) {
     timeDS1820 = millis();
     triggeredConversion = false;
 
@@ -149,8 +148,8 @@ void MeasureDS1820Temp() {
         if (current_temp[i] == -127) {
           Log.error(F("DS1820: Device %s currently disconnected!" CR), (char*)ds1820_addr[i].c_str());
         } else if (DS1820_ALWAYS || current_temp[i] != persisted_temp[i]) {
-          DS1820data["tempc"] = (float)DallasTemperature::toFahrenheit(current_temp[i]);
-          DS1820data["tempf"] = (float)current_temp[i];
+          DS1820data["tempf"] = (float)DallasTemperature::toFahrenheit(current_temp[i]);
+          DS1820data["tempc"] = (float)current_temp[i];
 
           if (DS1820_DETAILS) {
             DS1820data["type"] = ds1820_type[i];

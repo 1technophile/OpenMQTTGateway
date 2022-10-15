@@ -25,15 +25,15 @@ home/OpenMQTTGateway/BTtoMQTT/C7FaaD132C00 {"id":"c7:fa:ad:13:2c:00","rssi":-68,
 ```
 
 The subtopic after `home/BTtoMQTT/` is the MAC address of the Bluetooth low energy beacon.  The rssi value is the [RSSI signal level](https://www.metageek.com/training/resources/understanding-rssi.html) from which you may deduce the relative distance to the device.
-Consider the distance as a beta featuer as currently we are not retrieving the emitting power of the beacon to make it more accurate.
+Consider the distance as a beta feature as currently we are not retrieving the emitting power of the beacon to make it more accurate.
 
 Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
 
-IOS version >=10 devices advertise without an extra app a mac address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
+iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
 
 
 ## Receiving signals from BLE devices Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale and [many more](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
-So as to receive BLE sensors data you need either a simple ESP32 either an ESP8266/arduino + HM10/11 with firmware >= v601
+So as to receive BLE sensors data you need a simple ESP32
 The mi flora supported firmware is >3.1.8
 
 Verify that your sensor is working with the App and update it with the last software version.
@@ -59,23 +59,28 @@ The infos will appear like this on your MQTT broker:
 
 `home/OpenMQTTGateway/BTtoMQTT/4C33A6603C79 {"hum":"52.6","tempc":"19.2","tempf":"66.56"}`
 
-More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html)  (especially about how it was implemented with HM10)
+More info are available on [my blog](https://1technophile.blogspot.fr/2017/11/mi-flora-integration-to-openmqttgateway.html) 
 
 ::: tip
-The HM10 module doesn't read enough information (servicedata UUID is missing) to support Mi Scale and Mi Band. They are supported nevertheless with ESP32.
-OpenMQTTGateway publish the servicedata field of your BLE devices, with HM10 this field can be longer compared to ESP32 if the device is not recognised.
+OpenMQTTGateway publish the servicedata field of your BLE devices.
 :::
 
 ## Setting a white or black list
-A black list is a list of mac adresses that will never be published by OMG
+A black list is a list of MAC addresses that will never be published by OMG
 to set black list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"black-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
-A white list is a list of mac adresses permitted to be published by OMG
+A white list is a list of MAC addresses permitted to be published by OMG
 to set white list
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 
-Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list
+Note: if you want to filter (white or black list) on BLE sensors that are auto discovered, you need to wait for the discovery before applying the white or black list, or temporarily disable it:
+
+to temporarily disable white/black list
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"ignoreWBlist":true}'`
+
+to enable white/black list back
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"ignoreWBlist":false}'`
 
 ::: tip
 So as to keep your white/black list persistent you can publish it with the retain option of MQTT (-r with mosquitto_pub or retain check box of MQTT Explorer)
@@ -126,7 +131,7 @@ If you want to change this characteristic:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"onlysensors":true}'`
 
 ::: tip
-With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
@@ -138,7 +143,7 @@ If you want to change this characteristic:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"bleconnect":false}'`
 
 ::: tip
-With Home Assistant, this command is directly avalaible through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
 ## Setting if the gateway publish into Home Assistant Home presence topic
@@ -147,6 +152,41 @@ If you want to publish to Home Assistant presence topic, you can activate this f
 Or by an MQTT command.
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
+
+To change presence publication topic, use this MQTT command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceTopic":"presence/"}'`
+
+To use iBeacon UUID for presence, instead of sender (random) MAC address, use this MQTT command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceUseBeaconUuid":true}'`
+
+This will change usual payload for iBeacon from:
+`{"id":"60:87:57:4C:9B:C2","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}`
+To:
+`{"id":"1de4b189115e45f6b44e509352269977","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66,"mac":"60:87:57:4C:9B:C2"}`
+Note: the MAC address is put in "mac" field.
+
+## Setting if the gateway uses iBeacon UUID as topic, instead of (random) MAC address
+
+By default, iBeacon are published like other devices, using a topic based on the MAC address of the sender.
+But modern phones randomize their Bluetooth MAC address making it difficult to track iBeacon.
+
+For example, the 2 following messages corresponds to the same iBeacon, but with different MAC and topics:
+```
+home/OpenMQTTGateway/BTtoMQTT/58782076BC24 {"id":"58:78:20:76:BC:24","mac_type":1,"rssi":-79,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+home/OpenMQTTGateway/BTtoMQTT/5210A84690AC {"id":"52:10:A8:46:90:AC","mac_type":1,"rssi":-77,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+```
+
+To use iBeacon UUID as topic, use this MQTT command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubBeaconUuidForTopic":true}'`
+
+Resulting in such messages (for the same iBeacon as previously):
+```
+home/OpenMQTTGateway/BTtoMQTT/1de4b189115e45f6b44e509352269977 {"id":"52:10:A8:46:90:AC","mac_type":1,"rssi":-76,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+home/OpenMQTTGateway/BTtoMQTT/1de4b189115e45f6b44e509352269977 {"id":"7B:63:C6:82:DC:57","mac_type":1,"rssi":-83,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
+```
 
 ## Setting the minimum RSSI accepted to publish device data
 
@@ -160,11 +200,87 @@ you can also accept all the devices by the following command:
 
 The default value is set into config_BT.h
 
+## ADVANCED: Setting up an external decoder
+
+This advanced option is used to publish raw radio frames on a specific topic to be decoded by an external decoder instead of the integrated one.
+
+To enable external decoder:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"extDecoderEnable":true}'`
+
+To change the default external decoder topic to "undecoded":
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"extDecoderTopic":"undecoded"}'`
+
+## ADVANCED: Filtering out connectable devices
+
+[With OpenHAB integration](../integrate/openhab2.md), this configuration is highly recommended, otherwise you may encounter incomplete data.
+
+If you want to enable this feature:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
+
+## ADVANCED: Publishing known service data
+
+If you want to enable this feature:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownServiceData":true}'`
+
+## ADVANCED: Publishing unknown service data
+
+If you want to change the default behaviour, in case you are having too heavy service data:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownServiceData":false}'`
+
+## ADVANCED: Publishing known manufacturer's data
+
+If you want to change the default behaviour:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownManufData":true}'`
+
+## ADVANCED: Publishing unknown manufacturer's data
+
+If you want to change the default behaviour, in case you are having too heavy service data:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownManufData":false}'`
+
+## ADVANCED: Publishing the service UUID data
+
+If you want to change the default behaviour:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubServiceDataUUID":true}'`
+
+## Store BLE configuration into the gateway (only with ESP32 boards)
+
+Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
+
+To store the running configuration into the gateway, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"save":true}'`
+
+At any time, you can reload the stored configuration with the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"load":true}'`
+
+If you want to erase the stored configuration, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"erase":true}'`
+Note that it will not change the running configuration, only ensure default configuration is used at next startup.
+
+By the way, if you want to load the default built-in configuration (on any board, not only ESP32), use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
+Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
+
 ## Read/write BLE characteristics over MQTT (ESP32 only)
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
 ::: tip
-These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this.](#setting-the-number-of-scans-between-connection-attempts)
+These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this](#setting-the-number-of-scans-between-connection-attempts).
+This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
+
+**Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
+To specify the MAC address type add the parameter `"mac_type"` to the command. For example `"mac_type": 1` to connect with a device with the MAC address type of 1.
 :::
 
 ### Example write command
@@ -175,7 +291,8 @@ mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
   "ble_write_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
   "ble_write_value":"TEST",
   "value_type":"STRING",
-  "ttl":4 }'
+  "ttl":4,
+  "immediate":true }'
 ```
 Response:
 ```
@@ -187,7 +304,7 @@ Response:
   "success":true
 }
 ```
-### Example read commnad
+### Example read command
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
   "ble_read_address":"AA:BB:CC:DD:EE:FF",
@@ -212,9 +329,25 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
 :::
 
-## Other
+## SwitchBot Bot control (ESP32 only)
 
-To check your hm10 firmware version upload a serial sketch to the nodemcu (this will enable communication directly with the hm10) and launch the command:
-`AT+VERR?`
+SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
-More info about HM-10 is [available here](http://www.martyncurrey.com/hm-10-bluetooth-4ble-modules/)
+::: tip If the SwitchBot mode is changed the ESP32 must be restarted. :::
+
+The device can also be controlled over MQTT with a simplified BLE write command.
+
+### Example command to set the SwitchBot state to ON:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+  "SBS1":"on",
+  "mac":"AA:BB:CC:DD:EE:FF"
+}'
+```
+Response (assuming success):
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "state":"on"
+}
+```

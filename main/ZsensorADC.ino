@@ -54,12 +54,7 @@ void MeasureADC() {
     } else {
       if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC) {
         Log.trace(F("Creating ADC buffer" CR));
-#  if defined(ADC_DIVIDER)
-        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(2);
-#  else
-        const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
-#  endif
-        StaticJsonDocument<JSON_MSG_CALC_BUFFER> jsonBuffer;
+        StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject ADCdata = jsonBuffer.to<JsonObject>();
         ADCdata["adc"] = (int)val;
 #  if defined(ADC_DIVIDER)

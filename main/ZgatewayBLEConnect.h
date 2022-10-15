@@ -12,7 +12,10 @@ class zBLEConnect {
 public:
   NimBLEClient* m_pClient;
   TaskHandle_t m_taskHandle = nullptr;
-  zBLEConnect(NimBLEAddress& addr) { m_pClient = NimBLEDevice::createClient(addr); }
+  zBLEConnect(NimBLEAddress& addr) {
+    m_pClient = NimBLEDevice::createClient(addr);
+    m_pClient->setConnectTimeout(5);
+  }
   virtual ~zBLEConnect() { NimBLEDevice::deleteClient(m_pClient); }
   virtual bool writeData(BLEAction* action);
   virtual bool readData(BLEAction* action);
@@ -52,6 +55,24 @@ class HHCCJCY01HHCC_connect : public zBLEConnect {
 public:
   HHCCJCY01HHCC_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
   void publishData() override;
+};
+
+class XMWSDJ04MMC_connect : public zBLEConnect {
+  std::vector<uint8_t> m_data;
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  XMWSDJ04MMC_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  void publishData() override;
+};
+
+class SBS1_connect : public zBLEConnect {
+  uint8_t m_notifyVal;
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  SBS1_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  bool processActions(std::vector<BLEAction>& actions) override;
 };
 
 #endif //ESP32

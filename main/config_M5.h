@@ -35,13 +35,22 @@
 #ifdef ZboardM5STACK
 #  include <M5Stack.h>
 #endif
+#ifdef ZboardM5TOUGH
+#  include <M5Tough.h>
+#endif
 
 extern void setupM5();
 extern void loopM5();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*---------------DEFINE SCREEN BRIGHTNESS------------------*/
-#ifndef SLEEP_LCD_BRIGHTNESS
-#  define SLEEP_LCD_BRIGHTNESS 2 // 0 to 100
+#ifdef ZboardM5TOUGH // Sleep brightness doesn't seem to work for the moment on Tough
+#  ifndef SLEEP_LCD_BRIGHTNESS
+#    define SLEEP_LCD_BRIGHTNESS 15 // 0 to 100
+#  endif
+#else
+#  ifndef SLEEP_LCD_BRIGHTNESS
+#    define SLEEP_LCD_BRIGHTNESS 2 // 0 to 100
+#  endif
 #endif
 #ifndef NORMAL_LCD_BRIGHTNESS
 #  define NORMAL_LCD_BRIGHTNESS 100 // 0 to 100
@@ -55,5 +64,15 @@ extern void loopM5();
 #define LOG_TO_LCD    true //set to false if you want to use serial monitor for the log per default instead of the M5 screen
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 #define subjectMQTTtoM5set "/commands/MQTTtoM5/config"
+
+// Simple print macro
+
+// Simple construct for displaying message in lcd and oled displays
+
+#define displayPrint(...) \
+  if (lowpowermode < 2) M5Print(__VA_ARGS__) // only print if not in low power mode
+#define lpDisplayPrint(...) M5Print(__VA_ARGS__) // print in low power mode
+
+void M5Print(char*, char* = "", char* = "");
 
 #endif

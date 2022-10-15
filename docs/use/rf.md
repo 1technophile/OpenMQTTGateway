@@ -7,7 +7,7 @@ With version 0.9.7 the ability to switch active signal receiver and decoder is s
 
 ### Switching Active Receiver Module
 
-Switching of the active receiver module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active receiver module.
+Switching of the active receiver module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active receiver module.
 
 To enable the RF Gateway module send a json message to the RF Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 
@@ -122,6 +122,29 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ![](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
 
+### Limit Protocols
+It is possible to limit the protocols that Pilight will respond to, this can help reduce noise from unwanted devices and in some cases disable conflicting protocols.
+
+#### Available protocols
+To list the available protocols on the Serial - 
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"available":true}'`
+#### Limit protocols
+To limit the protocols, send a JSON array of protocols as below - 
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols -m '{"limit": ["array", "of", "protocols"]}'`
+
+eg: `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"limit":["tfa", "ev1527"}'`
+
+#### Reset protocols
+To reset and listen to all protocols -
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols -m '{"reset": true}`'
+
+#### Enabled protocols
+To list the enabled protocols on the Serial - 
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"enabled":true}'`
+
 ### Send data by MQTT to transmit a RF signal
 
 #### Using a known protocol
@@ -212,13 +235,13 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ### Send data by MQTT to convert it on KAKU signal 
 
-Once you get the infos publish the parameters with mqtt like that for off:
+Once you get the infos publish the parameters with MQTT like that for off:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"address":8233228,"switchType":0}"`
 
 for on:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"adress":8233228,"switchType":1}"`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoRF2 -m "{"unit":0,"groupBit":0,"period":273,"address":8233228,"switchType":1}"`
 
 ## rtl_433 device decoders
 
@@ -333,11 +356,11 @@ This function does not work when all available decoders are enabled and triggers
 "signalRssi":-38,           - most recent received signal strength
 "train":1,                  - signal processing train #
 "messageCount":3,           - total number of signals received
-"_enabledReceiver":1,       - which recevier is enabled
+"_enabledReceiver":1,       - which receiver is enabled
 "receiveMode":0,            - is the receiver currently receiving a signal
 "currentRssi":-89,          - current rssi level
 "minimumRssi":-82,          - minimum rssi level to start signal processing
-"pulses":0,                 - how many pulses have been recieved in the current signal
+"pulses":0,                 - how many pulses have been received in the current signal
 "StackHighWaterMark":5528,  - ESP32 Stack
 "freeMem":112880}           - ESP32 memory available
 ```

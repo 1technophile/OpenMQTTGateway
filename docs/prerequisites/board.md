@@ -6,7 +6,15 @@ You can take a look to the [OpenMQTTGateway compatible website](https://compatib
 Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280, HTU21D, AHTx0, DS1820
 or actuators; LED, relays, PWM.
 
-Here is some information to find the board suitable for your need, you have the choice between off the shelves boards and DIY setup.
+::: tip Running on a computer
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can use [Theengs Gateway](https://gateway.theengs.io/).
+:::
+
+::: tip Running on a tablet or phone
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
+:::
+
+Here is some information to find the boards suitable for your need, you have the choice between off the shelves boards and DIY setup.
 
 ## Off the shelves boards
 The boards below doesn't need hardware modification (or a lite one).
@@ -16,8 +24,11 @@ The boards below doesn't need hardware modification (or a lite one).
 |Sonoff RF Bridge (*) |![](../img/OpenMQTTGateway_boards_sonoff_rfbridge.png)|X|[mod](https://1technophile.blogspot.com/2018/02/adding-infrared-emitter-to-sonoff-rf.html)|-|-|-|-|-|
 |All bare ESP32|-|-|-|X|-|X|-|X|
 |OLIMEX ESP32 Ethernet|-|-|-|X|-|X|-|X|
+|OLIMEX ESP32 Ethernet POE|-|-|-|X|-|X|-|X|
+|OLIMEX ESP32 Ethernet POE ISO|-|-|-|X|-|X|-|X|
 |ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
+|[M5Tough](M5)|-|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
 |[M5Stick C](M5)|![](../img/OpenMQTTgateway_M5_StickC_Board_Display_Text.png)|-|send|X|-|X|X|X|
 |[M5Atom](M5)||-|send|X|-|X|X|X|
@@ -33,20 +44,20 @@ The boards below need hardware [parts](parts.md) and electronic/hardware compete
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |Arduino UNO|X|X(limited compared to ESP)|-|-|-|X|X|
-|Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
+|Arduino MEGA|X|X(limited compared to ESP)|-|-|-|X|X|
 |ESP32|X|X|X|X|not tested|X|X|
-|ESP8266|X|X|X|not tested|X|X|X|
+|ESP8266|X|X|-|not tested|X|X|X|
 
 ::: tip
 Pilight is only supported on ESP, Arduino UNO handle only 32bits values in our context.
-Setup based on HM10 doesn't support some BLE [devices](devices.md#for-ble-devices).
+HM10 is no longer supported by OpenMQTTGateway
 :::
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 
 Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection. 
 
-The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to arduino Uno & Mega.
+The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to Arduino Uno & Mega.
 
 Choosing your board depends heavily on the technologies you want to use with it.
 To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).

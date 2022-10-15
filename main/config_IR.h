@@ -1,15 +1,15 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
-   This files enables to set your parameter for the infrared gateway 
-  
+
+   This files enables to set your parameter for the infrared gateway
+
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -41,13 +41,13 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #define subjectMultiGTWIR "+/+/IRtoMQTT"
 #define IRbitsKey         "IRBITS_" // bits  will be defined if a subject contains IRbitsKey followed by a value of 2 digits
 #define IRRptKey          "RPT_" // repeats  will be defined if a subject contains IRRptKey followed by a value of 1 digit
-#define repeatIRwMQTT     false // do we repeat a received signal by using mqtt, we send a command signal to subjectForwardMQTTtoIR
+#define repeatIRwMQTT     false // do we repeat a received signal by using MQTT, we send a command signal to subjectForwardMQTTtoIR
 #define repeatIRwNumber   0 // default repeat of the signal
 //#define RawDirectForward false // direct repeat of IR signal with raw data
 #define RawFrequency 38 // raw frequency sending
 //#define DumpMode true // uncomment so as to see big dumps of IR codes
 
-#define pubIRunknownPrtcl false // key to avoid mqtt publication of unknown IR protocol (set to true if you want to publish unknown protocol)
+#define pubIRunknownPrtcl false // key to avoid MQTT publication of unknown IR protocol (set to true if you want to publish unknown protocol)
 #define PanasonicAddress  0x4004 // Panasonic address (Pre data)
 
 #if defined(ESP8266) || defined(ESP32) //IR supported protocols on ESP8266, all supported per default
@@ -146,6 +146,19 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #  define IR_PANASONIC_AC32
 #  define IR_MILESTAG2
 #  define IR_ECOCLIM
+#  define IR_XMP
+#  define IR_KELON168
+#  define IR_TEKNOPOINT
+#  define IR_HAIER_AC176
+#  define IR_BOSE
+#  define IR_SANYO_AC88
+#  define IR_TROTEC_3550
+#  define IR_ARRIS
+#  define IR_RHOSS
+#  define IR_AIRTON
+#  define IR_COOLIX48
+#  define IR_HITACHI_AC264
+#  define IR_HITACHI_AC296
 #elif __AVR_ATmega2560__
 #  define IR_COOLIX
 #  define IR_Whynter

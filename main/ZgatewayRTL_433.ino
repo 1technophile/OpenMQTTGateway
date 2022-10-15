@@ -50,7 +50,7 @@ void rtl_433_Callback(char* message) {
   }
 
   String topic = String(subjectRTL_433toMQTT);
-#  ifdef valueAsASubject
+#  if valueAsATopic
   String model = RFrtl_433_ESPdata["model"];
   String id = RFrtl_433_ESPdata["id"];
   if (model != 0) {
@@ -116,7 +116,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRTL_433 Fail json" CR));
     }
-    enableActiveReceiver();
+    enableActiveReceiver(false);
   }
 }
 

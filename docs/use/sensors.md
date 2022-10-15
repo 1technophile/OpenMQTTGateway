@@ -4,7 +4,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 `    sudo mosquitto_sub -t +/# -v`
 
 ### ADC
-The value is between 0 and 1024 and is tranmitted via Mqtt when it changes.
+The value is between 0 and 1024 and is transmitted via MQTT when it changes.
 `home/OpenMQTTGateway/ADCtoMQTT {"value":543}`
 
 ### DHT
@@ -40,7 +40,7 @@ Each sensor will be published under the following topic using each sensors' addr
 Legacy (removed after release 0.9.5)
 `home/OpenMQTTGateway/CLIMAtoMQTT/ds1820/0x0000000000000000 {"temp":27.8,"unit":"C","type":"DS18B20","res":"12bit\n","addr":"0x28616411907650bc"}`
 
-The units for temperature readings are sent in Celcius by default can be changed to ferenheight by setting DS1820_FAHRENHEIT = true in in config_DS1820.h
+The units for temperature readings are sent in Celsius by default can be changed to Fahrenheit by setting DS1820_FAHRENHEIT = true in in config_DS1820.h
 
 If you don't want to resend values that haven't changed you can set DS1820_ALWAYS = false in config_DS1820.h
 

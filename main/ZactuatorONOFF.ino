@@ -30,7 +30,7 @@
 
 #ifdef ZactuatorONOFF
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
@@ -44,13 +44,33 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic
       pub(subjectGTWONOFFtoMQTT, ONOFFdata);
     } else {
-      Log.error(F("MQTTtoONOFF failed json read" CR));
+      if (ONOFFdata["cmd"] == "high_pulse") {
+        Log.notice(F("MQTTtoONOFF high_pulse ok" CR));
+        Log.notice(F("GPIO number: %d" CR), gpio);
+        int pulselength = ONOFFdata["pulse_length"] | 500;
+        Log.notice(F("Pulse length: %d ms" CR), pulselength);
+        pinMode(gpio, OUTPUT);
+        digitalWrite(gpio, HIGH);
+        delay(pulselength);
+        digitalWrite(gpio, LOW);
+      } else if (ONOFFdata["cmd"] == "low_pulse") {
+        Log.notice(F("MQTTtoONOFF low_pulse ok" CR));
+        Log.notice(F("GPIO number: %d" CR), gpio);
+        int pulselength = ONOFFdata["pulse_length"] | 500;
+        Log.notice(F("Pulse length: %d ms" CR), pulselength);
+        pinMode(gpio, OUTPUT);
+        digitalWrite(gpio, LOW);
+        delay(pulselength);
+        digitalWrite(gpio, HIGH);
+      } else {
+        Log.error(F("MQTTtoONOFF failed json read" CR));
+      }
     }
   }
 }
 #  endif
 
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));

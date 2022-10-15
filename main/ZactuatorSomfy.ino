@@ -51,7 +51,7 @@ void setupSomfy() {
   Log.trace(F("ZactuatorSomfy setup done " CR));
 }
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoSomfy(char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoSomfy)) {
 #    ifdef ZradioCC1101

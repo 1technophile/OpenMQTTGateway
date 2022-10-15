@@ -11,14 +11,14 @@ You need to set `OpenHABAutoDiscovery` to true into `config_mqttDiscovery.h`
 `#define OpenHABDiscovery true`
 
 ::: tip
-If you are connecting to BLE devices it is highly recommended to set `BLE_FILTER_CONNECTABLE` to `1` in `config_BT.h`. Otherwise you may encounter incomplete data.
+If you are connecting to BLE devices it is highly recommended to set `filterConnectable` to `true` in [BT configuration](../use/ble.md#advanced-filter-out-connectable-devices). Otherwise you may encounter incomplete data.
 :::
 
 The things will appear in the inbox of the paperUI, add them and links the channels. You should see them into the control panel for further usage.
 ![](../img/OpenMQTTgateway_OpenHAB_Control.png)
 
 ## MQTT 2 manual setup >=Openhab2.4
-You should have a mqtt broker installed (either mosquitto or the OpenHAB2 embedded one)
+You should have an MQTT broker installed (either mosquitto or the OpenHAB2 embedded one)
 
 In paper UI
 * In bindings add the MQTT Things binding
@@ -42,7 +42,7 @@ In paper UI
 * Repeat for each channels and each things
 * Configuration > Things > "Your thing" : click on a channel and add 1 or several items per channel defining what you want to display in the sitemap
 or
-* Define your items in an item file like this by refering to your mqtt things channels:
+* Define your items in an item file like this by refering to your MQTT things channels:
 For a mi flora and mi jia
 
 ```java
@@ -80,7 +80,7 @@ Number lux_P		"Luminiosité plante[%.1f lux]"              {channel="mqtt:topic:
 
 * Configuration > Things > "Your thing" : click on a channel and add 1 or several switch per channel 
 or
-* Define your items in an item file like this by refering to your mqtt thing channel:
+* Define your items in an item file like this by refering to your MQTT thing channel:
 
 `Switch OMGSwitch "Prise 1" <poweroutlet> {channel="mqtt:topic:08998877:Power1"}`
 

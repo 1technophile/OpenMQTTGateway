@@ -25,7 +25,20 @@ Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgate
 
 * [List of compatible boards (Off the shelf or DIY) is available](https://compatible.openmqttgateway.com/index.php/boards/), RF Bridge, IR, BLE gateways...
 
-* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, HM10, RF, IR emitters and receivers...
+*Running on a computer*
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
+
+* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, RF, IR emitters and receivers...
+
+## Compatible controllers, saas or software
+
+* [Home Assistant](https://docs.openmqttgateway.com/integrate/home_assistant.html)
+
+* [OpenHAB](https://docs.openmqttgateway.com/integrate/openhab2.html)
+
+* [NodeRed](https://docs.openmqttgateway.com/integrate/node_red.html)
+
+* [AWS-IOT](https://docs.openmqttgateway.com/integrate/aws_iot.html)
 
 ## Contributors ✨
 

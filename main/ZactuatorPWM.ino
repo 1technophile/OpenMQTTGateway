@@ -195,7 +195,7 @@ boolean PWMtoMQTT() {
   return false;
 }
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));
@@ -206,8 +206,8 @@ void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
       JsonVariant value = jsonData[channelJsonKeys[i]];
       if (!value.isNull()) {
         float targetValue = value.as<float>();
-        targetValue = min(targetValue, 1.f);
-        targetValue = max(targetValue, 0.f);
+        targetValue = std::min(targetValue, 1.f);
+        targetValue = std::max(targetValue, 0.f);
         targetValues[i] = targetValue;
 
         // Initially configure as an instantaneous change....
@@ -239,8 +239,8 @@ void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
       if (!value.isNull()) {
         float gamma = value.as<float>();
         // Sanity check
-        gamma = min(gamma, 4.f);
-        gamma = max(gamma, 0.5f);
+        gamma = std::min(gamma, 4.f);
+        gamma = std::max(gamma, 0.5f);
         calibrationGamma[i] = gamma;
       }
       snprintf(key, sizeof(key), "min-%s", channelJsonKeys[i]);
