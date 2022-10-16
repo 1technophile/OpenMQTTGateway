@@ -32,31 +32,27 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #ifdef ZgatewayBT
 
-#  ifdef ESP32
-#    include "FreeRTOS.h"
+#  include "FreeRTOS.h"
 SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
 SemaphoreHandle_t semaphoreBLEOperation;
 QueueHandle_t BLEQueue;
 // Headers used for deep sleep functions
-#    include <NimBLEAdvertisedDevice.h>
-#    include <NimBLEDevice.h>
-#    include <NimBLEScan.h>
-#    include <NimBLEUtils.h>
-#    include <driver/adc.h>
-#    include <esp_bt.h>
-#    include <esp_bt_main.h>
-#    include <esp_wifi.h>
-#    include <stdatomic.h>
-
-#    include "ZgatewayBLEConnect.h"
-#    include "soc/timer_group_reg.h"
-#    include "soc/timer_group_struct.h"
-
-#  endif
-
+#  include <NimBLEAdvertisedDevice.h>
+#  include <NimBLEDevice.h>
+#  include <NimBLEScan.h>
+#  include <NimBLEUtils.h>
 #  include <decoder.h>
+#  include <driver/adc.h>
+#  include <esp_bt.h>
+#  include <esp_bt_main.h>
+#  include <esp_wifi.h>
+#  include <stdatomic.h>
 
 #  include <vector>
+
+#  include "ZgatewayBLEConnect.h"
+#  include "soc/timer_group_reg.h"
+#  include "soc/timer_group_struct.h"
 
 using namespace std;
 
@@ -77,9 +73,7 @@ struct decompose {
   bool reverse;
 };
 
-#  ifdef ESP32
 vector<BLEAction> BLEactions;
-#  endif
 
 vector<BLEdevice*> devices;
 int newDevices = 0;
@@ -196,7 +190,6 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   }
   pub("/commands/BTtoMQTT/config", jo);
 
-#  if defined(ESP32)
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
@@ -215,10 +208,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     preferences.end();
     Log.notice(F("BT config saved" CR));
   }
-#  endif
 }
 
-#  if defined(ESP32)
 void BTConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
@@ -237,7 +228,6 @@ void BTConfig_load() {
   BTConfig_fromJson(jo, true); // Never send mqtt message with config
   Log.notice(F("BT config loaded" CR));
 }
-#  endif
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
   if (abs((int)data["rssi"] | 0) < abs(BTConfig.minRssi) && data.containsKey("id")) {
@@ -288,7 +278,6 @@ public:
 
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData = true);
 
-#  ifdef ESP32
 static TaskHandle_t xCoreTaskHandle;
 static TaskHandle_t xProcBLETaskHandle;
 
@@ -340,20 +329,6 @@ void emptyBTQueue() {
   }
 }
 
-#  else
-
-JsonBundle jsonBTBuffer;
-
-JsonObject& getBTJsonObject(const char* json, bool haPresenceEnabled) {
-  return jsonBTBuffer.createObject();
-}
-
-void pubBT(JsonObject& data) {
-  pubBTMainCore(data);
-}
-
-#  endif
-
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
@@ -388,12 +363,10 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
 }
 
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type) {
-#  ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
   }
-#  endif
 
   BLEdevice* device = getDeviceByMac(mac);
   if (device == &NO_DEVICE_FOUND) {
@@ -435,9 +408,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
   // update oneWhite flag
   oneWhite = oneWhite || device->isWhtL;
 
-#  ifdef ESP32
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
-#  endif
 }
 
 #  define isWhite(device)      device->isWhtL
@@ -544,7 +515,6 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
 #  endif
 
-#  ifdef ESP32
 /*
        Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
        Ported to Arduino ESP32 by Evandro Copercini
@@ -777,39 +747,39 @@ void lowPowerESP32() { // low power mode
 }
 
 void deepSleep(uint64_t time_in_us) {
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#  if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   sleepScreen();
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
-#    endif
+#  endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
   BLEDevice::deinit(true);
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
   // Ignore the deprecated warning, this call is necessary here.
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   adc_power_off();
-#    pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
   esp_wifi_stop();
   esp_deep_sleep(time_in_us);
 }
 
 void changelowpowermode(int newLowPowerMode) {
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#  if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   if (lowpowermode == 2) {
-#      ifdef ZboardM5STACK
+#    ifdef ZboardM5STACK
     M5.Lcd.wakeup();
-#      endif
-#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#    endif
+#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
     M5.Axp.SetLDO2(true);
     M5.Lcd.begin();
-#      endif
+#    endif
   }
   char lpm[2];
   sprintf(lpm, "%d", newLowPowerMode);
   M5Print("Changing LOW POWER mode to:", lpm, "");
-#    endif
+#  endif
   lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
   preferences.putUInt("lowpowermode", lowpowermode);
@@ -865,124 +835,6 @@ bool BTtoMQTT() { // for on demand BLE scans
   BLEscan();
   return true;
 }
-#  else // arduino or ESP8266 working with HM10/11
-
-#    include <SoftwareSerial.h>
-#    define QUESTION_MSG "AT+DISA?"
-
-SoftwareSerial softserial(BT_RX, BT_TX);
-
-String returnedString((char*)0);
-unsigned long timebt = 0;
-
-// this struct define which parts of the hexadecimal chain we extract and what to do with these parts
-// {"mac"}, {"typ"}, {"rsi"}, {"rdl"}, {"sty"}, {"rda"}
-struct decompose d[6] = {{0, 12, true}, {12, 2, false}, {14, 2, false}, {16, 2, false}, {28, 4, true}, {32, 60, false}};
-
-void setupBT() {
-  BTConfig_init();
-  Log.notice(F("BLE interval: %d" CR), BTConfig.BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
-  Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
-  Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
-  softserial.begin(HMSerialSpeed);
-  softserial.print(F("AT+ROLE1" CR));
-  delay(100);
-  softserial.print(F("AT+IMME1" CR));
-  delay(100);
-  softserial.print(F("AT+RESET" CR));
-  delay(100);
-#    ifdef HM_BLUE_LED_STOP
-  softserial.print(F("AT+PIO11" CR)); // When not connected (as in BLE mode) the LED is off. When connected the LED is solid on.
-#    endif
-  delay(100);
-#    if defined(ESP8266)
-  returnedString.reserve(512); //reserve memory space for BT Serial. (size should depend on available RAM)
-#    endif
-  Log.trace(F("ZgatewayBT HM1X setup done " CR));
-}
-
-bool BTtoMQTT() {
-  //extract serial data from module in hexa format
-  while (softserial.available() > 0) {
-    int a = softserial.read();
-    if (a < 16) {
-      returnedString += "0";
-    }
-    returnedString += String(a, HEX);
-  }
-
-  if (millis() > (timebt + BTConfig.BLEinterval)) { //retrieving data
-    timebt = millis();
-    returnedString.remove(0); //init data string
-    softserial.print(F(QUESTION_MSG)); //start new discovery
-    return false;
-  }
-
-#    if defined(ESP8266)
-  yield();
-#    endif
-  if (returnedString.length() > (BLEdelimiterLength + CRLR_Length)) { //packet has to be at least the (BLEdelimiter + 'CR LF') length
-    Log.verbose(F("returnedString: %s" CR), (char*)returnedString.c_str());
-    if (returnedString.equals(F(BLEEndOfDiscovery))) //OK+DISCE
-    {
-      returnedString.remove(0); //clear data string
-      scanCount++;
-      Log.notice(F("Scan number %d end " CR), scanCount);
-      return false;
-    }
-    size_t pos = 0, eolPos = 0;
-    while ((pos = returnedString.indexOf(F(BLEdelimiter))) != -1 && (eolPos = returnedString.indexOf(F(CRLR))) != -1) {
-#    if defined(ESP8266)
-      yield();
-#    endif
-      String token = returnedString.substring(pos + BLEdelimiterLength, eolPos); //capture a BT device frame
-      returnedString.remove(0, eolPos + CRLR_Length); //remove frame from main buffer (including 'CR LF' chars)
-      Log.trace(F("Token: %s" CR), token.c_str());
-      if (token.length() > 32) { // we extract data only if we have size is at least the size of (MAC, TYPE, RSSI, and Rest Data Length)
-        String mac = F("");
-        mac.reserve(17);
-        for (int i = d[0].start; i < (d[0].start + d[0].len); i += 2) {
-          mac += token.substring((d[0].start + d[0].len) - i - 2, (d[0].start + d[0].len) - i);
-          if (i < (d[0].start + d[0].len) - 2)
-            mac += ":";
-        }
-        mac.toUpperCase();
-
-        String rssiStr = token.substring(d[2].start, (d[2].start + d[2].len));
-        int rssi = (int)strtol(rssiStr.c_str(), NULL, 16) - 256;
-
-        String restDataLengthStr = token.substring(d[3].start, (d[3].start + d[3].len));
-        int restDataLength = (int)strtol(restDataLengthStr.c_str(), NULL, 16) * 2;
-
-        String restData = F("");
-        if (restDataLength <= 60)
-          restData = token.substring(d[5].start, (d[5].start + restDataLength));
-
-        Log.trace(F("Creating BLE buffer" CR));
-        JsonObject& BLEdata = getBTJsonObject();
-
-        Log.trace(F("Id %s" CR), (char*)mac.c_str());
-        BLEdata["id"] = (const char*)mac.c_str();
-        BLEdevice* device = getDeviceByMac((char*)mac.c_str());
-
-        if (!BTConfig.ignoreWBlist && isBlack(device))
-          return false; //if black listed MAC we go out
-        if (!BTConfig.ignoreWBlist && oneWhite && !isWhite(device))
-          return false; //if WBlist is enabled AND we have at least one white MAC AND this MAC is not white we go out
-
-        BLEdata["rssi"] = (int)rssi;
-        if (!BTConfig.pubOnlySensors && BTConfig.presenceEnable)
-          hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
-        Log.trace(F("Service data: %s" CR), restData.c_str());
-        BLEdata["servicedata"] = restData.c_str();
-        PublishDeviceData(BLEdata);
-      }
-    }
-    return false;
-  }
-}
-#  endif
 
 void RemoveJsonPropertyIf(JsonObject& obj, const char* key, bool condition) {
   if (condition) {
@@ -1004,7 +856,6 @@ boolean valid_service_data(const char* data, int size) {
 void launchBTDiscovery() {
   if (newDevices == 0)
     return;
-#    ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
@@ -1013,10 +864,6 @@ void launchBTDiscovery() {
   vector<BLEdevice*> localDevices = devices;
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
-#    else
-  newDevices = 0;
-  for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-#    endif
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
     // Do not launch discovery for the devices already discovered or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
@@ -1186,16 +1033,13 @@ void BTforceScan() {
   if (!ProcessLock) {
     BTtoMQTT();
     Log.trace(F("Scan done" CR));
-#  ifdef ESP32
     if (BTConfig.bleConnect)
       BLEconnect();
-#  endif
   } else {
     Log.trace(F("Cannot launch scan due to other process running" CR));
   }
 }
 
-#  ifdef ESP32
 void immediateBTAction(void* pvParameters) {
   if (BLEactions.size()) {
     // Immediate action; we need to prevent the normal connection action and stop scanning
@@ -1251,10 +1095,8 @@ void startBTActionTask() {
       &th, /* Task handle. */
       1); /* Core where the task should run */
 }
-#  endif
 
 void MQTTtoBTAction(JsonObject& BTdata) {
-#  ifdef ESP32
   BLEAction action;
   memset(&action, 0, sizeof(BLEAction));
   if (BTdata.containsKey("SBS1")) {
@@ -1319,7 +1161,6 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {
     startBTActionTask();
   }
-#  endif
 }
 
 void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
@@ -1332,24 +1173,16 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     WorBupdated |= updateWorB(BTdata, false);
 
     if (WorBupdated) {
-#  ifdef ESP32
       if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdTRUE) {
         dumpDevices();
         xSemaphoreGive(semaphoreCreateOrUpdateDevice);
       }
-#  else
-      dumpDevices();
-#  endif
     }
 
     // Force scan now
     if (BTdata.containsKey("interval") && BTdata["interval"] == 0) {
       Log.notice(F("BLE forced scan" CR));
-#  ifdef ESP32
       atomic_store_explicit(&forceBTScan, 1, ::memory_order_seq_cst); // ask the other core to do the scan for us
-#  else
-      BTforceScan();
-#  endif
     }
 
     /*
@@ -1361,24 +1194,19 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     if (BTdata.containsKey("init") && BTdata["init"].as<bool>()) {
       // Restore the default (initial) configuration
       BTConfig_init();
-    }
-#  ifdef ESP32
-    else if (BTdata.containsKey("load") && BTdata["load"].as<bool>()) {
+    } else if (BTdata.containsKey("load") && BTdata["load"].as<bool>()) {
       // Load the saved configuration, if not initialised
       BTConfig_load();
     }
-#  endif
 
     // Load config from json if available
     BTConfig_fromJson(BTdata);
 
-#  ifdef ESP32
     if (BTdata.containsKey("lowpowermode")) {
       changelowpowermode((int)BTdata["lowpowermode"]);
     }
 
     MQTTtoBTAction(BTdata);
-#  endif
   }
 }
 #endif

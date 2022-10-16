@@ -1,19 +1,19 @@
-/*  
-  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
     HELTEC ESP32 LORA - SSD1306 / Onboard 0.96-inch 128*64 dot matrix OLED display
-  
+
     Copyright: (c)Florian ROBERT
-    
+
     Contributors:
     - 1technophile
     - NorthernMan54
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -49,6 +49,30 @@ void setupHELTEC() {
 }
 
 void loopHELTEC() {
+  static int previousLogLevel;
+  int currentLogLevel = Log.getLastMsgLevel();
+  if (previousLogLevel != currentLogLevel && lowpowermode != 2) {
+    switch (currentLogLevel) {
+      case 1:
+      case 2:
+        //        wakeScreen(NORMAL_LCD_BRIGHTNESS);
+        //        M5.Lcd.fillScreen(TFT_RED); // FATAL, ERROR
+        //        M5.Lcd.setTextColor(TFT_BLACK, TFT_RED);
+        break;
+      case 3:
+        //        wakeScreen(NORMAL_LCD_BRIGHTNESS);
+        //        M5.Lcd.fillScreen(TFT_ORANGE); // WARNING
+        //        M5.Lcd.setTextColor(TFT_BLACK, TFT_ORANGE);
+        break;
+      default:
+        //        wakeScreen(SLEEP_LCD_BRIGHTNESS);
+        //       M5.Lcd.fillScreen(TFT_WHITE);
+        Oled.fillScreen(WHITE);
+        Oled.drawLogo((int)OLED_WIDTH * 0.24, (int)(OLED_WIDTH / 2) - OLED_WIDTH * 0.2, (int)(OLED_HEIGHT / 2) + OLED_HEIGHT * 0.2, true, true, true, true, true, true); // Name
+        break;
+    }
+  }
+  previousLogLevel = currentLogLevel;
 }
 
 void MQTTtoHELTEC(char* topicOri, JsonObject& HELTECdata) { // json object decoding
@@ -63,10 +87,24 @@ void MQTTtoHELTEC(char* topicOri, JsonObject& HELTECdata) { // json object decod
   }
 }
 
-// Simple method to display message on oled
+// Simple print methonds
 
-size_t OledPrint(String msg) {
-  return Oled.print(msg);
+void heltecPrint(char* line1, char* line2, char* line3) {
+  Oled.println(line1);
+  Oled.println(line2);
+  Oled.println(line3);
+  delay(2000);
+}
+
+void heltecPrint(char* line1, char* line2) {
+  Oled.println(line1);
+  Oled.println(line2);
+  delay(2000);
+}
+
+void heltecPrint(char* line1) {
+  Oled.println(line1);
+  delay(2000);
 }
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
@@ -113,10 +151,13 @@ int OledSerial::read(void) {
 void OledSerial::flush(void) {
 }
 
+void OledSerial::fillScreen(OLEDDISPLAY_COLOR color) {
+  display->clear();
+  display->setColor(color);
+  display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
+}
+
 size_t OledSerial::write(uint8_t c) {
-// Serial.print("Setup: Executing on core ");
-Serial.print(xPortGetCoreID());
-//  Serial.write(c);
   display->clear();
   display->setColor(WHITE);
   display->setFont(ArialMT_Plain_10);
@@ -128,9 +169,6 @@ Serial.print(xPortGetCoreID());
 }
 
 size_t OledSerial::write(const uint8_t* buffer, size_t size) {
-  // Serial.print("Setup: Executing on core ");
-  // Serial.println(xPortGetCoreID());
-  // Serial.write(buffer, size);
   display->clear();
   display->setColor(WHITE);
   display->setFont(ArialMT_Plain_10);

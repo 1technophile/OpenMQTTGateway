@@ -260,7 +260,7 @@ void revert_hex_data(const char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-/** 
+/**
  * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
  * This value can represent a negative value if canBeNegative is set to true
  */
@@ -295,10 +295,10 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 
 /**
  * @brief Publish the payload on default MQTT topic.
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param payload  the message to sends
- * @param retainFlag true if you what a retain 
+ * @param retainFlag true if you what a retain
  */
 void pub(const char* topicori, const char* payload, bool retainFlag) {
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -307,7 +307,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
 
 /**
  * @brief Publish the payload on default MQTT topic
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param data The Json Object that rapresent the message
  */
@@ -363,7 +363,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 /**
  * @brief Publish the payload on default MQTT topic
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param payload the message to sends
  */
@@ -374,10 +374,10 @@ void pub(const char* topicori, const char* payload) {
 
 /**
  * @brief Publish the payload on the topic with a retantion
- * 
+ *
  * @param topic  The topic where to publish
  * @param data   The Json Object that rapresent the message
- * @param retain true if you what a retain 
+ * @param retain true if you what a retain
  */
 void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
   String buffer = "";
@@ -387,7 +387,7 @@ void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
 
 /**
  * @brief Low level MQTT functions without retain
- * 
+ *
  * @param topic  the topic
  * @param payload  the payload
  */
@@ -397,8 +397,8 @@ void pubMQTT(const char* topic, const char* payload) {
 
 /**
  * @brief Very Low level MQTT functions with retain Flag
- * 
- * @param topic the topic 
+ *
+ * @param topic the topic
  * @param payload the payload
  * @param retainFlag  true if retain the retain Flag
  */
@@ -527,10 +527,8 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    if (lowpowermode < 2)
-      M5Print("MQTT connected", "", "");
-#endif
+
+    displayPrint("MQTT connected");
     Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
@@ -880,9 +878,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    M5Print("OTA in progress", "", "");
-#  endif
+    lpDisplayPrint("OTA in progress");
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
@@ -891,9 +887,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    M5Print("OTA done", "", "");
-#  endif
+    lpDisplayPrint("OTA done");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
@@ -1207,9 +1201,7 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (lowpowermode < 2) {
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-      M5Print("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
-#    endif
+      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
       lowPowerESP32();
@@ -1234,10 +1226,7 @@ void setup_wifimanager(bool reset_settings) {
     digitalWrite(LED_INFO, !LED_INFO_ON);
   }
 
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-  if (lowpowermode < 2)
-    M5Print("Wifi connected", "", "");
-#  endif
+  displayPrint("Wifi connected");
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -1532,12 +1521,14 @@ void loop() {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
+
+// Function that doesn't need an active connection
 #if defined(ZboardHELTEC)
   loopHELTEC();
 #endif
 }
 
-/** 
+/**
  * Calculate uptime and take into account the millis() rollover
  */
 unsigned long uptime() {
@@ -1639,7 +1630,7 @@ void stateMeasures() {
 #endif
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
-/** 
+/**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
 void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
@@ -1659,7 +1650,7 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   }
 }
 
-/** 
+/**
  * get oldest time index from the values array from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
 int getMin() {
@@ -1674,7 +1665,7 @@ int getMin() {
   return minindex;
 }
 
-/** 
+/**
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
 bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
@@ -1755,6 +1746,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     MQTTtoM5(topicOri, jsondata);
+#  endif
+#  if defined(ZboardHELTEC)
+    MQTTtoHELTEC(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, jsondata);
