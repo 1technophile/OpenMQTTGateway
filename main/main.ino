@@ -180,7 +180,7 @@ char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
 #endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
-bool justReconnected = false; //indicate when we have just re-connected to MQTT
+bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ZmqttDiscovery
@@ -1374,23 +1374,22 @@ void loop() {
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
 #endif
     failure_number_ntwk = 0;
-    if (client.connected()) {
+    if (client.loop()) { // MQTT client is still connected
       digitalWrite(LED_INFO, LED_INFO_ON);
       failure_number_ntwk = 0;
-
-      client.loop();
+      // We have just re-connected if connected was previously false
+      bool justReconnected = !connected;
 
 #ifdef ZmqttDiscovery
-      if (disc) {
-        if (!connectedOnce || (discovery_republish_on_reconnect && !justReconnected)) {
-          // at first connection we publish the discovery payloads
-          // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
+      // at first connection we publish the discovery payloads
+      // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
+      bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
+      if (publishDiscovery) {
           pubMqttDiscovery();
-        }
       }
 #endif
       connectedOnce = true;
-      justReconnected = true;
+      connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
@@ -1460,7 +1459,7 @@ void loop() {
 #ifdef ZgatewayBT
 #  ifdef ZmqttDiscovery
       if (disc)
-        launchBTDiscovery();
+        launchBTDiscovery(publishDiscovery);
 #  endif
 #  ifndef ESP32
       if (BTtoMQTT())
@@ -1496,13 +1495,12 @@ void loop() {
       RTL_433Loop();
 #endif
     } else {
-      // MQTT disconnected, we reset the justReconnected flag
-      justReconnected = false;
+      // MQTT disconnected
+      connected = false;
       connectMQTT();
     }
   } else { // disconnected from network
-    // Network disconnected, we reset the justReconnected flag
-    justReconnected = false;
+    connected = false;
     Log.warning(F("Network disconnected:" CR));
     digitalWrite(LED_ERROR, LED_ERROR_ON);
     delay(2000); // add a delay to avoid ESP32 crash and reset

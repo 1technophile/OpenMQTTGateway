@@ -30,7 +30,7 @@ extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 extern void emptyBTQueue();
-extern void launchBTDiscovery();
+extern void launchBTDiscovery(bool overrideDiscovery);
 
 #ifdef ESP32
 extern int btQueueBlocked;
