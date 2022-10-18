@@ -1385,7 +1385,7 @@ void loop() {
       // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
       bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
       if (publishDiscovery) {
-          pubMqttDiscovery();
+        pubMqttDiscovery();
       }
 #endif
       connectedOnce = true;
