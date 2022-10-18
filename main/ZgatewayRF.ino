@@ -176,6 +176,7 @@ void RFtoMQTT() {
 #  if simpleReceiving
 void MQTTtoRF(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
+  disableActiveReceiver();
   ELECHOUSE_cc1101.SetTx(receiveMhz);
 #    endif
   mySwitch.disableReceive();
@@ -251,6 +252,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
       float trMhz = RFdata["mhz"] | CC1101_FREQUENCY;
       if (validFrequency((int)trMhz)) {
+        disableActiveReceiver();
         ELECHOUSE_cc1101.SetTx(trMhz);
         Log.notice(F("Transmit mhz: %F" CR), trMhz);
       }
@@ -321,6 +323,7 @@ void enableRFReceive() {
 #  endif
 
 #  ifdef ZradioCC1101 // set Receive on and Transmitt off
+  ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.SetRx(receiveMhz);
 #  endif
   mySwitch.disableTransmit();

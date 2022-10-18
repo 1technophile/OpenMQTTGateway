@@ -33,7 +33,7 @@
 
 char messageBuffer[JSON_MSG_BUFFER];
 
-rtl_433_ESP rtl_433(-1); // use -1 to disable transmitter
+rtl_433_ESP rtl_433(-1);
 
 void rtl_433_Callback(char* message) {
   DynamicJsonDocument jsonBuffer2(JSON_MSG_BUFFER);
@@ -67,7 +67,6 @@ void rtl_433_Callback(char* message) {
 }
 
 void setupRTL_433() {
-  rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, receiveMhz);
   rtl_433.setCallback(rtl_433_Callback, messageBuffer, JSON_MSG_BUFFER);
   Log.trace(F("ZgatewayRTL_433 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRTL_433);
   Log.notice(F("ZgatewayRTL_433 setup done " CR));
@@ -139,6 +138,7 @@ extern void enableRTLreceive() {
   disablePilightReceive();
 #  endif
 
+  rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, receiveMhz);
   rtl_433.enableReceiver(RF_MODULE_RECEIVER_GPIO);
 }
 

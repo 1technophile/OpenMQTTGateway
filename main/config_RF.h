@@ -261,6 +261,37 @@ void enableActiveReceiver(bool isBoot) {
   }
   currentReceiver = activeReceiver;
 }
+
+void disableActiveReceiver() {
+  Log.trace(F("disableActiveReceiver: %d" CR), activeReceiver);
+  switch (activeReceiver) {
+#  ifdef ZgatewayPilight
+    case ACTIVE_PILIGHT:
+      disablePilightReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF
+    case ACTIVE_RF:
+      disableRFReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRTL_433
+    case ACTIVE_RTL:
+      disableRTLreceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF2
+    case ACTIVE_RF2:
+      disableRF2Receive();
+      break;
+#  endif
+#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+    default:
+      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
+#  endif
+  }
+}
+
 #endif
 
 #endif
