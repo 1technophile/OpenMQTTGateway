@@ -857,7 +857,6 @@ boolean valid_service_data(const char* data, int size) {
 void launchBTDiscovery(bool overrideDiscovery) {
   if (!overrideDiscovery && newDevices == 0)
     return;
-#    ifdef ESP32
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
