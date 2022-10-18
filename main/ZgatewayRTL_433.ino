@@ -46,7 +46,7 @@ void rtl_433_Callback(char* message) {
 
   unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round(RFrtl_433_ESPdata["temperature_C"]);
   String topic = String(subjectRTL_433toMQTT);
-#  ifdef valueAsATopic
+#  if valueAsATopic
   String model = RFrtl_433_ESPdata["model"];
   String id = RFrtl_433_ESPdata["id"];
   if (model != 0) {
