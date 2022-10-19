@@ -28,17 +28,12 @@
 */
 #include "User_config.h"
 #ifdef ZgatewayRTL_433
-#  ifndef ZradioCC1101
-#    error "CC1101 is the only supported receiver module for RTL_433 and needs to be enabled."
-#  endif
 
 #  include <rtl_433_ESP.h>
 
 char messageBuffer[JSON_MSG_BUFFER];
 
-rtl_433_ESP rtl_433(-1); // use -1 to disable transmitter
-
-#  include <ELECHOUSE_CC1101_SRC_DRV.h>
+rtl_433_ESP rtl_433(-1);
 
 void rtl_433_Callback(char* message) {
   DynamicJsonDocument jsonBuffer2(JSON_MSG_BUFFER);
@@ -49,6 +44,7 @@ void rtl_433_Callback(char* message) {
     return;
   }
 
+  unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round(RFrtl_433_ESPdata["temperature_C"]);
   String topic = String(subjectRTL_433toMQTT);
 #  if valueAsATopic
   String model = RFrtl_433_ESPdata["model"];
@@ -61,14 +57,16 @@ void rtl_433_Callback(char* message) {
   }
 #  endif
 
-  pub((char*)topic.c_str(), RFrtl_433_ESPdata);
+  if (!isAduplicateSignal(MQTTvalue)) {
+    pub((char*)topic.c_str(), RFrtl_433_ESPdata);
+    storeSignalValue(MQTTvalue);
+  }
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
 #  endif
 }
 
 void setupRTL_433() {
-  rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
   rtl_433.setCallback(rtl_433_Callback, messageBuffer, JSON_MSG_BUFFER);
   Log.trace(F("ZgatewayRTL_433 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRTL_433);
   Log.notice(F("ZgatewayRTL_433 setup done " CR));
@@ -93,16 +91,24 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       success = true;
     }
     if (RTLdata.containsKey("rssi")) {
-      int minimumRssi = RTLdata["rssi"] | 0;
-      Log.notice(F("RTL_433 minimum RSSI: %d" CR), minimumRssi);
-      rtl_433.setMinimumRSSI(minimumRssi);
+      int rssiThreshold = RTLdata["rssi"] | 0;
+      Log.notice(F("RTL_433 RSSI Threshold Delta: %d " CR), rssiThreshold);
+      rtl_433.setRSSIThreshold(rssiThreshold);
       success = true;
     }
+#  if defined(RF_SX1276) || defined(RF_SX1278)
+    if (RTLdata.containsKey("ookThreshold")) {
+      int newOokThreshold = RTLdata["ookThreshold"] | 0;
+      Log.notice(F("RTL_433 ookThreshold %d" CR), newOokThreshold);
+      rtl_433.setOOKThreshold(newOokThreshold);
+      success = true;
+    }
+#  endif
     if (RTLdata.containsKey("debug")) {
       int debug = RTLdata["debug"] | -1;
       Log.notice(F("RTL_433 set debug: %d" CR), debug);
-      rtl_433.setDebug(debug);
-      rtl_433.initReceiver(RF_RECEIVER_GPIO, receiveMhz);
+      // rtl_433.setDebug(debug);
+      rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, receiveMhz);
       success = true;
     }
     if (RTLdata.containsKey("status")) {
@@ -131,9 +137,9 @@ extern void enableRTLreceive() {
 #  ifdef ZgatewayPilight
   disablePilightReceive();
 #  endif
-  ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
-  rtl_433.enableReceiver(RF_RECEIVER_GPIO);
-  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+
+  rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, receiveMhz);
+  rtl_433.enableReceiver(RF_MODULE_RECEIVER_GPIO);
 }
 
 extern void disableRTLreceive() {
@@ -142,8 +148,12 @@ extern void disableRTLreceive() {
   rtl_433.disableReceiver();
 }
 
-extern int getRTLMinimumRSSI() {
-  return rtl_433.minimumRssi;
+extern int getRTLrssiThreshold() {
+  return rtl_433.rssiThreshold;
+}
+
+extern int getRTLAverageRSSI() {
+  return rtl_433.averageRssi;
 }
 
 extern int getRTLCurrentRSSI() {
@@ -153,5 +163,11 @@ extern int getRTLCurrentRSSI() {
 extern int getRTLMessageCount() {
   return rtl_433.messageCount;
 }
+
+#  if defined(RF_SX1276) || defined(RF_SX1278)
+extern int getOOKThresh() {
+  return rtl_433.OokFixedThreshold;
+}
+#  endif
 
 #endif
