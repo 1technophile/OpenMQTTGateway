@@ -152,6 +152,9 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 void MQTTtoRF2(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101
   NewRemoteReceiver::disable();
+  disableActiveReceiver();
+  ELECHOUSE_cc1101.Init();
+  pinMode(RF_EMITTER_GPIO, OUTPUT);
   ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
 #    endif
 
@@ -268,6 +271,9 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
     if (boolSWITCHTYPE != 99) {
 #    ifdef ZradioCC1101
       NewRemoteReceiver::disable();
+      disableActiveReceiver();
+      ELECHOUSE_cc1101.Init();
+      pinMode(RF_EMITTER_GPIO, OUTPUT);
       ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY); // set Transmit on
 #    endif
       Log.trace(F("MQTTtoRF2 switch type ok" CR));
@@ -356,10 +362,11 @@ void enableRF2Receive() {
   disableRFReceive();
 #  endif
 
-  NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
 #  ifdef ZradioCC1101
+  ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
 #  endif
+  NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
 }
 
 #endif
