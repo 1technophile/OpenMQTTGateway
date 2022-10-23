@@ -87,7 +87,12 @@ public:
 
   void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
 
-  size_t write(uint8_t);
+  // This is a bit of lazy programmer simplifacation for the semapore and core detecting code.  Not sure if it is truly space efficient.
+
+  inline size_t write(uint8_t x) {
+    return write(&x, 1);
+  }
+
   size_t write(const uint8_t* buffer, size_t size);
   inline size_t write(const char* buffer, size_t size) {
     return write((uint8_t*)buffer, size);
