@@ -943,8 +943,8 @@ void launchBTDiscovery(bool overrideDiscovery) {
         } else {
           Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
         }
-        p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
       }
+      p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), p->macAdr);
     }
