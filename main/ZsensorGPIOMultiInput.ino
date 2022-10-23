@@ -12,6 +12,7 @@
     Contributors:
     - 1technophile
     - QuagmireMan
+    - ArtiomFedorov
   
     This file is part of OpenMQTTGateway.
     
@@ -30,21 +31,11 @@
 
 #ifdef ZsensorGPIOMultiInput
 
-unsigned long lastDebounceTime = 0;
-int InputState = 3; // Set to 3 so that it reads on startup
-int lastInputState = 3;
-
-void setupGPIOMultiInput() {
-
-
-
-  Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO);
-  pinMode(INPUT_GPIO, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
-
-
-
-
-}
+#ifdef INPUT_GPIO_1
+unsigned long lastDebounceTime_1 = 0;
+int InputState_1 = 3; // Set to 3 so that it reads on startup
+int lastInputState_1 = 3;
+#endif
 
 
 void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number) {
@@ -52,14 +43,30 @@ void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject GPIOdata = jsonBuffer.to<JsonObject>();
   if (_input_state == HIGH) {
-    GPIOdata["gpio_" + String(GPIO_number)] = "HIGH";
+    GPIOdata["gpio_" + String(GPIO_number)] = MULTI_INPUT_GPIO_ON_VALUE;
   }
   if (_input_state == LOW) {
-    GPIOdata["gpio_" + String(GPIO_number)] = "LOW";
+    GPIOdata["gpio_" + String(GPIO_number)] = MULTI_INPUT_GPIO_OFF_VALUE;
   }
   if (GPIOdata.size() > 0)
     pub(subjectGPIOMultiInputtoMQTT, GPIOdata);
 }
+
+
+void setupGPIOMultiInput() {
+
+
+#ifdef INPUT_GPIO_1
+  Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO_1);
+  pinMode(INPUT_GPIO_1, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
+#endif
+
+
+
+}
+
+
+
 
 
 
@@ -68,25 +75,22 @@ void MeasureGPIOMultiInput() {
 
 
 
-
-  int reading = digitalRead(INPUT_GPIO);
-
-  if (reading != lastInputState) {
-    lastDebounceTime = millis();
+#ifdef INPUT_GPIO_1
+  int reading_1 = digitalRead(INPUT_GPIO_1);
+  if (reading_1 != lastInputState_1) {
+    lastDebounceTime_1 = millis();
   }
-
-  if ((millis() - lastDebounceTime) > GPIOInputDebounceDelay) {
-#  if defined(ESP8266) || defined(ESP32)
+  if ((millis() - lastDebounceTime_1) > GPIOMultiInputDebounceDelay) {
+#  ifdef ESP32
     yield();
 #  endif
-    if (reading != InputState) {
-      InputState = reading;
-      publishMeasureGPIOMultiInput(InputState, 1)
+    if (reading_1 != InputState_1) {
+      InputState_1 = reading_1;
+      publishMeasureGPIOMultiInput(InputState_1, 1)
     }
   }
-
-  lastInputState = reading;
-
+  lastInputState_1 = reading_1;
+#endif
 
 
 
