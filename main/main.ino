@@ -188,6 +188,7 @@ bool disc = true; // Auto discovery with Home Assistant convention
 #endif
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
+static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
@@ -509,6 +510,14 @@ bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   return true;
 }
 
+void delayWithOTA(long millis) {  
+  long waitStep = 100;
+  for(long wait=0; wait < millis; wait += waitStep){
+    ArduinoOTA.handle();
+    delay(waitStep);
+  }    
+}
+
 void connectMQTT() {
 #ifndef ESPWifiManualSetup
 #  if defined(ESP8266) || defined(ESP32)
@@ -564,10 +573,17 @@ void connectMQTT() {
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
     digitalWrite(LED_ERROR, LED_ERROR_ON);
-    delay(2000);
+    delayWithOTA(2000);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
-    delay(5000);
+    delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {
+      unsigned long millis_since_last_ota;
+      while((millis_since_last_ota != 0) && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
+        // OTA might be still active, we sleep for a while
+        Log.warning(F("OTA might be still active (activity %d ms ago)" CR), millis_since_last_ota);
+        ArduinoOTA.handle();
+        delay(100);
+      }
       watchdogReboot(1);
     }
   }
@@ -875,6 +891,7 @@ void setOTA() {
     Log.trace(F("Start OTA, lock other functions" CR));
     digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
     digitalWrite(LED_ERROR, LED_ERROR_ON);
+    last_ota_activity_millis = millis();
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
@@ -882,6 +899,7 @@ void setOTA() {
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
+    last_ota_activity_millis = 0;
     digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
 #  if defined(ZgatewayBT) && defined(ESP32)
@@ -891,8 +909,10 @@ void setOTA() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
+    last_ota_activity_millis = millis();
   });
   ArduinoOTA.onError([](ota_error_t error) {
+    last_ota_activity_millis = millis();
     digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
 #  if defined(ZgatewayBT) && defined(ESP32)
