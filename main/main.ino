@@ -510,12 +510,16 @@ bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   return true;
 }
 
-void delayWithOTA(long millis) {
+void delayWithOTA(long waitMillis) {
+#if defined(ESP8266) || defined(ESP32)
   long waitStep = 100;
-  for (long wait = 0; wait < millis; wait += waitStep) {
+  for (long waitedMillis = 0; waitedMillis < waitMillis; waitedMillis += waitStep) {
     ArduinoOTA.handle();
     delay(waitStep);
   }
+#else
+  delay(waitMillis);
+#endif
 }
 
 void connectMQTT() {
