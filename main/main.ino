@@ -510,12 +510,12 @@ bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   return true;
 }
 
-void delayWithOTA(long millis) {  
+void delayWithOTA(long millis) {
   long waitStep = 100;
-  for(long wait=0; wait < millis; wait += waitStep){
+  for (long wait = 0; wait < millis; wait += waitStep) {
     ArduinoOTA.handle();
     delay(waitStep);
-  }    
+  }
 }
 
 void connectMQTT() {
@@ -578,7 +578,7 @@ void connectMQTT() {
     delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {
       unsigned long millis_since_last_ota;
-      while((millis_since_last_ota != 0) && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
+      while ((millis_since_last_ota != 0) && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
         // OTA might be still active, we sleep for a while
         Log.warning(F("OTA might be still active (activity %d ms ago)" CR), millis_since_last_ota);
         ArduinoOTA.handle();
