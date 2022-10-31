@@ -135,6 +135,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorGPIOInput
 #  include "config_GPIOInput.h"
 #endif
+#ifdef ZsensorGPIOMultiInput
+#  include "config_GPIOMultiInput.h"
+#endif
 #ifdef ZsensorGPIOKeyCode
 #  include "config_GPIOKeyCode.h"
 #endif
@@ -778,6 +781,10 @@ void setup() {
 #ifdef ZsensorGPIOInput
   setupGPIOInput();
   modules.add(ZsensorGPIOInput);
+#endif
+#ifdef ZsensorGPIOMultiInput
+  setupGPIOMultiInput();
+  modules.add(ZsensorGPIOMultiInput);
 #endif
 #ifdef ZsensorGPIOKeyCode
   setupGPIOKeyCode();
@@ -1431,6 +1438,9 @@ void loop() {
 #endif
 #ifdef ZsensorGPIOInput
       MeasureGPIOInput();
+#endif
+#ifdef ZsensorGPIOMultiInput
+      MeasureGPIOMultiInput();
 #endif
 #ifdef ZsensorGPIOKeyCode
       MeasureGPIOKeyCode();
