@@ -122,8 +122,6 @@ void setupGPIOMultiInput() {
 #  endif
 }
 
-
-
 void MeasureGPIOMultiInput() {
 #  ifdef INPUT_GPIO_1
   int reading_1 = digitalRead(INPUT_GPIO_1);
