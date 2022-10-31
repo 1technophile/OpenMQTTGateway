@@ -691,6 +691,24 @@ void pubMqttDiscovery() {
   );
 #  endif
 
+#  ifdef ZsensorGPIOMultiInput
+  Log.trace(F("GPIOMultiInputDiscovery" CR));
+  char* GPIOMultiInputsensor[8] = {"binary_sensor", "GPIOMultiInput", "", "", jsonGpio, MULTI_INPUT_GPIO_ON_VALUE, MULTI_INPUT_GPIO_ON_VALUE, ""};
+  //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+  //trc(GPIOMultiInputsensor[1]);
+  createDiscovery(GPIOMultiInputsensor[0],
+                  subjectGPIOMultiInputtoMQTT, GPIOMultiInputsensor[1], (char*)getUniqueId(GPIOMultiInputsensor[1], GPIOMultiInputsensor[2]).c_str(),
+                  will_Topic, GPIOMultiInputsensor[3], GPIOMultiInputsensor[4],
+                  GPIOMultiInputsensor[5], GPIOMultiInputsensor[6], GPIOMultiInputsensor[7],
+                  0, "", "", true, "",
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone //State Class
+  );
+#  endif
+
+
+
 #  ifdef ZsensorINA226
 #    define INA226parametersCount 3
   Log.trace(F("INA226Discovery" CR));
