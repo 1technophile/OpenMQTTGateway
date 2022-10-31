@@ -35,9 +35,8 @@ void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number);
 #define subjectGPIOMultiInputtoMQTT "/GPIOMultiInputtoMQTT"
 #define GPIOMultiInputDebounceDelay 60 //debounce time, increase if there are issues
 
-
 #ifndef GPIOMultiInputState
-#    define GPIOMultiInputState 1 // Set to 3 so that it reads on startup, or 1
+#  define GPIOMultiInputState 1 // Set to 3 so that it reads on startup, or 1
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/

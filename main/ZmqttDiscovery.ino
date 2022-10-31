@@ -707,8 +707,6 @@ void pubMqttDiscovery() {
   );
 #  endif
 
-
-
 #  ifdef ZsensorINA226
 #    define INA226parametersCount 3
   Log.trace(F("INA226Discovery" CR));
