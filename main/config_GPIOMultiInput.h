@@ -27,7 +27,7 @@
 #define config_GPIOMultiInput_h
 
 extern void setupGPIOMultiInput();
-extern void GPIOMInputtoMQTT();
+extern void GPIOMultiInputtoMQTT();
 void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number);
 
 /*----------------------------USER PARAMETERS-----------------------------*/
@@ -35,10 +35,15 @@ void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number);
 #define subjectGPIOMultiInputtoMQTT "/GPIOMultiInputtoMQTT"
 #define GPIOMultiInputDebounceDelay 60 //debounce time, increase if there are issues
 
+
+#ifndef GPIOMultiInputState
+#    define GPIOMultiInputState 1 // Set to 3 so that it reads on startup, or 1
+#endif
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef INPUT_GPIO_1
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO_1 12
+#    define INPUT_GPIO_1 13
 #  endif
 #endif
 
@@ -62,25 +67,25 @@ void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number);
 
 #ifndef INPUT_GPIO_5
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO_5 35
+#    define INPUT_GPIO_5 23
 #  endif
 #endif
 
 #ifndef INPUT_GPIO_6
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO_6 34
+#    define INPUT_GPIO_6 22
 #  endif
 #endif
 
 #ifndef INPUT_GPIO_7
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO_7 39
+#    define INPUT_GPIO_7 21
 #  endif
 #endif
 
 #ifndef INPUT_GPIO_8
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO_8 36
+#    define INPUT_GPIO_8 19
 #  endif
 #endif
 
