@@ -81,7 +81,6 @@ int lastInputState_8 = GPIOMultiInputState;
 #  endif
 
 void setupGPIOMultiInput() {
-
 #  ifdef INPUT_GPIO_1
   Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO_1);
   pinMode(INPUT_GPIO_1, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
@@ -121,13 +120,11 @@ void setupGPIOMultiInput() {
   Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO_8);
   pinMode(INPUT_GPIO_8, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 #  endif
-
 }
 
 
 
 void MeasureGPIOMultiInput() {
-
 #  ifdef INPUT_GPIO_1
   int reading_1 = digitalRead(INPUT_GPIO_1);
   if (reading_1 != lastInputState_1) {
@@ -263,7 +260,6 @@ void MeasureGPIOMultiInput() {
   }
   lastInputState_8 = reading_8;
 #  endif
-
 }
 
 void publishMeasureGPIOMultiInput(int _input_state, int GPIO_number) {
