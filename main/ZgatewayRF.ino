@@ -111,6 +111,12 @@ void setupRF() {
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
 #  ifdef ZradioCC1101 //receiving with CC1101
+  if (ELECHOUSE_cc1101.getCC1101()) {
+    Log.notice("C1101 spi Connection OK");
+  } else {
+    Log.error("C1101 spi Connection Error");
+  }
+
   ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.SetRx(receiveMhz);
 #  endif
