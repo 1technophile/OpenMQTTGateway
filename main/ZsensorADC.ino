@@ -46,17 +46,27 @@ void MeasureADC() {
 #  if defined(ESP8266)
     yield();
 #  endif
-    timeadc = millis();
     static int persistedadc;
     int val = analogRead(ADC_GPIO);
+    int sum_val = val;
+    if (NumberOfReadingsADC > 1) { // add extra measurement for accuracy
+      for (int i=1; i<NumberOfReadingsADC; i++){
+        delay(7);
+        sum_val += analogRead(ADC_GPIO);
+      }
+      val = sum_val / NumberOfReadingsADC;
+    }
     if (isnan(val)) {
       Log.error(F("Failed to read from ADC !" CR));
     } else {
-      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC) {
+      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || millis() > (timeadc + 60000UL)) { // pub at least every minute
         Log.trace(F("Creating ADC buffer" CR));
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject ADCdata = jsonBuffer.to<JsonObject>();
         ADCdata["adc"] = (int)val;
+		if (NumberOfReadingsADC > 1) {
+			ADCdata["adc_reads"] = NumberOfReadingsADC;
+		}
 #  if defined(ADC_DIVIDER)
         float volt = 0;
 #    if defined(ESP32)
@@ -71,14 +81,20 @@ void MeasureADC() {
 #    endif
         volt *= ADC_DIVIDER;
         // let's give 2 decimal point
-        val = (volt * 100);
-        volt = (float)val / 100.0;
+        int v = (volt * 100);
+        volt = (float)v / 100.0;
         ADCdata["volt"] = (float)volt;
+#  endif
+#  if defined(ADC_CALIBRATED_SCALE_FACTOR) // calibration: scale factor = ref-Vcal-mV / sum-of-cal-readings @see https://skillbank.co.uk/arduino/calibrate.htm
+        float voltage = sum_val * ADC_CALIBRATED_SCALE_FACTOR; // convert to voltage in millivolts
+        ADCdata["adc_sum"] = (int)sum_val;
+        ADCdata["mvolt_scaled"] = (int)voltage; // real scaled/calibrated value in mV
 #  endif
         pub(ADCTOPIC, ADCdata);
         persistedadc = val;
       }
     }
+    timeadc = millis();
   }
 }
 #endif
