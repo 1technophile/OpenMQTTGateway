@@ -27,6 +27,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |OLIMEX ESP32 Ethernet POE|-|-|-|X|-|X|-|X|
 |OLIMEX ESP32 Ethernet POE ISO|-|-|-|X|-|X|-|X|
 |ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
+|Heltec WiFi LoRa 32 (V2.1)|-|rtl_433|-|X|X|-|X|-|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
 |[M5Tough](M5)|-|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|

@@ -111,6 +111,12 @@ void setupRF() {
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
 #  ifdef ZradioCC1101 //receiving with CC1101
+  if (ELECHOUSE_cc1101.getCC1101()) {
+    Log.notice("C1101 spi Connection OK");
+  } else {
+    Log.error("C1101 spi Connection Error");
+  }
+
   ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.SetRx(receiveMhz);
 #  endif
@@ -176,6 +182,7 @@ void RFtoMQTT() {
 #  if simpleReceiving
 void MQTTtoRF(char* topicOri, char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
+  disableActiveReceiver();
   ELECHOUSE_cc1101.SetTx(receiveMhz);
 #    endif
   mySwitch.disableReceive();
@@ -251,6 +258,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
       float trMhz = RFdata["mhz"] | CC1101_FREQUENCY;
       if (validFrequency((int)trMhz)) {
+        disableActiveReceiver();
         ELECHOUSE_cc1101.SetTx(trMhz);
         Log.notice(F("Transmit mhz: %F" CR), trMhz);
       }
@@ -321,6 +329,7 @@ void enableRFReceive() {
 #  endif
 
 #  ifdef ZradioCC1101 // set Receive on and Transmitt off
+  ELECHOUSE_cc1101.Init();
   ELECHOUSE_cc1101.SetRx(receiveMhz);
 #  endif
   mySwitch.disableTransmit();

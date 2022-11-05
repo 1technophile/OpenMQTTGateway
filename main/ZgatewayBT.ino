@@ -853,8 +853,9 @@ boolean valid_service_data(const char* data, int size) {
 
 #  ifdef ZmqttDiscovery
 // This function always should be called from the main core as it generates direct mqtt messages
-void launchBTDiscovery() {
-  if (newDevices == 0)
+// When overrideDiscovery=true, we publish discovery messages of known devices (even if no new)
+void launchBTDiscovery(bool overrideDiscovery) {
+  if (!overrideDiscovery && newDevices == 0)
     return;
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
@@ -866,8 +867,8 @@ void launchBTDiscovery() {
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
-    // Do not launch discovery for the devices already discovered or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
-    if (!isDiscovered(p) &&
+    // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
+    if ((overrideDiscovery || !isDiscovered(p)) &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
@@ -942,8 +943,8 @@ void launchBTDiscovery() {
         } else {
           Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
         }
-        p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
       }
+      p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
       Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), p->macAdr);
     }

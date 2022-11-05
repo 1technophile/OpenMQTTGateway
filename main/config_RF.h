@@ -63,13 +63,9 @@ extern void setupRTL_433();
 extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata);
 extern void enableRTLreceive();
 extern void disableRTLreceive();
-extern int getRTLMinimumRSSI();
+extern int getRTLrssiThreshold();
 extern int getRTLCurrentRSSI();
 extern int getRTLMessageCount();
-/**
- * minimumRssi minimum RSSI value to enable receiver
- */
-int minimumRssi = 0;
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
@@ -118,7 +114,7 @@ int minimumRssi = 0;
 #  define CC1101_FREQUENCY 433.92
 #endif
 // Allow ZGatewayRF Module to change receive frequency of CC1101 Transceiver module
-#ifdef ZradioCC1101
+#if defined(ZradioCC1101) || defined(ZradioSX127x)
 float receiveMhz = CC1101_FREQUENCY;
 #endif
 
@@ -164,7 +160,7 @@ int activeReceiver = 0;
 #  define ACTIVE_RTL      3
 #  define ACTIVE_RF2      4
 
-#  ifdef ZradioCC1101
+#  if defined(ZradioCC1101) || defined(ZradioSX127x)
 bool validFrequency(float mhz) {
   //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
   if (mhz >= 300 && mhz <= 348)
@@ -265,6 +261,37 @@ void enableActiveReceiver(bool isBoot) {
   }
   currentReceiver = activeReceiver;
 }
+
+void disableActiveReceiver() {
+  Log.trace(F("disableActiveReceiver: %d" CR), activeReceiver);
+  switch (activeReceiver) {
+#  ifdef ZgatewayPilight
+    case ACTIVE_PILIGHT:
+      disablePilightReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF
+    case ACTIVE_RF:
+      disableRFReceive();
+      break;
+#  endif
+#  ifdef ZgatewayRTL_433
+    case ACTIVE_RTL:
+      disableRTLreceive();
+      break;
+#  endif
+#  ifdef ZgatewayRF2
+    case ACTIVE_RF2:
+      disableRF2Receive();
+      break;
+#  endif
+#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+    default:
+      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
+#  endif
+  }
+}
+
 #endif
 
 #endif

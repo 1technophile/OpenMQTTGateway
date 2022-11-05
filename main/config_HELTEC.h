@@ -1,19 +1,19 @@
 /*  
-  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
+  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
     HELTEC ESP32 LORA - SSD1306 / Onboard 0.96-inch 128*64 dot matrix OLED display
-  
+
     Copyright: (c)Florian ROBERT
-    
+
     Contributors:
     - 1technophile
     - NorthernMan54
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -87,7 +87,12 @@ public:
 
   void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
 
-  size_t write(uint8_t);
+  // This is a bit of lazy programmer simplifacation for the semapore and core detecting code.  Not sure if it is truly space efficient.
+
+  inline size_t write(uint8_t x) {
+    return write(&x, 1);
+  }
+
   size_t write(const uint8_t* buffer, size_t size);
   inline size_t write(const char* buffer, size_t size) {
     return write((uint8_t*)buffer, size);

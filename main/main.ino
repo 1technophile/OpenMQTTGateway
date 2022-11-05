@@ -28,7 +28,7 @@
 #include "User_config.h"
 
 // Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
   SIGNAL_SIZE_UL_ULL value;
@@ -180,7 +180,7 @@ char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
 #endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
-bool justReconnected = false; //indicate when we have just re-connected to MQTT
+bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ZmqttDiscovery
@@ -260,7 +260,7 @@ void revert_hex_data(const char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-/** 
+/**
  * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
  * This value can represent a negative value if canBeNegative is set to true
  */
@@ -295,10 +295,10 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 
 /**
  * @brief Publish the payload on default MQTT topic.
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param payload  the message to sends
- * @param retainFlag true if you what a retain 
+ * @param retainFlag true if you what a retain
  */
 void pub(const char* topicori, const char* payload, bool retainFlag) {
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -307,7 +307,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
 
 /**
  * @brief Publish the payload on default MQTT topic
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param data The Json Object that rapresent the message
  */
@@ -363,7 +363,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 /**
  * @brief Publish the payload on default MQTT topic
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param payload the message to sends
  */
@@ -374,10 +374,10 @@ void pub(const char* topicori, const char* payload) {
 
 /**
  * @brief Publish the payload on the topic with a retantion
- * 
+ *
  * @param topic  The topic where to publish
  * @param data   The Json Object that rapresent the message
- * @param retain true if you what a retain 
+ * @param retain true if you what a retain
  */
 void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
   String buffer = "";
@@ -387,7 +387,7 @@ void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
 
 /**
  * @brief Low level MQTT functions without retain
- * 
+ *
  * @param topic  the topic
  * @param payload  the payload
  */
@@ -397,8 +397,8 @@ void pubMQTT(const char* topic, const char* payload) {
 
 /**
  * @brief Very Low level MQTT functions with retain Flag
- * 
- * @param topic the topic 
+ *
+ * @param topic the topic
  * @param payload the payload
  * @param retainFlag  true if retain the retain Flag
  */
@@ -1374,23 +1374,22 @@ void loop() {
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
 #endif
     failure_number_ntwk = 0;
-    if (client.connected()) {
+    if (client.loop()) { // MQTT client is still connected
       digitalWrite(LED_INFO, LED_INFO_ON);
       failure_number_ntwk = 0;
-
-      client.loop();
+      // We have just re-connected if connected was previously false
+      bool justReconnected = !connected;
 
 #ifdef ZmqttDiscovery
-      if (disc) {
-        if (!connectedOnce || (discovery_republish_on_reconnect && !justReconnected)) {
-          // at first connection we publish the discovery payloads
-          // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
-          pubMqttDiscovery();
-        }
+      // at first connection we publish the discovery payloads
+      // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
+      bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
+      if (publishDiscovery) {
+        pubMqttDiscovery();
       }
 #endif
       connectedOnce = true;
-      justReconnected = true;
+      connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
@@ -1460,7 +1459,7 @@ void loop() {
 #ifdef ZgatewayBT
 #  ifdef ZmqttDiscovery
       if (disc)
-        launchBTDiscovery();
+        launchBTDiscovery(publishDiscovery);
 #  endif
 #  ifndef ESP32
       if (BTtoMQTT())
@@ -1496,13 +1495,12 @@ void loop() {
       RTL_433Loop();
 #endif
     } else {
-      // MQTT disconnected, we reset the justReconnected flag
-      justReconnected = false;
+      // MQTT disconnected
+      connected = false;
       connectMQTT();
     }
   } else { // disconnected from network
-    // Network disconnected, we reset the justReconnected flag
-    justReconnected = false;
+    connected = false;
     Log.warning(F("Network disconnected:" CR));
     digitalWrite(LED_ERROR, LED_ERROR_ON);
     delay(2000); // add a delay to avoid ESP32 crash and reset
@@ -1521,14 +1519,12 @@ void loop() {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
-
-// Function that doesn't need an active connection
 #if defined(ZboardHELTEC)
   loopHELTEC();
 #endif
 }
 
-/** 
+/**
  * Calculate uptime and take into account the millis() rollover
  */
 unsigned long uptime() {
@@ -1610,14 +1606,18 @@ void stateMeasures() {
 #  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
   SYSdata["actRec"] = (int)activeReceiver;
 #  endif
-#  ifdef ZradioCC1101
+#  if defined(ZradioCC1101) || defined(ZradioSX127x)
   SYSdata["mhz"] = (float)receiveMhz;
 #  endif
 #  if defined(ZgatewayRTL_433)
   if (activeReceiver == ACTIVE_RTL) {
-    SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+    SYSdata["RTLRssiThresh"] = (int)getRTLrssiThreshold();
     SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+    SYSdata["RTLAVGRssi"] = (int)getRTLAverageRSSI();
     SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+#    ifdef ZradioSX127x
+    SYSdata["RTLOOKThresh"] = (int)getOOKThresh();
+#    endif
   }
 #  endif
   SYSdata["modules"] = modules;
@@ -1625,8 +1625,8 @@ void stateMeasures() {
 }
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
-/** 
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
+/**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
 void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
@@ -1646,7 +1646,7 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   }
 }
 
-/** 
+/**
  * get oldest time index from the values array from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
 int getMin() {
@@ -1661,7 +1661,7 @@ int getMin() {
   return minindex;
 }
 
-/** 
+/**
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
 bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
@@ -1670,7 +1670,7 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
     if (receivedSignal[i].value == value) {
       unsigned long now = millis();
       if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
-        Log.notice(F("no pub. dupl" CR));
+        Log.trace(F("no pub. dupl" CR));
         return true;
       }
     }

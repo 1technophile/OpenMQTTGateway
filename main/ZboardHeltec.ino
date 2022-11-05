@@ -1,19 +1,19 @@
-/*  
-  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
    Send and receiving command by MQTT
- 
+
     HELTEC ESP32 LORA - SSD1306 / Onboard 0.96-inch 128*64 dot matrix OLED display
-  
+
     Copyright: (c)Florian ROBERT
-    
+
     Contributors:
     - 1technophile
     - NorthernMan54
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -32,7 +32,8 @@
 #if defined(ZboardHELTEC)
 #  include "ArduinoLog.h"
 #  include "config_HELTEC.h"
-// #  include "heltec.h"
+
+SemaphoreHandle_t semaphoreOLEDOperation;
 
 void logToLCD(bool display) {
   display ? Log.begin(LOG_LEVEL_LCD, &Oled) : Log.begin(LOG_LEVEL, &Serial); // Log on LCD following LOG_LEVEL_LCD
@@ -125,6 +126,10 @@ OledSerial::OledSerial(int x) {
 
 void OledSerial::begin() {
   // Heltec.begin(); // User OMG serial support
+
+  semaphoreOLEDOperation = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphoreOLEDOperation);
+
   display->init();
   display->flipScreenVertically();
   display->setFont(ArialMT_Plain_10);
@@ -157,28 +162,24 @@ void OledSerial::fillScreen(OLEDDISPLAY_COLOR color) {
   display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
 }
 
-size_t OledSerial::write(uint8_t c) {
-  display->clear();
-  display->setColor(WHITE);
-  display->setFont(ArialMT_Plain_10);
-
-  display->write((char)c);
-  display->drawLogBuffer(0, 0);
-  display->display();
-  return 1;
-}
-
 size_t OledSerial::write(const uint8_t* buffer, size_t size) {
-  display->clear();
-  display->setColor(WHITE);
-  display->setFont(ArialMT_Plain_10);
-  while (size) {
-    display->write((char)*buffer++);
-    size--;
+  if (xPortGetCoreID() == CONFIG_ARDUINO_RUNNING_CORE) {
+    if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+      display->clear();
+      display->setColor(WHITE);
+      display->setFont(ArialMT_Plain_10);
+      while (size) {
+        display->write((char)*buffer++);
+        size--;
+      }
+      display->drawLogBuffer(0, 0);
+      display->display();
+      xSemaphoreGive(semaphoreOLEDOperation);
+      return size;
+    }
   }
-  display->drawLogBuffer(0, 0);
-  display->display();
-  return size;
+  // Default to Serial output if the display is not available
+  return Serial.write(buffer, size);
 }
 
 /*
