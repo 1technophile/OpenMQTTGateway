@@ -36,7 +36,7 @@ ADC_MODE(ADC_TOUT);
 
 //Time used to wait for an interval before resending adc value
 unsigned long timeadc = 0;
-
+unsigned long timeadcpub = 0;
 void setupADC() {
   Log.notice(F("ADC_GPIO: %d" CR), ADC_GPIO);
 }
@@ -46,6 +46,7 @@ void MeasureADC() {
 #  if defined(ESP8266)
     yield();
 #  endif
+    timeadc = millis();
     static int persistedadc;
     int val = analogRead(ADC_GPIO);
     int sum_val = val;
@@ -59,7 +60,8 @@ void MeasureADC() {
     if (isnan(val)) {
       Log.error(F("Failed to read from ADC !" CR));
     } else {
-      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || millis() > (timeadc + 60000UL)) { // pub at least every minute
+      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || millis() > (timeadcpub + 60000UL)) { // pub at least every minute
+        timeadcpub = millis();
         Log.trace(F("Creating ADC buffer" CR));
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject ADCdata = jsonBuffer.to<JsonObject>();
@@ -93,8 +95,7 @@ void MeasureADC() {
         pub(ADCTOPIC, ADCdata);
         persistedadc = val;
       }
-    }
-    timeadc = millis();
+    }    
   }
 }
 #endif
