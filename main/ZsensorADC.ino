@@ -52,7 +52,7 @@ void MeasureADC() {
     int val = analogRead(ADC_GPIO);
     int sum_val = val;
     if (NumberOfReadingsADC > 1) { // add extra measurement for accuracy
-      for (int i = 1; i < NumberOfReadingsADC; i++) {        
+      for (int i = 1; i < NumberOfReadingsADC; i++) {
         sum_val += analogRead(ADC_GPIO);
       }
       val = sum_val / NumberOfReadingsADC;
@@ -60,8 +60,7 @@ void MeasureADC() {
     if (isnan(val)) {
       Log.error(F("Failed to read from ADC !" CR));
     } else {
-      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || (MinTimeInSecBetweenPublishingADC > 0 && millis() > (timeadcpub + (MinTimeInSecBetweenPublishingADC * 1000UL)))) { 
-        timeadcpub = millis();
+      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || (MinTimeInSecBetweenPublishingADC > 0 && millis() > (timeadcpub + (MinTimeInSecBetweenPublishingADC * 1000UL)))) {
         Log.trace(F("Creating ADC buffer" CR));
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject ADCdata = jsonBuffer.to<JsonObject>();
