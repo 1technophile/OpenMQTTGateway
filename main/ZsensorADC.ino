@@ -45,14 +45,14 @@ void MeasureADC() {
   if (millis() > (timeadc + TimeBetweenReadingADC)) { //retrieving value of temperature and humidity of the box from DHT every xUL
 #  if defined(ESP8266)
     yield();
+    analogRead(ADC_GPIO); //the reliability of the readings can be significantly improved by discarding an initial reading and then averaging the results
 #  endif
     timeadc = millis();
     static int persistedadc;
     int val = analogRead(ADC_GPIO);
     int sum_val = val;
     if (NumberOfReadingsADC > 1) { // add extra measurement for accuracy
-      for (int i=1; i<NumberOfReadingsADC; i++){
-        delay(7);
+      for (int i=1; i<NumberOfReadingsADC; i++){        
         sum_val += analogRead(ADC_GPIO);
       }
       val = sum_val / NumberOfReadingsADC;
