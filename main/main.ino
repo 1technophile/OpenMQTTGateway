@@ -159,6 +159,9 @@ struct GfSun2000Data {};
 #if defined(ZgatewayRS232)
 #  include "config_RS232.h"
 #endif
+#if defined(ZgatewayCloud)
+#  include "config_Cloud.h"
+#endif
 /*------------------------------------------------------------------------*/
 
 void setupTLS(bool self_signed = false, uint8_t index = 0);
@@ -813,6 +816,10 @@ void setup() {
 #endif
 #ifdef ZsensorSHTC3
   setupSHTC3();
+#endif
+#ifdef ZgatewayCloud
+  setupCloud();
+  modules.add(ZgatewayCloud);
 #endif
 #ifdef ZgatewayRTL_433
   setupRTL_433();
@@ -1494,6 +1501,9 @@ void loop() {
 #ifdef ZgatewayRTL_433
       RTL_433Loop();
 #endif
+#ifdef ZgatewayCloud
+      CloudLoop();
+#endif
     } else {
       // MQTT disconnected
       connected = false;
@@ -1622,6 +1632,9 @@ void stateMeasures() {
 #  endif
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
+#  ifdef ZgatewayCloud
+  pubCloud(subjectSYStoMQTT, SYSdata);
+#  endif
 }
 #endif
 
@@ -1633,16 +1646,16 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   unsigned long now = millis();
   // find oldest value of the buffer
   int o = getMin();
-  Log.trace(F("Min ind: %d" CR), o);
+  //  Log.trace(F("Min ind: %d" CR), o);
   // replace it by the new one
   receivedSignal[o].value = MQTTvalue;
   receivedSignal[o].time = now;
 
   // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
-  Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
-  Log.trace(F("Col: val/timestamp" CR));
+  //  Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
+  //  Log.trace(F("Col: val/timestamp" CR));
   for (int i = 0; i < struct_size; i++) {
-    Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
+    //    Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
   }
 }
 
@@ -1665,12 +1678,12 @@ int getMin() {
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
 bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
-  Log.trace(F("isAdupl?" CR));
+  // Log.trace(F("isAdupl?" CR));
   for (int i = 0; i < struct_size; i++) {
     if (receivedSignal[i].value == value) {
       unsigned long now = millis();
       if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
-        Log.trace(F("no pub. dupl" CR));
+        //  Log.trace(F("no pub. dupl" CR));
         return true;
       }
     }
