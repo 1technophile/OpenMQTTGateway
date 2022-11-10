@@ -40,6 +40,14 @@ extern void ADCtoMQTT();
 #  define ThresholdReadingADC 50 // following the comparison between the previous value and the current one +- the threshold the value will be published or not
 #endif
 
+#if !defined(NumberOfReadingsADC) || (NumberOfReadingsADC < 1)
+#  define NumberOfReadingsADC 1 // number of readings for better accuracy: avg adc = sum of adc / num readings
+#endif
+
+#ifndef MinTimeInSecBetweenPublishingADC
+#  define MinTimeInSecBetweenPublishingADC 0 // pub at least at defined interval - usefull to publish values in case they do not change so much ; 0 = disabled
+#endif
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266) || !defined(ADC_GPIO)
 #  define ADC_GPIO A0 //on nodeMCU this is D3 pin
