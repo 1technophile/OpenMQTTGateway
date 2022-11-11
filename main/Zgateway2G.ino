@@ -95,7 +95,7 @@ bool _2GtoMQTT() {
   }
   return false;
 }
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTto2G(char* topicOri, char* datacallback) {
   String data = datacallback;
   String topic = topicOri;
@@ -126,7 +126,7 @@ void MQTTto2G(char* topicOri, char* datacallback) {
 }
 #  endif
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTto2G(char* topicOri, JsonObject& SMSdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTto2G)) {
     const char* sms = SMSdata["message"];

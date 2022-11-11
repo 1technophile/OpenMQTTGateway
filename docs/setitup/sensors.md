@@ -11,7 +11,7 @@
 |GPIO Input|Inputs|-|
 |GPIO KeyCode|Keycode|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |INA226|Current and voltage|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|TSL2561|Luminiosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|TSL2561|Luminosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 ## Pinout
 |Module|Arduino Pin| ESP8266 Pin|ESP32 Pin|

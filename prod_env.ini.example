@@ -102,7 +102,7 @@ board_build.ldscript = eagle.flash.1m64.ld ;this frees more space for firmware u
 ;hacked Sonoff RF-Bridge OTA flash
 [env:sonoff-rfbridge-hacked-ota]
 upload_protocol = espota
-upload_port = <ip> ;change this to the ip address of you SRFB
+upload_port = <ip> ;change this to the IP address of you SRFB
 upload_speed = 512000
 upload_flags = 
     --auth=OTAPASSWORD

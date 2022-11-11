@@ -153,7 +153,7 @@ void MeasureDS1820Temp() {
 
           if (DS1820_DETAILS) {
             DS1820data["type"] = ds1820_type[i];
-            DS1820data["res"] = ds1820_resolution[i] + String("bit" CR);
+            DS1820data["res"] = String(ds1820_resolution[i]) + String("bit");
             DS1820data["addr"] = ds1820_addr[i];
           }
           pub((char*)(String(OW_TOPIC) + "/" + ds1820_addr[i]).c_str(), DS1820data);

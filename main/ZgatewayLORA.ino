@@ -49,6 +49,12 @@ void setupLORA() {
   Log.notice(F("LORA_SS: %d" CR), LORA_SS);
   Log.notice(F("LORA_RST: %d" CR), LORA_RST);
   Log.notice(F("LORA_DI0: %d" CR), LORA_DI0);
+  LoRa.setTxPower(LORA_TX_POWER);
+  LoRa.setSpreadingFactor(LORA_SPREADING_FACTOR);
+  LoRa.setSignalBandwidth(LORA_SIGNAL_BANDWIDTH);
+  LoRa.setCodingRate4(LORA_CODING_RATE);
+  LoRa.setPreambleLength(LORA_PREAMBLE_LENGTH);
+  LoRa.setSyncWord(LORA_SYNC_WORD);
   Log.trace(F("ZgatewayLORA setup done" CR));
 }
 
@@ -81,7 +87,7 @@ void LORAtoMQTT() {
   }
 }
 
-#  ifdef jsonReceiving
+#  if jsonReceiving
 void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
@@ -115,7 +121,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
   }
 }
 #  endif
-#  ifdef simpleReceiving
+#  if simpleReceiving
 void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();

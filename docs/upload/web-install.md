@@ -1,4 +1,9 @@
 # (Option 1) Upload from the web
+
+::: tip Running on a tablet or phone
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
+:::
+
 You can upload the firmware to your ESP device directly from here.
 1. Plug in your ESP to a USB port.
 2. Select the firmware in the box below.
@@ -15,18 +20,19 @@ The table below describes the libraries and the modules of each board configurat
 |**ESP32**|
 |esp32-lolin32lite-ble|ESP32 Lolin lite|Suitable for low power with BLE gateway, [tutorial](https://1technophile.blogspot.com/2021/04/low-power-esp32-ble-gateway.html)|-|-|X|-|
 |esp32-m5atom|M5Atom|Compact enclosure ESP32 with BLE gateway|-|(Emit)|X|-|
-|esp32-m5stack-ble|M5Stack Core|Expandable mobule with BLE gateway, display, and little IR emitter|-|-|X|-|
-|esp32-m5stick-ble|M5Stick Grey|Expandable mobule with BLE gateway and little IR emitter|-|(Emit)|X|-|
-|esp32-m5stick-c-ble|M5Stick C Orange|Expandable mobule with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
-|esp32-m5stick-cp-ble|M5Stick C Plus Orange|Expandable mobule with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
-|esp32-m5tough-ble|M5Tough rugged|Expandable mobule with BLE gateway and display, suitable for outdoor|-|-|X|-|
+|esp32-m5stack-ble|M5Stack Core|Expandable module with BLE gateway, display, and little IR emitter|-|-|X|-|
+|esp32-m5stick-ble|M5Stick Grey|Expandable module with BLE gateway and little IR emitter|-|(Emit)|X|-|
+|esp32-m5stick-c-ble|M5Stick C Orange|Expandable module with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
+|esp32-m5stick-cp-ble|M5Stick C Plus Orange|Expandable module with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
+|esp32-m5tough-ble|M5Tough rugged|Expandable module with BLE gateway and display, suitable for outdoor|-|-|X|-|
 |esp32-olimex-gtw-ble-eth|Olimex Ethernet Gateway (non POE)|BLE gateway with external antenna as an option|-|-|X|-|
 |esp32-olimex-gtw-ble-poe|Olimex Ethernet Gateway (POE)|BLE gateway with external antenna as an option|-|-|X|-|
 |esp32-olimex-gtw-ble-poe-iso|Olimex Ethernet Gateway (POE + ISO)|BLE gateway with external antenna as an option|-|-|X|-|
 |esp32-olimex-gtw-ble-wifi|Olimex Ethernet Gateway (non POE) using wifi| BLE gateway|-|-|X|-|
 |esp32dev-ble-cont|ESP32 dev board|BLE gateway with continuous scanning, suitable in particular for door and window BLE sensors (and all the others)|-|-|X|-|
 |esp32dev-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
-|esp32dev-ble-mqtt-decode|ESP32 dev board|BLE gateway with the decoding offloaded to [Theengs Gateway](https://gateway.theengs.io/)|-|-|X|-|
+|esp32dev-ble-openhab|ESP32 dev board|BLE gateway with one scan every 55s per default and OpenHAB discovery|-|-|X|-|
+|esp32dev-ble-mqtt-undecoded|ESP32 dev board|BLE gateway with the decoding offloaded to [Theengs Gateway](https://gateway.theengs.io/)|-|-|X|-|
 |esp32dev-gf-sun-inverter|ESP32 dev board|RS232 reading of GridFree Sun Inverter|-|-|-|-|
 |esp32dev-ir|ESP32 dev board|Infrared (Emitting and receiving) using [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266)|-|X|-|-|
 |esp32dev-multi_receiver|ESP32 dev board|Multi RF library with the possibility to switch between [ESPilight](https://github.com/puuu/ESPiLight), [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP), [NewRemoteSwitch](https://github.com/1technophile/NewRemoteSwitch) and [RCSwitch](https://github.com/1technophile/rc-switch), need CC1101|X|-|-|-|
@@ -40,13 +46,14 @@ The table below describes the libraries and the modules of each board configurat
 |esp32feather-ble|ESP32 Feather Adafruit|BLE for the Adafruit Feather board|-|-|X|-|
 |heltec-wifi-lora32-868|ESP32 HELTEC LORA V2|LORA communication 868Mhz  using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa) |-|-|-|X|
 |heltec-wifi-lora32-915|ESP32 HELTEC LORA V2|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
+|heltec-rtl_433|ESP32 HELTEC LORA32 v2|Gateway using [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP) and [RadioLib](https://github.com/jgromes/RadioLib)|X|-|-|-|
 |tinypico-ble|ESP32 TinyPICO|BLE Gateway|-|-|X|-|
 |ttgo-lora32-v1-868|ESP32 TTGO LORA V1|LORA communication 868Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-lora32-v1-915|ESP32 TTGO LORA V1|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-tbeam|ESP32 TTGO T BEAM|BLE gateway with battery holder|-|-|X|-|
+|esp32dev-ble-datatest|ESP32 dev board|Default BLE gateway with additional servicedata, manufacturerdata and service uuid for analysing decoding issues|-|-|X|-|
 |**ESP8266**|
 |nodemcuv2-2g|ESP8266 board|SMS gateway, need A6/A7 GSM module|-|-|-|-|
-|nodemcuv2-ble|ESP8266 board|BLE gateway, need HM10 Module|-|-|X|-|
 |nodemcuv2-ir|ESP8266 board|Infrared gateway using [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266)|-|X|-|-|
 |nodemcuv2-rf-cc1101|ESP8266 board|RF gateway using [RCSwitch](https://github.com/1technophile/rc-switch) library, need CC1101|X|-|-|-|
 |nodemcuv2-rf|ESP8266 board|RF gateway using [RCSwitch](https://github.com/1technophile/rc-switch) library|X|-|-|-|

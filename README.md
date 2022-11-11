@@ -1,5 +1,4 @@
 [![Community forum](https://img.shields.io/badge/community-forum-brightgreen.svg)](https://community.openmqttgateway.com)
-[![GitLicense](https://gitlicense.com/badge/1technophile/OpenMQTTGateway)](https://gitlicense.com/license/1technophile/OpenMQTTGateway)
 
 ![Build](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=development)
 ![Check Code Format](https://github.com/1technophile/OpenMQTTGateway/workflows/Check%20Code%20Format/badge.svg?branch=development)
@@ -28,7 +27,7 @@ Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgate
 *Running on a computer*
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
 
-* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, HM10, RF, IR emitters and receivers...
+* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, RF, IR emitters and receivers...
 
 ## Compatible controllers, saas or software
 

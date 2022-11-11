@@ -8,7 +8,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 
 `    sudo mosquitto_sub -t +/# -v`
 
-Generate your RF signals with an Moteino on other RFM69 based devices, you will receive :
+Generate your RF signals with a Moteino on other RFM69 based devices, you will receive :
 
 `home/OpenMQTTGateway/RFM69toMQTT 60,-98,0`
 

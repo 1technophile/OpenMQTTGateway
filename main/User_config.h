@@ -50,7 +50,7 @@
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
 
-// Uncomment to use the mac address in the format of 112233445566 as the gateway name
+// Uncomment to use the MAC address in the format of 112233445566 as the gateway name
 // Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
 //#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
@@ -69,7 +69,7 @@
 //#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and mac only
 #ifdef NetworkAdvancedSetup
 #  if defined(ESP8266) || defined(ESP32)
-const byte ip[] = {192, 168, 1, 99}; //ip adress of the gateway, already defined for arduino below
+const byte ip[] = {192, 168, 1, 99}; //IP address of the gateway, already defined for arduino below
 #  endif
 const byte gateway[] = {0, 0, 0, 0};
 const byte Dns[] = {0, 0, 0, 0};
@@ -80,7 +80,7 @@ const byte subnet[] = {255, 255, 255, 0};
 //#  define ESPWifiManualSetup true //uncomment you don't want to use wifimanager for your credential settings on ESP
 #else // for arduino boards
 const byte ip[] = {192, 168, 1, 99};
-const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield mac adress
+const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield MAC address
 #endif
 
 //#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on ESP32 Ethernet gateway and adapt the settings to your board below, the default parameter are for OLIMEX ESP32 Gateway
@@ -132,10 +132,10 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 //#define WIFIMNG_HIDE_MQTT_CONFIG //Uncomment so as to hide MQTT setting from Wifi manager page
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
-//#define MDNS_SD //uncomment if you  want to use mdns for discovering automatically your ip server, please note that MDNS with ESP32 can cause the BLE to not work
+//#define MDNS_SD //uncomment if you  want to use mDNS for discovering automatically your IP server, please note that mDNS with ESP32 can cause the BLE to not work
 #define maxConnectionRetry     10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
 #define maxConnectionRetryWifi 5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
-#define maxRetryWatchDog       11 //maximum Wifi or mqtt re-connection attempts before restarting
+#define maxRetryWatchDog       11 //maximum Wifi or MQTT re-connection attempts before restarting
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
@@ -144,7 +144,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 //MQTT Parameters definition
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 #  define parameters_size     60
-#  define mqtt_topic_max_size 100
+#  define mqtt_topic_max_size 150
 #  ifndef mqtt_max_packet_size
 #    ifdef MQTT_HTTPS_FW_UPDATE
 #      define mqtt_max_packet_size 2560
@@ -154,7 +154,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #else
 #  define parameters_size      30
-#  define mqtt_topic_max_size  50
+#  define mqtt_topic_max_size  75
 #  define mqtt_max_packet_size 128
 #endif
 
@@ -199,7 +199,7 @@ const char* certificate PROGMEM = R"EOF("
 #    define AWS_IOT false
 #  endif
 
-//#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via mqtt message.
+//#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.
 
 #  ifdef MQTT_HTTPS_FW_UPDATE
 // If used, this should be set to the root CA certificate of the server hosting the firmware.
@@ -354,18 +354,22 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
 #ifndef jsonPublishing
-#  define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#  define jsonPublishing true //define false if you don't want to use Json publishing (one topic for all the parameters)
 #endif
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
 #ifndef jsonReceiving
-#  define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#  define jsonReceiving true //define false if you don't want to use Json  reception analysis
 #endif
 
-//#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+#ifndef simplePublishing
+#  define simplePublishing false //define true if you want to use simple publishing (one topic for one parameter)
+#endif
 //example
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-//#define simpleReceiving true //comment if you don't want to use old way reception analysis
+#ifndef simpleReceiving
+#  define simpleReceiving true //define false if you don't want to use old way reception analysis
+#endif
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #ifndef ota_hostname
@@ -453,8 +457,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #define eraseCmd   "erase"
 #define statusCmd  "status"
 
-// uncomment the line below to integrate msg value into the subject when receiving
-//#define valueAsASubject true
+#ifndef valueAsATopic
+#  define valueAsATopic false // define true to integrate msg value into the subject when receiving
+#endif
 
 #if defined(ESP32)
 #  define JSON_MSG_BUFFER    768
@@ -474,10 +479,10 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define STRTO_UL_ULL       strtoul
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // variable to avoid duplicates
 #  ifndef time_avoid_duplicate
-#    define time_avoid_duplicate 3000 // if you want to avoid duplicate mqtt message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
+#    define time_avoid_duplicate 3000 // if you want to avoid duplicate MQTT message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates
 #  endif
 #endif
 
@@ -491,5 +496,10 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef LOG_LEVEL
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
+
+/*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
+// The real definitions are in config_M5.h / config_HELTEC.h
+#define displayPrint(...)   // only print if not in low power mode
+#define lpDisplayPrint(...) // print in low power mode
 
 #endif

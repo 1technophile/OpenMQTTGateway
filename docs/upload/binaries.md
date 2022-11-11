@@ -11,11 +11,11 @@ Download the binary corresponding to your board and gateway [here](https://githu
 https://www.espressif.com/en/products/hardware/esp32/resources
 * Uncompress the package
 * Execute `flash_download_tools`
-* Choose Developper mode
+* Choose Developer mode
 * Choose ESP32 DownloadTool
 * Set the files and the address as below:
 ![Flash download tool](../img/OpenMQTTgateway_ESP32_binary_flash.png)
-And set the parameters used by arduino IDE, we are able to upload to ESP32 a binary file containing OpenMQTTGateway.
+And set the parameters used by Arduino IDE, we are able to upload to ESP32 a binary file containing OpenMQTTGateway.
 * Set the config as above
 * Connect your ESP32 board and select the COM port 
 * Click on erase if it is your first upload
@@ -78,8 +78,8 @@ https://github.com/marcelstoer/nodemcu-pyflasher/releases
 * Click on *FlashNodeMCU*
 The upload details appears.
 
-With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
-Note that to reset the wifi and mqtt settings you can check *yes, wipes all data*
+Note that to reset the wifi and MQTT settings you can check *yes, wipes all data*
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fdocs.openmqttgateway.com%2Fupload%2Fbinaries.html&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)

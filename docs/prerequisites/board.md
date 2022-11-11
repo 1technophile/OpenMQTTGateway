@@ -7,7 +7,11 @@ Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, AD
 or actuators; LED, relays, PWM.
 
 ::: tip Running on a computer
-If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can use [Theengs Gateway](https://gateway.theengs.io/).
+:::
+
+::: tip Running on a tablet or phone
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
 :::
 
 Here is some information to find the boards suitable for your need, you have the choice between off the shelves boards and DIY setup.
@@ -23,6 +27,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |OLIMEX ESP32 Ethernet POE|-|-|-|X|-|X|-|X|
 |OLIMEX ESP32 Ethernet POE ISO|-|-|-|X|-|X|-|X|
 |ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
+|Heltec WiFi LoRa 32 (V2.1)|-|rtl_433|-|X|X|-|X|-|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
 |[M5Tough](M5)|-|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
@@ -40,20 +45,20 @@ The boards below need hardware [parts](parts.md) and electronic/hardware compete
 |DIY boards|RF|IR|BLE|LORA|GSM|Button|Relay|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |Arduino UNO|X|X(limited compared to ESP)|-|-|-|X|X|
-|Arduino MEGA|X|X(limited compared to ESP)|X|-|-|X|X|
+|Arduino MEGA|X|X(limited compared to ESP)|-|-|-|X|X|
 |ESP32|X|X|X|X|not tested|X|X|
-|ESP8266|X|X|X|not tested|X|X|X|
+|ESP8266|X|X|-|not tested|X|X|X|
 
 ::: tip
 Pilight is only supported on ESP, Arduino UNO handle only 32bits values in our context.
-Setup based on HM10 doesn't support some BLE [devices](devices.md#for-ble-devices).
+HM10 is no longer supported by OpenMQTTGateway
 :::
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 
 Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection. 
 
-The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to arduino Uno & Mega.
+The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to Arduino Uno & Mega.
 
 Choosing your board depends heavily on the technologies you want to use with it.
 To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).

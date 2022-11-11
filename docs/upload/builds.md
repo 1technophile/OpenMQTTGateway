@@ -29,8 +29,6 @@ lib_deps =
   ${libraries.arduinolog}
 build_flags =
   -w ; supress all warnings
-  '-DjsonPublishing=true'
-  '-DjsonReceiving=true'
 ;  '-DLOG_LEVEL=LOG_LEVEL_TRACE'  ; Enable trace level logging
 monitor_speed = 115200
 ```
@@ -96,8 +94,8 @@ build_flags =
   '-DLED_RECEIVE_ON=LOW'             ; Comment 2
   '-DRF_RECEIVER_GPIO=13'
   '-DRF_EMITTER_GPIO=15'
-  '-UsimpleReceiving'                ; Disable HA discovery
-  '-UZmqttDiscovery'
+  '-DsimpleReceiving=false'          
+  '-UZmqttDiscovery'                 ; Disable HA discovery
 monitor_speed = 115200
 
 [env:nodemcuv2-pilight-bme280-ota]
@@ -108,7 +106,7 @@ upload_flags =
   --auth=otapassword
   --port=8266
 ```
-The first new environment we create, `nodemcuv2-pilight-bme280`, inherits the default `nodemcuv2-pilight` environment in `platformio.ini` with the `extends = env:nodemcuv2-pilight` line. In the `lib_deps` section, it imports all the `lib_deps` of `nodemcuv2-pilight` with the `${env:nodemcuv2-pilight.lib_deps}` line, and adds BME280 on top of it. (Since the environment we're extending already has this `lib_deps` attribute, specifying it again would normally replace it completely with our new attribute; instead, to keep its value but simply append to it, we import the original in the beginning of our `lib_deps` attribute.) In the `build_flags` section, it again imports all the `build_flags` of `nodemcuv2-pilight` and many of its own overrides, e.g. changing `Base_Topic` found in `User_config.h` from the default to "rf/" by using the `'-DBase_Topic="rf/"'` line. It also unsets previously set configurations (i.e. `simpleReceiving`) by using `'-UsimpleReceiving'`. This environment will work over serial upload.
+The first new environment we create, `nodemcuv2-pilight-bme280`, inherits the default `nodemcuv2-pilight` environment in `platformio.ini` with the `extends = env:nodemcuv2-pilight` line. In the `lib_deps` section, it imports all the `lib_deps` of `nodemcuv2-pilight` with the `${env:nodemcuv2-pilight.lib_deps}` line, and adds BME280 on top of it. (Since the environment we're extending already has this `lib_deps` attribute, specifying it again would normally replace it completely with our new attribute; instead, to keep its value but simply append to it, we import the original in the beginning of our `lib_deps` attribute.) In the `build_flags` section, it again imports all the `build_flags` of `nodemcuv2-pilight` and many of its own overrides, e.g. changing `Base_Topic` found in `User_config.h` from the default to "rf/" by using the `'-DBase_Topic="rf/"'` line. It also unsets previously set configurations (i.e. `mqttDiscovery`) by using `'-UZmqttDiscovery'`. This environment will work over serial upload.
 
 The second new environment, `nodemcuv2-pilight-bme280-ota`, inherits everything we specified in the first environment (with the line `extends = env:nodemcuv2-pilight-bme280`), but modifies it to upload over OTA (Wi-Fi). We also specified this as the `default_env` in the beginning of the file, so PlatformIO will choose this environment to build and upload if we don't specify otherwise.
 
@@ -163,7 +161,7 @@ With some ESP it could be necessary to push the reset button when the upload beg
 
 If you want to erase the settings stored in the ESP memory use:
 `pio run --target erase`
-This can be usefull especialy before the first upload or when you change the board partitions sizing.
+This can be useful especially before the first upload or when you change the board partitions sizing.
 
 Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
 ```
@@ -171,7 +169,7 @@ home/OpenMQTTGateway/LWT Online
 home/OpenMQTTGateway/version
 ```
 
-With PIO you can also upload the firmware through Over the Air, so as to do that you can add the upload options flags used below, `upload_port` is the IP adress of your ESP:
+With PIO you can also upload the firmware through Over the Air, so as to do that you can add the upload options flags used below, `upload_port` is the IP address of your ESP:
 
 ``` ini
 [env:esp32-ble]
@@ -195,13 +193,13 @@ upload_flags =
 ## Configure & Upload with Arduino IDE
 
 * Download the [CODE](https://github.com/1technophile/OpenMQTTGateway/releases) from github
-* First download the last version of the Arduino IDE from the arduino [website](https://www.arduino.cc/en/Main/Software)
+* First download the last version of the Arduino IDE from the Arduino [website](https://www.arduino.cc/en/Main/Software)
 * Add ESP32 boards by following this [tutorial](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
 * Add ESP8266 boards by following this [tutorial](https://github.com/esp8266/Arduino#installing-with-boards-manager)
 * Download the libraries package corresponding to your board and module wished into the same page (example esp32-m5stick-c-ble-libraries.zip)
-* Unzip the libraries into your arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
+* Unzip the libraries into your Arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
 * If necessary replace the spaces into each library folder by _: example rename “ESP32 BLE Arduino” folder to “ESP32_BLE_Arduino”
-* Open the file main.ino from OpenMQTTGateway/main folder with the arduino IDE
+* Open the file main.ino from OpenMQTTGateway/main folder with the Arduino IDE
 * Change the settings and the desired gateways into `User_config.h` (uncomment the modules you want)
 
 *Example for the use of RF gateway:*
@@ -214,15 +212,15 @@ upload_flags =
 //#define ZgatewayBT "BT" //ESP8266, ESP32
 ```
 
-* Change the pins or parameters corresponding to the modules choosen, for RF you can change the pins into config_RF.h
+* Change the pins or parameters corresponding to the modules chosen, for RF you can change the pins in config_RF.h
 * Choose the board on the Arduino IDE
 * Select the port corresponding to the board
 * Note that for using BLE on ESP32 you will need to select *Minimal SPIFFS* into Tools->Partition Scheme
 * Open the serial monitor and set 115200 bauds
 * Upload ➡️
-* You should see the logs into the serial monitor
+* You should see the logs in the serial monitor
 
-With an ESP if you did not set your network and mqtt parameters manually you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
 ## API
 With the V0.9 we added the support of json for receiving and publishing.
@@ -230,14 +228,14 @@ Per default Json reception and Json publication is activated, the previous simpl
 
 You can deactivate Json or simple mode following theses instructions:
 ```cpp
-#define jsonPublishing true //comment if you don't want to use Json  publishing  (one topic for all the parameters)
+#define jsonPublishing true //define false if you don't want to use Json publishing (one topic for all the parameters)
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
-//#define simplePublishing true //comment if you don't want to use simple publishing (one topic for one parameter)
+#define simplePublishing false //define true if you want to use simple publishing (one topic for one parameter)
 //example 
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
-#define simpleReceiving true //comment if you don't want to use old way reception analysis
-#define jsonReceiving true //comment if you don't want to use Json  reception analysis
+#define simpleReceiving true //define false if you don't want to use old way reception analysis
+#define jsonReceiving true //define false if you don't want to use Json  reception analysis
 ```
 
 If you are using platformio you can also comment the definitions above and define your parameters into platformio.ini file by setting the following `build_flags`:
@@ -261,7 +259,7 @@ If you want to use HASS MQTT discovery you need to have
 uncommented.
 Added to that auto discovery box should be selected into your Home Assistant MQTT integration configuration.
 
-With an ESP if you did not set your network and mqtt parameters manualy you can now open the [web portal configuration](portal.md).
+With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
 ::: warning Note
 simpleReceiving on Arduino boards doesn't accept 64 bits MQTT values, you can only send 32bits values from the MQTT broker.

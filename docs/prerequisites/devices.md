@@ -18,51 +18,69 @@ Added to that it retrieves the measures from the devices below. By default the d
 
 |Devices|Model|Measurements|
 |-|:-:|:-:|
-| ATorch Battery Capacity Monitor (c)|DT24|volt/amp/watt|
-| BLE watches with fixed mac||rssi for presence detection|
+| Amazfit|Smart Watch/Band (1)|steps, activity heart rate (when activated in the Zepp Life settings)|
+| April Brother|ABTemp|uuid/mfid/major/txpower @ 1 m/temperature/battery|
+| April Brother|N03|temperature/humidity/luminance/battery|
+| ATorch Battery Capacity Monitor (c)|DT24|voltage/amp/watt|
+| BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
-| BlueMaestro|TempoDisc|temperature/humidity/duepoint/voltage|
-| ClearGrass |CGG1|temperature/humidity/battery|
+| BlueMaestro|TempoDisc|temperature/humidity/dew point/voltage|
+| BM2 Battery Monitor|BM2|battery|
+| ClearGrass|CGG1|temperature/humidity/battery/voltage (depending on which CGG1 firmware is installed)|
 | ClearGrass alarm clock|CGD1|temperature/humidity|
-| ClearGrass with atmospheric pressure |CGP1W|temperature/humidity/air pressure|
-| Clock |LYWDS02|temperature/humidity|
-| Eddystone TLM|protocol|temperature/count/volt/time|
-| GOVEE |H5055|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6/battery|
-| GOVEE |H5075|temperature/humidity/battery|
-| GOVEE |H5072|temperature/humidity/battery|
-| GOVEE |H5102|temperature/humidity/battery|
-| HONEYWELL |JQJCY01YM|formaldehyde/temperature/humidity/battery|
-| Ibeacon|protocol|UUID/MFID/Major/Minor/Power|
+| ClearGrass with atmospheric pressure|CGP1W|temperature/humidity/air pressure|
+| ClearGrass Clock|LYWSD02|temperature/humidity/battery|
+| GOVEE|H5055|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6/battery|
+| GOVEE|H5075|temperature/humidity/battery|
+| GOVEE|H5072|temperature/humidity/battery|
+| GOVEE|H5102|temperature/humidity/battery|
+| HONEYWELL|JQJCY01YM|formaldehyde/temperature/humidity/battery|
+| Hydractiva Digital | Amphiro/Oras|sessions/time/litres/temperature/energy|
+| iBeacon|protocol|uuid/mfid/major/minor/txpower @ 1 m/voltage|
 | INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
-| INKBIRD (1)|IBS-TH2|temperature/battery|
+| INKBIRD (1)|IBS-TH2/P01B|temperature/battery|
 | INKBIRD (1)|IBT-2X|temperature1/temperature2|
-| INKBIRD (1)|IBT-4XS|temperature1/temperature2/temperature3/temperature4|
+| INKBIRD|IBT-4X(S/C)|temperature1/temperature2/temperature3/temperature4|
 | INKBIRD (1)|IBT-6XS|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6|
-| iNode Energy Meter (1)||power/energy/battery|
-| Mokosmart (1)|M1|x_axis/y_axis/z_axis/battery|
-| Mokosmart (1)|H4|temperature/humidity/volt|
-| Qingping |CGDK2|temperature/humidity|
-| Qingping |CGH1|open|
-| Qingping |CGPR1|presence/luminance|
-| RuuviTag Raw V1|RuuviTag|temperature/humidity/pressure/acceleration/volt|
-| RuuviTag Raw V2|RuuviTag|temperature/humidity/pressure/acceleration/volt/TX power/movement/counter/sequence number|
-| Switchbot(c)|S1|mode/state/battery|
-| Thermobeacon|WS02|temperature/humidity/volt|
-| Thermobeacon|WS08|temperature/humidity/volt|
+| iNode|Energy Meter (1)|Current average and aggregate kW(h)/m³/battery|
+| Oria/Brifit/SigmaWit/SensorPro|TH Sensor|temperature/humidity/battery|
+| Mokosmart (1)|M1|acceleration x/y/z-axis/battery|
+| Mokosmart (1)|H4|temperature/humidity/voltage|
+| Otio/BeeWi|Door & Window Sensor|contact/battery|
+| Qingping|CGDK2|temperature/humidity|
+| Qingping|CGH1|open|
+| Qingping|CGPR1|presence/luminance/battery|
+| Qingping|CGDN1|temperature/humidity/PM2.5/PM10/carbon dioxide|
+| RDL52832||mfid/uuid/minor/major/txpower @ 1 m/temperature/humidity/acceleration x/y/z-axis|
+| RBaron|b-parasite|moisture/temperature/humidity/luminance (v1.1.0+)/voltage|
+| RuuviTag Raw V1|RuuviTag|temperature/humidity/pressure/acceleration x/y/z-axis/voltage|
+| RuuviTag Raw V2|RuuviTag|temperature/humidity/pressure/acceleration x/y/z-axis/voltage/TX power/movement/counter/sequence number|
+| SmartDry|Laundry Sensor|temperature/humidity/shake/voltage/wake|
+| Switchbot|Bot (c)|mode/state/battery|
+| Switchbot|Motion Sensor|movement/light level/sensing distance/led/scope tested/battery|
+| Switchbot|Contact Sensor|contact/movement/scope tested/light level/battery|
+| Switchbot|Curtain|motion state/position/light level/battery/calibration state|
+| Switchbot|Meter (Plus)|temperature/humidity/battery|
+| Thermobeacon|WS02|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
+| Thermobeacon|WS08|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
+| ThermoPro|TP357|temperature/humidity|
+| ThermoPro|TP358|temperature/humidity|
+| ThermoPro|TP359|temperature/humidity|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
-| Vegtrug ||temperature/moisture/luminance/fertility|
-| XIAOMI Mi Flora |HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
-| XIAOMI Ropot |HHCCPOT002|temperature/moisture/fertility|
-| XIAOMI Mi Jia |LYWSDCGO|temperature/humidity/battery|
-| XIAOMI Mi Jia 2 (1)(c)|LYWSD03MMC|temperature/humidity/battery/volt|
-| XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/volt|
-| XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/volt|
-| XIAOMI Mi Lamp |MUE4094RT|presence|
-| XIAOMI Mi Scale v1 (1)|XMTZC04HM|weight|
-| XIAOMI Mi Scale v2 (1)|XMTZC05HM|weight|
-| XIAOMI Mi Temp/Humidity v1 (1)(c)|MHO-C401|temperature/humidity/battery/volt|
-| XIAOMI Mi Temp/Humidity v2 (1)(c)|XMWSDJ04MMC|temperature/humidity/battery/volt|
-| XIAOMI Mi band (1)||steps|
+| Vegtrug||temperature/moisture/luminance/fertility|
+| XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
+| XIAOMI Ropot|HHCCPOT002|temperature/moisture/fertility|
+| XIAOMI Mi Jia|LYWSDCGO|temperature/humidity/battery|
+| XIAOMI Mi Jia|LYWSD02|temperature/humidity/battery|
+| XIAOMI Mi Jia 2 (1)(c)|LYWSD03MMC|temperature/humidity/battery/voltage|
+| XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/voltage|
+| XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/voltage|
+| XIAOMI Mi Lamp|MUE4094RT|presence|
+| XIAOMI Mi Smart Scale (1)|XMTZC01HM/XMTZC04HM|weighing mode/unit/weight|
+| XIAOMI Mi Body Composition Scale (1)|XMTZC02HM/XMTZC05HM|weighing mode/unit/weight/impedance|
+| XIAOMI Mi Temp/Humidity v1 (1)(c)|MHO-C401|temperature/humidity/battery/voltage|
+| XIAOMI Mi Temp/Humidity v2 (1)(c)|XMWSDJ04MMC|temperature/humidity/battery/voltage|
+| XIAOMI|Mi band (1)|steps/activity heart rate (when activated in the Zepp Life settings)|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
@@ -75,7 +93,7 @@ Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/
 ![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
 
 ## For infrared IR devices 
-The list of supported devices for ESP is [here](https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md), and [here](https://github.com/1technophile/OpenMQTTGateway/blob/6f73160d1421bebf2c1bbc9b8017978ff5b16520/main/config_IR.h#L123) for Arduino boards, as there is also the possibility of using raw and global caché (ESP)  sending possibilities of this gateway is huge!
+The list of supported devices for ESP is [here](https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md), and [here](https://github.com/1technophile/OpenMQTTGateway/blob/6f73160d1421bebf2c1bbc9b8017978ff5b16520/main/config_IR.h#L123) for Arduino boards, as there is also the possibility of using raw and global cache (ESP) sending possibilities of this gateway is huge!
 
 ## LORA
 LORA is more dedicated at this moment for tinkering and DIY and there is no Off the shelves devices compatible to my knowledge with this gateway.

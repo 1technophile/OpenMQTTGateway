@@ -33,7 +33,7 @@ With the IR gateway you need to put on the topic the protocol_name you want to u
 
 Exhaustive list [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1910001295)
 
-For example if I want to send a command to a sony TV you can use the following command:
+For example if I want to send a command to a Sony TV you can use the following command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775,"protocol_name":"SONY"}'`
 
@@ -50,7 +50,7 @@ If you don’t want to use special parameters for IR just use value key, the pro
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m  '{"value":551489775}'`
 
-NOTE: on arduino Uno most of the protocols are not enable per default due to memory constraints (it is not the case for MEGA), to enable them go to [User_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/main/User_config.h) and uncomment the #define corresponding the protocols you want:
+NOTE: on Arduino Uno most of the protocols are not enable per default due to memory constraints (it is not the case for MEGA), to enable them go to [User_config.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/main/User_config.h) and uncomment the #define corresponding the protocols you want:
 
 ```cpp
 //#define IR_COOLIX
@@ -75,7 +75,7 @@ Extract this part of the code:
 38000,1,69,340,169,20,20,20,20,20,64,20,20,20,20,20,20,20,20,20,20,20,64,20,64,20,20,20,64,20,64,20,64,20,64,20,64,20,64,20,64,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,64,20,64,20,64,20,64,20,64,20,64,20,1544,340,85,20,3663
 ```
 
-and publish it to mqtt with the a subject containing IR_GC:
+and publish it to MQTT with the subject containing IR_GC:
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"raw":"38000,1,1,171,171,21,64,21,21,21,21,21,21,21,21,21,21,21,21,21,64,21,64,21,21,21,21,21,21,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,64,21,21,21,21,21,21,21,21,21,64,21,64,21,64,21,21,21,64,21,64,21,64,21,64,21,1114","protocol_name":"GC"}'
 ```
@@ -85,14 +85,14 @@ You should be able to command your devices without having listened with the IR r
 ## Send data by MQTT with advanced IR parameters
 IR sending support two advanced parameters; bits length and repeat number.
 
-The example below will send the following advanced parameters bits: 14 and repeat:4 times for a sony protocol:
+The example below will send the following advanced parameters bits: 14 and repeat:4 times for a Sony protocol:
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoIR -m '{"value":551489775,"protocol_name":"NEC","repeat":4,"bits":14}'
 ```
 
 ## Send raw IR data by MQTT
 
-2) If you use an arduino UNO enable `IR_Raw` by uncommenting the line 129 in User_config.h
+2) If you use an Arduino UNO enable `IR_Raw` by uncommenting the line 129 in User_config.h
 `#define IR_Raw`
 If you are using the uno you will have to comment other gateway like ZgatewayRF, ZgatewayBT and ZgatewayIR to keep enough memory
 

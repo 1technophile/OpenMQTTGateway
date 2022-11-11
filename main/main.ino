@@ -28,7 +28,7 @@
 #include "User_config.h"
 
 // Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
   SIGNAL_SIZE_UL_ULL value;
@@ -154,6 +154,9 @@ struct GfSun2000Data {};
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
 #endif
+#if defined(ZboardHELTEC)
+#  include "config_HELTEC.h"
+#endif
 #if defined(ZgatewayRS232)
 #  include "config_RS232.h"
 #endif
@@ -164,12 +167,12 @@ void setupTLS(bool self_signed = false, uint8_t index = 0);
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
-char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = MQTT_PASS; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = MQTT_SERVER;
+char mqtt_user[parameters_size + 1] = MQTT_USER; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size + 1] = MQTT_PASS; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size + 1] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
-char mqtt_topic[mqtt_topic_max_size] = Base_Topic;
-char gateway_name[parameters_size] = Gateway_Name;
+char mqtt_topic[parameters_size + 1] = Base_Topic;
+char gateway_name[parameters_size + 1] = Gateway_Name;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
@@ -178,6 +181,7 @@ char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
 #endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
+bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ZmqttDiscovery
@@ -240,7 +244,7 @@ ESP8266WiFiMulti wifiMulti;
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 
-// client link to pubsub mqtt
+// client link to pubsub MQTT
 PubSubClient client;
 
 void revert_hex_data(const char* in, char* out, int l) {
@@ -257,7 +261,7 @@ void revert_hex_data(const char* in, char* out, int l) {
   out[l - 1] = '\0';
 }
 
-/** 
+/**
  * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
  * This value can represent a negative value if canBeNegative is set to true
  */
@@ -292,10 +296,10 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 
 /**
  * @brief Publish the payload on default MQTT topic.
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param payload  the message to sends
- * @param retainFlag true if you what a retain 
+ * @param retainFlag true if you what a retain
  */
 void pub(const char* topicori, const char* payload, bool retainFlag) {
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -304,7 +308,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
 
 /**
  * @brief Publish the payload on default MQTT topic
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param data The Json Object that rapresent the message
  */
@@ -314,7 +318,7 @@ void pub(const char* topicori, JsonObject& data) {
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
-#ifdef valueAsASubject
+#if valueAsATopic
 #  ifdef ZgatewayPilight
   String value = data["value"];
   String protocol = data["protocol"];
@@ -329,12 +333,12 @@ void pub(const char* topicori, JsonObject& data) {
 #  endif
 #endif
 
-#ifdef jsonPublishing
+#if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
   pubMQTT(topic, dataAsString.c_str());
 #endif
 
-#ifdef simplePublishing
+#if simplePublishing
   Log.trace(F("simplePub - ON" CR));
   // Loop through all the key-value pairs in obj
   for (JsonPair p : data) {
@@ -360,7 +364,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 /**
  * @brief Publish the payload on default MQTT topic
- * 
+ *
  * @param topicori suffix to add on default MQTT Topic
  * @param payload the message to sends
  */
@@ -371,10 +375,10 @@ void pub(const char* topicori, const char* payload) {
 
 /**
  * @brief Publish the payload on the topic with a retantion
- * 
+ *
  * @param topic  The topic where to publish
  * @param data   The Json Object that rapresent the message
- * @param retain true if you what a retain 
+ * @param retain true if you what a retain
  */
 void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
   String buffer = "";
@@ -384,7 +388,7 @@ void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
 
 /**
  * @brief Low level MQTT functions without retain
- * 
+ *
  * @param topic  the topic
  * @param payload  the payload
  */
@@ -394,8 +398,8 @@ void pubMQTT(const char* topic, const char* payload) {
 
 /**
  * @brief Very Low level MQTT functions with retain Flag
- * 
- * @param topic the topic 
+ *
+ * @param topic the topic
  * @param payload the payload
  * @param retainFlag  true if retain the retain Flag
  */
@@ -491,15 +495,19 @@ void pubMQTT(String topic, unsigned long payload) {
 }
 
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
-  char topic[mqtt_topic_max_size];
-  strcpy(topic, mqtt_topic);
-  strcat(topic, gateway_name);
-  strcat(topic, toAdd);
-  if (strstr(topicOri, topic) != NULL) {
-    return true;
-  } else {
+  // Is string "<mqtt_topic><gateway_name><toAdd>" equal to "<topicOri>"?
+  // Compare first part with first chunk
+  if (strncmp(topicOri, mqtt_topic, strlen(mqtt_topic)) != 0)
     return false;
-  }
+  // Move pointer of sizeof chunk
+  topicOri += strlen(mqtt_topic);
+  // And so on...
+  if (strncmp(topicOri, gateway_name, strlen(gateway_name)) != 0)
+    return false;
+  topicOri += strlen(gateway_name);
+  if (strncmp(topicOri, toAdd, strlen(toAdd)) != 0)
+    return false;
+  return true;
 }
 
 void connectMQTT() {
@@ -520,10 +528,8 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
-#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    if (lowpowermode < 2)
-      M5Print("MQTT connected", "", "");
-#endif
+
+    displayPrint("MQTT connected");
     Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
@@ -617,6 +623,10 @@ void setup() {
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
 #    endif
+#    if defined(ZboardHELTEC)
+  setupHELTEC();
+  modules.add(ZboardHELTEC);
+#    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
@@ -663,7 +673,7 @@ void setup() {
   client.setClient(*(Client*)eClient);
 
 #if defined(MDNS_SD) && (defined(ESP8266) || defined(ESP32))
-  Log.trace(F("Connecting to MQTT by mDNS without mqtt hostname" CR));
+  Log.trace(F("Connecting to MQTT by mDNS without MQTT hostname" CR));
   connectMQTTmdns();
 #else
   uint16_t port = strtol(mqtt_port, NULL, 10);
@@ -869,9 +879,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    M5Print("OTA in progress", "", "");
-#  endif
+    lpDisplayPrint("OTA in progress");
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
@@ -880,9 +888,7 @@ void setOTA() {
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-    M5Print("OTA done", "", "");
-#  endif
+    lpDisplayPrint("OTA done");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
@@ -1010,7 +1016,7 @@ WiFiManager wifiManager;
 
 //flag for saving data
 bool shouldSaveConfig = false;
-//do we have been connected once to mqtt
+//do we have been connected once to MQTT
 
 //callback notifying us of the need to save config
 void saveConfigCallback() {
@@ -1153,11 +1159,11 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size);
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
-  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size * 2);
+  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
-  WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size * 2);
+  WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
 #  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -1169,7 +1175,7 @@ void setup_wifimanager(bool reset_settings) {
   //set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
-//set static ip
+//set static IP
 #  ifdef NetworkAdvancedSetup
   Log.trace(F("Adv wifi cfg" CR));
   IPAddress gateway_adress(gateway);
@@ -1196,9 +1202,7 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (lowpowermode < 2) {
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-      M5Print("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
-#    endif
+      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
       lowPowerESP32();
@@ -1223,10 +1227,7 @@ void setup_wifimanager(bool reset_settings) {
     digitalWrite(LED_INFO, !LED_INFO_ON);
   }
 
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-  if (lowpowermode < 2)
-    M5Print("Wifi connected", "", "");
-#  endif
+  displayPrint("Wifi connected");
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -1290,8 +1291,8 @@ void WiFiEvent(WiFiEvent_t event) {
       Log.notice(F("Ethernet Connected" CR));
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
-      Log.trace(F("OpenMQTTGateway mac: %s" CR), ETH.macAddress().c_str());
-      Log.trace(F("OpenMQTTGateway ip: %s" CR), ETH.localIP().toString().c_str());
+      Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
+      Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
       Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
       esp32EthConnected = true;
       break;
@@ -1374,20 +1375,22 @@ void loop() {
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
 #endif
     failure_number_ntwk = 0;
-    if (client.connected()) {
+    if (client.loop()) { // MQTT client is still connected
       digitalWrite(LED_INFO, LED_INFO_ON);
       failure_number_ntwk = 0;
-
-      client.loop();
+      // We have just re-connected if connected was previously false
+      bool justReconnected = !connected;
 
 #ifdef ZmqttDiscovery
-      if (disc) {
-        if (!connectedOnce) {
-          pubMqttDiscovery(); // at first connection we publish the discovery payloads
-        }
+      // at first connection we publish the discovery payloads
+      // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
+      bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
+      if (publishDiscovery) {
+        pubMqttDiscovery();
       }
 #endif
       connectedOnce = true;
+      connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
@@ -1457,7 +1460,7 @@ void loop() {
 #ifdef ZgatewayBT
 #  ifdef ZmqttDiscovery
       if (disc)
-        launchBTDiscovery();
+        launchBTDiscovery(publishDiscovery);
 #  endif
 #  ifndef ESP32
       if (BTtoMQTT())
@@ -1493,9 +1496,12 @@ void loop() {
       RTL_433Loop();
 #endif
     } else {
+      // MQTT disconnected
+      connected = false;
       connectMQTT();
     }
   } else { // disconnected from network
+    connected = false;
     Log.warning(F("Network disconnected:" CR));
     digitalWrite(LED_ERROR, LED_ERROR_ON);
     delay(2000); // add a delay to avoid ESP32 crash and reset
@@ -1514,9 +1520,12 @@ void loop() {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
+#if defined(ZboardHELTEC)
+  loopHELTEC();
+#endif
 }
 
-/** 
+/**
  * Calculate uptime and take into account the millis() rollover
  */
 unsigned long uptime() {
@@ -1572,8 +1581,8 @@ void stateMeasures() {
   SYSdata["btqsnd"] = btQueueLengthCount;
   SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
-  SYSdata["interval"] = BLEinterval;
-  SYSdata["scanbcnct"] = BLEscanBeforeConnect;
+  SYSdata["interval"] = BTConfig.BLEinterval;
+  SYSdata["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
   SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
@@ -1598,14 +1607,18 @@ void stateMeasures() {
 #  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
   SYSdata["actRec"] = (int)activeReceiver;
 #  endif
-#  ifdef ZradioCC1101
+#  if defined(ZradioCC1101) || defined(ZradioSX127x)
   SYSdata["mhz"] = (float)receiveMhz;
 #  endif
 #  if defined(ZgatewayRTL_433)
   if (activeReceiver == ACTIVE_RTL) {
-    SYSdata["RTLminRssi"] = (int)getRTLMinimumRSSI();
+    SYSdata["RTLRssiThresh"] = (int)getRTLrssiThreshold();
     SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
+    SYSdata["RTLAVGRssi"] = (int)getRTLAverageRSSI();
     SYSdata["RTLCnt"] = (int)getRTLMessageCount();
+#    ifdef ZradioSX127x
+    SYSdata["RTLOOKThresh"] = (int)getOOKThresh();
+#    endif
   }
 #  endif
   SYSdata["modules"] = modules;
@@ -1613,8 +1626,8 @@ void stateMeasures() {
 }
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
-/** 
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
+/**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
 void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
@@ -1634,7 +1647,7 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   }
 }
 
-/** 
+/**
  * get oldest time index from the values array from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
 int getMin() {
@@ -1649,7 +1662,7 @@ int getMin() {
   return minindex;
 }
 
-/** 
+/**
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
 bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
@@ -1658,7 +1671,7 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
     if (receivedSignal[i].value == value) {
       unsigned long now = millis();
       if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
-        Log.notice(F("no pub. dupl" CR));
+        Log.trace(F("no pub. dupl" CR));
         return true;
       }
     }
@@ -1697,7 +1710,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #ifdef ZgatewayRTL_433 // ZgatewayRTL_433 is only defined with json publishing due to its numerous parameters
     MQTTtoRTL_433(topicOri, jsondata);
 #endif
-#ifdef jsonReceiving
+#if jsonReceiving
 #  ifdef ZgatewayLORA
     MQTTtoLORA(topicOri, jsondata);
 #  endif
@@ -1731,6 +1744,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     MQTTtoM5(topicOri, jsondata);
 #  endif
+#  if defined(ZboardHELTEC)
+    MQTTtoHELTEC(topicOri, jsondata);
+#  endif
 #  ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, jsondata);
 #  endif
@@ -1748,7 +1764,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
-#ifdef simpleReceiving
+#if simpleReceiving
 #  ifdef ZgatewayLORA
     MQTTtoLORA(topicOri, datacallback);
 #  endif
@@ -2070,10 +2086,10 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  endif
     if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
       if (SYSdata.containsKey("mqtt_topic")) {
-        strncpy(mqtt_topic, SYSdata["mqtt_topic"], mqtt_topic_max_size);
+        strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
       if (SYSdata.containsKey("gateway_name")) {
-        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size * 2);
+        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
       }
 #  ifndef ESPWifiManualSetup
       saveMqttConfig();
@@ -2097,7 +2113,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   }
 }
 
-#if defined(valueAsASubject) && !defined(ZgatewayPilight)
+#if valueAsATopic && !defined(ZgatewayPilight)
 #  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String toString(uint64_t input) {
   String result = "";

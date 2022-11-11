@@ -24,7 +24,7 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
-A low power mode switch is automaticaly created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
+A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
 In low power mode you should use ESPWifiManualSetup so as to rely on the credentials entered into User_config.h.
 So as to do that uncomment the line below in User_config.h
 ``` c
@@ -41,7 +41,7 @@ If you change the default low power mode in config_BT.h to 2 and your credential
 
 ### Behaviour
 
-If the connexion of the board to WIFI and MQTT is successfull you will see the logo with text like below:
+If the connection of the board to WIFI and MQTT is successful you will see the logo with text like below:
 
 ![boards](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)
 
