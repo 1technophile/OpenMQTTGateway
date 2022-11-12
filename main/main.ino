@@ -582,8 +582,14 @@ void connectMQTT() {
     delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {
       unsigned long millis_since_last_ota;
-      while ((millis_since_last_ota != 0) && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
-        // OTA might be still active, we sleep for a while
+      while (
+          // When
+          // ...incomplete OTA in progress
+          (last_ota_activity_millis != 0)
+          // ...AND last OTA activity fairly recently
+          && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
+        // ... We consider that OTA might be still active, and we sleep for a while, and giving
+        // OTA chance to proceed (ArduinoOTA.handle())
         Log.warning(F("OTA might be still active (activity %d ms ago)" CR), millis_since_last_ota);
 #if defined(ESP8266) || defined(ESP32)
         ArduinoOTA.handle();
