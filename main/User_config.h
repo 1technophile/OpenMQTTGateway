@@ -380,6 +380,13 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef ota_port
 #  define ota_port 8266
 #endif
+// timeout for OTA activities
+// OTA upload with no activity in this period is considered inactive
+// As long as OTA upload is considered "active", we avoid rebooting e.g.
+// in case of failures connecting to MQTT
+#ifndef ota_timeout_millis
+#  define ota_timeout_millis 30000
+#endif
 
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
 #ifndef LED_SEND_RECEIVE
