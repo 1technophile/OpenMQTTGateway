@@ -39,6 +39,17 @@ char device[parameters_size];
 char token[parameters_size];
 String cloudTopic;
 
+// Queue messages to be sent via loop
+
+QueueHandle_t omgCloudQueue;
+SemaphoreHandle_t omgCloudSemaphore;
+
+typedef struct cloudMsg {
+  char topic[mqtt_topic_max_size];
+  char payload[mqtt_max_packet_size];
+  bool retain;
+} cloudMsg_t;
+
 void cloudCallback(char* topic, byte* payload, unsigned int length) {
   byte* p = (byte*)malloc(length + 1);
   // Copy the payload to the new buffer
@@ -84,12 +95,8 @@ void reconnect() {
         Log.error(F("Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
       };
       Log.notice(F("OMG Cloud subscribing to %s" CR), topic.c_str());
-      if (!cloud.publish((cloudTopic + "/LWT").c_str(), Gateway_AnnouncementMsg, will_Retain)) {
-        Log.error(F("Inital Cloud publish failed, rc=%d" CR), cloud.state());
-      };
-      if (!cloud.publish((cloudTopic + "/version").c_str(), OMG_VERSION)) {
-        Log.error(F("Inital Cloud publish failed, rc=%d" CR), cloud.state());
-      };
+      // Need to use the central cloud.publish
+      pubOmgCloud((String(mqtt_topic) + String(gateway_name) + will_Topic).c_str(), Gateway_AnnouncementMsg, will_Retain);
     } else {
       Log.error(F("OMG Cloud connection failed: rc=%d, retrying in 35 seconds." CR), cloud.state());
       delay(35000);
@@ -110,6 +117,11 @@ void setupCloud() {
   cloud.setBufferSize(mqtt_max_packet_size);
   cloud.setServer("omgpoc.homebridge.ca", 8883);
 
+  // Create queue for cloud messages
+  omgCloudQueue = xQueueCreate(2, sizeof(cloudMsg_t*));
+  omgCloudSemaphore = xSemaphoreCreateBinary();
+  xSemaphoreGive(omgCloudSemaphore);
+
   reconnect();
 }
 
@@ -118,19 +130,43 @@ void CloudLoop() {
     reconnect();
   }
   cloud.loop();
+
+  if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
+    if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
+      Log.warning(F("[ OMG->CLOUD ] unQueue ESP32 Core %d %x %d" CR), xPortGetCoreID(), xTaskGetCurrentTaskHandle(), uxSemaphoreGetCount(omgCloudSemaphore));
+      cloudMsg_t* omgCloudMessage = nullptr;
+      if (cloud.connected() && xQueueReceive(omgCloudQueue,
+                                             &omgCloudMessage,
+                                             (TickType_t)10) == pdPASS) {
+        Log.warning(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+        if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
+          Log.error(F("[ OMG->CLOUD ] Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
+        };
+      }
+      free(omgCloudMessage);
+      xSemaphoreGive(omgCloudSemaphore);
+
+      Log.warning(F("[ OMG->CLOUD ] Give ESP32 Core %d %x %d" CR), xPortGetCoreID(), xTaskGetCurrentTaskHandle(), uxSemaphoreGetCount(omgCloudSemaphore));
+    }
+  }
 }
 
 void pubOmgCloud(const char* topic, const char* payload, bool retain) {
-  if (cloud.connected()) {
-    topic += strlen(mqtt_topic);
-    topic += strlen(gateway_name);
+  topic += strlen(mqtt_topic);
+  topic += strlen(gateway_name);
 
-    Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
-    if (!cloud.publish((cloudTopic + String(topic)).c_str(), payload, retain)) {
-      Log.error(F("Cloud publish failed, rc=%d" CR), cloud.state());
-    };
+  Log.warning(F("[ OMG->CLOUD ] place on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
+
+  cloudMsg_t* omgCloudMessage = (cloudMsg_t*)calloc(1, sizeof(cloudMsg_t));
+  strcpy(omgCloudMessage->topic, (cloudTopic + String(topic)).c_str());
+  strcpy(omgCloudMessage->payload, payload);
+  omgCloudMessage->retain = retain;
+  if (xQueueSend(omgCloudQueue, &omgCloudMessage, 0) != pdTRUE) {
+    Log.warning(F("[ OMG->CLOUD ] omgCloudQueue full, discarding signal" CR));
+    free(omgCloudMessage);
   } else {
-    Log.warning(F("Cloud not connected, aborting this publication" CR));
+    Log.warning(F("[ OMG->CLOUD ] message placed on Queue %d %x" CR), xPortGetCoreID(), xTaskGetCurrentTaskHandle());
+    Log.warning(F("[ OMG->CLOUD ] placeed on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
   }
 }
 
