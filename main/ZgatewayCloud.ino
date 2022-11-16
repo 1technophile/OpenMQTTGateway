@@ -57,10 +57,8 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
   // Conversion to a printable string
   p[length] = '\0';
 
-  // cloudTopic = omgCloudSub/omgClient-636ef7c6149d798f3b71849e/bLOoakg7wF_Ip2Xk4YFazViBJMcTSm
-
-  Log.notice(F("OMG Cloud message Received: %s" CR), topic);
-  displayPrint("OMG Cloud message Received:", topic);
+  Log.trace(F("[ CLOUD->OMG ] message Received: %s" CR), topic);
+  displayPrint("[ CLOUD->OMG ] Received:", topic);
 
   // normalize cloud topic to be similar to local mqtt topic
   topic += cloudTopic.length();
@@ -82,29 +80,30 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
 void reconnect() {
   // Loop until we're reconnected
   while (!cloud.connected()) {
-    Log.notice(F("Attempting to connect to OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(clientId)).c_str(), device, token);
-    displayPrint("Attempting OMG Cloud connection");
+    Log.notice(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(clientId)).c_str(), device, token);
     if (cloud.connect(("omgClient-" + String(clientId)).c_str(), device, token, (cloudTopic + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
-      displayPrint("OMG Cloud connected");
-      Log.notice(F("OMG Cloud connected %s" CR), cloudTopic.c_str());
+      displayPrint("[ CLOUD ] connected");
+      Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
 
       // ... and resubscribe
       cloud.setCallback(cloudCallback);
       String topic = "omgCloudSub/omgClient-" + String(clientId) + "/" + String(device) + "/#";
       if (!cloud.subscribe(topic.c_str())) {
-        Log.error(F("Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
+        Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
       };
-      Log.notice(F("OMG Cloud subscribing to %s" CR), topic.c_str());
+      Log.verbose(F("[ CLOUD ] OMG Cloud subscribing to %s" CR), topic.c_str());
       // Need to use the central cloud.publish
       pubOmgCloud((String(mqtt_topic) + String(gateway_name) + will_Topic).c_str(), Gateway_AnnouncementMsg, will_Retain);
     } else {
-      Log.error(F("OMG Cloud connection failed: rc=%d, retrying in 35 seconds." CR), cloud.state());
+      Log.error(F("[ CLOUD ] OMG Cloud connection failed: rc=%d, retrying in 35 seconds." CR), cloud.state());
       delay(35000);
     }
   }
 }
 
 void setupCloud() {
+  Log.trace(F("ZgatewayCloud setup start" CR));
+
   char deviceToken[90] = DEVICETOKEN; // clientid:device:token TODO: base64 encode the devicetoken
   strcpy(clientId, strtok(deviceToken, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
   strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
@@ -118,11 +117,12 @@ void setupCloud() {
   cloud.setServer("omgpoc.homebridge.ca", 8883);
 
   // Create queue for cloud messages
-  omgCloudQueue = xQueueCreate(2, sizeof(cloudMsg_t*));
+  omgCloudQueue = xQueueCreate(5, sizeof(cloudMsg_t*));
   omgCloudSemaphore = xSemaphoreCreateBinary();
   xSemaphoreGive(omgCloudSemaphore);
 
   reconnect();
+  Log.notice(F("ZgatewayCloud setup done" CR));
 }
 
 void CloudLoop() {
@@ -133,20 +133,19 @@ void CloudLoop() {
 
   if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
     if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
-      Log.warning(F("[ OMG->CLOUD ] unQueue ESP32 Core %d %x %d" CR), xPortGetCoreID(), xTaskGetCurrentTaskHandle(), uxSemaphoreGetCount(omgCloudSemaphore));
       cloudMsg_t* omgCloudMessage = nullptr;
       if (cloud.connected() && xQueueReceive(omgCloudQueue,
                                              &omgCloudMessage,
                                              (TickType_t)10) == pdPASS) {
-        Log.warning(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+        Log.verbose(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
         if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
-          Log.error(F("[ OMG->CLOUD ] Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
-        };
+          Log.error(F("Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
+        } else {
+          Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+        }
       }
       free(omgCloudMessage);
       xSemaphoreGive(omgCloudSemaphore);
-
-      Log.warning(F("[ OMG->CLOUD ] Give ESP32 Core %d %x %d" CR), xPortGetCoreID(), xTaskGetCurrentTaskHandle(), uxSemaphoreGetCount(omgCloudSemaphore));
     }
   }
 }
@@ -155,18 +154,17 @@ void pubOmgCloud(const char* topic, const char* payload, bool retain) {
   topic += strlen(mqtt_topic);
   topic += strlen(gateway_name);
 
-  Log.warning(F("[ OMG->CLOUD ] place on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
+  Log.verbose(F("[ OMG->CLOUD ] place on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
 
   cloudMsg_t* omgCloudMessage = (cloudMsg_t*)calloc(1, sizeof(cloudMsg_t));
   strcpy(omgCloudMessage->topic, (cloudTopic + String(topic)).c_str());
   strcpy(omgCloudMessage->payload, payload);
   omgCloudMessage->retain = retain;
   if (xQueueSend(omgCloudQueue, &omgCloudMessage, 0) != pdTRUE) {
-    Log.warning(F("[ OMG->CLOUD ] omgCloudQueue full, discarding signal" CR));
+    Log.warning(F("omgCloudQueue full, discarding signal topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
     free(omgCloudMessage);
+    displayPrint("[ CLOUD ] discarding");
   } else {
-    Log.warning(F("[ OMG->CLOUD ] message placed on Queue %d %x" CR), xPortGetCoreID(), xTaskGetCurrentTaskHandle());
-    Log.warning(F("[ OMG->CLOUD ] placeed on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
   }
 }
 
