@@ -114,8 +114,11 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #endif
 
-#ifndef WifiManager_password
-#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
+#define WM_PWD_FROM_MAC false // enable to set the password from the 8 first digit of the ESP mac address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
+#if !WM_PWD_FROM_MAC
+#  ifndef WifiManager_password
+#    define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
+#  endif
 #endif
 #ifndef WifiManager_ssid
 #  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
