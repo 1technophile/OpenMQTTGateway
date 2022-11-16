@@ -191,6 +191,7 @@ bool disc = true; // Auto discovery with Home Assistant convention
 #endif
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
+static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
@@ -513,6 +514,18 @@ bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   return true;
 }
 
+void delayWithOTA(long waitMillis) {
+#if defined(ESP8266) || defined(ESP32)
+  long waitStep = 100;
+  for (long waitedMillis = 0; waitedMillis < waitMillis; waitedMillis += waitStep) {
+    ArduinoOTA.handle();
+    delay(waitStep);
+  }
+#else
+  delay(waitMillis);
+#endif
+}
+
 void connectMQTT() {
 #ifndef ESPWifiManualSetup
 #  if defined(ESP8266) || defined(ESP32)
@@ -568,10 +581,25 @@ void connectMQTT() {
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
     digitalWrite(LED_ERROR, LED_ERROR_ON);
-    delay(2000);
+    delayWithOTA(2000);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
-    delay(5000);
+    delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {
+      unsigned long millis_since_last_ota;
+      while (
+          // When
+          // ...incomplete OTA in progress
+          (last_ota_activity_millis != 0)
+          // ...AND last OTA activity fairly recently
+          && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
+        // ... We consider that OTA might be still active, and we sleep for a while, and giving
+        // OTA chance to proceed (ArduinoOTA.handle())
+        Log.warning(F("OTA might be still active (activity %d ms ago)" CR), millis_since_last_ota);
+#if defined(ESP8266) || defined(ESP32)
+        ArduinoOTA.handle();
+#endif
+        delay(100);
+      }
       watchdogReboot(1);
     }
   }
@@ -883,6 +911,7 @@ void setOTA() {
     Log.trace(F("Start OTA, lock other functions" CR));
     digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
     digitalWrite(LED_ERROR, LED_ERROR_ON);
+    last_ota_activity_millis = millis();
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
@@ -890,6 +919,7 @@ void setOTA() {
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
+    last_ota_activity_millis = 0;
     digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
 #  if defined(ZgatewayBT) && defined(ESP32)
@@ -899,8 +929,10 @@ void setOTA() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
+    last_ota_activity_millis = millis();
   });
   ArduinoOTA.onError([](ota_error_t error) {
+    last_ota_activity_millis = millis();
     digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
     digitalWrite(LED_ERROR, !LED_ERROR_ON);
 #  if defined(ZgatewayBT) && defined(ESP32)
@@ -1169,8 +1201,8 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
-  WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
-  WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
+  WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
+  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 2048);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
 #  endif
   //WiFiManager
