@@ -388,48 +388,88 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define ota_timeout_millis 30000
 #endif
 
+#ifndef RGB_INDICATORS // Management of Errors, reception/emission and informations indicators with basic LED
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifndef LED_SEND_RECEIVE
-#  ifdef ESP8266
-#    define LED_SEND_RECEIVE 40
-#  elif ESP32
-#    define LED_SEND_RECEIVE 40
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_SEND_RECEIVE 40
-#  else //arduino uno/nano
-#    define LED_SEND_RECEIVE 40
+#  ifndef LED_SEND_RECEIVE
+#    ifdef ESP8266
+#      define LED_SEND_RECEIVE 40
+#    elif ESP32
+#      define LED_SEND_RECEIVE 40
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_SEND_RECEIVE 40
+#    else //arduino uno/nano
+#      define LED_SEND_RECEIVE 40
+#    endif
 #  endif
-#endif
-#ifndef LED_SEND_RECEIVE_ON
-#  define LED_SEND_RECEIVE_ON HIGH
-#endif
-#ifndef LED_ERROR
-#  ifdef ESP8266
-#    define LED_ERROR 42
-#  elif ESP32
-#    define LED_ERROR 42
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_ERROR 42
-#  else //arduino uno/nano
-#    define LED_ERROR 42
+#  ifndef LED_SEND_RECEIVE_ON
+#    define LED_SEND_RECEIVE_ON HIGH
 #  endif
-#endif
-#ifndef LED_ERROR_ON
-#  define LED_ERROR_ON HIGH
-#endif
-#ifndef LED_INFO
-#  ifdef ESP8266
-#    define LED_INFO 44
-#  elif ESP32
-#    define LED_INFO 44
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_INFO 44
-#  else //arduino uno/nano
-#    define LED_INFO 44
+#  ifndef LED_ERROR
+#    ifdef ESP8266
+#      define LED_ERROR 42
+#    elif ESP32
+#      define LED_ERROR 42
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_ERROR 42
+#    else //arduino uno/nano
+#      define LED_ERROR 42
+#    endif
 #  endif
-#endif
-#ifndef LED_INFO_ON
-#  define LED_INFO_ON HIGH
+#  ifndef LED_ERROR_ON
+#    define LED_ERROR_ON HIGH
+#  endif
+#  ifndef LED_INFO
+#    ifdef ESP8266
+#      define LED_INFO 44
+#    elif ESP32
+#      define LED_INFO 44
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_INFO 44
+#    else //arduino uno/nano
+#      define LED_INFO 44
+#    endif
+#  endif
+#  ifndef LED_INFO_ON
+#    define LED_INFO_ON HIGH
+#  endif
+#  define SetupIndicators()            \
+    pinMode(LED_SEND_RECEIVE, OUTPUT); \
+    pinMode(LED_INFO, OUTPUT);         \
+    pinMode(LED_ERROR, OUTPUT);        \
+    SendReceiveIndicatorOFF();         \
+    InfoIndicatorOFF();                \
+    ErrorIndicatorOFF();
+
+#  define ErrorIndicatorON()        digitalWrite(LED_ERROR, LED_ERROR_ON)
+#  define ErrorIndicatorOFF()       digitalWrite(LED_ERROR, !LED_ERROR_ON)
+#  define SendReceiveIndicatorON()  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON)
+#  define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
+#  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
+#  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
+#else // Management of Errors, reception/emission and informations indicators with RGB LED
+#  include <FastLED.h>
+CRGB leds[FASTLED_IND_NUM_LEDS];
+#  define SetupIndicators()                                                               \
+    FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
+    FastLED.setBrightness(20); /* Error, warning and infos display management*/
+#  define ErrorIndicatorON() \
+    leds[0] = CRGB::Red;     \
+    FastLED.show()
+#  define ErrorIndicatorOFF() \
+    leds[0] = CRGB::Black;    \
+    FastLED.show()
+#  define SendReceiveIndicatorON() \
+    leds[0] = CRGB::Blue;          \
+    FastLED.show()
+#  define SendReceiveIndicatorOFF() \
+    leds[0] = CRGB::Black;          \
+    FastLED.show()
+#  define InfoIndicatorON() \
+    leds[0] = CRGB::Green;  \
+    FastLED.show()
+#  define InfoIndicatorOFF() \
+    leds[0] = CRGB::Black;   \
+    FastLED.show()
 #endif
 
 #ifdef ESP8266

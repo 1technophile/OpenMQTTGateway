@@ -316,7 +316,7 @@ void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
-  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
+  SendReceiveIndicatorON();
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #if valueAsATopic
 #  ifdef ZgatewayPilight
@@ -576,9 +576,9 @@ void connectMQTT() {
     if (mqtt_secure)
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
+    ErrorIndicatorON();
     delayWithOTA(2000);
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    ErrorIndicatorOFF();
     delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {
       unsigned long millis_since_last_ota;
@@ -630,12 +630,7 @@ void setup() {
   Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
 
   //setup LED status
-  pinMode(LED_SEND_RECEIVE, OUTPUT);
-  pinMode(LED_INFO, OUTPUT);
-  pinMode(LED_ERROR, OUTPUT);
-  digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-  digitalWrite(LED_INFO, !LED_INFO_ON);
-  digitalWrite(LED_ERROR, !LED_ERROR_ON);
+  SetupIndicators();
 
 #if defined(ESP8266) || defined(ESP32)
 #  ifdef ESP8266
@@ -901,8 +896,8 @@ void setOTA() {
 
   ArduinoOTA.onStart([]() {
     Log.trace(F("Start OTA, lock other functions" CR));
-    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
+    ErrorIndicatorON();
+    SendReceiveIndicatorON();
     last_ota_activity_millis = millis();
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
@@ -912,8 +907,8 @@ void setOTA() {
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
     last_ota_activity_millis = 0;
-    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    ErrorIndicatorOFF();
+    SendReceiveIndicatorOFF();
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
@@ -925,8 +920,8 @@ void setOTA() {
   });
   ArduinoOTA.onError([](ota_error_t error) {
     last_ota_activity_millis = millis();
-    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    ErrorIndicatorOFF();
+    SendReceiveIndicatorOFF();
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
@@ -1241,8 +1236,8 @@ void setup_wifimanager(bool reset_settings) {
     }
 #  endif
 
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
-    digitalWrite(LED_INFO, LED_INFO_ON);
+    ErrorIndicatorON();
+    InfoIndicatorON();
     Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
@@ -1254,8 +1249,8 @@ void setup_wifimanager(bool reset_settings) {
       watchdogReboot(3);
       delay(5000);
     }
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
-    digitalWrite(LED_INFO, !LED_INFO_ON);
+    ErrorIndicatorOFF();
+    InfoIndicatorOFF();
   }
 
   displayPrint("Wifi connected");
@@ -1391,8 +1386,8 @@ void loop() {
   // Switch off of the LED after TimeLedON
   if (now > (timer_led_measures + (TimeLedON * 1000))) {
     timer_led_measures = millis();
-    digitalWrite(LED_INFO, !LED_INFO_ON);
-    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
+    InfoIndicatorOFF();
+    SendReceiveIndicatorOFF();
   }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1407,7 +1402,7 @@ void loop() {
 #endif
     failure_number_ntwk = 0;
     if (client.loop()) { // MQTT client is still connected
-      digitalWrite(LED_INFO, LED_INFO_ON);
+      InfoIndicatorON();
       failure_number_ntwk = 0;
       // We have just re-connected if connected was previously false
       bool justReconnected = !connected;
@@ -1534,9 +1529,9 @@ void loop() {
   } else { // disconnected from network
     connected = false;
     Log.warning(F("Network disconnected:" CR));
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
+    ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    ErrorIndicatorOFF();
     delay(2000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
 #  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
@@ -1791,7 +1786,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
 #endif
-    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
+    SendReceiveIndicatorON();
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
@@ -1862,8 +1857,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  endif
 
       Log.warning(F("Starting firmware update" CR));
-      digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
-      digitalWrite(LED_ERROR, LED_ERROR_ON);
+      SendReceiveIndicatorON();
+      ErrorIndicatorON();
 
 #  if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();
@@ -1958,8 +1953,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           break;
       }
 
-      digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-      digitalWrite(LED_ERROR, !LED_ERROR_ON);
+      SendReceiveIndicatorOFF();
+      ErrorIndicatorOFF();
 
 #  if defined(ZgatewayBT) && defined(ESP32)
       startProcessing();
