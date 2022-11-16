@@ -28,6 +28,8 @@
 
 extern void setupCloud();
 extern void CloudLoop();
-extern void pubCloud(const char*, const char*);
+extern void pubOmgCloud(const char*, const char*, bool);
+
+#define pubCloud(...) pubOmgCloud(__VA_ARGS__)
 
 #endif

@@ -406,6 +406,7 @@ void pubMQTT(const char* topic, const char* payload) {
  * @param retainFlag  true if retain the retain Flag
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
+  pubCloud(topic, payload, retainFlag);
   if (client.connected()) {
     Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
 #if AWS_IOT
@@ -1014,6 +1015,7 @@ void setup_wifi() {
 #  endif
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
+  displayPrint("Wifi connected");
 }
 
 #elif defined(ESP8266) || defined(ESP32)
@@ -1632,9 +1634,6 @@ void stateMeasures() {
 #  endif
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
-#  ifdef ZgatewayCloud
-  pubCloud(subjectSYStoMQTT, SYSdata);
-#  endif
 }
 #endif
 
