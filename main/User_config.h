@@ -449,7 +449,12 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #else // Management of Errors, reception/emission and informations indicators with RGB LED
 #  include <FastLED.h>
 CRGB leds[FASTLED_IND_NUM_LEDS];
+#  ifndef RGB_LED_POWER
+#    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
+#  endif
 #  define SetupIndicators()                                                               \
+    pinMode(RGB_LED_POWER, OUTPUT);                                                       \
+    digitalWrite(RGB_LED_POWER, HIGH);                                                    \
     FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
     FastLED.setBrightness(20); /* Error, warning and infos display management*/
 #  define ErrorIndicatorON() \
