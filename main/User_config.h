@@ -388,6 +388,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define ota_timeout_millis 30000
 #endif
 
+/*-------------ERRORS, INFOS, SEND RECEIVE Display through LED----------------*/
 #ifndef RGB_INDICATORS // Management of Errors, reception/emission and informations indicators with basic LED
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
 #  ifndef LED_SEND_RECEIVE
@@ -456,7 +457,7 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
     pinMode(RGB_LED_POWER, OUTPUT);                                                       \
     digitalWrite(RGB_LED_POWER, HIGH);                                                    \
     FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
-    FastLED.setBrightness(20); /* Error, warning and infos display management*/
+    FastLED.setBrightness(20);
 #  define ErrorIndicatorON() \
     leds[0] = CRGB::Red;     \
     FastLED.show()
