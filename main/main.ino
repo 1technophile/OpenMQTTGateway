@@ -1867,10 +1867,10 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert) {
         if (ota_server_cert.length() > 0) {
-          Log.error(F("using stored cert" CR));
+          Log.notice(F("using stored cert" CR));
           ota_cert = ota_server_cert.c_str();
         } else {
-          Log.error(F("using config cert" CR));
+          Log.notice(F("using config cert" CR));
           ota_cert = OTAserver_cert;
         }
       }
