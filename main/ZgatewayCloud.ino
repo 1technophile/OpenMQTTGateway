@@ -34,7 +34,7 @@ WiFiClientSecure cloudWifi;
 
 PubSubClient cloud(cloudWifi);
 
-char clientId[parameters_size];
+char account[parameters_size];
 char device[parameters_size];
 char token[parameters_size];
 String cloudTopic;
@@ -80,14 +80,14 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
 void reconnect() {
   // Loop until we're reconnected
   while (!cloud.connected()) {
-    Log.notice(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(clientId)).c_str(), device, token);
-    if (cloud.connect(("omgClient-" + String(clientId)).c_str(), device, token, (cloudTopic + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
+    Log.notice(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(device)).c_str(), device, token);
+    if (cloud.connect(("omgDevice-" + String(device)).c_str(), device, token, (cloudTopic + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
       displayPrint("[ CLOUD ] connected");
       Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
 
       // ... and resubscribe
       cloud.setCallback(cloudCallback);
-      String topic = "omgCloudSub/omgClient-" + String(clientId) + "/" + String(device) + "/#";
+      String topic = "omgCloudSub/omgClient-" + String(account) + "/" + String(device) + "/#";
       if (!cloud.subscribe(topic.c_str())) {
         Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
       };
@@ -104,12 +104,12 @@ void reconnect() {
 void setupCloud() {
   Log.trace(F("ZgatewayCloud setup start" CR));
 
-  char deviceToken[90] = DEVICETOKEN; // clientid:device:token TODO: base64 encode the devicetoken
-  strcpy(clientId, strtok(deviceToken, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
+  char deviceToken[90] = DEVICETOKEN; // account:device:token TODO: base64 encode the devicetoken
+  strcpy(account, strtok(deviceToken, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
   strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
   strcpy(token, strtok(0, ":"));
 
-  cloudTopic = "omgCloudPub/omgClient-" + String(clientId) + "/" + String(device);
+  cloudTopic = "omgCloudPub/omgClient-" + String(account) + "/" + String(device);
   cloudWifi.setInsecure();
   cloud.setKeepAlive(300); // 5 minutes for keep alive
 
