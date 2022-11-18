@@ -28,7 +28,7 @@
 #  include <PubSubClient.h>
 
 #  include "ArduinoLog.h"
-
+#  include "config_mqttDiscovery.h"
 // client link to pubsub MQTT
 WiFiClientSecure cloudWifi;
 
@@ -117,7 +117,7 @@ void setupCloud() {
   cloud.setServer("omgpoc.homebridge.ca", 8883);
 
   // Create queue for cloud messages
-  omgCloudQueue = xQueueCreate(5, sizeof(cloudMsg_t*));
+  omgCloudQueue = xQueueCreate(20, sizeof(cloudMsg_t*));
   omgCloudSemaphore = xSemaphoreCreateBinary();
   xSemaphoreGive(omgCloudSemaphore);
 
@@ -151,13 +151,17 @@ void CloudLoop() {
 }
 
 void pubOmgCloud(const char* topic, const char* payload, bool retain) {
-  topic += strlen(mqtt_topic);
-  topic += strlen(gateway_name);
-
   Log.verbose(F("[ OMG->CLOUD ] place on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
 
   cloudMsg_t* omgCloudMessage = (cloudMsg_t*)calloc(1, sizeof(cloudMsg_t));
-  strcpy(omgCloudMessage->topic, (cloudTopic + String(topic)).c_str());
+  if (strncmp(topic, discovery_Topic, strlen(discovery_Topic)) != 0) {
+    topic += strlen(mqtt_topic);
+    topic += strlen(gateway_name);
+    strcpy(omgCloudMessage->topic, (cloudTopic + String(topic)).c_str());
+  } else {
+    strcpy(omgCloudMessage->topic, (cloudTopic + '/' + String(topic)).c_str());
+  }
+
   strcpy(omgCloudMessage->payload, payload);
   omgCloudMessage->retain = retain;
   if (xQueueSend(omgCloudQueue, &omgCloudMessage, 0) != pdTRUE) {
