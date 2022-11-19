@@ -26,13 +26,13 @@ module.exports = {
       lastUpdated: 'Last Updated',
       editLinks: true,
       nav: [
+        { text: 'Shop🆕', link: 'https://shop.theengs.io/'},
         { text: 'Blog', link: 'https://1technophile.blogspot.com'},
         { text: 'Docs', link: '/'},
         { text: 'Community', link: 'https://community.openmqttgateway.com', target:'_self', rel:''},
         { text: 'Devices', link: 'https://compatible.openmqttgateway.com/index.php/devices', target:'_self', rel:''},
-        { text: 'Boards', link: 'https://compatible.openmqttgateway.com/index.php/boards', target:'_self', rel:''},
         { text: 'Upload', link: '/upload/web-install.html'},
-        { text: 'Theengs🆕', link: 'https://app.theengs.io/'}
+        { text: 'Theengs', link: 'https://app.theengs.io/'}
       ],
       sidebar: [
         ['/','0 - What is it for 🏠'],

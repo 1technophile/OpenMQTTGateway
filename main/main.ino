@@ -188,6 +188,7 @@ bool disc = true; // Auto discovery with Home Assistant convention
 #endif
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
+static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
@@ -315,7 +316,7 @@ void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
-  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
+  SendReceiveIndicatorON();
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #if valueAsATopic
 #  ifdef ZgatewayPilight
@@ -509,6 +510,18 @@ bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   return true;
 }
 
+void delayWithOTA(long waitMillis) {
+#if defined(ESP8266) || defined(ESP32)
+  long waitStep = 100;
+  for (long waitedMillis = 0; waitedMillis < waitMillis; waitedMillis += waitStep) {
+    ArduinoOTA.handle();
+    delay(waitStep);
+  }
+#else
+  delay(waitMillis);
+#endif
+}
+
 void connectMQTT() {
 #ifndef ESPWifiManualSetup
 #  if defined(ESP8266) || defined(ESP32)
@@ -563,11 +576,26 @@ void connectMQTT() {
     if (mqtt_secure)
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
-    delay(2000);
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
-    delay(5000);
+    ErrorIndicatorON();
+    delayWithOTA(2000);
+    ErrorIndicatorOFF();
+    delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {
+      unsigned long millis_since_last_ota;
+      while (
+          // When
+          // ...incomplete OTA in progress
+          (last_ota_activity_millis != 0)
+          // ...AND last OTA activity fairly recently
+          && ((millis_since_last_ota = millis() - last_ota_activity_millis) < ota_timeout_millis)) {
+        // ... We consider that OTA might be still active, and we sleep for a while, and giving
+        // OTA chance to proceed (ArduinoOTA.handle())
+        Log.warning(F("OTA might be still active (activity %d ms ago)" CR), millis_since_last_ota);
+#if defined(ESP8266) || defined(ESP32)
+        ArduinoOTA.handle();
+#endif
+        delay(100);
+      }
       watchdogReboot(1);
     }
   }
@@ -602,12 +630,7 @@ void setup() {
   Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
 
   //setup LED status
-  pinMode(LED_SEND_RECEIVE, OUTPUT);
-  pinMode(LED_INFO, OUTPUT);
-  pinMode(LED_ERROR, OUTPUT);
-  digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-  digitalWrite(LED_INFO, !LED_INFO_ON);
-  digitalWrite(LED_ERROR, !LED_ERROR_ON);
+  SetupIndicators();
 
 #if defined(ESP8266) || defined(ESP32)
 #  ifdef ESP8266
@@ -873,8 +896,9 @@ void setOTA() {
 
   ArduinoOTA.onStart([]() {
     Log.trace(F("Start OTA, lock other functions" CR));
-    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
+    ErrorIndicatorON();
+    SendReceiveIndicatorON();
+    last_ota_activity_millis = millis();
 #  if defined(ZgatewayBT) && defined(ESP32)
     stopProcessing();
 #  endif
@@ -882,8 +906,9 @@ void setOTA() {
   });
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
-    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    last_ota_activity_millis = 0;
+    ErrorIndicatorOFF();
+    SendReceiveIndicatorOFF();
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
@@ -891,10 +916,12 @@ void setOTA() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
+    last_ota_activity_millis = millis();
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    last_ota_activity_millis = millis();
+    ErrorIndicatorOFF();
+    SendReceiveIndicatorOFF();
 #  if defined(ZgatewayBT) && defined(ESP32)
     startProcessing();
 #  endif
@@ -1160,8 +1187,8 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
-  WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 1, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
-  WiFiManagerParameter custom_mqtt_cert("cert", "mqtt broker cert", mqtt_cert.c_str(), 2048);
+  WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
+  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 2048);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
 #  endif
   //WiFiManager
@@ -1209,8 +1236,8 @@ void setup_wifimanager(bool reset_settings) {
     }
 #  endif
 
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
-    digitalWrite(LED_INFO, LED_INFO_ON);
+    ErrorIndicatorON();
+    InfoIndicatorON();
     Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
@@ -1222,8 +1249,8 @@ void setup_wifimanager(bool reset_settings) {
       watchdogReboot(3);
       delay(5000);
     }
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
-    digitalWrite(LED_INFO, !LED_INFO_ON);
+    ErrorIndicatorOFF();
+    InfoIndicatorOFF();
   }
 
   displayPrint("Wifi connected");
@@ -1359,8 +1386,8 @@ void loop() {
   // Switch off of the LED after TimeLedON
   if (now > (timer_led_measures + (TimeLedON * 1000))) {
     timer_led_measures = millis();
-    digitalWrite(LED_INFO, !LED_INFO_ON);
-    digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
+    InfoIndicatorOFF();
+    SendReceiveIndicatorOFF();
   }
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1375,7 +1402,7 @@ void loop() {
 #endif
     failure_number_ntwk = 0;
     if (client.loop()) { // MQTT client is still connected
-      digitalWrite(LED_INFO, LED_INFO_ON);
+      InfoIndicatorON();
       failure_number_ntwk = 0;
       // We have just re-connected if connected was previously false
       bool justReconnected = !connected;
@@ -1502,9 +1529,9 @@ void loop() {
   } else { // disconnected from network
     connected = false;
     Log.warning(F("Network disconnected:" CR));
-    digitalWrite(LED_ERROR, LED_ERROR_ON);
+    ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
-    digitalWrite(LED_ERROR, !LED_ERROR_ON);
+    ErrorIndicatorOFF();
     delay(2000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
 #  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
@@ -1759,7 +1786,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
 #endif
-    digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
+    SendReceiveIndicatorON();
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
@@ -1830,8 +1857,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  endif
 
       Log.warning(F("Starting firmware update" CR));
-      digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON);
-      digitalWrite(LED_ERROR, LED_ERROR_ON);
+      SendReceiveIndicatorON();
+      ErrorIndicatorON();
 
 #  if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();
@@ -1840,10 +1867,10 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert) {
         if (ota_server_cert.length() > 0) {
-          Log.error(F("using stored cert" CR));
+          Log.notice(F("using stored cert" CR));
           ota_cert = ota_server_cert.c_str();
         } else {
-          Log.error(F("using config cert" CR));
+          Log.notice(F("using config cert" CR));
           ota_cert = OTAserver_cert;
         }
       }
@@ -1926,8 +1953,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           break;
       }
 
-      digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON);
-      digitalWrite(LED_ERROR, !LED_ERROR_ON);
+      SendReceiveIndicatorOFF();
+      ErrorIndicatorOFF();
 
 #  if defined(ZgatewayBT) && defined(ESP32)
       startProcessing();
