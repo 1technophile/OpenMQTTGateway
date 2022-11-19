@@ -114,6 +114,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorHTU21
 #  include "config_HTU21.h"
 #endif
+#ifdef ZsensorLM75
+#  include "config_LM75.h"
+#endif
 #ifdef ZsensorAHTx0
 #  include "config_AHTx0.h"
 #endif
@@ -719,6 +722,10 @@ void setup() {
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
   modules.add(ZsensorHTU21);
+#endif
+#ifdef ZsensorLM75
+  setupZsensorLM75();
+  modules.add(ZsensorLM75);
 #endif
 #ifdef ZsensorAHTx0
   setupZsensorAHTx0();
@@ -1428,6 +1435,9 @@ void loop() {
 #endif
 #ifdef ZsensorHTU21
       MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
+#endif
+#ifdef ZsensorLM75
+      MeasureTemp(); //Addon to measure Temperature of an LM75 sensor
 #endif
 #ifdef ZsensorAHTx0
       MeasureAHTTempHum(); //Addon to measure Temperature, Humidity, of an 'AHTx0' sensor
