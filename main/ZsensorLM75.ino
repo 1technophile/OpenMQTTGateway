@@ -56,6 +56,8 @@ void setupZsensorLM75() {
 
 #  if defined(ESP32)
   Wire.begin(I2C_SDA, I2C_SCL);
+#  elif defined(ESP8266)
+  Wire.begin();
 #  endif
 }
 
