@@ -76,7 +76,7 @@ void MeasureTemp() {
     }
 
     // Check if reads failed and exit early (to try again).
-    if (isnan(lm75TempC) ) {
+    if (isnan(lm75TempC)) {
       Log.error(F("Failed to read from sensor HLM75!" CR));
     } else {
       Log.notice(F("Creating LM75 buffer" CR));
