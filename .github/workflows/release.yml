@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and upload Assets to Release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install platformio
@@ -44,13 +44,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Create the documentation and deploy it to GitHub Pages
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: "14.x"
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install build dependencies

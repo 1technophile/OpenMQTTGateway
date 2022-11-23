@@ -32,7 +32,6 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 
 #ifdef ZgatewayBT
 
-#  include "FreeRTOS.h"
 SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
 SemaphoreHandle_t semaphoreBLEOperation;
 QueueHandle_t BLEQueue;
@@ -46,8 +45,8 @@ QueueHandle_t BLEQueue;
 #  include <esp_bt.h>
 #  include <esp_bt_main.h>
 #  include <esp_wifi.h>
-#  include <stdatomic.h>
 
+#  include <atomic>
 #  include <vector>
 
 #  include "ZgatewayBLEConnect.h"

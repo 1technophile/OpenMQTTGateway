@@ -207,27 +207,26 @@ const char* certificate PROGMEM = R"EOF("
 // The default certificate is for github.
 const char* OTAserver_cert PROGMEM = R"EOF("
 -----BEGIN CERTIFICATE-----
-MIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs
+MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFzc3VyYW5j
-ZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAwMFowbDEL
-MAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3
-LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNlcnQgSGlnaCBBc3N1cmFuY2Ug
-RVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMbM5XPm
-+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9ppkCxxLeyj9CYpKlBWTrT3JTW
-PNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8OkhPhPYlG++MXs2ziS4wblCJEM
-xChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ckRZqnrG0AFFoEt7oT61EKmEFB
-Ik5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhakaHPQNAQTXKFx01p8VdteZOE3
-hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDirCmTCv2ZdlYTBoSUeh10aUAsg
-EsxBu24LUTi4S8sCAwEAAaNjMGEwDgYDVR0PAQH/BAQDAgGGMA8GA1UdEwEB/wQF
-MAMBAf8wHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoIAu9jZCvDMB8GA1UdIwQYMBaA
-FLE+w2kD+L9HAdSYJhoIAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQAcGgaX3Nec
-nzyIZgYIVyHbIUf4KmeqvxgydkAQV8GK83rZEWWONfqe/EW1ntlMMUu4kehDLI6z
-eM7b41N5cdblIZQB2lWHmiRk9opmzN6cN82oNLFpmyPInngiK3BD41VHMWEZ71jF
-hS9OMPagMRYjyOfiZRYzy78aG6A9+MpeizGLYAiJLQwGXFK3xPkKmNEVX58Svnw2
-Yzi9RKR/5CYrCsSXaQ3pjOLAEFe4yHYSkVXySGnYvCoCWw9E1CAx2/S6cCZdkGCe
-vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
-+OkuE6N36B9K
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
+b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
+CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
+nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
+43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
+T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
+gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
+BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
+TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
+DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
+hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
+06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
+PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
+YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
+CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----
 ")EOF";
 
@@ -381,49 +380,102 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef ota_port
 #  define ota_port 8266
 #endif
+// timeout for OTA activities
+// OTA upload with no activity in this period is considered inactive
+// As long as OTA upload is considered "active", we avoid rebooting e.g.
+// in case of failures connecting to MQTT
+#ifndef ota_timeout_millis
+#  define ota_timeout_millis 30000
+#endif
 
+/*-------------ERRORS, INFOS, SEND RECEIVE Display through LED----------------*/
+#ifndef RGB_INDICATORS // Management of Errors, reception/emission and informations indicators with basic LED
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifndef LED_SEND_RECEIVE
-#  ifdef ESP8266
-#    define LED_SEND_RECEIVE 40
-#  elif ESP32
-#    define LED_SEND_RECEIVE 40
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_SEND_RECEIVE 40
-#  else //arduino uno/nano
-#    define LED_SEND_RECEIVE 40
+#  ifndef LED_SEND_RECEIVE
+#    ifdef ESP8266
+#      define LED_SEND_RECEIVE 40
+#    elif ESP32
+#      define LED_SEND_RECEIVE 40
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_SEND_RECEIVE 40
+#    else //arduino uno/nano
+#      define LED_SEND_RECEIVE 40
+#    endif
 #  endif
-#endif
-#ifndef LED_SEND_RECEIVE_ON
-#  define LED_SEND_RECEIVE_ON HIGH
-#endif
-#ifndef LED_ERROR
-#  ifdef ESP8266
-#    define LED_ERROR 42
-#  elif ESP32
-#    define LED_ERROR 42
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_ERROR 42
-#  else //arduino uno/nano
-#    define LED_ERROR 42
+#  ifndef LED_SEND_RECEIVE_ON
+#    define LED_SEND_RECEIVE_ON HIGH
 #  endif
-#endif
-#ifndef LED_ERROR_ON
-#  define LED_ERROR_ON HIGH
-#endif
-#ifndef LED_INFO
-#  ifdef ESP8266
-#    define LED_INFO 44
-#  elif ESP32
-#    define LED_INFO 44
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_INFO 44
-#  else //arduino uno/nano
-#    define LED_INFO 44
+#  ifndef LED_ERROR
+#    ifdef ESP8266
+#      define LED_ERROR 42
+#    elif ESP32
+#      define LED_ERROR 42
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_ERROR 42
+#    else //arduino uno/nano
+#      define LED_ERROR 42
+#    endif
 #  endif
-#endif
-#ifndef LED_INFO_ON
-#  define LED_INFO_ON HIGH
+#  ifndef LED_ERROR_ON
+#    define LED_ERROR_ON HIGH
+#  endif
+#  ifndef LED_INFO
+#    ifdef ESP8266
+#      define LED_INFO 44
+#    elif ESP32
+#      define LED_INFO 44
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_INFO 44
+#    else //arduino uno/nano
+#      define LED_INFO 44
+#    endif
+#  endif
+#  ifndef LED_INFO_ON
+#    define LED_INFO_ON HIGH
+#  endif
+#  define SetupIndicators()            \
+    pinMode(LED_SEND_RECEIVE, OUTPUT); \
+    pinMode(LED_INFO, OUTPUT);         \
+    pinMode(LED_ERROR, OUTPUT);        \
+    SendReceiveIndicatorOFF();         \
+    InfoIndicatorOFF();                \
+    ErrorIndicatorOFF();
+
+#  define ErrorIndicatorON()        digitalWrite(LED_ERROR, LED_ERROR_ON)
+#  define ErrorIndicatorOFF()       digitalWrite(LED_ERROR, !LED_ERROR_ON)
+#  define SendReceiveIndicatorON()  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON)
+#  define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
+#  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
+#  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
+#else // Management of Errors, reception/emission and informations indicators with RGB LED
+#  include <FastLED.h>
+CRGB leds[FASTLED_IND_NUM_LEDS];
+#  ifndef RGB_LED_POWER
+#    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
+#  endif
+#  define SetupIndicators()                                                               \
+    pinMode(RGB_LED_POWER, OUTPUT);                                                       \
+    digitalWrite(RGB_LED_POWER, HIGH);                                                    \
+    FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
+    FastLED.setBrightness(20);
+#  define ErrorIndicatorON() \
+    leds[0] = CRGB::Red;     \
+    FastLED.show()
+#  define ErrorIndicatorOFF() \
+    leds[0] = CRGB::Black;    \
+    FastLED.show()
+#  define SendReceiveIndicatorON() \
+    leds[0] = CRGB::Blue;          \
+    FastLED.show()
+#  define SendReceiveIndicatorOFF() \
+    leds[0] = CRGB::Black;          \
+    FastLED.show()
+#  define InfoIndicatorON() \
+    leds[0] = CRGB::Green;  \
+    FastLED.show()
+#  define InfoIndicatorOFF() \
+    leds[0] = CRGB::Black;   \
+    FastLED.show()
 #endif
 
 #ifdef ESP8266
