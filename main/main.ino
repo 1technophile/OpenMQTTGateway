@@ -631,7 +631,10 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   Log.begin(LOG_LEVEL, &Serial);
   Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
-
+#if defined(TRIGGER_GPIO) && !defined(ESPWifiManualSetup)
+  pinMode(TRIGGER_GPIO, INPUT_PULLUP);
+  checkButton();
+#endif
   //setup LED status
   SetupIndicators();
 
@@ -1058,7 +1061,7 @@ void saveConfigCallback() {
 }
 
 #  ifdef TRIGGER_GPIO
-void checkButton() { // code from tzapu/wifimanager examples
+void checkButton() { // Check if button is pressed so as to reset the credentials and parameters stored into the flash, code from tzapu/wifimanager examples
 #    if defined(INPUT_GPIO) && defined(ZsensorGPIOInput) && INPUT_GPIO == TRIGGER_GPIO
   MeasureGPIOInput();
 #    else
@@ -1068,7 +1071,6 @@ void checkButton() { // code from tzapu/wifimanager examples
     delay(50);
     if (digitalRead(TRIGGER_GPIO) == LOW) {
       Log.trace(F("Trigger button Pressed" CR));
-      // still holding button for 3000 ms, reset settings, code not ideaa for production
       delay(3000); // reset delay hold
       if (digitalRead(TRIGGER_GPIO) == LOW) {
         Log.trace(F("Button Held" CR));
@@ -1122,9 +1124,6 @@ void saveMqttConfig() {
 }
 
 void setup_wifimanager(bool reset_settings) {
-#  ifdef TRIGGER_GPIO
-  pinMode(TRIGGER_GPIO, INPUT_PULLUP);
-#  endif
   delay(10);
   WiFi.mode(WIFI_STA);
 
