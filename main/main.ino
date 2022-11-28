@@ -1250,8 +1250,8 @@ void setup_wifimanager(bool reset_settings) {
     }
 #  endif
 
-    ErrorIndicatorON();
     InfoIndicatorON();
+    ErrorIndicatorON();
     Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
@@ -1263,8 +1263,8 @@ void setup_wifimanager(bool reset_settings) {
       watchdogReboot(3);
       delay(5000);
     }
-    ErrorIndicatorOFF();
     InfoIndicatorOFF();
+    ErrorIndicatorOFF();
   }
 
   displayPrint("Wifi connected");
