@@ -554,6 +554,21 @@ void pubMqttDiscovery() {
   }
 #  endif
 
+#  ifdef ZsensorLM75
+  Log.trace(F("LM75Discovery" CR));
+  char* LM75sensor[8] = {"sensor", "temp", "htu", "temperature", jsonTempc, "", "", "°C"};
+  //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+  createDiscovery(LM75sensor[0],
+                  LM75TOPIC, LM75sensor[1], (char*)getUniqueId(LM75sensor[1], LM75sensor[2]).c_str(),
+                  will_Topic, LM75sensor[3], LM75sensor[4],
+                  LM75sensor[5], LM75sensor[6], LM75sensor[7],
+                  0, "", "", true, "",
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone //State Class
+  );
+#  endif
+
 #  ifdef ZsensorAHTx0
 #    define AHTparametersCount 2
   Log.trace(F("AHTx0Discovery" CR));
