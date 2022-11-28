@@ -30,6 +30,13 @@
 
 #ifdef ZactuatorONOFF
 
+void setupONOFF() {
+  pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
+#  ifdef ACTUATOR_ONOFF_DEFAULT
+  digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
+#  endif
+}
+
 #  if jsonReceiving
 void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
@@ -104,7 +111,11 @@ void ActuatorButtonTrigger() {
   }
   Log.trace(F("Actuator triggered %s by button" CR), level_string);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
-  pub(subjectGTWONOFFtoMQTT, level_string);
+  // Send the state of the switch to the broker so as to update the status
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
+  ONOFFdata["cmd"] = (int)level;
+  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
 }
 
 #endif
