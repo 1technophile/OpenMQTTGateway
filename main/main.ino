@@ -182,6 +182,10 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
 #endif
+#ifdef WM_PWD_FROM_MAC
+#  undef WifiManager_password;
+char WifiManager_password[9];
+#endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
 int failure_number_ntwk = 0; // number of failure connecting to network
@@ -655,13 +659,17 @@ void setup() {
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
-#  ifdef USE_MAC_AS_GATEWAY_NAME
   String s = WiFi.macAddress();
+#  ifdef USE_MAC_AS_GATEWAY_NAME
   sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
           s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%s", Gateway_Short_Name, gateway_name);
+  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
   strcpy(ota_hostname, WifiManager_ssid);
   Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
+#  endif
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
+          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
 #  endif
 
 #  ifdef ESP32_ETHERNET
@@ -1233,18 +1241,9 @@ void setup_wifimanager(bool reset_settings) {
 
   if (!wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
   {
-    // Wifi Manager password
-    String wm_password;
-#  if WM_PWD_FROM_MAC // From ESP Mac Address
-    wm_password = WiFi.macAddress();
-    wm_password.replace(":", "");
-    wm_password.substring(0, 8);
-#  else
-    wm_password = WifiManager_password; // From macro definition
-#  endif
 #  ifdef ESP32
     if (lowpowermode < 2) {
-      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, const_cast<char*>(wm_password.c_str()));
+      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
       lowPowerESP32();
@@ -1254,11 +1253,11 @@ void setup_wifimanager(bool reset_settings) {
 
     ErrorIndicatorON();
     InfoIndicatorON();
-    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, wm_password.c_str());
+    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
-    if (!wifiManager.autoConnect(WifiManager_ssid, wm_password.c_str())) {
+    if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
       Log.warning(F("failed to connect and hit timeout" CR));
       delay(3000);
       //reset and try again
