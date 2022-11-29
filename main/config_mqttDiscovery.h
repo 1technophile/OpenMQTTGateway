@@ -119,7 +119,9 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define discovery_republish_on_reconnect false
 #endif
 
-#define DEVICEMANUFACTURER "OMG_community"
+#ifndef GATEWAY_MANUFACTURER
+#  define GATEWAY_MANUFACTURER "OMG_community"
+#endif
 
 /*-------------- Auto discovery macros-----------------*/
 // Set the line below to true so as to have autodiscovery working with OpenHAB
