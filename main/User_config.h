@@ -460,7 +460,7 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
     FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
     FastLED.setBrightness(20);
 #  define ErrorIndicatorON() \
-    leds[0] = CRGB::Red;     \
+    leds[0] = CRGB::Orange;  \
     FastLED.show()
 #  define ErrorIndicatorOFF() \
     leds[0] = CRGB::Black;    \
