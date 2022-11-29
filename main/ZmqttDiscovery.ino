@@ -139,12 +139,16 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
   JsonArray identifiers = device.createNestedArray("identifiers");
 
   if (use_gateway_info) {
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
-    serializeJson(modules, JSONmessageBuffer, sizeof(JSONmessageBuffer));
-
     device["name"] = gateway_name;
-    device["model"] = JSONmessageBuffer;
-    device["manufacturer"] = DEVICEMANUFACTURER;
+#  ifndef GATEWAY_MODEL
+    String model = "";
+    serializeJson(modules, model);
+    device["model"] = model;
+#  else
+    device["model"] = GATEWAY_MODEL;
+#  endif
+
+    device["manufacturer"] = GATEWAY_MANUFACTURER;
     device["sw_version"] = OMG_VERSION;
     identifiers.add(getMacAddress());
 
@@ -301,11 +305,15 @@ void createDiscovery(const char* sensor_type,
 
   if (gateway_entity) {
     //device representing the board
+    device["name"] = String(gateway_name);
+#  ifndef GATEWAY_MODEL
     String model = "";
     serializeJson(modules, model);
-    device["name"] = String(gateway_name);
     device["model"] = model;
-    device["manufacturer"] = DEVICEMANUFACTURER;
+#  else
+    device["model"] = GATEWAY_MODEL;
+#  endif
+    device["manufacturer"] = GATEWAY_MANUFACTURER;
     device["sw_version"] = OMG_VERSION;
     identifiers.add(String(getMacAddress()));
   } else {
