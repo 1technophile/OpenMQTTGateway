@@ -50,7 +50,7 @@
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
 
-// Uncomment to use the MAC address in the format of 112233445566 as the gateway name
+// Uncomment to use the MAC address first 4 digits in the format of 5566 as the gateway name
 // Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
 //#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
@@ -114,11 +114,9 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #endif
 
-#define WM_PWD_FROM_MAC false // enable to set the password from the 8 first digit of the ESP mac address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
-#if !WM_PWD_FROM_MAC
-#  ifndef WifiManager_password
-#    define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
-#  endif
+//#define WM_PWD_FROM_MAC true // enable to set the password from the 8 first digit of the ESP mac address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
+#ifndef WifiManager_password
+#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
 #endif
 #ifndef WifiManager_ssid
 #  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
