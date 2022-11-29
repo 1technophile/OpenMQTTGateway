@@ -723,8 +723,8 @@ void setup() {
   delay(1500);
 
 #ifdef ZactuatorONOFF
-  pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
-  digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
+  setupONOFF();
+  modules.add(ZactuatorONOFF);
 #endif
 #ifdef ZsensorBME280
   setupZsensorBME280();
