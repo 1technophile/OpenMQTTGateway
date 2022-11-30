@@ -178,6 +178,7 @@ char mqtt_server[parameters_size + 1] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
 char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
+char ota_pass[parameters_size + 1] = ota_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
@@ -186,7 +187,7 @@ char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
 #endif
 #ifdef WM_PWD_FROM_MAC
-#  undef WifiManager_password;
+#  undef WifiManager_password
 char WifiManager_password[9];
 #endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
@@ -924,7 +925,7 @@ void setOTA() {
   ArduinoOTA.setHostname(ota_hostname);
 
   // No authentication by default
-  ArduinoOTA.setPassword(ota_password);
+  ArduinoOTA.setPassword(ota_pass);
 
   ArduinoOTA.onStart([]() {
     Log.trace(F("Start OTA, lock other functions" CR));
@@ -1134,6 +1135,7 @@ void saveMqttConfig() {
   json["mqtt_broker_cert"] = mqtt_cert;
   json["mqtt_ss_index"] = mqtt_ss_index;
   json["ota_server_cert"] = ota_server_cert;
+  json["ota_pass"] = ota_pass;
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -1195,6 +1197,8 @@ void setup_wifimanager(bool reset_settings) {
           mqtt_ss_index = json["mqtt_ss_index"].as<uint8_t>();
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
+        if (json.containsKey("ota_pass"))
+          strcpy(ota_pass, json["ota_pass"]);
         if (json.containsKey("ota_server_cert"))
           ota_server_cert = json["ota_server_cert"].as<const char*>();
       } else {
@@ -1218,6 +1222,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 2048);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
+  WiFiManagerParameter custom_ota_pass("ota", "ota password", ota_pass, parameters_size);
 #  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -1248,6 +1253,7 @@ void setup_wifimanager(bool reset_settings) {
   wifiManager.addParameter(&custom_mqtt_cert);
   wifiManager.addParameter(&custom_gateway_name);
   wifiManager.addParameter(&custom_mqtt_topic);
+  wifiManager.addParameter(&custom_ota_pass);
 #  endif
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
@@ -1292,6 +1298,7 @@ void setup_wifimanager(bool reset_settings) {
     strcpy(mqtt_pass, custom_mqtt_pass.getValue());
     strcpy(mqtt_topic, custom_mqtt_topic.getValue());
     strcpy(gateway_name, custom_gateway_name.getValue());
+    strcpy(ota_pass, custom_ota_pass.getValue());
     mqtt_secure = *custom_mqtt_secure.getValue();
 
     int cert_len = strlen(custom_mqtt_cert.getValue());
@@ -1877,7 +1884,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  if MQTT_HTTPS_FW_UPDATE_USE_PASSWORD > 0
       const char* pwd = HttpsFwUpdateData["password"];
       if (pwd) {
-        if (strcmp(pwd, ota_password) != 0) {
+        if (strcmp(pwd, ota_pass) != 0) {
           Log.error(F("Invalid OTA password" CR));
           return;
         }
