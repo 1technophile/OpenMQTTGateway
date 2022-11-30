@@ -120,6 +120,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorAHTx0
 #  include "config_AHTx0.h"
 #endif
+#ifdef ZsensorRN8209
+#  include "config_RN8209.h"
+#endif
 #ifdef ZsensorHCSR04
 #  include "config_HCSR04.h"
 #endif
@@ -209,6 +212,8 @@ static String ota_server_cert = "";
 #  include <SPIFFS.h>
 #  include <nvs.h>
 #  include <nvs_flash.h>
+
+bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
 #  ifdef ESP32_ETHERNET
 #    include <ETH.h>
@@ -862,6 +867,10 @@ void setup() {
 #    undef ACTIVE_RECEIVER
 #  endif
 #  define ACTIVE_RECEIVER ACTIVE_RTL
+#endif
+#ifdef ZsensorRN8209
+  setupRN8209();
+  modules.add(ZsensorRN8209);
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRF2)
 #  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive

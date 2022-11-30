@@ -758,6 +758,29 @@ void pubMqttDiscovery() {
   );
 #  endif
 
+#  ifdef ZsensorRN8209
+#    define RN8209parametersCount 3
+  Log.trace(F("RN8209Discovery" CR));
+  char* RN8209sensor[RN8209parametersCount][8] = {
+      {"sensor", "volt", "RN8209", "", jsonVolt, "", "", "V"},
+      {"sensor", "current", "RN8209", "", jsonCurrent, "", "", "A"},
+      {"sensor", "power", "RN8209", "", jsonPower, "", "", "W"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  for (int i = 0; i < RN8209parametersCount; i++) {
+    String name = String(RN8209sensor[i][2]) + "PWR: " + String(RN8209sensor[i][1]);
+    createDiscovery(RN8209sensor[i][0],
+                    subjectRN8209toMQTT, (char*)name.c_str(), (char*)getUniqueId(RN8209sensor[i][1], RN8209sensor[i][2]).c_str(),
+                    will_Topic, RN8209sensor[i][3], RN8209sensor[i][4],
+                    RN8209sensor[i][5], RN8209sensor[i][6], RN8209sensor[i][7],
+                    0, "", "", true, "",
+                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    stateClassNone //State Class
+    );
+  }
+#  endif
+
 #  ifdef ZgatewayRF
   // Sensor to display RF received value
   Log.trace(F("gatewayRFDiscovery" CR));

@@ -328,8 +328,6 @@ void emptyBTQueue() {
   }
 }
 
-bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
-
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
 
 BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
