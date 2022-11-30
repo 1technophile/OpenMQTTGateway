@@ -64,7 +64,7 @@ void MeasureGPIOInput() {
     if (reading == LOW) {
       if (resetTime == 0) {
         resetTime = millis();
-      } else if ((millis() - resetTime) > 10000) {
+      } else if ((millis() - resetTime) > 3000) {
         Log.trace(F("Button Held" CR));
         Log.notice(F("Erasing ESP Config, restarting" CR));
         setup_wifimanager(true);
