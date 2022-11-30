@@ -328,7 +328,6 @@ void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
-  SendReceiveIndicatorON();
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #if valueAsATopic
 #  ifdef ZgatewayPilight
@@ -417,6 +416,7 @@ void pubMQTT(const char* topic, const char* payload) {
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (client.connected()) {
+    SendReceiveIndicatorON();
     Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
 #if AWS_IOT
     client.publish(topic, payload); // AWS IOT doesn't support retain flag for the moment
@@ -424,7 +424,7 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
     client.publish(topic, payload, retainFlag);
 #endif
   } else {
-    Log.warning(F("Client not connected, aborting thes publication" CR));
+    Log.warning(F("Client not connected, aborting the publication" CR));
   }
 }
 
@@ -526,6 +526,11 @@ void delayWithOTA(long waitMillis) {
 #if defined(ESP8266) || defined(ESP32)
   long waitStep = 100;
   for (long waitedMillis = 0; waitedMillis < waitMillis; waitedMillis += waitStep) {
+#  ifndef ESPWifiManualSetup
+#    if defined(ESP8266) || defined(ESP32)
+    checkButton(); // check if a reset of wifi/mqtt settings is asked
+#    endif
+#  endif
     ArduinoOTA.handle();
     delay(waitStep);
   }
@@ -589,7 +594,7 @@ void connectMQTT() {
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
     ErrorIndicatorON();
-    delayWithOTA(2000);
+    delayWithOTA(5000);
     ErrorIndicatorOFF();
     delayWithOTA(5000);
     if (failure_number_mqtt > maxRetryWatchDog) {

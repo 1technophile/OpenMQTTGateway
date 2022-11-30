@@ -165,8 +165,8 @@ The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above 
 The gateway can support up to 3 LED to display its operating state:
 * LED_INFO 
 switched ON when network and MQTT connection are OK
-5s ON, 5s OFF when WIFI is disconnected
-1s ON, 4s OFF when MQTT is disconnected
+5s ON, 5s OFF when MQTT is disconnected
+2s ON, 2s OFF when NETWORK is disconnected
 
 * LED_RECEIVE
 Blink for `TimeLedON` 1s when the gateway receive a signal from one of its module so as to send to MQTT
