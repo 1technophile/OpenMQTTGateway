@@ -21,6 +21,7 @@ From your smartphone search for your OpenMQTTGateway wifi network and connect to
 * Set your MQTT Server password (facultative)
 * Set your MQTT base topic if you need to change it (you must keep the / at the end)
 * Set your gateway name if you need to change it
+* Set your Over The Air password, this password is used for local and remote OTA
 
 * Click on save
 
