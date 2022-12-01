@@ -769,7 +769,7 @@ void pubMqttDiscovery() {
   };
 
   for (int i = 0; i < RN8209parametersCount; i++) {
-    String name = String(RN8209sensor[i][2]) + "PWR: " + String(RN8209sensor[i][1]);
+    String name = "NRG: " + String(RN8209sensor[i][1]);
     createDiscovery(RN8209sensor[i][0],
                     subjectRN8209toMQTT, (char*)name.c_str(), (char*)getUniqueId(RN8209sensor[i][1], RN8209sensor[i][2]).c_str(),
                     will_Topic, RN8209sensor[i][3], RN8209sensor[i][4],
