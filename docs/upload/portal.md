@@ -3,7 +3,8 @@
 ## Wifi and MQTT configuration portal for Wifi boards
 
 Once loaded into your ESP and if you don't use the manual configuration you have to set your network parameters with wifi manager portal.
-From your smartphone search for your OpenMQTTGateway wifi network and connect to it with `WifiManager_password` (the default password is "your_password"), a web page will appear.
+From your smartphone search for your OpenMQTTGateway or OMG wifi network and connect to it with `WifiManager_password` (the default password is "your_password"), a web page will appear.
+If you are using a device sold by Theengs or the macro `-DWM_PWD_FROM_MAC=true` the password will be the last 8 digits of the device MAC Address in upper case (example, password would be `CCDDEEFF` for a MAC Address `AABBCCDDEEFF`). The Mac address can be found on the device sticker.
 
 ![Wifi manager menu](../img/OpenMQTTGateway_Wifi_Manager_menu.png)
 
