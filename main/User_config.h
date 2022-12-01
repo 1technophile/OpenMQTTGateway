@@ -50,7 +50,7 @@
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
 
-// Uncomment to use the MAC address first 4 digits in the format of 5566 as the gateway name
+// Uncomment to use the MAC address first 4 digits in the format of 5566 as the suffix of the short gateway name.
 // Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
 //#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
@@ -66,7 +66,7 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and mac only
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and MAC only
 #ifdef NetworkAdvancedSetup
 #  if defined(ESP8266) || defined(ESP32)
 const byte ip[] = {192, 168, 1, 99}; //IP address of the gateway, already defined for arduino below
@@ -114,7 +114,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #endif
 
-//#define WM_PWD_FROM_MAC true // enable to set the password from the 8 first digit of the ESP mac address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
+//#define WM_PWD_FROM_MAC true // enable to set the password from the last 8 digits of the ESP MAC address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
 #ifndef WifiManager_password
 #  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
 #endif
