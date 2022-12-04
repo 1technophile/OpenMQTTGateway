@@ -1273,12 +1273,24 @@ void setup_wifimanager(bool reset_settings) {
     InfoIndicatorON();
     ErrorIndicatorON();
     Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
+
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
     if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
       Log.warning(F("failed to connect and hit timeout" CR));
       delay(3000);
+
+#  ifdef ESP32
+      /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
+      esp_wifi_set_mode(WIFI_MODE_AP);
+      esp_wifi_start();
+      wifi_config_t conf;
+      esp_wifi_get_config(WIFI_IF_AP, &conf);
+      conf.ap.ssid_hidden = 1;
+      esp_wifi_set_config(WIFI_IF_AP, &conf);
+#  endif
+
       //reset and try again
       watchdogReboot(3);
       delay(5000);
