@@ -1,15 +1,15 @@
-/*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+/*
+  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker
    Send and receiving command by MQTT
- 
-   This files enables to set your parameter for the BME280 sensor
 
-    Copyright: (c) Hans-Juergen Dinges  
-    
+   This files enables you to set parameters for the BME280 or BMP280 sensors.
+
+    Copyright: (c) Hans-Juergen Dinges
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -26,13 +26,12 @@
    Connection Schemata:
    --------------------
 
-   BH1750 ------> Arduino Uno ----------> ESP8266
-   ==============================================
-   Vcc ---------> 5V -------------------> Vu (5V)
-   GND ---------> GND ------------------> GND
-   SCL ---------> Pin A5 ---------------> D1
-   SDA ---------> Pin A4 ---------------> D2
-   ADD ---------> N/C (Not Connected) --> N/C (Not Connected)
+   BME280/BMP280 ------> Arduino Uno ----------> ESP8266
+   =====================================================
+   Vcc ----------------> 5V/3.3V     ----------> 5V/3.3V    (5V or 3.3V depends on the BME280/BMP280 board variant)
+   GND ----------------> GND         ----------> GND
+   SCL ----------------> Pin A5      ----------> D1
+   SDA ----------------> Pin A4      ----------> D2
 
 */
 #ifndef config_BME280_h
@@ -62,15 +61,39 @@ int BME280_i2c_addr = 0x76; // Bosch BME280 I2C Address
 int BME280_PIN_SDA = SDA; // PIN SDA
 int BME280_PIN_SCL = SCL; // PIN SCL
 
-// Temperature correction for BME280 devices
+// Oversampling for BME280/BMP280 devices
+
+#ifndef BME280TemperatureOversample
+// BME280TemperatureOversample - Values:
+// ------------------------
+//  0, skipped
+//  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
+#  define BME280TemperatureOversample 1
+#endif
+
+#ifndef BME280PressureOversample
+// BME280PressureOversample - Values:
+// -------------------------
+//  0, skipped
+//  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
+#  define BME280PressureOversample 1
+#endif
+
+#ifndef BME280HumidityOversample
+// BME280HumidityOversample - Values:
+// -------------------------
+//  0, skipped
+//  1 through 5, oversampling *1, *2, *4, *8, *16 respectively
+#  define BME280HumidityOversample 1
+#endif
+
+// Temperature correction for BME280/BMP280 devices
 
 #ifndef BME280Correction
-
-// BME280Correction - Correction in celcius of temperature reported by bme280 sensor.  Both Celcius and Farenheit temperatures are adjusted.
+// BME280Correction - Correction in celcius of temperature reported by BME280/BMP280 sensor. Both Celcius and Farenheit temperatures are adjusted.
 // -------------------------
 // Value is a float
 // ie Compiler Directive '-DBME280Correction=-3.4'
-
 #  define BME280Correction 0
 #endif
 

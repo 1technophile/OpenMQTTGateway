@@ -3,7 +3,7 @@ OpenMQTTGateway is not closed to one board or type of board, by using the power 
 
 You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported boards](https://compatible.openmqttgateway.com/index.php/boards/).
 
-Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280, HTU21D, AHTx0, DS1820
+Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280/BMP280, HTU21D, AHTx0, DS1820
 or actuators; LED, relays, PWM.
 
 ::: tip Running on a computer
@@ -56,7 +56,7 @@ HM10 is no longer supported by OpenMQTTGateway
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 
-Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection. 
+Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection.
 
 The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to Arduino Uno & Mega.
 
@@ -64,6 +64,3 @@ Choosing your board depends heavily on the technologies you want to use with it.
 To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).
 
 The choice between these boards will depend on your knowledge and your requirements in terms of reliability, situation, modules wanted and devices you already have.
-
-
-
