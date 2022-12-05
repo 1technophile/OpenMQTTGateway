@@ -1471,7 +1471,7 @@ void loop() {
       }
 #endif
 #ifdef ZsensorBME280
-      MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280
+      MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280/BMP280
 #endif
 #ifdef ZsensorHTU21
       MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor
