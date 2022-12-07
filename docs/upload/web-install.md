@@ -47,6 +47,7 @@ The table below describes the libraries and the modules of each board configurat
 |esp32dev-somfy-CC1101|ESP32 dev board|Gateway using [Somfy Remote](https://github.com/Legion2/Somfy_Remote_Lib) library, need CC1101|X|-|-|-|
 |esp32dev-weatherstation|ESP32 dev board|Gateway to retrieve weather station data Ventus W174/W132 (tested), Auriol H13726, Hama EWS 1500, Meteoscan W155/W160 using [WeatherStationDataRx](https://github.com/Zwer2k/WeatherStationDataRx)|X|-|-|-|
 |esp32feather-ble|ESP32 Feather Adafruit|BLE for the Adafruit Feather board|-|-|X|-|
+|shelly-plus1|Shelly Plus 1 relay board|BLE, Relay control, Switch|-|-|X|-|
 |heltec-wifi-lora32-868|ESP32 HELTEC LORA V2|LORA communication 868Mhz  using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa) |-|-|-|X|
 |heltec-wifi-lora32-915|ESP32 HELTEC LORA V2|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |heltec-rtl_433|ESP32 HELTEC LORA32 v2|Gateway using [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP) and [RadioLib](https://github.com/jgromes/RadioLib)|X|-|-|-|

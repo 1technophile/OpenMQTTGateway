@@ -41,7 +41,10 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 #endif
 //#  define ACTUATOR_ONOFF_DEFAULT !ACTUATOR_ON // ACTUATOR_ON or !ACTUATOR_ON, set to the state desired on reset.
 #ifndef ACTUATOR_BUTTON_TRIGGER_LEVEL
-#  define ACTUATOR_BUTTON_TRIGGER_LEVEL LOW // 0 or 1, set to the sensing level which to detect a button press to change the actuator state.
+//#  define ACTUATOR_BUTTON_TRIGGER_LEVEL LOW // 0 or 1, set to the sensing level which to detect a button press to change the actuator state.
+#endif
+#ifndef ACTUATOR_TRIGGER
+#  define ACTUATOR_TRIGGER false // false or true, enable to control an actuator directly from the board switch (default behavior if true), or by button if ACTUATOR_BUTTON_TRIGGER_LEVEL is defined
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
