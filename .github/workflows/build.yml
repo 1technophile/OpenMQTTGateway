@@ -46,7 +46,6 @@ jobs:
           - "ttgo-t-beam"
           - "heltec-wifi-lora-32-868"
           - "heltec-wifi-lora-32-915"
-          - "esp32dev-mqtt-fw-test"
           - "nodemcuv2-all-test"
           - "nodemcuv2-fastled-test"
           - "nodemcuv2-2g"
