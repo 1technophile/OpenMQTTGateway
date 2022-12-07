@@ -86,6 +86,14 @@ jobs:
           pip install platformio
       - name: Run PlatformIO
         run: platformio run -e ${{ matrix.environments }}
+      - name: Upload Assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.environments }}
+          path: |
+            .pio/build/*/firmware.bin
+            .pio/build/*/partitions.bin
+          retention-days: 7
 
   documentation:
     runs-on: ubuntu-latest
