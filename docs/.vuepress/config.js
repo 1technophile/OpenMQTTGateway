@@ -22,6 +22,7 @@ module.exports = {
       smoothScroll: true,
       repo: '1technophile/OpenMQTTGateway',
       docsDir: 'docs',
+      base: '/',
       docsBranch: 'development',
       lastUpdated: 'Last Updated',
       editLinks: true,
