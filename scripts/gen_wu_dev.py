@@ -79,8 +79,8 @@ export default {
 }
 </script>'''
 
-manif_folder = "/firmware_build_dev/"
-manif_path = 'docs/.vuepress/public/firmware_build_dev/'
+manif_folder = "/dev/firmware_build/"
+manif_path = 'docs/.vuepress/public/firmware_build/'
 vue_path = 'docs/.vuepress/components/'
 bin_path = 'toDeploy/'
 cors_proxy = '' #'https://cors.bridged.cc/'
