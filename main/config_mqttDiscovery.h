@@ -61,7 +61,7 @@ extern void createDiscoveryFromList(const char* mac,
  * @param sensor_type the Type
  * @param st_topic set state topic,
  * @param s_name set name,
- * @param unique_id set niqueId
+ * @param unique_id set uniqueId
  * @param availability_topic set availability_topic,
  * @param device_class set device_class,
  * @param value_template set value_template,
@@ -69,8 +69,8 @@ extern void createDiscoveryFromList(const char* mac,
  * @param payload_off set payload_off,
  * @param unit_of_meas set unit_of_meas,
  * @param off_delay set off_delay
- * @param payload_available set payload_avalaible,
- * @param payload_not_avalaible set payload_not_avalaible
+ * @param payload_available set payload_available,
+ * @param payload_not_available set payload_not_available
  * @param gateway_entity set is a gateway entity, 
  * @param cmd_topic set command topic
  * @param device_name set device name, 

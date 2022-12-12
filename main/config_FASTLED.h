@@ -35,7 +35,7 @@
 // How many leds in your strip?
 #define FASTLED_NUM_LEDS 16
 
-// Uncomment/edit one of the following lines for your leds arrangement.
+// Uncomment/edit one of the following lines for your LEDs arrangement.
 
 //#define FASTLED_TYPE TM1803
 //#define FASTLED_TYPE TM1804
