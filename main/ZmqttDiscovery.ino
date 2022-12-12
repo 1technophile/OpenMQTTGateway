@@ -277,6 +277,8 @@ void createDiscovery(const char* sensor_type,
   if (payload_on[0]) {
     if (strcmp(sensor_type, "button") == 0) {
       sensor["pl_prs"] = payload_on; // payload_press for a button press
+    } else if (strcmp(sensor_type, "number") == 0) {
+      sensor["cmd_tpl"] = payload_on; // payload_on for a switch
     } else {
       sensor["pl_on"] = payload_on; // payload_on for a switch
     }
@@ -924,21 +926,21 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayBT
-  createDiscovery("sensor", //set Type
+  createDiscovery("number", //set Type
                   subjectSYStoMQTT, "BT: Interval between scans", (char*)getUniqueId("interval", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.interval }}", //set availability_topic,device_class,value_template,
-                  "", "", "ms", //set,payload_on,payload_off,unit_of_meas,
+                  "", "", "{{ value_json.interval/1000 }}", //set availability_topic,device_class,value_template,
+                  "{\"interval\":{{value*1000}}}", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
                   stateClassNone //State Class
   );
-  createDiscovery("sensor", //set Type
+  createDiscovery("number", //set Type
                   subjectSYStoMQTT, "BT: Connnect every X scan(s)", (char*)getUniqueId("scanbcnct", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
-                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "{\"scanbcnct\":{{value}}}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set off_delay
+                  "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );
