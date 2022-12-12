@@ -274,8 +274,13 @@ void createDiscovery(const char* sensor_type,
     sensor["retain"] = retainCmd; // Retain command
   if (value_template[0])
     sensor["val_tpl"] = value_template; //value_template
-  if (payload_on[0])
-    sensor["pl_on"] = payload_on; // payload_on
+  if (payload_on[0]) {
+    if (strcmp(sensor_type, "button") == 0) {
+      sensor["pl_prs"] = payload_on; // payload_press for a button press
+    } else {
+      sensor["pl_on"] = payload_on; // payload_on for a switch
+    }
+  }
   if (payload_off[0])
     sensor["pl_off"] = payload_off; //payload_off
   if (off_delay != 0)
@@ -487,7 +492,7 @@ void pubMqttDiscovery() {
   );
 #    endif
 #  endif
-  createDiscovery("switch", //set Type
+  createDiscovery("button", //set Type
                   will_Topic, "SYS: Restart gateway", (char*)getUniqueId("restart", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"restart\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
@@ -496,7 +501,7 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );
-  createDiscovery("switch", //set Type
+  createDiscovery("button", //set Type
                   will_Topic, "SYS: Erase credentials", (char*)getUniqueId("erase", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"erase\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
@@ -937,7 +942,7 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );
-  createDiscovery("switch", //set Type
+  createDiscovery("button", //set Type
                   will_Topic, "BT: Force scan", (char*)getUniqueId("force_scan", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"interval\":0}", "", "", //set,payload_on,payload_off,unit_of_meas,
