@@ -963,6 +963,15 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("switch", //set Type
+                  "", "BT: Active scan", (char*)getUniqueId("active_scan", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "", //set availability_topic,device_class,value_template,
+                  "{\"activescan\":true}", "{\"activescan\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone //State Class
+  );
+  createDiscovery("switch", //set Type
                   "", "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "", //set availability_topic,device_class,value_template,
                   "{\"hasspresence\":true}", "{\"hasspresence\":false}", "", //set,payload_on,payload_off,unit_of_meas,
