@@ -89,6 +89,7 @@ static bool oneWhite = false;
 void BTConfig_init() {
   BTConfig.bleConnect = AttemptBLEConnect;
   BTConfig.BLEinterval = TimeBtwRead;
+  BTConfig.activeScan = ActiveBLEScan;
   BTConfig.BLEscanBeforeConnect = ScanBeforeConnect;
   BTConfig.pubOnlySensors = PublishOnlySensors;
   BTConfig.presenceEnable = HassPresence;
@@ -127,6 +128,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
     BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
+  // Define if the scan is active or passive
+  BTConfig_update(BTdata, "activescan", BTConfig.activeScan);
   // Number of scan before a connect set
   BTConfig_update(BTdata, "scanbcnct", BTConfig.BLEscanBeforeConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
@@ -164,6 +167,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["bleconnect"] = BTConfig.bleConnect;
   jo["interval"] = BTConfig.BLEinterval;
+  jo["activescan"] = BTConfig.activeScan;
   jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
   jo["hasspresence"] = BTConfig.presenceEnable;
@@ -611,7 +615,7 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  pBLEScan->setActiveScan(ActiveBLEScan);
+  pBLEScan->setActiveScan(BTConfig.activeScan);
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
@@ -789,6 +793,7 @@ void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  Log.notice(F("Active BLE scan: %T" CR), BTConfig.activeScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
