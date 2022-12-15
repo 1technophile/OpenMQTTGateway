@@ -84,8 +84,8 @@ manif_path = 'docs/.vuepress/public/firmware_build/'
 vue_path = 'docs/.vuepress/components/'
 bin_path = 'toDeploy/'
 cors_proxy = '' #'https://cors.bridged.cc/'
-esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
-esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/master/tools/partitions/boot_app0.bin'
+esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
+esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
 
 if not os.path.exists(manif_path):
     os.makedirs(manif_path)
