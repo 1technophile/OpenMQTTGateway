@@ -87,7 +87,7 @@ public:
 
   void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
 
-  // This is a bit of lazy programmer simplifacation for the semapore and core detecting code.  Not sure if it is truly space efficient.
+  // This is a bit of lazy programmer simplification for the semaphore and core detecting code.  Not sure if it is truly space efficient.
 
   inline size_t write(uint8_t x) {
     return write(&x, 1);

@@ -3,6 +3,7 @@ module.exports = {
       lineNumbers: true
     },
     title: 'OpenMQTTGateway version_tag',
+    base: '/',
     description: 'One gateway, many technologies: MQTT gateway for ESP8266, ESP32, Sonoff RF Bridge or Arduino with bidirectional 433mhz/315mhz/868mhz, Infrared communications, BLE, beacons detection, mi flora / mi jia / LYWSD02/ Mi Scale compatibility, SMS & LORA.',
     head: [
       ['link', { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png"}],
@@ -26,13 +27,13 @@ module.exports = {
       lastUpdated: 'Last Updated',
       editLinks: true,
       nav: [
+        { text: 'Shop🆕', link: 'https://shop.theengs.io/'},
         { text: 'Blog', link: 'https://1technophile.blogspot.com'},
         { text: 'Docs', link: '/'},
         { text: 'Community', link: 'https://community.openmqttgateway.com', target:'_self', rel:''},
         { text: 'Devices', link: 'https://compatible.openmqttgateway.com/index.php/devices', target:'_self', rel:''},
-        { text: 'Boards', link: 'https://compatible.openmqttgateway.com/index.php/boards', target:'_self', rel:''},
         { text: 'Upload', link: '/upload/web-install.html'},
-        { text: 'Theengs🆕', link: 'https://app.theengs.io/'}
+        { text: 'Theengs', link: 'https://app.theengs.io/'}
       ],
       sidebar: [
         ['/','0 - What is it for 🏠'],

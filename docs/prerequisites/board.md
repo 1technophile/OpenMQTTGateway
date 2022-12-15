@@ -3,7 +3,7 @@ OpenMQTTGateway is not closed to one board or type of board, by using the power 
 
 You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported boards](https://compatible.openmqttgateway.com/index.php/boards/).
 
-Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280, HTU21D, AHTx0, DS1820
+Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280/BMP280, HTU21D, AHTx0, DS1820
 or actuators; LED, relays, PWM.
 
 ::: tip Running on a computer
@@ -27,6 +27,7 @@ The boards below doesn't need hardware modification (or a lite one).
 |OLIMEX ESP32 Ethernet POE|-|-|-|X|-|X|-|X|
 |OLIMEX ESP32 Ethernet POE ISO|-|-|-|X|-|X|-|X|
 |ESP32-WT32-ETH01 Ethernet|-|-|-|X|-|X|-|X|
+|Heltec WiFi LoRa 32 (V2.1)|-|rtl_433|-|X|X|-|X|-|
 |[M5Stack Basic](M5)|![](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)|-|-|X|-|X|X|X|
 |[M5Tough](M5)|-|-|-|X|-|X|X|X|
 |M5Stick|-|-|send|X|-|X|-|X|
@@ -55,7 +56,7 @@ HM10 is no longer supported by OpenMQTTGateway
 
 ![boards](../img/OpenMQTTGateway_boards.png)
 
-Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection. 
+Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection.
 
 The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to Arduino Uno & Mega.
 
@@ -63,6 +64,3 @@ Choosing your board depends heavily on the technologies you want to use with it.
 To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).
 
 The choice between these boards will depend on your knowledge and your requirements in terms of reliability, situation, modules wanted and devices you already have.
-
-
-

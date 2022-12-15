@@ -47,7 +47,7 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #define LORA_SYNC_WORD        0x12
 #define DEFAULT_CRC           true
 
-#define repeatLORAwMQTT false // do we repeat a received signal by using mqtt with LORA gateway
+#define repeatLORAwMQTT false // do we repeat a received signal by using MQTT with LORA gateway
 
 /*-------------------PIN DEFINITIONS----------------------*/
 //TTGO LORA BOARD ESP32 PIN DEFINITION

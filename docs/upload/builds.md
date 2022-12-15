@@ -194,7 +194,7 @@ upload_flags =
 
 * Download the [CODE](https://github.com/1technophile/OpenMQTTGateway/releases) from github
 * First download the last version of the Arduino IDE from the Arduino [website](https://www.arduino.cc/en/Main/Software)
-* Add ESP32 boards by following this [tutorial](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md)
+* Add ESP32 boards by following this [tutorial](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide)
 * Add ESP8266 boards by following this [tutorial](https://github.com/esp8266/Arduino#installing-with-boards-manager)
 * Download the libraries package corresponding to your board and module wished into the same page (example esp32-m5stick-c-ble-libraries.zip)
 * Unzip the libraries into your Arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)

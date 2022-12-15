@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-   This files enables to set your parameter for the ADC value
+   This files enables to set your parameter for the RN8209 sensor
   
     Copyright: (c)Florian ROBERT
   
@@ -23,34 +23,27 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef config_ADC_h
-#define config_ADC_h
+#ifndef config_RN8209_h
+#define config_RN8209_h
 
-extern void setupADC();
-extern void ADCtoMQTT();
+extern void setupRN8209();
+extern void RN8209toMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define ADCTOPIC "/ADCtoMQTT"
+#define subjectRN8209toMQTT "/RN8209toMQTT"
 
-#if !defined(TimeBetweenReadingADC) || (TimeBetweenReadingADC < 200)
-#  define TimeBetweenReadingADC 500 // time between 2 ADC readings, minimum 200 to let the time of the ESP to keep the connection
+/*-------------CALIBRATION PARAMETERS----------------*/
+#ifndef RN8209_KU
+#  define RN8209_KU 18570
+#endif
+#ifndef RN8209_KIA
+#  define RN8209_KIA 272433
+#endif
+#ifndef RN8209_EC
+#  define RN8209_EC 28250
 #endif
 
-#ifndef ThresholdReadingADC
-#  define ThresholdReadingADC 50 // following the comparison between the previous value and the current one +- the threshold the value will be published or not
+#ifndef TimeBetweenReadingRN8209
+#  define TimeBetweenReadingRN8209 10000 // time between 2 RN8209 readings in ms
 #endif
-
-#if !defined(NumberOfReadingsADC) || (NumberOfReadingsADC < 1)
-#  define NumberOfReadingsADC 1 // number of readings for better accuracy: avg adc = sum of adc / num readings
-#endif
-
-#ifndef MinTimeInSecBetweenPublishingADC
-#  define MinTimeInSecBetweenPublishingADC 0 // pub at least at defined interval - useful to publish values in case they do not change so much ; 0 = disabled
-#endif
-
-/*-------------------PIN DEFINITIONS----------------------*/
-#if defined(ESP8266) || !defined(ADC_GPIO)
-#  define ADC_GPIO A0 //on nodeMCU this is D3 pin
-#endif
-
 #endif

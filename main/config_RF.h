@@ -74,7 +74,7 @@ extern int getRTLMessageCount();
 #define subjectGTWRFtoMQTT "/433toMQTT"
 #define RFprotocolKey      "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
 #define RFbitsKey          "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
-#define repeatRFwMQTT      false // do we repeat a received signal by using mqtt with RF gateway
+#define repeatRFwMQTT      false // do we repeat a received signal by using MQTT with RF gateway
 #define RFpulselengthKey   "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWRF "+/+/433toMQTT"

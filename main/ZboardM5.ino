@@ -218,7 +218,7 @@ void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circl
 }
 
 void M5Print(char* line1, char* line2, char* line3) {
-  if (lowpowermode == 2) digitalWrite(LED_INFO, LED_INFO_ON);
+  if (lowpowermode == 2) InfoIndicatorON();
   wakeScreen(NORMAL_LCD_BRIGHTNESS);
   M5.Lcd.fillScreen(TFT_WHITE);
   drawLogo(M5.Lcd.width() * 0.1875, (M5.Lcd.width() / 2) - M5.Lcd.width() * 0.24, M5.Lcd.height() * 0.5, true, true, true, true, true, true);
@@ -227,6 +227,6 @@ void M5Print(char* line1, char* line2, char* line3) {
   M5.Lcd.drawString(line2, 5, M5.Lcd.height() * 0.8, 1);
   M5.Lcd.drawString(line3, 5, M5.Lcd.height() * 0.9, 1);
   delay(2000);
-  digitalWrite(LED_INFO, !LED_INFO_ON); // to switch off no need of condition
+  InfoIndicatorOFF(); // to switch off no need of condition
 }
 #endif

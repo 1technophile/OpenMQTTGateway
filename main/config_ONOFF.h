@@ -37,11 +37,9 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 #define ONKey  "setON"
 #define OFFKey "setOFF"
 #ifndef ACTUATOR_ON
-#  define ACTUATOR_ON LOW // LOW or HIGH, set to the output level of the gpio pin to turn the actuator on.
+#  define ACTUATOR_ON LOW // LOW or HIGH, set to the output level of the GPIO pin to turn the actuator on.
 #endif
-#ifndef ACTUATOR_ONOFF_DEFAULT
-#  define ACTUATOR_ONOFF_DEFAULT !ACTUATOR_ON // ACTUATOR_ON or !ACTUATOR_ON, set to the state desired on reset.
-#endif
+//#  define ACTUATOR_ONOFF_DEFAULT !ACTUATOR_ON // ACTUATOR_ON or !ACTUATOR_ON, set to the state desired on reset.
 #ifndef ACTUATOR_BUTTON_TRIGGER_LEVEL
 #  define ACTUATOR_BUTTON_TRIGGER_LEVEL LOW // 0 or 1, set to the sensing level which to detect a button press to change the actuator state.
 #endif
