@@ -473,7 +473,7 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
     digitalWrite(RGB_LED_POWER, HIGH);                                                    \
     FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
     FastLED.setBrightness(FASTLED_BRIGHTNESS);
-#  define ErrorIndicatorON()             \
+#  define ErrorIndicatorON()                \
     leds[FASTLED_ERROR_LED] = CRGB::Orange; \
     FastLED.show()
 #  define ErrorIndicatorOFF()              \
