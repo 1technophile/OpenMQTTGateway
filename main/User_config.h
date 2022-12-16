@@ -454,28 +454,42 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
 #  ifndef RGB_LED_POWER
 #    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
 #  endif
+#  ifndef FASTLED_BRIGHTNESS
+#    define FASTLED_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
+#  endif
+// Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
+#  ifndef FASTLED_INFO_LED
+#    define FASTLED_INFO_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_SEND_RECEIVCE_LED
+#    define FASTLED_SEND_RECEIVCE_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_ERROR_LED
+#    define FASTLED_ERROR_LED 0 // First Led
+#  endif
+
 #  define SetupIndicators()                                                               \
     pinMode(RGB_LED_POWER, OUTPUT);                                                       \
     digitalWrite(RGB_LED_POWER, HIGH);                                                    \
     FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
-    FastLED.setBrightness(20);
-#  define ErrorIndicatorON() \
-    leds[0] = CRGB::Orange;  \
+    FastLED.setBrightness(FASTLED_BRIGHTNESS);
+#  define ErrorIndicatorON()             \
+    leds[FASTLED_ERROR_LED] = CRGB::Red; \
     FastLED.show()
-#  define ErrorIndicatorOFF() \
-    leds[0] = CRGB::Black;    \
+#  define ErrorIndicatorOFF()              \
+    leds[FASTLED_ERROR_LED] = CRGB::Black; \
     FastLED.show()
-#  define SendReceiveIndicatorON() \
-    leds[0] = CRGB::Blue;          \
+#  define SendReceiveIndicatorON()                \
+    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Blue; \
     FastLED.show()
-#  define SendReceiveIndicatorOFF() \
-    leds[0] = CRGB::Black;          \
+#  define SendReceiveIndicatorOFF()                \
+    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Black; \
     FastLED.show()
-#  define InfoIndicatorON() \
-    leds[0] = CRGB::Green;  \
+#  define InfoIndicatorON()               \
+    leds[FASTLED_INFO_LED] = CRGB::Green; \
     FastLED.show()
-#  define InfoIndicatorOFF() \
-    leds[0] = CRGB::Black;   \
+#  define InfoIndicatorOFF()              \
+    leds[FASTLED_INFO_LED] = CRGB::Black; \
     FastLED.show()
 #endif
 
