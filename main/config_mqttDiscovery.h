@@ -112,7 +112,9 @@ void announceDeviceTrigger(bool use_gateway_info,
                            char* device_model,
                            char* device_mac);
 
-#define discovery_Topic "homeassistant"
+#ifndef discovery_Topic
+#  define discovery_Topic "homeassistant"
+#endif
 // discovery_republish_on_reconnect false to publish discovery topics over MQTT only with first connect
 // discovery_republish_on_reconnect true to always republish discovery topics over MQTT when connection is re-established
 #ifndef discovery_republish_on_reconnect
@@ -254,6 +256,13 @@ const char* availableHASSUnits[] = {"W",
                                     "bpm",
                                     "dB",
                                     "dBm",
-                                    "B"};
+                                    "B",
+                                    "UV index",
+                                    "m/s",
+                                    "km/h",
+                                    "°",
+                                    "mm",
+                                    "mm/h",
+                                    "cm"};
 
 #endif
