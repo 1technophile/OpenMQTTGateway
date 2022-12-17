@@ -119,7 +119,7 @@ with open(manif_path + filename,'wb') as output_file:
 
 for item in range(len(assets)):
     name = assets[item]['name']
-    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name):
+    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
         fw_url = assets[item]['browser_download_url']
