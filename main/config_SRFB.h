@@ -42,15 +42,15 @@ extern void MQTTtoSRFB(char* topicOri, JsonObject& RFdata);
 #define SRFBminipulselengthKey "Tlow_"
 #define SRFBsyncKey            "Tsyn_"
 
-#define repeatSRFBwMQTT false // do we repeat a received signal by using mqtt with Sonoff RF Bridge
+#define repeatSRFBwMQTT false // do we repeat a received signal by using MQTT with Sonoff RF Bridge
 
 // -----------------------------------------------------------------------------
 // RFBRIDGE
 // -----------------------------------------------------------------------------
 
 #define RF_SEND_TIMES    4 // How many times to send the message
-#define RF_SEND_DELAY    500 // Interval between sendings in ms
-#define RF_RECEIVE_DELAY 500 // Interval between recieving in ms (avoid debouncing)
+#define RF_SEND_DELAY    500 // Interval between sending in ms
+#define RF_RECEIVE_DELAY 500 // Interval between receiving in ms (avoid debouncing)
 
 // -----------------------------------------------------------------------------
 // DEFINITIONS

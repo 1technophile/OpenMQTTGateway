@@ -146,6 +146,7 @@ unsigned long scanCount = 0;
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct BTConfig_s {
   bool bleConnect; // Attempt a BLE connection to sensors with ESP32
+  bool activeScan;
   unsigned int BLEinterval; // Time between 2 scans
   unsigned int BLEscanBeforeConnect; // Number of BLE scans between connection cycles
   bool pubOnlySensors; // Publish only the identified sensors (like temperature sensors)

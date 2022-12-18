@@ -185,7 +185,7 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 
 #ifndef IR_EMITTER_INVERTED
 #  if defined(ESP8266) || defined(ESP32)
-#    define IR_EMITTER_INVERTED false //set to true if yuou want to reverse the LED signal for the emitter
+#    define IR_EMITTER_INVERTED false //set to true if you want to reverse the LED signal for the emitter
 #  endif
 #endif
 

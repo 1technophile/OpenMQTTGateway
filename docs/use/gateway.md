@@ -115,6 +115,16 @@ The `server_cert` parameter is optional. If the update server has changed or cer
 :::
 
 ### Example firmware update message:
+Without certificate, in this case we will use the root certificate defined in User_config.h
+```
+mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/firmware_update" -m '{
+  "version": "test",
+  "password": "OTAPASSWORD",
+  "url": "https://github.com/1technophile/OpenMQTTGateway/releases/download/v0.9.12/esp32dev-ble-firmware.bin"
+}'
+```
+
+With certificate:
 ```
 mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/firmware_update" -m '{
   "version": "test",
@@ -150,14 +160,13 @@ A bash script is available [here](ota_command_cert.zip) to simplify the use of t
 The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above WiFi and MQTT broker credentials and the Firmware update via MQTT options disabled. This is due to the restricted available flash, so as to still be able to use OTA firmware updates for these boards.
 :::
 
-
 # State LED usage
 
 The gateway can support up to 3 LED to display its operating state:
 * LED_INFO 
 switched ON when network and MQTT connection are OK
-5s ON, 5s OFF when WIFI is disconnected
-1s ON, 4s OFF when MQTT is disconnected
+5s ON, 5s OFF when MQTT is disconnected
+2s ON, 2s OFF when NETWORK is disconnected
 
 * LED_RECEIVE
 Blink for `TimeLedON` 1s when the gateway receive a signal from one of its module so as to send to MQTT

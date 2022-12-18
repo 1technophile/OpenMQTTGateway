@@ -19,7 +19,7 @@
 |SONOFF RFR3|4|-|
 |RF WIFI GATEWAY|5|-|
 
-Connect the Emitter and Receiver to a 5V (**3.3V** for CC1101) supply source, and the ground of your supply source to the ground of your board.
+Connect the Emitter and Receiver to a 5V or 3.3V supply source, check datasheet of your modules to confirm (**3.3V** for CC1101), and the ground of your supply source to the ground of your board.
 
 ### CC1101 Pinout
 |Board|Receiver Pin(GDO2)|Emitter Pin(GDO0)|SCK|VCC|MOSI|MISO|CSN|GND
@@ -29,7 +29,6 @@ Connect the Emitter and Receiver to a 5V (**3.3V** for CC1101) supply source, an
 
 To use the CC1101 module, `ZradioCC1101` must be uncomment in the `User_config.h` or added to the `build_flags`.
 More information about the [CC1101 wiring](https://github.com/LSatan/SmartRC-CC1101-Driver-Lib#wiring). ( Please note that with OMG we are recommending CC1101 GDO2 to be connected to ESP32 D27 and GDO0 to be connected to D12, this is different than the LSatan diagram. This is due to the ESP32 using D2 as part of the boot process. )
-
 
 ## Arduino Hardware setup
 ![RF](../img/OpenMQTTgateway_Arduino_Addon_RF.png)
@@ -43,6 +42,9 @@ With SRX882 some users reported that D3 is not working use D1 instead in this ca
 
 ## ESP32 Hardware setup
 ![Addon_RF](../img/OpenMQTTgateway_ESP32_Addon_RF.png)
+
+## Heltec SX127X 433Mhz boards
+Those boards don't require any hardware modifications.
 
 ## SONOFF RF Bridge Hardware setup
 Per default there is no need on modifying the RF Bridge hardware, unless you don't want to use the provided RF controller (EFM8BB1). Indeed if you want to extend the protocols supported by the bridge you can [bypass this controller](https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack) and use the ESP8255 capacities to decode RF Signal.
