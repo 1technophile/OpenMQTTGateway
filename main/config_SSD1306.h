@@ -42,6 +42,8 @@
 
 #define OLED_TEXT_BUFFER 1000
 #define OLED_TEXT_ROWS   5
+#define OLED_WIDTH       128
+#define OLED_HEIGHT      64
 
 // Display layout definitions based on board definition
 

@@ -29,11 +29,11 @@
 #ifdef ZgatewayRTL_433
 
 #  include <ArduinoJson.h>
-#  include "ArduinoLog.h"
-#  include "User_config.h"
-
 #  include <config_RF.h>
 #  include <rtl_433_ESP.h>
+
+#  include "ArduinoLog.h"
+#  include "User_config.h"
 
 char messageBuffer[JSON_MSG_BUFFER];
 
