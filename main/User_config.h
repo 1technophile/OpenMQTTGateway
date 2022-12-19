@@ -565,7 +565,7 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
 #endif
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
-// The real definitions are in config_M5.h / config_HELTEC.h
+// The real definitions are in config_M5.h / config_SSD1306.h
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 

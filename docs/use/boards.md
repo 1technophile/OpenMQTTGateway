@@ -80,3 +80,17 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC, M5stickC Plus and middle button of M5stack).
 If you are already in low power mode 1 or 2 with M5Stack you can wake up the board by pressing the red button.
+
+## SSD1306 Display boards ( Heltec SX127X 433Mhz boards and LILYGO® LoRa32 V2.1_1.6.1 433 Mhz )
+
+### Setting the log output
+
+Per default the log of the SSD1306 Display boards is going to the LCD display with Errors and Warnings only, if you want to change the ouput at build time you can do it with the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.
+
+You can also change it by MQTT. For example if you want to set to LCD
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":true}'`
+
+you can also revert it to the serial monitor:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":false}'`
