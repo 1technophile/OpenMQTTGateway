@@ -191,7 +191,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     Serial.println();
     return; // Do not try to erase/write/send config at startup
   }
-  pub("/commands/BTtoMQTT/config", jo);
+  pub(subjectBTtoMQTT, jo);
 
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
