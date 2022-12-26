@@ -39,6 +39,7 @@ jobs:
           - "esp32-m5atom-lite"
           - "esp32dev-rtl_433"
           - "heltec-rtl_433"
+          - "lilygo-rtl_433"
           - "esp32dev-multi_receiver"
           - "tinypico-ble"
           - "ttgo-lora32-v1-868"
