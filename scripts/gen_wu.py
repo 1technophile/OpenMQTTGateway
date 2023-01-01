@@ -87,8 +87,8 @@ manif_folder = "/firmware_build/"
 manif_path = 'docs/.vuepress/public/firmware_build/'
 vue_path = 'docs/.vuepress/components/'
 cors_proxy = '' #'https://cors.bridged.cc/'
-esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
-esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/master/tools/partitions/boot_app0.bin'
+esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
+esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
 release = requests.get('https://api.github.com/repos/' + repo + '/releases/latest')
 rel_data = json.loads(release.text)
 
@@ -119,7 +119,7 @@ with open(manif_path + filename,'wb') as output_file:
 
 for item in range(len(assets)):
     name = assets[item]['name']
-    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name):
+    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'lilygo' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
         fw_url = assets[item]['browser_download_url']

@@ -159,8 +159,8 @@ struct GfSun2000Data {};
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "config_M5.h"
 #endif
-#if defined(ZboardHELTEC)
-#  include "config_HELTEC.h"
+#if defined(ZdisplaySSD1306)
+#  include "config_SSD1306.h"
 #endif
 #if defined(ZgatewayRS232)
 #  include "config_RS232.h"
@@ -666,9 +666,9 @@ void setup() {
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
 #    endif
-#    if defined(ZboardHELTEC)
-  setupHELTEC();
-  modules.add(ZboardHELTEC);
+#    if defined(ZdisplaySSD1306)
+  setupSSD1306();
+  modules.add(ZdisplaySSD1306);
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
@@ -1596,8 +1596,8 @@ void loop() {
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   loopM5();
 #endif
-#if defined(ZboardHELTEC)
-  loopHELTEC();
+#if defined(ZdisplaySSD1306)
+  loopSSD1306();
 #endif
 }
 
@@ -1820,8 +1820,8 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
     MQTTtoM5(topicOri, jsondata);
 #  endif
-#  if defined(ZboardHELTEC)
-    MQTTtoHELTEC(topicOri, jsondata);
+#  if defined(ZdisplaySSD1306)
+    MQTTtoSSD1306(topicOri, jsondata);
 #  endif
 #  ifdef ZactuatorONOFF
     MQTTtoONOFF(topicOri, jsondata);

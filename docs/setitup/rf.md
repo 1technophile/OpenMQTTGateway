@@ -43,7 +43,7 @@ With SRX882 some users reported that D3 is not working use D1 instead in this ca
 ## ESP32 Hardware setup
 ![Addon_RF](../img/OpenMQTTgateway_ESP32_Addon_RF.png)
 
-## Heltec SX127X 433Mhz boards
+## Heltec SX127X 433Mhz boards and LILYGO® LoRa32 V2.1_1.6.1 433 Mhz
 Those boards don't require any hardware modifications.
 
 ## SONOFF RF Bridge Hardware setup

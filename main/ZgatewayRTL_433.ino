@@ -26,10 +26,14 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "User_config.h"
 #ifdef ZgatewayRTL_433
 
+#  include <ArduinoJson.h>
+#  include <config_RF.h>
 #  include <rtl_433_ESP.h>
+
+#  include "ArduinoLog.h"
+#  include "User_config.h"
 
 char messageBuffer[JSON_MSG_BUFFER];
 

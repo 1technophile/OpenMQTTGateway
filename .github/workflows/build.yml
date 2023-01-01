@@ -39,6 +39,7 @@ jobs:
           - "esp32-m5atom-lite"
           - "esp32dev-rtl_433"
           - "heltec-rtl_433"
+          - "lilygo-rtl_433"
           - "esp32dev-multi_receiver"
           - "tinypico-ble"
           - "ttgo-lora32-v1-868"
@@ -71,6 +72,8 @@ jobs:
           - "esp32dev-ble-datatest"
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
+          - "thingpulse-espgateway"
+          - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:
