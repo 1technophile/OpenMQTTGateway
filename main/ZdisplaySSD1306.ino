@@ -59,6 +59,7 @@ void setupSSD1306() {
 static int previousLogLevel = 0;
 
 void loopSSD1306() {
+  /*
   int currentLogLevel = Log.getLastMsgLevel();
   if (previousLogLevel != currentLogLevel && lowpowermode != 2) {
     switch (currentLogLevel) {
@@ -81,6 +82,7 @@ void loopSSD1306() {
     }
   }
   previousLogLevel = currentLogLevel;
+  */
 }
 
 void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object decoding
@@ -101,6 +103,10 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       Log.error(F("MQTTtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
+}
+
+void ssd1306PubPrint(const char* topicori, JsonObject& data) {
+  Oled.jsonPrint(topicori, data);
 }
 
 // Simple print methonds
@@ -207,6 +213,49 @@ size_t OledSerial::write(const uint8_t* buffer, size_t size) {
   }
   // Default to Serial output if the display is not available
   return Serial.write(buffer, size);
+}
+
+void OledSerial::jsonPrint(const char* topicori, JsonObject& data) {
+  if (xPortGetCoreID() == CONFIG_ARDUINO_RUNNING_CORE) {
+    if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+      String id = data["id"];
+      String channel = data["channel"];
+      String rssi = data["rssi"];
+      char temperature_C[5];
+      dtostrf(data["temperature_C"], 3, 1, temperature_C);
+      int humidity = data["humidity"];
+      String battery_ok = data["battery_ok"];
+      String wind_avg_km_h = data["wind_avg_km_h"];
+
+      char* topic = strtok((char*)topicori, "/");
+
+      display->clear();
+      display->setColor(WHITE);
+      display->setFont(ArialMT_Plain_10);
+      // strlen(topicori)
+      display->drawString(0, 0, topic);
+      display->drawLine(0, 12, OLED_WIDTH, 12);
+      display->drawString(0, 13, data["model"]);
+      display->drawString(0, 26, (String) "id: " + id + " channel: " + channel);
+      //  display->setFont(ArialMT_Plain_16);
+      String line4 = "";
+      if (data.containsKey("temperature_C")) {
+        line4 = "temp: " + (String)temperature_C + "°C ";
+      }
+      if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
+        line4 += "hum: " + (String)humidity + "% ";
+      }
+      if (data.containsKey("wind_avg_km_h")) {
+        line4 += "wind: " + wind_avg_km_h + " ";
+      }
+
+      display->drawString(0, 39, line4);
+      display->drawString(0, 52, (String) "batt: " + battery_ok + " rssi: " + rssi);
+      display->display();
+      xSemaphoreGive(semaphoreOLEDOperation);
+      return;
+    }
+  }
 }
 
 /*

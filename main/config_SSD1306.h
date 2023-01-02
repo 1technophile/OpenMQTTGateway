@@ -81,6 +81,9 @@ void ssd1306Print(char*, char*, char*);
 void ssd1306Print(char*, char*);
 void ssd1306Print(char*);
 
+#define pubOled(...) ssd1306PubPrint(__VA_ARGS__)
+void ssd1306PubPrint(const char*, JsonObject&);
+
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
 class OledSerial : public Stream {
@@ -91,6 +94,7 @@ public:
   OledSerial(int);
   void begin();
   void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
+  void jsonPrint(const char* topicori, JsonObject& data);
 
   SSD1306Wire* display;
 
