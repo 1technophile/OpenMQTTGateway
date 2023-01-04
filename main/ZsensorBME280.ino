@@ -191,8 +191,10 @@ void MeasureTempHumAndPressure() {
       } else {
         Log.trace(F("Same Altitude Feet don't send it" CR));
       }
-      if (BME280data.size() > 0)
+      if (BME280data.size() > 0) {
         pub(BMETOPIC, BME280data);
+        pubOled(BMETOPIC, BME280data);
+      }
     }
 
     persisted_bme_tempc = BmeTempC;

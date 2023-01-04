@@ -1699,6 +1699,7 @@ void stateMeasures() {
 #  endif
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
+  pubOled(subjectSYStoMQTT, SYSdata);
 }
 #endif
 

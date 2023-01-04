@@ -40,10 +40,11 @@
 
 #include "SSD1306Wire.h"
 
-#define OLED_TEXT_BUFFER 1000
-#define OLED_TEXT_ROWS   5
-#define OLED_WIDTH       128
-#define OLED_HEIGHT      64
+#define OLED_TEXT_BUFFER    1000
+#define OLED_TEXT_ROWS      5
+#define OLED_WIDTH          128
+#define OLED_HEIGHT         64
+#define DISPLAYPAGEINTERVAL 5 // Number of seconds between json message displays
 
 // Display layout definitions based on board definition
 
@@ -54,6 +55,8 @@
 #  define OLED_WIDTH  128
 #  define OLED_HEIGHT 64
 #endif
+
+#define OLED_TEXT_WIDTH OLED_WIDTH / 4 // This is an approx amount
 
 extern void setupSSD1306();
 extern void loopSSD1306();
@@ -84,6 +87,16 @@ void ssd1306Print(char*);
 #define pubOled(...) ssd1306PubPrint(__VA_ARGS__)
 void ssd1306PubPrint(const char*, JsonObject&);
 
+// Structure for queueing OMG messages to the display
+
+struct displayQueueMessage {
+  char title[OLED_TEXT_WIDTH];
+  char line1[OLED_TEXT_WIDTH];
+  char line2[OLED_TEXT_WIDTH];
+  char line3[OLED_TEXT_WIDTH];
+  char line4[OLED_TEXT_WIDTH];
+};
+
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
 class OledSerial : public Stream {
@@ -94,7 +107,7 @@ public:
   OledSerial(int);
   void begin();
   void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
-  void jsonPrint(const char* topicori, JsonObject& data);
+  void displayPage(displayQueueMessage*);
 
   SSD1306Wire* display;
 
