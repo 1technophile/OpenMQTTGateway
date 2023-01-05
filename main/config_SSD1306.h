@@ -40,11 +40,17 @@
 
 #include "SSD1306Wire.h"
 
-#define OLED_TEXT_BUFFER    1000
-#define OLED_TEXT_ROWS      5
-#define OLED_WIDTH          128
-#define OLED_HEIGHT         64
-#define DISPLAYPAGEINTERVAL 5 // Number of seconds between json message displays
+#define OLED_TEXT_BUFFER 1000
+#define OLED_TEXT_ROWS   5
+#define OLED_WIDTH       128
+#define OLED_HEIGHT      64
+#ifndef DISPLAY_PAGE_INTERVAL
+#  define DISPLAY_PAGE_INTERVAL 5 // Number of seconds between json message displays
+#endif
+
+#ifndef DISPLAY_IDLE_LOGO
+#  define DISPLAY_IDLE_LOGO true // Display the OMG logo when idle
+#endif
 
 // Display layout definitions based on board definition
 
@@ -61,7 +67,6 @@
 extern void setupSSD1306();
 extern void loopSSD1306();
 extern void MQTTtoSSD1306(char*, JsonObject&);
-size_t OledPrint(String msg);
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL_LCD
@@ -69,6 +74,9 @@ size_t OledPrint(String msg);
 #endif
 #ifndef LOG_TO_LCD
 #  define LOG_TO_LCD false // Default to not display log messages on display
+#endif
+#ifndef JSON_TO_LCD
+#  define JSON_TO_LCD true // Default to displaying JSON messages on the display
 #endif
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 #define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306"
@@ -89,6 +97,15 @@ void ssd1306PubPrint(const char*, JsonObject&);
 
 // Structure for queueing OMG messages to the display
 
+/*
+Structure for queueing OMG messages to the display.
+Length of each line is OLED_TEXT_WIDTH
+- title
+- line1
+- line2
+- line3
+- line4
+*/
 struct displayQueueMessage {
   char title[OLED_TEXT_WIDTH];
   char line1[OLED_TEXT_WIDTH];
