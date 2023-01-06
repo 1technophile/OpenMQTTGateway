@@ -236,9 +236,11 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
           }
         }
 
-        int humidity = data["humidity"];
+        float humidity = data["humidity"];
         if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
-          line3 += "hum: " + (String)humidity + "% ";
+          char hum[5];
+          dtostrf(humidity, 3, 1, hum);
+          line3 += "hum: " + (String)hum + "% ";
         }
         if (data.containsKey("wind_avg_km_h")) {
           float wind_avg_km_h = data["wind_avg_km_h"];
@@ -300,11 +302,12 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         // Line 3
 
-        int humidity = data["hum"];
-
         String line3 = "";
+        float humidity = data["hum"];
         if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-          line3 += "humidity: " + (String)humidity + "% ";
+          char hum[5];
+          dtostrf(humidity, 3, 1, hum);
+          line3 += "hum: " + (String)hum + "% ";
         }
         line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
 
