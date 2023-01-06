@@ -43,6 +43,7 @@ SemaphoreHandle_t semaphoreOLEDOperation;
 QueueHandle_t displayQueue;
 boolean logToLCDDisplay = LOG_TO_LCD;
 boolean jsonDisplay = JSON_TO_LCD;
+boolean displayMetric = DISPLAY_METRIC;
 
 /*
 Toogle log display
@@ -62,6 +63,7 @@ void setupSSD1306() {
   Log.trace(F("ZdisplaySSD1306 json-lcd: %T" CR), jsonDisplay);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), DISPLAY_IDLE_LOGO);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
 
   Oled.begin();
   Log.notice(F("Setup SSD1306 Display end" CR));
@@ -134,6 +136,10 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       }
       Log.notice(F("Set json-lcd: %T" CR), jsonDisplay);
       success = true;
+    } else if (SSD1306data.containsKey("display-metric")) {
+      displayMetric = SSD1306data["display-metric"];
+      Log.notice(F("Set display-metric: %T" CR), jsonDisplay);
+      success = true;
     }
     if (success) {
       pub(subjectSSD1306toMQTTset, SSD1306data);
@@ -159,7 +165,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
     displayQueueMessage* message = (displayQueueMessage*)malloc(sizeof(displayQueueMessage));
 
     char* topic = strdup(topicori);
-    strcpy(message->title, strtok(topic, "/"));
+    strlcpy(message->title, strtok(topic, "/"), OLED_TEXT_WIDTH);
     free(topic);
 
     switch (hash(message->title)) {
@@ -168,7 +174,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         // Line 1
 
-        strncpy(message->line1, data["version"], OLED_TEXT_WIDTH);
+        strlcpy(message->line1, data["version"], OLED_TEXT_WIDTH);
 
         // Line 2
 
@@ -204,7 +210,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         // Line 1
 
-        strcpy(message->line1, data["model"]);
+        strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
 
         // Line 2
 
@@ -215,21 +221,38 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         // Line 3
 
-        char tempc[5];
-        dtostrf(data["temperature_C"], 3, 1, tempc);
-        int humidity = data["humidity"];
-        String wind_avg_km_h = data["wind_avg_km_h"];
-
         String line3 = "";
+
         if (data.containsKey("temperature_C")) {
-          line3 = "temp: " + (String)tempc + "°C ";
+          float temperature_C = data["temperature_C"];
+          char temp[5];
+
+          if (displayMetric) {
+            dtostrf(temperature_C, 3, 1, temp);
+            line3 = "temp: " + (String)temp + "°C ";
+          } else {
+            dtostrf(celsius2fahrenheit(temperature_C), 3, 1, temp);
+            line3 = "temp: " + (String)temp + "°F ";
+          }
         }
+
+        int humidity = data["humidity"];
         if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
           line3 += "hum: " + (String)humidity + "% ";
         }
         if (data.containsKey("wind_avg_km_h")) {
-          line3 += "wind: " + wind_avg_km_h + " ";
+          float wind_avg_km_h = data["wind_avg_km_h"];
+          char wind[6];
+
+          if (displayMetric) {
+            dtostrf(wind_avg_km_h, 3, 1, wind);
+            line3 += "wind: " + (String)wind + "km/h ";
+          } else {
+            dtostrf(kmph2mph(wind_avg_km_h), 3, 1, wind);
+            line3 += "wind: " + (String)wind + "mp/h ";
+          }
         }
+
         line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
 
         // Line 4
@@ -256,16 +279,22 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         // Line 1
 
-        strcpy(message->line1, "bme280");
+        strlcpy(message->line1, "bme280", OLED_TEXT_WIDTH);
 
         // Line 2
 
-        char tempc[5];
-        dtostrf(data["tempc"], 3, 1, tempc);
-
         String line2 = "";
         if (data.containsKey("tempc")) {
-          line2 = "temperature: " + (String)tempc + "°C ";
+          char temp[5];
+          float temperature_C = data["tempc"];
+
+          if (displayMetric) {
+            dtostrf(temperature_C, 3, 1, temp);
+            line2 = "temp: " + (String)temp + "°C ";
+          } else {
+            dtostrf(celsius2fahrenheit(temperature_C), 3, 1, temp);
+            line2 = "temp: " + (String)temp + "°F ";
+          }
         }
         line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
 
@@ -281,9 +310,17 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         // Line 4
 
-        int pressure = (int)data["pa"] / 100;
+        float pa = (int)data["pa"] / 100;
+        char pressure[6];
 
-        String line4 = "pressure: " + (String)pressure + " hPa";
+        String line4 = "";
+        if (displayMetric) {
+          dtostrf(pa, 3, 1, pressure);
+          line4 = "pressure: " + (String)pressure + " hPa";
+        } else {
+          dtostrf(hpa2inhg(pa), 3, 1, pressure);
+          line4 = "pressure: " + (String)pressure + " inHg";
+        }
         line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
 
         // Queue completed message

@@ -40,17 +40,38 @@
 
 #include "SSD1306Wire.h"
 
-#define OLED_TEXT_BUFFER 1000
-#define OLED_TEXT_ROWS   5
-#define OLED_WIDTH       128
-#define OLED_HEIGHT      64
+/*-------------------DEFINE LOG LEVEL----------------------*/
+
+#ifndef LOG_LEVEL_LCD
+#  define LOG_LEVEL_LCD LOG_LEVEL_WARNING // Default to only display Warning level messages
+#endif
+
+#ifndef LOG_TO_LCD
+#  define LOG_TO_LCD false // Default to not display log messages on display
+#endif
+
+#ifndef JSON_TO_LCD
+#  define JSON_TO_LCD true // Default to displaying JSON messages on the display
+#endif
+
 #ifndef DISPLAY_PAGE_INTERVAL
-#  define DISPLAY_PAGE_INTERVAL 5 // Number of seconds between json message displays
+#  define DISPLAY_PAGE_INTERVAL 3 // Number of seconds between json message displays
 #endif
 
 #ifndef DISPLAY_IDLE_LOGO
 #  define DISPLAY_IDLE_LOGO true // Display the OMG logo when idle
 #endif
+
+#ifndef DISPLAY_METRIC
+#  define DISPLAY_METRIC true // Units used for display of sensor data
+#endif
+
+/*------------------- DEFAULT DISPLAY GEOMETRY ----------------------*/
+
+#define OLED_TEXT_BUFFER 1000
+#define OLED_TEXT_ROWS   5
+#define OLED_WIDTH       128
+#define OLED_HEIGHT      64
 
 // Display layout definitions based on board definition
 
@@ -64,23 +85,16 @@
 
 #define OLED_TEXT_WIDTH OLED_WIDTH / 4 // This is an approx amount
 
+/*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
+
+#define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306"
+#define subjectSSD1306toMQTTset "/SSD1306toMQTT"
+
+/*-------------------EXTERNAL FUNCTIONS----------------------*/
+
 extern void setupSSD1306();
 extern void loopSSD1306();
 extern void MQTTtoSSD1306(char*, JsonObject&);
-
-/*-------------------DEFINE LOG LEVEL----------------------*/
-#ifndef LOG_LEVEL_LCD
-#  define LOG_LEVEL_LCD LOG_LEVEL_WARNING // Default to only display Warning level messages
-#endif
-#ifndef LOG_TO_LCD
-#  define LOG_TO_LCD false // Default to not display log messages on display
-#endif
-#ifndef JSON_TO_LCD
-#  define JSON_TO_LCD true // Default to displaying JSON messages on the display
-#endif
-/*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
-#define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306"
-#define subjectSSD1306toMQTTset "/SSD1306toMQTT"
 
 // Simple construct for displaying message in lcd and oled displays
 
@@ -165,5 +179,27 @@ protected:
 };
 
 extern OledSerial Oled;
+
+/*------------------- Unit Conversion Functions ----------------------*/
+
+#define celsius2fahrenheit(celsius) (celsius * (9.0f / 5.0f) + 32)
+
+#define fahrenheit2celsius(fahrenheit) ((fahrenheit - 32) * (5.0f / 9.0f))
+
+#define kmph2mph(kmph) (kmph * (1.0f / 1.609344f))
+
+#define mph2kmph(mph) (mph * 1.609344f)
+
+#define mm2inch(mm) (mm * 0.039370f)
+
+#define inch2mm(inch) (inch * 25.4f)
+
+#define kpa2psi(kpa) (kpa * (1.0f / 6.89475729f))
+
+#define psi2kpa(psi) (psi * 6.89475729f)
+
+#define hpa2inhg(hpa) (hpa * (1.0f / 33.8639f))
+
+#define inhg2hpa(inhg) (inhg * 33.8639f)
 
 #endif

@@ -112,3 +112,13 @@ You can also change it by MQTT. For example if you want to display module json m
 And to disable the display of module json messages:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-json":false}'`
+
+### Units for display, Metric or Imperial
+
+By default the display uses metric units, and this can be changed either by compiler directive or mqtt command.
+
+The compiler directive is `-DDISPLAY_METRIC=true`
+
+The mqtt command to change to the units is:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
