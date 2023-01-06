@@ -119,6 +119,8 @@ By default the display uses metric units, and this can be changed either by comp
 
 The compiler directive is `-DDISPLAY_METRIC=true`
 
-The mqtt command to change to the units is:
+The mqtt command to change the units is:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
+
+Please note that it may take several seconds/display updates for the units to change.  This is due to the queueing of messages for display.
