@@ -421,6 +421,15 @@ void pubMqttDiscovery() {
 #    endif
 #  endif
 #  ifdef ESP32
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: Internal temperature", (char*)getUniqueId("tempc", "").c_str(), //set state_topic,name,uniqueId
+                  "", "temperature", "{{ value_json.tempc }}", //set availability_topic,device_class,value_template,
+                  "", "", "°C", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC
+                  stateClassMeasurement //State Class
+  );
 #    ifdef ZgatewayBT
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Low Power Mode", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId

@@ -227,6 +227,14 @@ static String ota_server_cert = "";
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
+#  if defined(SENS_SAR_MEAS_WAIT2_REG)
+// ESP32 internal temperature reading
+#    include <stdio.h>
+
+#    include "rom/ets_sys.h"
+#    include "soc/rtc_cntl_reg.h"
+#    include "soc/sens_reg.h"
+#  endif
 #  ifdef ESP32_ETHERNET
 #    include <ETH.h>
 void WiFiEvent(WiFiEvent_t event);
@@ -1576,6 +1584,9 @@ void loop() {
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
+#ifdef ZactuatorONOFF
+      OverHeatingRelayOFF();
+#endif
 #ifdef ZactuatorPWM
       PWMLoop();
 #endif
@@ -1631,13 +1642,32 @@ unsigned long uptime() {
   return uptime;
 }
 
+/**
+ * Calculate internal ESP32 temperature
+ */
+#if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG)
+float intTemperatureRead() {
+  SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
+  SET_PERI_REG_BITS(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_CLK_DIV, 10, SENS_TSENS_CLK_DIV_S);
+  CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP);
+  CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_DUMP_OUT);
+  SET_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP_FORCE);
+  SET_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP);
+  ets_delay_us(100);
+  SET_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_DUMP_OUT);
+  ets_delay_us(5);
+  float temp_f = (float)GET_PERI_REG_BITS2(SENS_SAR_SLAVE_ADDR3_REG, SENS_TSENS_OUT, SENS_TSENS_OUT_S);
+  float temp_c = (temp_f - 32) / 1.8;
+  return temp_c;
+}
+#endif
+
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
-  Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime());
 #  if defined(ESP8266) || defined(ESP32)
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
@@ -1645,6 +1675,9 @@ void stateMeasures() {
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
+#      ifdef SENS_SAR_MEAS_WAIT2_REG // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+  SYSdata["tempc"] = intTemperatureRead();
+#      endif
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
 #    ifdef ESP32_ETHERNET

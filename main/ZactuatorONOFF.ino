@@ -29,6 +29,7 @@
 #include "User_config.h"
 
 #ifdef ZactuatorONOFF
+unsigned long timeinttemp = 0;
 
 void setupONOFF() {
   pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
@@ -101,6 +102,25 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
     pub(subjectGTWONOFFtoMQTT, &b);
   }
 }
+#  endif
+
+//Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
+#  ifdef MAX_TEMP_ACTUATOR
+void OverHeatingRelayOFF() {
+#    if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG) // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+  if (millis() > (timeinttemp + TimeBetweenReadingIntTemp)) {
+    float internalTempc = intTemperatureRead();
+    Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
+    if (internalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+      Log.error("OverTemperature detected switching OFF Actuator");
+      ActuatorManualTrigger(!ACTUATOR_ON);
+    }
+    timeinttemp = millis();
+  }
+#    endif
+}
+#  else
+void OverHeatingRelayOFF() {}
 #  endif
 
 void ActuatorManualTrigger(uint8_t level) {
