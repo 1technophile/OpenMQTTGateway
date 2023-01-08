@@ -66,6 +66,64 @@ extern void disableRTLreceive();
 extern int getRTLrssiThreshold();
 extern int getRTLCurrentRSSI();
 extern int getRTLMessageCount();
+#  ifdef ZmqttDiscovery
+extern void launchRTL_433Discovery(bool overrideDiscovery);
+// This structure stores the entities of the RTL 433 devices and is they have been discovered or not
+// The uniqueId is composed of the device id + the key
+
+#    define uniqueIdSize  60 // longest model + longest key
+#    define modelNameSize 31 // longest model
+
+struct RTL_433device {
+  char uniqueId[uniqueIdSize];
+  char modelName[modelNameSize];
+  bool isDisc;
+};
+
+extern std::vector<RTL_433device*> RTL_433devices;
+
+const char parameters[39][3][16] = {
+    // RTL_433 key, name, unit
+    {"temperature_C", "temperature", "°C"},
+    {"temperature_1_C", "temperature", "°C"},
+    {"temperature_2_C", "temperature", "°C"},
+    {"temperature_F", "temperature", "°F"},
+    {"time", "timestamp", ""},
+    {"battery_ok", "battery", ""},
+    {"humidity", "humidity", "%"},
+    {"moisture", "moisture", "%"},
+    {"pressure_hPa", "pressure", "hPa"},
+    {"pressure_kPa", "pressure", "kPa"},
+    {"wind_speed_km_h", "wind speed", "km/h"},
+    {"wind_avg_km_h", "wind average", "km/h"},
+    {"wind_avg_mi_h", "wind average", "mi/h"},
+    {"wind_avg_m_s", "wind average", "m/s"},
+    {"wind_speed_m_s", "wind speed", "m/s"},
+    {"gust_speed_km_h", "gust speed", "km/h"},
+    {"wind_max_km_h", "wind max", "km/h"},
+    {"wind_max_m_s", "wind max", "m/s"},
+    {"gust_speed_m_s", "gust speed", "m/s"},
+    {"wind_dir_deg", "wind direction", "°"},
+    {"rain_mm", "rain", "mm"},
+    {"rain_mm_h", "rain", "mm/h"},
+    {"rain_in", "rain", "in"},
+    {"rain_rate_in_h", "rain", "in/h"},
+    {"rssi", "rssi", "dB"},
+    {"snr", "snr", "dB"},
+    {"noise", "noise", "dB"},
+    {"depth_cm", "depth", "cm"},
+    {"power_W", "power", "W"},
+    {"light_lux", "light", "lx"},
+    {"lux", "lux", "lx"},
+    {"uv", "uv", "UV index"},
+    {"uvi", "uvi", "UV index"},
+    {"storm_dist", "storm distance", "mi"},
+    {"strike_distance", "strike distance", "mi"},
+    {"tamper", "tamper", ""},
+    {"alarm", "alarm", ""},
+    {"motion", "motion", ""},
+    {"strike_count", "strike count", ""}}; // from rtl_433_mqtt_hass.py
+#  endif
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys

@@ -201,6 +201,17 @@ unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
+#  include <vector>
+// Flags definition for white list, black list, discovery management
+#  define device_flags_init     0 << 0
+#  define device_flags_isDisc   1 << 0
+#  define device_flags_isWhiteL 1 << 1
+#  define device_flags_isBlackL 1 << 2
+#  define device_flags_connect  1 << 3
+#  define isWhite(device)       device->isWhtL
+#  define isBlack(device)       device->isBlkL
+#  define isDiscovered(device)  device->isDisc
+
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
@@ -1570,6 +1581,10 @@ void loop() {
 #endif
 #ifdef ZgatewayRTL_433
       RTL_433Loop();
+#  ifdef ZmqttDiscovery
+      if (disc)
+        launchRTL_433Discovery(publishDiscovery);
+#  endif
 #endif
     } else {
       // MQTT disconnected
