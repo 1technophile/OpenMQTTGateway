@@ -198,7 +198,7 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
  * @param sensor_type the Type
  * @param st_topic set state topic,
  * @param s_name set name,
- * @param unique_id set niqueId
+ * @param unique_id set uniqueId
  * @param availability_topic set availability_topic,
  * @param device_class set device_class,
  * @param value_template set value_template,
@@ -206,8 +206,8 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
  * @param payload_off set payload_off,
  * @param unit_of_meas set unit_of_meas,
  * @param off_delay set off_delay
- * @param payload_available set payload_avalaible,
- * @param payload_not_avalaible set payload_not_avalaible
+ * @param payload_available set payload_available,
+ * @param payload_not_available set payload_not_available
  * @param gateway_entity set is a gateway entity, 
  * @param cmd_topic set command topic
  * @param device_name set device name, 
@@ -223,7 +223,7 @@ void createDiscovery(const char* sensor_type,
                      const char* availability_topic, const char* device_class, const char* value_template,
                      const char* payload_on, const char* payload_off, const char* unit_of_meas,
                      int off_delay,
-                     const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* cmd_topic,
+                     const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
                      const char* state_class, const char* state_off, const char* state_on) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
@@ -289,8 +289,8 @@ void createDiscovery(const char* sensor_type,
     sensor["off_delay"] = off_delay; //off_delay
   if (payload_available[0])
     sensor["pl_avail"] = payload_available; // payload_on
-  if (payload_not_avalaible[0])
-    sensor["pl_not_avail"] = payload_not_avalaible; //payload_off
+  if (payload_not_available[0])
+    sensor["pl_not_avail"] = payload_not_available; //payload_off
   if (state_class[0])
     sensor["state_class"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
   if (state_on != nullptr)
@@ -376,7 +376,7 @@ void pubMqttDiscovery() {
                   will_Topic, "connectivity", "", //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -385,7 +385,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
                   "", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -395,7 +395,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.freemem }}", //set availability_topic,device_class,value_template,
                   "", "", "B", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -404,7 +404,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.ip }}", //set availability_topic,device_class,value_template,
                   "", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -414,7 +414,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.rssi }}", //set availability_topic,device_class,value_template,
                   "", "", "dB", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -427,7 +427,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.lowpowermode }}", //set availability_topic,device_class,value_template,
                   "", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID
                   stateClassNone //State Class
   );
@@ -438,7 +438,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5batvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -447,7 +447,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5batcurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -456,7 +456,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5vinvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -465,7 +465,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5vincurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -476,7 +476,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -485,7 +485,7 @@ void pubMqttDiscovery() {
                   "", "{{ value_json.m5ischarging }}", "", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -494,7 +494,7 @@ void pubMqttDiscovery() {
                   "", "{{ value_json.m5ischargefull }}", "", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -505,7 +505,7 @@ void pubMqttDiscovery() {
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"restart\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -514,7 +514,7 @@ void pubMqttDiscovery() {
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"erase\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -927,7 +927,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.interval/1000 }}", //set availability_topic,device_class,value_template,
                   "{\"interval\":{{value*1000}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
                   stateClassNone //State Class
   );
@@ -936,7 +936,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
                   "{\"scanbcnct\":{{value}},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
-                  "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible,is a gateway entity, command topic
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -945,7 +945,7 @@ void pubMqttDiscovery() {
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"interval\":0}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -954,7 +954,7 @@ void pubMqttDiscovery() {
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"erase\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );
@@ -963,7 +963,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.onlysensors }}", //set availability_topic,device_class,value_template,
                   "{\"onlysensors\":true,\"save\":true}", "{\"onlysensors\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
@@ -973,7 +973,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.activescan }}", //set availability_topic,device_class,value_template,
                   "{\"activescan\":true,\"save\":true}", "{\"activescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
@@ -983,7 +983,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
                   "{\"hasspresence\":true,\"save\":true}", "{\"hasspresence\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
@@ -993,7 +993,7 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.bleconnect }}", //set availability_topic,device_class,value_template,
                   "{\"bleconnect\":true,\"save\":true}", "{\"bleconnect\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
@@ -1003,7 +1003,7 @@ void pubMqttDiscovery() {
                   "", "", "", //set availability_topic,device_class,value_template,
                   "{\"lowpowermode\":2}", "{\"lowpowermode\":0}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
-                  "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible,is a gateway entity, command topic
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );

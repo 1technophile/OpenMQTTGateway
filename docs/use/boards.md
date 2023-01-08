@@ -53,7 +53,7 @@ The same behaviour apply to M5StickC and M5StickC Plus
 
 ### Setting the log output
 
-Per default the log of the M5 boards is going to the LCD display with Errors and Warnings only, if you want to change the ouput at build time you can do it in [config_M5.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_M5.h).
+Per default the log of the M5 boards is going to the LCD display with Errors and Warnings only, if you want to change the output at build time you can do it in [config_M5.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_M5.h).
 
 You can also change it by MQTT. For example if you want to set to LCD
 
@@ -85,7 +85,7 @@ If you are already in low power mode 1 or 2 with M5Stack you can wake up the boa
 
 ### Setting the log output
 
-Per default the log of the SSD1306 Display boards is going to the LCD display with Errors and Warnings only, if you want to change the ouput at build time you can do it with the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.
+Per default the log of the SSD1306 Display boards is going to the LCD display with Errors and Warnings only, if you want to change the output at build time you can do it with the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.
 
 You can also change it by MQTT. For example if you want to set to LCD
 
