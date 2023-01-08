@@ -147,7 +147,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
                             "", "", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "1", "0", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             0, //set  off_delay
-                            "", "", false, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                            "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                             (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
                             "" //State Class
             );
@@ -157,7 +157,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
                             "", "", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "1", "0", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             0, //set  off_delay
-                            "", "", false, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                            "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                             (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
                             stateClassTotalIncreasing //State Class
             );
@@ -167,7 +167,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
                             "", "", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "", "", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             0, //set  off_delay
-                            "", "", false, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                            "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                             (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
                             stateClassMeasurement //State Class
             );

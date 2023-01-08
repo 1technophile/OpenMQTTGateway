@@ -22,8 +22,8 @@ You should have an MQTT broker installed (either mosquitto or the OpenHAB2 embed
 
 In paper UI
 * In bindings add the MQTT Things binding
-* Inbox > MQTT Things binding > Add manualy >MQTT Broker : configure your borker
-* Inbox > MQTT Things binding > Add manualy >Generic MQTT Thing : select your previously configured broker as a bridge and enter your thing definition (example RF plug, weather station, PIR sensor)
+* Inbox > MQTT Things binding > Add manually >MQTT Broker : configure your broker
+* Inbox > MQTT Things binding > Add manually >Generic MQTT Thing : select your previously configured broker as a bridge and enter your thing definition (example RF plug, weather station, PIR sensor)
 * Configuration > Things > "Your thing" : click on + and add one channel for each thing parameter (example for a weather station, you will have one channel for the temperature, one channel for the humidity etc..)
 * For a state channel define the MQTT topic like this:
 
@@ -42,7 +42,7 @@ In paper UI
 * Repeat for each channels and each things
 * Configuration > Things > "Your thing" : click on a channel and add 1 or several items per channel defining what you want to display in the sitemap
 or
-* Define your items in an item file like this by refering to your MQTT things channels:
+* Define your items in an item file like this by referring to your MQTT things channels:
 For a mi flora and mi jia
 
 ```java
@@ -80,7 +80,7 @@ Number lux_P		"Luminiosité plante[%.1f lux]"              {channel="mqtt:topic:
 
 * Configuration > Things > "Your thing" : click on a channel and add 1 or several switch per channel 
 or
-* Define your items in an item file like this by refering to your MQTT thing channel:
+* Define your items in an item file like this by referring to your MQTT thing channel:
 
 `Switch OMGSwitch "Prise 1" <poweroutlet> {channel="mqtt:topic:08998877:Power1"}`
 

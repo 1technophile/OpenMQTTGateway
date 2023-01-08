@@ -2,7 +2,7 @@
 
 Jeedom is free open-source software. [Jeedom Core](https://doc.jeedom.com/en_US/presentation/index) has multiple functionalities: scenario management, historic visualization, curves/graphics generation, text/speech-based interactions… The clear and intuitive interface allows you to set up a complete solution without development knowledge. And using widgets, views and designs, you can build your own interface.
 
-As a modular system, Jeedom provides a Market where "plugins" are available to handle numerous home automation protocols, answer to specific use cases and provide a higher level of integration between the heterogenous device ecosystem.
+As a modular system, Jeedom provides a Market where "plugins" are available to handle numerous home automation protocols, answer to specific use cases and provide a higher level of integration between the heterogeneous device ecosystem.
 
 To be able to use MQTT protocol into Jeedom and decode json payloads, [plugin jMQTT](https://domochip.github.io/jMQTT/) is needed first. Then an OMG device will be integrated, as a Jeedom equipment, and finally a BT device will be integrated, also as an equipment.
 
@@ -175,4 +175,4 @@ For example:
 
 This has be made using Open MQTT Gateway v0.9.13, Jeedom Core v4.2.20 and jMQTT plugin v2022-07-25.
 
-The original discution is available on [Jeedom Community](https://community.jeedom.com/t/antenne-bluetooth-avec-un-esp32-open-mqtt-gateway-et-jmqtt/87407) (in French).
+The original discussion is available on [Jeedom Community](https://community.jeedom.com/t/antenne-bluetooth-avec-un-esp32-open-mqtt-gateway-et-jmqtt/87407) (in French).

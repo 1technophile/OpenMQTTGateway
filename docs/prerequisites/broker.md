@@ -3,7 +3,7 @@ The broker will act as an intermediary between OpenMQTTGateway and your [control
 
 All the events or commands could pass by the broker.
 
-There is many choice of brokers, here is some of the most populars:
+There are many choices of brokers, here are some of the most popular:
 * [Mosquitto](https://mosquitto.org/) (Open source)
 * [Moquette](https://moquette-io.github.io/moquette/) (Open source)
 * [HiveMQ](https://www.hivemq.com/hivemq/features/)

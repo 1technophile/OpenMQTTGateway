@@ -334,7 +334,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  * @brief Publish the payload on default MQTT topic
  *
  * @param topicori suffix to add on default MQTT Topic
- * @param data The Json Object that rapresent the message
+ * @param data The Json Object that represents the message
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
@@ -397,10 +397,10 @@ void pub(const char* topicori, const char* payload) {
 }
 
 /**
- * @brief Publish the payload on the topic with a retantion
+ * @brief Publish the payload on the topic with a retention
  *
  * @param topic  The topic where to publish
- * @param data   The Json Object that rapresent the message
+ * @param data   The Json Object that represents the message
  * @param retain true if you what a retain
  */
 void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
@@ -633,7 +633,7 @@ void connectMQTT() {
 // Callback function, when the gateway receive an MQTT value on the topics subscribed this function is called
 void callback(char* topic, byte* payload, unsigned int length) {
   // In order to republish this payload, a copy must be made
-  // as the orignal payload buffer will be overwritten whilst
+  // as the original payload buffer will be overwritten whilst
   // constructing the PUBLISH packet.
   Log.trace(F("Hey I got a callback %s" CR), topic);
   // Allocate the correct amount of memory for the payload copy
