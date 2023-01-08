@@ -92,7 +92,10 @@ void loopSSD1306() {
     if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && uxQueueMessagesWaiting(displayQueue)) {
       displayQueueMessage* message = nullptr;
       xQueueReceive(displayQueue, &message, portMAX_DELAY);
-      Oled.displayPage(message);
+      if (!Oled.displayPage(message)) {
+        Log.warning(F("[ssd1306] displayPage failed: %s" CR), message->title);
+      }
+      free(message);
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
     }
   }
@@ -330,6 +333,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
         if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
           Log.error(F("ERROR: displayQueue full, discarding signal %s" CR), message->title);
+          free(message);
         } else {
           // Log.notice(F("Queued %s" CR), message->title);
         }
@@ -482,7 +486,7 @@ size_t OledSerial::write(const uint8_t* buffer, size_t size) {
 Display full page message on the display.
 - Used to display JSON messages published from each gateway module
 */
-void OledSerial::displayPage(displayQueueMessage* message) {
+boolean OledSerial::displayPage(displayQueueMessage* message) {
   if (xPortGetCoreID() == CONFIG_ARDUINO_RUNNING_CORE) {
     if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
       display->clear();
@@ -496,10 +500,13 @@ void OledSerial::displayPage(displayQueueMessage* message) {
       display->drawString(0, 52, message->line4);
       display->display();
       xSemaphoreGive(semaphoreOLEDOperation);
-      return;
+      return true;
+    } else {
+      return false;
     }
+  } else {
+    return false;
   }
-  free(&message);
 }
 
 /*
