@@ -83,14 +83,44 @@ If you are already in low power mode 1 or 2 with M5Stack you can wake up the boa
 
 ## SSD1306 Display boards ( Heltec SX127X 433Mhz boards and LILYGO® LoRa32 V2.1_1.6.1 433 Mhz )
 
+Several options are available for the display of information on the SSD1306 Display.  These options include display of the OMG logo and setup messages, redirecting of the log output to the display, and display of various module messages on the display.  These options are exclusive to each other, and when a different option is enabled, the current option is disabled.
+
 ### Setting the log output
 
-Per default the log of the SSD1306 Display boards is going to the LCD display with Errors and Warnings only, if you want to change the output at build time you can do it with the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.
+The display of serial log messages to the display can be enabled via compiler directive `-DLOG_TO_LCD=true` or via MQTT commands.
 
-You can also change it by MQTT. For example if you want to set to LCD
+For example if you want to set the serial log to LCD
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":true}'`
 
-you can also revert it to the serial monitor:
+you can also revert it back to the serial monitor:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":false}'`
+
+The log level of the messages displayed is Errors and Warnings, and this can only be changed via the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.  
+
+### Displaying Module json messages ( default )
+
+The display of messages from various modules is also supported.  Currently supported modules include `ZgatewayRTL_433` and `ZsensorBME280`.
+
+This can be enabled with the compiler directive `-DJSON_TO_LCD=true`.
+
+You can also change it by MQTT. For example if you want to display module json messages:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"json-lcd":true}'`
+
+And to disable the display of module json messages:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-json":false}'`
+
+### Units for display, Metric or Imperial
+
+By default the display uses metric units, and this can be changed either by compiler directive or mqtt command.
+
+The compiler directive is `-DDISPLAY_METRIC=true`
+
+The mqtt command to change the units is:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
+
+Please note that it may take several seconds/display updates for the units to change.  This is due to the queueing of messages for display.
