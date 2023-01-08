@@ -175,6 +175,12 @@ const char parameters[39][3][16] = {
 #if defined(ZradioCC1101) || defined(ZradioSX127x)
 float receiveMhz = CC1101_FREQUENCY;
 #endif
+/*-------------------CC1101 DefaultTXPower----------------------*/
+//Adjust the default TX-Power for sending radio if ZradioCC1101 is used.
+//The following settings are possible depending on the frequency band.  (-30  -20  -15  -10  -6    0    5    7    10   11   12) Default is max!
+#ifndef RF_CC1101_TXPOWER
+#  define RF_CC1101_TXPOWER 12
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RF_RECEIVER_GPIO
