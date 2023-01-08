@@ -116,7 +116,7 @@ void BTConfig_update(JsonObject& data, const char* key, T& var) {
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
-  // Attempts to connect to elligible devices or not
+  // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
@@ -221,7 +221,7 @@ void BTConfig_load() {
     return;
   }
   JsonObject jo = jsonBuffer.as<JsonObject>();
-  BTConfig_fromJson(jo, true); // Never send mqtt message with config
+  BTConfig_fromJson(jo, true); // Never send MQTT message with config
   Log.notice(F("BT config loaded" CR));
 }
 
