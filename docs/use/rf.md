@@ -250,7 +250,7 @@ This feature is only available on a ESP32 based device with a supported transcei
 ### Supported hardware combinations
 
 - ESP32 based device with a CC1101 transceiver
-- Heltec WiFi LoRa 32 (V2.1)
+- Heltec WiFi LoRa 32 (V2.1) and LilyGo Lora 32 V2.1
 
 ### Supported Decoders
 
@@ -348,7 +348,6 @@ Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be ca
 Delta applied to RSSI floor noise level to determine start and end of signal, defaults to 9db.
 
 `home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"rssi": 9}`
-
 
 ### Retrieve current status of receiver
 

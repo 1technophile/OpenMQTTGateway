@@ -47,7 +47,6 @@ QueueHandle_t BLEQueue;
 #  include <esp_wifi.h>
 
 #  include <atomic>
-#  include <vector>
 
 #  include "ZgatewayBLEConnect.h"
 #  include "soc/timer_group_reg.h"
@@ -57,12 +56,6 @@ using namespace std;
 
 // Global struct to store live BT configuration data
 BTConfig_s BTConfig;
-
-#  define device_flags_init     0 << 0
-#  define device_flags_isDisc   1 << 0
-#  define device_flags_isWhiteL 1 << 1
-#  define device_flags_isBlackL 1 << 2
-#  define device_flags_connect  1 << 3
 
 TheengsDecoder decoder;
 
@@ -411,10 +404,6 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
 
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
 }
-
-#  define isWhite(device)      device->isWhtL
-#  define isBlack(device)      device->isBlkL
-#  define isDiscovered(device) device->isDisc
 
 void dumpDevices() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
