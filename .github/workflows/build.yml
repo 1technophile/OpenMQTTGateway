@@ -47,6 +47,7 @@ jobs:
           - "ttgo-t-beam"
           - "heltec-wifi-lora-32-868"
           - "heltec-wifi-lora-32-915"
+          - "shelly-plus1"
           - "nodemcuv2-all-test"
           - "nodemcuv2-fastled-test"
           - "nodemcuv2-2g"

@@ -103,13 +103,16 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
 }
 #  endif
 
-void ActuatorButtonTrigger() {
-  uint8_t level = !digitalRead(ACTUATOR_ONOFF_GPIO);
-  char* level_string = "ON";
-  if (level != ACTUATOR_ON) {
-    level_string = "OFF";
+void ActuatorManualTrigger(uint8_t level) {
+#  ifdef ACTUATOR_BUTTON_TRIGGER_LEVEL
+  if (level == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
+    // Change level value to the opposite of the current level
+    level = !digitalRead(ACTUATOR_ONOFF_GPIO);
   }
-  Log.trace(F("Actuator triggered %s by button" CR), level_string);
+#  else
+  level = !digitalRead(ACTUATOR_ONOFF_GPIO);
+#  endif
+  Log.trace(F("Actuator triggered %d" CR), level);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
   // Send the state of the switch to the broker so as to update the status
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
