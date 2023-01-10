@@ -196,7 +196,6 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
   int valuePRT = 0;
   int valuePLSL = 0;
   int valueBITS = 0;
-  
   int pos = topic.lastIndexOf(RFprotocolKey);
   if (pos != -1) {
     pos = pos + +strlen(RFprotocolKey);
@@ -237,9 +236,9 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
     pub(subjectGTWRFtoMQTT, datacallback); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
-    ELECHOUSE_cc1101.SetRx(receiveMhz);
-    mySwitch.disableTransmit();
-    mySwitch.enableReceive(RF_RECEIVER_GPIO);
+  ELECHOUSE_cc1101.SetRx(receiveMhz);
+  mySwitch.disableTransmit();
+  mySwitch.enableReceive(RF_RECEIVER_GPIO);
 #    endif
 }
 #  endif
