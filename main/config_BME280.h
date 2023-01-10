@@ -59,10 +59,10 @@ int BME280_i2c_addr = 0x76; // Bosch BME280 I2C Address
 
 // Only supported for ESP
 #ifndef BME280_PIN_SDA
-	#define BME280_PIN_SDA SDA
+#  define BME280_PIN_SDA SDA
 #endif
 #ifndef BME280_PIN_SCL
-	#define BME280_PIN_SCL SCL
+#  define BME280_PIN_SCL SCL
 #endif
 
 // Oversampling for BME280/BMP280 devices
