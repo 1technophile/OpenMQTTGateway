@@ -47,7 +47,7 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 #  define ACTUATOR_TRIGGER false // false or true, enable to control an actuator directly from the board switch (default behavior if true), or by button if ACTUATOR_BUTTON_TRIGGER_LEVEL is defined
 #endif
 #ifndef MAX_TEMP_ACTUATOR
-//#  define MAX_TEMP_ACTUATOR         60 // Temperature that will trigger the relay to go OFF
+//#  define MAX_TEMP_ACTUATOR         70 // Temperature that will trigger the relay to go OFF
 #endif
 #ifndef TimeBetweenReadingIntTemp
 #  define TimeBetweenReadingIntTemp 5000 // Time interval between internal temp measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached

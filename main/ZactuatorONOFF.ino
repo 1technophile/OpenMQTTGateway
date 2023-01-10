@@ -112,7 +112,7 @@ void OverHeatingRelayOFF() {
     float internalTempc = intTemperatureRead();
     Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
     if (internalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
-      Log.error("OverTemperature detected switching OFF Actuator");
+      Log.error("[ActuatorONOFF] OverTemperature detected switching OFF Actuator");
       ActuatorManualTrigger(!ACTUATOR_ON);
     }
     timeinttemp = millis();
