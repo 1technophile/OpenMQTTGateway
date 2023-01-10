@@ -74,16 +74,19 @@ Arduino IDE serial data received when receiving data by 433Mhz
 
 ### Send data by MQTT with advanced RF parameters
 
-RF sending support three advanced parameters; bits length, RF protocol and RF pulselength
-if you want to use a different RCswitch protocol put inside your payload the protocol number 2, "protocol":2.
+RF sending support four advanced parameters: bits length, RF protocol, RF pulselength and RF transmission power
 
-if you want to use a pulselength 315 put inside your topic "delay":315
+-if you want to use a bits number different than 24 put inside your topic "length":24 for example
 
-if you want to use a bits number different than 24 put inside your topic "length":24 for example
+-if you want to use a different RCswitch protocol put inside your payload the protocol number 2, "protocol":2.
+
+-if you want to use a pulselength 315 put inside your topic "delay":315
+
+-if you want to send with a lower power (scale from -30 to 12; 12 is default) than put inside your topic "cc1101_pa":5
 
 Example:
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315}'`
-will make RCSwitch use the protocol 2 with a pulselength of 315ms and a bits number of 24
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315, "cc1101_pa":5}'`
+will make RCSwitch use the protocol 2 with a pulselength of 315ms and a bits number of 24 with a power of 5
 
 ### Repeat the RF signal OpenMQTTGateway receive
 So as to repeat the RF signal received by the gateway once set the following parameter to true in config_RF.h
