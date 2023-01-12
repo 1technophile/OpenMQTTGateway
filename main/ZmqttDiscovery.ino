@@ -98,9 +98,9 @@ void createDiscoveryFromList(const char* mac,
  * @param device_name           Valid only if gateway entry is false, The name of the device.
  * @param device_manufacturer   Valid only if gateway entry is false, The manufacturer of the device.
  * @param device_model          Valid only if gateway entry is false, The model of the device.
- * @param device_mac            Valid only if gateway entry is false, The connection of the device to the outside world
+ * @param device_id            Valid only if gateway entry is false, The connection of the device to the outside world
  */
-void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char* subtype, char* unique_id, char* device_name, char* device_manufacturer, char* device_model, char* device_mac) {
+void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char* subtype, char* unique_id, char* device_name, char* device_manufacturer, char* device_model, char* device_id) {
   //Create The Json
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
@@ -139,12 +139,16 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
   JsonArray identifiers = device.createNestedArray("identifiers");
 
   if (use_gateway_info) {
-    char JSONmessageBuffer[JSON_MSG_BUFFER];
-    serializeJson(modules, JSONmessageBuffer, sizeof(JSONmessageBuffer));
-
     device["name"] = gateway_name;
-    device["model"] = JSONmessageBuffer;
-    device["manufacturer"] = DEVICEMANUFACTURER;
+#  ifndef GATEWAY_MODEL
+    String model = "";
+    serializeJson(modules, model);
+    device["model"] = model;
+#  else
+    device["model"] = GATEWAY_MODEL;
+#  endif
+
+    device["manufacturer"] = GATEWAY_MANUFACTURER;
     device["sw_version"] = OMG_VERSION;
     identifiers.add(getMacAddress());
 
@@ -156,11 +160,11 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
     identifiers.add(deviceid);
 
     /*Set Connection */
-    if (device_mac[0] != 0) {
+    if (device_id[0] != 0) {
       JsonArray connections = device.createNestedArray("connections");
       JsonArray connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
-      connection_mac.add(device_mac);
+      connection_mac.add(device_id);
     }
 
     //Set manufacturer
@@ -189,12 +193,12 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
 }
 
 /**
- * @brief Generate message and publish it on an MQTT discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
+ * @brief Generate message and publish it on an MQTT discovery explorer. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
  * 
  * @param sensor_type the Type
  * @param st_topic set state topic,
  * @param s_name set name,
- * @param unique_id set niqueId
+ * @param unique_id set uniqueId
  * @param availability_topic set availability_topic,
  * @param device_class set device_class,
  * @param value_template set value_template,
@@ -202,14 +206,14 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
  * @param payload_off set payload_off,
  * @param unit_of_meas set unit_of_meas,
  * @param off_delay set off_delay
- * @param payload_available set payload_avalaible,
- * @param payload_not_avalaible set payload_not_avalaible
+ * @param payload_available set payload_available,
+ * @param payload_not_available set payload_not_available
  * @param gateway_entity set is a gateway entity, 
  * @param cmd_topic set command topic
  * @param device_name set device name, 
  * @param device_manufacturer set device manufacturer, 
  * @param device_model set device model, 
- * @param device_mac set device MAC, 
+ * @param device_id set device(BLE)/entity(RTL_433) identification, 
  * @param retainCmd set retain
  * @param state_class set state class
  * 
@@ -219,8 +223,8 @@ void createDiscovery(const char* sensor_type,
                      const char* availability_topic, const char* device_class, const char* value_template,
                      const char* payload_on, const char* payload_off, const char* unit_of_meas,
                      int off_delay,
-                     const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* cmd_topic,
-                     const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
+                     const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
+                     const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
                      const char* state_class, const char* state_off, const char* state_on) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
@@ -270,23 +274,37 @@ void createDiscovery(const char* sensor_type,
     sensor["retain"] = retainCmd; // Retain command
   if (value_template[0])
     sensor["val_tpl"] = value_template; //value_template
-  if (payload_on[0])
-    sensor["pl_on"] = payload_on; // payload_on
+  if (payload_on[0]) {
+    if (strcmp(sensor_type, "button") == 0) {
+      sensor["pl_prs"] = payload_on; // payload_press for a button press
+    } else if (strcmp(sensor_type, "number") == 0) {
+      sensor["cmd_tpl"] = payload_on; // payload_on for a switch
+    } else {
+      sensor["pl_on"] = payload_on; // payload_on for a switch
+    }
+  }
   if (payload_off[0])
     sensor["pl_off"] = payload_off; //payload_off
   if (off_delay != 0)
     sensor["off_delay"] = off_delay; //off_delay
   if (payload_available[0])
     sensor["pl_avail"] = payload_available; // payload_on
-  if (payload_not_avalaible[0])
-    sensor["pl_not_avail"] = payload_not_avalaible; //payload_off
+  if (payload_not_available[0])
+    sensor["pl_not_avail"] = payload_not_available; //payload_off
   if (state_class[0])
     sensor["state_class"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
   if (state_on != nullptr)
-    sensor["stat_on"] = state_on;
+    if (strcmp(state_on, "true") == 0) {
+      sensor["stat_on"] = true;
+    } else {
+      sensor["stat_on"] = state_on;
+    }
   if (state_off != nullptr)
-    sensor["stat_off"] = state_off;
-
+    if (strcmp(state_off, "false") == 0) {
+      sensor["stat_off"] = false;
+    } else {
+      sensor["stat_off"] = state_off;
+    }
   if (cmd_topic[0]) {
     char command_topic[mqtt_topic_max_size];
     strcpy(command_topic, mqtt_topic);
@@ -301,27 +319,27 @@ void createDiscovery(const char* sensor_type,
 
   if (gateway_entity) {
     //device representing the board
+    device["name"] = String(gateway_name);
+#  ifndef GATEWAY_MODEL
     String model = "";
     serializeJson(modules, model);
-    device["name"] = String(gateway_name);
     device["model"] = model;
-    device["manufacturer"] = DEVICEMANUFACTURER;
+#  else
+    device["model"] = GATEWAY_MODEL;
+#  endif
+    device["manufacturer"] = GATEWAY_MANUFACTURER;
     device["sw_version"] = OMG_VERSION;
     identifiers.add(String(getMacAddress()));
   } else {
-    //Device representing the actual sensor/switch device
-    //The Device ID
-    char deviceid[13];
-    memcpy(deviceid, &unique_id[0], 12);
-    deviceid[12] = '\0';
-    identifiers.add(deviceid);
-
     //The Connections
-    if (device_mac[0] != 0) {
+    if (device_id[0] != 0) {
       JsonArray connections = device.createNestedArray("connections");
       JsonArray connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
-      connection_mac.add(device_mac);
+      connection_mac.add(device_id);
+      //Device representing the actual sensor/switch device
+      //The Device ID
+      identifiers.add(device_id);
     }
 
     if (device_manufacturer[0]) {
@@ -332,9 +350,13 @@ void createDiscovery(const char* sensor_type,
       device["model"] = device_model;
     }
 
+    // generate unique device name by adding the second half of the device_id only if device_name and device_id are different
     if (device_name[0]) {
-      // generate unique device name by adding the second half of the device_mac
-      device["name"] = device_name + String("-") + String(device_mac + 6);
+      if (strcmp(device_id, device_name) != 0) {
+        device["name"] = device_name + String("-") + String(device_id + 6);
+      } else {
+        device["name"] = device_name;
+      }
     }
 
     device["via_device"] = String(gateway_name); //device name of the board
@@ -354,8 +376,8 @@ void pubMqttDiscovery() {
                   will_Topic, "connectivity", "", //set availability_topic,device_class,value_template,
                   Gateway_AnnouncementMsg, will_Message, "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("sensor", //set Type
@@ -363,19 +385,18 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
                   "", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
-
 #  if defined(ESP8266) || defined(ESP32)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Free memory", (char*)getUniqueId("freemem", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.freemem }}", //set availability_topic,device_class,value_template,
                   "", "", "B", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("sensor", //set Type
@@ -383,8 +404,8 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.ip }}", //set availability_topic,device_class,value_template,
                   "", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #    ifndef ESP32_ETHERNET
@@ -393,21 +414,30 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.rssi }}", //set availability_topic,device_class,value_template,
                   "", "", "dB", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #    endif
 #  endif
 #  ifdef ESP32
+  createDiscovery("sensor", //set Type
+                  subjectSYStoMQTT, "SYS: Internal temperature", (char*)getUniqueId("tempc", "").c_str(), //set state_topic,name,uniqueId
+                  "", "temperature", "{{ value_json.tempc }}", //set availability_topic,device_class,value_template,
+                  "", "", "°C", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC
+                  stateClassMeasurement //State Class
+  );
 #    ifdef ZgatewayBT
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Low Power Mode", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.lowpowermode }}", //set availability_topic,device_class,value_template,
                   "", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID
                   stateClassNone //State Class
   );
 #    endif
@@ -417,8 +447,8 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5batvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("sensor", //set Type
@@ -426,8 +456,8 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5batcurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("sensor", //set Type
@@ -435,8 +465,8 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5vinvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("sensor", //set Type
@@ -444,8 +474,8 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5vincurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #    endif
@@ -455,8 +485,8 @@ void pubMqttDiscovery() {
                   "", "", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("binary_sensor", //set Type
@@ -464,8 +494,8 @@ void pubMqttDiscovery() {
                   "", "{{ value_json.m5ischarging }}", "", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
   createDiscovery("binary_sensor", //set Type
@@ -473,40 +503,30 @@ void pubMqttDiscovery() {
                   "", "{{ value_json.m5ischargefull }}", "", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a child device, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", true, "", //set,payload_available,payload_not available   ,is a child device, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #    endif
 #  endif
-  createDiscovery("switch", //set Type
+  createDiscovery("button", //set Type
                   will_Topic, "SYS: Restart gateway", (char*)getUniqueId("restart", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"restart\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
-  createDiscovery("switch", //set Type
+  createDiscovery("button", //set Type
                   will_Topic, "SYS: Erase credentials", (char*)getUniqueId("erase", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"erase\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
-  createDiscovery("switch", //set Type
-                  "", "SYS: Auto discovery", (char*)getUniqueId("discovery", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "", //set availability_topic,device_class,value_template,
-                  "{\"discovery\":true}", "{\"discovery\":false}", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
-                  stateClassNone //State Class
-  );
-
 #  ifdef ZsensorBME280
 #    define BMEparametersCount 5
   Log.trace(F("bme280Discovery" CR));
@@ -520,13 +540,12 @@ void pubMqttDiscovery() {
   };
 
   for (int i = 0; i < BMEparametersCount; i++) {
-    //trc(BMEsensor[i][1]);
     createDiscovery(BMEsensor[i][0],
                     BMETOPIC, BMEsensor[i][1], (char*)getUniqueId(BMEsensor[i][1], BMEsensor[i][2]).c_str(),
                     will_Topic, BMEsensor[i][3], BMEsensor[i][4],
                     BMEsensor[i][5], BMEsensor[i][6], BMEsensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
@@ -548,10 +567,25 @@ void pubMqttDiscovery() {
                     will_Topic, HTUsensor[i][3], HTUsensor[i][4],
                     HTUsensor[i][5], HTUsensor[i][6], HTUsensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
+#  endif
+
+#  ifdef ZsensorLM75
+  Log.trace(F("LM75Discovery" CR));
+  char* LM75sensor[8] = {"sensor", "temp", "htu", "temperature", jsonTempc, "", "", "°C"};
+  //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+
+  createDiscovery(LM75sensor[0],
+                  LM75TOPIC, LM75sensor[1], (char*)getUniqueId(LM75sensor[1], LM75sensor[2]).c_str(),
+                  will_Topic, LM75sensor[3], LM75sensor[4],
+                  LM75sensor[5], LM75sensor[6], LM75sensor[7],
+                  0, "", "", true, "",
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                  stateClassNone //State Class
+  );
 #  endif
 
 #  ifdef ZsensorAHTx0
@@ -569,7 +603,7 @@ void pubMqttDiscovery() {
                     will_Topic, AHTsensor[i][3], AHTsensor[i][4],
                     AHTsensor[i][5], AHTsensor[i][6], AHTsensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
@@ -591,7 +625,7 @@ void pubMqttDiscovery() {
                     will_Topic, DHTsensor[i][3], DHTsensor[i][4],
                     DHTsensor[i][5], DHTsensor[i][6], DHTsensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
@@ -608,7 +642,7 @@ void pubMqttDiscovery() {
                   will_Topic, ADCsensor[3], ADCsensor[4],
                   ADCsensor[5], ADCsensor[6], ADCsensor[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -630,7 +664,7 @@ void pubMqttDiscovery() {
                     will_Topic, BH1750sensor[i][3], BH1750sensor[i][4],
                     BH1750sensor[i][5], BH1750sensor[i][6], BH1750sensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
@@ -653,7 +687,7 @@ void pubMqttDiscovery() {
                     will_Topic, TSL2561sensor[i][3], TSL2561sensor[i][4],
                     TSL2561sensor[i][5], TSL2561sensor[i][6], TSL2561sensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
@@ -670,7 +704,7 @@ void pubMqttDiscovery() {
                   will_Topic, HCSR501sensor[3], HCSR501sensor[4],
                   HCSR501sensor[5], HCSR501sensor[6], HCSR501sensor[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -686,7 +720,7 @@ void pubMqttDiscovery() {
                   will_Topic, GPIOInputsensor[3], GPIOInputsensor[4],
                   GPIOInputsensor[5], GPIOInputsensor[6], GPIOInputsensor[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -708,7 +742,7 @@ void pubMqttDiscovery() {
                     will_Topic, INA226sensor[i][3], INA226sensor[i][4],
                     INA226sensor[i][5], INA226sensor[i][6], INA226sensor[i][7],
                     0, "", "", true, "",
-                    "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                     stateClassNone //State Class
     );
   }
@@ -730,9 +764,32 @@ void pubMqttDiscovery() {
                   will_Topic, actuatorONOFF[3], actuatorONOFF[4],
                   actuatorONOFF[5], actuatorONOFF[6], actuatorONOFF[7],
                   0, "", "", true, subjectMQTTtoONOFF,
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+#  endif
+
+#  ifdef ZsensorRN8209
+#    define RN8209parametersCount 3
+  Log.trace(F("RN8209Discovery" CR));
+  char* RN8209sensor[RN8209parametersCount][8] = {
+      {"sensor", "volt", "RN8209", "", jsonVolt, "", "", "V"},
+      {"sensor", "current", "RN8209", "", jsonCurrent, "", "", "A"},
+      {"sensor", "power", "RN8209", "", jsonPower, "", "", "W"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  for (int i = 0; i < RN8209parametersCount; i++) {
+    String name = "NRG: " + String(RN8209sensor[i][1]);
+    createDiscovery(RN8209sensor[i][0],
+                    subjectRN8209toMQTT, (char*)name.c_str(), (char*)getUniqueId(RN8209sensor[i][1], RN8209sensor[i][2]).c_str(),
+                    will_Topic, RN8209sensor[i][3], RN8209sensor[i][4],
+                    RN8209sensor[i][5], RN8209sensor[i][6], RN8209sensor[i][7],
+                    0, "", "", true, "",
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                    stateClassNone //State Class
+    );
+  }
 #  endif
 
 #  ifdef ZgatewayRF
@@ -747,7 +804,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewayRF[3], gatewayRF[4],
                   gatewayRF[5], gatewayRF[6], gatewayRF[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 
@@ -765,7 +822,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewayRF2[3], gatewayRF2[4],
                   gatewayRF2[5], gatewayRF2[6], gatewayRF2[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -782,7 +839,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewayRFM69[3], gatewayRFM69[4],
                   gatewayRFM69[5], gatewayRFM69[6], gatewayRFM69[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -799,7 +856,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewayLORA[3], gatewayLORA[4],
                   gatewayLORA[5], gatewayLORA[6], gatewayLORA[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -816,7 +873,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewaySRFB[3], gatewaySRFB[4],
                   gatewaySRFB[5], gatewaySRFB[6], gatewaySRFB[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -833,7 +890,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewayPilight[3], gatewayPilight[4],
                   gatewayPilight[5], gatewayPilight[6], gatewayPilight[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -850,7 +907,7 @@ void pubMqttDiscovery() {
                   will_Topic, gatewayIR[3], gatewayIR[4],
                   gatewayIR[5], gatewayIR[6], gatewayIR[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
@@ -867,73 +924,95 @@ void pubMqttDiscovery() {
                   will_Topic, gateway2G[3], gateway2G[4],
                   gateway2G[5], gateway2G[6], gateway2G[7],
                   0, "", "", true, "",
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
 #  endif
 
 #  ifdef ZgatewayBT
-  createDiscovery("sensor", //set Type
-                  subjectSYStoMQTT, "BT: Interval between scans", (char*)getUniqueId("interval", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.interval }}", //set availability_topic,device_class,value_template,
-                  "", "", "ms", //set,payload_on,payload_off,unit_of_meas,
+#    ifdef ESP32
+  createDiscovery("number", //set Type
+                  subjectBTtoMQTT, "BT: Interval between scans", (char*)getUniqueId("interval", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.interval/1000 }}", //set availability_topic,device_class,value_template,
+                  "{\"interval\":{{value*1000}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
                   stateClassNone //State Class
   );
-  createDiscovery("sensor", //set Type
-                  subjectSYStoMQTT, "BT: Connnect every X scan(s)", (char*)getUniqueId("scanbcnct", "").c_str(), //set state_topic,name,uniqueId
+  createDiscovery("number", //set Type
+                  subjectBTtoMQTT, "BT: Connnect every X scan(s)", (char*)getUniqueId("scanbcnct", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
-                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  "", "", true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  "{\"scanbcnct\":{{value}},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set off_delay
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
-  createDiscovery("switch", //set Type
+  createDiscovery("button", //set Type
                   will_Topic, "BT: Force scan", (char*)getUniqueId("force_scan", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
                   "{\"interval\":0}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                  stateClassNone //State Class
+  );
+  createDiscovery("button", //set Type
+                  will_Topic, "BT: Erase config", (char*)getUniqueId("erase_bt_config", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "", //set availability_topic,device_class,value_template,
+                  "{\"erase\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );
   createDiscovery("switch", //set Type
-                  "", "BT: Publish only sensors", (char*)getUniqueId("only_sensors", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "", //set availability_topic,device_class,value_template,
-                  "{\"onlysensors\":true}", "{\"onlysensors\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectBTtoMQTT, "BT: Publish only sensors", (char*)getUniqueId("only_sensors", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.onlysensors }}", //set availability_topic,device_class,value_template,
+                  "{\"onlysensors\":true,\"save\":true}", "{\"onlysensors\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
-                  stateClassNone //State Class
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  "", "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "", //set availability_topic,device_class,value_template,
-                  "{\"hasspresence\":true}", "{\"hasspresence\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectBTtoMQTT, "BT: Active scan", (char*)getUniqueId("active_scan", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.activescan }}", //set availability_topic,device_class,value_template,
+                  "{\"activescan\":true,\"save\":true}", "{\"activescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
-                  stateClassNone //State Class
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
   );
-#    ifdef ESP32
   createDiscovery("switch", //set Type
-                  "", "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
+                  subjectBTtoMQTT, "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
+                  "{\"hasspresence\":true,\"save\":true}", "{\"hasspresence\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+  createDiscovery("switch", //set Type
+                  subjectBTtoMQTT, "BT: Connect to devices", (char*)getUniqueId("bleconnect", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.bleconnect }}", //set availability_topic,device_class,value_template,
+                  "{\"bleconnect\":true,\"save\":true}", "{\"bleconnect\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+  createDiscovery("switch", //set Type
+                  subjectBTtoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "", //set availability_topic,device_class,value_template,
                   "{\"lowpowermode\":2}", "{\"lowpowermode\":0}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
-                  "", "", true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
-                  stateClassNone //State Class
-  );
-  createDiscovery("switch", //set Type
-                  "", "BT: Connect to devices", (char*)getUniqueId("bleconnect", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "", //set availability_topic,device_class,value_template,
-                  "{\"bleconnect\":true}", "{\"bleconnect\":false}", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone //State Class
   );

@@ -74,16 +74,17 @@ Arduino IDE serial data received when receiving data by 433Mhz
 
 ### Send data by MQTT with advanced RF parameters
 
-RF sending support three advanced parameters; bits length, RF protocol and RF pulselength
-if you want to use a different RCswitch protocol put inside your payload the protocol number 2, "protocol":2.
+RF sending support three advanced parameters: bits length, RF protocol and RF pulselength
 
-if you want to use a pulselength 315 put inside your topic "delay":315
+-if you want to use a bits number different than 24 put inside your topic "length":24 for example
 
-if you want to use a bits number different than 24 put inside your topic "length":24 for example
+-if you want to use a different RCswitch protocol put inside your payload the protocol number 2, "protocol":2.
+
+-if you want to use a pulselength 315 put inside your topic "delay":315
 
 Example:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315}'`
-will make RCSwitch use the protocol 2 with a pulselength of 315ms and a bits number of 24
+will make RCSwitch use the protocol 2 with a pulselength of 315ms and a bits number of 24 with a power of 5
 
 ### Repeat the RF signal OpenMQTTGateway receive
 So as to repeat the RF signal received by the gateway once set the following parameter to true in config_RF.h
@@ -96,7 +97,7 @@ You can add a "repeat" key/value to the MQTTto433 JSON message to override the d
 Example:
 `home/OpenMQTTGateway/commands/MQTTto433 {"value":1315156,"protocol":1,"length":24,"delay":317, "repeat":10}`
 
-### Set Transmit and Receive Frequency of CC1101 Transceiver Module
+### Set Transmit and Receive Frequency and Transmit Power of CC1101 Transceiver
 
 Default transmit frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by including the frequency in the transmit message.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board.
 
@@ -109,6 +110,13 @@ Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be ca
 Messages received will include the frequency, and when transmitting on a different frequency the module return to the receive frequency afterwards.  ie transmit messages on 303.732 Mhz then receive messages on 433.92 Mhz 
 
 `{"value":4534142,"protocol":6,"length":26,"delay":356,"mhz":315.026}`
+
+You can adjust the tx-power in db for a transmission. Parameter is `cc1101_pa` and valid values in decibel are (-30  -20  -15  -10  -6    0    5    7    10   11   12) Default is max!
+That can be done to reduce range and therefore disturbances with other nearby devices.
+If you want to send a transmission with a power of 5 db than use the message 
+
+`{"value":1315156,"protocol":2,"length":24,"delay":315, "cc1101_pa":5}`
+
 
 ## Pilight gateway
 
@@ -250,7 +258,7 @@ This feature is only available on a ESP32 based device with a supported transcei
 ### Supported hardware combinations
 
 - ESP32 based device with a CC1101 transceiver
-- Heltec WiFi LoRa 32 (V2.1)
+- Heltec WiFi LoRa 32 (V2.1) and LilyGo Lora 32 V2.1
 
 ### Supported Decoders
 
@@ -348,7 +356,6 @@ Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be ca
 Delta applied to RSSI floor noise level to determine start and end of signal, defaults to 9db.
 
 `home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"rssi": 9}`
-
 
 ### Retrieve current status of receiver
 

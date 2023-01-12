@@ -3,6 +3,7 @@ import requests
 import json
 import string
 import argparse
+import shutil
 
 mf_temp32 = string.Template('''{
   "name": "OpenMQTTGateway",
@@ -78,25 +79,13 @@ export default {
 }
 </script>'''
 
-parser = argparse.ArgumentParser()
-parser.add_argument('repo')
-args = parser.parse_args()
-repo = args.repo
-
-manif_folder = "/firmware_build/"
+manif_folder = "/dev/firmware_build/"
 manif_path = 'docs/.vuepress/public/firmware_build/'
 vue_path = 'docs/.vuepress/components/'
+bin_path = 'toDeploy/'
 cors_proxy = '' #'https://cors.bridged.cc/'
 esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
 esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
-release = requests.get('https://api.github.com/repos/' + repo + '/releases/latest')
-rel_data = json.loads(release.text)
-
-if 'assets' in rel_data:
-    assets = rel_data['assets']
-else:
-    print('Assets not found')
-    os._exit(1)
 
 if not os.path.exists(manif_path):
     os.makedirs(manif_path)
@@ -117,55 +106,43 @@ filename = esp32_boot.split('/')[-1]
 with open(manif_path + filename,'wb') as output_file:
     output_file.write(boot_bin.content)
 
-for item in range(len(assets)):
-    name = assets[item]['name']
+for name in os.listdir(bin_path):
     if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'lilygo' in name or 'shelly' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
-        fw_url = assets[item]['browser_download_url']
-        fwp_url = fw_url.split('-firmware')[0] + '-partitions.bin'
-        mani_str = mf_temp32.substitute({'cp':cors_proxy, 'part':manif_folder + fwp_url.split('/')[-1], 'bin':manif_folder + fw_url.split('/')[-1], 'bl':manif_folder + esp32_blurl.split('/')[-1], 'boot':manif_folder + esp32_boot.split('/')[-1]})
+        print('Bin name:' + name)
+        part_name = name.split('-firmware')[0] + '-partitions.bin'
+        print('Partition name:' + part_name)
+        mani_str = mf_temp32.substitute({'cp':cors_proxy, 'part':manif_folder + part_name.split('/')[-1], 'bin':manif_folder + name.split('/')[-1], 'bl':manif_folder + esp32_blurl.split('/')[-1], 'boot':manif_folder + esp32_boot.split('/')[-1]})
 
         with open(manif_path + man_file, 'w') as nf:
             nf.write(mani_str)
 
         wu_file.write(wu_temp_opt.substitute({'mff':manif_folder + man_file, 'mfn':fw}))
 
-        fw_bin = requests.get(fw_url)
-        filename = fw_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
-            output_file.write(fw_bin.content)
-
-        part_bin = requests.get(fwp_url)
-        filename = fwp_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
-            output_file.write(part_bin.content)
+        shutil.copyfile(bin_path + name, (manif_path + name))
+        shutil.copyfile(bin_path + part_name, (manif_path + part_name))
 
         print('Created: ' + os.path.abspath(man_file))
 
 wu_file.write(wu_temp_p2)
 
-for item in range(len(assets)):
-    name = assets[item]['name']
+for name in os.listdir(bin_path):
     if 'firmware.bin' in name and ('nodemcu' in name or 'sonoff' in name or 'rf-wifi-gateway' in name or 'manual-wifi-test' in name or 'rfbridge' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
-        fw_url = assets[item]['browser_download_url']
-        mani_str = mf_temp8266.substitute({'cp':cors_proxy, 'bin':manif_folder + fw_url.split('/')[-1]})
+        print('Bin name:' + name)
+        part_name = name.split('-firmware')[0] + '-partitions.bin'
+        print('Partition name:' + part_name)
+        mani_str = mf_temp8266.substitute({'cp':cors_proxy, 'bin':manif_folder + name.split('/')[-1]})
 
         with open(manif_path + man_file, 'w') as nf:
             nf.write(mani_str)
 
         wu_file.write(manif_folder + wu_temp_opt.substitute({'mff':manif_folder + man_file, 'mfn':fw}))
-        fw_bin = requests.get(fw_url)
-        filename = fw_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
-            output_file.write(fw_bin.content)
 
-        part_bin = requests.get(fwp_url)
-        filename = fwp_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
-            output_file.write(part_bin.content)
+        shutil.copyfile(bin_path + name, (manif_path + name))
+
         print('Created: ' + os.path.abspath(man_file))
 
 wu_file.write(wu_temp_end)

@@ -35,9 +35,11 @@ jobs:
           - "esp32-m5tough-ble"
           - "esp32-m5stick-c-ble"
           - "esp32-m5stick-cp-ble"
-          - "esp32-m5atom"
+          - "esp32-m5atom-matrix"
+          - "esp32-m5atom-lite"
           - "esp32dev-rtl_433"
           - "heltec-rtl_433"
+          - "lilygo-rtl_433"
           - "esp32dev-multi_receiver"
           - "tinypico-ble"
           - "ttgo-lora32-v1-868"
@@ -45,7 +47,7 @@ jobs:
           - "ttgo-t-beam"
           - "heltec-wifi-lora-32-868"
           - "heltec-wifi-lora-32-915"
-          - "esp32dev-mqtt-fw-test"
+          - "shelly-plus1"
           - "nodemcuv2-all-test"
           - "nodemcuv2-fastled-test"
           - "nodemcuv2-2g"
@@ -71,6 +73,8 @@ jobs:
           - "esp32dev-ble-datatest"
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
+          - "thingpulse-espgateway"
+          - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:
@@ -85,6 +89,14 @@ jobs:
           pip install platformio
       - name: Run PlatformIO
         run: platformio run -e ${{ matrix.environments }}
+      - name: Upload Assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.environments }}
+          path: |
+            .pio/build/*/firmware.bin
+            .pio/build/*/partitions.bin
+          retention-days: 7
 
   documentation:
     runs-on: ubuntu-latest

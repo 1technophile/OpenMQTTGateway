@@ -2,8 +2,13 @@
 
 ## Wifi and MQTT configuration portal for Wifi boards
 
-Once loaded into your ESP and if you don't use the manual configuration you have to set your network parameters with wifi manager portal.
-From your smartphone search for your OpenMQTTGateway wifi network and connect to it with `WifiManager_password` (the default password is "your_password"), a web page will appear.
+Once loaded into your ESP, and if you don't use the manual configuration, you have to set your network parameters with Wifi Manager portal.
+
+From your smartphone, search for  OpenMQTTGateway or OMG wifi network and connect to it with the `WifiManager_password` you have defined (the default password is **"your_password"**), or if you are using a device sold by Theengs or the macro `-DWM_PWD_FROM_MAC=true`, the password will be the last eight digits of the device MAC Address with upper case.
+Example, the password would be `CCDDEEFF` for a MAC Address `AABBCCDDEEFF`. 
+For Theengs devices, the MAC Address can be found on the device sticker, and for all the devices, it is printed on the serial monitor logs.
+
+Once connected to the Wifi, a web page should appear. On Android, you may also have a popup asking you if you want to connect to it without an internet connection. Answer yes always/all the time. If the web page doesn't appear, click on the Wifi Access Point and "Manage router".
 
 ![Wifi manager menu](../img/OpenMQTTGateway_Wifi_Manager_menu.png)
 
@@ -21,6 +26,7 @@ From your smartphone search for your OpenMQTTGateway wifi network and connect to
 * Set your MQTT Server password (facultative)
 * Set your MQTT base topic if you need to change it (you must keep the / at the end)
 * Set your gateway name if you need to change it
+* Set your Over The Air password, this password is used for local and remote OTA
 
 * Click on save
 

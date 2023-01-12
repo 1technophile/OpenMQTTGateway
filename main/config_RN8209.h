@@ -4,7 +4,7 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-   This files enables to set your parameter for the GPIOInput sensor
+   This files enables to set your parameter for the RN8209 sensor
   
     Copyright: (c)Florian ROBERT
   
@@ -23,30 +23,27 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef config_GPIOInput_h
-#define config_GPIOInput_h
+#ifndef config_RN8209_h
+#define config_RN8209_h
 
-extern void setupGPIOInput();
-extern void GPIOInputtoMQTT();
+extern void setupRN8209();
+extern void RN8209toMQTT();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectGPIOInputtoMQTT "/GPIOInputtoMQTT"
-#define GPIOInputDebounceDelay 60 //debounce time, increase if there are issues
+#define subjectRN8209toMQTT "/RN8209toMQTT"
 
-/*-------------------PIN DEFINITIONS----------------------*/
-#ifndef INPUT_GPIO
-#  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO 13
-#  else
-#    define INPUT_GPIO 7
-#  endif
+/*-------------CALIBRATION PARAMETERS----------------*/
+#ifndef RN8209_KU
+#  define RN8209_KU 18570
+#endif
+#ifndef RN8209_KIA
+#  define RN8209_KIA 272433
+#endif
+#ifndef RN8209_EC
+#  define RN8209_EC 28250
 #endif
 
-#ifndef GPIO_INPUT_TYPE
-#  define GPIO_INPUT_TYPE INPUT_PULLUP
+#ifndef TimeBetweenReadingRN8209
+#  define TimeBetweenReadingRN8209 10000 // time between 2 RN8209 readings in ms
 #endif
-
-#define INPUT_GPIO_ON_VALUE  "HIGH"
-#define INPUT_GPIO_OFF_VALUE "LOW"
-
 #endif

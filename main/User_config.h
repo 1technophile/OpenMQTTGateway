@@ -50,7 +50,7 @@
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
 
-// Uncomment to use the MAC address in the format of 112233445566 as the gateway name
+// Uncomment to use the MAC address first 4 digits in the format of 5566 as the suffix of the short gateway name.
 // Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
 //#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
@@ -66,7 +66,7 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and mac only
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and MAC only
 #ifdef NetworkAdvancedSetup
 #  if defined(ESP8266) || defined(ESP32)
 const byte ip[] = {192, 168, 1, 99}; //IP address of the gateway, already defined for arduino below
@@ -114,6 +114,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #endif
 
+//#define WM_PWD_FROM_MAC true // enable to set the password from the last 8 digits of the ESP MAC address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
 #ifndef WifiManager_password
 #  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
 #endif
@@ -207,27 +208,26 @@ const char* certificate PROGMEM = R"EOF("
 // The default certificate is for github.
 const char* OTAserver_cert PROGMEM = R"EOF("
 -----BEGIN CERTIFICATE-----
-MIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs
+MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFzc3VyYW5j
-ZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAwMFowbDEL
-MAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3
-LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNlcnQgSGlnaCBBc3N1cmFuY2Ug
-RVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMbM5XPm
-+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9ppkCxxLeyj9CYpKlBWTrT3JTW
-PNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8OkhPhPYlG++MXs2ziS4wblCJEM
-xChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ckRZqnrG0AFFoEt7oT61EKmEFB
-Ik5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhakaHPQNAQTXKFx01p8VdteZOE3
-hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDirCmTCv2ZdlYTBoSUeh10aUAsg
-EsxBu24LUTi4S8sCAwEAAaNjMGEwDgYDVR0PAQH/BAQDAgGGMA8GA1UdEwEB/wQF
-MAMBAf8wHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoIAu9jZCvDMB8GA1UdIwQYMBaA
-FLE+w2kD+L9HAdSYJhoIAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQAcGgaX3Nec
-nzyIZgYIVyHbIUf4KmeqvxgydkAQV8GK83rZEWWONfqe/EW1ntlMMUu4kehDLI6z
-eM7b41N5cdblIZQB2lWHmiRk9opmzN6cN82oNLFpmyPInngiK3BD41VHMWEZ71jF
-hS9OMPagMRYjyOfiZRYzy78aG6A9+MpeizGLYAiJLQwGXFK3xPkKmNEVX58Svnw2
-Yzi9RKR/5CYrCsSXaQ3pjOLAEFe4yHYSkVXySGnYvCoCWw9E1CAx2/S6cCZdkGCe
-vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
-+OkuE6N36B9K
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
+b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
+CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
+nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
+43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
+T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
+gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
+BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
+TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
+DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
+hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
+06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
+PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
+YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
+CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----
 ")EOF";
 
@@ -316,6 +316,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
 //#define ZsensorHTU21   "HTU21"    //ESP8266, Arduino, ESP32
+//#define ZsensorLM75   "LM75"    //ESP8266, Arduino, ESP32
 //#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
@@ -388,48 +389,108 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define ota_timeout_millis 30000
 #endif
 
+/*-------------ERRORS, INFOS, SEND RECEIVE Display through LED----------------*/
+#ifndef RGB_INDICATORS // Management of Errors, reception/emission and informations indicators with basic LED
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#ifndef LED_SEND_RECEIVE
-#  ifdef ESP8266
-#    define LED_SEND_RECEIVE 40
-#  elif ESP32
-#    define LED_SEND_RECEIVE 40
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_SEND_RECEIVE 40
-#  else //arduino uno/nano
-#    define LED_SEND_RECEIVE 40
+#  ifndef LED_SEND_RECEIVE
+#    ifdef ESP8266
+#      define LED_SEND_RECEIVE 40
+#    elif ESP32
+#      define LED_SEND_RECEIVE 40
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_SEND_RECEIVE 40
+#    else //arduino uno/nano
+#      define LED_SEND_RECEIVE 40
+#    endif
 #  endif
-#endif
-#ifndef LED_SEND_RECEIVE_ON
-#  define LED_SEND_RECEIVE_ON HIGH
-#endif
-#ifndef LED_ERROR
-#  ifdef ESP8266
-#    define LED_ERROR 42
-#  elif ESP32
-#    define LED_ERROR 42
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_ERROR 42
-#  else //arduino uno/nano
-#    define LED_ERROR 42
+#  ifndef LED_SEND_RECEIVE_ON
+#    define LED_SEND_RECEIVE_ON HIGH
 #  endif
-#endif
-#ifndef LED_ERROR_ON
-#  define LED_ERROR_ON HIGH
-#endif
-#ifndef LED_INFO
-#  ifdef ESP8266
-#    define LED_INFO 44
-#  elif ESP32
-#    define LED_INFO 44
-#  elif __AVR_ATmega2560__ //arduino mega
-#    define LED_INFO 44
-#  else //arduino uno/nano
-#    define LED_INFO 44
+#  ifndef LED_ERROR
+#    ifdef ESP8266
+#      define LED_ERROR 42
+#    elif ESP32
+#      define LED_ERROR 42
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_ERROR 42
+#    else //arduino uno/nano
+#      define LED_ERROR 42
+#    endif
 #  endif
-#endif
-#ifndef LED_INFO_ON
-#  define LED_INFO_ON HIGH
+#  ifndef LED_ERROR_ON
+#    define LED_ERROR_ON HIGH
+#  endif
+#  ifndef LED_INFO
+#    ifdef ESP8266
+#      define LED_INFO 44
+#    elif ESP32
+#      define LED_INFO 44
+#    elif __AVR_ATmega2560__ //arduino mega
+#      define LED_INFO 44
+#    else //arduino uno/nano
+#      define LED_INFO 44
+#    endif
+#  endif
+#  ifndef LED_INFO_ON
+#    define LED_INFO_ON HIGH
+#  endif
+#  define SetupIndicators()            \
+    pinMode(LED_SEND_RECEIVE, OUTPUT); \
+    pinMode(LED_INFO, OUTPUT);         \
+    pinMode(LED_ERROR, OUTPUT);        \
+    SendReceiveIndicatorOFF();         \
+    InfoIndicatorOFF();                \
+    ErrorIndicatorOFF();
+
+#  define ErrorIndicatorON()        digitalWrite(LED_ERROR, LED_ERROR_ON)
+#  define ErrorIndicatorOFF()       digitalWrite(LED_ERROR, !LED_ERROR_ON)
+#  define SendReceiveIndicatorON()  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON)
+#  define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
+#  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
+#  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
+#else // Management of Errors, reception/emission and informations indicators with RGB LED
+#  include <FastLED.h>
+CRGB leds[FASTLED_IND_NUM_LEDS];
+#  ifndef RGB_LED_POWER
+#    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
+#  endif
+#  ifndef FASTLED_BRIGHTNESS
+#    define FASTLED_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
+#  endif
+// Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
+#  ifndef FASTLED_INFO_LED
+#    define FASTLED_INFO_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_SEND_RECEIVCE_LED
+#    define FASTLED_SEND_RECEIVCE_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_ERROR_LED
+#    define FASTLED_ERROR_LED 0 // First Led
+#  endif
+
+#  define SetupIndicators()                                                               \
+    pinMode(RGB_LED_POWER, OUTPUT);                                                       \
+    digitalWrite(RGB_LED_POWER, HIGH);                                                    \
+    FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
+    FastLED.setBrightness(FASTLED_BRIGHTNESS);
+#  define ErrorIndicatorON()                \
+    leds[FASTLED_ERROR_LED] = CRGB::Orange; \
+    FastLED.show()
+#  define ErrorIndicatorOFF()              \
+    leds[FASTLED_ERROR_LED] = CRGB::Black; \
+    FastLED.show()
+#  define SendReceiveIndicatorON()                \
+    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Blue; \
+    FastLED.show()
+#  define SendReceiveIndicatorOFF()                \
+    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Black; \
+    FastLED.show()
+#  define InfoIndicatorON()               \
+    leds[FASTLED_INFO_LED] = CRGB::Green; \
+    FastLED.show()
+#  define InfoIndicatorOFF()              \
+    leds[FASTLED_INFO_LED] = CRGB::Black; \
+    FastLED.show()
 #endif
 
 #ifdef ESP8266
@@ -504,7 +565,8 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
-// The real definitions are in config_M5.h / config_HELTEC.h
+// The real definitions are in config_M5.h / config_SSD1306.h
+#define pubOled(...)        // display the published message onto the OLED display
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 

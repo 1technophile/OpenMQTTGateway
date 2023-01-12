@@ -19,7 +19,8 @@ The table below describes the libraries and the modules of each board configurat
 |:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |**ESP32**|
 |esp32-lolin32lite-ble|ESP32 Lolin lite|Suitable for low power with BLE gateway, [tutorial](https://1technophile.blogspot.com/2021/04/low-power-esp32-ble-gateway.html)|-|-|X|-|
-|esp32-m5atom|M5Atom|Compact enclosure ESP32 with BLE gateway|-|(Emit)|X|-|
+|esp32-m5atom-lite|M5Atom Lite|Compact enclosure ESP32 with BLE gateway|-|(Emit)|X|-|
+|esp32-m5atom-matrix|M5Atom Matrix|Compact enclosure ESP32 with BLE gateway|-|(Emit)|X|-|
 |esp32-m5stack-ble|M5Stack Core|Expandable module with BLE gateway, display, and little IR emitter|-|-|X|-|
 |esp32-m5stick-ble|M5Stick Grey|Expandable module with BLE gateway and little IR emitter|-|(Emit)|X|-|
 |esp32-m5stick-c-ble|M5Stick C Orange|Expandable module with BLE gateway, display, and little IR emitter|-|(Emit)|X|-|
@@ -33,6 +34,8 @@ The table below describes the libraries and the modules of each board configurat
 |esp32dev-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
 |esp32dev-ble-openhab|ESP32 dev board|BLE gateway with one scan every 55s per default and OpenHAB discovery|-|-|X|-|
 |esp32dev-ble-mqtt-undecoded|ESP32 dev board|BLE gateway with the decoding offloaded to [Theengs Gateway](https://gateway.theengs.io/)|-|-|X|-|
+|esp32s3-dev-c1-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
+|esp32c3-dev-m1-ble|ESP32 dev board|BLE gateway with one scan every 55s per default|-|-|X|-|
 |esp32dev-gf-sun-inverter|ESP32 dev board|RS232 reading of GridFree Sun Inverter|-|-|-|-|
 |esp32dev-ir|ESP32 dev board|Infrared (Emitting and receiving) using [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266)|-|X|-|-|
 |esp32dev-multi_receiver|ESP32 dev board|Multi RF library with the possibility to switch between [ESPilight](https://github.com/puuu/ESPiLight), [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP), [NewRemoteSwitch](https://github.com/1technophile/NewRemoteSwitch) and [RCSwitch](https://github.com/1technophile/rc-switch), need CC1101|X|-|-|-|
@@ -44,9 +47,11 @@ The table below describes the libraries and the modules of each board configurat
 |esp32dev-somfy-CC1101|ESP32 dev board|Gateway using [Somfy Remote](https://github.com/Legion2/Somfy_Remote_Lib) library, need CC1101|X|-|-|-|
 |esp32dev-weatherstation|ESP32 dev board|Gateway to retrieve weather station data Ventus W174/W132 (tested), Auriol H13726, Hama EWS 1500, Meteoscan W155/W160 using [WeatherStationDataRx](https://github.com/Zwer2k/WeatherStationDataRx)|X|-|-|-|
 |esp32feather-ble|ESP32 Feather Adafruit|BLE for the Adafruit Feather board|-|-|X|-|
+|shelly-plus1|Shelly Plus 1 relay board|BLE, Relay control, Switch|-|-|X|-|
 |heltec-wifi-lora32-868|ESP32 HELTEC LORA V2|LORA communication 868Mhz  using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa) |-|-|-|X|
 |heltec-wifi-lora32-915|ESP32 HELTEC LORA V2|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |heltec-rtl_433|ESP32 HELTEC LORA32 v2|Gateway using [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP) and [RadioLib](https://github.com/jgromes/RadioLib)|X|-|-|-|
+|lilygo-rtl_433|ESP32 LILYGO LoRa32 V2.1|Gateway using [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP) and [RadioLib](https://github.com/jgromes/RadioLib)|X|-|-|-|
 |tinypico-ble|ESP32 TinyPICO|BLE Gateway|-|-|X|-|
 |ttgo-lora32-v1-868|ESP32 TTGO LORA V1|LORA communication 868Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|
 |ttgo-lora32-v1-915|ESP32 TTGO LORA V1|LORA communication 915Mhz using [arduino-LoRA](https://github.com/sandeepmistry/arduino-LoRa)|-|-|-|X|

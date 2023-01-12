@@ -47,7 +47,6 @@ QueueHandle_t BLEQueue;
 #  include <esp_wifi.h>
 
 #  include <atomic>
-#  include <vector>
 
 #  include "ZgatewayBLEConnect.h"
 #  include "soc/timer_group_reg.h"
@@ -57,12 +56,6 @@ using namespace std;
 
 // Global struct to store live BT configuration data
 BTConfig_s BTConfig;
-
-#  define device_flags_init     0 << 0
-#  define device_flags_isDisc   1 << 0
-#  define device_flags_isWhiteL 1 << 1
-#  define device_flags_isBlackL 1 << 2
-#  define device_flags_connect  1 << 3
 
 TheengsDecoder decoder;
 
@@ -89,6 +82,7 @@ static bool oneWhite = false;
 void BTConfig_init() {
   BTConfig.bleConnect = AttemptBLEConnect;
   BTConfig.BLEinterval = TimeBtwRead;
+  BTConfig.activeScan = ActiveBLEScan;
   BTConfig.BLEscanBeforeConnect = ScanBeforeConnect;
   BTConfig.pubOnlySensors = PublishOnlySensors;
   BTConfig.presenceEnable = HassPresence;
@@ -122,11 +116,13 @@ void BTConfig_update(JsonObject& data, const char* key, T& var) {
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
-  // Attempts to connect to elligible devices or not
+  // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
     BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
+  // Define if the scan is active or passive
+  BTConfig_update(BTdata, "activescan", BTConfig.activeScan);
   // Number of scan before a connect set
   BTConfig_update(BTdata, "scanbcnct", BTConfig.BLEscanBeforeConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
@@ -164,6 +160,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["bleconnect"] = BTConfig.bleConnect;
   jo["interval"] = BTConfig.BLEinterval;
+  jo["activescan"] = BTConfig.activeScan;
   jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
   jo["hasspresence"] = BTConfig.presenceEnable;
@@ -187,7 +184,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     Serial.println();
     return; // Do not try to erase/write/send config at startup
   }
-  pub("/commands/BTtoMQTT/config", jo);
+  pub(subjectBTtoMQTT, jo);
 
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
@@ -224,7 +221,7 @@ void BTConfig_load() {
     return;
   }
   JsonObject jo = jsonBuffer.as<JsonObject>();
-  BTConfig_fromJson(jo, true); // Never send mqtt message with config
+  BTConfig_fromJson(jo, true); // Never send MQTT message with config
   Log.notice(F("BT config loaded" CR));
 }
 
@@ -328,8 +325,6 @@ void emptyBTQueue() {
   }
 }
 
-bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
-
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
 
 BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
@@ -409,10 +404,6 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
 
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
 }
-
-#  define isWhite(device)      device->isWhtL
-#  define isBlack(device)      device->isBlkL
-#  define isDiscovered(device) device->isDisc
 
 void dumpDevices() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
@@ -613,7 +604,7 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  pBLEScan->setActiveScan(ActiveBLEScan);
+  pBLEScan->setActiveScan(BTConfig.activeScan);
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
@@ -791,6 +782,7 @@ void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  Log.notice(F("Active BLE scan: %T" CR), BTConfig.activeScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
@@ -974,7 +966,9 @@ void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
-  if (model_id >= 0) { // Broadcaster devices
+  if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
+      model_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+      model_id != TheengsDecoder::BLE_ID_NUM::GAEN) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
       createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected

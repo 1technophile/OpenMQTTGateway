@@ -134,7 +134,19 @@ If you want to change this characteristic:
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
-The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
+The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
+
+## Setting if the gateway use active or passive scanning
+
+If you want to change this characteristic (default:true):
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"activescan":false}'`
+
+::: tip
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+:::
+
+If false, the gateway will only do a passive scanning (not request for sensor broadcasts), some sensors may not advertize their data with passive scanning.
 
 ## Setting if the gateway connects to BLE devices eligibles on ESP32
 

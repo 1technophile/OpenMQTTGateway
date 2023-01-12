@@ -11,6 +11,8 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 * Button C on M5Stack (GPIO 37)
 * Button lateral on M5stick (GPIO 35)
 
+You can also do a long press when powering the board so as to reset it.
+
 ### Low power mode for ESP32
 OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT:
 
@@ -51,7 +53,7 @@ The same behaviour apply to M5StickC and M5StickC Plus
 
 ### Setting the log output
 
-Per default the log of the M5 boards is going to the LCD display with Errors and Warnings only, if you want to change the ouput at build time you can do it in [config_M5.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_M5.h).
+Per default the log of the M5 boards is going to the LCD display with Errors and Warnings only, if you want to change the output at build time you can do it in [config_M5.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_M5.h).
 
 You can also change it by MQTT. For example if you want to set to LCD
 
@@ -78,3 +80,47 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC, M5stickC Plus and middle button of M5stack).
 If you are already in low power mode 1 or 2 with M5Stack you can wake up the board by pressing the red button.
+
+## SSD1306 Display boards ( Heltec SX127X 433Mhz boards and LILYGO® LoRa32 V2.1_1.6.1 433 Mhz )
+
+Several options are available for the display of information on the SSD1306 Display.  These options include display of the OMG logo and setup messages, redirecting of the log output to the display, and display of various module messages on the display.  These options are exclusive to each other, and when a different option is enabled, the current option is disabled.
+
+### Setting the log output
+
+The display of serial log messages to the display can be enabled via compiler directive `-DLOG_TO_LCD=true` or via MQTT commands.
+
+For example if you want to set the serial log to LCD
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":true}'`
+
+you can also revert it back to the serial monitor:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":false}'`
+
+The log level of the messages displayed is Errors and Warnings, and this can only be changed via the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.  
+
+### Displaying Module json messages ( default )
+
+The display of messages from various modules is also supported.  Currently supported modules include `ZgatewayRTL_433` and `ZsensorBME280`.
+
+This can be enabled with the compiler directive `-DJSON_TO_LCD=true`.
+
+You can also change it by MQTT. For example if you want to display module json messages:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"json-lcd":true}'`
+
+And to disable the display of module json messages:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-json":false}'`
+
+### Units for display, Metric or Imperial
+
+By default the display uses metric units, and this can be changed either by compiler directive or mqtt command.
+
+The compiler directive is `-DDISPLAY_METRIC=true`
+
+The mqtt command to change the units is:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
+
+Please note that it may take several seconds/display updates for the units to change.  This is due to the queueing of messages for display.

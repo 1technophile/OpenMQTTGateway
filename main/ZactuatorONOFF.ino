@@ -29,6 +29,14 @@
 #include "User_config.h"
 
 #ifdef ZactuatorONOFF
+unsigned long timeinttemp = 0;
+
+void setupONOFF() {
+  pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
+#  ifdef ACTUATOR_ONOFF_DEFAULT
+  digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
+#  endif
+}
 
 #  if jsonReceiving
 void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
@@ -96,15 +104,41 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
 }
 #  endif
 
-void ActuatorButtonTrigger() {
-  uint8_t level = !digitalRead(ACTUATOR_ONOFF_GPIO);
-  char* level_string = "ON";
-  if (level != ACTUATOR_ON) {
-    level_string = "OFF";
+//Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
+#  ifdef MAX_TEMP_ACTUATOR
+void OverHeatingRelayOFF() {
+#    if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG) // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+  if (millis() > (timeinttemp + TimeBetweenReadingIntTemp)) {
+    float internalTempc = intTemperatureRead();
+    Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
+    if (internalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+      Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
+      ActuatorManualTrigger(!ACTUATOR_ON);
+    }
+    timeinttemp = millis();
   }
-  Log.trace(F("Actuator triggered %s by button" CR), level_string);
+#    endif
+}
+#  else
+void OverHeatingRelayOFF() {}
+#  endif
+
+void ActuatorManualTrigger(uint8_t level) {
+#  ifdef ACTUATOR_BUTTON_TRIGGER_LEVEL
+  if (level == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
+    // Change level value to the opposite of the current level
+    level = !digitalRead(ACTUATOR_ONOFF_GPIO);
+  }
+#  else
+  level = !digitalRead(ACTUATOR_ONOFF_GPIO);
+#  endif
+  Log.trace(F("Actuator triggered %d" CR), level);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
-  pub(subjectGTWONOFFtoMQTT, level_string);
+  // Send the state of the switch to the broker so as to update the status
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
+  ONOFFdata["cmd"] = (int)level;
+  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
 }
 
 #endif

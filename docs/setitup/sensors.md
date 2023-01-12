@@ -2,15 +2,16 @@
 ## Compatible sensors
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|DHT11|Temperature and Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|DHT22|Temperature and Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|DHT11|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|DHT22|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |HCSR501|PIR|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |BH1750|Digital light|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|BME280|Temperature, Humidity and pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|BME280|Temperature, Humidity, Pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|BMP280|Temperature, Pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |HTU21|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |GPIO Input|Inputs|-|
 |GPIO KeyCode|Keycode|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|INA226|Current and voltage|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|INA226|Current, Voltage|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |TSL2561|Luminosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 ## Pinout
@@ -21,8 +22,8 @@
 |Analog reading|A0|A0|A0|
 |BH1750 SDA|A4|D2|21|
 |BH1750 SCL|A5|D1|22|
-|BME280 SDA|A4|D2|21|
-|BME280 SCL|A5|D1|22|
+|BME280/BMP280 SDA|A4|D2|21|
+|BME280/BMP280 SCL|A5|D1|22|
 |HTU21 SDA|A4|D2|21|
 |HTU21 SCL|A5|D1|22|
 |INA226 SDA|A4|D2|21|
