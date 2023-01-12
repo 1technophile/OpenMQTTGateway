@@ -18,7 +18,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 
 |Devices|Model|Measurements|
 |-|:-:|:-:|
-| Amazfit|Smart Watch/Band (1)|steps, activity heart rate (when activated in the Zepp Life settings)|
+| Amazfit|Smart Watch/Band|steps, activity heart rate (when activated in the Zepp Life settings)|
 | April Brother|ABTemp|uuid/mfid/major/txpower @ 1 m/temperature/battery|
 | April Brother|N03|temperature/humidity/luminance/battery|
 | ATorch Battery Capacity Monitor (c)|DT24|voltage/amp/watt|
@@ -45,16 +45,16 @@ Added to that it retrieves the measures from the devices below. By default the d
 | HONEYWELL|JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | Hydractiva Digital | Amphiro/Oras|sessions/time/litres/temperature/energy|
 | iBeacon|protocol|uuid/mfid/major/minor/txpower @ 1 m/voltage|
-| INKBIRD (1)|IBS-TH1|temperature/humidity/battery|
-| INKBIRD (1)|IBS-TH2/P01B|temperature/battery|
-| INKBIRD (1)|IBT-2X|temperature1/temperature2|
+| INKBIRD|IBS-TH1|temperature/humidity/battery|
+| INKBIRD|IBS-TH2/P01B|temperature/battery|
+| INKBIRD|IBT-2X|temperature1/temperature2|
 | INKBIRD|IBT-4X(S/C)|temperature1/temperature2/temperature3/temperature4|
-| INKBIRD (1)|IBT-6XS|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6|
-| iNode|Energy Meter (1)|Current average and aggregate kW(h)/m³/battery|
+| INKBIRD|IBT-6XS|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6|
+| iNode|Energy Meter|Current average and aggregate kW(h)/m³/battery|
 | Oria/Brifit/SigmaWit/SensorPro|TH Sensor T201|temperature/humidity/battery|
 | Oria/Brifit/SigmaWit/SensorPro|TH Sensor T301|temperature/humidity/battery|
-| Mokosmart (1)|M1|acceleration x/y/z-axis/battery|
-| Mokosmart (1)|H4|temperature/humidity/voltage|
+| Mokosmart|M1|acceleration x/y/z-axis/battery|
+| Mokosmart|H4|temperature/humidity/voltage|
 | Mopeka|Pro|temperature/level/sync status/voltage/battery/reading quality|
 | Otio/BeeWi|Door & Window Sensor|contact/battery|
 | Qingping|CGDK2|temperature/humidity|
@@ -85,20 +85,19 @@ Added to that it retrieves the measures from the devices below. By default the d
 | XIAOMI Ropot|HHCCPOT002|temperature/moisture/fertility|
 | XIAOMI Mi Jia|LYWSDCGO|temperature/humidity/battery|
 | XIAOMI Mi Jia|LYWSD02|temperature/humidity/battery|
-| XIAOMI Mi Jia 2 (1)(c)|LYWSD03MMC|temperature/humidity/battery/voltage|
+| XIAOMI Mi Jia 2(c)|LYWSD03MMC|temperature/humidity/battery/voltage|
 | XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/voltage|
 | XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/voltage|
 | XIAOMI Mi Lamp|MUE4094RT|presence|
-| XIAOMI Mi Smart Scale (1)|XMTZC01HM/XMTZC04HM|weighing mode/unit/weight|
-| XIAOMI Mi Body Composition Scale (1)|XMTZC02HM/XMTZC05HM|weighing mode/unit/weight/impedance|
-| XIAOMI Mi Temp/Humidity v1 (1)(c)|MHO-C401|temperature/humidity/battery/voltage|
-| XIAOMI Mi Temp/Humidity v2 (1)(c)|XMWSDJ04MMC|temperature/humidity/battery/voltage|
-| XIAOMI|Mi band (1)|steps/activity heart rate (when activated in the Zepp Life settings)|
+| XIAOMI Mi Smart Scale|XMTZC01HM/XMTZC04HM|weighing mode/unit/weight|
+| XIAOMI Mi Body Composition Scale|XMTZC02HM/XMTZC05HM|weighing mode/unit/weight/impedance|
+| XIAOMI Mi Temp/Humidity v1(c)|MHO-C401|temperature/humidity/battery/voltage|
+| XIAOMI Mi Temp/Humidity v2(c)|XMWSDJ04MMC|temperature/humidity/battery/voltage|
+| XIAOMI|Mi band|steps/activity heart rate (when activated in the Zepp Life settings)|
 
 Exhaustive list [here](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/)
 
 ::: tip
-- (1) Not supported with HM10.
 - (2) See https://github.com/atc1441/ATC_MiThermometer
 - (3) See https://github.com/pvvx/ATC_MiThermometer
 :::
