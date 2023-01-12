@@ -24,7 +24,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | ATorch Battery Capacity Monitor (c)|DT24|voltage/amp/watt|
 | BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
-| BlueMaestro|TempoDisc 2 in 1|temperature/battery|
+| BlueMaestro|TempoDisc 1 in 1|temperature/battery|
 | BlueMaestro|TempoDisc 3 in 1|temperature/humidity/dew point/battery|
 | BlueMaestro|TempoDisc 4 in 1|temperature/humidity/pressure/battery|
 | BM2 Battery Monitor|BM2|battery|
