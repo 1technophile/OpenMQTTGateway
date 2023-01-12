@@ -196,6 +196,10 @@ const char* certificate PROGMEM = R"EOF("
 #    define MQTT_SECURE_DEFAULT false
 #  endif
 
+#  ifndef MQTT_CERT_VALIDATE_DEFAULT
+#    define MQTT_CERT_VALIDATE_DEFAULT false
+#  endif
+
 #  ifndef AWS_IOT
 #    define AWS_IOT false
 #  endif
