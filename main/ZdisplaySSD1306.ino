@@ -234,7 +234,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             dtostrf(temperature_C, 3, 1, temp);
             line3 = "temp: " + (String)temp + "°C ";
           } else {
-            dtostrf(celsius2fahrenheit(temperature_C), 3, 1, temp);
+            dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
             line3 = "temp: " + (String)temp + "°F ";
           }
         }
@@ -253,7 +253,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             dtostrf(wind_avg_km_h, 3, 1, wind);
             line3 += "wind: " + (String)wind + "km/h ";
           } else {
-            dtostrf(kmph2mph(wind_avg_km_h), 3, 1, wind);
+            dtostrf(convert_kmph2mph(wind_avg_km_h), 3, 1, wind);
             line3 += "wind: " + (String)wind + "mp/h ";
           }
         }
@@ -297,7 +297,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             dtostrf(temperature_C, 3, 1, temp);
             line2 = "temp: " + (String)temp + "°C ";
           } else {
-            dtostrf(celsius2fahrenheit(temperature_C), 3, 1, temp);
+            dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
             line2 = "temp: " + (String)temp + "°F ";
           }
         }
@@ -324,7 +324,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
           dtostrf(pa, 3, 1, pressure);
           line4 = "pressure: " + (String)pressure + " hPa";
         } else {
-          dtostrf(hpa2inhg(pa), 3, 1, pressure);
+          dtostrf(convert_hpa2inhg(pa), 3, 1, pressure);
           line4 = "pressure: " + (String)pressure + " inHg";
         }
         line4.toCharArray(message->line4, OLED_TEXT_WIDTH);

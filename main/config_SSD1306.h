@@ -182,24 +182,20 @@ extern OledSerial Oled;
 
 /*------------------- Unit Conversion Functions ----------------------*/
 
-#define celsius2fahrenheit(celsius) (celsius * (9.0f / 5.0f) + 32)
+#define convert_kmph2mph(kmph) (kmph * (1.0f / 1.609344f))
 
-#define fahrenheit2celsius(fahrenheit) ((fahrenheit - 32) * (5.0f / 9.0f))
+#define convert_mph2kmph(mph) (mph * 1.609344f)
 
-#define kmph2mph(kmph) (kmph * (1.0f / 1.609344f))
+#define convert_mm2inch(mm) (mm * 0.039370f)
 
-#define mph2kmph(mph) (mph * 1.609344f)
+#define convert_inch2mm(inch) (inch * 25.4f)
 
-#define mm2inch(mm) (mm * 0.039370f)
+#define convert_kpa2psi(kpa) (kpa * (1.0f / 6.89475729f))
 
-#define inch2mm(inch) (inch * 25.4f)
+#define convert_psi2kpa(psi) (psi * 6.89475729f)
 
-#define kpa2psi(kpa) (kpa * (1.0f / 6.89475729f))
+#define convert_hpa2inhg(hpa) (hpa * (1.0f / 33.8639f))
 
-#define psi2kpa(psi) (psi * 6.89475729f)
-
-#define hpa2inhg(hpa) (hpa * (1.0f / 33.8639f))
-
-#define inhg2hpa(inhg) (inhg * 33.8639f)
+#define convert_inhg2hpa(inhg) (inhg * 33.8639f)
 
 #endif
