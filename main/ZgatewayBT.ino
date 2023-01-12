@@ -47,7 +47,6 @@ QueueHandle_t BLEQueue;
 #  include <esp_wifi.h>
 
 #  include <atomic>
-#  include <vector>
 
 #  include "ZgatewayBLEConnect.h"
 #  include "soc/timer_group_reg.h"
@@ -57,12 +56,6 @@ using namespace std;
 
 // Global struct to store live BT configuration data
 BTConfig_s BTConfig;
-
-#  define device_flags_init     0 << 0
-#  define device_flags_isDisc   1 << 0
-#  define device_flags_isWhiteL 1 << 1
-#  define device_flags_isBlackL 1 << 2
-#  define device_flags_connect  1 << 3
 
 TheengsDecoder decoder;
 
@@ -123,7 +116,7 @@ void BTConfig_update(JsonObject& data, const char* key, T& var) {
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
-  // Attempts to connect to elligible devices or not
+  // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
@@ -228,7 +221,7 @@ void BTConfig_load() {
     return;
   }
   JsonObject jo = jsonBuffer.as<JsonObject>();
-  BTConfig_fromJson(jo, true); // Never send mqtt message with config
+  BTConfig_fromJson(jo, true); // Never send MQTT message with config
   Log.notice(F("BT config loaded" CR));
 }
 
@@ -411,10 +404,6 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
 
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
 }
-
-#  define isWhite(device)      device->isWhtL
-#  define isBlack(device)      device->isBlkL
-#  define isDiscovered(device) device->isDisc
 
 void dumpDevices() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {

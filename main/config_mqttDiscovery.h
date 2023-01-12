@@ -86,7 +86,7 @@ extern void createDiscovery(const char* sensor_type,
                             const char* availability_topic, const char* device_class, const char* value_template,
                             const char* payload_on, const char* payload_off, const char* unit_of_meas,
                             int off_delay,
-                            const char* payload_available, const char* payload_not_avalaible, bool gateway_entity, const char* command_topic,
+                            const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* command_topic,
                             const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
                             const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr);
 
@@ -112,7 +112,9 @@ void announceDeviceTrigger(bool use_gateway_info,
                            char* device_model,
                            char* device_mac);
 
-#define discovery_Topic "homeassistant"
+#ifndef discovery_Topic
+#  define discovery_Topic "homeassistant"
+#endif
 // discovery_republish_on_reconnect false to publish discovery topics over MQTT only with first connect
 // discovery_republish_on_reconnect true to always republish discovery topics over MQTT when connection is re-established
 #ifndef discovery_republish_on_reconnect
@@ -254,6 +256,13 @@ const char* availableHASSUnits[] = {"W",
                                     "bpm",
                                     "dB",
                                     "dBm",
-                                    "B"};
+                                    "B",
+                                    "UV index",
+                                    "m/s",
+                                    "km/h",
+                                    "°",
+                                    "mm",
+                                    "mm/h",
+                                    "cm"};
 
 #endif

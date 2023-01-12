@@ -25,7 +25,7 @@ The gateway will need an MQTT username and password, you have to create a new us
 The max size of the username is 30 and 60 for the password.
 :::
 
-OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automaticaly.
+OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automatically.
 
 ![](../img/OpenMQTTGateway_auto_discovery_Gateway_Home_Assistant.gif)
 
@@ -33,15 +33,48 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 
 ![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
+::: info
+The Bluetooth and the RTL_433 gateway will create automatically devices and entities, the RF gateway will create DeviceTrigger.
+The OpenMQTTGateway will also be available as a device to monitor its parameters and control it. The sensors (DHT for example) and actuators (relays) are attached to the gateway.
+:::
+
+## RTL_433 auto discovery specificity
+
+Even if the RTL_433 gateway will create automatically the devices and entities, you may loose the link to them when you change the batteries. This is proper to the RF devices. In this case new device and entities will be created. You may bypass this by creating entities through manual configuration that filter following the device model and other parameters and don't take into account the id.
+Example:
+```yaml
+mqtt:
+  sensor:
+    - state_topic: "+/+/RTL_433toMQTT/WS2032/+"
+```
+instead of
+```yaml
+mqtt:
+  sensor:
+    - state_topic: "+/+/RTL_433toMQTT/WS2032/47998"
+```
+Note also that the sensor may leverage channels, types or subtypes, they can be used in the filtering 
+Example:
+In the example below 9 is the `subtype` and 1 is the `channel`
+```yaml
+mqtt:
+  sensor:
+    - state_topic: "+/+/RTL_433toMQTT/Prologue-TH/9/1/+"
+```
+instead of
+```yaml
+mqtt:
+  sensor:
+    - state_topic: "+/+/RTL_433toMQTT/Prologue-TH/9/1/215"
+```
+
+Alternatively the rssi signal could be used also.
 
 ## MQTT Device Trigger and RF
 
 With OpenMQTTGateway [configured to receive RF signals](./setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](./use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a signal. 
 
 With autodiscovery enabled, HomeAssistant will discover a [MQTT Device Trigger](https://www.home-assistant.io/integrations/device_trigger.mqtt/) identified by the value field given in the mqtt argument. 
-
-
-
 
 ## Manual integration examples
 From @123, @finity, @denniz03, @jrockstad, @anarchking, @dkluivingh

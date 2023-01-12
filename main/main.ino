@@ -201,6 +201,17 @@ unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
+#  include <vector>
+// Flags definition for white list, black list, discovery management
+#  define device_flags_init     0 << 0
+#  define device_flags_isDisc   1 << 0
+#  define device_flags_isWhiteL 1 << 1
+#  define device_flags_isBlackL 1 << 2
+#  define device_flags_connect  1 << 3
+#  define isWhite(device)       device->isWhtL
+#  define isBlack(device)       device->isBlkL
+#  define isDiscovered(device)  device->isDisc
+
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
@@ -216,6 +227,14 @@ static String ota_server_cert = "";
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 
+#  if defined(SENS_SAR_MEAS_WAIT2_REG)
+// ESP32 internal temperature reading
+#    include <stdio.h>
+
+#    include "rom/ets_sys.h"
+#    include "soc/rtc_cntl_reg.h"
+#    include "soc/sens_reg.h"
+#  endif
 #  ifdef ESP32_ETHERNET
 #    include <ETH.h>
 void WiFiEvent(WiFiEvent_t event);
@@ -323,7 +342,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  * @brief Publish the payload on default MQTT topic
  *
  * @param topicori suffix to add on default MQTT Topic
- * @param data The Json Object that rapresent the message
+ * @param data The Json Object that represents the message
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
@@ -386,10 +405,10 @@ void pub(const char* topicori, const char* payload) {
 }
 
 /**
- * @brief Publish the payload on the topic with a retantion
+ * @brief Publish the payload on the topic with a retention
  *
  * @param topic  The topic where to publish
- * @param data   The Json Object that rapresent the message
+ * @param data   The Json Object that represents the message
  * @param retain true if you what a retain
  */
 void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
@@ -622,7 +641,7 @@ void connectMQTT() {
 // Callback function, when the gateway receive an MQTT value on the topics subscribed this function is called
 void callback(char* topic, byte* payload, unsigned int length) {
   // In order to republish this payload, a copy must be made
-  // as the orignal payload buffer will be overwritten whilst
+  // as the original payload buffer will be overwritten whilst
   // constructing the PUBLISH packet.
   Log.trace(F("Hey I got a callback %s" CR), topic);
   // Allocate the correct amount of memory for the payload copy
@@ -1565,11 +1584,18 @@ void loop() {
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
 #endif
+#ifdef ZactuatorONOFF
+      OverHeatingRelayOFF();
+#endif
 #ifdef ZactuatorPWM
       PWMLoop();
 #endif
 #ifdef ZgatewayRTL_433
       RTL_433Loop();
+#  ifdef ZmqttDiscovery
+      if (disc)
+        launchRTL_433Discovery(publishDiscovery);
+#  endif
 #endif
     } else {
       // MQTT disconnected
@@ -1616,13 +1642,32 @@ unsigned long uptime() {
   return uptime;
 }
 
+/**
+ * Calculate internal ESP32 temperature
+ */
+#if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG)
+float intTemperatureRead() {
+  SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
+  SET_PERI_REG_BITS(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_CLK_DIV, 10, SENS_TSENS_CLK_DIV_S);
+  CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP);
+  CLEAR_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_DUMP_OUT);
+  SET_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP_FORCE);
+  SET_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_POWER_UP);
+  ets_delay_us(100);
+  SET_PERI_REG_MASK(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_DUMP_OUT);
+  ets_delay_us(5);
+  float temp_f = (float)GET_PERI_REG_BITS2(SENS_SAR_SLAVE_ADDR3_REG, SENS_TSENS_OUT, SENS_TSENS_OUT_S);
+  float temp_c = (temp_f - 32) / 1.8;
+  return temp_c;
+}
+#endif
+
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
-  Log.trace(F("retrieving value of system characteristics Uptime (s):%u" CR), uptime());
 #  if defined(ESP8266) || defined(ESP32)
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
@@ -1630,6 +1675,9 @@ void stateMeasures() {
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
+#      ifdef SENS_SAR_MEAS_WAIT2_REG // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+  SYSdata["tempc"] = intTemperatureRead();
+#      endif
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
 #    ifdef ESP32_ETHERNET
@@ -1699,6 +1747,7 @@ void stateMeasures() {
 #  endif
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
+  pubOled(subjectSYStoMQTT, SYSdata);
 }
 #endif
 
