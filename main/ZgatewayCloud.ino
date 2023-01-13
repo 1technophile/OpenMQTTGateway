@@ -48,33 +48,37 @@ typedef struct cloudMsg {
   char topic[mqtt_topic_max_size];
   char payload[mqtt_max_packet_size];
   bool retain;
-} cloudMsg_t;
+};
 
 void cloudCallback(char* topic, byte* payload, unsigned int length) {
   byte* p = (byte*)malloc(length + 1);
-  // Copy the payload to the new buffer
-  memcpy(p, payload, length);
-  // Conversion to a printable string
-  p[length] = '\0';
+  if (p != NULL) {
+    // Copy the payload to the new buffer
+    memcpy(p, payload, length);
+    // Conversion to a printable string
+    p[length] = '\0';
 
-  Log.trace(F("[ CLOUD->OMG ] message Received: %s" CR), topic);
-  displayPrint("[ CLOUD->OMG ] Received:", topic);
+    Log.trace(F("[ CLOUD->OMG ] message Received: %s" CR), topic);
+    displayPrint("[ CLOUD->OMG ] Received:", topic);
 
-  // normalize cloud topic to be similar to local mqtt topic
-  topic += cloudTopic.length();
+    // normalize cloud topic to be similar to local mqtt topic
+    topic += cloudTopic.length();
 
-  char localTopic[mqtt_max_packet_size];
-  (String(mqtt_topic) + String(gateway_name) + String(topic)).toCharArray(localTopic, mqtt_max_packet_size);
-  // Log.notice(F("Normalized topic: %s" CR), localTopic);
+    char localTopic[mqtt_max_packet_size];
+    (String(mqtt_topic) + String(gateway_name) + String(topic)).toCharArray(localTopic, mqtt_max_packet_size);
+    // Log.notice(F("Normalized topic: %s" CR), localTopic);
 
-  //launch the function to treat received data if this data concern OpenMQTTGateway
-  if ((strstr(localTopic, subjectMultiGTWKey) != NULL) ||
-      (strstr(localTopic, subjectGTWSendKey) != NULL) ||
-      (strstr(localTopic, subjectFWUpdate) != NULL))
-    receivingMQTT(localTopic, (char*)p);
+    //launch the function to treat received data if this data concern OpenMQTTGateway
+    if ((strstr(localTopic, subjectMultiGTWKey) != NULL) ||
+        (strstr(localTopic, subjectGTWSendKey) != NULL) ||
+        (strstr(localTopic, subjectFWUpdate) != NULL))
+      receivingMQTT(localTopic, (char*)p);
 
-  // Free the memory
-  free(p);
+    // Free the memory
+    free(p);
+  } else {
+    Log.error(F("[ CLOUD ] insufficent memory " CR));
+  }
 }
 
 void reconnect() {
@@ -117,7 +121,7 @@ void setupCloud() {
   cloud.setServer("omgpoc.homebridge.ca", 8883);
 
   // Create queue for cloud messages
-  omgCloudQueue = xQueueCreate(20, sizeof(cloudMsg_t*));
+  omgCloudQueue = xQueueCreate(20, sizeof(cloudMsg*));
   omgCloudSemaphore = xSemaphoreCreateBinary();
   xSemaphoreGive(omgCloudSemaphore);
 
@@ -133,42 +137,50 @@ void CloudLoop() {
 
   if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
     if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
-      cloudMsg_t* omgCloudMessage = nullptr;
-      if (cloud.connected() && xQueueReceive(omgCloudQueue,
-                                             &omgCloudMessage,
-                                             (TickType_t)10) == pdPASS) {
-        Log.verbose(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
-        if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
-          Log.error(F("Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
-        } else {
-          Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+      if (cloud.connected()) {
+        cloudMsg* omgCloudMessage = nullptr;
+        if (xQueueReceive(omgCloudQueue,
+                          &omgCloudMessage,
+                          (TickType_t)10) == pdPASS) {
+          Log.verbose(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+          if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
+            Log.error(F("[ CLOUD ] Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
+          } else {
+            Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+          }
+          free(omgCloudMessage);
         }
       }
-      free(omgCloudMessage);
       xSemaphoreGive(omgCloudSemaphore);
     }
   }
 }
 
 void pubOmgCloud(const char* topic, const char* payload, bool retain) {
-  Log.verbose(F("[ OMG->CLOUD ] place on queue topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
+  Log.trace(F("[ OMG->CLOUD ] place on queue topic: %s msg: %s " CR), (cloudTopic + '/' + String(topic)).c_str(), payload);
 
-  cloudMsg_t* omgCloudMessage = (cloudMsg_t*)calloc(1, sizeof(cloudMsg_t));
-  if (strncmp(topic, discovery_Topic, strlen(discovery_Topic)) != 0) {
-    topic += strlen(mqtt_topic);
-    topic += strlen(gateway_name);
-    strcpy(omgCloudMessage->topic, (cloudTopic + String(topic)).c_str());
-  } else {
-    strcpy(omgCloudMessage->topic, (cloudTopic + '/' + String(topic)).c_str());
-  }
+  cloudMsg* omgCloudMessage = (cloudMsg*)malloc(sizeof(cloudMsg));
+  if (omgCloudMessage != NULL) {
+    String messageTopic;
 
-  strcpy(omgCloudMessage->payload, payload);
-  omgCloudMessage->retain = retain;
-  if (xQueueSend(omgCloudQueue, &omgCloudMessage, 0) != pdTRUE) {
-    Log.warning(F("omgCloudQueue full, discarding signal topic: %s msg: %s " CR), (cloudTopic + String(topic)).c_str(), payload);
-    free(omgCloudMessage);
-    displayPrint("[ CLOUD ] discarding");
+    if (strncmp(topic, discovery_Topic, strlen(discovery_Topic)) != 0) {
+      messageTopic = cloudTopic + String(topic + (strlen(mqtt_topic) + strlen(gateway_name)));
+    } else {
+      messageTopic = cloudTopic + '/' + String(topic);
+    }
+    messageTopic.toCharArray(omgCloudMessage->topic, mqtt_topic_max_size);
+
+    omgCloudMessage->retain = retain;
+    strlcpy(omgCloudMessage->payload, payload, mqtt_max_packet_size);
+
+    if (xQueueSend(omgCloudQueue, (void*)&omgCloudMessage, 0) != pdTRUE) {
+      Log.warning(F("[ CLOUD ] omgCloudQueue full, discarding signal topic: %s msg: %s " CR), omgCloudMessage->topic, payload);
+      free(omgCloudMessage);
+      displayPrint("[ CLOUD ] discarding");
+    } else {
+    }
   } else {
+    Log.error(F("[ CLOUD ] insufficent memory %s" CR), topic);
   }
 }
 
