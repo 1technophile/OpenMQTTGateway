@@ -230,8 +230,7 @@ static String ota_server_cert = "";
 #  include <nvs_flash.h>
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
-
-#  if defined(SENS_SAR_MEAS_WAIT2_REG)
+#  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
 #    include <stdio.h>
 
@@ -1663,7 +1662,7 @@ unsigned long uptime() {
 /**
  * Calculate internal ESP32 temperature
  */
-#if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG)
+#if defined(ESP32) && !defined(NO_INT_TEMP_READING)
 float intTemperatureRead() {
   SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
   SET_PERI_REG_BITS(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_CLK_DIV, 10, SENS_TSENS_CLK_DIV_S);
@@ -1693,7 +1692,7 @@ void stateMeasures() {
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
-#      ifdef SENS_SAR_MEAS_WAIT2_REG // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+#      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
 #      endif
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
