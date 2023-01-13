@@ -107,7 +107,7 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
 //Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
 #  ifdef MAX_TEMP_ACTUATOR
 void OverHeatingRelayOFF() {
-#    if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG) // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+#    if defined(ESP32) && !defined(NO_INT_TEMP_READING)
   if (millis() > (timeinttemp + TimeBetweenReadingIntTemp)) {
     float internalTempc = intTemperatureRead();
     Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
