@@ -50,6 +50,9 @@ typedef struct cloudMsg {
   bool retain;
 };
 
+unsigned long reconnectTime = uptime();
+#  define RECONNECT_DELAY 35
+
 void cloudCallback(char* topic, byte* payload, unsigned int length) {
   byte* p = (byte*)malloc(length + 1);
   if (p != NULL) {
@@ -59,7 +62,7 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
     p[length] = '\0';
 
     Log.trace(F("[ CLOUD->OMG ] message Received: %s" CR), topic);
-    displayPrint("[ CLOUD->OMG ] Received:", topic);
+    // displayPrint("[ CLOUD->OMG ] Received:", topic);
 
     // normalize cloud topic to be similar to local mqtt topic
     topic += cloudTopic.length();
@@ -81,27 +84,22 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-void reconnect() {
-  // Loop until we're reconnected
-  while (!cloud.connected()) {
-    Log.notice(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(device)).c_str(), device, token);
-    if (cloud.connect(("omgDevice-" + String(device)).c_str(), device, token, (cloudTopic + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
-      displayPrint("[ CLOUD ] connected");
-      Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
-
-      // ... and resubscribe
-      cloud.setCallback(cloudCallback);
-      String topic = "omgCloudSub/omgClient-" + String(account) + "/" + String(device) + "/#";
-      if (!cloud.subscribe(topic.c_str())) {
-        Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
-      };
-      Log.verbose(F("[ CLOUD ] OMG Cloud subscribing to %s" CR), topic.c_str());
-      // Need to use the central cloud.publish
-      pubOmgCloud((String(mqtt_topic) + String(gateway_name) + will_Topic).c_str(), Gateway_AnnouncementMsg, will_Retain);
-    } else {
-      Log.error(F("[ CLOUD ] OMG Cloud connection failed: rc=%d, retrying in 35 seconds." CR), cloud.state());
-      delay(35000);
-    }
+void cloudConnect() {
+  Log.warning(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(device)).c_str(), device, token);
+  if (cloud.connect(("omgDevice-" + String(device)).c_str(), device, token, (cloudTopic + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
+    displayPrint("[ CLOUD ] connected");
+    Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
+    cloud.setCallback(cloudCallback);
+    String topic = cloudTopic + subjectMQTTtoX;
+    if (!cloud.subscribe(topic.c_str())) {
+      Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
+    };
+    Log.verbose(F("[ CLOUD ] OMG Cloud subscribing to %s" CR), topic.c_str());
+    // Need to use the central cloud.publish
+    pubOmgCloud((String(mqtt_topic) + String(gateway_name) + will_Topic).c_str(), Gateway_AnnouncementMsg, will_Retain);
+  } else {
+    Log.error(F("[ CLOUD ] OMG Cloud connection failed: rc=%d, retrying in %d seconds." CR), cloud.state(), RECONNECT_DELAY);
+    reconnectTime = uptime() + RECONNECT_DELAY;
   }
 }
 
@@ -125,19 +123,20 @@ void setupCloud() {
   omgCloudSemaphore = xSemaphoreCreateBinary();
   xSemaphoreGive(omgCloudSemaphore);
 
-  reconnect();
+  cloudConnect();
   Log.notice(F("ZgatewayCloud setup done" CR));
 }
 
 void CloudLoop() {
   if (!cloud.connected()) {
-    reconnect();
-  }
-  cloud.loop();
+    if (uptime() > reconnectTime) {
+      cloudConnect();
+    }
+  } else {
+    cloud.loop();
 
-  if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
-    if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
-      if (cloud.connected()) {
+    if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
+      if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
         cloudMsg* omgCloudMessage = nullptr;
         if (xQueueReceive(omgCloudQueue,
                           &omgCloudMessage,
@@ -145,13 +144,14 @@ void CloudLoop() {
           Log.verbose(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
           if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
             Log.error(F("[ CLOUD ] Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
+            reconnectTime = uptime() + RECONNECT_DELAY;
           } else {
             Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
           }
           free(omgCloudMessage);
         }
+        xSemaphoreGive(omgCloudSemaphore);
       }
-      xSemaphoreGive(omgCloudSemaphore);
     }
   }
 }
