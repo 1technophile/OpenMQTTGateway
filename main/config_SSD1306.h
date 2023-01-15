@@ -66,6 +66,10 @@
 #  define DISPLAY_METRIC true // Units used for display of sensor data
 #endif
 
+#ifndef DISPLAY_FLIP
+#  define DISPLAY_FLIP true // Flip display orientation
+#endif
+
 /*------------------- DEFAULT DISPLAY GEOMETRY ----------------------*/
 
 #define OLED_TEXT_BUFFER 1000

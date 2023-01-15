@@ -570,7 +570,6 @@ void connectMQTT() {
 #  endif
 #endif
 
-  Log.warning(F("MQTT connection..." CR));
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
   strcat(topic, gateway_name);
@@ -581,9 +580,8 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
-
+    Log.warning(F("MQTT connected" CR));
     displayPrint("MQTT connected");
-    Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
@@ -761,6 +759,10 @@ void setup() {
 
   delay(1500);
 
+#ifdef ZgatewayCloud
+  setupCloud();
+  modules.add(ZgatewayCloud);
+#endif
 #ifdef ZactuatorONOFF
   setupONOFF();
   modules.add(ZactuatorONOFF);
@@ -893,10 +895,6 @@ void setup() {
 #endif
 #ifdef ZsensorSHTC3
   setupSHTC3();
-#endif
-#ifdef ZgatewayCloud
-  setupCloud();
-  modules.add(ZgatewayCloud);
 #endif
 #ifdef ZgatewayRTL_433
   setupRTL_433();
@@ -1098,7 +1096,7 @@ void setup_wifi() {
     }
 #  endif
   }
-  Log.notice(F("WiFi ok with manual config credentials" CR));
+  Log.warning(F("WiFi ok with manual config credentials" CR));
   displayPrint("Wifi connected");
 }
 
@@ -1333,6 +1331,7 @@ void setup_wifimanager(bool reset_settings) {
   }
 
   displayPrint("Wifi connected");
+  Log.warning(F("Wifi connected"));
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -1692,6 +1691,7 @@ void stateMeasures() {
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
+  SYSdata["maxBlock"] = ESP.getMaxAllocHeap();
 #      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
 #      endif
