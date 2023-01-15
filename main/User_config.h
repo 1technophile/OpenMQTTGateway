@@ -196,6 +196,10 @@ const char* certificate PROGMEM = R"EOF("
 #    define MQTT_SECURE_DEFAULT false
 #  endif
 
+#  ifndef MQTT_CERT_VALIDATE_DEFAULT
+#    define MQTT_CERT_VALIDATE_DEFAULT false
+#  endif
+
 #  ifndef AWS_IOT
 #    define AWS_IOT false
 #  endif
@@ -497,6 +501,7 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
 //#  define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
 #elif ESP32
 //#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
+//#  define NO_INT_TEMP_READING true //Define if we don't want internal temperature reading for the ESP32
 #endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN

@@ -213,6 +213,7 @@ static unsigned long last_ota_activity_millis = 0;
 #  define isDiscovered(device)  device->isDisc
 
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
+static bool mqtt_cert_validate = MQTT_CERT_VALIDATE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
 static String mqtt_cert = "";
 static String ota_server_cert = "";
@@ -226,8 +227,7 @@ static String ota_server_cert = "";
 #  include <nvs_flash.h>
 
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
-
-#  if defined(SENS_SAR_MEAS_WAIT2_REG)
+#  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
 #    include <stdio.h>
 
@@ -729,7 +729,12 @@ void setup() {
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
     eClient = new WiFiClientSecure;
-    setupTLS(MQTT_SECURE_SELF_SIGNED, mqtt_ss_index);
+    if (mqtt_cert_validate) {
+      setupTLS(MQTT_SECURE_SELF_SIGNED, mqtt_ss_index);
+    } else {
+      WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
+      sClient->setInsecure();
+    }
   } else {
     eClient = new WiFiClient;
   }
@@ -1645,7 +1650,7 @@ unsigned long uptime() {
 /**
  * Calculate internal ESP32 temperature
  */
-#if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG)
+#if defined(ESP32) && !defined(NO_INT_TEMP_READING)
 float intTemperatureRead() {
   SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 3, SENS_FORCE_XPD_SAR_S);
   SET_PERI_REG_BITS(SENS_SAR_TSENS_CTRL_REG, SENS_TSENS_CLK_DIV, 10, SENS_TSENS_CLK_DIV_S);
@@ -1675,7 +1680,7 @@ void stateMeasures() {
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
-#      ifdef SENS_SAR_MEAS_WAIT2_REG // This macro is necessary to retrieve temperature and not present with S3 and C3 environment
+#      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
 #      endif
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);

@@ -420,7 +420,7 @@ void pubMqttDiscovery() {
   );
 #    endif
 #  endif
-#  if defined(ESP32) && defined(SENS_SAR_MEAS_WAIT2_REG)
+#  if defined(ESP32) && !defined(NO_INT_TEMP_READING)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Internal temperature", (char*)getUniqueId("tempc", "").c_str(), //set state_topic,name,uniqueId
                   "", "temperature", "{{ value_json.tempc }}", //set availability_topic,device_class,value_template,
