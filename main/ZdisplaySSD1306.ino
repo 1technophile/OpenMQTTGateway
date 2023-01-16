@@ -44,6 +44,7 @@ QueueHandle_t displayQueue;
 boolean logToLCDDisplay = LOG_TO_LCD;
 boolean jsonDisplay = JSON_TO_LCD;
 boolean displayMetric = DISPLAY_METRIC;
+boolean displayFlip = DISPLAY_FLIP;
 
 /*
 Toogle log display
@@ -64,6 +65,7 @@ void setupSSD1306() {
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), DISPLAY_IDLE_LOGO);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
 
   Oled.begin();
   Log.notice(F("Setup SSD1306 Display end" CR));
@@ -141,14 +143,23 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       success = true;
     } else if (SSD1306data.containsKey("display-metric")) {
       displayMetric = SSD1306data["display-metric"];
-      Log.notice(F("Set display-metric: %T" CR), jsonDisplay);
+      Log.notice(F("Set display-metric: %T" CR), displayMetric);
+      success = true;
+    } else if (SSD1306data.containsKey("display-flip")) {
+      displayFlip = SSD1306data["display-flip"];
+      Log.notice(F("Set display-flip: %T" CR), displayFlip);
+      if (displayFlip) {
+        Oled.display->flipScreenVertically();
+      } else {
+        Oled.display->resetOrientation();
+      }
       success = true;
     }
     if (success) {
       pub(subjectSSD1306toMQTTset, SSD1306data);
     } else {
       pub(subjectSSD1306toMQTTset, "{\"Status\": \"Error\"}"); // Fail feedback
-      Log.error(F("MQTTtoSSD1306 Fail json" CR), SSD1306data);
+      Log.error(F("[ SSD1306 ] MQTTtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
 }
@@ -166,182 +177,246 @@ Parse json message from module into a format for displaying on screen, and queue
 void ssd1306PubPrint(const char* topicori, JsonObject& data) {
   if (jsonDisplay) {
     displayQueueMessage* message = (displayQueueMessage*)malloc(sizeof(displayQueueMessage));
+    if (message != NULL) {
+      char* topic = strdup(topicori);
+      strlcpy(message->title, strtok(topic, "/"), OLED_TEXT_WIDTH);
+      free(topic);
 
-    char* topic = strdup(topicori);
-    strlcpy(message->title, strtok(topic, "/"), OLED_TEXT_WIDTH);
-    free(topic);
+      switch (hash(message->title)) {
+        case hash("SYStoMQTT"): {
+          // {"uptime":456356,"version":"lilygo-rtl_433-test-A-v1.1.1-25-g574177d[lily-cloud]","freemem":125488,"mqttport":"1883","mqttsecure":false,"freestack":3752,"rssi":-36,"SSID":"The_Beach","BSSID":"64:A5:C3:69:C3:38","ip":"192.168.1.239","mac":"4C:75:25:A8:D5:D8","actRec":3,"mhz":433.92,"RTLRssiThresh":-98,"RTLRssi":-108,"RTLAVGRssi":-107,"RTLCnt":121707,"RTLOOKThresh":90,"modules":["LILYGO_OLED","CLOUD","rtl_433"]}
 
-    switch (hash(message->title)) {
-      case hash("SYStoMQTT"): {
-        // {"uptime":456356,"version":"lilygo-rtl_433-test-A-v1.1.1-25-g574177d[lily-cloud]","freemem":125488,"mqttport":"1883","mqttsecure":false,"freestack":3752,"rssi":-36,"SSID":"The_Beach","BSSID":"64:A5:C3:69:C3:38","ip":"192.168.1.239","mac":"4C:75:25:A8:D5:D8","actRec":3,"mhz":433.92,"RTLRssiThresh":-98,"RTLRssi":-108,"RTLAVGRssi":-107,"RTLCnt":121707,"RTLOOKThresh":90,"modules":["LILYGO_OLED","CLOUD","rtl_433"]}
+          // Line 1
 
-        // Line 1
+          strlcpy(message->line1, data["version"], OLED_TEXT_WIDTH);
 
-        strlcpy(message->line1, data["version"], OLED_TEXT_WIDTH);
+          // Line 2
 
-        // Line 2
+          String uptime = data["uptime"];
+          String line2 = "uptime: " + uptime;
+          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
 
-        String uptime = data["uptime"];
-        String line2 = "uptime: " + uptime;
-        line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
+          // Line 3
 
-        // Line 3
+          String freemem = data["freemem"];
+          String line3 = "freemem: " + freemem;
+          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
 
-        String freemem = data["freemem"];
-        String line3 = "freemem: " + freemem;
-        line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
+          // Line 4
 
-        // Line 4
+          String ip = data["ip"];
+          String line4 = "ip: " + ip;
+          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
 
-        String ip = data["ip"];
-        String line4 = "ip: " + ip;
-        line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
+          // Queue completed message
 
-        // Queue completed message
-
-        if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-          Log.error(F("ERROR: displayQueue full, discarding signal %s" CR), message->title);
-        } else {
-          // Log.notice(F("Queued %s" CR), message->title);
+          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ SSD1306 ] ERROR: displayQueue full, discarding signal %s" CR), message->title);
+          } else {
+            // Log.notice(F("Queued %s" CR), message->title);
+          }
+          break;
         }
-        break;
-      }
 
 #  ifdef ZgatewayRTL_433
-      case hash("RTL_433toMQTT"): {
-        // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
+        case hash("RTL_433toMQTT"): {
+          // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
 
-        // Line 1
+          // Line 1
 
-        strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
+          strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
 
-        // Line 2
+          // Line 2
 
-        String id = data["id"];
-        String channel = data["channel"];
-        String line2 = "id: " + id + " channel: " + channel;
-        line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
+          String id = data["id"];
+          String channel = data["channel"];
+          String line2 = "id: " + id + " channel: " + channel;
+          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
 
-        // Line 3
+          // Line 3
 
-        String line3 = "";
+          String line3 = "";
 
-        if (data.containsKey("temperature_C")) {
-          float temperature_C = data["temperature_C"];
-          char temp[5];
+          if (data.containsKey("temperature_C")) {
+            float temperature_C = data["temperature_C"];
+            char temp[5];
 
-          if (displayMetric) {
-            dtostrf(temperature_C, 3, 1, temp);
-            line3 = "temp: " + (String)temp + "°C ";
-          } else {
-            dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
-            line3 = "temp: " + (String)temp + "°F ";
+            if (displayMetric) {
+              dtostrf(temperature_C, 3, 1, temp);
+              line3 = "temp: " + (String)temp + "°C ";
+            } else {
+              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+              line3 = "temp: " + (String)temp + "°F ";
+            }
           }
-        }
 
-        float humidity = data["humidity"];
-        if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
-          char hum[5];
-          dtostrf(humidity, 3, 1, hum);
-          line3 += "hum: " + (String)hum + "% ";
-        }
-        if (data.containsKey("wind_avg_km_h")) {
-          float wind_avg_km_h = data["wind_avg_km_h"];
-          char wind[6];
-
-          if (displayMetric) {
-            dtostrf(wind_avg_km_h, 3, 1, wind);
-            line3 += "wind: " + (String)wind + "km/h ";
-          } else {
-            dtostrf(convert_kmph2mph(wind_avg_km_h), 3, 1, wind);
-            line3 += "wind: " + (String)wind + "mp/h ";
+          float humidity = data["humidity"];
+          if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
+            char hum[5];
+            dtostrf(humidity, 3, 1, hum);
+            line3 += "hum: " + (String)hum + "% ";
           }
+          if (data.containsKey("wind_avg_km_h")) {
+            float wind_avg_km_h = data["wind_avg_km_h"];
+            char wind[6];
+
+            if (displayMetric) {
+              dtostrf(wind_avg_km_h, 3, 1, wind);
+              line3 += "wind: " + (String)wind + "km/h ";
+            } else {
+              dtostrf(convert_kmph2mph(wind_avg_km_h), 3, 1, wind);
+              line3 += "wind: " + (String)wind + "mp/h ";
+            }
+          }
+
+          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
+
+          // Line 4
+
+          String rssi = data["rssi"];
+          String battery_ok = data["battery_ok"];
+
+          String line4 = "batt: " + battery_ok + " rssi: " + rssi;
+          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
+
+          // Queue completed message
+
+          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
+          } else {
+            // Log.notice(F("Queued %s" CR), message->title);
+          }
+          break;
         }
-
-        line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-
-        // Line 4
-
-        String rssi = data["rssi"];
-        String battery_ok = data["battery_ok"];
-
-        String line4 = "batt: " + battery_ok + " rssi: " + rssi;
-        line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-        // Queue completed message
-
-        if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-          Log.error(F("ERROR: displayQueue full, discarding signal %s" CR), message->title);
-        } else {
-          // Log.notice(F("Queued %s" CR), message->title);
-        }
-        break;
-      }
 #  endif
 #  ifdef ZsensorBME280
-      case hash("CLIMAtoMQTT"): {
-        // {"tempc":17.06,"tempf":62.708,"hum":50.0752,"pa":98876.14,"altim":205.8725,"altift":675.4348}
+        case hash("CLIMAtoMQTT"): {
+          // {"tempc":17.06,"tempf":62.708,"hum":50.0752,"pa":98876.14,"altim":205.8725,"altift":675.4348}
 
-        // Line 1
+          // Line 1
 
-        strlcpy(message->line1, "bme280", OLED_TEXT_WIDTH);
+          strlcpy(message->line1, "bme280", OLED_TEXT_WIDTH);
 
-        // Line 2
+          // Line 2
 
-        String line2 = "";
-        if (data.containsKey("tempc")) {
-          char temp[5];
-          float temperature_C = data["tempc"];
+          String line2 = "";
+          if (data.containsKey("tempc")) {
+            char temp[5];
+            float temperature_C = data["tempc"];
 
-          if (displayMetric) {
-            dtostrf(temperature_C, 3, 1, temp);
-            line2 = "temp: " + (String)temp + "°C ";
-          } else {
-            dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
-            line2 = "temp: " + (String)temp + "°F ";
+            if (displayMetric) {
+              dtostrf(temperature_C, 3, 1, temp);
+              line2 = "temp: " + (String)temp + "°C ";
+            } else {
+              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+              line2 = "temp: " + (String)temp + "°F ";
+            }
           }
+          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
+
+          // Line 3
+
+          String line3 = "";
+          float humidity = data["hum"];
+          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
+            char hum[5];
+            dtostrf(humidity, 3, 1, hum);
+            line3 += "hum: " + (String)hum + "% ";
+          }
+          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
+
+          // Line 4
+
+          float pa = (int)data["pa"] / 100;
+          char pressure[6];
+
+          String line4 = "";
+          if (displayMetric) {
+            dtostrf(pa, 3, 1, pressure);
+            line4 = "pressure: " + (String)pressure + " hPa";
+          } else {
+            dtostrf(convert_hpa2inhg(pa), 3, 1, pressure);
+            line4 = "pressure: " + (String)pressure + " inHg";
+          }
+          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
+
+          // Queue completed message
+
+          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
+            free(message);
+          } else {
+            // Log.notice(F("Queued %s" CR), message->title);
+          }
+          break;
         }
-        line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-
-        // Line 3
-
-        String line3 = "";
-        float humidity = data["hum"];
-        if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-          char hum[5];
-          dtostrf(humidity, 3, 1, hum);
-          line3 += "hum: " + (String)hum + "% ";
-        }
-        line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-
-        // Line 4
-
-        float pa = (int)data["pa"] / 100;
-        char pressure[6];
-
-        String line4 = "";
-        if (displayMetric) {
-          dtostrf(pa, 3, 1, pressure);
-          line4 = "pressure: " + (String)pressure + " hPa";
-        } else {
-          dtostrf(convert_hpa2inhg(pa), 3, 1, pressure);
-          line4 = "pressure: " + (String)pressure + " inHg";
-        }
-        line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-        // Queue completed message
-
-        if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-          Log.error(F("ERROR: displayQueue full, discarding signal %s" CR), message->title);
-          free(message);
-        } else {
-          // Log.notice(F("Queued %s" CR), message->title);
-        }
-        break;
-      }
 #  endif
-      default:
-        Log.error(F("ERROR: unhandled topic %s" CR), message->title);
+#  ifdef ZgatewayBT
+        case hash("BTtoMQTT"): {
+          // {"id":"49:22:07:07:1C:F6","mac_type":0,"name":"sps","rssi":-87,"brand":"Inkbird","model":"TH Sensor","model_id":"IBS-TH1","cidc":false,"tempc":0.8,"tempf":33.44,"hum":29.61,"batt":100}
+
+          // Line 1
+
+          strlcpy(message->line1, data["brand"], OLED_TEXT_WIDTH);
+
+          // Line 2
+
+          strlcpy(message->line2, data["model_id"], OLED_TEXT_WIDTH);
+
+          // Line 3
+
+          String line3 = "";
+
+          if (data.containsKey("tempc")) {
+            float temperature_C = data["tempc"];
+            char temp[5];
+
+            if (displayMetric) {
+              dtostrf(temperature_C, 3, 1, temp);
+              line3 = "temp: " + (String)temp + "°C ";
+            } else {
+              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+              line3 = "temp: " + (String)temp + "°F ";
+            }
+          }
+
+          float humidity = data["hum"];
+          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
+            char hum[5];
+            dtostrf(humidity, 3, 1, hum);
+            line3 += "hum: " + (String)hum + "% ";
+          }
+
+          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
+
+          // Line 4
+
+          String rssi = data["rssi"];
+          String battery_ok = data["batt"];
+
+          String line4;
+          if (data.containsKey("batt"))
+            line4 += "batt: " + battery_ok + " ";
+
+          line4 += "rssi: " + rssi;
+          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
+
+          // Queue completed message
+
+          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
+            free(message);
+          } else {
+            // Log.notice(F("Queued %s" CR), message->title);
+          }
+          break;
+        }
+#  endif
+        default:
+          Log.error(F("[ SSD1306 ] unhandled topic %s" CR), message->title);
+      }
+    } else {
+      Log.error(F("[ SSD1306 ] insufficent memory " CR));
     }
   }
 }
@@ -411,9 +486,12 @@ void OledSerial::begin() {
   xSemaphoreGive(semaphoreOLEDOperation);
 
   display->init();
-  display->flipScreenVertically();
+  if (displayFlip) {
+    display->flipScreenVertically();
+  } else {
+    display->resetOrientation();
+  }
   display->setFont(ArialMT_Plain_10);
-
   display->setColor(WHITE);
   display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
   display->display();
