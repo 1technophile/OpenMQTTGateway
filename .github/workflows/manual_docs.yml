@@ -1,6 +1,7 @@
 name: Create and publish documentation
 on:
   workflow_dispatch:
+  workflow_call:
 jobs:
   documentation:
     runs-on: ubuntu-latest
