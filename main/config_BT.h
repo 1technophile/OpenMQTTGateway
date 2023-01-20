@@ -112,24 +112,8 @@ extern int btQueueLengthCount;
 
 unsigned long scanCount = 0;
 
-#ifndef pubKnownBLEServiceData
-#  define pubKnownBLEServiceData false // define true if you want to publish service data belonging to recognised sensors
-#endif
-
-#ifndef pubUnknownBLEServiceData
-#  define pubUnknownBLEServiceData true // define false if you don't want to publish service data to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
-#endif
-
-#ifndef pubBLEManufacturerData
-#  define pubBLEManufacturerData false // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
-#endif
-
-#ifndef pubUnknownBLEManufacturerData
-#  define pubUnknownBLEManufacturerData true // define true if you want to publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
-#endif
-
-#ifndef pubBLEServiceUUID
-#  define pubBLEServiceUUID false // define true if you want to publish the service UUID data
+#ifndef pubBLEAdvData
+#  define pubBLEAdvData false // define true if you want to publish all advertisement data
 #endif
 
 #ifndef useBeaconUuidForTopic
@@ -157,11 +141,7 @@ struct BTConfig_s {
   bool extDecoderEnable; // Send undecoded device data to another gateway device for decoding
   String extDecoderTopic; // Topic to send undecoded device data on
   bool filterConnectable; // Sets whether to filter publishing of scanned devices that require a connection.
-  bool pubKnownServiceData; // Publish service data belonging to recognised sensors
-  bool pubUnknownServiceData; // Publish service data belonging to unrecognised sensors (in case you are having too heavy service data) https://github.com/1technophile/OpenMQTTGateway/issues/318#issuecomment-446064707
-  bool pubKnownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
-  bool pubUnknownManufData; // Publish the manufacturer's data (sometimes contains characters that aren't valid with receiving client)
-  bool pubServiceDataUUID; // Publish the service UUID data
+  bool pubAdvData; // Publish service data belonging to recognised sensors
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
   bool ignoreWBlist; // Disable Whitelist & Blacklist
 };

@@ -92,11 +92,7 @@ void BTConfig_init() {
   BTConfig.extDecoderEnable = UseExtDecoder;
   BTConfig.extDecoderTopic = MQTTDecodeTopic;
   BTConfig.filterConnectable = BLE_FILTER_CONNECTABLE;
-  BTConfig.pubKnownServiceData = pubKnownBLEServiceData;
-  BTConfig.pubUnknownServiceData = pubUnknownBLEServiceData;
-  BTConfig.pubKnownManufData = pubBLEManufacturerData;
-  BTConfig.pubUnknownManufData = pubUnknownBLEManufacturerData;
-  BTConfig.pubServiceDataUUID = pubBLEServiceUUID;
+  BTConfig.pubAdvData = pubBLEAdvData;
   BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
   BTConfig.ignoreWBlist = false;
 }
@@ -141,16 +137,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   BTConfig_update(BTdata, "extDecoderTopic", BTConfig.extDecoderTopic);
   // Sets whether to filter publishing
   BTConfig_update(BTdata, "filterConnectable", BTConfig.filterConnectable);
-  // Publish service data belonging to recognised sensors
-  BTConfig_update(BTdata, "pubKnownServiceData", BTConfig.pubKnownServiceData);
-  // Publish service data belonging to unrecognised sensors
-  BTConfig_update(BTdata, "pubUnknownServiceData", BTConfig.pubUnknownServiceData);
-  // Publish known manufacturer's data
-  BTConfig_update(BTdata, "pubKnownManufData", BTConfig.pubKnownManufData);
-  // Publish unknown manufacturer's data
-  BTConfig_update(BTdata, "pubUnknownManufData", BTConfig.pubUnknownManufData);
-  // Publish the service UUID data
-  BTConfig_update(BTdata, "pubServiceDataUUID", BTConfig.pubServiceDataUUID);
+  // Publish advertisment data
+  BTConfig_update(BTdata, "pubadvdata", BTConfig.pubAdvData);
   // Use iBeacon UUID as topic, instead of sender (random) MAC address
   BTConfig_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
   // Disable Whitelist & Blacklist
@@ -170,11 +158,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
   jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
   jo["filterConnectable"] = BTConfig.filterConnectable;
-  jo["pubKnownServiceData"] = BTConfig.pubKnownServiceData;
-  jo["pubUnknownServiceData"] = BTConfig.pubUnknownServiceData;
-  jo["pubKnownManufData"] = BTConfig.pubKnownManufData;
-  jo["pubUnknownManufData"] = BTConfig.pubUnknownManufData;
-  jo["pubServiceDataUUID"] = BTConfig.pubServiceDataUUID;
+  jo["pubadvdata"] = BTConfig.pubAdvData;
   jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
   jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
 
@@ -544,6 +528,7 @@ void procBLETask(void* pvParameters) {
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
+      BLEdata["adv_type"] = advertisedDevice->getAdvType();
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
@@ -827,13 +812,6 @@ bool BTtoMQTT() { // for on demand BLE scans
   return true;
 }
 
-void RemoveJsonPropertyIf(JsonObject& obj, const char* key, bool condition) {
-  if (condition) {
-    Log.trace(F("Removing %s" CR), key);
-    obj.remove(key);
-  }
-}
-
 boolean valid_service_data(const char* data, int size) {
   for (int i = 0; i < size; ++i) {
     if (data[i] != 48) // 48 correspond to 0 in ASCII table
@@ -946,14 +924,15 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
-    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) {
-      RemoveJsonPropertyIf(BLEdata, "servicedatauuid", !BTConfig.pubServiceDataUUID && BLEdata.containsKey("model"));
-      RemoveJsonPropertyIf(BLEdata, "servicedata", !BTConfig.pubKnownServiceData && BLEdata.containsKey("model"));
-      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", !BTConfig.pubKnownManufData && BLEdata.containsKey("model"));
+    if (!BTConfig.pubAdvData) {
+      BLEdata.remove("servicedatauuid");
+      BLEdata.remove("servicedata");
+      BLEdata.remove("manufacturerdata");
+      BLEdata.remove("mac_type");
+      BLEdata.remove("adv_type");
+    }
+    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
       pubBT(BLEdata);
-    } else {
-      RemoveJsonPropertyIf(BLEdata, "servicedata", !BTConfig.pubUnknownServiceData);
-      RemoveJsonPropertyIf(BLEdata, "manufacturerdata", !BTConfig.pubUnknownManufData && BLEdata.containsKey("model"));
     }
   } else if (BLEdata.containsKey("distance")) {
     pubBT(BLEdata);

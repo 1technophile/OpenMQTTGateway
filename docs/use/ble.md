@@ -124,7 +124,7 @@ If you want to change the number of BLE scans that are done before a BLE connect
 
 The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
 
-## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors
+## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors (default: false)
 
 If you want to change this characteristic:
 
@@ -232,37 +232,19 @@ If you want to enable this feature:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
 
-## ADVANCED: Publishing known service data
+## ADVANCED: Publishing advertisement data (default: false)
 
 If you want to enable this feature:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownServiceData":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubadvdata":true}'`
 
-## ADVANCED: Publishing unknown service data
+## ADVANCED: Not publishing advertisement data
 
-If you want to change the default behaviour, in case you are having too heavy service data:
+To stop publishing advertisement data:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownServiceData":false}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubadvdata":false}'`
 
-## ADVANCED: Publishing known manufacturer's data
-
-If you want to change the default behaviour:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownManufData":true}'`
-
-## ADVANCED: Publishing unknown manufacturer's data
-
-If you want to change the default behaviour, in case you are having too heavy service data:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownManufData":false}'`
-
-## ADVANCED: Publishing the service UUID data
-
-If you want to change the default behaviour:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubServiceDataUUID":true}'`
-
-## Store BLE configuration into the gateway (only with ESP32 boards)
+## Store BLE configuration into the gateway
 
 Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
 
@@ -284,7 +266,7 @@ By the way, if you want to load the default built-in configuration (on any board
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
 Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
 
-## Read/write BLE characteristics over MQTT (ESP32 only)
+## Read/write BLE characteristics over MQTT
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
 ::: tip
@@ -341,7 +323,7 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
 :::
 
-## SwitchBot Bot control (ESP32 only)
+## SwitchBot Bot control
 
 SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
