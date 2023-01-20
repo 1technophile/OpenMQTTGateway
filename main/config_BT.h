@@ -141,7 +141,7 @@ struct BTConfig_s {
   bool extDecoderEnable; // Send undecoded device data to another gateway device for decoding
   String extDecoderTopic; // Topic to send undecoded device data on
   bool filterConnectable; // Sets whether to filter publishing of scanned devices that require a connection.
-  bool pubAdvData; // Publish service data belonging to recognised sensors
+  bool pubAdvData; // Publish advertisement data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
   bool ignoreWBlist; // Disable Whitelist & Blacklist
 };
