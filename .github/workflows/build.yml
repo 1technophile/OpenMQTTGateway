@@ -9,7 +9,7 @@ jobs:
       matrix:
         environments:
           - "rfbridge"
-          - "sonoff-rfbridge-direct"
+          - "rfbridge-direct"
           - "esp32dev-all-test"
           - "esp32dev-rf"
           - "esp32dev-pilight-cc1101"
