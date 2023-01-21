@@ -31,21 +31,75 @@
 
 #  include <SoftwareSerial.h>
 
-SoftwareSerial RS232Serial(RS232_RX_GPIO, RS232_TX_GPIO); // RX, TX
+#  ifndef RS232_UART // software serial mode
+SoftwareSerial RS232SoftSerial(RS232_RX_GPIO, RS232_TX_GPIO); // RX, TX
+#  endif
+
+// use pointer to stream class for serial communication to make code
+// compatible with both softwareSerial as hardwareSerial.
+Stream* RS232Stream = NULL;
 
 void setupRS232() {
+//Initalize serial port
+#  ifdef RS232_UART // Hardware serial
+#    if RS232_UART == 0 // init UART0
+  Serial.end(); // stop if already initialized
+#      ifdef ESP32
+  Serial.begin(RS232Baud, SERIAL_8N1, RS232_RX_GPIO, RS232_TX_GPIO);
+#      else
+  Serial.begin(RS232Baud, SERIAL_8N1);
+#      endif
+#      if defined(ESP8266) && defined(RS232_UART0_SWAP)
+  Serial.swap(); // swap UART0 ports from (GPIO1,GPIO3) to (GPIO15,GPIO13)
+#      endif
+  RS232Stream = &Serial;
+  Log.notice(F("RS232 HW UART0" CR));
+
+#    elif RS232_UART == 1 // init UART1
+  Serial1.end(); // stop if already initialized
+#      ifdef ESP32
+  Serial1.begin(RS232Baud, SERIAL_8N1, RS232_RX_GPIO, RS232_TX_GPIO);
+#      else
+  Serial1.begin(RS232Baud, SERIAL_8N1);
+#      endif
+  RS232Stream = &Serial1;
+  Log.notice(F("RS232 HW UART1" CR));
+
+#    elif RS232_UART == 2 // init UART2
+  Serial2.end(); // stop if already initialized
+#      ifdef ESP32
+  Serial2.begin(RS232Baud, SERIAL_8N1, RS232_RX_GPIO, RS232_TX_GPIO);
+#      else
+  Serial2.begin(RS232Baud, SERIAL_8N1);
+#      endif
+  RS232Stream = &Serial2;
+  Log.notice(F("RS232 HW UART2" CR));
+
+#    elif RS232_UART == 3 // init UART3
+  Serial3.end(); // stop if already initialized
+  Serial3.begin(RS232Baud, SERIAL_8N1);
+  RS232Stream = &Serial3;
+  Log.notice(F("RS232 HW UART3" CR));
+#    endif
+
+#  else // Software serial
   // define pin modes for RX, TX:
   pinMode(RS232_RX_GPIO, INPUT);
   pinMode(RS232_TX_GPIO, OUTPUT);
-  // set the data rate for the SoftwareSerial port
-  RS232Serial.begin(RS232Baud);
+  RS232SoftSerial.begin(RS232Baud);
+  RS232Stream = &RS232SoftSerial; // get stream of serial
 
-  Log.notice(F("RS232_RX_GPIO: %d " CR), RS232_RX_GPIO);
-  Log.notice(F("RS232_TX_GPIO: %d " CR), RS232_TX_GPIO);
-  Log.notice(F("RS232Baud: %d " CR), RS232Baud);
-  Log.trace(F("ZgatewayRS232 setup done " CR));
+  Log.notice(F("RS232_RX_GPIO: %d" CR), RS232_RX_GPIO);
+  Log.notice(F("RS232_TX_GPIO: %d" CR), RS232_TX_GPIO);
+#  endif
+
+  // Flush all bytes in the "link" serial port buffer
+  while (RS232Stream->available() > 0)
+    RS232Stream->read();
+
+  Log.notice(F("RS232Baud: %d" CR), RS232Baud);
+  Log.trace(F("ZgatewayRS232 setup done" CR));
 }
-
 
 void RS232toMQTT() {
 // Function to send retreived RS232 data as MQTT message
@@ -58,18 +112,17 @@ void RS232toMQTT() {
 #  endif
 }
 
-
 void RS232RAWtoMQTT() {
   // Send all RS232 output until RS232InPost as MQTT message
   //This function is Blocking, but there should only ever be a few bytes, usually an ACK or a NACK.
-  if (RS232Serial.available()) {
+  if (RS232Stream->available()) {
     Log.trace(F("RS232toMQTT" CR));
     static char RS232data[MAX_INPUT];
     static unsigned int input_pos = 0;
     static char inChar;
     do {
-      if (RS232Serial.available()) {
-        inChar = RS232Serial.read();
+      if (RS232Stream->available()) {
+        inChar = RS232Stream->read();
         RS232data[input_pos] = inChar;
         input_pos++;
         Log.trace(F("Received %c" CR), inChar);
@@ -86,14 +139,14 @@ void RS232RAWtoMQTT() {
 void RS232JSONtoMQTT() {
   // Assumes valid JSON data at RS232 interface. Use (nested) keys to split JSON data in separate
   // sub-MQTT-topics up to the defined nesting level.
-  if (RS232Serial->available()) {
+  if (RS232Stream->available()) {
     Log.trace(F("RS232toMQTT" CR));
 
     // Allocate the JSON document
     StaticJsonDocument<RS232JSONDocSize> doc;
 
     // Read the JSON document from the "link" serial port
-    DeserializationError err = deserializeJson(doc, *RS232Serial);
+    DeserializationError err = deserializeJson(doc, *RS232Stream);
 
     if (err == DeserializationError::Ok) {
       // JSON received, send as MQTT topics
@@ -104,8 +157,8 @@ void RS232JSONtoMQTT() {
       Log.error(F("Error in RS232JSONtoMQTT, deserializeJson() returned %s"), err.c_str());
 
       // Flush all bytes in the "link" serial port buffer
-      while (RS232Serial->available() > 0)
-        RS232Serial->read();
+      while (RS232Stream->available() > 0)
+        RS232Stream->read();
     }
   }
 }
@@ -157,9 +210,9 @@ void MQTTtoRS232(char* topicOri, JsonObject& RS232data) {
     Log.trace(F("Value set: %s" CR), data);
     Log.trace(F("Prefix set: %s" CR), prefix);
     Log.trace(F("Postfix set: %s" CR), postfix);
-    RS232Serial.print(prefix);
-    RS232Serial.print(data);
-    RS232Serial.print(postfix);
+    RS232Stream->print(prefix);
+    RS232Stream->print(data);
+    RS232Stream->print(postfix);
   }
 }
 #endif
