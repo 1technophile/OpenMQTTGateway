@@ -33,7 +33,7 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 /*-------------------RS232 topics & parameters----------------------*/
 
 // Settings RS232 to MQTT topic
-#define RS232toMQTTsubject "/RS232toMQTT"
+#define subjectRS232toMQTT "/RS232toMQTT"
 
 // setting to specify mode used for sending MQTT messages:
 //   0: RAW: all recieved input at RS232 interface is collected in single MQTT message

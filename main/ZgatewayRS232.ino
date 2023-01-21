@@ -101,19 +101,9 @@ void setupRS232() {
   Log.trace(F("ZgatewayRS232 setup done" CR));
 }
 
+#  if RS232toMQTTmode == 0 // Convert received data to single MQTT topic
 void RS232toMQTT() {
-// Function to send retreived RS232 data as MQTT message
-#  if RS232toMQTTmode == 0
-  RS232RAWtoMQTT(); //Convert received data to single MQTT topic
-#  elif RS232toMQTTmode == 1
-  RS232JSONtoMQTT(); // Convert received data to multiple MQTT topics based on JSON (nested) keys
-#  else
-#    error("unsupported RS232toMQTTmode selected");
-#  endif
-}
-
-void RS232RAWtoMQTT() {
-  // Send all RS232 output until RS232InPost as MQTT message
+  // Send all RS232 output (up to RS232InPost char revieved) as MQTT message
   //This function is Blocking, but there should only ever be a few bytes, usually an ACK or a NACK.
   if (RS232Stream->available()) {
     Log.trace(F("RS232toMQTT" CR));
@@ -136,7 +126,9 @@ void RS232RAWtoMQTT() {
   }
 }
 
-void RS232JSONtoMQTT() {
+
+#  elif RS232toMQTTmode == 1 // Convert recievee JSON data to multiple MQTT topics based (nested) keys
+void RS232toMQTT() {
   // Assumes valid JSON data at RS232 interface. Use (nested) keys to split JSON data in separate
   // sub-MQTT-topics up to the defined nesting level.
   if (RS232Stream->available()) {
@@ -150,7 +142,7 @@ void RS232JSONtoMQTT() {
 
     if (err == DeserializationError::Ok) {
       // JSON received, send as MQTT topics
-      char topic[mqtt_topic_max_size + 1] = RS232toMQTTsubject;
+      char topic[mqtt_topic_max_size + 1] = subjectRS232toMQTT;
       sendMQTTfromNestedJson(doc.as<JsonVariant>(), topic, 0, RS232maxJSONlevel);
     } else {
       // Print error to serial log
@@ -191,7 +183,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
 
   } else {
     // output value at current json level
-    char output[256];
+    char output[MAX_INPUT + 1];
     serializeJson(obj, output, 256);
     Log.notice(F("level=%d, topic=%s, value: %s\n"), level, topic, output);
 
@@ -199,6 +191,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
     pub(topic, &output[0]);
   }
 }
+#  endif
 
 void MQTTtoRS232(char* topicOri, JsonObject& RS232data) {
   Log.trace(F("json" CR));
