@@ -57,7 +57,7 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 //            ./RS232toMQTT/humidity/sens2 ==> 60
 //
 #ifndef RS232toMQTTmode
-#  define RS232toMQTTmode 1
+#  define RS232toMQTTmode 0
 #endif
 
 // settings for RS232TopicMode 0 (RAW)
