@@ -126,7 +126,6 @@ void RS232toMQTT() {
   }
 }
 
-
 #  elif RS232toMQTTmode == 1 // Convert recievee JSON data to multiple MQTT topics based (nested) keys
 void RS232toMQTT() {
   // Assumes valid JSON data at RS232 interface. Use (nested) keys to split JSON data in separate
