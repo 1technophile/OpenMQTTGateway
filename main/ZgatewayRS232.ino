@@ -184,7 +184,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
   } else {
     // output value at current json level
     char output[MAX_INPUT + 1];
-    serializeJson(obj, output, 256);
+    serializeJson(obj, output, MAX_INPUT);
     Log.notice(F("level=%d, topic=%s, value: %s\n"), level, topic, output);
 
     // send MQTT message
