@@ -26,6 +26,8 @@
 #ifndef config_RS232_h
 #define config_RS232_h
 
+#include "arduinoJson.h"
+
 extern void setupRS232();
 extern void RS232toMQTT();
 extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
