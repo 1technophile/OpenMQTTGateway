@@ -46,7 +46,21 @@ void setupRS232() {
   Log.trace(F("ZgatewayRS232 setup done " CR));
 }
 
+
 void RS232toMQTT() {
+// Function to send retreived RS232 data as MQTT message
+#  if RS232toMQTTmode == 0
+  RS232RAWtoMQTT(); //Convert received data to single MQTT topic
+#  elif RS232toMQTTmode == 1
+  RS232JSONtoMQTT(); // Convert received data to multiple MQTT topics based on JSON (nested) keys
+#  else
+#    error("unsupported RS232toMQTTmode selected");
+#  endif
+}
+
+
+void RS232RAWtoMQTT() {
+  // Send all RS232 output until RS232InPost as MQTT message
   //This function is Blocking, but there should only ever be a few bytes, usually an ACK or a NACK.
   if (RS232Serial.available()) {
     Log.trace(F("RS232toMQTT" CR));
@@ -66,6 +80,70 @@ void RS232toMQTT() {
     Log.trace(F("Publish %s" CR), RS232data);
     char* output = RS232data + sizeof(RS232Pre) - 1;
     pub(subjectRS232toMQTT, output);
+  }
+}
+
+void RS232JSONtoMQTT() {
+  // Assumes valid JSON data at RS232 interface. Use (nested) keys to split JSON data in separate
+  // sub-MQTT-topics up to the defined nesting level.
+  if (RS232Serial->available()) {
+    Log.trace(F("RS232toMQTT" CR));
+
+    // Allocate the JSON document
+    StaticJsonDocument<RS232JSONDocSize> doc;
+
+    // Read the JSON document from the "link" serial port
+    DeserializationError err = deserializeJson(doc, *RS232Serial);
+
+    if (err == DeserializationError::Ok) {
+      // JSON received, send as MQTT topics
+      char topic[mqtt_topic_max_size + 1] = RS232toMQTTsubject;
+      sendMQTTfromNestedJson(doc.as<JsonVariant>(), topic, 0, RS232maxJSONlevel);
+    } else {
+      // Print error to serial log
+      Log.error(F("Error in RS232JSONtoMQTT, deserializeJson() returned %s"), err.c_str());
+
+      // Flush all bytes in the "link" serial port buffer
+      while (RS232Serial->available() > 0)
+        RS232Serial->read();
+    }
+  }
+}
+
+void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLevel) {
+  // recursively step through JSON data and send MQTT messages
+  if (level < maxLevel && obj.is<JsonObject>()) {
+    int topicLength = strlen(topic);
+    // loop over fields
+    for (JsonPair pair : obj.as<JsonObject>()) {
+      // check if new key still fits in topic cstring
+      const char* key = pair.key().c_str();
+      Log.trace(F("level=%d, key='%s'" CR), level, pair.key().c_str());
+      if (topicLength + 2 + strlen(key) <= mqtt_topic_max_size) {
+        // add new level to existing topic cstring
+        topic[topicLength] = '/'; // add slash
+        topic[topicLength + 1] = '\0'; // terminate
+        strncat(topic + topicLength, key, mqtt_topic_max_size - topicLength - 2);
+
+        // step recursively into next level
+        sendMQTTfromNestedJson(pair.value(), topic, level + 1, maxLevel);
+
+        // restore topic
+        topic[topicLength] = '\0';
+      } else {
+        Log.error(F("Nested key '%s' at level %d does not fit within max topic length of %d, skipping"),
+                  key, level, mqtt_topic_max_size);
+      }
+    }
+
+  } else {
+    // output value at current json level
+    char output[256];
+    serializeJson(obj, output, 256);
+    Log.notice(F("level=%d, topic=%s, value: %s\n"), level, topic, output);
+
+    // send MQTT message
+    pub(topic, &output[0]);
   }
 }
 
