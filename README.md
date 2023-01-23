@@ -30,6 +30,7 @@ Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgate
 [![](./docs/img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+The plug is available in North America only, other regions are planned.
 
 ## Compatible items
 
