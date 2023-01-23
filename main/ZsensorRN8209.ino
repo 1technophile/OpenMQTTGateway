@@ -35,6 +35,23 @@ extern "C" bool init_8209c_interface();
 
 StaticJsonDocument<JSON_MSG_BUFFER> doc;
 
+// GetCurrent function for critical operation like overcurrent protection
+float getRN8209current() {
+  uint8_t ret = rn8209c_read_emu_status();
+  if (ret) {
+    int32_t current;
+    uint32_t temp_current = 0;
+    rn8209c_read_current(phase_A, &temp_current);
+    if (ret == 1) {
+      current = temp_current;
+    } else {
+      current = (int32_t)temp_current * (-1);
+    }
+    return current / 10000.0;
+  }
+  return 0;
+}
+
 void rn8209_loop(void* mode) {
   if (!ProcessLock) {
     uint32_t voltage;
@@ -78,6 +95,7 @@ void setupRN8209() {
   set_user_param(cal);
   init_8209c_interface();
   xTaskCreate(rn8209_loop, "rn8209_loop", RN8209_TASK_STACK_SIZE, NULL, RN8209_TASK_PRIO, NULL);
+  Log.trace(F("ZsensorRN8209 setup done " CR));
 }
 
 #endif // ZsensorRN8209
