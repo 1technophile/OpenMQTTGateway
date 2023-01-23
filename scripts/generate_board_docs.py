@@ -11,7 +11,7 @@ table_init = pd.DataFrame(columns=['Environment', 'uC', 'Hardware', 'Description
 table = table_init
 
 # Parse platformio.ini to retrieve boards information
-conf.read('boards.ini')
+conf.read('environments.ini')
 for each_section in conf.sections():
     if ("env:" in each_section and "-test" not in each_section):
         env = each_section.replace("env:", "")
