@@ -1,6 +1,8 @@
 name: Build binaries, docs and publish to dev folder
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 jobs:
   build-upload:
     runs-on: ubuntu-latest

@@ -89,7 +89,14 @@ void MeasureGPIOInput() {
 
 #  if defined(ZactuatorONOFF) && defined(ACTUATOR_TRIGGER)
       //Trigger the actuator if we are not at startup
-      if (InputState != 3) ActuatorManualTrigger(InputState);
+      if (InputState != 3) {
+#    if defined(ACTUATOR_BUTTON_TRIGGER_LEVEL)
+        if (InputState == ACTUATOR_BUTTON_TRIGGER_LEVEL)
+          ActuatorTrigger(); // Button press trigger
+#    else
+        ActuatorTrigger(); // Switch trigger
+#    endif
+      }
 #  endif
       InputState = reading;
     }

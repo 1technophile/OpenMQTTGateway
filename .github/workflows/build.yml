@@ -9,7 +9,7 @@ jobs:
       matrix:
         environments:
           - "rfbridge"
-          - "sonoff-rfbridge-direct"
+          - "rfbridge-direct"
           - "esp32dev-all-test"
           - "esp32dev-rf"
           - "esp32dev-pilight-cc1101"
@@ -38,6 +38,7 @@ jobs:
           - "esp32-m5atom-matrix"
           - "esp32-m5atom-lite"
           - "esp32dev-rtl_433"
+          - "esp32doitv1-aithinker-r01-sx1278"
           - "heltec-rtl_433"
           - "lilygo-rtl_433"
           - "esp32dev-multi_receiver"

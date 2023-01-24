@@ -109,12 +109,15 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
 void OverHeatingRelayOFF() {
 #    if defined(ESP32) && !defined(NO_INT_TEMP_READING)
   if (millis() > (timeinttemp + TimeBetweenReadingIntTemp)) {
+    static float previousInternalTempc = 0;
     float internalTempc = intTemperatureRead();
     Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
-    if (internalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+    // We switch OFF the actuator if the temperature of the ESP32 is more than MAX_TEMP_ACTUATOR two consecutive times, so as to avoid false single readings to trigger the relay OFF.
+    if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
       Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
-      ActuatorManualTrigger(!ACTUATOR_ON);
+      ActuatorTrigger();
     }
+    previousInternalTempc = internalTempc;
     timeinttemp = millis();
   }
 #    endif
@@ -123,15 +126,13 @@ void OverHeatingRelayOFF() {
 void OverHeatingRelayOFF() {}
 #  endif
 
-void ActuatorManualTrigger(uint8_t level) {
-#  ifdef ACTUATOR_BUTTON_TRIGGER_LEVEL
-  if (level == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
-    // Change level value to the opposite of the current level
-    level = !digitalRead(ACTUATOR_ONOFF_GPIO);
-  }
-#  else
-  level = !digitalRead(ACTUATOR_ONOFF_GPIO);
-#  endif
+/*
+  Handling of actuator control following the cases below:
+  -Button press, if the button goes to ACTUATOR_BUTTON_TRIGGER_LEVEL we change the Actuator level
+  -Status less switch state change (a switch without ON OFF labels), an action of this type of switch will trigger a change of the actuator state independently from the switch position
+*/
+void ActuatorTrigger() {
+  uint8_t level = !digitalRead(ACTUATOR_ONOFF_GPIO);
   Log.trace(F("Actuator triggered %d" CR), level);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
   // Send the state of the switch to the broker so as to update the status
