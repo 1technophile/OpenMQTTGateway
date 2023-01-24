@@ -332,7 +332,7 @@ void createDiscovery(const char* sensor_type,
     identifiers.add(String(getMacAddress()));
   } else {
     //The Connections
-    if (device_id[0] != 0) {
+    if (device_id[0]) {
       JsonArray connections = device.createNestedArray("connections");
       JsonArray connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
@@ -352,7 +352,7 @@ void createDiscovery(const char* sensor_type,
 
     // generate unique device name by adding the second half of the device_id only if device_name and device_id are different
     if (device_name[0]) {
-      if (strcmp(device_id, device_name) != 0) {
+      if (strcmp(device_id, device_name) != 0 && device_id[0]) {
         device["name"] = device_name + String("-") + String(device_id + 6);
       } else {
         device["name"] = device_name;
@@ -991,6 +991,16 @@ void pubMqttDiscovery() {
                   subjectBTtoMQTT, "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
                   "{\"hasspresence\":true,\"save\":true}", "{\"hasspresence\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+  createDiscovery("switch", //set Type
+                  subjectBTtoMQTT, "BT: Publish Advertisement data", (char*)getUniqueId("pubadvdata", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.pubadvdata }}", //set availability_topic,device_class,value_template,
+                  "{\"pubadvdata\":true,\"save\":true}", "{\"pubadvdata\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
