@@ -124,7 +124,7 @@ If you want to change the number of BLE scans that are done before a BLE connect
 
 The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
 
-## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors
+## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors (default: false)
 
 If you want to change this characteristic:
 
@@ -232,37 +232,24 @@ If you want to enable this feature:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
 
-## ADVANCED: Publishing known service data
+## ADVANCED: Publishing advertisement data (default: false)
 
 If you want to enable this feature:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownServiceData":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubadvdata":true}'`
 
-## ADVANCED: Publishing unknown service data
+This will publish extensive information about the device:
+```json
+{"id":"11:22:33:44:55:66","mac_type":0,"adv_type":0,"name":"Qingping Motion & Light","rssi":-93,"servicedata":"88121122334455660201520f0126090403000000","servicedatauuid":"0xfdcd","brand":"Qingping","model":"Motion & Light","model_id":"CGPR1","lux":3,"batt":82}
+```
 
-If you want to change the default behaviour, in case you are having too heavy service data:
+## ADVANCED: Not publishing advertisement data
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownServiceData":false}'`
+To stop publishing advertisement data:
 
-## ADVANCED: Publishing known manufacturer's data
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubadvdata":false}'`
 
-If you want to change the default behaviour:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownManufData":true}'`
-
-## ADVANCED: Publishing unknown manufacturer's data
-
-If you want to change the default behaviour, in case you are having too heavy service data:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownManufData":false}'`
-
-## ADVANCED: Publishing the service UUID data
-
-If you want to change the default behaviour:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubServiceDataUUID":true}'`
-
-## Store BLE configuration into the gateway (only with ESP32 boards)
+## Store BLE configuration into the gateway
 
 Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
 
@@ -284,14 +271,14 @@ By the way, if you want to load the default built-in configuration (on any board
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
 Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
 
-## Read/write BLE characteristics over MQTT (ESP32 only)
+## Read/write BLE characteristics over MQTT
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
 ::: tip
 These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this](#setting-the-number-of-scans-between-connection-attempts).
 This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
 
-**Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
+**Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". The mac_type of your device can be seen by setting `pubadvdata` to `true` with an MQTT command (see Publishing advertisement data), or with the macro `pubBLEAdvData true`. By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
 To specify the MAC address type add the parameter `"mac_type"` to the command. For example `"mac_type": 1` to connect with a device with the MAC address type of 1.
 :::
 
@@ -341,7 +328,7 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
 :::
 
-## SwitchBot Bot control (ESP32 only)
+## SwitchBot Bot control
 
 SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
