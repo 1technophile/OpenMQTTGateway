@@ -941,9 +941,9 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("number", //set Type
-                  subjectBTtoMQTT, "BT: Connnect every X scan(s)", (char*)getUniqueId("scanbcnct", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
-                  "{\"scanbcnct\":{{value}},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectBTtoMQTT, "BT: Connnect interval", (char*)getUniqueId("intervalcnct", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.intervalcnct/60000 }}", //set availability_topic,device_class,value_template,
+                  "{\"intervalcnct\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
                   "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
