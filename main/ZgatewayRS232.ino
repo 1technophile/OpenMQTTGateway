@@ -29,9 +29,8 @@
 
 #ifdef ZgatewayRS232
 
-#  include <SoftwareSerial.h>
-
 #  ifndef RS232_UART // software serial mode
+#    include <SoftwareSerial.h>
 SoftwareSerial RS232SoftSerial(RS232_RX_GPIO, RS232_TX_GPIO); // RX, TX
 #  endif
 
