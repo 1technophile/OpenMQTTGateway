@@ -144,7 +144,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           if (strcmp(parameters[i][0], "tamper") == 0 || strcmp(parameters[i][0], "alarm") == 0 || strcmp(parameters[i][0], "motion") == 0) {
             createDiscovery("binary_sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
-                            "", "", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                            "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "1", "0", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             0, //set  off_delay
                             "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -154,7 +154,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           } else if (strcmp(parameters[i][0], "strike_count") == 0) {
             createDiscovery("sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
-                            "", "", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                            "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "1", "0", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             0, //set  off_delay
                             "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -164,7 +164,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           } else {
             createDiscovery("sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
-                            "", "", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                            "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "", "", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             0, //set  off_delay
                             "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
