@@ -111,6 +111,38 @@ void BTConfig_update(JsonObject& data, const char* key, T& var) {
   }
 }
 
+void stateBTMeasures(bool start) {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jo = jsonBuffer.to<JsonObject>();
+  jo["bleconnect"] = BTConfig.bleConnect;
+  jo["interval"] = BTConfig.BLEinterval;
+  jo["activescan"] = BTConfig.activeScan;
+  jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+  jo["onlysensors"] = BTConfig.pubOnlySensors;
+  jo["hasspresence"] = BTConfig.presenceEnable;
+  jo["presenceTopic"] = BTConfig.presenceTopic;
+  jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+  jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
+  jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
+  jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
+  jo["filterConnectable"] = BTConfig.filterConnectable;
+  jo["pubadvdata"] = BTConfig.pubAdvData;
+  jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+  jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
+  jo["btqblck"] = btQueueBlocked;
+  jo["btqsum"] = btQueueLengthSum;
+  jo["btqsnd"] = btQueueLengthCount;
+  jo["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
+
+  if (start) {
+    Log.notice(F("BT sys: "));
+    serializeJsonPretty(jsonBuffer, Serial);
+    Serial.println();
+    return; // Do not try to erase/write/send config at startup
+  }
+  pub(subjectBTtoMQTT, jo);
+}
+
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
@@ -144,31 +176,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Disable Whitelist & Blacklist
   BTConfig_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
 
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject jo = jsonBuffer.to<JsonObject>();
-  jo["bleconnect"] = BTConfig.bleConnect;
-  jo["interval"] = BTConfig.BLEinterval;
-  jo["activescan"] = BTConfig.activeScan;
-  jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
-  jo["onlysensors"] = BTConfig.pubOnlySensors;
-  jo["hasspresence"] = BTConfig.presenceEnable;
-  jo["presenceTopic"] = BTConfig.presenceTopic;
-  jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
-  jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
-  jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
-  jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
-  jo["filterConnectable"] = BTConfig.filterConnectable;
-  jo["pubadvdata"] = BTConfig.pubAdvData;
-  jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
-  jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
-
-  if (startup) {
-    Log.notice(F("BT config: "));
-    serializeJsonPretty(jsonBuffer, Serial);
-    Serial.println();
-    return; // Do not try to erase/write/send config at startup
-  }
-  pub(subjectBTtoMQTT, jo);
+  stateBTMeasures(startup);
 
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
@@ -180,6 +188,23 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   }
 
   if (BTdata.containsKey("save") && BTdata["save"].as<bool>()) {
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject jo = jsonBuffer.to<JsonObject>();
+    jo["bleconnect"] = BTConfig.bleConnect;
+    jo["interval"] = BTConfig.BLEinterval;
+    jo["activescan"] = BTConfig.activeScan;
+    jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+    jo["onlysensors"] = BTConfig.pubOnlySensors;
+    jo["hasspresence"] = BTConfig.presenceEnable;
+    jo["presenceTopic"] = BTConfig.presenceTopic;
+    jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+    jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
+    jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
+    jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
+    jo["filterConnectable"] = BTConfig.filterConnectable;
+    jo["pubadvdata"] = BTConfig.pubAdvData;
+    jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+    jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
