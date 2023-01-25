@@ -34,7 +34,7 @@ jobs:
           sudo apt install rename
           ./scripts/prepare_deploy.sh
       - name: Set up Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: "14.x"
       - name: Build documentation
