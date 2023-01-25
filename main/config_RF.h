@@ -107,7 +107,7 @@ const char parameters[39][4][24] = {
     {"rain_mm", "rain", "mm", "precipitation"},
     {"rain_mm_h", "rain", "mm/h", "precipitation"},
     {"rain_in", "rain", "in", "precipitation_intensity"},
-    {"rain_rate_in_h", "rain", "precipitation_intensity"},
+    {"rain_rate_in_h", "rain", "in/h", "precipitation_intensity"},
     {"rssi", "rssi", "dB", "signal_strength"},
     {"snr", "snr", "dB", ""},
     {"noise", "noise", "dB", ""},
