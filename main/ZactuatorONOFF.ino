@@ -174,4 +174,11 @@ void ActuatorTrigger() {
   pub(subjectGTWONOFFtoMQTT, ONOFFdata);
 }
 
+void stateONOFFMeasures() {
+  //Publish actuator state
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
+  ONOFFdata["cmd"] = (int)digitalRead(ACTUATOR_ONOFF_GPIO);
+  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+}
 #endif
