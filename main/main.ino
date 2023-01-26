@@ -1492,6 +1492,9 @@ void loop() {
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
         stateMeasures();
+#  ifdef ZgatewayBT
+        stateBTMeasures(false);
+#  endif
       }
 #endif
 #ifdef ZsensorBME280
@@ -1562,12 +1565,7 @@ void loop() {
       if (disc)
         launchBTDiscovery(publishDiscovery);
 #  endif
-#  ifndef ESP32
-      if (BTtoMQTT())
-        Log.trace(F("BTtoMQTT OK" CR));
-#  else
       emptyBTQueue();
-#  endif
 #endif
 #ifdef ZgatewaySRFB
       SRFBtoMQTT();
@@ -1705,10 +1703,6 @@ void stateMeasures() {
 #  ifdef ZgatewayBT
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
-  SYSdata["btqblck"] = btQueueBlocked;
-  SYSdata["btqsum"] = btQueueLengthSum;
-  SYSdata["btqsnd"] = btQueueLengthCount;
-  SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
   SYSdata["interval"] = BTConfig.BLEinterval;
   SYSdata["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
