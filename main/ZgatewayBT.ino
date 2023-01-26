@@ -83,7 +83,7 @@ void BTConfig_init() {
   BTConfig.bleConnect = AttemptBLEConnect;
   BTConfig.BLEinterval = TimeBtwRead;
   BTConfig.activeScan = ActiveBLEScan;
-  BTConfig.BLEscanBeforeConnect = ScanBeforeConnect;
+  BTConfig.intervalConnect = TimeBtwConnect;
   BTConfig.pubOnlySensors = PublishOnlySensors;
   BTConfig.presenceEnable = HassPresence;
   BTConfig.presenceTopic = subjectHomePresence;
@@ -96,6 +96,8 @@ void BTConfig_init() {
   BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
   BTConfig.ignoreWBlist = false;
 }
+
+unsigned long timeBetweenConnect = 0;
 
 template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
 void BTConfig_update(JsonObject& data, const char* key, T& var);
@@ -117,7 +119,7 @@ void stateBTMeasures(bool start) {
   jo["bleconnect"] = BTConfig.bleConnect;
   jo["interval"] = BTConfig.BLEinterval;
   jo["activescan"] = BTConfig.activeScan;
-  jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+  jo["intervalcnct"] = BTConfig.intervalConnect;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
   jo["hasspresence"] = BTConfig.presenceEnable;
   jo["presenceTopic"] = BTConfig.presenceTopic;
@@ -152,7 +154,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Define if the scan is active or passive
   BTConfig_update(BTdata, "activescan", BTConfig.activeScan);
   // Number of scan before a connect set
-  BTConfig_update(BTdata, "scanbcnct", BTConfig.BLEscanBeforeConnect);
+  BTConfig_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
   BTConfig_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
   // Home Assistant presence message
@@ -193,7 +195,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["bleconnect"] = BTConfig.bleConnect;
     jo["interval"] = BTConfig.BLEinterval;
     jo["activescan"] = BTConfig.activeScan;
-    jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+    jo["intervalcnct"] = BTConfig.intervalConnect;
     jo["onlysensors"] = BTConfig.pubOnlySensors;
     jo["hasspresence"] = BTConfig.presenceEnable;
     jo["presenceTopic"] = BTConfig.presenceTopic;
@@ -717,9 +719,11 @@ void coreTask(void* pvParameters) {
       } else if (!ProcessLock) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
-          // Launching a connect every BLEscanBeforeConnect
-          if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
+          // Launching a connect every TimeBtwConnect
+          if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
+            timeBetweenConnect = millis();
             BLEconnect();
+          }
           dumpDevices();
           xSemaphoreGive(semaphoreBLEOperation);
         } else {
@@ -793,7 +797,7 @@ void setupBT() {
   BTConfig_init();
   BTConfig_load();
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
+  Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
   Log.notice(F("Active BLE scan: %T" CR), BTConfig.activeScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
@@ -1069,8 +1073,10 @@ void immediateBTAction(void* pvParameters) {
       std::swap(BLEactions, act_swap);
 
       // If we stopped the scheduled connect for this action, do the scheduled now
-      if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
+      if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
+        timeBetweenConnect = millis();
         BLEconnect();
+      }
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
       Log.error(F("BLE busy - command not sent" CR));

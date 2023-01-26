@@ -113,16 +113,14 @@ If you want to scan continuously for BLE devices, for example for beacon locatio
 In this case you should deactivate the BLE connection mechanism to avoid concurrency between scan and connections (see chapter below, bleconnect).
 
 ::: tip
-For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
+For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `TimeBtwConnect` per default, you can modify it by following the procedure below.
 :::
 
-## Setting the number of scans between connection attempts
+## Setting the time between connection attempts
 
-If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
+If you want to change the time between BLE connect you can change it by MQTT, if you want the BLE connect time to be every 300s:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanbcnct":30}'`
-
-The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalcnct":300000}'`
 
 ## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors (default: false)
 

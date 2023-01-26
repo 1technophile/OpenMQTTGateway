@@ -66,7 +66,7 @@ extern int btQueueLengthCount;
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -100 will not be reported
 
 #ifndef Scan_duration
-#  define Scan_duration 10000 //define the time for a scan
+#  define Scan_duration 10000 //define the time for a scan); in milliseconds
 #endif
 #ifndef BLEScanInterval
 #  define BLEScanInterval 52 // How often the scan occurs / switches channels; in milliseconds,
@@ -77,15 +77,15 @@ extern int btQueueLengthCount;
 #ifndef ActiveBLEScan
 #  define ActiveBLEScan true // Set active scanning, this will get more data from the advertiser.
 #endif
-#ifndef ScanBeforeConnect
-#  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
+#ifndef TimeBtwConnect
+#  define TimeBtwConnect 3600000 //define default time between BLE connection attempt (not used for immediate actions); in milliseconds
 #endif
 
 #ifndef BLEScanDuplicateCacheSize
 #  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
-#  define TimeBtwRead 55555 //define default time between 2 scans
+#  define TimeBtwRead 55555 //define default time between 2 scans); in milliseconds
 #endif
 
 #ifndef PublishOnlySensors
@@ -131,8 +131,8 @@ unsigned long scanCount = 0;
 struct BTConfig_s {
   bool bleConnect; // Attempt a BLE connection to sensors with ESP32
   bool activeScan;
-  unsigned int BLEinterval; // Time between 2 scans
-  unsigned int BLEscanBeforeConnect; // Number of BLE scans between connection cycles
+  unsigned long BLEinterval; // Time between 2 scans
+  unsigned long intervalConnect; // Time between 2 connects
   bool pubOnlySensors; // Publish only the identified sensors (like temperature sensors)
   bool presenceEnable; // Publish into Home Assistant presence topic
   String presenceTopic; // Home Assistant presence topic to publish on

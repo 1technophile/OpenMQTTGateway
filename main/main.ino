@@ -1705,7 +1705,7 @@ void stateMeasures() {
   SYSdata["lowpowermode"] = (int)lowpowermode;
 #    endif
   SYSdata["interval"] = BTConfig.BLEinterval;
-  SYSdata["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+  SYSdata["intervalcnct"] = BTConfig.intervalConnect;
   SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
