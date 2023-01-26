@@ -124,3 +124,21 @@ The mqtt command to change the units is:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
 
 Please note that it may take several seconds/display updates for the units to change.  This is due to the queueing of messages for display.
+
+### Flip Display 180 degrees
+
+This allows you to rotate the display 180 degrees.  Can be set at compile time or during use, defaults to true.
+
+The compiler directive is `-DDISPLAY_FLIP=false`
+
+The mqtt command to change display orientation is:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-flip":false}'`
+
+Please note that it may take several seconds/display updates for the display to change.  This is due to the queueing of messages for display.
+
+### Display OpenMQTTGateway Logo when Idle
+
+When this option is enabled the OLED display will show the OpenMQTTGateway Logo when it is idle.  Defaults to false
+
+The compiler directive is `-DDISPLAY_IDLE_LOGO=true`

@@ -219,6 +219,9 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
+    if (data.containsKey("model") || data.containsKey("distance")) { // Only display sensor data
+      pubOled((char*)topic.c_str(), data);
+    }
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
     if (data.containsKey("servicedatauuid"))

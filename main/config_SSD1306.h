@@ -59,11 +59,15 @@
 #endif
 
 #ifndef DISPLAY_IDLE_LOGO
-#  define DISPLAY_IDLE_LOGO true // Display the OMG logo when idle
+#  define DISPLAY_IDLE_LOGO false // Display the OMG logo when idle
 #endif
 
 #ifndef DISPLAY_METRIC
 #  define DISPLAY_METRIC true // Units used for display of sensor data
+#endif
+
+#ifndef DISPLAY_FLIP
+#  define DISPLAY_FLIP true // Flip display orientation
 #endif
 
 /*------------------- DEFAULT DISPLAY GEOMETRY ----------------------*/
