@@ -29,13 +29,19 @@
 #include "User_config.h"
 
 #ifdef ZactuatorONOFF
-unsigned long timeinttemp = 0;
 
 void setupONOFF() {
+#  ifdef MAX_CURRENT_ACTUATOR
+  xTaskCreate(overLimitCurrent, "overLimitCurrent", 2500, NULL, 10, NULL);
+#  endif
+#  ifdef MAX_TEMP_ACTUATOR
+  xTaskCreate(overLimitTemp, "overLimitTemp", 2500, NULL, 10, NULL);
+#  endif
   pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
 #  ifdef ACTUATOR_ONOFF_DEFAULT
   digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
 #  endif
+  Log.trace(F("ZactuatorONOFF setup done" CR));
 }
 
 #  if jsonReceiving
@@ -106,9 +112,9 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
 
 //Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
 #  ifdef MAX_TEMP_ACTUATOR
-void OverHeatingRelayOFF() {
+void overLimitTemp(void* pvParameters) {
 #    if defined(ESP32) && !defined(NO_INT_TEMP_READING)
-  if (millis() > (timeinttemp + TimeBetweenReadingIntTemp)) {
+  for (;;) {
     static float previousInternalTempc = 0;
     float internalTempc = intTemperatureRead();
     Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
@@ -116,14 +122,40 @@ void OverHeatingRelayOFF() {
     if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
       Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
       ActuatorTrigger();
+      for (int i = 0; i < 30; i++) {
+        ErrorIndicatorON();
+        vTaskDelay(200);
+        ErrorIndicatorOFF();
+        vTaskDelay(200);
+      }
     }
     previousInternalTempc = internalTempc;
-    timeinttemp = millis();
+    vTaskDelay(TimeBetweenReadingIntTemp);
   }
 #    endif
 }
-#  else
-void OverHeatingRelayOFF() {}
+#  endif
+
+// Check regularly current the relay and switch it OFF if the current is more than MAX_CURRENT_ACTUATOR
+#  ifdef MAX_CURRENT_ACTUATOR
+void overLimitCurrent(void* pvParameters) {
+  for (;;) {
+    float current = getRN8209current();
+    Log.trace(F("RN8209 Current %F" CR), current);
+    // We switch OFF the actuator if the current of the RN8209 is more than MAX_CURRENT_ACTUATOR.
+    if (current > MAX_CURRENT_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+      Log.error(F("[ActuatorONOFF] OverCurrent detected ( %F > %F ) switching OFF Actuator" CR), current, MAX_CURRENT_ACTUATOR);
+      ActuatorTrigger();
+      for (int i = 0; i < 30; i++) {
+        ErrorIndicatorON();
+        vTaskDelay(200);
+        ErrorIndicatorOFF();
+        vTaskDelay(200);
+      }
+    }
+    vTaskDelay(TimeBetweenReadingCurrent);
+  }
+}
 #  endif
 
 /*
