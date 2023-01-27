@@ -1500,6 +1500,9 @@ void loop() {
 #  ifdef ZgatewayBT
         stateBTMeasures(false);
 #  endif
+#  ifdef ZactuatorONOFF
+        stateONOFFMeasures();
+#  endif
       }
 #endif
 #ifdef ZsensorBME280
