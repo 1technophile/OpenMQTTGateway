@@ -119,14 +119,11 @@ void overLimitTemp(void* pvParameters) {
     float internalTempc = intTemperatureRead();
     Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
     // We switch OFF the actuator if the temperature of the ESP32 is more than MAX_TEMP_ACTUATOR two consecutive times, so as to avoid false single readings to trigger the relay OFF.
-    if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
-      Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
-      ActuatorTrigger();
-      for (int i = 0; i < 30; i++) {
-        ErrorIndicatorON();
-        vTaskDelay(200);
-        ErrorIndicatorOFF();
-        vTaskDelay(200);
+    if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR) {
+      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with thew previous condition, but it is better to trigger the digitalRead only if the previous condition is met
+        Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
+        ActuatorTrigger();
+        CriticalIndicatorON();
       }
     }
     previousInternalTempc = internalTempc;
@@ -143,14 +140,11 @@ void overLimitCurrent(void* pvParameters) {
     float current = getRN8209current();
     Log.trace(F("RN8209 Current %F" CR), current);
     // We switch OFF the actuator if the current of the RN8209 is more than MAX_CURRENT_ACTUATOR.
-    if (current > MAX_CURRENT_ACTUATOR && digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
-      Log.error(F("[ActuatorONOFF] OverCurrent detected ( %F > %F ) switching OFF Actuator" CR), current, MAX_CURRENT_ACTUATOR);
-      ActuatorTrigger();
-      for (int i = 0; i < 30; i++) {
-        ErrorIndicatorON();
-        vTaskDelay(200);
-        ErrorIndicatorOFF();
-        vTaskDelay(200);
+    if (current > MAX_CURRENT_ACTUATOR) {
+      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with thew previous condition, but it is better to trigger the digitalRead only if the previous condition is met
+        Log.error(F("[ActuatorONOFF] OverCurrent detected ( %F > %F ) switching OFF Actuator" CR), current, MAX_CURRENT_ACTUATOR);
+        ActuatorTrigger();
+        CriticalIndicatorON();
       }
     }
     vTaskDelay(TimeBetweenReadingCurrent);
