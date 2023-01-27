@@ -57,7 +57,7 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 #  define TimeBetweenReadingIntTemp 5000 // Time interval between internal temp measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
 #endif
 #ifndef TimeBetweenReadingCurrent
-#  define TimeBetweenReadingCurrent 1000 // Time interval between internal temp measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
+#  define TimeBetweenReadingCurrent 1000 // Time interval between internal current measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
 #endif
 /*-------------------PIN DEFINITIONS----------------------*/
 // default pin, if not set into the MQTT json
