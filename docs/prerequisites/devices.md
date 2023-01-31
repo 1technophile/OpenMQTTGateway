@@ -24,6 +24,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | ATorch Battery Capacity Monitor (c)|DT24|voltage/amp/watt|
 | BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
+| BlueCharm|BC08|acceleration x/y/z-axis/voltage/temperature|
 | BlueMaestro|TempoDisc 1 in 1|temperature/battery|
 | BlueMaestro|TempoDisc 3 in 1|temperature/humidity/dew point/battery|
 | BlueMaestro|TempoDisc 4 in 1|temperature/humidity/pressure/battery|
@@ -45,6 +46,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | HONEYWELL|JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | Hydractiva Digital | Amphiro/Oras|sessions/time/litres/temperature/energy|
 | iBeacon|protocol|uuid/mfid/major/minor/txpower @ 1 m/voltage|
+| Jaalee|JHT F525|temperature/humidity/battery|
 | INKBIRD|IBS-TH1|temperature/humidity/battery|
 | INKBIRD|IBS-TH2/P01B|temperature/battery|
 | INKBIRD|IBT-2X|temperature1/temperature2|

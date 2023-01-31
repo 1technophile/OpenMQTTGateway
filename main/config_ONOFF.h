@@ -47,10 +47,17 @@ extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
 //#  define ACTUATOR_BUTTON_TRIGGER_LEVEL LOW // 0 or 1, set to the level which to detect a button press to change the actuator state.
 #endif
 #ifndef MAX_TEMP_ACTUATOR
-//#  define MAX_TEMP_ACTUATOR         70 // Temperature that will trigger the relay to go OFF
+//#  define MAX_TEMP_ACTUATOR         70.0 // Temperature that will trigger the relay to go OFF
 #endif
+#ifndef MAX_CURRENT_ACTUATOR
+//#  define MAX_CURRENT_ACTUATOR         15.0 // Current that will trigger the relay to go OFF
+#endif
+
 #ifndef TimeBetweenReadingIntTemp
 #  define TimeBetweenReadingIntTemp 5000 // Time interval between internal temp measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
+#endif
+#ifndef TimeBetweenReadingCurrent
+#  define TimeBetweenReadingCurrent 1000 // Time interval between internal current measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
 #endif
 /*-------------------PIN DEFINITIONS----------------------*/
 // default pin, if not set into the MQTT json

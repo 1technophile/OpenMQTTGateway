@@ -694,6 +694,19 @@ void setup() {
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
+/*
+ The 2 modules below are not connection dependent so start them before the connectivity functions
+ Note that the ONOFF module need to start after the RN8209 so that the overCurrent task is launched after the setup of the sensor
+*/
+#  ifdef ZsensorRN8209
+  setupRN8209();
+  modules.add(ZsensorRN8209);
+#  endif
+#  ifdef ZactuatorONOFF
+  setupONOFF();
+  modules.add(ZactuatorONOFF);
+#  endif
+
   String s = WiFi.macAddress();
 #  ifdef USE_MAC_AS_GATEWAY_NAME
   sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
@@ -762,10 +775,6 @@ void setup() {
 #ifdef ZgatewayCloud
   setupCloud();
   modules.add(ZgatewayCloud);
-#endif
-#ifdef ZactuatorONOFF
-  setupONOFF();
-  modules.add(ZactuatorONOFF);
 #endif
 #ifdef ZsensorBME280
   setupZsensorBME280();
@@ -903,10 +912,6 @@ void setup() {
 #    undef ACTIVE_RECEIVER
 #  endif
 #  define ACTIVE_RECEIVER ACTIVE_RTL
-#endif
-#ifdef ZsensorRN8209
-  setupRN8209();
-  modules.add(ZsensorRN8209);
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRF2)
 #  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive
@@ -1500,6 +1505,12 @@ void loop() {
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
         stateMeasures();
+#  ifdef ZgatewayBT
+        stateBTMeasures(false);
+#  endif
+#  ifdef ZactuatorONOFF
+        stateONOFFMeasures();
+#  endif
       }
 #endif
 #ifdef ZsensorBME280
@@ -1570,12 +1581,7 @@ void loop() {
       if (disc)
         launchBTDiscovery(publishDiscovery);
 #  endif
-#  ifndef ESP32
-      if (BTtoMQTT())
-        Log.trace(F("BTtoMQTT OK" CR));
-#  else
       emptyBTQueue();
-#  endif
 #endif
 #ifdef ZgatewaySRFB
       SRFBtoMQTT();
@@ -1596,9 +1602,6 @@ void loop() {
 #endif
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
-#endif
-#ifdef ZactuatorONOFF
-      OverHeatingRelayOFF();
 #endif
 #ifdef ZactuatorPWM
       PWMLoop();
@@ -1717,13 +1720,9 @@ void stateMeasures() {
 #  ifdef ZgatewayBT
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
-  SYSdata["btqblck"] = btQueueBlocked;
-  SYSdata["btqsum"] = btQueueLengthSum;
-  SYSdata["btqsnd"] = btQueueLengthCount;
-  SYSdata["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
 #    endif
   SYSdata["interval"] = BTConfig.BLEinterval;
-  SYSdata["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
+  SYSdata["intervalcnct"] = BTConfig.intervalConnect;
   SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
