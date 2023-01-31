@@ -53,7 +53,7 @@ static RTL_433device NO_DEVICE_FOUND = {{0},
 
 RTL_433device* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 RTL_433device* getDeviceById(const char* id) {
-  Log.trace(F("getDeviceById %s" CR), id);
+  // Log.trace(F("getDeviceById %s" CR), id);
 
   for (std::vector<RTL_433device*>::iterator it = RTL_433devices.begin(); it != RTL_433devices.end(); ++it) {
     if ((strcmp((*it)->uniqueId, id) == 0)) {
@@ -93,10 +93,13 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
     RTL_433devices.push_back(device);
     newRTL_433Devices++;
   } else {
-    Log.trace(F("update %s" CR), id);
-
+    Log.trace(F("update %s count: %d published: %T" CR), id, device->count, device->isDisc);
+    device->count++;
+    if (device->count > 10) {
+      device->count = 10;
+    }
     if (flags & device_flags_isDisc) {
-      device->isDisc = true;
+      // device->isDisc = true;
     }
   }
 
@@ -106,8 +109,8 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
 // This function always should be called from the main core as it generates direct mqtt messages
 // When overrideDiscovery=true, we publish discovery messages of known RTL_433devices (even if no new)
 void launchRTL_433Discovery(bool overrideDiscovery) {
-  if (!overrideDiscovery && newRTL_433Devices == 0)
-    return;
+  // if (!overrideDiscovery && newRTL_433Devices == 0)
+    //return;
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("[rtl_433] semaphorecreateOrUpdateDeviceRTL_433 Semaphore NOT taken" CR));
     return;
@@ -117,9 +120,11 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
   xSemaphoreGive(semaphorecreateOrUpdateDeviceRTL_433);
   for (std::vector<RTL_433device*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     RTL_433device* pdevice = *it;
+    // 
+    
     Log.trace(F("Device id %s" CR), pdevice->uniqueId);
     // Do not launch discovery for the RTL_433devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
-    if (overrideDiscovery || !isDiscovered(pdevice)) {
+    if ((overrideDiscovery || !isDiscovered(pdevice)) && pdevice->count > 9) {
       size_t numRows = sizeof(parameters) / sizeof(parameters[0]);
       for (int i = 0; i < numRows; i++) {
         if (strstr(pdevice->uniqueId, parameters[i][0]) != 0) {
@@ -181,7 +186,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
         Log.trace(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
       }
     } else {
-      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
+      // Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
     }
   }
 }
@@ -240,7 +245,7 @@ void rtl_433_Callback(char* message) {
 
   uniqueid.replace("/", "-");
 
-  Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
+  // Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
     storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
     pub((char*)topic.c_str(), RFrtl_433_ESPdata);
