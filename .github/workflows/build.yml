@@ -74,6 +74,7 @@ jobs:
           - "esp32dev-ble-datatest"
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
+          - "airm2m_core_esp32c3"
           - "thingpulse-espgateway"
           - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest
