@@ -962,6 +962,11 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
       BLEdata.remove("manufacturerdata");
       BLEdata.remove("mac_type");
       BLEdata.remove("adv_type");
+      // tag device properties
+      BLEdata.remove("type");
+      BLEdata.remove("cidc");
+      BLEdata.remove("acts");
+      BLEdata.remove("cont");
     }
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
       pubBT(BLEdata);
