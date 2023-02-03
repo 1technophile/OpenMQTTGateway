@@ -6,6 +6,7 @@ on:
 jobs:
   build-upload:
     runs-on: ubuntu-latest
+    if: github.repository_owner == '1technophile'
     name: Build and upload Assets to Release
     steps:
       - uses: actions/checkout@v3
