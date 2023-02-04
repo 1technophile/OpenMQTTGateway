@@ -110,7 +110,7 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
 // When overrideDiscovery=true, we publish discovery messages of known RTL_433devices (even if no new)
 void launchRTL_433Discovery(bool overrideDiscovery) {
   // if (!overrideDiscovery && newRTL_433Devices == 0)
-    //return;
+  //return;
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("[rtl_433] semaphorecreateOrUpdateDeviceRTL_433 Semaphore NOT taken" CR));
     return;
@@ -120,8 +120,8 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
   xSemaphoreGive(semaphorecreateOrUpdateDeviceRTL_433);
   for (std::vector<RTL_433device*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     RTL_433device* pdevice = *it;
-    // 
-    
+    //
+
     Log.trace(F("Device id %s" CR), pdevice->uniqueId);
     // Do not launch discovery for the RTL_433devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
     if ((overrideDiscovery || !isDiscovered(pdevice)) && pdevice->count > 9) {

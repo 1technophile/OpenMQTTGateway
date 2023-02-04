@@ -22,7 +22,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
-#ifdef ZgatewayCloud
+#if defined(ZgatewayCloud) && defined(ESP32)
 
 #  include <ArduinoJson.h>
 #  include <PubSubClient.h>
@@ -179,6 +179,17 @@ void pubOmgCloud(const char* topic, const char* payload, bool retain) {
     omgCloudMessage->topic = topicHolder;
 
     omgCloudMessage->retain = retain;
+
+    // Add gateway_name to SYStoMQTT
+    
+    if (strstr(topic, subjectSYStoMQTT)) {
+      StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
+      deserializeJson(SYSdata, payload);
+      SYSdata["gateway_name"] = gateway_name;
+      String dataAsString = "";
+      serializeJson(SYSdata, dataAsString);
+      payload = dataAsString.c_str();
+    }
 
     char* payloadHolder = (char*)malloc(strlen(payload) + 1);
     if (payloadHolder == NULL) {
