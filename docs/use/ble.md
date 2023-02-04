@@ -230,7 +230,7 @@ If you want to enable this feature:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
 
-## ADVANCED: Publishing advertisement data (default: false)
+## ADVANCED: Publishing advertisement and advanced data (default: false)
 
 If you want to enable this feature:
 
