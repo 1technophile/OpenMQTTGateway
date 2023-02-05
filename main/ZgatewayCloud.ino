@@ -111,7 +111,7 @@ void setupCloud() {
   strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
   strcpy(token, strtok(0, ":"));
 
-  cloudTopic = "omgCloudPub/omgClient-" + String(account) + "/" + String(device);
+  cloudTopic = "omgCloudPub/omgClient-" + String(account);
   cloudWifi.setInsecure();
   cloud.setKeepAlive(300); // 5 minutes for keep alive
 
@@ -165,11 +165,11 @@ void pubOmgCloud(const char* topic, const char* payload, bool retain) {
   if (omgCloudMessage != NULL) {
     String messageTopic;
 
-    if (strncmp(topic, discovery_Topic, strlen(discovery_Topic)) != 0) {
-      messageTopic = cloudTopic + String(topic + (strlen(mqtt_topic) + strlen(gateway_name)));
-    } else {
+    // if (strncmp(topic, discovery_Topic, strlen(discovery_Topic)) != 0) {
+    //  messageTopic = cloudTopic + String(topic + (strlen(mqtt_topic) + strlen(gateway_name)));
+    // } else {
       messageTopic = cloudTopic + '/' + String(topic);
-    }
+    // }
     char* topicHolder = (char*)malloc(messageTopic.length() + 1);
     if (topicHolder == NULL) {
       free(omgCloudMessage);
@@ -179,17 +179,6 @@ void pubOmgCloud(const char* topic, const char* payload, bool retain) {
     omgCloudMessage->topic = topicHolder;
 
     omgCloudMessage->retain = retain;
-
-    // Add gateway_name to SYStoMQTT
-    
-    if (strstr(topic, subjectSYStoMQTT)) {
-      StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
-      deserializeJson(SYSdata, payload);
-      SYSdata["gateway_name"] = gateway_name;
-      String dataAsString = "";
-      serializeJson(SYSdata, dataAsString);
-      payload = dataAsString.c_str();
-    }
 
     char* payloadHolder = (char*)malloc(strlen(payload) + 1);
     if (payloadHolder == NULL) {
