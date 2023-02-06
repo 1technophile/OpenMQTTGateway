@@ -111,7 +111,7 @@ void setupCloud() {
   strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
   strcpy(token, strtok(0, ":"));
 
-  cloudTopic = "omgCloudPub/omgClient-" + String(account);
+  cloudTopic = "omgClient-" + String(account);
   cloudWifi.setInsecure();
   cloud.setKeepAlive(300); // 5 minutes for keep alive
 
