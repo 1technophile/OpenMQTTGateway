@@ -65,10 +65,10 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
     // displayPrint("[ CLOUD->OMG ] Received:", topic);
 
     // normalize cloud topic to be similar to local mqtt topic
-    topic += cloudTopic.length();
+    topic += cloudTopic.length() + 1;
 
     char localTopic[mqtt_max_packet_size];
-    (String(mqtt_topic) + String(gateway_name) + String(topic)).toCharArray(localTopic, mqtt_max_packet_size);
+    (String(topic)).toCharArray(localTopic, mqtt_max_packet_size);
     // Log.notice(F("Normalized topic: %s" CR), localTopic);
 
     //launch the function to treat received data if this data concern OpenMQTTGateway
@@ -90,7 +90,7 @@ void cloudConnect() {
     displayPrint("[ CLOUD ] connected");
     Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
     cloud.setCallback(cloudCallback);
-    String topic = cloudTopic + subjectMQTTtoX;
+    String topic = cloudTopic + '/' + mqtt_topic + gateway_name + subjectMQTTtoX;
     if (!cloud.subscribe(topic.c_str())) {
       Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
     };
@@ -168,7 +168,7 @@ void pubOmgCloud(const char* topic, const char* payload, bool retain) {
     // if (strncmp(topic, discovery_Topic, strlen(discovery_Topic)) != 0) {
     //  messageTopic = cloudTopic + String(topic + (strlen(mqtt_topic) + strlen(gateway_name)));
     // } else {
-      messageTopic = cloudTopic + '/' + String(topic);
+    messageTopic = cloudTopic + '/' + String(topic);
     // }
     char* topicHolder = (char*)malloc(messageTopic.length() + 1);
     if (topicHolder == NULL) {
