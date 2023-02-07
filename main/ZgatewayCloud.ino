@@ -86,9 +86,10 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
 
 void cloudConnect() {
   Log.warning(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(device)).c_str(), device, token);
-  if (cloud.connect(("omgDevice-" + String(device)).c_str(), device, token, (cloudTopic + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
+  if (cloud.connect(("omgDevice-" + String(gateway_name)).c_str(), device, token, (cloudTopic + '/' + String(mqtt_topic) + String(gateway_name)+ "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
     displayPrint("[ CLOUD ] connected");
     Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
+    Log.verbose(F("[ CLOUD ] OMG Cloud LWT %s" CR), (cloudTopic + '/' + mqtt_topic + gateway_name + "/LWT").c_str());
     cloud.setCallback(cloudCallback);
     String topic = cloudTopic + '/' + mqtt_topic + gateway_name + subjectMQTTtoX;
     if (!cloud.subscribe(topic.c_str())) {
