@@ -941,6 +941,15 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("number", //set Type
+                  subjectBTtoMQTT, "BT: Interval between active scans", (char*)getUniqueId("intervalacts", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.intervalacts/1000 }}", //set availability_topic,device_class,value_template,
+                  "{\"intervalacts\":{{value*1000}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
+                  stateClassNone //State Class
+  );
+  createDiscovery("number", //set Type
                   subjectBTtoMQTT, "BT: Connnect interval", (char*)getUniqueId("intervalcnct", "").c_str(), //set state_topic,name,uniqueId
                   "", "", "{{ value_json.intervalcnct/60000 }}", //set availability_topic,device_class,value_template,
                   "{\"intervalcnct\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
@@ -978,9 +987,9 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectBTtoMQTT, "BT: Active scan", (char*)getUniqueId("active_scan", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.activescan }}", //set availability_topic,device_class,value_template,
-                  "{\"activescan\":true,\"save\":true}", "{\"activescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectBTtoMQTT, "BT: Adaptive scan", (char*)getUniqueId("adaptive_scan", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.adaptivescan }}", //set availability_topic,device_class,value_template,
+                  "{\"adaptivescan\":true,\"save\":true}", "{\"adaptivescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain

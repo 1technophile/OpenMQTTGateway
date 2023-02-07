@@ -22,7 +22,6 @@ jobs:
           - "esp32dev-ble-openhab"
           - "esp32dev-ble-mqtt-undecoded"
           - "esp32dev-ble-aws"
-          - "esp32dev-ble-cont"
           - "esp32feather-ble"
           - "esp32-lolin32lite-ble"
           - "esp32-olimex-gtw-ble-eth"

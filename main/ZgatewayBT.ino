@@ -82,7 +82,7 @@ static bool oneWhite = false;
 void BTConfig_init() {
   BTConfig.bleConnect = AttemptBLEConnect;
   BTConfig.BLEinterval = TimeBtwRead;
-  BTConfig.activeScan = ActiveBLEScan;
+  BTConfig.adaptiveScan = AdaptiveBLEScan;
   BTConfig.intervalActiveScan = TimeBtwActive;
   BTConfig.intervalConnect = TimeBtwConnect;
   BTConfig.pubOnlySensors = PublishOnlySensors;
@@ -120,7 +120,7 @@ void stateBTMeasures(bool start) {
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["bleconnect"] = BTConfig.bleConnect;
   jo["interval"] = BTConfig.BLEinterval;
-  jo["activescan"] = BTConfig.activeScan;
+  jo["adaptivescan"] = BTConfig.adaptiveScan;
   jo["intervalacts"] = BTConfig.intervalActiveScan;
   jo["intervalcnct"] = BTConfig.intervalConnect;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
@@ -155,7 +155,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
     BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
   // Define if the scan is active or passive
-  BTConfig_update(BTdata, "activescan", BTConfig.activeScan);
+  BTConfig_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
   // Time before before active scan
   BTConfig_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
   // Time before a connect set
@@ -199,7 +199,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     JsonObject jo = jsonBuffer.to<JsonObject>();
     jo["bleconnect"] = BTConfig.bleConnect;
     jo["interval"] = BTConfig.BLEinterval;
-    jo["activescan"] = BTConfig.activeScan;
+    jo["adaptivescan"] = BTConfig.adaptiveScan;
     jo["intervalacts"] = BTConfig.intervalActiveScan;
     jo["intervalcnct"] = BTConfig.intervalConnect;
     jo["onlysensors"] = BTConfig.pubOnlySensors;
@@ -625,11 +625,11 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  if (millis() > (timeBetweenActive + BTConfig.intervalActiveScan) && !BTConfig.activeScan && BTConfig.intervalActiveScan != 0) {
+  if (millis() > (timeBetweenActive + BTConfig.intervalActiveScan)) {
     pBLEScan->setActiveScan(true);
     timeBetweenActive = millis();
   } else {
-    pBLEScan->setActiveScan(BTConfig.activeScan);
+    pBLEScan->setActiveScan(false);
   }
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
@@ -810,7 +810,7 @@ void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
-  Log.notice(F("Active BLE scan: %T" CR), BTConfig.activeScan);
+  Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
   Log.notice(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
@@ -1002,6 +1002,22 @@ void process_bledata(JsonObject& BLEdata) {
       createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
+      if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
+        if (BLEdata.containsKey("acts") && BLEdata.containsKey("cont")) {
+          if (BLEdata["acts"] && BLEdata["cont"]) {
+            BTConfig.BLEinterval = MinTimeBtwScan;
+            BTConfig.intervalActiveScan = MinTimeBtwScan;
+            Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
+            stateBTMeasures(false);
+          }
+        } else if (BLEdata.containsKey("cont")) {
+          if (BLEdata["cont"]) {
+            BTConfig.BLEinterval = MinTimeBtwScan;
+            Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
+            stateBTMeasures(false);
+          }
+        }
+      }
     }
   } else {
     if (BLEdata.containsKey("name")) { // Connectable devices
