@@ -136,9 +136,9 @@ The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD0
 
 ## Setting if the gateway use adaptive scanning
 
-Adaptive scanning let the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
-The gateway retrieves your devices information from the [Theengs Decoder](https://decoder.theengs.io) and adapt its parameters following the results.
-For example a door or a PIR sensor will require continuous scanning, so if detected the gateway is going to go down is time between scan to its minimum. Or your devices may also requires active scanning to retrieve data, in this case the gateway will also trigger an active scan when necessary.
+Adaptive scanning lets the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
+The gateway retrieves your devices' information from [Theengs Decoder](https://decoder.theengs.io) and adapts its parameters accordingly.
+For example a door or a PIR sensor will require continuous scanning, so if detected the gateway is going to reduce its time between scans to the minimum. Or your devices may also require active scanning to retrieve data, in this case the gateway will also trigger active scans at regular intervals.
 
 If you want to change this characteristic (default:true):
 

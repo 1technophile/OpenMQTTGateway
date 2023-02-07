@@ -75,13 +75,13 @@ extern int btQueueLengthCount;
 #  define BLEScanWindow 30 // How long to scan during the interval; in milliseconds.
 #endif
 #ifndef AdaptiveBLEScan
-#  define AdaptiveBLEScan true // Set adaptive scanning, this will get more data from the advertiser.
+#  define AdaptiveBLEScan true // Sets adaptive scanning, this will automatically decide on the best passive and active scanning intervals
 #endif
 #ifndef TimeBtwActive
 #  define TimeBtwActive 55555 //define default time between two BLE active scans when general passive scanning is selected; in milliseconds
 #endif
 #ifndef MinTimeBtwScan
-#  define MinTimeBtwScan 100 //define the time for a scan; in milliseconds
+#  define MinTimeBtwScan 100 //define the time between two scans; in milliseconds
 #endif
 #ifndef TimeBtwConnect
 #  define TimeBtwConnect 3600000 //define default time between BLE connection attempt (not used for immediate actions); in milliseconds
