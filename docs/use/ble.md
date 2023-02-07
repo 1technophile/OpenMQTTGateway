@@ -146,6 +146,18 @@ With Home Assistant, this command is directly available through MQTT auto discov
 
 If false, the gateway will only do a passive scanning (not request for sensor broadcasts), some sensors may not advertize their data with passive scanning.
 
+## Setting the time between active scanning
+
+If you have passive scanning activated, but also have some devices which require active scanning, this defines the time interval between two intermittent active scans.
+
+If you want to change the time between active scans you can change it by MQTT. For setting the active scan interval time to every 5 minutes:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
+
+::: tip
+Setting `{"intervalacts":0}` deactivates intermittent active scanning to only have consistent passive scanning if `'{"activescan":false}'`.
+:::
+
 ## Setting if the gateway connects to BLE devices eligibles on ESP32
 
 If you want to change this characteristic:
