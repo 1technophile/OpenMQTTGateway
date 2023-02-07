@@ -134,11 +134,15 @@ With Home Assistant, this command is directly available through MQTT auto discov
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
 
-## Setting if the gateway use active or passive scanning
+## Setting if the gateway use adaptive scanning
+
+Adaptive scanning let the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
+The gateway retrieves your devices information from the [Theengs Decoder](https://decoder.theengs.io) and adapt its parameters following the results.
+For example a door or a PIR sensor will require continuous scanning, so if detected the gateway is going to go down is time between scan to its minimum. Or your devices may also requires active scanning to retrieve data, in this case the gateway will also trigger an active scan when necessary.
 
 If you want to change this characteristic (default:true):
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"activescan":false}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"adaptivescan":false}'`
 
 ::: tip
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
@@ -153,10 +157,6 @@ If you have passive scanning activated, but also have some devices which require
 If you want to change the time between active scans you can change it by MQTT. For setting the active scan interval time to every 5 minutes:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
-
-::: tip
-Setting `{"intervalacts":0}` deactivates intermittent active scanning to only have consistent passive scanning if `'{"activescan":false}'`.
-:::
 
 ## Setting if the gateway connects to BLE devices eligibles on ESP32
 
