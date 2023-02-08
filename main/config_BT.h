@@ -66,7 +66,7 @@ extern int btQueueLengthCount;
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -100 will not be reported
 
 #ifndef Scan_duration
-#  define Scan_duration 10000 //define the time for a scan); in milliseconds
+#  define Scan_duration 10000 //define the time for a scan; in milliseconds
 #endif
 #ifndef BLEScanInterval
 #  define BLEScanInterval 52 // How often the scan occurs / switches channels; in milliseconds,
@@ -74,8 +74,14 @@ extern int btQueueLengthCount;
 #ifndef BLEScanWindow
 #  define BLEScanWindow 30 // How long to scan during the interval; in milliseconds.
 #endif
-#ifndef ActiveBLEScan
-#  define ActiveBLEScan true // Set active scanning, this will get more data from the advertiser.
+#ifndef AdaptiveBLEScan
+#  define AdaptiveBLEScan true // Sets adaptive scanning, this will automatically decide on the best passive and active scanning intervals
+#endif
+#ifndef TimeBtwActive
+#  define TimeBtwActive 55555 //define default time between two BLE active scans when general passive scanning is selected; in milliseconds
+#endif
+#ifndef MinTimeBtwScan
+#  define MinTimeBtwScan 100 //define the time between two scans; in milliseconds
 #endif
 #ifndef TimeBtwConnect
 #  define TimeBtwConnect 3600000 //define default time between BLE connection attempt (not used for immediate actions); in milliseconds
@@ -85,7 +91,7 @@ extern int btQueueLengthCount;
 #  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
-#  define TimeBtwRead 55555 //define default time between 2 scans); in milliseconds
+#  define TimeBtwRead 55555 //define default time between 2 scans; in milliseconds
 #endif
 
 #ifndef PublishOnlySensors
@@ -130,7 +136,8 @@ unsigned long scanCount = 0;
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct BTConfig_s {
   bool bleConnect; // Attempt a BLE connection to sensors with ESP32
-  bool activeScan;
+  bool adaptiveScan;
+  unsigned long intervalActiveScan; // Time between 2 active scans when generally passive scanning
   unsigned long BLEinterval; // Time between 2 scans
   unsigned long intervalConnect; // Time between 2 connects
   bool pubOnlySensors; // Publish only the identified sensors (like temperature sensors)
