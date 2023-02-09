@@ -936,7 +936,7 @@ bool wifi_reconnect_bypass() {
 #  endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
     WiFi.begin();
-    delay(500);
+    delay(1000);
     wifi_autoreconnect_cnt++;
   }
   if (wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
