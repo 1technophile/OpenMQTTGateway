@@ -760,8 +760,8 @@ void coreTask(void* pvParameters) {
 }
 
 void lowPowerESP32() { // low power mode
-  Log.trace(F("Going to deep sleep for: %l s" CR), (BTConfig.BLEinterval / 1000));
-  deepSleep(BTConfig.BLEinterval * 1000);
+  Log.trace(F("Going to deep sleep for: %l s" CR), (TimeBtwRead / 1000));
+  deepSleep(TimeBtwRead * 1000);
 }
 
 void deepSleep(uint64_t time_in_us) {
@@ -771,7 +771,7 @@ void deepSleep(uint64_t time_in_us) {
 #  endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
-  BLEDevice::deinit(true);
+  if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
   // Ignore the deprecated warning, this call is necessary here.
 #  pragma GCC diagnostic push

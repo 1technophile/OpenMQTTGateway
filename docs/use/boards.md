@@ -24,6 +24,8 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":2}'`
 
+The interval between the ESP32 wake up is defined at build time by the macro `TimeBtwRead`, a change of the `interval` through MQTT will not impact the time between wake up.
+
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
 A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
