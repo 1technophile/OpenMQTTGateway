@@ -802,6 +802,8 @@ void changelowpowermode(int newLowPowerMode) {
   preferences.begin(Gateway_Short_Name, false);
   preferences.putUInt("lowpowermode", lowpowermode);
   preferences.end();
+  // Publish the states to update the controller switch status
+  stateMeasures();
 }
 
 void setupBT() {

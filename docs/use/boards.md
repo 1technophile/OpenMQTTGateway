@@ -28,7 +28,7 @@ The interval between the ESP32 wake up is defined at build time by the macro `Ti
 
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
-A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
+A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update will be revceived and acknowledged when the device woke up.
 In low power mode you should use ESPWifiManualSetup so as to rely on the credentials entered into User_config.h.
 So as to do that uncomment the line below in User_config.h
 ``` c
