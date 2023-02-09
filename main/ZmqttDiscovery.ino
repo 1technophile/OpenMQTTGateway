@@ -249,6 +249,20 @@ void createDiscovery(const char* sensor_type,
     sensor["stat_t"] = state_topic;
   }
 
+  if (availability_topic[0]) {
+    char avty_topic[mqtt_topic_max_size];
+    // If not an entity belonging to the gateway we put wild card for the location and gateway name
+    // allowing to have the entity detected by several gateways and a consistent discovery topic among the gateways
+    if (gateway_entity) {
+      strcpy(avty_topic, mqtt_topic);
+      strcat(avty_topic, gateway_name);
+    } else {
+      strcpy(avty_topic, "+/+");
+    }
+    strcat(avty_topic, availability_topic);
+    sensor["avty_t"] = avty_topic;
+  }
+
   if (device_class[0]) {
     // We check if the class belongs to HAAS classes list
     int num_classes = sizeof(availableHASSClasses) / sizeof(availableHASSClasses[0]);
@@ -978,7 +992,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish only sensors", (char*)getUniqueId("only_sensors", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.onlysensors }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.onlysensors }}", //set availability_topic,device_class,value_template,
                   "{\"onlysensors\":true,\"save\":true}", "{\"onlysensors\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -988,7 +1002,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Adaptive scan", (char*)getUniqueId("adaptive_scan", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.adaptivescan }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.adaptivescan }}", //set availability_topic,device_class,value_template,
                   "{\"adaptivescan\":true,\"save\":true}", "{\"adaptivescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -998,7 +1012,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
                   "{\"hasspresence\":true,\"save\":true}", "{\"hasspresence\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -1008,7 +1022,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish Advertisement data", (char*)getUniqueId("pubadvdata", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.pubadvdata }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.pubadvdata }}", //set availability_topic,device_class,value_template,
                   "{\"pubadvdata\":true,\"save\":true}", "{\"pubadvdata\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -1018,7 +1032,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Connect to devices", (char*)getUniqueId("bleconnect", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.bleconnect }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.bleconnect }}", //set availability_topic,device_class,value_template,
                   "{\"bleconnect\":true,\"save\":true}", "{\"bleconnect\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
