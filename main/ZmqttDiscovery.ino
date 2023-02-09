@@ -444,17 +444,6 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC
                   stateClassMeasurement //State Class
   );
-#    ifdef ZgatewayBT
-  createDiscovery("sensor", //set Type
-                  subjectSYStoMQTT, "SYS: Low Power Mode", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.lowpowermode }}", //set availability_topic,device_class,value_template,
-                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device ID
-                  stateClassNone //State Class
-  );
-#    endif
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat voltage", (char*)getUniqueId("m5batvoltage", "").c_str(), //set state_topic,name,uniqueId
@@ -1041,16 +1030,16 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectBTtoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "", //set availability_topic,device_class,value_template,
+                  subjectSYStoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.lowpowermode | bool }}", //set availability_topic,device_class,value_template,
                   "{\"lowpowermode\":2}", "{\"lowpowermode\":0}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
                   "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
-                  stateClassNone //State Class
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
   );
 #    endif
 #  endif
 }
-
 #endif
