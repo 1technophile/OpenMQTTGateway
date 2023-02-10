@@ -287,12 +287,13 @@ static_assert(MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT < (sizeof(certs_array) / siz
 #endif
 
 /*------------------DEEP SLEEP parameters ------------------*/
+//DEFAULT_LOW_POWER_MODE -1 to normal mode, low power mode can't be used on this build
 //DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)
 //DEFAULT_LOW_POWER_MODE 1 to activate deep sleep
 //DEFAULT_LOW_POWER_MODE 2 to activate deep sleep (LCD is turned OFF)
 #ifdef ESP32
 #  ifndef DEFAULT_LOW_POWER_MODE
-#    define DEFAULT_LOW_POWER_MODE 0
+#    define DEFAULT_LOW_POWER_MODE -1
 #  endif
 int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
