@@ -1024,7 +1024,7 @@ void process_bledata(JsonObject& BLEdata) {
             Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
             stateBTMeasures(false);
           }
-        } else if (BLEdata.containsKey("cont")) {
+        } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
           if (BLEdata["cont"]) {
             BTConfig.BLEinterval = MinTimeBtwScan;
             Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
