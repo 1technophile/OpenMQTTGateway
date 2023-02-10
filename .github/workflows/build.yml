@@ -22,7 +22,6 @@ jobs:
           - "esp32dev-ble-openhab"
           - "esp32dev-ble-mqtt-undecoded"
           - "esp32dev-ble-aws"
-          - "esp32dev-ble-cont"
           - "esp32feather-ble"
           - "esp32-lolin32lite-ble"
           - "esp32-olimex-gtw-ble-eth"
@@ -74,6 +73,7 @@ jobs:
           - "esp32dev-ble-datatest"
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
+          - "airm2m_core_esp32c3"
           - "thingpulse-espgateway"
           - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest

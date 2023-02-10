@@ -24,9 +24,11 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":2}'`
 
+The interval between the ESP32 wake up is defined at build time by the macro `TimeBtwRead`, a change of the `interval` through MQTT will not impact the time between wake up.
+
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
-A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
+A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update will be revceived and acknowledged when the device woke up.
 In low power mode you should use ESPWifiManualSetup so as to rely on the credentials entered into User_config.h.
 So as to do that uncomment the line below in User_config.h
 ``` c
@@ -124,3 +126,21 @@ The mqtt command to change the units is:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
 
 Please note that it may take several seconds/display updates for the units to change.  This is due to the queueing of messages for display.
+
+### Flip Display 180 degrees
+
+This allows you to rotate the display 180 degrees.  Can be set at compile time or during use, defaults to true.
+
+The compiler directive is `-DDISPLAY_FLIP=false`
+
+The mqtt command to change display orientation is:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-flip":false}'`
+
+Please note that it may take several seconds/display updates for the display to change.  This is due to the queueing of messages for display.
+
+### Display OpenMQTTGateway Logo when Idle
+
+When this option is enabled the OLED display will show the OpenMQTTGateway Logo when it is idle.  Defaults to false
+
+The compiler directive is `-DDISPLAY_IDLE_LOGO=true`

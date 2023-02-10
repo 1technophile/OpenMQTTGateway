@@ -82,8 +82,9 @@ static bool oneWhite = false;
 void BTConfig_init() {
   BTConfig.bleConnect = AttemptBLEConnect;
   BTConfig.BLEinterval = TimeBtwRead;
-  BTConfig.activeScan = ActiveBLEScan;
-  BTConfig.BLEscanBeforeConnect = ScanBeforeConnect;
+  BTConfig.adaptiveScan = AdaptiveBLEScan;
+  BTConfig.intervalActiveScan = TimeBtwActive;
+  BTConfig.intervalConnect = TimeBtwConnect;
   BTConfig.pubOnlySensors = PublishOnlySensors;
   BTConfig.presenceEnable = HassPresence;
   BTConfig.presenceTopic = subjectHomePresence;
@@ -96,6 +97,9 @@ void BTConfig_init() {
   BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
   BTConfig.ignoreWBlist = false;
 }
+
+unsigned long timeBetweenConnect = 0;
+unsigned long timeBetweenActive = 0;
 
 template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
 void BTConfig_update(JsonObject& data, const char* key, T& var);
@@ -111,6 +115,39 @@ void BTConfig_update(JsonObject& data, const char* key, T& var) {
   }
 }
 
+void stateBTMeasures(bool start) {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jo = jsonBuffer.to<JsonObject>();
+  jo["bleconnect"] = BTConfig.bleConnect;
+  jo["interval"] = BTConfig.BLEinterval;
+  jo["adaptivescan"] = BTConfig.adaptiveScan;
+  jo["intervalacts"] = BTConfig.intervalActiveScan;
+  jo["intervalcnct"] = BTConfig.intervalConnect;
+  jo["onlysensors"] = BTConfig.pubOnlySensors;
+  jo["hasspresence"] = BTConfig.presenceEnable;
+  jo["presenceTopic"] = BTConfig.presenceTopic;
+  jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+  jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
+  jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
+  jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
+  jo["filterConnectable"] = BTConfig.filterConnectable;
+  jo["pubadvdata"] = BTConfig.pubAdvData;
+  jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+  jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
+  jo["btqblck"] = btQueueBlocked;
+  jo["btqsum"] = btQueueLengthSum;
+  jo["btqsnd"] = btQueueLengthCount;
+  jo["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
+
+  if (start) {
+    Log.notice(F("BT sys: "));
+    serializeJsonPretty(jsonBuffer, Serial);
+    Serial.println();
+    return; // Do not try to erase/write/send config at startup
+  }
+  pub(subjectBTtoMQTT, jo);
+}
+
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
@@ -118,9 +155,11 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
     BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
   // Define if the scan is active or passive
-  BTConfig_update(BTdata, "activescan", BTConfig.activeScan);
-  // Number of scan before a connect set
-  BTConfig_update(BTdata, "scanbcnct", BTConfig.BLEscanBeforeConnect);
+  BTConfig_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
+  // Time before before active scan
+  BTConfig_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
+  // Time before a connect set
+  BTConfig_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
   BTConfig_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
   // Home Assistant presence message
@@ -144,31 +183,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Disable Whitelist & Blacklist
   BTConfig_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
 
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject jo = jsonBuffer.to<JsonObject>();
-  jo["bleconnect"] = BTConfig.bleConnect;
-  jo["interval"] = BTConfig.BLEinterval;
-  jo["activescan"] = BTConfig.activeScan;
-  jo["scanbcnct"] = BTConfig.BLEscanBeforeConnect;
-  jo["onlysensors"] = BTConfig.pubOnlySensors;
-  jo["hasspresence"] = BTConfig.presenceEnable;
-  jo["presenceTopic"] = BTConfig.presenceTopic;
-  jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
-  jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
-  jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
-  jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
-  jo["filterConnectable"] = BTConfig.filterConnectable;
-  jo["pubadvdata"] = BTConfig.pubAdvData;
-  jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
-  jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
-
-  if (startup) {
-    Log.notice(F("BT config: "));
-    serializeJsonPretty(jsonBuffer, Serial);
-    Serial.println();
-    return; // Do not try to erase/write/send config at startup
-  }
-  pub(subjectBTtoMQTT, jo);
+  stateBTMeasures(startup);
 
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
@@ -180,6 +195,24 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   }
 
   if (BTdata.containsKey("save") && BTdata["save"].as<bool>()) {
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject jo = jsonBuffer.to<JsonObject>();
+    jo["bleconnect"] = BTConfig.bleConnect;
+    jo["interval"] = BTConfig.BLEinterval;
+    jo["adaptivescan"] = BTConfig.adaptiveScan;
+    jo["intervalacts"] = BTConfig.intervalActiveScan;
+    jo["intervalcnct"] = BTConfig.intervalConnect;
+    jo["onlysensors"] = BTConfig.pubOnlySensors;
+    jo["hasspresence"] = BTConfig.presenceEnable;
+    jo["presenceTopic"] = BTConfig.presenceTopic;
+    jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+    jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
+    jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
+    jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
+    jo["filterConnectable"] = BTConfig.filterConnectable;
+    jo["pubadvdata"] = BTConfig.pubAdvData;
+    jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+    jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -219,6 +252,9 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
+    if (data.containsKey("model") || data.containsKey("distance")) { // Only display sensor data
+      pubOled((char*)topic.c_str(), data);
+    }
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
     if (data.containsKey("servicedatauuid"))
@@ -589,7 +625,12 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  pBLEScan->setActiveScan(BTConfig.activeScan);
+  if (millis() > (timeBetweenActive + BTConfig.intervalActiveScan)) {
+    pBLEScan->setActiveScan(true);
+    timeBetweenActive = millis();
+  } else {
+    pBLEScan->setActiveScan(false);
+  }
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
   BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
@@ -689,9 +730,11 @@ void coreTask(void* pvParameters) {
       } else if (!ProcessLock) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
-          // Launching a connect every BLEscanBeforeConnect
-          if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
+          // Launching a connect every TimeBtwConnect
+          if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
+            timeBetweenConnect = millis();
             BLEconnect();
+          }
           dumpDevices();
           xSemaphoreGive(semaphoreBLEOperation);
         } else {
@@ -717,8 +760,8 @@ void coreTask(void* pvParameters) {
 }
 
 void lowPowerESP32() { // low power mode
-  Log.trace(F("Going to deep sleep for: %l s" CR), (BTConfig.BLEinterval / 1000));
-  deepSleep(BTConfig.BLEinterval * 1000);
+  Log.trace(F("Going to deep sleep for: %l s" CR), (TimeBtwRead / 1000));
+  deepSleep(TimeBtwRead * 1000);
 }
 
 void deepSleep(uint64_t time_in_us) {
@@ -728,7 +771,7 @@ void deepSleep(uint64_t time_in_us) {
 #  endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
-  BLEDevice::deinit(true);
+  if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
   // Ignore the deprecated warning, this call is necessary here.
 #  pragma GCC diagnostic push
@@ -759,15 +802,18 @@ void changelowpowermode(int newLowPowerMode) {
   preferences.begin(Gateway_Short_Name, false);
   preferences.putUInt("lowpowermode", lowpowermode);
   preferences.end();
+  // Publish the states to update the controller switch status
+  stateMeasures();
 }
 
 void setupBT() {
   BTConfig_init();
   BTConfig_load();
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
-  Log.notice(F("BLE scans number before connect: %d" CR), BTConfig.BLEscanBeforeConnect);
+  Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
-  Log.notice(F("Active BLE scan: %T" CR), BTConfig.activeScan);
+  Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
+  Log.notice(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
 
@@ -930,6 +976,11 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
       BLEdata.remove("manufacturerdata");
       BLEdata.remove("mac_type");
       BLEdata.remove("adv_type");
+      // tag device properties
+      BLEdata.remove("type");
+      BLEdata.remove("cidc");
+      BLEdata.remove("acts");
+      BLEdata.remove("cont");
     }
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
       pubBT(BLEdata);
@@ -953,6 +1004,22 @@ void process_bledata(JsonObject& BLEdata) {
       createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
+      if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
+        if (BLEdata.containsKey("acts") && BLEdata.containsKey("cont")) {
+          if (BLEdata["acts"] && BLEdata["cont"]) {
+            BTConfig.BLEinterval = MinTimeBtwScan;
+            BTConfig.intervalActiveScan = MinTimeBtwScan;
+            Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
+            stateBTMeasures(false);
+          }
+        } else if (BLEdata.containsKey("cont")) {
+          if (BLEdata["cont"]) {
+            BTConfig.BLEinterval = MinTimeBtwScan;
+            Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
+            stateBTMeasures(false);
+          }
+        }
+      }
     }
   } else {
     if (BLEdata.containsKey("name")) { // Connectable devices
@@ -1041,8 +1108,10 @@ void immediateBTAction(void* pvParameters) {
       std::swap(BLEactions, act_swap);
 
       // If we stopped the scheduled connect for this action, do the scheduled now
-      if ((!(scanCount % BTConfig.BLEscanBeforeConnect) || scanCount == 1) && BTConfig.bleConnect)
+      if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
+        timeBetweenConnect = millis();
         BLEconnect();
+      }
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
       Log.error(F("BLE busy - command not sent" CR));

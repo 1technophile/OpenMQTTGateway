@@ -6,6 +6,7 @@ on:
 jobs:
   build-upload:
     runs-on: ubuntu-latest
+    if: github.repository_owner == '1technophile'
     name: Build and upload Assets to Release
     steps:
       - uses: actions/checkout@v3
@@ -34,7 +35,7 @@ jobs:
           sudo apt install rename
           ./scripts/prepare_deploy.sh
       - name: Set up Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: "14.x"
       - name: Build documentation

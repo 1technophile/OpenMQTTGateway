@@ -249,6 +249,20 @@ void createDiscovery(const char* sensor_type,
     sensor["stat_t"] = state_topic;
   }
 
+  if (availability_topic[0]) {
+    char avty_topic[mqtt_topic_max_size];
+    // If not an entity belonging to the gateway we put wild card for the location and gateway name
+    // allowing to have the entity detected by several gateways and a consistent discovery topic among the gateways
+    if (gateway_entity) {
+      strcpy(avty_topic, mqtt_topic);
+      strcat(avty_topic, gateway_name);
+    } else {
+      strcpy(avty_topic, "+/+");
+    }
+    strcat(avty_topic, availability_topic);
+    sensor["avty_t"] = avty_topic;
+  }
+
   if (device_class[0]) {
     // We check if the class belongs to HAAS classes list
     int num_classes = sizeof(availableHASSClasses) / sizeof(availableHASSClasses[0]);
@@ -430,17 +444,6 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC
                   stateClassMeasurement //State Class
   );
-#    ifdef ZgatewayBT
-  createDiscovery("sensor", //set Type
-                  subjectSYStoMQTT, "SYS: Low Power Mode", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.lowpowermode }}", //set availability_topic,device_class,value_template,
-                  "", "", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  "", "", true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device ID
-                  stateClassNone //State Class
-  );
-#    endif
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat voltage", (char*)getUniqueId("m5batvoltage", "").c_str(), //set state_topic,name,uniqueId
@@ -941,9 +944,18 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("number", //set Type
-                  subjectBTtoMQTT, "BT: Connnect every X scan(s)", (char*)getUniqueId("scanbcnct", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.scanbcnct }}", //set availability_topic,device_class,value_template,
-                  "{\"scanbcnct\":{{value}},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectBTtoMQTT, "BT: Interval between active scans", (char*)getUniqueId("intervalacts", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.intervalacts/1000 }}", //set availability_topic,device_class,value_template,
+                  "{\"intervalacts\":{{value*1000}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
+                  stateClassNone //State Class
+  );
+  createDiscovery("number", //set Type
+                  subjectBTtoMQTT, "BT: Connnect interval", (char*)getUniqueId("intervalcnct", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.intervalcnct/60000 }}", //set availability_topic,device_class,value_template,
+                  "{\"intervalcnct\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
                   "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
@@ -969,7 +981,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish only sensors", (char*)getUniqueId("only_sensors", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.onlysensors }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.onlysensors }}", //set availability_topic,device_class,value_template,
                   "{\"onlysensors\":true,\"save\":true}", "{\"onlysensors\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -978,9 +990,9 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectBTtoMQTT, "BT: Active scan", (char*)getUniqueId("active_scan", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.activescan }}", //set availability_topic,device_class,value_template,
-                  "{\"activescan\":true,\"save\":true}", "{\"activescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectBTtoMQTT, "BT: Adaptive scan", (char*)getUniqueId("adaptive_scan", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.adaptivescan }}", //set availability_topic,device_class,value_template,
+                  "{\"adaptivescan\":true,\"save\":true}", "{\"adaptivescan\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
@@ -989,7 +1001,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
                   "{\"hasspresence\":true,\"save\":true}", "{\"hasspresence\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -999,7 +1011,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish Advertisement data", (char*)getUniqueId("pubadvdata", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.pubadvdata }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.pubadvdata }}", //set availability_topic,device_class,value_template,
                   "{\"pubadvdata\":true,\"save\":true}", "{\"pubadvdata\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -1009,7 +1021,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Connect to devices", (char*)getUniqueId("bleconnect", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "{{ value_json.bleconnect }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "", "{{ value_json.bleconnect }}", //set availability_topic,device_class,value_template,
                   "{\"bleconnect\":true,\"save\":true}", "{\"bleconnect\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -1018,16 +1030,16 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectBTtoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
-                  "", "", "", //set availability_topic,device_class,value_template,
+                  subjectSYStoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
+                  "", "", "{{ value_json.lowpowermode | bool }}", //set availability_topic,device_class,value_template,
                   "{\"lowpowermode\":2}", "{\"lowpowermode\":0}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
                   "", "", true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
-                  stateClassNone //State Class
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
   );
 #    endif
 #  endif
 }
-
 #endif
