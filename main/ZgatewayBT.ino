@@ -741,12 +741,13 @@ void coreTask(void* pvParameters) {
             BLEconnect();
           }
           dumpDevices();
+          Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
           xSemaphoreGive(semaphoreBLEOperation);
         } else {
           Log.error(F("Failed to start scan - BLE busy" CR));
         }
       }
-      if (lowpowermode) {
+      if (lowpowermode > 0) {
         lowPowerESP32();
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
         if (scan == 1) BTforceScan();
@@ -764,51 +765,57 @@ void coreTask(void* pvParameters) {
   }
 }
 
+#  if DEFAULT_LOW_POWER_MODE != -1
 void lowPowerESP32() { // low power mode
   Log.trace(F("Going to deep sleep for: %l s" CR), (TimeBtwRead / 1000));
   deepSleep(TimeBtwRead * 1000);
 }
 
 void deepSleep(uint64_t time_in_us) {
-#  if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   sleepScreen();
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
-#  endif
+#    endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
   if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
   // Ignore the deprecated warning, this call is necessary here.
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   adc_power_off();
-#  pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
   esp_wifi_stop();
   esp_deep_sleep(time_in_us);
 }
+#  else
+void lowPowerESP32() {}
+#  endif
 
 void changelowpowermode(int newLowPowerMode) {
+#  if DEFAULT_LOW_POWER_MODE != -1
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
-#  if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   if (lowpowermode == 2) {
-#    ifdef ZboardM5STACK
+#      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
-#    endif
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#      endif
+#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
     M5.Axp.SetLDO2(true);
     M5.Lcd.begin();
-#    endif
+#      endif
   }
   char lpm[2];
   sprintf(lpm, "%d", newLowPowerMode);
   M5Print("Changing LOW POWER mode to:", lpm, "");
-#  endif
+#    endif
   lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
   preferences.putUInt("lowpowermode", lowpowermode);
   preferences.end();
   // Publish the states to update the controller switch status
   stateMeasures();
+#  endif
 }
 
 void setupBT() {
