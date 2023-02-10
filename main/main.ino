@@ -1113,13 +1113,11 @@ void saveConfigCallback() {
 }
 
 #  ifdef TRIGGER_GPIO
-void checkButton() { // Check if button is pressed so as to reset the credentials and parameters stored into the flash, code from tzapu/wifimanager examples
-#    if defined(INPUT_GPIO) && defined(ZsensorGPIOInput) && INPUT_GPIO == TRIGGER_GPIO
-  MeasureGPIOInput();
-#    else
-  // check for button press
+/**
+ * Identify a long button press to trigger a reset
+* */
+void blockingWaitForReset() {
   if (digitalRead(TRIGGER_GPIO) == LOW) {
-    // poor mans debounce/press-hold, code not ideal for production
     delay(50);
     if (digitalRead(TRIGGER_GPIO) == LOW) {
       Log.trace(F("Trigger button Pressed" CR));
@@ -1131,7 +1129,23 @@ void checkButton() { // Check if button is pressed so as to reset the credential
       }
     }
   }
+}
+
+/**
+ * Check if button is pressed so as to reset the credentials and parameters stored into the flash
+* */
+void checkButton() {
+  unsigned long timeFromStart = millis();
+  // Identify if the reset button is pushed at start
+  if (timeFromStart < TimeToResetAtStart) {
+    blockingWaitForReset();
+  } else { // When we are not at start we either check the button as a regular input (ZsensorGPIOInput used) or for a reset
+#    if defined(INPUT_GPIO) && defined(ZsensorGPIOInput) && INPUT_GPIO == TRIGGER_GPIO
+    MeasureGPIOInput();
+#    else
+    blockingWaitForReset();
 #    endif
+  }
 }
 #  else
 void checkButton() {}
