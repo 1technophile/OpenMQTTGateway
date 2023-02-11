@@ -137,12 +137,14 @@ The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD0
 ## Setting if the gateway use adaptive scanning
 
 Adaptive scanning lets the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
-The gateway retrieves your devices' information from [Theengs Decoder](https://decoder.theengs.io) and adapts its parameters accordingly.
+The gateway retrieves your devices' information from [Theengs Decoder](https://decoder.theengs.io) and adapts its parameters accordingly if a device that requires it is detected.
 For example a door or a PIR sensor will require continuous scanning, so if detected the gateway is going to reduce its time between scans to the minimum. Or your devices may also require active scanning to retrieve data, in this case the gateway will also trigger active scans at regular intervals.
 
 If you want to change this characteristic (default:true):
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"adaptivescan":false}'`
+
+Setting Adaptive scanning to `false` will automatically put the gateway to continuous active scanning.
 
 ::: tip
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.

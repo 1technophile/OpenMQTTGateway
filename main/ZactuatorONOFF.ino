@@ -55,6 +55,11 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       Log.notice(F("GPIO number: %d" CR), gpio);
       pinMode(gpio, OUTPUT);
       digitalWrite(gpio, boolSWITCHTYPE);
+      if (boolSWITCHTYPE == ACTUATOR_ON) {
+        PowerIndicatorON();
+      } else {
+        PowerIndicatorOFF();
+      }
       // we acknowledge the sending by publishing the value to an acknowledgement topic
       pub(subjectGTWONOFFtoMQTT, ONOFFdata);
     } else {
@@ -103,6 +108,11 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
       ON = false;
 
     digitalWrite(gpio, ON);
+    if (ON == ACTUATOR_ON) {
+      PowerIndicatorON();
+    } else {
+      PowerIndicatorOFF();
+    }
     // we acknowledge the sending by publishing the value to an acknowledgement topic
     char b = ON;
     pub(subjectGTWONOFFtoMQTT, &b);
@@ -161,6 +171,11 @@ void ActuatorTrigger() {
   uint8_t level = !digitalRead(ACTUATOR_ONOFF_GPIO);
   Log.trace(F("Actuator triggered %d" CR), level);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
+  if (level == ACTUATOR_ON) {
+    PowerIndicatorON();
+  } else {
+    PowerIndicatorOFF();
+  }
   // Send the state of the switch to the broker so as to update the status
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
