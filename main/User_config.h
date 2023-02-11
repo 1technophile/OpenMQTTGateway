@@ -458,7 +458,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define PowerIndicatorON()        // Not used
 #  define PowerIndicatorOFF()       // Not used
 #else // Management of Errors, reception/emission and informations indicators with RGB LED
-#  define FASTLED_ESP32_I2S // To avoid ESP32 instabilities
+#  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
+#    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
+#  endif
 #  include <FastLED.h>
 CRGB leds[FASTLED_IND_NUM_LEDS];
 #  ifdef FASTLED_IND_DATA_GPIO2 // Only used for Critical Indicator
