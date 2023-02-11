@@ -454,7 +454,13 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
 #  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
 #  define CriticalIndicatorON()     // Not used
+#  define CriticalIndicatorON()     // Not used
+#  define PowerIndicatorON()        // Not used
+#  define PowerIndicatorOFF()       // Not used
 #else // Management of Errors, reception/emission and informations indicators with RGB LED
+#  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
+#    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
+#  endif
 #  include <FastLED.h>
 CRGB leds[FASTLED_IND_NUM_LEDS];
 #  ifdef FASTLED_IND_DATA_GPIO2 // Only used for Critical Indicator
@@ -480,11 +486,20 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #    define FASTLED_CRITICAL_LED 0 // First Led
 #  endif
 
-#  define SetupIndicators()                                                               \
-    pinMode(RGB_LED_POWER, OUTPUT);                                                       \
-    digitalWrite(RGB_LED_POWER, HIGH);                                                    \
-    FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
-    FastLED.setBrightness(FASTLED_BRIGHTNESS)
+#  ifndef FASTLED_IND_DATA_GPIO2
+#    define SetupIndicators()                                                               \
+      pinMode(RGB_LED_POWER, OUTPUT);                                                       \
+      digitalWrite(RGB_LED_POWER, HIGH);                                                    \
+      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
+      FastLED.setBrightness(FASTLED_BRIGHTNESS)
+#  else
+#    define SetupIndicators()                                                                 \
+      pinMode(RGB_LED_POWER, OUTPUT);                                                         \
+      digitalWrite(RGB_LED_POWER, HIGH);                                                      \
+      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS);   \
+      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO2>(leds2, FASTLED_IND_NUM_LEDS); \
+      FastLED.setBrightness(FASTLED_BRIGHTNESS)
+#  endif
 #  define ErrorIndicatorON()                \
     leds[FASTLED_ERROR_LED] = CRGB::Orange; \
     FastLED.show()
@@ -503,13 +518,17 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #  define InfoIndicatorOFF()              \
     leds[FASTLED_INFO_LED] = CRGB::Black; \
     FastLED.show()
-#  ifdef FASTLED_IND_DATA_GPIO2
+#  ifdef FASTLED_IND_DATA_GPIO2 // Used for relay power indicator
 // For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
 // This enable to have persistence of the indicator to inform the user
-#    define CriticalIndicatorON()                                                             \
-      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO2>(leds2, FASTLED_IND_NUM_LEDS); \
-      FastLED.setBrightness(FASTLED_BRIGHTNESS);                                              \
-      leds2[FASTLED_INFO_LED] = CRGB::Red;                                                    \
+#    define CriticalIndicatorON()          \
+      leds2[FASTLED_INFO_LED] = CRGB::Red; \
+      FastLED.show()
+#    define PowerIndicatorON()               \
+      leds2[FASTLED_INFO_LED] = CRGB::Green; \
+      FastLED.show()
+#    define PowerIndicatorOFF()              \
+      leds2[FASTLED_INFO_LED] = CRGB::Black; \
       FastLED.show()
 #  endif
 #endif
