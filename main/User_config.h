@@ -454,6 +454,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
 #  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
 #  define CriticalIndicatorON()     // Not used
+#  define CriticalIndicatorON()     // Not used
+#  define PowerIndicatorON()        // Not used
+#  define PowerIndicatorOFF()       // Not used
 #else // Management of Errors, reception/emission and informations indicators with RGB LED
 #  define FASTLED_ESP32_I2S // To avoid ESP32 instabilities
 #  include <FastLED.h>
@@ -525,10 +528,6 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #    define PowerIndicatorOFF()              \
       leds2[FASTLED_INFO_LED] = CRGB::Black; \
       FastLED.show()
-#  else
-#    define CriticalIndicatorON()
-#    define PowerIndicatorON()
-#    define PowerIndicatorOFF()
 #  endif
 #endif
 
