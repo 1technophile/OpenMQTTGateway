@@ -38,6 +38,11 @@ void setupONOFF() {
   xTaskCreate(overLimitTemp, "overLimitTemp", 2500, NULL, 10, NULL);
 #  endif
   pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
+  if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+    PowerIndicatorON();
+  } else {
+    PowerIndicatorOFF();
+  }
 #  ifdef ACTUATOR_ONOFF_DEFAULT
   digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
 #  endif
