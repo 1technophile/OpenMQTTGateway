@@ -33,9 +33,9 @@
 #  include <SPI.h>
 #  include <Wire.h>
 
-#define WIPHONE_MESSAGE_MAGIC 0x6c6d
-#define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
-#define WIPHONE_MAX_MESSAGE_LEN 230
+#  define WIPHONE_MESSAGE_MAGIC   0x6c6d
+#  define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
+#  define WIPHONE_MAX_MESSAGE_LEN 230
 
 typedef struct __attribute__((packed)) {
   // WiPhone uses RadioHead library which has additional (unused) headers
@@ -46,14 +46,12 @@ typedef struct __attribute__((packed)) {
   uint16_t magic;
   uint32_t to;
   uint32_t from;
-  char     message[WIPHONE_MAX_MESSAGE_LEN];
-}
-wiphone_message;
+  char message[WIPHONE_MAX_MESSAGE_LEN];
+} wiphone_message;
 
-enum LORA_ID_NUM
-{
-    UNKNOWN_DEVICE = -1,
-    WIPHONE,
+enum LORA_ID_NUM {
+  UNKNOWN_DEVICE = -1,
+  WIPHONE,
 };
 typedef enum LORA_ID_NUM LORA_ID_NUM;
 
@@ -147,7 +145,7 @@ boolean _MQTTtoWiPhone(JsonObject& LORAdata) {
   wiphonemsg.to = strtol(LORAdata["to"], NULL, 16);
   const char* message = LORAdata["message"];
   strlcpy(wiphonemsg.message, message, WIPHONE_MAX_MESSAGE_LEN);
-  LoRa.write((uint8_t*)&wiphonemsg, strlen(message)+WIPHONE_MESSAGE_MIN_LEN+1);
+  LoRa.write((uint8_t*)&wiphonemsg, strlen(message) + WIPHONE_MESSAGE_MIN_LEN + 1);
   return true;
 }
 
@@ -193,7 +191,7 @@ void LORAtoMQTT() {
     for (int i = 0; i < packetSize; i++) {
       packet[i] = (char)LoRa.read();
 
-      if ( packet[i] < 32 || packet[i] > 127 )
+      if (packet[i] < 32 || packet[i] > 127)
         binary = true;
     }
     // Terminate with a null character in case we have a string
@@ -204,13 +202,13 @@ void LORAtoMQTT() {
     LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
     LORAdata["packetSize"] = (int)packetSize;
 
-    uint8_t deviceId = _determineDevice( packet, packetSize );
+    uint8_t deviceId = _determineDevice(packet, packetSize);
     if (deviceId == WIPHONE) {
       _WiPhoneToMQTT(packet, LORAdata);
     } else if (binary) {
       // We have non-ascii data: create hex string of the data
       char hex[packetSize * 2 + 1];
-      _rawToHex( packet, hex, packetSize );
+      _rawToHex(packet, hex, packetSize);
       // Terminate with a null character
       hex[packetSize * 2] = 0;
 
@@ -255,18 +253,18 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
       else
         LoRa.disableCrc();
 
-      if ( invertIQ )
+      if (invertIQ)
         LoRa.enableInvertIQ();
       else
         LoRa.disableInvertIQ();
 
       LoRa.beginPacket();
-      uint8_t deviceId = _determineDevice( LORAdata );
+      uint8_t deviceId = _determineDevice(LORAdata);
       if (deviceId == WIPHONE) {
         _MQTTtoWiPhone(LORAdata);
       } else if (hex) {
         // We have hex data: create convert to binary
-        byte raw[ strlen(hex)/2];
+        byte raw[strlen(hex) / 2];
         _hexToRaw(hex, raw, sizeof(raw));
         LoRa.print((char*)raw);
       } else {
