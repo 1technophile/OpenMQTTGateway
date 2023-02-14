@@ -453,8 +453,8 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 6
   Log.trace(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][9] = {
-      {"sensor", "volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
+      {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "amp", mac, "current", jsonCurrent, "", "", "A", stateClassMeasurement},
       {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
       {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
       {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
