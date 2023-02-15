@@ -152,7 +152,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
   // Identify AdaptiveScan deactivation to pass to continuous mode
-  if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == false && BTConfig.adaptiveScan == true) {
+  if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == false && BTConfig.adaptiveScan == true && startup == false) {
     BTdata["interval"] = MinTimeBtwScan;
     BTdata["intervalacts"] = MinTimeBtwScan;
   }
