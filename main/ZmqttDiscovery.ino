@@ -760,7 +760,7 @@ void pubMqttDiscovery() {
                   subjectGTWONOFFtoMQTT, actuatorONOFF[1], (char*)getUniqueId(actuatorONOFF[1], actuatorONOFF[2]).c_str(),
                   will_Topic, actuatorONOFF[3], actuatorONOFF[4],
                   actuatorONOFF[5], actuatorONOFF[6], actuatorONOFF[7],
-                  0, Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoONOFF, 
+                  0, Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoONOFF,
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
@@ -773,7 +773,7 @@ void pubMqttDiscovery() {
       {"sensor", "volt", "RN8209", "voltage", jsonVolt, "", "", "V"},
       {"sensor", "current", "RN8209", "current", jsonCurrent, "", "", "A"},
       {"sensor", "power", "RN8209", "power", jsonPower, "", "", "W"},
-      {"binary_sensor", "inUse","RN8209", "power", jsonPower, "", "", ""}
+      {"binary_sensor", "inUse", "RN8209", "power", jsonPower, "", "", ""}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
