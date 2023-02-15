@@ -39,4 +39,5 @@ jobs:
           release-url: ${{ steps.release-id.outputs.upload_url }}
           allow-overwrite: true
   call-workflow-passing-data:
+    needs: build-upload
     uses: ./.github/workflows/manual_docs.yml
