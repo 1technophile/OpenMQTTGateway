@@ -373,55 +373,187 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 #  endif
 #  ifdef ZgatewayBT
         case hash("BTtoMQTT"): {
-          // {"id":"49:22:07:07:1C:F6","mac_type":0,"name":"sps","rssi":-87,"brand":"Inkbird","model":"TH Sensor","model_id":"IBS-TH1","cidc":false,"tempc":0.8,"tempf":33.44,"hum":29.61,"batt":100}
+          // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
 
           // Line 1
+          strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
 
-          strlcpy(message->line1, data["brand"], OLED_TEXT_WIDTH);
-
-          // Line 2
-
-          strlcpy(message->line2, data["model_id"], OLED_TEXT_WIDTH);
-
-          // Line 3
-
+          // Line 2, 3, 4
+          String line2 = "";
           String line3 = "";
+          String line4 = "";
 
-          if (data.containsKey("tempc")) {
-            float temperature_C = data["tempc"];
-            char temp[5];
+          // Properties
+          String properties[6] = {"", "", "", "", "", ""};
+          int property = -1;
 
-            if (displayMetric) {
-              dtostrf(temperature_C, 3, 1, temp);
-              line3 = "temp: " + (String)temp + "°C ";
-            } else {
-              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
-              line3 = "temp: " + (String)temp + "°F ";
+          if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT") {
+            if (data.containsKey("tempc")) {
+              property++;
+              char temp[5];
+              if (displayMetric) {
+                float temperature = data["tempc"];
+                dtostrf(temperature, 3, 1, temp);
+                properties[property] = "temp: " + (String)temp + "°C ";
+              } else {
+                float temperature = data["tempf"];
+                dtostrf(temperature, 3, 1, temp);
+                properties[property] = "temp: " + (String)temp + "°F ";
+              }
+            }
+
+            if (data.containsKey("tempc2_dp")) {
+              property++;
+              char tempdp[5];
+              if (displayMetric) {
+                float temperature = data["tempc2_dp"];
+                dtostrf(temperature, 3, 1, tempdp);
+                properties[property] = "dewp: " + (String)tempdp + "°C ";
+              } else {
+                float temperature = data["tempf2_dp"];
+                dtostrf(temperature, 3, 1, tempdp);
+                properties[property] = "dewp: " + (String)tempdp + "°F ";
+              }
+            }
+
+            if (data.containsKey("extprobe")) {
+              property++;
+              properties[property] = " ext. probe";
+            }
+
+            if (data.containsKey("hum")) {
+              property++;
+              float humidity = data["hum"];
+              char hum[5];
+
+              dtostrf(humidity, 3, 1, hum);
+              properties[property] = "hum: " + (String)hum + "% ";
+            }
+
+            if (data.containsKey("pm25")) {
+              property++;
+              int pm25int = data["pm25"];
+              char pm25[3];
+              itoa(pm25int, pm25, 10);
+              if ((data.containsKey("pm10"))) {
+                properties[property] = "PM 2.5: " + (String)pm25 + " ";
+
+              } else {
+                properties[property] = "pm2.5: " + (String)pm25 + "μg/m³ ";
+              }
+            }
+
+            if (data.containsKey("pm10")) {
+              property++;
+              int pm10int = data["pm10"];
+              char pm10[3];
+              itoa(pm10int, pm10, 10);
+              if ((data.containsKey("pm25"))) {
+                properties[property] = "/ 10: " + (String)pm10 + "μg/m³ ";
+
+              } else {
+                properties[property] = "pm10: " + (String)pm10 + "μg/m³ ";
+              }
+            }
+
+            if (data.containsKey("for")) {
+              property++;
+              int formint = data["for"];
+              char form[3];
+              itoa(formint, form, 10);
+              properties[property] = "CH₂O: " + (String)form + "mg/m³ ";
+            }
+
+            if (data.containsKey("co2")) {
+              property++;
+              int co2int = data["co2"];
+              char co2[4];
+              itoa(co2int, co2, 10);
+              properties[property] = "co2: " + (String)co2 + "ppm ";
+            }
+
+            if (data.containsKey("moi")) {
+              property++;
+              int moiint = data["moi"];
+              char moi[4];
+              itoa(moiint, moi, 10);
+              properties[property] = "moi: " + (String)moi + "% ";
+            }
+
+            if (data.containsKey("lux")) {
+              property++;
+              int luxint = data["lux"];
+              char lux[5];
+              itoa(luxint, lux, 10);
+              properties[property] = "lux: " + (String)lux + "lx ";
+            }
+
+            if (data.containsKey("fer")) {
+              property++;
+              int ferint = data["fer"];
+              char fer[7];
+              itoa(ferint, fer, 10);
+              properties[property] = "fer: " + (String)fer + "µS/cm ";
+            }
+
+            if (data.containsKey("pres")) {
+              property++;
+              int presint = data["pres"];
+              char pres[4];
+              itoa(presint, pres, 10);
+              properties[property] = "pres: " + (String)pres + "hPa ";
+            }
+
+            if (data.containsKey("batt")) {
+              property++;
+              int battery = data["batt"];
+              char batt[5];
+              itoa(battery, batt, 10);
+              properties[property] = "batt: " + (String)batt + "% ";
+            }
+
+            if (data.containsKey("volt")) {
+              property++;
+              float voltf = data["volt"];
+              char volt[5];
+              dtostrf(voltf, 3, 1, volt);
+              properties[property] = "volt: " + (String)volt + "V ";
+            }
+          } else if (data["type"] == "BODY") {
+            if (data.containsKey("steps")) {
+              property++;
+              int stepsint = data["steps"];
+              char steps[5];
+              itoa(stepsint, steps, 10);
+              properties[property] = "steps: " + (String)steps + " ";
+              // next line
+              property++;
+            }
+
+            if (data.containsKey("act_bpm")) {
+              property++;
+              int actbpmint = data["act_bpm"];
+              char actbpm[3];
+              itoa(actbpmint, actbpm, 10);
+              properties[property] = "activity bpm: " + (String)actbpm + " ";
+            }
+
+            if (data.containsKey("bpm")) {
+              property++;
+              int bpmint = data["bpm"];
+              char bpm[3];
+              itoa(bpmint, bpm, 10);
+              properties[property] = "bpm: " + (String)bpm + " ";
             }
           }
 
-          float humidity = data["hum"];
-          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            char hum[5];
-            dtostrf(humidity, 3, 1, hum);
-            line3 += "hum: " + (String)hum + "% ";
-          }
+          line2 = properties[0] + properties[1];
+          line3 = properties[2] + properties[3];
+          line4 = properties[4] + properties[5];
 
+          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
           line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-
-          // Line 4
-
-          String rssi = data["rssi"];
-          String battery_ok = data["batt"];
-
-          String line4;
-          if (data.containsKey("batt"))
-            line4 += "batt: " + battery_ok + " ";
-
-          line4 += "rssi: " + rssi;
           line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-          // Queue completed message
 
           if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
             Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
