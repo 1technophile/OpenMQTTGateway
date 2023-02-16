@@ -54,6 +54,23 @@ Behind the scene you will find functionalities dedicated to gateways like:
 Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 The plug is available in North America only, other regions are planned.
 
+## Media
+
+* [Hackaday - ARDUINO LIBRARY BRINGS RTL_433 TO THE ESP32](https://hackaday.com/2023/01/13/arduino-library-brings-rtl_433-to-the-esp32)
+* [CNX Software - 433 MHz is not dead! Using an ESP32 board with LoRa module to talk to 433 MHz sensors](https://www.cnx-software.com/2023/01/14/esp32-board-with-lora-433-mhz-sensors/)
+* [RTL_433 PORTED TO ESP32 MICROCONTROLLERS WITH CC1101 OR SX127X TRANSCEIVER CHIPS](https://www.rtl-sdr.com/rtl_433-ported-to-esp32-microcontrollers-with-cc1101-or-sx127x-transceiver-chips/)
+* [Using low-cost wireless sensors in the unlicensed bands](https://lwn.net/Articles/921497/)
+* [SMART PLUG ESP32 OPENMQTTGATEWAY SERVING AS AN BLE MQTT GATEWAY AND A POWER METER](https://www.electronics-lab.com/smart-plug-esp32-openmqttgateway-serving-as-an-ble-mqtt-gateway-and-a-power-meter/)
+
+### BLE
+<iframe width="560" height="315" src="https://www.youtube.com/watch?v=noUROhtf0E0&t=40s" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+### 433Mhz
+<iframe width="560" height="315" src="https://youtube.com/watch?v=H-JXWbWjJYE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+### LORA
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6DftaHxDawM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 ::: warning Note
 The material and information contained in this documentation is for general information purposes only. You should not rely upon the material or information on this documentation as a basis for making any business, legal or any other decisions. There is no warranty given on this documentation content. If you decide to follow the information and materials given it is at your own risk. I will not be liable for any false, inaccurate, inappropriate or incomplete information presented on this website.
 :::
