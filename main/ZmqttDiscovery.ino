@@ -377,6 +377,12 @@ void createDiscovery(const char* sensor_type,
   pub_custom_topic((char*)topic.c_str(), sensor, true);
 }
 
+void eraseTopic(const char* sensor_type, const char* unique_id) {
+  String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
+  Log.trace(F("Erase entity discovery %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
+  pubMQTT((char*)topic.c_str(), "", true);
+}
+
 void pubMqttDiscovery() {
   Log.trace(F("omgStatusDiscovery" CR));
   createDiscovery("binary_sensor", //set Type
@@ -994,6 +1000,25 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
+
+#      define EntitiesCount 8
+  const char* obsoleteEntities[EntitiesCount][2] = {
+      // Remove previously created entities for version < 1.4.0
+      {"switch", "active_scan"},
+      // Remove previously created entities for version < 1.3.0
+      {"number", "scanbcnct"},
+      // Remove previously created entities for version < 1.2.0
+      {"switch", "discovery"},
+      {"switch", "restart"},
+      {"switch", "erase"},
+      {"switch", "force_scan"},
+      {"sensor", "interval"},
+      {"sensor", "scanbcnct"}};
+
+  for (int i = 0; i < EntitiesCount; i++) {
+    eraseTopic(obsoleteEntities[i][0], (char*)getUniqueId(obsoleteEntities[i][1], "").c_str());
+  }
+
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.hasspresence }}", //set availability_topic,device_class,value_template,
@@ -1035,6 +1060,9 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
+#      else
+  // Remove previously created switch for version < 1.4.0
+  eraseTopic("switch", (char*)getUniqueId("lowpowermode", "").c_str());
 #      endif
 #    endif
 #  endif
