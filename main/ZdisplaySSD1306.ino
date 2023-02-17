@@ -545,6 +545,37 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
               itoa(bpmint, bpm, 10);
               properties[property] = "bpm: " + (String)bpm + " ";
             }
+          } else if (data["type"] == "SCALE") {
+            if (data.containsKey("weighing_mode")) {
+              property++;
+              String mode = data["weighing_mode"];
+              properties[property] = mode + " ";
+              // next line
+              property++;
+            }
+
+            if (data.containsKey("weight")) {
+              property++;
+              float weightf = data["weight"];
+              char weight[7];
+              dtostrf(weightf, 3, 1, weight);
+              if (data.containsKey("unit")) {
+                String unit = data["unit"];
+                properties[property] = "weight: " + (String)weight + unit + " ";
+              } else {
+                properties[property] = "weight: " + (String)weight;
+              }
+              // next line
+              property++;
+            }
+
+            if (data.containsKey("impedance")) {
+              property++;
+              int impint = data["impedance"];
+              char imp[3];
+              itoa(impint, imp, 10);
+              properties[property] = "impedance: " + (String)imp + "ohm ";
+            }
           }
 
           line2 = properties[0] + properties[1];
