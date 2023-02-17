@@ -499,6 +499,45 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
               dtostrf(voltf, 3, 1, volt);
               properties[property] = "volt: " + (String)volt + "V ";
             }
+          } else if (data["type"] == "BBQ") {
+            String tempcstr = "";
+            int j = 7;
+            if (data["model_id"] == "IBT-2X(S)") {
+              j = 3;
+            } else if (data["model_id"] == "IBT-4X(S/C)") {
+              j = 5;
+            }
+
+            for (int i = 0; i < j; i++) {
+              if (i == 0) {
+                if (displayMetric) {
+                  tempcstr = "tempc";
+                } else {
+                  tempcstr = "tempf";
+                }
+                i++;
+              } else {
+                if (displayMetric) {
+                  tempcstr = "tempc" + (String)i;
+                } else {
+                  tempcstr = "tempf" + (String)i;
+                }
+              }
+
+              if (data.containsKey(tempcstr)) {
+                char temp[5];
+                float temperature = data[tempcstr];
+                dtostrf(temperature, 3, 1, temp);
+                properties[i - 1] = "tp" + (String)i + ": " + (String)temp;
+                if (displayMetric) {
+                  properties[i - 1] += "°C ";
+                } else {
+                  properties[i - 1] += "°F ";
+                }
+              } else {
+                properties[i - 1] = "tp" + (String)i + ": " + "off ";
+              }
+            }
           } else if (data["type"] == "BODY") {
             if (data.containsKey("steps")) {
               property++;
