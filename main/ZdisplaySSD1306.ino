@@ -355,263 +355,265 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
         case hash("BTtoMQTT"): {
           // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
 
-          // Line 1
-          strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
+          if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "IBEACON") {
+            // Line 1
+            strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
 
-          // Line 2, 3, 4
-          String line2 = "";
-          String line3 = "";
-          String line4 = "";
+            // Line 2, 3, 4
+            String line2 = "";
+            String line3 = "";
+            String line4 = "";
 
-          // Properties
-          String properties[6] = {"", "", "", "", "", ""};
-          int property = -1;
+            // Properties
+            String properties[6] = {"", "", "", "", "", ""};
+            int property = -1;
 
-          if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT") {
-            if (data.containsKey("tempc")) {
-              property++;
-              char temp[5];
-              if (displayMetric) {
-                float temperature = data["tempc"];
-                dtostrf(temperature, 3, 1, temp);
-                properties[property] = "temp: " + (String)temp + "°C ";
-              } else {
-                float temperature = data["tempf"];
-                dtostrf(temperature, 3, 1, temp);
-                properties[property] = "temp: " + (String)temp + "°F ";
-              }
-            }
-
-            if (data.containsKey("tempc2_dp")) {
-              property++;
-              char tempdp[5];
-              if (displayMetric) {
-                float temperature = data["tempc2_dp"];
-                dtostrf(temperature, 3, 1, tempdp);
-                properties[property] = "dewp: " + (String)tempdp + "°C ";
-              } else {
-                float temperature = data["tempf2_dp"];
-                dtostrf(temperature, 3, 1, tempdp);
-                properties[property] = "dewp: " + (String)tempdp + "°F ";
-              }
-            }
-
-            if (data.containsKey("extprobe")) {
-              property++;
-              properties[property] = " ext. probe";
-            }
-
-            if (data.containsKey("hum")) {
-              property++;
-              float humidity = data["hum"];
-              char hum[5];
-
-              dtostrf(humidity, 3, 1, hum);
-              properties[property] = "hum: " + (String)hum + "% ";
-            }
-
-            if (data.containsKey("pm25")) {
-              property++;
-              int pm25int = data["pm25"];
-              char pm25[3];
-              itoa(pm25int, pm25, 10);
-              if ((data.containsKey("pm10"))) {
-                properties[property] = "PM 2.5: " + (String)pm25 + " ";
-
-              } else {
-                properties[property] = "pm2.5: " + (String)pm25 + "μg/m³ ";
-              }
-            }
-
-            if (data.containsKey("pm10")) {
-              property++;
-              int pm10int = data["pm10"];
-              char pm10[3];
-              itoa(pm10int, pm10, 10);
-              if ((data.containsKey("pm25"))) {
-                properties[property] = "/ 10: " + (String)pm10 + "μg/m³ ";
-
-              } else {
-                properties[property] = "pm10: " + (String)pm10 + "μg/m³ ";
-              }
-            }
-
-            if (data.containsKey("for")) {
-              property++;
-              int formint = data["for"];
-              char form[3];
-              itoa(formint, form, 10);
-              properties[property] = "CH₂O: " + (String)form + "mg/m³ ";
-            }
-
-            if (data.containsKey("co2")) {
-              property++;
-              int co2int = data["co2"];
-              char co2[4];
-              itoa(co2int, co2, 10);
-              properties[property] = "co2: " + (String)co2 + "ppm ";
-            }
-
-            if (data.containsKey("moi")) {
-              property++;
-              int moiint = data["moi"];
-              char moi[4];
-              itoa(moiint, moi, 10);
-              properties[property] = "moi: " + (String)moi + "% ";
-            }
-
-            if (data.containsKey("lux")) {
-              property++;
-              int luxint = data["lux"];
-              char lux[5];
-              itoa(luxint, lux, 10);
-              properties[property] = "lux: " + (String)lux + "lx ";
-            }
-
-            if (data.containsKey("fer")) {
-              property++;
-              int ferint = data["fer"];
-              char fer[7];
-              itoa(ferint, fer, 10);
-              properties[property] = "fer: " + (String)fer + "µS/cm ";
-            }
-
-            if (data.containsKey("pres")) {
-              property++;
-              int presint = data["pres"];
-              char pres[4];
-              itoa(presint, pres, 10);
-              properties[property] = "pres: " + (String)pres + "hPa ";
-            }
-
-            if (data.containsKey("batt")) {
-              property++;
-              int battery = data["batt"];
-              char batt[5];
-              itoa(battery, batt, 10);
-              properties[property] = "batt: " + (String)batt + "% ";
-            }
-
-            if (data.containsKey("volt")) {
-              property++;
-              float voltf = data["volt"];
-              char volt[5];
-              dtostrf(voltf, 3, 1, volt);
-              properties[property] = "volt: " + (String)volt + "V ";
-            }
-          } else if (data["type"] == "BBQ") {
-            String tempcstr = "";
-            int j = 7;
-            if (data["model_id"] == "IBT-2X(S)") {
-              j = 3;
-            } else if (data["model_id"] == "IBT-4X(S/C)") {
-              j = 5;
-            }
-
-            for (int i = 0; i < j; i++) {
-              if (i == 0) {
-                if (displayMetric) {
-                  tempcstr = "tempc";
-                } else {
-                  tempcstr = "tempf";
-                }
-                i++;
-              } else {
-                if (displayMetric) {
-                  tempcstr = "tempc" + (String)i;
-                } else {
-                  tempcstr = "tempf" + (String)i;
-                }
-              }
-
-              if (data.containsKey(tempcstr)) {
+            if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT") {
+              if (data.containsKey("tempc")) {
+                property++;
                 char temp[5];
-                float temperature = data[tempcstr];
-                dtostrf(temperature, 3, 1, temp);
-                properties[i - 1] = "tp" + (String)i + ": " + (String)temp;
                 if (displayMetric) {
-                  properties[i - 1] += "°C ";
+                  float temperature = data["tempc"];
+                  dtostrf(temperature, 3, 1, temp);
+                  properties[property] = "temp: " + (String)temp + "°C ";
                 } else {
-                  properties[i - 1] += "°F ";
+                  float temperature = data["tempf"];
+                  dtostrf(temperature, 3, 1, temp);
+                  properties[property] = "temp: " + (String)temp + "°F ";
                 }
-              } else {
-                properties[i - 1] = "tp" + (String)i + ": " + "off ";
+              }
+
+              if (data.containsKey("tempc2_dp")) {
+                property++;
+                char tempdp[5];
+                if (displayMetric) {
+                  float temperature = data["tempc2_dp"];
+                  dtostrf(temperature, 3, 1, tempdp);
+                  properties[property] = "dewp: " + (String)tempdp + "°C ";
+                } else {
+                  float temperature = data["tempf2_dp"];
+                  dtostrf(temperature, 3, 1, tempdp);
+                  properties[property] = "dewp: " + (String)tempdp + "°F ";
+                }
+              }
+
+              if (data.containsKey("extprobe")) {
+                property++;
+                properties[property] = " ext. probe";
+              }
+
+              if (data.containsKey("hum")) {
+                property++;
+                float humidity = data["hum"];
+                char hum[5];
+
+                dtostrf(humidity, 3, 1, hum);
+                properties[property] = "hum: " + (String)hum + "% ";
+              }
+
+              if (data.containsKey("pm25")) {
+                property++;
+                int pm25int = data["pm25"];
+                char pm25[3];
+                itoa(pm25int, pm25, 10);
+                if ((data.containsKey("pm10"))) {
+                  properties[property] = "PM 2.5: " + (String)pm25 + " ";
+
+                } else {
+                  properties[property] = "pm2.5: " + (String)pm25 + "μg/m³ ";
+                }
+              }
+
+              if (data.containsKey("pm10")) {
+                property++;
+                int pm10int = data["pm10"];
+                char pm10[3];
+                itoa(pm10int, pm10, 10);
+                if ((data.containsKey("pm25"))) {
+                  properties[property] = "/ 10: " + (String)pm10 + "μg/m³ ";
+
+                } else {
+                  properties[property] = "pm10: " + (String)pm10 + "μg/m³ ";
+                }
+              }
+
+              if (data.containsKey("for")) {
+                property++;
+                int formint = data["for"];
+                char form[3];
+                itoa(formint, form, 10);
+                properties[property] = "CH₂O: " + (String)form + "mg/m³ ";
+              }
+
+              if (data.containsKey("co2")) {
+                property++;
+                int co2int = data["co2"];
+                char co2[4];
+                itoa(co2int, co2, 10);
+                properties[property] = "co2: " + (String)co2 + "ppm ";
+              }
+
+              if (data.containsKey("moi")) {
+                property++;
+                int moiint = data["moi"];
+                char moi[4];
+                itoa(moiint, moi, 10);
+                properties[property] = "moi: " + (String)moi + "% ";
+              }
+
+              if (data.containsKey("lux")) {
+                property++;
+                int luxint = data["lux"];
+                char lux[5];
+                itoa(luxint, lux, 10);
+                properties[property] = "lux: " + (String)lux + "lx ";
+              }
+
+              if (data.containsKey("fer")) {
+                property++;
+                int ferint = data["fer"];
+                char fer[7];
+                itoa(ferint, fer, 10);
+                properties[property] = "fer: " + (String)fer + "µS/cm ";
+              }
+
+              if (data.containsKey("pres")) {
+                property++;
+                int presint = data["pres"];
+                char pres[4];
+                itoa(presint, pres, 10);
+                properties[property] = "pres: " + (String)pres + "hPa ";
+              }
+
+              if (data.containsKey("batt")) {
+                property++;
+                int battery = data["batt"];
+                char batt[5];
+                itoa(battery, batt, 10);
+                properties[property] = "batt: " + (String)batt + "% ";
+              }
+
+              if (data.containsKey("volt")) {
+                property++;
+                float voltf = data["volt"];
+                char volt[5];
+                dtostrf(voltf, 3, 1, volt);
+                properties[property] = "volt: " + (String)volt + "V ";
+              }
+            } else if (data["type"] == "BBQ") {
+              String tempcstr = "";
+              int j = 7;
+              if (data["model_id"] == "IBT-2X(S)") {
+                j = 3;
+              } else if (data["model_id"] == "IBT-4X(S/C)") {
+                j = 5;
+              }
+
+              for (int i = 0; i < j; i++) {
+                if (i == 0) {
+                  if (displayMetric) {
+                    tempcstr = "tempc";
+                  } else {
+                    tempcstr = "tempf";
+                  }
+                  i++;
+                } else {
+                  if (displayMetric) {
+                    tempcstr = "tempc" + (String)i;
+                  } else {
+                    tempcstr = "tempf" + (String)i;
+                  }
+                }
+
+                if (data.containsKey(tempcstr)) {
+                  char temp[5];
+                  float temperature = data[tempcstr];
+                  dtostrf(temperature, 3, 1, temp);
+                  properties[i - 1] = "tp" + (String)i + ": " + (String)temp;
+                  if (displayMetric) {
+                    properties[i - 1] += "°C ";
+                  } else {
+                    properties[i - 1] += "°F ";
+                  }
+                } else {
+                  properties[i - 1] = "tp" + (String)i + ": " + "off ";
+                }
+              }
+            } else if (data["type"] == "BODY") {
+              if (data.containsKey("steps")) {
+                property++;
+                int stepsint = data["steps"];
+                char steps[5];
+                itoa(stepsint, steps, 10);
+                properties[property] = "steps: " + (String)steps + " ";
+                // next line
+                property++;
+              }
+
+              if (data.containsKey("act_bpm")) {
+                property++;
+                int actbpmint = data["act_bpm"];
+                char actbpm[3];
+                itoa(actbpmint, actbpm, 10);
+                properties[property] = "activity bpm: " + (String)actbpm + " ";
+              }
+
+              if (data.containsKey("bpm")) {
+                property++;
+                int bpmint = data["bpm"];
+                char bpm[3];
+                itoa(bpmint, bpm, 10);
+                properties[property] = "bpm: " + (String)bpm + " ";
+              }
+            } else if (data["type"] == "SCALE") {
+              if (data.containsKey("weighing_mode")) {
+                property++;
+                String mode = data["weighing_mode"];
+                properties[property] = mode + " ";
+                // next line
+                property++;
+              }
+
+              if (data.containsKey("weight")) {
+                property++;
+                float weightf = data["weight"];
+                char weight[7];
+                dtostrf(weightf, 3, 1, weight);
+                if (data.containsKey("unit")) {
+                  String unit = data["unit"];
+                  properties[property] = "weight: " + (String)weight + unit + " ";
+                } else {
+                  properties[property] = "weight: " + (String)weight;
+                }
+                // next line
+                property++;
+              }
+
+              if (data.containsKey("impedance")) {
+                property++;
+                int impint = data["impedance"];
+                char imp[3];
+                itoa(impint, imp, 10);
+                properties[property] = "impedance: " + (String)imp + "ohm ";
               }
             }
-          } else if (data["type"] == "BODY") {
-            if (data.containsKey("steps")) {
-              property++;
-              int stepsint = data["steps"];
-              char steps[5];
-              itoa(stepsint, steps, 10);
-              properties[property] = "steps: " + (String)steps + " ";
-              // next line
-              property++;
-            }
 
-            if (data.containsKey("act_bpm")) {
-              property++;
-              int actbpmint = data["act_bpm"];
-              char actbpm[3];
-              itoa(actbpmint, actbpm, 10);
-              properties[property] = "activity bpm: " + (String)actbpm + " ";
-            }
+            line2 = properties[0] + properties[1];
+            line3 = properties[2] + properties[3];
+            line4 = properties[4] + properties[5];
 
-            if (data.containsKey("bpm")) {
-              property++;
-              int bpmint = data["bpm"];
-              char bpm[3];
-              itoa(bpmint, bpm, 10);
-              properties[property] = "bpm: " + (String)bpm + " ";
-            }
-          } else if (data["type"] == "SCALE") {
-            if (data.containsKey("weighing_mode")) {
-              property++;
-              String mode = data["weighing_mode"];
-              properties[property] = mode + " ";
-              // next line
-              property++;
-            }
+            line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
+            line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
+            line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
 
-            if (data.containsKey("weight")) {
-              property++;
-              float weightf = data["weight"];
-              char weight[7];
-              dtostrf(weightf, 3, 1, weight);
-              if (data.containsKey("unit")) {
-                String unit = data["unit"];
-                properties[property] = "weight: " + (String)weight + unit + " ";
-              } else {
-                properties[property] = "weight: " + (String)weight;
-              }
-              // next line
-              property++;
+            if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
+              Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
+              free(message);
+            } else {
+              // Log.notice(F("Queued %s" CR), message->title);
             }
-
-            if (data.containsKey("impedance")) {
-              property++;
-              int impint = data["impedance"];
-              char imp[3];
-              itoa(impint, imp, 10);
-              properties[property] = "impedance: " + (String)imp + "ohm ";
-            }
+            break;
           }
-
-          line2 = properties[0] + properties[1];
-          line3 = properties[2] + properties[3];
-          line4 = properties[4] + properties[5];
-
-          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // Log.notice(F("Queued %s" CR), message->title);
-          }
-          break;
         }
 #  endif
         default:
