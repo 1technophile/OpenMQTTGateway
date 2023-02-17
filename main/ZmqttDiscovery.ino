@@ -287,8 +287,10 @@ void createDiscovery(const char* sensor_type,
       sensor["pl_prs"] = payload_on; // payload_press for a button press
     } else if (strcmp(sensor_type, "number") == 0) {
       sensor["cmd_tpl"] = payload_on; // payload_on for a switch
+    } else if (strcmp(sensor_type, "update") == 0) {
+      sensor["payload_install"] = payload_on; // payload_install for update
     } else {
-      sensor["pl_on"] = payload_on; // payload_on for a switch
+      sensor["pl_on"] = payload_on; // payload_on for the rest
     }
   }
   if (payload_off[0])
@@ -527,6 +529,15 @@ void pubMqttDiscovery() {
                   "{\"cmd\":\"erase\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                  stateClassNone //State Class
+  );
+  createDiscovery("update", //set Type
+                  subjectSYStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "firmware", "", //set availability_topic,device_class,value_template,
+                  "{\"version\":\"latest\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSupdate, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );

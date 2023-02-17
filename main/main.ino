@@ -597,9 +597,6 @@ void connectMQTT() {
 #ifdef ZgatewayIR
       client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
 #endif
-#ifdef MQTT_HTTPS_FW_UPDATE
-      client.subscribe(subjectFWUpdate);
-#endif
       Log.trace(F("Subscription OK to the subjects %s" CR), topic2);
     }
   } else {
@@ -653,7 +650,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   //launch the function to treat received data if this data concern OpenMQTTGateway
   if ((strstr(topic, subjectMultiGTWKey) != NULL) ||
       (strstr(topic, subjectGTWSendKey) != NULL) ||
-      (strstr(topic, subjectFWUpdate) != NULL))
+      (strstr(topic, subjectMQTTtoSYSupdate) != NULL))
     receivingMQTT(topic, (char*)p);
 
   // Free the memory
@@ -1509,6 +1506,8 @@ void loop() {
       connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
+        if (!timer_sys_measures) // Only check for updates at start
+          checkForUpdates();
         timer_sys_measures = millis();
         stateMeasures();
 #  ifdef ZgatewayBT
@@ -1691,6 +1690,7 @@ void stateMeasures() {
   SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
 #  if defined(ESP8266) || defined(ESP32)
+  SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
@@ -1940,13 +1940,53 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 }
 
 #ifdef MQTT_HTTPS_FW_UPDATE
+String release_link;
 #  ifdef ESP32
+#    include <HTTPClient.h>
+
 #    include "zzHTTPUpdate.h"
+
+/**
+ * Check on a server the latest version information to build a release_link
+ * The release link will be used when the user trigger an OTA update command
+ * Only available for ESP32
+ */
+void checkForUpdates() {
+  HTTPClient http;
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  http.begin(OTA_JSON_URL, OTAserver_cert);
+  int httpCode = http.GET();
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jsondata = jsonBuffer.to<JsonObject>();
+
+  if (httpCode > 0) { //Check for the returning code
+    String payload = http.getString();
+    auto error = deserializeJson(jsonBuffer, payload);
+    if (error) {
+      Log.error(F("deserialize MQTT data failed: %s" CR), error.c_str());
+      return;
+    }
+    Log.trace(F("httpCode %d" CR), httpCode);
+    Log.trace(F("payload %s" CR), payload);
+  } else {
+    Log.error(F("Error on HTTP request"));
+  }
+  http.end(); //Free the resources
+  if (jsondata.containsKey("latest_version") && jsondata.containsKey("release_link")) {
+    jsondata["installed_version"] = OMG_VERSION;
+    release_link = jsondata["release_link"].as<String>() + ENV_NAME + "-firmware.bin";
+    Log.trace(F("release_link %s" CR), release_link.c_str());
+    jsondata.remove("release_link");
+    pub(subjectSYStoMQTT, jsondata);
+  }
+}
 #  elif ESP8266
+void checkForUpdates(){};
 #    include <ESP8266httpUpdate.h>
 #  endif
+
 void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
-  if (strstr(topicOri, subjectFWUpdate) != NULL) {
+  if (strstr(topicOri, subjectMQTTtoSYSupdate) != NULL) {
     const char* version = HttpsFwUpdateData["version"];
     if (version && ((strlen(version) != strlen(OMG_VERSION)) || strcmp(version, OMG_VERSION) != 0)) {
       const char* url = HttpsFwUpdateData["url"];
@@ -1955,23 +1995,25 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           Log.error(F("Invalid firmware extension" CR));
           return;
         }
+#  if MQTT_HTTPS_FW_UPDATE_USE_PASSWORD > 0
+        const char* pwd = HttpsFwUpdateData["password"];
+        if (pwd) {
+          if (strcmp(pwd, ota_pass) != 0) {
+            Log.error(F("Invalid OTA password" CR));
+            return;
+          }
+        } else {
+          Log.error(F("No password sent" CR));
+          return;
+        }
+#  endif
+      } else if (release_link.indexOf(".bin", release_link.length() - 5) > 0) {
+        url = release_link.c_str();
+        Log.error(F("Using system OTA url %s" CR), url);
       } else {
         Log.error(F("Invalid URL" CR));
         return;
       }
-
-#  if MQTT_HTTPS_FW_UPDATE_USE_PASSWORD > 0
-      const char* pwd = HttpsFwUpdateData["password"];
-      if (pwd) {
-        if (strcmp(pwd, ota_pass) != 0) {
-          Log.error(F("Invalid OTA password" CR));
-          return;
-        }
-      } else {
-        Log.error(F("No password sent" CR));
-        return;
-      }
-#  endif
 
       Log.warning(F("Starting firmware update" CR));
       SendReceiveIndicatorON();
