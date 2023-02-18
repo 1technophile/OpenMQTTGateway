@@ -388,7 +388,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             String properties[6] = {"", "", "", "", "", ""};
             int property = -1;
 
-            if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT" || (data["type"] == "UNIQ" && data["model_id"] == "SDLS")) {
+            if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT" || data["type"] == "ACEL" || (data["type"] == "UNIQ" && data["model_id"] == "SDLS")) {
               if (data.containsKey("tempc")) {
                 property++;
                 char temp[5];
