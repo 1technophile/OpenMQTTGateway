@@ -368,7 +368,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             String properties[6] = {"", "", "", "", "", ""};
             int property = -1;
 
-            if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT") {
+            if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT" || (data["type"] == "UNIQ" && data["model_id"] == "SDLS")) {
               if (data.containsKey("tempc")) {
                 property++;
                 char temp[5];
@@ -493,6 +493,14 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
                 properties[property] = "batt: " + (String)batt + "% ";
               }
 
+              if (data.containsKey("shake")) {
+                property++;
+                int shakeint = data["shake"];
+                char shake[3];
+                itoa(shakeint, shake, 10);
+                properties[property] = "shake: " + (String)shake + " ";
+              }
+
               if (data.containsKey("volt")) {
                 property++;
                 float voltf = data["volt"];
@@ -500,6 +508,13 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
                 dtostrf(voltf, 3, 1, volt);
                 properties[property] = "volt: " + (String)volt + "V ";
               }
+
+              if (data.containsKey("wake")) {
+                property++;
+                String wakestr = data["wake"];
+                properties[property] = "wake: " + wakestr + " ";
+              }
+
             } else if (data["type"] == "BBQ") {
               String tempcstr = "";
               int j = 7;
@@ -595,6 +610,38 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
                 char imp[3];
                 itoa(impint, imp, 10);
                 properties[property] = "impedance: " + (String)imp + "ohm ";
+              }
+            } else if (data["type"] == "UNIQ") {
+              if (data["model_id"] == "M1017") {
+                if (data.containsKey("lvl_cm")) {
+                  property++;
+                  char lvl[5];
+                  if (displayMetric) {
+                    float lvlf = data["lvl_cm"];
+                    dtostrf(lvlf, 3, 1, lvl);
+                    properties[property] = "level: " + (String)lvl + "cm ";
+                  } else {
+                    float lvlf = data["lvl_in"];
+                    dtostrf(lvlf, 3, 1, lvl);
+                    properties[property] = "level: " + (String)lvl + "\" ";
+                  }
+                }
+
+                if (data.containsKey("quality")) {
+                  property++;
+                  int qualint = data["quality"];
+                  char qual[3];
+                  itoa(qualint, qual, 10);
+                  properties[property] = "qy: " + (String)qual + " ";
+                }
+
+                if (data.containsKey("batt")) {
+                  property++;
+                  int battery = data["batt"];
+                  char batt[5];
+                  itoa(battery, batt, 10);
+                  properties[property] = "batt: " + (String)batt + "% ";
+                }
               }
             }
 
