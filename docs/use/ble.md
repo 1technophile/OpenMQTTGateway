@@ -144,13 +144,23 @@ If you want to change this characteristic (default:true):
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"adaptivescan":false}'`
 
-Setting Adaptive scanning to `false` will automatically put the gateway to continuous active scanning.
+Setting Adaptive scanning to `false` will automatically put the gateway to continuous active scanning if no additional manual changes have already been applied.
 
 ::: tip
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
-If false, the gateway will only do a passive scanning (not request for sensor broadcasts), some sensors may not advertize their data with passive scanning.
+An overview with background information to better understand the different setting used:
+
+**Passive scanning:** With this scanning mode the gateway picks up any freely available broadcasts sent out by devices, without any interaction with the devices. The interval for this is set with [{"interval":66000}](#setting-the-time-between-ble-scans-and-force-a-scan)
+
+**Active scanning:** With this scanning mode the gateway sends out requests for sensor broadcasts first, before then picking up the broadcast advertisement data. Some devices require this request before they send out all data in their broadcasts. The interval for this active scanning with request first is set by [{"intervalacts":300000}](#setting-the-time-between-active-scanning)
+
+If adaptive scanning is set to false and you want to manually set these intervals, setting [Publishing advertisement and advanced data](#advanced-publishing-advertisement-and-advanced-data-default-false) to true will show you additional data about which of your devices require active scanning and/or continuous scanning, so that you can tune these setting to your devices and your individual requirements of their data.
+
+**"cont":true** - the device requires continuous scanning. If passive ({"interval":100}) or active ({"intervalacts":100}) depends on the additional device specification.
+
+**"acts":true** - the device requires active scanning to broadcast all of it's data for decoding.
 
 ## Setting the time between active scanning
 
