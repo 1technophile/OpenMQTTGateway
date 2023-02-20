@@ -356,9 +356,6 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
           // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
 
           if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "IBEACON") {
-            // Line 1
-            strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
-
             // Line 2, 3, 4
             String line2 = "";
             String line3 = "";
@@ -649,16 +646,22 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             line3 = properties[2] + properties[3];
             line4 = properties[4] + properties[5];
 
-            line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-            line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-            line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
+            if (!(line2 == "" && line3 == "" && line4 == "")) {
+              // Line 1
+              strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
 
-            if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-              Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
-              free(message);
-            } else {
-              // Log.notice(F("Queued %s" CR), message->title);
+              line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
+              line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
+              line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
+
+              if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
+                Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
+                free(message);
+              } else {
+                // Log.notice(F("Queued %s" CR), message->title);
+              }
             }
+
             break;
           }
         }
