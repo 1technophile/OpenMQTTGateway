@@ -779,7 +779,7 @@ void pubMqttDiscovery() {
       {"sensor", "volt", "RN8209", "voltage", jsonVolt, "", "", "V"},
       {"sensor", "current", "RN8209", "current", jsonCurrent, "", "", "A"},
       {"sensor", "power", "RN8209", "power", jsonPower, "", "", "W"},
-      {"binary_sensor", "inUse", "RN8209", "power", jsonPower, "", "", ""}
+      {"binary_sensor", "inUse", "RN8209", "power", jsonInuse, "", "", ""}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 

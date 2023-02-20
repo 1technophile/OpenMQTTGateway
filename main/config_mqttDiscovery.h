@@ -166,6 +166,7 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonTime     "{{ value_json.time }}"
 #  define jsonCount    "{{ value_json.count }}"
 #  define jsonAlarm    "{{ value_json.alarm }}"
+#  define jsonInuse    "{{ value_json.power | float > 0 }}"
 #else // Home assistant autodiscovery value key definition
 #  define jsonBatt     "{{ value_json.batt | is_defined }}"
 #  define jsonLux      "{{ value_json.lux | is_defined }}"
@@ -201,6 +202,7 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonTime     "{{ value_json.time | is_defined }}"
 #  define jsonCount    "{{ value_json.count | is_defined }}"
 #  define jsonAlarm    "{{ value_json.alarm | is_defined }}"
+#  define jsonInuse    "{{ value_json.power | is_defined | float > 0 }}"
 #endif
 
 #define stateClassNone            ""
