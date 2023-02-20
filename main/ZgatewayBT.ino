@@ -151,12 +151,17 @@ void stateBTMeasures(bool start) {
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to eligible devices or not
   BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
+  // Identify AdaptiveScan deactivation to pass to continuous mode
+  if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == false && BTConfig.adaptiveScan == true && startup == false) {
+    BTdata["interval"] = MinTimeBtwScan;
+    BTdata["intervalacts"] = MinTimeBtwScan;
+  }
+  BTConfig_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
+  // Time before before active scan
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
     BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
-  // Define if the scan is active or passive
-  BTConfig_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
-  // Time before before active scan
+  // Define if the scan is adaptive or not
   BTConfig_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
   // Time before a connect set
   BTConfig_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
@@ -448,8 +453,8 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 6
   Log.trace(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][9] = {
-      {"sensor", "volt", mac, "power", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "amp", mac, "power", jsonCurrent, "", "", "A", stateClassMeasurement},
+      {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "amp", mac, "current", jsonCurrent, "", "", "A", stateClassMeasurement},
       {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
       {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
       {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
@@ -736,12 +741,13 @@ void coreTask(void* pvParameters) {
             BLEconnect();
           }
           dumpDevices();
+          Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
           xSemaphoreGive(semaphoreBLEOperation);
         } else {
           Log.error(F("Failed to start scan - BLE busy" CR));
         }
       }
-      if (lowpowermode) {
+      if (lowpowermode > 0) {
         lowPowerESP32();
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
         if (scan == 1) BTforceScan();
@@ -759,51 +765,57 @@ void coreTask(void* pvParameters) {
   }
 }
 
+#  if DEFAULT_LOW_POWER_MODE != -1
 void lowPowerESP32() { // low power mode
   Log.trace(F("Going to deep sleep for: %l s" CR), (TimeBtwRead / 1000));
   deepSleep(TimeBtwRead * 1000);
 }
 
 void deepSleep(uint64_t time_in_us) {
-#  if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   sleepScreen();
   esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
-#  endif
+#    endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
   if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
   // Ignore the deprecated warning, this call is necessary here.
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   adc_power_off();
-#  pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
   esp_wifi_stop();
   esp_deep_sleep(time_in_us);
 }
+#  else
+void lowPowerESP32() {}
+#  endif
 
 void changelowpowermode(int newLowPowerMode) {
+#  if DEFAULT_LOW_POWER_MODE != -1
   Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
-#  if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   if (lowpowermode == 2) {
-#    ifdef ZboardM5STACK
+#      ifdef ZboardM5STACK
     M5.Lcd.wakeup();
-#    endif
-#    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#      endif
+#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
     M5.Axp.SetLDO2(true);
     M5.Lcd.begin();
-#    endif
+#      endif
   }
   char lpm[2];
   sprintf(lpm, "%d", newLowPowerMode);
   M5Print("Changing LOW POWER mode to:", lpm, "");
-#  endif
+#    endif
   lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
   preferences.putUInt("lowpowermode", lowpowermode);
   preferences.end();
   // Publish the states to update the controller switch status
   stateMeasures();
+#  endif
 }
 
 void setupBT() {
@@ -1012,7 +1024,7 @@ void process_bledata(JsonObject& BLEdata) {
             Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
             stateBTMeasures(false);
           }
-        } else if (BLEdata.containsKey("cont")) {
+        } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
           if (BLEdata["cont"]) {
             BTConfig.BLEinterval = MinTimeBtwScan;
             Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));

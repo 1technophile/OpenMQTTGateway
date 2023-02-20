@@ -59,6 +59,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Mokosmart|H4|temperature/humidity/voltage|
 | Mopeka|Pro|temperature/level/sync status/voltage/battery/reading quality|
 | Otio/BeeWi|Door & Window Sensor|contact/battery|
+| Polar|H10 Chest strap|activity heart rate|
 | Qingping|CGDK2|temperature/humidity|
 | Qingping|CGH1|open|
 | Qingping|CGPR1|presence/luminance/battery|
@@ -72,7 +73,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Sensirion|SHT4X TH sensor|temperature/humidity|
 | Switchbot|Bot (c)|mode/state/battery|
 | Switchbot|Motion Sensor|movement/light level/sensing distance/led/scope tested/battery|
-| Switchbot|Contact Sensor|contact/movement/scope tested/light level/battery|
+| Switchbot|Contact Sensor|contact/movement/scope tested/light level/in count/out count/push count/battery|
 | Switchbot|Curtain|motion state/position/light level/battery/calibration state|
 | Switchbot|Meter (Plus)|temperature/humidity/battery|
 | Thermobeacon|WS02|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|

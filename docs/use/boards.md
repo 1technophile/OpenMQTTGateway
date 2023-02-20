@@ -11,10 +11,12 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 * Button C on M5Stack (GPIO 37)
 * Button lateral on M5stick (GPIO 35)
 
-You can also do a long press when powering the board so as to reset it.
+You can also do a long press when powering the board to reset it, this press must be done during the first 5 seconds after the start.
 
 ### Low power mode for ESP32
-OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT:
+OpenMQTTGateway support a low power mode for ESP32, this mode is available per default on boards with batteries. The other boards needs to have the macro `DEFAULT_LOW_POWER_MODE` defined at 0, 1 or 2 to use it. More information about the modes is available into User_config.h.
+
+When available this mode can be set by MQTT:
 
 * Normal mode (per default)
 
