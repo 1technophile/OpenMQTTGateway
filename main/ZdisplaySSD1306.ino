@@ -595,11 +595,11 @@ void OledSerial::drawLogo() {
     display->setColor(BLACK);
 
     // line 1
-    display->drawLine(20, 32, 14, 27);
-    display->drawLine(21, 32, 15, 27);
+    display->drawLine(15, 28, 20, 31);
+    display->drawLine(15, 29, 20, 32);
     // line 2
-    display->drawLine(25, 29, 23, 21);
-    display->drawLine(26, 29, 24, 21);
+    display->drawLine(25, 29, 22, 21);
+    display->drawLine(26, 29, 23, 21);
     // circle 1
     display->fillCircle(25, 35, 7);
     display->setColor(WHITE);
