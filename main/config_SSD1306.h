@@ -135,13 +135,10 @@ struct displayQueueMessage {
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
 class OledSerial : public Stream {
-private:
-  void ssd1306Intro(int scale, int displayWidth, int displayHeight);
-
 public:
   OledSerial(int);
   void begin();
-  void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name);
+  void drawLogo();
   boolean displayPage(displayQueueMessage*);
 
   SSD1306Wire* display;
