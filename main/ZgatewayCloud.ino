@@ -119,7 +119,7 @@ void setupCloud() {
   cloud.setKeepAlive(300); // 5 minutes for keep alive
 
   cloud.setBufferSize(mqtt_max_packet_size);
-  cloud.setServer("omgpoc.homebridge.ca", 8883);
+  cloud.setServer("cloudbeta.openmqttgateway.com", 8883);
 
   // Create queue for cloud messages
   omgCloudQueue = xQueueCreate(30, sizeof(cloudMsg*));
