@@ -138,7 +138,7 @@ class OledSerial : public Stream {
 public:
   OledSerial(int);
   void begin();
-  void drawLogo();
+  void drawLogo(int xshift, int yshift);
   boolean displayPage(displayQueueMessage*);
 
   SSD1306Wire* display;
