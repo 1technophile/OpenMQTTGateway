@@ -60,7 +60,7 @@ void MeasureGPIOInput() {
 #  if defined(ESP8266) || defined(ESP32)
     yield();
 #  endif
-#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
+#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO && !defined(ESPWifiManualSetup)
     if (reading == LOW) {
       if (resetTime == 0) {
         resetTime = millis();
