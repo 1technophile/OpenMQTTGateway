@@ -1506,8 +1506,10 @@ void loop() {
       connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
-        if (!timer_sys_measures) // Only check for updates at start
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+        if (!timer_sys_measures) // Only check for updates at start for ESP32
           checkForUpdates();
+#  endif
         timer_sys_measures = millis();
         stateMeasures();
 #  ifdef ZgatewayBT
@@ -1940,18 +1942,18 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 }
 
 #ifdef MQTT_HTTPS_FW_UPDATE
-String release_link;
+String latestVersion;
 #  ifdef ESP32
 #    include <HTTPClient.h>
 
 #    include "zzHTTPUpdate.h"
 
 /**
- * Check on a server the latest version information to build a release_link
+ * Check on a server the latest version information to build a releaseLink
  * The release link will be used when the user trigger an OTA update command
  * Only available for ESP32
  */
-void checkForUpdates() {
+bool checkForUpdates() {
   HTTPClient http;
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
@@ -1963,25 +1965,27 @@ void checkForUpdates() {
     String payload = http.getString();
     auto error = deserializeJson(jsonBuffer, payload);
     if (error) {
-      Log.error(F("deserialize MQTT data failed: %s" CR), error.c_str());
-      return;
+      Log.error(F("Deserialize MQTT data failed: %s" CR), error.c_str());
     }
-    Log.trace(F("httpCode %d" CR), httpCode);
-    Log.trace(F("payload %s" CR), payload);
+    Log.trace(F("HttpCode %d" CR), httpCode);
+    Log.trace(F("Payload %s" CR), payload.c_str());
   } else {
     Log.error(F("Error on HTTP request"));
   }
   http.end(); //Free the resources
-  if (jsondata.containsKey("latest_version") && jsondata.containsKey("release_link")) {
+  if (jsondata.containsKey("latest_version")) {
     jsondata["installed_version"] = OMG_VERSION;
-    release_link = jsondata["release_link"].as<String>() + ENV_NAME + "-firmware.bin";
-    Log.trace(F("release_link %s" CR), release_link.c_str());
-    jsondata.remove("release_link");
+    jsondata["entity_picture"] = ENTITY_PICTURE;
+    latestVersion = jsondata["latest_version"].as<String>();
     pub(subjectSYStoMQTT, jsondata);
+    Log.trace(F("Update file found on server" CR));
+    return true;
+  } else {
+    Log.trace(F("No update file found on server" CR));
+    return false;
   }
 }
 #  elif ESP8266
-void checkForUpdates(){};
 #    include <ESP8266httpUpdate.h>
 #  endif
 
@@ -1990,6 +1994,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
     const char* version = HttpsFwUpdateData["version"];
     if (version && ((strlen(version) != strlen(OMG_VERSION)) || strcmp(version, OMG_VERSION) != 0)) {
       const char* url = HttpsFwUpdateData["url"];
+      String systemUrl;
       if (url) {
         if (!strstr((url + (strlen(url) - 5)), ".bin")) {
           Log.error(F("Invalid firmware extension" CR));
@@ -2007,9 +2012,22 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           return;
         }
 #  endif
-      } else if (release_link.indexOf(".bin", release_link.length() - 5) > 0) {
-        url = release_link.c_str();
-        Log.error(F("Using system OTA url %s" CR), url);
+#  ifdef ESP32
+      } else if (strcmp(version, "latest") == 0) {
+        if (!checkForUpdates())
+          return;
+        systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
+        url = systemUrl.c_str();
+        Log.notice(F("Using system OTA url with latest version %s" CR), url);
+      } else if (strcmp(version, "dev") == 0) {
+        systemUrl = String(RELEASE_LINK_DEV) + ENV_NAME + "-firmware.bin";
+        url = systemUrl.c_str();
+        Log.notice(F("Using system OTA url with dev version %s" CR), url);
+      } else if (version[0] == 'v') {
+        systemUrl = String(RELEASE_LINK) + version + "/" + ENV_NAME + "-firmware.bin";
+        url = systemUrl.c_str();
+        Log.notice(F("Using system OTA url with defined version %s" CR), url);
+#  endif
       } else {
         Log.error(F("Invalid URL" CR));
         return;

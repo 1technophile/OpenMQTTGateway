@@ -535,7 +535,7 @@ void pubMqttDiscovery() {
   createDiscovery("update", //set Type
                   subjectSYStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "firmware", "", //set availability_topic,device_class,value_template,
-                  "{\"version\":\"latest\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  LATEST_OR_DEV, "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSupdate, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain

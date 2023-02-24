@@ -268,4 +268,10 @@ const char* availableHASSUnits[] = {"W",
                                     "mm/h",
                                     "cm"};
 
+// Define the command used to update through OTA depending if we want to update from dev nightly or latest release
+#if DEVELOPMENTOTA
+#  define LATEST_OR_DEV "{\"version\":\"dev\"}"
+#else
+#  define LATEST_OR_DEV "{\"version\":\"latest\"}"
+#endif
 #endif

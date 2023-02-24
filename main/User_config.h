@@ -238,9 +238,14 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 #    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
 #      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #    endif
-#    ifndef OTA_JSON_URL
-#      define OTA_JSON_URL "https://raw.githubusercontent.com/1technophile/OpenMQTTGateway/development/latest_version.json" //OTA url used to discover new versions of the firmware
+#    if DEVELOPMENTOTA
+#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
+#    else
+#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/firmware_build/latest_version.json" //OTA url used to discover new versions of the firmware
 #    endif
+#    define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
+#    define RELEASE_LINK_DEV "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/"
+#    define RELEASE_LINK     "https://github.com/1technophile/OpenMQTTGateway/releases/download/"
 #  endif
 
 #  ifndef MQTT_SECURE_SELF_SIGNED

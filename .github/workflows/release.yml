@@ -19,7 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install platformio
       - name: Set version tag from git
-        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" main/User_config.h
+        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" main/User_config.h scripts/latest_version.json
       - name: Run PlatformIO
         run: platformio run
       - name: Prepare Release Assets
