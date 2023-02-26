@@ -45,6 +45,7 @@ boolean logToLCDDisplay = LOG_TO_LCD;
 boolean jsonDisplay = JSON_TO_LCD;
 boolean displayMetric = DISPLAY_METRIC;
 boolean displayFlip = DISPLAY_FLIP;
+uint8_t displayBrightness = round(DISPLAY_BRIGHTNESS * 2.55);
 
 /*
 Toogle log display
@@ -493,6 +494,7 @@ void OledSerial::begin() {
     display->resetOrientation();
   }
   display->setFont(ArialMT_Plain_10);
+  display->setBrightness(displayBrightness);
   drawLogo(0, 0);
   display->invertDisplay();
   display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);

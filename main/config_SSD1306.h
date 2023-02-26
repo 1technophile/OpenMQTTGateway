@@ -70,6 +70,10 @@
 #  define DISPLAY_FLIP true // Flip display orientation
 #endif
 
+#ifndef DISPLAY_BRIGHTNESS
+#  define DISPLAY_BRIGHTNESS 50 // 0-100; 50 % brightness as default
+#endif
+
 /*------------------- DEFAULT DISPLAY GEOMETRY ----------------------*/
 
 #define OLED_TEXT_BUFFER 1000
