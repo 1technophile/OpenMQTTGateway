@@ -40,6 +40,7 @@ jobs:
           - "esp32doitv1-aithinker-r01-sx1278"
           - "heltec-rtl_433"
           - "heltec-ble"
+          - "ttgo-v1-rtl_433"
           - "lilygo-rtl_433"
           - "lilygo-ble"
           - "esp32dev-multi_receiver"
