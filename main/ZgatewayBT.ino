@@ -257,9 +257,6 @@ void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
       topic = BTConfig.extDecoderTopic; // If external decoder, use this topic to send data
     topic = subjectBTtoMQTT + String("/") + topic;
     pub((char*)topic.c_str(), data);
-    if (data.containsKey("model") || data.containsKey("distance")) { // Only display sensor data
-      pubOled((char*)topic.c_str(), data);
-    }
   }
   if (haPresenceEnabled && data.containsKey("distance")) {
     if (data.containsKey("servicedatauuid"))
@@ -982,6 +979,10 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
+    String topic = subjectBTtoMQTT;
+    if (BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Only display sensor data
+      pubOled((char*)topic.c_str(), BLEdata);
+    }
     if (!BTConfig.pubAdvData) {
       BLEdata.remove("servicedatauuid");
       BLEdata.remove("servicedata");
