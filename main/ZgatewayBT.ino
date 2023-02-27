@@ -70,7 +70,7 @@ vector<BLEAction> BLEactions;
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
-static BLEdevice NO_DEVICE_FOUND = {{0},
+static BLEdevice NO_BT_DEVICE_FOUND = {{0},
                                     0,
                                     false,
                                     false,
@@ -361,7 +361,7 @@ BLEdevice* getDeviceByMac(const char* mac) {
       return *it;
     }
   }
-  return &NO_DEVICE_FOUND;
+  return &NO_BT_DEVICE_FOUND;
 }
 
 bool updateWorB(JsonObject& BTdata, bool isWhite) {
@@ -388,7 +388,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
   }
 
   BLEdevice* device = getDeviceByMac(mac);
-  if (device == &NO_DEVICE_FOUND) {
+  if (device == &NO_BT_DEVICE_FOUND) {
     Log.trace(F("add %s" CR), mac);
     //new device
     device = new BLEdevice();
