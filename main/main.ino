@@ -279,6 +279,20 @@ ESP8266WiFiMulti wifiMulti;
 // client link to pubsub MQTT
 PubSubClient client;
 
+template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
+void Config_update(JsonObject& data, const char* key, T& var);
+template <typename T>
+void Config_update(JsonObject& data, const char* key, T& var) {
+  if (data.containsKey(key)) {
+    if (var != data[key].as<T>()) {
+      var = data[key].as<T>();
+      Log.notice(F("Config %s changed: %s" CR), key, data[key].as<String>());
+    } else {
+      Log.notice(F("Config %s unchanged: %s" CR), key, data[key].as<String>());
+    }
+  }
+}
+
 void revert_hex_data(const char* in, char* out, int l) {
   //reverting array 2 by 2 to get the data in good order
   int i = l - 2, j = 0;

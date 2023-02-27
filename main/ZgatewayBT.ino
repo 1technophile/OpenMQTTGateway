@@ -101,20 +101,6 @@ void BTConfig_init() {
 unsigned long timeBetweenConnect = 0;
 unsigned long timeBetweenActive = 0;
 
-template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
-void BTConfig_update(JsonObject& data, const char* key, T& var);
-template <typename T>
-void BTConfig_update(JsonObject& data, const char* key, T& var) {
-  if (data.containsKey(key)) {
-    if (var != data[key].as<T>()) {
-      var = data[key].as<T>();
-      Log.notice(F("BT config %s changed: %s" CR), key, data[key].as<String>());
-    } else {
-      Log.notice(F("BT config %s unchanged: %s" CR), key, data[key].as<String>());
-    }
-  }
-}
-
 void stateBTMeasures(bool start) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
@@ -150,7 +136,7 @@ void stateBTMeasures(bool start) {
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to eligible devices or not
-  BTConfig_update(BTdata, "bleconnect", BTConfig.bleConnect);
+  Config_update(BTdata, "bleconnect", BTConfig.bleConnect);
   // Identify AdaptiveScan deactivation to pass to continuous mode
   if (startup == false) {
     if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == false && BTConfig.adaptiveScan == true) {
@@ -161,37 +147,37 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
       BTdata["intervalacts"] = TimeBtwActive;
     }
   }
-  BTConfig_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
+  Config_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
   // Time before before active scan
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
-    BTConfig_update(BTdata, "interval", BTConfig.BLEinterval);
+    Config_update(BTdata, "interval", BTConfig.BLEinterval);
   // Define if the scan is adaptive or not
-  BTConfig_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
+  Config_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
   // Time before a connect set
-  BTConfig_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
+  Config_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
-  BTConfig_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
+  Config_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
   // Home Assistant presence message
-  BTConfig_update(BTdata, "hasspresence", BTConfig.presenceEnable);
+  Config_update(BTdata, "hasspresence", BTConfig.presenceEnable);
   // Home Assistant presence message topic
-  BTConfig_update(BTdata, "presenceTopic", BTConfig.presenceTopic);
+  Config_update(BTdata, "presenceTopic", BTConfig.presenceTopic);
   // Home Assistant presence message use iBeacon UUID
-  BTConfig_update(BTdata, "presenceUseBeaconUuid", BTConfig.presenceUseBeaconUuid);
+  Config_update(BTdata, "presenceUseBeaconUuid", BTConfig.presenceUseBeaconUuid);
   // MinRSSI set
-  BTConfig_update(BTdata, "minrssi", BTConfig.minRssi);
+  Config_update(BTdata, "minrssi", BTConfig.minRssi);
   // Send undecoded device data
-  BTConfig_update(BTdata, "extDecoderEnable", BTConfig.extDecoderEnable);
+  Config_update(BTdata, "extDecoderEnable", BTConfig.extDecoderEnable);
   // Topic to send undecoded device data
-  BTConfig_update(BTdata, "extDecoderTopic", BTConfig.extDecoderTopic);
+  Config_update(BTdata, "extDecoderTopic", BTConfig.extDecoderTopic);
   // Sets whether to filter publishing
-  BTConfig_update(BTdata, "filterConnectable", BTConfig.filterConnectable);
+  Config_update(BTdata, "filterConnectable", BTConfig.filterConnectable);
   // Publish advertisment data
-  BTConfig_update(BTdata, "pubadvdata", BTConfig.pubAdvData);
+  Config_update(BTdata, "pubadvdata", BTConfig.pubAdvData);
   // Use iBeacon UUID as topic, instead of sender (random) MAC address
-  BTConfig_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
+  Config_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
   // Disable Whitelist & Blacklist
-  BTConfig_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
+  Config_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
 
   stateBTMeasures(startup);
 

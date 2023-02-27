@@ -30,22 +30,90 @@
 
 #ifdef ZactuatorONOFF
 
+#  ifdef ESP32
+// Global struct to store live ONOFF configuration data
+ONOFFConfig_s ONOFFConfig;
+
+void ONOFFConfig_init() {
+  ONOFFConfig.ONOFFState = !ACTUATOR_ON;
+  ONOFFConfig.useLastStateOnStart = USE_LAST_STATE_ON_RESTART;
+}
+
+void ONOFFConfig_fromJson(JsonObject& ONOFFdata) {
+  Config_update(ONOFFdata, "uselaststate", ONOFFConfig.useLastStateOnStart);
+  Config_update(ONOFFdata, "cmd", ONOFFConfig.ONOFFState);
+
+  if (ONOFFdata.containsKey("erase") && ONOFFdata["erase"].as<bool>()) {
+    // Erase config from NVS (non-volatile storage)
+    preferences.begin(Gateway_Short_Name, false);
+    preferences.remove("ONOFFConfig");
+    preferences.end();
+    Log.notice(F("ONOFF config erased" CR));
+    return; // Erase prevails on save, so skipping save
+  }
+  if (ONOFFdata.containsKey("save") && ONOFFdata["save"].as<bool>()) {
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject jo = jsonBuffer.to<JsonObject>();
+    jo["uselaststate"] = ONOFFConfig.useLastStateOnStart;
+    jo["cmd"] = ONOFFConfig.ONOFFState;
+    // Save config into NVS (non-volatile storage)
+    String conf = "";
+    serializeJson(jsonBuffer, conf);
+    preferences.begin(Gateway_Short_Name, false);
+    preferences.putString("ONOFFConfig", conf);
+    preferences.end();
+    Log.notice(F("ONOFF config saved" CR));
+  }
+}
+
+void ONOFFConfig_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  auto error = deserializeJson(jsonBuffer, preferences.getString("ONOFFConfig", "{}"));
+  preferences.end();
+  if (error) {
+    Log.error(F("ONOFF config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    return;
+  }
+  if (jsonBuffer.isNull()) {
+    Log.warning(F("ONOFF config is null" CR));
+    return;
+  }
+  JsonObject jo = jsonBuffer.as<JsonObject>();
+  ONOFFConfig_fromJson(jo);
+  Log.notice(F("ONOFF config loaded" CR));
+}
+#  else
+void ONOFFConfig_init(){};
+void ONOFFConfig_fromJson(JsonObject& ONOFFdata){};
+void ONOFFConfig_load(){};
+#  endif
+
 void setupONOFF() {
 #  ifdef MAX_CURRENT_ACTUATOR
-  xTaskCreate(overLimitCurrent, "overLimitCurrent", 2500, NULL, 10, NULL);
+  xTaskCreate(overLimitCurrent, "overLimitCurrent", 4000, NULL, 10, NULL);
 #  endif
 #  ifdef MAX_TEMP_ACTUATOR
-  xTaskCreate(overLimitTemp, "overLimitTemp", 2500, NULL, 10, NULL);
+  xTaskCreate(overLimitTemp, "overLimitTemp", 4000, NULL, 10, NULL);
+#  endif
+#  ifdef ESP32
+  ONOFFConfig_init();
+  ONOFFConfig_load();
+  Log.notice(F("Target state on restart: %T" CR), ONOFFConfig.ONOFFState);
+  Log.notice(F("Use last state on restart: %T" CR), ONOFFConfig.useLastStateOnStart);
 #  endif
   pinMode(ACTUATOR_ONOFF_GPIO, OUTPUT);
+#  ifdef ACTUATOR_ONOFF_DEFAULT
+  digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
+#  elif defined(ESP32)
+  if (ONOFFConfig.useLastStateOnStart)
+    digitalWrite(ACTUATOR_ONOFF_GPIO, ONOFFConfig.ONOFFState);
+#  endif
   if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
     PowerIndicatorON();
   } else {
     PowerIndicatorOFF();
   }
-#  ifdef ACTUATOR_ONOFF_DEFAULT
-  digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
-#  endif
   Log.trace(F("ZactuatorONOFF setup done" CR));
 }
 
@@ -65,6 +133,13 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       } else {
         PowerIndicatorOFF();
       }
+#    ifdef ESP32
+      if (ONOFFConfig.useLastStateOnStart) {
+        ONOFFdata["save"] = true;
+        ONOFFConfig_fromJson(ONOFFdata);
+        ONOFFdata.remove("save");
+      }
+#    endif
       // we acknowledge the sending by publishing the value to an acknowledgement topic
       pub(subjectGTWONOFFtoMQTT, ONOFFdata);
     } else {
@@ -90,6 +165,25 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
         Log.error(F("MQTTtoONOFF failed json read" CR));
       }
     }
+  }
+  if (cmpToMainTopic(topicOri, subjectMQTTtoONOFFset)) {
+    Log.trace(F("MQTTtoONOFF json set" CR));
+    /*
+     * Configuration modifications priorities:
+     *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
+     *  Then parameters included in json are taken in account
+     *  Finally `erase=true` and `save=true` commands are executed (if both are present, ERASE prevails on SAVE)
+     */
+    if (ONOFFdata.containsKey("init") && ONOFFdata["init"].as<bool>()) {
+      // Restore the default (initial) configuration
+      ONOFFConfig_init();
+    } else if (ONOFFdata.containsKey("load") && ONOFFdata["load"].as<bool>()) {
+      // Load the saved configuration, if not initialised
+      ONOFFConfig_load();
+    }
+
+    // Load config from json if available
+    ONOFFConfig_fromJson(ONOFFdata);
   }
 }
 #  endif
@@ -135,7 +229,7 @@ void overLimitTemp(void* pvParameters) {
     Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
     // We switch OFF the actuator if the temperature of the ESP32 is more than MAX_TEMP_ACTUATOR two consecutive times, so as to avoid false single readings to trigger the relay OFF.
     if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR) {
-      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with thew previous condition, but it is better to trigger the digitalRead only if the previous condition is met
+      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with the previous condition, but it is better to trigger the digitalRead only if the previous condition is met to avoid the digitalRead
         Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
         ActuatorTrigger();
         CriticalIndicatorON();
@@ -152,16 +246,18 @@ void overLimitTemp(void* pvParameters) {
 #  ifdef MAX_CURRENT_ACTUATOR
 void overLimitCurrent(void* pvParameters) {
   for (;;) {
+    static float previousCurrent = 0;
     float current = getRN8209current();
     Log.trace(F("RN8209 Current %F" CR), current);
     // We switch OFF the actuator if the current of the RN8209 is more than MAX_CURRENT_ACTUATOR.
-    if (current > MAX_CURRENT_ACTUATOR) {
-      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with thew previous condition, but it is better to trigger the digitalRead only if the previous condition is met
+    if (current > MAX_CURRENT_ACTUATOR && previousCurrent > MAX_CURRENT_ACTUATOR) {
+      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with the previous condition, but it is better to trigger the digitalRead only if the previous condition is met to avoid the digitalRead
         Log.error(F("[ActuatorONOFF] OverCurrent detected ( %F > %F ) switching OFF Actuator" CR), current, MAX_CURRENT_ACTUATOR);
         ActuatorTrigger();
         CriticalIndicatorON();
       }
     }
+    previousCurrent = current;
     vTaskDelay(TimeBetweenReadingCurrent);
   }
 }
@@ -185,6 +281,13 @@ void ActuatorTrigger() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)level;
+#  ifdef ESP32
+  if (ONOFFConfig.useLastStateOnStart) {
+    ONOFFdata["save"] = true;
+    ONOFFConfig_fromJson(ONOFFdata);
+    ONOFFdata.remove("save");
+  }
+#  endif
   pub(subjectGTWONOFFtoMQTT, ONOFFdata);
 }
 
