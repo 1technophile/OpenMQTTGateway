@@ -48,8 +48,8 @@ std::vector<RTL_433device*> RTL_433devices;
 int newRTL_433Devices = 0;
 
 static RTL_433device NO_RTL_433_DEVICE_FOUND = {{0},
-                                        0,
-                                        false};
+                                                0,
+                                                false};
 
 RTL_433device* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 RTL_433device* getDeviceById(const char* id) {

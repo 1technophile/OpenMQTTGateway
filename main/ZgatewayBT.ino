@@ -71,12 +71,12 @@ vector<BLEdevice*> devices;
 int newDevices = 0;
 
 static BLEdevice NO_BT_DEVICE_FOUND = {{0},
-                                    0,
-                                    false,
-                                    false,
-                                    false,
-                                    false,
-                                    TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
+                                       0,
+                                       false,
+                                       false,
+                                       false,
+                                       false,
+                                       TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
 static bool oneWhite = false;
 
 void BTConfig_init() {
