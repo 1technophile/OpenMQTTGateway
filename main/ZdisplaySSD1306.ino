@@ -45,6 +45,8 @@ boolean logToLCDDisplay = LOG_TO_LCD;
 boolean jsonDisplay = JSON_TO_LCD;
 boolean displayMetric = DISPLAY_METRIC;
 boolean displayFlip = DISPLAY_FLIP;
+boolean displayState = DISPLAY_STATE;
+boolean idlelogo = DISPLAY_IDLE_LOGO;
 uint8_t displayBrightness = round(DISPLAY_BRIGHTNESS * 2.55);
 
 /*
@@ -60,7 +62,7 @@ module setup, for use in Arduino setup
 */
 void setupSSD1306() {
   Log.trace(F("Setup SSD1306 Display" CR));
-  Log.trace(F("ZdisplaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306set);
+  Log.trace(F("ZdisplaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306);
   Log.trace(F("ZdisplaySSD1306 log-lcd: %T" CR), logToLCDDisplay);
   Log.trace(F("ZdisplaySSD1306 json-lcd: %T" CR), jsonDisplay);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
@@ -106,13 +108,11 @@ void loopSSD1306() {
   /*
   Display logo if it has been more than DISPLAY_PAGE_INTERVAL
   */
-#  if DISPLAY_IDLE_LOGO
-  if (uptime() > nextDisplayPage + 1 && !logoDisplayed) {
+  if (uptime() > nextDisplayPage + 1 && !logoDisplayed && idlelogo) {
     Oled.fillScreen(BLACK);
     Oled.drawLogo(rand() % 13 - 5, rand() % 32 - 13);
     logoDisplayed = true;
   }
-#  endif
 }
 
 /*
@@ -122,10 +122,24 @@ Handler for mqtt commands sent to the module
 */
 void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object decoding
   bool success = false;
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306)) {
     Log.trace(F("MQTTtoSSD1306 json set" CR));
     // Log display set between SSD1306 lcd (true) and serial monitor (false)
-    if (SSD1306data.containsKey("log-lcd")) {
+    if (SSD1306data.containsKey("onstate")) {
+      if (displayState != SSD1306data["onstate"]) {
+        displayState = SSD1306data["onstate"];
+        Oled.begin();
+      }
+      displayState = SSD1306data["onstate"];
+      Log.notice(F("Set display state: %T" CR), logToLCDDisplay);
+      success = true;
+    } else if (SSD1306data.containsKey("brightness")) {
+      displayBrightness = SSD1306data["brightness"];
+      displayBrightness = round(displayBrightness * 2.55);
+      Oled.display->setBrightness(displayBrightness);
+      Log.notice(F("Set brightness: %d" CR), displayBrightness);
+      success = true;
+    } else if (SSD1306data.containsKey("log-lcd")) {
       logToLCDDisplay = SSD1306data["log-lcd"];
       Log.notice(F("Set lcd log: %T" CR), logToLCDDisplay);
       logToLCD(logToLCDDisplay);
@@ -145,6 +159,9 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       displayMetric = SSD1306data["display-metric"];
       Log.notice(F("Set display-metric: %T" CR), displayMetric);
       success = true;
+    } else if (SSD1306data.containsKey("idlelogo")) {
+      idlelogo = SSD1306data["idlelogo"];
+      success = true;
     } else if (SSD1306data.containsKey("display-flip")) {
       displayFlip = SSD1306data["display-flip"];
       Log.notice(F("Set display-flip: %T" CR), displayFlip);
@@ -156,9 +173,9 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       success = true;
     }
     if (success) {
-      pub(subjectSSD1306toMQTTset, SSD1306data);
+      stateSSD1306Display();
     } else {
-      pub(subjectSSD1306toMQTTset, "{\"Status\": \"Error\"}"); // Fail feedback
+      pub(subjectSSD1306toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[ SSD1306 ] MQTTtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
@@ -183,6 +200,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
       free(topic);
 
       Oled.display->normalDisplay();
+      // Oled.display->normalDisplay();
 
       switch (hash(message->title)) {
         case hash("SYStoMQTT"): {
@@ -488,17 +506,21 @@ void OledSerial::begin() {
   xSemaphoreGive(semaphoreOLEDOperation);
 
   display->init();
-  if (displayFlip) {
-    display->flipScreenVertically();
+  if (displayState) {
+    if (displayFlip) {
+      display->flipScreenVertically();
+    } else {
+      display->resetOrientation();
+    }
+    display->setFont(ArialMT_Plain_10);
+    display->setBrightness(displayBrightness);
+    drawLogo(0, 0);
+    display->invertDisplay();
+    display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);
+    delay(1000);
   } else {
-    display->resetOrientation();
+    display->displayOff();
   }
-  display->setFont(ArialMT_Plain_10);
-  display->setBrightness(displayBrightness);
-  drawLogo(0, 0);
-  display->invertDisplay();
-  display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);
-  delay(1000);
 }
 
 /*
@@ -622,6 +644,20 @@ void OledSerial::drawLogo(int xshift, int yshift) {
     display->display();
     xSemaphoreGive(semaphoreOLEDOperation);
   }
+}
+
+void stateSSD1306Display() {
+  //Publish display state
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
+  DISPLAYdata["onstate"] = (bool)displayState;
+  DISPLAYdata["brightness"] = (int)round(displayBrightness / 2.55);
+  DISPLAYdata["display-metric"] = (bool)displayMetric;
+  DISPLAYdata["display-flip"] = (bool)displayFlip;
+  DISPLAYdata["idlelogo"] = (bool)idlelogo;
+  DISPLAYdata["log-lcd"] = (bool)logToLCDDisplay;
+  DISPLAYdata["json-lcd"] = (bool)jsonDisplay;
+  pub(subjectSSD1306toMQTT, DISPLAYdata);
 }
 
 #endif

@@ -1518,6 +1518,9 @@ void loop() {
 #  ifdef ZactuatorONOFF
         stateONOFFMeasures();
 #  endif
+#  ifdef ZdisplaySSD1306
+        stateSSD1306Display();
+#  endif
       }
 #endif
 #ifdef ZsensorBME280

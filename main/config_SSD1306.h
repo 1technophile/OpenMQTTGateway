@@ -70,6 +70,10 @@
 #  define DISPLAY_FLIP true // Flip display orientation
 #endif
 
+#ifndef DISPLAY_STATE
+#  define DISPLAY_STATE true // set to false if you don't want to use the display
+#endif
+
 #ifndef DISPLAY_BRIGHTNESS
 #  define DISPLAY_BRIGHTNESS 50 // 0-100; 50 % brightness as default
 #endif
@@ -95,8 +99,8 @@
 
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 
-#define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306"
-#define subjectSSD1306toMQTTset "/SSD1306toMQTT"
+#define subjectMQTTtoSSD1306 "/commands/MQTTtoSSD1306"
+#define subjectSSD1306toMQTT "/SSD1306toMQTT"
 
 /*-------------------EXTERNAL FUNCTIONS----------------------*/
 
