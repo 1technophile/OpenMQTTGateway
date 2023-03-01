@@ -89,6 +89,9 @@ extern int btQueueLengthCount;
 #ifndef TimeBtwConnect
 #  define TimeBtwConnect 3600000 //define default time between BLE connection attempt (not used for immediate actions); in milliseconds
 #endif
+#ifndef PresenceAwayTimer
+#  define PresenceAwayTimer 120000 //define the time between Offline Status update for the sensors
+#endif
 
 #ifndef BLEScanDuplicateCacheSize
 #  define BLEScanDuplicateCacheSize 200
@@ -160,6 +163,7 @@ struct BTConfig_s {
   bool pubAdvData; // Publish advertisement data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
   bool ignoreWBlist; // Disable Whitelist & Blacklist
+  unsigned long presenceAwayTimer; //Timer that trigger a tracker state as offline if not seen
 };
 
 // Global struct to store live BT configuration data
@@ -209,6 +213,7 @@ struct BLEdevice {
   bool isBlkL;
   bool connect;
   int sensorModel_id;
+  unsigned long lastUpdate;
 };
 
 class BLEconectable {
