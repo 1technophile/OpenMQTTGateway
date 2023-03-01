@@ -39,7 +39,13 @@ Goes ON for 25 ms, then back to OFF:
 Goes OFF for 25 ms, then back to ON:
 `mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse","pulse_length":25}'`
 
-Be aware that outputs are OFF by default when the board first start.
+Behavior at start in case of power loss (ESP32 only):
+The module will record per default the last state of the actuator and attempt to recover it upon restart. 
+Example: if your relay is ON and a power outage occurs, when the power comes back the firmware will attempt to switch ON the relay again.
+
+If you don't want this behavior you can set the macro `USE_LAST_STATE_ON_RESTART` to `false` at build time or use the command below at runtime:
+`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/config -m '{"uselaststate":false,"save":true}"'`
+The key `save` will persist the configuration upon restarts.
 
 ## FASTLED
 ### The FASTLED module support 2 different operation modes
