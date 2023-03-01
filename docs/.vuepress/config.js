@@ -88,6 +88,7 @@ module.exports = {
             'use/sensors',
             'use/actuators',
             'use/boards',
+            'use/displays',
             'use/gateway'
           ]
         },
