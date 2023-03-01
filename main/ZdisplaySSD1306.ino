@@ -62,7 +62,7 @@ module setup, for use in Arduino setup
 */
 void setupSSD1306() {
   Log.trace(F("Setup SSD1306 Display" CR));
-  Log.trace(F("ZdisplaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306);
+  Log.trace(F("ZdisplaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306set);
   Log.trace(F("ZdisplaySSD1306 log-lcd: %T" CR), logToLCDDisplay);
   Log.trace(F("ZdisplaySSD1306 json-lcd: %T" CR), jsonDisplay);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
@@ -122,7 +122,7 @@ Handler for mqtt commands sent to the module
 */
 void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object decoding
   bool success = false;
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
     Log.trace(F("MQTTtoSSD1306 json set" CR));
     // Log display set between SSD1306 lcd (true) and serial monitor (false)
     if (SSD1306data.containsKey("onstate")) {

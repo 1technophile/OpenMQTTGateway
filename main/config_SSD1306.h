@@ -99,8 +99,8 @@
 
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 
-#define subjectMQTTtoSSD1306 "/commands/MQTTtoSSD1306"
-#define subjectSSD1306toMQTT "/SSD1306toMQTT"
+#define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306/config"
+#define subjectSSD1306toMQTT    "/SSD1306toMQTT"
 
 /*-------------------EXTERNAL FUNCTIONS----------------------*/
 
