@@ -93,7 +93,7 @@ void loopSSD1306() {
 
   long enough since the last message and display not being used and a queue message waiting
   */
-  if (jsonDisplay) {
+  if (jsonDisplay && displayState) {
     if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && uxQueueMessagesWaiting(displayQueue)) {
       displayQueueMessage* message = nullptr;
       xQueueReceive(displayQueue, &message, portMAX_DELAY);
@@ -108,7 +108,7 @@ void loopSSD1306() {
   /*
   Display logo if it has been more than DISPLAY_PAGE_INTERVAL
   */
-  if (uptime() > nextDisplayPage + 1 && !logoDisplayed && idlelogo) {
+  if (uptime() > nextDisplayPage + 1 && !logoDisplayed && idlelogo && displayState) {
     Oled.fillScreen(BLACK);
     Oled.drawLogo(rand() % 13 - 5, rand() % 32 - 13);
     logoDisplayed = true;
@@ -192,7 +192,7 @@ constexpr unsigned int hash(const char* s, int off = 0) { // workaround for swit
 Parse json message from module into a format for displaying on screen, and queue for display
 */
 void ssd1306PubPrint(const char* topicori, JsonObject& data) {
-  if (jsonDisplay) {
+  if (jsonDisplay && displayState) {
     displayQueueMessage* message = (displayQueueMessage*)malloc(sizeof(displayQueueMessage));
     if (message != NULL) {
       char* topic = strdup(topicori);
@@ -200,7 +200,6 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
       free(topic);
 
       Oled.display->normalDisplay();
-      // Oled.display->normalDisplay();
 
       switch (hash(message->title)) {
         case hash("SYStoMQTT"): {
@@ -303,6 +302,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
 
           if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
             Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
+            free(message);
           } else {
             // Log.notice(F("Queued %s" CR), message->title);
           }
@@ -667,6 +667,13 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
             line4 = properties[4] + properties[5];
 
             if (!(line2 == "" && line3 == "" && line4 == "")) {
+              // Titel
+              char* topic = strdup(topicori);
+              String heading = strtok(topic, "/");
+              String line0 = heading + "           " + data["id"].as<String>().substring(9, 17);
+              line0.toCharArray(message->title, OLED_TEXT_WIDTH);
+              free(topic);
+
               // Line 1
               strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
 
@@ -680,9 +687,13 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
               } else {
                 // Log.notice(F("Queued %s" CR), message->title);
               }
+            } else {
+              free(message);
             }
 
             break;
+          } else {
+            free(message);
           }
         }
 #  endif
@@ -751,7 +762,7 @@ OledSerial::OledSerial(int x) {
 }
 
 /*
-Initialize ssd1306 oled display for use, and display animated OMG logo
+Initialize ssd1306 oled display for use, and display OMG logo
 */
 void OledSerial::begin() {
   // SSD1306.begin(); // User OMG serial support

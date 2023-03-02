@@ -991,9 +991,8 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
-    String topic = subjectBTtoMQTT;
-    if (BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Only display sensor data
-      pubOled((char*)topic.c_str(), BLEdata);
+    if (BLEdata.containsKey("type") && (BLEdata.containsKey("model") || BLEdata.containsKey("distance"))) { // Only display sensor data with type
+      pubOled(subjectBTtoMQTT, BLEdata);
     }
     if (!BTConfig.pubAdvData) {
       BLEdata.remove("servicedatauuid");
