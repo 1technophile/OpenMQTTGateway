@@ -28,7 +28,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | BlueMaestro|TempoDisc 1 in 1|temperature/battery|
 | BlueMaestro|TempoDisc 3 in 1|temperature/humidity/dew point/battery|
 | BlueMaestro|TempoDisc 4 in 1|temperature/humidity/pressure/battery|
-| BM2 Battery Monitor|BM2|battery|
+| BM2 Battery Monitor|BM2|battery/volt(c)|
 | ClearGrass|CGG1|temperature/humidity/battery/voltage (depending on which CGG1 firmware is installed)|
 | ClearGrass alarm clock|CGD1|temperature/humidity/battery|
 | ClearGrass alarm clock|CGC1|temperature/humidity/battery|
@@ -84,7 +84,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | ThermoPro|TP393|temperature/humidity|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
 | Vegtrug||temperature/moisture/luminance/fertility|
-| XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(1)(c)|
+| XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(c)|
 | XIAOMI Ropot|HHCCPOT002|temperature/moisture/fertility|
 | XIAOMI Mi Jia|LYWSDCGO|temperature/humidity/battery|
 | XIAOMI Mi Jia|LYWSD02|temperature/humidity/battery|
