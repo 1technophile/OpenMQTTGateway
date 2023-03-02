@@ -467,6 +467,18 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
   createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel_id);
 }
 
+void BM2Discovery(const char* mac, const char* sensorModel_id) {
+#    define BM2parametersCount 2
+  Log.trace(F("BM2Discovery" CR));
+  const char* BM2sensor[BM2parametersCount][9] = {
+      {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  createDiscoveryFromList(mac, BM2sensor, BM2parametersCount, "BM2", "Generic", sensorModel_id);
+}
+
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
@@ -529,6 +541,7 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
+void BM2Discovery(const char* mac, const char* sensorModel_id) {}
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
 #  endif
 
@@ -668,6 +681,10 @@ void BLEconnect() {
             DT24_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
+          } else if (p->sensorModel_id == BLEconectable::id::BM2) {
+            BM2_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
+            BLEclient.publishData();
           } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
             HHCCJCY01HHCC_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
@@ -696,6 +713,7 @@ void BLEconnect() {
                 if (p->sensorModel_id != BLEconectable::id::DT24_BLE &&
                     p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
                     p->sensorModel_id != BLEconectable::id::LYWSD03MMC &&
+                    p->sensorModel_id != BLEconectable::id::BM2 &&
                     p->sensorModel_id != BLEconectable::id::MHO_C401 &&
                     p->sensorModel_id != BLEconectable::id::XMWSDJ04MMC) {
                   // if irregulary connected to and connection failed clear the connect flag.
@@ -906,7 +924,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
       if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
           p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
           p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
-          p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) { // Exception on HHCCJCY01HHCC as this one is discoverable and connectable for battery retrieving
+          p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
         Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
         std::string properties = decoder.getTheengProperties(p->sensorModel_id);
         Log.trace(F("properties: %s" CR), properties.c_str());
@@ -952,10 +970,13 @@ void launchBTDiscovery(bool overrideDiscovery) {
       } else {
         if (p->sensorModel_id > BLEconectable::id::MIN &&
                 p->sensorModel_id < BLEconectable::id::MAX ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
           // Discovery of sensors from which we retrieve data only by connect
           if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
             DT24Discovery(macWOdots.c_str(), "DT24-BLE");
+          }
+          if (p->sensorModel_id == BLEconectable::id::BM2) {
+            BM2Discovery(macWOdots.c_str(), "BM2");
           }
           if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
             LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
@@ -1046,6 +1067,8 @@ void process_bledata(JsonObject& BLEdata) {
         model_id = BLEconectable::id::LYWSD03MMC;
       else if (name.compare("DT24-BLE") == 0)
         model_id = BLEconectable::id::DT24_BLE;
+      else if (name.compare("Battery Monitor") == 0)
+        model_id = BLEconectable::id::BM2;
       else if (name.compare("MHO-C401") == 0)
         model_id = BLEconectable::id::MHO_C401;
       else if (name.compare("XMWSDJ04MMC") == 0)
