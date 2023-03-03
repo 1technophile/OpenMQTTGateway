@@ -5,7 +5,7 @@ Several options are available for the display of information on the SSD1306 disp
 
 The current SSD1306 display states are being published to the `SSD1306toMQTT` topic, e.g.
 
-`{"onstate":true,"brightness":50,"display-metric":true,"display-flip":true,"idlelogo":true,"log-lcd":false,"json-lcd":true}`
+`{"onstate":true,"brightness":50,"display-metric":true,"display-flip":true,"idlelogo":true,"log-oled":false,"json-oled":true}`
 
 ### Display ON/OFF
 To turn the SSD1306 display on or off.
@@ -59,27 +59,27 @@ or at runtime with
 
 ### Setting the log output
 
-The display of serial log messages to the display can be enabled via compiler directive `-DLOG_TO_LCD=true` or via MQTT commands.
+The display of serial log messages to the display can be enabled via compiler directive `-DLOG_TO_OLED=true` or via MQTT commands.
 
-For example if you want to set the serial log to LCD
+For example if you want to set the serial log to OLED
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"log-lcd":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"log-oled":true}'`
 
-you can also revert it back to the serial monitor:
+you can also revert it back with
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"log-lcd":false}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"log-oled":false}'`
 
-The log level of the messages displayed is Errors and Warnings, and this can only be changed via the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.  
+The log level of the messages displayed is Errors and Warnings, and this can only be changed via the compiler directive `-DLOG_LEVEL_OLED=LOG_LEVEL_NOTICE`.  
 
 ### Displaying Module json messages (default)
 
 The display of messages from various modules is also supported. Currently supported modules include `ZgatewayRTL_433`, `ZgatewayBT` and `ZsensorBME280`.
 
-This can be enabled with the compiler directive `-DJSON_TO_LCD=true`.
+This can be enabled with the compiler directive `-DJSON_TO_OLED=true`.
 
 You can also change it by MQTT. For example if you want to display module json messages:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"json-lcd":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"json-oled":true}'`
 
 And to disable the display of module json messages:
 
