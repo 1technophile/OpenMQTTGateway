@@ -122,9 +122,8 @@ const char parameters[40][4][24] = {
     {"tamper", "tamper", "", ""},
     {"alarm", "alarm", "", ""},
     {"motion", "motion", "", "motion"},
-    {"strike_count", "strike count", "", ""},// from rtl_433_mqtt_hass.py
-    {"event", "Status", "", "moisture"}
-    }; 
+    {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
+    {"event", "Status", "", "moisture"}};
 #  endif
 #endif
 /*-------------------RF topics & parameters----------------------*/

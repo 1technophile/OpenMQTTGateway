@@ -161,7 +161,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
                             (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
                             stateClassTotalIncreasing //State Class
             );
-          } else if (strcmp(parameters[i][0], "event") == 0 && strcmp(pdevice->modelName, "Govee-Water") == 0) {
+          } else if (strcmp(parameters[i][0], "event") == 0 && strcmp(pdevice->modelName, "Govee-Water") == 0) { //the entity will detect Water Leak Event and go back to Off state after 60seconds
             createDiscovery("binary_sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
                             "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
