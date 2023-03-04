@@ -42,16 +42,16 @@
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 
-#ifndef LOG_LEVEL_LCD
-#  define LOG_LEVEL_LCD LOG_LEVEL_WARNING // Default to only display Warning level messages
+#ifndef LOG_LEVEL_OLED
+#  define LOG_LEVEL_OLED LOG_LEVEL_WARNING // Default to only display Warning level messages
 #endif
 
-#ifndef LOG_TO_LCD
-#  define LOG_TO_LCD false // Default to not display log messages on display
+#ifndef LOG_TO_OLED
+#  define LOG_TO_OLED false // Default to not display log messages on display
 #endif
 
-#ifndef JSON_TO_LCD
-#  define JSON_TO_LCD true // Default to displaying JSON messages on the display
+#ifndef JSON_TO_OLED
+#  define JSON_TO_OLED true // Default to displaying JSON messages on the display
 #endif
 
 #ifndef DISPLAY_PAGE_INTERVAL
