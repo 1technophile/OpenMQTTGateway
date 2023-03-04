@@ -6,8 +6,9 @@
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
 :::
 
-::: NOTE
+::: warning Note
 If you are on macOS and have a LilyGo LoRa32 V2.1 board, make sure you have the [correct driver for the CH9102 Serial Chip](https://github.com/WCHSoftGroup/ch34xser_macos) installed and selected in the popup when initiating the web install.
+:::
 
 To finalise the driver installation don't forget the confirmation in the **Security** section of **System Preferences** after the restart.
 

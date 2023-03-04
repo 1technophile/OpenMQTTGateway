@@ -84,3 +84,25 @@ You can also change it by MQTT. For example if you want to display module json m
 And to disable the display of module json messages:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"display-json":false}'`
+
+### Store the current display configuration in the gateway
+
+To store the running display configuration into non-volatile storage on the gateway use the following command. This assures persistence across restarts.
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"save":true}'`
+
+At any time, you can reload the stored configuration with the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"load":true}'`
+
+If you want to erase the stored configuration, use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"erase":true}'` 
+
+Note that this will not change the running configuration, it only ensures that the default configuration is used at next startup.
+
+If you want to load the default configuration use the command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m '{"init":true}'` 
+
+Note that this will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
