@@ -47,7 +47,7 @@ boolean displayMetric = DISPLAY_METRIC;
 boolean displayFlip = DISPLAY_FLIP;
 boolean displayState = DISPLAY_STATE;
 boolean idlelogo = DISPLAY_IDLE_LOGO;
-uint8_t displayBrightness = round(DISPLAY_BRIGHTNESS * 2.55);
+uint8_t displayBrightness = DISPLAY_BRIGHTNESS;
 
 /*
 Toogle log display
@@ -70,6 +70,8 @@ void setupSSD1306() {
   Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
 
+  SSD1306Config_init();
+  SSD1306Config_load();
   Oled.begin();
   Log.notice(F("Setup SSD1306 Display end" CR));
 
@@ -125,10 +127,10 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
   bool success = false;
   if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
     Log.trace(F("MQTTtoSSD1306 json set" CR));
-    // Log display set between SSD1306 OLED (true) and serial monitor (false)
+    // properties
     if (SSD1306data.containsKey("onstate")) {
       if (displayState != SSD1306data["onstate"]) {
-        displayState = SSD1306data["onstate"];
+        displayState = SSD1306data["onstate"].as<bool>();
         if (!displayState) {
           Oled.display->displayOff();
         } else {
@@ -136,17 +138,19 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
           Oled.begin();
         }
       }
-      displayState = SSD1306data["onstate"];
-      Log.notice(F("Set display state: %T" CR), logToOLEDDisplay);
+      displayState = SSD1306data["onstate"].as<bool>();
+      Log.notice(F("Set display state: %T" CR), displayState);
       success = true;
-    } else if (SSD1306data.containsKey("brightness")) {
-      displayBrightness = SSD1306data["brightness"];
-      displayBrightness = round(displayBrightness * 2.55);
-      Oled.display->setBrightness(displayBrightness);
+    }
+    if (SSD1306data.containsKey("brightness")) {
+      displayBrightness = SSD1306data["brightness"].as<int>();
+      Oled.display->setBrightness(round(displayBrightness * 2.55));
+      Oled.begin();
       Log.notice(F("Set brightness: %d" CR), displayBrightness);
       success = true;
-    } else if (SSD1306data.containsKey("log-oled")) {
-      logToOLEDDisplay = SSD1306data["log-oled"];
+    }
+    if (SSD1306data.containsKey("log-oled")) {
+      logToOLEDDisplay = SSD1306data["log-oled"].as<bool>();
       Log.notice(F("Set OLED log: %T" CR), logToOLEDDisplay);
       logToOLED(logToOLEDDisplay);
       if (logToOLEDDisplay) {
@@ -154,22 +158,25 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       }
       success = true;
     } else if (SSD1306data.containsKey("json-oled")) {
-      jsonDisplay = SSD1306data["json-oled"];
+      jsonDisplay = SSD1306data["json-oled"].as<bool>();
       if (jsonDisplay) {
         logToOLEDDisplay = false;
         logToOLED(logToOLEDDisplay);
       }
       Log.notice(F("Set json-oled: %T" CR), jsonDisplay);
       success = true;
-    } else if (SSD1306data.containsKey("display-metric")) {
-      displayMetric = SSD1306data["display-metric"];
+    }
+    if (SSD1306data.containsKey("display-metric")) {
+      displayMetric = SSD1306data["display-metric"].as<bool>();
       Log.notice(F("Set display-metric: %T" CR), displayMetric);
       success = true;
-    } else if (SSD1306data.containsKey("idlelogo")) {
-      idlelogo = SSD1306data["idlelogo"];
+    }
+    if (SSD1306data.containsKey("idlelogo")) {
+      idlelogo = SSD1306data["idlelogo"].as<bool>();
       success = true;
-    } else if (SSD1306data.containsKey("display-flip")) {
-      displayFlip = SSD1306data["display-flip"];
+    }
+    if (SSD1306data.containsKey("display-flip")) {
+      displayFlip = SSD1306data["display-flip"].as<bool>();
       Log.notice(F("Set display-flip: %T" CR), displayFlip);
       if (displayFlip) {
         Oled.display->flipScreenVertically();
@@ -178,12 +185,104 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       }
       success = true;
     }
+    // save, load, init, erase
+    if (SSD1306data.containsKey("save") && SSD1306data["save"]) {
+      success = SSD1306Config_save();
+      if (success) {
+        Log.notice(F("SSD1306 config saved" CR));
+        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs saved\"}");
+      }
+    } else if (SSD1306data.containsKey("load") && SSD1306data["load"]) {
+      success = SSD1306Config_load();
+      if (success) {
+        Log.notice(F("SSD1306 config loaded" CR));
+        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs loaded\"}");
+        Oled.begin();
+      }
+    } else if (SSD1306data.containsKey("init") && SSD1306data["init"]) {
+      SSD1306Config_init();
+      pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs initialised\"}");
+      Oled.begin();
+      success = true;
+    } else if (SSD1306data.containsKey("erase") && SSD1306data["erase"]) {
+      // Erase config from NVS (non-volatile storage)
+      preferences.begin(Gateway_Short_Name, false);
+      success = preferences.remove("SSD1306Config");
+      preferences.end();
+      if (success) {
+        Log.notice(F("SSD1306 config erased" CR));
+        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs erased\"}");
+      } else {
+        Log.notice(F("SSD1306 nothing to erase" CR));
+        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 nothing to erase\"}");
+      }
+    }
     if (success) {
       stateSSD1306Display();
     } else {
       pub(subjectSSD1306toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[ SSD1306 ] MQTTtoSSD1306 Fail json" CR), SSD1306data);
     }
+  }
+}
+
+bool SSD1306Config_save() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jo = jsonBuffer.to<JsonObject>();
+  jo["onstate"] = displayState;
+  jo["brightness"] = displayBrightness;
+  jo["log-oled"] = logToOLEDDisplay;
+  jo["json-oled"] = jsonDisplay;
+  jo["display-metric"] = displayMetric;
+  jo["idlelogo"] = idlelogo;
+  jo["display-flip"] = displayFlip;
+  // Save config into NVS (non-volatile storage)
+  String conf = "";
+  serializeJson(jsonBuffer, conf);
+  preferences.begin(Gateway_Short_Name, false);
+  preferences.putString("SSD1306Config", conf);
+  preferences.end();
+}
+
+void SSD1306Config_init() {
+  displayState = DISPLAY_STATE;
+  displayBrightness = DISPLAY_BRIGHTNESS;
+  logToOLEDDisplay = LOG_TO_OLED;
+  jsonDisplay = JSON_TO_OLED;
+  displayMetric = DISPLAY_METRIC;
+  idlelogo = DISPLAY_IDLE_LOGO;
+  displayFlip = DISPLAY_FLIP;
+  Log.notice(F("SSD1306 config initialised" CR));
+}
+
+bool SSD1306Config_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  String exists = preferences.getString("SSD1306Config", "{}");
+  if (exists != "{}") {
+    auto error = deserializeJson(jsonBuffer, preferences.getString("SSD1306Config", "{}"));
+    preferences.end();
+    if (error) {
+      Log.error(F("SSD1306 config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      return false;
+    }
+    if (jsonBuffer.isNull()) {
+      Log.warning(F("SSD1306 config is null" CR));
+      return false;
+    }
+    JsonObject jo = jsonBuffer.as<JsonObject>();
+    displayState = jo["onstate"].as<bool>();
+    displayBrightness = jo["brightness"].as<int>();
+    logToOLEDDisplay = jo["log-oled"].as<bool>();
+    jsonDisplay = jo["json-oled"].as<bool>();
+    displayMetric = jo["display-metric"].as<bool>();
+    idlelogo = jo["idlelogo"].as<bool>();
+    displayFlip = jo["display-flip"].as<bool>();
+    return true;
+  } else {
+    preferences.end();
+    Log.notice(F("No SSD1306 config to load" CR));
+    return false;
   }
 }
 
@@ -777,19 +876,19 @@ void OledSerial::begin() {
   xSemaphoreGive(semaphoreOLEDOperation);
 
   display->init();
-  if (displayState) {
-    if (displayFlip) {
-      display->flipScreenVertically();
-    } else {
-      display->resetOrientation();
-    }
-    display->setFont(ArialMT_Plain_10);
-    display->setBrightness(displayBrightness);
-    drawLogo(0, 0);
-    display->invertDisplay();
-    display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);
-    delay(1000);
+  if (displayFlip) {
+    display->flipScreenVertically();
   } else {
+    display->resetOrientation();
+  }
+  display->setFont(ArialMT_Plain_10);
+  display->setBrightness(round(displayBrightness * 2.55));
+  drawLogo(0, 0);
+  display->invertDisplay();
+  display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);
+  delay(1000);
+
+  if (!displayState) {
     display->displayOff();
   }
 }
@@ -923,7 +1022,7 @@ void stateSSD1306Display() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
   DISPLAYdata["onstate"] = (bool)displayState;
-  DISPLAYdata["brightness"] = (int)round(displayBrightness / 2.55);
+  DISPLAYdata["brightness"] = (int)displayBrightness;
   DISPLAYdata["display-metric"] = (bool)displayMetric;
   DISPLAYdata["display-flip"] = (bool)displayFlip;
   DISPLAYdata["idlelogo"] = (bool)idlelogo;
