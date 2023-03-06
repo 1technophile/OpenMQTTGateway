@@ -5,7 +5,7 @@ Several options are available for the display of information on the SSD1306 disp
 
 The current SSD1306 display states are being published to the `SSD1306toMQTT` topic, e.g.
 
-`{"onstate":true,"brightness":50,"display-metric":true,"display-flip":true,"idlelogo":true,"log-oled":false,"json-oled":true}`
+`{"onstate":true,"brightness":50,"displaymetric":true,"display-flip":true,"idlelogo":true,"log-oled":false,"json-oled":true}`
 
 ### Display ON/OFF
 To turn the SSD1306 display on or off.
@@ -38,7 +38,7 @@ This can be set with the compiler directive `-DDISPLAY_METRIC=false`.
 
 or with the runtime command
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m {"display-metric":false}`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m {"displaymetric":false}`
 
 ### Rotating the display by 180 degrees
 
