@@ -424,6 +424,39 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+
+#    ifdef ZdisplaySSD1306
+  createDiscovery("switch", //set Type
+                  subjectSSD1306toMQTT, "SS1306: Control", (char*)getUniqueId("onstate", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.onstate }}", //set availability_topic,device_class,value_template,
+                  "{\"onstate\":true,\"save\":true}", "{\"onstate\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSSD1306set, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+  createDiscovery("switch", //set Type
+                  subjectSSD1306toMQTT, "SS1306: Display metric", (char*)getUniqueId("displaymetric", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.displaymetric }}", //set availability_topic,device_class,value_template,
+                  "{\"displaymetric\":true,\"save\":true}", "{\"displaymetric\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSSD1306set, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+  createDiscovery("number", //set Type
+                  subjectSSD1306toMQTT, "SSD1306: Brightness", (char*)getUniqueId("brightness", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.brightness }}", //set availability_topic,device_class,value_template,
+                  "{\"brightness\":{{value}},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSSD1306set, //set,payload_available,payload_not available,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                  stateClassNone //State Class
+  );
+#    endif
+
 #    ifndef ESP32_ETHERNET
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Rssi", (char*)getUniqueId("rssi", "").c_str(), //set state_topic,name,uniqueId
