@@ -166,9 +166,9 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       Log.notice(F("Set json-oled: %T" CR), jsonDisplay);
       success = true;
     }
-    if (SSD1306data.containsKey("display-metric")) {
-      displayMetric = SSD1306data["display-metric"].as<bool>();
-      Log.notice(F("Set display-metric: %T" CR), displayMetric);
+    if (SSD1306data.containsKey("displaymetric")) {
+      displayMetric = SSD1306data["displaymetric"].as<bool>();
+      Log.notice(F("Set displaymetric: %T" CR), displayMetric);
       success = true;
     }
     if (SSD1306data.containsKey("idlelogo")) {
@@ -233,7 +233,7 @@ bool SSD1306Config_save() {
   jo["brightness"] = displayBrightness;
   jo["log-oled"] = logToOLEDDisplay;
   jo["json-oled"] = jsonDisplay;
-  jo["display-metric"] = displayMetric;
+  jo["displaymetric"] = displayMetric;
   jo["idlelogo"] = idlelogo;
   jo["display-flip"] = displayFlip;
   // Save config into NVS (non-volatile storage)
@@ -275,7 +275,7 @@ bool SSD1306Config_load() {
     displayBrightness = jo["brightness"].as<int>();
     logToOLEDDisplay = jo["log-oled"].as<bool>();
     jsonDisplay = jo["json-oled"].as<bool>();
-    displayMetric = jo["display-metric"].as<bool>();
+    displayMetric = jo["displaymetric"].as<bool>();
     idlelogo = jo["idlelogo"].as<bool>();
     displayFlip = jo["display-flip"].as<bool>();
     return true;
@@ -1023,7 +1023,7 @@ void stateSSD1306Display() {
   JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
   DISPLAYdata["onstate"] = (bool)displayState;
   DISPLAYdata["brightness"] = (int)displayBrightness;
-  DISPLAYdata["display-metric"] = (bool)displayMetric;
+  DISPLAYdata["displaymetric"] = (bool)displayMetric;
   DISPLAYdata["display-flip"] = (bool)displayFlip;
   DISPLAYdata["idlelogo"] = (bool)idlelogo;
   DISPLAYdata["log-oled"] = (bool)logToOLEDDisplay;
