@@ -844,7 +844,7 @@ void pubMqttDiscovery() {
                     RN8209sensor[i][5], RN8209sensor[i][6], RN8209sensor[i][7], //set,payload_on,payload_off,unit_of_meas
                     0, Gateway_AnnouncementMsg, will_Message, true, "", //set  off_delay,payload_available,payload_not available   ,is a gateway entity, command topic
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
