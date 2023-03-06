@@ -127,7 +127,7 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
   bool success = false;
   if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
     Log.trace(F("MQTTtoSSD1306 json set" CR));
-    // Log display set between SSD1306 OLED (true) and serial monitor (false)
+    // properties
     if (SSD1306data.containsKey("onstate")) {
       if (displayState != SSD1306data["onstate"]) {
         displayState = SSD1306data["onstate"].as<bool>();
@@ -141,13 +141,15 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       displayState = SSD1306data["onstate"].as<bool>();
       Log.notice(F("Set display state: %T" CR), displayState);
       success = true;
-    } else if (SSD1306data.containsKey("brightness")) {
+    }
+    if (SSD1306data.containsKey("brightness")) {
       displayBrightness = SSD1306data["brightness"].as<int>();
       Oled.display->setBrightness(round(displayBrightness * 2.55));
       Oled.begin();
       Log.notice(F("Set brightness: %d" CR), displayBrightness);
       success = true;
-    } else if (SSD1306data.containsKey("log-oled")) {
+    }
+    if (SSD1306data.containsKey("log-oled")) {
       logToOLEDDisplay = SSD1306data["log-oled"].as<bool>();
       Log.notice(F("Set OLED log: %T" CR), logToOLEDDisplay);
       logToOLED(logToOLEDDisplay);
@@ -163,14 +165,17 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       }
       Log.notice(F("Set json-oled: %T" CR), jsonDisplay);
       success = true;
-    } else if (SSD1306data.containsKey("display-metric")) {
+    }
+    if (SSD1306data.containsKey("display-metric")) {
       displayMetric = SSD1306data["display-metric"].as<bool>();
       Log.notice(F("Set display-metric: %T" CR), displayMetric);
       success = true;
-    } else if (SSD1306data.containsKey("idlelogo")) {
+    }
+    if (SSD1306data.containsKey("idlelogo")) {
       idlelogo = SSD1306data["idlelogo"].as<bool>();
       success = true;
-    } else if (SSD1306data.containsKey("display-flip")) {
+    }
+    if (SSD1306data.containsKey("display-flip")) {
       displayFlip = SSD1306data["display-flip"].as<bool>();
       Log.notice(F("Set display-flip: %T" CR), displayFlip);
       if (displayFlip) {
@@ -179,7 +184,9 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
         Oled.display->resetOrientation();
       }
       success = true;
-    } else if (SSD1306data.containsKey("save") && SSD1306data["save"]) {
+    }
+    // save, load, init, erase
+    if (SSD1306data.containsKey("save") && SSD1306data["save"]) {
       success = SSD1306Config_save();
       if (success) {
         Log.notice(F("SSD1306 config saved" CR));
