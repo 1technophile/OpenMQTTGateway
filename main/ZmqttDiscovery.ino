@@ -449,6 +449,16 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+  createDiscovery("switch", //set Type
+                  subjectSYStoMQTT, "SYS: Auto discovery", (char*)getUniqueId("discovery", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.discovery }}", //set availability_topic,device_class,value_template,
+                  "{\"discovery\":true}", "{\"discovery\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
 
 #    ifdef ZdisplaySSD1306
   createDiscovery("switch", //set Type
@@ -539,15 +549,6 @@ void pubMqttDiscovery() {
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                  stateClassNone //State Class
-  );
-  createDiscovery("switch", //set Type
-                  "", "SYS: Auto discovery", (char*)getUniqueId("discovery", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "", //set availability_topic,device_class,value_template,
-                  "{\"discovery\":true}", "{\"discovery\":false}", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
                   stateClassNone //State Class
   );
 #    endif
@@ -1065,16 +1066,15 @@ void pubMqttDiscovery() {
 #      define EntitiesCount 8
   const char* obsoleteEntities[EntitiesCount][2] = {
       // Remove previously created entities for version < 1.4.0
-      {"switch", "active_scan"},
+      {"switch", "active_scan"}, // Replaced by adaptive scan
       // Remove previously created entities for version < 1.3.0
-      {"number", "scanbcnct"},
+      {"number", "scanbcnct"}, // Now a connect interval
       // Remove previously created entities for version < 1.2.0
-      {"switch", "discovery"},
-      {"switch", "restart"},
-      {"switch", "erase"},
-      {"switch", "force_scan"},
-      {"sensor", "interval"},
-      {"sensor", "scanbcnct"}};
+      {"switch", "restart"}, // Now a button
+      {"switch", "erase"}, // Now a button
+      {"switch", "force_scan"}, // Now a button
+      {"sensor", "interval"}, // Now a number
+      {"sensor", "scanbcnct"}}; // Now a number
 
   for (int i = 0; i < EntitiesCount; i++) {
     eraseTopic(obsoleteEntities[i][0], (char*)getUniqueId(obsoleteEntities[i][1], "").c_str());

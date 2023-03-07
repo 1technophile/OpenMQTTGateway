@@ -1708,6 +1708,9 @@ void stateMeasures() {
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
   SYSdata["version"] = OMG_VERSION;
+#  ifdef ZmqttDiscovery
+  SYSdata["discovery"] = disc;
+#  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
@@ -2322,6 +2325,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     if (SYSdata.containsKey("discovery")) {
       if (SYSdata["discovery"].is<bool>()) {
         disc = SYSdata["discovery"];
+        stateMeasures();
         if (disc)
           pubMqttDiscovery();
       } else {
