@@ -129,23 +129,12 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     Log.trace(F("MQTTtoSSD1306 json set" CR));
     // properties
     if (SSD1306data.containsKey("onstate")) {
-      if (displayState != SSD1306data["onstate"]) {
-        displayState = SSD1306data["onstate"].as<bool>();
-        if (!displayState) {
-          Oled.display->displayOff();
-        } else {
-          Oled.display->displayOn();
-          Oled.begin();
-        }
-      }
       displayState = SSD1306data["onstate"].as<bool>();
       Log.notice(F("Set display state: %T" CR), displayState);
       success = true;
     }
     if (SSD1306data.containsKey("brightness")) {
       displayBrightness = SSD1306data["brightness"].as<int>();
-      Oled.display->setBrightness(round(displayBrightness * 2.55));
-      Oled.begin();
       Log.notice(F("Set brightness: %d" CR), displayBrightness);
       success = true;
     }
@@ -178,11 +167,6 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     if (SSD1306data.containsKey("display-flip")) {
       displayFlip = SSD1306data["display-flip"].as<bool>();
       Log.notice(F("Set display-flip: %T" CR), displayFlip);
-      if (displayFlip) {
-        Oled.display->flipScreenVertically();
-      } else {
-        Oled.display->resetOrientation();
-      }
       success = true;
     }
     // save, load, init, erase
@@ -190,20 +174,18 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       success = SSD1306Config_save();
       if (success) {
         Log.notice(F("SSD1306 config saved" CR));
-        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs saved\"}");
       }
     } else if (SSD1306data.containsKey("load") && SSD1306data["load"]) {
       success = SSD1306Config_load();
       if (success) {
         Log.notice(F("SSD1306 config loaded" CR));
-        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs loaded\"}");
-        Oled.begin();
       }
     } else if (SSD1306data.containsKey("init") && SSD1306data["init"]) {
       SSD1306Config_init();
-      pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs initialised\"}");
-      Oled.begin();
       success = true;
+      if (success) {
+        Log.notice(F("SSD1306 config initialised" CR));
+      }
     } else if (SSD1306data.containsKey("erase") && SSD1306data["erase"]) {
       // Erase config from NVS (non-volatile storage)
       preferences.begin(Gateway_Short_Name, false);
@@ -211,16 +193,12 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       preferences.end();
       if (success) {
         Log.notice(F("SSD1306 config erased" CR));
-        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 configs erased\"}");
-      } else {
-        Log.notice(F("SSD1306 nothing to erase" CR));
-        pub(subjectSSD1306toMQTT, "{\"Status\": \"SSD1306 nothing to erase\"}");
       }
     }
     if (success) {
       stateSSD1306Display();
     } else {
-      pub(subjectSSD1306toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
+      // pub(subjectSSD1306toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[ SSD1306 ] MQTTtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
@@ -1029,6 +1007,20 @@ void stateSSD1306Display() {
   DISPLAYdata["log-oled"] = (bool)logToOLEDDisplay;
   DISPLAYdata["json-oled"] = (bool)jsonDisplay;
   pub(subjectSSD1306toMQTT, DISPLAYdata);
+  // apply
+  Oled.display->setBrightness(round(displayBrightness * 2.55));
+
+  if (!displayState) {
+    Oled.display->displayOff();
+  } else {
+    Oled.display->displayOn();
+  }
+
+  if (displayFlip) {
+    Oled.display->flipScreenVertically();
+  } else {
+    Oled.display->resetOrientation();
+  }
 }
 
 #endif
