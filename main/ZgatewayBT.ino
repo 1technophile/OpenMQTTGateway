@@ -466,7 +466,7 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
 #    define BM2parametersCount 2
   Log.trace(F("BM2Discovery" CR));
   const char* BM2sensor[BM2parametersCount][9] = {
-      {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "volt", mac, "voltage", jsonVoltBM2, "", "", "V", stateClassMeasurement}, // We use a json definition that retrieve only data from the BM2 decoder, as this sensor also advertize volt as an iBeacon
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -1033,7 +1033,7 @@ void process_bledata(JsonObject& BLEdata) {
       model_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
       model_id != TheengsDecoder::BLE_ID_NUM::GAEN) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-    if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+    if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
       createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
