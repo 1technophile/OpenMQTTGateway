@@ -81,143 +81,141 @@ From @123, @finity, @denniz03, @jrockstad, @anarchking, @dkluivingh
 
 ### Door sensor
 ```yaml
-binary_sensor:
-  - platform: mqtt
-    name: "test"
-    state_topic: "home/OpenMQTTGateway/433toMQTT"
-    value_template: >-
-      {% if value_json.value == '7821834' %}
-        {{'ON'}}
-      {% elif value_json.value == '7821838' %}
-        {{'OFF'}}
-      {% else %}
-        {{states('binary_sensor.test') | upper}}
-      {% endif %}
-    qos: 0
-    device_class: opening
+mqtt:
+  binary_sensor:
+    - name: "test"
+      state_topic: "home/OpenMQTTGateway/433toMQTT"
+      value_template: >-
+        {% if value_json.value == '7821834' %}
+          {{'ON'}}
+        {% elif value_json.value == '7821838' %}
+          {{'OFF'}}
+        {% else %}
+          {{states('binary_sensor.test') | upper}}
+        {% endif %}
+      qos: 0
+      device_class: opening
 ```
 
 ```yaml
-binary_sensor:
-  - platform: mqtt
-    name: doorbell
-    state_topic: 'home/OpenMQTTGateway/SRFBtoMQTT'
-    #value_template: "{{ value_json.raw }}"
-    value_template: >- 
-      {% if value_json.value == '14163857' %}
-        {{'ON'}}
-      {% else %}
-        {{states('binary_sensor.doorbell') | upper}}
-      {% endif %}
-    off_delay: 30
-    device_class: 'sound'
-  - binary_sensor:
-    platform: mqtt
-    name: light_back_sensor
-    state_topic: 'home/OpenMQTTGateway/SRFBtoMQTT'
-    #value_template: '{{ value_jason.value }}'
-    value_template: >- 
-      {% if value_json.value == '1213858' %}
-        {{'ON'}}
-      {% else %}
-        {{states('binary_sensor.light_back_sensor') | upper}}
-      {% endif %}
-    off_delay: 5
-  - binary_sensor:
-    platform: mqtt
-    name: rf_outlet_sensor
-    state_topic: 'home/OpenMQTTGateway/SRFBtoMQTT'
-    value_template: >- 
-      {% if value_json.value == '16766303' %}
-        {{'ON'}}
-      {% else %} 
-        {{states('binary_sensor.rf_outlet_sensor') | upper}}
-      {% endif %}
+mqtt:
+  binary_sensor:
+    - name: doorbell
+      state_topic: 'home/OpenMQTTGateway/SRFBtoMQTT'
+      #value_template: "{{ value_json.raw }}"
+      value_template: >- 
+        {% if value_json.value == '14163857' %}
+          {{'ON'}}
+        {% else %}
+          {{states('binary_sensor.doorbell') | upper}}
+        {% endif %}
+      off_delay: 30
+      device_class: 'sound'
+
+    - name: light_back_sensor
+      state_topic: 'home/OpenMQTTGateway/SRFBtoMQTT'
+      #value_template: '{{ value_jason.value }}'
+      value_template: >- 
+        {% if value_json.value == '1213858' %}
+          {{'ON'}}
+        {% else %}
+          {{states('binary_sensor.light_back_sensor') | upper}}
+        {% endif %}
+      off_delay: 5
+
+    - name: rf_outlet_sensor
+      state_topic: 'home/OpenMQTTGateway/SRFBtoMQTT'
+      value_template: >- 
+        {% if value_json.value == '16766303' %}
+          {{'ON'}}
+        {% else %} 
+          {{states('binary_sensor.rf_outlet_sensor') | upper}}
+        {% endif %}
 ```
 
 ### Motion sensor
 ```yaml
-binary_sensor:
-      - platform: mqtt
-        name: "Bewegung_Schlafzimmer"
-        #device_class: motion
-        state_topic: "home/OpenMQTTGateway1/HCSR501toMQTT"
-        value_template: '{{ value_json["presence"] }}'
-        payload_on: "true"
-        payload_off: "false"
+mqtt:
+  binary_sensor:
+    - name: "Bewegung_Schlafzimmer"
+      #device_class: motion
+      state_topic: "home/OpenMQTTGateway1/HCSR501toMQTT"
+      value_template: '{{ value_json["presence"] }}'
+      payload_on: "true"
+      payload_off: "false"
 ```
 
 ### Switches
 
 ```yaml
 #switches
-switch:
-  - platform: mqtt
-    name: Plug1
-    state_topic: "home/OpenMQTTGateway/SRFBtoMQTT"
-    command_topic: "home/OpenMQTTGateway/commands/MQTTtoSRFB"
-    value_template: "{{ value_json.value }}"
-    payload_on: '{"value":4546575}'
-    payload_off: '{"value":4546572}'
-    state_on: 4546575
-    state_off: 4546572
-    qos: "0"
-    retain: true
+mqtt:
+  switch:
+    - name: Plug1
+      state_topic: "home/OpenMQTTGateway/SRFBtoMQTT"
+      command_topic: "home/OpenMQTTGateway/commands/MQTTtoSRFB"
+      value_template: "{{ value_json.value }}"
+      payload_on: '{"value":4546575}'
+      payload_off: '{"value":4546572}'
+      state_on: 4546575
+      state_off: 4546572
+      qos: "0"
+      retain: true
 ```
 
 ### Mijia Thermometer BLE
 
 ```yaml
-Sensor:
-- platform: mqtt
-  state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA' # MQTT topic, check MQTT messages; replace AA... with id (BLE MAC) of your device
-  name: "mijia_thermometer_temperature"
-  unit_of_measurement: '°C'
-  value_template: '{{ value_json.tem | is_defined }}'
-  expire_after: 21600 # 6 hours
-- platform: mqtt
-  state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA'
-  name: "mijia_thermometer_humidity"
-  unit_of_measurement: '%'
-  value_template: '{{ value_json.hum | is_defined }}'
-  expire_after: 21600 # 6 hours
-- platform: mqtt
-  state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA'
-  name: "mijia_thermometer_battery"
-  unit_of_measurement: '%'
-  value_template: '{{ value_json.batt | is_defined }}'
-  expire_after: 21600 # 6 hours
-  ```
+mqtt:
+  sensor:
+    - name: "mijia_thermometer_temperature"
+      state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA' # MQTT topic, check MQTT messages; replace AA... with id (BLE MAC) of your device
+      unit_of_measurement: '°C'
+      value_template: '{{ value_json.tem | is_defined }}'
+      expire_after: 21600 # 6 hours
+      force_update: true
+    - name: "mijia_thermometer_humidity"
+      state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA'
+      unit_of_measurement: '%'
+      value_template: '{{ value_json.hum | is_defined }}'
+      expire_after: 21600 # 6 hours
+      force_update: true
+    - name: "mijia_thermometer_battery"
+      state_topic: 'home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA'
+      unit_of_measurement: '%'
+      value_template: '{{ value_json.batt | is_defined }}'
+      expire_after: 21600 # 6 hours
+      force_update: true
+```
 
 
 ### Xiaomi Mi Scale V2 BLE (XMTZC05HM)
 
 ```yaml
-sensor:
-  - platform: mqtt
-    name: "Weight"
-    state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your MQTT topic here
-    value_template: '{{ value_json["weight"] }}'
-    unit_of_measurement: "kg"
-    icon: mdi:weight-kilogram
+mqtt:
+  sensor:
+    - name: "Weight"
+      state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your MQTT topic here
+      value_template: '{{ value_json["weight"] }}'
+      unit_of_measurement: "kg"
+      icon: mdi:weight-kilogram
     
-  - platform: mqtt
-    name: "Impedance"
-    state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your MQTT topic here also
-    value_template: '{{ value_json["impedance"] }}'
-    unit_of_measurement: "Ohm"
-    icon: mdi:omega
+    - name: "Impedance"
+      state_topic: "home/OpenMQTTGateway/BTtoMQTT/AAAAAAAAAAAA" # replace your MQTT topic here also
+      value_template: '{{ value_json["impedance"] }}'
+      unit_of_measurement: "Ohm"
+      icon: mdi:omega
     
-  - platform: template
-    sensors:
-      body_mass_index:
-        friendly_name: 'Body Mass Index'
-        value_template: >-
-          {% set HEIGHT = (1.76)|float %} # replace your height in meters
-          {% set WEIGHT = states('sensor.xmtzc05hm_weight')|float %}
-          {{- (WEIGHT/(HEIGHT*HEIGHT))|float|round(1) -}}
-        icon_template: >
-          {{ 'mdi:human' }}
+template:
+  sensor:
+    - name: body_mass_index:
+      friendly_name: 'Body Mass Index'
+      value_template: >-
+        {% set HEIGHT = (1.76)|float %} # replace your height in meters
+        {% set WEIGHT = states('sensor.xmtzc05hm_weight')|float %}
+        {{- (WEIGHT/(HEIGHT*HEIGHT))|float|round(1) -}}
+      icon_template: >
+        {{ 'mdi:human' }}
 ```
 
 ### MQTT Room Presence
@@ -237,15 +235,15 @@ sensor:
 ### Temperature sensor
 
 ```yaml
-sensor:
-  - platform: mqtt
-    name: outdoor temp
-    state_topic: "home/OpenMQTTGateway/433toMQTT"
-    unit_of_measurement: '°C'
-    value_template: >
-      {% if value_json is defined and value_json.sensor == 125 %}
-      {{ value_json.tempc }}
-      {% else %}
-      {{ states('sensor.outdoor_temp') }}
-       {% endif %}
+mqtt:
+  sensor:
+    - name: outdoor temp
+      state_topic: "home/OpenMQTTGateway/433toMQTT"
+      unit_of_measurement: '°C'
+      value_template: >
+        {% if value_json is defined and value_json.sensor == 125 %}
+          {{ value_json.tempc }}
+        {% else %}
+          {{ states('sensor.outdoor_temp') }}
+        {% endif %}
 ```
