@@ -134,6 +134,14 @@ With Home Assistant, this command is directly available through MQTT auto discov
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
 
+## Setting if the gateway publishes known devices which randomly change their MAC address
+
+The default is false, as such devices cannot be related to specific devices.
+
+If you want to change this characteristic:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"randommacs":true}'`
+
 ## Setting if the gateway use adaptive scanning
 
 Adaptive scanning lets the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.

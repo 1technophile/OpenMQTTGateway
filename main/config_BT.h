@@ -98,6 +98,10 @@ extern int btQueueLengthCount;
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
 #endif
 
+#ifndef PublishRandomMACs
+#  define PublishRandomMACs false //false to not publish devices which randomly change their MAC addresses
+#endif
+
 #ifndef HassPresence
 #  define HassPresence false //false if we publish into Home Assistant presence topic
 #endif
@@ -141,6 +145,7 @@ struct BTConfig_s {
   unsigned long BLEinterval; // Time between 2 scans
   unsigned long intervalConnect; // Time between 2 connects
   bool pubOnlySensors; // Publish only the identified sensors (like temperature sensors)
+  bool pubRandomMACs; // Publish devices which randomly change their MAC address
   bool presenceEnable; // Publish into Home Assistant presence topic
   String presenceTopic; // Home Assistant presence topic to publish on
   bool presenceUseBeaconUuid; // Use iBeacon UUID as for presence, instead of sender MAC (random) address
