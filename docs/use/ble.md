@@ -178,6 +178,12 @@ If you want to change the time between active scans you can change it by MQTT. F
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
 
+## Setting the duration of a scan
+
+If you want to change the default 10 sec duration of each scan cycle to 5 seconds
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanduration":5000}'`
+
 ## Setting if the gateway connects to BLE devices eligibles on ESP32
 
 If you want to change this characteristic:
