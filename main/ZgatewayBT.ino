@@ -754,6 +754,9 @@ void coreTask(void* pvParameters) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
       } else if (!ProcessLock) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+#  ifdef ZgatewayRTL_433
+          disableRTLreceive();
+#  endif
           BLEscan();
           // Launching a connect every TimeBtwConnect
           if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
@@ -763,6 +766,9 @@ void coreTask(void* pvParameters) {
           dumpDevices();
           Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
           xSemaphoreGive(semaphoreBLEOperation);
+#  ifdef ZgatewayRTL_433
+          enableRTLreceive();
+#  endif
         } else {
           Log.error(F("Failed to start scan - BLE busy" CR));
         }
@@ -868,7 +874,7 @@ void setupBT() {
   xTaskCreatePinnedToCore(
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
-      5120, /* Stack size in bytes */
+      3500, /* Stack size in bytes */
       NULL, /* Task input parameter */
       2, /* Priority of the task (set higher than core task) */
       &xProcBLETaskHandle, /* Task handle. */
@@ -878,7 +884,7 @@ void setupBT() {
   xTaskCreatePinnedToCore(
       coreTask, /* Function to implement the task */
       "coreTask", /* Name of the task */
-      10000, /* Stack size in bytes */
+      2500, /* Stack size in bytes */
       NULL, /* Task input parameter */
       1, /* Priority of the task */
       &xCoreTaskHandle, /* Task handle. */
