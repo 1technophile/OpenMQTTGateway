@@ -86,6 +86,7 @@ void BTConfig_init() {
   BTConfig.intervalActiveScan = TimeBtwActive;
   BTConfig.intervalConnect = TimeBtwConnect;
   BTConfig.pubOnlySensors = PublishOnlySensors;
+  BTConfig.pubRandomMACs = PublishRandomMACs;
   BTConfig.presenceEnable = HassPresence;
   BTConfig.presenceTopic = subjectHomePresence;
   BTConfig.presenceUseBeaconUuid = useBeaconUuidForPresence;
@@ -110,6 +111,7 @@ void stateBTMeasures(bool start) {
   jo["intervalacts"] = BTConfig.intervalActiveScan;
   jo["intervalcnct"] = BTConfig.intervalConnect;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
+  jo["randommacs"] = BTConfig.pubRandomMACs;
   jo["hasspresence"] = BTConfig.presenceEnable;
   jo["presenceTopic"] = BTConfig.presenceTopic;
   jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
@@ -167,6 +169,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   Config_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
   Config_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
+  // publish devices which randomly change their MAC addresses
+  Config_update(BTdata, "randommacs", BTConfig.pubRandomMACs);
   // Home Assistant presence message
   Config_update(BTdata, "hasspresence", BTConfig.presenceEnable);
   // Home Assistant presence message topic
@@ -208,6 +212,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["intervalacts"] = BTConfig.intervalActiveScan;
     jo["intervalcnct"] = BTConfig.intervalConnect;
     jo["onlysensors"] = BTConfig.pubOnlySensors;
+    jo["randommac"] = BTConfig.pubRandomMACs;
     jo["hasspresence"] = BTConfig.presenceEnable;
     jo["presenceTopic"] = BTConfig.presenceTopic;
     jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
@@ -839,6 +844,7 @@ void setupBT() {
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  Log.notice(F("Publishing random MAC devices: %T" CR), BTConfig.pubRandomMACs);
   Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
   Log.notice(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
@@ -909,10 +915,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
-    // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
+    // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (iBeacon, GAEN and Microsoft CDP)
     if ((overrideDiscovery || !isDiscovered(p)) &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
@@ -1000,6 +1007,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
+    if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
+      return;
+    }
     if (BLEdata.containsKey("type") && (BLEdata.containsKey("model") || BLEdata.containsKey("distance"))) { // Only display sensor data with type
       pubOled(subjectBTtoMQTT, BLEdata);
     }
@@ -1031,6 +1041,7 @@ void process_bledata(JsonObject& BLEdata) {
   int mac_type = BLEdata["mac_type"].as<int>();
   if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
       model_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+      model_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
       model_id != TheengsDecoder::BLE_ID_NUM::GAEN) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {

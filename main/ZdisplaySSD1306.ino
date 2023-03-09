@@ -458,7 +458,7 @@ void ssd1306PubPrint(const char* topicori, JsonObject& data) {
         case hash("BTtoMQTT"): {
           // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
 
-          if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "IBEACON") {
+          if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "APPLE_CONT" && data["model_id"] != "IBEACON") {
             // Line 2, 3, 4
             String line2 = "";
             String line3 = "";
