@@ -136,7 +136,7 @@ The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD0
 
 ## Setting if the gateway publishes known devices which randomly change their MAC address
 
-The default is false, as such devices cannot be related to specific devices.
+The default is false, as such changing MAC addresses cannot be related to specific devices.
 
 If you want to change this characteristic:
 

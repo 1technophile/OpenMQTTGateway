@@ -919,6 +919,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
     if ((overrideDiscovery || !isDiscovered(p)) &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
@@ -1040,6 +1041,7 @@ void process_bledata(JsonObject& BLEdata) {
   int mac_type = BLEdata["mac_type"].as<int>();
   if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
       model_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+      model_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
       model_id != TheengsDecoder::BLE_ID_NUM::GAEN) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
