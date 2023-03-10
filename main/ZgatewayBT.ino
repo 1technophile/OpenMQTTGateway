@@ -85,6 +85,7 @@ void BTConfig_init() {
   BTConfig.adaptiveScan = AdaptiveBLEScan;
   BTConfig.intervalActiveScan = TimeBtwActive;
   BTConfig.intervalConnect = TimeBtwConnect;
+  BTConfig.scanDuration = Scan_duration;
   BTConfig.pubOnlySensors = PublishOnlySensors;
   BTConfig.pubRandomMACs = PublishRandomMACs;
   BTConfig.presenceEnable = HassPresence;
@@ -110,6 +111,7 @@ void stateBTMeasures(bool start) {
   jo["adaptivescan"] = BTConfig.adaptiveScan;
   jo["intervalacts"] = BTConfig.intervalActiveScan;
   jo["intervalcnct"] = BTConfig.intervalConnect;
+  jo["scanduration"] = BTConfig.scanDuration;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
   jo["randommacs"] = BTConfig.pubRandomMACs;
   jo["hasspresence"] = BTConfig.presenceEnable;
@@ -144,9 +146,11 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == false && BTConfig.adaptiveScan == true) {
       BTdata["interval"] = MinTimeBtwScan;
       BTdata["intervalacts"] = MinTimeBtwScan;
+      BTdata["scanduration"] = MinScanDuration;
     } else if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == true && BTConfig.adaptiveScan == false) {
       BTdata["interval"] = TimeBtwRead;
       BTdata["intervalacts"] = TimeBtwActive;
+      BTdata["scanduration"] = Scan_duration;
 #  ifdef ZmqttDiscovery
       // Remove discovered entities
       eraseTopic("number", (char*)getUniqueId("interval", "").c_str());
@@ -168,6 +172,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Time before a connect set
   Config_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
+  Config_update(BTdata, "scanduration", BTConfig.scanDuration);
+  // define the duration for a scan; in milliseconds
   Config_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
   // publish devices which randomly change their MAC addresses
   Config_update(BTdata, "randommacs", BTConfig.pubRandomMACs);
@@ -211,6 +217,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["adaptivescan"] = BTConfig.adaptiveScan;
     jo["intervalacts"] = BTConfig.intervalActiveScan;
     jo["intervalcnct"] = BTConfig.intervalConnect;
+    jo["scanduration"] = BTConfig.scanDuration;
     jo["onlysensors"] = BTConfig.pubOnlySensors;
     jo["randommac"] = BTConfig.pubRandomMACs;
     jo["hasspresence"] = BTConfig.presenceEnable;
@@ -653,7 +660,7 @@ void BLEscan() {
   }
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
-  BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
+  BLEScanResults foundDevices = pBLEScan->start(BTConfig.scanDuration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
   enableCore0WDT();
@@ -733,7 +740,7 @@ void BLEconnect() {
 void stopProcessing() {
   Log.notice(F("Stop BLE processing" CR));
   ProcessLock = true;
-  delay(Scan_duration < 2000 ? Scan_duration : 2000);
+  delay(BTConfig.scanDuration < 2000 ? BTConfig.scanDuration : 2000);
 }
 
 void startProcessing() {
@@ -843,6 +850,7 @@ void setupBT() {
   BTConfig_load();
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
+  Log.notice(F("BLE scan duration: %d" CR), BTConfig.scanDuration);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
   Log.notice(F("Publishing random MAC devices: %T" CR), BTConfig.pubRandomMACs);
   Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
@@ -1053,12 +1061,16 @@ void process_bledata(JsonObject& BLEdata) {
           if (BLEdata["acts"] && BLEdata["cont"]) {
             BTConfig.BLEinterval = MinTimeBtwScan;
             BTConfig.intervalActiveScan = MinTimeBtwScan;
+            BTConfig.scanDuration = MinScanDuration;
             Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
             stateBTMeasures(false);
           }
         } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
           if (BLEdata["cont"]) {
             BTConfig.BLEinterval = MinTimeBtwScan;
+            if ((BLEdata["type"].as<string>()).compare("CTMO") == 0) {
+              BTConfig.scanDuration = MinScanDuration;
+            }
             Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
             stateBTMeasures(false);
           }
