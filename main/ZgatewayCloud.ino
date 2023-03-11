@@ -76,7 +76,7 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
     //launch the function to treat received data if this data concern OpenMQTTGateway
     if ((strstr(localTopic, subjectMultiGTWKey) != NULL) ||
         (strstr(localTopic, subjectGTWSendKey) != NULL) ||
-        (strstr(localTopic, subjectFWUpdate) != NULL))
+        (strstr(localTopic, subjectMQTTtoSYSupdate) != NULL))
       receivingMQTT(localTopic, (char*)p);
 
     // Free the memory
