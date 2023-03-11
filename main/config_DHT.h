@@ -34,9 +34,9 @@ extern void DHTtoMQTT();
 #define dht_always            true // if false when the current value for temp or hum is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingDHT 30000 // time between 2 DHT readings
 /*-------------DHT SENSOR TYPE-------------*/
-//#define DHT_SENSOR_TYPE DHT11 //uncomment for DHT11 Sensor
+#define DHT_SENSOR_TYPE DHT11 //uncomment for DHT11 Sensor
 //#define DHT_SENSOR_TYPE DHT21 //uncomment for DHT21 Sensor
-#define DHT_SENSOR_TYPE DHT22 //uncomment for DHT22 Sensor (default for backwards compatibility)
+//#define DHT_SENSOR_TYPE DHT22 //uncomment for DHT22 Sensor (default for backwards compatibility)
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef DHT_RECEIVER_GPIO
 #  if defined(ESP8266)
