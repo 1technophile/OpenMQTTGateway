@@ -946,6 +946,15 @@ bool wifi_reconnect_bypass() {
   while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
 #  endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
+
+//Reduce WiFi interference on PIR when using ESP32
+#  ifdef defined(ESP32) && defined(ZsensorHCSR501)
+    //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
+    //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
+    esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11G);
+    WiFi.setTxPower(WIFI_POWER_11dBm);
+#  endif
+
     WiFi.begin();
     delay(1000);
     wifi_autoreconnect_cnt++;
