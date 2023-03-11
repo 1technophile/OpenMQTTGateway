@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "renaming bin files with the board name"
+echo "renaming bin files with the environment name"
 rename -v 's:/:-:g' .pio/build/*/*.bin
 mkdir toDeploy
 rename 's/.pio-build-//' .*.bin

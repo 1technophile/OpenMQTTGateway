@@ -39,7 +39,9 @@ jobs:
           - "esp32dev-rtl_433"
           - "esp32doitv1-aithinker-r01-sx1278"
           - "heltec-rtl_433"
+          - "heltec-ble"
           - "lilygo-rtl_433"
+          - "lilygo-ble"
           - "esp32dev-multi_receiver"
           - "tinypico-ble"
           - "ttgo-lora32-v1-868"
@@ -74,6 +76,7 @@ jobs:
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
           - "airm2m_core_esp32c3"
+          - "lolin_c3_mini"
           - "thingpulse-espgateway"
           - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest

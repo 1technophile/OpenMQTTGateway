@@ -134,6 +134,14 @@ With Home Assistant, this command is directly available through MQTT auto discov
 
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
 
+## Setting if the gateway publishes known devices which randomly change their MAC address
+
+The default is false, as such changing MAC addresses cannot be related to specific devices.
+
+If you want to change this characteristic:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"randommacs":true}'`
+
 ## Setting if the gateway use adaptive scanning
 
 Adaptive scanning lets the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
@@ -169,6 +177,12 @@ If you have passive scanning activated, but also have some devices which require
 If you want to change the time between active scans you can change it by MQTT. For setting the active scan interval time to every 5 minutes:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
+
+## Setting the duration of a scan
+
+If you want to change the default 10 sec duration of each scan cycle to 5 seconds
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanduration":5000}'`
 
 ## Setting if the gateway connects to BLE devices eligibles on ESP32
 

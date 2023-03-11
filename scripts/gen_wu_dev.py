@@ -83,12 +83,16 @@ manif_folder = "/dev/firmware_build/"
 manif_path = 'docs/.vuepress/public/firmware_build/'
 vue_path = 'docs/.vuepress/components/'
 bin_path = 'toDeploy/'
-cors_proxy = '' #'https://cors.bridged.cc/'
+cors_proxy = ''  # 'https://cors.bridged.cc/'
 esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
-esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
+esp32_boot = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
 
 if not os.path.exists(manif_path):
     os.makedirs(manif_path)
+
+# copy OTA latest version definition
+shutil.move("scripts/latest_version_dev.json",
+            manif_path + "latest_version_dev.json")
 
 if not os.path.exists(vue_path):
     os.makedirs(vue_path)
@@ -98,12 +102,12 @@ wu_file.write(wu_temp_p1)
 
 bl_bin = requests.get(esp32_blurl)
 filename = esp32_blurl.split('/')[-1]
-with open(manif_path + filename,'wb') as output_file:
+with open(manif_path + filename, 'wb') as output_file:
     output_file.write(bl_bin.content)
 
 boot_bin = requests.get(esp32_boot)
 filename = esp32_boot.split('/')[-1]
-with open(manif_path + filename,'wb') as output_file:
+with open(manif_path + filename, 'wb') as output_file:
     output_file.write(boot_bin.content)
 
 for name in os.listdir(bin_path):
@@ -113,12 +117,14 @@ for name in os.listdir(bin_path):
         print('Bin name:' + name)
         part_name = name.split('-firmware')[0] + '-partitions.bin'
         print('Partition name:' + part_name)
-        mani_str = mf_temp32.substitute({'cp':cors_proxy, 'part':manif_folder + part_name.split('/')[-1], 'bin':manif_folder + name.split('/')[-1], 'bl':manif_folder + esp32_blurl.split('/')[-1], 'boot':manif_folder + esp32_boot.split('/')[-1]})
+        mani_str = mf_temp32.substitute({'cp': cors_proxy, 'part': manif_folder + part_name.split('/')[-1], 'bin': manif_folder + name.split(
+            '/')[-1], 'bl': manif_folder + esp32_blurl.split('/')[-1], 'boot': manif_folder + esp32_boot.split('/')[-1]})
 
         with open(manif_path + man_file, 'w') as nf:
             nf.write(mani_str)
 
-        wu_file.write(wu_temp_opt.substitute({'mff':manif_folder + man_file, 'mfn':fw}))
+        wu_file.write(wu_temp_opt.substitute(
+            {'mff': manif_folder + man_file, 'mfn': fw}))
 
         shutil.copyfile(bin_path + name, (manif_path + name))
         shutil.copyfile(bin_path + part_name, (manif_path + part_name))
@@ -134,12 +140,14 @@ for name in os.listdir(bin_path):
         print('Bin name:' + name)
         part_name = name.split('-firmware')[0] + '-partitions.bin'
         print('Partition name:' + part_name)
-        mani_str = mf_temp8266.substitute({'cp':cors_proxy, 'bin':manif_folder + name.split('/')[-1]})
+        mani_str = mf_temp8266.substitute(
+            {'cp': cors_proxy, 'bin': manif_folder + name.split('/')[-1]})
 
         with open(manif_path + man_file, 'w') as nf:
             nf.write(mani_str)
 
-        wu_file.write(manif_folder + wu_temp_opt.substitute({'mff':manif_folder + man_file, 'mfn':fw}))
+        wu_file.write(
+            manif_folder + wu_temp_opt.substitute({'mff': manif_folder + man_file, 'mfn': fw}))
 
         shutil.copyfile(bin_path + name, (manif_path + name))
 

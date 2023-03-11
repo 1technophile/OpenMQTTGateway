@@ -42,16 +42,16 @@
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 
-#ifndef LOG_LEVEL_LCD
-#  define LOG_LEVEL_LCD LOG_LEVEL_WARNING // Default to only display Warning level messages
+#ifndef LOG_LEVEL_OLED
+#  define LOG_LEVEL_OLED LOG_LEVEL_WARNING // Default to only display Warning level messages
 #endif
 
-#ifndef LOG_TO_LCD
-#  define LOG_TO_LCD false // Default to not display log messages on display
+#ifndef LOG_TO_OLED
+#  define LOG_TO_OLED false // Default to not display log messages on display
 #endif
 
-#ifndef JSON_TO_LCD
-#  define JSON_TO_LCD true // Default to displaying JSON messages on the display
+#ifndef JSON_TO_OLED
+#  define JSON_TO_OLED true // Default to displaying JSON messages on the display
 #endif
 
 #ifndef DISPLAY_PAGE_INTERVAL
@@ -59,7 +59,7 @@
 #endif
 
 #ifndef DISPLAY_IDLE_LOGO
-#  define DISPLAY_IDLE_LOGO false // Display the OMG logo when idle
+#  define DISPLAY_IDLE_LOGO true // Display the OMG logo when idle
 #endif
 
 #ifndef DISPLAY_METRIC
@@ -68,6 +68,14 @@
 
 #ifndef DISPLAY_FLIP
 #  define DISPLAY_FLIP true // Flip display orientation
+#endif
+
+#ifndef DISPLAY_STATE
+#  define DISPLAY_STATE true // set to false if you don't want to use the display
+#endif
+
+#ifndef DISPLAY_BRIGHTNESS
+#  define DISPLAY_BRIGHTNESS 50 // 0-100; 50 % brightness as default
 #endif
 
 /*------------------- DEFAULT DISPLAY GEOMETRY ----------------------*/
@@ -91,8 +99,8 @@
 
 /*-------------------DEFINE MQTT TOPIC FOR CONFIG----------------------*/
 
-#define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306"
-#define subjectSSD1306toMQTTset "/SSD1306toMQTT"
+#define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306/config"
+#define subjectSSD1306toMQTT    "/SSD1306toMQTT"
 
 /*-------------------EXTERNAL FUNCTIONS----------------------*/
 
@@ -138,7 +146,7 @@ class OledSerial : public Stream {
 public:
   OledSerial(int);
   void begin();
-  void drawLogo();
+  void drawLogo(int xshift, int yshift);
   boolean displayPage(displayQueueMessage*);
 
   SSD1306Wire* display;

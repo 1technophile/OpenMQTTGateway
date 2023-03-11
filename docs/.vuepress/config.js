@@ -69,6 +69,7 @@ module.exports = {
             'upload/web-install',
             'upload/binaries',
             'upload/builds',
+            'upload/gitpod',
             'upload/portal',
             'upload/advanced-configuration',
             'upload/troubleshoot'
@@ -88,6 +89,7 @@ module.exports = {
             'use/sensors',
             'use/actuators',
             'use/boards',
+            'use/displays',
             'use/gateway'
           ]
         },
