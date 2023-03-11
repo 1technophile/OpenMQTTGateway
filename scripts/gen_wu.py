@@ -3,6 +3,7 @@ import requests
 import json
 import string
 import argparse
+import shutil
 
 mf_temp32 = string.Template('''{
   "name": "OpenMQTTGateway",
@@ -86,10 +87,11 @@ repo = args.repo
 manif_folder = "/firmware_build/"
 manif_path = 'docs/.vuepress/public/firmware_build/'
 vue_path = 'docs/.vuepress/components/'
-cors_proxy = '' #'https://cors.bridged.cc/'
-esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/master/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
-esp32_boot =  'https://github.com/espressif/arduino-esp32/raw/master/tools/partitions/boot_app0.bin'
-release = requests.get('https://api.github.com/repos/' + repo + '/releases/latest')
+cors_proxy = ''  # 'https://cors.bridged.cc/'
+esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
+esp32_boot = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
+release = requests.get('https://api.github.com/repos/' +
+                       repo + '/releases/latest')
 rel_data = json.loads(release.text)
 
 if 'assets' in rel_data:
@@ -101,6 +103,9 @@ else:
 if not os.path.exists(manif_path):
     os.makedirs(manif_path)
 
+# copy OTA latest version definition
+shutil.move("scripts/latest_version.json", manif_path + "latest_version.json")
+
 if not os.path.exists(vue_path):
     os.makedirs(vue_path)
 
@@ -109,36 +114,38 @@ wu_file.write(wu_temp_p1)
 
 bl_bin = requests.get(esp32_blurl)
 filename = esp32_blurl.split('/')[-1]
-with open(manif_path + filename,'wb') as output_file:
+with open(manif_path + filename, 'wb') as output_file:
     output_file.write(bl_bin.content)
 
 boot_bin = requests.get(esp32_boot)
 filename = esp32_boot.split('/')[-1]
-with open(manif_path + filename,'wb') as output_file:
+with open(manif_path + filename, 'wb') as output_file:
     output_file.write(boot_bin.content)
 
 for item in range(len(assets)):
     name = assets[item]['name']
-    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name):
+    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'lilygo' in name or 'shelly' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
         fw_url = assets[item]['browser_download_url']
         fwp_url = fw_url.split('-firmware')[0] + '-partitions.bin'
-        mani_str = mf_temp32.substitute({'cp':cors_proxy, 'part':manif_folder + fwp_url.split('/')[-1], 'bin':manif_folder + fw_url.split('/')[-1], 'bl':manif_folder + esp32_blurl.split('/')[-1], 'boot':manif_folder + esp32_boot.split('/')[-1]})
+        mani_str = mf_temp32.substitute({'cp': cors_proxy, 'part': manif_folder + fwp_url.split('/')[-1], 'bin': manif_folder + fw_url.split(
+            '/')[-1], 'bl': manif_folder + esp32_blurl.split('/')[-1], 'boot': manif_folder + esp32_boot.split('/')[-1]})
 
         with open(manif_path + man_file, 'w') as nf:
             nf.write(mani_str)
 
-        wu_file.write(wu_temp_opt.substitute({'mff':manif_folder + man_file, 'mfn':fw}))
+        wu_file.write(wu_temp_opt.substitute(
+            {'mff': manif_folder + man_file, 'mfn': fw}))
 
         fw_bin = requests.get(fw_url)
         filename = fw_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
+        with open(manif_path + filename, 'wb') as output_file:
             output_file.write(fw_bin.content)
 
         part_bin = requests.get(fwp_url)
         filename = fwp_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
+        with open(manif_path + filename, 'wb') as output_file:
             output_file.write(part_bin.content)
 
         print('Created: ' + os.path.abspath(man_file))
@@ -151,20 +158,22 @@ for item in range(len(assets)):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
         fw_url = assets[item]['browser_download_url']
-        mani_str = mf_temp8266.substitute({'cp':cors_proxy, 'bin':manif_folder + fw_url.split('/')[-1]})
+        mani_str = mf_temp8266.substitute(
+            {'cp': cors_proxy, 'bin': manif_folder + fw_url.split('/')[-1]})
 
         with open(manif_path + man_file, 'w') as nf:
             nf.write(mani_str)
 
-        wu_file.write(manif_folder + wu_temp_opt.substitute({'mff':manif_folder + man_file, 'mfn':fw}))
+        wu_file.write(
+            manif_folder + wu_temp_opt.substitute({'mff': manif_folder + man_file, 'mfn': fw}))
         fw_bin = requests.get(fw_url)
         filename = fw_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
+        with open(manif_path + filename, 'wb') as output_file:
             output_file.write(fw_bin.content)
 
         part_bin = requests.get(fwp_url)
         filename = fwp_url.split('/')[-1]
-        with open(manif_path + filename,'wb') as output_file:
+        with open(manif_path + filename, 'wb') as output_file:
             output_file.write(part_bin.content)
         print('Created: ' + os.path.abspath(man_file))
 

@@ -1,6 +1,6 @@
 # Integrate OPENHAB3
 
-This tutorial will show how to integrate the BLE gateway to OpenHAB3 leveraging the auto discovery functionnality.
+This tutorial will show how to integrate the BLE gateway to OpenHAB3 leveraging the auto discovery functionality.
 After this tutorial, you should see your Bluetooth Low Energy devices in OpenHAB3 without any file based manual configuration.
 
 ## Prerequisites

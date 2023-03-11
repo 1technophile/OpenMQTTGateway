@@ -9,7 +9,7 @@ jobs:
       matrix:
         environments:
           - "rfbridge"
-          - "sonoff-rfbridge-direct"
+          - "rfbridge-direct"
           - "esp32dev-all-test"
           - "esp32dev-rf"
           - "esp32dev-pilight-cc1101"
@@ -22,7 +22,6 @@ jobs:
           - "esp32dev-ble-openhab"
           - "esp32dev-ble-mqtt-undecoded"
           - "esp32dev-ble-aws"
-          - "esp32dev-ble-cont"
           - "esp32feather-ble"
           - "esp32-lolin32lite-ble"
           - "esp32-olimex-gtw-ble-eth"
@@ -38,7 +37,11 @@ jobs:
           - "esp32-m5atom-matrix"
           - "esp32-m5atom-lite"
           - "esp32dev-rtl_433"
+          - "esp32doitv1-aithinker-r01-sx1278"
           - "heltec-rtl_433"
+          - "heltec-ble"
+          - "lilygo-rtl_433"
+          - "lilygo-ble"
           - "esp32dev-multi_receiver"
           - "tinypico-ble"
           - "ttgo-lora32-v1-868"
@@ -46,7 +49,7 @@ jobs:
           - "ttgo-t-beam"
           - "heltec-wifi-lora-32-868"
           - "heltec-wifi-lora-32-915"
-          - "esp32dev-mqtt-fw-test"
+          - "shelly-plus1"
           - "nodemcuv2-all-test"
           - "nodemcuv2-fastled-test"
           - "nodemcuv2-2g"
@@ -72,6 +75,10 @@ jobs:
           - "esp32dev-ble-datatest"
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
+          - "airm2m_core_esp32c3"
+          - "lolin_c3_mini"
+          - "thingpulse-espgateway"
+          - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:
@@ -86,6 +93,14 @@ jobs:
           pip install platformio
       - name: Run PlatformIO
         run: platformio run -e ${{ matrix.environments }}
+      - name: Upload Assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.environments }}
+          path: |
+            .pio/build/*/firmware.bin
+            .pio/build/*/partitions.bin
+          retention-days: 7
 
   documentation:
     runs-on: ubuntu-latest

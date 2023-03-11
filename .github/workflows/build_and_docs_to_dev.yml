@@ -1,0 +1,53 @@
+name: Build binaries, docs and publish to dev folder
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == '1technophile'
+    name: Build and upload Assets to Release
+    steps:
+      - uses: actions/checkout@v3
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 6
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.7"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio requests shutils
+          npm install
+      - name: Set sha tag
+        run: |
+          sed -i "s/version_tag/${{ steps.short-sha.outputs.sha }}/g" main/User_config.h scripts/latest_version_dev.json
+          sed -i "s/version_tag/DEVELOPMENT SHA:${{ steps.short-sha.outputs.sha }} TEST ONLY/g" docs/.vuepress/config.js
+          sed -i "s|base: '/'|base: '/dev/'|g" docs/.vuepress/config.js
+      - name: Run PlatformIO
+        run: |
+          export PLATFORMIO_BUILD_FLAGS="'-DDEVELOPMENTOTA=true'"
+          platformio run
+      - name: Prepare Release Assets
+        run: |
+          sudo apt install rename
+          ./scripts/prepare_deploy.sh
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14.x"
+      - name: Build documentation
+        run: |
+          python ./scripts/gen_wu_dev.py
+          npm run docs:build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/.vuepress/dist
+          destination_dir: dev
+          cname: docs.openmqttgateway.com

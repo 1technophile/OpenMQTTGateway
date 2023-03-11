@@ -34,11 +34,11 @@ unsigned long resetTime = 0;
 #  endif
 unsigned long lastDebounceTime = 0;
 int InputState = 3; // Set to 3 so that it reads on startup
-int lastInputState = 3;
+int previousInputState = 3;
 
 void setupGPIOInput() {
   Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO);
-  pinMode(INPUT_GPIO, INPUT_PULLUP); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
+  pinMode(INPUT_GPIO, GPIO_INPUT_TYPE); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 }
 
 void MeasureGPIOInput() {
@@ -49,7 +49,7 @@ void MeasureGPIOInput() {
   // since the last press to ignore any noise:
 
   // If the switch changed, due to noise or pressing:
-  if (reading != lastInputState) {
+  if (reading != previousInputState) {
     // reset the debouncing timer
     lastDebounceTime = millis();
   }
@@ -60,11 +60,11 @@ void MeasureGPIOInput() {
 #  if defined(ESP8266) || defined(ESP32)
     yield();
 #  endif
-#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
+#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO && !defined(ESPWifiManualSetup)
     if (reading == LOW) {
       if (resetTime == 0) {
         resetTime = millis();
-      } else if ((millis() - resetTime) > 10000) {
+      } else if ((millis() - resetTime) > 3000) {
         Log.trace(F("Button Held" CR));
         Log.notice(F("Erasing ESP Config, restarting" CR));
         setup_wifimanager(true);
@@ -75,7 +75,6 @@ void MeasureGPIOInput() {
 #  endif
     // if the Input state has changed:
     if (reading != InputState) {
-      InputState = reading;
       Log.trace(F("Creating GPIOInput buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject GPIOdata = jsonBuffer.to<JsonObject>();
@@ -88,15 +87,22 @@ void MeasureGPIOInput() {
       if (GPIOdata.size() > 0)
         pub(subjectGPIOInputtoMQTT, GPIOdata);
 
-#  ifdef ZactuatorONOFF
-      if (InputState == ACTUATOR_BUTTON_TRIGGER_LEVEL) {
-        ActuatorButtonTrigger();
+#  if defined(ZactuatorONOFF) && defined(ACTUATOR_TRIGGER)
+      //Trigger the actuator if we are not at startup
+      if (InputState != 3) {
+#    if defined(ACTUATOR_BUTTON_TRIGGER_LEVEL)
+        if (InputState == ACTUATOR_BUTTON_TRIGGER_LEVEL)
+          ActuatorTrigger(); // Button press trigger
+#    else
+        ActuatorTrigger(); // Switch trigger
+#    endif
       }
 #  endif
+      InputState = reading;
     }
   }
 
-  // save the reading. Next time through the loop, it'll be the lastInputState:
-  lastInputState = reading;
+  // save the reading. Next time through the loop, it'll be the previousInputState:
+  previousInputState = reading;
 }
 #endif

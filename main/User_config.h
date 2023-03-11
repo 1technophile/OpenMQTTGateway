@@ -50,7 +50,7 @@
  */
 /*-------------DEFINE GATEWAY NAME BELOW IT CAN ALSO BE DEFINED IN platformio.ini----------------*/
 
-// Uncomment to use the MAC address in the format of 112233445566 as the gateway name
+// Uncomment to use the MAC address first 4 digits in the format of 5566 as the suffix of the short gateway name.
 // Any definition of Gateway_Name will be ignored. The Gateway_Short_name _ MAC will be used as the access point name.
 //#define USE_MAC_AS_GATEWAY_NAME
 #ifndef Gateway_Name
@@ -66,7 +66,7 @@
 
 /*-------------DEFINE YOUR NETWORK PARAMETERS BELOW----------------*/
 
-//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and mac only
+//#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and MAC only
 #ifdef NetworkAdvancedSetup
 #  if defined(ESP8266) || defined(ESP32)
 const byte ip[] = {192, 168, 1, 99}; //IP address of the gateway, already defined for arduino below
@@ -114,6 +114,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  endif
 #endif
 
+//#define WM_PWD_FROM_MAC true // enable to set the password from the last 8 digits of the ESP MAC address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
 #ifndef WifiManager_password
 #  define WifiManager_password "alamakotaakotmaale" //this is going to be the WPA2-PSK password for the initial setup access point
 #endif
@@ -195,6 +196,10 @@ const char* certificate PROGMEM = R"EOF("
 #    define MQTT_SECURE_DEFAULT false
 #  endif
 
+#  ifndef MQTT_CERT_VALIDATE_DEFAULT
+#    define MQTT_CERT_VALIDATE_DEFAULT false
+#  endif
+
 #  ifndef AWS_IOT
 #    define AWS_IOT false
 #  endif
@@ -233,6 +238,14 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 #    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
 #      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #    endif
+#    if DEVELOPMENTOTA
+#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
+#    else
+#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/firmware_build/latest_version.json" //OTA url used to discover new versions of the firmware
+#    endif
+#    define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
+#    define RELEASE_LINK_DEV "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/"
+#    define RELEASE_LINK     "https://github.com/1technophile/OpenMQTTGateway/releases/download/"
 #  endif
 
 #  ifndef MQTT_SECURE_SELF_SIGNED
@@ -282,12 +295,13 @@ static_assert(MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT < (sizeof(certs_array) / siz
 #endif
 
 /*------------------DEEP SLEEP parameters ------------------*/
+//DEFAULT_LOW_POWER_MODE -1 to normal mode, low power mode can't be used on this build
 //DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)
 //DEFAULT_LOW_POWER_MODE 1 to activate deep sleep
 //DEFAULT_LOW_POWER_MODE 2 to activate deep sleep (LCD is turned OFF)
 #ifdef ESP32
 #  ifndef DEFAULT_LOW_POWER_MODE
-#    define DEFAULT_LOW_POWER_MODE 0
+#    define DEFAULT_LOW_POWER_MODE -1
 #  endif
 int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #endif
@@ -315,6 +329,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
 //#define ZsensorHTU21   "HTU21"    //ESP8266, Arduino, ESP32
+//#define ZsensorLM75   "LM75"    //ESP8266, Arduino, ESP32
 //#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
@@ -447,41 +462,91 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
 #  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
 #  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
+#  define CriticalIndicatorON()     // Not used
+#  define CriticalIndicatorON()     // Not used
+#  define PowerIndicatorON()        // Not used
+#  define PowerIndicatorOFF()       // Not used
 #else // Management of Errors, reception/emission and informations indicators with RGB LED
+#  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
+#    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
+#  endif
 #  include <FastLED.h>
 CRGB leds[FASTLED_IND_NUM_LEDS];
+#  ifdef FASTLED_IND_DATA_GPIO2 // Only used for Critical Indicator
+CRGB leds2[FASTLED_IND_NUM_LEDS];
+#  endif
 #  ifndef RGB_LED_POWER
 #    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
 #  endif
-#  define SetupIndicators()                                                               \
-    pinMode(RGB_LED_POWER, OUTPUT);                                                       \
-    digitalWrite(RGB_LED_POWER, HIGH);                                                    \
-    FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
-    FastLED.setBrightness(20);
-#  define ErrorIndicatorON() \
-    leds[0] = CRGB::Red;     \
+#  ifndef FASTLED_BRIGHTNESS
+#    define FASTLED_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
+#  endif
+// Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
+#  ifndef FASTLED_INFO_LED
+#    define FASTLED_INFO_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_SEND_RECEIVCE_LED
+#    define FASTLED_SEND_RECEIVCE_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_ERROR_LED
+#    define FASTLED_ERROR_LED 0 // First Led
+#  endif
+#  ifndef FASTLED_CRITICAL_LED
+#    define FASTLED_CRITICAL_LED 0 // First Led
+#  endif
+
+#  ifndef FASTLED_IND_DATA_GPIO2
+#    define SetupIndicators()                                                               \
+      pinMode(RGB_LED_POWER, OUTPUT);                                                       \
+      digitalWrite(RGB_LED_POWER, HIGH);                                                    \
+      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
+      FastLED.setBrightness(FASTLED_BRIGHTNESS)
+#  else
+#    define SetupIndicators()                                                                 \
+      pinMode(RGB_LED_POWER, OUTPUT);                                                         \
+      digitalWrite(RGB_LED_POWER, HIGH);                                                      \
+      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS);   \
+      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO2>(leds2, FASTLED_IND_NUM_LEDS); \
+      FastLED.setBrightness(FASTLED_BRIGHTNESS)
+#  endif
+#  define ErrorIndicatorON()                \
+    leds[FASTLED_ERROR_LED] = CRGB::Orange; \
     FastLED.show()
-#  define ErrorIndicatorOFF() \
-    leds[0] = CRGB::Black;    \
+#  define ErrorIndicatorOFF()              \
+    leds[FASTLED_ERROR_LED] = CRGB::Black; \
     FastLED.show()
-#  define SendReceiveIndicatorON() \
-    leds[0] = CRGB::Blue;          \
+#  define SendReceiveIndicatorON()                \
+    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Blue; \
     FastLED.show()
-#  define SendReceiveIndicatorOFF() \
-    leds[0] = CRGB::Black;          \
+#  define SendReceiveIndicatorOFF()                \
+    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Black; \
     FastLED.show()
-#  define InfoIndicatorON() \
-    leds[0] = CRGB::Green;  \
+#  define InfoIndicatorON()               \
+    leds[FASTLED_INFO_LED] = CRGB::Green; \
     FastLED.show()
-#  define InfoIndicatorOFF() \
-    leds[0] = CRGB::Black;   \
+#  define InfoIndicatorOFF()              \
+    leds[FASTLED_INFO_LED] = CRGB::Black; \
     FastLED.show()
+#  ifdef FASTLED_IND_DATA_GPIO2 // Used for relay power indicator
+// For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
+// This enable to have persistence of the indicator to inform the user
+#    define CriticalIndicatorON()          \
+      leds2[FASTLED_INFO_LED] = CRGB::Red; \
+      FastLED.show()
+#    define PowerIndicatorON()               \
+      leds2[FASTLED_INFO_LED] = CRGB::Green; \
+      FastLED.show()
+#    define PowerIndicatorOFF()              \
+      leds2[FASTLED_INFO_LED] = CRGB::Black; \
+      FastLED.show()
+#  endif
 #endif
 
 #ifdef ESP8266
 //#  define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
 #elif ESP32
 //#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
+//#  define NO_INT_TEMP_READING true //Define if we don't want internal temperature reading for the ESP32
 #endif
 
 //      VCC   ------------D|-----------/\/\/\/\ -----------------  Arduino PIN
@@ -502,7 +567,6 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
 #define subjectMQTTtoX     "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 #define subjectGTWSendKey  "MQTTto"
-#define subjectFWUpdate    "firmware_update"
 
 // key used for launching commands to the gateway
 #define restartCmd "restart"
@@ -543,14 +607,16 @@ CRGB leds[FASTLED_IND_NUM_LEDS];
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
-
+#define subjectMQTTtoSYSupdate       "/commands/MQTTtoSYS/firmware_update"
+#define TimeToResetAtStart           5000 // Time we allow the user at start for the reset command by button press
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
-// The real definitions are in config_M5.h / config_HELTEC.h
+// The real definitions are in config_M5.h / config_SSD1306.h
+#define pubOled(...)        // display the published message onto the OLED display
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 

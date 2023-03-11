@@ -11,8 +11,12 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 * Button C on M5Stack (GPIO 37)
 * Button lateral on M5stick (GPIO 35)
 
+You can also do a long press when powering the board to reset it, this press must be done during the first 5 seconds after the start.
+
 ### Low power mode for ESP32
-OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT:
+OpenMQTTGateway support a low power mode for ESP32, this mode is available per default on boards with batteries. The other boards needs to have the macro `DEFAULT_LOW_POWER_MODE` defined at 0, 1 or 2 to use it. More information about the modes is available into User_config.h.
+
+When available this mode can be set by MQTT:
 
 * Normal mode (per default)
 
@@ -22,9 +26,11 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoBT/config" -m '{"lowpowermode":2}'`
 
+The interval between the ESP32 wake up is defined at build time by the macro `TimeBtwRead`, a change of the `interval` through MQTT will not impact the time between wake up.
+
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
-A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update is published every 2 minutes.
+A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update will be revceived and acknowledged when the device woke up.
 In low power mode you should use ESPWifiManualSetup so as to rely on the credentials entered into User_config.h.
 So as to do that uncomment the line below in User_config.h
 ``` c
@@ -51,7 +57,7 @@ The same behaviour apply to M5StickC and M5StickC Plus
 
 ### Setting the log output
 
-Per default the log of the M5 boards is going to the LCD display with Errors and Warnings only, if you want to change the ouput at build time you can do it in [config_M5.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_M5.h).
+Per default the log of the M5 boards is going to the LCD display with Errors and Warnings only, if you want to change the output at build time you can do it in [config_M5.h](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/config_M5.h).
 
 You can also change it by MQTT. For example if you want to set to LCD
 

@@ -104,20 +104,29 @@ The `mqtt_cert_index` value corresponds to the 0 to X index of the `certs_array`
 
 # Firmware update from MQTT (ESP only)
 
-The gateway can be updated through an MQTT message by providing a JSON formatted message with a version number, OTA password (optional, see below), and URL to fetch the update from.  
+When the gateway used is from a standard ESP32 environment [listed and defined here](https://github.com/1technophile/OpenMQTTGateway/blob/development/environments.ini), it can be updated through a simple MQTT command:
+```
+mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/MQTTtoSYS/firmware_update" -m '{
+  "version": "latest"
+}'
+```
+This would download the latest version firmware binary from Github and install it.
 
-To enable this functionality, `MQTT_HTTPS_FW_UPDATE` will need to be defined or the line that defines in in user_config.h will need to be uncommented.
+Note that this update option is also autodiscovered through Home Assistant convention, you can update directly from the device page with 2 clicks.
 
-::: tip
-If using an unsecure MQTT broker it is **highly recommended** to disable the password checking by setting the macro `MQTT_HTTPS_FW_UPDATE_USE_PASSWORD` to 0 (default is 1 (enabled)), otherwise a clear text password may be sent over the network.  
+![](../img/OpenMQTTGateway-OTA-Update-Home-Assistant.png)
 
-The `server_cert` parameter is optional. If the update server has changed or certificate updated or not set in `user_config.h` then you can provide the certificate here.
-:::
+You can also indicate the target version to update:
+```
+mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/MQTTtoSYS/firmware_update" -m '{
+  "version": "v1.2.0"
+}'
+```
+Alternatively if you want to choose the update URL you can use the command below (ESP32 and ESP8266):
 
-### Example firmware update message:
 Without certificate, in this case we will use the root certificate defined in User_config.h
 ```
-mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/firmware_update" -m '{
+mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/MQTTtoSYS/firmware_update" -m '{
   "version": "test",
   "password": "OTAPASSWORD",
   "url": "https://github.com/1technophile/OpenMQTTGateway/releases/download/v0.9.12/esp32dev-ble-firmware.bin"
@@ -126,7 +135,7 @@ mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/firmware_update" -m '{
 
 With certificate:
 ```
-mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/firmware_update" -m '{
+mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/MQTTtoSYS/firmware_update" -m '{
   "version": "test",
   "password": "OTAPASSWORD",
   "url": "https://github.com/1technophile/OpenMQTTGateway/releases/download/v0.9.12/esp32dev-ble-firmware.bin",
@@ -156,6 +165,15 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 A bash script is available [here](ota_command_cert.zip) to simplify the use of the `server_cert` parameter.  
 
+
+To enable this functionality, `MQTT_HTTPS_FW_UPDATE` will need to be defined or the line that defines in in user_config.h will need to be uncommented.
+
+::: tip
+If using an unsecure MQTT broker it is **highly recommended** to disable the password checking by setting the macro `MQTT_HTTPS_FW_UPDATE_USE_PASSWORD` to 0 (default is 1 (enabled)), otherwise a clear text password may be sent over the network.  
+
+The `server_cert` parameter is optional. If the update server has changed or certificate updated or not set in `user_config.h` then you can provide the certificate here.
+:::
+
 ::: warning
 The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above WiFi and MQTT broker credentials and the Firmware update via MQTT options disabled. This is due to the restricted available flash, so as to still be able to use OTA firmware updates for these boards.
 :::
@@ -165,8 +183,8 @@ The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above 
 The gateway can support up to 3 LED to display its operating state:
 * LED_INFO 
 switched ON when network and MQTT connection are OK
-5s ON, 5s OFF when WIFI is disconnected
-1s ON, 4s OFF when MQTT is disconnected
+5s ON, 5s OFF when MQTT is disconnected
+2s ON, 2s OFF when NETWORK is disconnected
 
 * LED_RECEIVE
 Blink for `TimeLedON` 1s when the gateway receive a signal from one of its module so as to send to MQTT

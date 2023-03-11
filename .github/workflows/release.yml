@@ -19,7 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install platformio
       - name: Set version tag from git
-        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" main/User_config.h
+        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" main/User_config.h scripts/latest_version.json
       - name: Run PlatformIO
         run: platformio run
       - name: Prepare Release Assets
@@ -38,35 +38,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           release-url: ${{ steps.release-id.outputs.upload_url }}
           allow-overwrite: true
-
-  documentation:
+  call-workflow-passing-data:
     needs: build-upload
-    runs-on: ubuntu-latest
-    name: Create the documentation and deploy it to GitHub Pages
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "14.x"
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.7"
-      - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests
-          npm install
-      - name: Set version tag from git
-        run: sed -i "s/version_tag/${GITHUB_REF#refs/tags/}/g" docs/.vuepress/config.js
-      - name: Build documentation
-        run: |
-          python ./scripts/gen_wu.py ${GITHUB_REPOSITORY}
-          npm run docs:build
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/.vuepress/dist
-          cname: docs.openmqttgateway.com
+    uses: ./.github/workflows/manual_docs.yml

@@ -113,18 +113,16 @@ If you want to scan continuously for BLE devices, for example for beacon locatio
 In this case you should deactivate the BLE connection mechanism to avoid concurrency between scan and connections (see chapter below, bleconnect).
 
 ::: tip
-For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `ScanBeforeConnect` per default, you can modify it by following the procedure below.
+For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `TimeBtwConnect` per default, you can modify it by following the procedure below.
 :::
 
-## Setting the number of scans between connection attempts
+## Setting the time between connection attempts
 
-If you want to change the number of BLE scans that are done before a BLE connect you can change it by MQTT, if you want the BLE connect to be every 30 scans:
+If you want to change the time between BLE connect you can change it by MQTT, if you want the BLE connect time to be every 300s:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanbcnct":30}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalcnct":300000}'`
 
-The BLE connect will be done every 30 * (`TimeBtwRead` + `Scan_duration`), 30 * (55000 + 10000) = 1950000ms
-
-## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors
+## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors (default: false)
 
 If you want to change this characteristic:
 
@@ -134,7 +132,57 @@ If you want to change this characteristic:
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
 
-The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is usefull if you don't use the gateway for presence detection but only to retrieve sensors data.
+The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
+
+## Setting if the gateway publishes known devices which randomly change their MAC address
+
+The default is false, as such changing MAC addresses cannot be related to specific devices.
+
+If you want to change this characteristic:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"randommacs":true}'`
+
+## Setting if the gateway use adaptive scanning
+
+Adaptive scanning lets the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
+The gateway retrieves your devices' information from [Theengs Decoder](https://decoder.theengs.io) and adapts its parameters accordingly if a device that requires it is detected.
+For example a door or a PIR sensor will require continuous scanning, so if detected the gateway is going to reduce its time between scans to the minimum. Or your devices may also require active scanning to retrieve data, in this case the gateway will also trigger active scans at regular intervals.
+
+If you want to change this characteristic (default:true):
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"adaptivescan":false}'`
+
+Setting Adaptive scanning to `false` will automatically put the gateway to continuous active scanning if no additional manual changes have already been applied.
+
+::: tip
+With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
+:::
+
+An overview with background information to better understand the different setting used:
+
+**Passive scanning:** With this scanning mode the gateway picks up any freely available broadcasts sent out by devices, without any interaction with the devices. The interval for this is set with [{"interval":66000}](#setting-the-time-between-ble-scans-and-force-a-scan)
+
+**Active scanning:** With this scanning mode the gateway sends out requests for sensor broadcasts first, before then picking up the broadcast advertisement data. Some devices require this request before they send out all data in their broadcasts. The interval for this active scanning with request first is set by [{"intervalacts":300000}](#setting-the-time-between-active-scanning)
+
+If adaptive scanning is set to false and you want to manually set these intervals, setting [Publishing advertisement and advanced data](#advanced-publishing-advertisement-and-advanced-data-default-false) to true will show you additional data about which of your devices require active scanning and/or continuous scanning, so that you can tune these setting to your devices and your individual requirements of their data.
+
+**"cont":true** - the device requires continuous scanning. If passive ({"interval":100}) or active ({"intervalacts":100}) depends on the additional device specification.
+
+**"acts":true** - the device requires active scanning to broadcast all of it's data for decoding.
+
+## Setting the time between active scanning
+
+If you have passive scanning activated, but also have some devices which require active scanning, this defines the time interval between two intermittent active scans.
+
+If you want to change the time between active scans you can change it by MQTT. For setting the active scan interval time to every 5 minutes:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
+
+## Setting the duration of a scan
+
+If you want to change the default 10 sec duration of each scan cycle to 5 seconds
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanduration":5000}'`
 
 ## Setting if the gateway connects to BLE devices eligibles on ESP32
 
@@ -220,37 +268,24 @@ If you want to enable this feature:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
 
-## ADVANCED: Publishing known service data
+## ADVANCED: Publishing advertisement and advanced data (default: false)
 
 If you want to enable this feature:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownServiceData":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubadvdata":true}'`
 
-## ADVANCED: Publishing unknown service data
+This will publish extensive information about the device:
+```json
+{"id":"11:22:33:44:55:66","mac_type":0,"adv_type":0,"name":"Qingping Motion & Light","rssi":-93,"servicedata":"88121122334455660201520f0126090403000000","servicedatauuid":"0xfdcd","brand":"Qingping","model":"Motion & Light","model_id":"CGPR1","lux":3,"batt":82}
+```
 
-If you want to change the default behaviour, in case you are having too heavy service data:
+## ADVANCED: Not publishing advertisement data
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownServiceData":false}'`
+To stop publishing advertisement data:
 
-## ADVANCED: Publishing known manufacturer's data
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubadvdata":false}'`
 
-If you want to change the default behaviour:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubKnownManufData":true}'`
-
-## ADVANCED: Publishing unknown manufacturer's data
-
-If you want to change the default behaviour, in case you are having too heavy service data:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubUnknownManufData":false}'`
-
-## ADVANCED: Publishing the service UUID data
-
-If you want to change the default behaviour:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubServiceDataUUID":true}'`
-
-## Store BLE configuration into the gateway (only with ESP32 boards)
+## Store BLE configuration into the gateway
 
 Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
 
@@ -272,14 +307,14 @@ By the way, if you want to load the default built-in configuration (on any board
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
 Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
 
-## Read/write BLE characteristics over MQTT (ESP32 only)
+## Read/write BLE characteristics over MQTT
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
 ::: tip
 These actions will be taken on the next BLE connection, which occurs after scanning and after the scan count is reached, [see above to set this](#setting-the-number-of-scans-between-connection-attempts).
 This can be overridden by providing an (optional) parameter `"immediate": true` within the command. This will cause the BLE scan to stop if currently in progress, allowing the command to be immediately processed. All other connection commands in queue will also be processed for the same device, commands for other devices will be deferred until the next normally scheduled connection.
 
-**Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
+**Note** Some devices need to have the MAC address type specified. You can find this type by checking the log/MQTT data and looking for "mac_type". The mac_type of your device can be seen by setting `pubadvdata` to `true` with an MQTT command (see Publishing advertisement data), or with the macro `pubBLEAdvData true`. By default the type is 0 but some devices use different type values. You must specify the correct type to connect successfully.  
 To specify the MAC address type add the parameter `"mac_type"` to the command. For example `"mac_type": 1` to connect with a device with the MAC address type of 1.
 :::
 
@@ -329,7 +364,7 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
 :::
 
-## SwitchBot Bot control (ESP32 only)
+## SwitchBot Bot control
 
 SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 

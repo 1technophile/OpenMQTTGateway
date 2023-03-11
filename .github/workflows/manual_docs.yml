@@ -1,24 +1,25 @@
 name: Create and publish documentation
 on:
   workflow_dispatch:
+  workflow_call:
 jobs:
   documentation:
     runs-on: ubuntu-latest
     name: Create the documentation and deploy it to GitHub Pages
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: "14.x"
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests
+          pip install requests pandas markdown pytablereader tabulate
           npm install
       - name: get lastest release tag
         id: last_release
@@ -30,6 +31,7 @@ jobs:
         run: sed -i "s/version_tag/${{steps.last_release.outputs.tag_name}}/g" docs/.vuepress/config.js
       - name: Build documentation
         run: |
+          python ./scripts/generate_board_docs.py
           python ./scripts/gen_wu.py ${GITHUB_REPOSITORY}
           npm run docs:build
       - name: Deploy to GitHub Pages

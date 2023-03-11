@@ -61,6 +61,7 @@ void MeasureADC() {
       Log.error(F("Failed to read from ADC !" CR));
     } else {
       if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || (MinTimeInSecBetweenPublishingADC > 0 && millis() > (timeadcpub + (MinTimeInSecBetweenPublishingADC * 1000UL)))) {
+        timeadcpub = millis();
         Log.trace(F("Creating ADC buffer" CR));
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
         JsonObject ADCdata = jsonBuffer.to<JsonObject>();

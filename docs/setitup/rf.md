@@ -1,12 +1,32 @@
 # RF gateway (433mhz/315mhz)
-## Compatible parts
-|Module|Purpose|Where to Buy|
-|-|-|-|
-|SRX882 (recommended)|433Mhz Receiver|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|STX882 (recommended)|433Mhz Transmitter|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|XD RF 5V|433Mhz Receiver|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|FS1000A|433Mhz Transmitter|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|CC1101|433Mhz Transceiver|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+Protocols, modules and library
+
+RTL_433 covers OOK protocols detailed [here](../use/rf#supported-decoders) and supports auto-discovery following Home Assistant convention. The other libraries/modules are more for advanced users.
+
+|Board| Protocols|Assembly/Soldering required|
+|-|:-:|:-:|
+|Heltec LORA V2 433Mhz|[RTL_433](../use/rf#supported-decoders), receiving only|No|
+|LILYGO® LoRa32 V2.1_1.6.1 433 Mhz|[RTL_433](../use/rf#supported-decoders), receiving only|No|
+|ESP32 + SX127X|[RTL_433](../use/rf#supported-decoders), receiving only|Yes|
+|ESP32 + CC1101|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Yes|
+|ESP8266 + CC1101|RF(RCSwitch), RF2(KaKu), Pilight|Yes|
+|ESP32 + Basic RF modules (SRX, STX, XD RF, FS1000A|RF(RCSwitch), RF2(KaKu), Pilight|Yes|
+
+:::tip
+If you want to try the RTL_433 module with a combination or a board outside of this list, verify that it has an SX1278 or a SX1276
+:::
+Heltec LORA V3 is not compatible with RTL_433 library as it is based on an SX1262 module.
+
+## Assembly/soldering required parts
+|Module|Purpose|Compatible modules|Receiver Switching|Where to Buy|
+|-|-|-|-|-|
+|SRX882 (recommended)|433Mhz Receiver|RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|STX882 (recommended)|433Mhz Transmitter|RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|XD RF 5V|433Mhz Receiver|RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|FS1000A|433Mhz Transmitter|RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|CC1101|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|SX1276/SX1278|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|LilyGo/Heltec|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 ## Pinout
 |Board| Receiver Pin| Emitter Pin|
@@ -42,9 +62,6 @@ With SRX882 some users reported that D3 is not working use D1 instead in this ca
 
 ## ESP32 Hardware setup
 ![Addon_RF](../img/OpenMQTTgateway_ESP32_Addon_RF.png)
-
-## Heltec SX127X 433Mhz boards
-Those boards don't require any hardware modifications.
 
 ## SONOFF RF Bridge Hardware setup
 Per default there is no need on modifying the RF Bridge hardware, unless you don't want to use the provided RF controller (EFM8BB1). Indeed if you want to extend the protocols supported by the bridge you can [bypass this controller](https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack) and use the ESP8255 capacities to decode RF Signal.
