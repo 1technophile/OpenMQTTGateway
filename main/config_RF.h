@@ -170,7 +170,7 @@ const char parameters[40][4][24] = {
 /*-------------------CC1101 frequency----------------------*/
 //Match frequency to the hardware version of the radio if ZradioCC1101 is used.
 #ifndef CC1101_FREQUENCY
-#  define CC1101_FREQUENCY 433.92
+#  define CC1101_FREQUENCY 868.00
 #endif
 // Allow ZGatewayRF Module to change receive frequency of CC1101 Transceiver module
 #if defined(ZradioCC1101) || defined(ZradioSX127x)

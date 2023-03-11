@@ -310,7 +310,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
 
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
-#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+//#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 #define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
 #define ZgatewayWeatherStation "WeatherStation" //ESP8266, Arduino, ESP32
@@ -324,7 +324,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR04  "HCSR04"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
-#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
+//#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
@@ -333,19 +333,19 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorDS1820  "DS1820"   //ESP8266, Arduino, ESP32
 //#define ZsensorGPIOKeyCode "GPIOKeyCode" //ESP8266, Arduino, ESP32
-#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
+//#define ZsensorGPIOInput "GPIOInput" //ESP8266, Arduino, ESP32
 #define ZmqttDiscovery "HADiscovery"//ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZactuatorFASTLED "FASTLED" //ESP8266, Arduino, ESP32, Sonoff RF Bridge
 //#define ZboardM5STICKC "M5StickC"
 //#define ZboardM5STICKCP "M5StickCP"
 //#define ZboardM5STACK  "M5STACK"
 //#define ZboardM5TOUGH  "M5TOUGH"
-//#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
-#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
+//#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
-//#define ZgatewayRTL_433   "RTL_433"  //ESP8266, Arduino, ESP32
+#define ZgatewayRTL_433   "RTL_433"  //ESP8266, Arduino, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef version_Topic
