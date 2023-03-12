@@ -1827,6 +1827,17 @@ int getMin() {
   return minindex;
 }
 
+void SyncNTP() {
+    configTime(0, 0, NTP_SERVER);
+    time_t now = time(nullptr);
+    uint8_t count = 0;
+    Log.trace(F("Waiting for NTP time sync" CR));
+    while ((now < 8 * 3600 * 2) && count++ < 60) {
+      delay(500);
+      now = time(nullptr);
+    }
+}
+    
 /**
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
@@ -1926,7 +1937,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #endif
     SendReceiveIndicatorON();
-
+    SyncNTP();
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
 #if simpleReceiving
