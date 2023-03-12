@@ -590,7 +590,9 @@ void procBLETask(void* pvParameters) {
       String mac_adress = advertisedDevice->getAddress().toString().c_str();
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
-      BLEdata["time"]=time(nullptr);
+      #if defined(ESP8266) || defined(ESP32)
+        BLEdata["time"]=time(nullptr);
+      #endif
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
