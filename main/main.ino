@@ -947,19 +947,25 @@ bool wifi_reconnect_bypass() {
 #  endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
-//Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
-#if defined(ESP32) && ( defined(WifiMode) || defined(WifiPower) )
-    //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
-    //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
-    #ifdef WifiMode
-      if (esp_wifi_set_protocol(WIFI_IF_STA, WifiMode) != ESP_OK) {
-        Log.error(F("Failed to change WifiMode." CR));
-      }
-    #endif
-    #ifdef WifiPower
-      WiFi.setTxPower(WifiPower);
-    #endif
-#endif
+  //Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
+#  ifdef ESP32
+  // https://github.com/jnogues/ESP32-Long-Range-WiFi/issues/4
+  // Reset wifi protocol
+  if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_LR) != ESP_OK) {
+          Log.error(F("Failed to reset WifiMode." CR));
+  }
+  //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
+  //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
+  #ifdef WifiGMode
+    if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G) != ESP_OK) {
+      Log.error(F("Failed to change WifiMode." CR));
+    }
+  #endif
+
+  #ifdef WifiPower
+    WiFi.setTxPower(WifiPower);
+  #endif
+#  endif
 
     WiFi.begin();
     delay(1000);
