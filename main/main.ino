@@ -316,6 +316,30 @@ long value_from_hex_data(const char* service_data, int offset, int data_length, 
   return value;
 }
 
+/*
+From an hexa char array ("A220EE...") to a byte array (half the size)
+ */
+bool _hexToRaw(const char* in, byte* out, int rawSize) {
+  if (strlen(in) != rawSize * 2)
+    return false;
+  char tmp[3] = {0};
+  for (unsigned char p = 0; p < rawSize; p++) {
+    memcpy(tmp, &in[p * 2], 2);
+    out[p] = strtol(tmp, NULL, 16);
+  }
+  return true;
+}
+
+/*
+From a byte array to an hexa char array ("A220EE...", double the size)
+ */
+bool _rawToHex(byte* in, char* out, int rawSize) {
+  for (unsigned char p = 0; p < rawSize; p++) {
+    sprintf_P(&out[p * 2], PSTR("%02X" CR), in[p]);
+  }
+  return true;
+}
+
 char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
   static char a[16];
   sprintf(a, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);

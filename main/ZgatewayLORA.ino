@@ -56,32 +56,6 @@ enum LORA_ID_NUM {
 typedef enum LORA_ID_NUM LORA_ID_NUM;
 
 /*
-Taken from main/ZgatewaySRFB.ino
-From an hexa char array ("A220EE...") to a byte array (half the size)
- */
-bool _hexToRaw(const char* in, byte* out, int rawSize) {
-  if (strlen(in) != rawSize * 2)
-    return false;
-  char tmp[3] = {0};
-  for (unsigned char p = 0; p < rawSize; p++) {
-    memcpy(tmp, &in[p * 2], 2);
-    out[p] = strtol(tmp, NULL, 16);
-  }
-  return true;
-}
-
-/*
-Taken from main/ZgatewaySRFB.ino
-From a byte array to an hexa char array ("A220EE...", double the size)
- */
-bool _rawToHex(byte* in, char* out, int rawSize) {
-  for (unsigned char p = 0; p < rawSize; p++) {
-    sprintf_P(&out[p * 2], PSTR("%02X" CR), in[p]);
-  }
-  return true;
-}
-
-/*
 Try and determine device given the payload
  */
 uint8_t _determineDevice(byte* packet, int packetSize) {
