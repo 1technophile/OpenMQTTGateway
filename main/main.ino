@@ -1794,6 +1794,19 @@ void stateMeasures() {
 }
 #endif
 
+#if defined(ESP8266) || defined(ESP32)
+void SyncNTP() {
+    configTime(0, 0, NTP_SERVER);
+    time_t now = time(nullptr);
+    uint8_t count = 0;
+    Log.trace(F("Waiting for NTP time sync" CR));
+    while ((now < 8 * 3600 * 2) && count++ < 60) {
+      delay(500);
+      now = time(nullptr);
+    }
+}
+#endif
+    
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 /**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
@@ -1830,17 +1843,6 @@ int getMin() {
   return minindex;
 }
 
-void SyncNTP() {
-    configTime(0, 0, NTP_SERVER);
-    time_t now = time(nullptr);
-    uint8_t count = 0;
-    Log.trace(F("Waiting for NTP time sync" CR));
-    while ((now < 8 * 3600 * 2) && count++ < 60) {
-      delay(500);
-      now = time(nullptr);
-    }
-}
-    
 /**
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
