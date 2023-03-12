@@ -1938,7 +1938,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #endif
     SendReceiveIndicatorON();
-    SyncNTP();
+    #if defined(ESP8266) || defined(ESP32)
+      SyncNTP();
+    #endif
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
 #if simpleReceiving
