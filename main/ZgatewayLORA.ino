@@ -73,6 +73,10 @@ Try and determine device given the JSON type
 uint8_t _determineDevice(JsonObject& LORAdata) {
   const char* protocol_name = LORAdata["type"];
 
+  // No type provided
+  if (!protocol_name)
+    return UNKNOWN_DEVICE;
+
   if (strcmp(protocol_name, "WiPhone") == 0)
     return WIPHONE;
 
@@ -240,7 +244,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
         // We have hex data: create convert to binary
         byte raw[strlen(hex) / 2];
         _hexToRaw(hex, raw, sizeof(raw));
-        LoRa.print((char*)raw);
+        LoRa.write((uint8_t*)raw, sizeof(raw));
       } else {
         // ascii payload
         LoRa.print(message);
