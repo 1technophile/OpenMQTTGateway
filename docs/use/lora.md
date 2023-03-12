@@ -21,6 +21,14 @@ Once one board flashed with OMG and the other with the sender program you should
 {"rssi":-16,"snr":9.5,"pferror":-3581,"packetSize":9,"message":"hello 37"}
 ```
 
+Messages that contain non-printable characters will be converted to hexadecimal and look like this:
+```json
+{"rssi":-121,"snr":-11.75,"pferror":-29116,"packetSize":3,"hex":"C0FFEE"}
+```
+And from a supported device (in this case, a WiPhone), looks like this:
+```json
+{"rssi":-50,"snr":9.25,"pferror":20728,"packetSize":30,"from":"123ABC","to":"000000","message":"Hi from WiPhone","type":"WiPhone"}
+```
 ## Send data by MQTT to convert it on LORA signal 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA -m '{"message":"hello OMG1"}'`
 
@@ -44,7 +52,11 @@ LORA  sending support the following parameters that should be specified in the j
 
 More info on where the LORA library is born [@sandeepmistry](https://github.com/sandeepmistry/arduino-LoRa/blob/master/API.md#radio-parameters)
 
-Example:
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA -m '{"message":"test8","txpower":17,}'`
+Examples:
 
+* Plain text message: `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA -m '{"message":"test8","txpower":17}'`\
 will make LORA use the a txpower of 17 when sending the message "test8"
+* Binary message: `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoLORA" -m '{"hex":"01C0FFEE"}'`\
+will send binary 0x01C0FFEE
+* WiPhone message: `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoLORA" -m '{"message":"test","type":"WiPhone","to":"123ABC","from":"FFFFFF"}'`\
+will send "test" to a WiPhone with chip ID 123ABC
