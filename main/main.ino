@@ -1707,6 +1707,7 @@ void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
+  SYSdata["time"] = time(nullptr);
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
