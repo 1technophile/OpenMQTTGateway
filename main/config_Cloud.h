@@ -26,10 +26,34 @@
 #ifndef config_CLOUD_h
 #define config_CLOUD_h
 
+/*------------------- Optional Compiler Directives ----------------------*/
+
+#ifndef CLOUDENABLED
+#  define CLOUDENABLED false
+#endif
+
+#ifndef DEVICETOKEN
+#  define DEVICETOKEN ""
+#endif
+
+/*------------------- End of Compiler Directives ----------------------*/
+
 extern void setupCloud();
 extern void CloudLoop();
 extern void pubOmgCloud(const char*, const char*, bool);
+extern void MQTTtoCLOUD(char*, JsonObject&);
+extern void stateCLOUDStatus();
 
-#define pubCloud(...) pubOmgCloud(__VA_ARGS__)
+bool cloudActive;
+
+#define RECONNECT_DELAY 35
+
+#define subjectMQTTtoCLOUDset "/commands/MQTTtoCLOUD/config"
+#define subjectCLOUDtoMQTT    "/CLOUDtoMQTT"
+
+#define pubCloud(...)         \
+  if (cloudActive) {          \
+    pubOmgCloud(__VA_ARGS__); \
+  }
 
 #endif

@@ -28,7 +28,9 @@
 #  include <PubSubClient.h>
 
 #  include "ArduinoLog.h"
+#  include "config_Cloud.h"
 #  include "config_mqttDiscovery.h"
+
 // client link to pubsub MQTT
 WiFiClientSecure cloudWifi;
 
@@ -37,6 +39,10 @@ PubSubClient cloud(cloudWifi);
 char account[parameters_size];
 char device[parameters_size];
 char token[parameters_size];
+
+String deviceToken;
+bool cloudEnabled;
+
 String cloudTopic;
 
 // Queue messages to be sent via loop
@@ -53,7 +59,6 @@ typedef struct cloudMsg {
 };
 
 unsigned long reconnectTime = uptime();
-#  define RECONNECT_DELAY 35
 
 void cloudCallback(char* topic, byte* payload, unsigned int length) {
   byte* p = (byte*)malloc(length + 1);
@@ -87,34 +92,52 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
 }
 
 void cloudConnect() {
-  Log.warning(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), ("omgClient-" + String(device)).c_str(), device, token);
-  if (cloud.connect(("omgDevice-" + String(gateway_name)).c_str(), device, token, (cloudTopic + '/' + String(mqtt_topic) + String(gateway_name) + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
-    displayPrint("[ CLOUD ] connected");
-    Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
-    Log.verbose(F("[ CLOUD ] OMG Cloud LWT %s" CR), (cloudTopic + '/' + mqtt_topic + gateway_name + "/LWT").c_str());
-    cloud.setCallback(cloudCallback);
-    String topic = cloudTopic + '/' + mqtt_topic + gateway_name + subjectMQTTtoX;
-    if (!cloud.subscribe(topic.c_str())) {
-      Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
-    };
-    Log.verbose(F("[ CLOUD ] OMG Cloud subscribing to %s" CR), topic.c_str());
-    // Need to use the central cloud.publish
-    pubOmgCloud((String(mqtt_topic) + String(gateway_name) + will_Topic).c_str(), Gateway_AnnouncementMsg, will_Retain);
+  if (deviceToken.length() == 86) {
+    cloudActive = true;
+    deviceToken.substring(0, deviceToken.indexOf(':')).toCharArray(account, parameters_size);
+    deviceToken.substring(deviceToken.indexOf(':') + 1, deviceToken.lastIndexOf(':')).toCharArray(device, parameters_size);
+    deviceToken.substring(deviceToken.lastIndexOf(':') + 1).toCharArray(token, parameters_size);
+    // strcpy(account, strtok(deviceToken.c_str(), ":")); // TODO: strtok is not thread safe.....and needs to be replaced
+    // strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
+    // strcpy(token, strtok(0, ":"));
+
+    cloudTopic = "omgClient-" + String(account);
+    Log.warning(F("[ CLOUD ] Connecting OMG Cloud %s - %s - %s" CR), account, device, token);
+    if (cloud.connect(("omgDevice-" + String(gateway_name)).c_str(), device, token, (cloudTopic + '/' + String(mqtt_topic) + String(gateway_name) + "/LWT").c_str(), will_QoS, will_Retain, will_Message)) {
+      displayPrint("[ CLOUD ] connected");
+      Log.verbose(F("[ CLOUD ] OMG Cloud connected %s" CR), cloudTopic.c_str());
+      Log.verbose(F("[ CLOUD ] OMG Cloud LWT %s" CR), (cloudTopic + '/' + mqtt_topic + gateway_name + "/LWT").c_str());
+      cloud.setCallback(cloudCallback);
+      String topic = cloudTopic + '/' + mqtt_topic + gateway_name + subjectMQTTtoX;
+      if (!cloud.subscribe(topic.c_str())) {
+        Log.error(F("[ CLOUD ] Cloud subscribe failed %s, rc=%d" CR), topic.c_str(), cloud.state());
+      };
+      Log.verbose(F("[ CLOUD ] OMG Cloud subscribing to %s" CR), topic.c_str());
+      // Need to use the central cloud.publish
+      pubOmgCloud((String(mqtt_topic) + String(gateway_name) + will_Topic).c_str(), Gateway_AnnouncementMsg, will_Retain);
+    } else {
+      Log.error(F("[ CLOUD ] OMG Cloud connection failed: rc=%d, retrying in %d seconds." CR), cloud.state(), RECONNECT_DELAY);
+      reconnectTime = uptime() + RECONNECT_DELAY;
+    }
   } else {
-    Log.error(F("[ CLOUD ] OMG Cloud connection failed: rc=%d, retrying in %d seconds." CR), cloud.state(), RECONNECT_DELAY);
-    reconnectTime = uptime() + RECONNECT_DELAY;
+    Log.error(F("[ CLOUD ] Invalid devicetoken %d" CR), deviceToken.length());
+    cloudActive = false;
   }
+}
+
+void cloudDisconnect() {
+  cloudActive = false;
+  cloudEnabled = false;
+  cloud.disconnect();
+  Log.notice(F("[ CLOUD ] OMG Cloud disconected" CR));
 }
 
 void setupCloud() {
   Log.trace(F("ZgatewayCloud setup start" CR));
 
-  char deviceToken[90] = DEVICETOKEN; // account:device:token TODO: base64 encode the devicetoken
-  strcpy(account, strtok(deviceToken, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
-  strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
-  strcpy(token, strtok(0, ":"));
+  CloudConfig_init();
+  CloudConfig_load();
 
-  cloudTopic = "omgClient-" + String(account);
   cloudWifi.setInsecure();
   cloud.setKeepAlive(300); // 5 minutes for keep alive
 
@@ -125,38 +148,173 @@ void setupCloud() {
   omgCloudQueue = xQueueCreate(30, sizeof(cloudMsg*));
   omgCloudSemaphore = xSemaphoreCreateBinary();
   xSemaphoreGive(omgCloudSemaphore);
-
-  cloudConnect();
+  stateCLOUDStatus();
+  if (cloudEnabled) {
+    cloudConnect();
+  }
   Log.notice(F("ZgatewayCloud setup done" CR));
   cloudReady = true;
 }
 
-void CloudLoop() {
-  if (!cloud.connected()) {
-    if (uptime() > reconnectTime) {
-      cloudConnect();
-    }
-  } else {
-    cloud.loop();
+void CloudConfig_init() {
+  deviceToken = DEVICETOKEN; // account:device:token TODO: base64 encode the devicetoken
+  cloudEnabled = CLOUDENABLED;
+  Log.notice(F("Cloud config initialised" CR));
+}
 
-    if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
-      if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
-        cloudMsg* omgCloudMessage = nullptr;
-        if (xQueueReceive(omgCloudQueue,
-                          &omgCloudMessage,
-                          (TickType_t)10) == pdPASS) {
-          Log.verbose(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
-          if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
-            Log.error(F("[ CLOUD ] Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
-            reconnectTime = uptime() + RECONNECT_DELAY;
-          } else {
-            Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
-          }
-          free(omgCloudMessage->topic);
-          free(omgCloudMessage->payload);
-          free(omgCloudMessage);
+bool CloudConfig_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  String exists = preferences.getString("CLOUDConfig", "{}");
+  if (exists != "{}") {
+    auto error = deserializeJson(jsonBuffer, preferences.getString("CLOUDConfig", "{}"));
+    preferences.end();
+    if (error) {
+      Log.error(F("CLOUD config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      return false;
+    }
+    if (jsonBuffer.isNull()) {
+      Log.warning(F("CLOUD config is null" CR));
+      return false;
+    }
+    JsonObject jo = jsonBuffer.as<JsonObject>();
+    deviceToken = jo["deviceToken"].as<String>();
+    cloudEnabled = jo["cloudEnabled"].as<bool>();
+    return true;
+  } else {
+    preferences.end();
+    Log.notice(F("No CLOUD config to load" CR));
+    return false;
+  }
+}
+
+bool CloudConfig_save() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jo = jsonBuffer.to<JsonObject>();
+  jo["deviceToken"] = deviceToken;
+  jo["cloudEnabled"] = cloudEnabled;
+  // Save config into NVS (non-volatile storage)
+  String conf = "";
+  serializeJson(jsonBuffer, conf);
+  preferences.begin(Gateway_Short_Name, false);
+  preferences.putString("CLOUDConfig", conf);
+  preferences.end();
+}
+
+void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decoding
+  bool success = false;
+  if (cmpToMainTopic(topicOri, subjectMQTTtoCLOUDset)) {
+    Log.trace(F("MQTTtoCLOUD json set" CR));
+    // properties
+    if (CLOUDdata.containsKey("deviceToken")) {
+      String tempToken = CLOUDdata["deviceToken"].as<String>();
+      if (tempToken.length() == 86) {
+        deviceToken = tempToken;
+        // Log.notice(F("Set deviceToken: %d" CR), deviceToken);
+        CloudConfig_save();
+        if (cloudEnabled) {
+          cloudConnect();
+        } else {
+          cloudDisconnect();
         }
-        xSemaphoreGive(omgCloudSemaphore);
+        success = true;
+      } else {
+        success = false;
+      }
+    }
+    if (CLOUDdata.containsKey("cloudEnabled")) {
+      cloudEnabled = CLOUDdata["cloudEnabled"].as<bool>();
+      Log.notice(F("Set cloudEnabled: %d" CR), cloudEnabled);
+      if (cloudEnabled) {
+        cloudConnect();
+      } else {
+        cloudDisconnect();
+      }
+      CloudConfig_save();
+      success = true;
+    }
+    if (CLOUDdata.containsKey("status")) {
+      success = true;
+    }
+    // save, load, init, erase
+    if (CLOUDdata.containsKey("save") && CLOUDdata["save"]) {
+      success = CloudConfig_save();
+      if (success) {
+        Log.notice(F("CLOUD config saved" CR));
+      }
+    } else if (CLOUDdata.containsKey("load") && CLOUDdata["load"]) {
+      success = CloudConfig_load();
+      if (success) {
+        Log.notice(F("CLOUD config loaded" CR));
+      }
+    } else if (CLOUDdata.containsKey("init") && CLOUDdata["init"]) {
+      CloudConfig_init();
+      if (cloudEnabled) {
+        cloudConnect();
+      } else {
+        cloudDisconnect();
+      }
+      success = true;
+      if (success) {
+        Log.notice(F("CLOUD config initialised" CR));
+      }
+    } else if (CLOUDdata.containsKey("erase") && CLOUDdata["erase"]) {
+      // Erase config from NVS (non-volatile storage)
+      preferences.begin(Gateway_Short_Name, false);
+      success = preferences.remove("CLOUDConfig");
+      preferences.end();
+      if (success) {
+        Log.notice(F("CLOUD config erased" CR));
+      }
+    }
+    if (success) {
+      stateCLOUDStatus();
+    } else {
+      pub(subjectCLOUDtoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
+      Log.error(F("[ CLOUD ] MQTTtoCLOUD Fail json" CR), CLOUDdata);
+    }
+  }
+}
+
+void stateCLOUDStatus() {
+  //Publish display state
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject CLOUDdata = jsonBuffer.to<JsonObject>();
+  CLOUDdata["cloudEnabled"] = (bool)cloudEnabled;
+  CLOUDdata["cloudActive"] = (bool)cloudActive;
+  CLOUDdata["cloudState"] = cloud.state();
+  pub(subjectCLOUDtoMQTT, CLOUDdata);
+  // apply
+}
+
+void CloudLoop() {
+  if (cloudActive) {
+    if (!cloud.connected()) {
+      if (uptime() > reconnectTime) {
+        cloudConnect();
+      }
+    } else {
+      cloud.loop();
+
+      if (uxQueueMessagesWaiting(omgCloudQueue) && uxSemaphoreGetCount(omgCloudSemaphore)) { // && uxSemaphoreGetCount(omgCloudSemaphore)
+        if (xSemaphoreTake(omgCloudSemaphore, (TickType_t)10) == pdTRUE) {
+          cloudMsg* omgCloudMessage = nullptr;
+          if (xQueueReceive(omgCloudQueue,
+                            &omgCloudMessage,
+                            (TickType_t)10) == pdPASS) {
+            Log.verbose(F("[ OMG->CLOUD ] unQueue topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+            if (!cloud.publish(omgCloudMessage->topic, omgCloudMessage->payload, omgCloudMessage->retain)) {
+              Log.error(F("[ CLOUD ] Cloud publish failed, rc=%d, topic: %s msg: %s " CR), cloud.state(), omgCloudMessage->topic, omgCloudMessage->payload);
+              reconnectTime = uptime() + RECONNECT_DELAY;
+            } else {
+              Log.trace(F("[ OMG->CLOUD ] topic: %s msg: %s " CR), omgCloudMessage->topic, omgCloudMessage->payload);
+            }
+            free(omgCloudMessage->topic);
+            free(omgCloudMessage->payload);
+            free(omgCloudMessage);
+          }
+          xSemaphoreGive(omgCloudSemaphore);
+        }
       }
     }
   }

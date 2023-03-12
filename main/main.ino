@@ -1543,6 +1543,9 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+#  ifdef ZgatewayCloud
+        stateCLOUDStatus();
+#  endif
       }
 #endif
 #ifdef ZsensorBME280
@@ -1935,6 +1938,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);
+#  endif
+#  if defined(ZgatewayCloud)
+    MQTTtoCLOUD(topicOri, jsondata);
 #  endif
 #endif
     SendReceiveIndicatorON();
