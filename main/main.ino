@@ -1707,7 +1707,9 @@ void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
+#  if defined(ESP8266) || defined(ESP32)
   SYSdata["time"] = time(nullptr);
+# endif
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
