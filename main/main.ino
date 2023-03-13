@@ -168,6 +168,9 @@ struct GfSun2000Data {};
 #if defined(ZgatewayCloud)
 #  include "config_Cloud.h"
 #endif
+#if defined(ZwebUI)
+#  include "config_WebUI.h"
+#endif
 /*------------------------------------------------------------------------*/
 
 void setupTLS(bool self_signed = false, uint8_t index = 0);
@@ -750,6 +753,11 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   //Begining ethernet connection in case of Arduino + W5100
   setup_ethernet();
+#endif
+
+#if defined(ZwebUI)
+  WebUISetup();
+  modules.add(ZwebUI);
 #endif
 
 #if defined(ESP8266) || defined(ESP32)
@@ -1651,6 +1659,9 @@ void loop() {
 #ifdef ZgatewayCloud
       CloudLoop();
 #endif
+#ifdef ZwebUI
+      WebUILoop();
+#endif
     } else {
       // MQTT disconnected
       connected = false;
@@ -1717,7 +1728,7 @@ float intTemperatureRead() {
 #endif
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-void stateMeasures() {
+String stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
@@ -1803,6 +1814,9 @@ void stateMeasures() {
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
+  String output;
+  serializeJson(SYSdata, output);
+  return output;
 }
 #endif
 

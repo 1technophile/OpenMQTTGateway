@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+    <title>OpenMQTTGateway - Information</title>
+    <script>
+    var x = null,
+        lt,
+        to,
+        tp,
+        pc = '';
+    function eb(s) {
+        return document.getElementById(s);
+    }
+    function qs(s) {
+        return document.querySelector(s);
+    }
+    function sp(i) {
+        eb(i).type = (eb(i).type === 'text' ? 'password' : 'text');
+    }
+    function wl(f) {
+        window.addEventListener('load', f);
+    }
+    function i() {
+        var s,
+            o = "<table style='width:100%'><tr><th>Program Version}29.5.0(sensors)}1Build Date & Time}22021-06-17T08:26:50}1Core/SDK Version}22_7_4_9/2.2.2-dev(38a443e)}1Uptime}20T01:40:35}1Flash write Count}217 at 0xFA000}1Boot Count}213}1Restart Reason}2Software/System restart}1}2&nbsp;}1AP1 SSId (RSSI)}2The_Beach (88%, -56 dBm) 11n}1Hostname}2topic-7896}1MAC Address}25C:CF:7F:87:1E:D8}1IP Address (wifi)}2192.168.1.112}1<hr/>}2<hr/>}1Gateway}2192.168.1.1}1Subnet Mask}2255.255.255.0}1DNS Server}2192.168.1.1}1}2&nbsp;}1MQTT Host}2}1MQTT Port}21883}1MQTT User}2DVES_USER}1MQTT Client}2DVES_871ED8}1MQTT Topic}2topic}1MQTT Group Topic 1}2cmnd/tasmotas/}1MQTT Full Topic}2cmnd/topic/}1MQTT Fallback Topic}2cmnd/DVES_871ED8_fb/}1MQTT No Retain}2Disabled}1}2&nbsp;}1Emulation}2None}1}2&nbsp;}1ESP Chip Id}28855256 (ESP8266EX)}1Flash Chip Id}20x1640E0}1Flash Size}24096 kB}1Program Flash Size}24096 kB}1Program Size}2661 kB}1Free Program Space}2340 kB}1Free Memory}222.0 kB</td></tr></table>";
+        s = o.replace(/}1/g, "</td></tr><tr><th>").replace(/}2/g, "</th><td>");
+        eb('i').innerHTML = s;
+    }
+    wl(i);
+    function jd() {
+        var t = 0,
+            i = document.querySelectorAll('input,button,textarea,select');
+        while (i.length >= t) {
+            if (i[t]) {
+                i[t]['name'] = (i[t].hasAttribute('id') && (!i[t].hasAttribute('name'))) ? i[t]['id'] : i[t]['name'];
+            }
+            t++;
+        }
+    }
+    wl(jd);
+    </script>
+    <style>
+    div, fieldset, input, select {
+        padding: 5px;
+        font-size: 1em;
+    }
+
+    fieldset {
+        background: #4f4f4f;
+    }
+
+    p {
+        margin: 0.5em 0;
+    }
+
+    input {
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        background: #dddddd;
+        color: #000000;
+    }
+
+    input[type=checkbox], input[type=radio] {
+        width: 1em;
+        margin-right: 6px;
+        vertical-align: -1px;
+    }
+
+    input[type=range] {
+        width: 99%;
+    }
+
+    select {
+        width: 100%;
+        background: #dddddd;
+        color: #000000;
+    }
+
+    textarea {
+        resize: vertical;
+        width: 98%;
+        height: 318px;
+        padding: 5px;
+        overflow: auto;
+        background: #1f1f1f;
+        color: #65c115;
+    }
+
+    body {
+        text-align: center;
+        font-family: verdana, sans-serif;
+        background: #252525;
+    }
+
+    td {
+        padding: 0px;
+    }
+
+    button {
+        border: 0;
+        border-radius: 0.3rem;
+        background: #1fa3ec;
+        color: #faffff;
+        line-height: 2.4rem;
+        font-size: 1.2rem;
+        width: 100%;
+        -webkit-transition-duration: 0.4s;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0e70a4;
+    }
+
+    .bred {
+        background: #d43535;
+    }
+
+    .bred:hover {
+        background: #931f1f;
+    }
+
+    .bgrn {
+        background: #47c266;
+    }
+
+    .bgrn:hover {
+        background: #5aaf6f;
+    }
+
+    a {
+        color: #1fa3ec;
+        text-decoration: none;
+    }
+
+    .p {
+        float: left;
+        text-align: left;
+    }
+
+    .q {
+        float: right;
+        text-align: right;
+    }
+
+    .r {
+        border-radius: 0.3em;
+        padding: 2px;
+        margin: 6px 2px;
+    }
+    </style>
+</head>
+<body>
+    <div style='text-align:left;display:inline-block;color:#eaeaea;min-width:340px;'>
+        <div style='text-align:center;color:#eaeaea;'>
+            <noscript>
+                To use  please enable JavaScript
+                <br>
+            </noscript>
+            <h3> </h3>
+            <h2>OpenMQTTGateway</h2>
+        </div>
+        <style>
+        td {
+            padding: 0px 5px;
+        }
+        </style>
+        <div id='i' name='i'></div>
+        <div id=but2d style="display: block;"></div>
+        <p>
+        <form id=but2 style="display: block;" action='.' method='get'>
+            <button>Main Menu</button>
+        </form>
+        </p>
+        <div style='text-align:right;font-size:11px;'>
+            <hr/>
+            <a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>OpenMQTTGateway 1.4.0</a>
+        </div>
+    </div>
+</body>
+</html>
