@@ -1806,7 +1806,7 @@ void SyncNTP() {
   }
 }
 #endif
-    
+
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 /**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
