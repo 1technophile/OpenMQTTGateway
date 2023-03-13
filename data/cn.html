@@ -174,8 +174,12 @@
         </form>
         </p>
         <p>
-        <form action='dm' method='get'>
-            <button>Configure Domoticz</button>
+        <form action='https://cloudbeta.openmqttgateway.com/auth/start' method='get'>
+            <input type="hidden" name="response_type" value="code"/>
+            <input type="hidden" name="client_id" value="1"/>
+            <input type="hidden" name="scope" value="access_devices"/>
+            <input type="hidden" name="redirect_uri" value="http://192.168.1.160:80/"/>
+            <button>Configure Cloud</button>
         </form>
         </p>
         <p>
