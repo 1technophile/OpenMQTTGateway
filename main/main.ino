@@ -2107,13 +2107,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           client.disconnect();
           update_client = *(WiFiClientSecure*)eClient;
         } else {
-          configTime(0, 0, NTP_SERVER);
-          time_t now = time(nullptr);
-          uint8_t count = 0;
-          Log.trace(F("Waiting for NTP time sync" CR));
-          while ((now < 8 * 3600 * 2) && count++ < 60) {
-            delay(500);
-            now = time(nullptr);
+          SyncNTP();
           }
 
           if (count >= 60) {
