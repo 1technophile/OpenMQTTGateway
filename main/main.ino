@@ -980,15 +980,15 @@ bool wifi_reconnect_bypass() {
     }
 //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
 //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
-#   ifdef WifiGMode
+#    ifdef WifiGMode
     if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G) != ESP_OK) {
       Log.error(F("Failed to change WifiMode." CR));
     }
-#   endif
+#    endif
 
-    #ifdef WifiPower
+#    ifdef WifiPower
     WiFi.setTxPower(WifiPower);
-    #endif
+#    endif
 #  endif
 
     WiFi.begin();
