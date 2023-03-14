@@ -241,7 +241,7 @@ bool validFrequency(float mhz) {
 
 int currentReceiver = -1;
 
-extern void stateMeasures(); // Send a status message
+extern String stateMeasures(); // Send a status message
 
 #  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
 #    if defined(ESP8266) || defined(ESP32)

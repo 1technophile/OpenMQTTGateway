@@ -172,6 +172,7 @@ bool returnFile(String path) {
 
 void WebUISetup() {
   Log.trace(F("ZwebUI setup start" CR));
+  Log.begin(LOG_LEVEL, &WebLog)
 
   FILESYSTEM.begin();
   {
@@ -203,5 +204,54 @@ void WebUISetup() {
 void WebUILoop() {
   server.handleClient();
 }
+
+// This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
+
+WebSerial WebLog(0); // Not sure about this, came from Hardwareserial
+WebSerial::WebSerial(int x) {
+}
+
+/*
+Initialize ssd1306 oled display for use, and display OMG logo
+*/
+void WebSerial::begin() {
+  // SSD1306.begin(); // User OMG serial support
+}
+
+/*
+Dummy virtual functions carried over from Serial
+*/
+int WebSerial::available(void) {
+}
+
+/*
+Dummy virtual functions carried over from Serial
+*/
+int WebSerial::peek(void) {
+}
+
+/*
+Dummy virtual functions carried over from Serial
+*/
+int WebSerial::read(void) {
+}
+
+/*
+Dummy virtual functions carried over from Serial
+*/
+void WebSerial::flush(void) {
+}
+
+/*
+Write line of text to the display with vertical scrolling of screen
+*/
+size_t WebSerial::write(const uint8_t* buffer, size_t size) {
+
+  // Default to Serial output if the display is not available
+  return Serial.write(buffer, size);
+}
+
+
+
 
 #endif

@@ -26,6 +26,8 @@
 #ifndef config_WebUI_h
 #define config_WebUI_h
 
+#include <Wire.h>
+
 /*------------------- Optional Compiler Directives ----------------------*/
 
 
@@ -37,5 +39,49 @@
 extern void WebUISetup();
 
 extern void WebUILoop();
+
+/*------------------- Take over serial output and split to  ----------------------*/
+
+class WebSerial : public Stream {
+public:
+  WebSerial(int);
+  void begin();
+
+
+
+  int available(void); // Dummy functions
+  int peek(void); // Dummy functions
+  int read(void); // Dummy functions
+  void flush(void); // Dummy functions
+
+
+  inline size_t write(uint8_t x) {
+    return write(&x, 1);
+  }
+
+  size_t write(const uint8_t* buffer, size_t size);
+  inline size_t write(const char* buffer, size_t size) {
+    return write((uint8_t*)buffer, size);
+  }
+  inline size_t write(const char* s) {
+    return write((uint8_t*)s, strlen(s));
+  }
+  inline size_t write(unsigned long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(unsigned int n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(int n) {
+    return write((uint8_t)n);
+  }
+
+protected:
+};
+
+extern WebSerial WebLog;
 
 #endif
