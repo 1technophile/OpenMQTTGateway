@@ -1801,8 +1801,16 @@ void SyncNTP() {
   uint8_t count = 0;
   Log.trace(F("Waiting for NTP time sync" CR));
   while ((now < 8 * 3600 * 2) && count++ < 60) {
-    delay(500);
-    now = time(nullptr);
+	delay(500);
+	now = time(nullptr);
+  }
+
+  if (count >= 60) {
+	Log.error(F("Unable to update - invalid time" CR));
+#  if defined(ZgatewayBT) && defined(ESP32)
+	startProcessing();
+#  endif
+	return;
   }
 }
 #endif
@@ -2107,16 +2115,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           client.disconnect();
           update_client = *(WiFiClientSecure*)eClient;
         } else {
-          SyncNTP();
-          }
-
-          if (count >= 60) {
-            Log.error(F("Unable to update - invalid time" CR));
-#  if defined(ZgatewayBT) && defined(ESP32)
-            startProcessing();
-#  endif
-            return;
-          }
+		  SyncNTP();
         }
 
 #  ifdef ESP32
