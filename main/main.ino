@@ -1725,7 +1725,7 @@ float intTemperatureRead() {
   return temp_c;
 }
 #endif
-#  if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32)
 void SyncNTP() {  
   configTime(0, 0, NTP_SERVER);
   time_t now = time(nullptr);
@@ -1744,7 +1744,7 @@ void SyncNTP() {
     return;
   }
 }  
-#  endif
+#endif
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
@@ -1972,9 +1972,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #endif
     SendReceiveIndicatorON();
-#  if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32)
     SyncNTP();
-#  endif
+#endif
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
 #if simpleReceiving
