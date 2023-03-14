@@ -66,7 +66,10 @@ extern int btQueueLengthCount;
 #define MinimumRSSI -100 //default minimum rssi value, all the devices below -100 will not be reported
 
 #ifndef Scan_duration
-#  define Scan_duration 10000 //define the time for a scan; in milliseconds
+#  define Scan_duration 10000 //define the duration for a scan; in milliseconds
+#endif
+#ifndef MinScanDuration
+#  define MinScanDuration 1000 //minimum duration for a scan; in milliseconds
 #endif
 #ifndef BLEScanInterval
 #  define BLEScanInterval 52 // How often the scan occurs / switches channels; in milliseconds,
@@ -96,6 +99,10 @@ extern int btQueueLengthCount;
 
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
+#endif
+
+#ifndef PublishRandomMACs
+#  define PublishRandomMACs false //false to not publish devices which randomly change their MAC addresses
 #endif
 
 #ifndef HassPresence
@@ -140,7 +147,9 @@ struct BTConfig_s {
   unsigned long intervalActiveScan; // Time between 2 active scans when generally passive scanning
   unsigned long BLEinterval; // Time between 2 scans
   unsigned long intervalConnect; // Time between 2 connects
+  unsigned long scanDuration; // Duration for a scan; in milliseconds
   bool pubOnlySensors; // Publish only the identified sensors (like temperature sensors)
+  bool pubRandomMACs; // Publish devices which randomly change their MAC address
   bool presenceEnable; // Publish into Home Assistant presence topic
   String presenceTopic; // Home Assistant presence topic to publish on
   bool presenceUseBeaconUuid; // Use iBeacon UUID as for presence, instead of sender MAC (random) address
