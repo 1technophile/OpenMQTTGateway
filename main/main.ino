@@ -1725,12 +1725,34 @@ float intTemperatureRead() {
   return temp_c;
 }
 #endif
+#  if defined(ESP8266) || defined(ESP32)
+void SyncNTP() {  
+  configTime(0, 0, NTP_SERVER);
+  time_t now = time(nullptr);
+  uint8_t count = 0;
+  Log.trace(F("Waiting for NTP time sync" CR));
+  while ((now < 8 * 3600 * 2) && count++ < 60) {
+	delay(500);
+	now = time(nullptr);
+  }
 
+  if (count >= 60) {
+	Log.error(F("Unable to update - invalid time" CR));
+#  if defined(ZgatewayBT) && defined(ESP32)
+	startProcessing();
+#  endif
+	return;
+  }
+}  
+#  endif
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
+#  if defined(ESP8266) || defined(ESP32)
+  SYSdata["unixtime"] = time(nullptr);
+#  endif
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
@@ -1950,7 +1972,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #endif
     SendReceiveIndicatorON();
-
+#if defined(ESP8266) || defined(ESP32)
+    SyncNTP();
+#endif
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
 #if simpleReceiving
@@ -2113,22 +2137,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           client.disconnect();
           update_client = *(WiFiClientSecure*)eClient;
         } else {
-          configTime(0, 0, NTP_SERVER);
-          time_t now = time(nullptr);
-          uint8_t count = 0;
-          Log.trace(F("Waiting for NTP time sync" CR));
-          while ((now < 8 * 3600 * 2) && count++ < 60) {
-            delay(500);
-            now = time(nullptr);
-          }
-
-          if (count >= 60) {
-            Log.error(F("Unable to update - invalid time" CR));
-#  if defined(ZgatewayBT) && defined(ESP32)
-            startProcessing();
-#  endif
-            return;
-          }
+          SyncNTP();
         }
 
 #  ifdef ESP32
