@@ -438,7 +438,7 @@ void pub_custom_topic(const char* topic, JsonObject& data, boolean retain) {
  * @param payload  the payload
  */
 void pubMQTT(const char* topic, const char* payload) {
-  pubMQTT(topic, payload, false);
+  pubMQTT(topic, payload, SENSOR_RETAIN);
 }
 
 /**
