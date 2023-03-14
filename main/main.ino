@@ -1726,7 +1726,7 @@ float intTemperatureRead() {
 }
 #endif
 #if defined(ESP8266) || defined(ESP32)
-void SyncNTP() {  
+void SyncNTP() {
   configTime(0, 0, NTP_SERVER);
   time_t now = time(nullptr);
   uint8_t count = 0;
@@ -1743,7 +1743,7 @@ void SyncNTP() {
 #  endif
     return;
   }
-}  
+}
 #endif
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
