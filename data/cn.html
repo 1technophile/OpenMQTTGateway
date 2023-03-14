@@ -174,11 +174,13 @@
         </form>
         </p>
         <p>
-        <form action='https://cloudbeta.openmqttgateway.com/auth/start' method='get'>
+        <form action='https://localhost:3000/token/start' method='get'>
             <input type="hidden" name="response_type" value="code"/>
             <input type="hidden" name="client_id" value="1"/>
             <input type="hidden" name="scope" value="access_devices"/>
+            <input type="hidden" name="macAddress" value="01:02:03:04:05:06"/>
             <input type="hidden" name="redirect_uri" value="http://192.168.1.160:80/"/>
+            <input type="hidden" name="gateway_name" value="my gateway name"/>
             <button>Configure Cloud</button>
         </form>
         </p>
