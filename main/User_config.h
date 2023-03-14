@@ -362,6 +362,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef will_Message
 #  define will_Message "offline"
 #endif
+#ifndef sensor_Retain
+#  define sensor_Retain false
+#endif
 #ifndef Gateway_AnnouncementMsg
 #  define Gateway_AnnouncementMsg "online"
 #endif
