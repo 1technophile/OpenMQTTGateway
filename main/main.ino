@@ -1732,16 +1732,16 @@ void SyncNTP() {
   uint8_t count = 0;
   Log.trace(F("Waiting for NTP time sync" CR));
   while ((now < 8 * 3600 * 2) && count++ < 60) {
-	delay(500);
-	now = time(nullptr);
+    delay(500);
+    now = time(nullptr);
   }
 
   if (count >= 60) {
-	Log.error(F("Unable to update - invalid time" CR));
+    Log.error(F("Unable to update - invalid time" CR));
 #  if defined(ZgatewayBT) && defined(ESP32)
-	startProcessing();
+    startProcessing();
 #  endif
-	return;
+    return;
   }
 }  
 #  endif
@@ -1972,9 +1972,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #endif
     SendReceiveIndicatorON();
-#if defined(ESP8266) || defined(ESP32)
+#  if defined(ESP8266) || defined(ESP32)
     SyncNTP();
-#endif
+#  endif
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
 #if simpleReceiving
