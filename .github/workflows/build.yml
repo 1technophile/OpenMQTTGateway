@@ -76,6 +76,7 @@ jobs:
           - "esp32s3-dev-c1-ble"
           - "esp32c3-dev-m1-ble"
           - "airm2m_core_esp32c3"
+          - "lolin_c3_mini"
           - "thingpulse-espgateway"
           - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest

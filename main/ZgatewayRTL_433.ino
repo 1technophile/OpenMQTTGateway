@@ -214,8 +214,6 @@ void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, con
     }
   }
 }
-#  else
-void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, const char* uniqueid) {}
 #  endif
 
 void rtl_433_Callback(char* message) {
@@ -252,7 +250,10 @@ void rtl_433_Callback(char* message) {
 
   Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
-    storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
+#  ifdef ZmqttDiscovery
+    if (disc)
+      storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
+#  endif
     pub((char*)topic.c_str(), RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
     pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);

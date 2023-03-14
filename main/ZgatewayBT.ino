@@ -85,7 +85,9 @@ void BTConfig_init() {
   BTConfig.adaptiveScan = AdaptiveBLEScan;
   BTConfig.intervalActiveScan = TimeBtwActive;
   BTConfig.intervalConnect = TimeBtwConnect;
+  BTConfig.scanDuration = Scan_duration;
   BTConfig.pubOnlySensors = PublishOnlySensors;
+  BTConfig.pubRandomMACs = PublishRandomMACs;
   BTConfig.presenceEnable = HassPresence;
   BTConfig.presenceTopic = subjectHomePresence;
   BTConfig.presenceUseBeaconUuid = useBeaconUuidForPresence;
@@ -109,7 +111,9 @@ void stateBTMeasures(bool start) {
   jo["adaptivescan"] = BTConfig.adaptiveScan;
   jo["intervalacts"] = BTConfig.intervalActiveScan;
   jo["intervalcnct"] = BTConfig.intervalConnect;
+  jo["scanduration"] = BTConfig.scanDuration;
   jo["onlysensors"] = BTConfig.pubOnlySensors;
+  jo["randommacs"] = BTConfig.pubRandomMACs;
   jo["hasspresence"] = BTConfig.presenceEnable;
   jo["presenceTopic"] = BTConfig.presenceTopic;
   jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
@@ -137,17 +141,28 @@ void stateBTMeasures(bool start) {
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Attempts to connect to eligible devices or not
   Config_update(BTdata, "bleconnect", BTConfig.bleConnect);
-  // Identify AdaptiveScan deactivation to pass to continuous mode
+  // Identify AdaptiveScan deactivation to pass to continuous mode or activation to come back to default settings
   if (startup == false) {
     if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == false && BTConfig.adaptiveScan == true) {
       BTdata["interval"] = MinTimeBtwScan;
       BTdata["intervalacts"] = MinTimeBtwScan;
+      BTdata["scanduration"] = MinScanDuration;
     } else if (BTdata.containsKey("adaptivescan") && BTdata["adaptivescan"] == true && BTConfig.adaptiveScan == false) {
       BTdata["interval"] = TimeBtwRead;
       BTdata["intervalacts"] = TimeBtwActive;
+      BTdata["scanduration"] = Scan_duration;
+#  ifdef ZmqttDiscovery
+      // Remove discovered entities
+      eraseTopic("number", (char*)getUniqueId("interval", "").c_str());
+      eraseTopic("number", (char*)getUniqueId("intervalacts", "").c_str());
+#  endif
     }
   }
   Config_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
+#  ifdef ZmqttDiscovery
+  // Create discovery entities
+  btScanParametersDiscovery();
+#  endif
   // Time before before active scan
   // Scan interval set
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
@@ -157,7 +172,11 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Time before a connect set
   Config_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
+  Config_update(BTdata, "scanduration", BTConfig.scanDuration);
+  // define the duration for a scan; in milliseconds
   Config_update(BTdata, "onlysensors", BTConfig.pubOnlySensors);
+  // publish devices which randomly change their MAC addresses
+  Config_update(BTdata, "randommacs", BTConfig.pubRandomMACs);
   // Home Assistant presence message
   Config_update(BTdata, "hasspresence", BTConfig.presenceEnable);
   // Home Assistant presence message topic
@@ -198,7 +217,9 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["adaptivescan"] = BTConfig.adaptiveScan;
     jo["intervalacts"] = BTConfig.intervalActiveScan;
     jo["intervalcnct"] = BTConfig.intervalConnect;
+    jo["scanduration"] = BTConfig.scanDuration;
     jo["onlysensors"] = BTConfig.pubOnlySensors;
+    jo["randommac"] = BTConfig.pubRandomMACs;
     jo["hasspresence"] = BTConfig.presenceEnable;
     jo["presenceTopic"] = BTConfig.presenceTopic;
     jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
@@ -457,7 +478,7 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
 #    define BM2parametersCount 2
   Log.trace(F("BM2Discovery" CR));
   const char* BM2sensor[BM2parametersCount][9] = {
-      {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "volt", mac, "voltage", jsonVoltBM2, "", "", "V", stateClassMeasurement}, // We use a json definition that retrieve only data from the BM2 decoder, as this sensor also advertize volt as an iBeacon
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -639,7 +660,7 @@ void BLEscan() {
   }
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
-  BLEScanResults foundDevices = pBLEScan->start(Scan_duration / 1000, false);
+  BLEScanResults foundDevices = pBLEScan->start(BTConfig.scanDuration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
   enableCore0WDT();
@@ -719,7 +740,7 @@ void BLEconnect() {
 void stopProcessing() {
   Log.notice(F("Stop BLE processing" CR));
   ProcessLock = true;
-  delay(Scan_duration < 2000 ? Scan_duration : 2000);
+  delay(BTConfig.scanDuration < 2000 ? BTConfig.scanDuration : 2000);
 }
 
 void startProcessing() {
@@ -829,7 +850,9 @@ void setupBT() {
   BTConfig_load();
   Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
   Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
+  Log.notice(F("BLE scan duration: %d" CR), BTConfig.scanDuration);
   Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  Log.notice(F("Publishing random MAC devices: %T" CR), BTConfig.pubRandomMACs);
   Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
   Log.notice(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
@@ -900,10 +923,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
-    // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
+    // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (iBeacon, GAEN and Microsoft CDP)
     if ((overrideDiscovery || !isDiscovered(p)) &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
         p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
@@ -991,6 +1015,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     if (processBLEData) process_bledata(BLEdata);
+    if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
+      return;
+    }
     if (BLEdata.containsKey("type") && (BLEdata.containsKey("model") || BLEdata.containsKey("distance"))) { // Only display sensor data with type
       pubOled(subjectBTtoMQTT, BLEdata);
     }
@@ -1022,9 +1049,10 @@ void process_bledata(JsonObject& BLEdata) {
   int mac_type = BLEdata["mac_type"].as<int>();
   if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
       model_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
+      model_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
       model_id != TheengsDecoder::BLE_ID_NUM::GAEN) { // Broadcaster devices
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-    if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+    if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
       createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
     } else {
       createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
@@ -1033,12 +1061,16 @@ void process_bledata(JsonObject& BLEdata) {
           if (BLEdata["acts"] && BLEdata["cont"]) {
             BTConfig.BLEinterval = MinTimeBtwScan;
             BTConfig.intervalActiveScan = MinTimeBtwScan;
+            BTConfig.scanDuration = MinScanDuration;
             Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
             stateBTMeasures(false);
           }
         } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
           if (BLEdata["cont"]) {
             BTConfig.BLEinterval = MinTimeBtwScan;
+            if ((BLEdata["type"].as<string>()).compare("CTMO") == 0) {
+              BTConfig.scanDuration = MinScanDuration;
+            }
             Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
             stateBTMeasures(false);
           }
