@@ -109,6 +109,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorBH1750
 #  include "config_BH1750.h"
 #endif
+#ifdef ZsensorTEMT6000
+#  include "config_TEMT6000.h"
+#endif
 #ifdef ZsensorTSL2561
 #  include "config_TSL2561.h"
 #endif
@@ -871,6 +874,10 @@ void setup() {
 #ifdef ZsensorBH1750
   setupZsensorBH1750();
   modules.add(ZsensorBH1750);
+#endif
+#ifdef ZsensorTEMT6000
+  setupZsensorTEMT6000();
+  modules.add(ZsensorTEMT6000);
 #endif
 #ifdef ZsensorTSL2561
   setupZsensorTSL2561();
@@ -1637,6 +1644,9 @@ void loop() {
 #endif
 #ifdef ZsensorBH1750
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
+#endif
+#ifdef ZsensorTEMT6000
+      MeasureLightIntensityTEMT6000();
 #endif
 #ifdef ZsensorTSL2561
       MeasureLightIntensityTSL2561();
