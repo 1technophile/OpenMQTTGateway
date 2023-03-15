@@ -1751,6 +1751,7 @@ void stateMeasures() {
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
 #  if defined(ESP8266) || defined(ESP32)
+  SyncNTP();
   SYSdata["unixtime"] = time(nullptr);
 #  endif
   SYSdata["version"] = OMG_VERSION;
@@ -1972,9 +1973,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  endif
 #endif
     SendReceiveIndicatorON();
-#if defined(ESP8266) || defined(ESP32)
-    SyncNTP();
-#endif
+
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
 #if simpleReceiving
