@@ -765,7 +765,7 @@ void pubMqttDiscovery() {
   for (int i = 0; i < TEMT6000parametersCount; i++) {
     //trc(TEMT6000sensor[i][1]);
     createDiscovery(TEMT6000sensor[i][0],
-                    subjectTSL12561toMQTT, TEMT6000sensor[i][1], (char*)getUniqueId(TEMT6000sensor[i][1], TEMT6000sensor[i][2]).c_str(),
+                    subjectTEMT6000toMQTT, TEMT6000sensor[i][1], (char*)getUniqueId(TEMT6000sensor[i][1], TEMT6000sensor[i][2]).c_str(),
                     will_Topic, TEMT6000sensor[i][3], TEMT6000sensor[i][4],
                     TEMT6000sensor[i][5], TEMT6000sensor[i][6], TEMT6000sensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
