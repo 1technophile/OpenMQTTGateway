@@ -359,6 +359,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef will_Retain
 #  define will_Retain true
 #endif
+#ifndef sensor_Retain
+#  define sensor_Retain false
+#endif
 #ifndef will_Message
 #  define will_Message "offline"
 #endif
