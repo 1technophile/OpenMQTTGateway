@@ -40,11 +40,20 @@ extern void WebUISetup();
 
 extern void WebUILoop();
 
+typedef struct logMsg {
+  const uint8_t* buffer;
+  size_t size;
+};
+
+/*------------------- Web Constants  ----------------------*/
+
+
+
 /*------------------- Take over serial output and split to  ----------------------*/
 
-class WebSerial : public Stream {
+class SerialWeb : public Stream {
 public:
-  WebSerial(int);
+  SerialWeb(int);
   void begin();
 
 
@@ -82,6 +91,6 @@ public:
 protected:
 };
 
-extern WebSerial WebLog;
+extern SerialWeb WebLog;
 
 #endif
