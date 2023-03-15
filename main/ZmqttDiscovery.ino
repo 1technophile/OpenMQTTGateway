@@ -752,6 +752,29 @@ void pubMqttDiscovery() {
   }
 #  endif
 
+#  ifdef ZsensorTEMT6000
+#    define TEMT6000parametersCount 3
+  Log.trace(F("TEMT6000Discovery" CR));
+  char* TEMT6000sensor[TEMT6000parametersCount][8] = {
+      {"sensor", "lux", "TEMT6000", "illuminance", jsonLux, "", "", "lx"},
+      {"sensor", "ftcd", "TEMT6000", "", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "TEMT6000", "", jsonWm2, "", "", "wm²"}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  for (int i = 0; i < TEMT6000parametersCount; i++) {
+    //trc(TEMT6000sensor[i][1]);
+    createDiscovery(TEMT6000sensor[i][0],
+                    subjectTSL12561toMQTT, TEMT6000sensor[i][1], (char*)getUniqueId(TEMT6000sensor[i][1], TEMT6000sensor[i][2]).c_str(),
+                    will_Topic, TEMT6000sensor[i][3], TEMT6000sensor[i][4],
+                    TEMT6000sensor[i][5], TEMT6000sensor[i][6], TEMT6000sensor[i][7],
+                    0, Gateway_AnnouncementMsg, will_Message, true, "",
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                    stateClassNone //State Class
+    );
+  }
+#  endif
+
 #  ifdef ZsensorTSL2561
 #    define TSL2561parametersCount 3
   Log.trace(F("TSL2561Discovery" CR));
