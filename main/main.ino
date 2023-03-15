@@ -696,8 +696,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 #ifdef ESP32
-void setESP32WifiPorotocolTxPower()
-{
+void setESP32WifiPorotocolTxPower() {
   //Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
   //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
   //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
@@ -707,29 +706,28 @@ void setESP32WifiPorotocolTxPower()
   }
 #  endif
 
-	uint8_t getprotocol;
+  uint8_t getprotocol;
   esp_err_t err;
-	err = esp_wifi_get_protocol(WIFI_IF_STA, &getprotocol);
+  err = esp_wifi_get_protocol(WIFI_IF_STA, &getprotocol);
 
-	if (err != ESP_OK) {
-		Log.notice(F("Could not get protocol!" CR));
-	}
-	if (getprotocol & WIFI_PROTOCOL_11N) {
-		Log.notice(F("WiFi_Protocol_11n" CR));
-	}
-	if (getprotocol & WIFI_PROTOCOL_11G) {
-		Log.notice(F("WiFi_Protocol_11g" CR));
-	}
-	if (getprotocol & WIFI_PROTOCOL_11B) {
-		Log.notice(F("WiFi_Protocol_11b" CR));
-	}
+  if (err != ESP_OK) {
+    Log.notice(F("Could not get protocol!" CR));
+  }
+  if (getprotocol & WIFI_PROTOCOL_11N) {
+    Log.notice(F("WiFi_Protocol_11n" CR));
+  }
+  if (getprotocol & WIFI_PROTOCOL_11G) {
+    Log.notice(F("WiFi_Protocol_11g" CR));
+  }
+  if (getprotocol & WIFI_PROTOCOL_11B) {
+    Log.notice(F("WiFi_Protocol_11b" CR));
+  }
 
 #  ifdef WifiPower
   Log.notice(F("Requested WiFi power level: %i" CR), WifiPower);
   WiFi.setTxPower(WifiPower);
 #  endif
   Log.notice(F("Operating WiFi power level: %i" CR), WiFi.getTxPower());
-
 }
 #endif
 
