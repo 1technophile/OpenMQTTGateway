@@ -93,4 +93,7 @@ protected:
 
 extern SerialWeb WebLog;
 
+/*------------------- Take over serial output and split to  ----------------------*/
+
+
 #endif

@@ -30,10 +30,19 @@
 #  include <WebSerial.h>
 
 #  include "ArduinoLog.h"
+#  include "config_WebContent.h"
 #  include "config_WebUI.h"
 
 AsyncWebServer server(80);
-QueueHandle_t logQueue;
+
+/*------------------- Local functions ----------------------*/
+
+void notFound(AsyncWebServerRequest* request);
+void handleSlash(AsyncWebServerRequest* request);
+void handleCS(AsyncWebServerRequest* request);
+void handleCN(AsyncWebServerRequest* request);
+
+/*------------------- Local functions ----------------------*/
 
 //format bytes
 String formatBytes(size_t bytes) {
@@ -48,7 +57,22 @@ String formatBytes(size_t bytes) {
   }
 }
 
-/*
+bool exists(String path) {
+  bool yes = false;
+  File file = FILESYSTEM.open(path, "r");
+  if (!file.isDirectory()) {
+    yes = true;
+  }
+  file.close();
+  return yes;
+}
+
+String processer(const String& var) {
+  if (var == "_OMG_GATEWAYNAME_")
+    return F("Hello world!");
+  return String();
+}
+
 void handleSlash(AsyncWebServerRequest* request) {
   Log.trace(F("handleSlash: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
   if (request->args()) {
@@ -62,7 +86,37 @@ void handleSlash(AsyncWebServerRequest* request) {
       request->send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
     }
   } else {
-    request->send(SPIFFS, "/index.html");
+    AsyncResponseStream* response = request->beginResponseStream("text/html");
+    response->print(header_html);
+    response->print(slash_script);
+    response->print(script);
+    response->print(style);
+    response->print(slash_body);
+    response->print(footer);
+    request->send(response);
+  }
+}
+
+void handleCN(AsyncWebServerRequest* request) {
+  Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
+  if (request->args()) {
+    for (uint8_t i = 0; i < request->args(); i++) {
+      Log.trace(F("handleCN Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+    }
+    if (request->hasArg("m")) {
+      request->send(200, "application/json", stateMeasures());
+    } else {
+      // Log.trace(F("Arguments %s" CR), message);
+      request->send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
+    }
+  } else {
+    AsyncResponseStream* response = request->beginResponseStream("text/html");
+    response->print(header_html);
+    response->print(script);
+    response->print(style);
+    response->print(config_body);
+    response->print(footer);
+    request->send(response);
   }
 }
 
@@ -72,38 +126,22 @@ void handleCS(AsyncWebServerRequest* request) {
   Log.trace(F("handleCS: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
   if (request->args()) {
     for (uint8_t i = 0; i < request->args(); i++) {
-      Log.trace(F("Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+      Log.trace(F("handleCS Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
     }
 
-    Log.trace(F("logIndex: %d, c1: %s, c2: %s" CR), logIndex, request->arg("c1"), request->arg("c2"));
+    Log.trace(F("handleCS c1: %s, c2: %s" CR), request->arg("c1"), request->arg("c2"));
     String message = "";
     if (request->hasArg("c1")) {
       String c1 = request->arg("c1");
 
       String cmdTopic = String(mqtt_topic) + String(gateway_name) + "/" + c1.substring(0, c1.indexOf(' '));
       String command = c1.substring(c1.indexOf(' ') + 1);
-      Log.trace(F("inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic, command);
+      Log.trace(F("handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic, command);
       receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
       message += logIndex + '}1' + '0' + '}1' + '}1';
       request->send(200, "text/plain", message);
     }
     if (request->hasArg("c2")) {
-      if (uxQueueMessagesWaiting(logQueue)) {
-        logMsg* logMessage = nullptr;
-        xQueueReceive(logQueue, &logMessage, (TickType_t)10);
-        logIndex++;
-        message += logIndex + '}1' + '0' + '}1';
-        message += "\n";
-        // message += (char*)logMessage->buffer;
-        while (logMessage->size) {
-          message += (char)*logMessage->buffer++;
-          logMessage->size--;
-        }
-        message += '}1';
-        Log.trace(F("Web Message: '%s'" CR), message);
-        request->send(200, "text/plain", message);
-        free(logMessage);
-      }
     }
 
     // Log.trace(F("Arguments %s" CR), message);
@@ -111,10 +149,26 @@ void handleCS(AsyncWebServerRequest* request) {
     request->send(200, "text/plain", message);
   } else {
     request->send(SPIFFS, "/cs.html");
-
   }
 }
-*/
+
+void notFound(AsyncWebServerRequest* request) {
+  //  if (!handleFileRead(request)) {
+  //  }
+  Log.trace(F("notFound: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
+  String path = request->url();
+  if (!exists(path)) {
+    if (exists(path + ".html")) {
+      path += ".html";
+    } else {
+      request->send(404, "text/plain", "Not found");
+      return;
+    }
+  }
+  Log.trace(F("notFound: actual uri: %s, args: %d, method: %d" CR), path, request->args(), request->method());
+  request->send(SPIFFS, path);
+  // request->send(404, "text/plain", "Not found");
+}
 
 void recvMsg(uint8_t* data, size_t len) {
   WebSerial.println("Received Data...");
@@ -125,17 +179,8 @@ void recvMsg(uint8_t* data, size_t len) {
   WebSerial.println(d);
 }
 
-/*
-void notFound(AsyncWebServerRequest* request) {
-  //  if (!handleFileRead(request)) {
-  //  }
-  request->send(404, "text/plain", "Not found");
-}
-*/
-
 void WebUISetup() {
   Log.trace(F("ZwebUI setup start" CR));
-  logQueue = xQueueCreate(5, sizeof(logMsg*));
 
   FILESYSTEM.begin();
   {
@@ -149,11 +194,12 @@ void WebUISetup() {
     }
   }
 
-  //  server.on("/cs", HTTP_GET, handleCS);
+  server.on("/cs", HTTP_GET, handleCS);
+  server.on("/cn", HTTP_GET, handleCN);
 
-  //  server.on("/", HTTP_GET, handleSlash);
+  server.on("/", HTTP_GET, handleSlash);
 
-  //  server.onNotFound(notFound);
+  server.onNotFound(notFound);
 
   WebSerial.begin(&server);
   WebSerial.msgCallback(recvMsg);
@@ -168,6 +214,8 @@ void WebUISetup() {
 
 void WebUILoop() {
 }
+
+/*------------------- Serial logging interceptor ----------------------*/
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
@@ -232,10 +280,6 @@ void addLog(const uint8_t* buffer, size_t size) {
       line[lineIndex++] = char(buffer[i]);
     }
   }
-  // char temp[200];
-  // d.toCharArray(temp, 200);
-  // Serial.write(temp);
-  // WebSerial.println(d);
 }
 
 #endif
