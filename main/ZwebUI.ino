@@ -41,6 +41,16 @@ void notFound(AsyncWebServerRequest* request);
 void handleSlash(AsyncWebServerRequest* request);
 void handleCS(AsyncWebServerRequest* request);
 void handleCN(AsyncWebServerRequest* request);
+void handleIN(AsyncWebServerRequest* request);
+void handleRT(AsyncWebServerRequest* request);
+void handleCL(AsyncWebServerRequest* request);
+void handleTK(AsyncWebServerRequest* request);
+
+/*------------------- External functions ----------------------*/
+
+esp_err_t nvs_flash_erase(void);
+extern String stateMeasures(); // Send a status message
+extern void eraseAndRestart();
 
 /*------------------- Local functions ----------------------*/
 
@@ -67,12 +77,6 @@ bool exists(String path) {
   return yes;
 }
 
-String processer(const String& var) {
-  if (var == "_OMG_GATEWAYNAME_")
-    return F("Hello world!");
-  return String();
-}
-
 void handleSlash(AsyncWebServerRequest* request) {
   Log.trace(F("handleSlash: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
   if (request->args()) {
@@ -80,19 +84,29 @@ void handleSlash(AsyncWebServerRequest* request) {
       Log.trace(F("Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
     }
     if (request->hasArg("m")) {
-      request->send(200, "application/json", stateMeasures());
+      request->send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
+    } else if (request->hasArg("rst")) {
+      Log.warning(F("[WebUI] Restart" CR));
+#  if defined(ESP8266)
+      ESP.reset();
+#  else
+      ESP.restart();
+#  endif
     } else {
       // Log.trace(F("Arguments %s" CR), message);
       request->send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
     }
   } else {
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
     AsyncResponseStream* response = request->beginResponseStream("text/html");
-    response->print(header_html);
+    response->printf(header_html, (String(gateway_name) + " - Main Menu").c_str());
     response->print(slash_script);
     response->print(script);
     response->print(style);
-    response->print(slash_body);
-    response->print(footer);
+    response->printf(slash_body, jsonChar, gateway_name);
+    response->printf(footer, OMG_VERSION);
     request->send(response);
   }
 }
@@ -103,19 +117,120 @@ void handleCN(AsyncWebServerRequest* request) {
     for (uint8_t i = 0; i < request->args(); i++) {
       Log.trace(F("handleCN Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
     }
-    if (request->hasArg("m")) {
-      request->send(200, "application/json", stateMeasures());
-    } else {
-      // Log.trace(F("Arguments %s" CR), message);
-      request->send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
-    }
   } else {
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
     AsyncResponseStream* response = request->beginResponseStream("text/html");
-    response->print(header_html);
+    response->printf(header_html, (String(gateway_name) + " - Configuration").c_str());
     response->print(script);
     response->print(style);
-    response->print(config_body);
-    response->print(footer);
+    response->printf(config_body, jsonChar, gateway_name);
+    response->printf(footer, OMG_VERSION);
+    request->send(response);
+  }
+}
+
+void handleRT(AsyncWebServerRequest* request) {
+  Log.trace(F("handleRT: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
+  if (request->args()) {
+    for (uint8_t i = 0; i < request->args(); i++) {
+      Log.trace(F("handleRT Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+    }
+  }
+  if (request->hasArg("non")) {
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    Log.warning(F("[WebUI] Erase and Restart" CR));
+    AsyncResponseStream* response = request->beginResponseStream("text/html");
+    response->printf(header_html, (String(gateway_name) + " - Reset").c_str());
+    response->print(script);
+    response->print(style);
+    response->printf(reset_body, jsonChar, gateway_name);
+    response->printf(footer, OMG_VERSION);
+    request->send(response);
+
+    nvs_flash_erase();
+    ESP.restart();
+  } else {
+    handleCN(request);
+  }
+}
+
+void handleCL(AsyncWebServerRequest* request) {
+  Log.trace(F("handleCL: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
+  if (request->args()) {
+    for (uint8_t i = 0; i < request->args(); i++) {
+      Log.trace(F("handleCL Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+    }
+  }
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  AsyncResponseStream* response = request->beginResponseStream("text/html");
+  response->printf(header_html, (String(gateway_name) + " - Cloud").c_str());
+  response->print(script);
+  response->print(style);
+#  ifdef ESP32_ETHERNET
+  response->printf(cloud_body, jsonChar, gateway_name, " cloud checked", "https://cloudbeta.openmqttgateway.com/token/start", (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/tk").c_str(), gateway_name);
+#  else
+  response->printf(cloud_body, jsonChar, gateway_name, " cloud checked", " Not", "https://cloudbeta.openmqttgateway.com/token/start", (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/tk?").c_str(), gateway_name);
+#  endif
+  response->printf(footer, OMG_VERSION);
+  request->send(response);
+}
+
+void handleTK(AsyncWebServerRequest* request) {
+  Log.trace(F("handleTK: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
+  if (request->args()) {
+    for (uint8_t i = 0; i < request->args(); i++) {
+      Log.trace(F("handleTK Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+    }
+  }
+
+  if (request->hasArg("c1")) {
+    String c1 = request->arg("c1");
+
+    String cmdTopic = String(mqtt_topic) + String(gateway_name) + "/" + c1.substring(0, c1.indexOf(' '));
+    String command = c1.substring(c1.indexOf(' ') + 1);
+    Log.trace(F("handleTK inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic, command);
+    receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
+    
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    AsyncResponseStream* response = request->beginResponseStream("text/html");
+    response->printf(header_html, (String(gateway_name) + " - Cloud").c_str());
+    response->print(script);
+    response->print(style);
+    response->printf(token_body, jsonChar, gateway_name);
+
+    response->printf(footer, OMG_VERSION);
+    request->send(response);
+  }
+}
+
+void handleIN(AsyncWebServerRequest* request) {
+  Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
+  if (request->args()) {
+    for (uint8_t i = 0; i < request->args(); i++) {
+      Log.trace(F("handleIN Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+    }
+  } else {
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+    AsyncResponseStream* response = request->beginResponseStream("text/html");
+    response->printf(header_html, (String(gateway_name) + " - Information").c_str());
+    String SYStoMQTT = stateMeasures(); // .replace(",\"", "}1");  // .replace("\":", "=2")
+    SYStoMQTT.replace(",\"", "}1");
+    SYStoMQTT.replace("\":", "}2");
+    SYStoMQTT.replace("{\"", "");
+    SYStoMQTT.replace("\"", "\\\"");
+    response->printf(information_script, SYStoMQTT.c_str());
+
+    response->print(script);
+    response->print(style);
+    response->printf(information_body, jsonChar, gateway_name);
+    response->printf(footer, OMG_VERSION);
     request->send(response);
   }
 }
@@ -194,10 +309,16 @@ void WebUISetup() {
     }
   }
 
-  server.on("/cs", HTTP_GET, handleCS);
-  server.on("/cn", HTTP_GET, handleCN);
+  server.on("/", HTTP_GET, handleSlash); // Main Menu
+  server.on("/cs", HTTP_GET, handleCS); // Console
 
-  server.on("/", HTTP_GET, handleSlash);
+  server.on("/in", HTTP_GET, handleIN); // Information
+
+  server.on("/cn", HTTP_GET, handleCN); // Configuration
+  server.on("/cl", HTTP_GET, handleCL); // Cloud configuration
+  server.on("/tk", HTTP_GET, handleTK); // Store Device Token
+
+  server.on("/rt", HTTP_GET, handleRT); // Reset configuration
 
   server.onNotFound(notFound);
 
