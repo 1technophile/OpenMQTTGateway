@@ -695,7 +695,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   free(p);
 }
 
-#ifdef ESP32
+#if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
 void setESP32WifiPorotocolTxPower() {
   //Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
   //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
@@ -1008,7 +1008,7 @@ bool wifi_reconnect_bypass() {
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
     WiFi.begin();
-#  ifdef ESP32
+#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
     setESP32WifiPorotocolTxPower();
 #  endif
     delay(1000);
@@ -2258,7 +2258,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
       Log.warning(F("Attempting connection to new AP" CR));
       WiFi.begin((const char*)SYSdata["wifi_ssid"], (const char*)SYSdata["wifi_pass"]);
-#  ifdef ESP32
+#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
       setESP32WifiPorotocolTxPower();
 #  endif
       WiFi.waitForConnectResult();
@@ -2267,7 +2267,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         Log.error(F("Failed to connect to new AP; falling back" CR));
         WiFi.disconnect(true);
         WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
-#  ifdef ESP32
+#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
         setESP32WifiPorotocolTxPower();
 #  endif
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
