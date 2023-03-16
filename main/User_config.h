@@ -605,6 +605,7 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
