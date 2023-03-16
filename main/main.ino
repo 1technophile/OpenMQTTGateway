@@ -700,8 +700,14 @@ void setESP32WifiPorotocolTxPower() {
   //Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
   //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
   //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
-#  ifdef WifiGMode
+# if WifiGMode == true
   if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G) != ESP_OK) {
+    Log.error(F("Failed to change WifiMode." CR));
+  }
+#  endif
+
+# if WifiGMode == false
+  if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N) != ESP_OK) {
     Log.error(F("Failed to change WifiMode." CR));
   }
 #  endif

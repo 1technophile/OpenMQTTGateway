@@ -620,6 +620,7 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 //Certain sensors are sensitive to ESP32 Wifi which can cause interference with their normal operation
 //For example it can cause false triggers on a PIR HC-SR501
 //It is reccomended to change Wifi BAND to G and reduce tx power level to 11dBm
+//Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined false to get Band N back.
 #ifdef ESP32
 #  ifndef WifiGMode
 //#    define WifiGMode                 true
