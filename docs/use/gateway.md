@@ -122,6 +122,9 @@ mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/MQTTtoSYS/firmware_upd
   "version": "v1.2.0"
 }'
 ```
+
+OpenMQTTGateway checks at start and every hour if an update is available.
+
 Alternatively if you want to choose the update URL you can use the command below (ESP32 and ESP8266):
 
 Without certificate, in this case we will use the root certificate defined in User_config.h

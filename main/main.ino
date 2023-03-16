@@ -45,6 +45,10 @@ ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 //Time used to wait for an interval before checking system measures
 unsigned long timer_sys_measures = 0;
+
+// Time used to wait before system checkings
+unsigned long timer_sys_checks = 0;
+
 #  define ARDUINOJSON_USE_LONG_LONG     1
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
 #endif
@@ -1544,10 +1548,6 @@ void loop() {
       connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
-#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
-        if (!timer_sys_measures) // Only check for updates at start for ESP32
-          checkForUpdates();
-#  endif
         timer_sys_measures = millis();
         stateMeasures();
 #  ifdef ZgatewayBT
@@ -1559,6 +1559,12 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+      }
+      if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+        checkForUpdates();
+#  endif
+        timer_sys_checks = millis();
       }
 #endif
 #ifdef ZsensorBME280
@@ -1998,6 +2004,7 @@ String latestVersion;
  * Only available for ESP32
  */
 bool checkForUpdates() {
+  Log.notice(F("Update check"));
   HTTPClient http;
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
