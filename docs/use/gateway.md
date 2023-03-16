@@ -111,6 +111,7 @@ mosquitto_pub -t "home/OpenMQTTGateway_ESP32_BLE/commands/MQTTtoSYS/firmware_upd
 }'
 ```
 This would download the latest version firmware binary from Github and install it.
+It can be used with version 1.5.0 and above.
 
 Note that this update option is also autodiscovered through Home Assistant convention, you can update directly from the device page with 2 clicks.
 
