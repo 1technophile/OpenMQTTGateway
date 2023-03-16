@@ -2027,6 +2027,8 @@ bool checkForUpdates() {
   if (jsondata.containsKey("latest_version")) {
     jsondata["installed_version"] = OMG_VERSION;
     jsondata["entity_picture"] = ENTITY_PICTURE;
+    if (!jsondata.containsKey("release_summary"))
+      jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
     pub(subjectSYStoMQTT, jsondata);
     Log.trace(F("Update file found on server" CR));
@@ -2065,6 +2067,9 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  endif
 #  ifdef ESP32
       } else if (strcmp(version, "latest") == 0) {
+#    if defined(ZgatewayBT)
+        stopProcessing();
+#    endif
         if (!checkForUpdates())
           return;
         systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
@@ -2087,10 +2092,10 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       Log.warning(F("Starting firmware update" CR));
       SendReceiveIndicatorON();
       ErrorIndicatorON();
-
-#  if defined(ZgatewayBT) && defined(ESP32)
-      stopProcessing();
-#  endif
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject jsondata = jsonBuffer.to<JsonObject>();
+      jsondata["release_summary"] = "Update in progress ...";
+      pub(subjectSYStoMQTT, jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert) {
@@ -2169,6 +2174,9 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
         case HTTP_UPDATE_OK:
           Log.notice(F("HTTP_UPDATE_OK" CR));
+          jsondata["release_summary"] = "Update success !";
+          jsondata["installed_version"] = latestVersion;
+          pub(subjectSYStoMQTT, jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();
