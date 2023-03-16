@@ -38,7 +38,7 @@ The Bluetooth and the RTL_433 gateway will create automatically devices and enti
 The OpenMQTTGateway will also be available as a device to monitor its parameters and control it. The sensors (DHT for example) and actuators (relays) are attached to the gateway.
 
 30 minutes after its activation the auto discovery will be automaticaly deactivated, you can reactivate it from the gateway controls.
-Some devices may require a button push to trigger a message and generate the auto discovery.
+Some devices may require a button push or motion/contact event to trigger a message and generate the auto discovery.
 :::
 
 ## RTL_433 auto discovery specificity
