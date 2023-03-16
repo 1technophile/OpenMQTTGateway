@@ -27,7 +27,7 @@
 #  include <AsyncTCP.h>
 #  include <ESPAsyncWebServer.h>
 #  include <SPIFFS.h>
-#  include <WebSerial.h>
+// #  include <WebSerial.h>
 
 #  include "ArduinoLog.h"
 #  include "config_WebContent.h"
@@ -194,7 +194,7 @@ void handleTK(AsyncWebServerRequest* request) {
     String command = c1.substring(c1.indexOf(' ') + 1);
     Log.trace(F("handleTK inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic, command);
     receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
-    
+
     char jsonChar[100];
     serializeJson(modules, jsonChar, measureJson(modules) + 1);
     AsyncResponseStream* response = request->beginResponseStream("text/html");
@@ -286,12 +286,12 @@ void notFound(AsyncWebServerRequest* request) {
 }
 
 void recvMsg(uint8_t* data, size_t len) {
-  WebSerial.println("Received Data...");
+  // WebSerial.println("Received Data...");
   String d = "";
   for (int i = 0; i < len; i++) {
     d += char(data[i]);
   }
-  WebSerial.println(d);
+  // WebSerial.println(d);
 }
 
 void WebUISetup() {
@@ -322,8 +322,8 @@ void WebUISetup() {
 
   server.onNotFound(notFound);
 
-  WebSerial.begin(&server);
-  WebSerial.msgCallback(recvMsg);
+  // WebSerial.begin(&server);
+  // WebSerial.msgCallback(recvMsg);
 
   server.begin();
 
@@ -395,7 +395,7 @@ void addLog(const uint8_t* buffer, size_t size) {
     if (buffer[i] == 10 || lineIndex > lineBuffer - 1) {
       line[lineIndex++] = char(0);
       // Serial.write(line);
-      WebSerial.println(line);
+      // WebSerial.println(line);
       lineIndex = 0;
     } else {
       line[lineIndex++] = char(buffer[i]);
