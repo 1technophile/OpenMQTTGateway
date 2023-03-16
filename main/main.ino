@@ -200,6 +200,7 @@ int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ZmqttDiscovery
 bool disc = true; // Auto discovery with Home Assistant convention
+unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 #endif
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
@@ -1537,6 +1538,9 @@ void loop() {
       bool justReconnected = !connected;
 
 #ifdef ZmqttDiscovery
+      // Deactivate autodiscovery after DiscoveryAutoOffTimer
+      if (disc && (now > lastDiscovery + DiscoveryAutoOffTimer))
+        disc = false;
       // at first connection we publish the discovery payloads
       // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
       bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
@@ -2363,6 +2367,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifdef ZmqttDiscovery
     if (SYSdata.containsKey("discovery")) {
       if (SYSdata["discovery"].is<bool>()) {
+        if (SYSdata["discovery"] == true && disc == false)
+          lastDiscovery = millis();
         disc = SYSdata["discovery"];
         stateMeasures();
         if (disc)
