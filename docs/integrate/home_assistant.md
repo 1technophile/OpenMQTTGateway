@@ -13,7 +13,7 @@ From Home Assistant site
 
 On OpenMQTTGateway the Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation. Here are a few tips for activating discovery on Home Assistant, but for detailed configuration please refer to the Home Assistant website. 
 
-Enable discovery on your MQTT integration in HASS.
+Enable discovery on your MQTT integration in HASS (activated per default).
 
 ![](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
 
@@ -36,6 +36,9 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 ::: info
 The Bluetooth and the RTL_433 gateway will create automatically devices and entities, the RF gateway will create DeviceTrigger.
 The OpenMQTTGateway will also be available as a device to monitor its parameters and control it. The sensors (DHT for example) and actuators (relays) are attached to the gateway.
+
+30 minutes after its activation the auto discovery will be automaticaly deactivated, you can reactivate it from the gateway controls.
+Some devices may require a button push to trigger a message and generate the auto discovery.
 :::
 
 ## RTL_433 auto discovery specificity
