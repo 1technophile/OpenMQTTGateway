@@ -36,6 +36,10 @@
 #  define DEVICETOKEN ""
 #endif
 
+#ifndef CLOUDGATEWAY
+#  define CLOUDGATEWAY "https://cloudbeta.openmqttgateway.com/"
+#endif
+
 /*------------------- End of Compiler Directives ----------------------*/
 
 extern void setupCloud();

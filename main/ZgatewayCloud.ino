@@ -211,12 +211,6 @@ void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decodin
       if (tempToken.length() == 86) {
         deviceToken = tempToken;
         // Log.notice(F("Set deviceToken: %d" CR), deviceToken);
-        CloudConfig_save();
-        if (cloudEnabled) {
-          cloudConnect();
-        } else {
-          cloudDisconnect();
-        }
         success = true;
       } else {
         success = false;
@@ -225,13 +219,15 @@ void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decodin
     if (CLOUDdata.containsKey("cloudEnabled")) {
       cloudEnabled = CLOUDdata["cloudEnabled"].as<bool>();
       Log.notice(F("Set cloudEnabled: %d" CR), cloudEnabled);
+      success = true;
+    }
+    if (success) {    // If cloud enabled or device token updated
+      CloudConfig_save();
       if (cloudEnabled) {
         cloudConnect();
       } else {
         cloudDisconnect();
       }
-      CloudConfig_save();
-      success = true;
     }
     if (CLOUDdata.containsKey("status")) {
       success = true;

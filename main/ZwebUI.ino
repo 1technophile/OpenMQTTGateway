@@ -33,6 +33,10 @@
 #  include "config_WebContent.h"
 #  include "config_WebUI.h"
 
+#  if defined(ZgatewayCloud)
+#    include "config_Cloud.h"
+#  endif
+
 AsyncWebServer server(80);
 
 /*------------------- Local functions ----------------------*/
@@ -157,6 +161,7 @@ void handleRT(AsyncWebServerRequest* request) {
   }
 }
 
+#  if defined(ZgatewayCloud)
 void handleCL(AsyncWebServerRequest* request) {
   Log.trace(F("handleCL: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
   if (request->args()) {
@@ -170,11 +175,11 @@ void handleCL(AsyncWebServerRequest* request) {
   response->printf(header_html, (String(gateway_name) + " - Cloud").c_str());
   response->print(script);
   response->print(style);
-#  ifdef ESP32_ETHERNET
-  response->printf(cloud_body, jsonChar, gateway_name, " cloud checked", "https://cloudbeta.openmqttgateway.com/token/start", (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/tk").c_str(), gateway_name);
-#  else
-  response->printf(cloud_body, jsonChar, gateway_name, " cloud checked", " Not", "https://cloudbeta.openmqttgateway.com/token/start", (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/tk?").c_str(), gateway_name);
-#  endif
+#    ifdef ESP32_ETHERNET
+  response->printf(cloud_body, jsonChar, gateway_name, " cloud checked", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name);
+#    else
+  response->printf(cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name);
+#    endif
   response->printf(footer, OMG_VERSION);
   request->send(response);
 }
@@ -187,12 +192,12 @@ void handleTK(AsyncWebServerRequest* request) {
     }
   }
 
-  if (request->hasArg("c1")) {
-    String c1 = request->arg("c1");
+  if (request->hasArg("deviceToken")) {
+    String deviceToken = request->arg("deviceToken");
 
-    String cmdTopic = String(mqtt_topic) + String(gateway_name) + "/" + c1.substring(0, c1.indexOf(' '));
-    String command = c1.substring(c1.indexOf(' ') + 1);
-    Log.trace(F("handleTK inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic, command);
+    String cmdTopic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoCLOUDset);
+    String command = "{ \"cloudEnabled\": true, \"deviceToken\": \"" + deviceToken + "\" }";
+    Log.trace(F("handleTK inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
     receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
 
     char jsonChar[100];
@@ -207,6 +212,8 @@ void handleTK(AsyncWebServerRequest* request) {
     request->send(response);
   }
 }
+
+#  endif
 
 void handleIN(AsyncWebServerRequest* request) {
   Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
@@ -315,8 +322,10 @@ void WebUISetup() {
   server.on("/in", HTTP_GET, handleIN); // Information
 
   server.on("/cn", HTTP_GET, handleCN); // Configuration
+#  if defined(ZgatewayCloud)
   server.on("/cl", HTTP_GET, handleCL); // Cloud configuration
-  server.on("/tk", HTTP_GET, handleTK); // Store Device Token
+  server.on("/tk", HTTP_POST, handleTK); // Store Device Token
+#  endif
 
   server.on("/rt", HTTP_GET, handleRT); // Reset configuration
 
