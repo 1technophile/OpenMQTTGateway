@@ -563,8 +563,10 @@ static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
-    if (xQueueSend(BLEQueue, &advertisedDevice, 0) != pdTRUE) {
+    BLEAdvertisedDevice* ad = new BLEAdvertisedDevice(*advertisedDevice);
+    if (xQueueSend(BLEQueue, &ad, 0) != pdTRUE) {
       Log.error(F("BLEQueue full" CR));
+      delete (ad);
     }
   }
 };
@@ -597,6 +599,7 @@ void procBLETask(void* pvParameters) {
 
       if (BTConfig.filterConnectable && device->connect) {
         Log.notice(F("Filtered connectable device" CR));
+        delete (advertisedDevice);
         continue;
       }
 
@@ -636,6 +639,7 @@ void procBLETask(void* pvParameters) {
         Log.trace(F("Filtered MAC device" CR));
       }
     }
+    delete (advertisedDevice);
   }
 }
 
