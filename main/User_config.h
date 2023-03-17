@@ -387,7 +387,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define simpleReceiving true //define false if you don't want to use old way reception analysis
 #endif
 #ifndef message_UTCtime
-#  define message_UTCTime false //define true if you want messages to be timestamped in ISO8601 UTC format (e.g.: "UTCtime"="2023-12-26T19:10:20Z")
+#  define message_UTCtime false //define true if you want messages to be timestamped in ISO8601 UTC format (e.g.: "UTCtime"="2023-12-26T19:10:20Z")
 #endif
 #ifndef message_unixtime
 #  define message_unixtime false //define true if you want messages to have an unix timestamp (e.g.: "unixtime"=1679015107)
