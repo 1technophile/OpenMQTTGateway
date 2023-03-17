@@ -593,10 +593,10 @@ void procBLETask(void* pvParameters) {
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
 #  if defined(ESP8266) || defined(ESP32)
-#    if message_UTCtime == true
+#    if message_UTCtimestamp == true
       BLEdata["UTCtime"] = UTCtimestamp();
 #    endif
-#    if message_unixtime == true
+#    if message_unixtimestamp == true
       BLEdata["unixtime"] = unixtimestamp();
 #    endif
 #  endif
