@@ -46,7 +46,7 @@ extern void setupCloud();
 extern void CloudLoop();
 extern void pubOmgCloud(const char*, const char*, bool);
 extern void MQTTtoCLOUD(char*, JsonObject&);
-extern void stateCLOUDStatus();
+extern String stateCLOUDStatus();
 
 bool cloudActive;
 

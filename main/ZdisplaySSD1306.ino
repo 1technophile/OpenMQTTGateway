@@ -102,7 +102,10 @@ void loopSSD1306() {
       if (!Oled.displayPage(message)) {
         Log.warning(F("[ssd1306] displayPage failed: %s" CR), message->title);
       }
-      free(message);
+      if (currentOledMessage) {
+        free(currentOledMessage);
+      }
+      currentOledMessage = message;
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       logoDisplayed = false;
     }
@@ -995,7 +998,7 @@ void OledSerial::drawLogo(int xshift, int yshift) {
   }
 }
 
-void stateSSD1306Display() {
+String stateSSD1306Display() {
   //Publish display state
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
@@ -1021,6 +1024,9 @@ void stateSSD1306Display() {
   } else {
     Oled.display->resetOrientation();
   }
+  String output;
+  serializeJson(DISPLAYdata, output);
+  return output;
 }
 
 #endif

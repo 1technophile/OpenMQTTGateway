@@ -37,6 +37,10 @@
 #    include "config_Cloud.h"
 #  endif
 
+#  if defined(ZdisplaySSD1306)
+#    include "config_SSD1306.h"
+#  endif
+
 AsyncWebServer server(80);
 
 /*------------------- Local functions ----------------------*/
@@ -88,8 +92,12 @@ void handleSlash(AsyncWebServerRequest* request) {
       Log.trace(F("Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
     }
     if (request->hasArg("m")) {
+#  if defined(ZdisplaySSD1306)
+      request->send(200, "application/json", "{t}{s}<b>" + String(currentOledMessage->title) + "</b>{e}{s}" + String(currentOledMessage->line1) + "{e}{s}" + String(currentOledMessage->line2) + "{e}{s}" + String(currentOledMessage->line3) + "{e}{s}" + String(currentOledMessage->line4) + "{e}</table>");
+#  else
       request->send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
-    } else if (request->hasArg("rst")) {
+#  endif
+    } else if (request->hasArg("rst")) { // TODO: This should redirect to the RST page
       Log.warning(F("[WebUI] Restart" CR));
 #  if defined(ESP8266)
       ESP.reset();
@@ -227,12 +235,25 @@ void handleIN(AsyncWebServerRequest* request) {
 
     AsyncResponseStream* response = request->beginResponseStream("text/html");
     response->printf(header_html, (String(gateway_name) + " - Information").c_str());
-    String SYStoMQTT = stateMeasures(); // .replace(",\"", "}1");  // .replace("\":", "=2")
-    SYStoMQTT.replace(",\"", "}1");
-    SYStoMQTT.replace("\":", "}2");
-    SYStoMQTT.replace("{\"", "");
-    SYStoMQTT.replace("\"", "\\\"");
-    response->printf(information_script, SYStoMQTT.c_str());
+
+    String informationDisplay = stateMeasures(); // .replace(",\"", "}1");  // .replace("\":", "=2")
+
+    // }1 json-oled }2 true } }1 Cloud }2 cloudEnabled}2true}1c
+#  if defined(ZdisplaySSD1306)
+    informationDisplay += "1SSD1306}2}1"; // }1 the bracket is not needed as the previous message ends with }
+    informationDisplay += stateSSD1306Display();
+#  endif
+#  if defined(ZgatewayCloud)
+    informationDisplay += "1Cloud}2}1";
+    informationDisplay += stateCLOUDStatus();
+#  endif
+
+    informationDisplay += "1}2";
+    informationDisplay.replace(",\"", "}1");
+    informationDisplay.replace("\":", "}2");
+    informationDisplay.replace("{\"", "");
+    informationDisplay.replace("\"", "\\\"");
+    response->printf(information_script, informationDisplay.c_str());
 
     response->print(script);
     response->print(style);

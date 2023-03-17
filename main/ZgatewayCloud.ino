@@ -221,7 +221,7 @@ void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decodin
       Log.notice(F("Set cloudEnabled: %d" CR), cloudEnabled);
       success = true;
     }
-    if (success) {    // If cloud enabled or device token updated
+    if (success) { // If cloud enabled or device token updated
       CloudConfig_save();
       if (cloudEnabled) {
         cloudConnect();
@@ -272,7 +272,7 @@ void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decodin
   }
 }
 
-void stateCLOUDStatus() {
+String stateCLOUDStatus() {
   //Publish display state
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject CLOUDdata = jsonBuffer.to<JsonObject>();
@@ -281,6 +281,9 @@ void stateCLOUDStatus() {
   CLOUDdata["cloudState"] = cloud.state();
   pub(subjectCLOUDtoMQTT, CLOUDdata);
   // apply
+  String output;
+  serializeJson(CLOUDdata, output);
+  return output;
 }
 
 void CloudLoop() {
