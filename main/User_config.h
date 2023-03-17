@@ -386,6 +386,12 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef simpleReceiving
 #  define simpleReceiving true //define false if you don't want to use old way reception analysis
 #endif
+#ifndef message_Time
+#  define message_Time false //define true if you want messages to be timestamped in ISO8601 UTC format (e.g.: "time"="2023-12-26T19:10:20Z")
+#endif
+#ifndef message_UnixTime
+#  define message_UnixTime false //define true if you want messages to have an unix timestamp (e.g.: "unixtime"=1679015107)
+#endif
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
 #ifndef ota_hostname
