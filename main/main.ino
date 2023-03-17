@@ -1825,10 +1825,10 @@ void stateMeasures() {
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
 #  if defined(ESP8266) || defined(ESP32)
-#    if message_UTCtime == true
+#    if message_UTCtimestamp == true
   SYSdata["UTCtime"] = UTCtimestamp();
 #    endif
-#    if message_unixtime == true
+#    if message_unixtimestamp == true
   SYSdata["unixtime"] = unixtimestamp();
 #    endif
 #  endif
