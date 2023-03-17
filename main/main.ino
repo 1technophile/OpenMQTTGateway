@@ -1614,6 +1614,9 @@ void loop() {
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
         checkForUpdates();
 #  endif
+#  if defined(ESP8266) || defined(ESP32)
+        syncNTP();
+#  endif
         timer_sys_checks = millis();
       }
 #endif
@@ -1781,8 +1784,9 @@ float intTemperatureRead() {
   return temp_c;
 }
 #endif
+
 #if defined(ESP8266) || defined(ESP32)
-void SyncNTP() {
+void syncNTP() {
   configTime(0, 0, NTP_SERVER);
   time_t now = time(nullptr);
   uint8_t count = 0;
@@ -1800,16 +1804,35 @@ void SyncNTP() {
     return;
   }
 }
+
+int unixtimestamp() {
+  return time(nullptr);
+}
+
+String timestamp() {
+  time_t now;
+  time(&now);
+  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
+  strftime(buffer, sizeof buffer, "%FT%TZ", gmtime(&now));
+  return buffer;
+}
+
 #endif
+
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
 #  if defined(ESP8266) || defined(ESP32)
-  SyncNTP();
-  SYSdata["unixtime"] = time(nullptr);
+#    if message_Time == true
+  SYSdata["time"] = timestamp();
+#    endif
+#    if message_UnixTime == true
+  SYSdata["unixtime"] = unixtimestamp();
+#    endif
 #  endif
+
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
@@ -2198,7 +2221,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           client.disconnect();
           update_client = *(WiFiClientSecure*)eClient;
         } else {
-          SyncNTP();
+          syncNTP();
         }
 
 #  ifdef ESP32
