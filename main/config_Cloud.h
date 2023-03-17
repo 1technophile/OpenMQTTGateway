@@ -42,11 +42,17 @@
 
 /*------------------- End of Compiler Directives ----------------------*/
 
+#define CLOUD_DEVICE_TOKEN_LENGTH 86
+
 extern void setupCloud();
 extern void CloudLoop();
 extern void pubOmgCloud(const char*, const char*, bool);
 extern void MQTTtoCLOUD(char*, JsonObject&);
 extern String stateCLOUDStatus();
+extern bool isCloudEnabled();
+extern bool isCloudDeviceTokenSupplied();
+extern bool setCloudEnabled(bool);
+extern bool setCloudDeviceToken(String);
 
 bool cloudActive;
 

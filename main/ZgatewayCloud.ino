@@ -91,8 +91,8 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-void cloudConnect() {
-  if (deviceToken.length() == 86) {
+bool cloudConnect() {
+  if (deviceToken.length() == CLOUD_DEVICE_TOKEN_LENGTH) {
     cloudActive = true;
     deviceToken.substring(0, deviceToken.indexOf(':')).toCharArray(account, parameters_size);
     deviceToken.substring(deviceToken.indexOf(':') + 1, deviceToken.lastIndexOf(':')).toCharArray(device, parameters_size);
@@ -123,6 +123,7 @@ void cloudConnect() {
     Log.error(F("[ CLOUD ] Invalid devicetoken %d" CR), deviceToken.length());
     cloudActive = false;
   }
+  return cloudActive;
 }
 
 void cloudDisconnect() {
@@ -207,28 +208,19 @@ void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decodin
     Log.trace(F("MQTTtoCLOUD json set" CR));
     // properties
     if (CLOUDdata.containsKey("deviceToken")) {
-      String tempToken = CLOUDdata["deviceToken"].as<String>();
-      if (tempToken.length() == 86) {
-        deviceToken = tempToken;
-        // Log.notice(F("Set deviceToken: %d" CR), deviceToken);
-        success = true;
-      } else {
-        success = false;
-      }
+      success = setCloudDeviceToken(CLOUDdata["deviceToken"].as<String>());
     }
     if (CLOUDdata.containsKey("cloudEnabled")) {
-      cloudEnabled = CLOUDdata["cloudEnabled"].as<bool>();
-      Log.notice(F("Set cloudEnabled: %d" CR), cloudEnabled);
-      success = true;
+      success = setCloudEnabled(CLOUDdata["cloudEnabled"].as<bool>());
     }
+    /*
     if (success) { // If cloud enabled or device token updated
-      CloudConfig_save();
       if (cloudEnabled) {
         cloudConnect();
       } else {
         cloudDisconnect();
       }
-    }
+    }*/
     if (CLOUDdata.containsKey("status")) {
       success = true;
     }
@@ -277,6 +269,11 @@ String stateCLOUDStatus() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject CLOUDdata = jsonBuffer.to<JsonObject>();
   CLOUDdata["cloudEnabled"] = (bool)cloudEnabled;
+  if (deviceToken.length() == CLOUD_DEVICE_TOKEN_LENGTH) {
+    CLOUDdata["cloudDeviceToken"] = true;
+  } else {
+    CLOUDdata["cloudDeviceToken"] = false;
+  }
   CLOUDdata["cloudActive"] = (bool)cloudActive;
   CLOUDdata["cloudState"] = cloud.state();
   pub(subjectCLOUDtoMQTT, CLOUDdata);
@@ -284,6 +281,37 @@ String stateCLOUDStatus() {
   String output;
   serializeJson(CLOUDdata, output);
   return output;
+}
+
+bool setCloudEnabled(bool value) {
+  cloudEnabled = value;
+  Log.notice(F("Set cloudEnabled: %d" CR), cloudEnabled);
+  CloudConfig_save();
+  if (cloudEnabled) {
+    cloudConnect();
+  } else {
+    cloudDisconnect();
+  }
+  return true;
+}
+
+bool setCloudDeviceToken(String tempToken) {
+  if (tempToken.length() == CLOUD_DEVICE_TOKEN_LENGTH) {
+    deviceToken = tempToken;
+    CloudConfig_save();
+    // Log.notice(F("Set deviceToken: %d" CR), deviceToken);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool isCloudEnabled() {
+  return (bool)cloudEnabled;
+}
+
+bool isCloudDeviceTokenSupplied() {
+  return (deviceToken.length() == CLOUD_DEVICE_TOKEN_LENGTH);
 }
 
 void CloudLoop() {

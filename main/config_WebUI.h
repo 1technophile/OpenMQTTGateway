@@ -30,7 +30,9 @@
 
 /*------------------- Optional Compiler Directives ----------------------*/
 
-
+#ifndef WEB_TEMPLATE_BUFFER_MAX_SIZE
+#  define WEB_TEMPLATE_BUFFER_MAX_SIZE 2000
+#endif
 
 /*------------------- End of Compiler Directives ----------------------*/
 
@@ -47,8 +49,6 @@ typedef struct logMsg {
 
 /*------------------- Web Constants  ----------------------*/
 
-
-
 /*------------------- Take over serial output and split to  ----------------------*/
 
 class SerialWeb : public Stream {
@@ -56,13 +56,10 @@ public:
   SerialWeb(int);
   void begin();
 
-
-
   int available(void); // Dummy functions
   int peek(void); // Dummy functions
   int read(void); // Dummy functions
   void flush(void); // Dummy functions
-
 
   inline size_t write(uint8_t x) {
     return write(&x, 1);
@@ -94,6 +91,5 @@ protected:
 extern SerialWeb WebLog;
 
 /*------------------- Take over serial output and split to  ----------------------*/
-
 
 #endif
