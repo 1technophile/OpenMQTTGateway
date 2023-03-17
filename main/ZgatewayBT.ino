@@ -593,7 +593,12 @@ void procBLETask(void* pvParameters) {
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
 #  if defined(ESP8266) || defined(ESP32)
-      BLEdata["unixtime"] = time(nullptr);
+#    if message_Time == true
+      BLEdata["time"] = timestamp();
+#    endif
+#    if message_UnixTime == true
+      BLEdata["unixtime"] = unixtimestamp();
+#    endif
 #  endif
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
