@@ -359,14 +359,14 @@ void handleCS() {
       Log.trace(F("handleCS Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
 
-    Log.trace(F("handleCS c1: %s, c2: %s" CR), server.arg("c1"), server.arg("c2"));
+    // Log.trace(F("handleCS c1: %s, c2: %s" CR), server.arg("c1").c_str(), server.arg("c2").c_str());
     String message = "";
     if (server.hasArg("c1")) {
       String c1 = server.arg("c1");
 
       String cmdTopic = String(mqtt_topic) + String(gateway_name) + "/" + c1.substring(0, c1.indexOf(' '));
       String command = c1.substring(c1.indexOf(' ') + 1);
-      Log.trace(F("handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic, command);
+      Log.trace(F("handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
       receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
       message += logIndex + '}1' + '0' + '}1' + '}1';
       server.send(200, "text/plain", message);
