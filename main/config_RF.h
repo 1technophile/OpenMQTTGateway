@@ -80,8 +80,6 @@ struct RTL_433device {
   bool isDisc;
 };
 
-extern std::vector<RTL_433device*> RTL_433devices;
-
 const char parameters[40][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"temperature_C", "temperature", "°C", "temperature"},
