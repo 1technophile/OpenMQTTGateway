@@ -563,8 +563,10 @@ static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
-    if (xQueueSend(BLEQueue, &advertisedDevice, 0) != pdTRUE) {
+    BLEAdvertisedDevice* ad = new BLEAdvertisedDevice(*advertisedDevice);
+    if (xQueueSend(BLEQueue, &ad, 0) != pdTRUE) {
       Log.error(F("BLEQueue full" CR));
+      delete (ad);
     }
   }
 };
@@ -600,6 +602,7 @@ void procBLETask(void* pvParameters) {
 
       if (BTConfig.filterConnectable && device->connect) {
         Log.notice(F("Filtered connectable device" CR));
+        delete (advertisedDevice);
         continue;
       }
 
@@ -639,6 +642,7 @@ void procBLETask(void* pvParameters) {
         Log.trace(F("Filtered MAC device" CR));
       }
     }
+    delete (advertisedDevice);
   }
 }
 
@@ -927,11 +931,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
     BLEdevice* p = *it;
     Log.trace(F("Device mac %s" CR), p->macAdr);
     // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (iBeacon, GAEN and Microsoft CDP)
-    if ((overrideDiscovery || !isDiscovered(p)) &&
-        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
-        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
-        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
-        p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::GAEN) {
+    if (overrideDiscovery || !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
@@ -1050,10 +1050,7 @@ void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
-  if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON &&
-      model_id != TheengsDecoder::BLE_ID_NUM::MS_CDP &&
-      model_id != TheengsDecoder::BLE_ID_NUM::APPLE_CONT &&
-      model_id != TheengsDecoder::BLE_ID_NUM::GAEN) { // Broadcaster devices
+  if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON && (BLEdata["type"].as<string>()).compare("RMAC") != 0) { // Broadcaster devices, excluding random macs
     Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
     if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
       createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
@@ -1108,7 +1105,7 @@ void process_bledata(JsonObject& BLEdata) {
     }
   }
   if (!BTConfig.extDecoderEnable && model_id < 0) {
-    Log.trace(F("No device found " CR));
+    Log.trace(F("No eligible device found " CR));
   }
 }
 

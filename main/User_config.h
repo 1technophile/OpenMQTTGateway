@@ -359,6 +359,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef will_Retain
 #  define will_Retain true
 #endif
+#ifndef sensor_Retain
+#  define sensor_Retain false
+#endif
 #ifndef will_Message
 #  define will_Message "offline"
 #endif
@@ -602,6 +605,7 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
@@ -611,6 +615,20 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
+#endif
+
+/*-------------------ESP32 Wifi band and tx power ---------------------*/
+//Certain sensors are sensitive to ESP32 Wifi which can cause interference with their normal operation
+//For example it can cause false triggers on a PIR HC-SR501
+//It is reccomended to change Wifi BAND to G and reduce tx power level to 11dBm
+//Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined false to get Band N back.
+#ifdef ESP32
+#  ifndef WifiGMode
+//#    define WifiGMode                 true
+#  endif
+#  ifndef WifiPower
+//#    define WifiPower                 WIFI_POWER_11dBm
+#  endif
 #endif
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
