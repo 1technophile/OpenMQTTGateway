@@ -45,6 +45,10 @@ ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 //Time used to wait for an interval before checking system measures
 unsigned long timer_sys_measures = 0;
+
+// Time used to wait before system checkings
+unsigned long timer_sys_checks = 0;
+
 #  define ARDUINOJSON_USE_LONG_LONG     1
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
 #endif
@@ -196,6 +200,7 @@ int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 #ifdef ZmqttDiscovery
 bool disc = true; // Auto discovery with Home Assistant convention
+unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 #endif
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
@@ -1579,6 +1584,9 @@ void loop() {
       bool justReconnected = !connected;
 
 #ifdef ZmqttDiscovery
+      // Deactivate autodiscovery after DiscoveryAutoOffTimer
+      if (disc && (now > lastDiscovery + DiscoveryAutoOffTimer))
+        disc = false;
       // at first connection we publish the discovery payloads
       // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
       bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
@@ -1590,10 +1598,6 @@ void loop() {
       connected = true;
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
-#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
-        if (!timer_sys_measures) // Only check for updates at start for ESP32
-          checkForUpdates();
-#  endif
         timer_sys_measures = millis();
         stateMeasures();
 #  ifdef ZgatewayBT
@@ -1605,6 +1609,15 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+      }
+      if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+        checkForUpdates();
+#  endif
+#  if defined(ESP8266) || defined(ESP32)
+        syncNTP();
+#  endif
+        timer_sys_checks = millis();
       }
 #endif
 #ifdef ZsensorBME280
@@ -1772,11 +1785,54 @@ float intTemperatureRead() {
 }
 #endif
 
+#if defined(ESP8266) || defined(ESP32)
+void syncNTP() {
+  configTime(0, 0, NTP_SERVER);
+  time_t now = time(nullptr);
+  uint8_t count = 0;
+  Log.trace(F("Waiting for NTP time sync" CR));
+  while ((now < 8 * 3600 * 2) && count++ < 60) {
+    delay(500);
+    now = time(nullptr);
+  }
+
+  if (count >= 60) {
+    Log.error(F("Unable to update - invalid time" CR));
+#  if defined(ZgatewayBT) && defined(ESP32)
+    startProcessing();
+#  endif
+    return;
+  }
+}
+
+int unixtimestamp() {
+  return time(nullptr);
+}
+
+String UTCtimestamp() {
+  time_t now;
+  time(&now);
+  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
+  strftime(buffer, sizeof buffer, "%FT%TZ", gmtime(&now));
+  return buffer;
+}
+
+#endif
+
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 void stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
+#  if defined(ESP8266) || defined(ESP32)
+#    if message_UTCtimestamp == true
+  SYSdata["UTCtime"] = UTCtimestamp();
+#    endif
+#    if message_unixtimestamp == true
+  SYSdata["unixtime"] = unixtimestamp();
+#    endif
+#  endif
+
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
@@ -2044,6 +2100,7 @@ String latestVersion;
  * Only available for ESP32
  */
 bool checkForUpdates() {
+  Log.notice(F("Update check"));
   HTTPClient http;
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
@@ -2066,6 +2123,8 @@ bool checkForUpdates() {
   if (jsondata.containsKey("latest_version")) {
     jsondata["installed_version"] = OMG_VERSION;
     jsondata["entity_picture"] = ENTITY_PICTURE;
+    if (!jsondata.containsKey("release_summary"))
+      jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
     pub(subjectSYStoMQTT, jsondata);
     Log.trace(F("Update file found on server" CR));
@@ -2104,6 +2163,9 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  endif
 #  ifdef ESP32
       } else if (strcmp(version, "latest") == 0) {
+#    if defined(ZgatewayBT)
+        stopProcessing();
+#    endif
         if (!checkForUpdates())
           return;
         systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
@@ -2126,10 +2188,10 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       Log.warning(F("Starting firmware update" CR));
       SendReceiveIndicatorON();
       ErrorIndicatorON();
-
-#  if defined(ZgatewayBT) && defined(ESP32)
-      stopProcessing();
-#  endif
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject jsondata = jsonBuffer.to<JsonObject>();
+      jsondata["release_summary"] = "Update in progress ...";
+      pub(subjectSYStoMQTT, jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert) {
@@ -2159,22 +2221,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           client.disconnect();
           update_client = *(WiFiClientSecure*)eClient;
         } else {
-          configTime(0, 0, NTP_SERVER);
-          time_t now = time(nullptr);
-          uint8_t count = 0;
-          Log.trace(F("Waiting for NTP time sync" CR));
-          while ((now < 8 * 3600 * 2) && count++ < 60) {
-            delay(500);
-            now = time(nullptr);
-          }
-
-          if (count >= 60) {
-            Log.error(F("Unable to update - invalid time" CR));
-#  if defined(ZgatewayBT) && defined(ESP32)
-            startProcessing();
-#  endif
-            return;
-          }
+          syncNTP();
         }
 
 #  ifdef ESP32
@@ -2208,6 +2255,9 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
         case HTTP_UPDATE_OK:
           Log.notice(F("HTTP_UPDATE_OK" CR));
+          jsondata["release_summary"] = "Update success !";
+          jsondata["installed_version"] = latestVersion;
+          pub(subjectSYStoMQTT, jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();
@@ -2400,6 +2450,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifdef ZmqttDiscovery
     if (SYSdata.containsKey("discovery")) {
       if (SYSdata["discovery"].is<bool>()) {
+        if (SYSdata["discovery"] == true && disc == false)
+          lastDiscovery = millis();
         disc = SYSdata["discovery"];
         stateMeasures();
         if (disc)

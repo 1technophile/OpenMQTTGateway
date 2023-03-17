@@ -563,8 +563,10 @@ static int taskCore = 0;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
-    if (xQueueSend(BLEQueue, &advertisedDevice, 0) != pdTRUE) {
+    BLEAdvertisedDevice* ad = new BLEAdvertisedDevice(*advertisedDevice);
+    if (xQueueSend(BLEQueue, &ad, 0) != pdTRUE) {
       Log.error(F("BLEQueue full" CR));
+      delete (ad);
     }
   }
 };
@@ -590,6 +592,14 @@ void procBLETask(void* pvParameters) {
       String mac_adress = advertisedDevice->getAddress().toString().c_str();
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
+#  if defined(ESP8266) || defined(ESP32)
+#    if message_UTCtimestamp == true
+      BLEdata["UTCtime"] = UTCtimestamp();
+#    endif
+#    if message_unixtimestamp == true
+      BLEdata["unixtime"] = unixtimestamp();
+#    endif
+#  endif
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
@@ -597,6 +607,7 @@ void procBLETask(void* pvParameters) {
 
       if (BTConfig.filterConnectable && device->connect) {
         Log.notice(F("Filtered connectable device" CR));
+        delete (advertisedDevice);
         continue;
       }
 
@@ -636,6 +647,7 @@ void procBLETask(void* pvParameters) {
         Log.trace(F("Filtered MAC device" CR));
       }
     }
+    delete (advertisedDevice);
   }
 }
 
