@@ -1809,7 +1809,7 @@ int unixtimestamp() {
   return time(nullptr);
 }
 
-String timestamp() {
+String UTCtimestamp() {
   time_t now;
   time(&now);
   char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
@@ -1825,10 +1825,10 @@ void stateMeasures() {
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
 #  if defined(ESP8266) || defined(ESP32)
-#    if message_Time == true
-  SYSdata["time"] = timestamp();
+#    if message_UTCtime == true
+  SYSdata["UTCtime"] = UTCtimestamp();
 #    endif
-#    if message_UnixTime == true
+#    if message_unixtime == true
   SYSdata["unixtime"] = unixtimestamp();
 #    endif
 #  endif
