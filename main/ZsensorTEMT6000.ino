@@ -61,7 +61,7 @@ void MeasureLightIntensityTEMT6000() {
     float microamps = amps * 1000000;
     float lux = microamps * 2.0;
 
-    if (persisted_lux != lux|| temt6000_always) {
+    if (persisted_lux != lux || temt6000_always) {
       persisted_lux = lux;
 
       TEMT6000data["lux"] = (float)lux;

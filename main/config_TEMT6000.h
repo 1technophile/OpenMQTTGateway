@@ -41,8 +41,8 @@
 extern void setupTEMT6000();
 extern void TEMT6000toMQTT();
 
-#define temt6000_always            true  // if false only send current value if it has changed
-#define TEMT6000LIGHTSENSORPIN     A0    //Ambient light sensor reading = ADC0
+#define temt6000_always            true // if false only send current value if it has changed
+#define TEMT6000LIGHTSENSORPIN     A0 //Ambient light sensor reading = ADC0
 #define TimeBetweenReadingtemt6000 10000 //10000 ms
 
 /*----------------------------USER PARAMETERS-----------------------------*/
