@@ -24,10 +24,11 @@
 #include "User_config.h"
 #if defined(ZwebUI) && defined(ESP32)
 #  include <ArduinoJson.h>
-#  include <AsyncTCP.h>
-#  include <ESPAsyncWebServer.h>
+// #  include <AsyncTCP.h>
+// #  include <ESPAsyncWebServer.h>
 #  include <SPIFFS.h>
 // #  include <WebSerial.h>
+#  include <WebServer.h>
 
 #  include "ArduinoLog.h"
 #  include "config_WebContent.h"
@@ -41,18 +42,20 @@
 #    include "config_SSD1306.h"
 #  endif
 
-AsyncWebServer server(80);
+WebServer server(80);
 
 /*------------------- Local functions ----------------------*/
 
-void notFound(AsyncWebServerRequest* request);
-void handleSlash(AsyncWebServerRequest* request);
+// void notFound(AsyncWebServerRequest* request);
+void handleSlash();
+/*
 void handleCS(AsyncWebServerRequest* request);
 void handleCN(AsyncWebServerRequest* request);
 void handleIN(AsyncWebServerRequest* request);
 void handleRT(AsyncWebServerRequest* request);
 void handleCL(AsyncWebServerRequest* request);
 void handleTK(AsyncWebServerRequest* request);
+*/
 
 /*------------------- External functions ----------------------*/
 
@@ -85,19 +88,19 @@ bool exists(String path) {
   return yes;
 }
 
-void handleSlash(AsyncWebServerRequest* request) {
-  Log.trace(F("handleSlash: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
-  if (request->args()) {
-    for (uint8_t i = 0; i < request->args(); i++) {
-      Log.trace(F("Arg: %d, %s=%s" CR), i, request->argName(i).c_str(), request->arg(i).c_str());
+void handleSlash() {
+  Log.trace(F("handleSlash: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      Log.trace(F("Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-    if (request->hasArg("m")) {
+    if (server.hasArg("m")) {
 #  if defined(ZdisplaySSD1306)
-      request->send(200, "application/json", "{t}{s}<b>" + String(currentOledMessage->title) + "</b>{e}{s}" + String(currentOledMessage->line1) + "{e}{s}" + String(currentOledMessage->line2) + "{e}{s}" + String(currentOledMessage->line3) + "{e}{s}" + String(currentOledMessage->line4) + "{e}</table>");
+      server.send(200, "application/json", "{t}{s}<b>" + String(currentOledMessage->title) + "</b>{e}{s}" + String(currentOledMessage->line1) + "{e}{s}" + String(currentOledMessage->line2) + "{e}{s}" + String(currentOledMessage->line3) + "{e}{s}" + String(currentOledMessage->line4) + "{e}</table>");
 #  else
-      request->send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
+      server.send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
 #  endif
-    } else if (request->hasArg("rst")) { // TODO: This should redirect to the RST page
+    } else if (server.hasArg("rst")) { // TODO: This should redirect to the RST page
       Log.warning(F("[WebUI] Restart" CR));
 #  if defined(ESP8266)
       ESP.reset();
@@ -106,23 +109,39 @@ void handleSlash(AsyncWebServerRequest* request) {
 #  endif
     } else {
       // Log.trace(F("Arguments %s" CR), message);
-      request->send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
+      server.send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
     }
   } else {
     char jsonChar[100];
     serializeJson(modules, jsonChar, measureJson(modules) + 1);
 
-    AsyncResponseStream* response = request->beginResponseStream("text/html");
+    char buffer[2000];
+
+    // AsyncResponseStream* response = server.beginResponseStream("text/html");
+
+    snprintf(buffer, 2000, header_html, (String(gateway_name) + " - Main Menu").c_str());
+    String response = String(buffer);
+    response += String(slash_script);
+    response += String(script);
+    response += String(style);
+    snprintf(buffer, 2000, slash_body, jsonChar, gateway_name);
+    response += String(buffer);
+    snprintf(buffer, 2000, footer, OMG_VERSION);
+    response += String(buffer);
+
+    /*
     response->printf(header_html, (String(gateway_name) + " - Main Menu").c_str());
     response->print(slash_script);
     response->print(script);
     response->print(style);
     response->printf(slash_body, jsonChar, gateway_name);
     response->printf(footer, OMG_VERSION);
-    request->send(response);
+    */
+    server.send(200, "text/html", response);
   }
 }
 
+/*
 void handleCN(AsyncWebServerRequest* request) {
   Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), request->url(), request->args(), request->method());
   if (request->args()) {
@@ -321,6 +340,7 @@ void recvMsg(uint8_t* data, size_t len) {
   }
   // WebSerial.println(d);
 }
+*/
 
 void WebUISetup() {
   Log.trace(F("ZwebUI setup start" CR));
@@ -337,20 +357,22 @@ void WebUISetup() {
     }
   }
 
-  server.on("/", HTTP_GET, handleSlash); // Main Menu
-  server.on("/cs", HTTP_GET, handleCS); // Console
+  server.on("/", handleSlash); // Main Menu
+  /*
+  server.on("/cs", handleCS); // Console
 
-  server.on("/in", HTTP_GET, handleIN); // Information
+  server.on("/in", handleIN); // Information
 
-  server.on("/cn", HTTP_GET, handleCN); // Configuration
+  server.on("/cn", handleCN); // Configuration
 #  if defined(ZgatewayCloud)
-  server.on("/cl", HTTP_GET, handleCL); // Cloud configuration
-  server.on("/tk", HTTP_POST, handleTK); // Store Device Token
+  server.on("/cl", handleCL); // Cloud configuration
+  server.on("/tk", handleTK); // Store Device Token
 #  endif
 
-  server.on("/rt", HTTP_GET, handleRT); // Reset configuration
+  server.on("/rt", handleRT); // Reset configuration
 
   server.onNotFound(notFound);
+  */
 
   // WebSerial.begin(&server);
   // WebSerial.msgCallback(recvMsg);
@@ -364,6 +386,7 @@ void WebUISetup() {
 }
 
 void WebUILoop() {
+  server.handleClient();
 }
 
 /*------------------- Serial logging interceptor ----------------------*/
