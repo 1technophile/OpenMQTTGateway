@@ -497,7 +497,65 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define PowerIndicatorON()    // Not used
 #  define PowerIndicatorOFF()   // Not used
 #  define SetupIndicators()     // Not used
-#else // Management of Errors, reception/emission and informations indicators with RGB LED
+// Management of Errors, reception/emission and informations indicators with RGB LED
+#elif RGB_INDICATORS == 2   // using Adafruit_NeoPixel
+#  include <Adafruit_NeoPixel.h>
+#  ifndef ANEOPIX_LED_TYPE                           // needs library constants
+#    define ANEOPIX_LED_TYPE NEO_GRB + NEO_KHZ800    // ws2812 and alike
+#  endif
+Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_TYPE);
+
+#  ifndef RGB_LED_POWER
+#    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
+#  endif
+#  ifndef ANEOPIX_BRIGHTNESS
+#    define ANEOPIX_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
+#  endif
+// Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
+#  ifndef ANEOPIX_INFO_LED
+#    define ANEOPIX_INFO_LED 0 // First Led
+#  endif
+#  ifndef ANEOPIX_SEND_RECEIVCE_LED
+#    define ANEOPIX_SEND_RECEIVCE_LED 0 // First Led
+#  endif
+#  ifndef ANEOPIX_ERROR_LED
+#    define ANEOPIX_ERROR_LED 0 // First Led
+#  endif
+// no ANEOPIX_CRITICAL_LED and FASTLED_IND_DATA_GPIO2 with Adafruit_NeoPixel
+// preprocessor calculates color values
+#  define ANEOPIX_RED ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16          // dimmed /4
+#  define ANEOPIX_GOLD (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
+                         (((0xD7 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
+#  define ANEOPIX_GREEN ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8
+#  define ANEOPIX_BLUE (0x3F * ANEOPIX_BRIGHTNESS) >> 8                 // dimmed /4
+#  define ANEOPIX_BLACK 0
+
+#  define SetupIndicators()                      \
+    pinMode(RGB_LED_POWER, OUTPUT);              \
+    digitalWrite(RGB_LED_POWER, HIGH);           \
+    leds.begin();
+#  define ErrorIndicatorON()                               \
+    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_RED);    \
+    leds.show();
+#  define ErrorIndicatorOFF()                              \
+    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_BLACK);  \
+    leds.show();
+#  define SendReceiveIndicatorON()                                \
+    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_GOLD);  \
+    leds.show();
+#  define SendReceiveIndicatorOFF()                               \
+    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_BLACK); \
+    leds.show();
+#  define InfoIndicatorON()                              \
+    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BLUE); \
+    leds.show();
+#  define InfoIndicatorOFF()                             \
+    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BLACK); \
+    leds.show();
+#  define SetupIndicatorInfo()
+#  define SetupIndicatorSendReceive()
+#  define SetupIndicatorError()
+#else   // FastLED remains standard for RGB_INDICATORS
 #  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
 #    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
 #  endif
