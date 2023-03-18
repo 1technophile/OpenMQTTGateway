@@ -9,7 +9,8 @@ RTL_433 covers OOK protocols detailed [here](../use/rf#supported-decoders) and s
 |LILYGO® LoRa32 V2.1_1.6.1 433 Mhz|[RTL_433](../use/rf#supported-decoders), receiving only|No|
 |ESP32 + SX127X|[RTL_433](../use/rf#supported-decoders), receiving only|Yes|
 |ESP32 + CC1101|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Yes|
-|ESP8266 + CC1101|RF(RCSwitch), RF2(KaKu), Pilight|Yes|
+|ESP8266 + Basic RF modules (SRX, STX, XD RF, FS1000A|RF(RCSwitch), RF2(KaKu), Pilight|Yes|
+|ESP8266 + CC1101 (might have lower range than with SRX/STX above)|RF(RCSwitch), RF2(KaKu), Pilight|Yes|
 |ESP32 + Basic RF modules (SRX, STX, XD RF, FS1000A|RF(RCSwitch), RF2(KaKu), Pilight|Yes|
 
 :::tip

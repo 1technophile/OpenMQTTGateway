@@ -140,7 +140,7 @@ Delta applied to RSSI floor noise level to determine start and end of signal, de
 
 ### Switching Active Receiver Module
 
-Switching of the active receiver module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active receiver module.
+Switching of the active transceiver (RTL_433 receiver only) module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active transceiver module.
 
 To enable the RF Gateway module send a json message to the RF Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 

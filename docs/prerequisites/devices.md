@@ -84,7 +84,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | ThermoPro|TP393|temperature/humidity|
 | TPMS|TPMS|temperature/pressure/battery/alarm/count|
 | Vegtrug||temperature/moisture/luminance/fertility|
-| XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(c)|
+| XIAOMI Mi Flora|HHCCJCY01HHCC|temperature/moisture/luminance/fertility/battery(c) firmware >3.1.8|
 | XIAOMI Ropot|HHCCPOT002|temperature/moisture/fertility|
 | XIAOMI Mi Jia|LYWSDCGO|temperature/humidity/battery|
 | XIAOMI Mi Jia|LYWSD02|temperature/humidity/battery|
