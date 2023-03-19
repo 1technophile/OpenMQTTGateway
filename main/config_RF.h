@@ -125,6 +125,11 @@ const char parameters[40][4][24] = {
     {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
     {"event", "Status", "", "moisture"}};
 #  endif
+#  ifdef RTL_433_DISCOVERY_LOGGING
+#    define DISCOVERY_TRACE_LOG(...) Log.trace(__VA_ARGS__)
+#  else
+#    define DISCOVERY_TRACE_LOG(...)
+#  endif
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys

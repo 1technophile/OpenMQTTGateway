@@ -53,7 +53,7 @@ static RTL_433device NO_RTL_433_DEVICE_FOUND = {{0},
 
 RTL_433device* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 RTL_433device* getDeviceById(const char* id) {
-  Log.trace(F("getDeviceById %s" CR), id);
+  DISCOVERY_TRACE_LOG(F("getDeviceById %s" CR), id);
 
   for (std::vector<RTL_433device*>::iterator it = RTL_433devices.begin(); it != RTL_433devices.end(); ++it) {
     if ((strcmp((*it)->uniqueId, id) == 0)) {
@@ -66,9 +66,9 @@ RTL_433device* getDeviceById(const char* id) {
 void dumpRTL_433Devices() {
   for (std::vector<RTL_433device*>::iterator it = RTL_433devices.begin(); it != RTL_433devices.end(); ++it) {
     RTL_433device* p = *it;
-    Log.trace(F("uniqueId %s" CR), p->uniqueId);
-    Log.trace(F("modelName %s" CR), p->modelName);
-    Log.trace(F("isDisc %d" CR), p->isDisc);
+    DISCOVERY_TRACE_LOG(F("uniqueId %s" CR), p->uniqueId);
+    DISCOVERY_TRACE_LOG(F("modelName %s" CR), p->modelName);
+    DISCOVERY_TRACE_LOG(F("isDisc %d" CR), p->isDisc);
   }
 }
 
@@ -80,7 +80,7 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
 
   RTL_433device* device = getDeviceById(id);
   if (device == &NO_RTL_433_DEVICE_FOUND) {
-    Log.trace(F("add %s" CR), id);
+    DISCOVERY_TRACE_LOG(F("add %s" CR), id);
     //new device
     device = new RTL_433device();
     if (strlcpy(device->uniqueId, id, uniqueIdSize) > uniqueIdSize) {
@@ -93,7 +93,7 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
     RTL_433devices.push_back(device);
     newRTL_433Devices++;
   } else {
-    Log.trace(F("update %s" CR), id);
+    DISCOVERY_TRACE_LOG(F("update %s" CR), id);
 
     if (flags & device_flags_isDisc) {
       device->isDisc = true;
@@ -117,7 +117,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
   xSemaphoreGive(semaphorecreateOrUpdateDeviceRTL_433);
   for (std::vector<RTL_433device*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     RTL_433device* pdevice = *it;
-    Log.trace(F("Device id %s" CR), pdevice->uniqueId);
+    DISCOVERY_TRACE_LOG(F("Device id %s" CR), pdevice->uniqueId);
     // Do not launch discovery for the RTL_433devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
     if (overrideDiscovery || !isDiscovered(pdevice)) {
       size_t numRows = sizeof(parameters) / sizeof(parameters[0]);
@@ -126,7 +126,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           // Remove the key from the unique id to extract the device id
           String idWoKey = pdevice->uniqueId;
           idWoKey.remove(idWoKey.length() - (strlen(parameters[i][0]) + 1));
-          Log.trace(F("idWoKey %s" CR), idWoKey.c_str());
+          DISCOVERY_TRACE_LOG(F("idWoKey %s" CR), idWoKey.c_str());
 #    if OpenHABDiscovery
           String value_template = "{{ value_json." + String(parameters[i][0]) + "}}";
 #    else
@@ -138,7 +138,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           String idWoKeyAndModel = idWoKey;
           idWoKeyAndModel.remove(0, strlen(pdevice->modelName));
           idWoKeyAndModel.replace("-", "/");
-          Log.trace(F("idWoKeyAndModel %s" CR), idWoKeyAndModel.c_str());
+          DISCOVERY_TRACE_LOG(F("idWoKeyAndModel %s" CR), idWoKeyAndModel.c_str());
           topic = topic + "/" + String(pdevice->modelName) + idWoKeyAndModel;
 #    endif
           if (strcmp(parameters[i][0], "tamper") == 0 || strcmp(parameters[i][0], "alarm") == 0 || strcmp(parameters[i][0], "motion") == 0) {
@@ -188,10 +188,10 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
         }
       }
       if (!pdevice->isDisc) {
-        Log.trace(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
+        DISCOVERY_TRACE_LOG(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
       }
     } else {
-      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
+      DISCOVERY_TRACE_LOG(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
     }
   }
 }
@@ -248,7 +248,7 @@ void rtl_433_Callback(char* message) {
 
   uniqueid.replace("/", "-");
 
-  Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
+  // Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
     if (disc)
