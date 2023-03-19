@@ -459,7 +459,7 @@ void strupp(char* beg) {
 
 #  ifdef ZmqttDiscovery
 void DT24Discovery(const char* mac, const char* sensorModel_id) {
-#    define DT24parametersCount 6
+#    define DT24parametersCount 7
   Log.trace(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][9] = {
       {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
@@ -467,7 +467,8 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
       {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
       {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
       {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement}
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"binary_sensor", "inUse", mac, "power", jsonInuse, "", "", ""}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
