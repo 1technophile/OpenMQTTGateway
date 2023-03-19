@@ -37,8 +37,8 @@
 #ifndef config_BME280_h
 #define config_BME280_h
 
-extern void setupBME280();
-extern void BME280toMQTT();
+extern void setupZsensorBME280();
+extern void MeasureTempHumAndPressure();
 
 #ifndef bme280_always
 #  define bme280_always true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
