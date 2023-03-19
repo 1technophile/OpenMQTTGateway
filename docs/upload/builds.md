@@ -47,7 +47,7 @@ build_flags =
 ```
 Here, build flags starting with "-D" let us set configuration values you would normally find in `User_config.h` and `config_xx.h` files by specifying them here, overriding the default values set in those files. To include special characters, you can triple escape them with a backslash like so:
 ```ini
-  -Dwifi_password=\"Cato\\\'sYounger\\\$on\" ; Cato'sYounger$on
+  '-Dwifi_password="Cato\\\'sYounger\\\$on"' ; Cato'sYounger$on
 ```
 
 The different listed configurations in `platformio.ini` represent some standard environments and boards. For example, the environment
@@ -84,8 +84,9 @@ build_flags =
   '-DGateway_Name="OpenMQTTGateway"'
   '-DZsensorBME280="BME280"'
   '-DBase_Topic="rf/"'
+  '-DESPWifiManualSetup=true'
   '-Dwifi_ssid="mynetwork"'
-  -Dwifi_password=\"Cato\\\'sYounger\\\$on\" ; Cato'sYounger$on
+  '-Dwifi_password="Cato\\\'sYounger\\\$on"' ; Cato'sYounger$on
   '-DMQTT_USER="mqttusername"'
   '-DMQTT_PASS="mqttpassword"'
   '-DMQTT_SERVER="mqttserver.local"'
@@ -106,6 +107,13 @@ upload_flags =
   --auth=otapassword
   --port=8266
 ```
+
+::: warning Note
+Adding manual WiFi and MQTT credentials to an environment also requires to define
+`'-DESPWifiManualSetup=true'`
+for the credetials to be registered correctly.
+:::
+
 The first new environment we create, `nodemcuv2-pilight-bme280`, inherits the default `nodemcuv2-pilight` environment in `platformio.ini` with the `extends = env:nodemcuv2-pilight` line. In the `lib_deps` section, it imports all the `lib_deps` of `nodemcuv2-pilight` with the `${env:nodemcuv2-pilight.lib_deps}` line, and adds BME280 on top of it. (Since the environment we're extending already has this `lib_deps` attribute, specifying it again would normally replace it completely with our new attribute; instead, to keep its value but simply append to it, we import the original in the beginning of our `lib_deps` attribute.) In the `build_flags` section, it again imports all the `build_flags` of `nodemcuv2-pilight` and many of its own overrides, e.g. changing `Base_Topic` found in `User_config.h` from the default to "rf/" by using the `'-DBase_Topic="rf/"'` line. It also unsets previously set configurations (i.e. `mqttDiscovery`) by using `'-UZmqttDiscovery'`. This environment will work over serial upload.
 
 The second new environment, `nodemcuv2-pilight-bme280-ota`, inherits everything we specified in the first environment (with the line `extends = env:nodemcuv2-pilight-bme280`), but modifies it to upload over OTA (Wi-Fi). We also specified this as the `default_env` in the beginning of the file, so PlatformIO will choose this environment to build and upload if we don't specify otherwise.

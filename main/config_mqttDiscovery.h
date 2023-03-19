@@ -121,6 +121,10 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define discovery_republish_on_reconnect false
 #endif
 
+#ifndef DiscoveryAutoOffTimer
+#  define DiscoveryAutoOffTimer 1800000 // Timer (ms) that trigger auto discovery to off after activation, the goal is to avoid the discovery of entities that are not expected
+#endif
+
 #ifndef GATEWAY_MANUFACTURER
 #  define GATEWAY_MANUFACTURER "OMG_community"
 #endif
@@ -166,6 +170,8 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonTime     "{{ value_json.time }}"
 #  define jsonCount    "{{ value_json.count }}"
 #  define jsonAlarm    "{{ value_json.alarm }}"
+#  define jsonInuse    "{{ value_json.power | float > 0 }}"
+#  define jsonVoltBM2  "{{% if  value_json.model_id == \"BM2\" -%} {{value_json.volt}} {%- endif %}}"
 #else // Home assistant autodiscovery value key definition
 #  define jsonBatt     "{{ value_json.batt | is_defined }}"
 #  define jsonLux      "{{ value_json.lux | is_defined }}"
@@ -201,6 +207,8 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonTime     "{{ value_json.time | is_defined }}"
 #  define jsonCount    "{{ value_json.count | is_defined }}"
 #  define jsonAlarm    "{{ value_json.alarm | is_defined }}"
+#  define jsonInuse    "{{ value_json.power | is_defined | float > 0 }}"
+#  define jsonVoltBM2  "{{% if  value_json.model_id == \"BM2\" and value_json.volt is defined -%} {{value_json.volt}} {%- endif %}}"
 #endif
 
 #define stateClassNone            ""
@@ -266,4 +274,10 @@ const char* availableHASSUnits[] = {"W",
                                     "mm/h",
                                     "cm"};
 
+// Define the command used to update through OTA depending if we want to update from dev nightly or latest release
+#if DEVELOPMENTOTA
+#  define LATEST_OR_DEV "{\"version\":\"dev\"}"
+#else
+#  define LATEST_OR_DEV "{\"version\":\"latest\"}"
+#endif
 #endif

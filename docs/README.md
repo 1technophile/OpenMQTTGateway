@@ -62,11 +62,14 @@ The plug is available in North America only, other regions are planned.
 * [Using low-cost wireless sensors in the unlicensed bands](https://lwn.net/Articles/921497/)
 * [SMART PLUG ESP32 OPENMQTTGATEWAY SERVING AS AN BLE MQTT GATEWAY AND A POWER METER](https://www.electronics-lab.com/smart-plug-esp32-openmqttgateway-serving-as-an-ble-mqtt-gateway-and-a-power-meter/)
 
+### 433Mhz and BLE
+<iframe width="560" height="315" src="https://youtube.com/embed/_gdXR1uklaY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 ### BLE
-<iframe width="560" height="315" src="https://www.youtube.com/watch?v=noUROhtf0E0&t=40s" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/noUROhtf0E0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ### 433Mhz
-<iframe width="560" height="315" src="https://youtube.com/watch?v=H-JXWbWjJYE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://youtube.com/embed/H-JXWbWjJYE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ### LORA
 <iframe width="560" height="315" src="https://www.youtube.com/embed/6DftaHxDawM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>

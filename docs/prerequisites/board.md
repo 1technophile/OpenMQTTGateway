@@ -4,7 +4,7 @@ OpenMQTTGateway is not closed to one board or type of board, by using the power 
 
 You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported boards](https://compatible.openmqttgateway.com/index.php/boards/).
 
-Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561, BME280/BMP280, HTU21D, AHTx0, DS1820
+Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, TEMT6000, TSL2561, BME280/BMP280, HTU21D, AHTx0, DS1820
 or actuators; LED, relays, PWM.
 
 ::: tip Running on a computer

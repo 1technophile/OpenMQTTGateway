@@ -238,6 +238,14 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 #    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
 #      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #    endif
+#    if DEVELOPMENTOTA
+#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
+#    else
+#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/firmware_build/latest_version.json" //OTA url used to discover new versions of the firmware
+#    endif
+#    define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
+#    define RELEASE_LINK_DEV "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/"
+#    define RELEASE_LINK     "https://github.com/1technophile/OpenMQTTGateway/releases/download/"
 #  endif
 
 #  ifndef MQTT_SECURE_SELF_SIGNED
@@ -318,6 +326,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+//#define ZsensorTEMT6000 "TEMT6000"  //ESP8266
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
 //#define ZsensorHTU21   "HTU21"    //ESP8266, Arduino, ESP32
@@ -351,6 +360,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef will_Retain
 #  define will_Retain true
 #endif
+#ifndef sensor_Retain
+#  define sensor_Retain false
+#endif
 #ifndef will_Message
 #  define will_Message "offline"
 #endif
@@ -374,6 +386,12 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
 #ifndef simpleReceiving
 #  define simpleReceiving true //define false if you don't want to use old way reception analysis
+#endif
+#ifndef message_UTCtimestamp
+#  define message_UTCtimestamp false //define true if you want messages to be timestamped in ISO8601 UTC format (e.g.: "UTCtime"="2023-12-26T19:10:20Z")
+#endif
+#ifndef message_unixtimestamp
+#  define message_unixtimestamp false //define true if you want messages to have an unix timestamp (e.g.: "unixtime"=1679015107)
 #endif
 
 /*-------------DEFINE YOUR OTA PARAMETERS BELOW----------------*/
@@ -558,7 +576,6 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #define subjectMQTTtoX     "/commands/#"
 #define subjectMultiGTWKey "toMQTT"
 #define subjectGTWSendKey  "MQTTto"
-#define subjectFWUpdate    "firmware_update"
 
 // key used for launching commands to the gateway
 #define restartCmd "restart"
@@ -595,14 +612,30 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #endif
 
 #define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT"
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
+#define subjectMQTTtoSYSupdate       "/commands/MQTTtoSYS/firmware_update"
 #define TimeToResetAtStart           5000 // Time we allow the user at start for the reset command by button press
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
+#endif
+
+/*-------------------ESP32 Wifi band and tx power ---------------------*/
+//Certain sensors are sensitive to ESP32 Wifi which can cause interference with their normal operation
+//For example it can cause false triggers on a PIR HC-SR501
+//It is reccomended to change Wifi BAND to G and reduce tx power level to 11dBm
+//Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined false to get Band N back.
+#ifdef ESP32
+#  ifndef WifiGMode
+//#    define WifiGMode                 true
+#  endif
+#  ifndef WifiPower
+//#    define WifiPower                 WIFI_POWER_11dBm
+#  endif
 #endif
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/

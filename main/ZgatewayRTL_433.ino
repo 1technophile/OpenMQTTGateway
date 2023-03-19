@@ -47,9 +47,9 @@ SemaphoreHandle_t semaphorecreateOrUpdateDeviceRTL_433;
 std::vector<RTL_433device*> RTL_433devices;
 int newRTL_433Devices = 0;
 
-static RTL_433device NO_DEVICE_FOUND = {{0},
-                                        0,
-                                        false};
+static RTL_433device NO_RTL_433_DEVICE_FOUND = {{0},
+                                                0,
+                                                false};
 
 RTL_433device* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 RTL_433device* getDeviceById(const char* id) {
@@ -60,7 +60,7 @@ RTL_433device* getDeviceById(const char* id) {
       return *it;
     }
   }
-  return &NO_DEVICE_FOUND;
+  return &NO_RTL_433_DEVICE_FOUND;
 }
 
 void dumpRTL_433Devices() {
@@ -79,8 +79,8 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
   }
 
   RTL_433device* device = getDeviceById(id);
-  if (device == &NO_DEVICE_FOUND) {
-    // Log.trace(F("add %s" CR), id);
+  if (device == &NO_RTL_433_DEVICE_FOUND) {
+    Log.trace(F("add %s" CR), id);
     //new device
     device = new RTL_433device();
     if (strlcpy(device->uniqueId, id, uniqueIdSize) > uniqueIdSize) {
@@ -166,6 +166,16 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
                             (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
                             stateClassTotalIncreasing //State Class
             );
+          } else if (strcmp(parameters[i][0], "event") == 0 && strcmp(pdevice->modelName, "Govee-Water") == 0) { //the entity will detect Water Leak Event and go back to Off state after 60seconds
+            createDiscovery("binary_sensor", //set Type
+                            (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
+                            "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                            "Water Leak", "", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
+                            60, //set  off_delay
+                            "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                            (char*)idWoKey.c_str(), "Govee", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
+                            stateClassMeasurement //State Class
+            );
           } else {
             createDiscovery("sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
@@ -209,8 +219,6 @@ void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, con
     }
   }
 }
-#  else
-void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, const char* uniqueid) {}
 #  endif
 
 void rtl_433_Callback(char* message) {
@@ -247,7 +255,10 @@ void rtl_433_Callback(char* message) {
 
   // Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
-    storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
+#  ifdef ZmqttDiscovery
+    if (disc)
+      storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
+#  endif
     pub((char*)topic.c_str(), RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
     pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);

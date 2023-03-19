@@ -83,7 +83,7 @@ struct RTL_433device {
 
 extern std::vector<RTL_433device*> RTL_433devices;
 
-const char parameters[39][4][24] = {
+const char parameters[40][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"temperature_C", "temperature", "°C", "temperature"},
     {"temperature_1_C", "temperature", "°C", "temperature"},
@@ -123,7 +123,8 @@ const char parameters[39][4][24] = {
     {"tamper", "tamper", "", ""},
     {"alarm", "alarm", "", ""},
     {"motion", "motion", "", "motion"},
-    {"strike_count", "strike count", "", ""}}; // from rtl_433_mqtt_hass.py
+    {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
+    {"event", "Status", "", "moisture"}};
 #  endif
 #endif
 /*-------------------RF topics & parameters----------------------*/

@@ -25,11 +25,13 @@ jobs:
           npm install
       - name: Set sha tag
         run: |
-          sed -i "s/version_tag/${{ steps.short-sha.outputs.sha }}/g" main/User_config.h
+          sed -i "s/version_tag/${{ steps.short-sha.outputs.sha }}/g" main/User_config.h scripts/latest_version_dev.json
           sed -i "s/version_tag/DEVELOPMENT SHA:${{ steps.short-sha.outputs.sha }} TEST ONLY/g" docs/.vuepress/config.js
           sed -i "s|base: '/'|base: '/dev/'|g" docs/.vuepress/config.js
       - name: Run PlatformIO
-        run: platformio run
+        run: |
+          export PLATFORMIO_BUILD_FLAGS="'-DDEVELOPMENTOTA=true'"
+          platformio run
       - name: Prepare Release Assets
         run: |
           sudo apt install rename

@@ -13,6 +13,13 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 
 You can also do a long press when powering the board to reset it, this press must be done during the first 5 seconds after the start.
 
+### Wifi interference on ESP32 ###
+Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP32 with Wifi enabled. To reduce or elimate the effect the board must be put into Wifi B/G with lower TX power.
+
+This can be achieved with the following macro, `WifiGMode` defined true and `WifiPower` to e.g. WIFI_POWER_11dBm.  
+
+Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined **false** to get Band N back.
+
 ### Low power mode for ESP32
 OpenMQTTGateway support a low power mode for ESP32, this mode is available per default on boards with batteries. The other boards needs to have the macro `DEFAULT_LOW_POWER_MODE` defined at 0, 1 or 2 to use it. More information about the modes is available into User_config.h.
 
@@ -84,65 +91,3 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC, M5stickC Plus and middle button of M5stack).
 If you are already in low power mode 1 or 2 with M5Stack you can wake up the board by pressing the red button.
-
-## SSD1306 Display boards ( Heltec SX127X 433Mhz boards and LILYGO® LoRa32 V2.1_1.6.1 433 Mhz )
-
-Several options are available for the display of information on the SSD1306 Display.  These options include display of the OMG logo and setup messages, redirecting of the log output to the display, and display of various module messages on the display.  These options are exclusive to each other, and when a different option is enabled, the current option is disabled.
-
-### Setting the log output
-
-The display of serial log messages to the display can be enabled via compiler directive `-DLOG_TO_LCD=true` or via MQTT commands.
-
-For example if you want to set the serial log to LCD
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":true}'`
-
-you can also revert it back to the serial monitor:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"log-lcd":false}'`
-
-The log level of the messages displayed is Errors and Warnings, and this can only be changed via the compiler directive `-DLOG_LEVEL_LCD=LOG_LEVEL_NOTICE`.  
-
-### Displaying Module json messages ( default )
-
-The display of messages from various modules is also supported.  Currently supported modules include `ZgatewayRTL_433` and `ZsensorBME280`.
-
-This can be enabled with the compiler directive `-DJSON_TO_LCD=true`.
-
-You can also change it by MQTT. For example if you want to display module json messages:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"json-lcd":true}'`
-
-And to disable the display of module json messages:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-json":false}'`
-
-### Units for display, Metric or Imperial
-
-By default the display uses metric units, and this can be changed either by compiler directive or mqtt command.
-
-The compiler directive is `-DDISPLAY_METRIC=true`
-
-The mqtt command to change the units is:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-metric":false}'`
-
-Please note that it may take several seconds/display updates for the units to change.  This is due to the queueing of messages for display.
-
-### Flip Display 180 degrees
-
-This allows you to rotate the display 180 degrees.  Can be set at compile time or during use, defaults to true.
-
-The compiler directive is `-DDISPLAY_FLIP=false`
-
-The mqtt command to change display orientation is:
-
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306 -m '{"display-flip":false}'`
-
-Please note that it may take several seconds/display updates for the display to change.  This is due to the queueing of messages for display.
-
-### Display OpenMQTTGateway Logo when Idle
-
-When this option is enabled the OLED display will show the OpenMQTTGateway Logo when it is idle.  Defaults to false
-
-The compiler directive is `-DDISPLAY_IDLE_LOGO=true`
