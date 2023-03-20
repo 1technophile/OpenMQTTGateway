@@ -755,7 +755,10 @@ void setup() {
   checkButton();
 #endif
   //setup LED status
-  SetupIndicators();
+  SetupIndicatorError();
+  SetupIndicatorSendReceive();
+  SetupIndicatorInfo();
+  SetupIndicators(); // For RGB Leds
 
 #if defined(ESP8266) || defined(ESP32)
 #  ifdef ESP8266
