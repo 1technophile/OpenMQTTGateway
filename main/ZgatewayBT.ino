@@ -482,6 +482,7 @@ void updateDevicesStatus() {
 }
 
 void dumpDevices() {
+#  if LOG_LEVEL > 4 // > NOTICE LOG LEVEL
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     Log.trace(F("macAdr %s" CR), p->macAdr);
@@ -493,6 +494,7 @@ void dumpDevices() {
     Log.trace(F("sensorModel_id %d" CR), p->sensorModel_id);
     Log.trace(F("LastUpdate %u" CR), p->lastUpdate);
   }
+#  endif
 }
 
 void strupp(char* beg) {
@@ -1118,59 +1120,62 @@ void process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
-  if (model_id >= 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON && (BLEdata["type"].as<string>()).compare("RMAC") != 0) { // Broadcaster devices, excluding random macs
-    Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-    if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
-      createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
-    } else {
-      createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
-      if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
-        if (BLEdata.containsKey("acts") && BLEdata.containsKey("cont")) {
-          if (BLEdata["acts"] && BLEdata["cont"]) {
-            BTConfig.BLEinterval = MinTimeBtwScan;
-            BTConfig.intervalActiveScan = MinTimeBtwScan;
-            BTConfig.scanDuration = MinScanDuration;
-            Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
-            stateBTMeasures(false);
-          }
-        } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
-          if (BLEdata["cont"]) {
-            BTConfig.BLEinterval = MinTimeBtwScan;
-            if ((BLEdata["type"].as<string>()).compare("CTMO") == 0) {
+  if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
+    if (model_id >= 0) { // Broadcaster devices
+      Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
+      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
+        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
+      } else {
+        createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
+        if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
+          if (BLEdata.containsKey("acts") && BLEdata.containsKey("cont")) {
+            if (BLEdata["acts"] && BLEdata["cont"]) {
+              BTConfig.BLEinterval = MinTimeBtwScan;
+              BTConfig.intervalActiveScan = MinTimeBtwScan;
               BTConfig.scanDuration = MinScanDuration;
+              Log.notice(F("Active and continuous scanning required, paramaters adapted" CR));
+              stateBTMeasures(false);
             }
-            Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
-            stateBTMeasures(false);
+          } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
+            if (BLEdata["cont"]) {
+              BTConfig.BLEinterval = MinTimeBtwScan;
+              if ((BLEdata["type"].as<string>()).compare("CTMO") == 0) {
+                BTConfig.scanDuration = MinScanDuration;
+              }
+              Log.notice(F("Passive continuous scanning required, paramaters adapted" CR));
+              stateBTMeasures(false);
+            }
           }
         }
       }
-    }
-  } else {
-    if (BLEdata.containsKey("name")) { // Connectable devices
-      std::string name = BLEdata["name"];
-      if (name.compare("LYWSD03MMC") == 0)
-        model_id = BLEconectable::id::LYWSD03MMC;
-      else if (name.compare("DT24-BLE") == 0)
-        model_id = BLEconectable::id::DT24_BLE;
-      else if (name.compare("Battery Monitor") == 0)
-        model_id = BLEconectable::id::BM2;
-      else if (name.compare("MHO-C401") == 0)
-        model_id = BLEconectable::id::MHO_C401;
-      else if (name.compare("XMWSDJ04MMC") == 0)
-        model_id = BLEconectable::id::XMWSDJ04MMC;
+    } else {
+      if (BLEdata.containsKey("name")) { // Connectable devices
+        std::string name = BLEdata["name"];
+        if (name.compare("LYWSD03MMC") == 0)
+          model_id = BLEconectable::id::LYWSD03MMC;
+        else if (name.compare("DT24-BLE") == 0)
+          model_id = BLEconectable::id::DT24_BLE;
+        else if (name.compare("Battery Monitor") == 0)
+          model_id = BLEconectable::id::BM2;
+        else if (name.compare("MHO-C401") == 0)
+          model_id = BLEconectable::id::MHO_C401;
+        else if (name.compare("XMWSDJ04MMC") == 0)
+          model_id = BLEconectable::id::XMWSDJ04MMC;
 
-      if (model_id > 0) {
-        Log.trace(F("Connectable device found: %s" CR), name.c_str());
-        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
-      }
-    } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
-      const char* service_data = (const char*)(BLEdata["servicedata"] | "");
-      if (strstr(service_data, "209800") != NULL) {
-        model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
-        Log.trace(F("Connectable device found: HHCCJCY01HHCC" CR));
-        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+        if (model_id > 0) {
+          Log.trace(F("Connectable device found: %s" CR), name.c_str());
+          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+        }
+      } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
+        const char* service_data = (const char*)(BLEdata["servicedata"] | "");
+        if (strstr(service_data, "209800") != NULL) {
+          model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
+          Log.trace(F("Connectable device found: HHCCJCY01HHCC" CR));
+          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+        }
       }
     }
+    Log.trace(F("Random MAC or iBeacon device filtered" CR));
   }
   if (!BTConfig.extDecoderEnable && model_id < 0) {
     Log.trace(F("No eligible device found " CR));
