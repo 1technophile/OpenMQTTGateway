@@ -511,6 +511,9 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_
 #  ifndef ANEOPIX_BRIGHTNESS
 #    define ANEOPIX_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
 #  endif
+#  ifndef ANEOPIX_COLOR_SCHEME    // allow for different color combinations
+#    define ANEOPIX_COLOR_SCHEME 0
+#  endif
 // Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
 #  ifndef ANEOPIX_INFO_LED
 #    define ANEOPIX_INFO_LED 0 // First Led
@@ -521,36 +524,61 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_
 #  ifndef ANEOPIX_ERROR_LED
 #    define ANEOPIX_ERROR_LED 0 // First Led
 #  endif
+#  ifndef ANEOPIX_BOOT_LED
+#    define ANEOPIX_BOOT_LED 0 // First Led
+#  endif
 // no ANEOPIX_CRITICAL_LED and FASTLED_IND_DATA_GPIO2 with Adafruit_NeoPixel
 // preprocessor calculates color values
-#  define ANEOPIX_RED ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16          // dimmed /4
+#  define ANEOPIX_HOTPINK (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) |  \
+                            (((0x69 * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
+                            (0xB4 * ANEOPIX_BRIGHTNESS) >> 8
+#  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16      // dimmed /4
 #  define ANEOPIX_GOLD (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
                          (((0xD7 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
-#  define ANEOPIX_GREEN ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8
-#  define ANEOPIX_BLUE (0x3F * ANEOPIX_BRIGHTNESS) >> 8                 // dimmed /4
+#  define ANEOPIX_GREEN ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8         // bright
+#  define ANEOPIX_GREEN_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 8     // dimmed /4
+#  define ANEOPIX_AQUA (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
+                        (0xFF * ANEOPIX_BRIGHTNESS) >> 8
+#  define ANEOPIX_BLUE_DIM (0x3F * ANEOPIX_BRIGHTNESS) >> 8             // dimmed /4
 #  define ANEOPIX_BLACK 0
+// signalling color combinations tested for good visibility
+#  if ANEOPIX_COLOR_SCHEME == 0
+#    define ANEOPIX_ERROR ANEOPIX_RED_DIM
+#    define ANEOPIX_SENDRECEIVE ANEOPIX_GREEN   // bright green = sending
+#    define ANEOPIX_INFO ANEOPIX_GREEN_DIM      // dimmed green = info
+#    define ANEOPIX_OFF ANEOPIX_BLACK
+#    define ANEOPIX_BOOT ANEOPIX_HOTPINK
+#  else
+#    define ANEOPIX_ERROR ANEOPIX_RED_DIM
+#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold = sending
+#    define ANEOPIX_INFO ANEOPIX_BLUE_DIM       // dimmed blue = info
+#    define ANEOPIX_OFF ANEOPIX_BLACK
+#    define ANEOPIX_BOOT ANEOPIX_AQUA
+#  endif
 
-#  define SetupIndicators()                      \
-    pinMode(RGB_LED_POWER, OUTPUT);              \
-    digitalWrite(RGB_LED_POWER, HIGH);           \
-    leds.begin();
-#  define ErrorIndicatorON()                               \
-    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_RED);    \
+#  define SetupIndicators()                             \
+    pinMode(RGB_LED_POWER, OUTPUT);                     \
+    digitalWrite(RGB_LED_POWER, HIGH);                  \
+    leds.begin();                                       \
+    leds.setPixelColor(ANEOPIX_BOOT_LED, ANEOPIX_BOOT); \
     leds.show();
-#  define ErrorIndicatorOFF()                              \
-    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_BLACK);  \
+#  define ErrorIndicatorON()                              \
+    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
     leds.show();
-#  define SendReceiveIndicatorON()                                \
-    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_GOLD);  \
+#  define ErrorIndicatorOFF()                           \
+    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
     leds.show();
-#  define SendReceiveIndicatorOFF()                               \
-    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_BLACK); \
+#  define SendReceiveIndicatorON()                                      \
+    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_SENDRECEIVE); \
     leds.show();
-#  define InfoIndicatorON()                              \
-    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BLUE); \
+#  define SendReceiveIndicatorOFF()                             \
+    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_OFF); \
     leds.show();
-#  define InfoIndicatorOFF()                             \
-    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BLACK); \
+#  define InfoIndicatorON()                             \
+    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+    leds.show();
+#  define InfoIndicatorOFF()                           \
+    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
     leds.show();
 #  define SetupIndicatorInfo()
 #  define SetupIndicatorSendReceive()
