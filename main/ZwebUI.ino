@@ -39,6 +39,8 @@
 #    include "config_SSD1306.h"
 #  endif
 
+uint32_t requestToken = 0;
+
 WebServer server(80);
 
 /*------------------- Local functions ----------------------*/
@@ -60,6 +62,7 @@ void handleTK(); // Return Cloud token
 esp_err_t nvs_flash_erase(void);
 extern String stateMeasures(); // Send a status message
 extern void eraseAndRestart();
+extern unsigned long uptime();
 
 /*------------------- Local functions ----------------------*/
 
@@ -243,10 +246,11 @@ void handleCL() {
     strncpy(deviceToken, " Not", 4);
   }
 
+  requestToken = esp_random();
 #    ifdef ESP32_ETHERNET
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
 #    else
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, cloud_body, jsonChar, gateway_name, cloudEnabled, deviceToken, (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, cloud_body, jsonChar, gateway_name, cloudEnabled, deviceToken, (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
 #    endif
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
@@ -262,10 +266,10 @@ void handleTK() {
     }
   }
 
-  if (server.hasArg("deviceToken")) {
+  if (server.hasArg("deviceToken") && server.hasArg("uptime") && server.hasArg("RT")) {
     String deviceToken = server.arg("deviceToken");
 
-    if (setCloudDeviceToken(deviceToken)) {
+    if (setCloudDeviceToken(deviceToken) && server.arg("RT").toInt() == requestToken && server.arg("uptime").toInt() + 600 > uptime()) {
       setCloudEnabled(true);
       char jsonChar[100];
       serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -282,6 +286,9 @@ void handleTK() {
       response += String(buffer);
       server.send(200, "text/html", response);
     } else {
+      Log.trace(F("handleTK: uptime: %u, uptime: %u, ok: %T" CR), server.arg("uptime").toInt(), uptime(), server.arg("uptime").toInt() + 600 > uptime());
+      Log.trace(F("handleTK: RT: %d, RT: %d, ok: %T " CR), server.arg("RT").toInt(), requestToken, server.arg("RT").toInt() == requestToken);
+      Log.error(F("[WebUI] Invalid Token Response: RT: %T, uptime: %T" CR), server.arg("RT").toInt() == requestToken, server.arg("uptime").toInt() + 600 > uptime());
       server.send(500, "text/html", "Internal ERROR - Invalid Token");
     }
   }
