@@ -172,7 +172,7 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonAlarm       "{{ value_json.alarm }}"
 #  define jsonInuse       "{{ value_json.power | float > 0 }}"
 #  define jsonInuseRN8209 "{{ value_json.power | float > 0.02 }}"
-#  define jsonVoltBM2     "{{% if  value_json.model_id == \"BM2\" -%} {{value_json.volt}} {%- endif %}}"
+#  define jsonVoltBM2     "{% if value_json.uuid is not defined -%} {{value_json.volt}} {%- endif %}"
 #else // Home assistant autodiscovery value key definition
 #  define jsonBatt        "{{ value_json.batt | is_defined }}"
 #  define jsonLux         "{{ value_json.lux | is_defined }}"
@@ -210,7 +210,7 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define jsonAlarm       "{{ value_json.alarm | is_defined }}"
 #  define jsonInuse       "{{ value_json.power | is_defined | float > 0 }}"
 #  define jsonInuseRN8209 "{{ value_json.power | is_defined | float > 0.02 }}"
-#  define jsonVoltBM2     "{{% if  value_json.model_id == \"BM2\" and value_json.volt is defined -%} {{value_json.volt}} {%- endif %}}"
+#  define jsonVoltBM2     "{% if value_json.uuid is not defined and value_json.volt is defined -%} {{value_json.volt}} {%- endif %}"
 #endif
 
 #define stateClassNone            ""
