@@ -524,9 +524,6 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_
 #  ifndef ANEOPIX_ERROR_LED
 #    define ANEOPIX_ERROR_LED 0 // First Led
 #  endif
-#  ifndef ANEOPIX_BOOT_LED
-#    define ANEOPIX_BOOT_LED 0 // First Led
-#  endif
 // no ANEOPIX_CRITICAL_LED and FASTLED_IND_DATA_GPIO2 with Adafruit_NeoPixel
 // preprocessor calculates color values
 #  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16      // dimmed /4
@@ -554,7 +551,7 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_
     pinMode(RGB_LED_POWER, OUTPUT);                     \
     digitalWrite(RGB_LED_POWER, HIGH);                  \
     leds.begin();                                       \
-    leds.setPixelColor(ANEOPIX_BOOT_LED, ANEOPIX_BOOT); \
+    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BOOT); \
     leds.show();
 #  define ErrorIndicatorON()                              \
     leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
