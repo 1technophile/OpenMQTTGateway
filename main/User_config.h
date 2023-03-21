@@ -615,7 +615,8 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
-#define subjectSYStoMQTT             "/SYStoMQTT"
+#define subjectSYStoMQTT             "/SYStoMQTT" // system parameters
+#define subjectRLStoMQTT             "/RLStoMQTT" // latest release information
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 #define subjectMQTTtoSYSupdate       "/commands/MQTTtoSYS/firmware_update"
 #define TimeToResetAtStart           5000 // Time we allow the user at start for the reset command by button press
