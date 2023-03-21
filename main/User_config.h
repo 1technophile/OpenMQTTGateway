@@ -529,33 +529,27 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_
 #  endif
 // no ANEOPIX_CRITICAL_LED and FASTLED_IND_DATA_GPIO2 with Adafruit_NeoPixel
 // preprocessor calculates color values
-#  define ANEOPIX_HOTPINK (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) |  \
-                            (((0x69 * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
-                            (0xB4 * ANEOPIX_BRIGHTNESS) >> 8
 #  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16      // dimmed /4
 #  define ANEOPIX_GOLD (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
                          (((0xD7 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
-#  define ANEOPIX_GREEN ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8         // bright
 #  define ANEOPIX_GREEN_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 8     // dimmed /4
 #  define ANEOPIX_AQUA (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
                         (0xFF * ANEOPIX_BRIGHTNESS) >> 8
 #  define ANEOPIX_BLUE_DIM (0x3F * ANEOPIX_BRIGHTNESS) >> 8             // dimmed /4
 #  define ANEOPIX_BLACK 0
 // signalling color combinations tested for good visibility
-#  if ANEOPIX_COLOR_SCHEME == 0
+// colors common to the schemes
 #    define ANEOPIX_ERROR ANEOPIX_RED_DIM
 #    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold  = sending
+#    define ANEOPIX_OFF ANEOPIX_BLACK
+#    define ANEOPIX_BOOT ANEOPIX_AQUA
+// color differences
+#  if ANEOPIX_COLOR_SCHEME == 0
 #    define ANEOPIX_INFO ANEOPIX_GREEN_DIM      // dimmed green = info
-#    define ANEOPIX_OFF ANEOPIX_BLACK
-#    define ANEOPIX_BOOT ANEOPIX_AQUA
 #  else
-#    define ANEOPIX_ERROR ANEOPIX_RED_DIM
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold = sending
 #    define ANEOPIX_INFO ANEOPIX_BLUE_DIM       // dimmed blue = info
-#    define ANEOPIX_OFF ANEOPIX_BLACK
-#    define ANEOPIX_BOOT ANEOPIX_AQUA
 #  endif
-
+// during boot the RGB LED is on to signal also reboots
 #  define SetupIndicators()                             \
     pinMode(RGB_LED_POWER, OUTPUT);                     \
     digitalWrite(RGB_LED_POWER, HIGH);                  \
