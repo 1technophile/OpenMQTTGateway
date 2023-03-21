@@ -18,3 +18,5 @@ Once your broker is installed it can be interesting to see the traffic passing t
 * [HIVE MQ Web client](https://github.com/hivemq/hivemq-mqtt-web-client)
 * [MQTT FX](https://mqttfx.jensd.de/)
 
+For Android, you can use this application to visualize and control messages.
+* [IoT MQTT Panel] (https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod&hl=en)
