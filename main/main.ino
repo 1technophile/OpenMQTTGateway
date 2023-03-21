@@ -2136,7 +2136,7 @@ bool checkForUpdates() {
     if (!jsondata.containsKey("release_summary"))
       jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
-    pub(subjectSYStoMQTT, jsondata);
+    pub(subjectRLStoMQTT, jsondata);
     Log.trace(F("Update file found on server" CR));
     return true;
   } else {
@@ -2201,7 +2201,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject jsondata = jsonBuffer.to<JsonObject>();
       jsondata["release_summary"] = "Update in progress ...";
-      pub(subjectSYStoMQTT, jsondata);
+      pub(subjectRLStoMQTT, jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert) {
@@ -2267,7 +2267,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           Log.notice(F("HTTP_UPDATE_OK" CR));
           jsondata["release_summary"] = "Update success !";
           jsondata["installed_version"] = latestVersion;
-          pub(subjectSYStoMQTT, jsondata);
+          pub(subjectRLStoMQTT, jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();

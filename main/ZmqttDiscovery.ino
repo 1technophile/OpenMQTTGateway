@@ -617,7 +617,7 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("update", //set Type
-                  subjectSYStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
+                  subjectRLStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "firmware", "", //set availability_topic,device_class,value_template,
                   LATEST_OR_DEV, "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
