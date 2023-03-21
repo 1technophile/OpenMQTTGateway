@@ -544,10 +544,10 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_
 // signalling color combinations tested for good visibility
 #  if ANEOPIX_COLOR_SCHEME == 0
 #    define ANEOPIX_ERROR ANEOPIX_RED_DIM
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_GREEN   // bright green = sending
+#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold  = sending
 #    define ANEOPIX_INFO ANEOPIX_GREEN_DIM      // dimmed green = info
 #    define ANEOPIX_OFF ANEOPIX_BLACK
-#    define ANEOPIX_BOOT ANEOPIX_HOTPINK
+#    define ANEOPIX_BOOT ANEOPIX_AQUA
 #  else
 #    define ANEOPIX_ERROR ANEOPIX_RED_DIM
 #    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold = sending
