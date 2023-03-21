@@ -827,10 +827,10 @@ OledSerial Oled(0); // Not sure about this, came from Hardwareserial
 OledSerial::OledSerial(int x) {
   displayQueue = xQueueCreate(5, sizeof(displayQueueMessage*));
 #  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
-  // pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
-  // digitalWrite(RST_OLED, LOW);
-  // delay(50);
-  // digitalWrite(RST_OLED, HIGH);
+  pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
+  digitalWrite(RST_OLED, LOW);
+  delay(50);
+  digitalWrite(RST_OLED, HIGH);
   display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
 #  elif defined(Wireless_Stick)
   // pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
