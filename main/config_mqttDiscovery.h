@@ -121,6 +121,10 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define discovery_republish_on_reconnect false
 #endif
 
+#ifndef DiscoveryAutoOffTimer
+#  define DiscoveryAutoOffTimer 1800000 // Timer (ms) that trigger auto discovery to off after activation, the goal is to avoid the discovery of entities that are not expected
+#endif
+
 #ifndef GATEWAY_MANUFACTURER
 #  define GATEWAY_MANUFACTURER "OMG_community"
 #endif

@@ -93,7 +93,7 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
     RTL_433devices.push_back(device);
     newRTL_433Devices++;
   } else {
-    Log.trace(F("update %s count: %d published: %T" CR), id, device->count, device->isDisc);
+    // Log.trace(F("update %s count: %d published: %T" CR), id, device->count, device->isDisc);
     device->count++;
     if (device->count > 10) {
       device->count = 10;
@@ -122,7 +122,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
     RTL_433device* pdevice = *it;
     //
 
-    Log.trace(F("Device id %s" CR), pdevice->uniqueId);
+    // Log.trace(F("Device id %s" CR), pdevice->uniqueId);
     // Do not launch discovery for the RTL_433devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
     if ((overrideDiscovery || !isDiscovered(pdevice)) && pdevice->count > 9) {
       size_t numRows = sizeof(parameters) / sizeof(parameters[0]);
