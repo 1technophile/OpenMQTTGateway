@@ -638,6 +638,9 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #  endif
 #endif
 
+/*-----------PLACEHOLDERS FOR WebUI DISPLAY--------------*/
+#define pubWebUI(...)        // display the published message onto the OLED display
+
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
 // The real definitions are in config_M5.h / config_SSD1306.h
 #define pubOled(...)        // display the published message onto the OLED display

@@ -200,6 +200,7 @@ bool CloudConfig_save() {
   preferences.begin(Gateway_Short_Name, false);
   preferences.putString("CLOUDConfig", conf);
   preferences.end();
+  return true;
 }
 
 void MQTTtoCLOUD(char* topicOri, JsonObject& CLOUDdata) { // json object decoding

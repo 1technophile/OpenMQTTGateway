@@ -39,6 +39,7 @@
 #include <Wire.h>
 
 #include "SSD1306Wire.h"
+#include "config_WebUI.h"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 
@@ -50,8 +51,14 @@
 #  define LOG_TO_OLED false // Default to not display log messages on display
 #endif
 
-#ifndef JSON_TO_OLED
-#  define JSON_TO_OLED true // Default to displaying JSON messages on the display
+#ifndef ZwebUI
+#  ifndef JSON_TO_OLED
+#    define JSON_TO_OLED true // Default to displaying JSON messages on the display
+#  endif
+#else
+#  ifndef JSON_TO_OLED
+#    define JSON_TO_OLED false // Default to displaying JSON messages on the display
+#  endif
 #endif
 
 #ifndef DISPLAY_PAGE_INTERVAL
@@ -60,10 +67,6 @@
 
 #ifndef DISPLAY_IDLE_LOGO
 #  define DISPLAY_IDLE_LOGO true // Display the OMG logo when idle
-#endif
-
-#ifndef DISPLAY_METRIC
-#  define DISPLAY_METRIC true // Units used for display of sensor data
 #endif
 
 #ifndef DISPLAY_FLIP
@@ -121,28 +124,6 @@ void ssd1306Print(char*);
 
 #define pubOled(...) ssd1306PubPrint(__VA_ARGS__)
 void ssd1306PubPrint(const char*, JsonObject&);
-
-// Structure for queueing OMG messages to the display
-
-/*
-Structure for queueing OMG messages to the display.
-Length of each line is OLED_TEXT_WIDTH
-- title
-- line1
-- line2
-- line3
-- line4
-*/
-struct displayQueueMessage {
-  char title[OLED_TEXT_WIDTH];
-  char line1[OLED_TEXT_WIDTH];
-  char line2[OLED_TEXT_WIDTH];
-  char line3[OLED_TEXT_WIDTH];
-  char line4[OLED_TEXT_WIDTH];
-};
-
-displayQueueMessage* currentOledMessage;
-
 /*-------------------End of Global Variables----------------------*/
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
@@ -152,7 +133,7 @@ public:
   OledSerial(int);
   void begin();
   void drawLogo(int xshift, int yshift);
-  boolean displayPage(displayQueueMessage*);
+  boolean displayPage(webUIQueueMessage*);
 
   SSD1306Wire* display;
 
@@ -193,23 +174,5 @@ protected:
 };
 
 extern OledSerial Oled;
-
-/*------------------- Unit Conversion Functions ----------------------*/
-
-#define convert_kmph2mph(kmph) (kmph * (1.0f / 1.609344f))
-
-#define convert_mph2kmph(mph) (mph * 1.609344f)
-
-#define convert_mm2inch(mm) (mm * 0.039370f)
-
-#define convert_inch2mm(inch) (inch * 25.4f)
-
-#define convert_kpa2psi(kpa) (kpa * (1.0f / 6.89475729f))
-
-#define convert_psi2kpa(psi) (psi * 6.89475729f)
-
-#define convert_hpa2inhg(hpa) (hpa * (1.0f / 33.8639f))
-
-#define convert_inhg2hpa(inhg) (inhg * 33.8639f)
 
 #endif

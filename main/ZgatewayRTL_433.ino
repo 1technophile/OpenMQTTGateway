@@ -261,7 +261,6 @@ void rtl_433_Callback(char* message) {
 #  endif
     pub((char*)topic.c_str(), RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
-    pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);
   }
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());

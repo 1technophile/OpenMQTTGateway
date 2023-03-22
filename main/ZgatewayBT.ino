@@ -1026,9 +1026,6 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
     }
-    if (BLEdata.containsKey("type") && (BLEdata.containsKey("model") || BLEdata.containsKey("distance"))) { // Only display sensor data with type
-      pubOled(subjectBTtoMQTT, BLEdata);
-    }
     if (!BTConfig.pubAdvData) {
       BLEdata.remove("servicedatauuid");
       BLEdata.remove("servicedata");

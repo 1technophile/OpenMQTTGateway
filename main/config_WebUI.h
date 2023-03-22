@@ -28,26 +28,89 @@
 
 #include <Wire.h>
 
+#define WEBUI_TEXT_WIDTH      128
+
 /*------------------- Optional Compiler Directives ----------------------*/
 
 #ifndef WEB_TEMPLATE_BUFFER_MAX_SIZE
 #  define WEB_TEMPLATE_BUFFER_MAX_SIZE 2000
 #endif
 
+#ifndef DISPLAY_METRIC
+#  define DISPLAY_METRIC true // Units used for display of sensor data
+#endif
+
+#ifndef DISPLAY_WEBUI_INTERVAL
+#  define DISPLAY_WEBUI_INTERVAL 3 // Number of seconds between json message displays
+#endif
+
 /*------------------- End of Compiler Directives ----------------------*/
 
+// Structure for queueing OMG messages to the display
+
+/*
+Structure for queueing OMG messages to the display.
+Length of each line is WEBUI_TEXT_WIDTH
+- title
+- line1
+- line2
+- line3
+- line4
+*/
+
+struct webUIQueueMessage {
+  char title[WEBUI_TEXT_WIDTH];
+  char line1[WEBUI_TEXT_WIDTH];
+  char line2[WEBUI_TEXT_WIDTH];
+  char line3[WEBUI_TEXT_WIDTH];
+  char line4[WEBUI_TEXT_WIDTH];
+} webUIQueueMessage_t;
+
+/*------------------- Global Functions and Variables ----------------------*/
+
+#ifdef ZwebUI
+#  define pubWebUI(...) webUIPubPrint(__VA_ARGS__)
+void webUIPubPrint(const char*, JsonObject&);
+#endif
+void WebUISetup();
+void WebUILoop();
+void MQTTtoWebUI(char*, JsonObject&);
+
+webUIQueueMessage* currentWebUIMessage;
+
+/*------------------- End of Global Functions ----------------------*/
+
+#define subjectMQTTtoWebUIset "/commands/MQTTtoWebUI/config"
+#define subjectWebUItoMQTT    "/WebUItoMQTT"
+
+
+
+/*------------------- Unit Conversion Functions ----------------------*/
+
+#define convert_kmph2mph(kmph) (kmph * (1.0f / 1.609344f))
+
+#define convert_mph2kmph(mph) (mph * 1.609344f)
+
+#define convert_mm2inch(mm) (mm * 0.039370f)
+
+#define convert_inch2mm(inch) (inch * 25.4f)
+
+#define convert_kpa2psi(kpa) (kpa * (1.0f / 6.89475729f))
+
+#define convert_psi2kpa(psi) (psi * 6.89475729f)
+
+#define convert_hpa2inhg(hpa) (hpa * (1.0f / 33.8639f))
+
+#define convert_inhg2hpa(inhg) (inhg * 33.8639f)
+
+/* SPIFFS was used during development to store web pages */
+
 #define FILESYSTEM SPIFFS
-
-extern void WebUISetup();
-
-extern void WebUILoop();
 
 typedef struct logMsg {
   const uint8_t* buffer;
   size_t size;
 };
-
-/*------------------- Web Constants  ----------------------*/
 
 /*------------------- Take over serial output and split to  ----------------------*/
 

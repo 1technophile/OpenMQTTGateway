@@ -419,6 +419,7 @@ void pub(const char* topicori, JsonObject& data) {
 #if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
   pubMQTT(topic, dataAsString.c_str());
+  pubWebUI(topicori, data);
 #endif
 
 #if simplePublishing
@@ -1635,6 +1636,9 @@ void loop() {
 #  ifdef ZgatewayCloud
         stateCLOUDStatus();
 #  endif
+#  ifdef ZwebUI
+        stateWebUIStatus();
+#  endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
@@ -1949,7 +1953,6 @@ String stateMeasures() {
 #  endif
   SYSdata["modules"] = modules;
   pub(subjectSYStoMQTT, SYSdata);
-  pubOled(subjectSYStoMQTT, SYSdata);
   String output;
   serializeJson(SYSdata, output);
   return output;
