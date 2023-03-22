@@ -1105,6 +1105,7 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
       BLEdata.remove("cidc");
       BLEdata.remove("acts");
       BLEdata.remove("cont");
+      BLEdata.remove("track");
     }
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
       pubBT(BLEdata);
