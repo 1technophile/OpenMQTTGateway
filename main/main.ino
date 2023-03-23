@@ -1622,7 +1622,9 @@ void loop() {
         checkForUpdates();
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
+#    if message_UTCtimestamp || message_unixtimestamp
         syncNTP();
+#    endif
 #  endif
         timer_sys_checks = millis();
       }
