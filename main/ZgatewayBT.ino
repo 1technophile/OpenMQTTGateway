@@ -1011,7 +1011,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
           String tracker_id = macWOdots + "-tracker";
           createDiscovery("device_tracker",
                           discovery_topic.c_str(), tracker_name.c_str(), tracker_id.c_str(),
-                          will_Topic, "occupancy", "{% if value_json.rssi -%}home{%- else -%}not_home{%- endif %}",
+                          will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
                           "", "", "",
                           0, "", "", false, "",
                           model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
