@@ -761,6 +761,7 @@ void setup() {
   SetupIndicators(); // For RGB Leds
 
 #if defined(ESP8266) || defined(ESP32)
+  delay(100); //give time to start the flash and avoid issue when reading the preferences
 #  ifdef ESP8266
 #    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
   Serial.end();
