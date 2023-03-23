@@ -171,7 +171,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
                             (char*)idWoKey.c_str(), "Govee", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
                             stateClassMeasurement //State Class
             );
-          } else {
+          } else if (strcmp(pdevice->modelName, "Interlogix-Security") != 0) {
             createDiscovery("sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
                             "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
