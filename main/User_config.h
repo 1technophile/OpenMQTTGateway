@@ -416,9 +416,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef RGB_INDICATORS // Management of Errors, reception/emission and informations indicators with basic LED
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
 #  ifndef LED_SEND_RECEIVE
-#    ifdef LED_BUILTIN
-#      define LED_SEND_RECEIVE LED_BUILTIN
-#    endif
 #    ifdef ESP8266
 //#      define LED_SEND_RECEIVE 40
 #    elif ESP32
@@ -433,9 +430,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #    define LED_SEND_RECEIVE_ON HIGH
 #  endif
 #  ifndef LED_ERROR
-#    ifdef LED_BUILTIN
-#      define LED_ERROR LED_BUILTIN
-#    endif
 #    ifdef ESP8266
 //#      define LED_ERROR 42
 #    elif ESP32
@@ -450,9 +444,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #    define LED_ERROR_ON HIGH
 #  endif
 #  ifndef LED_INFO
-#    ifdef LED_BUILTIN
-#      define LED_INFO LED_BUILTIN
-#    endif
 #    ifdef ESP8266
 //#      define LED_INFO 44
 #    elif ESP32
