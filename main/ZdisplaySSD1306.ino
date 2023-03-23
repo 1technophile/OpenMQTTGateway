@@ -175,6 +175,7 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     // save, load, init, erase
     if (SSD1306data.containsKey("save") && SSD1306data["save"]) {
       SSD1306Config_save();
+      success = true;
     } else if (SSD1306data.containsKey("load") && SSD1306data["load"]) {
       success = SSD1306Config_load();
       if (success) {
