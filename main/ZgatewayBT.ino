@@ -998,6 +998,25 @@ void launchBTDiscovery(bool overrideDiscovery) {
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
+        String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
+        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
+          String tracker_name = String(model_id.c_str()) + "-tracker";
+          String tracker_id = macWOdots + "-tracker";
+          createDiscovery("device_tracker",
+                          discovery_topic.c_str(), tracker_name.c_str(), tracker_id.c_str(),
+                          will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
+                          "", "", "",
+                          0, "", "", false, "",
+                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                          stateClassNone);
+        }
         if (!properties.empty()) {
           StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
           deserializeJson(jsonBuffer, properties);
@@ -1005,7 +1024,6 @@ void launchBTDiscovery(bool overrideDiscovery) {
             Log.trace("Key: %s", prop.key().c_str());
             Log.trace("Unit: %s", prop.value()["unit"].as<const char*>());
             Log.trace("Name: %s", prop.value()["name"].as<const char*>());
-            String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
 #    if OpenHABDiscovery
@@ -1013,7 +1031,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 #    else
             String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
 #    endif
-            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && !strcmp(prop.key().c_str(), "state")) {
+            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
               String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
               String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
               createDiscovery("switch", //set Type
@@ -1023,7 +1041,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
                               model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                               stateClassNone, "off", "on");
-            } else {
+            } else if (strcmp(prop.key().c_str(), "device") != 0) {
               createDiscovery("sensor",
                               discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                               will_Topic, prop.value()["name"], value_template.c_str(),
@@ -1031,22 +1049,6 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               0, "", "", false, "",
                               model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                               stateClassMeasurement);
-            }
-            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-                p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
-              createDiscovery("device_tracker",
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, "occupancy", "{% if value_json.rssi -%}home{%- else -%}not_home{%- endif %}",
-                              "", "", "",
-                              0, "", "", false, "",
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassNone);
             }
           }
         }
