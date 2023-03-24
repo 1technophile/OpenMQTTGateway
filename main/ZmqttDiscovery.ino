@@ -295,6 +295,8 @@ void createDiscovery(const char* sensor_type,
   }
   if (payload_off[0])
     sensor["pl_off"] = payload_off; //payload_off
+  if (strcmp(sensor_type, "device_tracker") == 0)
+    sensor["source_type "] = "bluetooth_le"; // payload_install for update
   if (off_delay != 0)
     sensor["off_delay"] = off_delay; //off_delay
   if (payload_available[0])
@@ -386,8 +388,22 @@ void eraseTopic(const char* sensor_type, const char* unique_id) {
 }
 
 #  ifdef ZgatewayBT
+void btPresenceParametersDiscovery() {
+  if (BTConfig.presenceEnable) {
+    createDiscovery("number", //set Type
+                    subjectBTtoMQTT, "BT: Presence detection timer", (char*)getUniqueId("presenceawaytimer", "").c_str(), //set state_topic,name,uniqueId
+                    will_Topic, "", "{{ value_json.presenceawaytimer/60000 }}", //set availability_topic,device_class,value_template,
+                    "{\"presenceawaytimer\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
+                    0, //set  off_delay
+                    Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
+                    stateClassNone //State Class
+    );
+  }
+}
+
 void btScanParametersDiscovery() {
-  if (BTConfig.adaptiveScan == false) {
+  if (!BTConfig.adaptiveScan) {
     createDiscovery("number", //set Type
                     subjectBTtoMQTT, "BT: Interval between scans", (char*)getUniqueId("interval", "").c_str(), //set state_topic,name,uniqueId
                     will_Topic, "", "{{ value_json.interval/1000 }}", //set availability_topic,device_class,value_template,
@@ -601,7 +617,7 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("update", //set Type
-                  subjectSYStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
+                  subjectRLStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "firmware", "", //set availability_topic,device_class,value_template,
                   LATEST_OR_DEV, "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
@@ -881,7 +897,7 @@ void pubMqttDiscovery() {
       {"sensor", "volt", "RN8209", "voltage", jsonVolt, "", "", "V"},
       {"sensor", "current", "RN8209", "current", jsonCurrent, "", "", "A"},
       {"sensor", "power", "RN8209", "power", jsonPower, "", "", "W"},
-      {"binary_sensor", "inUse", "RN8209", "power", jsonInuse, "", "", ""}
+      {"binary_sensor", "inUse", "RN8209", "power", jsonInuseRN8209, "on", "off", ""}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -1104,6 +1120,8 @@ void pubMqttDiscovery() {
   }
 
   btScanParametersDiscovery();
+
+  btPresenceParametersDiscovery();
 
   createDiscovery("switch", //set Type
                   subjectBTtoMQTT, "BT: Publish HASS presence", (char*)getUniqueId("hasspresence", "").c_str(), //set state_topic,name,uniqueId

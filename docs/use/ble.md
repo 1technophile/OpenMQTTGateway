@@ -29,6 +29,26 @@ Once the data has been transmitted to the MQTT broker, it can be easily integrat
 
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
+## Receiving signals from BLE tracker devices for Presence detection
+By default the gateway will detect the BLE trackers from Tile, NUT, TAGIT, ITAG, MiBand, Amazfit and RuuviTag and create automaticaly a device tracker entity following the Home Assistant discovery convention (if the auto discovery is activated).
+The entity can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
+
+![](../img/OpenMQTTGateway-BLE-tracker-Home-Assistant.png)
+
+If you have multiple gateways, your BLE trackers may not be detected temporary by one gateway but still by the others. In this case you will see the tracker appears offline briefly and online again once it is detected by the others gateways.
+
+By default `presenceawaytimer` is set to 120s, you can change it with the following command (ms)
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceawaytimer":66000}'`
+
+Generally BLE devices will not broadcast if they are paired so you may need to ensure your beacons is unpaired/disconnected before it will be seen by the gateway.
+
+Consider the distance estimation as a beta feature.
+
+Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
+
+iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
+
 ## Setting a white or black list
 A black list is a list of MAC addresses that will never be published by OMG
 to set black list
@@ -157,33 +177,6 @@ If you want to change this characteristic:
 ::: tip
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
 :::
-
-## Receiving signals from BLE beacon devices for Presence detection
-
-Subscribe to all the messages with mosquitto or open your MQTT client software:
-
-`    sudo mosquitto_sub -t +/# -v`
-
-_NOTE: HM-10 or HM-11 module needed if you are not using ESP32; configure in `User_config.h`_
-
-The BT gateway module for OpenMQTTGateway enables the detection of BLE beacons and their signal strength.  Generally BLE devices will not broadcast if they are paired so you may need to ensure your beacons is unpaired before it will be seen by the gateway.
-
-If beacons are detected the gateway will periodically publish messages to MQTT (beacons must not be paired, see above):
-
-```
-home/OpenMQTTGateway/BTtoMQTT/45E174126E00 {"id":"45:e1:74:12:6e:00","rssi":-89,"distance":21.51847,"servicedata":"fe0000000000000000000000000000000000000000"}
-```
-```
-home/OpenMQTTGateway/BTtoMQTT/C7FaaD132C00 {"id":"c7:fa:ad:13:2c:00","rssi":-68,"distance":2.799256,"servicedata":"drfgdrgdsrgesrdgdrgdregesrgtrhtyhtfyhdtyhh"}
-```
-
-The subtopic after `home/BTtoMQTT/` is the MAC address of the Bluetooth low energy beacon.  The rssi value is the [RSSI signal level](https://www.metageek.com/training/resources/understanding-rssi.html) from which you may deduce the relative distance to the device.
-Consider the distance as a beta feature as currently we are not retrieving the emitting power of the beacon to make it more accurate.
-
-Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
-
-iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
-
 
 ## Setting if the gateway publish into Home Assistant Home presence topic
 

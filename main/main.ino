@@ -761,9 +761,13 @@ void setup() {
   checkButton();
 #endif
   //setup LED status
-  SetupIndicators();
+  SetupIndicatorError();
+  SetupIndicatorSendReceive();
+  SetupIndicatorInfo();
+  SetupIndicators(); // For RGB Leds
 
 #if defined(ESP8266) || defined(ESP32)
+  delay(100); //give time to start the flash and avoid issue when reading the preferences
 #  ifdef ESP8266
 #    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
   Serial.end();
@@ -1509,24 +1513,24 @@ void setup_ethernet_esp32() {
 
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
-    case SYSTEM_EVENT_ETH_START:
+    case ARDUINO_EVENT_ETH_START:
       Log.trace(F("Ethernet Started" CR));
       ETH.setHostname(gateway_name);
       break;
-    case SYSTEM_EVENT_ETH_CONNECTED:
+    case ARDUINO_EVENT_ETH_CONNECTED:
       Log.notice(F("Ethernet Connected" CR));
       break;
-    case SYSTEM_EVENT_ETH_GOT_IP:
+    case ARDUINO_EVENT_ETH_GOT_IP:
       Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
       Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
       Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
       esp32EthConnected = true;
       break;
-    case SYSTEM_EVENT_ETH_DISCONNECTED:
+    case ARDUINO_EVENT_ETH_DISCONNECTED:
       Log.error(F("Ethernet Disconnected" CR));
       esp32EthConnected = false;
       break;
-    case SYSTEM_EVENT_ETH_STOP:
+    case ARDUINO_EVENT_ETH_STOP:
       Log.error(F("Ethernet Stopped" CR));
       esp32EthConnected = false;
       break;
@@ -1645,7 +1649,9 @@ void loop() {
         checkForUpdates();
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
+#    if message_UTCtimestamp || message_unixtimestamp
         syncNTP();
+#    endif
 #  endif
         timer_sys_checks = millis();
       }
@@ -2171,7 +2177,7 @@ bool checkForUpdates() {
     if (!jsondata.containsKey("release_summary"))
       jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
-    pub(subjectSYStoMQTT, jsondata);
+    pub(subjectRLStoMQTT, jsondata);
     Log.trace(F("Update file found on server" CR));
     return true;
   } else {
@@ -2211,8 +2217,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #    if defined(ZgatewayBT)
         stopProcessing();
 #    endif
-        if (!checkForUpdates())
-          return;
         systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
         url = systemUrl.c_str();
         Log.notice(F("Using system OTA url with latest version %s" CR), url);
@@ -2236,7 +2240,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject jsondata = jsonBuffer.to<JsonObject>();
       jsondata["release_summary"] = "Update in progress ...";
-      pub(subjectSYStoMQTT, jsondata);
+      pub(subjectRLStoMQTT, jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert) {
@@ -2302,7 +2306,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           Log.notice(F("HTTP_UPDATE_OK" CR));
           jsondata["release_summary"] = "Update success !";
           jsondata["installed_version"] = latestVersion;
-          pub(subjectSYStoMQTT, jsondata);
+          pub(subjectRLStoMQTT, jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();
