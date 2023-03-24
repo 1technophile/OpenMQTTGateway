@@ -126,8 +126,6 @@ void ssd1306Print(char*);
 void ssd1306PubPrint(const char*, JsonObject&);
 /*-------------------End of Global Variables----------------------*/
 
-displayQueueMessage* currentOledMessage;
-
 /*-------------------End of Global Variables----------------------*/
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
