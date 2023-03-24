@@ -1144,6 +1144,14 @@ void setupTLS(bool self_signed, uint8_t index) {
 }
 #endif
 
+void ESPRestart() {
+#if defined(ESP32)
+  ESP.restart();
+#elif defined(ESP8266)
+  ESP.reset();
+#endif
+}
+
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
   WiFi.mode(WIFI_STA);
@@ -1243,14 +1251,6 @@ void checkButton() {
 #  else
 void checkButton() {}
 #  endif
-
-void ESPRestart() {
-#  if defined(ESP32)
-  ESP.restart();
-#  elif defined(ESP8266)
-  ESP.reset();
-#  endif
-}
 
 void eraseAndRestart() {
   Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
