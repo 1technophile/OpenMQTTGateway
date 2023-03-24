@@ -515,11 +515,11 @@ String stateWebUIStatus() {
   JsonObject WebUIdata = jsonBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
 
-  pub(subjectWebUItoMQTT, WebUIdata);
   String output;
   serializeJson(WebUIdata, output);
 
-  WebUIdata["currentMessage"] = (bool)currentWebUIMessage;
+  // WebUIdata["currentMessage"] = currentWebUIMessage;
+  pub(subjectWebUItoMQTT, WebUIdata);
   return output;
 }
 
