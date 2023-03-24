@@ -1068,10 +1068,8 @@ void setOTA() {
     last_ota_activity_millis = 0;
     ErrorIndicatorOFF();
     SendReceiveIndicatorOFF();
-#  if defined(ZgatewayBT) && defined(ESP32)
-    startProcessing();
-#  endif
     lpDisplayPrint("OTA done");
+    ESPRestart();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
@@ -1081,9 +1079,6 @@ void setOTA() {
     last_ota_activity_millis = millis();
     ErrorIndicatorOFF();
     SendReceiveIndicatorOFF();
-#  if defined(ZgatewayBT) && defined(ESP32)
-    startProcessing();
-#  endif
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
@@ -1095,6 +1090,7 @@ void setOTA() {
       Log.error(F("Receive Failed" CR));
     else if (error == OTA_END_ERROR)
       Log.error(F("End Failed" CR));
+    ESPRestart();
   });
   ArduinoOTA.begin();
 }
@@ -1247,6 +1243,14 @@ void checkButton() {
 #  else
 void checkButton() {}
 #  endif
+
+void ESPRestart() {
+#  if defined(ESP32)
+  ESP.restart();
+#  elif defined(ESP8266)
+  ESP.reset();
+#  endif
+}
 
 void eraseAndRestart() {
   Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
@@ -1814,9 +1818,6 @@ void syncNTP() {
 
   if (count >= 60) {
     Log.error(F("Unable to update - invalid time" CR));
-#  if defined(ZgatewayBT) && defined(ESP32)
-    startProcessing();
-#  endif
     return;
   }
 }
@@ -2276,20 +2277,14 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();
 #  endif
-#  ifdef ESP32
-          ESP.restart();
-#  elif ESP8266
-          ESP.reset();
-#  endif
+          ESPRestart();
           break;
       }
 
       SendReceiveIndicatorOFF();
       ErrorIndicatorOFF();
 
-#  if defined(ZgatewayBT) && defined(ESP32)
-      startProcessing();
-#  endif
+      ESPRestart();
     }
   }
 }
@@ -2303,11 +2298,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       const char* cmd = SYSdata["cmd"];
       Log.notice(F("Command: %s" CR), cmd);
       if (strstr(cmd, restartCmd) != NULL) { //restart
-#  if defined(ESP8266)
-        ESP.reset();
-#  else
-        ESP.restart();
-#  endif
+        ESPRestart();
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
 #  ifndef ESPWifiManualSetup
         setup_wifimanager(true);
@@ -2340,17 +2331,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
         setESP32WifiPorotocolTxPower();
 #  endif
-        if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-#  if defined(ESP8266)
-          ESP.reset();
-#  else
-          ESP.restart();
-#  endif
-        }
       }
-#  if defined(ZgatewayBT) && defined(ESP32)
-      startProcessing();
-#  endif
+      ESPRestart();
     }
 
 #  ifdef MQTTsetMQTT
@@ -2442,9 +2424,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-#    if defined(ZgatewayBT) && defined(ESP32)
-      startProcessing();
-#    endif
+      ESPRestart();
     }
 #  endif
     if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
@@ -2517,10 +2497,5 @@ String toString(uint32_t input) {
 */
 void watchdogReboot(byte reason) {
   Log.warning(F("Rebooting for reason code %d" CR), reason);
-#if defined(ESP32)
-  ESP.restart();
-#elif defined(ESP8266)
-  ESP.reset();
-#else // Insert other architectures here
-#endif
+  ESPRestart();
 }

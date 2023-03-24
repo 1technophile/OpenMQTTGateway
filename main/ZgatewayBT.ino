@@ -801,12 +801,11 @@ void stopProcessing() {
   Log.notice(F("Stop BLE processing" CR));
   ProcessLock = true;
   delay(BTConfig.scanDuration < 2000 ? BTConfig.scanDuration : 2000);
-}
-
-void startProcessing() {
-  Log.notice(F("Start BLE processing" CR));
-  ProcessLock = false;
-  vTaskResume(xCoreTaskHandle);
+  //Suspending and deleting tasks to free memory for OTA operations
+  vTaskSuspend(xCoreTaskHandle);
+  vTaskDelete(xCoreTaskHandle);
+  vTaskSuspend(xProcBLETaskHandle);
+  vTaskDelete(xProcBLETaskHandle);
 }
 
 void coreTask(void* pvParameters) {
@@ -847,7 +846,6 @@ void coreTask(void* pvParameters) {
       }
     } else {
       Log.trace(F("BLE core task canceled by processLock" CR));
-      vTaskSuspend(xCoreTaskHandle);
     }
   }
 }
