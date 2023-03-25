@@ -30,14 +30,17 @@ Once the data has been transmitted to the MQTT broker, it can be easily integrat
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
 ## Receiving signals from BLE tracker devices for Presence detection
-By default the gateway will detect the BLE trackers from Tile, NUT, TAGIT, ITAG, MiBand, Amazfit and RuuviTag and create automaticaly a device tracker entity following the Home Assistant discovery convention (if the auto discovery is activated).
-The entity can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
+The gateway can detect the BLE trackers from Tile, NUT, TAGIT, ITAG, MiBand, Amazfit and RuuviTag and create automaticaly a device tracker entity following the Home Assistant discovery convention (if the auto discovery is activated).
+To do this activate the "BT: Publish HASS presence" switch in your controller or send the followng MQTT command to your broker:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
+
+The entity created can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
 
 ![](../img/OpenMQTTGateway-BLE-tracker-Home-Assistant.png)
 
 If you have multiple gateways, your BLE trackers may not be detected temporary by one gateway but still by the others. In this case you will see the tracker appears offline briefly and online again once it is detected by the others gateways.
 
-By default `presenceawaytimer` is set to 120s, you can change it with the following command (ms)
+By default `presenceawaytimer` is set to 120s, you can change it from the slider in your controller or with the following command (ms)
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceawaytimer":66000}'`
 
