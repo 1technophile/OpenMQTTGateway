@@ -28,7 +28,7 @@ jobs:
           myToken: ${{ github.token }}
           view_top: 1
       - name: Set version tag from git
-        run: sed -i "s/version_tag/${{steps.last_release.outputs.tag_name}}/g" docs/.vuepress/config.js
+        run: sed -i "s/version_tag/${{steps.last_release.outputs.tag_name}}/g" docs/.vuepress/config.js scripts/latest_version.json
       - name: Build documentation
         run: |
           python ./scripts/generate_board_docs.py
