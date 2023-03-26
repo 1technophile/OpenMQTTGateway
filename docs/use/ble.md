@@ -318,7 +318,9 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 
 SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
-::: tip If the SwitchBot mode is changed the ESP32 must be restarted. :::
+::: tip 
+If the SwitchBot mode is changed the ESP32 must be restarted. 
+:::
 
 The device can also be controlled over MQTT with a simplified BLE write command.
 
