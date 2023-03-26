@@ -102,7 +102,10 @@ void loopSSD1306() {
       if (!Oled.displayPage(message)) {
         Log.warning(F("[ssd1306] displayPage failed: %s" CR), message->title);
       }
-      free(message);
+      if (currentOledMessage) {
+        free(currentOledMessage);
+      }
+      currentOledMessage = message;
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       logoDisplayed = false;
     }
@@ -171,10 +174,8 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     }
     // save, load, init, erase
     if (SSD1306data.containsKey("save") && SSD1306data["save"]) {
-      success = SSD1306Config_save();
-      if (success) {
-        Log.notice(F("SSD1306 config saved" CR));
-      }
+      SSD1306Config_save();
+      success = true;
     } else if (SSD1306data.containsKey("load") && SSD1306data["load"]) {
       success = SSD1306Config_load();
       if (success) {
@@ -204,7 +205,7 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
   }
 }
 
-bool SSD1306Config_save() {
+void SSD1306Config_save() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["onstate"] = displayState;
@@ -220,6 +221,7 @@ bool SSD1306Config_save() {
   preferences.begin(Gateway_Short_Name, false);
   preferences.putString("SSD1306Config", conf);
   preferences.end();
+  Log.notice(F("SSD1306 config saved" CR));
 }
 
 void SSD1306Config_init() {
@@ -824,22 +826,22 @@ OledSerial Oled(0); // Not sure about this, came from Hardwareserial
 OledSerial::OledSerial(int x) {
   displayQueue = xQueueCreate(5, sizeof(displayQueueMessage*));
 #  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
-  pinMode(RST_OLED, OUTPUT);
+  pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
   digitalWrite(RST_OLED, LOW);
   delay(50);
   digitalWrite(RST_OLED, HIGH);
   display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
 #  elif defined(Wireless_Stick)
-  pinMode(RST_OLED, OUTPUT);
-  digitalWrite(RST_OLED, LOW);
-  delay(50);
-  digitalWrite(RST_OLED, HIGH);
+  // pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
+  // digitalWrite(RST_OLED, LOW);
+  // delay(50);
+  // digitalWrite(RST_OLED, HIGH);
   display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_64_32);
 #  elif defined(ARDUINO_TTGO_LoRa32_v21new) // LILYGO® Disaster-Radio LoRa V2.1_1.6.1
-  pinMode(OLED_RST, OUTPUT);
-  digitalWrite(OLED_RST, LOW);
-  delay(50);
-  digitalWrite(OLED_RST, HIGH);
+  // pinMode(OLED_RST, OUTPUT);   // https://github.com/espressif/arduino-esp32/issues/4278
+  // digitalWrite(OLED_RST, LOW);
+  // delay(50);
+  // digitalWrite(OLED_RST, HIGH);
   display = new SSD1306Wire(0x3c, OLED_SDA, OLED_SCL, GEOMETRY_128_64);
 #  endif
 }
@@ -995,7 +997,7 @@ void OledSerial::drawLogo(int xshift, int yshift) {
   }
 }
 
-void stateSSD1306Display() {
+String stateSSD1306Display() {
   //Publish display state
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
@@ -1021,6 +1023,9 @@ void stateSSD1306Display() {
   } else {
     Oled.display->resetOrientation();
   }
+  String output;
+  serializeJson(DISPLAYdata, output);
+  return output;
 }
 
 #endif

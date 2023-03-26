@@ -107,6 +107,7 @@
 extern void setupSSD1306();
 extern void loopSSD1306();
 extern void MQTTtoSSD1306(char*, JsonObject&);
+extern String stateSSD1306Display();
 
 // Simple construct for displaying message in lcd and oled displays
 
@@ -139,6 +140,10 @@ struct displayQueueMessage {
   char line3[OLED_TEXT_WIDTH];
   char line4[OLED_TEXT_WIDTH];
 };
+
+displayQueueMessage* currentOledMessage;
+
+/*-------------------End of Global Variables----------------------*/
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
