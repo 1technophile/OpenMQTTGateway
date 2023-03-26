@@ -326,6 +326,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+//#define ZsensorMQ2 "MQ2"  //ESP8266, Arduino, ESP32
 //#define ZsensorTEMT6000 "TEMT6000"  //ESP8266
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
