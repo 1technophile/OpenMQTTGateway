@@ -326,6 +326,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+//#define ZsensorMQ2 "MQ2"  //ESP8266, Arduino, ESP32
 //#define ZsensorTEMT6000 "TEMT6000"  //ESP8266
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
@@ -417,13 +418,13 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 /*-------------DEFINE PINs FOR STATUS LEDs----------------*/
 #  ifndef LED_SEND_RECEIVE
 #    ifdef ESP8266
-#      define LED_SEND_RECEIVE 40
+//#      define LED_SEND_RECEIVE 40
 #    elif ESP32
-#      define LED_SEND_RECEIVE 40
+//#      define LED_SEND_RECEIVE 40
 #    elif __AVR_ATmega2560__ //arduino mega
-#      define LED_SEND_RECEIVE 40
+//#      define LED_SEND_RECEIVE 40
 #    else //arduino uno/nano
-#      define LED_SEND_RECEIVE 40
+//#      define LED_SEND_RECEIVE 40
 #    endif
 #  endif
 #  ifndef LED_SEND_RECEIVE_ON
@@ -431,13 +432,13 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  endif
 #  ifndef LED_ERROR
 #    ifdef ESP8266
-#      define LED_ERROR 42
+//#      define LED_ERROR 42
 #    elif ESP32
-#      define LED_ERROR 42
+//#      define LED_ERROR 42
 #    elif __AVR_ATmega2560__ //arduino mega
-#      define LED_ERROR 42
+//#      define LED_ERROR 42
 #    else //arduino uno/nano
-#      define LED_ERROR 42
+//#      define LED_ERROR 42
 #    endif
 #  endif
 #  ifndef LED_ERROR_ON
@@ -445,36 +446,57 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  endif
 #  ifndef LED_INFO
 #    ifdef ESP8266
-#      define LED_INFO 44
+//#      define LED_INFO 44
 #    elif ESP32
-#      define LED_INFO 44
+//#      define LED_INFO 44
 #    elif __AVR_ATmega2560__ //arduino mega
-#      define LED_INFO 44
+//#      define LED_INFO 44
 #    else //arduino uno/nano
-#      define LED_INFO 44
+//#      define LED_INFO 44
 #    endif
 #  endif
 #  ifndef LED_INFO_ON
 #    define LED_INFO_ON HIGH
 #  endif
-#  define SetupIndicators()            \
-    pinMode(LED_SEND_RECEIVE, OUTPUT); \
-    pinMode(LED_INFO, OUTPUT);         \
-    pinMode(LED_ERROR, OUTPUT);        \
-    SendReceiveIndicatorOFF();         \
-    InfoIndicatorOFF();                \
-    ErrorIndicatorOFF();
 
-#  define ErrorIndicatorON()        digitalWrite(LED_ERROR, LED_ERROR_ON)
-#  define ErrorIndicatorOFF()       digitalWrite(LED_ERROR, !LED_ERROR_ON)
-#  define SendReceiveIndicatorON()  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON)
-#  define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
-#  define InfoIndicatorON()         digitalWrite(LED_INFO, LED_INFO_ON)
-#  define InfoIndicatorOFF()        digitalWrite(LED_INFO, !LED_INFO_ON)
-#  define CriticalIndicatorON()     // Not used
-#  define CriticalIndicatorON()     // Not used
-#  define PowerIndicatorON()        // Not used
-#  define PowerIndicatorOFF()       // Not used
+#  ifdef LED_ERROR
+#    define SetupIndicatorError() \
+      pinMode(LED_ERROR, OUTPUT); \
+      ErrorIndicatorOFF();
+#    define ErrorIndicatorON()  digitalWrite(LED_ERROR, LED_ERROR_ON)
+#    define ErrorIndicatorOFF() digitalWrite(LED_ERROR, !LED_ERROR_ON)
+#  else
+#    define SetupIndicatorError()
+#    define ErrorIndicatorON()
+#    define ErrorIndicatorOFF()
+#  endif
+#  ifdef LED_SEND_RECEIVE
+#    define SetupIndicatorSendReceive()  \
+      pinMode(LED_SEND_RECEIVE, OUTPUT); \
+      SendReceiveIndicatorOFF();
+#    define SendReceiveIndicatorON()  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON)
+#    define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
+#  else
+#    define SetupIndicatorSendReceive()
+#    define SendReceiveIndicatorON()
+#    define SendReceiveIndicatorOFF()
+#  endif
+#  ifdef LED_INFO
+#    define SetupIndicatorInfo() \
+      pinMode(LED_INFO, OUTPUT); \
+      InfoIndicatorOFF();
+#    define InfoIndicatorON()  digitalWrite(LED_INFO, LED_INFO_ON)
+#    define InfoIndicatorOFF() digitalWrite(LED_INFO, !LED_INFO_ON)
+#  else
+#    define SetupIndicatorInfo()
+#    define InfoIndicatorON()
+#    define InfoIndicatorOFF()
+#  endif
+#  define CriticalIndicatorON() // Not used
+#  define CriticalIndicatorON() // Not used
+#  define PowerIndicatorON()    // Not used
+#  define PowerIndicatorOFF()   // Not used
+#  define SetupIndicators()     // Not used
 #else // Management of Errors, reception/emission and informations indicators with RGB LED
 #  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
 #    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
@@ -549,6 +571,9 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
       leds2[FASTLED_INFO_LED] = CRGB::Black; \
       FastLED.show()
 #  endif
+#  define SetupIndicatorInfo()
+#  define SetupIndicatorSendReceive()
+#  define SetupIndicatorError()
 #endif
 
 #ifdef ESP8266
@@ -615,7 +640,8 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
-#define subjectSYStoMQTT             "/SYStoMQTT"
+#define subjectSYStoMQTT             "/SYStoMQTT" // system parameters
+#define subjectRLStoMQTT             "/RLStoMQTT" // latest release information
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 #define subjectMQTTtoSYSupdate       "/commands/MQTTtoSYS/firmware_update"
 #define TimeToResetAtStart           5000 // Time we allow the user at start for the reset command by button press

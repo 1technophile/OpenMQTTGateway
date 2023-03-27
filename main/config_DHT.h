@@ -37,7 +37,9 @@ extern void MeasureTempAndHum();
 /*-------------DHT SENSOR TYPE-------------*/
 //#define DHT_SENSOR_TYPE DHT11 //uncomment for DHT11 Sensor
 //#define DHT_SENSOR_TYPE DHT21 //uncomment for DHT21 Sensor
-#define DHT_SENSOR_TYPE DHT22 //uncomment for DHT22 Sensor (default for backwards compatibility)
+#ifndef DHT_SENSOR_TYPE
+#  define DHT_SENSOR_TYPE DHT22 //uncomment for DHT22 Sensor (default for backwards compatibility)
+#endif
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef DHT_RECEIVER_GPIO
 #  if defined(ESP8266)

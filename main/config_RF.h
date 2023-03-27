@@ -83,8 +83,6 @@ struct RTL_433device {
   bool isDisc;
 };
 
-extern std::vector<RTL_433device*> RTL_433devices;
-
 const char parameters[40][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"temperature_C", "temperature", "°C", "temperature"},
@@ -127,6 +125,11 @@ const char parameters[40][4][24] = {
     {"motion", "motion", "", "motion"},
     {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
     {"event", "Status", "", "moisture"}};
+#  endif
+#  ifdef RTL_433_DISCOVERY_LOGGING
+#    define DISCOVERY_TRACE_LOG(...) Log.trace(__VA_ARGS__)
+#  else
+#    define DISCOVERY_TRACE_LOG(...)
 #  endif
 #endif
 /*-------------------RF topics & parameters----------------------*/
