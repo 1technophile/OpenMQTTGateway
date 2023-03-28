@@ -38,8 +38,8 @@
 #ifndef config_TEMT6000_h
 #define config_TEMT6000_h
 
-extern void setupTEMT6000();
-extern void TEMT6000toMQTT();
+extern void setupZsensorTEMT6000();
+extern void MeasureLightIntensityTEMT6000();
 
 #define temt6000_always            true // if false only send current value if it has changed
 #define TEMT6000LIGHTSENSORPIN     A0 //Ambient light sensor reading = ADC0

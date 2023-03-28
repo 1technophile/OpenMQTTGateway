@@ -38,8 +38,8 @@
 #ifndef config_HTU21_h
 #define config_HTU21_h
 
-extern void setupHTU21();
-extern void HTU21toMQTT();
+extern void setupZsensorHTU21();
+extern void MeasureTempHum();
 
 #define htu21_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadinghtu21 30000
