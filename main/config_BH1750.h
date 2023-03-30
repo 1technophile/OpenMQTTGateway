@@ -38,8 +38,8 @@
 #ifndef config_BH1750_h
 #define config_BH1750_h
 
-extern void setupBH1750();
-extern void BH1750toMQTT();
+extern void setupZsensorBH1750();
+extern void MeasureLightIntensity();
 
 #define bh1750_always            true // if false when the current value for light Level (Lux) is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingBH1750 30000

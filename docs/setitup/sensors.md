@@ -12,6 +12,7 @@
 |GPIO Input|Inputs|-|
 |GPIO KeyCode|Keycode|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |INA226|Current, Voltage|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|MQ2|Gas (flammable)|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |TEMT6000|Luminosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |TSL2561|Luminosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
@@ -29,6 +30,7 @@
 |HTU21 SCL|A5|D1|22|
 |INA226 SDA|A4|D2|21|
 |INA226 SCL|A5|D1|22|
+|MQ02 |A0 + D4|A0 + D4|A0 + D4|
 |TEMT6000 |A0|A0|A0|
 |TSL2561 SDA|A4|D2|21|
 |TSL2561 SCL|A5|D1|22|

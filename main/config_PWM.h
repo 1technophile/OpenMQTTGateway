@@ -24,6 +24,11 @@
 /*-------------------PWM topics & parameters----------------------*/
 
 // PWM MQTT Subjects
+
+extern void setupPWM();
+extern void PWMLoop();
+extern void MQTTtoPWM(char*, JsonObject&);
+
 #define subjectMQTTtoPWM          "/commands/MQTTtoPWM"
 #define subjectMQTTtoPWMset       subjectMQTTtoPWM "/set" //set channel(s) with JSON struct {"r":0-1,"g":0-1,"b":0-1,"w0":0-1,"w0":0-1,"fade":<fade time in seconds>}
 #define subjectMQTTtoPWMcalibrate subjectMQTTtoPWM "/calibrate" //set calibration data JSON struct {"gamma-r":0.5-4.0,"min-r":0-1,"max-r":0-1 etc. }

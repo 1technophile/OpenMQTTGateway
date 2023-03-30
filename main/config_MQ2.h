@@ -4,21 +4,19 @@
    Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
    Send and receiving command by MQTT
  
-   This is the Light Meter Addon based on modules with a TEMT6000:
-   - Measures ambient Light Intensity in Lux (lx), Foot Candela (ftcd) and Watt/m^2 (wattsm2)
-   - Required Hardware Module: TEMT6000
-   - Dependencies: none
+   This is the MQ2 GAS Sensor Addon based on modules with a MQ:
+   - Measures flammable gas
+   - Required Hardware Module: MQ2
 
    Connection Scheme:
    --------------------
 
-   TEMT6000 ----> ESP8266
+   MQ-2 -------> Arduino Uno ----------> ESP8266
    ==============================================
-   Vcc ---------> 3.3V
-   GND ---------> GND
-   SIG ---------> A0
-
-    Copyright: (c) Andre Greyling - this is a modified copy of Chris Broekema
+   Vcc ---------> 3.3V or 5V------------> 3.3V or 5V
+   GND ---------> GND ------------------> GND
+   A0 ----------> Pin A0 ---------------> A0
+   D0 ----------> Pin D4 ---------------> D4
   
     This file is part of OpenMQTTGateway.
     
@@ -35,21 +33,34 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef config_TEMT6000_h
-#define config_TEMT6000_h
+#ifndef config_MQ2_h
+#define config_MQ2_h
 
-extern void setupZsensorTEMT6000();
-extern void MeasureLightIntensityTEMT6000();
+extern void setupZsensorMQ2();
+extern void MQ2toMQTT();
 
-#define temt6000_always            true // if false only send current value if it has changed
-#define TEMT6000LIGHTSENSORPIN     A0 //Ambient light sensor reading = ADC0
-#define TimeBetweenReadingtemt6000 10000 //10000 ms
+#ifndef MQ2SENSORADCPIN
+#  ifdef ESP32
+#    define MQ2SENSORADCPIN 5 //MQ2 Gas sensor reading = ADC0
+#  else
+#    define MQ2SENSORADCPIN A0 //MQ2 Gas sensor reading = ADC0
+#  endif
+#endif
 
+#ifndef MQ2SENSORDETECTPIN
+#  ifdef ESP32
+#    define MQ2SENSORDETECTPIN 24 //MQ2 Gas sensor detected flag
+#  else
+#    define MQ2SENSORDETECTPIN D4 //MQ2 Gas sensor detected flag
+#  endif
+#endif
+
+#define TimeBetweenReadingmq2 10000
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectTEMT6000toMQTT "/LIGHTtoMQTT"
+#define subjectMQ2toMQTT "/GAStoMQTT/mq2"
 
 //Time used to wait for an interval before resending measured values
-unsigned long timetemt6000 = 0;
+unsigned long timemq2 = 0;
 
 #endif

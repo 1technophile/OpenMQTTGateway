@@ -768,6 +768,27 @@ void pubMqttDiscovery() {
   }
 #  endif
 
+#  ifdef ZsensorMQ2
+#    define MQ2parametersCount 2
+  Log.trace(F("MQ2Discovery" CR));
+  char* MQ2sensor[MQ2parametersCount][8] = {
+      {"sensor", "gas", "MQ2", "", jsonVal, "", "", "ppm"},
+      {"binary_sensor", "MQ2", "", "", jsonPresence, "true", "false", ""}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
+  };
+
+  for (int i = 0; i < MQ2parametersCount; i++) {
+    createDiscovery(MQ2sensor[i][0],
+                    subjectMQ2toMQTT, MQ2sensor[i][1], (char*)getUniqueId(MQ2sensor[i][1], MQ2sensor[i][2]).c_str(),
+                    will_Topic, MQ2sensor[i][3], MQ2sensor[i][4],
+                    MQ2sensor[i][5], MQ2sensor[i][6], MQ2sensor[i][7],
+                    0, Gateway_AnnouncementMsg, will_Message, true, "",
+                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                    stateClassNone //State Class
+    );
+  }
+#  endif
+
 #  ifdef ZsensorTEMT6000
 #    define TEMT6000parametersCount 3
   Log.trace(F("TEMT6000Discovery" CR));

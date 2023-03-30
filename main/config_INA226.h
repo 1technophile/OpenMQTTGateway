@@ -28,6 +28,8 @@
 
 extern void setupINA226();
 extern void INA226toMQTT();
+extern void MeasureINA226();
+
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectINA226toMQTT      "/INA226toMQTT"
