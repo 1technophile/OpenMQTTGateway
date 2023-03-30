@@ -1585,6 +1585,13 @@ void loop() {
 #  endif
 #endif
 
+#ifdef ESP32
+  if (ESP.getMaxAllocHeap() < 30000) {
+    Log.error(F("[CORE] extreme low memory, restarting. MaxBlock: %d, FreeHeap: %d " CR), ESP.getMaxAllocHeap(), ESP.getFreeHeap());
+    ESP.restart();
+  }
+#endif
+
   unsigned long now = millis();
 
   // Switch off of the LED after TimeLedON
@@ -1627,6 +1634,11 @@ void loop() {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
+#  ifdef ESP32
+        if (ESP.getMaxAllocHeap() < 40000) {
+          Log.warning(F("[CORE] low memory. MaxBlock: %d, FreeHeap: %d " CR), ESP.getMaxAllocHeap(), ESP.getFreeHeap());
+        }
+#  endif
         stateMeasures();
 #  ifdef ZgatewayBT
         stateBTMeasures(false);

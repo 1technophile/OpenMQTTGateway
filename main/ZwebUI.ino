@@ -64,9 +64,23 @@ void handleTK(); // Return Cloud token
 /*------------------- External functions ----------------------*/
 
 esp_err_t nvs_flash_erase(void);
-extern String stateMeasures(); // Send a status message
+// extern String stateMeasures(); // Send a status message
 extern void eraseAndRestart();
 extern unsigned long uptime();
+
+#  define ROW_LENGTH 200
+#  define MAX_ROWS   10
+
+typedef struct row {
+  unsigned int rowIndex;
+  char line[ROW_LENGTH];
+} row_t;
+
+typedef struct ConsoleBuffer {
+  row_t line[MAX_ROWS];
+};
+
+ConsoleBuffer consoleBuffer;
 
 /*------------------- Local functions ----------------------*/
 
@@ -93,6 +107,10 @@ bool exists(String path) {
   return yes;
 }
 
+/**
+ * @brief / - Page
+ * 
+ */
 void handleRoot() {
   Log.trace(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -152,6 +170,10 @@ void handleRoot() {
   }
 }
 
+/**
+ * @brief /CN - Configuration Page
+ * 
+ */
 void handleCN() {
   Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -176,6 +198,10 @@ void handleCN() {
   }
 }
 
+/**
+ * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
+ * 
+ */
 void handleRT() {
   Log.trace(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -209,6 +235,10 @@ void handleRT() {
 }
 
 #  if defined(ZgatewayCloud)
+/**
+ * @brief /CL - Cloud Configuration
+ * 
+ */
 void handleCL() {
   Log.trace(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -258,6 +288,10 @@ void handleCL() {
   server.send(200, "text/html", response);
 }
 
+/**
+ * @brief /TK - Receive Cloud Device Token
+ * 
+ */
 void handleTK() {
   Log.trace(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -296,6 +330,10 @@ void handleTK() {
 
 #  endif
 
+/**
+ * @brief /IN - Information Page
+ * 
+ */
 void handleIN() {
   Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -361,6 +399,10 @@ void handleIN() {
 
 uint32_t logIndex = 0;
 
+/**
+ * @brief /CS - Serial Console and Command Line
+ * 
+ */
 void handleCS() {
   Log.trace(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
@@ -375,24 +417,65 @@ void handleCS() {
 
       String cmdTopic = String(mqtt_topic) + String(gateway_name) + "/" + c1.substring(0, c1.indexOf(' '));
       String command = c1.substring(c1.indexOf(' ') + 1);
-      Log.trace(F("handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
-      receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
-      message += logIndex + '}1' + '0' + '}1' + '}1';
+      if (command.length()) {
+        Log.trace(F("[WebUI] handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
+        receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
+      } else {
+        Log.warning(F("[WebUI] Missing command: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
+      }
+      if (!server.hasArg("c2")) {
+        message = String(logIndex) + "}1" + "1" + "}1" + "}1";
+        server.send(200, "text/plain", message);
+      }
+    } else if (server.hasArg("c2")) {
+      //
+      // Display serial console
+      //
+      int c2 = server.arg("c2").toInt();
+      if (consoleBuffer.line[0].rowIndex > c2) {
+        message = String(consoleBuffer.line[0].rowIndex) + "}1" + "1" + "}1";
+
+        for (byte i = MAX_ROWS - 1; i > 0; i--) {
+          if (consoleBuffer.line[i].rowIndex > c2) {
+            message += String(consoleBuffer.line[i].line);
+          } else {
+          }
+        }
+
+        message += String(consoleBuffer.line[0].line) + "}1";
+        server.send(200, "text/plain", message);
+        logIndex = consoleBuffer.line[0].rowIndex;
+      } else {
+        message = String(logIndex) + "}1" + "1" + "}1" + "}1";
+        server.send(200, "text/plain", message);
+      }
+    } else {
+      message = String(logIndex) + "}1" + "1" + "}1" + "}1";
       server.send(200, "text/plain", message);
     }
-    if (server.hasArg("c2")) {
-    }
-
-    // Log.trace(F("Arguments %s" CR), message);
-    message += logIndex + '}1' + '0' + '}1' + '}1';
-    server.send(200, "text/plain", message);
   } else {
-    File file = FILESYSTEM.open("/cs.html", "r");
-    server.streamFile(file, "text/html");
-    file.close();
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+    char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configuration").c_str());
+    String response = String(buffer);
+    response += String(console_script);
+    response += String(script);
+    response += String(style);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, console_body, jsonChar, gateway_name);
+    response += String(buffer);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+    response += String(buffer);
+    server.send(200, "text/html", response);
   }
 }
 
+/**
+ * @brief Page not found handler
+ * 
+ */
 void notFound() {
   String path = server.uri();
   if (!exists(path)) {
@@ -456,6 +539,7 @@ void WebUILoop() {
   if (uptime() >= nextWebUIPage && uxQueueMessagesWaiting(webUIQueue)) {
     webUIQueueMessage* message = nullptr;
     xQueueReceive(webUIQueue, &message, portMAX_DELAY);
+
     if (currentWebUIMessage) {
       free(currentWebUIMessage);
     }
@@ -573,13 +657,23 @@ constexpr unsigned int webUIHash(const char* s, int off = 0) { // workaround for
   return !s[off] ? 5381 : (webUIHash(s, off + 1) * 33) ^ s[off];
 }
 
+void printConsoleBuffer() {
+  for (int i = 0; i < MAX_ROWS - 1; i++) {
+    Serial.print("rowIndex");
+    Serial.print(consoleBuffer.line[i].rowIndex);
+    Serial.print("->");
+    Serial.print(consoleBuffer.line[i].line);
+    Serial.print(CR);
+  }
+}
+
 /*
 Parse json message from module into a format for display
 */
 void webUIPubPrint(const char* topicori, JsonObject& data) {
   Log.trace(F("[ webUIPubPrint ] pub %s " CR), topicori);
   if (webUIQueue) {
-    webUIQueueMessage* message = (webUIQueueMessage*)malloc(sizeof(webUIQueueMessage));
+    webUIQueueMessage* message = (webUIQueueMessage*)heap_caps_calloc(1, sizeof(webUIQueueMessage), MALLOC_CAP_8BIT);
     if (message != NULL) {
       // Initalize message
       strlcpy(message->line1, "", WEBUI_TEXT_WIDTH);
@@ -605,27 +699,28 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           // Line 2
 
           String uptime = data["uptime"];
-          String line2 = "uptime: " + uptime;
-          line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+          String line = "uptime: " + uptime;
+          line.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 
           // Line 3
 
           String freemem = data["freemem"];
-          String line3 = "freemem: " + freemem;
-          line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+          line = "freemem: " + freemem;
+          line.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 
           // Line 4
 
           String ip = data["ip"];
-          String line4 = "ip: " + ip;
-          line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
+          line = "ip: " + ip;
+          line.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
           // Queue completed message
 
           if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
             Log.error(F("[ WebUI ] ERROR: webUIQueue full, discarding signal %s" CR), message->title);
+            // free(message);
           } else {
-            // Log.notice(F("Queued %s" CR), message->title);
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
           }
           break;
         }
@@ -697,7 +792,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
             free(message);
           } else {
-            // Log.notice(F("Queued %s" CR), message->title);
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
           }
           break;
         }
@@ -759,7 +854,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
             free(message);
           } else {
-            // Log.notice(F("Queued %s" CR), message->title);
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
           }
           break;
         }
@@ -1078,7 +1173,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
                 free(message);
               } else {
-                // Log.notice(F("Queued %s" CR), message->title);
+                Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
               }
             } else {
               free(message);
@@ -1133,13 +1228,14 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
             free(message);
           } else {
-            // Log.notice(F("Queued %s" CR), message->title);
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
           }
           break;
         }
 #  endif
         default:
           Log.error(F("[ WebUI ] unhandled topic %s" CR), message->title);
+          // free(message);
       }
     } else {
       Log.error(F("[ WebUI ] insufficent memory " CR));
@@ -1197,18 +1293,26 @@ size_t SerialWeb::write(const uint8_t* buffer, size_t size) {
   return Serial.write(buffer, size);
 }
 
-#  define lineBuffer 200
+void addRow(char* line) {
+  // move down rows
+  for (byte i = MAX_ROWS - 1; i > 0; i--) {
+    consoleBuffer.line[i].rowIndex = consoleBuffer.line[i - 1].rowIndex;
+    strlcpy(consoleBuffer.line[i].line, consoleBuffer.line[i - 1].line, ROW_LENGTH);
+  }
+  consoleBuffer.line[0].rowIndex++;
+  strlcpy(consoleBuffer.line[0].line, line, ROW_LENGTH);
+}
 
-char line[lineBuffer];
-char lineIndex = 0;
+char line[ROW_LENGTH];
+byte lineIndex = 0;
 void addLog(const uint8_t* buffer, size_t size) {
   String d = "";
   for (int i = 0; i < size; i++) {
     d += char(buffer[i]);
-    if (buffer[i] == 10 || lineIndex > lineBuffer - 1) {
+    if (lineIndex > ROW_LENGTH - 2) {
+      line[lineIndex++] = char(buffer[i]);
       line[lineIndex++] = char(0);
-      // Serial.write(line);
-      // WebSerial.println(line);
+      addRow(line);
       lineIndex = 0;
     } else {
       line[lineIndex++] = char(buffer[i]);

@@ -28,7 +28,7 @@
 
 #include <Wire.h>
 
-#define WEBUI_TEXT_WIDTH      128
+#define WEBUI_TEXT_WIDTH 128
 
 /*------------------- Optional Compiler Directives ----------------------*/
 
@@ -76,14 +76,14 @@ void WebUISetup();
 void WebUILoop();
 void MQTTtoWebUI(char*, JsonObject&);
 
+String stateWebUIStatus();
+
 webUIQueueMessage* currentWebUIMessage;
 
 /*------------------- End of Global Functions ----------------------*/
 
 #define subjectMQTTtoWebUIset "/commands/MQTTtoWebUI/config"
 #define subjectWebUItoMQTT    "/WebUItoMQTT"
-
-
 
 /*------------------- Unit Conversion Functions ----------------------*/
 
