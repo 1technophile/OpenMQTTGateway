@@ -222,8 +222,8 @@ void SSD1306Config_init() {
 bool SSD1306Config_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  String exists = preferences.getString("SSD1306Config", "{}");
-  if (exists != "{}") {
+  bool exists = preferences.isKey("SSD1306Config");
+  if (exists) {
     auto error = deserializeJson(jsonBuffer, preferences.getString("SSD1306Config", "{}"));
     preferences.end();
     if (error) {
@@ -241,6 +241,7 @@ bool SSD1306Config_load() {
     jsonDisplay = jo["json-oled"].as<bool>();
     idlelogo = jo["idlelogo"].as<bool>();
     displayFlip = jo["display-flip"].as<bool>();
+    Log.notice(F("Saved SSD1306 config loaded" CR));
     return true;
   } else {
     preferences.end();

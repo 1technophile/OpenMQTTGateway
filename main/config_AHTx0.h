@@ -38,8 +38,8 @@
 #ifndef config_AHTx0_h
 #define config_AHTx0_h
 
-extern void setupAHTx0();
-extern void AHTx0toMQTT();
+extern void setupZsensorAHTx0();
+extern void MeasureAHTTempHum();
 
 #define AHTx0_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingAHTx0 30000

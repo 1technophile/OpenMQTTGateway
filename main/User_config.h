@@ -326,6 +326,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorADC     "ADC"      //ESP8266, Arduino, ESP32
 //#define ZsensorBH1750  "BH1750"   //ESP8266, Arduino, ESP32
+//#define ZsensorMQ2 "MQ2"  //ESP8266, Arduino, ESP32
 //#define ZsensorTEMT6000 "TEMT6000"  //ESP8266
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
@@ -672,8 +673,47 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 
-/*-----------PLACEHOLDERS FOR CloudGateway--------------*/
-// The real definitions is in config_Cloud.h and this code is dead unless included
-#define pubCloud(...)
+/*----------- SHARED WITH OMG MODULES --------------*/
+
+char mqtt_topic[parameters_size + 1] = Base_Topic;
+char gateway_name[parameters_size + 1] = Gateway_Name;
+
+unsigned long uptime();
+bool cmpToMainTopic(const char*, const char*);
+void pub(const char*, const char*, bool);
+// void pub(const char*, JsonObject&);
+void pub(const char*, const char*);
+// void pub_custom_topic(const char*, JsonObject&, boolean);
+
+#if defined(ESP32)
+#  include <Preferences.h>
+Preferences preferences;
+#endif
+
+#ifdef ZmqttDiscovery
+bool disc = true; // Auto discovery with Home Assistant convention
+unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
+#endif
+
+#if defined(ESP8266) || defined(ESP32)
+#  include <vector>
+// Flags definition for white list, black list, discovery management
+#  define device_flags_init     0 << 0
+#  define device_flags_isDisc   1 << 0
+#  define device_flags_isWhiteL 1 << 1
+#  define device_flags_isBlackL 1 << 2
+#  define device_flags_connect  1 << 3
+#  define isWhite(device)       device->isWhtL
+#  define isBlack(device)       device->isBlkL
+#  define isDiscovered(device)  device->isDisc
+#endif
+
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
+bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL);
+void storeSignalValue(SIGNAL_SIZE_UL_ULL);
+#endif
+
+#define convertTemp_CtoF(c) ((c * 1.8) + 32)
+#define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 
 #endif

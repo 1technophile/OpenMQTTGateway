@@ -28,6 +28,7 @@
 
 extern void setupADC();
 extern void ADCtoMQTT();
+extern void MeasureADC();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define ADCTOPIC "/ADCtoMQTT"

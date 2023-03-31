@@ -39,8 +39,8 @@
 #ifndef config_TSL2561_h
 #define config_TSL2561_h
 
-extern void setupTSL2561();
-extern void TSL2561toMQTT();
+extern void setupZsensorTSL2561();
+extern void MeasureLightIntensityTSL2561();
 
 #define tsl2561_always            true // if false only send current value if it has changed
 #define TimeBetweenReadingtsl2561 30000
