@@ -32,6 +32,8 @@
 #  include <config_RF.h>
 #  include <rtl_433_ESP.h>
 
+#  include <vector>
+
 #  include "ArduinoLog.h"
 #  include "User_config.h"
 #  ifdef ZmqttDiscovery
@@ -40,7 +42,7 @@
 
 char messageBuffer[JSON_MSG_BUFFER];
 
-rtl_433_ESP rtl_433(-1);
+rtl_433_ESP rtl_433;
 
 #  ifdef ZmqttDiscovery
 SemaphoreHandle_t semaphorecreateOrUpdateDeviceRTL_433;
@@ -96,7 +98,7 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
     DISCOVERY_TRACE_LOG(F("update %s" CR), id);
 
     if (flags & device_flags_isDisc) {
-      // device->isDisc = true;
+      device->isDisc = true;
     }
   }
 
@@ -106,8 +108,8 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
 // This function always should be called from the main core as it generates direct mqtt messages
 // When overrideDiscovery=true, we publish discovery messages of known RTL_433devices (even if no new)
 void launchRTL_433Discovery(bool overrideDiscovery) {
-  // if (!overrideDiscovery && newRTL_433Devices == 0)
-  //return;
+  if (!overrideDiscovery && newRTL_433Devices == 0)
+    return;
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(1000)) == pdFALSE) {
     Log.error(F("[rtl_433] semaphorecreateOrUpdateDeviceRTL_433 Semaphore NOT taken" CR));
     return;
@@ -119,7 +121,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
     RTL_433device* pdevice = *it;
     DISCOVERY_TRACE_LOG(F("Device id %s" CR), pdevice->uniqueId);
     // Do not launch discovery for the RTL_433devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
-    if ((overrideDiscovery || !isDiscovered(pdevice)) && pdevice->count > 9) {
+    if (overrideDiscovery || !isDiscovered(pdevice)) {
       size_t numRows = sizeof(parameters) / sizeof(parameters[0]);
       for (int i = 0; i < numRows; i++) {
         if (strstr(pdevice->uniqueId, parameters[i][0]) != 0) {
@@ -256,6 +258,7 @@ void rtl_433_Callback(char* message) {
 #  endif
     pub((char*)topic.c_str(), RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
+    pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);
   }
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
@@ -276,7 +279,7 @@ void RTL_433Loop() {
   rtl_433.loop();
 }
 
-extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
+void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRTL_433)) {
     float tempMhz = RTLdata["mhz"];
     bool success = false;
@@ -313,7 +316,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
     }
     if (RTLdata.containsKey("status")) {
       Log.notice(F("RTL_433 get status:" CR));
-      rtl_433.getStatus(1);
+      rtl_433.getStatus();
       success = true;
     }
     if (success) {
@@ -326,7 +329,11 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
   }
 }
 
-extern void enableRTLreceive() {
+void stateRTL_433measures() {
+  rtl_433.getStatus();
+}
+
+void enableRTLreceive() {
   Log.notice(F("Switching to RTL_433 Receiver: %FMhz" CR), receiveMhz);
 #  ifdef ZgatewayRF
   disableRFReceive();
@@ -339,35 +346,11 @@ extern void enableRTLreceive() {
 #  endif
 
   rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, receiveMhz);
-  rtl_433.enableReceiver(RF_MODULE_RECEIVER_GPIO);
+  rtl_433.enableReceiver();
 }
 
-extern void disableRTLreceive() {
+void disableRTLreceive() {
   Log.trace(F("disableRTLreceive" CR));
-  rtl_433.enableReceiver(-1);
   rtl_433.disableReceiver();
 }
-
-extern int getRTLrssiThreshold() {
-  return rtl_433.rssiThreshold;
-}
-
-extern int getRTLAverageRSSI() {
-  return rtl_433.averageRssi;
-}
-
-extern int getRTLCurrentRSSI() {
-  return rtl_433.currentRssi;
-}
-
-extern int getRTLMessageCount() {
-  return rtl_433.messageCount;
-}
-
-#  if defined(RF_SX1276) || defined(RF_SX1278)
-extern int getOOKThresh() {
-  return rtl_433.OokFixedThreshold;
-}
-#  endif
-
 #endif

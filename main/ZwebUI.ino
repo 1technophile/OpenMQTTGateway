@@ -68,22 +68,277 @@ esp_err_t nvs_flash_erase(void);
 extern void eraseAndRestart();
 extern unsigned long uptime();
 
-#  define ROW_LENGTH 200
-#  define MAX_ROWS   10
+/*------------------- Web Console Globals ----------------------*/
 
-typedef struct row {
-  unsigned int rowIndex;
-  char line[ROW_LENGTH];
-} row_t;
+#  define ROW_LENGTH 1024
 
-typedef struct ConsoleBuffer {
-  row_t line[MAX_ROWS];
+const uint16_t LOG_BUFFER_SIZE = 6096;
+uint32_t log_buffer_pointer;
+void* log_buffer_mutex;
+char log_buffer[LOG_BUFFER_SIZE]; // Log buffer in DRAM
+
+const uint16_t MAX_LOGSZ = LOG_BUFFER_SIZE - 96;
+
+const uint16_t TOPSZ = 151; // Max number of characters in topic string
+
+uint8_t masterlog_level; // Master log level used to override set log level
+
+bool reset_web_log_flag = false; // Reset web console log
+
+/*
+void AddLog(uint32_t loglevel, PGM_P formatP, ...) {
+    va_list arg;
+    va_start(arg, formatP);
+    char* log_data = ext_vsnprintf_malloc_P(formatP, arg);
+    va_end(arg);
+    if (log_data == nullptr) { return; }
+
+    AddLogData(loglevel, log_data);
+    free(log_data);
+}
+*/
+
+#  ifdef ESP32
+/*********************************************************************************************\
+ * ESP32 AutoMutex
+\*********************************************************************************************/
+
+//////////////////////////////////////////
+// automutex.
+// create a mute in your driver with:
+// void *mutex = nullptr;
+//
+// then protect any function with
+// TasAutoMutex m(&mutex, "somename");
+// - mutex is automatically initialised if not already intialised.
+// - it will be automagically released when the function is over.
+// - the same thread can take multiple times (recursive).
+// - advanced options m.give() and m.take() allow you fine control within a function.
+// - if take=false at creat, it will not be initially taken.
+// - name is used in serial log of mutex deadlock.
+// - maxWait in ticks is how long it will wait before failing in a deadlock scenario (and then emitting on serial)
+class TasAutoMutex {
+  SemaphoreHandle_t mutex;
+  bool taken;
+  int maxWait;
+  const char* name;
+
+public:
+  TasAutoMutex(SemaphoreHandle_t* mutex, const char* name = "", int maxWait = 40, bool take = true);
+  ~TasAutoMutex();
+  void give();
+  void take();
+  static void init(SemaphoreHandle_t* ptr);
 };
+//////////////////////////////////////////
 
-ConsoleBuffer consoleBuffer;
+TasAutoMutex::TasAutoMutex(SemaphoreHandle_t* mutex, const char* name, int maxWait, bool take) {
+  if (mutex) {
+    if (!(*mutex)) {
+      TasAutoMutex::init(mutex);
+    }
+    this->mutex = *mutex;
+    this->maxWait = maxWait;
+    this->name = name;
+    if (take) {
+      this->taken = xSemaphoreTakeRecursive(this->mutex, this->maxWait);
+      //      if (!this->taken){
+      //        Serial.printf("\r\nMutexfail %s\r\n", this->name);
+      //      }
+    }
+  } else {
+    this->mutex = (SemaphoreHandle_t) nullptr;
+  }
+}
+
+TasAutoMutex::~TasAutoMutex() {
+  if (this->mutex) {
+    if (this->taken) {
+      xSemaphoreGiveRecursive(this->mutex);
+      this->taken = false;
+    }
+  }
+}
+
+void TasAutoMutex::init(SemaphoreHandle_t* ptr) {
+  SemaphoreHandle_t mutex = xSemaphoreCreateRecursiveMutex();
+  (*ptr) = mutex;
+  // needed, else for ESP8266 as we will initialis more than once in logging
+  //  (*ptr) = (void *) 1;
+}
+
+void TasAutoMutex::give() {
+  if (this->mutex) {
+    if (this->taken) {
+      xSemaphoreGiveRecursive(this->mutex);
+      this->taken = false;
+    }
+  }
+}
+
+void TasAutoMutex::take() {
+  if (this->mutex) {
+    if (!this->taken) {
+      this->taken = xSemaphoreTakeRecursive(this->mutex, this->maxWait);
+      //      if (!this->taken){
+      //        Serial.printf("\r\nMutexfail %s\r\n", this->name);
+      //      }
+    }
+  }
+}
+
+// Get span until single character in string
+size_t strchrspn(const char* str1, int character) {
+  size_t ret = 0;
+  char* start = (char*)str1;
+  char* end = strchr(str1, character);
+  if (end) ret = end - start;
+  return ret;
+}
+
+#  endif // ESP32
+
+void AddLogData(uint32_t loglevel, const char* log_data, const char* log_data_payload = nullptr, const char* log_data_retained = nullptr) {
+  // Store log_data in buffer
+  // To lower heap usage log_data_payload may contain the payload data from MqttPublishPayload()
+  //  and log_data_retained may contain optional retained message from MqttPublishPayload()
+#  ifdef ESP32
+  // this takes the mutex, and will be release when the class is destroyed -
+  // i.e. when the functon leaves  You CAN call mutex.give() to leave early.
+  TasAutoMutex mutex((SemaphoreHandle_t*)&log_buffer_mutex);
+#  endif // ESP32
+
+  char empty[2] = {0};
+  if (!log_data_payload) {
+    log_data_payload = empty;
+  }
+  if (!log_data_retained) {
+    log_data_retained = empty;
+  }
+
+  if (!log_buffer) {
+    return;
+  } // Leave now if there is no buffer available
+
+  // Delimited, zero-terminated buffer of log lines.
+  // Each entry has this format: [index][loglevel][log data]['\1']
+
+  // Truncate log messages longer than MAX_LOGSZ which is the log buffer size minus 64 spare
+  uint32_t log_data_len = strlen(log_data) + strlen(log_data_payload) + strlen(log_data_retained);
+  char too_long[TOPSZ];
+  if (log_data_len > MAX_LOGSZ) {
+    snprintf_P(too_long, sizeof(too_long) - 20, PSTR("%s%s"), log_data, log_data_payload); // 20 = strlen("... 123456 truncated")
+    snprintf_P(too_long, sizeof(too_long), PSTR("%s... %d truncated"), too_long, log_data_len);
+    log_data = too_long;
+    log_data_payload = empty;
+    log_data_retained = empty;
+  }
+
+  log_buffer_pointer &= 0xFF;
+  if (!log_buffer_pointer) {
+    log_buffer_pointer++; // Index 0 is not allowed as it is the end of char string
+  }
+  while (log_buffer_pointer == log_buffer[0] || // If log already holds the next index, remove it
+         strlen(log_buffer) + strlen(log_data) + strlen(log_data_payload) + strlen(log_data_retained) + 4 > LOG_BUFFER_SIZE) // 4 = log_buffer_pointer + '\1' + '\0'
+  {
+    char* it = log_buffer;
+    it++; // Skip log_buffer_pointer
+    it += strchrspn(it, '\1'); // Skip log line
+    it++; // Skip delimiting "\1"
+    memmove(log_buffer, it, LOG_BUFFER_SIZE - (it - log_buffer)); // Move buffer forward to remove oldest log line
+  }
+  snprintf_P(log_buffer, LOG_BUFFER_SIZE, PSTR("%s%c%c%s%s%s%s\1"),
+             log_buffer, log_buffer_pointer++, '0' + loglevel, "", log_data, log_data_payload, log_data_retained);
+  log_buffer_pointer &= 0xFF;
+  if (!log_buffer_pointer) {
+    log_buffer_pointer++; // Index 0 is not allowed as it is the end of char string
+  }
+}
+
+bool NeedLogRefresh(uint32_t req_loglevel, uint32_t index) {
+  if (!log_buffer) {
+    return false;
+  } // Leave now if there is no buffer available
+
+#  ifdef ESP32
+  // this takes the mutex, and will be release when the class is destroyed -
+  // i.e. when the functon leaves  You CAN call mutex.give() to leave early.
+  TasAutoMutex mutex((SemaphoreHandle_t*)&log_buffer_mutex);
+#  endif // ESP32
+
+  // Skip initial buffer fill
+  if (strlen(log_buffer) < LOG_BUFFER_SIZE / 2) {
+    return false;
+  }
+
+  char* line;
+  size_t len;
+  if (!GetLog(req_loglevel, &index, &line, &len)) {
+    return false;
+  }
+  return ((line - log_buffer) < LOG_BUFFER_SIZE / 4);
+}
+
+bool GetLog(uint32_t req_loglevel, uint32_t* index_p, char** entry_pp, size_t* len_p) {
+  if (!log_buffer) {
+    return false;
+  } // Leave now if there is no buffer available
+  if (uptime() < 3) {
+    return false;
+  } // Allow time to setup correct log level
+
+  uint32_t index = *index_p;
+  if (!req_loglevel || (index == log_buffer_pointer)) {
+    return false;
+  }
+
+#  ifdef ESP32
+  // this takes the mutex, and will be release when the class is destroyed -
+  // i.e. when the functon leaves  You CAN call mutex.give() to leave early.
+  TasAutoMutex mutex((SemaphoreHandle_t*)&log_buffer_mutex);
+#  endif // ESP32
+
+  if (!index) { // Dump all
+    index = log_buffer[0];
+  }
+
+  do {
+    size_t len = 0;
+    uint32_t loglevel = 0;
+    char* entry_p = log_buffer;
+    do {
+      uint32_t cur_idx = *entry_p;
+      entry_p++;
+      size_t tmp = strchrspn(entry_p, '\1');
+      tmp++; // Skip terminating '\1'
+      if (cur_idx == index) { // Found the requested entry
+        loglevel = *entry_p - '0';
+        entry_p++; // Skip loglevel
+        len = tmp - 1;
+        break;
+      }
+      entry_p += tmp;
+    } while (entry_p < log_buffer + LOG_BUFFER_SIZE && *entry_p != '\0');
+    index++;
+    if (index > 255) {
+      index = 1;
+    } // Skip 0 as it is not allowed
+    *index_p = index;
+    if ((len > 0) &&
+        (loglevel <= req_loglevel) &&
+        (masterlog_level <= req_loglevel)) {
+      *entry_pp = entry_p;
+      *len_p = len;
+      return true;
+    }
+    delay(0);
+  } while (index != log_buffer_pointer);
+  return false;
+}
 
 /*------------------- Local functions ----------------------*/
 
+#  ifdef WEBUI_DEVELOPMENT
 //format bytes
 String formatBytes(size_t bytes) {
   if (bytes < 1024) {
@@ -106,16 +361,17 @@ bool exists(String path) {
   file.close();
   return yes;
 }
+#  endif
 
 /**
  * @brief / - Page
  * 
  */
 void handleRoot() {
-  Log.trace(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_TRACE_LOG(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
     if (server.hasArg("m")) {
       if (currentWebUIMessage) {
@@ -148,7 +404,7 @@ void handleRoot() {
       ESP.restart();
 #  endif
     } else {
-      // Log.trace(F("Arguments %s" CR), message);
+      // WEBUI_TRACE_LOG(F("Arguments %s" CR), message);
       server.send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
     }
   } else {
@@ -175,10 +431,10 @@ void handleRoot() {
  * 
  */
 void handleCN() {
-  Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("handleCN Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("handleCN Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
   } else {
     char jsonChar[100];
@@ -203,10 +459,10 @@ void handleCN() {
  * 
  */
 void handleRT() {
-  Log.trace(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_TRACE_LOG(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("handleRT Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("handleRT Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
   }
   if (server.hasArg("non")) {
@@ -240,10 +496,10 @@ void handleRT() {
  * 
  */
 void handleCL() {
-  Log.trace(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_TRACE_LOG(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("handleCL Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("handleCL Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
   }
 
@@ -293,10 +549,10 @@ void handleCL() {
  * 
  */
 void handleTK() {
-  Log.trace(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_TRACE_LOG(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("handleTK Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("handleTK Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
   }
 
@@ -320,8 +576,8 @@ void handleTK() {
       response += String(buffer);
       server.send(200, "text/html", response);
     } else {
-      Log.trace(F("handleTK: uptime: %u, uptime: %u, ok: %T" CR), server.arg("uptime").toInt(), uptime(), server.arg("uptime").toInt() + 600 > uptime());
-      Log.trace(F("handleTK: RT: %d, RT: %d, ok: %T " CR), server.arg("RT").toInt(), requestToken, server.arg("RT").toInt() == requestToken);
+      WEBUI_TRACE_LOG(F("handleTK: uptime: %u, uptime: %u, ok: %T" CR), server.arg("uptime").toInt(), uptime(), server.arg("uptime").toInt() + 600 > uptime());
+      WEBUI_TRACE_LOG(F("handleTK: RT: %d, RT: %d, ok: %T " CR), server.arg("RT").toInt(), requestToken, server.arg("RT").toInt() == requestToken);
       Log.error(F("[WebUI] Invalid Token Response: RT: %T, uptime: %T" CR), server.arg("RT").toInt() == requestToken, server.arg("uptime").toInt() + 600 > uptime());
       server.send(500, "text/html", "Internal ERROR - Invalid Token");
     }
@@ -335,10 +591,10 @@ void handleTK() {
  * 
  */
 void handleIN() {
-  Log.trace(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("handleIN Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("handleIN Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
   } else {
     char jsonChar[100];
@@ -358,7 +614,7 @@ void handleIN() {
     informationDisplay += "1<BR>WebUI}2}1";
     informationDisplay += stateWebUIStatus();
 
-    Log.trace(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
+    WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
 
     // before {"uptime":33,"version":"lilygo-rtl_433-test-B-v1.4.0-98-gcff461db[WebUI]","env":"lilygo-rtl_433-test-B","freemem":106356,"mqttport":"1883","mqttsecure":false,"maxBlock":65136,"tempc":46.11111,"freestack":3208,"rssi":-53,"SSID":"The_Beach","BSSID":"90:72:40:18:A7:BE","ip":"192.168.1.160","mac":"4C:75:25:A8:85:04","actRec":3,"mhz":433.92,"RTLRssiThresh":-82,"RTLRssi":-95,"RTLAVGRssi":0,"RTLCnt":5,"RTLOOKThresh":90,"modules":["LILYGO_OLED","ZwebUI","CLOUD","rtl_433"]}1<BR>SSD1306}2}1{"onstate":true,"brightness":50,"displaymetric":true,"display-flip":true,"idlelogo":false,"log-oled":false,"json-oled":true}1<BR>Cloud}2}1{"cloudEnabled":true,"cloudActive":true,"cloudState":0}
 
@@ -369,7 +625,7 @@ void handleIN() {
     informationDisplay.replace("\":", "}2");
     informationDisplay.replace("{\"", "");
     informationDisplay.replace("\"", "\\\"");
-    Log.trace(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
+    WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
 
     // after uptime}233}1version}2\"lilygo-rtl_433-test-B-v1.4.0-98-gcff461db[WebUI]\"}1env}2\"lilygo-rtl_433-test-B\"}1freemem}2106356}1mqttport}2\"1883\"}1mqttsecure}2false}1maxBlock}265136}1tempc}246.11111}1freestack}23208}1rssi}2-53}1SSID}2\"The_Beach\"}1BSSID}2\"90:72:40:18:A7:BE\"}1ip}2\"192.168.1.160\"}1mac}2\"4C:75:25:A8:85:04\"}1actRec}23}1mhz}2433.92}1RTLRssiThresh}2-82}1RTLRssi}2-95}1RTLAVGRssi}20}1RTLCnt}25}1RTLOOKThresh}290}1modules}2[\"LILYGO_OLED\"}1ZwebUI\"}1CLOUD\"}1rtl_433\"]}1<BR>SSD1306}2}1onstate}2true}1brightness}250}1displaymetric}2true}1display-flip}2true}1idlelogo}2false}1log-oled}2false}1json-oled}2true}1<BR>Cloud}2}1cloudEnabled}2true}1cloudActive}2true}1cloudState}20}1}2
 
@@ -404,55 +660,44 @@ uint32_t logIndex = 0;
  * 
  */
 void handleCS() {
-  Log.trace(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (server.args()) {
+  WEBUI_TRACE_LOG(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  if (server.args() && server.hasArg("c2")) {
     for (uint8_t i = 0; i < server.args(); i++) {
-      Log.trace(F("handleCS Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+      WEBUI_TRACE_LOG(F("handleCS Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-
-    // Log.trace(F("handleCS c1: %s, c2: %s" CR), server.arg("c1").c_str(), server.arg("c2").c_str());
-    String message = "";
     if (server.hasArg("c1")) {
       String c1 = server.arg("c1");
 
       String cmdTopic = String(mqtt_topic) + String(gateway_name) + "/" + c1.substring(0, c1.indexOf(' '));
       String command = c1.substring(c1.indexOf(' ') + 1);
       if (command.length()) {
-        Log.trace(F("[WebUI] handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
+        WEBUI_TRACE_LOG(F("[WebUI] handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
         receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
       } else {
         Log.warning(F("[WebUI] Missing command: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
       }
-      if (!server.hasArg("c2")) {
-        message = String(logIndex) + "}1" + "1" + "}1" + "}1";
-        server.send(200, "text/plain", message);
-      }
-    } else if (server.hasArg("c2")) {
-      //
-      // Display serial console
-      //
-      int c2 = server.arg("c2").toInt();
-      if (consoleBuffer.line[0].rowIndex > c2) {
-        message = String(consoleBuffer.line[0].rowIndex) + "}1" + "1" + "}1";
-
-        for (byte i = MAX_ROWS - 1; i > 0; i--) {
-          if (consoleBuffer.line[i].rowIndex > c2) {
-            message += String(consoleBuffer.line[i].line);
-          } else {
-          }
-        }
-
-        message += String(consoleBuffer.line[0].line) + "}1";
-        server.send(200, "text/plain", message);
-        logIndex = consoleBuffer.line[0].rowIndex;
-      } else {
-        message = String(logIndex) + "}1" + "1" + "}1" + "}1";
-        server.send(200, "text/plain", message);
-      }
-    } else {
-      message = String(logIndex) + "}1" + "1" + "}1" + "}1";
-      server.send(200, "text/plain", message);
     }
+
+    uint32_t index = server.arg("c2").toInt();
+
+    String message = String(log_buffer_pointer) + "}1" + String(reset_web_log_flag) + "}1";
+    if (!reset_web_log_flag) {
+      index = 0;
+      reset_web_log_flag = true;
+    }
+
+    bool cflg = (index);
+    char* line;
+    size_t len;
+    while (GetLog(1, &index, &line, &len)) {
+      if (cflg) {
+        message += "\n";
+      }
+      message += String(line, len - 1);
+      cflg = true;
+    }
+    message += "}1";
+    server.send(200, "text/plain", message);
   } else {
     char jsonChar[100];
     serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -477,27 +722,32 @@ void handleCS() {
  * 
  */
 void notFound() {
+#  ifdef WEBUI_DEVELOPMENT
   String path = server.uri();
   if (!exists(path)) {
     if (exists(path + ".html")) {
       path += ".html";
     } else {
+#  endif
       Log.warning(F("[WebUI] notFound: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
       server.send(404, "text/plain", "Not found");
       return;
+#  ifdef WEBUI_DEVELOPMENT
     }
   }
-  Log.trace(F("notFound returning: actual uri: %s, args: %d, method: %d" CR), path, server.args(), server.method());
+  WEBUI_TRACE_LOG(F("notFound returning: actual uri: %s, args: %d, method: %d" CR), path, server.args(), server.method());
   File file = FILESYSTEM.open(path, "r");
   server.streamFile(file, "text/html");
   file.close();
+#  endif
 }
 
 void WebUISetup() {
-  Log.trace(F("ZwebUI setup start" CR));
+  WEBUI_TRACE_LOG(F("ZwebUI setup start" CR));
 
   webUIQueue = xQueueCreate(5, sizeof(webUIQueueMessage*));
 
+#  ifdef WEBUI_DEVELOPMENT
   FILESYSTEM.begin();
   {
     File root = FILESYSTEM.open("/");
@@ -505,10 +755,11 @@ void WebUISetup() {
     while (file) {
       String fileName = file.name();
       size_t fileSize = file.size();
-      Log.trace(F("FS File: %s, size: %s" CR), fileName.c_str(), formatBytes(fileSize).c_str());
+      WEBUI_TRACE_LOG(F("FS File: %s, size: %s" CR), fileName.c_str(), formatBytes(fileSize).c_str());
       file = root.openNextFile();
     }
   }
+#  endif
   server.onNotFound(notFound);
 
   server.on("/", handleRoot); // Main Menu
@@ -551,7 +802,7 @@ void WebUILoop() {
 void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decoding
   bool success = false;
   if (cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
-    Log.trace(F("MQTTtoWebUI json set" CR));
+    WEBUI_TRACE_LOG(F("MQTTtoWebUI json set" CR));
     // properties
     if (WebUIdata.containsKey("displaymetric")) {
       displayMetric = WebUIdata["displaymetric"].as<bool>();
@@ -598,6 +849,7 @@ String stateWebUIStatus() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject WebUIdata = jsonBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
+  WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);;
 
   String output;
   serializeJson(WebUIdata, output);
@@ -657,21 +909,11 @@ constexpr unsigned int webUIHash(const char* s, int off = 0) { // workaround for
   return !s[off] ? 5381 : (webUIHash(s, off + 1) * 33) ^ s[off];
 }
 
-void printConsoleBuffer() {
-  for (int i = 0; i < MAX_ROWS - 1; i++) {
-    Serial.print("rowIndex");
-    Serial.print(consoleBuffer.line[i].rowIndex);
-    Serial.print("->");
-    Serial.print(consoleBuffer.line[i].line);
-    Serial.print(CR);
-  }
-}
-
 /*
 Parse json message from module into a format for display
 */
 void webUIPubPrint(const char* topicori, JsonObject& data) {
-  Log.trace(F("[ webUIPubPrint ] pub %s " CR), topicori);
+  WEBUI_TRACE_LOG(F("[ webUIPubPrint ] pub %s " CR), topicori);
   if (webUIQueue) {
     webUIQueueMessage* message = (webUIQueueMessage*)heap_caps_calloc(1, sizeof(webUIQueueMessage), MALLOC_CAP_8BIT);
     if (message != NULL) {
@@ -718,7 +960,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
           if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
             Log.error(F("[ WebUI ] ERROR: webUIQueue full, discarding signal %s" CR), message->title);
-            // free(message);
+            free(message);
           } else {
             // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
           }
@@ -1234,8 +1476,8 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
         }
 #  endif
         default:
-          Log.error(F("[ WebUI ] unhandled topic %s" CR), message->title);
-          // free(message);
+          Log.verbose(F("[ WebUI ] unhandled topic %s" CR), message->title);
+          free(message);
       }
     } else {
       Log.error(F("[ WebUI ] insufficent memory " CR));
@@ -1293,26 +1535,16 @@ size_t SerialWeb::write(const uint8_t* buffer, size_t size) {
   return Serial.write(buffer, size);
 }
 
-void addRow(char* line) {
-  // move down rows
-  for (byte i = MAX_ROWS - 1; i > 0; i--) {
-    consoleBuffer.line[i].rowIndex = consoleBuffer.line[i - 1].rowIndex;
-    strlcpy(consoleBuffer.line[i].line, consoleBuffer.line[i - 1].line, ROW_LENGTH);
-  }
-  consoleBuffer.line[0].rowIndex++;
-  strlcpy(consoleBuffer.line[0].line, line, ROW_LENGTH);
-}
-
 char line[ROW_LENGTH];
-byte lineIndex = 0;
+int lineIndex = 0;
 void addLog(const uint8_t* buffer, size_t size) {
-  String d = "";
   for (int i = 0; i < size; i++) {
-    d += char(buffer[i]);
-    if (lineIndex > ROW_LENGTH - 2) {
-      line[lineIndex++] = char(buffer[i]);
+    if (char(buffer[i]) == 10 | lineIndex > ROW_LENGTH - 2) {
+      if (char(buffer[i]) != 10) {
+        line[lineIndex++] = char(buffer[i]);
+      }
       line[lineIndex++] = char(0);
-      addRow(line);
+      AddLogData(1, (const char*)&line[0]);
       lineIndex = 0;
     } else {
       line[lineIndex++] = char(buffer[i]);

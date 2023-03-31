@@ -44,6 +44,16 @@
 #  define DISPLAY_WEBUI_INTERVAL 3 // Number of seconds between json message displays
 #endif
 
+#ifdef WEBUI_TRACE_LOGGING
+#  define WEBUI_TRACE_LOG(...) Log.trace(__VA_ARGS__)
+#else
+#  define WEBUI_TRACE_LOG(...)
+#endif
+
+#ifdef WEBUI_DEVELOPMENT
+#  pragma message("[WebUI] Usage of SPIFFS for missing content enabled")
+#  define FILESYSTEM SPIFFS
+#endif
 /*------------------- End of Compiler Directives ----------------------*/
 
 // Structure for queueing OMG messages to the display
@@ -102,15 +112,6 @@ webUIQueueMessage* currentWebUIMessage;
 #define convert_hpa2inhg(hpa) (hpa * (1.0f / 33.8639f))
 
 #define convert_inhg2hpa(inhg) (inhg * 33.8639f)
-
-/* SPIFFS was used during development to store web pages */
-
-#define FILESYSTEM SPIFFS
-
-typedef struct logMsg {
-  const uint8_t* buffer;
-  size_t size;
-};
 
 /*------------------- Take over serial output and split to  ----------------------*/
 
