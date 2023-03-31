@@ -109,6 +109,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorBH1750
 #  include "config_BH1750.h"
 #endif
+#ifdef ZsensorMQ2
+#  include "config_MQ2.h"
+#endif
 #ifdef ZsensorTEMT6000
 #  include "config_TEMT6000.h"
 #endif
@@ -189,8 +192,6 @@ char mqtt_user[parameters_size + 1] = MQTT_USER; // not compulsory only if your 
 char mqtt_pass[parameters_size + 1] = MQTT_PASS; // not compulsory only if your broker needs authentication
 char mqtt_server[parameters_size + 1] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
-char mqtt_topic[parameters_size + 1] = Base_Topic;
-char gateway_name[parameters_size + 1] = Gateway_Name;
 char ota_pass[parameters_size + 1] = ota_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
@@ -207,24 +208,11 @@ bool connectedOnce = false; //indicate if we have been connected once to MQTT
 bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
 int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
-#ifdef ZmqttDiscovery
-bool disc = true; // Auto discovery with Home Assistant convention
-unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
-#endif
+
 unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
-#  include <vector>
-// Flags definition for white list, black list, discovery management
-#  define device_flags_init     0 << 0
-#  define device_flags_isDisc   1 << 0
-#  define device_flags_isWhiteL 1 << 1
-#  define device_flags_isBlackL 1 << 2
-#  define device_flags_connect  1 << 3
-#  define isWhite(device)       device->isWhtL
-#  define isBlack(device)       device->isBlkL
-#  define isDiscovered(device)  device->isDisc
 
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static bool mqtt_cert_validate = MQTT_CERT_VALIDATE_DEFAULT;
@@ -258,9 +246,7 @@ static bool esp32EthConnected = false;
 #  include <WiFiClientSecure.h>
 #  include <WiFiMulti.h>
 WiFiMulti wifiMulti;
-#  include <Preferences.h>
 #  include <WiFiManager.h>
-Preferences preferences;
 #  ifdef MDNS_SD
 #    include <ESPmDNS.h>
 #  endif
@@ -286,9 +272,6 @@ ESP8266WiFiMulti wifiMulti;
 #else
 #  include <Ethernet.h>
 #endif
-
-#define convertTemp_CtoF(c) ((c * 1.8) + 32)
-#define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 
 // client link to pubsub MQTT
 PubSubClient client;
@@ -894,6 +877,10 @@ void setup() {
   setupZsensorBH1750();
   modules.add(ZsensorBH1750);
 #endif
+#ifdef ZsensorMQ2
+  setupZsensorMQ2();
+  modules.add(ZsensorMQ2);
+#endif
 #ifdef ZsensorTEMT6000
   setupZsensorTEMT6000();
   modules.add(ZsensorTEMT6000);
@@ -1083,10 +1070,8 @@ void setOTA() {
     last_ota_activity_millis = 0;
     ErrorIndicatorOFF();
     SendReceiveIndicatorOFF();
-#  if defined(ZgatewayBT) && defined(ESP32)
-    startProcessing();
-#  endif
     lpDisplayPrint("OTA done");
+    ESPRestart();
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
@@ -1096,9 +1081,6 @@ void setOTA() {
     last_ota_activity_millis = millis();
     ErrorIndicatorOFF();
     SendReceiveIndicatorOFF();
-#  if defined(ZgatewayBT) && defined(ESP32)
-    startProcessing();
-#  endif
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
@@ -1110,6 +1092,7 @@ void setOTA() {
       Log.error(F("Receive Failed" CR));
     else if (error == OTA_END_ERROR)
       Log.error(F("End Failed" CR));
+    ESPRestart();
   });
   ArduinoOTA.begin();
 }
@@ -1162,6 +1145,14 @@ void setupTLS(bool self_signed, uint8_t index) {
   }
 }
 #endif
+
+void ESPRestart() {
+#if defined(ESP32)
+  ESP.restart();
+#elif defined(ESP8266)
+  ESP.reset();
+#endif
+}
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
@@ -1686,6 +1677,9 @@ void loop() {
 #ifdef ZsensorBH1750
       MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
 #endif
+#ifdef ZsensorMQ2
+      MeasureGasMQ2();
+#endif
 #ifdef ZsensorTEMT6000
       MeasureLightIntensityTEMT6000();
 #endif
@@ -1855,9 +1849,6 @@ void syncNTP() {
 
   if (count >= 60) {
     Log.error(F("Unable to update - invalid time" CR));
-#  if defined(ZgatewayBT) && defined(ESP32)
-    startProcessing();
-#  endif
     return;
   }
 }
@@ -2323,20 +2314,14 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();
 #  endif
-#  ifdef ESP32
-          ESP.restart();
-#  elif ESP8266
-          ESP.reset();
-#  endif
+          ESPRestart();
           break;
       }
 
       SendReceiveIndicatorOFF();
       ErrorIndicatorOFF();
 
-#  if defined(ZgatewayBT) && defined(ESP32)
-      startProcessing();
-#  endif
+      ESPRestart();
     }
   }
 }
@@ -2350,11 +2335,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       const char* cmd = SYSdata["cmd"];
       Log.notice(F("Command: %s" CR), cmd);
       if (strstr(cmd, restartCmd) != NULL) { //restart
-#  if defined(ESP8266)
-        ESP.reset();
-#  else
-        ESP.restart();
-#  endif
+        ESPRestart();
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
 #  ifndef ESPWifiManualSetup
         setup_wifimanager(true);
@@ -2387,17 +2368,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
         setESP32WifiPorotocolTxPower();
 #  endif
-        if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-#  if defined(ESP8266)
-          ESP.reset();
-#  else
-          ESP.restart();
-#  endif
-        }
       }
-#  if defined(ZgatewayBT) && defined(ESP32)
-      startProcessing();
-#  endif
+      ESPRestart();
     }
 
 #  ifdef MQTTsetMQTT
@@ -2489,9 +2461,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-#    if defined(ZgatewayBT) && defined(ESP32)
-      startProcessing();
-#    endif
+      ESPRestart();
     }
 #  endif
     if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
@@ -2564,10 +2534,5 @@ String toString(uint32_t input) {
 */
 void watchdogReboot(byte reason) {
   Log.warning(F("Rebooting for reason code %d" CR), reason);
-#if defined(ESP32)
-  ESP.restart();
-#elif defined(ESP8266)
-  ESP.reset();
-#else // Insert other architectures here
-#endif
+  ESPRestart();
 }
