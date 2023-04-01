@@ -104,7 +104,7 @@ void BTConfig_init() {
 unsigned long timeBetweenConnect = 0;
 unsigned long timeBetweenActive = 0;
 
-void stateBTMeasures(bool start) {
+String stateBTMeasures(bool start) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["bleconnect"] = BTConfig.bleConnect;
@@ -135,9 +135,12 @@ void stateBTMeasures(bool start) {
     Log.notice(F("BT sys: "));
     serializeJsonPretty(jsonBuffer, Serial);
     Serial.println();
-    return; // Do not try to erase/write/send config at startup
+    return ""; // Do not try to erase/write/send config at startup
   }
+  String output;
+  serializeJson(jo, output);
   pub(subjectBTtoMQTT, jo);
+  return (output);
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {

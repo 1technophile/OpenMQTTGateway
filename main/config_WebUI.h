@@ -44,16 +44,18 @@
 #  define DISPLAY_WEBUI_INTERVAL 3 // Number of seconds between json message displays
 #endif
 
+#ifdef WEBUI_DEVELOPMENT
+#  pragma message("[WebUI] Usage of SPIFFS for missing content enabled")
+#  define FILESYSTEM SPIFFS
+#  define WEBUI_TRACE_LOGGING
+#endif
+
 #ifdef WEBUI_TRACE_LOGGING
 #  define WEBUI_TRACE_LOG(...) Log.trace(__VA_ARGS__)
 #else
 #  define WEBUI_TRACE_LOG(...)
 #endif
 
-#ifdef WEBUI_DEVELOPMENT
-#  pragma message("[WebUI] Usage of SPIFFS for missing content enabled")
-#  define FILESYSTEM SPIFFS
-#endif
 /*------------------- End of Compiler Directives ----------------------*/
 
 // Structure for queueing OMG messages to the display
