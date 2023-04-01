@@ -602,7 +602,12 @@ void handleIN() {
 
     String informationDisplay = stateMeasures(); // .replace(",\"", "}1");  // .replace("\":", "=2")
 
-    // }1 json-oled }2 true } }1 Cloud }2 cloudEnabled}2true}1c
+// }1 json-oled }2 true } }1 Cloud }2 cloudEnabled}2true}1c
+#  if defined(ZgatewayBT)
+    informationDisplay += "1<BR>BT}2}1"; // }1 the bracket is not needed as the previous message ends with }
+    stateBTMeasures(false);
+    // informationDisplay += stateBTMeasures(false);
+#  endif
 #  if defined(ZdisplaySSD1306)
     informationDisplay += "1<BR>SSD1306}2}1"; // }1 the bracket is not needed as the previous message ends with }
     informationDisplay += stateSSD1306Display();
@@ -616,18 +621,14 @@ void handleIN() {
 
     WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
 
-    // before {"uptime":33,"version":"lilygo-rtl_433-test-B-v1.4.0-98-gcff461db[WebUI]","env":"lilygo-rtl_433-test-B","freemem":106356,"mqttport":"1883","mqttsecure":false,"maxBlock":65136,"tempc":46.11111,"freestack":3208,"rssi":-53,"SSID":"The_Beach","BSSID":"90:72:40:18:A7:BE","ip":"192.168.1.160","mac":"4C:75:25:A8:85:04","actRec":3,"mhz":433.92,"RTLRssiThresh":-82,"RTLRssi":-95,"RTLAVGRssi":0,"RTLCnt":5,"RTLOOKThresh":90,"modules":["LILYGO_OLED","ZwebUI","CLOUD","rtl_433"]}1<BR>SSD1306}2}1{"onstate":true,"brightness":50,"displaymetric":true,"display-flip":true,"idlelogo":false,"log-oled":false,"json-oled":true}1<BR>Cloud}2}1{"cloudEnabled":true,"cloudActive":true,"cloudState":0}
-
     // TODO: need to fix display of modules array within SYStoMQTT
 
-    informationDisplay += "1}2";
-    informationDisplay.replace(",\"", "}1");
-    informationDisplay.replace("\":", "}2");
-    informationDisplay.replace("{\"", "");
-    informationDisplay.replace("\"", "\\\"");
+    // informationDisplay += "1}2";
+    // informationDisplay.replace(",\"", "}1");
+    // informationDisplay.replace("\":", "}2");
+    // informationDisplay.replace("{\"", "");
+    // informationDisplay.replace("\"", "\\\"");
     WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
-
-    // after uptime}233}1version}2\"lilygo-rtl_433-test-B-v1.4.0-98-gcff461db[WebUI]\"}1env}2\"lilygo-rtl_433-test-B\"}1freemem}2106356}1mqttport}2\"1883\"}1mqttsecure}2false}1maxBlock}265136}1tempc}246.11111}1freestack}23208}1rssi}2-53}1SSID}2\"The_Beach\"}1BSSID}2\"90:72:40:18:A7:BE\"}1ip}2\"192.168.1.160\"}1mac}2\"4C:75:25:A8:85:04\"}1actRec}23}1mhz}2433.92}1RTLRssiThresh}2-82}1RTLRssi}2-95}1RTLAVGRssi}20}1RTLCnt}25}1RTLOOKThresh}290}1modules}2[\"LILYGO_OLED\"}1ZwebUI\"}1CLOUD\"}1rtl_433\"]}1<BR>SSD1306}2}1onstate}2true}1brightness}250}1displaymetric}2true}1display-flip}2true}1idlelogo}2false}1log-oled}2false}1json-oled}2true}1<BR>Cloud}2}1cloudEnabled}2true}1cloudActive}2true}1cloudState}20}1}2
 
     if (informationDisplay.length() > WEB_TEMPLATE_BUFFER_MAX_SIZE) {
       Log.warning(F("[WebUI] informationDisplay content length ( %d ) greater than WEB_TEMPLATE_BUFFER_MAX_SIZE.  Display truncated" CR), informationDisplay.length());
@@ -849,7 +850,8 @@ String stateWebUIStatus() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject WebUIdata = jsonBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
-  WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);;
+  WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
+  ;
 
   String output;
   serializeJson(WebUIdata, output);
@@ -959,7 +961,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           // Queue completed message
 
           if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ WebUI ] ERROR: webUIQueue full, discarding signal %s" CR), message->title);
+            Log.warning(F("[ WebUI ] ERROR: webUIQueue full, discarding %s" CR), message->title);
             free(message);
           } else {
             // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
