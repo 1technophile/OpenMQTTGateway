@@ -277,6 +277,7 @@ String stateCLOUDStatus() {
   }
   CLOUDdata["cloudActive"] = (bool)cloudActive;
   CLOUDdata["cloudState"] = cloud.state();
+  CLOUDdata["cloudQueue"] = uxQueueMessagesWaiting(omgCloudQueue);
   pub(subjectCLOUDtoMQTT, CLOUDdata);
   // apply
   String output;

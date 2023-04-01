@@ -54,9 +54,9 @@ float getRN8209current() {
 
 void rn8209_loop(void* mode) {
   if (!ProcessLock) {
-    uint32_t voltage;
-    int32_t current;
-    int32_t power;
+    uint32_t voltage = 123456;
+    int32_t current = 7891011;
+    int32_t power = 12131415;
 
     while (1) {
       uint8_t retv = rn8209c_read_voltage(&voltage);
@@ -64,7 +64,7 @@ void rn8209_loop(void* mode) {
       uint8_t retc = 1;
       uint8_t retp = 1;
       if (ret) {
-        uint32_t temp_current = 0;
+        uint32_t temp_current = 7891011;
         uint32_t temp_power = 0;
         retc = rn8209c_read_current(phase_A, &temp_current);
         retp = rn8209c_read_power(phase_A, &temp_power);
@@ -78,9 +78,9 @@ void rn8209_loop(void* mode) {
       }
 
       JsonObject data = doc.to<JsonObject>();
-      if (retv == 0) data["volt"] = (float)voltage / 1000.0;
-      if (retc == 0) data["current"] = (float)current / 10000.0;
-      if (retp == 0) data["power"] = (float)power / 10000.0;
+      data["volt"] = (float)voltage / 1000.0;
+      data["current"] = (float)current / 10000.0;
+      data["power"] = (float)power / 10000.0;
       if (data) pub(subjectRN8209toMQTT, data);
       delay(TimeBetweenReadingRN8209);
     }

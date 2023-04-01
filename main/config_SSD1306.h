@@ -122,8 +122,8 @@ void ssd1306Print(char*, char*, char*);
 void ssd1306Print(char*, char*);
 void ssd1306Print(char*);
 
-#define pubOled(...) ssd1306PubPrint(__VA_ARGS__)
-void ssd1306PubPrint(const char*, JsonObject&);
+// #define pubOled(...) ssd1306PubPrint(__VA_ARGS__)
+// void ssd1306PubPrint(const char*, JsonObject&);
 /*-------------------End of Global Variables----------------------*/
 
 /*-------------------End of Global Variables----------------------*/

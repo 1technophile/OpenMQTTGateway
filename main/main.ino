@@ -603,6 +603,7 @@ void connectMQTT() {
 #  endif
 #endif
 
+  Log.warning(F("MQTT connection..." CR));
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
   strcat(topic, gateway_name);
@@ -613,8 +614,9 @@ void connectMQTT() {
 #else
   if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
-    Log.warning(F("MQTT connected" CR));
+
     displayPrint("MQTT connected");
+    Log.notice(F("Connected to broker" CR));
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
@@ -1198,7 +1200,7 @@ void setup_wifi() {
     }
 #  endif
   }
-  Log.warning(F("WiFi ok with manual config credentials" CR));
+  Log.notice(F("WiFi ok with manual config credentials" CR));
   displayPrint("Wifi connected");
 }
 
@@ -1447,7 +1449,6 @@ void setup_wifimanager(bool reset_settings) {
   }
 
   displayPrint("Wifi connected");
-  Log.warning(F("Wifi connected"));
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -1576,13 +1577,6 @@ void loop() {
 #  endif
 #endif
 
-#ifdef ESP32
-  if (ESP.getMaxAllocHeap() < 30000) {
-    Log.error(F("[CORE] extreme low memory, restarting. MaxBlock: %d, FreeHeap: %d " CR), ESP.getMaxAllocHeap(), ESP.getFreeHeap());
-    ESP.restart();
-  }
-#endif
-
   unsigned long now = millis();
 
   // Switch off of the LED after TimeLedON
@@ -1625,11 +1619,6 @@ void loop() {
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
-#  ifdef ESP32
-        if (ESP.getMaxAllocHeap() < 40000) {
-          Log.warning(F("[CORE] low memory. MaxBlock: %d, FreeHeap: %d " CR), ESP.getMaxAllocHeap(), ESP.getFreeHeap());
-        }
-#  endif
         stateMeasures();
 #  ifdef ZgatewayBT
         stateBTMeasures(false);
@@ -1645,6 +1634,9 @@ void loop() {
 #  endif
 #  ifdef ZwebUI
         stateWebUIStatus();
+#  endif
+#  ifdef ZgatewayRTL_433
+        stateRTL_433measures();
 #  endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
@@ -1893,7 +1885,6 @@ String stateMeasures() {
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
-  SYSdata["maxBlock"] = ESP.getMaxAllocHeap();
 #      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
 #      endif
@@ -1949,21 +1940,12 @@ String stateMeasures() {
 #  if defined(ZradioCC1101) || defined(ZradioSX127x)
   SYSdata["mhz"] = (float)receiveMhz;
 #  endif
-#  if defined(ZgatewayRTL_433)
-  if (activeReceiver == ACTIVE_RTL) {
-    SYSdata["RTLRssiThresh"] = (int)getRTLrssiThreshold();
-    SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
-    SYSdata["RTLAVGRssi"] = (int)getRTLAverageRSSI();
-    SYSdata["RTLCnt"] = (int)getRTLMessageCount();
-#    ifdef ZradioSX127x
-    SYSdata["RTLOOKThresh"] = (int)getOOKThresh();
-#    endif
-  }
-#  endif
   SYSdata["modules"] = modules;
-  pub(subjectSYStoMQTT, SYSdata);
   String output;
   serializeJson(SYSdata, output);
+
+  pub(subjectSYStoMQTT, SYSdata);
+  pubOled(subjectSYStoMQTT, SYSdata);
   return output;
 }
 #endif
@@ -1976,16 +1958,16 @@ void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
   unsigned long now = millis();
   // find oldest value of the buffer
   int o = getMin();
-  //  Log.trace(F("Min ind: %d" CR), o);
+  // Log.trace(F("Min ind: %d" CR), o);
   // replace it by the new one
   receivedSignal[o].value = MQTTvalue;
   receivedSignal[o].time = now;
 
   // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
-  //  Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
-  //  Log.trace(F("Col: val/timestamp" CR));
+  // Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
+  // Log.trace(F("Col: val/timestamp" CR));
   for (int i = 0; i < struct_size; i++) {
-    //    Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
+    // Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
   }
 }
 
@@ -2013,7 +1995,7 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
     if (receivedSignal[i].value == value) {
       unsigned long now = millis();
       if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
-        //  Log.trace(F("no pub. dupl" CR));
+        // Log.trace(F("no pub. dupl" CR));
         return true;
       }
     }
