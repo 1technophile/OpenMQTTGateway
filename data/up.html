@@ -1,206 +1,240 @@
 <!DOCTYPE html>
-<html lang="en" class="">
+<html lang="en" class=" ">
+
 <head>
     <meta charset='utf-8'>
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
-    <title>OpenMQTTGateway - Firmware Upgrade</title>
+    <meta name="viewport " content="width=device-width,initial-scale=1,user-scalable=no " />
+    <title>OMG_9C9C1FE899A0 - Main Menu</title>
     <script>
-    var x = null,
-        lt,
-        to,
-        tp,
-        pc = '';
-    function eb(s) {
-        return document.getElementById(s);
-    }
-    function qs(s) {
-        return document.querySelector(s);
-    }
-    function sp(i) {
-        eb(i).type = (eb(i).type === 'text' ? 'password' : 'text');
-    }
-    function wl(f) {
-        window.addEventListener('load', f);
-    }
-    function jd() {
-        var t = 0,
-            i = document.querySelectorAll('input,button,textarea,select');
-        while (i.length >= t) {
-            if (i[t]) {
-                i[t]['name'] = (i[t].hasAttribute('id') && (!i[t].hasAttribute('name'))) ? i[t]['id'] : i[t]['name'];
-            }
-            t++;
+        var x = null,
+            lt,
+            to,
+            tp,
+            pc = '';
+        function eb(s) {
+            return document.getElementById(s);
         }
-    }
-    wl(jd);
+        function qs(s) {
+            return document.querySelector(s);
+        }
+        function sp(i) {
+            eb(i).type = (eb(i).type === 'text' ? 'password' : 'text');
+        }
+        function wl(f) {
+            window.addEventListener('load', f);
+        }
+        var ft;
+        function la(p) {
+            a = p || '';
+            clearTimeout(ft);
+            clearTimeout(lt);
+            if (x != null) {
+                x.abort()
+            }
+            x = new XMLHttpRequest();
+            x.onreadystatechange = function () {
+                if (x.readyState == 4 && x.status == 200) {
+                    var s = x.responseText.replace(/{t}/g, "<table style='width:100%'> ").replace(/{s}/g, "<tr><th> ").replace(/{m}/g, "</th><td style='width:20px;white-space:nowrap'> ").replace(/{e}/g, "</td></tr> ");
+                    eb('l1').innerHTML = s;
+                    clearTimeout(ft);
+                    clearTimeout(lt);
+                    lt = setTimeout(la, 2345);
+                }
+            };
+            x.open('GET', '.?m=1' + a, true);
+            x.send();
+            ft = setTimeout(la, 20000);
+        }
+        function lc(v, i, p) {
+            if (eb('s')) {
+                if (v == 'h' || v == 'd') {
+                    var sl = eb('sl4').value;
+                    eb('s').style.background = 'linear-gradient(to right,rgb(' + sl + '%,' + sl + '%,' + sl + '%),hsl(' + eb('sl2').value + ',100%%,50%%))';
+                }
+            }
+            la('&' + v + i + '=' + p);
+        }
+        wl(la);
+        function jd() {
+            var t = 0,
+                i = document.querySelectorAll('input,button,textarea,select');
+            while (i.length >= t) {
+                if (i[t]) {
+                    i[t]['name'] = (i[t].hasAttribute('id') && (!i[t].hasAttribute('name'))) ? i[t]['id'] : i[t]['name'];
+                }
+                t++;
+            }
+        }
+        wl(jd);
     </script>
     <style>
-    div, fieldset, input, select {
-        padding: 5px;
-        font-size: 1em;
-    }
+        div,
+        fieldset,
+        input,
+        select {
+            padding: 5px;
+            font-size: 1em;
+        }
 
-    fieldset {
-        background: #4f4f4f;
-    }
+        fieldset {
+            background: #DDDDDD;
+        }
 
-    p {
-        margin: 0.5em 0;
-    }
+        p {
+            margin: 0.5em 0;
+        }
 
-    input {
-        width: 100%;
-        box-sizing: border-box;
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        background: #dddddd;
-        color: #000000;
-    }
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            background: #EEEEEE;
+            color: #2F2F2F;
+        }
 
-    input[type=checkbox], input[type=radio] {
-        width: 1em;
-        margin-right: 6px;
-        vertical-align: -1px;
-    }
+        input[type=checkbox],
+        input[type=radio] {
+            width: 1em;
+            margin-right: 6px;
+            vertical-align: -1px;
+        }
 
-    input[type=range] {
-        width: 99%;
-    }
+        input[type=range] {
+            width: 99%;
+        }
 
-    select {
-        width: 100%;
-        background: #dddddd;
-        color: #000000;
-    }
+        select {
+            width: 100%;
+            background: #EEEEEE;
+            color: #2F2F2F;
+        }
 
-    textarea {
-        resize: vertical;
-        width: 98%;
-        height: 318px;
-        padding: 5px;
-        overflow: auto;
-        background: #1f1f1f;
-        color: #65c115;
-    }
+        textarea {
+            resize: vertical;
+            width: 98%;
+            height: 318px;
+            padding: 5px;
+            overflow: auto;
+            background: #2F2F2F;
+            color: #7BB461;
+        }
 
-    body {
-        text-align: center;
-        font-family: verdana, sans-serif;
-        background: #252525;
-    }
+        body {
+            text-align: center;
+            font-family: verdana, sans-serif;
+            background: #EEEEEE;
+            color: #2E2F2F;
+        }
 
-    td {
-        padding: 0px;
-    }
+        td {
+            padding: 0px;
+        }
 
-    button {
-        border: 0;
-        border-radius: 0.3rem;
-        background: #1fa3ec;
-        color: #faffff;
-        line-height: 2.4rem;
-        font-size: 1.2rem;
-        width: 100%;
-        -webkit-transition-duration: 0.4s;
-        transition-duration: 0.4s;
-        cursor: pointer;
-    }
+        button {
+            border: 0;
+            border-radius: 0.3rem;
+            background: #4B98D1;
+            color: #faffff;
+            line-height: 2.4rem;
+            font-size: 1.2rem;
+            width: 100%;
+            -webkit-transition-duration: 0.4s;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
 
-    button:hover {
-        background: #0e70a4;
-    }
+        button:hover {
+            background: #025880;
+            font-weight: bold;
+        }
 
-    .bred {
-        background: #d43535;
-    }
+        .bred {
+            background: #FFA900;
+        }
 
-    .bred:hover {
-        background: #931f1f;
-    }
+        .bred:hover {
+            background: #FF8000;
+            font-weight: bold;
+        }
 
-    .bgrn {
-        background: #47c266;
-    }
+        .bgrn {
+            background: #7BB461;
+        }
 
-    .bgrn:hover {
-        background: #5aaf6f;
-    }
+        .bgrn:hover {
+            background: #3A772A;
+            font-weight: bold;
+        }
 
-    a {
-        color: #1fa3ec;
-        text-decoration: none;
-    }
+        a {
+            color: #4B98D1;
+            text-decoration: none;
+        }
 
-    .p {
-        float: left;
-        text-align: left;
-    }
+        .p {
+            float: left;
+            text-align: left;
+        }
 
-    .q {
-        float: right;
-        text-align: right;
-    }
+        .q {
+            float: right;
+            text-align: right;
+        }
 
-    .r {
-        border-radius: 0.3em;
-        padding: 2px;
-        margin: 6px 2px;
-    }
+        .r {
+            border-radius: 0.3em;
+            padding: 2px;
+            margin: 6px 2px;
+        }
     </style>
 </head>
+
 <body>
-    <div style='text-align:left;display:inline-block;color:#eaeaea;min-width:340px;'>
-        <div style='text-align:center;color:#eaeaea;'>
+    <div style='text-align:left;display:inline-block;min-width:340px;'>
+        <div style='text-align:center;'>
             <noscript>
-                To use  please enable JavaScript
+                To use, please enable JavaScript
                 <br>
             </noscript>
-            <h3> </h3>
-            <h2>OpenMQTTGateway</h2>
+            <h3>["HELTEC_OLED","WebUI","CLOUD","BT"]</h3>
+            <h2>OMG_9C9C1FE899A0</h2>
         </div>
-        <div id='f1' style='display:block;'>
-            <fieldset>
-                <legend>
-                    <b>&nbsp;Upgrade by web server&nbsp;</b>
-                </legend>
-                <form method='get' action='u1'>
-                    <br>
-                    <b>OTA Url</b>
-                    <br>
-                    <input id='o' placeholder="OTA_URL" value="http://thehackbox.org/tasmota/release/tasmota.bin">
-                    <br>
-                    <br>
-                    <button type='submit'>Start upgrade</button>
-                </form>
-            </fieldset>
-            <br>
-            <br>
-            <fieldset>
-                <legend>
-                    <b>&nbsp;Upgrade by file upload&nbsp;</b>
-                </legend>
-                <form method='post' action='u2' enctype='multipart/form-data'>
-                    <br>
-                    <input type='file' name='u2'>
-                    <br>
-                    <br>
-                    <button type='submit' onclick='eb("f1").style.display="none";eb("f2").style.display="block";this.form.submit();'>Start upgrade</button>
-                </form>
-            </fieldset>
-        </div>
-        <div id='f2' style='display:none;text-align:center;'>
-            <b>Upload started ...</b>
-        </div>
-        <div id=but2d style="display: block;"></div>
+        <div style='padding:0;' id='l1' name='l1'></div>
+        <div id=but3d style='display: block;'></div>
         <p>
-        <form id=but2 style="display: block;" action='.' method='get'>
-            <button>Main Menu</button>
+        <fieldset>
+            <form id=but3 style='display: block;' action='cn' method='get'>
+                <button>Configuration</button>
+            </form>
+        </fieldset>
+        </p>
+        <p>
+        <form id=but4 style='display: block;' action='in' method='get'>
+            <button>Information</button>
+        </form>
+        </p>
+        <p>
+        <form id=but5 style='display: block;' action='up' method='get'>
+            <button>Firmware Upgrade</button>
+        </form>
+        </p>
+        <p>
+        <form id=but14 style='display: block;' action='cs' method='get'>
+            <button>Console</button>
+        </form>
+        </p>
+        <p>
+        <form id=but0 style='display: block;' action='.' method='get' onsubmit='return confirm("Confirm Restart");'>
+            <button name='rst' class='button bred'>Restart</button>
         </form>
         </p>
         <div style='text-align:right;font-size:11px;'>
-            <hr/>
-            <a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>OpenMQTTGateway 1.4.0</a>
+            <hr />
+            <a href='https://community.openmqttgateway.com' target='_blank'
+                style='color:#aaa;'>esp32_heltec_bt-v1.5.0-106-g2be8836e[WebUI]</a>
         </div>
     </div>
 </body>
+
 </html>

@@ -1109,8 +1109,6 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
         case webUIHash("BTtoMQTT"): {
           // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
 
-          T: [ OMG->MQTT ] topic: home/OMG_9C9C1FE899A0/BTtoMQTT/492207071CF6 msg: {"id":"49:22:07:07:1C:F6","name":"sps","rssi":-77,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","tempc":3.9,"tempf":39.02,"hum":17.23,"batt":88} 
-
           if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "APPLE_CONT" && data["model_id"] != "IBEACON") {
             // Line 2, 3, 4
             String line2 = "";
