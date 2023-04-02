@@ -605,8 +605,7 @@ void handleIN() {
 // }1 json-oled }2 true } }1 Cloud }2 cloudEnabled}2true}1c
 #  if defined(ZgatewayBT)
     informationDisplay += "1<BR>BT}2}1"; // }1 the bracket is not needed as the previous message ends with }
-    stateBTMeasures(false);
-    // informationDisplay += stateBTMeasures(false);
+    informationDisplay += stateBTMeasures(false);
 #  endif
 #  if defined(ZdisplaySSD1306)
     informationDisplay += "1<BR>SSD1306}2}1"; // }1 the bracket is not needed as the previous message ends with }
@@ -619,16 +618,18 @@ void handleIN() {
     informationDisplay += "1<BR>WebUI}2}1";
     informationDisplay += stateWebUIStatus();
 
-    WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
+    // stateBTMeasures causes a Stack canary watchpoint triggered (loopTask)
+    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
 
     // TODO: need to fix display of modules array within SYStoMQTT
 
-    // informationDisplay += "1}2";
-    // informationDisplay.replace(",\"", "}1");
-    // informationDisplay.replace("\":", "}2");
-    // informationDisplay.replace("{\"", "");
-    // informationDisplay.replace("\"", "\\\"");
-    WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
+    informationDisplay += "1}2";
+    informationDisplay.replace(",\"", "}1");
+    informationDisplay.replace("\":", "}2");
+    informationDisplay.replace("{\"", "");
+    informationDisplay.replace("\"", "\\\"");
+
+    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
 
     if (informationDisplay.length() > WEB_TEMPLATE_BUFFER_MAX_SIZE) {
       Log.warning(F("[WebUI] informationDisplay content length ( %d ) greater than WEB_TEMPLATE_BUFFER_MAX_SIZE.  Display truncated" CR), informationDisplay.length());
@@ -928,6 +929,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
       strlcpy(message->title, strtok(topic, "/"), WEBUI_TEXT_WIDTH);
       free(topic);
 
+      WEBUI_TRACE_LOG(F("[ webUIPubPrint ] switch %s " CR), message->title);
       switch (webUIHash(message->title)) {
         case webUIHash("SYStoMQTT"): {
           // {"uptime":456356,"version":"lilygo-rtl_433-test-A-v1.1.1-25-g574177d[lily-cloud]","freemem":125488,"mqttport":"1883","mqttsecure":false,"freestack":3752,"rssi":-36,"SSID":"The_Beach","BSSID":"64:A5:C3:69:C3:38","ip":"192.168.1.239","mac":"4C:75:25:A8:D5:D8","actRec":3,"mhz":433.92,"RTLRssiThresh":-98,"RTLRssi":-108,"RTLAVGRssi":-107,"RTLCnt":121707,"RTLOOKThresh":90,"modules":["LILYGO_OLED","CLOUD","rtl_433"]}
@@ -1106,6 +1108,8 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 #  ifdef ZgatewayBT
         case webUIHash("BTtoMQTT"): {
           // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
+
+          T: [ OMG->MQTT ] topic: home/OMG_9C9C1FE899A0/BTtoMQTT/492207071CF6 msg: {"id":"49:22:07:07:1C:F6","name":"sps","rssi":-77,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","tempc":3.9,"tempf":39.02,"hum":17.23,"batt":88} 
 
           if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "APPLE_CONT" && data["model_id"] != "IBEACON") {
             // Line 2, 3, 4
@@ -1420,12 +1424,15 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
               }
             } else {
+              WEBUI_TRACE_LOG(F("[ WebUI ] incomplete messaage %s" CR), topicori);
               free(message);
             }
 
             break;
           } else {
+            WEBUI_TRACE_LOG(F("[ WebUI ] incorrect model_id %s" CR), topicori);
             free(message);
+            break;
           }
         }
 #  endif
