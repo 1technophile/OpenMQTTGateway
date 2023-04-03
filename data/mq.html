@@ -3,7 +3,7 @@
 <head>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
-    <title>Patio Room Switch - Firmware Upgrade</title>
+    <title>Patio Room Switch - Configure MQTT</title>
     <script>
     var x = null,
         lt,
@@ -158,43 +158,63 @@
             <h3>Tuya MCU</h3>
             <h2>Patio Room Switch</h2>
         </div>
-        <div id='f1' style='display:block;'>
-            <fieldset>
-                <legend>
-                    <b>&nbsp;Upgrade by web server&nbsp;</b>
-                </legend>
-                <form method='get' action='u1'>
+        <fieldset>
+            <legend>
+                <b>&nbsp;MQTT parameters&nbsp;</b>
+            </legend>
+            <form method='get' action='mq'>
+                <p>
+                    <b>Host</b>
+                     ()
                     <br>
-                    <b>OTA Url</b>
+                    <input id='mh' placeholder="" value="mqtt.local">
+                </p>
+                <p>
+                    <b>Port</b>
+                     (1883)
                     <br>
-                    <input id='o' placeholder="OTA_URL" value="http://ota.tasmota.com/tasmota/release/tasmota.bin.gz">
+                    <input id='ml' placeholder='1883' value='1883'>
+                </p>
+                <p>
+                    <b>Client</b>
+                     (DVES_0B62D5)
                     <br>
+                    <input id='mc' placeholder="DVES_%06X" value="DVES_%06X">
+                </p>
+                <p>
+                    <b>User</b>
+                     (DVES_USER)
                     <br>
-                    <button type='submit'>Start upgrade</button>
-                </form>
-            </fieldset>
-            <br>
-            <br>
-            <fieldset>
-                <legend>
-                    <b>&nbsp;Upgrade by file upload&nbsp;</b>
-                </legend>
-                <form method='post' action='u2' enctype='multipart/form-data'>
+                    <input id='mu' placeholder="DVES_USER" value="DVES_USER">
+                </p>
+                <p>
+                    <label>
+                        <b>Password</b>
+                        <input type='checkbox' onclick='sp("mp")'>
+                    </label>
                     <br>
-                    <input type='file' name='u2'>
+                    <input id='mp' type='password' placeholder="Password" value="****">
+                </p>
+                <p>
+                    <b>Topic</b>
+                     = %topic% (tasmota_0B62D5)
                     <br>
+                    <input id='mt' placeholder="tasmota_%06X" value="tasmota_%06X">
+                </p>
+                <p>
+                    <b>Full Topic</b>
+                     (%prefix%/%topic%/)
                     <br>
-                    <button type='submit' onclick='eb("f1").style.display="none";eb("f2").style.display="block";this.form.submit();'>Start upgrade</button>
-                </form>
-            </fieldset>
-        </div>
-        <div id='f2' style='display:none;text-align:center;'>
-            <b>Upload started ...</b>
-        </div>
-        <div id=but2d style="display: block;"></div>
+                    <input id='mf' placeholder="%prefix%/%topic%/" value="%prefix%/%topic%/">
+                </p>
+                <br>
+                <button name='save' type='submit' class='button bgrn'>Save</button>
+            </form>
+        </fieldset>
+        <div id=but3d style="display: block;"></div>
         <p>
-        <form id=but2 style="display: block;" action='.' method='get'>
-            <button>Main Menu</button>
+        <form id=but3 style="display: block;" action='cn' method='get'>
+            <button>Configuration</button>
         </form>
         </p>
         <div style='text-align:right;font-size:11px;'>

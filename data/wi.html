@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+    <title>Patio Room Switch - Configure WiFi</title>
+    <script>
+    var x = null,
+        lt,
+        to,
+        tp,
+        pc = '';
+    function eb(s) {
+        return document.getElementById(s);
+    }
+    function qs(s) {
+        return document.querySelector(s);
+    }
+    function sp(i) {
+        eb(i).type = (eb(i).type === 'text' ? 'password' : 'text');
+    }
+    function wl(f) {
+        window.addEventListener('load', f);
+    }
+    function c(l) {
+        eb('s1').value = l.innerText || l.textContent;
+        eb('p1').focus();
+    }
+    function jd() {
+        var t = 0,
+            i = document.querySelectorAll('input,button,textarea,select');
+        while (i.length >= t) {
+            if (i[t]) {
+                i[t]['name'] = (i[t].hasAttribute('id') && (!i[t].hasAttribute('name'))) ? i[t]['id'] : i[t]['name'];
+            }
+            t++;
+        }
+    }
+    wl(jd);
+    </script>
+    <style>
+    div, fieldset, input, select {
+        padding: 5px;
+        font-size: 1em;
+    }
+
+    fieldset {
+        background: #4f4f4f;
+    }
+
+    p {
+        margin: 0.5em 0;
+    }
+
+    input {
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        background: #dddddd;
+        color: #000000;
+    }
+
+    input[type=checkbox], input[type=radio] {
+        width: 1em;
+        margin-right: 6px;
+        vertical-align: -1px;
+    }
+
+    input[type=range] {
+        width: 99%;
+    }
+
+    select {
+        width: 100%;
+        background: #dddddd;
+        color: #000000;
+    }
+
+    textarea {
+        resize: vertical;
+        width: 98%;
+        height: 318px;
+        padding: 5px;
+        overflow: auto;
+        background: #1f1f1f;
+        color: #65c115;
+    }
+
+    body {
+        text-align: center;
+        font-family: verdana, sans-serif;
+        background: #252525;
+    }
+
+    td {
+        padding: 0px;
+    }
+
+    button {
+        border: 0;
+        border-radius: 0.3rem;
+        background: #1fa3ec;
+        color: #faffff;
+        line-height: 2.4rem;
+        font-size: 1.2rem;
+        width: 100%;
+        -webkit-transition-duration: 0.4s;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0e70a4;
+    }
+
+    .bred {
+        background: #d43535;
+    }
+
+    .bred:hover {
+        background: #931f1f;
+    }
+
+    .bgrn {
+        background: #47c266;
+    }
+
+    .bgrn:hover {
+        background: #5aaf6f;
+    }
+
+    a {
+        color: #1fa3ec;
+        text-decoration: none;
+    }
+
+    .p {
+        float: left;
+        text-align: left;
+    }
+
+    .q {
+        float: right;
+        text-align: right;
+    }
+
+    .r {
+        border-radius: 0.3em;
+        padding: 2px;
+        margin: 6px 2px;
+    }
+
+    .si {
+        display: inline-flex;
+        align-items: flex-end;
+        height: 15px;
+        padding:0
+    }
+
+    .si i {
+        width: 3px;
+        margin-right: 1px;
+        border-radius: 3px;
+        background-color:#eaeaea
+    }
+
+    .si .b0 {
+        height:25%
+    }
+
+    .si .b1 {
+        height:50%
+    }
+
+    .si .b2 {
+        height:75%
+    }
+
+    .si .b3 {
+        height:100%
+    }
+
+    .o30 {
+        opacity: .3
+    }
+    </style>
+</head>
+<body>
+    <div style='text-align:left;display:inline-block;color:#eaeaea;min-width:340px;'>
+        <div style='text-align:center;color:#eaeaea;'>
+            <noscript>
+                To use Tasmota, please enable JavaScript
+                <br>
+            </noscript>
+            <h3>Tuya MCU</h3>
+            <h2>Patio Room Switch</h2>
+        </div>
+        <div title='-43 dBm (100%)'>
+            <a href='#p' onclick='c(this)'>The_Beach</a>
+            <span class='q'>
+                <div class='si'>
+                    <i class='b0'></i>
+                    <i class='b1'></i>
+                    <i class='b2'></i>
+                    <i class='b3'></i>
+            </span>
+        </div>
+    </div>
+    <div title='-84 dBm (32%)'>
+        <a href='#p' onclick='c(this)'>BELL634</a>
+        <span class='q'>
+            <div class='si'>
+                <i class='b0'></i>
+                <i class='b1'></i>
+                <i class='b2 o30'></i>
+                <i class='b3 o30'></i>
+        </span>
+    </div>
+    </div>
+    <div title='-86 dBm (28%)'>
+        <a href='#p' onclick='c(this)'>MRC</a>
+        <span class='q'>
+            <div class='si'>
+                <i class='b0'></i>
+                <i class='b1'></i>
+                <i class='b2 o30'></i>
+                <i class='b3 o30'></i>
+        </span>
+    </div>
+    </div>
+    <br>
+    <div>
+        <a href='/wi?scan='>Scan for all WiFi Networks</a>
+    </div>
+    <br>
+    <fieldset>
+        <legend>
+            <b>&nbsp;Wifi parameters&nbsp;</b>
+        </legend>
+        <form method='get' action='wi'>
+            <p>
+                <b>WiFi Network</b>
+                 ()
+                <br>
+                <input id='s1' placeholder="Type or Select your WiFi Network" value="The_Beach">
+            </p>
+            <p>
+                <label>
+                    <b>WiFi Password</b>
+                    <input type='checkbox' onclick='sp("p1")'>
+                </label>
+                <br>
+                <input id='p1' type='password' placeholder="Enter your WiFi Password" value="****">
+            </p>
+            <p>
+                <b>WiFi Network 2</b>
+                 ()
+                <br>
+                <input id='s2' placeholder="Type your Alternative WiFi Network" value="">
+            </p>
+            <p>
+                <label>
+                    <b>WiFi Password</b>
+                    <input type='checkbox' onclick='sp("p2")'>
+                </label>
+                <br>
+                <input id='p2' type='password' placeholder="Enter your WiFi Password" value="****">
+            </p>
+            <p>
+                <b>Hostname</b>
+                 (%s-%04d)
+                <br>
+                <input id='h' placeholder="%s-%04d" value="%s-%04d">
+            </p>
+            <p>
+                <b>CORS Domain</b>
+                <input id='c' placeholder="" value="http://jesse.local">
+            </p>
+            <br>
+            <button name='save' type='submit' class='button bgrn'>Save</button>
+        </form>
+    </fieldset>
+    <div id=but3d style="display: block;"></div>
+    <p>
+    <form id=but3 style="display: block;" action='cn' method='get'>
+        <button>Configuration</button>
+    </form>
+    </p>
+    <div style='text-align:right;font-size:11px;'>
+        <hr/>
+        <a href='https://bit.ly/tasmota' target='_blank' style='color:#aaa;'>Tasmota 9.5.0 by Theo Arends</a>
+    </div>
+    </div>
+</body>
+</html>
