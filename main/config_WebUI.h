@@ -45,7 +45,7 @@
 #endif
 
 #ifdef WEBUI_DEVELOPMENT
-#  pragma message("[WebUI] Usage of SPIFFS for missing content enabled")
+#  pragma message("[WebUI] Usage of SPIFFS for missing WebUI content enabled")
 #  define FILESYSTEM SPIFFS
 #  define WEBUI_TRACE_LOGGING
 #endif

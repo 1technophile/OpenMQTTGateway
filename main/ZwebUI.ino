@@ -64,7 +64,6 @@ void handleTK(); // Return Cloud token
 /*------------------- External functions ----------------------*/
 
 esp_err_t nvs_flash_erase(void);
-// extern String stateMeasures(); // Send a status message
 extern void eraseAndRestart();
 extern unsigned long uptime();
 
@@ -78,25 +77,9 @@ void* log_buffer_mutex;
 char log_buffer[LOG_BUFFER_SIZE]; // Log buffer in DRAM
 
 const uint16_t MAX_LOGSZ = LOG_BUFFER_SIZE - 96;
-
 const uint16_t TOPSZ = 151; // Max number of characters in topic string
-
 uint8_t masterlog_level; // Master log level used to override set log level
-
 bool reset_web_log_flag = false; // Reset web console log
-
-/*
-void AddLog(uint32_t loglevel, PGM_P formatP, ...) {
-    va_list arg;
-    va_start(arg, formatP);
-    char* log_data = ext_vsnprintf_malloc_P(formatP, arg);
-    va_end(arg);
-    if (log_data == nullptr) { return; }
-
-    AddLogData(loglevel, log_data);
-    free(log_data);
-}
-*/
 
 #  ifdef ESP32
 /*********************************************************************************************\
@@ -455,6 +438,61 @@ void handleCN() {
 }
 
 /**
+ * @brief /WI - Configure WiFi Page
+ * 
+ */
+void handleWI() {
+  WEBUI_TRACE_LOG(F("handleWI: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleWI Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+  }
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure WiFi").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, "", "", "", "", "", "");
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+
+/**
+ * @brief /MQ - Configure MQTT Page
+ * 
+ */
+void handleMQ() {
+  WEBUI_TRACE_LOG(F("handleMQ: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleMQ Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+  }
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure MQTT").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  // mqtt server, mqtt port, client id, mqtt username, mqtt password, topic, Full Topic
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, gateway_name, mqtt_user, mqtt_pass, mqtt_topic, "");
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+
+/**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
  * 
  */
@@ -534,9 +572,9 @@ void handleCL() {
 
   requestToken = esp_random();
 #    ifdef ESP32_ETHERNET
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
 #    else
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, cloud_body, jsonChar, gateway_name, cloudEnabled, deviceToken, (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_cloud_body, jsonChar, gateway_name, cloudEnabled, deviceToken, (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
 #    endif
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
@@ -655,6 +693,34 @@ void handleIN() {
   }
 }
 
+/**
+ * @brief /UP - Firmware Upgrade Page
+ * 
+ */
+void handleUP() {
+  WEBUI_TRACE_LOG(F("handleUP: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleUP Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+  } else {
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+    char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Firmware Upgrade").c_str());
+    String response = String(buffer);
+    response += String(script);
+    response += String(style);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, "http://upgrade/");
+    response += String(buffer);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+    response += String(buffer);
+    server.send(200, "text/html", response);
+  }
+}
+
 uint32_t logIndex = 0;
 
 /**
@@ -768,8 +834,11 @@ void WebUISetup() {
 
   server.on("/in", handleIN); // Information
   server.on("/cs", handleCS); // Console
+  server.on("/up", handleUP); // Firmware Upgrade
 
   server.on("/cn", handleCN); // Configuration
+  server.on("/wi", handleWI); // Configuration Wifi
+  server.on("/mq", handleMQ); // Configuration MQTT
 #  if defined(ZgatewayCloud)
   server.on("/cl", handleCL); // Cloud configuration
   server.on("/tk", handleTK); // Store Device Token
