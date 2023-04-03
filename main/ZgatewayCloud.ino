@@ -36,9 +36,11 @@ WiFiClientSecure cloudWifi;
 
 PubSubClient cloud(cloudWifi);
 
-char account[parameters_size];
-char device[parameters_size];
-char token[parameters_size];
+#define CLOUD_PARAMETER_SIZE 32
+
+char account[CLOUD_PARAMETER_SIZE];
+char device[CLOUD_PARAMETER_SIZE];
+char token[CLOUD_PARAMETER_SIZE];
 
 String deviceToken;
 bool cloudEnabled;
@@ -94,9 +96,9 @@ void cloudCallback(char* topic, byte* payload, unsigned int length) {
 bool cloudConnect() {
   if (deviceToken.length() == CLOUD_DEVICE_TOKEN_LENGTH) {
     cloudActive = true;
-    deviceToken.substring(0, deviceToken.indexOf(':')).toCharArray(account, parameters_size);
-    deviceToken.substring(deviceToken.indexOf(':') + 1, deviceToken.lastIndexOf(':')).toCharArray(device, parameters_size);
-    deviceToken.substring(deviceToken.lastIndexOf(':') + 1).toCharArray(token, parameters_size);
+    deviceToken.substring(0, deviceToken.indexOf(':')).toCharArray(account, CLOUD_PARAMETER_SIZE);
+    deviceToken.substring(deviceToken.indexOf(':') + 1, deviceToken.lastIndexOf(':')).toCharArray(device, CLOUD_PARAMETER_SIZE);
+    deviceToken.substring(deviceToken.lastIndexOf(':') + 1).toCharArray(token, CLOUD_PARAMETER_SIZE);
     // strcpy(account, strtok(deviceToken.c_str(), ":")); // TODO: strtok is not thread safe.....and needs to be replaced
     // strcpy(device, strtok(0, ":")); // TODO: strtok is not thread safe.....and needs to be replaced
     // strcpy(token, strtok(0, ":"));
