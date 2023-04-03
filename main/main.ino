@@ -1563,6 +1563,8 @@ void connectMQTTmdns() {
     if (n == 1) {
       Log.trace(F("One MQTT server found setting parameters" CR));
       client.setServer(MDNS.IP(0), int(MDNS.port(0)));
+      strncpy(mqtt_server, MDNS.IP(0).toString().c_str(), parameters_size + 1);
+      itoa(int(MDNS.port(0)), mqtt_port, 6);
     } else {
       Log.error(F("Several MQTT servers found, please deactivate mDNS and set your default server" CR));
     }
