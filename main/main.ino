@@ -70,7 +70,7 @@ struct GfSun2000Data {};
 #endif
 
 // Modules config inclusion
-#if defined(ZwebUI)
+#if defined(ZwebUI) && defined(ESP32)
 #  include "config_WebUI.h"
 #endif
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
@@ -815,7 +815,7 @@ void setup() {
   setup_ethernet();
 #endif
 
-#if defined(ZwebUI)
+#if defined(ZwebUI) && defined(ESP32)
   WebUISetup();
   modules.add(ZwebUI);
 #endif
@@ -1621,7 +1621,7 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
-#  ifdef ZwebUI
+#  if defined(ZwebUI) && defined(ESP32)
         stateWebUIStatus();
 #  endif
       }
@@ -1743,7 +1743,7 @@ void loop() {
         launchRTL_433Discovery(publishDiscovery);
 #  endif
 #endif
-#ifdef ZwebUI
+#if defined(ZwebUI) && defined(ESP32)
       WebUILoop();
 #endif
     } else {
