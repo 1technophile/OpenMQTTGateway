@@ -57,7 +57,7 @@
 #  endif
 #else
 #  ifndef JSON_TO_OLED
-#    define JSON_TO_OLED false // Default to displaying JSON messages on the display
+#    define JSON_TO_OLED false // If WebUI is NOT included within the build, the JSON message parser is not included within the build and the JSON messages are not available for display
 #  endif
 #endif
 
@@ -121,8 +121,6 @@ extern String stateSSD1306Display();
 void ssd1306Print(char*, char*, char*);
 void ssd1306Print(char*, char*);
 void ssd1306Print(char*);
-
-/*-------------------End of Global Variables----------------------*/
 
 /*-------------------End of Global Variables----------------------*/
 
