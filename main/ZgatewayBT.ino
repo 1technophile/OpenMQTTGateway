@@ -1101,7 +1101,7 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
       BLEdata.remove("mac_type");
       BLEdata.remove("adv_type");
       // tag device properties
-//      BLEdata.remove("type");   type is used by the WebUI module to determine the template used to display the signal
+      // BLEdata.remove("type");   type is used by the WebUI module to determine the template used to display the signal
       BLEdata.remove("cidc");
       BLEdata.remove("acts");
       BLEdata.remove("cont");
