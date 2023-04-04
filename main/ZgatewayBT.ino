@@ -104,7 +104,7 @@ void BTConfig_init() {
 unsigned long timeBetweenConnect = 0;
 unsigned long timeBetweenActive = 0;
 
-void stateBTMeasures(bool start) {
+String stateBTMeasures(bool start) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["bleconnect"] = BTConfig.bleConnect;
@@ -135,9 +135,12 @@ void stateBTMeasures(bool start) {
     Log.notice(F("BT sys: "));
     serializeJsonPretty(jsonBuffer, Serial);
     Serial.println();
-    return; // Do not try to erase/write/send config at startup
+    return ""; // Do not try to erase/write/send config at startup
   }
+  String output;
+  serializeJson(jo, output);
   pub(subjectBTtoMQTT, jo);
+  return (output);
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
@@ -1091,9 +1094,6 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
     }
-    if (BLEdata.containsKey("type") && (BLEdata.containsKey("model") || BLEdata.containsKey("distance"))) { // Only display sensor data with type
-      pubOled(subjectBTtoMQTT, BLEdata);
-    }
     if (!BTConfig.pubAdvData) {
       BLEdata.remove("servicedatauuid");
       BLEdata.remove("servicedata");
@@ -1101,7 +1101,7 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
       BLEdata.remove("mac_type");
       BLEdata.remove("adv_type");
       // tag device properties
-      BLEdata.remove("type");
+//      BLEdata.remove("type");   type is used by the WebUI module to determine the template used to display the signal
       BLEdata.remove("cidc");
       BLEdata.remove("acts");
       BLEdata.remove("cont");
