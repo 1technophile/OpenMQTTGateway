@@ -91,3 +91,20 @@ OpenMQTTGateway support a low power mode for ESP32, this mode can be set by MQTT
 
 The low power mode can be changed also with a push to button B when the board is processing (top button on M5stickC, M5stickC Plus and middle button of M5stack).
 If you are already in low power mode 1 or 2 with M5Stack you can wake up the board by pressing the red button.
+
+### Low power mode (deepSleep) for ESP8266 boards
+In certain use cases where power is severly limited you can use the ESP8266 deep sleep capability.
+
+* e.g. measuring a pool temperature every 5 minutes using an ESP8266 and DS18B20 probe where the ESP8266 is powered by very limited battery backed solar power.
+
+During deep sleep everything is off and (almost) all execution state is lost. 
+
+Consumption is about 20 µA.
+
+Use this when you want the device to sleep for minutes or hours.
+
+You only have to define the macro `ESP8266_DEEP_SLEEP_IN_US` with the number of microseconds.
+
+A hardware jumper is required connecting RST to a GPIO (not to CH_PD) defined by the macro `ESP8266_DEEP_SLEEP_WAKE_PIN` and defaulted to D0.
+
+And the sensor code must set variable `ready_to_sleep` to true after publishing the measurement to MQTT and the main loop will then enter deep sleep.
