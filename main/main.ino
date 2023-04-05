@@ -70,6 +70,9 @@ struct GfSun2000Data {};
 #endif
 
 // Modules config inclusion
+#if defined(ZwebUI) && defined(ESP32)
+#  include "config_WebUI.h"
+#endif
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 #  include "config_RF.h"
 #endif
@@ -396,6 +399,7 @@ void pub(const char* topicori, JsonObject& data) {
 #if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
   pubMQTT(topic, dataAsString.c_str());
+  pubWebUI(topicori, data);
 #endif
 
 #if simplePublishing
@@ -811,6 +815,11 @@ void setup() {
   setup_ethernet();
 #endif
 
+#if defined(ZwebUI) && defined(ESP32)
+  WebUISetup();
+  modules.add(ZwebUI);
+#endif
+
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
     eClient = new WiFiClientSecure;
@@ -1184,6 +1193,7 @@ void setup_wifi() {
 #  endif
   }
   Log.notice(F("WiFi ok with manual config credentials" CR));
+  displayPrint("Wifi connected");
 }
 
 #elif defined(ESP8266) || defined(ESP32)
@@ -1611,6 +1621,9 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+#  if defined(ZwebUI) && defined(ESP32)
+        stateWebUIStatus();
+#  endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
@@ -1730,6 +1743,9 @@ void loop() {
         launchRTL_433Discovery(publishDiscovery);
 #  endif
 #endif
+#if defined(ZwebUI) && defined(ESP32)
+      WebUILoop();
+#endif
     } else {
       // MQTT disconnected
       connected = false;
@@ -1827,7 +1843,7 @@ String UTCtimestamp() {
 #endif
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-void stateMeasures() {
+String stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
@@ -1919,8 +1935,12 @@ void stateMeasures() {
   }
 #  endif
   SYSdata["modules"] = modules;
+  String output;
+  serializeJson(SYSdata, output);
+
   pub(subjectSYStoMQTT, SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
+  return output;
 }
 #endif
 

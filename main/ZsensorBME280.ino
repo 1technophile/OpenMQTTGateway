@@ -193,7 +193,6 @@ void MeasureTempHumAndPressure() {
       }
       if (BME280data.size() > 0) {
         pub(BMETOPIC, BME280data);
-        pubOled(BMETOPIC, BME280data);
       }
     }
 

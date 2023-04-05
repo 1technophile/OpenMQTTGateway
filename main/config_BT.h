@@ -34,7 +34,7 @@ extern void launchBTDiscovery(bool overrideDiscovery);
 extern void stopProcessing();
 extern void startProcessing();
 extern void lowPowerESP32();
-extern void stateBTMeasures(bool);
+extern String stateBTMeasures(bool);
 
 #ifdef ESP32
 extern int btQueueBlocked;
