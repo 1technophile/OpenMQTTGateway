@@ -221,10 +221,12 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
-    preferences.remove("BTConfig");
-    preferences.end();
-    Log.notice(F("BT config erased" CR));
-    return; // Erase prevails on save, so skipping save
+    if (preferences.isKey("BTConfig")) {
+      preferences.remove("BTConfig");
+      preferences.end();
+      Log.notice(F("BT config erased" CR));
+      return; // Erase prevails on save, so skipping save
+    }
   }
 
   if (BTdata.containsKey("save") && BTdata["save"].as<bool>()) {
@@ -262,20 +264,22 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
 void BTConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  auto error = deserializeJson(jsonBuffer, preferences.getString("BTConfig", "{}"));
-  preferences.end();
-  Log.notice(F("BT config loaded" CR));
-  if (error) {
-    Log.error(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
-    return;
+  if (preferences.isKey("BTConfig")) {
+    auto error = deserializeJson(jsonBuffer, preferences.getString("BTConfig", "{}"));
+    preferences.end();
+    Log.notice(F("BT config loaded" CR));
+    if (error) {
+      Log.error(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      return;
+    }
+    if (jsonBuffer.isNull()) {
+      Log.warning(F("BT config is null" CR));
+      return;
+    }
+    JsonObject jo = jsonBuffer.as<JsonObject>();
+    BTConfig_fromJson(jo, true); // Never send MQTT message with config
+    Log.notice(F("BT config loaded" CR));
   }
-  if (jsonBuffer.isNull()) {
-    Log.warning(F("BT config is null" CR));
-    return;
-  }
-  JsonObject jo = jsonBuffer.as<JsonObject>();
-  BTConfig_fromJson(jo, true); // Never send MQTT message with config
-  Log.notice(F("BT config loaded" CR));
 }
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
