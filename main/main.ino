@@ -1617,6 +1617,7 @@ void loop() {
         stateMeasures();
 #  ifdef ZgatewayBT
         stateBTMeasures(false);
+        btScanWDG();
 #  endif
 #  ifdef ZactuatorONOFF
         stateONOFFMeasures();
