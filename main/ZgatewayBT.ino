@@ -101,6 +101,23 @@ void BTConfig_init() {
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
 }
 
+// Watchdog, if there was no change of btQueueLengthSum for 5 minutes, restart ESP
+void btScanWDG() {
+  static unsigned long previousbtQueueLengthSum = 0;
+  static unsigned long lastBtMsgTime = 0;
+  unsigned long now = millis();
+  if (!ProcessLock &&
+      previousbtQueueLengthSum == btQueueLengthSum &&
+      btQueueLengthSum != 0 &&
+      (now - lastBtMsgTime > BTConfig.BLEinterval)) {
+    Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtMsgTime / 1000);
+    ESPRestart();
+  } else {
+    previousbtQueueLengthSum = btQueueLengthSum;
+    lastBtMsgTime = now;
+  }
+}
+
 unsigned long timeBetweenConnect = 0;
 unsigned long timeBetweenActive = 0;
 
@@ -714,7 +731,6 @@ void BLEscan() {
   while (uxQueueMessagesWaiting(BLEQueue)) {
     yield();
   }
-  disableCore0WDT();
   Log.notice(F("Scan begin" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
@@ -730,7 +746,6 @@ void BLEscan() {
   BLEScanResults foundDevices = pBLEScan->start(BTConfig.scanDuration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
-  enableCore0WDT();
   Log.trace(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
 }
 
