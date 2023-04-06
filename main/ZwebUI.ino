@@ -466,7 +466,14 @@ void handleWI() {
 
 /**
  * @brief /MQ - Configure MQTT Page
- * 
+ * T: handleMQ Arg: 0, mh=192.168.1.17
+ * T: handleMQ Arg: 1, ml=1883
+ * T: handleMQ Arg: 2, mu=your_username
+ * T: handleMQ Arg: 3, mp=your_password
+ * T: handleMQ Arg: 4, sc=on
+ * T: handleMQ Arg: 5, msc=suds
+ * T: handleMQ Arg: 6, mt=home/
+ * T: handleMQ Arg: 7, save=
  */
 void handleMQ() {
   WEBUI_TRACE_LOG(F("handleMQ: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -474,7 +481,33 @@ void handleMQ() {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleMQ Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
+    if (server.hasArg("save")) {
+      if (server.hasArg("mh")) {
+        strncpy(mqtt_server, server.arg("mh").c_str(), parameters_size);
+      }
+      if (server.hasArg("ml")) {
+        strncpy(mqtt_port, server.arg("ml").c_str(), 6);
+      }
+      if (server.hasArg("mu")) {
+        strncpy(mqtt_user, server.arg("mu").c_str(), parameters_size);
+      }
+      if (server.hasArg("mp")) {
+        strncpy(mqtt_pass, server.arg("mp").c_str(), parameters_size);
+      }
+      mqtt_secure = server.hasArg("sc");
+      if (server.hasArg("msc")) {
+        mqtt_cert = server.arg("msc"); // String
+      }
+      if (server.hasArg("mt")) {
+        strncpy(mqtt_topic, server.arg("mt").c_str(), parameters_size);
+      }
+      #ifdef ESPWifiManualSetup
+      saveMqttConfig();
+      connectMQTT();
+      #endif
+    }
   }
+
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
 
@@ -484,8 +517,42 @@ void handleMQ() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  // mqtt server, mqtt port, client id, mqtt username, mqtt password, topic, Full Topic
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, gateway_name, mqtt_user, mqtt_pass, mqtt_topic, "");
+  // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, mqtt_pass, (mqtt_secure ? "checked" : ""), mqtt_cert, mqtt_topic);
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+
+/**
+ * @brief /LO - Configure Logging Page
+ * T: handleLO: uri: /lo, args: 2, method: 1
+ * T: handleLO Arg: 0, lo=5
+ * T: handleLO Arg: 1, save=
+ */
+void handleLO() {
+  WEBUI_TRACE_LOG(F("handleLO: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleLO Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save") && server.hasArg("lo")) {
+      Log.setLevel(server.arg("lo").toInt());
+    }
+  }
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure Logging").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  int logLevel = Log.getLevel();
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_logging_body, jsonChar, gateway_name, (logLevel == 0 ? "selected" : ""), (logLevel == 1 ? "selected" : ""), (logLevel == 2 ? "selected" : ""), (logLevel == 3 ? "selected" : ""), (logLevel == 4 ? "selected" : ""), (logLevel == 5 ? "selected" : ""), (logLevel == 6 ? "selected" : ""));
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -837,12 +904,13 @@ void WebUISetup() {
   server.on("/up", handleUP); // Firmware Upgrade
 
   server.on("/cn", handleCN); // Configuration
-  server.on("/wi", handleWI); // Configuration Wifi
-  server.on("/mq", handleMQ); // Configuration MQTT
+  server.on("/wi", handleWI); // Configure Wifi
+  server.on("/mq", handleMQ); // Configure MQTT
 #  if defined(ZgatewayCloud)
-  server.on("/cl", handleCL); // Cloud configuration
+  server.on("/cl", handleCL); // Configure Cloud
   server.on("/tk", handleTK); // Store Device Token
 #  endif
+  server.on("/lo", handleLO); // Configure Logging
 
   server.on("/rt", handleRT); // Reset configuration ( Erase and Restart )
   server.begin();
@@ -1043,72 +1111,74 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
 #  ifdef ZgatewayRTL_433
         case webUIHash("RTL_433toMQTT"): {
-          // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
+          if (!strncmp(data["model"], "status", 6) && data.containsKey("id")) {
+            // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
 
-          // Line 1
+            // Line 1
 
-          strlcpy(message->line1, data["model"], WEBUI_TEXT_WIDTH);
+            strlcpy(message->line1, data["model"], WEBUI_TEXT_WIDTH);
 
-          // Line 2
+            // Line 2
 
-          String id = data["id"];
-          String channel = data["channel"];
-          String line2 = "id: " + id + " channel: " + channel;
-          line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+            String id = data["id"];
+            String channel = data["channel"];
+            String line2 = "id: " + id + " channel: " + channel;
+            line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 
-          // Line 3
+            // Line 3
 
-          String line3 = "";
+            String line3 = "";
 
-          if (data.containsKey("temperature_C")) {
-            float temperature_C = data["temperature_C"];
-            char temp[5];
+            if (data.containsKey("temperature_C")) {
+              float temperature_C = data["temperature_C"];
+              char temp[5];
 
-            if (displayMetric) {
-              dtostrf(temperature_C, 3, 1, temp);
-              line3 = "temp: " + (String)temp + "°C ";
-            } else {
-              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
-              line3 = "temp: " + (String)temp + "°F ";
+              if (displayMetric) {
+                dtostrf(temperature_C, 3, 1, temp);
+                line3 = "temp: " + (String)temp + "°C ";
+              } else {
+                dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+                line3 = "temp: " + (String)temp + "°F ";
+              }
             }
-          }
 
-          float humidity = data["humidity"];
-          if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
-            char hum[5];
-            dtostrf(humidity, 3, 1, hum);
-            line3 += "hum: " + (String)hum + "% ";
-          }
-          if (data.containsKey("wind_avg_km_h")) {
-            float wind_avg_km_h = data["wind_avg_km_h"];
-            char wind[6];
-
-            if (displayMetric) {
-              dtostrf(wind_avg_km_h, 3, 1, wind);
-              line3 += "wind: " + (String)wind + "km/h ";
-            } else {
-              dtostrf(convert_kmph2mph(wind_avg_km_h), 3, 1, wind);
-              line3 += "wind: " + (String)wind + "mp/h ";
+            float humidity = data["humidity"];
+            if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
+              char hum[5];
+              dtostrf(humidity, 3, 1, hum);
+              line3 += "hum: " + (String)hum + "% ";
             }
-          }
+            if (data.containsKey("wind_avg_km_h")) {
+              float wind_avg_km_h = data["wind_avg_km_h"];
+              char wind[6];
 
-          line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+              if (displayMetric) {
+                dtostrf(wind_avg_km_h, 3, 1, wind);
+                line3 += "wind: " + (String)wind + "km/h ";
+              } else {
+                dtostrf(convert_kmph2mph(wind_avg_km_h), 3, 1, wind);
+                line3 += "wind: " + (String)wind + "mp/h ";
+              }
+            }
 
-          // Line 4
+            line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 
-          String rssi = data["rssi"];
-          String battery_ok = data["battery_ok"];
+            // Line 4
 
-          String line4 = "batt: " + battery_ok + " rssi: " + rssi;
-          line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
+            String rssi = data["rssi"];
+            String battery_ok = data["battery_ok"];
 
-          // Queue completed message
+            String line4 = "batt: " + battery_ok + " rssi: " + rssi;
+            line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
-          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
+            // Queue completed message
+
+            if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
+              Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+              free(message);
+            } else {
+              // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
+            }
           }
           break;
         }

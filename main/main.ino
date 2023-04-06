@@ -1589,6 +1589,9 @@ void loop() {
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
 #endif
     failure_number_ntwk = 0;
+#if defined(ZwebUI) && defined(ESP32)
+    WebUILoop();
+#endif
     if (client.loop()) { // MQTT client is still connected
       InfoIndicatorON();
       failure_number_ntwk = 0;
@@ -1743,9 +1746,7 @@ void loop() {
         launchRTL_433Discovery(publishDiscovery);
 #  endif
 #endif
-#if defined(ZwebUI) && defined(ESP32)
-      WebUILoop();
-#endif
+
     } else {
       // MQTT disconnected
       connected = false;
