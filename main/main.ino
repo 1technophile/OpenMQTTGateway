@@ -585,6 +585,9 @@ void delayWithOTA(long waitMillis) {
 #    endif
 #  endif
     ArduinoOTA.handle();
+#  if defined(ZwebUI) && defined(ESP32)
+    WebUILoop();
+#  endif
     delay(waitStep);
   }
 #else

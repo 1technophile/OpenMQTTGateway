@@ -501,7 +501,7 @@ void handleMQ() {
       if (server.hasArg("mt")) {
         strncpy(mqtt_topic, server.arg("mt").c_str(), parameters_size);
       }
-      #ifdef ESPWifiManualSetup
+      #ifndef ESPWifiManualSetup
       saveMqttConfig();
       connectMQTT();
       #endif
