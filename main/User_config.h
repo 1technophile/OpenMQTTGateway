@@ -678,6 +678,11 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
 
+void connectMQTT();
+#ifndef ESPWifiManualSetup
+void saveMqttConfig();
+#endif
+
 unsigned long uptime();
 bool cmpToMainTopic(const char*, const char*);
 void pub(const char*, const char*, bool);
