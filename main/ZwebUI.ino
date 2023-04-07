@@ -439,13 +439,53 @@ void handleCN() {
 
 /**
  * @brief /WI - Configure WiFi Page
- * 
+ * T: handleWI: uri: /wi, args: 4, method: 1
+ * T: handleWI Arg: 0, s1=SSID
+ * T: handleWI Arg: 1, p1=xxxxxx
+ * T: handleWI Arg: 2, h=OMG_4C7525A88504
+ * T: handleWI Arg: 3, save=
  */
 void handleWI() {
   WEBUI_TRACE_LOG(F("handleWI: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleWI Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save")) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+      if (server.hasArg("s1")) {
+        WEBtoSYS["wifi_ssid"] = server.arg("s1");
+      }
+      if (server.hasArg("p1")) {
+        WEBtoSYS["wifi_pass"] = server.arg("p1");
+      }
+      if (server.hasArg("h")) {
+        WEBtoSYS["gateway_name"] = server.arg("h");
+      }
+      String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+      String output;
+      serializeJson(WEBtoSYS, output);
+      Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
+      Log.warning(F("[WebUI] Save WiFi and Restart" CR));
+      char jsonChar[100];
+      serializeJson(modules, jsonChar, measureJson(modules) + 1);
+      char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save WiFi and Restart").c_str());
+      String response = String(buffer);
+      response += String(restart_script);
+      response += String(script);
+      response += String(style);
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save WiFi and Restart");
+      response += String(buffer);
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+      response += String(buffer);
+      server.send(200, "text/html", response);
+
+      delay(2000); // Wait for web page to be sent before
+      MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+      return;
     }
   }
   char jsonChar[100];
@@ -457,7 +497,8 @@ void handleWI() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, "", "", "", "", "", "");
+  // wifi_ssid, wifi_password, gateway_name
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFi.SSID(), WiFi.psk(), gateway_name);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
