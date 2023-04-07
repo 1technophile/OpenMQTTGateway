@@ -498,10 +498,10 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define PowerIndicatorOFF()   // Not used
 #  define SetupIndicators()     // Not used
 // Management of Errors, reception/emission and informations indicators with RGB LED
-#elif RGB_INDICATORS == 2   // using Adafruit_NeoPixel
+#elif RGB_INDICATORS == 2 // using Adafruit_NeoPixel
 #  include <Adafruit_NeoPixel.h>
-#  ifndef ANEOPIX_LED_TYPE                           // needs library constants
-#    define ANEOPIX_LED_TYPE NEO_GRB + NEO_KHZ800    // ws2812 and alike
+#  ifndef ANEOPIX_LED_TYPE // needs library constants
+#    define ANEOPIX_LED_TYPE NEO_GRB + NEO_KHZ800 // ws2812 and alike
 #  endif
 Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_TYPE);
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Only used for Critical Indicator
@@ -515,7 +515,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #  ifndef ANEOPIX_BRIGHTNESS
 #    define ANEOPIX_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
 #  endif
-#  ifndef ANEOPIX_COLOR_SCHEME    // allow for different color combinations
+#  ifndef ANEOPIX_COLOR_SCHEME // allow for different color combinations
 #    define ANEOPIX_COLOR_SCHEME 0
 #  endif
 // Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
@@ -532,46 +532,46 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #    define ANEOPIX_CRITICAL_LED 0 // First Led
 #  endif
 // preprocessor calculates color values
-#  define ANEOPIX_RED ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16
-#  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16      // dimmed /4
-#  define ANEOPIX_ORANGE (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
-                         (((0xA5 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
+#  define ANEOPIX_RED     ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16
+#  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16 // dimmed /4
+#  define ANEOPIX_ORANGE  (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
+                             (((0xA5 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
 #  define ANEOPIX_GOLD (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
-                         (((0xD7 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
-#  define ANEOPIX_GREEN ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8
-#  define ANEOPIX_GREEN_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 8     // dimmed /4
-#  define ANEOPIX_AQUA (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
-                        (0xFF * ANEOPIX_BRIGHTNESS) >> 8
-#  define ANEOPIX_BLUE (0xFF * ANEOPIX_BRIGHTNESS) >> 8
-#  define ANEOPIX_BLUE_DIM (0x3F * ANEOPIX_BRIGHTNESS) >> 8             // dimmed /4
-#  define ANEOPIX_BLACK 0
+                           (((0xD7 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
+#  define ANEOPIX_GREEN     ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8
+#  define ANEOPIX_GREEN_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 8 // dimmed /4
+#  define ANEOPIX_AQUA      (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
+                           (0xFF * ANEOPIX_BRIGHTNESS) >> 8
+#  define ANEOPIX_BLUE     (0xFF * ANEOPIX_BRIGHTNESS) >> 8
+#  define ANEOPIX_BLUE_DIM (0x3F * ANEOPIX_BRIGHTNESS) >> 8 // dimmed /4
+#  define ANEOPIX_BLACK    0
 
 #  if ANEOPIX_COLOR_SCHEME == 0
 // original color combination remains default
-#    define ANEOPIX_INFO ANEOPIX_GREEN
-#    define ANEOPIX_ERROR ANEOPIX_ORANGE
+#    define ANEOPIX_INFO        ANEOPIX_GREEN
+#    define ANEOPIX_ERROR       ANEOPIX_ORANGE
 #    define ANEOPIX_SENDRECEIVE ANEOPIX_BLUE
-#    define ANEOPIX_CRITICAL ANEOPIX_RED        // second led
-#    define ANEOPIX_POWER ANEOPIX_GREEN         // second led
-#    define ANEOPIX_BOOT ANEOPIX_BLACK          // unused
-#    define ANEOPIX_OFF ANEOPIX_BLACK
+#    define ANEOPIX_CRITICAL    ANEOPIX_RED // second led
+#    define ANEOPIX_POWER       ANEOPIX_GREEN // second led
+#    define ANEOPIX_BOOT        ANEOPIX_BLACK // unused
+#    define ANEOPIX_OFF         ANEOPIX_BLACK
 // color combinations tested for good visibility of onboard leds
 #  elif ANEOPIX_COLOR_SCHEME == 1
-#    define ANEOPIX_INFO ANEOPIX_GREEN_DIM      // dimmed green info background
-#    define ANEOPIX_ERROR ANEOPIX_RED_DIM
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold  = sending
-#    define ANEOPIX_CRITICAL ANEOPIX_BLACK      // unused
-#    define ANEOPIX_POWER ANEOPIX_BLACK         // unused
-#    define ANEOPIX_BOOT ANEOPIX_AQUA
-#    define ANEOPIX_OFF ANEOPIX_BLACK
+#    define ANEOPIX_INFO        ANEOPIX_GREEN_DIM // dimmed green info background
+#    define ANEOPIX_ERROR       ANEOPIX_RED_DIM
+#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD // bright gold  = sending
+#    define ANEOPIX_CRITICAL    ANEOPIX_BLACK // unused
+#    define ANEOPIX_POWER       ANEOPIX_BLACK // unused
+#    define ANEOPIX_BOOT        ANEOPIX_AQUA
+#    define ANEOPIX_OFF         ANEOPIX_BLACK
 #  else
-#    define ANEOPIX_INFO ANEOPIX_BLUE_DIM       // dimmed blue info background
-#    define ANEOPIX_ERROR ANEOPIX_RED_DIM
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD    // bright gold  = sending
-#    define ANEOPIX_CRITICAL ANEOPIX_BLACK      // unused
-#    define ANEOPIX_POWER ANEOPIX_BLACK         // unused
-#    define ANEOPIX_BOOT ANEOPIX_AQUA
-#    define ANEOPIX_OFF ANEOPIX_BLACK
+#    define ANEOPIX_INFO        ANEOPIX_BLUE_DIM // dimmed blue info background
+#    define ANEOPIX_ERROR       ANEOPIX_RED_DIM
+#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD // bright gold  = sending
+#    define ANEOPIX_CRITICAL    ANEOPIX_BLACK // unused
+#    define ANEOPIX_POWER       ANEOPIX_BLACK // unused
+#    define ANEOPIX_BOOT        ANEOPIX_AQUA
+#    define ANEOPIX_OFF         ANEOPIX_BLACK
 #  endif
 #  ifndef ANEOPIX_IND_DATA_GPIO2
 // during boot the RGB LED is on to signal also reboots
@@ -609,20 +609,20 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Used for relay power indicator
 // For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
 // This enable to have persistence of the indicator to inform the user
-#   define CriticalIndicatorON()                              \
+#    define CriticalIndicatorON()                             \
       leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
       leds.show();
-#   define PowerIndicatorON()                              \
+#    define PowerIndicatorON()                             \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
       leds2.show();
-#   define PowerIndicatorOFF()                            \
+#    define PowerIndicatorOFF()                           \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
       leds2.show();
 #  endif
 #  define SetupIndicatorInfo()
 #  define SetupIndicatorSendReceive()
 #  define SetupIndicatorError()
-#else   // FastLED remains standard for RGB_INDICATORS
+#else // FastLED remains standard for RGB_INDICATORS
 #  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
 #    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
 #  endif
