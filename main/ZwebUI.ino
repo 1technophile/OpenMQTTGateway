@@ -442,7 +442,6 @@ void handleCN() {
  * T: handleWI: uri: /wi, args: 4, method: 1
  * T: handleWI Arg: 0, s1=SSID
  * T: handleWI Arg: 1, p1=xxxxxx
- * T: handleWI Arg: 2, h=OMG_4C7525A88504
  * T: handleWI Arg: 3, save=
  */
 void handleWI() {
@@ -454,38 +453,46 @@ void handleWI() {
     if (server.hasArg("save")) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+      bool update = false;
       if (server.hasArg("s1")) {
         WEBtoSYS["wifi_ssid"] = server.arg("s1");
+        if (strncmp((char*)WiFi.SSID().c_str(), server.arg("s1").c_str(), parameters_size)) {
+          update = true;
+        }
       }
       if (server.hasArg("p1")) {
         WEBtoSYS["wifi_pass"] = server.arg("p1");
+        if (strncmp((char*)WiFi.psk().c_str(), server.arg("p1").c_str(), parameters_size)) {
+          update = true;
+        }
       }
-      if (server.hasArg("h")) {
-        WEBtoSYS["gateway_name"] = server.arg("h");
+      if (update) {
+        String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+        String output;
+        serializeJson(WEBtoSYS, output);
+        Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
+        Log.warning(F("[WebUI] Save WiFi and Restart" CR));
+        char jsonChar[100];
+        serializeJson(modules, jsonChar, measureJson(modules) + 1);
+        char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save WiFi and Restart").c_str());
+        String response = String(buffer);
+        response += String(restart_script);
+        response += String(script);
+        response += String(style);
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save WiFi and Restart");
+        response += String(buffer);
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+        response += String(buffer);
+        server.send(200, "text/html", response);
+
+        delay(2000); // Wait for web page to be sent before
+        MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+        return;
+      } else {
+        Log.warning(F("[WebUI] No changes" CR));
       }
-      String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-      String output;
-      serializeJson(WEBtoSYS, output);
-      Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
-      Log.warning(F("[WebUI] Save WiFi and Restart" CR));
-      char jsonChar[100];
-      serializeJson(modules, jsonChar, measureJson(modules) + 1);
-      char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
-
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save WiFi and Restart").c_str());
-      String response = String(buffer);
-      response += String(restart_script);
-      response += String(script);
-      response += String(style);
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save WiFi and Restart");
-      response += String(buffer);
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
-      response += String(buffer);
-      server.send(200, "text/html", response);
-
-      delay(2000); // Wait for web page to be sent before
-      MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
-      return;
     }
   }
   char jsonChar[100];
@@ -498,7 +505,7 @@ void handleWI() {
   response += String(script);
   response += String(style);
   // wifi_ssid, wifi_password, gateway_name
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFi.SSID(), WiFi.psk(), gateway_name);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFi.SSID(), WiFi.psk());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -507,12 +514,13 @@ void handleWI() {
 
 /**
  * @brief /MQ - Configure MQTT Page
- * T: handleMQ Arg: 0, mh=192.168.1.17
+ * T: handleMQ: uri: /mq, args: 8, method: 1
+ * T: handleMQ Arg: 0, mh=192.168.1.11
  * T: handleMQ Arg: 1, ml=1883
- * T: handleMQ Arg: 2, mu=your_username
- * T: handleMQ Arg: 3, mp=your_password
+ * T: handleMQ Arg: 2, mu=1234
+ * T: handleMQ Arg: 3, mp= 
  * T: handleMQ Arg: 4, sc=on
- * T: handleMQ Arg: 5, msc=suds
+ * T: handleMQ Arg: 5, h=
  * T: handleMQ Arg: 6, mt=home/
  * T: handleMQ Arg: 7, save=
  */
@@ -523,28 +531,66 @@ void handleMQ() {
       WEBUI_TRACE_LOG(F("handleMQ Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
     if (server.hasArg("save")) {
-      if (server.hasArg("mh")) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+      bool update = false;
+      if (server.hasArg("mh") && strncmp(mqtt_server, server.arg("mh").c_str(), parameters_size)) {
         strncpy(mqtt_server, server.arg("mh").c_str(), parameters_size);
+        update = true;
       }
-      if (server.hasArg("ml")) {
+      if (server.hasArg("ml") && strncmp(mqtt_port, server.arg("ml").c_str(), 6)) {
         strncpy(mqtt_port, server.arg("ml").c_str(), 6);
+        update = true;
       }
-      if (server.hasArg("mu")) {
+      if (server.hasArg("mu") && strncmp(mqtt_user, server.arg("mu").c_str(), parameters_size)) {
         strncpy(mqtt_user, server.arg("mu").c_str(), parameters_size);
+        update = true;
       }
-      if (server.hasArg("mp")) {
+      if (server.hasArg("mp") && strncmp(mqtt_pass, server.arg("mp").c_str(), parameters_size)) {
         strncpy(mqtt_pass, server.arg("mp").c_str(), parameters_size);
+        update = true;
       }
-      mqtt_secure = server.hasArg("sc");
-      if (server.hasArg("msc")) {
-        mqtt_cert = server.arg("msc"); // String
+      if (server.hasArg("sc") != mqtt_secure) {
+        mqtt_secure = server.hasArg("sc");
+        update = true;
       }
-      if (server.hasArg("mt")) {
+      if (server.hasArg("h") && strncmp(gateway_name, server.arg("h").c_str(), parameters_size)) {
+        strncpy(gateway_name, server.arg("h").c_str(), parameters_size);
+        update = true;
+      }
+      if (server.hasArg("mt") && strncmp(mqtt_topic, server.arg("mt").c_str(), parameters_size)) {
         strncpy(mqtt_topic, server.arg("mt").c_str(), parameters_size);
+        update = true;
       }
 #  ifndef ESPWifiManualSetup
-      saveMqttConfig();
-      connectMQTT();
+      if (update) {
+        Log.warning(F("[WebUI] Save MQTT and Restart" CR));
+
+        char jsonChar[100];
+        serializeJson(modules, jsonChar, measureJson(modules) + 1);
+        char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save MQTT and Restart").c_str());
+        String response = String(buffer);
+        response += String(restart_script);
+        response += String(script);
+        response += String(style);
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save MQTT and Restart");
+        response += String(buffer);
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+        response += String(buffer);
+        server.send(200, "text/html", response);
+
+        delay(2000); // Wait for web page to be sent before
+        String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+        String output;
+        serializeJson(WEBtoSYS, output);
+        Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
+        MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+        return;
+      } else {
+        Log.warning(F("[WebUI] No changes" CR));
+      }
 #  endif
     }
   }
@@ -559,7 +605,7 @@ void handleMQ() {
   response += String(script);
   response += String(style);
   // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, mqtt_pass, (mqtt_secure ? "checked" : ""), mqtt_cert, mqtt_topic);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, mqtt_pass, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -578,7 +624,8 @@ void handleLO() {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleLO Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-    if (server.hasArg("save") && server.hasArg("lo")) {
+    if (server.hasArg("save") && server.hasArg("lo") && server.arg("lo").toInt() != Log.getLevel()) {
+      Log.fatal(F("[WebUI] Log level changed to: %d" CR), server.arg("lo").toInt());
       Log.setLevel(server.arg("lo").toInt());
     }
   }
@@ -1108,7 +1155,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
       strlcpy(message->title, strtok(topic, "/"), WEBUI_TEXT_WIDTH);
       free(topic);
 
-      WEBUI_TRACE_LOG(F("[ webUIPubPrint ] switch %s " CR), message->title);
+      //  WEBUI_TRACE_LOG(F("[ webUIPubPrint ] switch %s " CR), message->title);
       switch (webUIHash(message->title)) {
         case webUIHash("SYStoMQTT"): {
           // {"uptime":456356,"version":"lilygo-rtl_433-test-A-v1.1.1-25-g574177d[lily-cloud]","freemem":125488,"mqttport":"1883","mqttsecure":false,"freestack":3752,"rssi":-36,"SSID":"The_Beach","BSSID":"64:A5:C3:69:C3:38","ip":"192.168.1.239","mac":"4C:75:25:A8:D5:D8","actRec":3,"mhz":433.92,"RTLRssiThresh":-98,"RTLRssi":-108,"RTLAVGRssi":-107,"RTLCnt":121707,"RTLOOKThresh":90,"modules":["LILYGO_OLED","CLOUD","rtl_433"]}
