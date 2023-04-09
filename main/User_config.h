@@ -497,13 +497,12 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  define PowerIndicatorON()    // Not used
 #  define PowerIndicatorOFF()   // Not used
 #  define SetupIndicators()     // Not used
-// Management of Errors, reception/emission and informations indicators with RGB LED
-#elif RGB_INDICATORS == 2 // using Adafruit_NeoPixel
+#else // Management of Errors, reception/emission and informations indicators with RGB LED
 #  include <Adafruit_NeoPixel.h>
-#  ifndef ANEOPIX_LED_TYPE // needs library constants
-#    define ANEOPIX_LED_TYPE NEO_GRB + NEO_KHZ800 // ws2812 and alike
+#  ifndef ANEOPIX_IND_TYPE // needs library constants
+#    define ANEOPIX_IND_TYPE NEO_GRB + NEO_KHZ800 // ws2812 and alike
 #  endif
-Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_LED_TYPE);
+Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_IND_TYPE);
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Only used for Critical Indicator
 // assume the same LED type
 Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LED_TYPE);
@@ -531,7 +530,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #  ifndef ANEOPIX_CRITICAL_LED
 #    define ANEOPIX_CRITICAL_LED 0 // First Led
 #  endif
-// preprocessor calculates color values
+// compile time calculation of color values
 #  define ANEOPIX_RED     ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16
 #  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16 // dimmed /4
 #  define ANEOPIX_ORANGE  (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
@@ -618,83 +617,6 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #    define PowerIndicatorOFF()                           \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
       leds2.show();
-#  endif
-#  define SetupIndicatorInfo()
-#  define SetupIndicatorSendReceive()
-#  define SetupIndicatorError()
-#else // FastLED remains standard for RGB_INDICATORS
-#  if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3) //I2S not available yet with Fastled on S3 and C3
-#    define FASTLED_ESP32_I2S // To avoid ESP32 instabilities https://github.com/FastLED/FastLED/issues/1438
-#  endif
-#  include <FastLED.h>
-CRGB leds[FASTLED_IND_NUM_LEDS];
-#  ifdef FASTLED_IND_DATA_GPIO2 // Only used for Critical Indicator
-CRGB leds2[FASTLED_IND_NUM_LEDS];
-#  endif
-#  ifndef RGB_LED_POWER
-#    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
-#  endif
-#  ifndef FASTLED_BRIGHTNESS
-#    define FASTLED_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
-#  endif
-// Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
-#  ifndef FASTLED_INFO_LED
-#    define FASTLED_INFO_LED 0 // First Led
-#  endif
-#  ifndef FASTLED_SEND_RECEIVCE_LED
-#    define FASTLED_SEND_RECEIVCE_LED 0 // First Led
-#  endif
-#  ifndef FASTLED_ERROR_LED
-#    define FASTLED_ERROR_LED 0 // First Led
-#  endif
-#  ifndef FASTLED_CRITICAL_LED
-#    define FASTLED_CRITICAL_LED 0 // First Led
-#  endif
-
-#  ifndef FASTLED_IND_DATA_GPIO2
-#    define SetupIndicators()                                                               \
-      pinMode(RGB_LED_POWER, OUTPUT);                                                       \
-      digitalWrite(RGB_LED_POWER, HIGH);                                                    \
-      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS); \
-      FastLED.setBrightness(FASTLED_BRIGHTNESS)
-#  else
-#    define SetupIndicators()                                                                 \
-      pinMode(RGB_LED_POWER, OUTPUT);                                                         \
-      digitalWrite(RGB_LED_POWER, HIGH);                                                      \
-      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO>(leds, FASTLED_IND_NUM_LEDS);   \
-      FastLED.addLeds<FASTLED_IND_TYPE, FASTLED_IND_DATA_GPIO2>(leds2, FASTLED_IND_NUM_LEDS); \
-      FastLED.setBrightness(FASTLED_BRIGHTNESS)
-#  endif
-#  define ErrorIndicatorON()                \
-    leds[FASTLED_ERROR_LED] = CRGB::Orange; \
-    FastLED.show()
-#  define ErrorIndicatorOFF()              \
-    leds[FASTLED_ERROR_LED] = CRGB::Black; \
-    FastLED.show()
-#  define SendReceiveIndicatorON()                \
-    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Blue; \
-    FastLED.show()
-#  define SendReceiveIndicatorOFF()                \
-    leds[FASTLED_SEND_RECEIVCE_LED] = CRGB::Black; \
-    FastLED.show()
-#  define InfoIndicatorON()               \
-    leds[FASTLED_INFO_LED] = CRGB::Green; \
-    FastLED.show()
-#  define InfoIndicatorOFF()              \
-    leds[FASTLED_INFO_LED] = CRGB::Black; \
-    FastLED.show()
-#  ifdef FASTLED_IND_DATA_GPIO2 // Used for relay power indicator
-// For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
-// This enable to have persistence of the indicator to inform the user
-#    define CriticalIndicatorON()          \
-      leds2[FASTLED_INFO_LED] = CRGB::Red; \
-      FastLED.show()
-#    define PowerIndicatorON()               \
-      leds2[FASTLED_INFO_LED] = CRGB::Green; \
-      FastLED.show()
-#    define PowerIndicatorOFF()              \
-      leds2[FASTLED_INFO_LED] = CRGB::Black; \
-      FastLED.show()
 #  endif
 #  define SetupIndicatorInfo()
 #  define SetupIndicatorSendReceive()
