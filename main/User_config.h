@@ -294,6 +294,16 @@ static_assert(MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT < (sizeof(certs_array) / siz
 #  endif
 #endif
 
+/**
+ * Deep-sleep for the ESP8266.
+ * Set the wake pin.
+ */
+#ifdef ESP8266_DEEP_SLEEP_IN_US
+#  ifndef ESP8266_DEEP_SLEEP_WAKE_PIN
+#    define ESP8266_DEEP_SLEEP_WAKE_PIN D0
+#  endif
+#endif
+
 /*------------------DEEP SLEEP parameters ------------------*/
 //DEFAULT_LOW_POWER_MODE -1 to normal mode, low power mode can't be used on this build
 //DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)

@@ -53,6 +53,14 @@ unsigned long timer_sys_checks = 0;
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
 #endif
 
+/**
+ * Deep-sleep for the ESP8266 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
+ * Set this to true in the sensor code after publishing the measurement.
+ */
+#ifdef ESP8266_DEEP_SLEEP_IN_US
+bool ready_to_sleep = false;
+#endif
+
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
@@ -769,6 +777,11 @@ void setup() {
   modules.add(ZdisplaySSD1306);
 #    endif
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
+#  endif
+
+#  ifdef ESP8266_DEEP_SLEEP_IN_US
+  Log.notice(F("Setting wake pin for deep sleep." CR));
+  pinMode(ESP8266_DEEP_SLEEP_WAKE_PIN, WAKEUP_PULLUP);
 #  endif
 
 /*
@@ -1778,6 +1791,17 @@ void loop() {
 #endif
 #if defined(ZdisplaySSD1306)
   loopSSD1306();
+#endif
+
+/**
+ * Deep-sleep for the ESP8266 - e.g. ESP8266_DEEP_SLEEP_IN_US 30000000 for 30 seconds.
+ * Everything is off and (almost) all execution state is lost.
+ */
+#ifdef ESP8266_DEEP_SLEEP_IN_US
+  if (ready_to_sleep) {
+    Log.notice(F("Entering deep sleep for : %l us." CR), ESP8266_DEEP_SLEEP_IN_US);
+    ESP.deepSleep(ESP8266_DEEP_SLEEP_IN_US);
+  }
 #endif
 }
 
