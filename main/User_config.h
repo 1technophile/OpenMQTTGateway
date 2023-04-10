@@ -505,7 +505,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_IND_TYPE);
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Only used for Critical Indicator
 // assume the same LED type
-Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LED_TYPE);
+Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IND_TYPE);
 #  endif
 
 #  ifndef RGB_LED_POWER
