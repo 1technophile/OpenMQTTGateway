@@ -521,8 +521,8 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #  ifndef ANEOPIX_INFO_LED
 #    define ANEOPIX_INFO_LED 0 // First Led
 #  endif
-#  ifndef ANEOPIX_SEND_RECEIVCE_LED
-#    define ANEOPIX_SEND_RECEIVCE_LED 0 // First Led
+#  ifndef ANEOPIX_SEND_RECEIVE_LED
+#    define ANEOPIX_SEND_RECEIVE_LED 0 // First Led
 #  endif
 #  ifndef ANEOPIX_ERROR_LED
 #    define ANEOPIX_ERROR_LED 0 // First Led
@@ -593,11 +593,11 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_LE
 #  define ErrorIndicatorOFF()                           \
     leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
     leds.show();
-#  define SendReceiveIndicatorON()                                      \
-    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_SENDRECEIVE); \
+#  define SendReceiveIndicatorON()                                     \
+    leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
     leds.show();
-#  define SendReceiveIndicatorOFF()                             \
-    leds.setPixelColor(ANEOPIX_SEND_RECEIVCE_LED, ANEOPIX_OFF); \
+#  define SendReceiveIndicatorOFF()                            \
+    leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
     leds.show();
 #  define InfoIndicatorON()                             \
     leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
