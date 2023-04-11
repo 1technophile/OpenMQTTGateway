@@ -36,10 +36,10 @@
 #  include <ESPiLight.h>
 ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 
-# ifdef ZgatewayPilight_rawEnabled
+#  ifdef ZgatewayPilight_rawEnabled
 // raw output support
 byte pilightRawEnabled = 0;
-# endif
+#  endif
 
 void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
@@ -83,11 +83,11 @@ void pilightCallback(const String& protocol, const String& message, int status,
   }
 }
 
-# ifdef ZgatewayPilight_rawEnabled
+#  ifdef ZgatewayPilight_rawEnabled
 void pilightRawCallback(const uint16_t* pulses, size_t length) {
   uint16_t pulse;
 
-  if (!pilightRawEnabled ) {
+  if (!pilightRawEnabled) {
     Log.trace(F("Pilight RAW not enabled" CR));
     return;
   }
@@ -99,12 +99,11 @@ void pilightRawCallback(const uint16_t* pulses, size_t length) {
   RFPiLightdata["format"] = "RAW";
   RFPiLightdata["rawlen"] = length;
   RFPiLightdata["pulsesString"] = rf.pulseTrainToString(pulses, length); // c=pulse_array_key;p=pulse_types
-    
-  // length chekc might be a good idea
+
   // publish data
   pub(subjectPilighttoMQTT, RFPiLightdata);
 }
-# endif
+#  endif
 
 void setupPilight() {
 #  ifdef ZradioCC1101 //receiving with CC1101
