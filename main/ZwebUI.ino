@@ -682,7 +682,6 @@ void handleMQ() {
       if (server.hasArg("mh")) {
         WEBtoSYS["mqtt_server"] = server.arg("mh");
         if (strncmp(mqtt_server, server.arg("mh").c_str(), parameters_size)) {
-          Log.warning(F("[WebUI] mqtt_server" CR));
           update = true;
         }
       }
@@ -690,7 +689,6 @@ void handleMQ() {
       if (server.hasArg("ml")) {
         WEBtoSYS["mqtt_port"] = server.arg("ml");
         if (strncmp(mqtt_port, server.arg("ml").c_str(), 6)) {
-          Log.warning(F("[WebUI] mqtt_port" CR));
           update = true;
         }
       }
@@ -698,7 +696,6 @@ void handleMQ() {
       if (server.hasArg("mu")) {
         WEBtoSYS["mqtt_user"] = server.arg("mu");
         if (strncmp(mqtt_user, server.arg("mu").c_str(), parameters_size)) {
-          Log.warning(F("[WebUI] mqtt_user" CR));
           update = true;
         }
       }
@@ -706,7 +703,6 @@ void handleMQ() {
       if (server.hasArg("mp")) {
         WEBtoSYS["mqtt_pass"] = server.arg("mp");
         if (strncmp(mqtt_pass, server.arg("mp").c_str(), parameters_size)) {
-          Log.warning(F("[WebUI] mqtt_pass" CR));
           update = true;
         }
       }
@@ -714,7 +710,6 @@ void handleMQ() {
       // SC - Secure Connection argument is only present when true
       WEBtoSYS["mqtt_secure"] = server.hasArg("sc");
       if (mqtt_secure != server.hasArg("sc")) {
-        Log.warning(F("[WebUI] mqtt_secure %T == %T" CR), mqtt_secure, server.hasArg("sc"));
         update = true;
       }
 
