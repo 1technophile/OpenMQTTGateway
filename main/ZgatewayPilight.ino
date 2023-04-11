@@ -184,7 +184,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       Log.notice(F("PiLight protocols available: %s" CR), rf.availableProtocols().c_str());
       success = true;
     }
-    # ifdef ZgatewayPilight_rawEnabled
+#  ifdef ZgatewayPilight_rawEnabled
     if (Pilightdata.containsKey("rawEnabled")) {
       Log.notice(F("Setting PiLight raw output enabled: %s" CR), Pilightdata["rawEnabled"]);
       pilightRawEnabled = (byte)Pilightdata["rawEnabled"];
@@ -193,7 +193,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       enablePilightReceive();
       success = true;
     }
-    # endif
+#  endif
 
     if (success) {
       pub(subjectGTWPilighttoMQTT, Pilightdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
@@ -334,11 +334,11 @@ extern void enablePilightReceive() {
   ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
 #  endif
   rf.setCallback(pilightCallback);
-  # ifdef ZgatewayPilight_rawEnabled
+#  ifdef ZgatewayPilight_rawEnabled
   if (pilightRawEnabled) {
     rf.setPulseTrainCallBack(pilightRawCallback);
   }
-  # endif
+#  endif
   rf.initReceiver(RF_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   rf.enableReceiver();
