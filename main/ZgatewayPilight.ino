@@ -36,10 +36,10 @@
 #  include <ESPiLight.h>
 ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 
-#ifdef ZgatewayPilight_rawEnabled
+# ifdef ZgatewayPilight_rawEnabled
 // raw output support
 byte pilightRawEnabled = 0;
-#endif
+# endif
 
 void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
@@ -83,11 +83,11 @@ void pilightCallback(const String& protocol, const String& message, int status,
   }
 }
 
-#ifdef ZgatewayPilight_rawEnabled
+# ifdef ZgatewayPilight_rawEnabled
 void pilightRawCallback(const uint16_t* pulses, size_t length) {
   uint16_t pulse;
 
-  if ( ! pilightRawEnabled ) {
+  if (!pilightRawEnabled ) {
     Log.trace(F("Pilight RAW not enabled" CR));
     return;
   }
@@ -104,7 +104,7 @@ void pilightRawCallback(const uint16_t* pulses, size_t length) {
   // publish data
   pub(subjectPilighttoMQTT, RFPiLightdata);
 }
-#endif
+# endif
 
 void setupPilight() {
 #  ifdef ZradioCC1101 //receiving with CC1101
@@ -185,7 +185,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       Log.notice(F("PiLight protocols available: %s" CR), rf.availableProtocols().c_str());
       success = true;
     }
-    #ifdef ZgatewayPilight_rawEnabled
+    # ifdef ZgatewayPilight_rawEnabled
     if (Pilightdata.containsKey("rawEnabled")) {
       Log.notice(F("Setting PiLight raw output enabled: %s" CR), Pilightdata["rawEnabled"]);
       pilightRawEnabled = (byte)Pilightdata["rawEnabled"];
@@ -194,7 +194,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       enablePilightReceive();
       success = true;
     }
-    #endif
+    # endif
 
     if (success) {
       pub(subjectGTWPilighttoMQTT, Pilightdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
@@ -335,11 +335,11 @@ extern void enablePilightReceive() {
   ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
 #  endif
   rf.setCallback(pilightCallback);
-  #ifdef ZgatewayPilight_rawEnabled
-  if ( pilightRawEnabled) {
+  # ifdef ZgatewayPilight_rawEnabled
+  if (pilightRawEnabled) {
     rf.setPulseTrainCallBack(pilightRawCallback);
   }
-  #endif
+  # endif
   rf.initReceiver(RF_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   rf.enableReceiver();
