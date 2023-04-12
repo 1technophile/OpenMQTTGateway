@@ -2355,7 +2355,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       client.disconnect();
       WiFi.disconnect(true);
 
-      Log.warning(F("Attempting connection to new AP" CR));
+      Log.warning(F("Attempting connection to new AP %s" CR), (const char*)SYSdata["wifi_ssid"]);
       WiFi.begin((const char*)SYSdata["wifi_ssid"], (const char*)SYSdata["wifi_pass"]);
 #  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
       setESP32WifiPorotocolTxPower();
@@ -2371,6 +2371,21 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  endif
       }
       ESPRestart();
+    }
+
+    bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
+
+    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
+      if (SYSdata.containsKey("mqtt_topic")) {
+        strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
+      }
+      if (SYSdata.containsKey("gateway_name")) {
+        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
+      }
+#  ifndef ESPWifiManualSetup
+      saveMqttConfig();
+#  endif
+      disconnectClient = true; // trigger reconnect in loop using the new topic/name
     }
 
 #  ifdef MQTTsetMQTT
@@ -2399,6 +2414,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #    if defined(ZgatewayBT) && defined(ESP32)
         stopProcessing();
 #    endif
+        disconnectClient = false;
         client.disconnect();
         update_server = true;
         if (secure_connect != mqtt_secure) {
@@ -2422,6 +2438,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #    if defined(ZgatewayBT) && defined(ESP32)
         stopProcessing();
 #    endif
+        disconnectClient = false;
         client.disconnect();
       }
 
@@ -2465,17 +2482,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       ESPRestart();
     }
 #  endif
-    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
-      if (SYSdata.containsKey("mqtt_topic")) {
-        strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
-      }
-      if (SYSdata.containsKey("gateway_name")) {
-        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
-      }
-#  ifndef ESPWifiManualSetup
-      saveMqttConfig();
-#  endif
-      client.disconnect(); // reconnects in loop using the new topic/name
+
+    if (disconnectClient) {
+      client.disconnect();
     }
 #endif
 

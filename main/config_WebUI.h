@@ -58,7 +58,7 @@
 
 /*------------------- End of Compiler Directives ----------------------*/
 
-// Structure for queueing OMG messages to the display
+#define MAX_WIFI_NETWORKS_TO_SHOW 10
 
 /*
 Structure for queueing OMG messages to the display.
