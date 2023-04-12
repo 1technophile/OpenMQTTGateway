@@ -162,6 +162,9 @@ void MeasureDS1820Temp() {
           Log.trace(F("DS1820: Temperature for device %s didn't change, don't publish it." CR), (char*)ds1820_addr[i].c_str());
         }
         persisted_temp[i] = current_temp[i];
+#  ifdef ESP8266_DEEP_SLEEP_IN_US
+        ready_to_sleep = true;
+#  endif
       }
     }
   }
