@@ -1030,25 +1030,83 @@ void handleUP() {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleUP Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-  } else {
-    char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
 
-    char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+    if (server.hasArg("o")) {
+      WEBtoSYS["url"] = server.arg("o");
+      WEBtoSYS["version"] = "test";
+      WEBtoSYS["password"] = ota_pass;
 
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Firmware Upgrade").c_str());
-    String response = String(buffer);
-    response += String(script);
-    response += String(style);
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, "http://upgrade/");
-    response += String(buffer);
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
-    response += String(buffer);
-    server.send(200, "text/html", response);
+      char jsonChar[100];
+      serializeJson(modules, jsonChar, measureJson(modules) + 1);
+      char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Updating Firmware and Restart").c_str());
+      String response = String(buffer);
+      response += String(restart_script);
+      response += String(script);
+      response += String(style);
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Updating Firmware and Restart");
+      response += String(buffer);
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+      response += String(buffer);
+      server.send(200, "text/html", response);
+
+      delay(2000); // Wait for web page to be sent before
+      String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSupdate);
+      String output;
+      serializeJson(WEBtoSYS, output);
+      Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
+      MQTTHttpsFWUpdate((char*)topic.c_str(), WEBtoSYS);
+      return;
+    } else if (server.hasArg("le")) {
+
+      uint32_t le = server.arg("le").toInt();
+      if (le != 0) {
+        WEBtoSYS["version"] = (le == 1 ? "latest" : (le == 2 ? "dev" : "unknown"));
+        WEBtoSYS["password"] = ota_pass;
+
+        char jsonChar[100];
+        serializeJson(modules, jsonChar, measureJson(modules) + 1);
+        char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Updating Firmware and Restart").c_str());
+        String response = String(buffer);
+        response += String(restart_script);
+        response += String(script);
+        response += String(style);
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Updating Firmware and Restart");
+        response += String(buffer);
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+        response += String(buffer);
+        server.send(200, "text/html", response);
+
+        delay(2000); // Wait for web page to be sent before
+        String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSupdate);
+        String output;
+        serializeJson(WEBtoSYS, output);
+        Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
+        MQTTHttpsFWUpdate((char*)topic.c_str(), WEBtoSYS);
+        return;
+      }
+    }
   }
-}
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
 
-uint32_t logIndex = 0;
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Firmware Upgrade").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, "https://github.com/1technophile/OpenMQTTGateway/releases/");
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
 
 /**
  * @brief /CS - Serial Console and Command Line
