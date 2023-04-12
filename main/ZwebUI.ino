@@ -1061,7 +1061,6 @@ void handleUP() {
       MQTTHttpsFWUpdate((char*)topic.c_str(), WEBtoSYS);
       return;
     } else if (server.hasArg("le")) {
-
       uint32_t le = server.arg("le").toInt();
       if (le != 0) {
         WEBtoSYS["version"] = (le == 1 ? "latest" : (le == 2 ? "dev" : "unknown"));
