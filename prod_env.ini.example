@@ -125,3 +125,47 @@ build_flags =
 board_build.flash_mode = dout
 extra_scripts = scripts/compressFirmware.py
 board_build.ldscript = eagle.flash.1m64.ld ;this frees more space for firmware uplad. Should also be uses for initial flash via serial
+
+;Wemos D1 with an MQ2 flammable gas sensor at custom interval
+[env:wemosd1-mq2-gas]
+platform = ${com.esp8266_platform}
+board = d1_mini
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.wifimanager8266}
+  ${libraries.esp8266_mdns}
+build_flags =
+  ${com-esp.build_flags}
+  '-UZmqttDiscovery'          ; disables MQTT Discovery
+;  '-UZmqttDiscovery="HADiscovery"'
+  '-DvalueAsATopic=true'       ; MQTT topic includes model and device
+  '-DGateway_Name="OpenMQTTGateway_MQ2_GAS"'
+  '-DZsensorMQ2="MQ2"'
+  '-DTimeBetweenReadingmq2=8000'
+board_build.flash_mode = dout
+custom_description = Gas flammable sensor gateway 
+custom_hardware = Gas flammable sensor first version
+
+;ESP12E with an DS1820 waterproof temperature probe, custom interval, max temperature resolution and DEEP SLEEP to conserve battery power
+[env:esp12e-ds18b20-deepsleep-pool]
+platform = ${com.esp8266_platform}
+board = esp12e
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.wifimanager8266}
+  ${libraries.esp8266_mdns}
+  ${libraries.dallastemperature}
+build_flags =
+  ${com-esp.build_flags}
+  '-UZmqttDiscovery'          ; disables MQTT Discovery
+;  '-UZmqttDiscovery="HADiscovery"'
+  '-DvalueAsATopic=true'       ; MQTT topic includes model and device
+  '-DGateway_Name="OpenMQTTGatewayDS1820Pool"'
+  '-DZsensorDS1820="DS1820"'
+  '-DDS1820_OWBUS_GPIO=D2'
+  '-DESP8266_DEEP_SLEEP_IN_US=120000000'
+  '-DDS1820_RESOLUTION=12'
+  '-DDS1820_INTERVAL_SEC=15UL'
+board_build.flash_mode = dout
+custom_description = Pool temp sensor gateway 
+custom_hardware = Pool temp sensor first version
