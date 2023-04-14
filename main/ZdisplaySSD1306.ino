@@ -40,10 +40,9 @@
 #  include "config_SSD1306.h"
 
 SemaphoreHandle_t semaphoreOLEDOperation;
-QueueHandle_t displayQueue;
+
 boolean logToOLEDDisplay = LOG_TO_OLED;
 boolean jsonDisplay = JSON_TO_OLED;
-boolean displayMetric = DISPLAY_METRIC;
 boolean displayFlip = DISPLAY_FLIP;
 boolean displayState = DISPLAY_STATE;
 boolean idlelogo = DISPLAY_IDLE_LOGO;
@@ -61,17 +60,15 @@ void logToOLED(bool display) {
 module setup, for use in Arduino setup
 */
 void setupSSD1306() {
+  SSD1306Config_init();
+  SSD1306Config_load();
   Log.trace(F("Setup SSD1306 Display" CR));
   Log.trace(F("ZdisplaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306set);
   Log.trace(F("ZdisplaySSD1306 log-oled: %T" CR), logToOLEDDisplay);
   Log.trace(F("ZdisplaySSD1306 json-oled: %T" CR), jsonDisplay);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
-  Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), DISPLAY_IDLE_LOGO);
-  Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), idlelogo);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
-
-  SSD1306Config_init();
-  SSD1306Config_load();
   Oled.begin();
   Log.notice(F("Setup SSD1306 Display end" CR));
 
@@ -96,16 +93,10 @@ void loopSSD1306() {
   long enough since the last message and display not being used and a queue message waiting
   */
   if (jsonDisplay && displayState) {
-    if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && uxQueueMessagesWaiting(displayQueue)) {
-      displayQueueMessage* message = nullptr;
-      xQueueReceive(displayQueue, &message, portMAX_DELAY);
-      if (!Oled.displayPage(message)) {
-        Log.warning(F("[ssd1306] displayPage failed: %s" CR), message->title);
+    if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && currentWebUIMessage) {
+      if (!Oled.displayPage(currentWebUIMessage)) {
+        Log.warning(F("[ssd1306] displayPage failed: %s" CR), currentWebUIMessage->title);
       }
-      if (currentOledMessage) {
-        free(currentOledMessage);
-      }
-      currentOledMessage = message;
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       logoDisplayed = false;
     }
@@ -158,11 +149,6 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       Log.notice(F("Set json-oled: %T" CR), jsonDisplay);
       success = true;
     }
-    if (SSD1306data.containsKey("displaymetric")) {
-      displayMetric = SSD1306data["displaymetric"].as<bool>();
-      Log.notice(F("Set displaymetric: %T" CR), displayMetric);
-      success = true;
-    }
     if (SSD1306data.containsKey("idlelogo")) {
       idlelogo = SSD1306data["idlelogo"].as<bool>();
       success = true;
@@ -190,8 +176,10 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     } else if (SSD1306data.containsKey("erase") && SSD1306data["erase"]) {
       // Erase config from NVS (non-volatile storage)
       preferences.begin(Gateway_Short_Name, false);
-      success = preferences.remove("SSD1306Config");
-      preferences.end();
+      if (preferences.isKey("SSD1306Config")) {
+        success = preferences.remove("SSD1306Config");
+        preferences.end();
+      }
       if (success) {
         Log.notice(F("SSD1306 config erased" CR));
       }
@@ -212,7 +200,6 @@ void SSD1306Config_save() {
   jo["brightness"] = displayBrightness;
   jo["log-oled"] = logToOLEDDisplay;
   jo["json-oled"] = jsonDisplay;
-  jo["displaymetric"] = displayMetric;
   jo["idlelogo"] = idlelogo;
   jo["display-flip"] = displayFlip;
   // Save config into NVS (non-volatile storage)
@@ -229,7 +216,6 @@ void SSD1306Config_init() {
   displayBrightness = DISPLAY_BRIGHTNESS;
   logToOLEDDisplay = LOG_TO_OLED;
   jsonDisplay = JSON_TO_OLED;
-  displayMetric = DISPLAY_METRIC;
   idlelogo = DISPLAY_IDLE_LOGO;
   displayFlip = DISPLAY_FLIP;
   Log.notice(F("SSD1306 config initialised" CR));
@@ -238,8 +224,7 @@ void SSD1306Config_init() {
 bool SSD1306Config_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  bool exists = preferences.isKey("SSD1306Config");
-  if (exists) {
+  if (preferences.isKey("SSD1306Config")) {
     auto error = deserializeJson(jsonBuffer, preferences.getString("SSD1306Config", "{}"));
     preferences.end();
     if (error) {
@@ -255,7 +240,6 @@ bool SSD1306Config_load() {
     displayBrightness = jo["brightness"].as<int>();
     logToOLEDDisplay = jo["log-oled"].as<bool>();
     jsonDisplay = jo["json-oled"].as<bool>();
-    displayMetric = jo["displaymetric"].as<bool>();
     idlelogo = jo["idlelogo"].as<bool>();
     displayFlip = jo["display-flip"].as<bool>();
     Log.notice(F("Saved SSD1306 config loaded" CR));
@@ -264,531 +248,6 @@ bool SSD1306Config_load() {
     preferences.end();
     Log.notice(F("No SSD1306 config to load" CR));
     return false;
-  }
-}
-
-/*
-Workaround for c not having a string based switch/case function
-*/
-constexpr unsigned int hash(const char* s, int off = 0) { // workaround for switching on a string https://stackoverflow.com/a/46711735/18643696
-  return !s[off] ? 5381 : (hash(s, off + 1) * 33) ^ s[off];
-}
-
-/*
-Parse json message from module into a format for displaying on screen, and queue for display
-*/
-void ssd1306PubPrint(const char* topicori, JsonObject& data) {
-  if (jsonDisplay && displayState) {
-    displayQueueMessage* message = (displayQueueMessage*)malloc(sizeof(displayQueueMessage));
-    if (message != NULL) {
-      char* topic = strdup(topicori);
-      strlcpy(message->title, strtok(topic, "/"), OLED_TEXT_WIDTH);
-      free(topic);
-
-      Oled.display->normalDisplay();
-
-      switch (hash(message->title)) {
-        case hash("SYStoMQTT"): {
-          // {"uptime":456356,"version":"lilygo-rtl_433-test-A-v1.1.1-25-g574177d[lily-cloud]","freemem":125488,"mqttport":"1883","mqttsecure":false,"freestack":3752,"rssi":-36,"SSID":"The_Beach","BSSID":"64:A5:C3:69:C3:38","ip":"192.168.1.239","mac":"4C:75:25:A8:D5:D8","actRec":3,"mhz":433.92,"RTLRssiThresh":-98,"RTLRssi":-108,"RTLAVGRssi":-107,"RTLCnt":121707,"RTLOOKThresh":90,"modules":["LILYGO_OLED","CLOUD","rtl_433"]}
-
-          // Line 1
-
-          strlcpy(message->line1, data["version"], OLED_TEXT_WIDTH);
-
-          // Line 2
-
-          String uptime = data["uptime"];
-          String line2 = "uptime: " + uptime;
-          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-
-          // Line 3
-
-          String freemem = data["freemem"];
-          String line3 = "freemem: " + freemem;
-          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-
-          // Line 4
-
-          String ip = data["ip"];
-          String line4 = "ip: " + ip;
-          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-          // Queue completed message
-
-          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ SSD1306 ] ERROR: displayQueue full, discarding signal %s" CR), message->title);
-          } else {
-            // Log.notice(F("Queued %s" CR), message->title);
-          }
-          break;
-        }
-
-#  ifdef ZgatewayRTL_433
-        case hash("RTL_433toMQTT"): {
-          // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
-
-          // Line 1
-
-          strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
-
-          // Line 2
-
-          String id = data["id"];
-          String channel = data["channel"];
-          String line2 = "id: " + id + " channel: " + channel;
-          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-
-          // Line 3
-
-          String line3 = "";
-
-          if (data.containsKey("temperature_C")) {
-            float temperature_C = data["temperature_C"];
-            char temp[5];
-
-            if (displayMetric) {
-              dtostrf(temperature_C, 3, 1, temp);
-              line3 = "temp: " + (String)temp + "°C ";
-            } else {
-              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
-              line3 = "temp: " + (String)temp + "°F ";
-            }
-          }
-
-          float humidity = data["humidity"];
-          if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
-            char hum[5];
-            dtostrf(humidity, 3, 1, hum);
-            line3 += "hum: " + (String)hum + "% ";
-          }
-          if (data.containsKey("wind_avg_km_h")) {
-            float wind_avg_km_h = data["wind_avg_km_h"];
-            char wind[6];
-
-            if (displayMetric) {
-              dtostrf(wind_avg_km_h, 3, 1, wind);
-              line3 += "wind: " + (String)wind + "km/h ";
-            } else {
-              dtostrf(convert_kmph2mph(wind_avg_km_h), 3, 1, wind);
-              line3 += "wind: " + (String)wind + "mp/h ";
-            }
-          }
-
-          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-
-          // Line 4
-
-          String rssi = data["rssi"];
-          String battery_ok = data["battery_ok"];
-
-          String line4 = "batt: " + battery_ok + " rssi: " + rssi;
-          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-          // Queue completed message
-
-          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // Log.notice(F("Queued %s" CR), message->title);
-          }
-          break;
-        }
-#  endif
-#  ifdef ZsensorBME280
-        case hash("CLIMAtoMQTT"): {
-          // {"tempc":17.06,"tempf":62.708,"hum":50.0752,"pa":98876.14,"altim":205.8725,"altift":675.4348}
-
-          // Line 1
-
-          strlcpy(message->line1, "bme280", OLED_TEXT_WIDTH);
-
-          // Line 2
-
-          String line2 = "";
-          if (data.containsKey("tempc")) {
-            char temp[5];
-            float temperature_C = data["tempc"];
-
-            if (displayMetric) {
-              dtostrf(temperature_C, 3, 1, temp);
-              line2 = "temp: " + (String)temp + "°C ";
-            } else {
-              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
-              line2 = "temp: " + (String)temp + "°F ";
-            }
-          }
-          line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-
-          // Line 3
-
-          String line3 = "";
-          float humidity = data["hum"];
-          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            char hum[5];
-            dtostrf(humidity, 3, 1, hum);
-            line3 += "hum: " + (String)hum + "% ";
-          }
-          line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-
-          // Line 4
-
-          float pa = (int)data["pa"] / 100;
-          char pressure[6];
-
-          String line4 = "";
-          if (displayMetric) {
-            dtostrf(pa, 3, 1, pressure);
-            line4 = "pressure: " + (String)pressure + " hPa";
-          } else {
-            dtostrf(convert_hpa2inhg(pa), 3, 1, pressure);
-            line4 = "pressure: " + (String)pressure + " inHg";
-          }
-          line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-          // Queue completed message
-
-          if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // Log.notice(F("Queued %s" CR), message->title);
-          }
-          break;
-        }
-#  endif
-#  ifdef ZgatewayBT
-        case hash("BTtoMQTT"): {
-          // {"id":"AA:BB:CC:DD:EE:FF","mac_type":0,"adv_type":0,"name":"sps","manufacturerdata":"de071f1000b1612908","rssi":-70,"brand":"Inkbird","model":"T(H) Sensor","model_id":"IBS-TH1/TH2/P01B","type":"THBX","cidc":false,"acts":true,"tempc":20.14,"tempf":68.252,"hum":41.27,"batt":41}
-
-          if (data["model_id"] != "MS-CDP" && data["model_id"] != "GAEN" && data["model_id"] != "APPLE_CONT" && data["model_id"] != "IBEACON") {
-            // Line 2, 3, 4
-            String line2 = "";
-            String line3 = "";
-            String line4 = "";
-
-            // Properties
-            String properties[6] = {"", "", "", "", "", ""};
-            int property = -1;
-
-            if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT" || data["type"] == "ACEL" || (data["type"] == "UNIQ" && data["model_id"] == "SDLS")) {
-              if (data.containsKey("tempc")) {
-                property++;
-                char temp[5];
-                if (displayMetric) {
-                  float temperature = data["tempc"];
-                  dtostrf(temperature, 3, 1, temp);
-                  properties[property] = "temp: " + (String)temp + "°C ";
-                } else {
-                  float temperature = data["tempf"];
-                  dtostrf(temperature, 3, 1, temp);
-                  properties[property] = "temp: " + (String)temp + "°F ";
-                }
-              }
-
-              if (data.containsKey("tempc2_dp")) {
-                property++;
-                char tempdp[5];
-                if (displayMetric) {
-                  float temperature = data["tempc2_dp"];
-                  dtostrf(temperature, 3, 1, tempdp);
-                  properties[property] = "dewp: " + (String)tempdp + "°C ";
-                } else {
-                  float temperature = data["tempf2_dp"];
-                  dtostrf(temperature, 3, 1, tempdp);
-                  properties[property] = "dewp: " + (String)tempdp + "°F ";
-                }
-              }
-
-              if (data.containsKey("extprobe")) {
-                property++;
-                properties[property] = " ext. probe";
-              }
-
-              if (data.containsKey("hum")) {
-                property++;
-                float humidity = data["hum"];
-                char hum[5];
-
-                dtostrf(humidity, 3, 1, hum);
-                properties[property] = "hum: " + (String)hum + "% ";
-              }
-
-              if (data.containsKey("pm25")) {
-                property++;
-                int pm25int = data["pm25"];
-                char pm25[3];
-                itoa(pm25int, pm25, 10);
-                if ((data.containsKey("pm10"))) {
-                  properties[property] = "PM 2.5: " + (String)pm25 + " ";
-
-                } else {
-                  properties[property] = "pm2.5: " + (String)pm25 + "μg/m³ ";
-                }
-              }
-
-              if (data.containsKey("pm10")) {
-                property++;
-                int pm10int = data["pm10"];
-                char pm10[3];
-                itoa(pm10int, pm10, 10);
-                if ((data.containsKey("pm25"))) {
-                  properties[property] = "/ 10: " + (String)pm10 + "μg/m³ ";
-
-                } else {
-                  properties[property] = "pm10: " + (String)pm10 + "μg/m³ ";
-                }
-              }
-
-              if (data.containsKey("for")) {
-                property++;
-                int formint = data["for"];
-                char form[3];
-                itoa(formint, form, 10);
-                properties[property] = "CH₂O: " + (String)form + "mg/m³ ";
-              }
-
-              if (data.containsKey("co2")) {
-                property++;
-                int co2int = data["co2"];
-                char co2[4];
-                itoa(co2int, co2, 10);
-                properties[property] = "co2: " + (String)co2 + "ppm ";
-              }
-
-              if (data.containsKey("moi")) {
-                property++;
-                int moiint = data["moi"];
-                char moi[4];
-                itoa(moiint, moi, 10);
-                properties[property] = "moi: " + (String)moi + "% ";
-              }
-
-              if (data.containsKey("lux")) {
-                property++;
-                int luxint = data["lux"];
-                char lux[5];
-                itoa(luxint, lux, 10);
-                properties[property] = "lux: " + (String)lux + "lx ";
-              }
-
-              if (data.containsKey("fer")) {
-                property++;
-                int ferint = data["fer"];
-                char fer[7];
-                itoa(ferint, fer, 10);
-                properties[property] = "fer: " + (String)fer + "µS/cm ";
-              }
-
-              if (data.containsKey("pres")) {
-                property++;
-                int presint = data["pres"];
-                char pres[4];
-                itoa(presint, pres, 10);
-                properties[property] = "pres: " + (String)pres + "hPa ";
-              }
-
-              if (data.containsKey("batt")) {
-                property++;
-                int battery = data["batt"];
-                char batt[5];
-                itoa(battery, batt, 10);
-                properties[property] = "batt: " + (String)batt + "% ";
-              }
-
-              if (data.containsKey("shake")) {
-                property++;
-                int shakeint = data["shake"];
-                char shake[3];
-                itoa(shakeint, shake, 10);
-                properties[property] = "shake: " + (String)shake + " ";
-              }
-
-              if (data.containsKey("volt")) {
-                property++;
-                float voltf = data["volt"];
-                char volt[5];
-                dtostrf(voltf, 3, 1, volt);
-                properties[property] = "volt: " + (String)volt + "V ";
-              }
-
-              if (data.containsKey("wake")) {
-                property++;
-                String wakestr = data["wake"];
-                properties[property] = "wake: " + wakestr + " ";
-              }
-
-            } else if (data["type"] == "BBQ") {
-              String tempcstr = "";
-              int j = 7;
-              if (data["model_id"] == "IBT-2X(S)") {
-                j = 3;
-              } else if (data["model_id"] == "IBT-4X(S/C)") {
-                j = 5;
-              }
-
-              for (int i = 0; i < j; i++) {
-                if (i == 0) {
-                  if (displayMetric) {
-                    tempcstr = "tempc";
-                  } else {
-                    tempcstr = "tempf";
-                  }
-                  i++;
-                } else {
-                  if (displayMetric) {
-                    tempcstr = "tempc" + (String)i;
-                  } else {
-                    tempcstr = "tempf" + (String)i;
-                  }
-                }
-
-                if (data.containsKey(tempcstr)) {
-                  char temp[5];
-                  float temperature = data[tempcstr];
-                  dtostrf(temperature, 3, 1, temp);
-                  properties[i - 1] = "tp" + (String)i + ": " + (String)temp;
-                  if (displayMetric) {
-                    properties[i - 1] += "°C ";
-                  } else {
-                    properties[i - 1] += "°F ";
-                  }
-                } else {
-                  properties[i - 1] = "tp" + (String)i + ": " + "off ";
-                }
-              }
-            } else if (data["type"] == "BODY") {
-              if (data.containsKey("steps")) {
-                property++;
-                int stepsint = data["steps"];
-                char steps[5];
-                itoa(stepsint, steps, 10);
-                properties[property] = "steps: " + (String)steps + " ";
-                // next line
-                property++;
-              }
-
-              if (data.containsKey("act_bpm")) {
-                property++;
-                int actbpmint = data["act_bpm"];
-                char actbpm[3];
-                itoa(actbpmint, actbpm, 10);
-                properties[property] = "activity bpm: " + (String)actbpm + " ";
-              }
-
-              if (data.containsKey("bpm")) {
-                property++;
-                int bpmint = data["bpm"];
-                char bpm[3];
-                itoa(bpmint, bpm, 10);
-                properties[property] = "bpm: " + (String)bpm + " ";
-              }
-            } else if (data["type"] == "SCALE") {
-              if (data.containsKey("weighing_mode")) {
-                property++;
-                String mode = data["weighing_mode"];
-                properties[property] = mode + " ";
-                // next line
-                property++;
-              }
-
-              if (data.containsKey("weight")) {
-                property++;
-                float weightf = data["weight"];
-                char weight[7];
-                dtostrf(weightf, 3, 1, weight);
-                if (data.containsKey("unit")) {
-                  String unit = data["unit"];
-                  properties[property] = "weight: " + (String)weight + unit + " ";
-                } else {
-                  properties[property] = "weight: " + (String)weight;
-                }
-                // next line
-                property++;
-              }
-
-              if (data.containsKey("impedance")) {
-                property++;
-                int impint = data["impedance"];
-                char imp[3];
-                itoa(impint, imp, 10);
-                properties[property] = "impedance: " + (String)imp + "ohm ";
-              }
-            } else if (data["type"] == "UNIQ") {
-              if (data["model_id"] == "M1017") {
-                if (data.containsKey("lvl_cm")) {
-                  property++;
-                  char lvl[5];
-                  if (displayMetric) {
-                    float lvlf = data["lvl_cm"];
-                    dtostrf(lvlf, 3, 1, lvl);
-                    properties[property] = "level: " + (String)lvl + "cm ";
-                  } else {
-                    float lvlf = data["lvl_in"];
-                    dtostrf(lvlf, 3, 1, lvl);
-                    properties[property] = "level: " + (String)lvl + "\" ";
-                  }
-                }
-
-                if (data.containsKey("quality")) {
-                  property++;
-                  int qualint = data["quality"];
-                  char qual[3];
-                  itoa(qualint, qual, 10);
-                  properties[property] = "qy: " + (String)qual + " ";
-                }
-
-                if (data.containsKey("batt")) {
-                  property++;
-                  int battery = data["batt"];
-                  char batt[5];
-                  itoa(battery, batt, 10);
-                  properties[property] = "batt: " + (String)batt + "% ";
-                }
-              }
-            }
-
-            line2 = properties[0] + properties[1];
-            line3 = properties[2] + properties[3];
-            line4 = properties[4] + properties[5];
-
-            if (!(line2 == "" && line3 == "" && line4 == "")) {
-              // Titel
-              char* topic = strdup(topicori);
-              String heading = strtok(topic, "/");
-              String line0 = heading + "           " + data["id"].as<String>().substring(9, 17);
-              line0.toCharArray(message->title, OLED_TEXT_WIDTH);
-              free(topic);
-
-              // Line 1
-              strlcpy(message->line1, data["model"], OLED_TEXT_WIDTH);
-
-              line2.toCharArray(message->line2, OLED_TEXT_WIDTH);
-              line3.toCharArray(message->line3, OLED_TEXT_WIDTH);
-              line4.toCharArray(message->line4, OLED_TEXT_WIDTH);
-
-              if (xQueueSend(displayQueue, (void*)&message, 0) != pdTRUE) {
-                Log.error(F("[ SSD1306 ] displayQueue full, discarding signal %s" CR), message->title);
-                free(message);
-              } else {
-                // Log.notice(F("Queued %s" CR), message->title);
-              }
-            } else {
-              free(message);
-            }
-
-            break;
-          } else {
-            free(message);
-          }
-        }
-#  endif
-        default:
-          Log.error(F("[ SSD1306 ] unhandled topic %s" CR), message->title);
-      }
-    } else {
-      Log.error(F("[ SSD1306 ] insufficent memory " CR));
-    }
   }
 }
 
@@ -825,7 +284,6 @@ void ssd1306Print(char* line1) {
 
 OledSerial Oled(0); // Not sure about this, came from Hardwareserial
 OledSerial::OledSerial(int x) {
-  displayQueue = xQueueCreate(5, sizeof(displayQueueMessage*));
 #  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
   pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
   digitalWrite(RST_OLED, LOW);
@@ -939,7 +397,7 @@ size_t OledSerial::write(const uint8_t* buffer, size_t size) {
 Display full page message on the display.
 - Used to display JSON messages published from each gateway module
 */
-boolean OledSerial::displayPage(displayQueueMessage* message) {
+boolean OledSerial::displayPage(webUIQueueMessage* message) {
   if (xPortGetCoreID() == CONFIG_ARDUINO_RUNNING_CORE) {
     if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
       display->normalDisplay();
@@ -1004,7 +462,6 @@ String stateSSD1306Display() {
   JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
   DISPLAYdata["onstate"] = (bool)displayState;
   DISPLAYdata["brightness"] = (int)displayBrightness;
-  DISPLAYdata["displaymetric"] = (bool)displayMetric;
   DISPLAYdata["display-flip"] = (bool)displayFlip;
   DISPLAYdata["idlelogo"] = (bool)idlelogo;
   DISPLAYdata["log-oled"] = (bool)logToOLEDDisplay;

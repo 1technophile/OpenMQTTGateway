@@ -101,10 +101,27 @@ void BTConfig_init() {
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
 }
 
+// Watchdog, if there was no change of btQueueLengthSum for 5 minutes, restart ESP
+void btScanWDG() {
+  static unsigned long previousbtQueueLengthSum = 0;
+  static unsigned long lastBtMsgTime = 0;
+  unsigned long now = millis();
+  if (!ProcessLock &&
+      previousbtQueueLengthSum == btQueueLengthSum &&
+      btQueueLengthSum != 0 &&
+      (now - lastBtMsgTime > BTConfig.BLEinterval)) {
+    Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtMsgTime / 1000);
+    ESPRestart();
+  } else {
+    previousbtQueueLengthSum = btQueueLengthSum;
+    lastBtMsgTime = now;
+  }
+}
+
 unsigned long timeBetweenConnect = 0;
 unsigned long timeBetweenActive = 0;
 
-void stateBTMeasures(bool start) {
+String stateBTMeasures(bool start) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["bleconnect"] = BTConfig.bleConnect;
@@ -135,9 +152,12 @@ void stateBTMeasures(bool start) {
     Log.notice(F("BT sys: "));
     serializeJsonPretty(jsonBuffer, Serial);
     Serial.println();
-    return; // Do not try to erase/write/send config at startup
+    return ""; // Do not try to erase/write/send config at startup
   }
+  String output;
+  serializeJson(jo, output);
   pub(subjectBTtoMQTT, jo);
+  return (output);
 }
 
 void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
@@ -218,10 +238,12 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   if (BTdata.containsKey("erase") && BTdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
-    preferences.remove("BTConfig");
-    preferences.end();
-    Log.notice(F("BT config erased" CR));
-    return; // Erase prevails on save, so skipping save
+    if (preferences.isKey("BTConfig")) {
+      preferences.remove("BTConfig");
+      preferences.end();
+      Log.notice(F("BT config erased" CR));
+      return; // Erase prevails on save, so skipping save
+    }
   }
 
   if (BTdata.containsKey("save") && BTdata["save"].as<bool>()) {
@@ -259,20 +281,22 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
 void BTConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  auto error = deserializeJson(jsonBuffer, preferences.getString("BTConfig", "{}"));
-  preferences.end();
-  Log.notice(F("BT config loaded" CR));
-  if (error) {
-    Log.error(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
-    return;
+  if (preferences.isKey("BTConfig")) {
+    auto error = deserializeJson(jsonBuffer, preferences.getString("BTConfig", "{}"));
+    preferences.end();
+    Log.notice(F("BT config loaded" CR));
+    if (error) {
+      Log.error(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      return;
+    }
+    if (jsonBuffer.isNull()) {
+      Log.warning(F("BT config is null" CR));
+      return;
+    }
+    JsonObject jo = jsonBuffer.as<JsonObject>();
+    BTConfig_fromJson(jo, true); // Never send MQTT message with config
+    Log.notice(F("BT config loaded" CR));
   }
-  if (jsonBuffer.isNull()) {
-    Log.warning(F("BT config is null" CR));
-    return;
-  }
-  JsonObject jo = jsonBuffer.as<JsonObject>();
-  BTConfig_fromJson(jo, true); // Never send MQTT message with config
-  Log.notice(F("BT config loaded" CR));
 }
 
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
@@ -707,7 +731,6 @@ void BLEscan() {
   while (uxQueueMessagesWaiting(BLEQueue)) {
     yield();
   }
-  disableCore0WDT();
   Log.notice(F("Scan begin" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
@@ -723,7 +746,6 @@ void BLEscan() {
   BLEScanResults foundDevices = pBLEScan->start(BTConfig.scanDuration / 1000, false);
   scanCount++;
   Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
-  enableCore0WDT();
   Log.trace(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
 }
 
@@ -1091,9 +1113,6 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
     }
-    if (BLEdata.containsKey("type") && (BLEdata.containsKey("model") || BLEdata.containsKey("distance"))) { // Only display sensor data with type
-      pubOled(subjectBTtoMQTT, BLEdata);
-    }
     if (!BTConfig.pubAdvData) {
       BLEdata.remove("servicedatauuid");
       BLEdata.remove("servicedata");
@@ -1101,7 +1120,7 @@ void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
       BLEdata.remove("mac_type");
       BLEdata.remove("adv_type");
       // tag device properties
-      BLEdata.remove("type");
+      // BLEdata.remove("type");   type is used by the WebUI module to determine the template used to display the signal
       BLEdata.remove("cidc");
       BLEdata.remove("acts");
       BLEdata.remove("cont");

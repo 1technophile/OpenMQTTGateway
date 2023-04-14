@@ -12,7 +12,7 @@ To build OpenMQTTGateway from the web and download the binary, follow these step
 
 ![](../img/OpenMQTTGateway-Build-gitpod-env.png)
 
-4. Wait for the server to build the binary. Once you see [SUCCESS], you can go to `.pio/build/<environment name>` and download `firmware.bin` by right-clicking on it and selecting "Download."
+4. Wait for the server to build the binary. Once you see [SUCCESS], you can go to `.pio/build/<environment name>` and download `firmware.bin` and `partitions.bin` by right-clicking on each and selecting "Download."
 ![](../img/OpenMQTTGateway-Build-gitpod.png)
 
 5. Finally, follow [Option 2](binaries.md) to upload the binary.
