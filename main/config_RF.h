@@ -81,6 +81,7 @@ struct RTL_433device {
   char uniqueId[uniqueIdSize];
   char modelName[modelNameSize];
   bool isDisc;
+  unsigned char count; // Counter for minimum number of messages before sending discover ( used a unsigned char, and stopped counting at 10)
 };
 
 const char parameters[40][4][24] = {

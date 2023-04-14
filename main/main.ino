@@ -53,6 +53,14 @@ unsigned long timer_sys_checks = 0;
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
 #endif
 
+/**
+ * Deep-sleep for the ESP8266 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
+ * Set this to true in the sensor code after publishing the measurement.
+ */
+#ifdef ESP8266_DEEP_SLEEP_IN_US
+bool ready_to_sleep = false;
+#endif
+
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
@@ -771,6 +779,11 @@ void setup() {
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
+#  ifdef ESP8266_DEEP_SLEEP_IN_US
+  Log.notice(F("Setting wake pin for deep sleep." CR));
+  pinMode(ESP8266_DEEP_SLEEP_WAKE_PIN, WAKEUP_PULLUP);
+#  endif
+
 /*
  The 2 modules below are not connection dependent so start them before the connectivity functions
  Note that the ONOFF module need to start after the RN8209 so that the overCurrent task is launched after the setup of the sensor
@@ -1364,7 +1377,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
-  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 2048);
+  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 4096);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
   WiFiManagerParameter custom_ota_pass("ota", "ota password", ota_pass, parameters_size);
 #  endif
@@ -1778,6 +1791,17 @@ void loop() {
 #endif
 #if defined(ZdisplaySSD1306)
   loopSSD1306();
+#endif
+
+/**
+ * Deep-sleep for the ESP8266 - e.g. ESP8266_DEEP_SLEEP_IN_US 30000000 for 30 seconds.
+ * Everything is off and (almost) all execution state is lost.
+ */
+#ifdef ESP8266_DEEP_SLEEP_IN_US
+  if (ready_to_sleep) {
+    Log.notice(F("Entering deep sleep for : %l us." CR), ESP8266_DEEP_SLEEP_IN_US);
+    ESP.deepSleep(ESP8266_DEEP_SLEEP_IN_US);
+  }
 #endif
 }
 
@@ -2195,9 +2219,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  endif
 #  ifdef ESP32
       } else if (strcmp(version, "latest") == 0) {
-#    if defined(ZgatewayBT)
-        stopProcessing();
-#    endif
         systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
         url = systemUrl.c_str();
         Log.notice(F("Using system OTA url with latest version %s" CR), url);
@@ -2214,7 +2235,9 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         Log.error(F("Invalid URL" CR));
         return;
       }
-
+#  if defined(ZgatewayBT)
+      stopProcessing();
+#  endif
       Log.warning(F("Starting firmware update" CR));
       SendReceiveIndicatorON();
       ErrorIndicatorON();

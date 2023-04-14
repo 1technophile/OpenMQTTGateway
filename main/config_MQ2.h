@@ -55,7 +55,9 @@ extern void MQ2toMQTT();
 #  endif
 #endif
 
-#define TimeBetweenReadingmq2 10000
+#ifndef TimeBetweenReadingmq2
+#  define TimeBetweenReadingmq2 10000
+#endif
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectMQ2toMQTT "/GAStoMQTT/mq2"
