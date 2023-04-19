@@ -40,7 +40,7 @@
 
 char messageBuffer[JSON_MSG_BUFFER];
 
-rtl_433_ESP rtl_433(-1);
+rtl_433_ESP rtl_433;
 
 #  ifdef ZmqttDiscovery
 SemaphoreHandle_t semaphorecreateOrUpdateDeviceRTL_433;
@@ -129,8 +129,14 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           DISCOVERY_TRACE_LOG(F("idWoKey %s" CR), idWoKey.c_str());
 #    if OpenHABDiscovery
           String value_template = "{{ value_json." + String(parameters[i][0]) + "}}";
+          if (strcmp(parameters[i][0], "battery_ok") == 0)) {
+              value_template = "{{ float(value_json." + String(parameters[i][0]) + ") * 99 + 1 }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
+            }
 #    else
           String value_template = "{{ value_json." + String(parameters[i][0]) + " | is_defined }}";
+          if (strcmp(parameters[i][0], "battery_ok") == 0) {
+            value_template = "{{ float(value_json." + String(parameters[i][0]) + ") * 99 + 1 | is_defined }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
+          }
 #    endif
           String topic = subjectRTL_433toMQTT;
 #    if valueAsATopic
@@ -314,7 +320,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
     }
     if (RTLdata.containsKey("status")) {
       Log.notice(F("RTL_433 get status:" CR));
-      rtl_433.getStatus(1);
+      rtl_433.getStatus();
       success = true;
     }
     if (success) {
@@ -340,12 +346,11 @@ extern void enableRTLreceive() {
 #  endif
 
   rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, receiveMhz);
-  rtl_433.enableReceiver(RF_MODULE_RECEIVER_GPIO);
+  rtl_433.enableReceiver();
 }
 
 extern void disableRTLreceive() {
   Log.trace(F("disableRTLreceive" CR));
-  rtl_433.enableReceiver(-1);
   rtl_433.disableReceiver();
 }
 
