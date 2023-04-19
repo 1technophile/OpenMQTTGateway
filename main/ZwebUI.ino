@@ -74,7 +74,7 @@ extern unsigned long uptime();
 const uint16_t LOG_BUFFER_SIZE = 6096;
 uint32_t log_buffer_pointer;
 void* log_buffer_mutex;
-char log_buffer[LOG_BUFFER_SIZE]; // Log buffer in DRAM
+char log_buffer[LOG_BUFFER_SIZE]; // Log buffer in HEAP
 
 const uint16_t MAX_LOGSZ = LOG_BUFFER_SIZE - 96;
 const uint16_t TOPSZ = 151; // Max number of characters in topic string
@@ -1030,7 +1030,7 @@ void handleUP() {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleUP Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);
     JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
 
     if (server.hasArg("o")) {
@@ -1038,26 +1038,15 @@ void handleUP() {
       WEBtoSYS["version"] = "test";
       WEBtoSYS["password"] = ota_pass;
 
-      char jsonChar[100];
-      serializeJson(modules, jsonChar, measureJson(modules) + 1);
-      char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+      {
+        sendRestartPage();
 
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Updating Firmware and Restart").c_str());
-      String response = String(buffer);
-      response += String(restart_script);
-      response += String(script);
-      response += String(style);
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Updating Firmware and Restart");
-      response += String(buffer);
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
-      response += String(buffer);
-      server.send(200, "text/html", response);
+        String output;
+        serializeJson(WEBtoSYS, output);
+        Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
+      }
 
-      delay(2000); // Wait for web page to be sent before
       String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSupdate);
-      String output;
-      serializeJson(WEBtoSYS, output);
-      Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
       MQTTHttpsFWUpdate((char*)topic.c_str(), WEBtoSYS);
       return;
     } else if (server.hasArg("le")) {
@@ -1065,27 +1054,15 @@ void handleUP() {
       if (le != 0) {
         WEBtoSYS["version"] = (le == 1 ? "latest" : (le == 2 ? "dev" : "unknown"));
         WEBtoSYS["password"] = ota_pass;
+        {
+          sendRestartPage();
 
-        char jsonChar[100];
-        serializeJson(modules, jsonChar, measureJson(modules) + 1);
-        char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+          String output;
+          serializeJson(WEBtoSYS, output);
+          Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
+        }
 
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Updating Firmware and Restart").c_str());
-        String response = String(buffer);
-        response += String(restart_script);
-        response += String(script);
-        response += String(style);
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Updating Firmware and Restart");
-        response += String(buffer);
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
-        response += String(buffer);
-        server.send(200, "text/html", response);
-
-        delay(2000); // Wait for web page to be sent before
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSupdate);
-        String output;
-        serializeJson(WEBtoSYS, output);
-        Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
         MQTTHttpsFWUpdate((char*)topic.c_str(), WEBtoSYS);
         return;
       }
@@ -1105,6 +1082,25 @@ void handleUP() {
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
   server.send(200, "text/html", response);
+}
+
+void sendRestartPage() {
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Updating Firmware and Restart").c_str());
+  String response = String(buffer);
+  response += String(restart_script);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Updating Firmware and Restart");
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+
+  delay(2000); // Wait for web page to be sent before
 }
 
 /**
