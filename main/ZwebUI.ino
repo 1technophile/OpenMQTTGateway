@@ -1077,7 +1077,7 @@ void handleUP() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, "https://github.com/1technophile/OpenMQTTGateway/releases/");
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, String(RELEASE_LINK + latestVersion + '/' + ENV_NAME + '-firmware.bin').c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1433,13 +1433,17 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
             // Line 2
 
-            if (data["id"] || data["channel"]) {
+            String line2 = "";
+            if (data["id"]) {
               String id = data["id"];
-              String channel = data["channel"];
-              String line2 = "id: " + id + " channel: " + channel;
-              line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+              line2 += "id: " + id + " ";
             }
 
+            if (data["channel"]) {
+              String channel = data["channel"];
+              line2 += "channel: " + channel;
+            }
+            line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
             // Line 3
 
             String line3 = "";

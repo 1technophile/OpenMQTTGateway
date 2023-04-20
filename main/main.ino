@@ -1964,11 +1964,20 @@ String stateMeasures() {
   }
 #  endif
   SYSdata["modules"] = modules;
-  String output;
-  serializeJson(SYSdata, output);
 
   pub(subjectSYStoMQTT, SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, 99);
+
+  String _modules = jsonChar;
+
+  _modules.replace(",", ";");
+
+  SYSdata["modules"] = _modules;
+  String output;
+  serializeJson(SYSdata, output);
   return output;
 }
 #endif
