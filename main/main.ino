@@ -1973,9 +1973,12 @@ String stateMeasures() {
 
   String _modules = jsonChar;
 
-  _modules.replace(",", ";");
+  _modules.replace(",", ", ");
+  _modules.replace("[", "");
+  _modules.replace("]", "");
+  _modules.replace("\"", "'");
 
-  SYSdata["modules"] = _modules;
+  SYSdata["modules"] = _modules.c_str();
   String output;
   serializeJson(SYSdata, output);
   return output;

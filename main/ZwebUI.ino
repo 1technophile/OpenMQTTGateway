@@ -984,7 +984,7 @@ void handleIN() {
     informationDisplay += stateWebUIStatus();
 
     // stateBTMeasures causes a Stack canary watchpoint triggered (loopTask)
-    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
+    // WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
 
     // TODO: need to fix display of modules array within SYStoMQTT
 
@@ -994,7 +994,7 @@ void handleIN() {
     informationDisplay.replace("{\"", "");
     informationDisplay.replace("\"", "\\\"");
 
-    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
+    // WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
 
     if (informationDisplay.length() > WEB_TEMPLATE_BUFFER_MAX_SIZE) {
       Log.warning(F("[WebUI] informationDisplay content length ( %d ) greater than WEB_TEMPLATE_BUFFER_MAX_SIZE.  Display truncated" CR), informationDisplay.length());
@@ -1077,7 +1077,8 @@ void handleUP() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, String(RELEASE_LINK + latestVersion + '/' + ENV_NAME + '-firmware.bin').c_str());
+  String systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, systemUrl.c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1235,20 +1236,21 @@ void WebUISetup() {
   Log.notice(F("ZwebUI setup done" CR));
 }
 
-unsigned long nextWebUIPage = uptime() + DISPLAY_WEBUI_INTERVAL;
+unsigned long nextWebUIMessage = uptime() + DISPLAY_WEBUI_INTERVAL;
 
 void WebUILoop() {
   server.handleClient();
 
-  if (uptime() >= nextWebUIPage && uxQueueMessagesWaiting(webUIQueue)) {
+  if (uptime() >= nextWebUIMessage && uxQueueMessagesWaiting(webUIQueue)) {
     webUIQueueMessage* message = nullptr;
     xQueueReceive(webUIQueue, &message, portMAX_DELAY);
+    newSSD1306Message = true;
 
     if (currentWebUIMessage) {
       free(currentWebUIMessage);
     }
     currentWebUIMessage = message;
-    nextWebUIPage = uptime() + DISPLAY_WEBUI_INTERVAL;
+    nextWebUIMessage = uptime() + DISPLAY_WEBUI_INTERVAL;
   }
 }
 
