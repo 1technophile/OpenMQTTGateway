@@ -1153,7 +1153,7 @@ void handleCS() {
 
     char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configuration").c_str());
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Console").c_str());
     String response = String(buffer);
     response += String(console_script);
     response += String(script);
