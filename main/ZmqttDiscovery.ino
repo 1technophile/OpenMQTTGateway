@@ -303,7 +303,7 @@ void createDiscovery(const char* sensor_type,
     sensor["pl_avail"] = payload_available; // payload_on
   if (payload_not_available[0])
     sensor["pl_not_avail"] = payload_not_available; //payload_off
-  if (state_class[0])
+  if (state_class && state_class[0])
     sensor["state_class"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
   if (state_on != nullptr)
     if (strcmp(state_on, "true") == 0) {
