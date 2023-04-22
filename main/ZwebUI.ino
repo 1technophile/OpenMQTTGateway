@@ -1142,7 +1142,9 @@ void handleCS() {
       if (cflg) {
         message += "\n";
       }
-      message += String(line, len - 1);
+      for (int x = 0; x < len - 1; x++) {
+        message += line[x];
+      }
       cflg = true;
     }
     message += "}1";
