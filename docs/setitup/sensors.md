@@ -8,6 +8,7 @@
 |BH1750|Digital light|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |BME280|Temperature, Humidity, Pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |BMP280|Temperature, Pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|C-37, YL-83, HM-RD|Leak, Water|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |HTU21|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |GPIO Input|Inputs|-|
 |GPIO KeyCode|Keycode|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
@@ -24,6 +25,7 @@
 |BH1750 SCL|A5|D1|22|
 |BME280/BMP280 SDA|A4|D2|21|
 |BME280/BMP280 SCL|A5|D1|22|
+|C-37, YL-83, HM-RD|A0 + D14|A0 + D14|A7 + D14|
 |DHT11/22|<a href="img/OpenMQTTgateway_Arduino_Addon_DHT.png" target="_blank">D8</a>|<a href="img/OpenMQTTgateway_ESP8266_Addon_DHT.png" target="_blank">D1</a>|16|
 |HC-SR501/HC-SR505|7|D5|5|
 |HTU21 SDA|A4|D2|21|
