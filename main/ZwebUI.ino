@@ -1428,7 +1428,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
 #  ifdef ZgatewayRTL_433
         case webUIHash("RTL_433toMQTT"): {
-          if (strncmp(data["model"], "status", 6)) { // Does not contain "status"
+          if (data["model"] && strncmp(data["model"], "status", 6)) { // Does not contain "status"
             // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
 
             // Line 1
