@@ -79,7 +79,7 @@ If you like the project and/or used it please consider supporting it! It can be 
 * [SMART PLUG ESP32 OPENMQTTGATEWAY SERVING AS AN BLE MQTT GATEWAY AND A POWER METER](https://www.electronics-lab.com/smart-plug-esp32-openmqttgateway-serving-as-an-ble-mqtt-gateway-and-a-power-meter/)
 
 ### Theengs Plug
-[![IMAGE ALT TEXT HERE](https://www.youtube.com/watch?v=nUwMt9p2U7o/0.jpg)](https://www.youtube.com/watch?v=nUwMt9p2U7o&t=427s)
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/nUwMt9p2U7o/0.jpg)](https://www.youtube.com/watch?v=nUwMt9p2U7o&t=427s)
 
 ### 433Mhz and BLE
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_gdXR1uklaY/0.jpg)](https://www.youtube.com/watch?v=_gdXR1uklaY)
