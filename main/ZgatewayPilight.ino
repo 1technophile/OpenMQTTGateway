@@ -36,9 +36,9 @@
 #  include <ESPiLight.h>
 ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 
-#  ifdef ZgatewayPilight_rawEnabled
+#  ifdef Pilight_rawEnabled
 // raw output support
-byte pilightRawEnabled = 0;
+bool pilightRawEnabled = 0;
 #  endif
 
 void pilightCallback(const String& protocol, const String& message, int status,
@@ -83,7 +83,7 @@ void pilightCallback(const String& protocol, const String& message, int status,
   }
 }
 
-#  ifdef ZgatewayPilight_rawEnabled
+#  ifdef Pilight_rawEnabled
 void pilightRawCallback(const uint16_t* pulses, size_t length) {
   uint16_t pulse;
 
@@ -184,7 +184,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       Log.notice(F("PiLight protocols available: %s" CR), rf.availableProtocols().c_str());
       success = true;
     }
-#  ifdef ZgatewayPilight_rawEnabled
+#  ifdef Pilight_rawEnabled
     if (Pilightdata.containsKey("rawEnabled")) {
       Log.notice(F("Setting PiLight raw output enabled: %s" CR), Pilightdata["rawEnabled"]);
       pilightRawEnabled = (byte)Pilightdata["rawEnabled"];
@@ -334,7 +334,7 @@ extern void enablePilightReceive() {
   ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
 #  endif
   rf.setCallback(pilightCallback);
-#  ifdef ZgatewayPilight_rawEnabled
+#  ifdef Pilight_rawEnabled
   if (pilightRawEnabled) {
     rf.setPulseTrainCallBack(pilightRawCallback);
   }
