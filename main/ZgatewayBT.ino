@@ -537,7 +537,7 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
       {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
       {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
       {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"binary_sensor", "inUse", mac, "power", jsonInuse, "", "", ""}
+      {"binary_sensor", "inUse", mac, "power", jsonInuse, "", "", "", stateClassNone}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
