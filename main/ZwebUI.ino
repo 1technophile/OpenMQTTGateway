@@ -984,7 +984,7 @@ void handleIN() {
     informationDisplay += stateWebUIStatus();
 
     // stateBTMeasures causes a Stack canary watchpoint triggered (loopTask)
-    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
+    // WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
 
     // TODO: need to fix display of modules array within SYStoMQTT
 
@@ -994,7 +994,7 @@ void handleIN() {
     informationDisplay.replace("{\"", "");
     informationDisplay.replace("\"", "\\\"");
 
-    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
+    // WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
 
     if (informationDisplay.length() > WEB_TEMPLATE_BUFFER_MAX_SIZE) {
       Log.warning(F("[WebUI] informationDisplay content length ( %d ) greater than WEB_TEMPLATE_BUFFER_MAX_SIZE.  Display truncated" CR), informationDisplay.length());
@@ -1077,7 +1077,8 @@ void handleUP() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, "https://github.com/1technophile/OpenMQTTGateway/releases/");
+  String systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, systemUrl.c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1141,7 +1142,9 @@ void handleCS() {
       if (cflg) {
         message += "\n";
       }
-      message += String(line, len - 1);
+      for (int x = 0; x < len - 1; x++) {
+        message += line[x];
+      }
       cflg = true;
     }
     message += "}1";
@@ -1152,7 +1155,7 @@ void handleCS() {
 
     char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configuration").c_str());
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Console").c_str());
     String response = String(buffer);
     response += String(console_script);
     response += String(script);
@@ -1235,20 +1238,21 @@ void WebUISetup() {
   Log.notice(F("ZwebUI setup done" CR));
 }
 
-unsigned long nextWebUIPage = uptime() + DISPLAY_WEBUI_INTERVAL;
+unsigned long nextWebUIMessage = uptime() + DISPLAY_WEBUI_INTERVAL;
 
 void WebUILoop() {
   server.handleClient();
 
-  if (uptime() >= nextWebUIPage && uxQueueMessagesWaiting(webUIQueue)) {
+  if (uptime() >= nextWebUIMessage && uxQueueMessagesWaiting(webUIQueue)) {
     webUIQueueMessage* message = nullptr;
     xQueueReceive(webUIQueue, &message, portMAX_DELAY);
+    newSSD1306Message = true;
 
     if (currentWebUIMessage) {
       free(currentWebUIMessage);
     }
     currentWebUIMessage = message;
-    nextWebUIPage = uptime() + DISPLAY_WEBUI_INTERVAL;
+    nextWebUIMessage = uptime() + DISPLAY_WEBUI_INTERVAL;
   }
 }
 
@@ -1424,7 +1428,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
 #  ifdef ZgatewayRTL_433
         case webUIHash("RTL_433toMQTT"): {
-          if (strncmp(data["model"], "status", 6)) { // Does not contain "status"
+          if (data["model"] && strncmp(data["model"], "status", 6)) { // Does not contain "status"
             // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
 
             // Line 1
@@ -1433,13 +1437,17 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
             // Line 2
 
-            if (data["id"] || data["channel"]) {
+            String line2 = "";
+            if (data["id"]) {
               String id = data["id"];
-              String channel = data["channel"];
-              String line2 = "id: " + id + " channel: " + channel;
-              line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+              line2 += "id: " + id + " ";
             }
 
+            if (data["channel"]) {
+              String channel = data["channel"];
+              line2 += "channel: " + channel;
+            }
+            line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
             // Line 3
 
             String line3 = "";

@@ -26,6 +26,7 @@
 #ifndef config_WebUI_h
 #define config_WebUI_h
 
+#include <ArduinoJson.h>
 #include <Wire.h>
 
 #define WEBUI_TEXT_WIDTH 128
@@ -91,6 +92,7 @@ void MQTTtoWebUI(char*, JsonObject&);
 String stateWebUIStatus();
 
 webUIQueueMessage* currentWebUIMessage;
+bool newSSD1306Message = false; // Flag to indicate new message to display
 
 /*------------------- End of Global Functions ----------------------*/
 
