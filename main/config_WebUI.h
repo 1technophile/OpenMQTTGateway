@@ -68,7 +68,7 @@
 /*------------------- End of Compiler Directives ----------------------*/
 
 #define WEBUI_SECURE                                                                    \
-  if (WebUIAuth) {                                                                      \
+  if (webUISecure) {                                                                      \
     if (!server.authenticate(www_username, ota_pass)) {                                 \
       return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse); \
     }                                                                                   \

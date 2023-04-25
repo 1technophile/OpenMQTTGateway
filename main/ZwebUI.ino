@@ -67,7 +67,7 @@ bool reset_web_log_flag = false; // Reset web console log
 
 const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
-bool WebUIAuth = WEBUI_AUTH;
+bool webUISecure = WEBUI_AUTH;
 boolean displayMetric = DISPLAY_METRIC;
 
 /*********************************************************************************************\
@@ -491,7 +491,7 @@ void handleCN() {
  * @brief /WU - Configuration Page
  * T: handleWU: uri: /wu, args: 3, method: 1
  * T: handleWU Arg: 0, dm=on - displayMetric
- * T: handleWU Arg: 1, sw=on - WebUIAuth
+ * T: handleWU Arg: 1, sw=on - webUISecure
  * T: handleWU Arg: 2, save=
  */
 void handleWU() {
@@ -501,18 +501,17 @@ void handleWU() {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleWU Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-
     bool update = false;
 
-    displayMetric = server.hasArg("dm");
     if (displayMetric != server.hasArg("dm")) {
       update = true;
     }
+    displayMetric = server.hasArg("dm");
 
-    WebUIAuth = server.hasArg("sw");
-    if (WebUIAuth != server.hasArg("sw")) {
+    if (webUISecure != server.hasArg("sw")) {
       update = true;
     }
+    webUISecure = server.hasArg("sw");
 
     if (server.hasArg("save") && update) {
       WebUIConfig_save();
@@ -529,7 +528,7 @@ void handleWU() {
   response += String(script);
   response += String(style);
   int logLevel = Log.getLevel();
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (WebUIAuth ? "checked" : ""));
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (webUISecure ? "checked" : ""));
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -747,10 +746,10 @@ void handleMQ() {
       }
 
       // SC - Secure Connection argument is only present when true
-      WEBtoSYS["mqtt_secure"] = server.hasArg("sc");
       if (mqtt_secure != server.hasArg("sc")) {
         update = true;
       }
+      WEBtoSYS["mqtt_secure"] = server.hasArg("sc");
 
       if (!update) {
         Log.warning(F("[WebUI] clearing" CR));
@@ -1243,6 +1242,7 @@ void notFound() {
 void WebUISetup() {
   WEBUI_TRACE_LOG(F("ZwebUI setup start" CR));
 
+  WebUIConfig_load();
   webUIQueue = xQueueCreate(5, sizeof(webUIQueueMessage*));
 
 #  ifdef WEBUI_DEVELOPMENT
@@ -1281,6 +1281,8 @@ void WebUISetup() {
 
   Log.begin(LOG_LEVEL, &WebLog);
 
+  Log.trace(F("[WebUI] displayMetric %T" CR), displayMetric);
+  Log.trace(F("[WebUI] WebUI Secure %T" CR), webUISecure);
   Log.notice(F("OpenMQTTGateway URL: http://%s/" CR), WiFi.localIP().toString().c_str());
   displayPrint("URL: http://", (char*)WiFi.localIP().toString().c_str());
   Log.notice(F("ZwebUI setup done" CR));
@@ -1354,6 +1356,7 @@ String stateWebUIStatus() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject WebUIdata = jsonBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
+  WebUIdata["webUISecure"] = (bool)webUISecure;
   WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
   ;
 
@@ -1369,27 +1372,27 @@ bool WebUIConfig_save() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["displayMetric"] = (bool)displayMetric;
-  jo["WebUIAuth"] = (bool)WebUIAuth;
+  jo["webUISecure"] = (bool)webUISecure;
   // Save config into NVS (non-volatile storage)
   String conf = "";
   serializeJson(jsonBuffer, conf);
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putString("WebUIConfig", conf);
+  int result = preferences.putString("WebUIConfig", conf);
   preferences.end();
+  Log.trace(F("[WebUI] WebUIConfig_save: %s, result: %d" CR), conf.c_str(), result);
   return true;
 }
 
 void WebUIConfig_init() {
   displayMetric = DISPLAY_METRIC;
-  WebUIAuth = WEBUI_AUTH;
+  webUISecure = WEBUI_AUTH;
   Log.notice(F("WebUI config initialised" CR));
 }
 
 bool WebUIConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  String exists = preferences.getString("WebUIConfig", "{}");
-  if (exists != "{}") {
+  if (preferences.isKey("WebUIConfig")) {
     auto error = deserializeJson(jsonBuffer, preferences.getString("WebUIConfig", "{}"));
     preferences.end();
     if (error) {
@@ -1402,7 +1405,7 @@ bool WebUIConfig_load() {
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
     displayMetric = jo["displayMetric"].as<bool>();
-    WebUIAuth = jo["WebUIAuth"];
+    webUISecure = jo["webUISecure"].as<bool>();
     return true;
   } else {
     preferences.end();
