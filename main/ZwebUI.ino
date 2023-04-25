@@ -45,10 +45,6 @@ QueueHandle_t webUIQueue;
 
 WebServer server(80);
 
-boolean displayMetric = DISPLAY_METRIC;
-
-/*------------------- Local functions ----------------------*/
-
 /*------------------- External functions ----------------------*/
 
 esp_err_t nvs_flash_erase(void);
@@ -72,6 +68,7 @@ bool reset_web_log_flag = false; // Reset web console log
 const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
 bool WebUIAuth = WEBUI_AUTH;
+boolean displayMetric = DISPLAY_METRIC;
 
 /*********************************************************************************************\
  * ESP32 AutoMutex
@@ -403,11 +400,7 @@ bool exists(String path) {
  */
 void handleRoot() {
   WEBUI_TRACE_LOG(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -470,11 +463,7 @@ void handleRoot() {
  * 
  */
 void handleCN() {
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
@@ -507,11 +496,7 @@ void handleCN() {
  */
 void handleWU() {
   WEBUI_TRACE_LOG(F("handleWU: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleWU Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -560,11 +545,7 @@ void handleWU() {
  */
 void handleWI() {
   WEBUI_TRACE_LOG(F("handleWI: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   String WiFiScan = "";
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
@@ -727,11 +708,7 @@ void handleWI() {
  */
 void handleMQ() {
   WEBUI_TRACE_LOG(F("handleMQ: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleMQ Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -854,11 +831,7 @@ void handleMQ() {
  */
 void handleLO() {
   WEBUI_TRACE_LOG(F("handleLO: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleLO Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -892,11 +865,7 @@ void handleLO() {
  */
 void handleRT() {
   WEBUI_TRACE_LOG(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleRT Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -934,11 +903,7 @@ void handleRT() {
  */
 void handleCL() {
   WEBUI_TRACE_LOG(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleCL Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -992,11 +957,7 @@ void handleCL() {
  */
 void handleTK() {
   WEBUI_TRACE_LOG(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleTK Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1039,11 +1000,7 @@ void handleTK() {
  */
 void handleIN() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleIN Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1113,11 +1070,7 @@ void handleIN() {
  */
 void handleUP() {
   WEBUI_TRACE_LOG(F("handleUP: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleUP Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1202,11 +1155,7 @@ void sendRestartPage() {
  */
 void handleCS() {
   WEBUI_TRACE_LOG(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
   if (server.args() && server.hasArg("c2")) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleCS Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1270,11 +1219,7 @@ void handleCS() {
  * 
  */
 void notFound() {
-  if (WebUIAuth) {
-    if (!server.authenticate(www_username, ota_pass)) {
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse);
-    }
-  }
+  WEBUI_SECURE
 #  ifdef WEBUI_DEVELOPMENT
   String path = server.uri();
   if (!exists(path)) {
