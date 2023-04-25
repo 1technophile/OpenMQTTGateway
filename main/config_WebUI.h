@@ -57,6 +57,14 @@
 #  define WEBUI_TRACE_LOG(...)
 #endif
 
+#ifndef WEBUI_AUTH
+#  define WEBUI_AUTH true // Default to WebUI authentication
+#endif
+
+#ifndef WEBUI_LOGIN
+#  define WEBUI_LOGIN "admin"
+#endif
+
 /*------------------- End of Compiler Directives ----------------------*/
 
 #define MAX_WIFI_NETWORKS_TO_SHOW 10
