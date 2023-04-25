@@ -167,6 +167,7 @@ const char parameters[40][4][24] = {
 #define subjectPilighttoMQTT         "/PilighttoMQTT"
 #define subjectGTWPilighttoMQTT      "/PilighttoMQTT"
 #define repeatPilightwMQTT           false // do we repeat a received signal by using MQTT with Pilight gateway
+//#define Pilight_rawEnabled true   // enables Pilight RAW return - switchable via MQTT
 
 /*-------------------RTL_433 topics & parameters----------------------*/
 //433Mhz RTL_433 MQTT Subjects and keys
