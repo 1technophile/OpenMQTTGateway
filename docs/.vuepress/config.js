@@ -90,7 +90,8 @@ module.exports = {
             'use/actuators',
             'use/boards',
             'use/displays',
-            'use/gateway'
+            'use/gateway',
+            'use/webui'
           ]
         },
         {

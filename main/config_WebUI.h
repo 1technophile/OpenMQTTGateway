@@ -57,7 +57,22 @@
 #  define WEBUI_TRACE_LOG(...)
 #endif
 
+#ifndef WEBUI_AUTH
+#  define WEBUI_AUTH true // Default to WebUI authentication
+#endif
+
+#ifndef WEBUI_LOGIN
+#  define WEBUI_LOGIN "admin"
+#endif
+
 /*------------------- End of Compiler Directives ----------------------*/
+
+#define WEBUI_SECURE                                                                    \
+  if (webUISecure) {                                                                    \
+    if (!server.authenticate(www_username, ota_pass)) {                                 \
+      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse); \
+    }                                                                                   \
+  }
 
 #define MAX_WIFI_NETWORKS_TO_SHOW 10
 
