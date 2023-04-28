@@ -677,7 +677,7 @@ void connectMQTT() {
 #endif
         delay(100);
       }
-      watchdogReboot(1);
+      ESPRestart(1);
     }
   }
 }
@@ -1111,7 +1111,7 @@ void setOTA() {
     ErrorIndicatorOFF();
     SendReceiveIndicatorOFF();
     lpDisplayPrint("OTA done");
-    ESPRestart();
+    ESPRestart(6);
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
@@ -1132,7 +1132,7 @@ void setOTA() {
       Log.error(F("Receive Failed" CR));
     else if (error == OTA_END_ERROR)
       Log.error(F("End Failed" CR));
-    ESPRestart();
+    ESPRestart(6);
   });
   ArduinoOTA.begin();
 }
@@ -1186,7 +1186,18 @@ void setupTLS(bool self_signed, uint8_t index) {
 }
 #endif
 
-void ESPRestart() {
+/*
+  Reboot for Reason Codes
+  1 - Repeated MQTT Connection Failure
+  2 - Repeated WiFi Connection Failure
+  3 - Failed WiFiManager configuration portal
+  4 - BLE Scan watchdog
+  5 - User requested reboot
+  6 - OTA Update
+  7 - Parameters changed
+*/
+void ESPRestart(byte reason) {
+  Log.warning(F("Rebooting for reason code %d" CR), reason);
 #if defined(ESP32)
   ESP.restart();
 #elif defined(ESP8266)
@@ -1229,12 +1240,12 @@ void setup_wifi() {
       }
     } else {
       if (failure_number_ntwk > maxRetryWatchDog) {
-        watchdogReboot(2);
+        ESPRestart(2);
       }
     }
 #  else
     if (failure_number_ntwk > maxRetryWatchDog) {
-      watchdogReboot(2);
+      ESPRestart(2);
     }
 #  endif
   }
@@ -1478,9 +1489,8 @@ void setup_wifimanager(bool reset_settings) {
       esp_wifi_set_config(WIFI_IF_AP, &conf);
 #  endif
 
-      //reset and try again
-      watchdogReboot(3);
-      delay(5000);
+      //restart and try again
+      ESPRestart(3);
     }
     InfoIndicatorOFF();
     ErrorIndicatorOFF();
@@ -2371,14 +2381,14 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  ifndef ESPWifiManualSetup
           saveMqttConfig();
 #  endif
-          ESPRestart();
+          ESPRestart(6);
           break;
       }
 
       SendReceiveIndicatorOFF();
       ErrorIndicatorOFF();
 
-      ESPRestart();
+      ESPRestart(6);
     }
   }
 }
@@ -2392,7 +2402,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       const char* cmd = SYSdata["cmd"];
       Log.notice(F("Command: %s" CR), cmd);
       if (strstr(cmd, restartCmd) != NULL) { //restart
-        ESPRestart();
+        ESPRestart(5);
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
 #  ifndef ESPWifiManualSetup
         setup_wifimanager(true);
@@ -2426,7 +2436,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         setESP32WifiPorotocolTxPower();
 #  endif
       }
-      ESPRestart();
+      ESPRestart(7);
     }
 
     bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
@@ -2535,7 +2545,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-      ESPRestart();
+      ESPRestart(7);
     }
 #  endif
 
@@ -2590,16 +2600,3 @@ String toString(uint32_t input) {
 }
 #  endif
 #endif
-
-/*
-  Reboot for repeated connection issues
-  Reason Codes
-  1 - Repeated MQTT Connection Failure
-  2 - Repeated WiFi Connection Failure
-  3 - Failed WiFiManager configuration portal
-  4 - BLE Scan watchdog
-*/
-void watchdogReboot(byte reason) {
-  Log.warning(F("Rebooting for reason code %d" CR), reason);
-  ESPRestart();
-}
