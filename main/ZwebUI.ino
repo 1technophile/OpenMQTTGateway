@@ -430,11 +430,7 @@ void handleRoot() {
 
       delay(2000); // Wait for web page to be sent before
 
-#  if defined(ESP8266)
-      ESP.reset();
-#  else
-      ESP.restart();
-#  endif
+      ESPRestart();
     } else {
       // WEBUI_TRACE_LOG(F("Arguments %s" CR), message);
       server.send(200, "text/plain", "00:14:36.767 RSL: RESULT = {\"Topic\":\"topic\"}");
@@ -888,8 +884,7 @@ void handleRT() {
     response += String(buffer);
     server.send(200, "text/html", response);
 
-    nvs_flash_erase();
-    ESP.restart();
+    eraseAndRestart();
   } else {
     handleCN();
   }
@@ -1358,7 +1353,6 @@ String stateWebUIStatus() {
   WebUIdata["displayMetric"] = (bool)displayMetric;
   WebUIdata["webUISecure"] = (bool)webUISecure;
   WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
-  ;
 
   String output;
   serializeJson(WebUIdata, output);
