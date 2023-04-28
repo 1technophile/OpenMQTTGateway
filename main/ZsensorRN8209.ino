@@ -53,12 +53,12 @@ float getRN8209current() {
 }
 
 void rn8209_loop(void* mode) {
-  if (!ProcessLock) {
-    uint32_t voltage;
-    int32_t current;
-    int32_t power;
+  uint32_t voltage;
+  int32_t current;
+  int32_t power;
 
-    while (1) {
+  while (1) {
+    if (!ProcessLock) {
       uint8_t retv = rn8209c_read_voltage(&voltage);
       uint8_t ret = rn8209c_read_emu_status();
       uint8_t retc = 1;
@@ -82,10 +82,8 @@ void rn8209_loop(void* mode) {
       if (retc == 0) data["current"] = (float)current / 10000.0;
       if (retp == 0) data["power"] = (float)power / 10000.0;
       if (data) pub(subjectRN8209toMQTT, data);
-      delay(TimeBetweenReadingRN8209);
     }
-  } else {
-    Log.trace(F("RN8209 reading canceled by processLock" CR));
+    delay(TimeBetweenReadingRN8209);
   }
 }
 
