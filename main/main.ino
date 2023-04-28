@@ -2597,6 +2597,7 @@ String toString(uint32_t input) {
   1 - Repeated MQTT Connection Failure
   2 - Repeated WiFi Connection Failure
   3 - Failed WiFiManager configuration portal
+  4 - BLE Scan watchdog
 */
 void watchdogReboot(byte reason) {
   Log.warning(F("Rebooting for reason code %d" CR), reason);
