@@ -35,9 +35,9 @@
 #define body_header             "<body><div style='text-align:left;display:inline-block;min-width:360px;'><div style='text-align:center;'><noscript> To use, please enable JavaScript <br></noscript><h3>%s</h3><h2>%s</h2></div>"
 
 #if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
-#define button_upgrade "<p><form id=but5 style='display: block;' action='up' method='get'><button>Firmware Upgrade</button></form></p>"
+#  define button_upgrade "<p><form id=but5 style='display: block;' action='up' method='get'><button>Firmware Upgrade</button></form></p>"
 #else
-#define button_upgrade ""
+#  define button_upgrade ""
 #endif
 // Configuration Menu
 
