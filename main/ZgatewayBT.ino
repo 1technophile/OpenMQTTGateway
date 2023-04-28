@@ -101,20 +101,20 @@ void BTConfig_init() {
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
 }
 
-// Watchdog, if there was no change of btQueueLengthSum for 5 minutes, restart ESP
+// Watchdog, if there was no change of BLE scanCount, restart ESP
 void btScanWDG() {
-  static unsigned long previousbtQueueLengthSum = 0;
-  static unsigned long lastBtMsgTime = 0;
+  static unsigned long previousBtScanCount = 0;
+  static unsigned long lastBtScan = 0;
   unsigned long now = millis();
   if (!ProcessLock &&
-      previousbtQueueLengthSum == btQueueLengthSum &&
-      btQueueLengthSum != 0 &&
-      (now - lastBtMsgTime > BTConfig.BLEinterval)) {
-    Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtMsgTime / 1000);
-    ESPRestart();
+      previousBtScanCount == scanCount &&
+      scanCount != 0 &&
+      (now - lastBtScan > BTConfig.BLEinterval)) {
+    Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
+    watchdogReboot(4);
   } else {
-    previousbtQueueLengthSum = btQueueLengthSum;
-    lastBtMsgTime = now;
+    previousBtScanCount = scanCount;
+    lastBtScan = now;
   }
 }
 
