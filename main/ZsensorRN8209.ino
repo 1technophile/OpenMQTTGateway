@@ -57,7 +57,8 @@ void rn8209_loop(void* mode) {
   int32_t current;
   int32_t power;
 
-  while (!ProcessLock) {
+  while (1) {
+    if(!ProcessLock){
     uint8_t retv = rn8209c_read_voltage(&voltage);
     uint8_t ret = rn8209c_read_emu_status();
     uint8_t retc = 1;
@@ -81,6 +82,7 @@ void rn8209_loop(void* mode) {
     if (retc == 0) data["current"] = (float)current / 10000.0;
     if (retp == 0) data["power"] = (float)power / 10000.0;
     if (data) pub(subjectRN8209toMQTT, data);
+    }
     delay(TimeBetweenReadingRN8209);
   }
 }
