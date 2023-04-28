@@ -111,7 +111,7 @@ void btScanWDG() {
       scanCount != 0 &&
       (now - lastBtScan > BTConfig.BLEinterval)) {
     Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
-    watchdogReboot(4);
+    ESPRestart(4);
   } else {
     previousBtScanCount = scanCount;
     lastBtScan = now;
