@@ -821,14 +821,16 @@ void BLEconnect() {
 }
 
 void stopProcessing() {
-  Log.notice(F("Stop BLE processing" CR));
   ProcessLock = true;
   delay(BTConfig.scanDuration < 2000 ? BTConfig.scanDuration : 2000);
-  //Suspending and deleting tasks to free memory for OTA operations
+  //Suspending, deleting tasks and stopping BT to free memory
   vTaskSuspend(xCoreTaskHandle);
   vTaskDelete(xCoreTaskHandle);
   vTaskSuspend(xProcBLETaskHandle);
   vTaskDelete(xProcBLETaskHandle);
+  if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
+  esp_bt_mem_release(ESP_BT_MODE_BTDM);
+  Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
@@ -886,8 +888,7 @@ void deepSleep(uint64_t time_in_us) {
 #    endif
 
   Log.trace(F("Deactivating ESP32 components" CR));
-  if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
-  esp_bt_mem_release(ESP_BT_MODE_BTDM);
+  stopProcessing();
   // Ignore the deprecated warning, this call is necessary here.
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
