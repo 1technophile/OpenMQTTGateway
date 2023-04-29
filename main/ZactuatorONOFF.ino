@@ -277,7 +277,7 @@ void ActuatorTrigger() {
     PowerIndicatorOFF();
   }
   // Send the state of the switch to the broker so as to update the status
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  StaticJsonDocument<64> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)level;
 #  ifdef ESP32
@@ -292,7 +292,7 @@ void ActuatorTrigger() {
 
 void stateONOFFMeasures() {
   //Publish actuator state
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  StaticJsonDocument<64> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)digitalRead(ACTUATOR_ONOFF_GPIO);
   pub(subjectGTWONOFFtoMQTT, ONOFFdata);
