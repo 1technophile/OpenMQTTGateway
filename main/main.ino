@@ -1306,20 +1306,6 @@ void checkButton() {
 void checkButton() {}
 #  endif
 
-void eraseAndRestart() {
-  Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
-
-#  if defined(ESP8266)
-  WiFi.disconnect(true);
-  wifiManager.resetSettings();
-  delay(5000);
-  ESP.reset();
-#  else
-  nvs_flash_erase();
-  ESP.restart();
-#  endif
-}
-
 void saveMqttConfig() {
   Log.trace(F("saving config" CR));
   DynamicJsonDocument json(512 + ota_server_cert.length() + mqtt_cert.length());
@@ -1921,6 +1907,25 @@ String UTCtimestamp() {
   char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
   strftime(buffer, sizeof buffer, "%FT%TZ", gmtime(&now));
   return buffer;
+}
+
+/*
+ Erase flash and restart the ESP
+*/
+void eraseAndRestart() {
+  Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
+
+#  if defined(ESP8266)
+  WiFi.disconnect(true);
+#    ifndef ESPWifiManualSetup
+  wifiManager.resetSettings();
+#    endif
+  delay(5000);
+  ESP.reset();
+#  else
+  nvs_flash_erase();
+  ESP.restart();
+#  endif
 }
 
 #endif

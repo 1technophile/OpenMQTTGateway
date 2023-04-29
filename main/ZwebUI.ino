@@ -46,8 +46,6 @@ QueueHandle_t webUIQueue;
 WebServer server(80);
 
 /*------------------- External functions ----------------------*/
-
-esp_err_t nvs_flash_erase(void);
 extern void eraseAndRestart();
 extern unsigned long uptime();
 
