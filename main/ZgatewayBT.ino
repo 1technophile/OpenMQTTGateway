@@ -647,7 +647,7 @@ std::string convertServiceData(std::string deviceServiceData) {
   char spr[2 * serviceDataLength + 1];
   for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
   spr[2 * serviceDataLength] = 0;
-  Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
+  Log.trace(F("Converted service data (%d) to %s" CR), serviceDataLength, spr);
   return spr;
 }
 
@@ -747,7 +747,7 @@ void BLEscan() {
   BLEScanResults foundDevices = pBLEScan->start(BTConfig.scanDuration / 1000, false);
   if (foundDevices.getCount())
     scanCount++;
-    Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
+  Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
   Log.trace(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
 }
 
@@ -950,7 +950,7 @@ void setupBTTasksAndBLE() {
   xTaskCreatePinnedToCore(
       coreTask, /* Function to implement the task */
       "coreTask", /* Name of the task */
-      10000, /* Stack size in bytes */
+      5120, /* Stack size in bytes */
       NULL, /* Task input parameter */
       1, /* Priority of the task */
       &xCoreTaskHandle, /* Task handle. */
@@ -1054,9 +1054,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
           StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
           deserializeJson(jsonBuffer, properties);
           for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
-            Log.trace("Key: %s", prop.key().c_str());
-            Log.trace("Unit: %s", prop.value()["unit"].as<const char*>());
-            Log.trace("Name: %s", prop.value()["name"].as<const char*>());
+            Log.trace(F("Key: %s"), prop.key().c_str());
+            Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
+            Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
 #    if OpenHABDiscovery
