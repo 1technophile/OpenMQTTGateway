@@ -68,6 +68,8 @@ struct decompose {
   bool reverse;
 };
 
+unsigned long BLEstarts = 0;
+
 vector<BLEAction> BLEactions;
 
 vector<BLEdevice*> devices;
@@ -104,7 +106,7 @@ void BTConfig_init() {
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
 }
 
-// Watchdog, if there was no change of BLE scanCount, restart ESP
+// Watchdog, if there was no change of BLE scanCount, restart BT
 void btScanWDG() {
   static unsigned long previousBtScanCount = 0;
   static unsigned long lastBtScan = 0;
@@ -114,7 +116,8 @@ void btScanWDG() {
       scanCount != 0 &&
       (now - lastBtScan > BTConfig.BLEinterval)) {
     Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
-    ESPRestart(4);
+    stopProcessing();
+    startProcessing();
   } else {
     previousBtScanCount = scanCount;
     lastBtScan = now;
@@ -151,6 +154,7 @@ String stateBTMeasures(bool start) {
   jo["btqsnd"] = btQueueLengthCount;
   jo["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
   jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
+  jo["blestarts"] = BLEstarts;
 
   if (start) {
     Log.notice(F("BT sys: "));
@@ -830,8 +834,13 @@ void stopProcessing() {
   vTaskSuspend(xProcBLETaskHandle);
   vTaskDelete(xProcBLETaskHandle);
   if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
-  esp_bt_mem_release(ESP_BT_MODE_BTDM);
   Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
+}
+
+void startProcessing() {
+  ProcessLock = false;
+  setupBTTasksAndBLE();
+  Log.notice(F("BLE gateway started, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
@@ -928,6 +937,32 @@ void changelowpowermode(int newLowPowerMode) {
 #  endif
 }
 
+void setupBTTasksAndBLE() {
+  BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
+  BLEDevice::init("");
+
+  xTaskCreatePinnedToCore(
+      procBLETask, /* Function to implement the task */
+      "procBLETask", /* Name of the task */
+      5120, /* Stack size in bytes */
+      NULL, /* Task input parameter */
+      2, /* Priority of the task (set higher than core task) */
+      &xProcBLETaskHandle, /* Task handle. */
+      1); /* Core where the task should run */
+
+  // we setup a task with priority one to avoid conflict with other gateways
+  xTaskCreatePinnedToCore(
+      coreTask, /* Function to implement the task */
+      "coreTask", /* Name of the task */
+      5120, /* Stack size in bytes */
+      NULL, /* Task input parameter */
+      1, /* Priority of the task */
+      &xCoreTaskHandle, /* Task handle. */
+      taskCore); /* Core where the task should run */
+
+  BLEstarts++;
+}
+
 void setupBT() {
   BTConfig_init();
   BTConfig_load();
@@ -954,27 +989,8 @@ void setupBT() {
 
   BLEQueue = xQueueCreate(32, sizeof(NimBLEAdvertisedDevice*));
 
-  BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
-  BLEDevice::init("");
+  setupBTTasksAndBLE();
 
-  xTaskCreatePinnedToCore(
-      procBLETask, /* Function to implement the task */
-      "procBLETask", /* Name of the task */
-      5120, /* Stack size in bytes */
-      NULL, /* Task input parameter */
-      2, /* Priority of the task (set higher than core task) */
-      &xProcBLETaskHandle, /* Task handle. */
-      1); /* Core where the task should run */
-
-  // we setup a task with priority one to avoid conflict with other gateways
-  xTaskCreatePinnedToCore(
-      coreTask, /* Function to implement the task */
-      "coreTask", /* Name of the task */
-      5120, /* Stack size in bytes */
-      NULL, /* Task input parameter */
-      1, /* Priority of the task */
-      &xCoreTaskHandle, /* Task handle. */
-      taskCore); /* Core where the task should run */
   Log.trace(F("ZgatewayBT multicore ESP32 setup done " CR));
 }
 
