@@ -513,7 +513,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #    define InfoIndicatorOFF()
 #  endif
 #  define CriticalIndicatorON() // Not used
-#  define CriticalIndicatorON() // Not used
 #  define PowerIndicatorON()    // Not used
 #  define PowerIndicatorOFF()   // Not used
 #  define SetupIndicators()     // Not used
@@ -628,9 +627,9 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Used for relay power indicator
 // For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
 // This enable to have persistence of the indicator to inform the user
-#    define CriticalIndicatorON()                             \
-      leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
-      leds.show();
+#    define CriticalIndicatorON()                              \
+      leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
+      leds2.show();
 #    define PowerIndicatorON()                             \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
       leds2.show();
