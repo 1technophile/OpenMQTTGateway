@@ -109,21 +109,21 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
   sensor["automation_type"] = "trigger"; // The type of automation, must be ‘trigger’.
 
   //SET TYPE
-  if (type[0] != 0) {
+  if (type && type[0] != 0) {
     sensor["type"] = type;
   } else {
     sensor["type"] = "button_short_press";
   }
 
   //SET SUBTYPE
-  if (subtype[0] != 0) {
+  if (subtype && subtype[0] != 0) {
     sensor["subtype"] = subtype;
   } else {
     sensor["subtype"] = "turn_on";
   }
 
   /* Set The topic */
-  if (topic[0]) {
+  if (topic && topic[0]) {
     char state_topic[mqtt_topic_max_size];
 
     strcpy(state_topic, mqtt_topic);
@@ -160,7 +160,7 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
     identifiers.add(deviceid);
 
     /*Set Connection */
-    if (device_id[0] != 0) {
+    if (device_id && device_id[0] != 0) {
       JsonArray connections = device.createNestedArray("connections");
       JsonArray connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
@@ -168,17 +168,17 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
     }
 
     //Set manufacturer
-    if (device_manufacturer[0]) {
+    if (device_manufacturer && device_manufacturer[0]) {
       device["manufacturer"] = device_manufacturer;
     }
 
     //Set name
-    if (device_name[0]) {
+    if (device_name && device_name[0]) {
       device["name"] = device_name;
     }
 
     // set The Model
-    if (device_model[0]) {
+    if (device_model && device_model[0]) {
       device["model"] = device_model;
     }
 
@@ -478,7 +478,7 @@ void pubMqttDiscovery() {
 
 #    ifdef ZdisplaySSD1306
   createDiscovery("switch", //set Type
-                  subjectSSD1306toMQTT, "SS1306: Control", (char*)getUniqueId("onstate", "").c_str(), //set state_topic,name,uniqueId
+                  subjectSSD1306toMQTT, "SSD1306: Control", (char*)getUniqueId("onstate", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.onstate }}", //set availability_topic,device_class,value_template,
                   "{\"onstate\":true,\"save\":true}", "{\"onstate\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
@@ -488,7 +488,7 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectSSD1306toMQTT, "SS1306: Display metric", (char*)getUniqueId("displaymetric", "").c_str(), //set state_topic,name,uniqueId
+                  subjectSSD1306toMQTT, "SSD1306: Display metric", (char*)getUniqueId("displaymetric", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.displaymetric }}", //set availability_topic,device_class,value_template,
                   "{\"displaymetric\":true,\"save\":true}", "{\"displaymetric\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay

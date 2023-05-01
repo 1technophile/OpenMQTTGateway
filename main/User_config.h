@@ -298,9 +298,19 @@ static_assert(MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT < (sizeof(certs_array) / siz
  * Deep-sleep for the ESP8266.
  * Set the wake pin.
  */
-#ifdef ESP8266_DEEP_SLEEP_IN_US
+#if defined(DEEP_SLEEP_IN_US) && defined(ESP8266)
 #  ifndef ESP8266_DEEP_SLEEP_WAKE_PIN
 #    define ESP8266_DEEP_SLEEP_WAKE_PIN D0
+#  endif
+#endif
+
+/**
+ * Ext wake for Deep-sleep for the ESP32.
+ * Set the wake pin state.
+ */
+#ifdef ESP32_EXT0_WAKE_PIN
+#  ifndef ESP32_EXT0_WAKE_PIN_STATE
+#    define ESP32_EXT0_WAKE_PIN_STATE 1
 #  endif
 #endif
 

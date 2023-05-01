@@ -163,9 +163,35 @@ build_flags =
   '-DGateway_Name="OpenMQTTGatewayDS1820Pool"'
   '-DZsensorDS1820="DS1820"'
   '-DDS1820_OWBUS_GPIO=D2'
-  '-DESP8266_DEEP_SLEEP_IN_US=120000000'
+  '-DDEEP_SLEEP_IN_US=120000000'
   '-DDS1820_RESOLUTION=12'
   '-DDS1820_INTERVAL_SEC=15UL'
 board_build.flash_mode = dout
 custom_description = Pool temp sensor gateway 
 custom_hardware = Pool temp sensor first version
+
+[env:wemos-d1-uno32-HM-RD-deepsleep-waterleak] ;C-37, YL-83, HM-RD leak detector powered by battery using ESP32 Deepsleep and EXT0 wake by sensor state
+platform = ${com.esp32_platform}
+board = wemos_d1_uno32
+board_build.partitions = min_spiffs.csv
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.wifimanager32}
+build_flags =
+  ${com-esp.build_flags}
+  '-UZmqttDiscovery'              ; disables MQTT Discovery
+;  '-UZmqttDiscovery="HADiscovery"'
+  '-DvalueAsATopic=true'          ; MQTT topic includes model and device
+  '-DGateway_Name="OpenMQTTGatewayMHRDWaterLeak"'
+  '-DZsensorC37_YL83_HMRD="HMRD"' ;Which type of sensor
+  '-DC37_YL83_HMRD_Digital_GPIO=GPIO_NUM_14'
+  '-DC37_YL83_HMRD_Analog_GPIO=GPIO_NUM_35'
+  '-DC37_YL83_HMRD_Analog_RESOLUTION=12'
+  '-DC37_YL83_HMRD_INTERVAL_SEC=3000'
+  '-DDEEP_SLEEP_IN_US=120000000' ; Deep sleep for a period of time to conserve battery
+  '-DESP32_EXT0_WAKE_PIN=C37_YL83_HMRD_Digital_GPIO' ;Should a leak be detected immediatly wake the ESP32 and report the problem
+  '-DESP32_EXT0_WAKE_PIN_STATE=0' ;Should water/leak be detected immediatly wake the ESP32 and report the problem, sensor state to look for wakeup
+board_build.flash_mode = dout
+custom_description = Water/Leak sensor gateway 
+custom_hardware = Water/Leak sensor first version
+monitor_speed = 115200

@@ -263,6 +263,24 @@ Generate your RF signals by pressing a remote button or other and you will see :
 
 ![](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
 
+#### Enabling RAW packet return support
+First, you need to compile a binary with `Pilight_rawEnabled true` uncommented in config_RF.h.
+
+Once the device is online, you can turn on the RAW packet return support with the following MQTT command:
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"rawEnabled":true}'`
+
+The returned JSON looks like this:
+`Client (null) received PUBLISH (d0, q0, r0, m0, 'home/OpenMQTTGateway/PilighttoMQTT', ... (176 bytes))
+{"format":"RAW","rawlen":106,"pulsesString":"c:0102010102020202020101010101010102020201020102020202020201010101010101010101010102010102010201020201010203;p:521,944,1924,3845@"}`
+
+The pulseString format is Pilight's native. For those who are not familiar with it:
+c:* are the indexes for the p:* array, which are the different pulse length. (e.g. pulse[0] = 521ms, pulse[1]=944ms..., so c[0], which is a '0' = 521ms pulse, c[1], which is a '1' =944ms pulse etc)
+
+After gathering all the packets you need, simply turn off the RAW packet support via MQTT:
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m '{"rawEnabled":false}'`
+
 ### Limit Protocols
 It is possible to limit the protocols that Pilight will respond to, this can help reduce noise from unwanted devices and in some cases disable conflicting protocols.
 
@@ -279,7 +297,7 @@ eg: `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols" -m
 
 #### Reset protocols
 To reset and listen to all protocols -
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols -m '{"reset": true}`'
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight/protocols -m '{"reset": true}'`
 
 #### Enabled protocols
 To list the enabled protocols on the Serial - 
