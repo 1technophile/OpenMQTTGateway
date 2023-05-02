@@ -46,7 +46,7 @@ void rn8209_loop(void* mode) {
     uint8_t ret = rn8209c_read_emu_status();
     uint8_t retc = 1;
     uint8_t retp = 1;
-    float previousPower = 0;
+    static float previousPower = 0;
     if (ret) {
       uint32_t temp_current = 0;
       uint32_t temp_power = 0;
@@ -82,7 +82,7 @@ void rn8209_loop(void* mode) {
          !PublishingTimerRN8209 ||
          (abs(power - previousPower) > previousPower * PreviousPowerThreshold) && abs(power - previousPower) > MinPowerThreshold) &&
         !ProcessLock) {
-      PublishingTimerRN8209 = millis();
+      PublishingTimerRN8209 = now;
       previousPower = power;
       if (data) pub(subjectRN8209toMQTT, data);
     }
