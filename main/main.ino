@@ -54,10 +54,10 @@ unsigned long timer_sys_checks = 0;
 #endif
 
 /**
- * Deep-sleep for the ESP8266 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
+ * Deep-sleep for the ESP8266 & ESP32 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
  * Set this to true in the sensor code after publishing the measurement.
  */
-#ifdef ESP8266_DEEP_SLEEP_IN_US
+#if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
 bool ready_to_sleep = false;
 #endif
 
@@ -146,6 +146,9 @@ struct GfSun2000Data {};
 #endif
 #ifdef ZsensorHCSR04
 #  include "config_HCSR04.h"
+#endif
+#ifdef ZsensorC37_YL83_HMRD
+#  include "config_C37_YL83_HMRD.h"
 #endif
 #ifdef ZsensorDHT
 #  include "config_DHT.h"
@@ -779,9 +782,32 @@ void setup() {
   Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
 
-#  ifdef ESP8266_DEEP_SLEEP_IN_US
+/**
+ * Deep-sleep for the ESP8266 & ESP32 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
+ * When woken set back to false.
+ */
+#  if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
+  ready_to_sleep = false;
+#  endif
+
+#  ifdef DEEP_SLEEP_IN_US
+#    ifdef ESP8266
   Log.notice(F("Setting wake pin for deep sleep." CR));
   pinMode(ESP8266_DEEP_SLEEP_WAKE_PIN, WAKEUP_PULLUP);
+#    endif
+#    ifdef ESP32
+  Log.notice(F("Setting duration for deep sleep." CR));
+  if (esp_sleep_enable_timer_wakeup(DEEP_SLEEP_IN_US) != ESP_OK) {
+    Log.error(F("Failed to set deep sleep duration." CR));
+  }
+#    endif
+#  endif
+
+#  ifdef ESP32_EXT0_WAKE_PIN
+  Log.notice(F("Setting EXT0 Wakeup for deep sleep." CR));
+  if (esp_sleep_enable_ext0_wakeup(ESP32_EXT0_WAKE_PIN, ESP32_EXT0_WAKE_PIN_STATE) != ESP_OK) {
+    Log.error(F("Failed to set deep sleep EXT0 Wakeup." CR));
+  }
 #  endif
 
 /*
@@ -992,6 +1018,10 @@ void setup() {
 #ifdef ZsensorADC
   setupADC();
   modules.add(ZsensorADC);
+#endif
+#ifdef ZsensorC37_YL83_HMRD
+  setupZsensorC37_YL83_HMRD();
+  modules.add(ZsensorC37_YL83_HMRD);
 #endif
 #ifdef ZsensorDHT
   setupDHT();
@@ -1684,6 +1714,9 @@ void loop() {
 #ifdef ZsensorTSL2561
       MeasureLightIntensityTSL2561();
 #endif
+#ifdef ZsensorC37_YL83_HMRD
+      MeasureC37_YL83_HMRDWater(); //Addon for leak detection with a C-37 YL-83 H-MRD
+#endif
 #ifdef ZsensorDHT
       MeasureTempAndHum(); //Addon to measure the temperature with a DHT
 #endif
@@ -1794,13 +1827,24 @@ void loop() {
 #endif
 
 /**
- * Deep-sleep for the ESP8266 - e.g. ESP8266_DEEP_SLEEP_IN_US 30000000 for 30 seconds.
+ * Deep-sleep for the ESP8266 & ESP32 - e.g. DEEP_SLEEP_IN_US 30000000 for 30 seconds / wake by ESP32_EXT0_WAKE_PIN.
  * Everything is off and (almost) all execution state is lost.
  */
-#ifdef ESP8266_DEEP_SLEEP_IN_US
+#if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
   if (ready_to_sleep) {
-    Log.notice(F("Entering deep sleep for : %l us." CR), ESP8266_DEEP_SLEEP_IN_US);
-    ESP.deepSleep(ESP8266_DEEP_SLEEP_IN_US);
+    delay(250); //Give some time for last MQTT messages to be sent
+#  ifdef DEEP_SLEEP_IN_US
+    Log.notice(F("Entering deep sleep for %l us." CR), DEEP_SLEEP_IN_US);
+#  endif
+#  ifdef ESP32_EXT0_WAKE_PIN
+    Log.notice(F("Entering deep sleep, EXT0 Wakeup by pin : %l." CR), ESP32_EXT0_WAKE_PIN);
+#  endif
+#  ifdef ESP8266
+    ESP.deepSleep(DEEP_SLEEP_IN_US);
+#  endif
+#  ifdef ESP32
+    esp_deep_sleep_start();
+#  endif
   }
 #endif
 }
@@ -1964,11 +2008,23 @@ String stateMeasures() {
   }
 #  endif
   SYSdata["modules"] = modules;
-  String output;
-  serializeJson(SYSdata, output);
 
   pub(subjectSYStoMQTT, SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, 99);
+
+  String _modules = jsonChar;
+
+  _modules.replace(",", ", ");
+  _modules.replace("[", "");
+  _modules.replace("]", "");
+  _modules.replace("\"", "'");
+
+  SYSdata["modules"] = _modules.c_str();
+  String output;
+  serializeJson(SYSdata, output);
   return output;
 }
 #endif

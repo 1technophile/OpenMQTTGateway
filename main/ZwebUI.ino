@@ -45,22 +45,6 @@ QueueHandle_t webUIQueue;
 
 WebServer server(80);
 
-boolean displayMetric = DISPLAY_METRIC;
-
-/*------------------- Local functions ----------------------*/
-
-void notFound();
-void handleRoot(); // "/"
-
-void handleCS(); // Console
-void handleCN(); // Configuration
-
-void handleIN(); // Information
-
-void handleRT(); // Restart
-void handleCL(); // Configure Cloud
-void handleTK(); // Return Cloud token
-
 /*------------------- External functions ----------------------*/
 
 esp_err_t nvs_flash_erase(void);
@@ -81,7 +65,11 @@ const uint16_t TOPSZ = 151; // Max number of characters in topic string
 uint8_t masterlog_level; // Master log level used to override set log level
 bool reset_web_log_flag = false; // Reset web console log
 
-#  ifdef ESP32
+const char* www_username = WEBUI_LOGIN;
+String authFailResponse = "Authentication Failed";
+bool webUISecure = WEBUI_AUTH;
+boolean displayMetric = DISPLAY_METRIC;
+
 /*********************************************************************************************\
  * ESP32 AutoMutex
 \*********************************************************************************************/
@@ -240,8 +228,6 @@ String HtmlEscape(const String unescaped) {
   }
   return result;
 }
-
-#  endif // ESP32
 
 void AddLogData(uint32_t loglevel, const char* log_data, const char* log_data_payload = nullptr, const char* log_data_retained = nullptr) {
   // Store log_data in buffer
@@ -414,6 +400,7 @@ bool exists(String path) {
  */
 void handleRoot() {
   WEBUI_TRACE_LOG(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -476,6 +463,7 @@ void handleRoot() {
  * 
  */
 void handleCN() {
+  WEBUI_SECURE
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
@@ -500,6 +488,54 @@ void handleCN() {
 }
 
 /**
+ * @brief /WU - Configuration Page
+ * T: handleWU: uri: /wu, args: 3, method: 1
+ * T: handleWU Arg: 0, dm=on - displayMetric
+ * T: handleWU Arg: 1, sw=on - webUISecure
+ * T: handleWU Arg: 2, save=
+ */
+void handleWU() {
+  WEBUI_TRACE_LOG(F("handleWU: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleWU Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    bool update = false;
+
+    if (displayMetric != server.hasArg("dm")) {
+      update = true;
+    }
+    displayMetric = server.hasArg("dm");
+
+    if (webUISecure != server.hasArg("sw")) {
+      update = true;
+    }
+    webUISecure = server.hasArg("sw");
+
+    if (server.hasArg("save") && update) {
+      WebUIConfig_save();
+    }
+  }
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure WebUI").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  int logLevel = Log.getLevel();
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (webUISecure ? "checked" : ""));
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+
+/**
  * @brief /WI - Configure WiFi Page
  * T: handleWI: uri: /wi, args: 4, method: 1
  * T: handleWI Arg: 0, s1=SSID
@@ -508,6 +544,7 @@ void handleCN() {
  */
 void handleWI() {
   WEBUI_TRACE_LOG(F("handleWI: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   String WiFiScan = "";
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
@@ -670,6 +707,7 @@ void handleWI() {
  */
 void handleMQ() {
   WEBUI_TRACE_LOG(F("handleMQ: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleMQ Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -708,10 +746,10 @@ void handleMQ() {
       }
 
       // SC - Secure Connection argument is only present when true
-      WEBtoSYS["mqtt_secure"] = server.hasArg("sc");
       if (mqtt_secure != server.hasArg("sc")) {
         update = true;
       }
+      WEBtoSYS["mqtt_secure"] = server.hasArg("sc");
 
       if (!update) {
         Log.warning(F("[WebUI] clearing" CR));
@@ -792,6 +830,7 @@ void handleMQ() {
  */
 void handleLO() {
   WEBUI_TRACE_LOG(F("handleLO: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleLO Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -825,6 +864,7 @@ void handleLO() {
  */
 void handleRT() {
   WEBUI_TRACE_LOG(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleRT Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -862,6 +902,7 @@ void handleRT() {
  */
 void handleCL() {
   WEBUI_TRACE_LOG(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleCL Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -915,6 +956,7 @@ void handleCL() {
  */
 void handleTK() {
   WEBUI_TRACE_LOG(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleTK Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -957,6 +999,7 @@ void handleTK() {
  */
 void handleIN() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleIN Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -984,7 +1027,7 @@ void handleIN() {
     informationDisplay += stateWebUIStatus();
 
     // stateBTMeasures causes a Stack canary watchpoint triggered (loopTask)
-    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
+    // WEBUI_TRACE_LOG(F("[WebUI] informationDisplay before %s" CR), informationDisplay.c_str());
 
     // TODO: need to fix display of modules array within SYStoMQTT
 
@@ -994,7 +1037,7 @@ void handleIN() {
     informationDisplay.replace("{\"", "");
     informationDisplay.replace("\"", "\\\"");
 
-    //  WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
+    // WEBUI_TRACE_LOG(F("[WebUI] informationDisplay after %s" CR), informationDisplay.c_str());
 
     if (informationDisplay.length() > WEB_TEMPLATE_BUFFER_MAX_SIZE) {
       Log.warning(F("[WebUI] informationDisplay content length ( %d ) greater than WEB_TEMPLATE_BUFFER_MAX_SIZE.  Display truncated" CR), informationDisplay.length());
@@ -1026,6 +1069,7 @@ void handleIN() {
  */
 void handleUP() {
   WEBUI_TRACE_LOG(F("handleUP: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleUP Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1077,7 +1121,8 @@ void handleUP() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, "https://github.com/1technophile/OpenMQTTGateway/releases/");
+  String systemUrl = RELEASE_LINK + latestVersion + "/" + ENV_NAME + "-firmware.bin";
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, upgrade_body, jsonChar, gateway_name, systemUrl.c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1109,6 +1154,7 @@ void sendRestartPage() {
  */
 void handleCS() {
   WEBUI_TRACE_LOG(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
   if (server.args() && server.hasArg("c2")) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleCS Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1141,7 +1187,9 @@ void handleCS() {
       if (cflg) {
         message += "\n";
       }
-      message += String(line, len - 1);
+      for (int x = 0; x < len - 1; x++) {
+        message += line[x];
+      }
       cflg = true;
     }
     message += "}1";
@@ -1152,7 +1200,7 @@ void handleCS() {
 
     char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configuration").c_str());
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Console").c_str());
     String response = String(buffer);
     response += String(console_script);
     response += String(script);
@@ -1170,6 +1218,7 @@ void handleCS() {
  * 
  */
 void notFound() {
+  WEBUI_SECURE
 #  ifdef WEBUI_DEVELOPMENT
   String path = server.uri();
   if (!exists(path)) {
@@ -1193,6 +1242,7 @@ void notFound() {
 void WebUISetup() {
   WEBUI_TRACE_LOG(F("ZwebUI setup start" CR));
 
+  WebUIConfig_load();
   webUIQueue = xQueueCreate(5, sizeof(webUIQueueMessage*));
 
 #  ifdef WEBUI_DEVELOPMENT
@@ -1219,6 +1269,7 @@ void WebUISetup() {
   server.on("/cn", handleCN); // Configuration
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
+  server.on("/wu", handleWU); // Configure WebUI
 #  if defined(ZgatewayCloud)
   server.on("/cl", handleCL); // Configure Cloud
   server.on("/tk", handleTK); // Store Device Token
@@ -1230,25 +1281,28 @@ void WebUISetup() {
 
   Log.begin(LOG_LEVEL, &WebLog);
 
+  Log.trace(F("[WebUI] displayMetric %T" CR), displayMetric);
+  Log.trace(F("[WebUI] WebUI Secure %T" CR), webUISecure);
   Log.notice(F("OpenMQTTGateway URL: http://%s/" CR), WiFi.localIP().toString().c_str());
   displayPrint("URL: http://", (char*)WiFi.localIP().toString().c_str());
   Log.notice(F("ZwebUI setup done" CR));
 }
 
-unsigned long nextWebUIPage = uptime() + DISPLAY_WEBUI_INTERVAL;
+unsigned long nextWebUIMessage = uptime() + DISPLAY_WEBUI_INTERVAL;
 
 void WebUILoop() {
   server.handleClient();
 
-  if (uptime() >= nextWebUIPage && uxQueueMessagesWaiting(webUIQueue)) {
+  if (uptime() >= nextWebUIMessage && uxQueueMessagesWaiting(webUIQueue)) {
     webUIQueueMessage* message = nullptr;
     xQueueReceive(webUIQueue, &message, portMAX_DELAY);
+    newSSD1306Message = true;
 
     if (currentWebUIMessage) {
       free(currentWebUIMessage);
     }
     currentWebUIMessage = message;
-    nextWebUIPage = uptime() + DISPLAY_WEBUI_INTERVAL;
+    nextWebUIMessage = uptime() + DISPLAY_WEBUI_INTERVAL;
   }
 }
 
@@ -1302,6 +1356,7 @@ String stateWebUIStatus() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject WebUIdata = jsonBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
+  WebUIdata["webUISecure"] = (bool)webUISecure;
   WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
   ;
 
@@ -1317,25 +1372,27 @@ bool WebUIConfig_save() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["displayMetric"] = (bool)displayMetric;
+  jo["webUISecure"] = (bool)webUISecure;
   // Save config into NVS (non-volatile storage)
   String conf = "";
   serializeJson(jsonBuffer, conf);
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putString("WebUIConfig", conf);
+  int result = preferences.putString("WebUIConfig", conf);
   preferences.end();
+  Log.trace(F("[WebUI] WebUIConfig_save: %s, result: %d" CR), conf.c_str(), result);
   return true;
 }
 
 void WebUIConfig_init() {
-  boolean displayMetric = DISPLAY_METRIC;
+  displayMetric = DISPLAY_METRIC;
+  webUISecure = WEBUI_AUTH;
   Log.notice(F("WebUI config initialised" CR));
 }
 
 bool WebUIConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  String exists = preferences.getString("WebUIConfig", "{}");
-  if (exists != "{}") {
+  if (preferences.isKey("WebUIConfig")) {
     auto error = deserializeJson(jsonBuffer, preferences.getString("WebUIConfig", "{}"));
     preferences.end();
     if (error) {
@@ -1348,6 +1405,7 @@ bool WebUIConfig_load() {
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
     displayMetric = jo["displayMetric"].as<bool>();
+    webUISecure = jo["webUISecure"].as<bool>();
     return true;
   } else {
     preferences.end();
@@ -1424,7 +1482,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
 #  ifdef ZgatewayRTL_433
         case webUIHash("RTL_433toMQTT"): {
-          if (strncmp(data["model"], "status", 6)) { // Does not contain "status"
+          if (data["model"] && strncmp(data["model"], "status", 6)) { // Does not contain "status"
             // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
 
             // Line 1
@@ -1433,13 +1491,17 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
             // Line 2
 
-            if (data["id"] || data["channel"]) {
+            String line2 = "";
+            if (data["id"]) {
               String id = data["id"];
-              String channel = data["channel"];
-              String line2 = "id: " + id + " channel: " + channel;
-              line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+              line2 += "id: " + id + " ";
             }
 
+            if (data["channel"]) {
+              String channel = data["channel"];
+              line2 += "channel: " + channel;
+            }
+            line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
             // Line 3
 
             String line3 = "";

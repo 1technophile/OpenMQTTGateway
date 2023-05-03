@@ -93,12 +93,13 @@ void loopSSD1306() {
   long enough since the last message and display not being used and a queue message waiting
   */
   if (jsonDisplay && displayState) {
-    if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && currentWebUIMessage) {
+    if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && currentWebUIMessage && newSSD1306Message) {
       if (!Oled.displayPage(currentWebUIMessage)) {
         Log.warning(F("[ssd1306] displayPage failed: %s" CR), currentWebUIMessage->title);
       }
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       logoDisplayed = false;
+      newSSD1306Message = false;
     }
   }
   /*
