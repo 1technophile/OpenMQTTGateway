@@ -812,7 +812,7 @@ void setup() {
 
 /*
  The 2 modules below are not connection dependent so start them before the connectivity functions
- Note that the ONOFF module need to start after the RN8209 so that the overCurrent task is launched after the setup of the sensor
+ Note that the ONOFF module need to start after the RN8209 so that the overCurrent function is launched after the setup of the sensor
 */
 #  ifdef ZsensorRN8209
   setupRN8209();
@@ -2227,7 +2227,7 @@ String latestVersion;
  * Only available for ESP32
  */
 bool checkForUpdates() {
-  Log.notice(F("Update check"));
+  Log.notice(F("Update check, free heap: %d"), ESP.getFreeHeap());
   HTTPClient http;
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
@@ -2260,6 +2260,7 @@ bool checkForUpdates() {
     Log.trace(F("No update file found on server" CR));
     return false;
   }
+  Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
 }
 #  elif ESP8266
 #    include <ESP8266httpUpdate.h>

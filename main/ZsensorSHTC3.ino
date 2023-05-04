@@ -13,16 +13,16 @@ void errorDecoder(SHTC3_Status_TypeDef message) // The errorDecoder function pri
 {
   switch (message) {
     case SHTC3_Status_Nominal:
-      Log.notice("Nominal");
+      Log.notice(F("Nominal"));
       break;
     case SHTC3_Status_Error:
-      Log.error("Error");
+      Log.error(F("Error"));
       break;
     case SHTC3_Status_CRC_Fail:
-      Log.error("CRC Fail");
+      Log.error(F("CRC Fail"));
       break;
     default:
-      Log.error("Unknown return code");
+      Log.error(F("Unknown return code"));
       break;
   }
 }

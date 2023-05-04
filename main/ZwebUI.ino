@@ -1056,6 +1056,7 @@ void handleIN() {
   }
 }
 
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
 /**
  * @brief /UP - Firmware Upgrade Page
  * 
@@ -1121,6 +1122,7 @@ void handleUP() {
   response += String(buffer);
   server.send(200, "text/html", response);
 }
+#  endif
 
 void sendRestartPage() {
   char jsonChar[100];
@@ -1257,8 +1259,9 @@ void WebUISetup() {
 
   server.on("/in", handleIN); // Information
   server.on("/cs", handleCS); // Console
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
   server.on("/up", handleUP); // Firmware Upgrade
-
+#  endif
   server.on("/cn", handleCN); // Configuration
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT

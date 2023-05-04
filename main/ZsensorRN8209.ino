@@ -33,54 +33,57 @@
 
 extern "C" bool init_8209c_interface();
 
-StaticJsonDocument<JSON_MSG_BUFFER> doc;
+float voltage = 0;
+float current = 0;
+float power = 0;
 
-// GetCurrent function for critical operation like overcurrent protection
-float getRN8209current() {
-  uint8_t ret = rn8209c_read_emu_status();
-  if (ret) {
-    int32_t current;
-    uint32_t temp_current = 0;
-    rn8209c_read_current(phase_A, &temp_current);
-    if (ret == 1) {
-      current = temp_current;
-    } else {
-      current = (int32_t)temp_current * (-1);
-    }
-    return current / 10000.0;
-  }
-  return 0;
-}
+unsigned long PublishingTimerRN8209 = 0;
 
 void rn8209_loop(void* mode) {
-  uint32_t voltage;
-  int32_t current;
-  int32_t power;
-
   while (1) {
-    if (!ProcessLock) {
-      uint8_t retv = rn8209c_read_voltage(&voltage);
-      uint8_t ret = rn8209c_read_emu_status();
-      uint8_t retc = 1;
-      uint8_t retp = 1;
-      if (ret) {
-        uint32_t temp_current = 0;
-        uint32_t temp_power = 0;
-        retc = rn8209c_read_current(phase_A, &temp_current);
-        retp = rn8209c_read_power(phase_A, &temp_power);
-        if (ret == 1) {
-          current = temp_current;
-          power = temp_power;
-        } else {
-          current = (int32_t)temp_current * (-1);
-          power = (int32_t)temp_power * (-1);
-        }
+    uint32_t temp_voltage = 0;
+    uint8_t retv = rn8209c_read_voltage(&temp_voltage);
+    uint8_t ret = rn8209c_read_emu_status();
+    uint8_t retc = 1;
+    uint8_t retp = 1;
+    static float previousPower = 0;
+    if (ret) {
+      uint32_t temp_current = 0;
+      uint32_t temp_power = 0;
+      retc = rn8209c_read_current(phase_A, &temp_current);
+      retp = rn8209c_read_power(phase_A, &temp_power);
+      if (ret == 1) {
+        current = temp_current;
+        power = temp_power;
+      } else {
+        current = (int32_t)temp_current * (-1);
+        power = (int32_t)temp_power * (-1);
       }
-
-      JsonObject data = doc.to<JsonObject>();
-      if (retv == 0) data["volt"] = (float)voltage / 1000.0;
-      if (retc == 0) data["current"] = (float)current / 10000.0;
-      if (retp == 0) data["power"] = (float)power / 10000.0;
+      if (retc == 0) {
+        current = current / 10000.0;
+        overLimitCurrent(current);
+      }
+    }
+    StaticJsonDocument<128> doc;
+    JsonObject data = doc.to<JsonObject>();
+    if (retc == 0) {
+      data["current"] = current;
+    }
+    if (retv == 0) {
+      voltage = (float)temp_voltage / 1000.0;
+      data["volt"] = voltage;
+    }
+    if (retp == 0) {
+      power = power / 10000.0;
+      data["power"] = power;
+    }
+    unsigned long now = millis();
+    if ((now > (PublishingTimerRN8209 + TimeBetweenPublishingRN8209) ||
+         !PublishingTimerRN8209 ||
+         (abs(power - previousPower) > previousPower * PreviousPowerThreshold) && abs(power - previousPower) > MinPowerThreshold) &&
+        !ProcessLock) {
+      PublishingTimerRN8209 = now;
+      previousPower = power;
       if (data) pub(subjectRN8209toMQTT, data);
     }
     delay(TimeBetweenReadingRN8209);
@@ -94,7 +97,7 @@ void setupRN8209() {
   cal.EC = RN8209_EC;
   set_user_param(cal);
   init_8209c_interface();
-  xTaskCreate(rn8209_loop, "rn8209_loop", RN8209_TASK_STACK_SIZE, NULL, RN8209_TASK_PRIO, NULL);
+  xTaskCreate(rn8209_loop, "rn8209_loop", RN8209_TASK_STACK_SIZE, NULL, 10, NULL);
   Log.trace(F("ZsensorRN8209 setup done " CR));
 }
 
