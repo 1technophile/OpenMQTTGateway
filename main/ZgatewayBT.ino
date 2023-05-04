@@ -154,6 +154,7 @@ String stateBTMeasures(bool start) {
   jo["btqsnd"] = btQueueLengthCount;
   jo["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
   jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
+  jo["blecoretaskstack"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
   jo["blestarts"] = BLEstarts;
 
   if (start) {

@@ -1951,11 +1951,14 @@ String stateMeasures() {
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
+  uint32_t minFreeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
+  minFreeMem = ESP.getMinFreeHeap();
+  SYSdata["minfreemem"] = minFreeMem;
 #      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
 #      endif
