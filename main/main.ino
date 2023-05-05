@@ -769,9 +769,13 @@ void setup() {
   Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
 #    endif
 #  elif ESP32
+#    if DEFAULT_LOW_POWER_MODE != -1 //  don't check preferences value if low power mode is not activated
   preferences.begin(Gateway_Short_Name, false);
-  lowpowermode = preferences.getUInt("lowpowermode", DEFAULT_LOW_POWER_MODE);
-  preferences.end();
+  if (preferences.isKey("lowpowermode")) {
+    lowpowermode = preferences.getUInt("lowpowermode", DEFAULT_LOW_POWER_MODE);
+    preferences.end();
+  }
+#    endif
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
 #    endif
@@ -779,8 +783,9 @@ void setup() {
   setupSSD1306();
   modules.add(ZdisplaySSD1306);
 #    endif
-  Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 #  endif
+
+  Log.notice(F("OpenMQTTGateway Version: " OMG_VERSION CR));
 
 /**
  * Deep-sleep for the ESP8266 & ESP32 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
