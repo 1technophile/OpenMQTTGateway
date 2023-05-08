@@ -102,6 +102,7 @@ void BTConfig_init() {
   BTConfig.pubBeaconUuidForTopic = useBeaconUuidForTopic;
   BTConfig.ignoreWBlist = false;
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
+  BTConfig.movingTimer = MovingTimer;
 }
 
 // Watchdog, if there was no change of BLE scanCount, restart ESP
@@ -146,6 +147,7 @@ String stateBTMeasures(bool start) {
   jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
   jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
   jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
+  jo["movingtimer"] = BTConfig.movingTimer;
   jo["btqblck"] = btQueueBlocked;
   jo["btqsum"] = btQueueLengthSum;
   jo["btqsnd"] = btQueueLengthCount;
@@ -222,6 +224,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   Config_update(BTdata, "presenceUseBeaconUuid", BTConfig.presenceUseBeaconUuid);
   // Timer to trigger a device state as offline if not seen
   Config_update(BTdata, "presenceawaytimer", BTConfig.presenceAwayTimer);
+  // Timer to trigger a device state as offline if not seen
+  Config_update(BTdata, "movingtimer", BTConfig.movingTimer);
   // MinRSSI set
   Config_update(BTdata, "minrssi", BTConfig.minRssi);
   // Send undecoded device data
@@ -272,6 +276,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
     jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
     jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
+    jo["movingtimer"] = BTConfig.movingTimer;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -485,15 +490,28 @@ void updateDevicesStatus() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     unsigned long now = millis();
-    if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-        p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) { // We apply the offline status only for tracking device, can be extended further to all the devices
+    // Device tracker devices
+    if (BTConfig.presenceEnable && (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2)) { // We apply the offline status only for tracking device, can be extended further to all the devices
       if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.presenceAwayTimer) && (now > BTConfig.presenceAwayTimer)) &&
+          (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(p)) && !isBlack(p)))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)) {
+        JsonObject BLEdata = getBTJsonObject();
+        BLEdata["id"] = p->macAdr;
+        BLEdata["state"] = "offline";
+        pubBT(BLEdata);
+        // We set the lastUpdate to 0 to avoid replublishing the offline state
+        p->lastUpdate = 0;
+      }
+    }
+    // Moving detection devices (devices with an accelerometer)
+    if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
+      if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.movingTimer) && (now > BTConfig.movingTimer)) &&
           (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(p)) && !isBlack(p)))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)) {
         JsonObject BLEdata = getBTJsonObject();
         BLEdata["id"] = p->macAdr;
@@ -717,8 +735,7 @@ void procBLETask(void* pvParameters) {
       } else {
         Log.trace(F("Filtered MAC device" CR));
       }
-      if (BTConfig.presenceEnable)
-        updateDevicesStatus();
+      updateDevicesStatus();
     }
     delete (advertisedDevice);
   }
@@ -941,6 +958,7 @@ void setupBT() {
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
   Log.notice(F("Presence Away Timer: %d" CR), BTConfig.presenceAwayTimer);
+  Log.notice(F("Moving Timer: %d" CR), BTConfig.movingTimer);
 
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
   atomic_init(&jsonBTBufferQueueNext, 0); // in theory, we don't need this
@@ -1036,6 +1054,17 @@ void launchBTDiscovery(bool overrideDiscovery) {
                           discovery_topic.c_str(), tracker_name.c_str(), tracker_id.c_str(),
                           will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
                           "", "", "",
+                          0, "", "", false, "",
+                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                          stateClassNone);
+        }
+        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
+          String sensor_name = String(model_id.c_str()) + "-moving";
+          String sensor_id = macWOdots + "-moving";
+          createDiscovery("binary_sensor",
+                          discovery_topic.c_str(), sensor_name.c_str(), sensor_id.c_str(),
+                          will_Topic, "moving", "{% if value_json.get('accx') -%}on{%- else -%}off{%- endif %}",
+                          "on", "off", "",
                           0, "", "", false, "",
                           model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                           stateClassNone);

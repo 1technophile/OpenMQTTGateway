@@ -94,7 +94,10 @@ extern int btQueueLengthCount;
 #  define TimeBtwConnect 3600000 //define default time between BLE connection attempt (not used for immediate actions); in milliseconds
 #endif
 #ifndef PresenceAwayTimer
-#  define PresenceAwayTimer 120000 //define the time between Offline Status update for the sensors
+#  define PresenceAwayTimer 120000 //define the time between Offline Status update for the tracker sensors
+#endif
+#ifndef MovingTimer
+#  define MovingTimer 60000 //define the time between Offline Status update for the moving sensors with an accelerometer
 #endif
 
 #ifndef BLEScanDuplicateCacheSize
@@ -168,6 +171,7 @@ struct BTConfig_s {
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
   bool ignoreWBlist; // Disable Whitelist & Blacklist
   unsigned long presenceAwayTimer; //Timer that trigger a tracker state as offline if not seen
+  unsigned long movingTimer; //Timer that trigger a moving sensor state as offline if not seen
 };
 
 // Global struct to store live BT configuration data
