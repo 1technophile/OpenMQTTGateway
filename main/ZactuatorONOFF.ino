@@ -51,6 +51,9 @@ void ONOFFConfig_fromJson(JsonObject& ONOFFdata) {
       preferences.end();
       Log.notice(F("ONOFF config erased" CR));
       return; // Erase prevails on save, so skipping save
+    } else {
+      Log.notice(F("ONOFF config not found" CR));
+      preferences.end();
     }
   }
   if (ONOFFdata.containsKey("save") && ONOFFdata["save"].as<bool>()) {
@@ -85,6 +88,9 @@ void ONOFFConfig_load() {
     JsonObject jo = jsonBuffer.as<JsonObject>();
     ONOFFConfig_fromJson(jo);
     Log.notice(F("ONOFF config loaded" CR));
+  } else {
+    preferences.end();
+    Log.notice(F("ONOFF config not found" CR));
   }
 }
 #  else

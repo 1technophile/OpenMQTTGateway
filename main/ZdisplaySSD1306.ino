@@ -179,8 +179,8 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       preferences.begin(Gateway_Short_Name, false);
       if (preferences.isKey("SSD1306Config")) {
         success = preferences.remove("SSD1306Config");
-        preferences.end();
       }
+      preferences.end();
       if (success) {
         Log.notice(F("SSD1306 config erased" CR));
       }
