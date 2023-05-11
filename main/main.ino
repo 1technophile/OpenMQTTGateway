@@ -339,6 +339,14 @@ long value_from_hex_data(const char* service_data, int offset, int data_length, 
 }
 
 /*
+ rounds a number to 2 decimal places
+ example: round(3.14159) -> 3.14
+*/
+double round2(double value) {
+  return (int)(value * 100 + 0.5) / 100.0;
+}
+
+/*
 From an hexa char array ("A220EE...") to a byte array (half the size)
  */
 bool _hexToRaw(const char* in, byte* out, int rawSize) {
