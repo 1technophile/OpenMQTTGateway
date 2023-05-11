@@ -256,6 +256,9 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
       preferences.end();
       Log.notice(F("BT config erased" CR));
       return; // Erase prevails on save, so skipping save
+    } else {
+      preferences.end();
+      Log.notice(F("BT config not found" CR));
     }
   }
 
@@ -310,6 +313,9 @@ void BTConfig_load() {
     JsonObject jo = jsonBuffer.as<JsonObject>();
     BTConfig_fromJson(jo, true); // Never send MQTT message with config
     Log.notice(F("BT config loaded" CR));
+  } else {
+    preferences.end();
+    Log.notice(F("BT config not found" CR));
   }
 }
 
