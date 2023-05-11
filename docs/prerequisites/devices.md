@@ -25,6 +25,8 @@ Added to that it retrieves the measures from the devices below. By default the d
 | BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
 | BlueCharm|BC08|acceleration x/y/z-axis/voltage/temperature|
+| BlueCharm|BC04P|acceleration x/y/z-axis/voltage/temperature|
+| BlueCharm|BC021|acceleration x/y/z-axis/voltage/temperature|
 | BlueMaestro|TempoDisc 1 in 1|temperature/battery|
 | BlueMaestro|TempoDisc 3 in 1|temperature/humidity/dew point/battery|
 | BlueMaestro|TempoDisc 4 in 1|temperature/humidity/pressure/battery|
