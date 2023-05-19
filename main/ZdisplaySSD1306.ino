@@ -207,9 +207,9 @@ void SSD1306Config_save() {
   String conf = "";
   serializeJson(jsonBuffer, conf);
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putString("SSD1306Config", conf);
+  int result = preferences.putString("SSD1306Config", conf);
   preferences.end();
-  Log.notice(F("SSD1306 config saved" CR));
+  Log.notice(F("SSD1306 Config_save: %s, result: %d" CR), conf.c_str(), result);
 }
 
 void SSD1306Config_init() {
