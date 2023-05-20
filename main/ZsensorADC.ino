@@ -34,6 +34,8 @@
 ADC_MODE(ADC_TOUT);
 #  endif
 
+static int persistedadc = -1024; // so that the first reading will always be published
+
 //Time used to wait for an interval before resending adc value
 unsigned long timeadc = 0;
 unsigned long timeadcpub = 0;
@@ -42,13 +44,12 @@ void setupADC() {
 }
 
 void MeasureADC() {
-  if (millis() > (timeadc + TimeBetweenReadingADC)) { //retrieving value of temperature and humidity of the box from DHT every xUL
+  if (millis() - timeadc > TimeBetweenReadingADC) { //retrieving value of temperature and humidity of the box from DHT every xUL
 #  if defined(ESP8266)
     yield();
     analogRead(ADC_GPIO); //the reliability of the readings can be significantly improved by discarding an initial reading and then averaging the results
 #  endif
     timeadc = millis();
-    static int persistedadc;
     int val = analogRead(ADC_GPIO);
     int sum_val = val;
     if (NumberOfReadingsADC > 1) { // add extra measurement for accuracy
@@ -60,7 +61,7 @@ void MeasureADC() {
     if (isnan(val)) {
       Log.error(F("Failed to read from ADC !" CR));
     } else {
-      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || (MinTimeInSecBetweenPublishingADC > 0 && millis() > (timeadcpub + (MinTimeInSecBetweenPublishingADC * 1000UL)))) {
+      if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || (MinTimeInSecBetweenPublishingADC > 0 && millis() - timeadcpub > (MinTimeInSecBetweenPublishingADC * 1000UL))) {
         timeadcpub = millis();
         Log.trace(F("Creating ADC buffer" CR));
         StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
