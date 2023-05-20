@@ -37,10 +37,12 @@ extern void MQTTtoFASTLED(char*, JsonObject&);
 #define subjectGTWFASTLEDtoMQTT           "/FASTLEDtoMQTT" //same color on all LEDs in #RRGGBB
 
 // How many leds in your strip?
+#ifndef FASTLED_NUM_LEDS
 #define FASTLED_NUM_LEDS 16
+#endif
 
 // Uncomment/edit one of the following lines for your LEDs arrangement.
-
+#ifndef FASTLED_TYPE
 //#define FASTLED_TYPE TM1803
 //#define FASTLED_TYPE TM1804
 //#define FASTLED_TYPE TM1809
@@ -66,6 +68,7 @@ extern void MQTTtoFASTLED(char*, JsonObject&);
 //#define FASTLED_TYPE P9813, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
 //#define FASTLED_TYPE APA102, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
 //#define FASTLED_TYPE DOTSTAR, DATA_GPIO, CLOCK_GPIO, RGB>(leds, NUM_LEDS);
+#endif
 
 // For led chips like Neopixels, which have a data line, ground, and power, you just
 // need to define DATA_GPIO.  For led chipsets that are SPI based (four wires - data, clock,
@@ -80,11 +83,19 @@ extern void MQTTtoFASTLED(char*, JsonObject&);
 #  define FASTLED_DATA_GPIO D2 // only D2 works by me
 //#define FASTLED_CLOCK_GPIO 13
 #elif ESP32
+#ifndef FASTLED_DATA_GPIO
 #  define FASTLED_DATA_GPIO  16
+#endif
+#ifndef FASTLED_CLOCK_GPIO
 #  define FASTLED_CLOCK_GPIO 13
+#endif
 #else
+#ifndef FASTLED_DATA_GPIO
 #  define FASTLED_DATA_GPIO  10
+#endif
+#ifndef FASTLED_CLOCK_GPIO
 #  define FASTLED_CLOCK_GPIO 13
+#endif
 #endif
 
 #endif
