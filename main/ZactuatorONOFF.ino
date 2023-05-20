@@ -47,9 +47,9 @@ void ONOFFConfig_fromJson(JsonObject& ONOFFdata) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("ONOFFConfig")) {
-      preferences.remove("ONOFFConfig");
+      int result = preferences.remove("ONOFFConfig");
+      Log.notice(F("ONOFF config erase result: %d" CR), result);
       preferences.end();
-      Log.notice(F("ONOFF config erased" CR));
       return; // Erase prevails on save, so skipping save
     } else {
       Log.notice(F("ONOFF config not found" CR));
@@ -65,9 +65,9 @@ void ONOFFConfig_fromJson(JsonObject& ONOFFdata) {
     String conf = "";
     serializeJson(jsonBuffer, conf);
     preferences.begin(Gateway_Short_Name, false);
-    preferences.putString("ONOFFConfig", conf);
+    int result = preferences.putString("ONOFFConfig", conf);
     preferences.end();
-    Log.notice(F("ONOFF config saved" CR));
+    Log.notice(F("ONOFF Config_save: %s, result: %d" CR), conf.c_str(), result);
   }
 }
 
