@@ -56,3 +56,18 @@ You will receive every `TimeBetweenPublishingRN8209` (set into config_RN8209.h) 
 One reading is done every 0.5s.
 
 `home/OpenMQTTGateway/RN8209toMQTT {"volt":120.345,"current":7.9264,"power":954.6132}`
+
+### Touch
+This sensor is only for ESP32, using the touch sensing peripheral. Up to 10 touch buttons can be defined, linked to 10 ESP32 pins that support touch sensing (GPIOs 0, 2, 4, 12, 13, 14, 15, 27, 32, 33) by defining TOUCH_GPIO, or TOUCH_GPIO_0 through TOUCH_GPIO_9. For example:
+
+`#define TOUCH_GPIO 4`
+
+The default is one sensor on GPIO 4.
+
+When a touch is detected, a message is sent indicating the number of the button ("id"), the fact that a touch button was pressed ("on" is 1) and the value measured by the esp32 ("value").
+
+`home/OpenMQTTGateway/touchToMQTT {"id":0,"on":1,"value":10}`
+
+When the button stops being touched (e.g., the finger is lifted off the button), a message is sent indicating that the button was released ("on" is 0), as well as the duration of the button press in milliseconds ("onDuration").
+
+`home/OpenMQTTGateway/touchToMQTT {"id":0,"on":0,"value":70,"onDuration":320}`
