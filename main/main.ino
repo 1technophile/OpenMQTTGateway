@@ -773,8 +773,10 @@ void setup() {
   preferences.begin(Gateway_Short_Name, false);
   if (preferences.isKey("lowpowermode")) {
     lowpowermode = preferences.getUInt("lowpowermode", DEFAULT_LOW_POWER_MODE);
-    preferences.end();
+  } else {
+    Log.notice(F("No lowpowermode config to load" CR));
   }
+  preferences.end();
 #    endif
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();

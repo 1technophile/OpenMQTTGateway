@@ -252,9 +252,9 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("BTConfig")) {
-      preferences.remove("BTConfig");
+      int result = preferences.remove("BTConfig");
+      Log.notice(F("BT config erase result: %d" CR), result);
       preferences.end();
-      Log.notice(F("BT config erased" CR));
       return; // Erase prevails on save, so skipping save
     } else {
       preferences.end();
@@ -289,9 +289,9 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     String conf = "";
     serializeJson(jsonBuffer, conf);
     preferences.begin(Gateway_Short_Name, false);
-    preferences.putString("BTConfig", conf);
+    int result = preferences.putString("BTConfig", conf);
     preferences.end();
-    Log.notice(F("BT config saved" CR));
+    Log.notice(F("BT config save: %s, result: %d" CR), conf.c_str(), result);
   }
 }
 
@@ -954,7 +954,8 @@ void changelowpowermode(int newLowPowerMode) {
 #    endif
   lowpowermode = newLowPowerMode;
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putUInt("lowpowermode", lowpowermode);
+  int result = preferences.putUInt("lowpowermode", lowpowermode);
+  Log.notice(F("BT LPM config save result: %d" CR), result);
   preferences.end();
   // Publish the states to update the controller switch status
   stateMeasures();
