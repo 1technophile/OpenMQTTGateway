@@ -168,6 +168,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorGPIOKeyCode
 #  include "config_GPIOKeyCode.h"
 #endif
+#ifdef ZsensorTouch
+#  include "config_Touch.h"
+#endif
 #ifdef ZmqttDiscovery
 #  include "config_mqttDiscovery.h"
 #endif
@@ -1026,6 +1029,10 @@ void setup() {
   setupADC();
   modules.add(ZsensorADC);
 #endif
+#ifdef ZsensorTouch
+  setupTouch();
+  modules.add(ZsensorTouch);
+#endif
 #ifdef ZsensorC37_YL83_HMRD
   setupZsensorC37_YL83_HMRD();
   modules.add(ZsensorC37_YL83_HMRD);
@@ -1743,6 +1750,9 @@ void loop() {
 #endif
 #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
+#endif
+#ifdef ZsensorTouch
+      MeasureTouch();
 #endif
 #ifdef ZgatewayLORA
       LORAtoMQTT();
