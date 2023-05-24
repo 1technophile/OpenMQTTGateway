@@ -764,7 +764,7 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  if (millis() > (timeBetweenActive + BTConfig.intervalActiveScan)) {
+  if (millis() > (timeBetweenActive + BTConfig.intervalActiveScan) || BTConfig.intervalActiveScan == BTConfig.BLEinterval) {
     pBLEScan->setActiveScan(true);
     timeBetweenActive = millis();
   } else {
