@@ -192,6 +192,20 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
   pub_custom_topic((char*)topic_to_publish.c_str(), sensor, true);
 }
 
+/*
+  * Remove a substring p from a given string s
+*/
+std::string remove_substring(std::string s, const std::string& p) {
+  std::string::size_type n = p.length();
+
+  for (std::string::size_type i = s.find(p);
+       i != std::string::npos;
+       i = s.find(p))
+    s.erase(i, n);
+
+  return s;
+}
+
 /**
  * @brief Generate message and publish it on an MQTT discovery explorer. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
  * 

@@ -339,20 +339,6 @@ long value_from_hex_data(const char* service_data, int offset, int data_length, 
 }
 
 /*
-  * Remove a substring p from a given string s
-*/
-std::string remove_substring(std::string s, const std::string& p) {
-  std::string::size_type n = p.length();
-
-  for (std::string::size_type i = s.find(p);
-       i != std::string::npos;
-       i = s.find(p))
-    s.erase(i, n);
-
-  return s;
-}
-
-/*
 From an hexa char array ("A220EE...") to a byte array (half the size)
  */
 bool _hexToRaw(const char* in, byte* out, int rawSize) {
