@@ -7,9 +7,6 @@ So as to use the autodiscovery function you need to have:
 * The Jinga transformation addon installed
 * The Json transformation addon installed
 
-You need to set `OpenHABAutoDiscovery` to true into `config_mqttDiscovery.h`
-`#define OpenHABDiscovery true`
-
 ::: tip
 If you are connecting to BLE devices it is highly recommended to set `filterConnectable` to `true` in [BT configuration](../use/ble.md#advanced-filter-out-connectable-devices). Otherwise you may encounter incomplete data.
 :::
