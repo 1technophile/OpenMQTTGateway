@@ -280,8 +280,13 @@ void createDiscovery(const char* sensor_type,
   sensor["uniq_id"] = unique_id; //unique_id
   if (retainCmd)
     sensor["retain"] = retainCmd; // Retain command
-  if (value_template[0])
-    sensor["val_tpl"] = value_template; //value_template
+  if (value_template[0]) {
+    if (strstr(value_template, " | is_defined") != NULL && OpenHABDisc) {
+      sensor["val_tpl"] = remove_substring(value_template, " | is_defined"); //OpenHAB compatible HA auto discovery
+    } else {
+      sensor["val_tpl"] = value_template; //HA Auto discovery
+    }
+  }
   if (payload_on[0]) {
     if (strcmp(sensor_type, "button") == 0) {
       sensor["pl_prs"] = payload_on; // payload_press for a button press
