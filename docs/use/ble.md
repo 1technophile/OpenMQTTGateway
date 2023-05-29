@@ -52,6 +52,23 @@ Note that you can find apps to simulate beacons and do some tests like [Beacon s
 
 iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
 
+## Receiving signals from BLE devices with accelerometers for movement detection
+The gateway is designed to detect BLE trackers from BlueCharm and automatically create a binary sensor entity in accordance with the Home Assistant discovery convention, provided that auto discovery is enabled.
+
+The binary sensor entity's state will be set to on or off based on whether the BLE beacon's x-axis acceleration value is detected during the time period defined by the movingtimer parameter.
+
+By default, the movingtimer parameter is set to 60 seconds (60,000 ms). To modify this value, use the following command:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"movingtimer":66000}'`
+
+To ensure proper functionality, configure the beacon using the KBeacon or KBeaconPro app (depending on your specific sensor) with the following settings:
+* In the General tab, set the Trigger Command to "motion".
+* In the Slot tab, enable advertisement with the Beacon Type set to "KSensor", the Trigger Only Advertisement option set to "YES", and the Sensor Axis set to "ON".
+
+![](../img/KBeacon-app-configuration-moving.jpg)
+
+![](../img/KBeacon-app-configuration-moving2.jpg)
+
 ## Setting a white or black list
 A black list is a list of MAC addresses that will never be published by OMG
 to set black list
@@ -318,7 +335,7 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 
 SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
-::: tip 
+::: tip
 If the SwitchBot mode is changed the ESP32 must be restarted. 
 :::
 

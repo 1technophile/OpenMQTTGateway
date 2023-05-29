@@ -168,6 +168,9 @@ struct GfSun2000Data {};
 #ifdef ZsensorGPIOKeyCode
 #  include "config_GPIOKeyCode.h"
 #endif
+#ifdef ZsensorTouch
+#  include "config_Touch.h"
+#endif
 #ifdef ZmqttDiscovery
 #  include "config_mqttDiscovery.h"
 #endif
@@ -773,8 +776,10 @@ void setup() {
   preferences.begin(Gateway_Short_Name, false);
   if (preferences.isKey("lowpowermode")) {
     lowpowermode = preferences.getUInt("lowpowermode", DEFAULT_LOW_POWER_MODE);
-    preferences.end();
+  } else {
+    Log.notice(F("No lowpowermode config to load" CR));
   }
+  preferences.end();
 #    endif
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
@@ -1023,6 +1028,10 @@ void setup() {
 #ifdef ZsensorADC
   setupADC();
   modules.add(ZsensorADC);
+#endif
+#ifdef ZsensorTouch
+  setupTouch();
+  modules.add(ZsensorTouch);
 #endif
 #ifdef ZsensorC37_YL83_HMRD
   setupZsensorC37_YL83_HMRD();
@@ -1742,6 +1751,9 @@ void loop() {
 #ifdef ZsensorADC
       MeasureADC(); //Addon to measure the analog value of analog pin
 #endif
+#ifdef ZsensorTouch
+      MeasureTouch();
+#endif
 #ifdef ZgatewayLORA
       LORAtoMQTT();
 #endif
@@ -1956,11 +1968,14 @@ String stateMeasures() {
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
+  uint32_t minFreeMem;
   freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
+  minFreeMem = ESP.getMinFreeHeap();
+  SYSdata["minfreemem"] = minFreeMem;
 #      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
 #      endif

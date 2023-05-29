@@ -1,51 +1,51 @@
+
 # Actuators
-## ON OFF
-This module enables to actuate things by giving to a PIN a HIGH or LOW value corresponding to an MQTT topic.
-Example usage: Connect a transistor to power a relay, connect a led...
+## ON/OFF Functionality
+The ON/OFF module of the OpenMQTTGateway provides you with the capability to control actuators, such as relays or LEDs, by assigning a HIGH or LOW value to a specific PIN through MQTT topics. For instance, you might connect a transistor to power a relay or an LED to the PIN.
 
-So as to pilot the GPIO use the following commands with [simple receiving](../upload/pio.md#api):
+To operate the default GPIO, identified as ACTUATOR_ONOFF_GPIO, you'll need to issue certain commands which comply with the JSON receiving format.
 
-OFF command:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/setOFF -m 15`
+### Standard ON/OFF control
+The OFF command can be executed as follows:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"cmd":0}'`
 
-ON command:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/setON -m 15`
+For the ON command, use:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"cmd":1}'`
 
-or with [json receiving](../upload/pio.md#api)
+You can also specify the GPIO number that you wish to control:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":1}'`
 
-OFF command:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":0}'`
+The status of the actuator will be published to the topic below every 2 minutes or upon state change.
+`home/OpenMQTTGateway/ONOFFtoMQTT '{"cmd":0}'`
 
-ON command:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":1}'`
+In the case of the simple receiving format, the commands can be executed as follows:
+OFF command: `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF/setOFF -m 15`
+ON command: `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF/setON -m 15`
 
-Since v0.9.9, you could ask for a short activation, the PIN will change state for only half a second.
+### Pulse control for short activations
+Additionally, the module also supports short activations, during which the PIN changes state for just half a second. This can be particularly useful when operating a relay board to trigger a step relay, thus allowing your home automation system to function as an auxiliary switch, without interfering with the existing switches in your house.
 
-For example you could use it with a relay board to activate an existing step relay. So your home automation act as a supplementary switch and do not interfere with the existing switch in your house.
+This functionality is available only through the JSON receiving format.
 
-It's available only with [json receiving](../upload/pio.md#api):
+To switch ON for half a second before reverting to OFF:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"high_pulse"}'`
 
-Goes ON for half a second, then back to OFF:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"high_pulse"}'`
+To switch OFF for half a second before reverting to ON:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse}'`
 
-Goes OFF for half a second, then back to ON:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse}"'`
+If you need to specify an activation duration other than half a second, include the pulse_length parameter along with the duration in milliseconds (ms).
 
-To specify activations other than half a second, include pulse_length and the time in ms.
+To switch ON for 25 ms before reverting to OFF:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"high_pulse","pulse_length":25}'`
 
-Goes ON for 25 ms, then back to OFF:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"high_pulse","pulse_length":25}'`
+To switch OFF for 25 ms before reverting to ON:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse","pulse_length":25}'`
 
-Goes OFF for 25 ms, then back to ON:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF -m '{"gpio":15,"cmd":"low_pulse","pulse_length":25}'`
+Recovery Functionality (ESP32 only)
+In the event of power loss, by default, the module will record the last known state of the actuator and attempt to revert to this state upon restarting. For example, if a relay was ON at the time of a power outage, the firmware will attempt to switch the relay ON again once power is restored.
 
-Behavior at start in case of power loss (ESP32 only):
-The module will record per default the last state of the actuator and attempt to recover it upon restart. 
-Example: if your relay is ON and a power outage occurs, when the power comes back the firmware will attempt to switch ON the relay again.
-
-If you don't want this behavior you can set the macro `USE_LAST_STATE_ON_RESTART` to `false` at build time or use the command below at runtime:
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoONOFF/config -m '{"uselaststate":false,"save":true}"'`
-The key `save` will persist the configuration upon restarts.
+If you prefer to disable this functionality, you can set the macro USE_LAST_STATE_ON_RESTART to false during the build time. Alternatively, you can issue the following command at runtime:
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoONOFF/config -m '{"uselaststate":false,"save":true}'`
 
 ## FASTLED
 ### The FASTLED module support 2 different operation modes
@@ -86,7 +86,7 @@ The number of entries in `PWM_CHANNEL_PINS` must exactly match the number of ent
 ### Usage
 
 #### Set
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoPWM/set -m '{"r":0.5,"g":0.2,"b":1,"fade":10.0}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoPWM/set -m '{"r":0.5,"g":0.2,"b":1,"fade":10.0}'`
 
 This example sets new values for the channels named `r`, `g`, and `b`.
 These channels will transition from their current values to the new values over 10s.
@@ -95,7 +95,7 @@ These channels will transition from their current values to the new values over 
 Calibration allows that min and max levels to be configured for each channel, so that the full 0-1 range of values
 that can be specified with the `set` command actually do things.
 
-`mosquitto_pub -t home/OpenMQTTGateway_MEGA/commands/MQTTtoPWM/calibrate -m '{"min-r":0.01,"max-r":1.0,"gamma-r":2.5}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoPWM/calibrate -m '{"min-r":0.01,"max-r":1.0,"gamma-r":2.5}'`
 
 This example calibrates the channel named `r`.
 After this calibration, if you set the `r` channel to 0.0, it will be remapped to 0.01 internally.

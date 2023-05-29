@@ -179,8 +179,8 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
       preferences.begin(Gateway_Short_Name, false);
       if (preferences.isKey("SSD1306Config")) {
         success = preferences.remove("SSD1306Config");
-        preferences.end();
       }
+      preferences.end();
       if (success) {
         Log.notice(F("SSD1306 config erased" CR));
       }
@@ -207,9 +207,9 @@ void SSD1306Config_save() {
   String conf = "";
   serializeJson(jsonBuffer, conf);
   preferences.begin(Gateway_Short_Name, false);
-  preferences.putString("SSD1306Config", conf);
+  int result = preferences.putString("SSD1306Config", conf);
   preferences.end();
-  Log.notice(F("SSD1306 config saved" CR));
+  Log.notice(F("SSD1306 Config_save: %s, result: %d" CR), conf.c_str(), result);
 }
 
 void SSD1306Config_init() {
