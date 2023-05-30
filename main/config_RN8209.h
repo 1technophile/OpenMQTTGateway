@@ -46,13 +46,14 @@ extern void RN8209toMQTT();
 #ifndef TimeBetweenReadingRN8209
 #  define TimeBetweenReadingRN8209 500 // time between 2 RN8209 readings in ms
 #endif
+
+#ifndef TimeOutWDTRN8209
+#  define TimeOutWDTRN8209 60 // time out if RN8209 task is stuck in seconds (should be more than TimeBetweenReadingRN8209/1000), the WDT will reset the ESP
+#endif
 #ifndef TimeBetweenPublishingRN8209
-#  define TimeBetweenPublishingRN8209 10000 // time between 2 RN8209 publishing in ms
+#  define TimeBetweenPublishingRN8209 60000 // time between 2 RN8209 publishing in ms
 #endif
-#ifndef PreviousPowerThreshold
-#  define PreviousPowerThreshold 0.1 // (percentage) threshold of the previous power that will trigger the publishing of the power value
-#endif
-#ifndef MinPowerThreshold
-#  define MinPowerThreshold 1 // (watt) Minimum power threshold that will trigger the publishing of the power value combined with PreviousPowerThreshold
+#ifndef MinCurrentThreshold
+#  define MinCurrentThreshold 0.1 // (A) Minimum current change that will trigger the publishing of the RN8209 measurements
 #endif
 #endif
