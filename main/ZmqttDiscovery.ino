@@ -1076,7 +1076,7 @@ void pubMqttDiscovery() {
 #    ifdef ESP32
 
   createDiscovery("number", //set Type
-                  subjectBTtoMQTT, "BT: Connnect interval", (char*)getUniqueId("intervalcnct", "").c_str(), //set state_topic,name,uniqueId
+                  subjectBTtoMQTT, "BT: Connect interval", (char*)getUniqueId("intervalcnct", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.intervalcnct/60000 }}", //set availability_topic,device_class,value_template,
                   "{\"intervalcnct\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
