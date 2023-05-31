@@ -1102,11 +1102,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
             Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
             String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
             String unique_id = macWOdots + "-" + String(prop.key().c_str());
-#    if OpenHABDiscovery
-            String value_template = "{{ value_json." + String(prop.key().c_str()) + "}}";
-#    else
             String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-#    endif
             if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
               String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
               String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";

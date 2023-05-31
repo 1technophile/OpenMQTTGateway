@@ -1972,6 +1972,7 @@ String stateMeasures() {
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
+  SYSdata["ohdiscovery"] = OpenHABDisc;
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
@@ -2445,7 +2446,13 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
-
+#  ifdef ZmqttDiscovery
+    if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
+      OpenHABDisc = SYSdata["ohdiscovery"];
+      Log.notice(F("OpenHAB discovery: %T" CR), OpenHABDisc);
+      stateMeasures();
+    }
+#  endif
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
 #  if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();
