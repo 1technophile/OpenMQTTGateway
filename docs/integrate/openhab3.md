@@ -54,10 +54,11 @@ If the broker is installed on another server you will also need to configure it 
 
 Bravo👏, second step done! Now let's add the Jinja transformation service.
 
-## Install Jinja Transformation
+## Install Jinja and JSONPath Transformations
 1. From the Administration click on Settings
 2. Click on Bindings
 3. Install Jinja Transformation (you can search at the bottom right)
+4. Install JSONPath Transformation
 
 ![](../img/OpenMQTTGateway-OpenHAB-Theengs-mqtt-jinja.png)
 
