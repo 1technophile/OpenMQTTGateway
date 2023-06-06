@@ -3,3 +3,4 @@
 *_env.ini
 **/.DS_Store
 node_modules
+*.ps1
