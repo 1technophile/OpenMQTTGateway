@@ -339,6 +339,14 @@ long value_from_hex_data(const char* service_data, int offset, int data_length, 
 }
 
 /*
+ rounds a number to 2 decimal places
+ example: round(3.14159) -> 3.14
+*/
+double round2(double value) {
+  return (int)(value * 100 + 0.5) / 100.0;
+}
+
+/*
 From an hexa char array ("A220EE...") to a byte array (half the size)
  */
 bool _hexToRaw(const char* in, byte* out, int rawSize) {
@@ -1964,6 +1972,7 @@ String stateMeasures() {
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = disc;
+  SYSdata["ohdiscovery"] = OpenHABDisc;
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
@@ -2437,7 +2446,13 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
-
+#  ifdef ZmqttDiscovery
+    if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
+      OpenHABDisc = SYSdata["ohdiscovery"];
+      Log.notice(F("OpenHAB discovery: %T" CR), OpenHABDisc);
+      stateMeasures();
+    }
+#  endif
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
 #  if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();

@@ -54,17 +54,18 @@ If the broker is installed on another server you will also need to configure it 
 
 Bravo👏, second step done! Now let's add the Jinja transformation service.
 
-## Install Jinja Transformation
+## Install Jinja and JSONPath Transformations
 1. From the Administration click on Settings
 2. Click on Bindings
 3. Install Jinja Transformation (you can search at the bottom right)
+4. Install JSONPath Transformation
 
 ![](../img/OpenMQTTGateway-OpenHAB-Theengs-mqtt-jinja.png)
 
 Second step done!
 
 ## Upload OpenMQTTGateway to an ESP32
-[Upload OpenMQTTGateway from the web](../upload/web-install.md) by selecting `esp32dev-ble-openhab`
+[Upload OpenMQTTGateway from the web](../upload/web-install.md) by selecting the environment corresponding to your need.
 
 Or use another upload method from the Upload section.
 
@@ -74,6 +75,10 @@ Or use another upload method from the Upload section.
 Or use another upload method from the Upload section that requires credentials before the build.
 
 You should see the gateway connected to your broker by checking with an MQTT client like MQTT Explorer.
+
+To make the auto discovery compatible with OpenHAB you have to send the following command with a retain flag.
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdiscovery":true}'`
 
 ## Adding the things
 1. From the Administration click on "Things" under "Settings", you should see a number in the INBOX button

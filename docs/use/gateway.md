@@ -33,6 +33,15 @@ If you want the settings to be kept upon gateway restart, you can publish the co
 Auto discovery is enable by default on release binaries, on platformio (except for UNO). With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
 :::
 
+## AutoDiscovery compatible with OpenHAB (default: false)
+OpenHAB does not support the key `is_defined` in the json template, to remove it at runtime and make the auto discovery compatible you can use the following command with a retain flag.
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdiscovery":true}'`
+
+::: tip
+This command can also be used with other controllers that does not support the is_defined key.
+:::
+
 ## Change the WiFi credentials
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"wifi_ssid":"ssid", "wifi_pass":"password"}'`

@@ -52,10 +52,10 @@ This notification pin can be inverted if driving directly or through a transisto
 `#define INVERT_LED_NOTIFY true`
 
 ### RN8209
-You will receive every `TimeBetweenPublishingRN8209` (set into config_RN8209.h) the RN8209 measurements (every 10s per default), or if the difference between the previous power reading and the new reading is more than 1W and more than 10% of the previous reading.
+You will receive every `TimeBetweenPublishingRN8209` (set into config_RN8209.h) the RN8209 measurements (every 60s per default), or if the difference between the previous current reading and the new reading is more than 0.1A.
 One reading is done every 0.5s.
 
-`home/OpenMQTTGateway/RN8209toMQTT {"volt":120.345,"current":7.9264,"power":954.6132}`
+`home/OpenMQTTGateway/RN8209toMQTT {"volt":120.34,"current":7.92,"power":954.61}`
 
 ### Touch
 This sensor is only for ESP32, using the touch sensing peripheral. Up to 10 touch buttons can be defined, linked to 10 ESP32 pins that support touch sensing (GPIOs 0, 2, 4, 12, 13, 14, 15, 27, 32, 33) by defining TOUCH_GPIO, or TOUCH_GPIO_0 through TOUCH_GPIO_9. For example:
