@@ -1178,7 +1178,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
 
 void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
-    process_bledata(BLEdata);
+    // If the BLEdata contains already decoded data from a previous servicedata iteration, the following one is not decoded and pubAdvData is false we don't publish this duplicate payload
+    if (process_bledata(BLEdata) < 0 && BLEdata.containsKey("model_id") && !BTConfig.pubAdvData) {
+      return;
+    }
+    // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
     }
@@ -1205,7 +1209,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
   }
 }
 
-void process_bledata(JsonObject& BLEdata) {
+int process_bledata(JsonObject& BLEdata) {
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
@@ -1269,6 +1273,7 @@ void process_bledata(JsonObject& BLEdata) {
   if (!BTConfig.extDecoderEnable && model_id < 0) {
     Log.trace(F("No eligible device found " CR));
   }
+  return model_id;
 }
 
 void hass_presence(JsonObject& HomePresence) {
