@@ -2498,6 +2498,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 }
 #endif
 
+#if defined(ESP8266) || defined(ESP32)
 bool SYSConfig_load() {
   preferences.begin(Gateway_Short_Name, true);
   if (preferences.isKey("SYSConfig")) {
@@ -2526,6 +2527,7 @@ void SYSConfig_save(std::string jsonSYSConfigString) {
   preferences.end();
   Log.notice(F("SYS Config_save: %s, result: %d" CR), jsonSYSConfigString.c_str(), result);
 }
+#endif
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
@@ -2544,6 +2546,12 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
+    if ((SYSdata.containsKey("whitelist") || SYSdata.containsKey("blacklist"))) {
+      std::string SYSfilter;
+      serializeJson(SYSdata, SYSfilter);
+      SYSConfig_save(SYSfilter);
+      SYSConfig_load();
+    }
 #  ifdef ZmqttDiscovery
     if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
       OpenHABDisc = SYSdata["ohdiscovery"];
@@ -2551,12 +2559,6 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       stateMeasures();
     }
 #  endif
-    if ((SYSdata.containsKey("whitelist") || SYSdata.containsKey("blacklist"))) {
-      std::string SYSfilter;
-      serializeJson(SYSdata, SYSfilter);
-      SYSConfig_save(SYSfilter);
-      SYSConfig_load();
-    }
 
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
 #  if defined(ZgatewayBT) && defined(ESP32)
