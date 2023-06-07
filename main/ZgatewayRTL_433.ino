@@ -129,7 +129,11 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           DISCOVERY_TRACE_LOG(F("idWoKey %s" CR), idWoKey.c_str());
           String value_template = "{{ value_json." + String(parameters[i][0]) + " | is_defined }}";
           if (strcmp(parameters[i][0], "battery_ok") == 0) {
-            value_template = "{{ float(value_json." + String(parameters[i][0]) + ") * 99 + 1 | is_defined }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
+            if (OpenHABDisc) {
+              value_template = "{{ value_json." + String(parameters[i][0]) + " * 99 + 1 }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
+            } else {
+              value_template = "{{ float(value_json." + String(parameters[i][0]) + ") * 99 + 1 | is_defined }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
+            }
           }
           String topic = subjectRTL_433toMQTT;
 #    if valueAsATopic
