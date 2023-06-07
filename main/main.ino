@@ -68,6 +68,8 @@ bool ready_to_sleep = false;
 #include <string>
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
+StaticJsonDocument<JSON_MSG_BUFFER> jsonSYSCONFIGBuffer;
+
 JsonArray modules = modulesBuffer.to<JsonArray>();
 
 #ifndef ZgatewayGFSunInverter
@@ -392,6 +394,67 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
   pubMQTT(topic.c_str(), payload, retainFlag);
 }
 
+bool arrayContains(JsonArray array, const char* value) {
+  for (JsonVariant v : array) {
+    if (strcmp(v.as<const char*>(), value) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool matchesPattern(const std::string& value, const std::string& pattern) {
+  // simple pattern matching with '*' wildcard
+  auto it = std::search(
+      value.begin(), value.end(),
+      pattern.begin(), pattern.end(),
+      [](char ch1, char ch2) {
+        return ch2 == '*' || ch1 == ch2;
+      });
+
+  return it != value.end();
+}
+
+bool filterMessage(JsonObject message) {
+  JsonObject filters = jsonSYSCONFIGBuffer.as<JsonObject>();
+  String filtersAsString = "";
+  serializeJson(filters, filtersAsString);
+  Log.trace(F("Filters %s" CR), filtersAsString.c_str());
+
+  JsonObject whitelist = filters["whitelist"];
+  for (JsonPair kv : whitelist) {
+    const char* key = kv.key().c_str();
+    if (!message.containsKey(key)) {
+      return false;
+    } else {
+      bool foundMatch = false;
+      for (JsonVariant value : whitelist[key].as<JsonArray>()) {
+        if (matchesPattern(message[key].as<std::string>(), value.as<std::string>())) {
+          foundMatch = true;
+          break;
+        }
+      }
+      if (!foundMatch) {
+        return false;
+      }
+    }
+  }
+
+  JsonObject blacklist = filters["blacklist"];
+  for (JsonPair kv : blacklist) {
+    const char* key = kv.key().c_str();
+    if (message.containsKey(key)) {
+      for (JsonVariant value : blacklist[key].as<JsonArray>()) {
+        if (matchesPattern(message[key].as<std::string>(), value.as<std::string>())) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 /**
  * @brief Publish the payload on default MQTT topic
  *
@@ -401,6 +464,11 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
   serializeJson(data, dataAsString);
+  if (!filterMessage(data)) {
+    Log.notice(F("Message filtered %s" CR), dataAsString.c_str());
+    return;
+  }
+
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #if valueAsATopic
@@ -774,6 +842,7 @@ void setup() {
 
 #if defined(ESP8266) || defined(ESP32)
   delay(100); //give time to start the flash and avoid issue when reading the preferences
+  SYSConfig_load();
 #  ifdef ESP8266
 #    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
   Serial.end();
@@ -2429,6 +2498,35 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 }
 #endif
 
+bool SYSConfig_load() {
+  preferences.begin(Gateway_Short_Name, true);
+  if (preferences.isKey("SYSConfig")) {
+    auto error = deserializeJson(jsonSYSCONFIGBuffer, preferences.getString("SYSConfig", "{}"));
+    preferences.end();
+    if (error) {
+      Log.error(F("SYS config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonSYSCONFIGBuffer.capacity());
+      return false;
+    }
+    if (jsonSYSCONFIGBuffer.isNull()) {
+      Log.warning(F("SYS config is null" CR));
+      return false;
+    }
+    Log.notice(F("Saved SYS config loaded" CR));
+    return true;
+  } else {
+    preferences.end();
+    Log.notice(F("No SYS config to load" CR));
+    return false;
+  }
+}
+
+void SYSConfig_save(std::string jsonSYSConfigString) {
+  preferences.begin(Gateway_Short_Name, false);
+  int result = preferences.putString("SYSConfig", jsonSYSConfigString.c_str());
+  preferences.end();
+  Log.notice(F("SYS Config_save: %s, result: %d" CR), jsonSYSConfigString.c_str(), result);
+}
+
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
     Log.trace(F("MQTTtoSYS json" CR));
@@ -2453,6 +2551,13 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       stateMeasures();
     }
 #  endif
+    if ((SYSdata.containsKey("whitelist") || SYSdata.containsKey("blacklist"))) {
+      std::string SYSfilter;
+      serializeJson(SYSdata, SYSfilter);
+      SYSConfig_save(SYSfilter);
+      SYSConfig_load();
+    }
+
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
 #  if defined(ZgatewayBT) && defined(ESP32)
       stopProcessing();

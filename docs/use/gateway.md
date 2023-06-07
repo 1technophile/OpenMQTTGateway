@@ -42,6 +42,40 @@ OpenHAB does not support the key `is_defined` in the json template, to remove it
 This command can also be used with other controllers that does not support the is_defined key.
 :::
 
+## Filter messages
+OpenMQTTGateway enables to set whitelist and blacklist to filter messages, the filter can be defined for any keys of the json containing a string, here is an example:
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"whitelist":{"name": "ATC*"},"blacklist":{"name": ["TP_*"]}}'`
+
+This example allow all messages with the name starting by ATC to be published and does not publish the ones that start with TP.
+
+Alternatively you can also filter at sensor level with their ids:
+
+```
+{
+  "whitelist": {
+    "id": ["11:22:33:44:55:66","AA:BB:CC:DD:EE:FF"]
+  },
+  "blacklist": {
+    "name": ["BCPro_*"]
+  }
+}
+```
+
+or a part of their ids:
+
+```
+{
+  "whitelist": {
+    "id": ["11:22*"]
+  },
+  "blacklist": {
+    "name": ["BCPro_*"]
+  }
+}
+```
+
+
 ## Change the WiFi credentials
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"wifi_ssid":"ssid", "wifi_pass":"password"}'`
