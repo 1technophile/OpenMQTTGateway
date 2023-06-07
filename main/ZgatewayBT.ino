@@ -366,7 +366,7 @@ public:
   }
 };
 
-void PublishDeviceData(JsonObject& BLEdata, bool processBLEData = true);
+void PublishDeviceData(JsonObject& BLEdata);
 
 atomic_int forceBTScan;
 
@@ -732,16 +732,33 @@ void procBLETask(void* pvParameters) {
           for (int j = 0; j < serviceDataCount; j++) {
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
             Log.trace(F("Service data: %s" CR), service_data.c_str());
-            BLEdata["servicedata"] = (char*)service_data.c_str();
             std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
             Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
-            BLEdata["servicedatauuid"] = (char*)serviceDatauuid.c_str();
-            process_bledata(BLEdata); // this will force to resolve all the service data
+            if (j) {
+              // if we have more than one service data, we need to create a new BLEdata object to publish the data to MQTT
+              // we can't use the same BLEdata object because its servicedata would be overwritten by the next service data
+              // the decoder does not handle multiple servicedata in the same message
+              // note that we keep the decoded data during the different iterations of the loop,
+              // the goal is to avoid issue with certain controllers that do not handle multiple messages with undecoded data (OpenHAB for example)
+              JsonObject& BLEdataTemp = getBTJsonObject();
+              bool ret = BLEdataTemp.set(BLEdata);
+              if (!ret) {
+                Log.error(F("BLEdataTemp.set(BLEdata) failed" CR));
+              } else {
+                BLEdataTemp.remove("servicedata");
+                BLEdataTemp["servicedata"] = (char*)service_data.c_str();
+                BLEdataTemp.remove("servicedatauuid");
+                BLEdataTemp["servicedatauuid"] = (char*)serviceDatauuid.c_str();
+                PublishDeviceData(BLEdataTemp);
+              }
+            } else {
+              BLEdata["servicedata"] = (char*)service_data.c_str();
+              BLEdata["servicedatauuid"] = (char*)serviceDatauuid.c_str();
+              PublishDeviceData(BLEdata);
+            }
           }
-
-          PublishDeviceData(BLEdata, false);
         } else {
-          PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
+          PublishDeviceData(BLEdata);
         }
       } else {
         Log.trace(F("Filtered MAC device" CR));
@@ -1159,9 +1176,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
 }
 #  endif
 
-void PublishDeviceData(JsonObject& BLEdata, bool processBLEData) {
+void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
-    if (processBLEData) process_bledata(BLEdata);
+    process_bledata(BLEdata);
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
     }
