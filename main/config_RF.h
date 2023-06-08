@@ -90,7 +90,7 @@ const char parameters[40][4][24] = {
     {"temperature_2_C", "temperature", "°C", "temperature"},
     {"temperature_F", "temperature", "°F", "temperature"},
     {"time", "timestamp", "", "timestamp"},
-    {"battery_ok", "battery", "", "battery"},
+    {"battery_ok", "battery", "%", "battery"},
     {"humidity", "humidity", "%", "humidity"},
     {"moisture", "moisture", "%", "humidity"},
     {"pressure_hPa", "pressure", "hPa", "pressure"},

@@ -1533,6 +1533,13 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
               }
             }
 
+            float moisture = data["moisture"];
+            if (data.containsKey("moisture") && moisture <= 100 && moisture >= 0) {
+              char moist[5];
+              dtostrf(moisture, 3, 1, moist);
+              line3 += "moist: " + (String)moist + "% ";
+            }
+
             line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 
             // Line 4
