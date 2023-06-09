@@ -224,7 +224,7 @@ unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
-
+bool failSafeMode = false;
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static bool mqtt_cert_validate = MQTT_CERT_VALIDATE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
@@ -841,26 +841,14 @@ void setup() {
   modules.add(ZactuatorONOFF);
 #  endif
 
-  String s = WiFi.macAddress();
-#  ifdef USE_MAC_AS_GATEWAY_NAME
-  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
-          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
-  strcpy(ota_hostname, WifiManager_ssid);
-  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
-#  endif
-#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
-  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
-          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-#  endif
-
 #  ifdef ESP32_ETHERNET
   setup_ethernet_esp32();
 #  else // WIFI ESP
 #    if defined(ESPWifiManualSetup)
   setup_wifi();
 #    else
-  setup_wifimanager(false);
+  // In failSafeMode we don't want to setup wifi manager as it has already been done before
+  if (!failSafeMode) setup_wifimanager(false);
 #    endif
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
@@ -1291,7 +1279,7 @@ void saveConfigCallback() {
 
 #  ifdef TRIGGER_GPIO
 /**
- * Identify a long button press to trigger a reset
+ * Identify a long button press to trigger a reset or a failsafe mode
 * */
 void blockingWaitForReset() {
   if (digitalRead(TRIGGER_GPIO) == LOW) {
@@ -1301,8 +1289,31 @@ void blockingWaitForReset() {
       delay(3000); // reset delay hold
       if (digitalRead(TRIGGER_GPIO) == LOW) {
         Log.trace(F("Button Held" CR));
-        Log.notice(F("Erasing ESP Config, restarting" CR));
-        setup_wifimanager(true);
+// Switching off the relay during reset or failsafe operations
+#    ifdef ZactuatorONOFF
+        uint8_t level = digitalRead(ACTUATOR_ONOFF_GPIO);
+        if (level == ACTUATOR_ON) {
+          ActuatorTrigger();
+        }
+#    endif
+        InfoIndicatorOFF();
+        SendReceiveIndicatorOFF();
+        // Checking if the flash has already been erased to identify if we erase it or go into failsafe mode
+        // going to failsafe mode is done by doing a long button press from a state where the flash has already been erased
+        if (SPIFFS.begin()) {
+          Log.trace(F("mounted file system" CR));
+          if (SPIFFS.exists("/config.json")) {
+            Log.notice(F("Erasing ESP Config, restarting" CR));
+            setup_wifimanager(true);
+          }
+        }
+        delay(30000);
+        if (digitalRead(TRIGGER_GPIO) == LOW) {
+          Log.notice(F("Going into failsafe mode without peripherals" CR));
+          // Failsafe mode enable to connect to Wifi or change the firmware without the peripherals setup
+          failSafeMode = true;
+          setup_wifimanager(false);
+        }
       }
     }
   }
@@ -1359,6 +1370,19 @@ void setup_wifimanager(bool reset_settings) {
 
   if (reset_settings)
     eraseAndRestart();
+
+  String s = WiFi.macAddress();
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
+          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
+  strcpy(ota_hostname, WifiManager_ssid);
+  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
+#  endif
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
+          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
 
   //read configuration from FS json
   Log.trace(F("mounting FS..." CR));
