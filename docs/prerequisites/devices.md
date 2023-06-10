@@ -55,11 +55,13 @@ Added to that it retrieves the measures from the devices below. By default the d
 | INKBIRD|IBT-4X(S/C)|temperature1/temperature2/temperature3/temperature4|
 | INKBIRD|IBT-6XS|temperature1/temperature2/temperature3/temperature4/temperature5/temperature6|
 | iNode|Energy Meter|Current average and aggregate kW(h)/m³/battery|
+| KKM |K6P|temperature/humidity/voltage|
+| KKM |K9|temperature/humidity/voltage/acceleration x/y/z-axis (optional - without recognised as K6P)|
 | Oria/Brifit/SigmaWit/SensorPro|TH Sensor T201|temperature/humidity/battery|
 | Oria/Brifit/SigmaWit/SensorPro|TH Sensor T301|temperature/humidity/battery|
 | Mokosmart|M1|acceleration x/y/z-axis/battery|
 | Mokosmart|H4|temperature/humidity/voltage|
-| Mopeka|Pro|temperature/level/sync status/voltage/battery/reading quality|
+| Mopeka|Pro|temperature/level/sync status/voltage/battery/reading quality/acceleration x/y-axis|
 | Otio/BeeWi|Door & Window Sensor|contact/battery|
 | Polar|H10 Chest strap|activity heart rate|
 | Qingping|CGDK2|temperature/humidity|
@@ -73,11 +75,13 @@ Added to that it retrieves the measures from the devices below. By default the d
 | SmartDry|Laundry Sensor|temperature/humidity/shake/voltage/wake|
 | Sensirion|MyCO₂/CO₂ Gadget|temperature/humidity/carbon dioxide|
 | Sensirion|SHT4X TH sensor|temperature/humidity|
+| Shelly|Button1|button press type, battery, packet ID|
 | Switchbot|Bot (c)|mode/state/battery|
 | Switchbot|Motion Sensor|movement/light level/sensing distance/led/scope tested/battery|
 | Switchbot|Contact Sensor|contact/movement/scope tested/light level/in count/out count/push count/battery|
 | Switchbot|Curtain|motion state/position/light level/battery/calibration state|
 | Switchbot|Meter (Plus)|temperature/humidity/battery|
+| Switchbot|Outdoor Meter|temperature/humidity/battery|
 | Thermobeacon|WS02|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
 | Thermobeacon|WS08|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
 | ThermoPro|TP357|temperature/humidity|
