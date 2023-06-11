@@ -251,6 +251,15 @@ void rtl_433_Callback(char* message) {
 
   uniqueid.replace("/", "-");
 
+#  if defined(ESP8266) || defined(ESP32)
+#    if message_UTCtimestamp == true
+  RFrtl_433_ESPdata["UTCtime"] = UTCtimestamp();
+#    endif
+#    if message_unixtimestamp == true
+  RFrtl_433_ESPdata["unixtime"] = unixtimestamp();
+#    endif
+#  endif
+
   // Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
