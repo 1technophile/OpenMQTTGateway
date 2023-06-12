@@ -13,12 +13,12 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 
 You can also do a long press when powering the board to reset it, this press must be done during the first 5 seconds after the start.
 
-### Wifi interference on ESP32 ###
-Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP32 with Wifi enabled. To reduce or elimate the effect the board must be put into Wifi B/G with lower TX power.
+### Wifi interference on sensors when using an ESP ###
+Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP with Wifi enabled. To reduce or elimate the effect the board must be put into Wifi B/G with lower TX power.
 
-This can be achieved with the following macro, `WifiGMode` defined true and `WifiPower` to e.g. WIFI_POWER_11dBm.  
+This can be achieved with the following macro, `WifiGMode` defined true and `WifiPower` to e.g. WIFI_POWER_11dBm (ESP32) or 11 (ESP8266).  
 
-Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined **false** to get Band N back.
+Since the WiFi protocol is persisted in the flash of the ESP you have to run at least once with `WiFiGMode` defined **false** to get Band N back.
 
 ### Low power mode for ESP32
 OpenMQTTGateway support a low power mode for ESP32, this mode is available per default on boards with batteries. The other boards needs to have the macro `DEFAULT_LOW_POWER_MODE` defined at 0, 1 or 2 to use it. More information about the modes is available into User_config.h.

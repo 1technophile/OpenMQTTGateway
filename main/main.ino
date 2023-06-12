@@ -716,7 +716,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 #if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-void setESP32WifiPorotocolTxPower() {
+void setESPWifiProtocolTxPower() {
   //Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
   //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
   //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
@@ -754,6 +754,48 @@ void setESP32WifiPorotocolTxPower() {
   WiFi.setTxPower(WifiPower);
 #  endif
   Log.notice(F("Operating WiFi power level: %i" CR), WiFi.getTxPower());
+}
+#endif
+
+#if defined(ESP8266) && (defined(WifiGMode) || defined(WifiPower))
+void setESPWifiProtocolTxPower() {
+#  if WifiGMode == true
+  if (!wifi_set_phy_mode(PHY_MODE_11G)) {
+    Log.error(F("Failed to change WifiMode." CR));
+  }
+#  endif
+
+#  if WifiGMode == false
+  if (!wifi_set_phy_mode(PHY_MODE_11N)) {
+    Log.error(F("Failed to change WifiMode." CR));
+  }
+#  endif
+
+  phy_mode_t getprotocol = wifi_get_phy_mode();
+  if (getprotocol == PHY_MODE_11N) {
+    Log.notice(F("WiFi_Protocol_11n" CR));
+  }
+  if (getprotocol == PHY_MODE_11G) {
+    Log.notice(F("WiFi_Protocol_11g" CR));
+  }
+  if (getprotocol == PHY_MODE_11B) {
+    Log.notice(F("WiFi_Protocol_11b" CR));
+  }
+
+#  ifdef WifiPower
+  Log.notice(F("Requested WiFi power level: %i dBm" CR), WifiPower);
+
+  int i_dBm = int(WifiPower * 4.0f);
+
+  // i_dBm 82 == 20.5 dBm
+  if (i_dBm > 82) {
+    i_dBm = 82;
+  } else if (i_dBm < 0) {
+    i_dBm = 0;
+  }
+
+  system_phy_set_max_tpw((uint8_t)i_dBm);
+#  endif
 }
 #endif
 
@@ -1082,8 +1124,8 @@ bool wifi_reconnect_bypass() {
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
     WiFi.begin();
-#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-    setESP32WifiPorotocolTxPower();
+#  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
+    setESPWifiProtocolTxPower();
 #  endif
     delay(1000);
     wifi_autoreconnect_cnt++;
@@ -2488,8 +2530,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
       Log.warning(F("Attempting connection to new AP %s" CR), (const char*)SYSdata["wifi_ssid"]);
       WiFi.begin((const char*)SYSdata["wifi_ssid"], (const char*)SYSdata["wifi_pass"]);
-#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-      setESP32WifiPorotocolTxPower();
+#  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
+      setESPWifiProtocolTxPower();
 #  endif
       WiFi.waitForConnectResult();
 
@@ -2497,8 +2539,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         Log.error(F("Failed to connect to new AP; falling back" CR));
         WiFi.disconnect(true);
         WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
-#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-        setESP32WifiPorotocolTxPower();
+#  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
+        setESPWifiProtocolTxPower();
 #  endif
       }
       ESPRestart(7);
