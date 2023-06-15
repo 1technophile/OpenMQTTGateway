@@ -400,6 +400,16 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
+
+#if defined(ESP8266) || defined(ESP32)
+#  if message_UTCtimestamp == true
+  data["UTCtime"] = UTCtimestamp();
+#  endif
+#  if message_unixtimestamp == true
+  data["unixtime"] = unixtimestamp();
+#  endif
+#endif
+
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -1953,8 +1963,8 @@ int unixtimestamp() {
 String UTCtimestamp() {
   time_t now;
   time(&now);
-  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
-  strftime(buffer, sizeof buffer, "%FT%TZ", gmtime(&now));
+  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZGMT"];
+  strftime(buffer, sizeof buffer, "%FT%TZGMT", gmtime(&now));
   return buffer;
 }
 
@@ -1984,14 +1994,6 @@ String stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
-#  if defined(ESP8266) || defined(ESP32)
-#    if message_UTCtimestamp == true
-  SYSdata["UTCtime"] = UTCtimestamp();
-#    endif
-#    if message_unixtimestamp == true
-  SYSdata["unixtime"] = unixtimestamp();
-#    endif
-#  endif
 
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
