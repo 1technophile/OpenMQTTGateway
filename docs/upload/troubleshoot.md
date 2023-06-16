@@ -6,7 +6,7 @@ If you see a green badge this means that the code compilation is OK with the con
 Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
 Verify especially that the libraries provided into the [release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
 
-## ESP32 compilation errors related to wifi
+## ESP32 compilation errors related to WiFi
 If you get one or several of the following errors:
 
 `error: 'WIFI_STA' was not declared in this scope`
@@ -15,7 +15,7 @@ If you get one or several of the following errors:
 
 `error: no matching function for call to 'WiFiClass::macAddress()`
 
-You have a conflict between Arduino default wifi library and ESP32 one. So as to resolve this issue you should move or remove the Arduino wifi library (Arduino Sketchbook folder\libraries\WiFi) in order to enable the IDE to take the one from ESP32 (Arduino Sketchbook folder\hardware\espressif\arduino-esp32\libraries\WiFi)
+You have a conflict between Arduino default WiFi library and ESP32 one. So as to resolve this issue you should move or remove the Arduino WiFi library (Arduino Sketchbook folder\libraries\WiFi) in order to enable the IDE to take the one from ESP32 (Arduino Sketchbook folder\hardware\espressif\arduino-esp32\libraries\WiFi)
 More info on [this topic](https://community.openmqttgateway.com/t/esp32-compilation-error/144/5?u=1technophile)
 
 ## Not able to send or receive RF or IR 
