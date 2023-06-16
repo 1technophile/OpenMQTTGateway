@@ -733,7 +733,6 @@ Preferences preferences;
 #endif
 
 #ifdef ZmqttDiscovery
-bool disc = true; // Auto discovery with Home Assistant convention
 unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 #endif
 
@@ -748,6 +747,13 @@ unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automa
 #  define isWhite(device)       device->isWhtL
 #  define isBlack(device)       device->isBlkL
 #  define isDiscovered(device)  device->isDisc
+
+/*----------------CONFIGURABLE PARAMETERS-----------------*/
+struct SYSConfig_s {
+  bool discovery; // HA discovery convention
+  bool ohdiscovery; // OH discovery specificities
+};
+
 #endif
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
