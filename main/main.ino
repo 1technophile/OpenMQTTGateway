@@ -1963,8 +1963,8 @@ int unixtimestamp() {
 String UTCtimestamp() {
   time_t now;
   time(&now);
-  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZGMT"];
-  strftime(buffer, sizeof buffer, "%FT%TZGMT", gmtime(&now));
+  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
+  strftime(buffer, sizeof buffer, "%FT%TZ", gmtime(&now));
   return buffer;
 }
 
