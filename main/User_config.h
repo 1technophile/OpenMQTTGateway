@@ -688,18 +688,17 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
 
-/*-------------------ESP32 Wifi band and tx power ---------------------*/
-//Certain sensors are sensitive to ESP32 Wifi which can cause interference with their normal operation
+/*-------------------ESP Wifi band and tx power ---------------------*/
+//Certain sensors are sensitive to Wifi which can cause interference with their normal operation
 //For example it can cause false triggers on a PIR HC-SR501
 //It is reccomended to change Wifi BAND to G and reduce tx power level to 11dBm
-//Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined false to get Band N back.
-#ifdef ESP32
-#  ifndef WifiGMode
+//Since the WiFi protocol is persisted in the flash of the ESP you have to run at least once with `WiFiGMode` defined false to get Band N back.
+#ifndef WifiGMode
 //#    define WifiGMode                 true
-#  endif
-#  ifndef WifiPower
-//#    define WifiPower                 WIFI_POWER_11dBm
-#  endif
+#endif
+#ifndef WifiPower
+//#    define WifiPower                 WIFI_POWER_11dBm //When using an ESP32
+//#    define WifiPower                 11 //When using an ESP8266
 #endif
 
 /*-----------PLACEHOLDERS FOR WebUI DISPLAY--------------*/
