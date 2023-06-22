@@ -4,3 +4,4 @@
 **/.DS_Store
 node_modules
 *.ps1
+main/certs/private*
