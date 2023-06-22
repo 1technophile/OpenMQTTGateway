@@ -148,6 +148,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define mqtt_topic_max_size 150
 #  ifndef mqtt_max_packet_size
 #    ifdef MQTT_HTTPS_FW_UPDATE
+#      define CHECK_OTA_UPDATE     true // enable to check for the presence of a new version for your environment on Github
 #      define mqtt_max_packet_size 2560
 #    else
 #      define mqtt_max_packet_size 1024
@@ -208,32 +209,11 @@ const char* certificate PROGMEM = R"EOF("
 
 #  ifdef MQTT_HTTPS_FW_UPDATE
 // If used, this should be set to the root CA certificate of the server hosting the firmware.
-// The certificate must be in PEM ascii format.
-// The default certificate is for github.
-const char* OTAserver_cert PROGMEM = R"EOF("
------BEGIN CERTIFICATE-----
-MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
-MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
-QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
-MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
-b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
-CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
-nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
-43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
-T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
-gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
-BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
-TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
-DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
-hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
-06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
-PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
-YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
-CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
------END CERTIFICATE-----
-")EOF";
+#    ifdef PRIVATE_CERTS
+#      include "certs/private_ota_cert.h"
+#    else
+#      include "certs/default_ota_cert.h"
+#    endif
 
 #    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
 #      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
@@ -261,23 +241,15 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 #  endif
 
 #  if MQTT_SECURE_SELF_SIGNED
-const char* ss_server_cert PROGMEM = R"EOF("
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
-")EOF";
-
-const char* ss_client_cert PROGMEM = R"EOF("
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
-")EOF";
-
-const char* ss_client_key PROGMEM = R"EOF("
------BEGIN RSA PRIVATE KEY-----
-...
------END RSA PRIVATE KEY-----
-")EOF";
+#    ifdef PRIVATE_CERTS
+#      include "certs/private_client_cert.h"
+#      include "certs/private_client_key.h"
+#      include "certs/private_server_cert.h"
+#    else
+#      include "certs/default_client_cert.h"
+#      include "certs/default_client_key.h"
+#      include "certs/default_server_cert.h"
+#    endif
 
 struct ss_certs {
   const char* server_cert;

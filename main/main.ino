@@ -503,11 +503,7 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (client.connected()) {
     SendReceiveIndicatorON();
     Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
-#if AWS_IOT
-    client.publish(topic, payload); // AWS IOT doesn't support retain flag for the moment
-#else
     client.publish(topic, payload, retainFlag);
-#endif
   } else {
     Log.warning(F("Client not connected, aborting the publication" CR));
   }
@@ -2276,6 +2272,7 @@ String latestVersion;
 
 #    include "zzHTTPUpdate.h"
 
+#    ifdef CHECK_OTA_UPDATE
 /**
  * Check on a server the latest version information to build a releaseLink
  * The release link will be used when the user trigger an OTA update command
@@ -2317,13 +2314,17 @@ bool checkForUpdates() {
   }
   Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
 }
+
+#    else
+bool checkForUpdates() {}
+#    endif
 #  elif ESP8266
 #    include <ESP8266httpUpdate.h>
 #  endif
 
 void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
   if (strstr(topicOri, subjectMQTTtoSYSupdate) != NULL) {
-    const char* version = HttpsFwUpdateData["version"];
+    const char* version = HttpsFwUpdateData["version"] | "latest";
     if (version && ((strlen(version) != strlen(OMG_VERSION)) || strcmp(version, OMG_VERSION) != 0)) {
       const char* url = HttpsFwUpdateData["url"];
       String systemUrl;
@@ -2374,18 +2375,19 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       pub(subjectRLStoMQTT, jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
-      if (!ota_cert) {
+      if (!ota_cert && !strstr(url, "http:")) {
         if (ota_server_cert.length() > 0) {
-          Log.notice(F("using stored cert" CR));
+          Log.notice(F("Using stored cert" CR));
           ota_cert = ota_server_cert.c_str();
         } else {
-          Log.notice(F("using config cert" CR));
+          Log.notice(F("Using config cert" CR));
           ota_cert = OTAserver_cert;
         }
       }
 
       t_httpUpdate_return result = HTTP_UPDATE_FAILED;
       if (strstr(url, "http:")) {
+        Log.notice(F("Http update" CR));
         WiFiClient update_client;
 #  ifdef ESP32
         httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
