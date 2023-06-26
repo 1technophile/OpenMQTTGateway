@@ -287,7 +287,7 @@ To specify the MAC address type add the parameter `"mac_type"` to the command. F
 
 ### Example write command
 ```
-mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "ble_write_address":"AA:BB:CC:DD:EE:FF",
   "ble_write_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
   "ble_write_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
@@ -308,7 +308,7 @@ Response:
 ```
 ### Example read command
 ```
-mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "ble_read_address":"AA:BB:CC:DD:EE:FF",
   "ble_read_service":"cba20d00-224d-11e6-9fb8-0002a5d5c51b",
   "ble_read_char":"cba20002-224d-11e6-9fb8-0002a5d5c51b",
@@ -343,7 +343,7 @@ The device can also be controlled over MQTT with a simplified BLE write command.
 
 ### Example command to set the SwitchBot state to ON:
 ```
-mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "SBS1":"on",
   "mac":"AA:BB:CC:DD:EE:FF"
 }'
