@@ -13,12 +13,12 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 
 You can also do a long press when powering the board to reset it, this press must be done during the first 5 seconds after the start.
 
-### Wifi interference on ESP32 ###
-Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP32 with Wifi enabled. To reduce or elimate the effect the board must be put into Wifi B/G with lower TX power.
+### Wifi interference on sensors when using an ESP ###
+Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP with Wifi enabled. To reduce or elimate the effect the board must be put into Wifi B/G with lower TX power.
 
-This can be achieved with the following macro, `WifiGMode` defined true and `WifiPower` to e.g. WIFI_POWER_11dBm.  
+This can be achieved with the following macro, `WifiGMode` defined true and `WifiPower` to e.g. WIFI_POWER_11dBm (ESP32) or 11 (ESP8266).  
 
-Since the WiFi protocol is persisted in the flash of the ESP32 you have to run at least once with `WiFiGMode` defined **false** to get Band N back.
+Since the WiFi protocol is persisted in the flash of the ESP you have to run at least once with `WiFiGMode` defined **false** to get Band N back.
 
 ### Low power mode for ESP32
 OpenMQTTGateway support a low power mode for ESP32, this mode is available per default on boards with batteries. The other boards needs to have the macro `DEFAULT_LOW_POWER_MODE` defined at 0, 1 or 2 to use it. More information about the modes is available into User_config.h.
@@ -37,7 +37,7 @@ The interval between the ESP32 wake up is defined at build time by the macro `Ti
 
 ::: tip
 When coming back from mode 2 to mode 0 you may publish the command with a retain flag so as to enable the gateway to retrieve it when reconnecting.
-A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update will be revceived and acknowledged when the device woke up.
+A low power mode switch is automatically created by discovery with Home Assistant, you may experience a delay between the command and the state update due to the fact that the update will be received and acknowledged when the device woke up.
 In low power mode you should use ESPWifiManualSetup so as to rely on the credentials entered into User_config.h.
 So as to do that uncomment the line below in User_config.h
 ``` c
@@ -54,7 +54,7 @@ If you change the default low power mode in config_BT.h to 2 and your credential
 
 ### Behaviour
 
-If the connection of the board to WIFI and MQTT is successful you will see the logo with text like below:
+If the connection of the board to WiFi and MQTT is successful you will see the logo with text like below:
 
 ![boards](../img/OpenMQTTgateway_M5_Stack_Board_Display_Text.png)
 
@@ -93,7 +93,7 @@ The low power mode can be changed also with a push to button B when the board is
 If you are already in low power mode 1 or 2 with M5Stack you can wake up the board by pressing the red button.
 
 ### Low power mode (deepSleep) for ESP8266 & ESP32 boards
-In certain use cases where power is severly limited you can use the ESP8266 or ESP32 deep sleep capability.
+In certain use cases where power is severely limited you can use the ESP8266 or ESP32 deep sleep capability.
 
 * e.g. measuring a pool temperature every 5 minutes using an ESP8266 and DS18B20 probe where the ESP8266 is powered by very limited battery backed solar power.
 * e.g. as a water/leak detector which wake-up based on sensor state an ESP32 and C-37 YL-83 HM-RD sensor where the ESP32 is powered by very limited battery power.

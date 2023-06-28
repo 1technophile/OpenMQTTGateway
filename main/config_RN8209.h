@@ -48,7 +48,7 @@ extern void RN8209toMQTT();
 #endif
 
 #ifndef TimeOutWDTRN8209
-#  define TimeOutWDTRN8209 60 // time out if RN8209 task is stuck in seconds (should be more than TimeBetweenReadingRN8209/1000), the WDT will reset the ESP
+#  define TimeOutWDTRN8209 5 // time out if RN8209 task is stuck in seconds (should be more than TimeBetweenReadingRN8209/1000), the WDT will reset the ESP
 #endif
 #ifndef TimeBetweenPublishingRN8209
 #  define TimeBetweenPublishingRN8209 60000 // time between 2 RN8209 publishing in ms

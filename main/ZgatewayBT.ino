@@ -692,14 +692,6 @@ void procBLETask(void* pvParameters) {
       String mac_adress = advertisedDevice->getAddress().toString().c_str();
       mac_adress.toUpperCase();
       BLEdata["id"] = (char*)mac_adress.c_str();
-#  if defined(ESP8266) || defined(ESP32)
-#    if message_UTCtimestamp == true
-      BLEdata["UTCtime"] = UTCtimestamp();
-#    endif
-#    if message_unixtimestamp == true
-      BLEdata["unixtime"] = unixtimestamp();
-#    endif
-#  endif
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
       Log.notice(F("Device detected: %s" CR), (char*)mac_adress.c_str());
@@ -1130,7 +1122,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
                               model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                               stateClassNone, "off", "on");
-            } else if (strcmp(prop.key().c_str(), "device") != 0) {
+            } else if (strcmp(prop.key().c_str(), "device") != 0 || strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
               createDiscovery("sensor",
                               discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                               will_Topic, prop.value()["name"], value_template.c_str(),
@@ -1369,7 +1361,8 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   if (BTdata.containsKey("SBS1")) {
     strcpy(action.addr, (const char*)BTdata["mac"]);
     action.write = true;
-    action.value = BTdata["SBS1"].as<std::string>();
+    std::string val = BTdata["SBS1"].as<std::string>(); // Fix #1694
+    action.value = val;
     action.ttl = 1;
     createOrUpdateDevice(action.addr, device_flags_connect,
                          TheengsDecoder::BLE_ID_NUM::SBS1, 1);
@@ -1405,7 +1398,8 @@ void MQTTtoBTAction(JsonObject& BTdata) {
     strcpy(action.addr, (const char*)BTdata["ble_write_address"]);
     action.service = NimBLEUUID((const char*)BTdata["ble_write_service"]);
     action.characteristic = NimBLEUUID((const char*)BTdata["ble_write_char"]);
-    action.value = std::string((const char*)BTdata["ble_write_value"]);
+    std::string val = BTdata["ble_write_value"].as<std::string>(); // Fix #1694
+    action.value = val;
     action.write = true;
     Log.trace(F("BLE ACTION Write" CR));
   } else if (BTdata.containsKey("ble_read_address") &&
@@ -1472,7 +1466,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     if (BTdata.containsKey("lowpowermode")) {
       changelowpowermode((int)BTdata["lowpowermode"]);
     }
-
+  } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     MQTTtoBTAction(BTdata);
   }
 }

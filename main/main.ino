@@ -224,7 +224,7 @@ unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
-
+bool failSafeMode = false;
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static bool mqtt_cert_validate = MQTT_CERT_VALIDATE_DEFAULT;
 static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
@@ -400,6 +400,16 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
+
+#if defined(ESP8266) || defined(ESP32)
+#  if message_UTCtimestamp == true
+  data["UTCtime"] = UTCtimestamp();
+#  endif
+#  if message_unixtimestamp == true
+  data["unixtime"] = unixtimestamp();
+#  endif
+#endif
+
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -493,11 +503,7 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (client.connected()) {
     SendReceiveIndicatorON();
     Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
-#if AWS_IOT
-    client.publish(topic, payload); // AWS IOT doesn't support retain flag for the moment
-#else
     client.publish(topic, payload, retainFlag);
-#endif
   } else {
     Log.warning(F("Client not connected, aborting the publication" CR));
   }
@@ -716,7 +722,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 #if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-void setESP32WifiPorotocolTxPower() {
+void setESPWifiProtocolTxPower() {
   //Reduce WiFi interference when using ESP32 using custom WiFi mode and tx power
   //https://github.com/espressif/arduino-esp32/search?q=WIFI_PROTOCOL_11G
   //https://www.letscontrolit.com/forum/viewtopic.php?t=671&start=20
@@ -754,6 +760,48 @@ void setESP32WifiPorotocolTxPower() {
   WiFi.setTxPower(WifiPower);
 #  endif
   Log.notice(F("Operating WiFi power level: %i" CR), WiFi.getTxPower());
+}
+#endif
+
+#if defined(ESP8266) && (defined(WifiGMode) || defined(WifiPower))
+void setESPWifiProtocolTxPower() {
+#  if WifiGMode == true
+  if (!wifi_set_phy_mode(PHY_MODE_11G)) {
+    Log.error(F("Failed to change WifiMode." CR));
+  }
+#  endif
+
+#  if WifiGMode == false
+  if (!wifi_set_phy_mode(PHY_MODE_11N)) {
+    Log.error(F("Failed to change WifiMode." CR));
+  }
+#  endif
+
+  phy_mode_t getprotocol = wifi_get_phy_mode();
+  if (getprotocol == PHY_MODE_11N) {
+    Log.notice(F("WiFi_Protocol_11n" CR));
+  }
+  if (getprotocol == PHY_MODE_11G) {
+    Log.notice(F("WiFi_Protocol_11g" CR));
+  }
+  if (getprotocol == PHY_MODE_11B) {
+    Log.notice(F("WiFi_Protocol_11b" CR));
+  }
+
+#  ifdef WifiPower
+  Log.notice(F("Requested WiFi power level: %i dBm" CR), WifiPower);
+
+  int i_dBm = int(WifiPower * 4.0f);
+
+  // i_dBm 82 == 20.5 dBm
+  if (i_dBm > 82) {
+    i_dBm = 82;
+  } else if (i_dBm < 0) {
+    i_dBm = 0;
+  }
+
+  system_phy_set_max_tpw((uint8_t)i_dBm);
+#  endif
 }
 #endif
 
@@ -841,26 +889,14 @@ void setup() {
   modules.add(ZactuatorONOFF);
 #  endif
 
-  String s = WiFi.macAddress();
-#  ifdef USE_MAC_AS_GATEWAY_NAME
-  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
-          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
-  strcpy(ota_hostname, WifiManager_ssid);
-  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
-#  endif
-#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
-  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
-          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-#  endif
-
 #  ifdef ESP32_ETHERNET
   setup_ethernet_esp32();
 #  else // WIFI ESP
 #    if defined(ESPWifiManualSetup)
   setup_wifi();
 #    else
-  setup_wifimanager(false);
+  // In failSafeMode we don't want to setup wifi manager as it has already been done before
+  if (!failSafeMode) setup_wifimanager(false);
 #    endif
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
@@ -1094,8 +1130,8 @@ bool wifi_reconnect_bypass() {
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
     WiFi.begin();
-#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-    setESP32WifiPorotocolTxPower();
+#  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
+    setESPWifiProtocolTxPower();
 #  endif
     delay(1000);
     wifi_autoreconnect_cnt++;
@@ -1291,7 +1327,7 @@ void saveConfigCallback() {
 
 #  ifdef TRIGGER_GPIO
 /**
- * Identify a long button press to trigger a reset
+ * Identify a long button press to trigger a reset or a failsafe mode
 * */
 void blockingWaitForReset() {
   if (digitalRead(TRIGGER_GPIO) == LOW) {
@@ -1301,8 +1337,31 @@ void blockingWaitForReset() {
       delay(3000); // reset delay hold
       if (digitalRead(TRIGGER_GPIO) == LOW) {
         Log.trace(F("Button Held" CR));
-        Log.notice(F("Erasing ESP Config, restarting" CR));
-        setup_wifimanager(true);
+// Switching off the relay during reset or failsafe operations
+#    ifdef ZactuatorONOFF
+        uint8_t level = digitalRead(ACTUATOR_ONOFF_GPIO);
+        if (level == ACTUATOR_ON) {
+          ActuatorTrigger();
+        }
+#    endif
+        InfoIndicatorOFF();
+        SendReceiveIndicatorOFF();
+        // Checking if the flash has already been erased to identify if we erase it or go into failsafe mode
+        // going to failsafe mode is done by doing a long button press from a state where the flash has already been erased
+        if (SPIFFS.begin()) {
+          Log.trace(F("mounted file system" CR));
+          if (SPIFFS.exists("/config.json")) {
+            Log.notice(F("Erasing ESP Config, restarting" CR));
+            setup_wifimanager(true);
+          }
+        }
+        delay(30000);
+        if (digitalRead(TRIGGER_GPIO) == LOW) {
+          Log.notice(F("Going into failsafe mode without peripherals" CR));
+          // Failsafe mode enable to connect to Wifi or change the firmware without the peripherals setup
+          failSafeMode = true;
+          setup_wifimanager(false);
+        }
       }
     }
   }
@@ -1359,6 +1418,19 @@ void setup_wifimanager(bool reset_settings) {
 
   if (reset_settings)
     eraseAndRestart();
+
+  String s = WiFi.macAddress();
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
+          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
+  strcpy(ota_hostname, WifiManager_ssid);
+  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
+#  endif
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
+          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
 
   //read configuration from FS json
   Log.trace(F("mounting FS..." CR));
@@ -1960,14 +2032,6 @@ String stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
   SYSdata["uptime"] = uptime();
-#  if defined(ESP8266) || defined(ESP32)
-#    if message_UTCtimestamp == true
-  SYSdata["UTCtime"] = UTCtimestamp();
-#    endif
-#    if message_unixtimestamp == true
-  SYSdata["unixtime"] = unixtimestamp();
-#    endif
-#  endif
 
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
@@ -2250,6 +2314,7 @@ String latestVersion;
 
 #    include "zzHTTPUpdate.h"
 
+#    ifdef CHECK_OTA_UPDATE
 /**
  * Check on a server the latest version information to build a releaseLink
  * The release link will be used when the user trigger an OTA update command
@@ -2291,13 +2356,17 @@ bool checkForUpdates() {
   }
   Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
 }
+
+#    else
+bool checkForUpdates() {}
+#    endif
 #  elif ESP8266
 #    include <ESP8266httpUpdate.h>
 #  endif
 
 void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
   if (strstr(topicOri, subjectMQTTtoSYSupdate) != NULL) {
-    const char* version = HttpsFwUpdateData["version"];
+    const char* version = HttpsFwUpdateData["version"] | "latest";
     if (version && ((strlen(version) != strlen(OMG_VERSION)) || strcmp(version, OMG_VERSION) != 0)) {
       const char* url = HttpsFwUpdateData["url"];
       String systemUrl;
@@ -2348,18 +2417,19 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       pub(subjectRLStoMQTT, jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
-      if (!ota_cert) {
+      if (!ota_cert && !strstr(url, "http:")) {
         if (ota_server_cert.length() > 0) {
-          Log.notice(F("using stored cert" CR));
+          Log.notice(F("Using stored cert" CR));
           ota_cert = ota_server_cert.c_str();
         } else {
-          Log.notice(F("using config cert" CR));
+          Log.notice(F("Using config cert" CR));
           ota_cert = OTAserver_cert;
         }
       }
 
       t_httpUpdate_return result = HTTP_UPDATE_FAILED;
       if (strstr(url, "http:")) {
+        Log.notice(F("Http update" CR));
         WiFiClient update_client;
 #  ifdef ESP32
         httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -2464,8 +2534,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
       Log.warning(F("Attempting connection to new AP %s" CR), (const char*)SYSdata["wifi_ssid"]);
       WiFi.begin((const char*)SYSdata["wifi_ssid"], (const char*)SYSdata["wifi_pass"]);
-#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-      setESP32WifiPorotocolTxPower();
+#  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
+      setESPWifiProtocolTxPower();
 #  endif
       WiFi.waitForConnectResult();
 
@@ -2473,8 +2543,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         Log.error(F("Failed to connect to new AP; falling back" CR));
         WiFi.disconnect(true);
         WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
-#  if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
-        setESP32WifiPorotocolTxPower();
+#  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
+        setESPWifiProtocolTxPower();
 #  endif
       }
       ESPRestart(7);

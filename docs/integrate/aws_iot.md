@@ -93,7 +93,7 @@ With PlatformIO you can directly leverage the environment `esp32dev-ble-aws`
 
 ## Build and upload
 
-## Connect to a wifi Access point [see portal](../upload/portal)
+## Connect to a WiFi Access point [see portal](../upload/portal)
 Enter your credentials and verify that Secure connection is marked.
 
 ## Verify that you receive data in AWS
