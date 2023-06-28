@@ -1056,6 +1056,17 @@ void handleIN() {
   }
 }
 
+/**
+ * @brief /handleFavicon - Send Favicon
+ * 
+ */
+void handleFavicon() {
+  WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  server.sendHeader("Content-Type", "image/x-icon");
+  server.send_P(200, "image/x-icon", reinterpret_cast<const char*>(Openmqttgateway_logo_mini_ico), sizeof(Openmqttgateway_logo_mini_ico));
+}
+
+
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
 /**
  * @brief /UP - Firmware Upgrade Page
@@ -1273,6 +1284,7 @@ void WebUISetup() {
   server.on("/lo", handleLO); // Configure Logging
 
   server.on("/rt", handleRT); // Reset configuration ( Erase and Restart )
+  server.on("/favicon.ico", handleFavicon); // Information
   server.begin();
 
   Log.begin(LOG_LEVEL, &WebLog);
