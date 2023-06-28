@@ -100,6 +100,9 @@ const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><
 
 const char footer[] = "<div style='text-align:right;font-size:11px;'><hr/><a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>%s</a></div></div></body></html>";
 
+// Source file - https://github.com/1technophile/OpenMQTTGateway/blob/54decb4b65c7894b926ac3a89de0c6b2a3021506/docs/.vuepress/public/favicon-16x16.png
+// Workflow was, convert to ICO format using an online convertor, then use the desktop utility xxd to convert to byte array
+
 const unsigned char Openmqttgateway_logo_mini_ico[] = {
   0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 0x00, 0x00, 0x01, 0x00,
   0x20, 0x00, 0x68, 0x04, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
