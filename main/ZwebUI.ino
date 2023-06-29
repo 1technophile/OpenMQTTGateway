@@ -1066,7 +1066,6 @@ void handleFavicon() {
   server.send_P(200, "image/x-icon", reinterpret_cast<const char*>(Openmqttgateway_logo_mini_ico), sizeof(Openmqttgateway_logo_mini_ico));
 }
 
-
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
 /**
  * @brief /UP - Firmware Upgrade Page
