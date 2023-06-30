@@ -5,7 +5,7 @@ Several options are available for the display of information on the SSD1306 disp
 
 The current SSD1306 display states are being published to the `SSD1306toMQTT` topic, e.g.
 
-`{"onstate":true,"brightness":50,"displaymetric":true,"display-flip":true,"idlelogo":true,"log-oled":false,"json-oled":true}`
+`{"onstate":true,"brightness":50,"display-flip":true,"idlelogo":true,"log-oled":false,"json-oled":true}`
 
 ### Display ON/OFF
 To turn the SSD1306 display on or off.
@@ -36,9 +36,9 @@ To have applicable device properties displayed in Imperial units, e.g. °F for t
 
 This can be set with the compiler directive `-DDISPLAY_METRIC=false`.
 
-or with the runtime command
+As the display Metric setting is being defined in the WebUI part of OpenMQTTGateway changes need to be sent there with the runtime command
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m {"displaymetric":false}`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoWebUI/config -m {"displayMetric":false}`
 
 ### Rotating the display by 180 degrees
 
