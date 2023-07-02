@@ -2270,6 +2270,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
+#  ifdef ZwebUI
+    MQTTtoWebUI(topicOri, jsondata);
+#  endif
 #endif
     SendReceiveIndicatorON();
 
