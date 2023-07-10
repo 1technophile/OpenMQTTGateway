@@ -128,12 +128,11 @@ boolean _MQTTtoWiPhone(JsonObject& LORAdata) {
 }
 
 void setupLORA() {
-
-# ifdef ESP8266
+#  ifdef ESP8266
   SPI.begin();
-# else
+#  else
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
-# endif
+#  endif
 
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
 
