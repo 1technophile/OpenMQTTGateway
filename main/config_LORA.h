@@ -55,7 +55,7 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 //TTGO LORA BOARD ESP32 PIN DEFINITION
 
 #ifndef LORA_SCK
-#  define LORA_SCK  5 // GPIO5  -- SX1278's SCK
+#  define LORA_SCK 5 // GPIO5  -- SX1278's SCK
 #endif
 
 #ifndef LORA_MISO
@@ -67,15 +67,15 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #endif
 
 #ifndef LORA_SS
-#  define LORA_SS   18 // GPIO18 -- SX1278's CS
+#  define LORA_SS 18 // GPIO18 -- SX1278's CS
 #endif
 
 #ifndef LORA_RST
-#  define LORA_RST  14 // GPIO14 -- SX1278's RESET
+#  define LORA_RST 14 // GPIO14 -- SX1278's RESET
 #endif
 
 #ifndef LORA_DI0
-#  define LORA_DI0  26 // GPIO26 -- SX1278's IRQ(Interrupt Request)
+#  define LORA_DI0 26 // GPIO26 -- SX1278's IRQ(Interrupt Request)
 #endif
 
 #endif
