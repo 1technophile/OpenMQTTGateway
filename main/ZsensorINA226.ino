@@ -72,9 +72,9 @@ void MeasureINA226() {
     char volt_c[7];
     char current_c[7];
     char power_c[7];
-    dtostrf(volt, 6, 3, volt_c);
-    dtostrf(current, 6, 3, current_c);
-    dtostrf(power, 6, 3, power_c);
+    dtostrf(volt, 0, 3, volt_c);
+    dtostrf(current, 0, 3, current_c);
+    dtostrf(power, 0, 3, power_c);
     INA226data["volt"] = (char*)volt_c;
     INA226data["current"] = (char*)current_c;
     INA226data["power"] = (char*)power_c;
