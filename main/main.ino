@@ -1277,10 +1277,15 @@ void setup_wifi() {
   // We start by connecting to a WiFi network
 
 #  ifdef NetworkAdvancedSetup
-  IPAddress ip_adress(ip);
-  IPAddress gateway_adress(gateway);
-  IPAddress subnet_adress(subnet);
-  IPAddress dns_adress(Dns);
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip_adress.fromString(NET_IP);
+  gateway_adress.fromString(NET_GW);
+  subnet_adress.fromString(NET_MASK);
+  dns_adress.fromString(NET_DNS);
+
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
   }
@@ -1515,10 +1520,15 @@ void setup_wifimanager(bool reset_settings) {
 //set static IP
 #  ifdef NetworkAdvancedSetup
   Log.trace(F("Adv wifi cfg" CR));
-  IPAddress gateway_adress(gateway);
-  IPAddress subnet_adress(subnet);
-  IPAddress ip_adress(ip);
-  wifiManager.setSTAStaticIPConfig(ip_adress, gateway_adress, subnet_adress);
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip_adress.fromString(NET_IP);
+  gateway_adress.fromString(NET_GW);
+  subnet_adress.fromString(NET_MASK);
+  dns_adress.fromString(NET_DNS);
+  wifiManager.setSTAStaticIPConfig(ip_adress, gateway_adress, subnet_adress, dns_adress);
 #  endif
 
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
@@ -1617,6 +1627,15 @@ void setup_ethernet_esp32() {
   bool ethBeginSuccess = false;
   WiFi.onEvent(WiFiEvent);
 #    ifdef NetworkAdvancedSetup
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip.fromString(NET_IP);
+  gateway.fromString(NET_GW);
+  subnet.fromString(NET_MASK);
+  Dns.fromString(NET_DNS);
+
   Log.trace(F("Adv eth cfg" CR));
   ETH.config(ip, gateway, subnet, Dns);
   ethBeginSuccess = ETH.begin();
@@ -1662,6 +1681,15 @@ void WiFiEvent(WiFiEvent_t event) {
 #else // Arduino case
 void setup_ethernet() {
 #  ifdef NetworkAdvancedSetup
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip.fromString(NET_IP);
+  gateway.fromString(NET_GW);
+  subnet.fromString(NET_MASK);
+  Dns.fromString(NET_DNS);
+
   Log.trace(F("Adv eth cfg" CR));
   Ethernet.begin(mac, ip, Dns, gateway, subnet);
 #  else
