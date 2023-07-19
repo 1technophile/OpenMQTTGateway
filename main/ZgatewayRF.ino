@@ -110,7 +110,15 @@ void setupRF() {
   //RF init parameters
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+
 #  ifdef ZradioCC1101 //receiving with CC1101
+  #  if defined(RF_MODULE_SCK) && defined(RF_MODULE_MISO) && defined(RF_MODULE_MOSI) && defined(RF_MODULE_CS)
+    Log.notice(F("RF_MODULE_SCK: %d " CR), RF_MODULE_SCK);
+    Log.notice(F("RF_MODULE_MISO: %d " CR), RF_MODULE_MISO);
+    Log.notice(F("RF_MODULE_MOSI: %d " CR), RF_MODULE_MOSI);
+    Log.notice(F("RF_MODULE_CS: %d " CR), RF_MODULE_CS);
+    ELECHOUSE_cc1101.setSpiPin(RF_MODULE_SCK, RF_MODULE_MISO, RF_MODULE_MOSI, RF_MODULE_CS);
+  #  endif
   if (ELECHOUSE_cc1101.getCC1101()) {
     Log.notice(F("C1101 spi Connection OK" CR));
   } else {
