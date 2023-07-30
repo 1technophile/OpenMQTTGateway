@@ -131,7 +131,7 @@ void RF2toMQTT() {
     RF2data["address"] = (unsigned long)rf2rd.address;
     RF2data["switchType"] = (int)rf2rd.switchType;
 #  ifdef ZmqttDiscovery //component creation for HA
-    if (disc)
+    if (SYSConfig.discovery)
       RF2toMQTTdiscovery(RF2data);
 #  endif
 

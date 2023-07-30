@@ -129,7 +129,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           DISCOVERY_TRACE_LOG(F("idWoKey %s" CR), idWoKey.c_str());
           String value_template = "{{ value_json." + String(parameters[i][0]) + " | is_defined }}";
           if (strcmp(parameters[i][0], "battery_ok") == 0) {
-            if (OpenHABDisc) {
+            if (SYSConfig.ohdiscovery) {
               value_template = "{{ value_json." + String(parameters[i][0]) + " * 99 + 1 }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
             } else {
               value_template = "{{ float(value_json." + String(parameters[i][0]) + ") * 99 + 1 | is_defined }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
@@ -254,7 +254,7 @@ void rtl_433_Callback(char* message) {
   // Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
-    if (disc)
+    if (SYSConfig.discovery)
       storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
 #  endif
     pub((char*)topic.c_str(), RFrtl_433_ESPdata);
