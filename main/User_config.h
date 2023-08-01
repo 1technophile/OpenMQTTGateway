@@ -175,6 +175,10 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define MQTT_PORT "1883"
 #endif
 
+#ifndef GeneralTimeOut
+#  define GeneralTimeOut 20 // time out if a task is stuck in seconds (should be more than TimeBetweenReadingRN8209/1000) and more than 3 seconds, the WDT will reset the ESP, used also for MQTT connection
+#endif
+
 #if defined(ESP8266) || defined(ESP32)
 // Uncomment to use a device running TheengsGateway to decode BLE data. (https://github.com/theengs/gateway)
 // Set the topic to the subscribe topic configured in the TheengGateway

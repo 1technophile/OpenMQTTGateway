@@ -27,6 +27,15 @@
 */
 #include "User_config.h"
 
+// States of the gateway
+// Wm setup
+// Connected to MQTT
+// Disconnected from Wifi
+// Disconnected from MQTT
+// Deep sleep
+// Local OTA in progress
+// Remote OTA in progress
+
 // Macros and structure to enable the duplicates removing on the following gateways
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // array to store previous received RFs, IRs codes and their timestamps
@@ -239,6 +248,7 @@ static String ota_server_cert = "";
 #  include <ArduinoOTA.h>
 #  include <FS.h>
 #  include <SPIFFS.h>
+#  include <esp_task_wdt.h>
 #  include <nvs.h>
 #  include <nvs_flash.h>
 
@@ -619,6 +629,9 @@ void delayWithOTA(long waitMillis) {
 #  if defined(ZwebUI) && defined(ESP32)
     WebUILoop();
 #  endif
+#  ifdef ESP32
+    esp_task_wdt_reset();
+#  endif
     delay(waitStep);
   }
 #else
@@ -676,11 +689,16 @@ void connectMQTT() {
 #endif
 
   Log.warning(F("MQTT connection..." CR));
+#ifdef ESP32
+  esp_task_wdt_add(NULL);
+  esp_task_wdt_reset();
+#endif
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
   strcat(topic, gateway_name);
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
+  client.setSocketTimeout(GeneralTimeOut - 1);
 #if AWS_IOT
   if (client.connect(gateway_name, mqtt_user, mqtt_pass)) { // AWS doesn't support will topic for the moment
 #else
@@ -920,7 +938,9 @@ void setup() {
     Log.error(F("Failed to set deep sleep EXT0 Wakeup." CR));
   }
 #  endif
-
+#  ifdef ESP32
+  esp_task_wdt_init(GeneralTimeOut, true); //enable panic so ESP32 restarts
+#  endif
 /*
  The 2 modules below are not connection dependent so start them before the connectivity functions
  Note that the ONOFF module need to start after the RN8209 so that the overCurrent function is launched after the setup of the sensor
@@ -1221,6 +1241,9 @@ void setOTA() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
+#  ifdef ESP32
+    esp_task_wdt_reset();
+#  endif
     last_ota_activity_millis = millis();
   });
   ArduinoOTA.onError([](ota_error_t error) {
@@ -1391,6 +1414,9 @@ void blockingWaitForReset() {
         if (level == ACTUATOR_ON) {
           ActuatorTrigger();
         }
+#    endif
+#    ifdef ESP32
+        esp_task_wdt_delete(NULL);
 #    endif
         InfoIndicatorOFF();
         SendReceiveIndicatorOFF();
@@ -1753,6 +1779,10 @@ void loop() {
 #  endif
 #endif
 
+#ifdef ESP32
+  esp_task_wdt_reset();
+#endif
+
   unsigned long now = millis();
 
   // Switch off of the LED after TimeLedON
@@ -1781,7 +1811,6 @@ void loop() {
       failure_number_ntwk = 0;
       // We have just re-connected if connected was previously false
       bool justReconnected = !connected;
-
 #ifdef ZmqttDiscovery
       // Deactivate autodiscovery after DiscoveryAutoOffTimer
       if (SYSConfig.discovery && (now > lastDiscovery + DiscoveryAutoOffTimer))
@@ -1944,10 +1973,16 @@ void loop() {
       connectMQTT();
     }
   } else { // disconnected from network
+#ifdef ESP32
+    esp_task_wdt_reset();
+#endif
     connected = false;
     Log.warning(F("Network disconnected:" CR));
     ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
+#ifdef ESP32
+    esp_task_wdt_reset();
+#endif
     ErrorIndicatorOFF();
     delay(2000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
@@ -2068,6 +2103,7 @@ void eraseAndRestart() {
   delay(5000);
   ESP.reset();
 #  else
+  esp_task_wdt_delete(NULL);
   nvs_flash_erase();
   ESP.restart();
 #  endif
@@ -2374,6 +2410,7 @@ String latestVersion;
 bool checkForUpdates() {
   Log.notice(F("Update check, free heap: %d"), ESP.getFreeHeap());
   HTTPClient http;
+  http.setTimeout(GeneralTimeOut - 1); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
   int httpCode = http.GET();
@@ -2459,7 +2496,11 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  if defined(ZgatewayBT)
       stopProcessing();
 #  endif
+#  ifdef ESP32
+      esp_task_wdt_delete(NULL); // Stop task watchdog during update
+#  endif
       Log.warning(F("Starting firmware update" CR));
+
       SendReceiveIndicatorON();
       ErrorIndicatorON();
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
