@@ -2365,7 +2365,7 @@ String latestVersion;
 
 #    include "zzHTTPUpdate.h"
 
-#    ifdef CHECK_OTA_UPDATE
+#    if CHECK_OTA_UPDATE
 /**
  * Check on a server the latest version information to build a releaseLink
  * The release link will be used when the user trigger an OTA update command
