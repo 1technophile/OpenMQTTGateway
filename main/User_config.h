@@ -148,7 +148,9 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define mqtt_topic_max_size 150
 #  ifndef mqtt_max_packet_size
 #    ifdef MQTT_HTTPS_FW_UPDATE
-#      define CHECK_OTA_UPDATE     true // enable to check for the presence of a new version for your environment on Github
+#      ifndef CHECK_OTA_UPDATE
+#        define CHECK_OTA_UPDATE true // enable to check for the presence of a new version for your environment on Github
+#      endif
 #      define mqtt_max_packet_size 2560
 #    else
 #      define mqtt_max_packet_size 1024
