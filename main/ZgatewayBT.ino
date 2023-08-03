@@ -68,8 +68,6 @@ struct decompose {
   bool reverse;
 };
 
-unsigned long BLEstarts = 0;
-
 vector<BLEAction> BLEactions;
 
 vector<BLEdevice*> devices;
@@ -107,7 +105,7 @@ void BTConfig_init() {
   BTConfig.movingTimer = MovingTimer;
 }
 
-// Watchdog, if there was no change of BLE scanCount, restart BT
+// Watchdog, if there was no change of BLE scanCount, restart the ESP
 void btScanWDG() {
   static unsigned long previousBtScanCount = 0;
   static unsigned long lastBtScan = 0;
@@ -117,8 +115,7 @@ void btScanWDG() {
       scanCount != 0 &&
       (now - lastBtScan > BTConfig.BLEinterval)) {
     Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
-    stopProcessing();
-    startProcessing();
+    ESPRestart(4);
   } else {
     previousBtScanCount = scanCount;
     lastBtScan = now;
@@ -157,7 +154,6 @@ String stateBTMeasures(bool start) {
   jo["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
   jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
   jo["blecoretaskstack"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
-  jo["blestarts"] = BLEstarts;
 
   if (start) {
     Log.notice(F("BT sys: "));
@@ -870,12 +866,6 @@ void stopProcessing() {
   Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
 }
 
-void startProcessing() {
-  ProcessLock = false;
-  setupBTTasksAndBLE();
-  Log.notice(F("BLE gateway started, free heap: %d" CR), ESP.getFreeHeap());
-}
-
 void coreTask(void* pvParameters) {
   while (true) {
     if (!ProcessLock) {
@@ -993,8 +983,6 @@ void setupBTTasksAndBLE() {
       1, /* Priority of the task */
       &xCoreTaskHandle, /* Task handle. */
       taskCore); /* Core where the task should run */
-
-  BLEstarts++;
 }
 
 void setupBT() {
