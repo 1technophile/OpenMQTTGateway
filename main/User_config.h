@@ -68,12 +68,18 @@
 
 //#define NetworkAdvancedSetup true //uncomment if you want to set advanced network parameters, not uncommented you can set the IP and MAC only
 #ifdef NetworkAdvancedSetup
-#  if defined(ESP8266) || defined(ESP32)
-const byte ip[] = {192, 168, 1, 99}; //IP address of the gateway, already defined for arduino below
+#  ifndef NET_IP
+#    define NET_IP "192.168.1.99"
 #  endif
-const byte gateway[] = {0, 0, 0, 0};
-const byte Dns[] = {0, 0, 0, 0};
-const byte subnet[] = {255, 255, 255, 0};
+#  ifndef NET_MASK
+#    define NET_MASK "255.255.255.0"
+#  endif
+#  ifndef NET_GW
+#    define NET_GW "192.168.1.1"
+#  endif
+#  ifndef NET_DNS
+#    define NET_DNS "192.168.1.1"
+#  endif
 #endif
 
 #if defined(ESP8266) || defined(ESP32) // for nodemcu, weemos and esp8266
