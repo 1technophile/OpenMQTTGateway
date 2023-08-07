@@ -1154,10 +1154,6 @@ void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     // Decode the payload
     process_bledata(BLEdata);
-    // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
-    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
-      pubBT(BLEdata);
-    }
     // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
@@ -1176,7 +1172,10 @@ void PublishDeviceData(JsonObject& BLEdata) {
       BLEdata.remove("cont");
       BLEdata.remove("track");
     }
-
+    // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
+    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
+      pubBT(BLEdata);
+    }
   } else if (BLEdata.containsKey("distance")) {
     pubBT(BLEdata);
   } else {
