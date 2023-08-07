@@ -252,6 +252,8 @@ static String ota_server_cert = "";
 #  include <nvs.h>
 #  include <nvs_flash.h>
 
+#  include "esp_heap_caps.h"
+
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
 #  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
@@ -2152,14 +2154,16 @@ String stateMeasures() {
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
-  uint32_t freeMem;
-  uint32_t minFreeMem;
-  freeMem = ESP.getFreeHeap();
+  uint32_t freeMem = ESP.getFreeHeap();
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
 #    ifdef ESP32
-  minFreeMem = ESP.getMinFreeHeap();
+  if (psramFound()) {
+    uint32_t free_psram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    SYSdata["freepsram"] = free_psram;
+  }
+  uint32_t minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minfreemem"] = minFreeMem;
 #      ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = intTemperatureRead();
