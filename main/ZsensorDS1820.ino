@@ -140,8 +140,8 @@ void MeasureDS1820Temp() {
       Log.error(F("DS1820: Failed to identify any temperature sensors on 1-wire bus during setup!" CR));
     } else {
       Log.trace(F("DS1820: Reading temperature(s) from %d sensor(s)..." CR), ds1820_count);
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject DS1820data = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> DS1820dataBuffer;
+      JsonObject DS1820data = DS1820dataBuffer.to<JsonObject>();
 
       for (uint8_t i = 0; i < ds1820_count; i++) {
         current_temp[i] = round(ds1820.getTempC(ds1820_devices[i]) * 10) / 10.0;
@@ -156,7 +156,9 @@ void MeasureDS1820Temp() {
             DS1820data["res"] = String(ds1820_resolution[i]) + String("bit");
             DS1820data["addr"] = ds1820_addr[i];
           }
-          pub((char*)(String(OW_TOPIC) + "/" + ds1820_addr[i]).c_str(), DS1820data);
+          String origin = String(OW_TOPIC) + "/" + ds1820_addr[i];
+          DS1820data["origin"] = origin;
+          enqueueJsonObject(DS1820data);
           delay(10);
 #  if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
           ready_to_sleep = true;

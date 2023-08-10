@@ -144,11 +144,10 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       if (ONOFFConfig.useLastStateOnStart) {
         ONOFFdata["save"] = true;
         ONOFFConfig_fromJson(ONOFFdata);
-        ONOFFdata.remove("save");
       }
 #    endif
       // we acknowledge the sending by publishing the value to an acknowledgement topic
-      pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+      stateONOFFMeasures();
     } else {
       if (ONOFFdata["cmd"] == "high_pulse") {
         Log.notice(F("MQTTtoONOFF high_pulse ok" CR));
@@ -290,10 +289,9 @@ void ActuatorTrigger() {
   if (ONOFFConfig.useLastStateOnStart) {
     ONOFFdata["save"] = true;
     ONOFFConfig_fromJson(ONOFFdata);
-    ONOFFdata.remove("save");
   }
 #  endif
-  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+  stateONOFFMeasures();
 }
 
 void stateONOFFMeasures() {
@@ -301,6 +299,7 @@ void stateONOFFMeasures() {
   StaticJsonDocument<64> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)digitalRead(ACTUATOR_ONOFF_GPIO);
-  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+  ONOFFdata["origin"] = subjectGTWONOFFtoMQTT;
+  enqueueJsonObject(ONOFFdata);
 }
 #endif

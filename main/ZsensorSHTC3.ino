@@ -47,8 +47,8 @@ void MeasureTempAndHum() {
         Log.error(F("Failed to read from SHTC3 sensor!" CR));
       } else {
         Log.trace(F("Creating SHTC3 buffer" CR));
-        StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-        JsonObject SHTC3data = jsonBuffer.to<JsonObject>();
+        StaticJsonDocument<JSON_MSG_BUFFER> SHTC3dataBuffer;
+        JsonObject SHTC3data = SHTC3dataBuffer.to<JsonObject>();
         if (h != persistedh || shtc3_always) {
           SHTC3data["hum"] = (float)h;
         } else {
@@ -60,8 +60,8 @@ void MeasureTempAndHum() {
         } else {
           Log.trace(F("Same temp don't send it" CR));
         }
-        if (SHTC3data.size() > 0)
-          pub(SHTC3TOPIC, SHTC3data);
+        SHTC3data["origin"] = SHTC3TOPIC;
+        enqueueJsonObject(SHTC3data);
       }
       persistedh = h;
       persistedt = t;

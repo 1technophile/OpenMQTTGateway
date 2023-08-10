@@ -29,16 +29,13 @@
 extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
-extern void emptyBTQueue();
+extern void pubMainCore(JsonObject& data);
 extern void launchBTDiscovery(bool overrideDiscovery);
 extern void stopProcessing();
 extern void lowPowerESP32();
 extern String stateBTMeasures(bool);
 
 #ifdef ESP32
-extern int btQueueBlocked;
-extern int btQueueLengthSum;
-extern int btQueueLengthCount;
 #  include "NimBLEDevice.h"
 #endif
 
@@ -117,10 +114,6 @@ extern int btQueueLengthCount;
 
 #ifndef HassPresence
 #  define HassPresence false //false if we publish into Home Assistant presence topic
-#endif
-
-#ifndef BTQueueSize
-#  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
 #endif
 
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
@@ -235,7 +228,5 @@ public:
     MAX,
   };
 };
-
-JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true);
 
 #endif

@@ -41,8 +41,8 @@ void setupHCSR501() {
 
 void MeasureHCSR501() {
   if (millis() > TimeBeforeStartHCSR501) { //let time to init the PIR sensor
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject HCSR501data = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> HCSR501dataBuffer;
+    JsonObject HCSR501data = HCSR501dataBuffer.to<JsonObject>();
     static int pirState = LOW;
     int PresenceValue = digitalRead(HCSR501_GPIO);
 #  if defined(ESP8266) || defined(ESP32)
@@ -64,8 +64,8 @@ void MeasureHCSR501() {
 #  ifdef HCSR501_LED_NOTIFY_GPIO
     digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState == HCSR501_LED_ON);
 #  endif
-    if (HCSR501data.size() > 0)
-      pub(subjectHCSR501toMQTT, HCSR501data);
+    HCSR501data["origin"] = subjectHCSR501toMQTT;
+    enqueueJsonObject(HCSR501data);
   }
 }
 #endif

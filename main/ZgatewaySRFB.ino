@@ -102,8 +102,8 @@ void _rfbDecode() {
     _rawToHex(&_uartbuf[1], buffer, RF_MESSAGE_SIZE);
 
     Log.trace(F("Creating SRFB buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject SRFBdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> SRFBdataBuffer;
+    JsonObject SRFBdata = SRFBdataBuffer.to<JsonObject>();
     SRFBdata["raw"] = String(buffer).substring(0, 18);
 
     int val_Tsyn = (int)(int)value_from_hex_data(buffer, 0, 4, false, false);
@@ -120,12 +120,14 @@ void _rfbDecode() {
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
       Log.trace(F("Adv data SRFBtoMQTT" CR));
-      pub(subjectSRFBtoMQTT, SRFBdata);
+      SRFBdata["origin"] = subjectSRFBtoMQTT;
+      enqueueJsonObject(SRFBdata);
       Log.trace(F("Store val: %lu" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatSRFBwMQTT) {
         Log.trace(F("Publish SRFB for rpt" CR));
-        pub(subjectMQTTtoSRFB, SRFBdata);
+        SRFBdata["origin"] = subjectMQTTtoSRFB;
+        enqueueJsonObject(SRFBdata);
       }
     }
     _rfbAck();
@@ -299,7 +301,8 @@ void MQTTtoSRFB(char* topicOri, JsonObject& SRFBdata) {
         Log.notice(F("MQTTtoSRFB OK" CR));
         _rfbSend(message_b, valueRPT);
         // Acknowledgement to the GTWRF topic
-        pub(subjectGTWSRFBtoMQTT, SRFBdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        SRFBdata["origin"] = subjectGTWSRFBtoMQTT;
+        enqueueJsonObject(SRFBdata);
       } else {
         Log.error(F("MQTTtoSRFB error decoding value" CR));
       }

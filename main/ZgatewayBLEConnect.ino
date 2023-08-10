@@ -79,14 +79,15 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
   if (actions.size() > 0) {
     for (auto& it : actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
-        JsonObject BLEresult = getBTJsonObject();
-        BLEresult["id"] = it.addr;
-        BLEresult["service"] = it.service.toString();
-        BLEresult["characteristic"] = it.characteristic.toString();
+        DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+        JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
+        BLEdata["id"] = it.addr;
+        BLEdata["service"] = it.service.toString();
+        BLEdata["characteristic"] = it.characteristic.toString();
 
         if (it.write) {
           Log.trace(F("processing BLE write" CR));
-          BLEresult["write"] = it.value;
+          BLEdata["write"] = it.value;
           result = writeData(&it);
         } else {
           Log.trace(F("processing BLE read" CR));
@@ -95,31 +96,32 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
             switch (it.value_type) {
               case BLE_VAL_HEX: {
                 char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
-                BLEresult["read"] = pHex;
+                BLEdata["read"] = pHex;
                 free(pHex);
                 break;
               }
               case BLE_VAL_INT: {
                 int ival = *(int*)it.value.data();
-                BLEresult["read"] = ival;
+                BLEdata["read"] = ival;
                 break;
               }
               case BLE_VAL_FLOAT: {
                 float fval = *(double*)it.value.data();
-                BLEresult["read"] = fval;
+                BLEdata["read"] = fval;
                 break;
               }
               default:
-                BLEresult["read"] = it.value.c_str();
+                BLEdata["read"] = it.value.c_str();
                 break;
             }
           }
         }
 
         it.complete = result;
-        BLEresult["success"] = result;
+        BLEdata["success"] = result;
         if (result || it.ttl <= 1) {
-          pubBT(BLEresult);
+          buildBTtopic(BLEdata);
+          enqueueJsonObject(BLEdata);
         }
       }
     }
@@ -138,7 +140,8 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
 
     if (length == 5) {
       Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject BLEdata = getBTJsonObject();
+      DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
       for (std::vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
@@ -157,8 +160,8 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
       BLEdata["hum"] = (float)(pData[2]);
       BLEdata["volt"] = (float)(((pData[4] * 256) + pData[3]) / 1000.0);
       BLEdata["batt"] = (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100);
-
-      pubBT(BLEdata);
+      buildBTtopic(BLEdata);
+      enqueueJsonObject(BLEdata);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -208,7 +211,8 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       // https://github.com/NiceLabs/atorch-console/blob/master/docs/protocol-design.md#dc-meter-report
       // Data comes as two packets ( 20 and 16 ), and am only processing first
       Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject& BLEdata = getBTJsonObject();
+      DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
       BLEdata["model"] = "DT24";
@@ -221,8 +225,8 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       BLEdata["price"] = (float)(((m_data[17] * 256 * 256) + (m_data[18] * 256) + m_data[19]) / 100.0);
       BLEdata["tempc"] = (float)(m_data[24] * 256) + m_data[25];
       BLEdata["tempf"] = (float)(convertTemp_CtoF((m_data[24] * 256) + m_data[25]));
-
-      pubBT(BLEdata);
+      buildBTtopic(BLEdata);
+      enqueueJsonObject(BLEdata);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -264,7 +268,8 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
     Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
     if (length == 16) {
       Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject& BLEdata = getBTJsonObject();
+      DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
       BLEdata["model"] = "BM2 Battery Monitor";
@@ -297,7 +302,8 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       float volt = ((output[2] | (output[1] << 8)) >> 4) / 100.0f;
       BLEdata["volt"] = volt;
       Log.trace(F("volt: %F" CR), volt);
-      pubBT(BLEdata);
+      buildBTtopic(BLEdata);
+      enqueueJsonObject(BLEdata);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -347,13 +353,15 @@ void HHCCJCY01HHCC_connect::publishData() {
       value = pChar2->readValue();
       const char* val2 = value.c_str();
       batteryValue = val2[0];
-      JsonObject& BLEdata = getBTJsonObject();
+      DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
       BLEdata["model"] = "HHCCJCY01HHCC";
       BLEdata["id"] = (char*)mac_address.c_str();
       BLEdata["batt"] = (int)batteryValue;
-      pubBT(BLEdata);
+      buildBTtopic(BLEdata);
+      enqueueJsonObject(BLEdata);
     } else {
       Log.notice(F("Failed getting characteristic" CR));
     }
@@ -372,7 +380,8 @@ void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* p
 
     if (length == 6) {
       Log.trace(F("Device identified creating BLE buffer" CR));
-      JsonObject BLEdata = getBTJsonObject();
+      DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       String mac_address = m_pClient->getPeerAddress().toString().c_str();
       mac_address.toUpperCase();
       BLEdata["model"] = "XMWSDJ04MMC";
@@ -383,8 +392,8 @@ void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* p
       BLEdata["hum"] = (float)((pData[2] | (pData[3] << 8)) * 0.1);
       BLEdata["volt"] = (float)((pData[4] | (pData[5] << 8)) / 1000.0);
       BLEdata["batt"] = (float)((((pData[4] | (pData[5] << 8)) / 1000.0) - 2.1) * 100);
-
-      pubBT(BLEdata);
+      buildBTtopic(BLEdata);
+      enqueueJsonObject(BLEdata);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -476,10 +485,12 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
 
         it.complete = result;
         if (result || it.ttl <= 1) {
-          JsonObject BLEresult = getBTJsonObject();
-          BLEresult["id"] = it.addr;
-          BLEresult["state"] = result ? it.value : it.value == "on" ? "off" : "on";
-          pubBT(BLEresult);
+          StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+          JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
+          BLEdata["id"] = it.addr;
+          BLEdata["state"] = result ? it.value : it.value == "on" ? "off" : "on";
+          buildBTtopic(BLEdata);
+          enqueueJsonObject(BLEdata);
         }
       }
     }

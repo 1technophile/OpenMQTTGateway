@@ -60,6 +60,12 @@ unsigned long timer_sys_checks = 0;
 
 #  define ARDUINOJSON_USE_LONG_LONG     1
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
+
+#  include <queue>
+#  ifndef QueueSize
+#    define QueueSize 32
+#  endif
+
 #endif
 
 /**
@@ -75,6 +81,15 @@ bool ready_to_sleep = false;
 #include <PubSubClient.h>
 
 #include <string>
+
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+struct JsonBundle {
+  StaticJsonDocument<JSON_MSG_BUFFER> doc;
+};
+
+std::queue<JsonBundle> jsonQueue;
+int queueLengthSum = 0;
+#endif
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
@@ -389,6 +404,67 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
 
+/*
+ * Publish a message depending on its origin
+ *
+*/
+void pubMainCore(JsonObject& data) {
+  if (data.containsKey("origin")) {
+    if (data.containsKey("distance")) {
+#ifdef ZgatewayBT
+      String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
+      Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
+      pub_custom_topic((char*)topic.c_str(), data, false);
+#endif
+    } else {
+      pub((char*)data["origin"].as<const char*>(), data);
+    }
+  } else {
+    Log.trace(F("No origin in JSON filtered" CR));
+  }
+}
+
+// Add a document to the queue
+void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+  if (jsonDoc.size() == 0) {
+    Log.error(F("Empty JSON, not enqueued" CR));
+    return;
+  }
+  Log.trace(F("Enqueue JSON" CR));
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  JsonBundle bundle;
+  bundle.doc = jsonDoc;
+  jsonQueue.push(bundle);
+  Log.trace(F("Queue length: %d" CR), jsonQueue.size());
+#else
+  // Pub to main core
+  JsonObject jsonObj = jsonDoc.to<JsonObject>();
+  pubMainCore(jsonObj); // Arduino UNO or other boards with small memory, we don't store and directly publish
+#endif
+}
+
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+// Empty the documents queue
+void emptyQueue() {
+  while (true) {
+    JsonBundle bundle;
+
+    if (jsonQueue.empty()) {
+      break;
+    }
+    Log.trace(F("Dequeue JSON" CR));
+    bundle = jsonQueue.front();
+    jsonQueue.pop();
+
+    JsonObject obj = bundle.doc.as<JsonObject>();
+    pubMainCore(obj);
+    queueLengthSum++;
+  }
+}
+#else
+void emptyQueue() {}
+#endif
+
 /**
  * @brief Publish the payload on default MQTT topic.
  *
@@ -418,7 +494,13 @@ void pub(const char* topicori, JsonObject& data) {
   data["unixtime"] = unixtimestamp();
 #  endif
 #endif
-
+  if (data.containsKey("origin")) { // temporary, in the future use this instead of topicori
+    data.remove("origin");
+  }
+  if (data.size() == 0) {
+    Log.error(F("Empty JSON, not published" CR));
+    return;
+  }
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -626,7 +708,7 @@ void delayWithOTA(long waitMillis) {
     WebUILoop();
 #  endif
 #  ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #  endif
     delay(waitStep);
   }
@@ -686,8 +768,8 @@ void connectMQTT() {
 
   Log.warning(F("MQTT connection..." CR));
 #ifdef ESP32
-  esp_task_wdt_add(NULL);
-  esp_task_wdt_reset();
+  //esp_task_wdt_add(NULL);
+  //esp_task_wdt_reset();
 #endif
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
@@ -933,7 +1015,7 @@ void setup() {
   }
 #  endif
 #  ifdef ESP32
-  esp_task_wdt_init(GeneralTimeOut, true); //enable panic so ESP32 restarts
+  //esp_task_wdt_init(GeneralTimeOut, true); //enable panic so ESP32 restarts
 #  endif
 /*
  The 2 modules below are not connection dependent so start them before the connectivity functions
@@ -1245,7 +1327,7 @@ void setOTA() {
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
 #  ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #  endif
     last_ota_activity_millis = millis();
   });
@@ -1433,7 +1515,7 @@ void blockingWaitForReset() {
         }
 #    endif
 #    ifdef ESP32
-        esp_task_wdt_delete(NULL);
+        //esp_task_wdt_delete(NULL);
 #    endif
         InfoIndicatorOFF();
         SendReceiveIndicatorOFF();
@@ -1841,7 +1923,7 @@ void loop() {
 #endif
 
 #ifdef ESP32
-  esp_task_wdt_reset();
+  //esp_task_wdt_reset();
 #endif
 
   unsigned long now = millis();
@@ -1917,6 +1999,7 @@ void loop() {
         timer_sys_checks = millis();
       }
 #endif
+      emptyQueue();
 #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280/BMP280
 #endif
@@ -2001,7 +2084,6 @@ void loop() {
       if (SYSConfig.discovery)
         launchBTDiscovery(publishDiscovery);
 #  endif
-      emptyBTQueue();
 #endif
 #ifdef ZgatewaySRFB
       SRFBtoMQTT();
@@ -2041,14 +2123,14 @@ void loop() {
     }
   } else { // disconnected from network
 #ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #endif
     connected = false;
     Log.warning(F("Network disconnected" CR));
     ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
 #ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #endif
     ErrorIndicatorOFF();
     delay(2000);
@@ -2163,7 +2245,7 @@ void eraseAndRestart() {
   delay(5000);
   ESP.reset();
 #  else
-  esp_task_wdt_delete(NULL);
+  //esp_task_wdt_delete(NULL);
   nvs_flash_erase();
   ESP.restart();
 #  endif
@@ -2173,8 +2255,8 @@ void eraseAndRestart() {
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String stateMeasures() {
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject SYSdata = jsonBuffer.to<JsonObject>();
+  StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
+
   SYSdata["uptime"] = uptime();
 
   SYSdata["version"] = OMG_VERSION;
@@ -2190,6 +2272,8 @@ String stateMeasures() {
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
+  SYSdata["msgproc"] = queueLengthSum;
+  SYSdata["msgspeed"] = round2((float)queueLengthSum / uptime());
 #    ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minfreemem"] = minFreeMem;
@@ -2262,7 +2346,8 @@ String stateMeasures() {
 #  endif
   SYSdata["modules"] = modules;
 
-  pub(subjectSYStoMQTT, SYSdata);
+  SYSdata["origin"] = subjectSYStoMQTT;
+  enqueueJsonObject(SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
 
   char jsonChar[100];
@@ -2415,7 +2500,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
-#  ifdef ZwebUI
+#  if defined(ZwebUI) && defined(ESP32)
     MQTTtoWebUI(topicOri, jsondata);
 #  endif
 #endif
@@ -2496,7 +2581,8 @@ bool checkForUpdates() {
     if (!jsondata.containsKey("release_summary"))
       jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
-    pub(subjectRLStoMQTT, jsondata);
+    jsondata["origin"] = subjectRLStoMQTT;
+    enqueueJsonObject(jsondata);
     Log.trace(F("Update file found on server" CR));
     return true;
   } else {
@@ -2558,16 +2644,16 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       stopProcessing();
 #  endif
 #  ifdef ESP32
-      esp_task_wdt_delete(NULL); // Stop task watchdog during update
+      //esp_task_wdt_delete(NULL); // Stop task watchdog during update
 #  endif
       Log.warning(F("Starting firmware update" CR));
 
       SendReceiveIndicatorON();
       ErrorIndicatorON();
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject jsondata = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsondata;
       jsondata["release_summary"] = "Update in progress ...";
-      pub(subjectRLStoMQTT, jsondata);
+      jsondata["origin"] = subjectRLStoMQTT;
+      enqueueJsonObject(jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert && !strstr(url, "http:")) {
@@ -2634,7 +2720,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           Log.notice(F("HTTP_UPDATE_OK" CR));
           jsondata["release_summary"] = "Update success !";
           jsondata["installed_version"] = latestVersion;
-          pub(subjectRLStoMQTT, jsondata);
+          jsondata["origin"] = subjectRLStoMQTT;
+          enqueueJsonObject(jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveConfig();

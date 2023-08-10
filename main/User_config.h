@@ -774,6 +774,9 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL);
 void storeSignalValue(SIGNAL_SIZE_UL_ULL);
 #endif
 
+// Origin topics
+#define subjectBTtoMQTT "/BTtoMQTT"
+
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
 

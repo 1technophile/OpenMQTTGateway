@@ -64,8 +64,8 @@ void MeasureADC() {
       if (val >= persistedadc + ThresholdReadingADC || val <= persistedadc - ThresholdReadingADC || (MinTimeInSecBetweenPublishingADC > 0 && millis() - timeadcpub > (MinTimeInSecBetweenPublishingADC * 1000UL))) {
         timeadcpub = millis();
         Log.trace(F("Creating ADC buffer" CR));
-        StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-        JsonObject ADCdata = jsonBuffer.to<JsonObject>();
+        StaticJsonDocument<JSON_MSG_BUFFER> ADCdataBuffer;
+        JsonObject ADCdata = ADCdataBuffer.to<JsonObject>();
         ADCdata["adc"] = (int)val;
         if (NumberOfReadingsADC > 1) {
           ADCdata["adc_reads"] = NumberOfReadingsADC;
@@ -93,7 +93,8 @@ void MeasureADC() {
         ADCdata["adc_sum"] = (int)sum_val;
         ADCdata["mvolt_scaled"] = (int)voltage; // real scaled/calibrated value in mV
 #  endif
-        pub(ADCTOPIC, ADCdata);
+        ADCdata["origin"] = ADCTOPIC;
+        enqueueJsonObject(ADCdata);
         persistedadc = val;
       }
     }

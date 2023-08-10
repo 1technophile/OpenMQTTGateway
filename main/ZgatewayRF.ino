@@ -133,8 +133,8 @@ void setupRF() {
 
 void RFtoMQTT() {
   if (mySwitch.available()) {
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject RFdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> RFdataBuffer;
+    JsonObject RFdata = RFdataBuffer.to<JsonObject>();
     Log.trace(F("Rcv. RF" CR));
 #  ifdef ESP32
     Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
@@ -167,13 +167,15 @@ void RFtoMQTT() {
       if (SYSConfig.discovery)
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
-      pub(subjectRFtoMQTT, RFdata);
+      RFdata["origin"] = subjectRFtoMQTT;
+      enqueueJsonObject(RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
       Log.trace(F("Store val: %u" CR), (unsigned long)MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatRFwMQTT) {
         Log.trace(F("Pub RF for rpt" CR));
-        pub(subjectMQTTtoRF, RFdata);
+        RFdata["origin"] = subjectMQTTtoRF;
+        enqueueJsonObject(RFdata);
       }
     }
   }
@@ -274,7 +276,9 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       mySwitch.setProtocol(valuePRT, valuePLSL);
       mySwitch.send(data, valueBITS);
       Log.notice(F("MQTTtoRF OK" CR));
-      pub(subjectGTWRFtoMQTT, RFdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      RFdata["origin"] = subjectGTWRFtoMQTT;
+      enqueueJsonObject(RFdata);
       mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT); // Restore the default value
     } else {
       bool success = false;
@@ -292,7 +296,9 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       }
 #    endif
       if (success) {
-        pub(subjectGTWRFtoMQTT, RFdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        RFdata["origin"] = subjectGTWRFtoMQTT;
+        enqueueJsonObject(RFdata);
       } else {
 #    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
         pub(subjectGTWRFtoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback

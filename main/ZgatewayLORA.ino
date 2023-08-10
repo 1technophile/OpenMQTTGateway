@@ -391,8 +391,8 @@ void setupLORA() {
 void LORAtoMQTT() {
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject LORAdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
+    JsonObject LORAdata = LORAdataBuffer.to<JsonObject>();
     Log.trace(F("Rcv. LORA" CR));
 #  ifdef ESP32
     String taskMessage = "LORA Task running on core ";
@@ -427,7 +427,7 @@ void LORAtoMQTT() {
       LORAdata["hex"] = hex;
     } else {
       // ascii payload
-      deserializeJson(jsonBuffer, packet, packetSize);
+      deserializeJson(LORAdataBuffer, packet, packetSize);
     }
 
     LORAdata["rssi"] = (int)LoRa.packetRssi();
@@ -454,13 +454,16 @@ void LORAtoMQTT() {
         storeLORADiscovery(LORAdata, LORAdata["model"].as<char*>(), id.c_str());
       }
 #  endif
-      pub(topic.c_str(), LORAdata);
+      LORAdata["origin"] = topic.c_str();
     } else {
-      pub(subjectLORAtoMQTT, LORAdata);
+      LORAdata["origin"] = subjectLORAtoMQTT;
     }
+    enqueueJsonObject(LORAdata);
+
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
-      pub(subjectMQTTtoLORA, LORAdata);
+      LORAdata["origin"] = subjectMQTTtoLORA;
+      enqueueJsonObject(LORAdata);
     }
   }
 }
@@ -489,7 +492,9 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 
       LoRa.endPacket();
       Log.trace(F("MQTTtoLORA OK" CR));
-      pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      LORAdata["origin"] = subjectGTWLORAtoMQTT;
+      enqueueJsonObject(LORAdata);
     } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
@@ -517,13 +522,14 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 }
 #  endif
 #  if simpleReceiving
-void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
+void MQTTtoLORA(char* topicOri, char* LORAarray) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
-    LoRa.print(LORAdata);
+    LoRa.print(LORAarray);
     LoRa.endPacket();
     Log.notice(F("MQTTtoLORA OK" CR));
-    pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    pub(subjectGTWLORAtoMQTT, LORAarray);
   }
 }
 #  endif

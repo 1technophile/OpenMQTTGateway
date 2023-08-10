@@ -55,8 +55,8 @@ void MeasureTempAndHum() {
       Log.error(F("Failed to read from DHT sensor!" CR));
     } else {
       Log.trace(F("Creating DHT buffer" CR));
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject DHTdata = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> DHTdataBuffer;
+      JsonObject DHTdata = DHTdataBuffer.to<JsonObject>();
       if (h != persistedh || dht_always) {
         DHTdata["hum"] = (float)h;
       } else {
@@ -68,8 +68,8 @@ void MeasureTempAndHum() {
       } else {
         Log.trace(F("Same temp don't send it" CR));
       }
-      if (DHTdata.size() > 0)
-        pub(DHTTOPIC, DHTdata);
+      DHTdata["origin"] = DHTTOPIC;
+      enqueueJsonObject(DHTdata);
     }
     persistedh = h;
     persistedt = t;

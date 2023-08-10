@@ -257,7 +257,8 @@ void rtl_433_Callback(char* message) {
     if (SYSConfig.discovery)
       storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
 #  endif
-    pub((char*)topic.c_str(), RFrtl_433_ESPdata);
+    RFrtl_433_ESPdata["origin"] = (char*)topic.c_str();
+    enqueueJsonObject(RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
     pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);
   }
@@ -321,7 +322,8 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       success = true;
     }
     if (success) {
-      pub(subjectRTL_433toMQTT, RTLdata);
+      RTLdata["origin"] = subjectRTL_433toMQTT;
+      enqueueJsonObject(RTLdata);
     } else {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[rtl_433] MQTTtoRTL_433 Fail json" CR));

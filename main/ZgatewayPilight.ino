@@ -45,8 +45,8 @@ void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
   if (status == VALID) {
     Log.trace(F("Creating RF PiLight buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject RFPiLightdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
+    JsonObject RFPiLightdata = RFPiLightdataBuffer.to<JsonObject>();
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
     JsonObject msg = jsonBuffer2.to<JsonObject>();
     auto error = deserializeJson(jsonBuffer2, message);
@@ -75,10 +75,12 @@ void pilightCallback(const String& protocol, const String& message, int status,
     RFPiLightdata["value"] = device_id;
     RFPiLightdata["repeats"] = (int)repeats;
     RFPiLightdata["status"] = (int)status;
-    pub(subjectPilighttoMQTT, RFPiLightdata);
+    RFPiLightdata["origin"] = subjectPilighttoMQTT;
+    enqueueJsonObject(RFPiLightdata);
     if (repeatPilightwMQTT) {
       Log.trace(F("Pub Pilight for rpt" CR));
-      pub(subjectMQTTtoPilight, RFPiLightdata);
+      RFPiLightdata["origin"] = subjectMQTTtoPilight;
+      enqueueJsonObject(RFPiLightdata);
     }
   }
 }
@@ -92,16 +94,16 @@ void pilightRawCallback(const uint16_t* pulses, size_t length) {
     return;
   }
 
-  Log.trace(F("Creating RF PiLight buffer" CR));
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject RFPiLightdata = jsonBuffer.to<JsonObject>();
+  StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
+  JsonObject RFPiLightdata = RFPiLightdataBuffer.to<JsonObject>();
 
   RFPiLightdata["format"] = "RAW";
   RFPiLightdata["rawlen"] = length;
   RFPiLightdata["pulsesString"] = rf.pulseTrainToString(pulses, length); // c=pulse_array_key;p=pulse_types
 
-  // publish data
-  pub(subjectPilighttoMQTT, RFPiLightdata);
+  // Enqueue data
+  RFPiLightdata["origin"] = subjectPilighttoMQTT;
+  enqueueJsonObject(RFPiLightdata);
 }
 #  endif
 
@@ -196,7 +198,9 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
 #  endif
 
     if (success) {
-      pub(subjectGTWPilighttoMQTT, Pilightdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      Pilightdata["origin"] = subjectGTWPilighttoMQTT;
+      enqueueJsonObject(Pilightdata);
     } else {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilightProtocol Fail json" CR));
@@ -264,7 +268,8 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       int msgLength = rf.send(protocol, message);
       if (msgLength > 0) {
         Log.trace(F("Adv data MQTTtoPilight push state via PilighttoMQTT" CR));
-        pub(subjectGTWPilighttoMQTT, Pilightdata);
+        Pilightdata["origin"] = subjectGTWPilighttoMQTT;
+        enqueueJsonObject(Pilightdata);
         success = true;
       } else {
         switch (msgLength) {
@@ -298,7 +303,9 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
     }
 #  endif
     if (success) {
-      pub(subjectGTWPilighttoMQTT, Pilightdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      Pilightdata["origin"] = subjectGTWPilighttoMQTT;
+      enqueueJsonObject(Pilightdata);
     } else {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilight Fail json" CR));

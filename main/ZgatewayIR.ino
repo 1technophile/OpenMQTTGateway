@@ -115,8 +115,8 @@ void IRtoMQTT() {
 
   if (irrecv.decode(&results)) {
     Log.trace(F("Creating IR buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject IRdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> IRdataBuffer;
+    JsonObject IRdata = IRdataBuffer.to<JsonObject>();
 
     Log.trace(F("Rcv. IR" CR));
 #  ifdef ESP32
@@ -168,7 +168,8 @@ void IRtoMQTT() {
       Log.notice(F("--no pub unknwn prt--" CR));
     } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
       Log.trace(F("Adv data IRtoMQTT" CR));
-      pub(subjectIRtoMQTT, IRdata);
+      IRdata["origin"] = subjectIRtoMQTT;
+      enqueueJsonObject(IRdata);
       Log.trace(F("Store val: %D" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatIRwMQTT) {
@@ -273,7 +274,8 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
       }
       if (signalSent) { // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         Log.notice(F("MQTTtoIR OK" CR));
-        pub(subjectGTWIRtoMQTT, IRdata);
+        IRdata["origin"] = subjectGTWIRtoMQTT;
+        enqueueJsonObject(IRdata);
       }
       irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
     } else {

@@ -118,10 +118,8 @@ void RF2toMQTTdiscovery(JsonObject& data) {
 
 void RF2toMQTT() {
   if (rf2rd.hasNewData) {
-    Log.trace(F("Creating RF2 buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject RF2data = jsonBuffer.to<JsonObject>();
-
+    StaticJsonDocument<JSON_MSG_BUFFER> RF2dataBuffer;
+    JsonObject RF2data = RF2dataBuffer.to<JsonObject>();
     rf2rd.hasNewData = false;
 
     Log.trace(F("Rcv. RF2" CR));
@@ -134,8 +132,8 @@ void RF2toMQTT() {
     if (SYSConfig.discovery)
       RF2toMQTTdiscovery(RF2data);
 #  endif
-
-    pub(subjectRF2toMQTT, RF2data);
+    RF2data["origin"] = subjectRF2toMQTT;
+    enqueueJsonObject(RF2data);
   }
 }
 
@@ -327,7 +325,9 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
     }
 #    endif
     if (success) {
-      pub(subjectGTWRF2toMQTT, RF2data); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      RF2data["origin"] = subjectGTWRF2toMQTT;
+      enqueueJsonObject(RF2data);
     } else {
 #    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
       pub(subjectGTWRF2toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
