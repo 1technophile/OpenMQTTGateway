@@ -128,7 +128,7 @@ It can be used with version 1.5.0 and above.
 
 Note that this update option is also autodiscovered through Home Assistant convention, you can update directly from the device page with 2 clicks.
 
-![](../img/OpenMQTTGateway-OTA-Update-Home-Assistant.png)
+![Home Assistant OTA Update](../img/OpenMQTTGateway-OTA-Update-Home-Assistant.png)
 
 You can also indicate the target version to update:
 ```

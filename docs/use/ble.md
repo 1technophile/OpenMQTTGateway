@@ -1,13 +1,17 @@
+---
+title: ESP32 BLE MQTT Gateway
+description: Versatile BLE gateway that scans and decodes data from various Bluetooth devices. It integrates seamlessly with MQTT brokers and controllers like Home Assistant and OpenHAB. Monitor temperature, humidity, pressure, and more for smarter control.
+---
 # BLE gateway
 
 The manufacturer agnostic BLE gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/), allowing you to visualize and analyze information from a wide range of sensors. 
 It can also act as a presence detection gateway by reading the nearby BLE tags or tracker.
 
-Data are transmitted to an MQTT broker, where it can be used to trigger events and rules, as well as displayed, stored and processed in your favorite controller. 
+Data are transmitted to an MQTT broker, where it can be used to trigger events and rules, as well as displayed, stored and processed in your favorite controller (Home Assistant, OpenHAB, Jeedom, Domoticz, ioBroker or any MQTT compatible software).
 
 With the ability to monitor and analyze data such as temperature, humidity, moisture, luminance, weight, pressure, fine particles, and more, the BLE gateway provides a flexible and customizable solution for integrating BLE technology into your control and monitoring systems.
 
-![](../img/OpenMQTTGateway-sensors-ble.png)
+![BLE sensors and devices](../img/OpenMQTTGateway-sensors-ble.png)
 
 ## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug!
 
@@ -17,7 +21,7 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 * Energy consumption monitoring,
 * Presence detection (beta).
 
-[![](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+[![Theengs plug view](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 The plug is available in North America only, other regions are planned.
@@ -33,11 +37,11 @@ OpenMQTTGateway is also available preloaded and configured with the [Theengs plu
 
 1. You should see data coming in your broker.
 
-![](../img/OpenMQTTGateway-mqtt-explorer-lywsd03mmc-atc.png)
+![LYWSD03MMC MQTT data view](../img/OpenMQTTGateway-mqtt-explorer-lywsd03mmc-atc.png)
 
 Once the data has been transmitted to the MQTT broker, it can be easily integrated with your preferred controller. For example, the data can be automatically discovered and made available within popular controllers, example below with Home Assistant.
 
-![](../img/OpenMQTTGateway-home-assistant-chart.png)
+![Home Assistant chart](../img/OpenMQTTGateway-home-assistant-chart.png)
 
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
@@ -47,8 +51,8 @@ To do this activate the "BT: Publish HASS presence" switch in your controller or
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
 
 The entity created can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
-
-![](../img/OpenMQTTGateway-BLE-tracker-Home-Assistant.png)
+ 
+![Away home Home assistant view](../img/OpenMQTTGateway-BLE-tracker-Home-Assistant.png)
 
 If you have multiple gateways, your BLE trackers may not be detected temporary by one gateway but still by the others. In this case you will see the tracker appears offline briefly and online again once it is detected by the others gateways.
 
@@ -77,9 +81,9 @@ To ensure proper functionality, configure the beacon using the KBeacon or KBeaco
 * In the General tab, set the Trigger Command to "motion".
 * In the Slot tab, enable advertisement with the Beacon Type set to "KSensor", the Trigger Only Advertisement option set to "YES", and the Sensor Axis set to "ON".
 
-![](../img/KBeacon-app-configuration-moving.jpg)
+![KBeacon trigger settings](../img/KBeacon-app-configuration-moving.jpg)
 
-![](../img/KBeacon-app-configuration-moving2.jpg)
+![KBeacon details](../img/KBeacon-app-configuration-moving2.jpg)
 
 ## Setting a white or black list
 A black list is a list of MAC addresses that will never be published by OMG

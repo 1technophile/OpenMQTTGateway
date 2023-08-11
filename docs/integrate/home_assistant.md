@@ -15,11 +15,11 @@ On OpenMQTTGateway the Home Assistant discovery is enabled by default on all bin
 
 Enable discovery on your MQTT integration in HASS (activated per default).
 
-![](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
+![Home Assistant Auto Discovery](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
 
 The gateway will need an MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
 
-![](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
+![Home Assistant Auto Discovery](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
 
 ::: warning Note
 The max size of the username is 30 and 60 for the password.
@@ -27,11 +27,11 @@ The max size of the username is 30 and 60 for the password.
 
 OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automatically.
 
-![](../img/OpenMQTTGateway_auto_discovery_Gateway_Home_Assistant.gif)
+![Home Assistant Auto Discovery](../img/OpenMQTTGateway_auto_discovery_Gateway_Home_Assistant.gif)
 
-![](../img/OpenMQTTGateway_auto_discovery_BLE_Sensor_Home_Assistant.gif)
+![Home Assistant Auto Discovery](../img/OpenMQTTGateway_auto_discovery_BLE_Sensor_Home_Assistant.gif)
 
-![](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
+![Home Assistant Auto Discovery](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ::: info
 The Bluetooth and the RTL_433 gateway will create automatically devices and entities, the RF gateway will create DeviceTrigger.
