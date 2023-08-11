@@ -23,10 +23,10 @@ The reference sheet, with the list of all functions, pinouts is [here](https://d
 Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgateway.com/upload/web-install.html) (no additional software required) or [build your own configuration](https://docs.openmqttgateway.com/upload/builds.html) with [PlatformIO](https://platformio.org/) or [Arduino IDE](https://www.arduino.cc/en/software)
 
 
-## First ready to go OpenMQTTGateway device !
+## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug !
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
-* BLE to MQTT gateway, tens of Bluetooth devices supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
 * Presence detection (beta).

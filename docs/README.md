@@ -41,10 +41,10 @@ Behind the scene you will find functionalities dedicated to gateways like:
 * Secure connections
 * Over the air updates
 
-## First ready to go OpenMQTTGateway device !
+## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug !
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
-* BLE to MQTT gateway, tens of Bluetooth devices supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
 * Presence detection (beta).

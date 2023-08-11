@@ -1,7 +1,7 @@
 # BLE gateway
 
-The manufacturer agnostic BLE gateway acts as a powerful BLE scanner of devices and decoder, allowing you to visualize and analyze information from a wide range of BLE devices. 
-It can also act as a presence detection gateway by reading the nearby BLE tags or tracker devices.
+The manufacturer agnostic BLE gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/), allowing you to visualize and analyze information from a wide range of sensors. 
+It can also act as a presence detection gateway by reading the nearby BLE tags or tracker.
 
 Data are transmitted to an MQTT broker, where it can be used to trigger events and rules, as well as displayed, stored and processed in your favorite controller. 
 
@@ -9,6 +9,18 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 
 ![](../img/OpenMQTTGateway-sensors-ble.png)
 
+## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug!
+
+[Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* Smart plug that can be controlled remotely,
+* Energy consumption monitoring,
+* Presence detection (beta).
+
+[![](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+
+Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+The plug is available in North America only, other regions are planned.
 
 ## Receiving signals from [compatible BLE sensors](https://decoder.theengs.io/devices/devices_by_brand.html) to publish it to an MQTT broker.
 To receive data from BLE sensors you can use an ESP32-based device with a programming USB port or use a Serial adapter.
