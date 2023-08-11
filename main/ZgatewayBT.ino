@@ -850,7 +850,11 @@ void BLEconnect() {
 
 void stopProcessing() {
   ProcessLock = true;
-  delay(BTConfig.scanDuration < 2000 ? BTConfig.scanDuration : 2000);
+  // We stop the scan
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  if (pBLEScan->isScanning()) {
+    pBLEScan->stop();
+  }
   //Suspending, deleting tasks and stopping BT to free memory
   vTaskSuspend(xCoreTaskHandle);
   vTaskDelete(xCoreTaskHandle);
