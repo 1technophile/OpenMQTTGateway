@@ -1,3 +1,8 @@
+---
+title: Infrared MQTT Gateway
+description: Unlock the potential of Infrared technology with our universal gateway. Decode signals from various devices, and integrate seamlessly with MQTT systems abd controllers like Home Assistant and OpenHAB.
+---
+
 # IR gateway
 There is two methods for finding the IR codes you want to replicate:
 1. Point the remote control to an IR receiver see [Receiving data from IR signal](#receiving-data-from-ir-signal) & [Send data by MQTT to convert it on IR signal](#send-data-by-mqtt-to-convert-it-on-ir-signal)
@@ -24,7 +29,7 @@ To receive big dump of raw data you need first to modify the [config_IR.h](https
 Unknown protocols are filtered by default, if you want to see the unknown protocols set into [config_IR.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/config_IR.h)
 `#define pubIRunknownPrtcl true` instead of false
 
-![](https://github.com/1technophile/OpenMQTTGateway/blob/master/img/OpenMQTTGateway_serial3.jpg)
+![IR serial](../img/OpenMQTTGateway_serial3.jpg)
 
 You can take this code and try to reproduce it with the gateway either by using [decimal value](#send-data-by-mqtt-to-convert-it-on-ir-signal) or the [raw value](#send-raw-ir-data-by-mqtt).
 

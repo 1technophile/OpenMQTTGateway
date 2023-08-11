@@ -4,21 +4,21 @@
 * From AWS console, search for IOT core
 * Create a Thing and name it, this name will be used as the OpenMQTTGateway name.
 
-![](../img/Integrate_AWS_IOT_Create_Thing.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Thing.png)
 
-![](../img/Integrate_AWS_IOT_Create_Thing2.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Thing2.png)
 
-![](../img/Integrate_AWS_IOT_Create_Thing3.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Thing3.png)
 
-![](../img/Integrate_AWS_IOT_Create_Thing4.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Thing4.png)
 
 ## Create a policy
 
-![](../img/Integrate_AWS_IOT_Create_Policy.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Policy.png)
 
-![](../img/Integrate_AWS_IOT_Create_Policy2.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Policy2.png)
 
-![](../img/Integrate_AWS_IOT_Create_Policy3.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Policy3.png)
 
 * Add this json code to the policy
 ```json
@@ -46,26 +46,26 @@
 
 * Create a new certificate
 
-![](../img/Integrate_AWS_IOT_Create_Certificate.png)
-![](../img/Integrate_AWS_IOT_Create_Certificate2.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Certificate.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Certificate2.png)
 
 * Download certificates and key
 
-![](../img/Integrate_AWS_IOT_Create_Certificate3.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Create_Certificate3.png)
 
 ## Attach Policy with certificate
 
-![](../img/Integrate_AWS_IOT_Attach_Policy.png)
-![](../img/Integrate_AWS_IOT_Attach_Policy2.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Attach_Policy.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Attach_Policy2.png)
 
 ## Activate certificate and attach it to Thing
 
-![](../img/Integrate_AWS_IOT_Attach_Thing.png)
-![](../img/Integrate_AWS_IOT_Attach_Thing2.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Attach_Thing.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Attach_Thing2.png)
 
 ## Find AWS EndPoint
 
-![](../img/Integrate_AWS_IOT_Find_Endpoint.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_Find_Endpoint.png)
 
 ## Gather the information for OpenMQTTGateway configuration
 
@@ -106,4 +106,4 @@ Enter your credentials and verify that Secure connection is marked.
 
 You should see messages coming.
 
-![](../img/Integrate_AWS_IOT_result_MQTT.png)
+![AWS tutorial step](../img/Integrate_AWS_IOT_result_MQTT.png)

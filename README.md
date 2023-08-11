@@ -4,7 +4,7 @@
 ![Check Code Format](https://github.com/1technophile/OpenMQTTGateway/workflows/Check%20Code%20Format/badge.svg?branch=development)
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/1technophile/openmqttgateway.svg)](http://isitmaintained.com/project/1technophile/openmqttgateway "Percentage of issues still open")
 
-[![](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.png)](https://community.openmqttgateway.com)
+[![OpenMQTTGateway capabilities](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.png)](https://community.openmqttgateway.com)
 
 OpenMQTTGateway project goal is to concentrate in one firmware different technologies and protocols, decreasing by the way the number of physical bridges needed, and hiding the different technologies singularity behind a simple & wide spread communication protocol; MQTT.
 
@@ -23,15 +23,15 @@ The reference sheet, with the list of all functions, pinouts is [here](https://d
 Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgateway.com/upload/web-install.html) (no additional software required) or [build your own configuration](https://docs.openmqttgateway.com/upload/builds.html) with [PlatformIO](https://platformio.org/) or [Arduino IDE](https://www.arduino.cc/en/software)
 
 
-## First ready to go OpenMQTTGateway device !
+## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug !
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
-* BLE to MQTT gateway, tens of Bluetooth devices supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
 * Presence detection (beta).
 
-[![](./docs/img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+[![Theengs plug view](./docs/img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 The plug is available in North America only, other regions are planned.
