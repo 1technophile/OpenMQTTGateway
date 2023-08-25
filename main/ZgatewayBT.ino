@@ -681,6 +681,8 @@ void procBLETask(void* pvParameters) {
 
   for (;;) {
     xQueueReceive(BLEQueue, &advertisedDevice, portMAX_DELAY);
+    // Feed the watchdog
+    esp_task_wdt_reset();
 
     if (!ProcessLock) {
       Log.trace(F("Creating BLE buffer" CR));
