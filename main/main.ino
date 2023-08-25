@@ -2438,7 +2438,6 @@ String latestVersion;
 bool checkForUpdates() {
   Log.notice(F("Update check, free heap: %d"), ESP.getFreeHeap());
   HTTPClient http;
-  http.setTimeout(GeneralTimeOut - 1); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
   int httpCode = http.GET();
