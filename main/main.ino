@@ -710,8 +710,6 @@ void connectMQTT() {
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
-    // publish version
-    pub(version_Topic, OMG_VERSION, will_Retain);
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);
