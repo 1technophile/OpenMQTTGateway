@@ -217,6 +217,11 @@ const char* certificate PROGMEM = R"EOF("
 #    define AWS_IOT false
 #  endif
 
+#  if AWS_IOT
+// Enable the use of ALPN for AWS IoT Core with the port 443
+const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
+#  endif
+
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.
 
 #  ifdef MQTT_HTTPS_FW_UPDATE

@@ -1274,6 +1274,11 @@ void setupTLS(bool self_signed, uint8_t index) {
     Log.notice(F("Using self signed cert index %u" CR), index);
 #    if defined(ESP32)
     sClient->setCACert(certs_array[index].server_cert);
+#      if AWS_IOT
+    if (strcmp(mqtt_port, "443") == 0) {
+      sClient->setAlpnProtocols(alpnProtocols);
+    }
+#      endif
 #      if MQTT_SECURE_SELF_SIGNED_CLIENT
     sClient->setCertificate(certs_array[index].client_cert);
     sClient->setPrivateKey(certs_array[index].client_key);
