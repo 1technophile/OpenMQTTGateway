@@ -37,6 +37,8 @@
 #  define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
 #  define WIPHONE_MAX_MESSAGE_LEN 230
 
+LORAConfig_s LORAConfig;
+
 typedef struct __attribute__((packed)) {
   // WiPhone uses RadioHead library which has additional (unused) headers
   uint8_t rh_to;
@@ -127,7 +129,69 @@ boolean _MQTTtoWiPhone(JsonObject& LORAdata) {
   return true;
 }
 
+void LORAConfig_init() {
+  LORAConfig.Frequency = LORA_BAND;
+}
+
+void LORAConfig_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  if (preferences.isKey("LORAConfig")) {
+    auto error = deserializeJson(jsonBuffer, preferences.getString("LORAConfig", "{}"));
+    preferences.end();
+    Log.notice(F("LORA Config loaded" CR));
+    if (error) {
+      Log.error(F("LORA Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      return;
+    }
+    if (jsonBuffer.isNull()) {
+      Log.warning(F("LORA Config is null" CR));
+      return;
+    }
+    JsonObject jo = jsonBuffer.as<JsonObject>();
+    LORAConfig_fromJson(jo);
+    Log.notice(F("LORA Config loaded" CR));
+  } else {
+    preferences.end();
+    Log.notice(F("LORA Config not found" CR));
+  }
+}
+
+void LORAConfig_fromJson(JsonObject& LORAdata) {
+  Config_update(LORAdata, "frequency", LORAConfig.Frequency);
+
+  if (LORAdata.containsKey("erase") && LORAdata["erase"].as<bool>()) {
+    // Erase config from NVS (non-volatile storage)
+    preferences.begin(Gateway_Short_Name, false);
+    if (preferences.isKey("LORAConfig")) {
+      int result = preferences.remove("LORAConfig");
+      Log.notice(F("LORA config erase result: %d" CR), result);
+      preferences.end();
+      return; // Erase prevails on save, so skipping save
+    } else {
+      Log.notice(F("LORA config not found" CR));
+      preferences.end();
+    }
+  }
+  if (LORAdata.containsKey("save") && LORAdata["save"].as<bool>()) {
+    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+    JsonObject jo = jsonBuffer.to<JsonObject>();
+    jo["frequency"] = LORAConfig.Frequency;
+    // Save config into NVS (non-volatile storage)
+    String conf = "";
+    serializeJson(jsonBuffer, conf);
+    preferences.begin(Gateway_Short_Name, false);
+    int result = preferences.putString("LORAConfig", conf);
+    preferences.end();
+    Log.notice(F("LORA Config_save: %s, result: %d restarting" CR), conf.c_str(), result);
+    ESP.restart();
+  }
+}
+
 void setupLORA() {
+  LORAConfig_init();
+  LORAConfig_load();
+  Log.notice(F("LORA Frequency: %d" CR), LORAConfig.Frequency);
 #  ifdef ESP8266
   SPI.begin();
 #  else
@@ -136,7 +200,7 @@ void setupLORA() {
 
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
 
-  if (!LoRa.begin(LORA_BAND)) {
+  if (!LoRa.begin(LORAConfig.Frequency)) {
     Log.error(F("ZgatewayLORA setup failed!" CR));
     while (1)
       ;
@@ -261,6 +325,25 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
     } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
+  }
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
+    Log.trace(F("MQTTtoLORA json set" CR));
+    /*
+     * Configuration modifications priorities:
+     *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
+     *  Then parameters included in json are taken in account
+     *  Finally `erase=true` and `save=true` commands are executed (if both are present, ERASE prevails on SAVE)
+     */
+    if (LORAdata.containsKey("init") && LORAdata["init"].as<bool>()) {
+      // Restore the default (initial) configuration
+      LORAConfig_init();
+    } else if (LORAdata.containsKey("load") && LORAdata["load"].as<bool>()) {
+      // Load the saved configuration, if not initialised
+      LORAConfig_load();
+    }
+
+    // Load config from json if available
+    LORAConfig_fromJson(LORAdata);
   }
 }
 #  endif

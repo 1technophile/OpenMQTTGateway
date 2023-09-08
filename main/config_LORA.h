@@ -34,6 +34,7 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #define subjectLORAtoMQTT    "/LORAtoMQTT"
 #define subjectMQTTtoLORA    "/commands/MQTTtoLORA"
 #define subjectGTWLORAtoMQTT "/LORAtoMQTT"
+#define subjectMQTTtoLORAset "/commands/MQTTtoLORA/config"
 
 //Default parameters used when the parameters are not set in the json data
 #ifndef LORA_BAND
@@ -77,5 +78,9 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #ifndef LORA_DI0
 #  define LORA_DI0 26 // GPIO26 -- SX1278's IRQ(Interrupt Request)
 #endif
+
+struct LORAConfig_s {
+  long Frequency;
+};
 
 #endif
