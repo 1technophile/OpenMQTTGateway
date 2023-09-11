@@ -243,12 +243,6 @@ void LORAtoMQTT() {
     }
     // Terminate with a null character in case we have a string
     packet[packetSize] = 0;
-
-    LORAdata["rssi"] = (int)LoRa.packetRssi();
-    LORAdata["snr"] = (float)LoRa.packetSnr();
-    LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
-    LORAdata["packetSize"] = (int)packetSize;
-
     uint8_t deviceId = _determineDevice(packet, packetSize);
     if (deviceId == WIPHONE) {
       _WiPhoneToMQTT(packet, LORAdata);
@@ -262,8 +256,14 @@ void LORAtoMQTT() {
       LORAdata["hex"] = hex;
     } else {
       // ascii payload
-      LORAdata["message"] = packet;
+      deserializeJson(jsonBuffer, packet, packetSize);
     }
+
+    LORAdata["rssi"] = (int)LoRa.packetRssi();
+    LORAdata["snr"] = (float)LoRa.packetSnr();
+    LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
+    LORAdata["packetSize"] = (int)packetSize;
+
     pub(subjectLORAtoMQTT, LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
