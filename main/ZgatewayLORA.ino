@@ -264,7 +264,19 @@ void LORAtoMQTT() {
     LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
     LORAdata["packetSize"] = (int)packetSize;
 
-    pub(subjectLORAtoMQTT, LORAdata);
+    std::string topic = LORAdata["id"].as<std::string>();
+
+    // Replace ":" in topic
+    size_t pos = topic.find(":");
+    while (pos != std::string::npos) {
+      topic.erase(pos, 1);
+      pos = topic.find(":", pos);
+    }
+
+    std::string subjectStr(subjectLORAtoMQTT);
+    topic = subjectStr + "/" + topic;
+
+    pub(topic.c_str(), LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
       pub(subjectMQTTtoLORA, LORAdata);
