@@ -2019,6 +2019,58 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           break;
         }
 #  endif
+#  ifdef ZgatewayLORA
+        case webUIHash("LORAtoMQTT"): {
+          // {"tempc":25.4,"hum":0,"batt":0}
+
+          String line1 = "";
+          if (data.containsKey("tempc")) {
+            char temp[5];
+            float temperature_C = data["tempc"];
+
+            if (displayMetric) {
+              dtostrf(temperature_C, 3, 1, temp);
+              line1 = "temp: " + (String)temp + "°C ";
+            } else {
+              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+              line1 = "temp: " + (String)temp + "°F ";
+            }
+          }
+          line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
+
+          // Line 2
+
+          String line2 = "";
+          float humidity = data["hum"];
+          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
+            char hum[5];
+            dtostrf(humidity, 3, 1, hum);
+            line2 += "hum: " + (String)hum + "% ";
+          }
+          line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+
+          // Line 3
+
+          String line3 = "";
+          float adc = data["adc"];
+          if (data.containsKey("adc") && adc <= 100 && adc >= 0) {
+            char cAdc[5];
+            dtostrf(adc, 3, 1, cAdc);
+            line3 += "adc: " + (String)cAdc + "µS/cm ";
+          }
+          line3.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+
+          // Queue completed message
+
+          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            free(message);
+          } else {
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
+          }
+          break;
+        }
+#  endif
         default:
           Log.verbose(F("[ WebUI ] unhandled topic %s" CR), message->title);
           free(message);

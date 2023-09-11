@@ -1864,6 +1864,9 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+#  ifdef ZgatewayLORA
+        stateLORAMeasures();
+#  endif
 #  if defined(ZwebUI) && defined(ESP32)
         stateWebUIStatus();
 #  endif

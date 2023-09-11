@@ -264,19 +264,20 @@ void LORAtoMQTT() {
     LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
     LORAdata["packetSize"] = (int)packetSize;
 
-    std::string topic = LORAdata["id"].as<std::string>();
-
-    // Replace ":" in topic
-    size_t pos = topic.find(":");
-    while (pos != std::string::npos) {
-      topic.erase(pos, 1);
-      pos = topic.find(":", pos);
+    if (LORAdata.containsKey("id")) {
+      // Replace ":" in topic
+      std::string topic = LORAdata["id"].as<std::string>();
+      size_t pos = topic.find(":");
+      while (pos != std::string::npos) {
+        topic.erase(pos, 1);
+        pos = topic.find(":", pos);
+      }
+      std::string subjectStr(subjectLORAtoMQTT);
+      topic = subjectStr + "/" + topic;
+      pub(topic.c_str(), LORAdata);
+    } else {
+      pub(subjectLORAtoMQTT, LORAdata);
     }
-
-    std::string subjectStr(subjectLORAtoMQTT);
-    topic = subjectStr + "/" + topic;
-
-    pub(topic.c_str(), LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
       pub(subjectMQTTtoLORA, LORAdata);
@@ -292,7 +293,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
     const char* hex = LORAdata["hex"];
     int txPower = LORAdata["txpower"] | LORA_TX_POWER;
     int spreadingFactor = LORAdata["spreadingfactor"] | LORA_SPREADING_FACTOR;
-    long int frequency = LORAdata["frequency "] | LORA_BAND;
+    long int frequency = LORAdata["frequency "] | LORAConfig.Frequency;
     long int signalBandwidth = LORAdata["signalbandwidth"] | LORA_SIGNAL_BANDWIDTH;
     int codingRateDenominator = LORAdata["codingrate"] | LORA_CODING_RATE;
     int preambleLength = LORAdata["preamblelength"] | LORA_PREAMBLE_LENGTH;
@@ -370,4 +371,11 @@ void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
   }
 }
 #  endif
+void stateLORAMeasures() {
+  //Publish LORA state
+  StaticJsonDocument<64> jsonBuffer;
+  JsonObject LORAdata = jsonBuffer.to<JsonObject>();
+  LORAdata["frequency"] = LORAConfig.Frequency;
+  pub(subjectGTWLORAtoMQTT, LORAdata);
+}
 #endif

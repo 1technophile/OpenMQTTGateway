@@ -714,7 +714,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #endif
 
 /*-----------PLACEHOLDERS FOR WebUI DISPLAY--------------*/
-#define pubWebUI(...) // display the published message onto the OLED display
+#define pubWebUI(...) // display the published message onto the WebUI display
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
 // The real definitions are in config_M5.h / config_SSD1306.h
