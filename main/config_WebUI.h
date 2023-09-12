@@ -34,7 +34,7 @@
 /*------------------- Optional Compiler Directives ----------------------*/
 
 #ifndef WEB_TEMPLATE_BUFFER_MAX_SIZE
-#  define WEB_TEMPLATE_BUFFER_MAX_SIZE 2000
+#  define WEB_TEMPLATE_BUFFER_MAX_SIZE 3000 // Max size of the template buffer
 #endif
 
 #ifndef DISPLAY_METRIC

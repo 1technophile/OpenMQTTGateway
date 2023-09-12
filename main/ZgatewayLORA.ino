@@ -366,7 +366,7 @@ void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
   }
 }
 #  endif
-void stateLORAMeasures() {
+String stateLORAMeasures() {
   //Publish LORA state
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject LORAdata = jsonBuffer.to<JsonObject>();
@@ -381,5 +381,9 @@ void stateLORAMeasures() {
   LORAdata["invertiq"] = LORAConfig.invertIQ;
 
   pub(subjectGTWLORAtoMQTT, LORAdata);
+
+  String output;
+  serializeJson(LORAdata, output);
+  return output;
 }
 #endif

@@ -853,6 +853,93 @@ void handleLO() {
 }
 
 /**
+ * @brief /LA - Configure LORA Page
+ * T: handleLA: uri: /la, args: 9, method: 1
+ * T: handleLA Arg: 0, lf=868100000
+ * T: handleLA Arg: 1, lt=14
+ * T: handleLA Arg: 2, ls=12
+ * T: handleLA Arg: 3, lb=125
+ * T: handleLA Arg: 4, lc=5
+ * T: handleLA Arg: 5, ll=8
+ * T: handleLA Arg: 6, lw=0
+ * T: handleLA Arg: 7, lr=1
+ * T: handleLA Arg: 8, li=0
+ * T: handleLA Arg: 9, save=
+ */
+void handleLA() {
+  WEBUI_TRACE_LOG(F("handleLA: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleLA Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save")) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject WEBtoLORA = jsonBuffer.to<JsonObject>();
+
+      if (server.hasArg("lf")) {
+        WEBtoLORA["frequency"] = server.arg("lf");
+      }
+
+      if (server.hasArg("lt")) {
+        WEBtoLORA["txpower"] = server.arg("lt");
+      }
+
+      if (server.hasArg("ls")) {
+        WEBtoLORA["spreadingfactor"] = server.arg("ls");
+      }
+
+      if (server.hasArg("lb")) {
+        WEBtoLORA["signalbandwidth"] = server.arg("lb");
+      }
+
+      if (server.hasArg("lc")) {
+        WEBtoLORA["codingrate"] = server.arg("lc");
+      }
+
+      if (server.hasArg("ll")) {
+        WEBtoLORA["preamblelength"] = server.arg("ll");
+      }
+
+      if (server.hasArg("lw")) {
+        WEBtoLORA["syncword"] = server.arg("lw");
+      }
+
+      if (server.hasArg("lr")) {
+        WEBtoLORA["enablecrc"] = server.arg("lr");
+      }
+
+      if (server.hasArg("li")) {
+        WEBtoLORA["invertiq"] = server.arg("li");
+      }
+
+      LORAConfig_fromJson(WEBtoLORA);
+    }
+  }
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure LORA").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_lora_body,
+           jsonChar,
+           gateway_name,
+           LORAConfig.frequency == 433000000 ? "selected" : "",
+           LORAConfig.frequency == 868000000 ? "selected" : "",
+           LORAConfig.frequency == 915000000 ? "selected" : "");
+
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+  stateLORAMeasures();
+  Log.trace(F("[WebUI] LORAConfig end" CR));
+}
+
+/**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
  * 
  */
@@ -1015,6 +1102,10 @@ void handleIN() {
 #  if defined(ZgatewayCloud)
     informationDisplay += "1<BR>Cloud}2}1";
     informationDisplay += stateCLOUDStatus();
+#  endif
+#  if defined(ZgatewayLORA)
+    informationDisplay += "1<BR>LORA}2}1";
+    informationDisplay += stateLORAMeasures();
 #  endif
     informationDisplay += "1<BR>WebUI}2}1";
     informationDisplay += stateWebUIStatus();
@@ -1276,6 +1367,9 @@ void WebUISetup() {
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
   server.on("/wu", handleWU); // Configure WebUI
+#  ifdef ZgatewayLORA
+  server.on("/la", handleLA); // Configure LORA
+#  endif
 #  if defined(ZgatewayCloud)
   server.on("/cl", handleCL); // Configure Cloud
   server.on("/tk", handleTK); // Store Device Token

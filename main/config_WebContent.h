@@ -50,7 +50,11 @@
 #endif
 #define configure_4 "<p><form action='wu' method='get'><button>Configure WebUI</button></form></p>"
 #define configure_5 "<p><form action='lo' method='get'><button>Configure Logging</button></form></p>"
-#define configure_6
+#ifdef ZgatewayLORA
+#  define configure_6 "<p><form action='la' method='get'><button>Configure LORA</button></form></p>"
+#else
+#  define configure_6
+#endif
 #define configure_7
 #define configure_8
 
@@ -97,6 +101,22 @@ const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><s
 const char config_logging_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>OpenMQTTGateway Logging</b></span></legend><form method='get' action='lo'><p><b>Log Level</b><br><select id='lo'><option %s value='0'>Silent</option><option %s value='1'>Fatal</option><option %s value='2'>Error</option><option %s value='3'>Warning</option><option %s value='4'>Notice</option><option %s value='5'>Trace</option><option %s value='6'>Verbose</option></select></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure WebUI</b></span></legend><form method='get' action='wu'><p><b>Display Metric</b><br><input id='dm' type='checkbox' %s></p><p><b>Secure WebUI</b><br><input id='sw' type='checkbox' %s></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+
+const char config_lora_body[] = body_header
+"<fieldset class=\"set1\">"
+"<legend><span><b>Configure LORA Frequency</b></span></legend>"
+"<form method='get' action='la'>"
+
+"<p><b>Frequency</b><br>"
+"<select id='lf' name='lf'>"
+"<option %s value='868000000'>868MHz</option>"
+"<option %s value='915000000'>915MHz</option>"
+"<option %s value='433000000'>433MHz</option>"
+"</select></p>"
+
+"<br><button name='save' type='submit' class='button bgrn'>Save</button>"
+"</form>"
+"</fieldset>" body_footer_config_menu;
 
 const char footer[] = "<div style='text-align:right;font-size:11px;'><hr/><a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>%s</a></div></div></body></html>";
 
