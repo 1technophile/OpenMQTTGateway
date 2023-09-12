@@ -1942,6 +1942,10 @@ void loop() {
 #endif
 #ifdef ZgatewayLORA
       LORAtoMQTT();
+#  ifdef ZmqttDiscovery
+      if (SYSConfig.discovery)
+        launchLORADiscovery(publishDiscovery);
+#  endif
 #endif
 #ifdef ZgatewayRF
       RFtoMQTT();

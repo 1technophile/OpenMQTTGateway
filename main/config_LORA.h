@@ -107,4 +107,26 @@ struct LORAConfig_s {
   bool invertIQ;
 };
 
+#ifdef ZmqttDiscovery
+extern void launchLORADiscovery(bool overrideDiscovery);
+// This structure stores the entities of the devices and is they have been discovered or not
+// The uniqueId is composed of the device id + the key
+
+#  define uniqueIdSize  30
+#  define modelNameSize 30
+
+struct LORAdevice {
+  char uniqueId[uniqueIdSize];
+  char modelName[modelNameSize];
+  bool isDisc;
+};
+
+const char LORAparameters[3][4][12] = {
+    // LORA key, name, unit, device_class
+    {"tempc", "temperature", "°C", "temperature"},
+    {"hum", "humidity", "%", "humidity"},
+    {"moi", "moisture", "%", "humidity"}};
+
+#endif
+
 #endif

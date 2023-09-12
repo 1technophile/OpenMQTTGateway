@@ -39,6 +39,139 @@
 
 LORAConfig_s LORAConfig;
 
+#  ifdef ZmqttDiscovery
+SemaphoreHandle_t semaphorecreateOrUpdateDeviceLORA;
+std::vector<LORAdevice*> LORAdevices;
+int newLORADevices = 0;
+
+static LORAdevice NO_LORA_DEVICE_FOUND = {{0},
+                                          0,
+                                          false};
+
+LORAdevice* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
+LORAdevice* getDeviceById(const char* id) {
+  Log.trace(F("getDeviceById %s" CR), id);
+
+  for (std::vector<LORAdevice*>::iterator it = LORAdevices.begin(); it != LORAdevices.end(); ++it) {
+    if ((strcmp((*it)->uniqueId, id) == 0)) {
+      return *it;
+    }
+  }
+  return &NO_LORA_DEVICE_FOUND;
+}
+
+void dumpLORADevices() {
+  for (std::vector<LORAdevice*>::iterator it = LORAdevices.begin(); it != LORAdevices.end(); ++it) {
+    LORAdevice* p = *it;
+    Log.trace(F("uniqueId %s" CR), p->uniqueId);
+    Log.trace(F("modelName %s" CR), p->modelName);
+    Log.trace(F("isDisc %d" CR), p->isDisc);
+  }
+}
+
+void createOrUpdateDeviceLORA(const char* id, const char* model, uint8_t flags) {
+  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(30000)) == pdFALSE) {
+    Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
+    return;
+  }
+
+  LORAdevice* device = getDeviceById(id);
+  if (device == &NO_LORA_DEVICE_FOUND) {
+    Log.trace(F("add %s" CR), id);
+    //new device
+    device = new LORAdevice();
+    if (strlcpy(device->uniqueId, id, uniqueIdSize) > uniqueIdSize) {
+      Log.warning(F("[LORA] Device id %s exceeds available space" CR), id); // Remove from production release ?
+    };
+    if (strlcpy(device->modelName, model, modelNameSize) > modelNameSize) {
+      Log.warning(F("[LORA] Device model %s exceeds available space" CR), id); // Remove from production release ?
+    };
+    device->isDisc = flags & device_flags_isDisc;
+    LORAdevices.push_back(device);
+    newLORADevices++;
+  } else {
+    Log.trace(F("update %s" CR), id);
+
+    if (flags & device_flags_isDisc) {
+      device->isDisc = true;
+    }
+  }
+
+  xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
+}
+
+// This function always should be called from the main core as it generates direct mqtt messages
+// When overrideDiscovery=true, we publish discovery messages of known LORAdevices (even if no new)
+void launchLORADiscovery(bool overrideDiscovery) {
+  if (!overrideDiscovery && newLORADevices == 0)
+    return;
+  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(1000)) == pdFALSE) {
+    Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
+    return;
+  }
+  newLORADevices = 0;
+  std::vector<LORAdevice*> localDevices = LORAdevices;
+  xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
+  for (std::vector<LORAdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
+    LORAdevice* pdevice = *it;
+    Log.trace(F("Device id %s" CR), pdevice->uniqueId);
+    // Do not launch discovery for the LORAdevices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
+    if (overrideDiscovery || !isDiscovered(pdevice)) {
+      size_t numRows = sizeof(LORAparameters) / sizeof(LORAparameters[0]);
+      for (int i = 0; i < numRows; i++) {
+        if (strstr(pdevice->uniqueId, LORAparameters[i][0]) != 0) {
+          // Remove the key from the unique id to extract the device id
+          String idWoKey = pdevice->uniqueId;
+          idWoKey.remove(idWoKey.length() - (strlen(LORAparameters[i][0]) + 1));
+          Log.trace(F("idWoKey %s" CR), idWoKey.c_str());
+          String value_template = "{{ value_json." + String(LORAparameters[i][0]) + " | is_defined }}";
+
+          String topic = idWoKey;
+          topic = String(subjectLORAtoMQTT) + "/" + topic;
+
+          createDiscovery("sensor", //set Type
+                          (char*)topic.c_str(), LORAparameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
+                          "", LORAparameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                          "", "", LORAparameters[i][2], //set,payload_on,payload_off,unit_of_meas,
+                          0, //set  off_delay
+                          "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                          (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
+                          stateClassMeasurement //State Class
+          );
+          pdevice->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
+          dumpLORADevices();
+          break;
+        }
+      }
+      if (!pdevice->isDisc) {
+        Log.trace(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
+      }
+    } else {
+      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
+    }
+  }
+}
+
+void storeLORADiscovery(JsonObject& RFLORA_ESPdata, const char* model, const char* uniqueid) {
+  //Sanitize model name
+  String modelSanitized = model;
+  modelSanitized.replace(" ", "_");
+  modelSanitized.replace("/", "_");
+  modelSanitized.replace(".", "_");
+  modelSanitized.replace("&", "");
+
+  //Sensors translation matrix for sensors that requires statistics by using stateClassMeasurement
+  size_t numRows = sizeof(LORAparameters) / sizeof(LORAparameters[0]);
+
+  for (int i = 0; i < numRows; i++) {
+    if (RFLORA_ESPdata.containsKey(LORAparameters[i][0])) {
+      String key_id = String(uniqueid) + "-" + String(LORAparameters[i][0]);
+      createOrUpdateDeviceLORA((char*)key_id.c_str(), (char*)modelSanitized.c_str(), device_flags_init);
+    }
+  }
+}
+#  endif
+
 typedef struct __attribute__((packed)) {
   // WiPhone uses RadioHead library which has additional (unused) headers
   uint8_t rh_to;
@@ -216,6 +349,10 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
 void setupLORA() {
   LORAConfig_init();
   LORAConfig_load();
+#  ifdef ZmqttDiscovery
+  semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
+#  endif
   Log.notice(F("LORA Frequency: %d" CR), LORAConfig.frequency);
 #  ifdef ESP8266
   SPI.begin();
@@ -291,8 +428,17 @@ void LORAtoMQTT() {
         topic.erase(pos, 1);
         pos = topic.find(":", pos);
       }
+      std::string id = topic;
       std::string subjectStr(subjectLORAtoMQTT);
       topic = subjectStr + "/" + topic;
+
+#  ifdef ZmqttDiscovery
+      if (SYSConfig.discovery) {
+        if (!LORAdata.containsKey("model"))
+          LORAdata["model"] = "LORA_NODE";
+        storeLORADiscovery(LORAdata, LORAdata["model"].as<char*>(), id.c_str());
+      }
+#  endif
       pub(topic.c_str(), LORAdata);
     } else {
       pub(subjectLORAtoMQTT, LORAdata);
