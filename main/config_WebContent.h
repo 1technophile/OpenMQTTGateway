@@ -104,7 +104,7 @@ const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><
 
 const char config_lora_body[] = body_header
 "<fieldset class=\"set1\">"
-"<legend><span><b>Configure LORA Frequency</b></span></legend>"
+"<legend><span><b>Configure LORA</b></span></legend>"
 "<form method='get' action='la'>"
 
 "<p><b>Frequency</b><br>"
@@ -114,9 +114,39 @@ const char config_lora_body[] = body_header
 "<option %s value='433000000'>433MHz</option>"
 "</select></p>"
 
+"<p><b>TX Power</b><br>"
+"<select id='lp' name='lp'>"
+"<option %s value='0'>0 dBm</option>"
+"<option %s value='1'>1 dBm</option>"
+"<option %s value='2'>2 dBm</option>"
+"<option %s value='3'>3 dBm</option>"
+"<option %s value='4'>4 dBm</option>"
+"<option %s value='5'>5 dBm</option>"
+"<option %s value='6'>6 dBm</option>"
+"<option %s value='7'>7 dBm</option>"
+"<option %s value='8'>8 dBm</option>"
+"<option %s value='9'>9 dBm</option>"
+"<option %s value='10'>10 dBm</option>"
+"<option %s value='11'>11 dBm</option>"
+"<option %s value='12'>12 dBm</option>"
+"<option %s value='13'>13 dBm</option>"
+"<option %s value='14'>14 dBm</option>"
+"</select></p>"
+
+"<p><b>Spreading Factor</b><br>"
+"<select id='ls' name='ls'>"
+"<option %s value='7'>SF7</option>"
+"<option %s value='8'>SF8</option>"
+"<option %s value='9'>SF9</option>"
+"<option %s value='10'>SF10</option>"
+"<option %s value='11'>SF11</option>"
+"<option %s value='12'>SF12</option>"
+"</select></p>"
+
 "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
 "</form>"
 "</fieldset>" body_footer_config_menu;
+
 
 const char footer[] = "<div style='text-align:right;font-size:11px;'><hr/><a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>%s</a></div></div></body></html>";
 

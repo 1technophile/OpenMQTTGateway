@@ -924,12 +924,33 @@ void handleLA() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_lora_body,
-           jsonChar,
-           gateway_name,
-           LORAConfig.frequency == 433000000 ? "selected" : "",
-           LORAConfig.frequency == 868000000 ? "selected" : "",
-           LORAConfig.frequency == 915000000 ? "selected" : "");
+snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_lora_body, 
+    jsonChar, 
+    gateway_name, 
+    LORAConfig.frequency == 868000000 ? "selected" : "", 
+    LORAConfig.frequency == 915000000 ? "selected" : "", 
+    LORAConfig.frequency == 433000000 ? "selected" : "",
+    LORAConfig.txPower == 0 ? "selected" : "",
+    LORAConfig.txPower == 1 ? "selected" : "",
+    LORAConfig.txPower == 2 ? "selected" : "",
+    LORAConfig.txPower == 3 ? "selected" : "",
+    LORAConfig.txPower == 4 ? "selected" : "",
+    LORAConfig.txPower == 5 ? "selected" : "",
+    LORAConfig.txPower == 6 ? "selected" : "",
+    LORAConfig.txPower == 7 ? "selected" : "",
+    LORAConfig.txPower == 8 ? "selected" : "",
+    LORAConfig.txPower == 9 ? "selected" : "",
+    LORAConfig.txPower == 10 ? "selected" : "",
+    LORAConfig.txPower == 11 ? "selected" : "",
+    LORAConfig.txPower == 12 ? "selected" : "",
+    LORAConfig.txPower == 13 ? "selected" : "",
+    LORAConfig.txPower == 14 ? "selected" : "",
+    LORAConfig.spreadingFactor == 7 ? "selected" : "",
+    LORAConfig.spreadingFactor == 8 ? "selected" : "",
+    LORAConfig.spreadingFactor == 9 ? "selected" : "",
+    LORAConfig.spreadingFactor == 10 ? "selected" : "",
+    LORAConfig.spreadingFactor == 11 ? "selected" : "",
+    LORAConfig.spreadingFactor == 12 ? "selected" : "");
 
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
