@@ -40,14 +40,30 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #ifndef LORA_BAND
 #  define LORA_BAND 868E6
 #endif
-#define LORA_SIGNAL_BANDWIDTH 125E3
-#define LORA_TX_POWER         17
-#define LORA_SPREADING_FACTOR 7
-#define LORA_CODING_RATE      5
-#define LORA_PREAMBLE_LENGTH  8
-#define LORA_SYNC_WORD        0x12
-#define DEFAULT_CRC           true
-#define INVERT_IQ             false
+#ifndef LORA_SIGNAL_BANDWIDTH
+#  define LORA_SIGNAL_BANDWIDTH 125E3
+#endif
+#ifndef LORA_TX_POWER
+#  define LORA_TX_POWER 17
+#endif
+#ifndef LORA_SPREADING_FACTOR
+#  define LORA_SPREADING_FACTOR 7
+#endif
+#ifndef LORA_CODING_RATE
+#  define LORA_CODING_RATE 5
+#endif
+#ifndef LORA_PREAMBLE_LENGTH
+#  define LORA_PREAMBLE_LENGTH 8
+#endif
+#ifndef LORA_SYNC_WORD
+#  define LORA_SYNC_WORD 0x12
+#endif
+#ifndef DEFAULT_CRC
+#  define DEFAULT_CRC true
+#endif
+#ifndef INVERT_IQ
+#  define INVERT_IQ false
+#endif
 
 #define repeatLORAwMQTT false // do we repeat a received signal by using MQTT with LORA gateway
 
@@ -80,7 +96,15 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #endif
 
 struct LORAConfig_s {
-  long Frequency;
+  long frequency;
+  int txPower;
+  int spreadingFactor;
+  long signalBandwidth;
+  int codingRateDenominator;
+  int preambleLength;
+  byte syncWord;
+  bool crc;
+  bool invertIQ;
 };
 
 #endif

@@ -130,7 +130,15 @@ boolean _MQTTtoWiPhone(JsonObject& LORAdata) {
 }
 
 void LORAConfig_init() {
-  LORAConfig.Frequency = LORA_BAND;
+  LORAConfig.frequency = LORA_BAND;
+  LORAConfig.txPower = LORA_TX_POWER;
+  LORAConfig.spreadingFactor = LORA_SPREADING_FACTOR;
+  LORAConfig.signalBandwidth = LORA_SIGNAL_BANDWIDTH;
+  LORAConfig.codingRateDenominator = LORA_CODING_RATE;
+  LORAConfig.preambleLength = LORA_PREAMBLE_LENGTH;
+  LORAConfig.syncWord = LORA_SYNC_WORD;
+  LORAConfig.crc = DEFAULT_CRC;
+  LORAConfig.invertIQ = INVERT_IQ;
 }
 
 void LORAConfig_load() {
@@ -158,7 +166,25 @@ void LORAConfig_load() {
 }
 
 void LORAConfig_fromJson(JsonObject& LORAdata) {
-  Config_update(LORAdata, "frequency", LORAConfig.Frequency);
+  Config_update(LORAdata, "frequency", LORAConfig.frequency);
+  Config_update(LORAdata, "txpower", LORAConfig.txPower);
+  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
+  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
+  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
+  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
+  Config_update(LORAdata, "syncword", LORAConfig.syncWord);
+  Config_update(LORAdata, "enablecrc", LORAConfig.crc);
+  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
+
+  LoRa.setFrequency(LORAConfig.frequency);
+  LoRa.setTxPower(LORAConfig.txPower);
+  LoRa.setSpreadingFactor(LORAConfig.spreadingFactor);
+  LoRa.setSignalBandwidth(LORAConfig.signalBandwidth);
+  LoRa.setCodingRate4(LORAConfig.codingRateDenominator);
+  LoRa.setPreambleLength(LORAConfig.preambleLength);
+  LoRa.setSyncWord(LORAConfig.syncWord);
+  LORAConfig.crc ? LoRa.enableCrc() : LoRa.disableCrc();
+  LORAConfig.invertIQ ? LoRa.enableInvertIQ() : LoRa.disableInvertIQ();
 
   if (LORAdata.containsKey("erase") && LORAdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
@@ -176,22 +202,21 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   if (LORAdata.containsKey("save") && LORAdata["save"].as<bool>()) {
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject jo = jsonBuffer.to<JsonObject>();
-    jo["frequency"] = LORAConfig.Frequency;
+    jo["frequency"] = LORAConfig.frequency;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
     preferences.begin(Gateway_Short_Name, false);
     int result = preferences.putString("LORAConfig", conf);
     preferences.end();
-    Log.notice(F("LORA Config_save: %s, result: %d restarting" CR), conf.c_str(), result);
-    ESP.restart();
+    Log.notice(F("LORA Config_save: %s, result: %d" CR), conf.c_str(), result);
   }
 }
 
 void setupLORA() {
   LORAConfig_init();
   LORAConfig_load();
-  Log.notice(F("LORA Frequency: %d" CR), LORAConfig.Frequency);
+  Log.notice(F("LORA Frequency: %d" CR), LORAConfig.frequency);
 #  ifdef ESP8266
   SPI.begin();
 #  else
@@ -200,7 +225,7 @@ void setupLORA() {
 
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
 
-  if (!LoRa.begin(LORAConfig.Frequency)) {
+  if (!LoRa.begin(LORAConfig.frequency)) {
     Log.error(F("ZgatewayLORA setup failed!" CR));
     while (1)
       ;
@@ -212,12 +237,6 @@ void setupLORA() {
   Log.notice(F("LORA_SS: %d" CR), LORA_SS);
   Log.notice(F("LORA_RST: %d" CR), LORA_RST);
   Log.notice(F("LORA_DI0: %d" CR), LORA_DI0);
-  LoRa.setTxPower(LORA_TX_POWER);
-  LoRa.setSpreadingFactor(LORA_SPREADING_FACTOR);
-  LoRa.setSignalBandwidth(LORA_SIGNAL_BANDWIDTH);
-  LoRa.setCodingRate4(LORA_CODING_RATE);
-  LoRa.setPreambleLength(LORA_PREAMBLE_LENGTH);
-  LoRa.setSyncWord(LORA_SYNC_WORD);
   Log.trace(F("ZgatewayLORA setup done" CR));
 }
 
@@ -291,33 +310,8 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
     Log.trace(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
     const char* hex = LORAdata["hex"];
-    int txPower = LORAdata["txpower"] | LORA_TX_POWER;
-    int spreadingFactor = LORAdata["spreadingfactor"] | LORA_SPREADING_FACTOR;
-    long int frequency = LORAdata["frequency "] | LORAConfig.Frequency;
-    long int signalBandwidth = LORAdata["signalbandwidth"] | LORA_SIGNAL_BANDWIDTH;
-    int codingRateDenominator = LORAdata["codingrate"] | LORA_CODING_RATE;
-    int preambleLength = LORAdata["preamblelength"] | LORA_PREAMBLE_LENGTH;
-    byte syncWord = LORAdata["syncword"] | LORA_SYNC_WORD;
-    bool crc = LORAdata["enablecrc"] | DEFAULT_CRC;
-    bool invertIQ = LORAdata["invertiq"] | INVERT_IQ;
+    LORAConfig_fromJson(LORAdata);
     if (message || hex) {
-      LoRa.setTxPower(txPower);
-      LoRa.setFrequency(frequency);
-      LoRa.setSpreadingFactor(spreadingFactor);
-      LoRa.setSignalBandwidth(signalBandwidth);
-      LoRa.setCodingRate4(codingRateDenominator);
-      LoRa.setPreambleLength(preambleLength);
-      LoRa.setSyncWord(syncWord);
-      if (crc)
-        LoRa.enableCrc();
-      else
-        LoRa.disableCrc();
-
-      if (invertIQ)
-        LoRa.enableInvertIQ();
-      else
-        LoRa.disableInvertIQ();
-
       LoRa.beginPacket();
       uint8_t deviceId = _determineDevice(LORAdata);
       if (deviceId == WIPHONE) {
@@ -357,6 +351,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 
     // Load config from json if available
     LORAConfig_fromJson(LORAdata);
+    stateLORAMeasures();
   }
 }
 #  endif
@@ -373,9 +368,18 @@ void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
 #  endif
 void stateLORAMeasures() {
   //Publish LORA state
-  StaticJsonDocument<64> jsonBuffer;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject LORAdata = jsonBuffer.to<JsonObject>();
-  LORAdata["frequency"] = LORAConfig.Frequency;
+  LORAdata["frequency"] = LORAConfig.frequency;
+  LORAdata["txpower"] = LORAConfig.txPower;
+  LORAdata["spreadingfactor"] = LORAConfig.spreadingFactor;
+  LORAdata["signalbandwidth"] = LORAConfig.signalBandwidth;
+  LORAdata["codingrate"] = LORAConfig.codingRateDenominator;
+  LORAdata["preamblelength"] = LORAConfig.preambleLength;
+  LORAdata["syncword"] = LORAConfig.syncWord;
+  LORAdata["enablecrc"] = LORAConfig.crc;
+  LORAdata["invertiq"] = LORAConfig.invertIQ;
+
   pub(subjectGTWLORAtoMQTT, LORAdata);
 }
 #endif
