@@ -852,6 +852,7 @@ void handleLO() {
   server.send(200, "text/html", response);
 }
 
+#  ifdef ZgatewayLORA
 /**
  * @brief /LA - Configure LORA Page
  * T: handleLA: uri: /la, args: 9, method: 1
@@ -977,6 +978,7 @@ void handleLA() {
   stateLORAMeasures();
   Log.trace(F("[WebUI] LORAConfig end" CR));
 }
+#  endif
 
 /**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
