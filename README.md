@@ -5,7 +5,7 @@
 
 [![OpenMQTTGateway capabilities](https://github.com/1technophile/OpenMQTTGateway/blob/development/docs/img/OpenMQTTGateway.png)](https://community.openmqttgateway.com)
 
-The OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
+OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
 
 ## Sponsors
 
