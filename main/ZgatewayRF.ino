@@ -164,7 +164,7 @@ void RFtoMQTT() {
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery) //component creation for HA
-      if (disc)
+      if (SYSConfig.discovery)
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       pub(subjectRFtoMQTT, RFdata);

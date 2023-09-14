@@ -95,7 +95,7 @@ build_flags =
   '-DLED_RECEIVE_ON=LOW'             ; Comment 2
   '-DRF_RECEIVER_GPIO=13'
   '-DRF_EMITTER_GPIO=15'
-  '-DsimpleReceiving=false'          
+  '-DsimpleReceiving=false'
   '-UZmqttDiscovery'                 ; Disable HA discovery
 monitor_speed = 115200
 
@@ -112,6 +112,18 @@ upload_flags =
 Adding manual WiFi and MQTT credentials to an environment also requires to define
 `'-DESPWifiManualSetup=true'`
 for the credetials to be registered correctly.
+:::
+
+::: warning Note
+Manual network configuration (IP, netmask, gateway, DNS) requires to define
+`'-DNetworkAdvancedSetup=true'`
+and related network parameters, e.g.:
+```
+'-DNET_IP="192.168.1.99"'
+'-DNET_MASK="255.255.255.0"'
+'-DNET_GW="192.168.1.1"'
+'-DNET_DNS="1.1.1.1"'
+```
 :::
 
 The first new environment we create, `nodemcuv2-pilight-bme280`, inherits the default `nodemcuv2-pilight` environment in `platformio.ini` with the `extends = env:nodemcuv2-pilight` line. In the `lib_deps` section, it imports all the `lib_deps` of `nodemcuv2-pilight` with the `${env:nodemcuv2-pilight.lib_deps}` line, and adds BME280 on top of it. (Since the environment we're extending already has this `lib_deps` attribute, specifying it again would normally replace it completely with our new attribute; instead, to keep its value but simply append to it, we import the original in the beginning of our `lib_deps` attribute.) In the `build_flags` section, it again imports all the `build_flags` of `nodemcuv2-pilight` and many of its own overrides, e.g. changing `Base_Topic` found in `User_config.h` from the default to "rf/" by using the `'-DBase_Topic="rf/"'` line. It also unsets previously set configurations (i.e. `mqttDiscovery`) by using `'-UZmqttDiscovery'`. This environment will work over serial upload.
@@ -150,7 +162,7 @@ board = esp32dev
 lib_deps =
   ${com-esp.lib_deps}
   ${libraries.rc-switch}
-build_flags = 
+build_flags =
   ${com-esp.build_flags}
   '-DZgatewayRF="RF"'
   '-DZgatewayIR="IR"'
@@ -173,7 +185,7 @@ This can be useful especially before the first upload or when you change the boa
 
 Once done the gateway should connect to your network and your broker, you should see it into the broker in the form of the following messages:
 ```
-home/OpenMQTTGateway/LWT Online 
+home/OpenMQTTGateway/LWT Online
 home/OpenMQTTGateway/version
 ```
 
@@ -239,7 +251,7 @@ You can deactivate Json or simple mode following theses instructions:
 #define jsonPublishing true //define false if you don't want to use Json publishing (one topic for all the parameters)
 //example home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4 {"rssi":-63,"servicedata":"fe0000000000000000000000000000000000000000"}
 #define simplePublishing false //define true if you want to use simple publishing (one topic for one parameter)
-//example 
+//example
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/rssi -63.0
 // home/OpenMQTTGateway_ESP32_DEVKIT/BTtoMQTT/4XXXXXXXXXX4/servicedata fe0000000000000000000000000000000000000000
 #define simpleReceiving true //define false if you don't want to use old way reception analysis
@@ -260,7 +272,7 @@ Note that depending on the environment the default platformio.ini has common opt
 [com-esp]
 ```
 
-If you want to use HASS MQTT discovery you need to have 
+If you want to use HASS MQTT discovery you need to have
 `#define jsonPublishing true`
 &
 `#define ZmqttDiscovery "HADiscovery"`

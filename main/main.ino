@@ -27,6 +27,15 @@
 */
 #include "User_config.h"
 
+// States of the gateway
+// Wm setup
+// Connected to MQTT
+// Disconnected from Wifi
+// Disconnected from MQTT
+// Deep sleep
+// Local OTA in progress
+// Remote OTA in progress
+
 // Macros and structure to enable the duplicates removing on the following gateways
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // array to store previous received RFs, IRs codes and their timestamps
@@ -224,6 +233,9 @@ unsigned long timer_led_measures = 0;
 static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 #if defined(ESP8266) || defined(ESP32)
+// Global struct to store live SYS configuration data
+SYSConfig_s SYSConfig;
+
 bool failSafeMode = false;
 static bool mqtt_secure = MQTT_SECURE_DEFAULT;
 static bool mqtt_cert_validate = MQTT_CERT_VALIDATE_DEFAULT;
@@ -236,6 +248,7 @@ static String ota_server_cert = "";
 #  include <ArduinoOTA.h>
 #  include <FS.h>
 #  include <SPIFFS.h>
+#  include <esp_task_wdt.h>
 #  include <nvs.h>
 #  include <nvs_flash.h>
 
@@ -294,9 +307,9 @@ void Config_update(JsonObject& data, const char* key, T& var) {
   if (data.containsKey(key)) {
     if (var != data[key].as<T>()) {
       var = data[key].as<T>();
-      Log.notice(F("Config %s changed: %s" CR), key, data[key].as<String>());
+      Log.notice(F("Config %s changed: %T" CR), key, data[key].as<T>());
     } else {
-      Log.notice(F("Config %s unchanged: %s" CR), key, data[key].as<String>());
+      Log.notice(F("Config %s unchanged: %T" CR), key, data[key].as<T>());
     }
   }
 }
@@ -616,12 +629,57 @@ void delayWithOTA(long waitMillis) {
 #  if defined(ZwebUI) && defined(ESP32)
     WebUILoop();
 #  endif
+#  ifdef ESP32
+    esp_task_wdt_reset();
+#  endif
     delay(waitStep);
   }
 #else
   delay(waitMillis);
 #endif
 }
+
+#ifdef ZmqttDiscovery
+void SYSConfig_init() {
+  SYSConfig.discovery = true;
+  SYSConfig.ohdiscovery = OpenHABDiscovery;
+}
+
+void SYSConfig_fromJson(JsonObject& SYSdata) {
+  Config_update(SYSdata, "discovery", SYSConfig.discovery);
+  Config_update(SYSdata, "ohdiscovery", SYSConfig.ohdiscovery);
+}
+#else
+void SYSConfig_init() {}
+void SYSConfig_fromJson(JsonObject& SYSdata) {}
+#endif
+
+#if defined(ESP32) && defined(ZmqttDiscovery)
+void SYSConfig_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  if (preferences.isKey("SYSConfig")) {
+    auto error = deserializeJson(jsonBuffer, preferences.getString("SYSConfig", "{}"));
+    preferences.end();
+    if (error) {
+      Log.error(F("SYS config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      return;
+    }
+    if (jsonBuffer.isNull()) {
+      Log.warning(F("SYS config is null" CR));
+      return;
+    }
+    JsonObject jo = jsonBuffer.as<JsonObject>();
+    SYSConfig_fromJson(jo);
+    Log.notice(F("SYS config loaded" CR));
+  } else {
+    preferences.end();
+    Log.notice(F("SYS config not found" CR));
+  }
+}
+#else // Function not available for ESP8266
+void SYSConfig_load() {}
+#endif
 
 void connectMQTT() {
 #ifndef ESPWifiManualSetup
@@ -631,11 +689,16 @@ void connectMQTT() {
 #endif
 
   Log.warning(F("MQTT connection..." CR));
+#ifdef ESP32
+  esp_task_wdt_add(NULL);
+  esp_task_wdt_reset();
+#endif
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
   strcat(topic, gateway_name);
   strcat(topic, will_Topic);
   client.setBufferSize(mqtt_max_packet_size);
+  client.setSocketTimeout(GeneralTimeOut - 1);
 #if AWS_IOT
   if (client.connect(gateway_name, mqtt_user, mqtt_pass)) { // AWS doesn't support will topic for the moment
 #else
@@ -647,8 +710,6 @@ void connectMQTT() {
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
-    // publish version
-    pub(version_Topic, OMG_VERSION, will_Retain);
     //Subscribing to topic
     char topic2[mqtt_topic_max_size];
     strcpy(topic2, mqtt_topic);
@@ -875,7 +936,9 @@ void setup() {
     Log.error(F("Failed to set deep sleep EXT0 Wakeup." CR));
   }
 #  endif
-
+#  ifdef ESP32
+  esp_task_wdt_init(GeneralTimeOut, true); //enable panic so ESP32 restarts
+#  endif
 /*
  The 2 modules below are not connection dependent so start them before the connectivity functions
  Note that the ONOFF module need to start after the RN8209 so that the overCurrent function is launched after the setup of the sensor
@@ -915,6 +978,9 @@ void setup() {
   WebUISetup();
   modules.add(ZwebUI);
 #endif
+
+  SYSConfig_init();
+  SYSConfig_load();
 
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
@@ -1173,6 +1239,9 @@ void setOTA() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
+#  ifdef ESP32
+    esp_task_wdt_reset();
+#  endif
     last_ota_activity_millis = millis();
   });
   ArduinoOTA.onError([](ota_error_t error) {
@@ -1203,6 +1272,11 @@ void setupTLS(bool self_signed, uint8_t index) {
     Log.notice(F("Using self signed cert index %u" CR), index);
 #    if defined(ESP32)
     sClient->setCACert(certs_array[index].server_cert);
+#      if AWS_IOT
+    if (strcmp(mqtt_port, "443") == 0) {
+      sClient->setAlpnProtocols(alpnProtocols);
+    }
+#      endif
 #      if MQTT_SECURE_SELF_SIGNED_CLIENT
     sClient->setCertificate(certs_array[index].client_cert);
     sClient->setPrivateKey(certs_array[index].client_key);
@@ -1277,10 +1351,15 @@ void setup_wifi() {
   // We start by connecting to a WiFi network
 
 #  ifdef NetworkAdvancedSetup
-  IPAddress ip_adress(ip);
-  IPAddress gateway_adress(gateway);
-  IPAddress subnet_adress(subnet);
-  IPAddress dns_adress(Dns);
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip_adress.fromString(NET_IP);
+  gateway_adress.fromString(NET_GW);
+  subnet_adress.fromString(NET_MASK);
+  dns_adress.fromString(NET_DNS);
+
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
   }
@@ -1343,6 +1422,9 @@ void blockingWaitForReset() {
         if (level == ACTUATOR_ON) {
           ActuatorTrigger();
         }
+#    endif
+#    ifdef ESP32
+        esp_task_wdt_delete(NULL);
 #    endif
         InfoIndicatorOFF();
         SendReceiveIndicatorOFF();
@@ -1515,10 +1597,15 @@ void setup_wifimanager(bool reset_settings) {
 //set static IP
 #  ifdef NetworkAdvancedSetup
   Log.trace(F("Adv wifi cfg" CR));
-  IPAddress gateway_adress(gateway);
-  IPAddress subnet_adress(subnet);
-  IPAddress ip_adress(ip);
-  wifiManager.setSTAStaticIPConfig(ip_adress, gateway_adress, subnet_adress);
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip_adress.fromString(NET_IP);
+  gateway_adress.fromString(NET_GW);
+  subnet_adress.fromString(NET_MASK);
+  dns_adress.fromString(NET_DNS);
+  wifiManager.setSTAStaticIPConfig(ip_adress, gateway_adress, subnet_adress, dns_adress);
 #  endif
 
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
@@ -1617,6 +1704,15 @@ void setup_ethernet_esp32() {
   bool ethBeginSuccess = false;
   WiFi.onEvent(WiFiEvent);
 #    ifdef NetworkAdvancedSetup
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip.fromString(NET_IP);
+  gateway.fromString(NET_GW);
+  subnet.fromString(NET_MASK);
+  Dns.fromString(NET_DNS);
+
   Log.trace(F("Adv eth cfg" CR));
   ETH.config(ip, gateway, subnet, Dns);
   ethBeginSuccess = ETH.begin();
@@ -1662,6 +1758,15 @@ void WiFiEvent(WiFiEvent_t event) {
 #else // Arduino case
 void setup_ethernet() {
 #  ifdef NetworkAdvancedSetup
+  IPAddress ip_adress;
+  IPAddress gateway_adress;
+  IPAddress subnet_adress;
+  IPAddress dns_adress;
+  ip.fromString(NET_IP);
+  gateway.fromString(NET_GW);
+  subnet.fromString(NET_MASK);
+  Dns.fromString(NET_DNS);
+
   Log.trace(F("Adv eth cfg" CR));
   Ethernet.begin(mac, ip, Dns, gateway, subnet);
 #  else
@@ -1705,6 +1810,10 @@ void loop() {
 #  endif
 #endif
 
+#ifdef ESP32
+  esp_task_wdt_reset();
+#endif
+
   unsigned long now = millis();
 
   // Switch off of the LED after TimeLedON
@@ -1733,14 +1842,13 @@ void loop() {
       failure_number_ntwk = 0;
       // We have just re-connected if connected was previously false
       bool justReconnected = !connected;
-
 #ifdef ZmqttDiscovery
       // Deactivate autodiscovery after DiscoveryAutoOffTimer
-      if (disc && (now > lastDiscovery + DiscoveryAutoOffTimer))
-        disc = false;
+      if (SYSConfig.discovery && (now > lastDiscovery + DiscoveryAutoOffTimer))
+        SYSConfig.discovery = false;
       // at first connection we publish the discovery payloads
       // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
-      bool publishDiscovery = disc && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
+      bool publishDiscovery = SYSConfig.discovery && (!connectedOnce || (discovery_republish_on_reconnect && justReconnected));
       if (publishDiscovery) {
         pubMqttDiscovery();
       }
@@ -1854,7 +1962,7 @@ void loop() {
 #endif
 #ifdef ZgatewayBT
 #  ifdef ZmqttDiscovery
-      if (disc)
+      if (SYSConfig.discovery)
         launchBTDiscovery(publishDiscovery);
 #  endif
       emptyBTQueue();
@@ -1885,7 +1993,7 @@ void loop() {
 #ifdef ZgatewayRTL_433
       RTL_433Loop();
 #  ifdef ZmqttDiscovery
-      if (disc)
+      if (SYSConfig.discovery)
         launchRTL_433Discovery(publishDiscovery);
 #  endif
 #endif
@@ -1896,10 +2004,16 @@ void loop() {
       connectMQTT();
     }
   } else { // disconnected from network
+#ifdef ESP32
+    esp_task_wdt_reset();
+#endif
     connected = false;
     Log.warning(F("Network disconnected:" CR));
     ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
+#ifdef ESP32
+    esp_task_wdt_reset();
+#endif
     ErrorIndicatorOFF();
     delay(2000);
 #if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
@@ -2020,6 +2134,7 @@ void eraseAndRestart() {
   delay(5000);
   ESP.reset();
 #  else
+  esp_task_wdt_delete(NULL);
   nvs_flash_erase();
   ESP.restart();
 #  endif
@@ -2035,8 +2150,8 @@ String stateMeasures() {
 
   SYSdata["version"] = OMG_VERSION;
 #  ifdef ZmqttDiscovery
-  SYSdata["discovery"] = disc;
-  SYSdata["ohdiscovery"] = OpenHABDisc;
+  SYSdata["discovery"] = SYSConfig.discovery;
+  SYSdata["ohdiscovery"] = SYSConfig.ohdiscovery;
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
@@ -2270,6 +2385,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
+#  ifdef ZwebUI
+    MQTTtoWebUI(topicOri, jsondata);
+#  endif
 #endif
     SendReceiveIndicatorON();
 
@@ -2314,7 +2432,7 @@ String latestVersion;
 
 #    include "zzHTTPUpdate.h"
 
-#    ifdef CHECK_OTA_UPDATE
+#    if CHECK_OTA_UPDATE
 /**
  * Check on a server the latest version information to build a releaseLink
  * The release link will be used when the user trigger an OTA update command
@@ -2323,6 +2441,7 @@ String latestVersion;
 bool checkForUpdates() {
   Log.notice(F("Update check, free heap: %d"), ESP.getFreeHeap());
   HTTPClient http;
+  http.setTimeout((GeneralTimeOut - 1) * 1000); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
   http.begin(OTA_JSON_URL, OTAserver_cert);
   int httpCode = http.GET();
@@ -2408,7 +2527,11 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  if defined(ZgatewayBT)
       stopProcessing();
 #  endif
+#  ifdef ESP32
+      esp_task_wdt_delete(NULL); // Stop task watchdog during update
+#  endif
       Log.warning(F("Starting firmware update" CR));
+
       SendReceiveIndicatorON();
       ErrorIndicatorON();
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
@@ -2518,8 +2641,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 #  ifdef ZmqttDiscovery
     if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
-      OpenHABDisc = SYSdata["ohdiscovery"];
-      Log.notice(F("OpenHAB discovery: %T" CR), OpenHABDisc);
+      SYSConfig.ohdiscovery = SYSdata["ohdiscovery"];
+      Log.notice(F("OpenHAB discovery: %T" CR), SYSConfig.ohdiscovery);
       stateMeasures();
     }
 #  endif
@@ -2668,17 +2791,32 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifdef ZmqttDiscovery
     if (SYSdata.containsKey("discovery")) {
       if (SYSdata["discovery"].is<bool>()) {
-        if (SYSdata["discovery"] == true && disc == false)
+        if (SYSdata["discovery"] == true && SYSConfig.discovery == false)
           lastDiscovery = millis();
-        disc = SYSdata["discovery"];
+        SYSConfig.discovery = SYSdata["discovery"];
         stateMeasures();
-        if (disc)
+        if (SYSConfig.discovery)
           pubMqttDiscovery();
       } else {
         Log.error(F("Discovery command not a boolean" CR));
       }
-      Log.notice(F("Discovery state: %T" CR), disc);
+      Log.notice(F("Discovery state: %T" CR), SYSConfig.discovery);
     }
+#  ifdef ESP32
+    if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject jo = jsonBuffer.to<JsonObject>();
+      jo["discovery"] = SYSConfig.discovery;
+      jo["ohdiscovery"] = SYSConfig.ohdiscovery;
+      // Save config into NVS (non-volatile storage)
+      String conf = "";
+      serializeJson(jsonBuffer, conf);
+      preferences.begin(Gateway_Short_Name, false);
+      int result = preferences.putString("SYSConfig", conf);
+      preferences.end();
+      Log.notice(F("SYS Config_save: %s, result: %d" CR), conf.c_str(), result);
+    }
+#  endif
 #endif
   }
 }

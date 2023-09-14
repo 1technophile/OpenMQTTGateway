@@ -68,8 +68,6 @@ struct decompose {
   bool reverse;
 };
 
-unsigned long BLEstarts = 0;
-
 vector<BLEAction> BLEactions;
 
 vector<BLEdevice*> devices;
@@ -107,7 +105,7 @@ void BTConfig_init() {
   BTConfig.movingTimer = MovingTimer;
 }
 
-// Watchdog, if there was no change of BLE scanCount, restart BT
+// Watchdog, if there was no change of BLE scanCount, restart the ESP
 void btScanWDG() {
   static unsigned long previousBtScanCount = 0;
   static unsigned long lastBtScan = 0;
@@ -117,8 +115,7 @@ void btScanWDG() {
       scanCount != 0 &&
       (now - lastBtScan > BTConfig.BLEinterval)) {
     Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
-    stopProcessing();
-    startProcessing();
+    ESPRestart(4);
   } else {
     previousBtScanCount = scanCount;
     lastBtScan = now;
@@ -157,7 +154,6 @@ String stateBTMeasures(bool start) {
   jo["btqavg"] = (btQueueLengthCount > 0 ? btQueueLengthSum / (float)btQueueLengthCount : 0);
   jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
   jo["blecoretaskstack"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
-  jo["blestarts"] = BLEstarts;
 
   if (start) {
     Log.notice(F("BT sys: "));
@@ -721,37 +717,31 @@ void procBLETask(void* pvParameters) {
         if (advertisedDevice->haveServiceData()) {
           int serviceDataCount = advertisedDevice->getServiceDataCount();
           Log.trace(F("Get services data number: %d" CR), serviceDataCount);
+          char initialBLEDataCharArray[JSON_MSG_BUFFER];
+          serializeJson(BLEdata, initialBLEDataCharArray);
           for (int j = 0; j < serviceDataCount; j++) {
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
             Log.trace(F("Service data: %s" CR), service_data.c_str());
             std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
             Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
-            if (j) {
-              // if we have more than one service data, we need to create a new BLEdata object to publish the data to MQTT
-              // we can't use the same BLEdata object because its servicedata would be overwritten by the next service data
-              // the decoder does not handle multiple servicedata in the same message
-              // note that we keep the decoded data during the different iterations of the loop,
-              // the goal is to avoid issue with certain controllers that do not handle multiple messages with undecoded data (OpenHAB for example)
-              JsonObject& BLEdataTemp = getBTJsonObject();
-              bool ret = BLEdataTemp.set(BLEdata);
-              if (!ret) {
-                Log.error(F("BLEdataTemp.set(BLEdata) failed" CR));
-              } else {
-                BLEdataTemp.remove("servicedata");
-                BLEdataTemp["servicedata"] = (char*)service_data.c_str();
-                BLEdataTemp.remove("servicedatauuid");
-                BLEdataTemp["servicedatauuid"] = (char*)serviceDatauuid.c_str();
-                PublishDeviceData(BLEdataTemp);
-              }
-            } else {
+            if (j == 0) {
               BLEdata["servicedata"] = (char*)service_data.c_str();
               BLEdata["servicedatauuid"] = (char*)serviceDatauuid.c_str();
               PublishDeviceData(BLEdata);
+            } else {
+              StaticJsonDocument<JSON_MSG_BUFFER> doc;
+              deserializeJson(doc, initialBLEDataCharArray);
+              JsonObject& BLEdataTemp = getBTJsonObject();
+              BLEdataTemp = doc.as<JsonObject>();
+              BLEdataTemp["servicedata"] = (char*)service_data.c_str();
+              BLEdataTemp["servicedatauuid"] = (char*)serviceDatauuid.c_str();
+              PublishDeviceData(BLEdataTemp);
             }
           }
         } else {
           PublishDeviceData(BLEdata);
         }
+
       } else {
         Log.trace(F("Filtered MAC device" CR));
       }
@@ -860,7 +850,11 @@ void BLEconnect() {
 
 void stopProcessing() {
   ProcessLock = true;
-  delay(BTConfig.scanDuration < 2000 ? BTConfig.scanDuration : 2000);
+  // We stop the scan
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  if (pBLEScan->isScanning()) {
+    pBLEScan->stop();
+  }
   //Suspending, deleting tasks and stopping BT to free memory
   vTaskSuspend(xCoreTaskHandle);
   vTaskDelete(xCoreTaskHandle);
@@ -868,12 +862,6 @@ void stopProcessing() {
   vTaskDelete(xProcBLETaskHandle);
   if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
   Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
-}
-
-void startProcessing() {
-  ProcessLock = false;
-  setupBTTasksAndBLE();
-  Log.notice(F("BLE gateway started, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
@@ -993,8 +981,6 @@ void setupBTTasksAndBLE() {
       1, /* Priority of the task */
       &xCoreTaskHandle, /* Task handle. */
       taskCore); /* Core where the task should run */
-
-  BLEstarts++;
 }
 
 void setupBT() {
@@ -1170,14 +1156,13 @@ void launchBTDiscovery(bool overrideDiscovery) {
 
 void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
-    // If the BLEdata contains already decoded data from a previous servicedata iteration, the following one is not decoded and pubAdvData is false we don't publish this duplicate payload
-    if (process_bledata(BLEdata) < 0 && BLEdata.containsKey("model_id") && !BTConfig.pubAdvData) {
-      return;
-    }
+    // Decode the payload
+    process_bledata(BLEdata);
     // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       return;
     }
+    // If pubAdvData is false we don't publish the adv data
     if (!BTConfig.pubAdvData) {
       BLEdata.remove("servicedatauuid");
       BLEdata.remove("servicedata");
@@ -1191,6 +1176,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
       BLEdata.remove("cont");
       BLEdata.remove("track");
     }
+    // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
       pubBT(BLEdata);
     }
@@ -1201,7 +1187,11 @@ void PublishDeviceData(JsonObject& BLEdata) {
   }
 }
 
-int process_bledata(JsonObject& BLEdata) {
+void process_bledata(JsonObject& BLEdata) {
+  if (!BLEdata.containsKey("id")) {
+    Log.error(F("No mac address in the payload" CR));
+    return;
+  }
   const char* mac = BLEdata["id"].as<const char*>();
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
@@ -1265,7 +1255,6 @@ int process_bledata(JsonObject& BLEdata) {
   if (!BTConfig.extDecoderEnable && model_id < 0) {
     Log.trace(F("No eligible device found " CR));
   }
-  return model_id;
 }
 
 void hass_presence(JsonObject& HomePresence) {

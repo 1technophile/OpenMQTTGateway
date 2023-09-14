@@ -1,3 +1,7 @@
+---
+title: LORA MQTT Gateway
+description: Explore the LORA MQTT gateway, designed for integration with devices utilizing LORA technology, including the MakerFab soil and moisture sensor. Unlock long range communication with the power of LORA..
+---
 # LORA gateway
 
 Tutorial on how to leverage LORA for a mailbox sensor from [PricelessToolkit](https://www.youtube.com/channel/UCz75N6inuLHXnRC5tqagNLw):
@@ -11,7 +15,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 
 Generate your LORA signals by using another TTGO LORA module, you can flash the sender program from [this repository](https://github.com/LilyGO/TTGO-LORA32-V2.0) and the SSD1306 library [there](https://github.com/ThingPulse/esp8266-oled-ssd1306)
 
-![](../img/OpenMQTTGateway_TTGO32_LORA_Send.jpg)
+![TTGO Lora sending packets](../img/OpenMQTTGateway_TTGO32_LORA_Send.jpg)
 
 Once one board flashed with OMG and the other with the sender program you should receive regular packets into `home/OpenMQTTGateway_ESP32_LORA_TEST/LORAtoMQTT` like below:
 
@@ -34,7 +38,7 @@ And from a supported device (in this case, a WiPhone), looks like this:
 
 This command will send by LORA the message "hello OMG1" and use the default parameters defined in [config_LORA.h](https://github.com/1technophile/OpenMQTTGateway/blob/4b8d28179b63ae3f3d454da57ec8c109c159c386/config_LORA.h#L32)
 
-![](../img/OpenMQTTGateway_TTGO32_LORA_Receive.jpg)
+![TTGO Lora receiving packets](../img/OpenMQTTGateway_TTGO32_LORA_Receive.jpg)
 
 If you want to test that your sending works you can use another TTGO LORA module, you can flash the receiver program from [this repository](https://github.com/LilyGO/TTGO-LORA32-V2.0)  and the SSD1306 library [there](https://github.com/ThingPulse/esp8266-oled-ssd1306)
 

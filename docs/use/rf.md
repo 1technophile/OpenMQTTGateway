@@ -1,3 +1,7 @@
+---
+title: 433Mhz MQTT Gateway
+description: Unlock the potential of RF 433 MHz technology with our universal gateway. Decode signals from various devices, and integrate seamlessly with MQTT systems and controllers like Home Assistant and OpenHAB.
+---
 
 # RF gateways  (433mhz/315mhz)
 
@@ -197,13 +201,13 @@ This command will send by RF the code 1315156 and use the default parameters (pr
 
 Arduino IDE serial data received when publishing data by MQTT
 
-![](../img/OpenMQTTGateway_serial1.jpg)
+![Serial data](../img/OpenMQTTGateway_serial1.jpg)
 
 We see that the Arduino receive the value 1315156 on the MQTT subject "MQTTto433" and send the data by RF
 
 Arduino IDE serial data received when receiving data by 433Mhz
 
-![](../img/OpenMQTTGateway_serial2.jpg)
+![Serial data 2](../img/OpenMQTTGateway_serial2.jpg)
 
 ### Send data by MQTT with advanced RF parameters
 
@@ -261,7 +265,7 @@ Subscribe to all the messages with mosquitto or open your MQTT client software:
 
 Generate your RF signals by pressing a remote button or other and you will see :
 
-![](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
+![Digoo DG R8S data](../img/OpenMQTTGateway_Pilight_Digoo-DG-R8S.png)
 
 #### Enabling RAW packet return support
 First, you need to compile a binary with `Pilight_rawEnabled true` uncommented in config_RF.h.
