@@ -115,7 +115,7 @@ const char config_lora_body[] = body_header
     "</select></p>"
 
     "<p><b>TX Power</b><br>"
-    "<select id='lp' name='lp'>"
+    "<select id='lt' name='lt'>"
     "<option %s value='0'>0 dBm</option>"
     "<option %s value='1'>1 dBm</option>"
     "<option %s value='2'>2 dBm</option>"
