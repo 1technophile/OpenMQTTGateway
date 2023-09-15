@@ -298,6 +298,10 @@ void LORAConfig_load() {
   }
 }
 
+byte hexStringToByte(const String& hexString) {
+  return (byte)strtol(hexString.c_str(), NULL, 16);
+}
+
 void LORAConfig_fromJson(JsonObject& LORAdata) {
   Config_update(LORAdata, "frequency", LORAConfig.frequency);
   Config_update(LORAdata, "txpower", LORAConfig.txPower);
@@ -305,7 +309,12 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
   Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
   Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
-  Config_update(LORAdata, "syncword", LORAConfig.syncWord);
+  // Handle syncword separately
+  if (LORAdata.containsKey("syncword")) {
+    String syncWordStr = LORAdata["syncword"].as<String>();
+    LORAConfig.syncWord = hexStringToByte(syncWordStr);
+    Log.notice(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+  }
   Config_update(LORAdata, "enablecrc", LORAConfig.crc);
   Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
 
@@ -522,7 +531,10 @@ String stateLORAMeasures() {
   LORAdata["signalbandwidth"] = LORAConfig.signalBandwidth;
   LORAdata["codingrate"] = LORAConfig.codingRateDenominator;
   LORAdata["preamblelength"] = LORAConfig.preambleLength;
-  LORAdata["syncword"] = LORAConfig.syncWord;
+  // Convert syncWord to a hexadecimal string and store it in the JSON
+  char syncWordHex[5]; // Enough space for 0xXX and null terminator
+  snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
+  LORAdata["syncword"] = syncWordHex;
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
 

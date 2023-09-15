@@ -169,7 +169,7 @@ const char config_lora_body[] = body_header
     "<input type='number' id='ll' name='ll' value='%d'></p>"
 
     "<p><b>Sync Word</b><br>"
-    "<input type='number' id='lw' name='lw' value='%d'></p>"
+    "<input type='text' id='lw' name='lw' value='0x%02X'></p>"
 
     "<p><b>CRC</b><br>"
     "<input type='checkbox' id='lr' name='lr' %s></p>"
