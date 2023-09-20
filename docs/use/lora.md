@@ -1,11 +1,19 @@
 ---
 title: LORA MQTT Gateway
-description: Explore the LORA MQTT gateway, designed for integration with devices utilizing LORA technology, including the MakerFab soil and moisture sensor. Unlock long range communication with the power of LORA..
+description: Explore the LORA MQTT gateway, designed for integration with devices utilizing LORA technology, including the MakerFab soil and moisture sensor, devices from PricelessTookit. Unlock long range communication with the power of LORA..
 ---
 # LORA gateway
 
-Tutorial on how to leverage LORA for a mailbox sensor from [PricelessToolkit](https://www.youtube.com/channel/UCz75N6inuLHXnRC5tqagNLw):
-<iframe width="560" height="315" src="https://www.youtube.com/embed/6DftaHxDawM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+## What is a LORA gateway
+A LoRa (Long Range) gateway is a device that facilitates communication between LoRa nodes and networks, enabling the transmission and reception of data over long distances using the LoRa modulation technique. It's designed to work with devices that utilize LoRa technology, such as the MakerFab soil and moisture sensor, devices from PricelessTookit and DIY sensors.
+
+The primary distinction between a LoRa gateway and a LoRaWAN gateway lies in the protocol and network architecture:
+
+LoRa Gateway: Focuses solely on the physical layer, utilizing the LoRa modulation for communication. It's responsible for receiving and transmitting raw LoRa signals without concerning itself with network protocols or data handling at higher layers. Being focused solely on the physical layer, a LoRa Gateway offers greater flexibility for customization and experimentation. The OpenMQTTGateway LoRa gateway receives raw LoRa signals, processes them, and publishes the data to an MQTT topic. Conversely, it can subscribe to MQTT topics and send commands to LoRa devices. This gateway is particularly useful for DIY projects, home automation enthusiasts, and scenarios where direct integration of LoRa devices with MQTT is desired.
+
+LoRaWAN Gateway: Operates at a higher layer and is part of the LoRaWAN network architecture. LoRaWAN is a protocol specification built on top of the LoRa technology, providing features like adaptive data rate, encryption, and multi-channel/multi-modulation. A LoRaWAN gateway handles the data from multiple LoRa nodes, forwards it to a centralized network server, which then manages the data and communicates back to the nodes.
+
+In essence, while both gateways utilize LoRa technology for communication, a LoRaWAN gateway is more sophisticated, offering advanced features and integration with the LoRaWAN network infrastructure. The LoRa gateway, with its simpler architecture, is ideal for small networks of nodes, offering easier setup and configuration, making it an interesting choice for users keen on experimenting with LoRa technology.
 
 ## Configuring the LORA gateway
 
@@ -69,3 +77,6 @@ will send binary 0x01C0FFEE
 will send "test" to a WiPhone with chip ID 123ABC
 
 More info on where the LORA library is born [@sandeepmistry](https://github.com/sandeepmistry/arduino-LoRa/blob/master/API.md#radio-parameters)
+
+Tutorial on how to leverage LORA for a mailbox sensor from [PricelessToolkit](https://www.youtube.com/channel/UCz75N6inuLHXnRC5tqagNLw):
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6DftaHxDawM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
