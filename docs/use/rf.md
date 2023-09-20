@@ -21,6 +21,10 @@ OpenMQTTGateway leverages several libraries for RF communication:
 | Pilight  | Open-source solution for device control and data retrieval. | Broad range of devices and protocols | Moderate | Offers raw and protocol-specific data handling  | Structured data |
 | RF2      | Library focused on KaKu devices and protocol. | Specific devices and protocols| Lightweight | Decoding and encoding capabilities  | Basic integration |
 
+::: info
+RTL_433 library can only receive data, RCSwitch, PiLight, RF2 can receive and transmit.
+:::
+
 ## RTL_433 device decoders
 
 This feature is only available on a ESP32 based device with a supported transceiver connected due to the resource requirements of the rtl_433 device decoders.  At the present time only Pulse Position Modulation (OOK_PPM), Pulse Width Modulation (OOK_PWM) and  Pulse Manchester Zero Bit (OOK_PULSE_MANCHESTER_ZEROBIT) based decoders are available.
