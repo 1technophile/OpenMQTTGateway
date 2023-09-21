@@ -19,14 +19,14 @@ Once connected to the WiFi, a web page should appear. On Android, you may also h
 * Select your WiFi
 * Set your WiFi password
 * Set your MQTT Server IP
-* Set your MQTT Server Port
+* Set your MQTT Server Port (default: 1883)
 * Set the MQTT secure connection box to select whether or not the connection should be secure
 * Copy/paste the MQTT server certificate in the MQTT server cert box (only required if using a secure connection), be sure to include the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` markers  
-* Set your MQTT Server username (facultative)
-* Set your MQTT Server password (facultative)
-* Set your MQTT base topic if you need to change it (you must keep the / at the end)
+* Set your MQTT Server username (optional)
+* Set your MQTT Server password (optional)
+* Set your MQTT base topic if you need to change it (you must keep the / at the end) (default: home/)
 * Set your gateway name if you need to change it
-* Set your Over The Air password `ota_password`, this password is used for local and remote OTA - it is also the password being used for the WebUI login.
+* Set your Over The Air password `ota_password`, this password is used for local and remote OTA - it is also the password being used for the WebUI login. (default: OTAPASSWORD)
 
 * Click on save
 
