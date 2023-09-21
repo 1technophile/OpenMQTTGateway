@@ -1230,7 +1230,7 @@ void process_bledata(JsonObject& BLEdata) {
           model_id = BLEconectable::id::LYWSD03MMC;
         else if (name.compare("DT24-BLE") == 0)
           model_id = BLEconectable::id::DT24_BLE;
-        else if (name.compare("Battery Monitor") == 0)
+        else if (name.compare("Battery Monitor") == 0 || name.compare("Li Battery Monitor") == 0 || name.compare("ZX-1689") == 0)
           model_id = BLEconectable::id::BM2;
         else if (name.compare("MHO-C401") == 0)
           model_id = BLEconectable::id::MHO_C401;
