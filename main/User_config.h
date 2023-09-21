@@ -128,7 +128,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
 #endif
 #ifndef WifiManager_ConfigPortalTimeOut
-#  define WifiManager_ConfigPortalTimeOut 120
+#  define WifiManager_ConfigPortalTimeOut 240 //time in seconds for the setup portal to stay open, default 240s
 #endif
 #ifndef WifiManager_TimeOut
 #  define WifiManager_TimeOut 5
