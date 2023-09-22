@@ -33,6 +33,7 @@ jobs:
           - "esp32-m5tough-ble"
           - "esp32-m5stick-c-ble"
           - "esp32-m5stick-cp-ble"
+          - "esp32s3-atomS3U"
           - "esp32-m5atom-matrix"
           - "esp32-m5atom-lite"
           - "esp32dev-rtl_433"
