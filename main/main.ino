@@ -870,7 +870,8 @@ void setup() {
   //Launch serial for debugging purposes
   Serial.begin(SERIAL_BAUD);
   Log.begin(LOG_LEVEL, &Serial);
-  Log.notice(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
+  Serial.print(CR);
+  Log.notice(F("************* WELCOME TO OpenMQTTGateway **************" CR));
 #if defined(TRIGGER_GPIO) && !defined(ESPWifiManualSetup)
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
   checkButton();
@@ -1536,7 +1537,9 @@ void setup_wifimanager(bool reset_settings) {
       if (error) {
         Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
       }
+      Log.notice(F("Configuration:" CR));
       serializeJsonPretty(json, Serial);
+      Serial.print(CR);
       if (!json.isNull()) {
         Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
         if (json.containsKey("mqtt_server"))
