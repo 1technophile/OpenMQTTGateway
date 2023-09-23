@@ -504,6 +504,7 @@ void updateDevicesStatus() {
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2)) { // We apply the offline status only for tracking device, can be extended further to all the devices
       if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.presenceAwayTimer) && (now > BTConfig.presenceAwayTimer)) &&
@@ -1065,6 +1066,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
+            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
             p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
           String tracker_name = String(model_id.c_str()) + "-tracker";

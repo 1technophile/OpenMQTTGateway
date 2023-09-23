@@ -46,7 +46,7 @@ Once the data has been transmitted to the MQTT broker, it can be easily integrat
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
 ## Receiving signals from BLE tracker devices for Presence detection
-The gateway can detect the BLE trackers from Tile, NUT, TAGIT, ITAG, MiBand, Amazfit and RuuviTag and create automatically a device tracker entity following the Home Assistant discovery convention (if the auto discovery is activated).
+The gateway can detect BLE trackers from Tile, NUT, TAGIT, ITAG, Mi Band, Amazfit, RuuviTag and BM2 Battery Monitor, and automatically create a device tracker entity following the Home Assistant discovery convention (if the auto discovery is activated).
 To do this activate the "BT: Publish HASS presence" switch in your controller or send the following MQTT command to your broker:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
 
