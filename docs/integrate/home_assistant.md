@@ -22,7 +22,7 @@ The gateway will need an MQTT username and password, you have to create a new us
 ![Home Assistant Auto Discovery](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
 
 ::: warning Note
-The max size of the username is 30 and 60 for the password.
+The max size of the username and password is 64 characters.
 :::
 
 OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automatically.
