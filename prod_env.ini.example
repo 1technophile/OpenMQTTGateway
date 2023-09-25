@@ -1,5 +1,5 @@
 [platformio]
-default_envs = 
+default_envs =
   esp32dev-ble-1
   esp32dev-ble-2
   env:nodemcuv2-ONOFFPILIGHT
@@ -12,7 +12,7 @@ board_build.partitions = min_spiffs.csv
 lib_deps =
   ${com-esp.lib_deps}
   ${libraries.ble}
-build_flags = 
+build_flags =
   ${com-esp.build_flags}
   '-DZgatewayBT="BT"'
   '-DGateway_Name="OpenMQTTGateway_ESP32_1"'
@@ -31,7 +31,7 @@ board_build.partitions = min_spiffs.csv
 lib_deps =
   ${com-esp.lib_deps}
   ${libraries.ble}
-build_flags = 
+build_flags =
   ${com-esp.build_flags}
   '-DZgatewayBT="BT"'
   '-DGateway_Name="OpenMQTTGateway_ESP32_2"'
@@ -51,7 +51,7 @@ lib_deps =
   ${libraries.esppilight}
   ${libraries.esp8266_mdns}
   ${libraries.wire}
-build_flags = 
+build_flags =
   ${com-esp.build_flags}
   '-DZgatewayPilight="Pilight"'
   '-DZactuatorONOFF="ONOFF"'
@@ -83,10 +83,10 @@ build_flags =
 [env:sonoff-rfbridge-hacked]
 platform = ${com.esp8266_platform}
 board = esp8285
-lib_deps = 
+lib_deps =
 	${com-esp.lib_deps}
 	${libraries.esppilight}
-build_flags = 
+build_flags =
 	${com-esp.build_flags}
 	'-DZgatewayPilight="Pilight"'
 	'-DRF_RECEIVER_GPIO=4'
@@ -104,15 +104,15 @@ board_build.ldscript = eagle.flash.1m64.ld ;this frees more space for firmware u
 upload_protocol = espota
 upload_port = <ip> ;change this to the IP address of you SRFB
 upload_speed = 512000
-upload_flags = 
+upload_flags =
     --auth=OTAPASSWORD
     --port=8266
 platform = ${com.esp8266_platform}
 board = esp8285
-lib_deps = 
+lib_deps =
 	${com-esp.lib_deps}
 	${libraries.esppilight}
-build_flags = 
+build_flags =
 	${com-esp.build_flags}
 	'-DZgatewayPilight="Pilight"'
 	'-DRF_RECEIVER_GPIO=4'
@@ -143,8 +143,37 @@ build_flags =
   '-DZsensorMQ2="MQ2"'
   '-DTimeBetweenReadingmq2=8000'
 board_build.flash_mode = dout
-custom_description = Gas flammable sensor gateway 
+custom_description = Gas flammable sensor gateway
 custom_hardware = Gas flammable sensor first version
+
+; Wemos Lolin D1 mini with CC1101 RF module and manual network configuration
+[env:d1mini-rf-cc1101]
+platform = ${com.esp8266_platform}
+board = d1_mini
+lib_deps =
+  ${com-esp.lib_deps}
+  ${libraries.wifimanager8266}
+  ${libraries.rc-switch}
+  ${libraries.smartrc-cc1101-driver-lib}
+  ${libraries.esp8266_mdns}
+build_flags =
+  ${com-esp.build_flags}
+  '-DZgatewayRF="RF"'
+  '-DZradioCC1101="CC1101"'
+  '-DGateway_Name="OMG_D1MINI_RF"'
+  ;; manual network config could be required due to
+  ;; the dhcp incompatibilities with the newer wifi routers
+  ; '-DNetworkAdvancedSetup=true'
+  ; '-DNET_IP="192.168.1.99"'
+  ; '-DNET_MASK="255.255.255.0"'
+  ; '-DNET_GW="192.168.1.1"'
+  ; '-DNET_DNS="1.1.1.1"'
+  '-DLED_RECEIVE=LED_BUILTIN'
+  '-DLED_RECEIVE_ON=LOW'
+  '-DRF_RECEIVER_GPIO=4'
+  '-DRF_EMITTER_GPIO=5'
+  ;; Assign erase/reset button
+  ; '-DTRIGGER_GPIO=0'
 
 ;ESP12E with an DS1820 waterproof temperature probe, custom interval, max temperature resolution and DEEP SLEEP to conserve battery power
 [env:esp12e-ds18b20-deepsleep-pool]
@@ -167,7 +196,7 @@ build_flags =
   '-DDS1820_RESOLUTION=12'
   '-DDS1820_INTERVAL_SEC=15UL'
 board_build.flash_mode = dout
-custom_description = Pool temp sensor gateway 
+custom_description = Pool temp sensor gateway
 custom_hardware = Pool temp sensor first version
 
 [env:wemos-d1-uno32-HM-RD-deepsleep-waterleak] ;C-37, YL-83, HM-RD leak detector powered by battery using ESP32 Deepsleep and EXT0 wake by sensor state
@@ -192,6 +221,6 @@ build_flags =
   '-DESP32_EXT0_WAKE_PIN=C37_YL83_HMRD_Digital_GPIO' ;Should a leak be detected immediatly wake the ESP32 and report the problem
   '-DESP32_EXT0_WAKE_PIN_STATE=0' ;Should water/leak be detected immediatly wake the ESP32 and report the problem, sensor state to look for wakeup
 board_build.flash_mode = dout
-custom_description = Water/Leak sensor gateway 
+custom_description = Water/Leak sensor gateway
 custom_hardware = Water/Leak sensor first version
 monitor_speed = 115200
