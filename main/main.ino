@@ -78,6 +78,7 @@ bool ready_to_sleep = false;
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
+bool ethConnected = false;
 
 #ifndef ZgatewayGFSunInverter
 // Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
@@ -264,7 +265,6 @@ bool ProcessLock = false; // Process lock when we want to use a critical functio
 #  ifdef ESP32_ETHERNET
 #    include <ETH.h>
 void WiFiEvent(WiFiEvent_t event);
-static bool esp32EthConnected = false;
 #  endif
 
 #  include <WiFiClientSecure.h>
@@ -952,18 +952,27 @@ void setup() {
   modules.add(ZactuatorONOFF);
 #  endif
 
-#  ifdef ESP32_ETHERNET
-  setup_ethernet_esp32();
-#  else // WIFI ESP
-#    if defined(ESPWifiManualSetup)
+#  if defined(ESPWifiManualSetup)
   setup_wifi();
-#    else
-  // In failSafeMode we don't want to setup wifi manager as it has already been done before
-  if (!failSafeMode) setup_wifimanager(false);
+#  else
+  if (loadConfigFromFlash()) {
+    Log.notice(F("Config loaded from flash" CR));
+#    ifdef ESP32_ETHERNET
+    setup_ethernet_esp32();
 #    endif
+    if (!failSafeMode && !ethConnected) setup_wifimanager(false);
+  } else {
+#    ifdef ESP32_ETHERNET
+    setup_ethernet_esp32();
+#    endif
+    Log.notice(F("No config in flash, launching wifi manager" CR));
+    // In failSafeMode we don't want to setup wifi manager as it has already been done before
+    if (!failSafeMode) setup_wifimanager(false);
+  }
+
+#  endif
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
-#  endif
 
   setOTA();
 #else // In case of arduino platform
@@ -1189,9 +1198,9 @@ void setup() {
 bool wifi_reconnect_bypass() {
   uint8_t wifi_autoreconnect_cnt = 0;
 #  ifdef ESP32
-  while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
+  while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
 #  else
-  while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
+  while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
 #  endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
@@ -1202,7 +1211,7 @@ bool wifi_reconnect_bypass() {
     delay(1000);
     wifi_autoreconnect_cnt++;
   }
-  if (wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
+  if (wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
     return true;
   } else {
     return false;
@@ -1316,6 +1325,10 @@ void setupTLS(bool self_signed, uint8_t index) {
 #  endif
   }
 }
+#else
+bool wifi_reconnect_bypass() {
+  return true;
+}
 #endif
 
 /*
@@ -1372,7 +1385,7 @@ void setup_wifi() {
     failure_number_ntwk++;
 #  if defined(ESP32) && defined(ZgatewayBT)
     if (lowpowermode) {
-      if (failure_number_ntwk > maxConnectionRetryWifi) {
+      if (failure_number_ntwk > maxConnectionRetryNetwork) {
         lowPowerESP32();
       }
     } else {
@@ -1494,28 +1507,9 @@ void saveMqttConfig() {
   configFile.close();
 }
 
-void setup_wifimanager(bool reset_settings) {
-  delay(10);
-  WiFi.mode(WIFI_STA);
-
-  if (reset_settings)
-    eraseAndRestart();
-
-  String s = WiFi.macAddress();
-#  ifdef USE_MAC_AS_GATEWAY_NAME
-  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
-          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
-  strcpy(ota_hostname, WifiManager_ssid);
-  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
-#  endif
-#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
-  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
-          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-#  endif
-
-  //read configuration from FS json
+bool loadConfigFromFlash() {
   Log.trace(F("mounting FS..." CR));
+  bool result = false;
 
   if (SPIFFS.begin()) {
     Log.trace(F("mounted file system" CR));
@@ -1561,12 +1555,35 @@ void setup_wifimanager(bool reset_settings) {
           strcpy(ota_pass, json["ota_pass"]);
         if (json.containsKey("ota_server_cert"))
           ota_server_cert = json["ota_server_cert"].as<const char*>();
+        result = true;
       } else {
         Log.warning(F("failed to load json config" CR));
       }
       configFile.close();
     }
   }
+  return result;
+}
+
+void setup_wifimanager(bool reset_settings) {
+  delay(10);
+  WiFi.mode(WIFI_STA);
+
+  if (reset_settings)
+    eraseAndRestart();
+
+  String s = WiFi.macAddress();
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
+          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
+  strcpy(ota_hostname, WifiManager_ssid);
+  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
+#  endif
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
+          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
 
   wifiManager.setDebugOutput(WM_DEBUG_LEVEL);
 
@@ -1623,6 +1640,10 @@ void setup_wifimanager(bool reset_settings) {
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
 
+#  ifdef ESP32_ETHERNET
+  wifiManager.setBreakAfterConfig(true); // If ethernet is used, we don't want to block the connection by keeping the portal up
+#  endif
+
   if (!wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
   {
 #  ifdef ESP32
@@ -1643,21 +1664,23 @@ void setup_wifimanager(bool reset_settings) {
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
     if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
-      Log.warning(F("failed to connect and hit timeout" CR));
-      delay(3000);
+      if (!ethConnected) { // If we are using ethernet, we don't want to restart the ESP
+        Log.warning(F("failed to connect and hit timeout" CR));
+        delay(3000);
 
 #  ifdef ESP32
-      /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
-      esp_wifi_set_mode(WIFI_MODE_AP);
-      esp_wifi_start();
-      wifi_config_t conf;
-      esp_wifi_get_config(WIFI_IF_AP, &conf);
-      conf.ap.ssid_hidden = 1;
-      esp_wifi_set_config(WIFI_IF_AP, &conf);
+        /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
+        esp_wifi_set_mode(WIFI_MODE_AP);
+        esp_wifi_start();
+        wifi_config_t conf;
+        esp_wifi_get_config(WIFI_IF_AP, &conf);
+        conf.ap.ssid_hidden = 1;
+        esp_wifi_set_config(WIFI_IF_AP, &conf);
 #  endif
 
-      //restart and try again
-      ESPRestart(3);
+        //restart and try again
+        ESPRestart(3);
+      }
     }
     InfoIndicatorOFF();
     ErrorIndicatorOFF();
@@ -1721,9 +1744,10 @@ void setup_ethernet_esp32() {
   ethBeginSuccess = ETH.begin();
 #    endif
   Log.trace(F("Connecting to Ethernet" CR));
-  while (!esp32EthConnected) {
+  while (!ethConnected && failure_number_ntwk <= maxConnectionRetryNetwork) {
     delay(500);
     Log.trace(F("." CR));
+    failure_number_ntwk++;
   }
 }
 
@@ -1740,15 +1764,15 @@ void WiFiEvent(WiFiEvent_t event) {
       Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
       Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
       Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
-      esp32EthConnected = true;
+      ethConnected = true;
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       Log.error(F("Ethernet Disconnected" CR));
-      esp32EthConnected = false;
+      ethConnected = false;
       break;
     case ARDUINO_EVENT_ETH_STOP:
       Log.error(F("Ethernet Stopped" CR));
-      esp32EthConnected = false;
+      ethConnected = false;
       break;
     default:
       break;
@@ -1824,11 +1848,10 @@ void loop() {
   }
 
 #if defined(ESP8266) || defined(ESP32)
-#  ifdef ESP32_ETHERNET
-  if (esp32EthConnected) {
-#  else
-  if (WiFi.status() == WL_CONNECTED) {
-#  endif
+  if (ethConnected || WiFi.status() == WL_CONNECTED) {
+    if (ethConnected && WiFi.status() == WL_CONNECTED) {
+      WiFi.disconnect(); // we disconnect the wifi as we are connected to ethernet
+    }
     ArduinoOTA.handle();
 #else
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
@@ -2008,7 +2031,7 @@ void loop() {
     esp_task_wdt_reset();
 #endif
     connected = false;
-    Log.warning(F("Network disconnected:" CR));
+    Log.warning(F("Network disconnected" CR));
     ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
 #ifdef ESP32
@@ -2016,14 +2039,7 @@ void loop() {
 #endif
     ErrorIndicatorOFF();
     delay(2000);
-#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
-#  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
-    WiFi.reconnect();
-#  endif
-    Log.warning(F("wifi" CR));
-#else
-    Log.warning(F("ethernet" CR));
-#endif
+    wifi_reconnect_bypass();
   }
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
@@ -2169,22 +2185,23 @@ String stateMeasures() {
 #      endif
   SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
+
+  SYSdata["ethernet"] = ethConnected;
+  if (ethConnected) {
 #    ifdef ESP32_ETHERNET
-  SYSdata["mac"] = (char*)ETH.macAddress().c_str();
-  SYSdata["ip"] = ip2CharArray(ETH.localIP());
-  ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
-  SYSdata["linkspeed"] = (int)ETH.linkSpeed();
-#    else
-  long rssi = WiFi.RSSI();
-  SYSdata["rssi"] = rssi;
-  String SSID = WiFi.SSID();
-  SYSdata["SSID"] = SSID;
-  String BSSID = WiFi.BSSIDstr();
-  SYSdata["BSSID"] = BSSID;
-  SYSdata["ip"] = ip2CharArray(WiFi.localIP());
-  String mac = WiFi.macAddress();
-  SYSdata["mac"] = (char*)mac.c_str();
+    SYSdata["mac"] = (char*)ETH.macAddress().c_str();
+    SYSdata["ip"] = ip2CharArray(ETH.localIP());
+    ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
+    SYSdata["linkspeed"] = (int)ETH.linkSpeed();
 #    endif
+  } else {
+    SYSdata["rssi"] = (long)WiFi.RSSI();
+    SYSdata["SSID"] = (char*)WiFi.SSID().c_str();
+    SYSdata["BSSID"] = (char*)WiFi.BSSIDstr().c_str();
+    SYSdata["ip"] = ip2CharArray(WiFi.localIP());
+    SYSdata["mac"] = (char*)WiFi.macAddress().c_str();
+  }
+
 #  endif
 #  ifdef ZgatewayBT
 #    ifdef ESP32
