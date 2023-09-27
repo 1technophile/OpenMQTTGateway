@@ -1869,6 +1869,9 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+#  ifdef ZgatewayLORA
+        stateLORAMeasures();
+#  endif
 #  if defined(ZwebUI) && defined(ESP32)
         stateWebUIStatus();
 #  endif
@@ -1944,6 +1947,10 @@ void loop() {
 #endif
 #ifdef ZgatewayLORA
       LORAtoMQTT();
+#  ifdef ZmqttDiscovery
+      if (SYSConfig.discovery)
+        launchLORADiscovery(publishDiscovery);
+#  endif
 #endif
 #ifdef ZgatewayRF
       RFtoMQTT();

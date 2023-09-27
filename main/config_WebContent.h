@@ -50,7 +50,11 @@
 #endif
 #define configure_4 "<p><form action='wu' method='get'><button>Configure WebUI</button></form></p>"
 #define configure_5 "<p><form action='lo' method='get'><button>Configure Logging</button></form></p>"
-#define configure_6
+#ifdef ZgatewayLORA
+#  define configure_6 "<p><form action='la' method='get'><button>Configure LORA</button></form></p>"
+#else
+#  define configure_6
+#endif
 #define configure_7
 #define configure_8
 
@@ -97,6 +101,88 @@ const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><s
 const char config_logging_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>OpenMQTTGateway Logging</b></span></legend><form method='get' action='lo'><p><b>Log Level</b><br><select id='lo'><option %s value='0'>Silent</option><option %s value='1'>Fatal</option><option %s value='2'>Error</option><option %s value='3'>Warning</option><option %s value='4'>Notice</option><option %s value='5'>Trace</option><option %s value='6'>Verbose</option></select></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure WebUI</b></span></legend><form method='get' action='wu'><p><b>Display Metric</b><br><input id='dm' type='checkbox' %s></p><p><b>Secure WebUI</b><br><input id='sw' type='checkbox' %s></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+
+const char config_lora_body[] = body_header
+    "<fieldset class=\"set1\">"
+    "<legend><span><b>Configure LORA</b></span></legend>"
+    "<form method='get' action='la'>"
+
+    "<p><b>Frequency</b><br>"
+    "<select id='lf' name='lf'>"
+    "<option %s value='868000000'>868MHz</option>"
+    "<option %s value='915000000'>915MHz</option>"
+    "<option %s value='433000000'>433MHz</option>"
+    "</select></p>"
+
+    "<p><b>TX Power</b><br>"
+    "<select id='lt' name='lt'>"
+    "<option %s value='0'>0 dBm</option>"
+    "<option %s value='1'>1 dBm</option>"
+    "<option %s value='2'>2 dBm</option>"
+    "<option %s value='3'>3 dBm</option>"
+    "<option %s value='4'>4 dBm</option>"
+    "<option %s value='5'>5 dBm</option>"
+    "<option %s value='6'>6 dBm</option>"
+    "<option %s value='7'>7 dBm</option>"
+    "<option %s value='8'>8 dBm</option>"
+    "<option %s value='9'>9 dBm</option>"
+    "<option %s value='10'>10 dBm</option>"
+    "<option %s value='11'>11 dBm</option>"
+    "<option %s value='12'>12 dBm</option>"
+    "<option %s value='13'>13 dBm</option>"
+    "<option %s value='14'>14 dBm</option>"
+    "</select></p>"
+
+    "<p><b>Spreading Factor</b><br>"
+    "<select id='ls' name='ls'>"
+    "<option %s value='7'>SF7</option>"
+    "<option %s value='8'>SF8</option>"
+    "<option %s value='9'>SF9</option>"
+    "<option %s value='10'>SF10</option>"
+    "<option %s value='11'>SF11</option>"
+    "<option %s value='12'>SF12</option>"
+    "</select></p>"
+
+    "<p><b>Signal Bandwidth</b><br>"
+    "<select id='lb' name='lb'>"
+    "<option %s value='7800'>7.8 kHz</option>"
+    "<option %s value='10400'>10.4 kHz</option>"
+    "<option %s value='15600'>15.6 kHz</option>"
+    "<option %s value='20800'>20.8 kHz</option>"
+    "<option %s value='31250'>31.25 kHz</option>"
+    "<option %s value='41700'>41.7 kHz</option>"
+    "<option %s value='62500'>62.5 kHz</option>"
+    "<option %s value='125000'>125 kHz</option>"
+    "<option %s value='250000'>250 kHz</option>"
+    "<option %s value='500000'>500 kHz</option>"
+    "</select></p>"
+
+    "<p><b>Coding Rate</b><br>"
+    "<select id='lc' name='lc'>"
+    "<option %s value='5'>4/5</option>"
+    "<option %s value='6'>4/6</option>"
+    "<option %s value='7'>4/7</option>"
+    "<option %s value='8'>4/8</option>"
+    "</select></p>"
+
+    "<p><b>Preamble Length</b><br>"
+    "<input type='number' id='ll' name='ll' value='%d'></p>"
+
+    "<p><b>Sync Word</b><br>"
+    "<input type='text' id='lw' name='lw' value='0x%02X'></p>"
+
+    "<p><b>CRC</b><br>"
+    "<input type='checkbox' id='lr' name='lr' %s></p>"
+
+    "<p><b>Invert IQ</b><br>"
+    "<input type='checkbox' id='li' name='li' %s></p>"
+
+    "<p><b>Only known</b><br>"
+    "<input type='checkbox' id='ok' name='ok' %s></p>"
+
+    "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
+    "</form>"
+    "</fieldset>" body_footer_config_menu;
 
 const char footer[] = "<div style='text-align:right;font-size:11px;'><hr/><a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>%s</a></div></div></body></html>";
 

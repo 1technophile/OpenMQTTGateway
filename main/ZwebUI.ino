@@ -852,6 +852,146 @@ void handleLO() {
   server.send(200, "text/html", response);
 }
 
+#  ifdef ZgatewayLORA
+/**
+ * @brief /LA - Configure LORA Page
+ * T: handleLA: uri: /la, args: 11, method: 1
+ * T: handleLA Arg: 0, lf=868100000
+ * T: handleLA Arg: 1, lt=14
+ * T: handleLA Arg: 2, ls=12
+ * T: handleLA Arg: 3, lb=125
+ * T: handleLA Arg: 4, lc=5
+ * T: handleLA Arg: 5, ll=8
+ * T: handleLA Arg: 6, lw=0
+ * T: handleLA Arg: 7, lr=1
+ * T: handleLA Arg: 8, li=0
+ * T: handleLA Arg: 9, ok=0
+ * T: handleLA Arg: 10, save=
+ */
+void handleLA() {
+  WEBUI_TRACE_LOG(F("handleLA: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleLA Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save")) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject WEBtoLORA = jsonBuffer.to<JsonObject>();
+
+      if (server.hasArg("lf")) {
+        WEBtoLORA["frequency"] = server.arg("lf");
+      }
+
+      if (server.hasArg("lt")) {
+        WEBtoLORA["txpower"] = server.arg("lt");
+      }
+
+      if (server.hasArg("ls")) {
+        WEBtoLORA["spreadingfactor"] = server.arg("ls");
+      }
+
+      if (server.hasArg("lb")) {
+        WEBtoLORA["signalbandwidth"] = server.arg("lb");
+      }
+
+      if (server.hasArg("lc")) {
+        WEBtoLORA["codingrate"] = server.arg("lc");
+      }
+
+      if (server.hasArg("ll")) {
+        WEBtoLORA["preamblelength"] = server.arg("ll");
+      }
+
+      if (server.hasArg("lw")) {
+        WEBtoLORA["syncword"] = server.arg("lw");
+      }
+
+      if (server.hasArg("lr")) {
+        WEBtoLORA["enablecrc"] = server.arg("lr");
+      } else {
+        WEBtoLORA["enablecrc"] = false;
+      }
+
+      if (server.hasArg("li")) {
+        WEBtoLORA["invertiq"] = server.arg("li");
+      } else {
+        WEBtoLORA["invertiq"] = false;
+      }
+
+      if (server.hasArg("ok")) {
+        WEBtoLORA["onlyknown"] = server.arg("ok");
+      } else {
+        WEBtoLORA["onlyknown"] = false;
+      }
+
+      LORAConfig_fromJson(WEBtoLORA);
+    }
+  }
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure LORA").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_lora_body,
+           jsonChar,
+           gateway_name,
+           LORAConfig.frequency == 868000000 ? "selected" : "",
+           LORAConfig.frequency == 915000000 ? "selected" : "",
+           LORAConfig.frequency == 433000000 ? "selected" : "",
+           LORAConfig.txPower == 0 ? "selected" : "",
+           LORAConfig.txPower == 1 ? "selected" : "",
+           LORAConfig.txPower == 2 ? "selected" : "",
+           LORAConfig.txPower == 3 ? "selected" : "",
+           LORAConfig.txPower == 4 ? "selected" : "",
+           LORAConfig.txPower == 5 ? "selected" : "",
+           LORAConfig.txPower == 6 ? "selected" : "",
+           LORAConfig.txPower == 7 ? "selected" : "",
+           LORAConfig.txPower == 8 ? "selected" : "",
+           LORAConfig.txPower == 9 ? "selected" : "",
+           LORAConfig.txPower == 10 ? "selected" : "",
+           LORAConfig.txPower == 11 ? "selected" : "",
+           LORAConfig.txPower == 12 ? "selected" : "",
+           LORAConfig.txPower == 13 ? "selected" : "",
+           LORAConfig.txPower == 14 ? "selected" : "",
+           LORAConfig.spreadingFactor == 7 ? "selected" : "",
+           LORAConfig.spreadingFactor == 8 ? "selected" : "",
+           LORAConfig.spreadingFactor == 9 ? "selected" : "",
+           LORAConfig.spreadingFactor == 10 ? "selected" : "",
+           LORAConfig.spreadingFactor == 11 ? "selected" : "",
+           LORAConfig.spreadingFactor == 12 ? "selected" : "",
+           LORAConfig.signalBandwidth == 7800 ? "selected" : "",
+           LORAConfig.signalBandwidth == 10400 ? "selected" : "",
+           LORAConfig.signalBandwidth == 15600 ? "selected" : "",
+           LORAConfig.signalBandwidth == 20800 ? "selected" : "",
+           LORAConfig.signalBandwidth == 31250 ? "selected" : "",
+           LORAConfig.signalBandwidth == 41700 ? "selected" : "",
+           LORAConfig.signalBandwidth == 62500 ? "selected" : "",
+           LORAConfig.signalBandwidth == 125000 ? "selected" : "",
+           LORAConfig.signalBandwidth == 250000 ? "selected" : "",
+           LORAConfig.signalBandwidth == 500000 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 5 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 6 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 7 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 8 ? "selected" : "",
+           LORAConfig.preambleLength,
+           LORAConfig.syncWord,
+           LORAConfig.crc ? "checked" : "",
+           LORAConfig.invertIQ ? "checked" : "",
+           LORAConfig.onlyKnown ? "checked" : "");
+
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+  stateLORAMeasures();
+  Log.trace(F("[WebUI] LORAConfig end" CR));
+}
+#  endif
+
 /**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
  * 
@@ -1015,6 +1155,10 @@ void handleIN() {
 #  if defined(ZgatewayCloud)
     informationDisplay += "1<BR>Cloud}2}1";
     informationDisplay += stateCLOUDStatus();
+#  endif
+#  if defined(ZgatewayLORA)
+    informationDisplay += "1<BR>LORA}2}1";
+    informationDisplay += stateLORAMeasures();
 #  endif
     informationDisplay += "1<BR>WebUI}2}1";
     informationDisplay += stateWebUIStatus();
@@ -1276,6 +1420,9 @@ void WebUISetup() {
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
   server.on("/wu", handleWU); // Configure WebUI
+#  ifdef ZgatewayLORA
+  server.on("/la", handleLA); // Configure LORA
+#  endif
 #  if defined(ZgatewayCloud)
   server.on("/cl", handleCL); // Configure Cloud
   server.on("/tk", handleTK); // Store Device Token
@@ -2007,6 +2154,58 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             line3 = "power: " + (String)pow + " W";
           }
           line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+
+          // Queue completed message
+
+          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            free(message);
+          } else {
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
+          }
+          break;
+        }
+#  endif
+#  ifdef ZgatewayLORA
+        case webUIHash("LORAtoMQTT"): {
+          // {"tempc":25.4,"hum":0,"batt":0}
+
+          String line1 = "";
+          if (data.containsKey("tempc")) {
+            char temp[5];
+            float temperature_C = data["tempc"];
+
+            if (displayMetric) {
+              dtostrf(temperature_C, 3, 1, temp);
+              line1 = "temp: " + (String)temp + "°C ";
+            } else {
+              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+              line1 = "temp: " + (String)temp + "°F ";
+            }
+          }
+          line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
+
+          // Line 2
+
+          String line2 = "";
+          float humidity = data["hum"];
+          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
+            char hum[5];
+            dtostrf(humidity, 3, 1, hum);
+            line2 += "hum: " + (String)hum + "% ";
+          }
+          line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+
+          // Line 3
+
+          String line3 = "";
+          float adc = data["adc"];
+          if (data.containsKey("adc") && adc <= 100 && adc >= 0) {
+            char cAdc[5];
+            dtostrf(adc, 3, 1, cAdc);
+            line3 += "adc: " + (String)cAdc + "µS/cm ";
+          }
+          line3.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 
           // Queue completed message
 
