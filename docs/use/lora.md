@@ -51,10 +51,14 @@ Once one board flashed with OMG and the other with the sender program you should
 {"id":"AA:BB:CC:DD:EE:FF","rssi":-16,"snr":9.5,"pferror":-3581,"packetSize":9,"tempc":"57"}
 ```
 
+![LORA board receiving data](../img/OpenMQTTgateway_ESP32_LORA_MSG.png)
+
 Messages that contain non-printable characters will be converted to hexadecimal and look like this:
 ```json
 {"rssi":-121,"snr":-11.75,"pferror":-29116,"packetSize":3,"hex":"C0FFEE"}
 ```
+They can be filtered by setting the "onlyknown" command to `true` or by an activation into the WebUI or Home Assistant.
+
 And from a supported device (in this case, a WiPhone), looks like this:
 ```json
 {"rssi":-50,"snr":9.25,"pferror":20728,"packetSize":30,"from":"123ABC","to":"000000","message":"Hi from WiPhone","type":"WiPhone"}
