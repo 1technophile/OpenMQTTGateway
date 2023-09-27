@@ -855,7 +855,7 @@ void handleLO() {
 #  ifdef ZgatewayLORA
 /**
  * @brief /LA - Configure LORA Page
- * T: handleLA: uri: /la, args: 9, method: 1
+ * T: handleLA: uri: /la, args: 11, method: 1
  * T: handleLA Arg: 0, lf=868100000
  * T: handleLA Arg: 1, lt=14
  * T: handleLA Arg: 2, ls=12
@@ -865,7 +865,8 @@ void handleLO() {
  * T: handleLA Arg: 6, lw=0
  * T: handleLA Arg: 7, lr=1
  * T: handleLA Arg: 8, li=0
- * T: handleLA Arg: 9, save=
+ * T: handleLA Arg: 9, ok=0
+ * T: handleLA Arg: 10, save=
  */
 void handleLA() {
   WEBUI_TRACE_LOG(F("handleLA: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -908,10 +909,20 @@ void handleLA() {
 
       if (server.hasArg("lr")) {
         WEBtoLORA["enablecrc"] = server.arg("lr");
+      } else {
+        WEBtoLORA["enablecrc"] = false;
       }
 
       if (server.hasArg("li")) {
         WEBtoLORA["invertiq"] = server.arg("li");
+      } else {
+        WEBtoLORA["invertiq"] = false;
+      }
+
+      if (server.hasArg("ok")) {
+        WEBtoLORA["onlyknown"] = server.arg("ok");
+      } else {
+        WEBtoLORA["onlyknown"] = false;
       }
 
       LORAConfig_fromJson(WEBtoLORA);
@@ -969,7 +980,8 @@ void handleLA() {
            LORAConfig.preambleLength,
            LORAConfig.syncWord,
            LORAConfig.crc ? "checked" : "",
-           LORAConfig.invertIQ ? "checked" : "");
+           LORAConfig.invertIQ ? "checked" : "",
+           LORAConfig.onlyKnown ? "checked" : "");
 
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);

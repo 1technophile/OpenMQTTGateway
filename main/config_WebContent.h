@@ -177,6 +177,9 @@ const char config_lora_body[] = body_header
     "<p><b>Invert IQ</b><br>"
     "<input type='checkbox' id='li' name='li' %s></p>"
 
+    "<p><b>Only known</b><br>"
+    "<input type='checkbox' id='ok' name='ok' %s></p>"
+
     "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
     "</form>"
     "</fieldset>" body_footer_config_menu;

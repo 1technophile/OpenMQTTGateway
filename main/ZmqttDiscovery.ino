@@ -1031,6 +1031,39 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+
+  createDiscovery("switch", //set Type
+                  subjectLORAtoMQTT, "LORA: CRC", (char*)getUniqueId("enablecrc", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.enablecrc }}", //set availability_topic,device_class,value_template,
+                  "{\"enablecrc\":true,\"save\":true}", "{\"enablecrc\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoLORAset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+
+  createDiscovery("switch", //set Type
+                  subjectLORAtoMQTT, "LORA: Invert IQ", (char*)getUniqueId("invertiq", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.invertiq }}", //set availability_topic,device_class,value_template,
+                  "{\"invertiq\":true,\"save\":true}", "{\"invertiq\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoLORAset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+
+  createDiscovery("switch", //set Type
+                  subjectLORAtoMQTT, "LORA: Only Known", (char*)getUniqueId("onlyknown", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.onlyknown }}", //set availability_topic,device_class,value_template,
+                  "{\"onlyknown\":true,\"save\":true}", "{\"onlyknown\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoLORAset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
 #  endif
 
 #  ifdef ZgatewaySRFB

@@ -64,6 +64,9 @@ extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 #ifndef INVERT_IQ
 #  define INVERT_IQ false
 #endif
+#ifndef LORA_ONLY_KNOWN
+#  define LORA_ONLY_KNOWN false
+#endif
 
 #define repeatLORAwMQTT false // do we repeat a received signal by using MQTT with LORA gateway
 
@@ -105,6 +108,7 @@ struct LORAConfig_s {
   byte syncWord;
   bool crc;
   bool invertIQ;
+  bool onlyKnown;
 };
 
 #ifdef ZmqttDiscovery

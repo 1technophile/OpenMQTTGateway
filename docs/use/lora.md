@@ -27,6 +27,7 @@ The LORA gateway can be configured by MQTT commands or by using the WebUI, here 
 * syncword: byte
 * enablecrc: boolean
 * invertiq: boolean
+* onlyknown: boolean
 
 With the WebUI:
 ![LORA configuration page](../img/OpenMQTTGateway_LORA_Configuration.png)

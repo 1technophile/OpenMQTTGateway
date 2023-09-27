@@ -272,6 +272,7 @@ void LORAConfig_init() {
   LORAConfig.syncWord = LORA_SYNC_WORD;
   LORAConfig.crc = DEFAULT_CRC;
   LORAConfig.invertIQ = INVERT_IQ;
+  LORAConfig.onlyKnown = LORA_ONLY_KNOWN;
 }
 
 void LORAConfig_load() {
@@ -309,6 +310,7 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
   Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
   Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
+  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
   // Handle syncword separately
   if (LORAdata.containsKey("syncword")) {
     String syncWordStr = LORAdata["syncword"].as<String>();
@@ -412,6 +414,10 @@ void LORAtoMQTT() {
     if (deviceId == WIPHONE) {
       _WiPhoneToMQTT(packet, LORAdata);
     } else if (binary) {
+      if (LORAConfig.onlyKnown) {
+        Log.trace(F("Ignoring non identifiable packet" CR));
+        return;
+      }
       // We have non-ascii data: create hex string of the data
       char hex[packetSize * 2 + 1];
       _rawToHex(packet, hex, packetSize);
@@ -537,6 +543,7 @@ String stateLORAMeasures() {
   LORAdata["syncword"] = syncWordHex;
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
+  LORAdata["onlyknown"] = LORAConfig.onlyKnown;
 
   pub(subjectGTWLORAtoMQTT, LORAdata);
 
