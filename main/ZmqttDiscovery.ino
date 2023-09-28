@@ -239,7 +239,7 @@ void createDiscovery(const char* sensor_type,
                      int off_delay,
                      const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
-                     const char* state_class, const char* state_off, const char* state_on) {
+                     const char* state_class, const char* state_off, const char* state_on, const char* enum_options) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
@@ -342,6 +342,10 @@ void createDiscovery(const char* sensor_type,
     strcat(command_topic, gateway_name);
     strcat(command_topic, cmd_topic);
     sensor["cmd_t"] = command_topic; //command_topic
+  }
+
+  if (enum_options != nullptr) {
+    sensor["options"] = enum_options;
   }
 
   StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
