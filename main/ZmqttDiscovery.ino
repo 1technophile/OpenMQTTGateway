@@ -1146,6 +1146,15 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+  createDiscovery("number", //set Type
+                  subjectBTtoMQTT, "BT: Scan duration", (char*)getUniqueId("scanduration", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.scanduration/1000 }}", //set availability_topic,device_class,value_template,
+                  "{\"scanduration\":{{value*1000}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
+                  stateClassNone //State Class
+  );
   createDiscovery("button", //set Type
                   will_Topic, "BT: Force scan", (char*)getUniqueId("force_scan", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "", //set availability_topic,device_class,value_template,
