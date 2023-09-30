@@ -186,7 +186,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
     }
 #  ifdef Pilight_rawEnabled
     if (Pilightdata.containsKey("rawEnabled")) {
-      Log.notice(F("Setting PiLight raw output enabled: %s" CR), Pilightdata["rawEnabled"]?"true":"false");
+      Log.notice(F("Setting PiLight raw output enabled: %s" CR), Pilightdata["rawEnabled"] ? "true" : "false");
       pilightRawEnabled = (bool)Pilightdata["rawEnabled"];
       disablePilightReceive();
       delay(1);
