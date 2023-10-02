@@ -800,7 +800,7 @@ void BLEconnect() {
             DT24_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
-          } else if (p->sensorModel_id == BLEconectable::id::BM2) {
+          } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
             BM2_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
             BLEclient.publishData();
@@ -832,7 +832,7 @@ void BLEconnect() {
                 if (p->sensorModel_id != BLEconectable::id::DT24_BLE &&
                     p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
                     p->sensorModel_id != BLEconectable::id::LYWSD03MMC &&
-                    p->sensorModel_id != BLEconectable::id::BM2 &&
+                    p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 &&
                     p->sensorModel_id != BLEconectable::id::MHO_C401 &&
                     p->sensorModel_id != BLEconectable::id::XMWSDJ04MMC) {
                   // if irregulary connected to and connection failed clear the connect flag.
@@ -1049,10 +1049,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
     if (overrideDiscovery || !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
-      if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
-          p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
-          p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
-          p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
+      if (p->sensorModel_id >= 0) {
         Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
         std::string properties = decoder.getTheengProperties(p->sensorModel_id);
         Log.trace(F("properties: %s" CR), properties.c_str());
@@ -1060,92 +1057,107 @@ void launchBTDiscovery(bool overrideDiscovery) {
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
         String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
-        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
-          String tracker_name = String(model_id.c_str()) + "-tracker";
-          String tracker_id = macWOdots + "-tracker";
-          createDiscovery("device_tracker",
-                          discovery_topic.c_str(), tracker_name.c_str(), tracker_id.c_str(),
-                          will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
-                          "", "", "",
-                          0, "", "", false, "",
-                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                          stateClassNone);
-        }
-        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
-          String sensor_name = String(model_id.c_str()) + "-moving";
-          String sensor_id = macWOdots + "-moving";
-          createDiscovery("binary_sensor",
-                          discovery_topic.c_str(), sensor_name.c_str(), sensor_id.c_str(),
-                          will_Topic, "moving", "{% if value_json.get('accx') -%}on{%- else -%}off{%- endif %}",
-                          "on", "off", "",
-                          0, "", "", false, "",
-                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                          stateClassNone);
-        }
-        if (!properties.empty()) {
-          StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-          deserializeJson(jsonBuffer, properties);
-          for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
-            Log.trace(F("Key: %s"), prop.key().c_str());
-            Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
-            Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
-            String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
-            String unique_id = macWOdots + "-" + String(prop.key().c_str());
-            String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
-              String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
-              String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
-              createDiscovery("switch", //set Type
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, "switch", value_template.c_str(),
-                              payload_on.c_str(), payload_off.c_str(), "", 0,
-                              Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassNone, "off", "on");
-            } else if (strcmp(prop.key().c_str(), "device") != 0 || strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
-              createDiscovery("sensor",
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, prop.value()["name"], value_template.c_str(),
-                              "", "", prop.value()["unit"],
-                              0, "", "", false, "",
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassMeasurement);
+        if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
+            p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
+            p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
+            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
+          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
+            String tracker_name = String(model_id.c_str()) + "-tracker";
+            String tracker_id = macWOdots + "-tracker";
+            createDiscovery("device_tracker",
+                            discovery_topic.c_str(), tracker_name.c_str(), tracker_id.c_str(),
+                            will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
+                            "", "", "",
+                            0, "", "", false, "",
+                            model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                            stateClassNone);
+          }
+          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
+            String sensor_name = String(model_id.c_str()) + "-moving";
+            std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
+            String sensor_id = macWOdots + "-moving";
+            createDiscovery("binary_sensor",
+                            discovery_topic.c_str(), sensor_name.c_str(), sensor_id.c_str(),
+                            will_Topic, "moving", "{% if value_json.get('accx') -%}on{%- else -%}off{%- endif %}",
+                            "on", "off", "",
+                            0, "", "", false, "",
+                            model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                            stateClassNone);
+          }
+          if (!properties.empty()) {
+            StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+            deserializeJson(jsonBuffer, properties);
+            for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
+              Log.trace(F("Key: %s"), prop.key().c_str());
+              Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
+              Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
+              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+              String unique_id = macWOdots + "-" + String(prop.key().c_str());
+              String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
+              if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
+                String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
+                String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
+                createDiscovery("switch", //set Type
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, "switch", value_template.c_str(),
+                                payload_on.c_str(), payload_off.c_str(), "", 0,
+                                Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassNone, "off", "on");
+              } else if (strcmp(prop.key().c_str(), "device") != 0 || strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
+                createDiscovery("sensor",
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, prop.value()["name"], value_template.c_str(),
+                                "", "", prop.value()["unit"],
+                                0, "", "", false, "",
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassMeasurement);
+              }
             }
           }
-        }
-      } else {
-        if (p->sensorModel_id > BLEconectable::id::MIN &&
-                p->sensorModel_id < BLEconectable::id::MAX ||
-            p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
-          // Discovery of sensors from which we retrieve data only by connect
-          if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
-            DT24Discovery(macWOdots.c_str(), "DT24-BLE");
-          }
-          if (p->sensorModel_id == BLEconectable::id::BM2) {
-            BM2Discovery(macWOdots.c_str(), "BM2");
-          }
-          if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
-            LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
-          }
-          if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
-            MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
-          }
-          if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
-            XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
-          }
-          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
-            HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
-          }
         } else {
-          Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
+          if (p->sensorModel_id > BLEconectable::id::MIN &&
+                  p->sensorModel_id < BLEconectable::id::MAX ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
+            // Discovery of sensors from which we retrieve data only by connect
+            if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
+              DT24Discovery(macWOdots.c_str(), "DT24-BLE");
+            }
+            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
+              // Sensor discovery
+              BM2Discovery(macWOdots.c_str(), "BM2");
+              // Device tracker discovery
+              String tracker_id = macWOdots + "-tracker";
+              createDiscovery("device_tracker",
+                              discovery_topic.c_str(), "BM2-tracker", tracker_id.c_str(),
+                              will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
+                              "", "", "",
+                              0, "", "", false, "",
+                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                              stateClassNone);
+            }
+            if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
+              LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
+            }
+            if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
+              MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
+            }
+            if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
+              XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
+            }
+            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
+              HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
+            }
+          } else {
+            Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
+          }
         }
       }
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
@@ -1200,8 +1212,14 @@ void process_bledata(JsonObject& BLEdata) {
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
       Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) {
-        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type); // Device that broadcast and can be connected
+      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) { // Device that broadcast and can be connected
+        if (BLEdata.containsKey("name")) {
+          std::string name = BLEdata["name"];
+          if (name.compare("Battery Monitor") == 0 || name.compare("Li Battery Monitor") == 0 || name.compare("ZX-1689") == 0)
+            createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+        }
+        if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC)
+          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
         if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
@@ -1226,14 +1244,12 @@ void process_bledata(JsonObject& BLEdata) {
         }
       }
     } else {
-      if (BLEdata.containsKey("name")) { // Connectable devices
+      if (BLEdata.containsKey("name")) { // Connectable only devices
         std::string name = BLEdata["name"];
         if (name.compare("LYWSD03MMC") == 0)
           model_id = BLEconectable::id::LYWSD03MMC;
         else if (name.compare("DT24-BLE") == 0)
           model_id = BLEconectable::id::DT24_BLE;
-        else if (name.compare("Battery Monitor") == 0 || name.compare("Li Battery Monitor") == 0 || name.compare("ZX-1689") == 0)
-          model_id = BLEconectable::id::BM2;
         else if (name.compare("MHO-C401") == 0)
           model_id = BLEconectable::id::MHO_C401;
         else if (name.compare("XMWSDJ04MMC") == 0)

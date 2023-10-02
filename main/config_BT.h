@@ -231,7 +231,6 @@ public:
     LYWSD03MMC,
     MHO_C401,
     DT24_BLE,
-    BM2,
     XMWSDJ04MMC,
     MAX,
   };
