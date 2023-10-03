@@ -76,7 +76,6 @@ jobs:
           - "airm2m_core_esp32c3"
           - "lolin_c3_mini"
           - "thingpulse-espgateway"
-          - "thingpulse-espgateway-ethernet"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:

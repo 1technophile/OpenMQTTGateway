@@ -346,7 +346,7 @@ void createDiscovery(const char* sensor_type,
 
   StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
   JsonObject device = jsonDeviceBuffer.to<JsonObject>();
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device.createNestedArray("ids");
 
   if (gateway_entity) {
     //device representing the board
@@ -354,17 +354,25 @@ void createDiscovery(const char* sensor_type,
 #  ifndef GATEWAY_MODEL
     String model = "";
     serializeJson(modules, model);
-    device["model"] = model;
+    device["mdl"] = model;
 #  else
-    device["model"] = GATEWAY_MODEL;
+    device["mdl"] = GATEWAY_MODEL;
 #  endif
-    device["manufacturer"] = GATEWAY_MANUFACTURER;
-    device["sw_version"] = OMG_VERSION;
+    device["mf"] = GATEWAY_MANUFACTURER;
+    if (ethConnected) {
+#  ifdef ESP32_ETHERNET
+      device["cu"] = String("http://") + String(ETH.localIP().toString()) + String("/"); //configuration_url
+#  endif
+    } else {
+      device["cu"] = String("http://") + String(WiFi.localIP().toString()) + String("/"); //configuration_url
+    }
+
+    device["sw"] = OMG_VERSION;
     identifiers.add(String(getMacAddress()));
   } else {
     //The Connections
     if (device_id[0]) {
-      JsonArray connections = device.createNestedArray("connections");
+      JsonArray connections = device.createNestedArray("cns");
       JsonArray connection_mac = connections.createNestedArray();
       connection_mac.add("mac");
       connection_mac.add(device_id);
@@ -374,11 +382,11 @@ void createDiscovery(const char* sensor_type,
     }
 
     if (device_manufacturer[0]) {
-      device["manufacturer"] = device_manufacturer;
+      device["mf"] = device_manufacturer;
     }
 
     if (device_model[0]) {
-      device["model"] = device_model;
+      device["mdl"] = device_model;
     }
 
     // generate unique device name by adding the second half of the device_id only if device_name and device_id are different
