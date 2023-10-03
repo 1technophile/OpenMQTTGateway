@@ -427,7 +427,11 @@ void LORAtoMQTT() {
       LORAdata["hex"] = hex;
     } else {
       // ascii payload
-      deserializeJson(LORAdataBuffer, packet, packetSize);
+      std::string packetStrStd = (char*)packet;
+      auto error = deserializeJson(LORAdataBuffer, packetStrStd);
+      if (error) {
+        Log.error(F("LORA packet deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), LORAdataBuffer.capacity());
+      }
     }
 
     LORAdata["rssi"] = (int)LoRa.packetRssi();
@@ -436,27 +440,18 @@ void LORAtoMQTT() {
     LORAdata["packetSize"] = (int)packetSize;
 
     if (LORAdata.containsKey("id")) {
-      // Replace ":" in topic
-      std::string topic = LORAdata["id"].as<std::string>();
-      size_t pos = topic.find(":");
-      while (pos != std::string::npos) {
-        topic.erase(pos, 1);
-        pos = topic.find(":", pos);
-      }
-      std::string id = topic;
-      std::string subjectStr(subjectLORAtoMQTT);
-      topic = subjectStr + "/" + topic;
-
+      std::string id = LORAdata["id"];
+      id.erase(std::remove(id.begin(), id.end(), ':'), id.end());
 #  ifdef ZmqttDiscovery
       if (SYSConfig.discovery) {
         if (!LORAdata.containsKey("model"))
-          LORAdata["model"] = "LORA_NODE";
+          LORAdataBuffer["model"] = "LORA_NODE";
         storeLORADiscovery(LORAdata, LORAdata["model"].as<char*>(), id.c_str());
       }
 #  endif
-      LORAdata["origin"] = topic.c_str();
+      buildTopicFromId(LORAdata, subjectLORAtoMQTT);
     } else {
-      LORAdata["origin"] = subjectLORAtoMQTT;
+      LORAdataBuffer["origin"] = subjectLORAtoMQTT;
     }
     enqueueJsonObject(LORAdata);
 

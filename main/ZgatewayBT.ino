@@ -418,7 +418,7 @@ void updateDevicesStatus() {
         JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
-        buildBTtopic(BLEdata);
+        buildTopicFromId(BLEdata, subjectBTtoMQTT);
         enqueueJsonObject(BLEdata);
         // We set the lastUpdate to 0 to avoid replublishing the offline state
         p->lastUpdate = 0;
@@ -432,7 +432,7 @@ void updateDevicesStatus() {
         JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
-        buildBTtopic(BLEdata);
+        buildTopicFromId(BLEdata, subjectBTtoMQTT);
         enqueueJsonObject(BLEdata);
         // We set the lastUpdate to 0 to avoid replublishing the offline state
         p->lastUpdate = 0;
@@ -584,40 +584,6 @@ std::string convertServiceData(std::string deviceServiceData) {
   spr[2 * serviceDataLength] = 0;
   Log.trace(F("Converted service data (%d) to %s" CR), serviceDataLength, spr);
   return spr;
-}
-
-void buildBTtopic(JsonObject& BLEdata) {
-  if (!BLEdata.containsKey("id")) {
-    Log.error(F("No id in BLEdata" CR));
-    return;
-  }
-
-  std::string topic = BLEdata["id"].as<std::string>();
-
-  // Replace ":" in topic
-  size_t pos = topic.find(":");
-  while (pos != std::string::npos) {
-    topic.erase(pos, 1);
-    pos = topic.find(":", pos);
-  }
-
-  if (BTConfig.pubBeaconUuidForTopic && !BTConfig.extDecoderEnable && BLEdata.containsKey("model_id") && BLEdata["model_id"].as<std::string>() == "IBEACON") {
-    if (BLEdata.containsKey("uuid")) {
-      topic = BLEdata["uuid"].as<std::string>();
-    } else {
-      Log.error(F("No uuid in BLEdata" CR));
-    }
-  }
-
-  if (BTConfig.extDecoderEnable && !BLEdata.containsKey("model"))
-    topic = BTConfig.extDecoderTopic.c_str();
-
-  std::string subjectStr(subjectBTtoMQTT);
-  topic = subjectStr + "/" + topic;
-
-  BLEdata["origin"] = topic;
-
-  Log.trace(F("Origin: %s" CR), BLEdata["origin"].as<const char*>());
 }
 
 void procBLETask(void* pvParameters) {
@@ -1146,7 +1112,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
     }
     // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
-      buildBTtopic(BLEdata);
+      buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata);
     } else {
       Log.notice(F("Not a sensor device filtered" CR));
@@ -1308,7 +1274,7 @@ void immediateBTAction(void* pvParameters) {
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       BLEdata["id"] = BLEactions.back().addr;
       BLEdata["success"] = false;
-      buildBTtopic(BLEdata);
+      buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata);
       BLEactions.pop_back();
       ProcessLock = false;

@@ -405,6 +405,44 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 }
 
 /*
+ * Add the jsonObject id as a topic to the jsonObject origin
+ *
+*/
+void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
+  if (!Jsondata.containsKey("id")) {
+    Log.error(F("No id in Jsondata" CR));
+    return;
+  }
+
+  std::string topic = Jsondata["id"].as<std::string>();
+
+  // Replace ":" in topic
+  size_t pos = topic.find(":");
+  while (pos != std::string::npos) {
+    topic.erase(pos, 1);
+    pos = topic.find(":", pos);
+  }
+#ifdef ZgatewayBT
+  if (BTConfig.pubBeaconUuidForTopic && !BTConfig.extDecoderEnable && Jsondata.containsKey("model_id") && Jsondata["model_id"].as<std::string>() == "IBEACON") {
+    if (Jsondata.containsKey("uuid")) {
+      topic = Jsondata["uuid"].as<std::string>();
+    } else {
+      Log.error(F("No uuid in Jsondata" CR));
+    }
+  }
+
+  if (BTConfig.extDecoderEnable && !Jsondata.containsKey("model"))
+    topic = BTConfig.extDecoderTopic.c_str();
+#endif
+  std::string subjectStr(origin);
+  topic = subjectStr + "/" + topic;
+
+  Jsondata["origin"] = topic;
+
+  Log.trace(F("Origin: %s" CR), Jsondata["origin"].as<const char*>());
+}
+
+/*
  * Publish a message depending on its origin
  *
 */
