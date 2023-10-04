@@ -150,13 +150,16 @@ void RFtoMQTT() {
     RFdata["tre_state"] = bin2tristate(binary);
     RFdata["binary"] = binary;
 
+#  if defined(ESP32) || defined(ESP8266)
     unsigned int* raw = mySwitch.getReceivedRawdata();
-    String rawDump = "";
-    for (unsigned int i = 0; i <= length * 2; i++) {
-      rawDump = rawDump + String(raw[i]) + ",";
+    std::string rawDump;
+    for (unsigned int i = 0; i < length * 2; i++) {
+      if (i != 0)
+        rawDump += ",";
+      rawDump += std::to_string(raw[i]);
     }
-    RFdata["raw"] = rawDump.c_str();
-
+    RFdata["raw"] = rawDump;
+#  endif
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
     RFdata["mhz"] = receiveMhz;
 #  endif
