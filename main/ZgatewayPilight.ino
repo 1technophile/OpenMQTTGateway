@@ -49,30 +49,35 @@ void pilightCallback(const String& protocol, const String& message, int status,
     JsonObject RFPiLightdata = RFPiLightdataBuffer.to<JsonObject>();
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
     JsonObject msg = jsonBuffer2.to<JsonObject>();
-    auto error = deserializeJson(jsonBuffer2, message);
-    if (error) {
-      Log.error(F("deserializeJson() failed: %s" CR), error.c_str());
-      return;
+    if (message.length() > 0) {
+      auto error = deserializeJson(jsonBuffer2, message);
+      if (error) {
+        Log.error(F("deserializeJson() failed: %s" CR), error.c_str());
+        return;
+      }
+      RFPiLightdata["message"] = msg;
     }
-    RFPiLightdata["message"] = msg;
-    RFPiLightdata["protocol"] = (const char*)protocol.c_str();
-    RFPiLightdata["length"] = (const char*)deviceID.c_str();
+    if (protocol.length() > 0) {
+      RFPiLightdata["protocol"] = protocol;
+    }
+    if (deviceID.length() > 0) {
+      RFPiLightdata["value"] = deviceID;
+      const char* device_id = deviceID.c_str();
+      if (!strlen(device_id) && !msg.isNull()) {
+        // deviceID returned from Pilight is only extracted from id field
+        // but some device may use another name as unique identifier
+        char* choices[] = {"key", "unit", "device_id", "systemcode", "unitcode", "programcode"};
 
-    const char* device_id = deviceID.c_str();
-    if (!strlen(device_id)) {
-      // deviceID returned from Pilight is only extracted from id field
-      // but some device may use another name as unique identifier
-      char* choices[] = {"key", "unit", "device_id", "systemcode", "unitcode", "programcode"};
-
-      for (uint8_t i = 0; i < 6; i++) {
-        if (msg[choices[i]]) {
-          device_id = (const char*)msg[choices[i]];
-          break;
+        for (uint8_t i = 0; i < 6; i++) {
+          if (msg[choices[i]]) {
+            device_id = (const char*)msg[choices[i]];
+            break;
+          }
         }
       }
+      RFPiLightdata["value"] = device_id;
     }
 
-    RFPiLightdata["value"] = device_id;
     RFPiLightdata["repeats"] = (int)repeats;
     RFPiLightdata["status"] = (int)status;
     RFPiLightdata["origin"] = subjectPilighttoMQTT;
