@@ -1108,7 +1108,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
                               model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                               stateClassNone, "off", "on");
-            } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HM || p->sensorModel_id == TheengsDecoder::XMTZC05HM) &&
+            } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
                        strcmp(prop.key().c_str(), "weighing_mode") == 0) {
               createDiscovery("sensor",
                               discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
@@ -1117,7 +1117,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               0, "", "", false, "",
                               model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                               stateClassMeasurement, nullptr, nullptr, "[\"person\",\"object\"]");
-            } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HM || p->sensorModel_id == TheengsDecoder::XMTZC05HM) &&
+            } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
                        strcmp(prop.key().c_str(), "unit") == 0) {
               createDiscovery("sensor",
                               discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
