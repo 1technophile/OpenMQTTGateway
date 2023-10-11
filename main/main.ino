@@ -410,17 +410,16 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 */
 void pubMainCore(JsonObject& data) {
   if (data.containsKey("origin")) {
-    if (data.containsKey("distance")) {
+    pub((char*)data["origin"].as<const char*>(), data);
 #ifdef ZgatewayBT
+    if (data.containsKey("distance")) {
       String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
       Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
       pub_custom_topic((char*)topic.c_str(), data, false);
-#endif
-    } else {
-      pub((char*)data["origin"].as<const char*>(), data);
     }
+#endif
   } else {
-    Log.trace(F("No origin in JSON filtered" CR));
+    Log.error(F("No origin in JSON filtered" CR));
   }
 }
 
