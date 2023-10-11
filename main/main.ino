@@ -1696,6 +1696,10 @@ void setup_wifimanager(bool reset_settings) {
     strcpy(mqtt_user, custom_mqtt_user.getValue());
     strcpy(mqtt_pass, custom_mqtt_pass.getValue());
     strcpy(mqtt_topic, custom_mqtt_topic.getValue());
+    if (mqtt_topic[strlen(mqtt_topic) - 1] != '/' && strlen(mqtt_topic) < parameters_size + 1) {
+      strcat(mqtt_topic, "/");
+    }
+
     strcpy(gateway_name, custom_gateway_name.getValue());
     strcpy(ota_pass, custom_ota_pass.getValue());
     mqtt_secure = *custom_mqtt_secure.getValue();
