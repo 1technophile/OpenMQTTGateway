@@ -75,7 +75,7 @@ Alternatively the rssi signal could be used also.
 
 ## MQTT Device Trigger and RF
 
-With OpenMQTTGateway [configured to receive RF signals](./setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](./use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a signal. 
+With OpenMQTTGateway [configured to receive RF signals](../setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](../use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a signal. 
 
 With autodiscovery enabled, HomeAssistant will discover a [MQTT Device Trigger](https://www.home-assistant.io/integrations/device_trigger.mqtt/) identified by the value field given in the mqtt argument. 
 
