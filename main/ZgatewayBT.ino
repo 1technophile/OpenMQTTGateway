@@ -1078,64 +1078,64 @@ void launchBTDiscovery(bool overrideDiscovery) {
                             0, "", "", false, "",
                             model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                             stateClassNone);
-        }
-        if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
-          String sensor_name = String(model_id.c_str()) + "-moving";
-          String sensor_id = macWOdots + "-moving";
-          createDiscovery("binary_sensor",
-                          discovery_topic.c_str(), sensor_name.c_str(), sensor_id.c_str(),
-                          will_Topic, "moving", "{% if value_json.get('accx') -%}on{%- else -%}off{%- endif %}",
-                          "on", "off", "",
-                          0, "", "", false, "",
-                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                          stateClassNone);
-        }
-        if (!properties.empty()) {
-          StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-          deserializeJson(jsonBuffer, properties);
-          for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
-            Log.trace(F("Key: %s"), prop.key().c_str());
-            Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
-            Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
-            String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
-            String unique_id = macWOdots + "-" + String(prop.key().c_str());
-            String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-            if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
-              String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
-              String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
-              createDiscovery("switch", //set Type
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, "switch", value_template.c_str(),
-                              payload_on.c_str(), payload_off.c_str(), "", 0,
-                              Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassNone, "off", "on");
-            } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
-                       strcmp(prop.key().c_str(), "weighing_mode") == 0) {
-              createDiscovery("sensor",
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, "enum", value_template.c_str(),
-                              "", "", prop.value()["unit"],
-                              0, "", "", false, "",
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassMeasurement, nullptr, nullptr, "[\"person\",\"object\"]");
-            } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
-                       strcmp(prop.key().c_str(), "unit") == 0) {
-              createDiscovery("sensor",
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, "enum", value_template.c_str(),
-                              "", "", prop.value()["unit"],
-                              0, "", "", false, "",
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassMeasurement, nullptr, nullptr, "[\"lb\",\"kg\",\"jin\"]");
-            } else if (strcmp(prop.key().c_str(), "device") != 0 || strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
-              createDiscovery("sensor",
-                              discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                              will_Topic, prop.value()["name"], value_template.c_str(),
-                              "", "", prop.value()["unit"],
-                              0, "", "", false, "",
-                              model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                              stateClassMeasurement);
+          }
+          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
+            String sensor_name = String(model_id.c_str()) + "-moving";
+            String sensor_id = macWOdots + "-moving";
+            createDiscovery("binary_sensor",
+                            discovery_topic.c_str(), sensor_name.c_str(), sensor_id.c_str(),
+                            will_Topic, "moving", "{% if value_json.get('accx') -%}on{%- else -%}off{%- endif %}",
+                            "on", "off", "",
+                            0, "", "", false, "",
+                            model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                            stateClassNone);
+          }
+          if (!properties.empty()) {
+            StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+            deserializeJson(jsonBuffer, properties);
+            for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
+              Log.trace(F("Key: %s"), prop.key().c_str());
+              Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
+              Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
+              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+              String unique_id = macWOdots + "-" + String(prop.key().c_str());
+              String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
+              if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
+                String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
+                String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
+                createDiscovery("switch", //set Type
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, "switch", value_template.c_str(),
+                                payload_on.c_str(), payload_off.c_str(), "", 0,
+                                Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassNone, "off", "on");
+              } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
+                         strcmp(prop.key().c_str(), "weighing_mode") == 0) {
+                createDiscovery("sensor",
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, "enum", value_template.c_str(),
+                                "", "", prop.value()["unit"],
+                                0, "", "", false, "",
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassMeasurement, nullptr, nullptr, "[\"person\",\"object\"]");
+              } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
+                         strcmp(prop.key().c_str(), "unit") == 0) {
+                createDiscovery("sensor",
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, "enum", value_template.c_str(),
+                                "", "", prop.value()["unit"],
+                                0, "", "", false, "",
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassMeasurement, nullptr, nullptr, "[\"lb\",\"kg\",\"jin\"]");
+              } else if (strcmp(prop.key().c_str(), "device") != 0 || strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
+                createDiscovery("sensor",
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, prop.value()["name"], value_template.c_str(),
+                                "", "", prop.value()["unit"],
+                                0, "", "", false, "",
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassMeasurement);
               }
             }
           }
