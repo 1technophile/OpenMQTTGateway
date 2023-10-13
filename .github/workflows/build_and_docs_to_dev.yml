@@ -51,3 +51,4 @@ jobs:
           publish_dir: ./docs/.vuepress/dist
           destination_dir: dev
           cname: docs.openmqttgateway.com
+          force_orphan: true
