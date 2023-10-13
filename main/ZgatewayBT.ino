@@ -113,7 +113,7 @@ void btScanWDG() {
   if (!ProcessLock &&
       previousBtScanCount == scanCount &&
       scanCount != 0 &&
-      (now - lastBtScan > BTConfig.BLEinterval)) {
+      (now - lastBtScan > ((BTConfig.BLEinterval + BTConfig.scanDuration) < GeneralTimeOut ? GeneralTimeOut + 1000 : (BTConfig.BLEinterval + BTConfig.scanDuration)))) {
     Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
     stopProcessing();
     ESPRestart(4);
@@ -633,9 +633,10 @@ void procBLETask(void* pvParameters) {
         if (advertisedDevice->haveServiceData()) {
           int serviceDataCount = advertisedDevice->getServiceDataCount();
           Log.trace(F("Get services data number: %d" CR), serviceDataCount);
-          // Copy jsonObject
-          JsonObject BLEdataTemp = BLEdata;
           for (int j = 0; j < serviceDataCount; j++) {
+            StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBufferTemp;
+            JsonObject BLEdataTemp = BLEdataBufferTemp.to<JsonObject>();
+            BLEdataBufferTemp = BLEdataBuffer;
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
             Log.trace(F("Service data: %s" CR), service_data.c_str());
             std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
