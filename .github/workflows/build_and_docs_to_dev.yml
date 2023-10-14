@@ -52,3 +52,4 @@ jobs:
           destination_dir: dev
           cname: docs.openmqttgateway.com
           force_orphan: true
+          keep_files: true
