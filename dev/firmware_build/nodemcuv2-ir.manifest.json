@@ -1,0 +1,9 @@
+{
+  "name": "OpenMQTTGateway",
+  "builds": [
+    {
+      "chipFamily": "ESP8266",
+      "parts": [{ "path": "/dev/firmware_build/nodemcuv2-ir-firmware.bin", "offset": 0 }]
+    }
+  ]
+}
