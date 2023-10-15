@@ -5,5 +5,12 @@
 node_modules
 *.ps1
 main/certs/private*
+<<<<<<< HEAD
 lib/*
 !lib/esp32-bt-lib
+=======
+CMakeLists.txt
+dependencies.lock
+sdkconfig.*
+!sdkconfig.defaults
+>>>>>>> 8cc415aa (First build with IDF, tested with esp32dev-ble only.)

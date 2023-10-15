@@ -43,7 +43,6 @@ QueueHandle_t BLEQueue;
 #  include <decoder.h>
 #  include <driver/adc.h>
 #  include <esp_bt.h>
-#  include <esp_bt_main.h>
 #  include <esp_wifi.h>
 
 #  include <atomic>
