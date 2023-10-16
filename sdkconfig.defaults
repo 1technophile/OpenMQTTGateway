@@ -152,3 +152,15 @@ CONFIG_ARDUINO_SELECTIVE_WiFiClientSecure=y
 CONFIG_ARDUINO_SELECTIVE_WiFiProv=y
 CONFIG_ARDUINO_SELECTIVE_Wire=y
 # end of Arduino Configuration
+
+# CONFIG_ESP32_WIFI_IRAM_OPT is not set
+# CONFIG_ESP32_WIFI_RX_IRAM_OPT is not set
+
+#
+# SPI configuration
+#
+# CONFIG_SPI_MASTER_IN_IRAM is not set
+# CONFIG_SPI_MASTER_ISR_IN_IRAM is not set
+# CONFIG_SPI_SLAVE_IN_IRAM is not set
+# CONFIG_SPI_SLAVE_ISR_IN_IRAM is not set
+# end of SPI configuration
