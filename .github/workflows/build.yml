@@ -43,6 +43,7 @@ jobs:
           - "lilygo-rtl_433"
           - "lilygo-ble"
           - "esp32dev-multi_receiver"
+          - "esp32dev-multi_receiver-pilight"
           - "tinypico-ble"
           - "ttgo-lora32-v1"
           - "ttgo-lora32-v21"
