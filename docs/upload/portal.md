@@ -35,8 +35,10 @@ If the board is connected by ethernet, the Wifi and password can be empty. If yo
 * Set your MQTT Server password (optional, 64 characters maximum)
 * Set your MQTT base topic if you need to change it (you must keep the / at the end) (default: home/, 64 characters maximum)
 * Set your gateway name if you need to change it
-* Set your Over The Air password `ota_password`, this password is used for local and remote OTA - it is also the password being used for the WebUI login. (default: OTAPASSWORD,  64 characters maximum)
-
+* Set your gateway password (default: empty,  8 characters minimum, 64 maximum), this password is used for 
+  * Local and remote OTA
+  * WebUI login (login:"admin", password: "")
+  * WiFi Manager Access Point password after initial config
 * Click on save
 
 ![WiFi manager save](../img/OpenMQTTGateway_Wifi_Manager_save.png)

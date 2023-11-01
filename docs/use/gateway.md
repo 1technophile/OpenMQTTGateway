@@ -54,6 +54,12 @@ This command can also be used with other controllers that does not support the i
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
+## Change the Gateway password
+
+The password must be 8 characters minimum.
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"gw_pass":"12345678"}'`
+
 ## Change the MQTT broker credentials
 ```
 mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m

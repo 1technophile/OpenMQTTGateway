@@ -121,9 +121,6 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 //#define WM_PWD_FROM_MAC true // enable to set the password from the last 8 digits of the ESP MAC address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
-#ifndef WifiManager_password
-#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
-#endif
 #ifndef WifiManager_ssid
 #  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
 #endif
@@ -407,8 +404,8 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef ota_hostname
 #  define ota_hostname Gateway_Name
 #endif
-#ifndef ota_password
-#  define ota_password "OTAPASSWORD"
+#ifndef gw_password
+#  define gw_password ""
 #endif
 #ifndef ota_port
 #  define ota_port 8266
@@ -733,7 +730,7 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 
 void connectMQTT();
 #ifndef ESPWifiManualSetup
-void saveMqttConfig();
+void saveConfig();
 #endif
 
 unsigned long uptime();
