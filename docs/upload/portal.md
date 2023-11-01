@@ -4,7 +4,7 @@
 
 Once loaded into your ESP, and if you don't use the manual configuration, you have to set your network parameters with WiFi Manager portal.
 
-From your smartphone, search for  OpenMQTTGateway or OMG_ WiFi network and connect to it with the `WifiManager_password` you have defined (the default password is **"your_password"**), or if you are using a device sold by Theengs or the macro `-DWM_PWD_FROM_MAC=true`, the password will be the last eight digits of the device MAC Address with upper case.
+From your smartphone, search for  OpenMQTTGateway or OMG_ WiFi network and connect to it without password, or if you are using a device sold by Theengs or the macro `-DWM_PWD_FROM_MAC=true`, the password will be the last eight digits of the device MAC Address with upper case.
 Example, the password would be `CCDDEEFF` for a MAC Address `AABBCCDDEEFF`. 
 For the Theengs Plug, the MAC Address can be found on the device sticker, and for all the devices, it is printed on the serial monitor logs.
 
