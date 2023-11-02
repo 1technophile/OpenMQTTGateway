@@ -616,8 +616,7 @@ void handleWI() {
       response += String(wifi_script);
       response += String(script);
       response += String(style);
-      // wifi_ssid, wifi_password, gateway_name
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID(), WiFi.psk());
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID());
       response += String(buffer);
       snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
       response += String(buffer);
@@ -679,8 +678,7 @@ void handleWI() {
   response += String(wifi_script);
   response += String(script);
   response += String(style);
-  // wifi_ssid, wifi_password, gateway_name
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID(), WiFi.psk());
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -809,7 +807,7 @@ void handleMQ() {
   response += String(script);
   response += String(style);
   // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, mqtt_pass, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
