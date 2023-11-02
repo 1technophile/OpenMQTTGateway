@@ -1606,7 +1606,7 @@ void setup_wifimanager(bool reset_settings) {
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
 
-  wifiManager.setConnectTimeout(WifiManager_TimeOut);
+  wifiManager.setConnectTimeout(WiFi_TimeOut);
   //Set timeout before going to portal
   wifiManager.setConfigPortalTimeout(WifiManager_ConfigPortalTimeOut);
 
@@ -2691,7 +2691,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
       setESPWifiProtocolTxPower();
 #  endif
-      WiFi.waitForConnectResult();
+      WiFi.waitForConnectResult(WiFi_TimeOut * 1000);
 
       if (WiFi.status() != WL_CONNECTED) {
         Log.error(F("Failed to connect to new AP; falling back" CR));
