@@ -235,7 +235,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   Config_update(BTdata, "extDecoderTopic", BTConfig.extDecoderTopic);
   // Sets whether to filter publishing
   Config_update(BTdata, "filterConnectable", BTConfig.filterConnectable);
-  // Publish advertisment data
+  // Publish advertisement data
   Config_update(BTdata, "pubadvdata", BTConfig.pubAdvData);
   // Use iBeacon UUID as topic, instead of sender (random) MAC address
   Config_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
@@ -513,7 +513,7 @@ void updateDevicesStatus() {
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
         pubBT(BLEdata);
-        // We set the lastUpdate to 0 to avoid replublishing the offline state
+        // We set the lastUpdate to 0 to avoid republishing the offline state
         p->lastUpdate = 0;
       }
     }
@@ -525,7 +525,7 @@ void updateDevicesStatus() {
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
         pubBT(BLEdata);
-        // We set the lastUpdate to 0 to avoid replublishing the offline state
+        // We set the lastUpdate to 0 to avoid republishing the offline state
         p->lastUpdate = 0;
       }
     }
@@ -1230,13 +1230,7 @@ void process_bledata(JsonObject& BLEdata) {
     if (model_id >= 0) { // Broadcaster devices
       Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
       if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) { // Device that broadcast and can be connected
-        if (BLEdata.containsKey("name")) {
-          std::string name = BLEdata["name"];
-          if (name.compare("Battery Monitor") == 0 || name.compare("Li Battery Monitor") == 0 || name.compare("ZX-1689") == 0)
-            createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
-        }
-        if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC)
-          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
         if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
