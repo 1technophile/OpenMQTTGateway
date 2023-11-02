@@ -865,7 +865,6 @@ void handleCG() {
     serializeJson(WEBtoSYS, output);
     Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
     MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
-    ESPRestart(7);
   } else {
     Log.warning(F("[WebUI] No changes" CR));
   }

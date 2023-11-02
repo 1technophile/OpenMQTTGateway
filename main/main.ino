@@ -2654,6 +2654,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
+    bool restartESP = false;
     Log.trace(F("MQTTtoSYS json" CR));
 #if defined(ESP8266) || defined(ESP32)
     if (SYSdata.containsKey("cmd")) {
@@ -2700,7 +2701,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         setESPWifiProtocolTxPower();
 #  endif
       }
-      ESPRestart(7);
+      restartESP = true;
     }
 
     bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
@@ -2714,6 +2715,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
       if (SYSdata.containsKey("gw_pass")) {
         strncpy(ota_pass, SYSdata["gw_pass"], parameters_size);
+        restartESP = true;
       }
 #  ifndef ESPWifiManualSetup
       saveConfig();
@@ -2812,7 +2814,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-      ESPRestart(7);
+      restartESP = true;
     }
 #  endif
 
@@ -2851,6 +2853,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 #  endif
 #endif
+    if (restartESP) {
+      ESPRestart(7);
+    }
   }
 }
 
