@@ -768,18 +768,18 @@ void handleMQ() {
 
 #  ifndef ESPWifiManualSetup
       if (update) {
-        Log.warning(F("[WebUI] Save MQTT and Restart" CR));
+        Log.warning(F("[WebUI] Save MQTT and Reconnect" CR));
 
         char jsonChar[100];
         serializeJson(modules, jsonChar, measureJson(modules) + 1);
         char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save MQTT and Restart").c_str());
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save MQTT and Reconnect").c_str());
         String response = String(buffer);
         response += String(restart_script);
         response += String(script);
         response += String(style);
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save MQTT and Restart");
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save MQTT and Reconnect");
         response += String(buffer);
         snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
         response += String(buffer);
@@ -810,6 +810,75 @@ void handleMQ() {
   response += String(style);
   // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, mqtt_pass, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+
+/**
+ * @brief /CG - Configure Gateway Page
+ * T: handleCG: uri: /gw, args: 2, method: 1
+ * T: handleCG Arg: 0, gp=1234
+ * T: handleCG Arg: 1, save=
+ */
+
+void handleCG() {
+  WEBUI_TRACE_LOG(F("handleCG: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  bool update = false;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleCG Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save") && server.hasArg("gp") && strcmp(ota_pass, server.arg("gp").c_str())) {
+      strncpy(ota_pass, server.arg("gp").c_str(), parameters_size);
+      WEBtoSYS["gw_pass"] = ota_pass;
+      update = true;
+    }
+  }
+
+  if (update) {
+    Log.warning(F("[WebUI] Save Password and Restart" CR));
+
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save Password and Restart").c_str());
+    String response = String(buffer);
+    response += String(restart_script);
+    response += String(script);
+    response += String(style);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save Password and Restart");
+    response += String(buffer);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+    response += String(buffer);
+    server.send(200, "text/html", response);
+
+    delay(2000); // Wait for web page to be sent before
+    String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+    String output;
+    serializeJson(WEBtoSYS, output);
+    Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
+    MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+  } else {
+    Log.warning(F("[WebUI] No changes" CR));
+  }
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure Gateway").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_gateway_body, jsonChar, gateway_name, ota_pass);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1419,6 +1488,7 @@ void WebUISetup() {
   server.on("/cn", handleCN); // Configuration
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
+  server.on("/cg", handleCG); // Configure Gateway"
   server.on("/wu", handleWU); // Configure WebUI
 #  ifdef ZgatewayLORA
   server.on("/la", handleLA); // Configure LORA

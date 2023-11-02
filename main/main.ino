@@ -213,17 +213,13 @@ char mqtt_user[parameters_size + 1] = MQTT_USER; // not compulsory only if your 
 char mqtt_pass[parameters_size + 1] = MQTT_PASS; // not compulsory only if your broker needs authentication
 char mqtt_server[parameters_size + 1] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
-char ota_pass[parameters_size + 1] = ota_password;
+char ota_pass[parameters_size + 1] = gw_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
 #  define MAC_NAME_MAX_LEN 30
 char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
-#endif
-#ifdef WM_PWD_FROM_MAC
-#  undef WifiManager_password
-char WifiManager_password[9];
 #endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
@@ -1482,7 +1478,7 @@ void checkButton() {
 void checkButton() {}
 #  endif
 
-void saveMqttConfig() {
+void saveConfig() {
   Log.trace(F("saving config" CR));
   DynamicJsonDocument json(512 + ota_server_cert.length() + mqtt_cert.length());
   json["mqtt_server"] = mqtt_server;
@@ -1561,7 +1557,19 @@ bool loadConfigFromFlash() {
       }
       configFile.close();
     }
+  } else {
+    Log.notice(F("no config file found defining default values" CR));
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+    String s = WiFi.macAddress();
+    sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
+            s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+    sprintf(ota_pass, "%.2s%.2s%.2s%.2s",
+            s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
   }
+
   return result;
 }
 
@@ -1572,17 +1580,11 @@ void setup_wifimanager(bool reset_settings) {
   if (reset_settings)
     eraseAndRestart();
 
-  String s = WiFi.macAddress();
 #  ifdef USE_MAC_AS_GATEWAY_NAME
-  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
-          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+  String s = WiFi.macAddress();
   snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
   strcpy(ota_hostname, WifiManager_ssid);
   Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
-#  endif
-#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
-  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
-          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
 #  endif
 
   wifiManager.setDebugOutput(WM_DEBUG_LEVEL);
@@ -1599,7 +1601,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 4096);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
-  WiFiManagerParameter custom_ota_pass("ota", "ota password", ota_pass, parameters_size);
+  WiFiManagerParameter custom_ota_pass("ota", "gateway password", ota_pass, parameters_size);
 #  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -1648,7 +1650,7 @@ void setup_wifimanager(bool reset_settings) {
   {
 #  ifdef ESP32
     if (lowpowermode < 2) {
-      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
+      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, ota_pass);
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
       lowPowerESP32();
@@ -1658,12 +1660,12 @@ void setup_wifimanager(bool reset_settings) {
 
     InfoIndicatorON();
     ErrorIndicatorON();
-    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
+    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, ota_pass);
 
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
-    if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
+    if (!wifiManager.autoConnect(WifiManager_ssid, ota_pass)) {
       if (!ethConnected) { // If we are using ethernet, we don't want to restart the ESP
         Log.warning(F("failed to connect and hit timeout" CR));
         delay(3000);
@@ -1723,7 +1725,7 @@ void setup_wifimanager(bool reset_settings) {
     }
 #  endif
     //save the custom parameters to FS
-    saveMqttConfig();
+    saveConfig();
   }
 }
 #  ifdef ESP32_ETHERNET
@@ -2635,7 +2637,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           pub(subjectRLStoMQTT, jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
-          saveMqttConfig();
+          saveConfig();
 #  endif
           ESPRestart(6);
           break;
@@ -2652,6 +2654,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
+    bool restartESP = false;
     Log.trace(F("MQTTtoSYS json" CR));
 #if defined(ESP8266) || defined(ESP32)
     if (SYSdata.containsKey("cmd")) {
@@ -2698,20 +2701,24 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         setESPWifiProtocolTxPower();
 #  endif
       }
-      ESPRestart(7);
+      restartESP = true;
     }
 
     bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
 
-    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
+    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name") || SYSdata.containsKey("gw_pass")) {
       if (SYSdata.containsKey("mqtt_topic")) {
         strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
       if (SYSdata.containsKey("gateway_name")) {
         strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
       }
+      if (SYSdata.containsKey("gw_pass")) {
+        strncpy(ota_pass, SYSdata["gw_pass"], parameters_size);
+        restartESP = true;
+      }
 #  ifndef ESPWifiManualSetup
-      saveMqttConfig();
+      saveConfig();
 #  endif
       disconnectClient = true; // trigger reconnect in loop using the new topic/name
     }
@@ -2788,7 +2795,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
           }
         }
 #    ifndef ESPWifiManualSetup
-        saveMqttConfig();
+        saveConfig();
 #    endif
       } else {
         if (update_server) {
@@ -2807,7 +2814,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-      ESPRestart(7);
+      restartESP = true;
     }
 #  endif
 
@@ -2846,6 +2853,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 #  endif
 #endif
+    if (restartESP) {
+      ESPRestart(7);
+    }
   }
 }
 

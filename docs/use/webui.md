@@ -10,7 +10,7 @@ For ESP32 based environments a WebUI is available to provide basic configuration
 
 # Login Authentication
 
-By default access to the WebUI uses basic authentication to control access to your OpenMQTTGateway Device.  The login is `admin` and the password is your ota_password (if unchanged, the default ota_password is `OTAPASSWORD`).
+By default access to the WebUI uses basic authentication to control access to your OpenMQTTGateway Device.  The login is `admin` and the password is your `gateway password` (if unchanged during onboarding there is no password).
 
 ::: warning
 The communication with the WebUI is not encrypted, which means that your data may be visible on your local network.
