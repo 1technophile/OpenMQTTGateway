@@ -354,9 +354,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
-#ifndef version_Topic
-#  define version_Topic "/version"
-#endif
 #ifndef will_Topic
 #  define will_Topic "/LWT"
 #endif
