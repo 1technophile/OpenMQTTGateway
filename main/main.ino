@@ -1133,14 +1133,14 @@ void setup() {
 #    ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
 #    endif
-    if (!failSafeMode && !ethConnected) setup_wifimanager(false);
+    if (!failSafeMode && !ethConnected) setupwifi(false);
   } else {
 #    ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
 #    endif
     Log.notice(F("No config in flash, launching wifi manager" CR));
     // In failSafeMode we don't want to setup wifi manager as it has already been done before
-    if (!failSafeMode) setup_wifimanager(false);
+    if (!failSafeMode) setupwifi(false);
   }
 
 #  endif
@@ -1362,6 +1362,13 @@ void setup() {
 #if defined(ESP8266) || defined(ESP32)
 // Bypass for ESP not reconnecting automaticaly the second time https://github.com/espressif/arduino-esp32/issues/2501
 bool wifi_reconnect_bypass() {
+#  if defined(ESP32) && defined(USE_BLUFI)
+  extern bool omg_blufi_ble_connected;
+  if (omg_blufi_ble_connected) {
+    Log.notice(F("BLUFI is connected, bypassing wifi reconnect" CR));
+    return true;
+  }
+#  endif
   uint8_t wifi_autoreconnect_cnt = 0;
 #  ifdef ESP32
   while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
@@ -1628,7 +1635,7 @@ void blockingWaitForReset() {
           Log.trace(F("mounted file system" CR));
           if (SPIFFS.exists("/config.json")) {
             Log.notice(F("Erasing ESP Config, restarting" CR));
-            setup_wifimanager(true);
+            setupwifi(true);
           }
         }
         delay(30000);
@@ -1636,7 +1643,7 @@ void blockingWaitForReset() {
           Log.notice(F("Going into failsafe mode without peripherals" CR));
           // Failsafe mode enable to connect to Wifi or change the firmware without the peripherals setup
           failSafeMode = true;
-          setup_wifimanager(false);
+          setupwifi(false);
         }
       }
     }
@@ -1766,12 +1773,19 @@ bool loadConfigFromFlash() {
   return result;
 }
 
-void setup_wifimanager(bool reset_settings) {
+void setupwifi(bool reset_settings) {
   delay(10);
   WiFi.mode(WIFI_STA);
 
   if (reset_settings)
     eraseAndRestart();
+
+#  if defined(ESP32) && defined(USE_BLUFI)
+  if (!wifi_reconnect_bypass()) {
+    startBlufi();
+    return;
+  }
+#  endif
 
 #  ifdef USE_MAC_AS_GATEWAY_NAME
   String s = WiFi.macAddress();
@@ -2881,7 +2895,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         ESPRestart(5);
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
 #  ifndef ESPWifiManualSetup
-        setup_wifimanager(true);
+        setupwifi(true);
 #  endif
       } else if (strstr(cmd, statusCmd) != NULL) { //erase and restart
         stateMeasures();

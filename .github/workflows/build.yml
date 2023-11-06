@@ -81,6 +81,7 @@ jobs:
           - "esp32c3-m5stamp"
           - "thingpulse-espgateway"
           - "theengs-bridge"
+          - "esp32dev-ble-idf"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:
@@ -93,6 +94,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install platformio
+          pip install setuptools
       - name: Extract ESP32 platform version from platformio.ini
         run: |
           ESP32_VERSION=$(grep 'esp32_platform\s*=' platformio.ini | cut -d'@' -f2 | tr -d '[:space:]')
