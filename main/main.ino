@@ -2593,6 +2593,9 @@ String latestVersion;
  */
 bool checkForUpdates() {
   Log.notice(F("Update check, free heap: %d"), ESP.getFreeHeap());
+#      ifdef ZGatewayBT
+  ProcessLock = true;
+#      endif
   HTTPClient http;
   http.setTimeout((GeneralTimeOut - 1) * 1000); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -2627,6 +2630,9 @@ bool checkForUpdates() {
     Log.trace(F("No update file found on server" CR));
     return false;
   }
+#      ifdef ZGatewayBT
+  ProcessLock = false;
+#      endif
   Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
 }
 
