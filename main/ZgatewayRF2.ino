@@ -326,8 +326,7 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
 #    endif
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      RF2data["origin"] = subjectGTWRF2toMQTT;
-      enqueueJsonObject(RF2data);
+      pub(subjectRF2toMQTT, RF2data);
     } else {
 #    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
       pub(subjectGTWRF2toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback

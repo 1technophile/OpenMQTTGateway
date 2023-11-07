@@ -274,8 +274,7 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
       }
       if (signalSent) { // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         Log.notice(F("MQTTtoIR OK" CR));
-        IRdata["origin"] = subjectGTWIRtoMQTT;
-        enqueueJsonObject(IRdata);
+        pub(subjectGTWIRtoMQTT, IRdata);
       }
       irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
     } else {

@@ -204,8 +204,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
 
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      Pilightdata["origin"] = subjectGTWPilighttoMQTT;
-      enqueueJsonObject(Pilightdata);
+      pub(subjectGTWPilighttoMQTT, Pilightdata);
     } else {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilightProtocol Fail json" CR));
@@ -309,8 +308,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
 #  endif
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      Pilightdata["origin"] = subjectGTWPilighttoMQTT;
-      enqueueJsonObject(Pilightdata);
+      pub(subjectGTWPilighttoMQTT, Pilightdata);
     } else {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilight Fail json" CR));

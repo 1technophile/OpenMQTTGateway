@@ -488,8 +488,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
       LoRa.endPacket();
       Log.trace(F("MQTTtoLORA OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      LORAdata["origin"] = subjectGTWLORAtoMQTT;
-      enqueueJsonObject(LORAdata);
+      pub(subjectGTWLORAtoMQTT, LORAdata);
     } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
     }

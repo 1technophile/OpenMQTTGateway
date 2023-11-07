@@ -300,9 +300,7 @@ void MQTTtoSRFB(char* topicOri, JsonObject& SRFBdata) {
 
         Log.notice(F("MQTTtoSRFB OK" CR));
         _rfbSend(message_b, valueRPT);
-        // Acknowledgement to the GTWRF topic
-        SRFBdata["origin"] = subjectGTWSRFBtoMQTT;
-        enqueueJsonObject(SRFBdata);
+        pub(subjectGTWSRFBtoMQTT, SRFBdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       } else {
         Log.error(F("MQTTtoSRFB error decoding value" CR));
       }

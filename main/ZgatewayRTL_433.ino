@@ -322,8 +322,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
       success = true;
     }
     if (success) {
-      RTLdata["origin"] = subjectRTL_433toMQTT;
-      enqueueJsonObject(RTLdata);
+      pub(subjectRTL_433toMQTT, RTLdata);
     } else {
       pub(subjectRTL_433toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[rtl_433] MQTTtoRTL_433 Fail json" CR));
