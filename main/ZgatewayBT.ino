@@ -662,8 +662,8 @@ void procBLETask(void* pvParameters) {
  */
 void BLEscan() {
   // Don't start the next scan until processing of previous results is complete.
-  while (uxQueueMessagesWaiting(BLEQueue) || jsonQueue.size() != 0) {
-    yield();
+  while (uxQueueMessagesWaiting(BLEQueue) || queueLength != 0) { // the criteria on queueLength could be adjusted to parallelize the scan and the queue processing
+    delay(1); // Wait for queue to empty, a yield here instead of the delay cause the WDT to trigger
   }
   Log.notice(F("Scan begin" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
@@ -806,9 +806,8 @@ void coreTask(void* pvParameters) {
           delay(waitms = interval > 100 ? 100 : interval); // 100ms
         }
       }
-    } else {
-      Log.trace(F("BLE core task canceled by processLock" CR));
     }
+    delay(1);
   }
 }
 
@@ -872,7 +871,7 @@ void setupBTTasksAndBLE() {
   xTaskCreatePinnedToCore(
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
-      8000, /* Stack size in bytes */
+      8500, /* Stack size in bytes */
       NULL, /* Task input parameter */
       2, /* Priority of the task (set higher than core task) */
       &xProcBLETaskHandle, /* Task handle. */
@@ -1031,7 +1030,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 0, "", "", false, "",
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassMeasurement, nullptr, nullptr, "[\"lb\",\"kg\",\"jin\"]");
-              } else if (strcmp(prop.key().c_str(), "device") != 0 || strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
+              } else if (strcmp(prop.key().c_str(), "device") != 0 && strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
                 createDiscovery("sensor",
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
@@ -1138,7 +1137,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
 }
 
 void process_bledata(JsonObject& BLEdata) {
-  yield();
+  yield(); // Necessary to let the loop run in case of connectivity issues
   if (!BLEdata.containsKey("id")) {
     Log.error(F("No mac address in the payload" CR));
     return;
