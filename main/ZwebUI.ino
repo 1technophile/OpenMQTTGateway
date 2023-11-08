@@ -814,6 +814,7 @@ void handleMQ() {
   server.send(200, "text/html", response);
 }
 
+#  ifndef ESPWifiManualSetup
 /**
  * @brief /CG - Configure Gateway Page
  * T: handleCG: uri: /gw, args: 2, method: 1
@@ -882,6 +883,7 @@ void handleCG() {
   response += String(buffer);
   server.send(200, "text/html", response);
 }
+#  endif
 
 /**
  * @brief /LO - Configure Logging Page
@@ -1486,7 +1488,9 @@ void WebUISetup() {
   server.on("/cn", handleCN); // Configuration
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
+#  ifndef ESPWifiManualSetup
   server.on("/cg", handleCG); // Configure Gateway"
+#  endif
   server.on("/wu", handleWU); // Configure WebUI
 #  ifdef ZgatewayLORA
   server.on("/la", handleLA); // Configure LORA

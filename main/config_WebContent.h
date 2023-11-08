@@ -48,7 +48,11 @@
 #else
 #  define configure_3
 #endif*/
-#define configure_3 "<p><form action='cg' method='get'><button>Configure Gateway</button></form></p>"
+#ifndef ESPWifiManualSetup
+#  define configure_3 "<p><form action='cg' method='get'><button>Configure Gateway</button></form></p>"
+#else
+#  define configure_3
+#endif
 #define configure_4 "<p><form action='wu' method='get'><button>Configure WebUI</button></form></p>"
 #define configure_5 "<p><form action='lo' method='get'><button>Configure Logging</button></form></p>"
 #ifdef ZgatewayLORA
@@ -99,8 +103,9 @@ const char config_wifi_body[] = body_header "%s<br><div><a href='/wi?scan='><b>S
 
 const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>MQTT Parameters</b></span></legend><form method='get' action='mq'><p><b>MQTT Server</b><br><input id='mh' placeholder=" MQTT_SERVER " value='%s'></p><p><b>MQTT Port</b><br><input id='ml' placeholder=" MQTT_PORT " value='%s'></p><p><b>MQTT Username</b><br><input id='mu' placeholder=" MQTT_USER " value='%s'></p><p><label><b>MQTT Password</b></label><br><input id='mp' type='password' placeholder=\"Password\" ></p><p><b>MQTT Secure Connection</b><br><input id='sc' type='checkbox' %s></p><p><b>Gateway Name</b><br><input id='h' placeholder=" Gateway_Name " value=\"%s\"></p><p><b>MQTT Base Topic</b><br><input id='mt' placeholder='' value='%s'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
+#ifndef ESPWifiManualSetup
 const char config_gateway_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Gateway Configuration</b></span></legend><form method='get' action='cg'><p><b>Gateway Password (8 characters min)</b><br><input id='gp' type='password' placeholder=\"********\"></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
-
+#endif
 const char config_logging_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>OpenMQTTGateway Logging</b></span></legend><form method='get' action='lo'><p><b>Log Level</b><br><select id='lo'><option %s value='0'>Silent</option><option %s value='1'>Fatal</option><option %s value='2'>Error</option><option %s value='3'>Warning</option><option %s value='4'>Notice</option><option %s value='5'>Trace</option><option %s value='6'>Verbose</option></select></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure WebUI</b></span></legend><form method='get' action='wu'><p><b>Display Metric</b><br><input id='dm' type='checkbox' %s></p><p><b>Secure WebUI</b><br><input id='sw' type='checkbox' %s></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
