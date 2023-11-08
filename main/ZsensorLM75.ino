@@ -80,14 +80,15 @@ void MeasureTemp() {
       Log.error(F("Failed to read from sensor HLM75!" CR));
     } else {
       Log.notice(F("Creating LM75 buffer" CR));
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject LM75data = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> LM75dataBuffer;
+      JsonObject LM75data = LM75dataBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
       if (lm75TempC != persisted_lm75_tempc || lm75_always) {
         float lm75TempF = (lm75TempC * 1.8) + 32;
         LM75data["tempc"] = (float)lm75TempC;
         LM75data["tempf"] = (float)lm75TempF;
-        pub(LM75TOPIC, LM75data);
+        LM75data["origin"] = LM75TOPIC;
+        enqueueJsonObject(LM75data);
       } else {
         Log.notice(F("Same Temp. Don't send it" CR));
       }

@@ -53,8 +53,8 @@ void MeasureC37_YL83_HMRDWater() {
     int sensorAnalogValue = analogRead(C37_YL83_HMRD_Analog_GPIO);
 
     Log.trace(F("Creating C37_YL83_HMRD buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject C37_YL83_HMRDdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> C37_YL83_HMRDdataBuffer;
+    JsonObject C37_YL83_HMRDdata = C37_YL83_HMRDdataBuffer.to<JsonObject>();
     if (sensorDigitalValue != persisteddigital || C37_YL83_HMRD_ALWAYS) {
       C37_YL83_HMRDdata["detected"] = (sensorDigitalValue == 1 ? "false" : "true");
     } else {
@@ -66,7 +66,8 @@ void MeasureC37_YL83_HMRDWater() {
       Log.trace(F("Same analog don't send it" CR));
     }
     if (C37_YL83_HMRDdata.size() > 0) {
-      pub(C37_YL83_HMRD_TOPIC, C37_YL83_HMRDdata);
+      C37_YL83_HMRDdata["origin"] = C37_YL83_HMRD_TOPIC;
+      enqueueJsonObject(C37_YL83_HMRDdata);
       delay(10);
 #  if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
       if (sensorDigitalValue == 1) //No water detected, all good we can sleep

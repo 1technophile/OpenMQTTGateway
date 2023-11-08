@@ -188,7 +188,6 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     if (success) {
       stateSSD1306Display();
     } else {
-      // pub(subjectSSD1306toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[ SSD1306 ] MQTTtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
@@ -459,15 +458,16 @@ void OledSerial::drawLogo(int xshift, int yshift) {
 
 String stateSSD1306Display() {
   //Publish display state
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject DISPLAYdata = jsonBuffer.to<JsonObject>();
+  StaticJsonDocument<JSON_MSG_BUFFER> DISPLAYdataBuffer;
+  JsonObject DISPLAYdata = DISPLAYdataBuffer.to<JsonObject>();
   DISPLAYdata["onstate"] = (bool)displayState;
   DISPLAYdata["brightness"] = (int)displayBrightness;
   DISPLAYdata["display-flip"] = (bool)displayFlip;
   DISPLAYdata["idlelogo"] = (bool)idlelogo;
   DISPLAYdata["log-oled"] = (bool)logToOLEDDisplay;
   DISPLAYdata["json-oled"] = (bool)jsonDisplay;
-  pub(subjectSSD1306toMQTT, DISPLAYdata);
+  DISPLAYdata["origin"] = subjectSSD1306toMQTT;
+  enqueueJsonObject(DISPLAYdata);
   // apply
   Oled.display->setBrightness(round(displayBrightness * 2.55));
 

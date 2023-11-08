@@ -85,16 +85,16 @@ void MeasureGPIOInput() {
     // if the Input state has changed:
     if (reading != InputState) {
       Log.trace(F("Creating GPIOInput buffer" CR));
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject GPIOdata = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> GPIOdataBuffer;
+      JsonObject GPIOdata = GPIOdataBuffer.to<JsonObject>();
       if (InputState == HIGH) {
         GPIOdata["gpio"] = "HIGH";
       }
       if (InputState == LOW) {
         GPIOdata["gpio"] = "LOW";
       }
-      if (GPIOdata.size() > 0)
-        pub(subjectGPIOInputtoMQTT, GPIOdata);
+      GPIOdata["origin"] = subjectGPIOInputtoMQTT;
+      enqueueJsonObject(GPIOdata);
 
 #  if defined(ZactuatorONOFF) && defined(ACTUATOR_TRIGGER)
       //Trigger the actuator if we are not at startup

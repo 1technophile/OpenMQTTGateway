@@ -61,13 +61,13 @@ void MeasureGasMQ2() {
     timemq2 = millis();
 
     Log.trace(F("Creating MQ2 buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject MQ2data = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> MQ2dataBuffer;
+    JsonObject MQ2data = MQ2dataBuffer.to<JsonObject>();
 
     MQ2data["gas"] = analogRead(MQ2SENSORADCPIN);
     MQ2data["detected"] = digitalRead(MQ2SENSORDETECTPIN) == HIGH ? "false" : "true";
-
-    pub(subjectMQ2toMQTT, MQ2data);
+    MQ2data["origin"] = subjectMQ2toMQTT;
+    enqueueJsonObject(MQ2data);
   }
 }
 #endif

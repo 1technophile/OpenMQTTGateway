@@ -40,7 +40,6 @@ float power = 0;
 TaskHandle_t rn8209TaskHandle = nullptr;
 
 unsigned long PublishingTimerRN8209 = 0;
-StaticJsonDocument<JSON_MSG_BUFFER> doc;
 
 void rn8209_loop(void* mode) {
   while (1) {
@@ -68,15 +67,16 @@ void rn8209_loop(void* mode) {
          !PublishingTimerRN8209 ||
          (abs(current - previousCurrent) > MinCurrentThreshold)) &&
         !ProcessLock) {
-      JsonObject data = doc.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> RN8209dataBuffer;
+      JsonObject RN8209data = RN8209dataBuffer.to<JsonObject>();
       if (retc == 0) {
-        data["current"] = round2(current);
+        RN8209data["current"] = round2(current);
       }
       uint32_t temp_power = 0;
       retp = rn8209c_read_power(phase_A, &temp_power);
       if (retv == 0) {
         voltage = (float)temp_voltage / 1000.0;
-        data["volt"] = round2(voltage);
+        RN8209data["volt"] = round2(voltage);
       }
       if (ret == 1) {
         power = temp_power;
@@ -85,15 +85,16 @@ void rn8209_loop(void* mode) {
       }
       if (retp == 0) {
         power = power / 10000.0;
-        data["power"] = round2(power);
+        RN8209data["power"] = round2(power);
       }
       PublishingTimerRN8209 = now;
       previousCurrent = current;
-      if (data) {
-        pub(subjectRN8209toMQTT, data);
+      if (RN8209data) {
+        RN8209data["origin"] = subjectRN8209toMQTT;
+        enqueueJsonObject(RN8209data);
       }
     }
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
     delay(TimeBetweenReadingRN8209);
   }
 }
@@ -106,7 +107,7 @@ void setupRN8209() {
   set_user_param(cal);
   init_8209c_interface();
   xTaskCreate(rn8209_loop, "rn8209_loop", 5000, NULL, 10, &rn8209TaskHandle);
-  esp_task_wdt_add(rn8209TaskHandle);
+  //esp_task_wdt_add(rn8209TaskHandle);
   Log.trace(F("ZsensorRN8209 setup done " CR));
 }
 

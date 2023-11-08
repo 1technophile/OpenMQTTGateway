@@ -115,8 +115,8 @@ void IRtoMQTT() {
 
   if (irrecv.decode(&results)) {
     Log.trace(F("Creating IR buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject IRdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> IRdataBuffer;
+    JsonObject IRdata = IRdataBuffer.to<JsonObject>();
 
     Log.trace(F("Rcv. IR" CR));
 #  ifdef ESP32
@@ -168,7 +168,8 @@ void IRtoMQTT() {
       Log.notice(F("--no pub unknwn prt--" CR));
     } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
       Log.trace(F("Adv data IRtoMQTT" CR));
-      pub(subjectIRtoMQTT, IRdata);
+      IRdata["origin"] = subjectIRtoMQTT;
+      enqueueJsonObject(IRdata);
       Log.trace(F("Store val: %D" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatIRwMQTT) {

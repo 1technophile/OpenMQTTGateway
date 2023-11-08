@@ -147,8 +147,8 @@ void MeasureTempHumAndPressure() {
       Log.error(F("Failed to read from BME280/BMP280!" CR));
     } else {
       Log.trace(F("Creating BME280/BMP280 buffer" CR));
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject BME280data = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> BME280dataBuffer;
+      JsonObject BME280data = BME280dataBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
       if (BmeTempC != persisted_bme_tempc || bme280_always) {
         BME280data["tempc"] = (float)BmeTempC;
@@ -191,9 +191,8 @@ void MeasureTempHumAndPressure() {
       } else {
         Log.trace(F("Same Altitude Feet don't send it" CR));
       }
-      if (BME280data.size() > 0) {
-        pub(BMETOPIC, BME280data);
-      }
+      BME280data["origin"] = BMETOPIC;
+      enqueueJsonObject(BME280data);
     }
 
     persisted_bme_tempc = BmeTempC;

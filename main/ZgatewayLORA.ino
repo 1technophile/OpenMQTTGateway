@@ -391,8 +391,8 @@ void setupLORA() {
 void LORAtoMQTT() {
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject LORAdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
+    JsonObject LORAdata = LORAdataBuffer.to<JsonObject>();
     Log.trace(F("Rcv. LORA" CR));
 #  ifdef ESP32
     String taskMessage = "LORA Task running on core ";
@@ -427,7 +427,11 @@ void LORAtoMQTT() {
       LORAdata["hex"] = hex;
     } else {
       // ascii payload
-      deserializeJson(jsonBuffer, packet, packetSize);
+      std::string packetStrStd = (char*)packet;
+      auto error = deserializeJson(LORAdataBuffer, packetStrStd);
+      if (error) {
+        Log.error(F("LORA packet deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), LORAdataBuffer.capacity());
+      }
     }
 
     LORAdata["rssi"] = (int)LoRa.packetRssi();
@@ -436,31 +440,25 @@ void LORAtoMQTT() {
     LORAdata["packetSize"] = (int)packetSize;
 
     if (LORAdata.containsKey("id")) {
-      // Replace ":" in topic
-      std::string topic = LORAdata["id"].as<std::string>();
-      size_t pos = topic.find(":");
-      while (pos != std::string::npos) {
-        topic.erase(pos, 1);
-        pos = topic.find(":", pos);
-      }
-      std::string id = topic;
-      std::string subjectStr(subjectLORAtoMQTT);
-      topic = subjectStr + "/" + topic;
-
+      std::string id = LORAdata["id"];
+      id.erase(std::remove(id.begin(), id.end(), ':'), id.end());
 #  ifdef ZmqttDiscovery
       if (SYSConfig.discovery) {
         if (!LORAdata.containsKey("model"))
-          LORAdata["model"] = "LORA_NODE";
+          LORAdataBuffer["model"] = "LORA_NODE";
         storeLORADiscovery(LORAdata, LORAdata["model"].as<char*>(), id.c_str());
       }
 #  endif
-      pub(topic.c_str(), LORAdata);
+      buildTopicFromId(LORAdata, subjectLORAtoMQTT);
     } else {
-      pub(subjectLORAtoMQTT, LORAdata);
+      LORAdataBuffer["origin"] = subjectLORAtoMQTT;
     }
+    enqueueJsonObject(LORAdata);
+
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
-      pub(subjectMQTTtoLORA, LORAdata);
+      LORAdata["origin"] = subjectMQTTtoLORA;
+      enqueueJsonObject(LORAdata);
     }
   }
 }
@@ -489,7 +487,8 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 
       LoRa.endPacket();
       Log.trace(F("MQTTtoLORA OK" CR));
-      pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+      pub(subjectGTWLORAtoMQTT, LORAdata);
     } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
@@ -517,13 +516,14 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 }
 #  endif
 #  if simpleReceiving
-void MQTTtoLORA(char* topicOri, char* LORAdata) { // json object decoding
+void MQTTtoLORA(char* topicOri, char* LORAarray) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
-    LoRa.print(LORAdata);
+    LoRa.print(LORAarray);
     LoRa.endPacket();
     Log.notice(F("MQTTtoLORA OK" CR));
-    pub(subjectGTWLORAtoMQTT, LORAdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+    pub(subjectGTWLORAtoMQTT, LORAarray);
   }
 }
 #  endif

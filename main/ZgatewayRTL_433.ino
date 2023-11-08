@@ -257,7 +257,8 @@ void rtl_433_Callback(char* message) {
     if (SYSConfig.discovery)
       storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
 #  endif
-    pub((char*)topic.c_str(), RFrtl_433_ESPdata);
+    RFrtl_433_ESPdata["origin"] = (char*)topic.c_str();
+    enqueueJsonObject(RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
     pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);
   }

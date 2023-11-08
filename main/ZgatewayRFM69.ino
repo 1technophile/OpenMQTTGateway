@@ -141,9 +141,8 @@ void setupRFM69(void) {
 bool RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone()) {
-    Log.trace(F("Creating RFM69 buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject RFM69data = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> RFM69dataBuffer;
+    JsonObject RFM69data = RFM69dataBuffer.to<JsonObject>();
     uint8_t data[RF69_MAX_DATA_LEN + 1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;
     uint8_t DATALEN = radio.DATALEN;
@@ -216,7 +215,8 @@ void MQTTtoRFM69(char* topicOri, JsonObject& RFM69data) {
       if (radio.sendWithRetry(valueRCV, data, strlen(data), 10)) {
         Log.notice(F(" OK " CR));
         // Acknowledgement to the GTWRF topic
-        pub(subjectGTWRFM69toMQTT, RFM69data); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        RFM69data["origin"] = subjectGTWRFM69toMQTT;
+        enqueueJsonObject(RFM69data);
       } else {
         Log.error(F("MQTTtoRFM69 sending failed" CR));
       }

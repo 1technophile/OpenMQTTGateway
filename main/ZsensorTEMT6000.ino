@@ -53,8 +53,8 @@ void MeasureLightIntensityTEMT6000() {
     timetemt6000 = millis();
 
     Log.trace(F("Creating TEMT6000 buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject TEMT6000data = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> TEMT6000dataBuffer;
+    JsonObject TEMT6000data = TEMT6000dataBuffer.to<JsonObject>();
 
     float volts = analogRead(TEMT6000LIGHTSENSORPIN) * 5.0 / 1024.0;
     float amps = volts / 10000.0; // across 10,000 Ohms
@@ -67,8 +67,8 @@ void MeasureLightIntensityTEMT6000() {
       TEMT6000data["lux"] = (float)lux;
       TEMT6000data["ftcd"] = (float)(lux) / 10.764;
       TEMT6000data["wattsm2"] = (float)(lux) / 683.0;
-
-      pub(subjectTEMT6000toMQTT, TEMT6000data);
+      TEMT6000data["origin"] = subjectTEMT6000toMQTT;
+      enqueueJsonObject(TEMT6000data);
     } else {
       Log.trace(F("Same lux value, do not send" CR));
     }
