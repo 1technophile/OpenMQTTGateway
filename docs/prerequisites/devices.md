@@ -21,6 +21,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Amazfit|Smart Watch/Band|steps, activity heart rate (when activated in the Zepp Life settings)|
 | April Brother|ABTemp|uuid/mfid/major/txpower @ 1 m/temperature/battery|
 | April Brother|N03|temperature/humidity/luminance/battery|
+| April Brother|N07|temperature/humidity/battery/packet ID|
 | ATorch Battery Capacity Monitor (c)|DT24|voltage/amp/watt|
 | BLE watches with fixed MAC||rssi for presence detection|
 | BLE beacons keychains||rssi for presence detection|
@@ -31,6 +32,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | BlueMaestro|TempoDisc 3 in 1|temperature/humidity/dew point/battery|
 | BlueMaestro|TempoDisc 4 in 1|temperature/humidity/pressure/battery|
 | BM2 Battery Monitor|BM2|battery/volt(c)|
+| BM6 Battery Monitor|BM6|battery|
 | ClearGrass|CGG1|temperature/humidity/battery/voltage (depending on which CGG1 firmware is installed)|
 | ClearGrass alarm clock|CGD1|temperature/humidity/battery|
 | ClearGrass alarm clock|CGC1|temperature/humidity/battery|
@@ -40,16 +42,20 @@ Added to that it retrieves the measures from the devices below. By default the d
 | GOVEE|H5074|temperature/humidity/battery|
 | GOVEE|H5075|temperature/humidity/battery|
 | GOVEE|H5072|temperature/humidity/battery|
+| GOVEE|H5100|temperature/humidity/battery|
 | GOVEE|H5101|temperature/humidity/battery|
 | GOVEE|H5102|temperature/humidity/battery|
+| GOVEE|H5104|temperature/humidity/battery|
 | GOVEE|H5106|PM2.5/temperature/humidity/battery|
 | GOVEE|H5174|temperature/humidity/battery|
 | GOVEE|H5177|temperature/humidity/battery|
+| GOVEE|H5179|temperature/humidity/battery|
 | HONEYWELL|JQJCY01YM|formaldehyde/temperature/humidity/battery|
 | Hydractiva Digital | Amphiro/Oras|sessions/time/litres/temperature/energy|
 | iBeacon|protocol|uuid/mfid/major/minor/txpower @ 1 m/voltage|
 | Jaalee|JHT F525|temperature/humidity/battery|
 | INKBIRD|IBS-TH1|temperature/humidity/battery|
+| INKBIRD|IBS-TH12S|temperature/humidity/battery|
 | INKBIRD|IBS-TH2/P01B|temperature/battery|
 | INKBIRD|IBT-2X|temperature1/temperature2|
 | INKBIRD|IBT-4X(S/C)|temperature1/temperature2/temperature3/temperature4|
@@ -57,11 +63,13 @@ Added to that it retrieves the measures from the devices below. By default the d
 | iNode|Energy Meter|Current average and aggregate kW(h)/m³/battery|
 | KKM |K6P|temperature/humidity/voltage|
 | KKM |K9|temperature/humidity/voltage/acceleration x/y/z-axis (optional - without recognised as K6P)|
+| Oral B| Toothbrush| state, mode, sector, pressure, time|
 | Oria/Brifit/SigmaWit/SensorPro|TH Sensor T201|temperature/humidity/battery|
 | Oria/Brifit/SigmaWit/SensorPro|TH Sensor T301|temperature/humidity/battery|
 | Mokosmart|M1|acceleration x/y/z-axis/battery|
 | Mokosmart|H4|temperature/humidity/voltage|
 | Mopeka|Pro|temperature/level/sync status/voltage/battery/reading quality/acceleration x/y-axis|
+| Lippert|BottleCheck|temperature/level/sync status/voltage/battery/reading quality/acceleration x/y-axis|
 | Otio/BeeWi|Door & Window Sensor|contact/battery|
 | Polar|H10 Chest strap|activity heart rate|
 | Qingping|CGDK2|temperature/humidity|
@@ -75,7 +83,9 @@ Added to that it retrieves the measures from the devices below. By default the d
 | SmartDry|Laundry Sensor|temperature/humidity/shake/voltage/wake|
 | Sensirion|MyCO₂/CO₂ Gadget|temperature/humidity/carbon dioxide|
 | Sensirion|SHT4X TH sensor|temperature/humidity|
-| Shelly|Button1|button press type, battery, packet ID|
+| ShellyBlu|Button1|button press type/battery/packet ID|
+| ShellyBlu|Door/Window|contact/rotation/battery/packet ID|
+| ShellyBlu|Motion|motion, illuminance, battery, packet ID|
 | Switchbot|Bot (c)|mode/state/battery|
 | Switchbot|Motion Sensor|movement/light level/sensing distance/led/scope tested/battery|
 | Switchbot|Contact Sensor|contact/movement/scope tested/light level/in count/out count/push count/battery|
@@ -85,6 +95,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | Thermobeacon|WS02|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
 | Thermobeacon|WS08|temperature/humidity/voltage/timestamp/maximum temperature/maximum temperature timestamp/minimum temperature/minimum temperature timestamp|
 | ThermoPro|TP357|temperature/humidity|
+| ThermoPro|TP357s|temperature/humidity|
 | ThermoPro|TP358|temperature/humidity|
 | ThermoPro|TP359|temperature/humidity|
 | ThermoPro|TP393|temperature/humidity|
@@ -96,7 +107,7 @@ Added to that it retrieves the measures from the devices below. By default the d
 | XIAOMI Mi Jia|LYWSD02|temperature/humidity/battery|
 | XIAOMI Mi Jia 2(c)|LYWSD03MMC|temperature/humidity/battery/voltage|
 | XIAOMI Mi Jia 2 custom firmware (2)|LYWSD03MMC ATC|temperature/humidity/battery/voltage|
-| XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX|temperature/humidity/battery/voltage|
+| XIAOMI Mi Jia 2 custom firmware (3)|LYWSD03MMC PVVX (encrypted or not)|temperature/humidity/battery/voltage|
 | XIAOMI Mi Lamp|MUE4094RT|presence|
 | XIAOMI Mi Smart Scale|XMTZC01HM/XMTZC04HM|weighing mode/unit/weight|
 | XIAOMI Mi Body Composition Scale|XMTZC02HM/XMTZC05HM|weighing mode/unit/weight/impedance|
