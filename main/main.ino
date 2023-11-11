@@ -531,6 +531,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
+  bool ret = sensor_Retain;
 
 #if defined(ESP8266) || defined(ESP32)
 #  if message_UTCtimestamp == true
@@ -540,6 +541,10 @@ void pub(const char* topicori, JsonObject& data) {
   data["unixtime"] = unixtimestamp();
 #  endif
 #endif
+  if (data.containsKey("retain") && data["retain"].is<bool>()) {
+    ret = data["retain"];
+    data.remove("retain");
+  }
   if (data.containsKey("origin")) { // temporary, in the future use this instead of topicori
     data.remove("origin");
   }
@@ -567,7 +572,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 #if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
-  pubMQTT(topic, dataAsString.c_str());
+  pubMQTT(topic.c_str(), dataAsString.c_str(), ret);
   pubWebUI(topicori, data);
 #endif
 
@@ -2034,17 +2039,20 @@ void loop() {
 #  endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
-#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
-        checkForUpdates();
-#  endif
 #  if defined(ESP8266) || defined(ESP32)
 #    if message_UTCtimestamp || message_unixtimestamp
         syncNTP();
 #    endif
 #  endif
-#  ifdef ZgatewayBT
-        if (!timer_sys_checks) ProcessLock = false; // Release BLE processes
+        if (!timer_sys_checks) { // Update check at start up only
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+          checkForUpdates();
 #  endif
+#  ifdef ZgatewayBT
+          ProcessLock = false; // Release BLE processes at start
+#  endif
+        }
+
         timer_sys_checks = millis();
       }
 #endif
@@ -2634,6 +2642,7 @@ bool checkForUpdates() {
       jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
     jsondata["origin"] = subjectRLStoMQTT;
+    jsondata["retain"] = true;
     enqueueJsonObject(jsondata);
     Log.trace(F("Update file found on server" CR));
     return true;
