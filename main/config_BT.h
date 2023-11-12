@@ -163,7 +163,7 @@ struct BTConfig_s {
   bool pubAdvData; // Publish advertisement data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
   bool ignoreWBlist; // Disable Whitelist & Blacklist
-  unsigned long presenceAwayTimer; //Timer that trigger a tracker state as offline if not seen
+  unsigned long presenceAwayTimer; //Timer that trigger a tracker/PIR state as offline/off if not seen
   unsigned long movingTimer; //Timer that trigger a moving sensor state as offline if not seen
 };
 
