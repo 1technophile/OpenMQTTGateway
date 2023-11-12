@@ -62,8 +62,12 @@ unsigned long timer_sys_checks = 0;
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
 
 #  include <queue>
+int queueLength = 0;
+int queueLengthSum = 0;
+int blockedMessages = 0;
+int maxQueueLength = 0;
 #  ifndef QueueSize
-#    define QueueSize 32
+#    define QueueSize 18
 #  endif
 
 #endif
@@ -88,7 +92,6 @@ struct JsonBundle {
 };
 
 std::queue<JsonBundle> jsonQueue;
-int queueLengthSum = 0;
 #endif
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
@@ -264,7 +267,7 @@ static String ota_server_cert = "";
 #  include <nvs.h>
 #  include <nvs_flash.h>
 
-bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
+bool ProcessLock = true; // Process lock when we want to use a critical function like OTA for example, at start to true so as to wait for critical functions to be performed before BLE start
 #  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
 #    include <stdio.h>
@@ -426,11 +429,16 @@ void pubMainCore(JsonObject& data) {
 // Add a document to the queue
 void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
   if (jsonDoc.size() == 0) {
-    Log.error(F("Empty JSON, not enqueued" CR));
+    Log.error(F("Empty JSON, skipping" CR));
+    return;
+  }
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  if (queueLength >= QueueSize) {
+    Log.warning(F("%d Doc(s) in queue, doc blocked" CR), queueLength);
+    blockedMessages++;
     return;
   }
   Log.trace(F("Enqueue JSON" CR));
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   JsonBundle bundle;
   bundle.doc = jsonDoc;
   jsonQueue.push(bundle);
@@ -484,20 +492,20 @@ void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
 
 // Empty the documents queue
 void emptyQueue() {
-  while (true) {
-    JsonBundle bundle;
-
-    if (jsonQueue.empty()) {
-      break;
-    }
-    Log.trace(F("Dequeue JSON" CR));
-    bundle = jsonQueue.front();
-    jsonQueue.pop();
-
-    JsonObject obj = bundle.doc.as<JsonObject>();
-    pubMainCore(obj);
-    queueLengthSum++;
+  queueLength = jsonQueue.size();
+  if (queueLength > maxQueueLength) {
+    maxQueueLength = queueLength;
   }
+  if (queueLength == 0) {
+    return;
+  }
+  JsonBundle bundle;
+  Log.trace(F("Dequeue JSON" CR));
+  bundle = jsonQueue.front();
+  jsonQueue.pop();
+  JsonObject obj = bundle.doc.as<JsonObject>();
+  pubMainCore(obj);
+  queueLengthSum++;
 }
 #else
 void emptyQueue() {}
@@ -523,6 +531,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
+  bool ret = sensor_Retain;
 
 #if defined(ESP8266) || defined(ESP32)
 #  if message_UTCtimestamp == true
@@ -532,6 +541,10 @@ void pub(const char* topicori, JsonObject& data) {
   data["unixtime"] = unixtimestamp();
 #  endif
 #endif
+  if (data.containsKey("retain") && data["retain"].is<bool>()) {
+    ret = data["retain"];
+    data.remove("retain");
+  }
   if (data.containsKey("origin")) { // temporary, in the future use this instead of topicori
     data.remove("origin");
   }
@@ -559,7 +572,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 #if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
-  pubMQTT(topic, dataAsString.c_str());
+  pubMQTT(topic.c_str(), dataAsString.c_str(), ret);
   pubWebUI(topicori, data);
 #endif
 
@@ -2026,14 +2039,20 @@ void loop() {
 #  endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
-#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
-        checkForUpdates();
-#  endif
 #  if defined(ESP8266) || defined(ESP32)
 #    if message_UTCtimestamp || message_unixtimestamp
         syncNTP();
 #    endif
 #  endif
+        if (!timer_sys_checks) { // Update check at start up only
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+          checkForUpdates();
+#  endif
+#  ifdef ZgatewayBT
+          ProcessLock = false; // Release BLE processes at start
+#  endif
+        }
+
         timer_sys_checks = millis();
       }
 #endif
@@ -2293,7 +2312,7 @@ void eraseAndRestart() {
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String stateMeasures() {
-  StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
+  StaticJsonDocument<1024> SYSdata;
 
   SYSdata["uptime"] = uptime();
 
@@ -2312,6 +2331,8 @@ String stateMeasures() {
   SYSdata["mqttsecure"] = mqtt_secure;
   SYSdata["msgproc"] = queueLengthSum;
   SYSdata["msgspeed"] = round2((float)queueLengthSum / uptime());
+  SYSdata["msgblock"] = blockedMessages;
+  SYSdata["maxqueue"] = maxQueueLength;
 #    ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minfreemem"] = minFreeMem;
@@ -2593,9 +2614,6 @@ String latestVersion;
  */
 bool checkForUpdates() {
   Log.notice(F("Update check, free heap: %d"), ESP.getFreeHeap());
-#      ifdef ZGatewayBT
-  ProcessLock = true;
-#      endif
   HTTPClient http;
   http.setTimeout((GeneralTimeOut - 1) * 1000); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -2616,6 +2634,7 @@ bool checkForUpdates() {
     Log.error(F("Error on HTTP request"));
   }
   http.end(); //Free the resources
+  Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
   if (jsondata.containsKey("latest_version")) {
     jsondata["installed_version"] = OMG_VERSION;
     jsondata["entity_picture"] = ENTITY_PICTURE;
@@ -2623,6 +2642,7 @@ bool checkForUpdates() {
       jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
     jsondata["origin"] = subjectRLStoMQTT;
+    jsondata["retain"] = true;
     enqueueJsonObject(jsondata);
     Log.trace(F("Update file found on server" CR));
     return true;
@@ -2630,10 +2650,6 @@ bool checkForUpdates() {
     Log.trace(F("No update file found on server" CR));
     return false;
   }
-#      ifdef ZGatewayBT
-  ProcessLock = false;
-#      endif
-  Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
 }
 
 #    else
