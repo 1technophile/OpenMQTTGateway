@@ -184,6 +184,8 @@ void announceDeviceTrigger(bool use_gateway_info,
 const char* availableHASSClasses[] = {"battery",
                                       "carbon_monoxide",
                                       "carbon_dioxide",
+                                      "door",
+                                      "enum",
                                       "pm10",
                                       "pm25",
                                       "humidity",
@@ -197,7 +199,7 @@ const char* availableHASSClasses[] = {"battery",
                                       "energy",
                                       "power_factor",
                                       "voltage",
-                                      "enum"};
+                                      "window"};
 
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L379
 // List of units available in Home Assistant
