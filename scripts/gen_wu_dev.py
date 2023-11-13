@@ -111,7 +111,7 @@ with open(manif_path + filename, 'wb') as output_file:
     output_file.write(boot_bin.content)
 
 for name in os.listdir(bin_path):
-    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'lilygo' in name or 'shelly' in name or 'lolin_c3' in name or 'tinypico' in name):
+    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'theengs' in name or 'lilygo' in name or 'shelly' in name or 'lolin_c3' in name or 'tinypico' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
         print('Bin name:' + name)
