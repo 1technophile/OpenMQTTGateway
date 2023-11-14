@@ -99,6 +99,14 @@ void ONOFFConfig_fromJson(JsonObject& ONOFFdata){};
 void ONOFFConfig_load(){};
 #  endif
 
+void updatePowerIndicator() {
+  if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+    PowerIndicatorON();
+  } else {
+    PowerIndicatorOFF();
+  }
+}
+
 void setupONOFF() {
 #  ifdef MAX_TEMP_ACTUATOR
   xTaskCreate(overLimitTemp, "overLimitTemp", 4000, NULL, 10, NULL);
@@ -116,11 +124,7 @@ void setupONOFF() {
   if (ONOFFConfig.useLastStateOnStart)
     digitalWrite(ACTUATOR_ONOFF_GPIO, ONOFFConfig.ONOFFState);
 #  endif
-  if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
-    PowerIndicatorON();
-  } else {
-    PowerIndicatorOFF();
-  }
+  updatePowerIndicator();
   Log.trace(F("ZactuatorONOFF setup done" CR));
 }
 

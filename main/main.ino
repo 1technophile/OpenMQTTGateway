@@ -772,18 +772,24 @@ void delayWithOTA(long waitMillis) {
 void SYSConfig_init() {
   SYSConfig.discovery = true;
   SYSConfig.ohdiscovery = OpenHABDiscovery;
+#  ifdef RGB_INDICATORS
+  SYSConfig.rgbbrightness = DEAULT_ADJ_BRIGHTNESS;
+#  endif
 }
 
 void SYSConfig_fromJson(JsonObject& SYSdata) {
   Config_update(SYSdata, "discovery", SYSConfig.discovery);
   Config_update(SYSdata, "ohdiscovery", SYSConfig.ohdiscovery);
+#  ifdef RGB_INDICATORS
+  Config_update(SYSdata, "rgbbrightness", SYSConfig.rgbbrightness);
+#  endif
 }
 #else
 void SYSConfig_init() {}
 void SYSConfig_fromJson(JsonObject& SYSdata) {}
 #endif
 
-#if defined(ESP32) && defined(ZmqttDiscovery)
+#if defined(ESP32)
 void SYSConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
@@ -1004,6 +1010,12 @@ void setup() {
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
   checkButton();
 #endif
+
+  delay(100); //give time to start the flash and avoid issue when reading the preferences
+
+  SYSConfig_init();
+  SYSConfig_load();
+
   //setup LED status
   SetupIndicatorError();
   SetupIndicatorSendReceive();
@@ -1011,7 +1023,6 @@ void setup() {
   SetupIndicators(); // For RGB Leds
 
 #if defined(ESP8266) || defined(ESP32)
-  delay(100); //give time to start the flash and avoid issue when reading the preferences
 #  ifdef ESP8266
 #    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
   Serial.end();
@@ -1116,9 +1127,6 @@ void setup() {
   WebUISetup();
   modules.add(ZwebUI);
 #endif
-
-  SYSConfig_init();
-  SYSConfig_load();
 
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
@@ -2317,6 +2325,9 @@ String stateMeasures() {
   SYSdata["uptime"] = uptime();
 
   SYSdata["version"] = OMG_VERSION;
+#  ifdef RGB_INDICATORS
+  SYSdata["rgbbrightness"] = SYSConfig.rgbbrightness;
+#  endif
 #  ifdef ZmqttDiscovery
   SYSdata["discovery"] = SYSConfig.discovery;
   SYSdata["ohdiscovery"] = SYSConfig.ohdiscovery;
@@ -2817,6 +2828,22 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
+#  ifdef RGB_INDICATORS
+    if (SYSdata.containsKey("rgbbrightness") && SYSdata["rgbbrightness"].is<float>()) {
+      if (SYSdata["rgbbrightness"] >= 0 && SYSdata["rgbbrightness"] <= 255) {
+        SYSConfig.rgbbrightness = round2(SYSdata["rgbbrightness"]);
+        leds.setBrightness(SYSConfig.rgbbrightness);
+        leds.show();
+#    ifdef ZactuatorONOFF
+        updatePowerIndicator();
+#    endif
+        Log.notice(F("RGB brightness: %d" CR), SYSConfig.rgbbrightness);
+        stateMeasures();
+      } else {
+        Log.error(F("RGB brightness value invalid - ignoring command" CR));
+      }
+    }
+#  endif
 #  ifdef ZmqttDiscovery
     if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
       SYSConfig.ohdiscovery = SYSdata["ohdiscovery"];
@@ -2990,6 +3017,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       JsonObject jo = jsonBuffer.to<JsonObject>();
       jo["discovery"] = SYSConfig.discovery;
       jo["ohdiscovery"] = SYSConfig.ohdiscovery;
+#    ifdef RGB_INDICATORS
+      jo["rgbbrightness"] = SYSConfig.rgbbrightness;
+#    endif
       // Save config into NVS (non-volatile storage)
       String conf = "";
       serializeJson(jsonBuffer, conf);

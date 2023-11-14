@@ -513,7 +513,10 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
 #  endif
 #  ifndef ANEOPIX_BRIGHTNESS
-#    define ANEOPIX_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
+#    define ANEOPIX_BRIGHTNESS 20 // Set Default maximum RGB brightness to approx 10% (0-255 scale)
+#  endif
+#  ifndef DEAULT_ADJ_BRIGHTNESS
+#    define DEAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
 #  endif
 #  ifndef ANEOPIX_COLOR_SCHEME // allow for different color combinations
 #    define ANEOPIX_COLOR_SCHEME 0
@@ -590,18 +593,21 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  endif
 #  define ErrorIndicatorON()                              \
     leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
+    leds.setBrightness(SYSConfig.rgbbrightness);          \
     leds.show();
 #  define ErrorIndicatorOFF()                           \
     leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
     leds.show();
 #  define SendReceiveIndicatorON()                                     \
     leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
+    leds.setBrightness(SYSConfig.rgbbrightness);                       \
     leds.show();
 #  define SendReceiveIndicatorOFF()                            \
     leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
     leds.show();
 #  define InfoIndicatorON()                             \
     leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+    leds.setBrightness(SYSConfig.rgbbrightness);        \
     leds.show();
 #  define InfoIndicatorOFF()                           \
     leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
@@ -611,9 +617,11 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 // This enable to have persistence of the indicator to inform the user
 #    define CriticalIndicatorON()                              \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
+      leds2.setBrightness(255);                                \
       leds2.show();
 #    define PowerIndicatorON()                             \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+      leds2.setBrightness(SYSConfig.rgbbrightness);        \
       leds2.show();
 #    define PowerIndicatorOFF()                           \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
@@ -762,6 +770,9 @@ unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automa
 struct SYSConfig_s {
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
+#  ifdef RGB_INDICATORS
+  int rgbbrightness; // brightness of the RGB LED
+#  endif
 };
 
 #endif
