@@ -29,10 +29,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#if defined(ESP8266) || defined(ESP32)
-#  include <EEPROM.h>
-#endif
-
 #ifdef ZgatewayRF
 extern void setupRF();
 extern void RFtoMQTT();
@@ -42,7 +38,6 @@ extern void disableRFReceive();
 extern void enableRFReceive();
 #endif
 #ifdef ZgatewayRF2
-extern void setupRF2();
 extern void RF2toMQTT();
 extern void MQTTtoRF2(char* topicOri, char* datacallback);
 extern void MQTTtoRF2(char* topicOri, JsonObject& RFdata);
@@ -58,9 +53,11 @@ extern void disablePilightReceive();
 extern void enablePilightReceive();
 #endif
 #ifdef ZgatewayRTL_433
+#  include <rtl_433_ESP.h>
+rtl_433_ESP rtl_433;
+
 extern void RTL_433Loop();
 extern void setupRTL_433();
-extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata);
 extern void enableRTLreceive();
 extern void disableRTLreceive();
 extern int getRTLrssiThreshold();
@@ -134,13 +131,14 @@ const char parameters[40][4][24] = {
 #endif
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTtoRF    "/commands/MQTTto433"
-#define subjectRFtoMQTT    "/433toMQTT"
-#define subjectGTWRFtoMQTT "/433toMQTT"
-#define RFprotocolKey      "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
-#define RFbitsKey          "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
-#define repeatRFwMQTT      false // do we repeat a received signal by using MQTT with RF gateway
-#define RFpulselengthKey   "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
+#define subjectMQTTtoRF       "/commands/MQTTto433"
+#define subjectRFtoMQTT       "/433toMQTT"
+#define subjectcommonRFtoMQTT "/RFtoMQTT"
+#define subjectGTWRFtoMQTT    "/433toMQTT"
+#define RFprotocolKey         "433_" // protocol will be defined if a subject contains RFprotocolKey followed by a value of 1 digit
+#define RFbitsKey             "RFBITS_" // bits  will be defined if a subject contains RFbitsKey followed by a value of 2 digits
+#define repeatRFwMQTT         false // do we repeat a received signal by using MQTT with RF gateway
+#define RFpulselengthKey      "PLSL_" // pulselength will be defined if a subject contains RFprotocolKey followed by a value of 3 digits
 // subject monitored to listen traffic processed by other gateways to store data and avoid ntuple
 #define subjectMultiGTWRF "+/+/433toMQTT"
 //RF number of signal repetition - Can be overridden by specifying "repeat" in a JSON message.
@@ -171,18 +169,39 @@ const char parameters[40][4][24] = {
 
 /*-------------------RTL_433 topics & parameters----------------------*/
 //433Mhz RTL_433 MQTT Subjects and keys
-#define subjectMQTTtoRTL_433 "/commands/MQTTtoRTL_433"
+#define subjectMQTTtoRFset   "/commands/MQTTtoRF/config"
 #define subjectRTL_433toMQTT "/RTL_433toMQTT"
 
-/*-------------------CC1101 frequency----------------------*/
-//Match frequency to the hardware version of the radio if ZradioCC1101 is used.
-#ifndef CC1101_FREQUENCY
-#  define CC1101_FREQUENCY 433.92
+/*-------------------RF frequency----------------------*/
+//Match frequency to the hardware version of the radio used.
+#ifndef RF_FREQUENCY
+#  define RF_FREQUENCY 433.92
 #endif
-// Allow ZGatewayRF Module to change receive frequency of CC1101 Transceiver module
-#if defined(ZradioCC1101) || defined(ZradioSX127x)
-float receiveMhz = CC1101_FREQUENCY;
-#endif
+
+/**
+ * Active  Module
+ * 1 = ZgatewayPilight
+ * 2 = ZgatewayRF
+ * 3 = ZgatewayRTL_433
+ * 4 = ZgatewayRF2
+ */
+
+struct RFConfig_s {
+  float frequency;
+  int rssiThreshold;
+  int newOokThreshold;
+  int activeReceiver;
+};
+
+#define ACTIVE_NONE     -1
+#define ACTIVE_RECERROR 0
+#define ACTIVE_PILIGHT  1
+#define ACTIVE_RF       2
+#define ACTIVE_RTL      3
+#define ACTIVE_RF2      4
+
+RFConfig_s RFConfig;
+
 /*-------------------CC1101 DefaultTXPower----------------------*/
 //Adjust the default TX-Power for sending radio if ZradioCC1101 is used.
 //The following settings are possible depending on the frequency band.  (-30  -20  -15  -10  -6    0    5    7    10   11   12) Default is max!
@@ -215,153 +234,6 @@ float receiveMhz = CC1101_FREQUENCY;
 //RF PIN definition
 #    define RF_EMITTER_GPIO 4 //4 = D4 on arduino
 #  endif
-#endif
-
-#if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
-/**
- * Active Receiver Module
- * 1 = ZgatewayPilight
- * 2 = ZgatewayRF
- * 3 = ZgatewayRTL_433
- * 4 = ZgatewayRF2
- */
-int activeReceiver = 0;
-#  define ACTIVE_RECERROR 0
-#  define ACTIVE_PILIGHT  1
-#  define ACTIVE_RF       2
-#  define ACTIVE_RTL      3
-#  define ACTIVE_RF2      4
-
-#  if defined(ZradioCC1101) || defined(ZradioSX127x)
-bool validFrequency(float mhz) {
-  //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
-  if (mhz >= 300 && mhz <= 348)
-    return true;
-  if (mhz >= 387 && mhz <= 464)
-    return true;
-  if (mhz >= 779 && mhz <= 928)
-    return true;
-  return false;
-}
-#  endif
-
-int currentReceiver = -1;
-
-#  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
-#    if defined(ESP8266) || defined(ESP32)
-// Check if a receiver is available
-bool validReceiver(int receiver) {
-  switch (receiver) {
-#      ifdef ZgatewayPilight
-    case ACTIVE_PILIGHT:
-      return true;
-#      endif
-#      ifdef ZgatewayRF
-    case ACTIVE_RF:
-      return true;
-#      endif
-#      ifdef ZgatewayRTL_433
-    case ACTIVE_RTL:
-      return true;
-#      endif
-#      ifdef ZgatewayRF2
-    case ACTIVE_RF2:
-      return true;
-#      endif
-    default:
-      Log.error(F("ERROR: stored receiver %d not available" CR), receiver);
-  }
-  return false;
-}
-#    endif
-#  endif
-
-void enableActiveReceiver(bool isBoot) {
-// Save currently active receiver and restore after reboot.
-// Only works with ESP and if there is no conflict.
-#  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
-#    if defined(ESP8266) || defined(ESP32)
-#      define _ACTIVE_RECV_MAGIC 0xA1B2C3D4
-
-  struct {
-    uint64_t magic;
-    int receiver;
-  } data;
-
-  EEPROM.begin(sizeof(data));
-  EEPROM.get(0, data);
-  if (isBoot && data.magic == _ACTIVE_RECV_MAGIC && validReceiver(data.receiver)) {
-    activeReceiver = data.receiver;
-  } else {
-    data.magic = _ACTIVE_RECV_MAGIC;
-    data.receiver = activeReceiver;
-    EEPROM.put(0, data);
-  }
-  EEPROM.end();
-#    endif
-#  endif
-
-  // if (currentReceiver != activeReceiver) {
-  Log.trace(F("enableActiveReceiver: %d" CR), activeReceiver);
-  switch (activeReceiver) {
-#  ifdef ZgatewayPilight
-    case ACTIVE_PILIGHT:
-      enablePilightReceive();
-      break;
-#  endif
-#  ifdef ZgatewayRF
-    case ACTIVE_RF:
-      enableRFReceive();
-      break;
-#  endif
-#  ifdef ZgatewayRTL_433
-    case ACTIVE_RTL:
-      enableRTLreceive();
-      break;
-#  endif
-#  ifdef ZgatewayRF2
-    case ACTIVE_RF2:
-      enableRF2Receive();
-      break;
-#  endif
-#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
-    default:
-      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
-#  endif
-  }
-  currentReceiver = activeReceiver;
-}
-
-void disableActiveReceiver() {
-  Log.trace(F("disableActiveReceiver: %d" CR), activeReceiver);
-  switch (activeReceiver) {
-#  ifdef ZgatewayPilight
-    case ACTIVE_PILIGHT:
-      disablePilightReceive();
-      break;
-#  endif
-#  ifdef ZgatewayRF
-    case ACTIVE_RF:
-      disableRFReceive();
-      break;
-#  endif
-#  ifdef ZgatewayRTL_433
-    case ACTIVE_RTL:
-      disableRTLreceive();
-      break;
-#  endif
-#  ifdef ZgatewayRF2
-    case ACTIVE_RF2:
-      disableRF2Receive();
-      break;
-#  endif
-#  ifndef ARDUINO_AVR_UNO // Space issues with the UNO
-    default:
-      Log.error(F("ERROR: unsupported receiver %d" CR), activeReceiver);
-#  endif
-  }
-}
-
 #endif
 
 #endif

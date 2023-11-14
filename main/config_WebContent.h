@@ -57,6 +57,8 @@
 #define configure_5 "<p><form action='lo' method='get'><button>Configure Logging</button></form></p>"
 #ifdef ZgatewayLORA
 #  define configure_6 "<p><form action='la' method='get'><button>Configure LORA</button></form></p>"
+#elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+#  define configure_6 "<p><form action='rf' method='get'><button>Configure RF</button></form></p>"
 #else
 #  define configure_6
 #endif
@@ -109,6 +111,29 @@ const char config_gateway_body[] = body_header "<fieldset class=\"set1\"><legend
 const char config_logging_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>OpenMQTTGateway Logging</b></span></legend><form method='get' action='lo'><p><b>Log Level</b><br><select id='lo'><option %s value='0'>Silent</option><option %s value='1'>Fatal</option><option %s value='2'>Error</option><option %s value='3'>Warning</option><option %s value='4'>Notice</option><option %s value='5'>Trace</option><option %s value='6'>Verbose</option></select></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure WebUI</b></span></legend><form method='get' action='wu'><p><b>Display Metric</b><br><input id='dm' type='checkbox' %s></p><p><b>Secure WebUI</b><br><input id='sw' type='checkbox' %s></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+
+const char config_rf_body[] = body_header
+    "<fieldset class=\"set1\">"
+    "<legend><span><b>Configure RF</b></span></legend>"
+    "<form method='get' action='rf'>"
+
+    "<p><b>Frequency</b><br>"
+    "<input type='number' id='rf' name='rf' step='any' value='%.3f'></p>"
+
+    // Active library dropdown
+    "<p><b>Active library</b><br>"
+    "<select id='ar' name='ar'>%s</select></p>"
+
+    /* // Need testing
+    "<p><b>OOK Threshold</b><br>"
+    "<input type='number' id='oo' name='oo' step='any' value='%d'></p>"
+
+    "<p><b>RSSI Threshold</b><br>"
+    "<input type='number' id='rs' name='rs' step='any' value='%d'></p>"
+*/
+    "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
+    "</form>"
+    "</fieldset>" body_footer_config_menu;
 
 const char config_lora_body[] = body_header
     "<fieldset class=\"set1\">"

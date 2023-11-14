@@ -34,9 +34,6 @@
 #  endif
 
 void setupSomfy() {
-#  ifdef ZradioCC1101 //using with CC1101
-  ELECHOUSE_cc1101.Init();
-#  endif
   pinMode(RF_EMITTER_GPIO, OUTPUT);
   digitalWrite(RF_EMITTER_GPIO, LOW);
 
@@ -54,10 +51,13 @@ void setupSomfy() {
 #  if jsonReceiving
 void MQTTtoSomfy(char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoSomfy)) {
-#    ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetTx(CC1101_FREQUENCY_SOMFY);
-#    endif
     Log.trace(F("MQTTtoSomfy json data analysis" CR));
+    float txFrequency = jsonData["frequency"] | RFConfig.frequency;
+#    ifdef ZradioCC1101 // set Receive off and Transmitt on
+    disableCurrentReceiver();
+    ELECHOUSE_cc1101.SetTx(txFrequency);
+    Log.notice(F("Transmit frequency: %F" CR), txFrequency);
+#    endif
 
     const int remoteIndex = jsonData["remote"];
     if (remoteIndex >= SOMFY_REMOTE_NUM) {
@@ -72,9 +72,8 @@ void MQTTtoSomfy(char* topicOri, JsonObject& jsonData) {
     EEPROMRollingCodeStorage rollingCodeStorage(EEPROM_ADDRESS_START + remoteIndex * 2);
     SomfyRemote somfyRemote(RF_EMITTER_GPIO, somfyRemotes[remoteIndex], &rollingCodeStorage);
     somfyRemote.sendCommand(command, repeat);
-#    ifdef ZradioCC1101
-    ELECHOUSE_cc1101.SetRx(receiveMhz); // set Receive on
-#    endif
+    initCC1101();
+    enableActiveReceiver();
   }
 }
 #  endif
