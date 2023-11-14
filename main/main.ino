@@ -63,8 +63,8 @@ unsigned long timer_sys_checks = 0;
 
 #  include <queue>
 int queueLength = 0;
-int queueLengthSum = 0;
-int blockedMessages = 0;
+unsigned long queueLengthSum = 0;
+unsigned long blockedMessages = 0;
 int maxQueueLength = 0;
 #  ifndef QueueSize
 #    define QueueSize 18
@@ -1478,14 +1478,25 @@ bool wifi_reconnect_bypass() {
   6 - OTA Update
   7 - Parameters changed
 */
+#if defined(ESP8266) || defined(ESP32)
 void ESPRestart(byte reason) {
+  delay(1000);
+  StaticJsonDocument<128> jsonBuffer;
+  JsonObject jsondata = jsonBuffer.to<JsonObject>();
+  jsondata["reason"] = reason;
+  jsondata["retain"] = true;
+  jsondata["uptime"] = uptime();
+  pub(subjectLOGtoMQTT, jsondata);
   Log.warning(F("Rebooting for reason code %d" CR), reason);
-#if defined(ESP32)
+#  if defined(ESP32)
   ESP.restart();
-#elif defined(ESP8266)
+#  elif defined(ESP8266)
   ESP.reset();
-#endif
+#  endif
 }
+#else
+void ESPRestart(byte reason) {}
+#endif
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
