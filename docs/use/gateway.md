@@ -201,6 +201,12 @@ The `server_cert` parameter is optional. If the update server has changed or cer
 The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above WiFi and MQTT broker credentials and the Firmware update via MQTT options disabled. This is due to the restricted available flash, so as to still be able to use OTA firmware updates for these boards.
 :::
 
+## Change the LED indicator brightness
+
+Minimum: 0, Maximum: 255, Default defined by DEAULT_ADJ_BRIGHTNESS
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"brightness":200}'`
+
 # State LED usage
 
 The gateway can support up to 3 LED to display its operating state:

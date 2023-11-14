@@ -516,6 +516,17 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
+#    ifdef RGB_INDICATORS
+  createDiscovery("number", //set Type
+                  subjectSYStoMQTT, "SYS: LED Brightness", (char*)getUniqueId("rgbbrightness", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.rgbbrightness/2.55}}", //set availability_topic,device_class,value_template,
+                  "{\"rgbbrightness\":{{value*2.55}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
+                  stateClassNone //State Class
+  );
+#    endif
 
 #    ifdef ZdisplaySSD1306
   createDiscovery("switch", //set Type
