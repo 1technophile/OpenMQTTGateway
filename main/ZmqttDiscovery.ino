@@ -470,7 +470,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Uptime", (char*)getUniqueId("uptime", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "duration", "{{ value_json.uptime }}", //set availability_topic,device_class,value_template,
                   "", "", "s", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -480,7 +480,7 @@ void pubMqttDiscovery() {
 #  if defined(ESP8266) || defined(ESP32)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Free memory", (char*)getUniqueId("freemem", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.freemem }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "data_size", "{{ value_json.freemem }}", //set availability_topic,device_class,value_template,
                   "", "", "B", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -562,8 +562,8 @@ void pubMqttDiscovery() {
 
 #    ifndef ESP32_ETHERNET
   createDiscovery("sensor", //set Type
-                  subjectSYStoMQTT, "SYS: Rssi", (char*)getUniqueId("rssi", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.rssi }}", //set availability_topic,device_class,value_template,
+                  subjectSYStoMQTT, "SYS: RSSI", (char*)getUniqueId("rssi", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "signal_strength", "{{ value_json.rssi }}", //set availability_topic,device_class,value_template,
                   "", "", "dB", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
