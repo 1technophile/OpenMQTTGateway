@@ -519,8 +519,8 @@ void pubMqttDiscovery() {
 #    ifdef RGB_INDICATORS
   createDiscovery("number", //set Type
                   subjectSYStoMQTT, "SYS: LED Brightness", (char*)getUniqueId("rgbbrightness", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.rgbbrightness/2.55}}", //set availability_topic,device_class,value_template,
-                  "{\"rgbbrightness\":{{value*2.55}},\"save\":true}", "", "s", //set,payload_on,payload_off,unit_of_meas,
+                  will_Topic, "", "{{ (value_json.rgbbrightness/2.55) | round(0) }}", //set availability_topic,device_class,value_template,
+                  "{\"rgbbrightness\":{{ (value*2.55) | round(0) }},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
@@ -575,7 +575,7 @@ void pubMqttDiscovery() {
 #  if defined(ESP32) && !defined(NO_INT_TEMP_READING)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Internal temperature", (char*)getUniqueId("tempc", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "temperature", "{{ value_json.tempc }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "temperature", "{{ value_json.tempc  | round(1)}}", //set availability_topic,device_class,value_template,
                   "", "", "°C", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
