@@ -682,7 +682,7 @@ void pubMqttDiscovery() {
   Log.trace(F("bme280Discovery" CR));
   char* BMEsensor[BMEparametersCount][8] = {
       {"sensor", "temp", "bme", "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "pa", "bme", "", jsonPa, "", "", "hPa"},
+      {"sensor", "pa", "bme", "pressure", jsonPa, "", "", "hPa"},
       {"sensor", "hum", "bme", "humidity", jsonHum, "", "", "%"},
       {"sensor", "altim", "bme", "", jsonAltim, "", "", "m"},
       {"sensor", "altift", "bme", "", jsonAltif, "", "", "ft"}
