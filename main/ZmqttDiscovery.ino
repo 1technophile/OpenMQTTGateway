@@ -652,7 +652,7 @@ void pubMqttDiscovery() {
 #  endif
   createDiscovery("button", //set Type
                   will_Topic, "SYS: Restart gateway", (char*)getUniqueId("restart", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "", //set availability_topic,device_class,value_template,
+                  will_Topic, "restart", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"restart\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
