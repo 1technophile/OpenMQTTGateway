@@ -623,7 +623,7 @@ void pubMqttDiscovery() {
 #    ifdef ZboardM5STACK
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Batt level", (char*)getUniqueId("m5battlevel", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "battery", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
