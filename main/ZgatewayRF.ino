@@ -263,7 +263,7 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       Log.notice(F("Bits nb: %d" CR), valueBITS);
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
       disableActiveReceiver();
-      
+
       int txPower = RFdata["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
       Log.notice(F("CC1101 TX Power: %d" CR), txPower);
