@@ -802,8 +802,8 @@ void pubMqttDiscovery() {
   Log.trace(F("BH1750Discovery" CR));
   char* BH1750sensor[BH1750parametersCount][8] = {
       {"sensor", "lux", "BH1750", "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "ftCd", "BH1750", "", jsonFtcd, "", "", ""},
-      {"sensor", "wattsm2", "BH1750", "", jsonWm2, "", "", "wm²"}
+      {"sensor", "ftCd", "BH1750", "irradiance", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "BH1750", "irradiance", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
