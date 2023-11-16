@@ -1029,14 +1029,6 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 0, "", "", false, "",
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassMeasurement, nullptr, nullptr, "[\"lb\",\"kg\",\"jin\"]");
-              } else if (strcmp(prop.key().c_str(), "pres") == 0 || strcmp(prop.key().c_str(), "movement") == 0) {
-                createDiscovery("binary_sensor",
-                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                                will_Topic, "motion", value_template.c_str(), // Idealy we should have the decoder give the name here as "motion" but for now it gives "presence"
-                                "True", "False", "",
-                                BTConfig.presenceAwayTimer, "", "", false, "",
-                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
-                                stateClassNone);
               } else if (strcmp(prop.value()["unit"], "string") == 0 && strcmp(prop.key().c_str(), "mac") != 0) {
                 createDiscovery("sensor",
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
