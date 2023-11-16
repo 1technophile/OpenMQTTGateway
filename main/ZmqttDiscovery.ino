@@ -824,8 +824,8 @@ void pubMqttDiscovery() {
 #    define MQ2parametersCount 2
   Log.trace(F("MQ2Discovery" CR));
   char* MQ2sensor[MQ2parametersCount][8] = {
-      {"sensor", "gas", "MQ2", "", jsonVal, "", "", "ppm"},
-      {"binary_sensor", "MQ2", "", "", jsonPresence, "true", "false", ""}
+      {"sensor", "gas", "MQ2", "gas", jsonVal, "", "", "ppm"},
+      {"binary_sensor", "MQ2", "", "gas", jsonPresence, "true", "false", ""}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
