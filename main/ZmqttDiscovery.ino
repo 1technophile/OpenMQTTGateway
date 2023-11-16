@@ -889,7 +889,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZsensorHCSR501
   Log.trace(F("HCSR501Discovery" CR));
-  char* HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "", jsonPresence, "true", "false", ""};
+  char* HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "motion", jsonPresence, "true", "false", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   //trc(HCSR501sensor[1]);
