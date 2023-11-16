@@ -846,8 +846,8 @@ void pubMqttDiscovery() {
   Log.trace(F("TEMT6000Discovery" CR));
   char* TEMT6000sensor[TEMT6000parametersCount][8] = {
       {"sensor", "lux", "TEMT6000", "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "ftcd", "TEMT6000", "", jsonFtcd, "", "", ""},
-      {"sensor", "wattsm2", "TEMT6000", "", jsonWm2, "", "", "wm²"}
+      {"sensor", "ftcd", "TEMT6000", "irradiance", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "TEMT6000", "irradiance", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -869,8 +869,8 @@ void pubMqttDiscovery() {
   Log.trace(F("TSL2561Discovery" CR));
   char* TSL2561sensor[TSL2561parametersCount][8] = {
       {"sensor", "lux", "TSL2561", "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "ftcd", "TSL2561", "", jsonFtcd, "", "", ""},
-      {"sensor", "wattsm2", "TSL2561", "", jsonWm2, "", "", "wm²"}
+      {"sensor", "ftcd", "TSL2561", "irradiance", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "TSL2561", "irradiance", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
