@@ -92,6 +92,12 @@ struct JsonBundle {
 };
 
 std::queue<JsonBundle> jsonQueue;
+
+#  ifdef ESP32
+// Mutex  to protect the queue
+SemaphoreHandle_t xQueueMutex;
+#  endif
+
 #endif
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
@@ -448,6 +454,30 @@ void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
   JsonObject jsonObj = jsonDoc.to<JsonObject>();
   pubMainCore(jsonObj); // Arduino UNO or other boards with small memory, we don't store and directly publish
 #endif
+}
+
+#ifdef ESP32
+// Semaphore check before enqueueing a document
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout))) {
+    enqueueJsonObject(jsonDoc);
+    xSemaphoreGive(xQueueMutex);
+    return true;
+  } else {
+    Log.error(F("xQueueMutex not taken" CR));
+    blockedMessages++;
+    return false;
+  }
+}
+#else
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+  enqueueJsonObject(jsonDoc);
+}
+#endif
+
+// Semaphore check before enqueueing a document with default timeout QueueSemaphoreTimeOutLoop
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+  return handleJsonEnqueue(jsonDoc, QueueSemaphoreTimeOutLoop);
 }
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
@@ -1029,6 +1059,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
 #    endif
 #  elif ESP32
+  xQueueMutex = xSemaphoreCreateMutex();
 #    if DEFAULT_LOW_POWER_MODE != -1 //  don't check preferences value if low power mode is not activated
   preferences.begin(Gateway_Short_Name, false);
   if (preferences.isKey("lowpowermode")) {
@@ -1477,6 +1508,7 @@ bool wifi_reconnect_bypass() {
   5 - User requested reboot
   6 - OTA Update
   7 - Parameters changed
+  8 - not enough memory to pursue
 */
 #if defined(ESP8266) || defined(ESP32)
 void ESPRestart(byte reason) {
@@ -2042,7 +2074,6 @@ void loop() {
         stateMeasures();
 #  ifdef ZgatewayBT
         stateBTMeasures(false);
-        btScanWDG();
 #  endif
 #  ifdef ZactuatorONOFF
         stateONOFFMeasures();
@@ -2348,6 +2379,9 @@ String stateMeasures() {
   uint32_t freeMem;
   uint32_t minFreeMem;
   freeMem = ESP.getFreeHeap();
+  if (freeMem < MinimumMemory) {
+    ESPRestart(8);
+  }
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
@@ -2428,7 +2462,7 @@ String stateMeasures() {
   SYSdata["modules"] = modules;
 
   SYSdata["origin"] = subjectSYStoMQTT;
-  enqueueJsonObject(SYSdata);
+  handleJsonEnqueue(SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
 
   char jsonChar[100];
@@ -2665,7 +2699,8 @@ bool checkForUpdates() {
     latestVersion = jsondata["latest_version"].as<String>();
     jsondata["origin"] = subjectRLStoMQTT;
     jsondata["retain"] = true;
-    enqueueJsonObject(jsondata);
+    handleJsonEnqueue(jsondata);
+
     Log.trace(F("Update file found on server" CR));
     return true;
   } else {
@@ -2735,7 +2770,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsondata;
       jsondata["release_summary"] = "Update in progress ...";
       jsondata["origin"] = subjectRLStoMQTT;
-      enqueueJsonObject(jsondata);
+      handleJsonEnqueue(jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert && !strstr(url, "http:")) {
@@ -2803,7 +2838,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           jsondata["release_summary"] = "Update success !";
           jsondata["installed_version"] = latestVersion;
           jsondata["origin"] = subjectRLStoMQTT;
-          enqueueJsonObject(jsondata);
+          handleJsonEnqueue(jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveConfig();

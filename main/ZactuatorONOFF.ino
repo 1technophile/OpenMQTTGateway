@@ -304,6 +304,6 @@ void stateONOFFMeasures() {
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)digitalRead(ACTUATOR_ONOFF_GPIO);
   ONOFFdata["origin"] = subjectGTWONOFFtoMQTT;
-  enqueueJsonObject(ONOFFdata);
+  handleJsonEnqueue(ONOFFdata, QueueSemaphoreTimeOutTask);
 }
 #endif

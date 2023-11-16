@@ -216,7 +216,7 @@ void MQTTtoRFM69(char* topicOri, JsonObject& RFM69data) {
         Log.notice(F(" OK " CR));
         // Acknowledgement to the GTWRF topic
         RFM69data["origin"] = subjectGTWRFM69toMQTT;
-        enqueueJsonObject(RFM69data);
+        handleJsonEnqueue(RFM69data);
       } else {
         Log.error(F("MQTTtoRFM69 sending failed" CR));
       }

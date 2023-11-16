@@ -467,7 +467,8 @@ String stateSSD1306Display() {
   DISPLAYdata["log-oled"] = (bool)logToOLEDDisplay;
   DISPLAYdata["json-oled"] = (bool)jsonDisplay;
   DISPLAYdata["origin"] = subjectSSD1306toMQTT;
-  enqueueJsonObject(DISPLAYdata);
+  handleJsonEnqueue(DISPLAYdata);
+
   // apply
   Oled.display->setBrightness(round(displayBrightness * 2.55));
 

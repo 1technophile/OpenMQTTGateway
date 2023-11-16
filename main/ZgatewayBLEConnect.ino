@@ -121,7 +121,7 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
         BLEdata["success"] = result;
         if (result || it.ttl <= 1) {
           buildTopicFromId(BLEdata, subjectBTtoMQTT);
-          enqueueJsonObject(BLEdata);
+          handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
         }
       }
     }
@@ -161,7 +161,7 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
       BLEdata["volt"] = (float)(((pData[4] * 256) + pData[3]) / 1000.0);
       BLEdata["batt"] = (float)(((((pData[4] * 256) + pData[3]) / 1000.0) - 2.1) * 100);
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -226,7 +226,7 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       BLEdata["tempc"] = (float)(m_data[24] * 256) + m_data[25];
       BLEdata["tempf"] = (float)(convertTemp_CtoF((m_data[24] * 256) + m_data[25]));
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -303,7 +303,7 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       BLEdata["volt"] = volt;
       Log.trace(F("volt: %F" CR), volt);
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -361,7 +361,7 @@ void HHCCJCY01HHCC_connect::publishData() {
       BLEdata["id"] = (char*)mac_address.c_str();
       BLEdata["batt"] = (int)batteryValue;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Failed getting characteristic" CR));
     }
@@ -393,7 +393,7 @@ void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* p
       BLEdata["volt"] = (float)((pData[4] | (pData[5] << 8)) / 1000.0);
       BLEdata["batt"] = (float)((((pData[4] | (pData[5] << 8)) / 1000.0) - 2.1) * 100);
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Invalid notification data" CR));
       return;
@@ -490,7 +490,7 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
           BLEdata["id"] = it.addr;
           BLEdata["state"] = result ? it.value : it.value == "on" ? "off" : "on";
           buildTopicFromId(BLEdata, subjectBTtoMQTT);
-          enqueueJsonObject(BLEdata);
+          handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
         }
       }
     }

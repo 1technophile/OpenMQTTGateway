@@ -73,7 +73,7 @@ void MeasureINA226() {
     INA226data["current"] = current;
     INA226data["power"] = power;
     INA226data["origin"] = subjectINA226toMQTT;
-    enqueueJsonObject(INA226data);
+    handleJsonEnqueue(INA226data);
   }
 }
 

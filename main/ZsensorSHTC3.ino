@@ -61,7 +61,7 @@ void MeasureTempAndHum() {
           Log.trace(F("Same temp don't send it" CR));
         }
         SHTC3data["origin"] = SHTC3TOPIC;
-        enqueueJsonObject(SHTC3data);
+        handleJsonEnqueue(SHTC3data);
       }
       persistedh = h;
       persistedt = t;

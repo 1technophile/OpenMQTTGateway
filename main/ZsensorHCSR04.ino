@@ -69,8 +69,7 @@ void MeasureDistance() {
         Log.trace(F("HC SR04 Distance hasn't changed" CR));
       }
       distance = d;
-      HCSR04data["origin"] = subjectHCSR04;
-      enqueueJsonObject(HCSR04data);
+      handleJsonEnqueue(HCSR04data);
     }
   }
 }

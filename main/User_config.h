@@ -180,6 +180,12 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #ifndef GeneralTimeOut
 #  define GeneralTimeOut 20 // time out if a task is stuck in seconds (should be more than TimeBetweenReadingRN8209/1000) and more than 3 seconds, the WDT will reset the ESP, used also for MQTT connection
 #endif
+#ifndef QueueSemaphoreTimeOutTask
+#  define QueueSemaphoreTimeOutTask 3000 // time out for semaphore retrieval from a task
+#endif
+#ifndef QueueSemaphoreTimeOutLoop
+#  define QueueSemaphoreTimeOutLoop 100 // time out for semaphore retrieval from the loop
+#endif
 
 #if defined(ESP8266) || defined(ESP32)
 // Uncomment to use a device running TheengsGateway to decode BLE data. (https://github.com/theengs/gateway)
@@ -766,6 +772,10 @@ unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automa
 #  define isWhite(device)       device->isWhtL
 #  define isBlack(device)       device->isBlkL
 #  define isDiscovered(device)  device->isDisc
+
+/*--------------------Minimum freeHeap--------------------*/
+// Below this parameter we trigger a restart, this avoid stuck boards like seen in https://github.com/1technophile/OpenMQTTGateway/issues/1693
+#  define MinimumMemory 40000
 
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct SYSConfig_s {

@@ -94,7 +94,7 @@ void MeasureGPIOInput() {
         GPIOdata["gpio"] = "LOW";
       }
       GPIOdata["origin"] = subjectGPIOInputtoMQTT;
-      enqueueJsonObject(GPIOdata);
+      handleJsonEnqueue(GPIOdata);
 
 #  if defined(ZactuatorONOFF) && defined(ACTUATOR_TRIGGER)
       //Trigger the actuator if we are not at startup

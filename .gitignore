@@ -5,4 +5,5 @@
 node_modules
 *.ps1
 main/certs/private*
-lib
+lib/*
+!lib/esp32-bt-lib

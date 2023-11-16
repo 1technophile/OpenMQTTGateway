@@ -104,7 +104,7 @@ void MeasureAHTTempHum() {
         Log.notice(F("Same Humidity. Don't send it" CR));
       }
       AHTx0data["origin"] = AHTTOPIC;
-      enqueueJsonObject(AHTx0data);
+      handleJsonEnqueue(AHTx0data);
     }
     persisted_aht_tempc = ahtTempC.temperature;
     persisted_aht_hum = ahtHum.relative_humidity;

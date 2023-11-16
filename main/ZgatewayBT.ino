@@ -103,23 +103,7 @@ void BTConfig_init() {
   BTConfig.ignoreWBlist = false;
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
   BTConfig.movingTimer = MovingTimer;
-}
-
-// Watchdog, if there was no change of BLE scanCount, restart the ESP
-void btScanWDG() {
-  static unsigned long previousBtScanCount = 0;
-  static unsigned long lastBtScan = 0;
-  unsigned long now = millis();
-  if (!ProcessLock &&
-      previousBtScanCount == scanCount &&
-      scanCount != 0 &&
-      (now - lastBtScan > ((BTConfig.BLEinterval + BTConfig.scanDuration) < GeneralTimeOut ? GeneralTimeOut + 1000 : (BTConfig.BLEinterval + BTConfig.scanDuration)))) {
-    Log.error(F("BLE Scan watchdog triggered at : %ds" CR), lastBtScan / 1000);
-    ESPRestart(4);
-  } else {
-    previousBtScanCount = scanCount;
-    lastBtScan = now;
-  }
+  BTConfig.forcePassiveScan = false;
 }
 
 unsigned long timeBetweenConnect = 0;
@@ -148,6 +132,7 @@ String stateBTMeasures(bool start) {
   jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
   jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
   jo["movingtimer"] = BTConfig.movingTimer;
+  jo["forcepassivescan"] = BTConfig.forcePassiveScan;
   jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
   jo["blecoretaskstack"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
 
@@ -160,7 +145,7 @@ String stateBTMeasures(bool start) {
   String output;
   serializeJson(jo, output);
   jo["origin"] = subjectBTtoMQTT;
-  enqueueJsonObject(jo);
+  handleJsonEnqueue(jo, QueueSemaphoreTimeOutTask);
   return (output);
 }
 
@@ -224,6 +209,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   Config_update(BTdata, "presenceawaytimer", BTConfig.presenceAwayTimer);
   // Timer to trigger a device state as offline if not seen
   Config_update(BTdata, "movingtimer", BTConfig.movingTimer);
+  // Force passive scan
+  Config_update(BTdata, "forcepassivescan", BTConfig.forcePassiveScan);
   // MinRSSI set
   Config_update(BTdata, "minrssi", BTConfig.minRssi);
   // Send undecoded device data
@@ -278,6 +265,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
     jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
     jo["movingtimer"] = BTConfig.movingTimer;
+    jo["forcepassivescan"] = BTConfig.forcePassiveScan;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -418,7 +406,7 @@ void updateDevicesStatus() {
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
         buildTopicFromId(BLEdata, subjectBTtoMQTT);
-        enqueueJsonObject(BLEdata);
+        handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
         // We set the lastUpdate to 0 to avoid replublishing the offline state
         p->lastUpdate = 0;
       }
@@ -432,7 +420,7 @@ void updateDevicesStatus() {
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
         buildTopicFromId(BLEdata, subjectBTtoMQTT);
-        enqueueJsonObject(BLEdata);
+        handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
         // We set the lastUpdate to 0 to avoid replublishing the offline state
         p->lastUpdate = 0;
       }
@@ -668,7 +656,7 @@ void BLEscan() {
   BLEScan* pBLEScan = BLEDevice::getScan();
   MyAdvertisedDeviceCallbacks myCallbacks;
   pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-  if (millis() > (timeBetweenActive + BTConfig.intervalActiveScan) || BTConfig.intervalActiveScan == BTConfig.BLEinterval) {
+  if ((millis() > (timeBetweenActive + BTConfig.intervalActiveScan) || BTConfig.intervalActiveScan == BTConfig.BLEinterval) && !BTConfig.forcePassiveScan) {
     pBLEScan->setActiveScan(true);
     timeBetweenActive = millis();
   } else {
@@ -756,17 +744,18 @@ void BLEconnect() {
 void stopProcessing() {
   ProcessLock = true;
   // We stop the scan
+  Log.notice(F("Stopping BLE scan" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
   if (pBLEScan->isScanning()) {
     pBLEScan->stop();
   }
+  Log.notice(F("Stopping BLE tasks" CR));
   //Suspending, deleting tasks and stopping BT to free memory
   vTaskSuspend(xCoreTaskHandle);
   vTaskDelete(xCoreTaskHandle);
   vTaskSuspend(xProcBLETaskHandle);
   vTaskDelete(xProcBLETaskHandle);
-  if (BLEDevice::getInitialized()) BLEDevice::deinit(true);
-  Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
+  Log.notice(F("BLE gateway stopped %T, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
@@ -787,7 +776,7 @@ void coreTask(void* pvParameters) {
             timeBetweenConnect = millis();
             BLEconnect();
           }
-          dumpDevices();
+          //dumpDevices();
           Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
           xSemaphoreGive(semaphoreBLEOperation);
         } else {
@@ -901,6 +890,7 @@ void setupBT() {
   Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
   Log.notice(F("Presence Away Timer: %d" CR), BTConfig.presenceAwayTimer);
   Log.notice(F("Moving Timer: %d" CR), BTConfig.movingTimer);
+  Log.notice(F("Force passive scan: %T" CR), BTConfig.forcePassiveScan);
 
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
 
@@ -936,7 +926,7 @@ boolean valid_service_data(const char* data, int size) {
 void launchBTDiscovery(bool overrideDiscovery) {
   if (!overrideDiscovery && newDevices == 0)
     return;
-  if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdFALSE) {
+  if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
   }
@@ -1136,7 +1126,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
     // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Not a sensor device filtered" CR));
       return;
@@ -1152,7 +1142,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
       BLEdata["mac"] = BLEdata["id"];
       BLEdata["id"] = BLEdata["uuid"];
     }
-    enqueueJsonObject(BLEdata);
+    handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
   } else {
     Log.notice(F("Low rssi, device filtered" CR));
     return;
@@ -1298,7 +1288,7 @@ void immediateBTAction(void* pvParameters) {
       BLEdata["id"] = BLEactions.back().addr;
       BLEdata["success"] = false;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      enqueueJsonObject(BLEdata);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
       BLEactions.pop_back();
       ProcessLock = false;
     }
@@ -1397,8 +1387,8 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     WorBupdated |= updateWorB(BTdata, false);
 
     if (WorBupdated) {
-      if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(1000)) == pdTRUE) {
-        dumpDevices();
+      if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdTRUE) {
+        //dumpDevices();
         xSemaphoreGive(semaphoreCreateOrUpdateDevice);
       }
     }
