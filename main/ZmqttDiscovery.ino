@@ -585,7 +585,7 @@ void pubMqttDiscovery() {
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat voltage", (char*)getUniqueId("m5batvoltage", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.m5batvoltage }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "voltage", "{{ value_json.m5batvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
@@ -594,7 +594,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Bat current", (char*)getUniqueId("m5batcurrent", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.m5batcurrent }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "current", "{{ value_json.m5batcurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
@@ -603,7 +603,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Vin voltage", (char*)getUniqueId("m5vinvoltage", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.m5vinvoltage }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "voltage", "{{ value_json.m5vinvoltage }}", //set availability_topic,device_class,value_template,
                   "", "", "V", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
@@ -612,7 +612,7 @@ void pubMqttDiscovery() {
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Vin current", (char*)getUniqueId("m5vincurrent", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.m5vincurrent }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "current", "{{ value_json.m5vincurrent }}", //set availability_topic,device_class,value_template,
                   "", "", "A", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
@@ -623,7 +623,7 @@ void pubMqttDiscovery() {
 #    ifdef ZboardM5STACK
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Batt level", (char*)getUniqueId("m5battlevel", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
+                  will_Topic, "battery", "{{ value_json.m5battlevel }}", //set availability_topic,device_class,value_template,
                   "", "", "%", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a child device, command topic
@@ -652,7 +652,7 @@ void pubMqttDiscovery() {
 #  endif
   createDiscovery("button", //set Type
                   will_Topic, "SYS: Restart gateway", (char*)getUniqueId("restart", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "", //set availability_topic,device_class,value_template,
+                  will_Topic, "restart", "", //set availability_topic,device_class,value_template,
                   "{\"cmd\":\"restart\"}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
@@ -682,7 +682,7 @@ void pubMqttDiscovery() {
   Log.trace(F("bme280Discovery" CR));
   char* BMEsensor[BMEparametersCount][8] = {
       {"sensor", "temp", "bme", "temperature", jsonTempc, "", "", "°C"},
-      {"sensor", "pa", "bme", "", jsonPa, "", "", "hPa"},
+      {"sensor", "pa", "bme", "pressure", jsonPa, "", "", "hPa"},
       {"sensor", "hum", "bme", "humidity", jsonHum, "", "", "%"},
       {"sensor", "altim", "bme", "", jsonAltim, "", "", "m"},
       {"sensor", "altift", "bme", "", jsonAltif, "", "", "ft"}
@@ -802,8 +802,8 @@ void pubMqttDiscovery() {
   Log.trace(F("BH1750Discovery" CR));
   char* BH1750sensor[BH1750parametersCount][8] = {
       {"sensor", "lux", "BH1750", "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "ftCd", "BH1750", "", jsonFtcd, "", "", ""},
-      {"sensor", "wattsm2", "BH1750", "", jsonWm2, "", "", "wm²"}
+      {"sensor", "ftCd", "BH1750", "irradiance", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "BH1750", "irradiance", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -824,8 +824,8 @@ void pubMqttDiscovery() {
 #    define MQ2parametersCount 2
   Log.trace(F("MQ2Discovery" CR));
   char* MQ2sensor[MQ2parametersCount][8] = {
-      {"sensor", "gas", "MQ2", "", jsonVal, "", "", "ppm"},
-      {"binary_sensor", "MQ2", "", "", jsonPresence, "true", "false", ""}
+      {"sensor", "gas", "MQ2", "gas", jsonVal, "", "", "ppm"},
+      {"binary_sensor", "MQ2", "", "gas", jsonPresence, "true", "false", ""}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -846,8 +846,8 @@ void pubMqttDiscovery() {
   Log.trace(F("TEMT6000Discovery" CR));
   char* TEMT6000sensor[TEMT6000parametersCount][8] = {
       {"sensor", "lux", "TEMT6000", "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "ftcd", "TEMT6000", "", jsonFtcd, "", "", ""},
-      {"sensor", "wattsm2", "TEMT6000", "", jsonWm2, "", "", "wm²"}
+      {"sensor", "ftcd", "TEMT6000", "irradiance", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "TEMT6000", "irradiance", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -869,8 +869,8 @@ void pubMqttDiscovery() {
   Log.trace(F("TSL2561Discovery" CR));
   char* TSL2561sensor[TSL2561parametersCount][8] = {
       {"sensor", "lux", "TSL2561", "illuminance", jsonLux, "", "", "lx"},
-      {"sensor", "ftcd", "TSL2561", "", jsonFtcd, "", "", ""},
-      {"sensor", "wattsm2", "TSL2561", "", jsonWm2, "", "", "wm²"}
+      {"sensor", "ftcd", "TSL2561", "irradiance", jsonFtcd, "", "", ""},
+      {"sensor", "wattsm2", "TSL2561", "irradiance", jsonWm2, "", "", "wm²"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -889,7 +889,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZsensorHCSR501
   Log.trace(F("HCSR501Discovery" CR));
-  char* HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "", jsonPresence, "true", "false", ""};
+  char* HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "motion", jsonPresence, "true", "false", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   //trc(HCSR501sensor[1]);
@@ -923,9 +923,9 @@ void pubMqttDiscovery() {
 #    define INA226parametersCount 3
   Log.trace(F("INA226Discovery" CR));
   char* INA226sensor[INA226parametersCount][8] = {
-      {"sensor", "volt", "INA226", "", jsonVolt, "", "", "V"},
-      {"sensor", "current", "INA226", "", jsonCurrent, "", "", "A"},
-      {"sensor", "power", "INA226", "", jsonPower, "", "", "W"}
+      {"sensor", "volt", "INA226", "voltage", jsonVolt, "", "", "V"},
+      {"sensor", "current", "INA226", "current", jsonCurrent, "", "", "A"},
+      {"sensor", "power", "INA226", "power", jsonPower, "", "", "W"}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
