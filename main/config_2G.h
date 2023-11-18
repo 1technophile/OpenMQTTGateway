@@ -28,32 +28,34 @@
 
 extern void setup2G();
 extern bool _2GtoMQTT();
-extern void MQTTto2G(char * topicOri, char * datacallback);
-extern void MQTTto2G(char * topicOri, JsonObject& SMSdata);
+extern void MQTTto2G(char* topicOri, char* datacallback);
+extern void MQTTto2G(char* topicOri, JsonObject& SMSdata);
 /*-------------------2G topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTto2G  Base_Topic Gateway_Name "/commands/MQTTto2G"
-#define subject2GtoMQTT  Base_Topic Gateway_Name "/2GtoMQTT"
-#define subjectGTW2GtoMQTT  Base_Topic Gateway_Name "/2GtoMQTT"
-#define _2GPhoneKey "PHO_" // phone number define the phone number to send the SMS MQTT->2G
+#define subjectMQTTto2G    "/commands/MQTTto2G"
+#define subject2GtoMQTT    "/2GtoMQTT"
+#define subjectGTW2GtoMQTT "/2GtoMQTT"
+#define _2GPhoneKey        "PHO_" // phone number define the phone number to send the SMS MQTT->2G
 
 #define _2G_MODULE_BAUDRATE 9600
-#define _2G_MIN_SIGNAL 30
-#define _2G_MAX_SIGNAL 1000
+#define _2G_MIN_SIGNAL      30
+#define _2G_MAX_SIGNAL      1000
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifdef ESP8266
-  #define _2G_TX_PIN D6 //D6 to A6 RX, 
-  #define _2G_RX_PIN D7 //D7 to A6 TX
-  #define _2G_PWR_PIN D5 // connect a MOSFET to power on and off your A6/7 module
-#elif defined(ESP32)
-  #define _2G_TX_PIN 16 //D16 to A6 RX, 
-  #define _2G_RX_PIN 17 //D17 to A6 TX
-  #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
-#else
-  #define _2G_TX_PIN 6 //D6 to A6 RX, 
-  #define _2G_RX_PIN 7 //D7 to A6 TX
-  #define _2G_PWR_PIN 5 // connect a MOSFET to power on and off your A6/7 module
+#if !defined(_2G_TX_GPIO) || !defined(_2G_RX_GPIO) || !defined(_2G_PWR_GPIO)
+#  ifdef ESP8266
+#    define _2G_TX_GPIO  D6 //D6 to A6 RX,
+#    define _2G_RX_GPIO  D7 //D7 to A6 TX
+#    define _2G_PWR_GPIO D5 // connect a MOSFET to power on and off your A6/7 module
+#  elif defined(ESP32)
+#    define _2G_TX_GPIO  16 //D16 to A6 RX,
+#    define _2G_RX_GPIO  17 //D17 to A6 TX
+#    define _2G_PWR_GPIO 5 // connect a MOSFET to power on and off your A6/7 module
+#  else
+#    define _2G_TX_GPIO  6 //D6 to A6 RX,
+#    define _2G_RX_GPIO  7 //D7 to A6 TX
+#    define _2G_PWR_GPIO 5 // connect a MOSFET to power on and off your A6/7 module
+#  endif
 #endif
 
 #endif

@@ -29,59 +29,89 @@
 #include "User_config.h"
 
 #ifdef ZsensorGPIOInput
-
+#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
+unsigned long resetTime = 0;
+#  endif
 unsigned long lastDebounceTime = 0;
-int InputState = 3;             // Set to 3 so that it reads on startup
-int lastInputState = 3; 
-
+int InputState = 3; // Set to 3 so that it reads on startup
+int previousInputState = 3;
 
 void setupGPIOInput() {
-  pinMode(GPIOInput_PIN, INPUT_PULLUP);     // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
+  Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO);
+  pinMode(INPUT_GPIO, GPIO_INPUT_TYPE); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 }
 
-void MeasureGPIOInput(){
-  int reading = digitalRead(GPIOInput_PIN);
+void MeasureGPIOInput() {
+  int reading = digitalRead(INPUT_GPIO);
 
   // check to see if you just pressed the button
   // (i.e. the input went from LOW to HIGH), and you've waited long enough
   // since the last press to ignore any noise:
 
   // If the switch changed, due to noise or pressing:
-  if (reading != lastInputState) {
+  if (reading != previousInputState) {
     // reset the debouncing timer
     lastDebounceTime = millis();
-    
   }
 
   if ((millis() - lastDebounceTime) > GPIOInputDebounceDelay) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
-  #if defined(ESP8266) || defined(ESP32) 
+#  if defined(ESP8266) || defined(ESP32)
     yield();
-  #endif
+#  endif
+#  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO && !defined(ESPWifiManualSetup)
+    if (reading == LOW) {
+      if (resetTime == 0) {
+        resetTime = millis();
+      } else if ((millis() - resetTime) > 3000) {
+        Log.trace(F("Button Held" CR));
+        InfoIndicatorOFF();
+        SendReceiveIndicatorOFF();
+// Switching off the relay during reset or failsafe operations
+#    ifdef ZactuatorONOFF
+        uint8_t level = digitalRead(ACTUATOR_ONOFF_GPIO);
+        if (level == ACTUATOR_ON) {
+          ActuatorTrigger();
+        }
+#    endif
+        Log.notice(F("Erasing ESP Config, restarting" CR));
+        setup_wifimanager(true);
+      }
+    } else {
+      resetTime = 0;
+    }
+#  endif
     // if the Input state has changed:
     if (reading != InputState) {
-      InputState = reading;
-      trc(F("Creating GPIOInput buffer"));
-      const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
-      StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-      JsonObject& GPIOdata = jsonBuffer.createObject();
+      Log.trace(F("Creating GPIOInput buffer" CR));
+      StaticJsonDocument<JSON_MSG_BUFFER> GPIOdataBuffer;
+      JsonObject GPIOdata = GPIOdataBuffer.to<JsonObject>();
       if (InputState == HIGH) {
-        trc(F("GPIO HIGH"));
-        pub(subjectGPIOInputtoMQTT,"HIGH");
-        GPIOdata.set("gpio", "HIGH");
+        GPIOdata["gpio"] = "HIGH";
       }
       if (InputState == LOW) {
-        trc(F("GPIO LOW"));
-        GPIOdata.set("gpio","LOW");
-        pub(subjectGPIOInputtoMQTT,"LOW");
+        GPIOdata["gpio"] = "LOW";
       }
-      if(GPIOdata.size()>0) pub(subjectGPIOInputtoMQTT,GPIOdata);
+      GPIOdata["origin"] = subjectGPIOInputtoMQTT;
+      enqueueJsonObject(GPIOdata);
+
+#  if defined(ZactuatorONOFF) && defined(ACTUATOR_TRIGGER)
+      //Trigger the actuator if we are not at startup
+      if (InputState != 3) {
+#    if defined(ACTUATOR_BUTTON_TRIGGER_LEVEL)
+        if (InputState == ACTUATOR_BUTTON_TRIGGER_LEVEL)
+          ActuatorTrigger(); // Button press trigger
+#    else
+        ActuatorTrigger(); // Switch trigger
+#    endif
+      }
+#  endif
+      InputState = reading;
     }
   }
 
-  // save the reading. Next time through the loop, it'll be the lastInputState:
-  lastInputState = reading;
- 
+  // save the reading. Next time through the loop, it'll be the previousInputState:
+  previousInputState = reading;
 }
 #endif

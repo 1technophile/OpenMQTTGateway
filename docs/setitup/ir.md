@@ -2,11 +2,11 @@
 ## Compatible parts
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|IR diode|Emitting|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|IR receiver|Receiving|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|IR diode|Emitting|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|IR receiver|Receiving|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 |transistor 2N2222|Amplify uC signal for the IR diode|-|
-|330 ohms resistor|-|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
-|220 ohms resistor|limit current to LED|[compatible parts list](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)|
+|330 ohms resistor|-|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|220 ohms resistor|limit current to LED|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
 
 The IR setup can work with bc547 and a 4x3 LED-Matrix.
 
@@ -27,3 +27,6 @@ Connect the Emitter and Receiver to a 5V supply source, and the ground of your s
 
 ## ESP32 Hardware setup
 ![IR](../img/OpenMQTTgateway_ESP32_Addon_IR.png)
+
+## Credits
+This gateway exists thanks to the work done on [IRRemote](https://github.com/z3t0/Arduino-IRremote) and [IRremoteESP8266](https://github.com/crankyoldgit/IRremoteESP8266) libraries. Thanks for the works of contributors and especially [@crankyoldgit](https://github.com/crankyoldgit) for its active contributions.

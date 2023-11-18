@@ -28,39 +28,39 @@
 #define config_SRFB_h
 
 extern void setupSRFB();
-extern bool SRFBtoMQTT();  
-extern void MQTTtoSRFB(char * topicOri, char * datacallback);
-extern void MQTTtoSRFB(char * topicOri, JsonObject& RFdata);
+extern bool SRFBtoMQTT();
+extern void MQTTtoSRFB(char* topicOri, char* datacallback);
+extern void MQTTtoSRFB(char* topicOri, JsonObject& RFdata);
 /*-------------------RF topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
-#define subjectMQTTtoSRFB  Base_Topic Gateway_Name "/commands/MQTTtoSRFB"
-#define subjectMQTTtoSRFBRaw  Base_Topic Gateway_Name "/commands/MQTTtoSRFB/Raw"
-#define subjectSRFBtoMQTT  Base_Topic Gateway_Name "/SRFBtoMQTT"
-#define subjectGTWSRFBtoMQTT  Base_Topic Gateway_Name "/SRFBtoMQTT"
-#define SRFBRptKey "RPT_"
+#define subjectMQTTtoSRFB      "/commands/MQTTtoSRFB"
+#define subjectMQTTtoSRFBRaw   "/commands/MQTTtoSRFB/Raw"
+#define subjectSRFBtoMQTT      "/SRFBtoMQTT"
+#define subjectGTWSRFBtoMQTT   "/SRFBtoMQTT"
+#define SRFBRptKey             "RPT_"
 #define SRFBmaxipulselengthKey "Thigh_"
 #define SRFBminipulselengthKey "Tlow_"
-#define SRFBsyncKey "Tsyn_"
+#define SRFBsyncKey            "Tsyn_"
 
-#define repeatSRFBwMQTT false // do we repeat a received signal by using mqtt with Sonoff RF Bridge
+#define repeatSRFBwMQTT false // do we repeat a received signal by using MQTT with Sonoff RF Bridge
 
 // -----------------------------------------------------------------------------
 // RFBRIDGE
 // -----------------------------------------------------------------------------
 
-#define RF_SEND_TIMES           4               // How many times to send the message
-#define RF_SEND_DELAY           500             // Interval between sendings in ms
-#define RF_RECEIVE_DELAY        500             // Interval between recieving in ms (avoid debouncing)
+#define RF_SEND_TIMES    4 // How many times to send the message
+#define RF_SEND_DELAY    500 // Interval between sending in ms
+#define RF_RECEIVE_DELAY 500 // Interval between receiving in ms (avoid debouncing)
 
 // -----------------------------------------------------------------------------
 // DEFINITIONS
 // -----------------------------------------------------------------------------
 
-#define RF_MESSAGE_SIZE     9
-#define RF_CODE_START       0xAA
-#define RF_CODE_ACK         0xA0
-#define RF_CODE_RFIN        0xA4
-#define RF_CODE_RFOUT       0xA5
-#define RF_CODE_STOP        0x55
+#define RF_MESSAGE_SIZE 9
+#define RF_CODE_START   0xAA
+#define RF_CODE_ACK     0xA0
+#define RF_CODE_RFIN    0xA4
+#define RF_CODE_RFOUT   0xA5
+#define RF_CODE_STOP    0x55
 
 #endif

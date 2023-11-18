@@ -32,33 +32,32 @@
 
 #ifdef ZgatewayRFM69
 
-#include <RFM69.h>                //https://www.github.com/lowpowerlab/rfm69
-#include <SPI.h>
-#include <EEPROM.h>
+#  include <EEPROM.h>
+#  include <RFM69.h> //https://www.github.com/lowpowerlab/rfm69
 
 char RadioConfig[128];
 
 // vvvvvvvvv Global Configuration vvvvvvvvvvv
 
 struct _GLOBAL_CONFIG {
-  uint32_t    checksum;
-  char        rfmapname[32];
-  char        encryptkey[16+1];
-  uint8_t     networkid;
-  uint8_t     nodeid;
-  uint8_t     powerlevel; // bits 0..4 power leve, bit 7 RFM69HCW 1=true
-  uint8_t     rfmfrequency;
+  uint32_t checksum;
+  char rfmapname[32];
+  char encryptkey[16 + 1];
+  uint8_t networkid;
+  uint8_t nodeid;
+  uint8_t powerlevel; // bits 0..4 power leve, bit 7 RFM69HCW 1=true
+  uint8_t rfmfrequency;
 };
 
-#define GC_POWER_LEVEL    (pGC->powerlevel & 0x1F)
-#define GC_IS_RFM69HCW  ((pGC->powerlevel & 0x80) != 0)
-#define SELECTED_FREQ(f)  ((pGC->rfmfrequency==f)?"selected":"")
+#  define GC_POWER_LEVEL   (pGC->powerlevel & 0x1F)
+#  define GC_IS_RFM69HCW   ((pGC->powerlevel & 0x80) != 0)
+#  define SELECTED_FREQ(f) ((pGC->rfmfrequency == f) ? "selected" : "")
 
-struct _GLOBAL_CONFIG *pGC;
+struct _GLOBAL_CONFIG* pGC;
 
 // vvvvvvvvv Global Configuration vvvvvvvvvvv
 uint32_t gc_checksum() {
-  uint8_t *p = (uint8_t *)pGC;
+  uint8_t* p = (uint8_t*)pGC;
   uint32_t checksum = 0;
   p += sizeof(pGC->checksum);
   for (size_t i = 0; i < (sizeof(*pGC) - 4); i++) {
@@ -67,53 +66,52 @@ uint32_t gc_checksum() {
   return checksum;
 }
 
-#if defined(ESP8266) || defined(ESP32)
+#  if defined(ESP8266) || defined(ESP32)
 void eeprom_setup() {
   EEPROM.begin(4096);
-  pGC = (struct _GLOBAL_CONFIG *)EEPROM.getDataPtr();
+  pGC = (struct _GLOBAL_CONFIG*)EEPROM.getDataPtr();
   // if checksum bad init GC else use GC values
   if (gc_checksum() != pGC->checksum) {
-    trc(F("Factory reset"));
+    Log.trace(F("Factory reset" CR));
     memset(pGC, 0, sizeof(*pGC));
     strcpy_P(pGC->encryptkey, ENCRYPTKEY);
     strcpy_P(pGC->rfmapname, RFM69AP_NAME);
     pGC->networkid = NETWORKID;
     pGC->nodeid = NODEID;
-    pGC->powerlevel = ((IS_RFM69HCW)?0x80:0x00) | POWER_LEVEL;
+    pGC->powerlevel = ((IS_RFM69HCW) ? 0x80 : 0x00) | POWER_LEVEL;
     pGC->rfmfrequency = FREQUENCY;
     pGC->checksum = gc_checksum();
     EEPROM.commit();
   }
 }
-#endif
+#  endif
 
 RFM69 radio;
 
 void setupRFM69(void) {
-  #if defined(ESP8266) || defined(ESP32)
-    eeprom_setup();
-  #endif
+#  if defined(ESP8266) || defined(ESP32)
+  eeprom_setup();
+#  endif
   int freq;
   static const char PROGMEM JSONtemplate[] =
-    R"({"msgType":"config","freq":%d,"rfm69hcw":%d,"netid":%d,"power":%d})";
+      R"({"msgType":"config","freq":%d,"rfm69hcw":%d,"netid":%d,"power":%d})";
   char payload[128];
 
   radio = RFM69(RFM69_CS, RFM69_IRQ, GC_IS_RFM69HCW, RFM69_IRQN);
 
   // Initialize radio
-  if (!radio.initialize(pGC->rfmfrequency, pGC->nodeid, pGC->networkid))
-  {
-    trc(F("ZgatewayRFM69 initialization failed"));
-    }
+  if (!radio.initialize(pGC->rfmfrequency, pGC->nodeid, pGC->networkid)) {
+    Log.error(F("ZgatewayRFM69 initialization failed" CR));
+  }
 
   if (GC_IS_RFM69HCW) {
-    radio.setHighPower();    // Only for RFM69HCW & HW!
+    radio.setHighPower(); // Only for RFM69HCW & HW!
   }
   radio.setPowerLevel(GC_POWER_LEVEL); // power output ranges from 0 (5dBm) to 31 (20dBm)
 
-  if (pGC->encryptkey[0] != '\0') radio.encrypt(pGC->encryptkey);
+  if (pGC->encryptkey[0] != '\0')
+    radio.encrypt(pGC->encryptkey);
 
-  trc(F("ZgatewayRFM69 Listening and transmitting at"));
   switch (pGC->rfmfrequency) {
     case RF69_433MHZ:
       freq = 433;
@@ -131,109 +129,101 @@ void setupRFM69(void) {
       freq = -1;
       break;
   }
-  trc(freq);
+  Log.notice(F("ZgatewayRFM69 Listening and transmitting at: %d" CR), freq);
 
   size_t len = snprintf_P(RadioConfig, sizeof(RadioConfig), JSONtemplate,
-      freq, GC_IS_RFM69HCW, pGC->networkid, GC_POWER_LEVEL);
+                          freq, GC_IS_RFM69HCW, pGC->networkid, GC_POWER_LEVEL);
   if (len >= sizeof(RadioConfig)) {
-    trc(F("\n\n*** RFM69 config truncated ***\n"));
+    Log.trace(F("\n\n*** RFM69 config truncated ***\n" CR));
   }
 }
 
 bool RFM69toMQTT(void) {
   //check if something was received (could be an interrupt from the radio)
-  if (radio.receiveDone())
-  {
-    trc(F("Creating RFM69 buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& RFM69data = jsonBuffer.createObject();
-    uint8_t data[RF69_MAX_DATA_LEN+1]; // For the null character
+  if (radio.receiveDone()) {
+    StaticJsonDocument<JSON_MSG_BUFFER> RFM69dataBuffer;
+    JsonObject RFM69data = RFM69dataBuffer.to<JsonObject>();
+    uint8_t data[RF69_MAX_DATA_LEN + 1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;
     uint8_t DATALEN = radio.DATALEN;
     uint16_t RSSI = radio.RSSI;
 
     //save packet because it may be overwritten
-    memcpy(data, (void *)radio.DATA, DATALEN);
-    data[DATALEN] = '\0';  // Terminate the string
+    memcpy(data, (void*)radio.DATA, DATALEN);
+    data[DATALEN] = '\0'; // Terminate the string
 
     // Ack as soon as possible
     //check if sender wanted an ACK
-    if (radio.ACKRequested())
-    {
+    if (radio.ACKRequested()) {
       radio.sendACK();
     }
     //updateClients(senderId, rssi, (const char *)data);
 
-    trc(F("Data received"));
-    trc((const char *)data);
+    Log.trace(F("Data received: %s" CR), (const char*)data);
 
-    char buff[sizeof(subjectRFM69toMQTT)+4];
+    char buff[sizeof(subjectRFM69toMQTT) + 4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
-    RFM69data.set("data", (char *)data);
-    RFM69data.set("rssi", (int)radio.RSSI); 
-    RFM69data.set("senderid", (int)radio.SENDERID);
-    pub(buff,RFM69data);
+    RFM69data["data"] = (char*)data;
+    RFM69data["rssi"] = (int)radio.RSSI;
+    RFM69data["senderid"] = (int)radio.SENDERID;
+    pub(buff, RFM69data);
 
     return true;
-
   } else {
     return false;
   }
 }
 
-#ifdef simpleReceiving
-  void MQTTtoRFM69(char * topicOri, char * datacallback) {
+#  if simpleReceiving
+void MQTTtoRFM69(char* topicOri, char* datacallback) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
+    Log.trace(F("MQTTtoRFM69 data analysis" CR));
+    char data[RF69_MAX_DATA_LEN + 1];
+    memcpy(data, (void*)datacallback, RF69_MAX_DATA_LEN);
+    data[RF69_MAX_DATA_LEN] = '\0';
 
-    if(strstr(topicOri, subjectMQTTtoRFM69) != NULL){
-      trc(F("MQTTtoRFM69 data analysis"));
-      char data[RF69_MAX_DATA_LEN+1];
-      memcpy(data, (void *)datacallback, RF69_MAX_DATA_LEN);
-      data[RF69_MAX_DATA_LEN] = '\0';
-    
-      //We look into the subject to see if a special RF protocol is defined
-      String topic = topicOri;
-      int valueRCV = defaultRFM69ReceiverId; //default receiver id value
-      int pos = topic.lastIndexOf(RFM69receiverKey);
-      if (pos != -1){
-        pos = pos + +strlen(RFM69receiverKey);
-        valueRCV = (topic.substring(pos,pos + 3)).toInt();
-        trc(F("RFM69 receiver ID:"));
-        trc(valueRCV);
-      }
-      if(radio.sendWithRetry(valueRCV, data, strlen(data),10)) {
-        trc(F(" OK "));
+    //We look into the subject to see if a special RF protocol is defined
+    String topic = topicOri;
+    int valueRCV = defaultRFM69ReceiverId; //default receiver id value
+    int pos = topic.lastIndexOf(RFM69receiverKey);
+    if (pos != -1) {
+      pos = pos + +strlen(RFM69receiverKey);
+      valueRCV = (topic.substring(pos, pos + 3)).toInt();
+      Log.notice(F("RFM69 receiver ID: %d" CR), valueRCV);
+    }
+    if (radio.sendWithRetry(valueRCV, data, strlen(data), 10)) {
+      Log.notice(F(" OK " CR));
+      // Acknowledgement to the GTWRF topic
+      char buff[sizeof(subjectGTWRFM69toMQTT) + 4];
+      sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
+      pub(buff, data);
+    } else {
+      Log.error(F("RFM69 sending failed" CR));
+    }
+  }
+}
+#  endif
+#  if jsonReceiving
+void MQTTtoRFM69(char* topicOri, JsonObject& RFM69data) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
+    const char* data = RFM69data["data"];
+    Log.trace(F("MQTTtoRFM69 json data analysis" CR));
+    if (data) {
+      Log.trace(F("MQTTtoRFM69 data ok" CR));
+      int valueRCV = RFM69data["receiverid"] | defaultRFM69ReceiverId; //default receiver id value
+      Log.notice(F("RFM69 receiver ID: %d" CR), valueRCV);
+      if (radio.sendWithRetry(valueRCV, data, strlen(data), 10)) {
+        Log.notice(F(" OK " CR));
         // Acknowledgement to the GTWRF topic
-        char buff[sizeof(subjectGTWRFM69toMQTT)+4];
-        sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
-        pub(buff, data);
+        RFM69data["origin"] = subjectGTWRFM69toMQTT;
+        enqueueJsonObject(RFM69data);
       } else {
-        trc(F("RFM69 sending failed"));
+        Log.error(F("MQTTtoRFM69 sending failed" CR));
       }
+    } else {
+      Log.error(F("MQTTtoRFM69 failed json read" CR));
     }
   }
-#endif
-#ifdef jsonReceiving
-  void MQTTtoRFM69(char * topicOri, JsonObject& RFM69data) {
-  
-   if (strcmp(topicOri,subjectMQTTtoRFM69) == 0){
-      const char * data = RFM69data["data"];
-      trc(F("MQTTtoRFM69 json data analysis"));
-      if(data){
-        trc(F("MQTTtoRFM69 data ok"));
-        int valueRCV = RFM69data["receiverid"]| defaultRFM69ReceiverId; //default receiver id value
-        trc(F("RFM69 receiver ID:"));
-        trc(valueRCV);
-        if(radio.sendWithRetry(valueRCV, data, strlen(data),10)) {
-          trc(F(" OK "));
-          // Acknowledgement to the GTWRF topic
-          pub(subjectGTWRFM69toMQTT, RFM69data);// we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-        } else {
-          trc(F("MQTTtoRFM69 sending failed"));
-        }
-      }else{
-        trc(F("MQTTtoRFM69 failed json read"));
-      }
-    }
-  }
-#endif
+}
+#  endif
 #endif

@@ -27,19 +27,19 @@
 #define config_RFM69_h
 
 extern void setupRFM69();
-extern bool RFM69toMQTT();  
-extern void MQTTtoRFM69(char * topicOri, char * datacallback);
-extern void MQTTtoRFM69(char * topicOri, JsonObject& RFdata);
+extern bool RFM69toMQTT();
+extern void MQTTtoRFM69(char* topicOri, char* datacallback);
+extern void MQTTtoRFM69(char* topicOri, JsonObject& RFdata);
 /*----------------------RFM69 topics & parameters -------------------------*/
 // Topic where the message from RFM69 will be published by the gateway,
 // appended with the nodeID of the sender
-#define subjectRFM69toMQTT  Base_Topic Gateway_Name "/RFM69toMQTT"
+#define subjectRFM69toMQTT "/RFM69toMQTT"
 
 // Topic subscribed by the gateway. Messages received will be sent to RFM69
-#define subjectMQTTtoRFM69  Base_Topic Gateway_Name "/commands/MQTTtoRFM69"
-#define RFM69receiverKey "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
+#define subjectMQTTtoRFM69 "/commands/MQTTtoRFM69"
+#define RFM69receiverKey   "RCV_" // receiver id will be defined if a subject contains RFM69receiverKey followed by a value of 3 digits
 // On reception of an ack from RFM69, the message that has been sent is published here
-#define subjectGTWRFM69toMQTT  Base_Topic Gateway_Name "/RFM69toMQTT/acked"
+#define subjectGTWRFM69toMQTT  "/RFM69toMQTT/acked"
 #define defaultRFM69ReceiverId 99
 
 // Default values
@@ -47,33 +47,33 @@ const char PROGMEM ENCRYPTKEY[] = "sampleEncryptKey";
 const char PROGMEM MDNS_NAME[] = "rfm69gw1";
 const char PROGMEM MQTT_BROKER[] = "raspi2";
 const char PROGMEM RFM69AP_NAME[] = "RFM69-AP";
-#define NETWORKID     200  //the same on all nodes that talk to each other
-#define NODEID        10
+#define NETWORKID 200 //the same on all nodes that talk to each other
+#define NODEID    10
 
 //Match frequency to the hardware version of the radio
-#define FREQUENCY     RF69_433MHZ
+#define FREQUENCY RF69_433MHZ
 //#define FREQUENCY     RF69_868MHZ
 //#define FREQUENCY      RF69_915MHZ
-#define IS_RFM69HCW    true // set to 'true' if you are using an RFM69HCW module
-#define POWER_LEVEL    31
+#define IS_RFM69HCW true // set to 'true' if you are using an RFM69HCW module
+#define POWER_LEVEL 31
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266)
-  #define RFM69_CS      D1
-  #define RFM69_IRQ     D8   // GPIO15/D8
-  #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
-  #define RFM69_RST     D4   // GPIO02/D4
+#  define RFM69_CS   D1
+#  define RFM69_IRQ  D8 // GPIO15/D8
+#  define RFM69_IRQN digitalPinToInterrupt(RFM69_IRQ)
+#  define RFM69_RST  D4 // GPIO02/D4
 #elif defined(ESP32)
-  #define RFM69_CS      1
-  #define RFM69_IRQ     8   // GPIO15/D8
-  #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
-  #define RFM69_RST     4   // GPIO02/D4
+#  define RFM69_CS   1
+#  define RFM69_IRQ  8 // GPIO15/D8
+#  define RFM69_IRQN digitalPinToInterrupt(RFM69_IRQ)
+#  define RFM69_RST  4 // GPIO02/D4
 #else
-  //RFM69 not tested with arduino
-  #define RFM69_CS      10
-  #define RFM69_IRQ     0
-  #define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ)
-  #define RFM69_RST     9
+//RFM69 not tested with arduino
+#  define RFM69_CS   10
+#  define RFM69_IRQ  0
+#  define RFM69_IRQN digitalPinToInterrupt(RFM69_IRQ)
+#  define RFM69_RST  9
 #endif
 
 #endif

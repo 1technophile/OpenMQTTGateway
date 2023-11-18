@@ -27,26 +27,65 @@
 #define config_ONOFF_h
 
 extern void setupONOFF();
-extern void MQTTtoONOFF(char * topicOri, char * datacallback);
-extern void MQTTtoONOFF(char * topicOri, JsonObject& RFdata);
+extern void MQTTtoONOFF(char* topicOri, char* datacallback);
+extern void MQTTtoONOFF(char* topicOri, JsonObject& RFdata);
+extern void stateONOFFMeasures();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectMQTTtoONOFF  Base_Topic Gateway_Name "/commands/MQTTtoONOFF"
-#define subjectGTWONOFFtoMQTT  Base_Topic Gateway_Name "/ONOFFtoMQTT"
+#define subjectMQTTtoONOFF    "/commands/MQTTtoONOFF"
+#define subjectGTWONOFFtoMQTT "/ONOFFtoMQTT"
+#define subjectMQTTtoONOFFset "/commands/MQTTtoONOFF/config"
 
-#define ONKey "setON"
+#define ONKey  "setON"
 #define OFFKey "setOFF"
 
+#ifndef USE_LAST_STATE_ON_RESTART
+#  define USE_LAST_STATE_ON_RESTART true // Define if we use the last state upon a power restart
+#endif
+#ifndef ACTUATOR_ON
+#  define ACTUATOR_ON LOW // LOW or HIGH, set to the output level of the GPIO pin to turn the actuator on.
+#endif
+//#  define ACTUATOR_ONOFF_DEFAULT !ACTUATOR_ON // ACTUATOR_ON or !ACTUATOR_ON, set to the state desired on reset.
+#ifndef ACTUATOR_TRIGGER
+#  define ACTUATOR_TRIGGER false // false or true, enable to control an actuator directly from the board switch (default behavior if true), or by button if ACTUATOR_BUTTON_TRIGGER_LEVEL is also defined
+#endif
+#ifndef ACTUATOR_BUTTON_TRIGGER_LEVEL
+//#  define ACTUATOR_BUTTON_TRIGGER_LEVEL LOW // 0 or 1, set to the level which to detect a button press to change the actuator state.
+#endif
+#ifndef MAX_TEMP_ACTUATOR
+//#  define MAX_TEMP_ACTUATOR         70.0 // Temperature that will trigger the relay to go OFF
+#endif
+#ifndef MAX_CURRENT_ACTUATOR
+//#  define MAX_CURRENT_ACTUATOR         15.0 // Current that will trigger the relay to go OFF
+#endif
+
+#ifndef TimeBetweenReadingIntTemp
+#  define TimeBetweenReadingIntTemp 5000 // Time interval between internal temp measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
+#endif
+#ifndef TimeBetweenReadingCurrent
+#  define TimeBetweenReadingCurrent 1000 // Time interval between internal current measurement to switch off the relay if MAX_TEMP_ACTUATOR is reached
+#endif
 /*-------------------PIN DEFINITIONS----------------------*/
 // default pin, if not set into the MQTT json
-#ifndef ACTUATOR_ONOFF_PIN
-    #ifdef ESP8266
-            #define ACTUATOR_ONOFF_PIN 15 //12 for sonoff basic relay
-    #elif ESP32
-        #define ACTUATOR_ONOFF_PIN 15 
-    #else
-        #define ACTUATOR_ONOFF_PIN 13
-    #endif
+#ifndef ACTUATOR_ONOFF_GPIO
+#  ifdef ESP8266
+#    define ACTUATOR_ONOFF_GPIO 15 //12 for sonoff basic relay
+#  elif ESP32
+#    define ACTUATOR_ONOFF_GPIO 15
+#  else
+#    define ACTUATOR_ONOFF_GPIO 13
+#  endif
+#endif
+
+#ifdef ESP32
+/*----------------CONFIGURABLE PARAMETERS-----------------*/
+struct ONOFFConfig_s {
+  bool ONOFFState; // Recorded actuator state
+  bool useLastStateOnStart; // Do we use the recorded actuator state on start
+};
+
+// Global struct to store live ONOFF configuration data
+extern ONOFFConfig_s ONOFFConfig;
 #endif
 
 #endif

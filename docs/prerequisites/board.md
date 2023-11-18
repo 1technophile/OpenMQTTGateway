@@ -1,37 +1,36 @@
-# Board
+# Boards
+
 OpenMQTTGateway is not closed to one board or type of board, by using the power of the Arduino framework and libraries that are cross compatibles it let you many choice of hardware, from an Arduino UNO to an ESP32.
 
-You can take a look to the components sheet to have a view of [supported boards and components](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1323184277)
+You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported boards](https://compatible.openmqttgateway.com/index.php/boards/).
 
-Moreover it supports also sensors; DHT, HC SR501, ADC, I2C bus, INA226, TSL2561
-Or can actutate things (LED chipsets, relays).
+Moreover the gateways capacities can be extended with sensors; DHT, HC SR501, ADC, I2C bus, INA226, MQ2, TEMT6000, TSL2561, BME280/BMP280, HTU21D, AHTx0, DS1820
+or actuators; LED, relays, PWM.
 
-Here is some information to find the board suitable for your need, you have the choice between wifi, ethernet and off the shelves devices:
+::: tip Running on a computer
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can use [Theengs Gateway](https://gateway.theengs.io/).
+:::
 
-Off the shelves wifi
-* SONOFF RF Bridge
-* Sonoff RFR3
-* Sonoff Basic
-* Wifi RF Gateway
+::: tip Running on a tablet or phone
+If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
+:::
 
-![boards](../img/OpenMQTTGateway_boards_sonoff.png)
+[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerfull BLE to MQTT gateway for over [80 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
 
-Wifi/Ethernet:
-* ESP8266
-* ESP32
-* Arduino Mega with an ethernet shield
-* Arduino Uno with an ethernet shield
+[![Theengs bridge view](../img/Theengs-Bridge-ble-gateway.png)](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna)
 
-![boards](../img/OpenMQTTGateway_boards.png)
+[Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
+* BLE to MQTT gateway, tens of Bluetooth devices supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* Smart plug that can be controlled remotely,
+* Energy consumption monitoring,
+* Presence detection (beta).
 
-Arduino + ethernet shields enables faster responsiveness of the gateway and a reliable connection. 
+[![Theengs plug view](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
-The ESP platform is more flexible in term of installation (no need of an ethernet cable) but is less reliable in term of communication. Thanks to its higher memory and processing power it has more modules or possibilities compared to arduino Uno & Mega.
+Support the project by purchasing the [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) or the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+The plug is available in North America only, other regions are planned.
 
 Choosing your board depends heavily on the technologies you want to use with it.
-To have a good overview of the compatibilities per board you can refer to [this sheet](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=1098440301).
+To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).
 
-The choice between these boards will depend on your knowledge and your requirements in terms of reliability, situation, modules wanted and devices you already have.
-
-
-
+The choice between these boards will depend on your knowledge and your requirements in terms of reliability, situation, modules wanted and devices you already have. The table below present those (auto-generated)

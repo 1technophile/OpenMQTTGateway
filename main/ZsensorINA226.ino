@@ -35,58 +35,46 @@
 #include "User_config.h"
 
 #ifdef ZsensorINA226
-#include <Wire.h>
+#  include <Wire.h>
 
-float rShunt=0.1; // Shunt Widerstand festlegen, hier 0.1 Ohm
+float rShunt = 0.1; // Shunt Widerstand festlegen, hier 0.1 Ohm
 const int INA226_ADDR = 0x40; // A0 und A1 auf GND > Adresse 40 Hex auf Seite 18 im Datenblatt
 
 //Time used to wait for an interval before resending temp and hum
 unsigned long timeINA226 = 0;
 
 void setupINA226() {
-  Wire.begin();   
+  Wire.begin();
   // Configuration Register Standard Einstellung 0x4127, hier aber 16 Werte Mitteln > 0x4427
   writeRegister(0x00, 0x4427); // 1.1ms Volt und Strom A/D-Wandlung, Shunt und VBus continous
 }
 
-void MeasureINA226(){
-    if (millis() > (timeINA226 + TimeBetweenReadingINA226)) {//retriving value of temperature and humidity of the box from DHT every xUL
-        timeINA226 = millis();
-        trc(F("Creating INA226 buffer"));
-        StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-        JsonObject& INA226data = jsonBuffer.createObject();
-        // Topic on which we will send data
-        trc(F("Retrieving electrical data"));
-        // Bus Spannung, read-only, 16Bit, 0...40.96V max., LSB 1.25mV
-        trc(F(" Volt: "));
-        float volt = readRegister(0x02) * 0.00125; 
-        trc(volt);
-        trc(F(" V, Current: "));
-        // Seite 24: Shunt Spannung +- 81,92mV mit 16 Bit, LSB 2,5uV
-        int shuntvolt = readRegister(0x01);
-        if (shuntvolt && 0x8000) {// eine negative Zahl? Dann 2er Komplement bilden
-          shuntvolt = ~shuntvolt; // alle Bits invertieren
-          shuntvolt += 1;         // 1 dazuzählen
-          shuntvolt *= -1 ;       // negativ machen
-        }
-        float current = shuntvolt * 0.0000025 / rShunt; // * LSB / R
-        trc(current);
-        trc(F(" A, Power: "));
-        float power=abs(volt*current);
-        trc(power);
-        trc(F(" W"));
-      
-        char volt_c[7];
-        char current_c[7];
-        char power_c[7];
-        dtostrf(volt,6,3,volt_c);
-        dtostrf(current,6,3,current_c);
-        dtostrf(power,6,3,power_c);
-        INA226data.set("volt", (char *)volt_c);
-        INA226data.set("current", (char *)current_c);
-        INA226data.set("power", (char *)power_c);
-        pub(subjectINA226toMQTT,INA226data);
+void MeasureINA226() {
+  if (millis() > (timeINA226 + TimeBetweenReadingINA226)) { //retrieving value of temperature and humidity of the box from DHT every xUL
+    timeINA226 = millis();
+    Log.trace(F("Creating INA226 buffer" CR));
+    StaticJsonDocument<JSON_MSG_BUFFER> INA226dataBuffer;
+    JsonObject INA226data = INA226dataBuffer.to<JsonObject>();
+    // Topic on which we will send data
+    Log.trace(F("Retrieving electrical data" CR));
+    // Bus Spannung, read-only, 16Bit, 0...40.96V max., LSB 1.25mV
+    float volt = readRegister(0x02) * 0.00125;
+    // Seite 24: Shunt Spannung +- 81,92mV mit 16 Bit, LSB 2,5uV
+    int shuntvolt = readRegister(0x01);
+    if (shuntvolt && 0x8000) { // eine negative Zahl? Dann 2er Komplement bilden
+      shuntvolt = ~shuntvolt; // alle Bits invertieren
+      shuntvolt += 1; // 1 dazuzählen
+      shuntvolt *= -1; // negativ machen
     }
+    float current = shuntvolt * 0.0000025 / rShunt; // * LSB / R
+    float power = abs(volt * current);
+
+    INA226data["volt"] = volt;
+    INA226data["current"] = current;
+    INA226data["power"] = power;
+    INA226data["origin"] = subjectINA226toMQTT;
+    enqueueJsonObject(INA226data);
+  }
 }
 
 static void writeRegister(byte reg, word value) {
@@ -103,7 +91,7 @@ static word readRegister(byte reg) {
   Wire.write(reg);
   if (Wire.endTransmission() == 0) {
     if (Wire.requestFrom(INA226_ADDR, 2) >= 2) {
-      res  = Wire.read() * 256;
+      res = Wire.read() * 256;
       res += Wire.read();
     }
   }

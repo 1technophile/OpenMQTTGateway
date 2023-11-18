@@ -40,23 +40,23 @@
 extern void setupHCSR04();
 extern void MeasureDistance();
 
-#define HCSR04_always true // If false, the current value of the parameter is the same as previous one don't send it by MQTT
+#define HCSR04_always            true // If false, the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingHCSR04 5000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define subjectHCSR04   Base_Topic Gateway_Name "/DISTtoMQTT/sr04"
+#define subjectHCSR04 "/DISTtoMQTT/sr04"
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #if defined(ESP8266)
-  #define HCSR04_TRI_PIN D6
-  #define HCSR04_ECH_PIN D7
+#  define HCSR04_TRI_GPIO D6
+#  define HCSR04_ECH_GPIO D7
 #elif defined(ESP32)
-  #define HCSR04_TRI_PIN 16 // NOT TESTED
-  #define HCSR04_ECH_PIN 17 // NOT TESTED
+#  define HCSR04_TRI_GPIO 16 // NOT TESTED
+#  define HCSR04_ECH_GPIO 17 // NOT TESTED
 #else
-  #define HCSR04_TRI_PIN 6 // NOT TESTED
-  #define HCSR04_ECH_PIN 5 // NOT TESTED
+#  define HCSR04_TRI_GPIO 6 // NOT TESTED
+#  define HCSR04_ECH_GPIO 5 // NOT TESTED
 #endif
 
 #endif

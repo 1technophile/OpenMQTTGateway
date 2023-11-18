@@ -1,12 +1,26 @@
 # Integrate OPENHAB2
 
+## Auto discovery through home assistant convention
+
+OpenMQTTGateway support autodiscovery of things for OpenHAB 2.4, so as to do that it rely on home assistant auto discovery convention.
+So as to use the autodiscovery function you need to have:
+* The Jinga transformation addon installed
+* The Json transformation addon installed
+
+::: tip
+If you are connecting to BLE devices it is highly recommended to set `filterConnectable` to `true` in [BT configuration](../use/ble.md#advanced-filter-out-connectable-devices). Otherwise you may encounter incomplete data.
+:::
+
+The things will appear in the inbox of the paperUI, add them and links the channels. You should see them into the control panel for further usage.
+![OpenHAB integration](../img/OpenMQTTgateway_OpenHAB_Control.png)
+
 ## MQTT 2 manual setup >=Openhab2.4
-You should have a mqtt broker installed (either mosquitto or the OpenHAB2 embedded one)
+You should have an MQTT broker installed (either mosquitto or the OpenHAB2 embedded one)
 
 In paper UI
 * In bindings add the MQTT Things binding
-* Inbox > MQTT Things binding > Add manualy >MQTT Broker : configure your borker
-* Inbox > MQTT Things binding > Add manualy >Generic MQTT Thing : select your previously configured broker as a bridge and enter your thing definition (example RF plug, weather station, PIR sensor)
+* Inbox > MQTT Things binding > Add manually >MQTT Broker : configure your broker
+* Inbox > MQTT Things binding > Add manually >Generic MQTT Thing : select your previously configured broker as a bridge and enter your thing definition (example RF plug, weather station, PIR sensor)
 * Configuration > Things > "Your thing" : click on + and add one channel for each thing parameter (example for a weather station, you will have one channel for the temperature, one channel for the humidity etc..)
 * For a state channel define the MQTT topic like this:
 
@@ -25,7 +39,7 @@ In paper UI
 * Repeat for each channels and each things
 * Configuration > Things > "Your thing" : click on a channel and add 1 or several items per channel defining what you want to display in the sitemap
 or
-* Define your items in an item file like this by refering to your mqtt things channels:
+* Define your items in an item file like this by referring to your MQTT things channels:
 For a mi flora and mi jia
 
 ```java
@@ -63,7 +77,7 @@ Number lux_P		"Luminiosité plante[%.1f lux]"              {channel="mqtt:topic:
 
 * Configuration > Things > "Your thing" : click on a channel and add 1 or several switch per channel 
 or
-* Define your items in an item file like this by refering to your mqtt thing channel:
+* Define your items in an item file like this by referring to your MQTT thing channel:
 
 `Switch OMGSwitch "Prise 1" <poweroutlet> {channel="mqtt:topic:08998877:Power1"}`
 

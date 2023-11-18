@@ -27,33 +27,110 @@
 #define config_LORA_h
 
 extern void setupLORA();
-extern void LORAtoMQTT();  
-extern void MQTTtoLORA(char * topicOri, char * datacallback);
-extern void MQTTtoLORA(char * topicOri, JsonObject& RFdata);
+extern void LORAtoMQTT();
+extern void MQTTtoLORA(char* topicOri, char* datacallback);
+extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
 /*----------------------LORA topics & parameters-------------------------*/
-#define subjectLORAtoMQTT     Base_Topic Gateway_Name "/LORAtoMQTT"
-#define subjectMQTTtoLORA     Base_Topic Gateway_Name "/commands/MQTTtoLORA"
-#define subjectGTWLORAtoMQTT  Base_Topic Gateway_Name "/LORAtoMQTT"
+#define subjectLORAtoMQTT    "/LORAtoMQTT"
+#define subjectMQTTtoLORA    "/commands/MQTTtoLORA"
+#define subjectGTWLORAtoMQTT "/LORAtoMQTT"
+#define subjectMQTTtoLORAset "/commands/MQTTtoLORA/config"
 
 //Default parameters used when the parameters are not set in the json data
-#define LORA_BAND             868E6
-#define LORA_SIGNAL_BANDWIDTH 125E3
-#define LORA_TX_POWER         17
-#define LORA_SPREADING_FACTOR 7
-#define LORA_CODING_RATE      5
-#define LORA_PREAMBLE_LENGTH  8
-#define LORA_SYNC_WORD        0x12
-#define DEFAULT_CRC           true
+#ifndef LORA_BAND
+#  define LORA_BAND 868E6
+#endif
+#ifndef LORA_SIGNAL_BANDWIDTH
+#  define LORA_SIGNAL_BANDWIDTH 125E3
+#endif
+#ifndef LORA_TX_POWER
+#  define LORA_TX_POWER 14
+#endif
+#ifndef LORA_SPREADING_FACTOR
+#  define LORA_SPREADING_FACTOR 7
+#endif
+#ifndef LORA_CODING_RATE
+#  define LORA_CODING_RATE 5
+#endif
+#ifndef LORA_PREAMBLE_LENGTH
+#  define LORA_PREAMBLE_LENGTH 8
+#endif
+#ifndef LORA_SYNC_WORD
+#  define LORA_SYNC_WORD 0x12
+#endif
+#ifndef DEFAULT_CRC
+#  define DEFAULT_CRC true
+#endif
+#ifndef INVERT_IQ
+#  define INVERT_IQ false
+#endif
+#ifndef LORA_ONLY_KNOWN
+#  define LORA_ONLY_KNOWN false
+#endif
 
-#define repeatLORAwMQTT false // do we repeat a received signal by using mqtt with LORA gateway
+#define repeatLORAwMQTT false // do we repeat a received signal by using MQTT with LORA gateway
 
 /*-------------------PIN DEFINITIONS----------------------*/
+
 //TTGO LORA BOARD ESP32 PIN DEFINITION
-#define LORA_SCK     5    // GPIO5  -- SX1278's SCK
-#define LORA_MISO    19   // GPIO19 -- SX1278's MISO
-#define LORA_MOSI    27   // GPIO27 -- SX1278's MOSI
-#define LORA_SS      18   // GPIO18 -- SX1278's CS
-#define LORA_RST     14   // GPIO14 -- SX1278's RESET
-#define LORA_DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
+
+#ifndef LORA_SCK
+#  define LORA_SCK 5 // GPIO5  -- SX1278's SCK
+#endif
+
+#ifndef LORA_MISO
+#  define LORA_MISO 19 // GPIO19 -- SX1278's MISO
+#endif
+
+#ifndef LORA_MOSI
+#  define LORA_MOSI 27 // GPIO27 -- SX1278's MOSI
+#endif
+
+#ifndef LORA_SS
+#  define LORA_SS 18 // GPIO18 -- SX1278's CS
+#endif
+
+#ifndef LORA_RST
+#  define LORA_RST 14 // GPIO14 -- SX1278's RESET
+#endif
+
+#ifndef LORA_DI0
+#  define LORA_DI0 26 // GPIO26 -- SX1278's IRQ(Interrupt Request)
+#endif
+
+struct LORAConfig_s {
+  long frequency;
+  int txPower;
+  int spreadingFactor;
+  long signalBandwidth;
+  int codingRateDenominator;
+  int preambleLength;
+  byte syncWord;
+  bool crc;
+  bool invertIQ;
+  bool onlyKnown;
+};
+
+#ifdef ZmqttDiscovery
+extern void launchLORADiscovery(bool overrideDiscovery);
+// This structure stores the entities of the devices and is they have been discovered or not
+// The uniqueId is composed of the device id + the key
+
+#  define uniqueIdSize  30
+#  define modelNameSize 30
+
+struct LORAdevice {
+  char uniqueId[uniqueIdSize];
+  char modelName[modelNameSize];
+  bool isDisc;
+};
+
+const char LORAparameters[3][4][12] = {
+    // LORA key, name, unit, device_class
+    {"tempc", "temperature", "°C", "temperature"},
+    {"hum", "humidity", "%", "humidity"},
+    {"moi", "moisture", "%", "humidity"}};
+
+#endif
 
 #endif

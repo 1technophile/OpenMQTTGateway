@@ -1,0 +1,2 @@
+tasks:
+  - command: pip3 install -U platformio && platformio run -e esp32dev-ble

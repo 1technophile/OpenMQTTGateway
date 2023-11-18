@@ -31,35 +31,41 @@
 #ifdef ZsensorHCSR501
 
 void setupHCSR501() {
-  pinMode(HCSR501_PIN, INPUT);     // declare HC SR-501 pin as input
+  Log.notice(F("HCSR501 pin: %d" CR), HCSR501_GPIO);
+  pinMode(HCSR501_GPIO, INPUT); // declare HC SR-501 GPIO as input
+#  ifdef HCSR501_LED_NOTIFY_GPIO
+  pinMode(HCSR501_LED_NOTIFY_GPIO, OUTPUT);
+  digitalWrite(HCSR501_LED_NOTIFY_GPIO, LOW);
+#  endif
 }
 
-void MeasureHCSR501(){
-  if (millis() > TimeBeforeStartHCSR501) {//let time to init the PIR sensor
-    const int JSON_MSG_CALC_BUFFER = JSON_OBJECT_SIZE(1);
-    StaticJsonBuffer<JSON_MSG_CALC_BUFFER> jsonBuffer;
-  JsonObject& HCSR501data = jsonBuffer.createObject();
-  static int pirState = LOW;
-  int PresenceValue = digitalRead(HCSR501_PIN);
-  #if defined(ESP8266) || defined(ESP32)
+void MeasureHCSR501() {
+  if (millis() > TimeBeforeStartHCSR501) { //let time to init the PIR sensor
+    StaticJsonDocument<JSON_MSG_BUFFER> HCSR501dataBuffer;
+    JsonObject HCSR501data = HCSR501dataBuffer.to<JsonObject>();
+    static int pirState = LOW;
+    int PresenceValue = digitalRead(HCSR501_GPIO);
+#  if defined(ESP8266) || defined(ESP32)
     yield();
-  #endif
-  if (PresenceValue == HIGH) { 
-    if (pirState == LOW) {
-      //turned on
-      HCSR501data.set("hcsr501", "true");
-      trc(F("HC SR501 Motion started"));
-      pirState = HIGH;
-    }
+#  endif
+    if (PresenceValue == HIGH) {
+      if (pirState == LOW) {
+        //turned on
+        HCSR501data["presence"] = "true";
+        pirState = HIGH;
+      }
     } else {
-      if (pirState == HIGH){
-      // turned off
-      HCSR501data.set("hcsr501", "false");
-      trc(F("HC SR501 Motion ended"));
-      pirState = LOW;
+      if (pirState == HIGH) {
+        // turned off
+        HCSR501data["presence"] = "false";
+        pirState = LOW;
       }
     }
-    if(HCSR501data.size()>0) pub(subjectHCSR501toMQTT,HCSR501data);
+#  ifdef HCSR501_LED_NOTIFY_GPIO
+    digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState == HCSR501_LED_ON);
+#  endif
+    HCSR501data["origin"] = subjectHCSR501toMQTT;
+    enqueueJsonObject(HCSR501data);
   }
 }
 #endif

@@ -34,40 +34,43 @@
 unsigned long timeHCSR04 = 0;
 
 void setupHCSR04() {
-  pinMode(HCSR04_TRI_PIN, OUTPUT);    // declare HC SR-04 trigger pin as output
-  pinMode(HCSR04_ECH_PIN, INPUT);     // declare HC SR-04 echo pin as input
+  Log.notice(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_GPIO);
+  Log.notice(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_GPIO);
+  pinMode(HCSR04_TRI_GPIO, OUTPUT); // declare HC SR-04 trigger GPIO as output
+  pinMode(HCSR04_ECH_GPIO, INPUT); // declare HC SR-04 echo GPIO as input
 }
 
 void MeasureDistance() {
   if (millis() > (timeHCSR04 + TimeBetweenReadingHCSR04)) {
     timeHCSR04 = millis();
-    trc(F("Creating HCSR04 buffer"));
-    StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject& HCSR04data = jsonBuffer.createObject();
-    digitalWrite(HCSR04_TRI_PIN, LOW);
+    Log.trace(F("Creating HCSR04 buffer" CR));
+    StaticJsonDocument<JSON_MSG_BUFFER> HCSR04dataBuffer;
+    JsonObject HCSR04data = HCSR04dataBuffer.to<JsonObject>();
+    digitalWrite(HCSR04_TRI_GPIO, LOW);
     delayMicroseconds(2);
-    digitalWrite(HCSR04_TRI_PIN, HIGH);
+    digitalWrite(HCSR04_TRI_GPIO, HIGH);
     delayMicroseconds(10);
-    digitalWrite(HCSR04_TRI_PIN, LOW);
-    unsigned long duration = pulseIn(HCSR04_ECH_PIN, HIGH);
+    digitalWrite(HCSR04_TRI_GPIO, LOW);
+    unsigned long duration = pulseIn(HCSR04_ECH_GPIO, HIGH);
     if (isnan(duration)) {
-      trc(F("Failed to read from HC SR04 sensor!"));
+      Log.error(F("Failed to read from HC SR04 sensor!" CR));
     } else {
       static unsigned int distance = 99999;
-      unsigned int d = duration/58.2;
-      HCSR04data.set("distance", (int)d);
+      unsigned int d = duration / 58.2;
+      HCSR04data["distance"] = (int)d;
       if (d > distance) {
-        HCSR04data.set("direction", "away");
-        trc(F("HC SR04 Distance changed"));
+        HCSR04data["direction"] = "away";
+        Log.trace(F("HC SR04 Distance changed" CR));
       } else if (d < distance) {
-        HCSR04data.set("direction", "towards");
-        trc(F("HC SR04 Distance changed"));
+        HCSR04data["direction"] = "towards";
+        Log.trace(F("HC SR04 Distance changed" CR));
       } else if (HCSR04_always) {
-        HCSR04data.set("direction", "static");
-        trc(F("HC SR04 Distance hasn't changed"));
+        HCSR04data["direction"] = "static";
+        Log.trace(F("HC SR04 Distance hasn't changed" CR));
       }
       distance = d;
-      if(HCSR04data.size()>0) pub(subjectHCSR04,HCSR04data);
+      HCSR04data["origin"] = subjectHCSR04;
+      enqueueJsonObject(HCSR04data);
     }
   }
 }
