@@ -502,7 +502,7 @@ void pubMqttDiscovery() {
                   "{\"discovery\":true,\"save\":true}", "{\"discovery\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
@@ -512,7 +512,7 @@ void pubMqttDiscovery() {
                   "{\"ohdiscovery\":true,\"save\":true}", "{\"ohdiscovery\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
