@@ -54,7 +54,7 @@ This command can also be used with other controllers that does not support the i
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
-## Change the Gateway password
+## Change the gateway password
 
 The password must be 8 characters minimum.
 

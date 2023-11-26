@@ -173,6 +173,6 @@ For example:
 
 ---
 
-This has be made using Open MQTT Gateway v0.9.13, Jeedom Core v4.2.20 and jMQTT plugin v2022-07-25.
+This has be made using OpenMQTTGateway v0.9.13, Jeedom Core v4.2.20 and jMQTT plugin v2022-07-25.
 
 The original discussion is available on [Jeedom Community](https://community.jeedom.com/t/antenne-bluetooth-avec-un-esp32-open-mqtt-gateway-et-jmqtt/87407) (in French).

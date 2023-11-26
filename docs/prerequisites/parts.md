@@ -6,7 +6,7 @@ You can take a look to the [OpenMQTTGateway compatible website](https://compatib
 Here is below the main parts reference.
 
 ## Main parts 
-|Parts|RF|IR|BLE|LORA|GSM|
+|Parts|RF|IR|BLE|LoRa|GSM|
 |-|:-:|:-:|:-:|:-:|:-:|
 |SRX882 / STX882|X|-||-|-|
 |CC1101|X|-|-|-|-|
