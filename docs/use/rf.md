@@ -1,5 +1,5 @@
 ---
-title: 433Mhz MQTT Gateway
+title: RF gateways (RTL_433/RCSwitch/RF/RF2)
 description: Unlock the potential of RF 433 MHz technology with our universal gateway. Decode signals from various devices, and integrate seamlessly with MQTT systems and controllers like Home Assistant and OpenHAB.
 ---
 
@@ -11,7 +11,7 @@ An RF (Radio Frequency) gateway is a device that facilitates communication betwe
 
 The primary advantage of using an RF gateway is its ability to bridge the gap between the world of RF devices, which might include sensors, remote controls, and other RF-based gadgets, and modern smart home systems or applications. This enables users to integrate a wide range of devices into their smart home setup, even if those devices were not originally designed for such integration.
 
-In the context of the 433MHz MQTT Gateway, the device not only decodes RF signals but also allows for seamless integration with MQTT systems. This means that signals from RF devices can be easily published to MQTT topics, and likewise, MQTT messages can be translated into RF signals for transmission. This two-way communication capability makes the gateway a powerful tool for expanding the capabilities of both RF devices and MQTT systems.
+In the context of the 433MHz MQTT gateway, the device not only decodes RF signals but also allows for seamless integration with MQTT systems. This means that signals from RF devices can be easily published to MQTT topics, and likewise, MQTT messages can be translated into RF signals for transmission. This two-way communication capability makes the gateway a powerful tool for expanding the capabilities of both RF devices and MQTT systems.
 
 OpenMQTTGateway leverages several libraries for RF communication:
 | Library  | Description | Device Support | Resource Requirements | Flexibility | Integration Capabilities |
@@ -164,24 +164,24 @@ Delta applied to RSSI floor noise level to determine start and end of signal, de
 
 ### Switching Active Receiver Module
 
-Switching of the active transceiver (RTL_433 receiver only) module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active transceiver module.
+Switching of the active transceiver (RTL_433 receiver only) module is available between the RF, RF2, RTL_433 and Pilight gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active transceiver module.
 
-To enable the RF Gateway module send a json message to the RF Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
+To enable the RF gateway module send a json message to the RF gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 
 Example:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"active":true}'`
 
-To enable the PiLight Gateway module send a json message to the PiLight Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
+To enable the PiLight gateway module send a json message to the PiLight gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 
 Example:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"active":true}'`
 
-To enable the RF2 Gateway module send a json message to the RF2 Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
+To enable the RF2 gateway module send a json message to the RF2 gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 
 Example:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRF2" -m '{"active":true}'`
 
-To enable the RTL_433 Gateway module send a json message to the RTL_433 Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
+To enable the RTL_433 gateway module send a json message to the RTL_433 gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
 
 Example:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRTL_433" -m '{"active":true}'`

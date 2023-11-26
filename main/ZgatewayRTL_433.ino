@@ -292,7 +292,7 @@ extern void MQTTtoRTL_433(char* topicOri, JsonObject& RTLdata) {
     }
     if (RTLdata.containsKey("active")) {
       Log.trace(F("RTL_433 active:" CR));
-      activeReceiver = ACTIVE_RTL; // Enable RTL_433 Gateway
+      activeReceiver = ACTIVE_RTL; // Enable RTL_433 gateway
       success = true;
     }
     if (RTLdata.containsKey("rssi")) {

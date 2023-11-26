@@ -1,5 +1,5 @@
 ---
-title: ESP32 BLE MQTT Gateway
+title: BLE ESP32 gateway
 description: Versatile BLE gateway that scans and decodes data from various Bluetooth devices. It integrates seamlessly with MQTT brokers and controllers like Home Assistant and OpenHAB. Monitor temperature, humidity, pressure, and more for smarter control.
 ---
 # BLE gateway
@@ -262,7 +262,7 @@ The default value is set into config_BT.h
 
 ## Store BLE configuration into the gateway
 
-Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
+OpenMQTTGateway has the capability to save the current configuration and reload it at startup.
 
 To store the running configuration into the gateway, use the command:
 

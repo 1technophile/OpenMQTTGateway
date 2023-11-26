@@ -1,5 +1,5 @@
 ---
-title: Infrared MQTT Gateway
+title: Infrared gateway
 description: Unlock the potential of Infrared technology with our universal gateway. Decode signals from various devices, and integrate seamlessly with MQTT systems abd controllers like Home Assistant and OpenHAB.
 ---
 

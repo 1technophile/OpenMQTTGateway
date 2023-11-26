@@ -816,7 +816,7 @@ void handleMQ() {
 
 #  ifndef ESPWifiManualSetup
 /**
- * @brief /CG - Configure Gateway Page
+ * @brief /CG - Configure gateway Page
  * T: handleCG: uri: /gw, args: 2, method: 1
  * T: handleCG Arg: 0, gp=1234
  * T: handleCG Arg: 1, save=
@@ -873,7 +873,7 @@ void handleCG() {
 
   char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure Gateway").c_str());
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure gateway").c_str());
   String response = String(buffer);
   response += String(script);
   response += String(style);
@@ -1489,7 +1489,7 @@ void WebUISetup() {
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
 #  ifndef ESPWifiManualSetup
-  server.on("/cg", handleCG); // Configure Gateway"
+  server.on("/cg", handleCG); // Configure gateway"
 #  endif
   server.on("/wu", handleWU); // Configure WebUI
 #  ifdef ZgatewayLORA

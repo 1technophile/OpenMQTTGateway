@@ -9,7 +9,7 @@
  - publish MQTT data to a different topic related to received 433Mhz signal based on ESPilight library
 
     Copyright: (c)Florian ROBERT
-    Pilight Gateway made by steadramon, improvments with the help of puuu
+    Pilight gateway made by steadramon, improvments with the help of puuu
 
     This file is part of OpenMQTTGateway.
 
@@ -296,7 +296,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
     }
     if (Pilightdata.containsKey("active")) {
       Log.trace(F("PiLight active:" CR));
-      activeReceiver = ACTIVE_PILIGHT; // Enable PILIGHT Gateway
+      activeReceiver = ACTIVE_PILIGHT; // Enable PILIGHT gateway
       success = true;
     }
 #  ifdef ZradioCC1101

@@ -2,21 +2,21 @@ OpenMQTTGateway aims to unify various technologies and protocols into a single f
 
 ![Overview](./img/OpenMQTTGateway.png)
 
-# What is an MQTT Gateway or Bridge ?
+# What is an MQTT gateway or bridge ?
 
 MQTT, short for Message Queuing Telemetry Transport, is a lightweight messaging protocol ideal for IoT devices.
 
-An MQTT Gateway or Bridge plays a pivotal role in the MQTT ecosystem:
+An MQTT gateway or bridge plays a pivotal role in the MQTT ecosystem:
 * Protocol Translation: It converts non-MQTT protocols (like Zigbee or Bluetooth) into MQTT, enabling broader network communication.
 * Data Aggregation: Combines data from multiple devices into single messages, optimizing network use.
 * Security: Incorporates features like SSL/TLS encryption to safeguard data during transmission.
 * Device Management: Handles tasks like firmware updates and remote configuration changes.
 
-In essence, an MQTT Gateway ensures smooth communication between devices and MQTT brokers, enhancing the efficiency and security of IoT systems.
+In essence, an MQTT gateway ensures smooth communication between devices and MQTT brokers, enhancing the efficiency and security of IoT systems.
 
 # What OpenMQTTGateway can do ?
 
-OpenMQTTGateway integrates with established technologies, such as 433mhz/315mhz protocols and infrared (IR), allowing you to upgrade and repurpose older devices. Additionally, OMG is compatible with modern technologies like Bluetooth Low Energy (BLE) and LORA.
+OpenMQTTGateway integrates with established technologies, such as 433mhz/315mhz protocols and infrared (IR), allowing you to upgrade and repurpose older devices. Additionally, OMG is compatible with modern technologies like Bluetooth Low Energy (BLE) and LoRa.
 
 To have an overview of the supported PIR, door, water, temperature, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
 [compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
@@ -37,7 +37,7 @@ Leveraging OpenMQTTGateway with a controller allows you to:
 * Detect opened door or windows through 433mhz or BLE and alert yourself when leaving
 * Detect water leakage or smoke remotely
 * Actionate a siren if something is going wrong
-* Detect if your far mailbox has been opened by the postman with LORA
+* Detect if your far mailbox has been opened by the postman with LoRa
 * Make smart your old TV or AC system through infrared control
 * Monitor vehicle tire pressure
 
