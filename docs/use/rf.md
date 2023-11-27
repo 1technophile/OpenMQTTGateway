@@ -60,7 +60,7 @@ This feature is only available on a ESP32 based device with a supported transcei
 ### Supported hardware combinations
 
 - ESP32 based device with a CC1101 transceiver
-- Heltec WiFi LoRa 32 (V2.1) and LilyGo Lora 32 V2.1
+- Heltec WiFi LoRa 32 (V2.1) and LilyGo LoRa 32 V2.1
 - ESP32 DOIT DevKit V1 and Ai-Thinker R01 (SX1278)
 - ESP32 + SX1278/SX1276
 

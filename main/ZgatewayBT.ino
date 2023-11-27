@@ -403,6 +403,7 @@ void updateDevicesStatus() {
     unsigned long now = millis();
     // Device tracker devices
     if (BTConfig.presenceEnable && (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
                                     p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
@@ -975,6 +976,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
             p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
             p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
           if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||

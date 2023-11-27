@@ -111,7 +111,7 @@ upload_flags =
 ::: warning Note
 Adding manual WiFi and MQTT credentials to an environment also requires to define
 `'-DESPWifiManualSetup=true'`
-for the credetials to be registered correctly.
+for the credentials to be registered correctly.
 :::
 
 ::: warning Note
@@ -236,7 +236,7 @@ upload_flags =
 * Choose the board on the Arduino IDE
 * Select the port corresponding to the board
 * Note that for using BLE on ESP32 you will need to select *Minimal SPIFFS* into Tools->Partition Scheme
-* Open the serial monitor and set 115200 bauds
+* Open the serial monitor and set 115200 baud
 * Upload ➡️
 * You should see the logs in the serial monitor
 
