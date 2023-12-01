@@ -236,8 +236,8 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       Log.notice(F("RF Protocol:%d" CR), valuePRT);
       Log.notice(F("RF Pulse Lgth: %d" CR), valuePLSL);
       Log.notice(F("Bits nb: %d" CR), valueBITS);
-      disableCurrentReceiver();
 #    ifdef ZradioCC1101
+      disableCurrentReceiver();
       initCC1101();
       int txPower = RFdata["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
@@ -246,7 +246,6 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       ELECHOUSE_cc1101.SetTx(txFrequency);
       Log.notice(F("Transmit frequency: %F" CR), txFrequency);
 #    endif
-      mySwitch.disableReceive();
       mySwitch.enableTransmit(RF_EMITTER_GPIO);
       mySwitch.setRepeatTransmit(valueRPT);
       mySwitch.setProtocol(valuePRT, valuePLSL);
