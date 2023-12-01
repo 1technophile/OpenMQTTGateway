@@ -1189,7 +1189,11 @@ void setup() {
   client.setCallback(callback);
 
   delay(1500);
-
+#if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+#  ifndef ARDUINO_AVR_UNO
+  setupCommonRF();
+#  endif
+#endif
 #ifdef ZsensorBME280
   setupZsensorBME280();
   modules.add(ZsensorBME280);
@@ -1235,12 +1239,10 @@ void setup() {
   modules.add(ZgatewayLORA);
 #endif
 #ifdef ZgatewayRF
-  setupRF();
   modules.add(ZgatewayRF);
 #  define ACTIVE_RECEIVER ACTIVE_RF
 #endif
 #ifdef ZgatewayRF2
-  setupRF2();
   modules.add(ZgatewayRF2);
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
@@ -1248,9 +1250,7 @@ void setup() {
 #  define ACTIVE_RECEIVER ACTIVE_RF2
 #endif
 #ifdef ZgatewayPilight
-  setupPilight();
   modules.add(ZgatewayPilight);
-  disablePilightReceive();
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
 #  endif
@@ -1305,6 +1305,10 @@ void setup() {
   modules.add(ZactuatorPWM);
 #endif
 #ifdef ZactuatorSomfy
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_NONE
   setupSomfy();
   modules.add(ZactuatorSomfy);
 #endif
@@ -1336,20 +1340,12 @@ void setup() {
   setupSHTC3();
 #endif
 #ifdef ZgatewayRTL_433
-  setupRTL_433();
-  modules.add(ZgatewayRTL_433);
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
 #  endif
 #  define ACTIVE_RECEIVER ACTIVE_RTL
-#endif
-#if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRF2)
-#  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive
-  activeReceiver = DEFAULT_RECEIVER;
-#  else
-  activeReceiver = ACTIVE_RECEIVER;
-#  endif
-  enableActiveReceiver(true);
+  setupRTL_433();
+  modules.add(ZgatewayRTL_433);
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
 
@@ -2084,6 +2080,9 @@ void loop() {
 #  ifdef ZgatewayLORA
         stateLORAMeasures();
 #  endif
+#  if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+        stateRFMeasures();
+#  endif
 #  if defined(ZwebUI) && defined(ESP32)
         stateWebUIStatus();
 #  endif
@@ -2442,23 +2441,6 @@ String stateMeasures() {
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
-#  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
-  SYSdata["actRec"] = (int)activeReceiver;
-#  endif
-#  if defined(ZradioCC1101) || defined(ZradioSX127x)
-  SYSdata["mhz"] = (float)receiveMhz;
-#  endif
-#  if defined(ZgatewayRTL_433)
-  if (activeReceiver == ACTIVE_RTL) {
-    SYSdata["RTLRssiThresh"] = (int)getRTLrssiThreshold();
-    SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
-    SYSdata["RTLAVGRssi"] = (int)getRTLAverageRSSI();
-    SYSdata["RTLCnt"] = (int)getRTLMessageCount();
-#    ifdef ZradioSX127x
-    SYSdata["RTLOOKThresh"] = (int)getOOKThresh();
-#    endif
-  }
-#  endif
   SYSdata["modules"] = modules;
 
   SYSdata["origin"] = subjectSYStoMQTT;
@@ -2563,8 +2545,8 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
 #endif
-#ifdef ZgatewayRTL_433 // ZgatewayRTL_433 is only defined with json publishing due to its numerous parameters
-    MQTTtoRTL_433(topicOri, jsondata);
+#if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+    MQTTtoRFset(topicOri, jsondata);
 #endif
 #if jsonReceiving
 #  ifdef ZgatewayLORA
