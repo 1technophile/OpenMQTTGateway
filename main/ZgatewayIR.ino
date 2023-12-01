@@ -169,7 +169,7 @@ void IRtoMQTT() {
     } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
       Log.trace(F("Adv data IRtoMQTT" CR));
       IRdata["origin"] = subjectIRtoMQTT;
-      enqueueJsonObject(IRdata);
+      handleJsonEnqueue(IRdata);
       Log.trace(F("Store val: %D" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatIRwMQTT) {

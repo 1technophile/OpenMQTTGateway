@@ -108,7 +108,7 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
 void launchRTL_433Discovery(bool overrideDiscovery) {
   if (!overrideDiscovery && newRTL_433Devices == 0)
     return;
-  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(1000)) == pdFALSE) {
+  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(QueueSemaphoreTimeOutLoop)) == pdFALSE) {
     Log.error(F("[rtl_433] semaphorecreateOrUpdateDeviceRTL_433 Semaphore NOT taken" CR));
     return;
   }
@@ -258,7 +258,7 @@ void rtl_433_Callback(char* message) {
       storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
 #  endif
     RFrtl_433_ESPdata["origin"] = (char*)topic.c_str();
-    enqueueJsonObject(RFrtl_433_ESPdata);
+    handleJsonEnqueue(RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
     pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);
   }

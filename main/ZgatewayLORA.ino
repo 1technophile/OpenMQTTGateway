@@ -105,7 +105,7 @@ void createOrUpdateDeviceLORA(const char* id, const char* model, uint8_t flags) 
 void launchLORADiscovery(bool overrideDiscovery) {
   if (!overrideDiscovery && newLORADevices == 0)
     return;
-  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(1000)) == pdFALSE) {
+  if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(QueueSemaphoreTimeOutLoop)) == pdFALSE) {
     Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
     return;
   }
@@ -453,12 +453,11 @@ void LORAtoMQTT() {
     } else {
       LORAdataBuffer["origin"] = subjectLORAtoMQTT;
     }
-    enqueueJsonObject(LORAdata);
-
+    handleJsonEnqueue(LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
       LORAdata["origin"] = subjectMQTTtoLORA;
-      enqueueJsonObject(LORAdata);
+      handleJsonEnqueue(LORAdata);
     }
   }
 }

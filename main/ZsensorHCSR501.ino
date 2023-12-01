@@ -65,7 +65,7 @@ void MeasureHCSR501() {
     digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState == HCSR501_LED_ON);
 #  endif
     HCSR501data["origin"] = subjectHCSR501toMQTT;
-    enqueueJsonObject(HCSR501data);
+    handleJsonEnqueue(HCSR501data);
   }
 }
 #endif

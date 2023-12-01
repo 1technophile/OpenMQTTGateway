@@ -158,7 +158,7 @@ void MeasureDS1820Temp() {
           }
           String origin = String(OW_TOPIC) + "/" + ds1820_addr[i];
           DS1820data["origin"] = origin;
-          enqueueJsonObject(DS1820data);
+          handleJsonEnqueue(DS1820data);
           delay(10);
 #  if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
           ready_to_sleep = true;
