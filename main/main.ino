@@ -273,7 +273,9 @@ static String ota_server_cert = "";
 #  include <nvs.h>
 #  include <nvs_flash.h>
 
-bool ProcessLock = true; // Process lock when we want to use a critical function like OTA for example, at start to true so as to wait for critical functions to be performed before BLE start
+bool BTProcessLock = true; // Process lock when we want to use a critical function like OTA for example, at start to true so as to wait for critical functions to be performed before BLE start
+bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
+
 #  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
 #    include <stdio.h>
@@ -1398,8 +1400,11 @@ void setOTA() {
     ErrorIndicatorON();
     SendReceiveIndicatorON();
     last_ota_activity_millis = millis();
-#  if defined(ZgatewayBT) && defined(ESP32)
+#  ifdef ESP32
+    ProcessLock = true;
+#    ifdef ZgatewayBT
     stopProcessing();
+#    endif
 #  endif
     lpDisplayPrint("OTA in progress");
   });
@@ -2099,7 +2104,7 @@ void loop() {
           checkForUpdates();
 #  endif
 #  ifdef ZgatewayBT
-          ProcessLock = false; // Release BLE processes at start
+          BTProcessLock = !BTConfig.enabled; // Release BLE processes at start if enabled
 #  endif
         }
 
@@ -2744,11 +2749,12 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         Log.error(F("Invalid URL" CR));
         return;
       }
-#  if defined(ZgatewayBT)
-      stopProcessing();
-#  endif
 #  ifdef ESP32
+      ProcessLock = true;
       //esp_task_wdt_delete(NULL); // Stop task watchdog during update
+#    ifdef ZgatewayBT
+      stopProcessing();
+#    endif
 #  endif
       Log.warning(F("Starting firmware update" CR));
 
@@ -2885,8 +2891,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 #  endif
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
-#  if defined(ZgatewayBT) && defined(ESP32)
+#  ifdef ESP32
+      ProcessLock = true;
+#    ifdef ZgatewayBT
       stopProcessing();
+#    endif
 #  endif
       String prev_ssid = WiFi.SSID();
       String prev_pass = WiFi.psk();
@@ -2953,8 +2962,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
 #    endif
 
-#    if defined(ZgatewayBT) && defined(ESP32)
+#    ifdef ESP32
+        ProcessLock = true;
+#      ifdef ZgatewayBT
         stopProcessing();
+#      endif
 #    endif
         disconnectClient = false;
         client.disconnect();
@@ -2977,8 +2989,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
         client.setServer(SYSdata["mqtt_server"].as<const char*>(), SYSdata["mqtt_port"].as<unsigned int>());
       } else {
-#    if defined(ZgatewayBT) && defined(ESP32)
+#    ifdef ESP32
+        ProcessLock = true;
+#      ifdef ZgatewayBT
         stopProcessing();
+#      endif
 #    endif
         disconnectClient = false;
         client.disconnect();

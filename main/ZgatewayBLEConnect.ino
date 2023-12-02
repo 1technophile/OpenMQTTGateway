@@ -6,7 +6,7 @@
 #    include "ZgatewayBLEConnect.h"
 #    define convertTemp_CtoF(c) ((c * 1.8) + 32)
 
-extern bool ProcessLock;
+extern bool BTProcessLock;
 extern std::vector<BLEdevice*> devices;
 
 NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& service,
@@ -135,7 +135,7 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
   if (m_taskHandle == nullptr) {
     return; // unexpected notification
   }
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
 
     if (length == 5) {
@@ -167,7 +167,7 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
       return;
     }
   } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
+    Log.trace(F("Callback process canceled by BTProcessLock" CR));
   }
 
   xTaskNotifyGive(m_taskHandle);
@@ -199,7 +199,7 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
     return; // unexpected notification
   }
 
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
     if (length == 20) {
       m_data.assign(pData, pData + length);
@@ -232,7 +232,7 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       return;
     }
   } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
+    Log.trace(F("Callback process canceled by BTProcessLock" CR));
   }
 
   xTaskNotifyGive(m_taskHandle);
@@ -264,7 +264,7 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
     return; // unexpected notification
   }
 
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
     if (length == 16) {
       Log.trace(F("Device identified creating BLE buffer" CR));
@@ -309,7 +309,7 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       return;
     }
   } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
+    Log.trace(F("Callback process canceled by BTProcessLock" CR));
   }
 
   xTaskNotifyGive(m_taskHandle);
@@ -375,7 +375,7 @@ void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* p
   if (m_taskHandle == nullptr) {
     return; // unexpected notification
   }
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
 
     if (length == 6) {
@@ -399,7 +399,7 @@ void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* p
       return;
     }
   } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
+    Log.trace(F("Callback process canceled by BTProcessLock" CR));
   }
 
   xTaskNotifyGive(m_taskHandle);
@@ -430,7 +430,7 @@ void SBS1_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
   if (m_taskHandle == nullptr) {
     return; // unexpected notification
   }
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
 
     if (length) {
@@ -440,7 +440,7 @@ void SBS1_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       return;
     }
   } else {
-    Log.trace(F("Callback process canceled by processLock" CR));
+    Log.trace(F("Callback process canceled by BTProcessLock" CR));
   }
 
   xTaskNotifyGive(m_taskHandle);
