@@ -472,6 +472,7 @@ bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int t
 #else
 bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
   enqueueJsonObject(jsonDoc);
+  return true;
 }
 #endif
 
@@ -2378,9 +2379,13 @@ String stateMeasures() {
   uint32_t freeMem;
   uint32_t minFreeMem;
   freeMem = ESP.getFreeHeap();
+#    ifdef ZgatewayRTL_433
+  // Some RTL_433 decoders have memory leak, this is a temporary workaround
   if (freeMem < MinimumMemory) {
+    Log.error(F("Not enough memory %d, restarting" CR), freeMem);
     ESPRestart(8);
   }
+#    endif
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttport"] = mqtt_port;
   SYSdata["mqttsecure"] = mqtt_secure;
