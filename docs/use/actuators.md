@@ -137,10 +137,12 @@ Optionally it can contain the following property:
 The middle button on physical Somfy RTS Remote controls is called "My".
 :::
 
+The frequency key is optional, if not set the gateway will use the default frequency defined by MQTTtoRF command at runtime or `RF_FREQUENCY` at buildtime.
+
 Send PROG command with remote 0:
 
-`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":0,"command":"Prog"}'`
+`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":0,"command":"Prog","frequency":433.92}'`
 
 Send Up command with remote 1:
 
-`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":1,"command":"Up"}'`
+`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":1,"command":"Up","frequency":433.92}'`
