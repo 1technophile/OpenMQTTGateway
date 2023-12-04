@@ -166,6 +166,7 @@ struct BTConfig_s {
   unsigned long presenceAwayTimer; //Timer that trigger a tracker/PIR state as offline/off if not seen
   unsigned long movingTimer; //Timer that trigger a moving sensor state as offline if not seen
   bool forcePassiveScan; //Force passive scan
+  bool enabled; // Enable or disable the BT gateway
 };
 
 // Global struct to store live BT configuration data

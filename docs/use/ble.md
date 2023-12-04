@@ -26,6 +26,16 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 The plug is available in North America only, other regions are planned.
 
+## Disable or enable the BLE gateway (default: true, available with HA discovery)
+
+If you want to deactivate the BLE gateway:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"enabled":false}'`
+
+If you want to activate the BLE gateway:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"enabled":true}'`
+
 ## Receiving signals from [compatible BLE sensors](https://decoder.theengs.io/devices/devices_by_brand.html) to publish it to an MQTT broker.
 To receive data from BLE sensors you can use an ESP32-based device with a programming USB port or use a Serial adapter.
 

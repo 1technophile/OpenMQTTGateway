@@ -104,6 +104,7 @@ void BTConfig_init() {
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
   BTConfig.movingTimer = MovingTimer;
   BTConfig.forcePassiveScan = false;
+  BTConfig.enabled = true;
 }
 
 unsigned long timeBetweenConnect = 0;
@@ -133,6 +134,7 @@ String stateBTMeasures(bool start) {
   jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
   jo["movingtimer"] = BTConfig.movingTimer;
   jo["forcepassivescan"] = BTConfig.forcePassiveScan;
+  jo["enabled"] = BTConfig.enabled;
   jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
   jo["blecoretaskstack"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
 
@@ -177,6 +179,13 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
       eraseTopic("number", (char*)getUniqueId("interval", "").c_str());
       eraseTopic("number", (char*)getUniqueId("intervalacts", "").c_str());
 #  endif
+    }
+    // Identify if the gateway is enabled or not and stop start accordingly
+    if (BTdata.containsKey("enabled") && BTdata["enabled"] == false && BTConfig.enabled == true) {
+      stopProcessing();
+    } else if (BTdata.containsKey("enabled") && BTdata["enabled"] == true && BTConfig.enabled == false) {
+      BTProcessLock = false;
+      setupBTTasksAndBLE();
     }
   }
   Config_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
@@ -225,6 +234,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   Config_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
   // Disable Whitelist & Blacklist
   Config_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
+  // Enable or disable the BT gateway
+  Config_update(BTdata, "enabled", BTConfig.enabled);
 
   stateBTMeasures(startup);
 
@@ -266,6 +277,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
     jo["movingtimer"] = BTConfig.movingTimer;
     jo["forcepassivescan"] = BTConfig.forcePassiveScan;
+    jo["enabled"] = BTConfig.enabled;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -580,7 +592,7 @@ void procBLETask(void* pvParameters) {
     xQueueReceive(BLEQueue, &advertisedDevice, portMAX_DELAY);
     // Feed the watchdog
     //esp_task_wdt_reset();
-    if (!ProcessLock) {
+    if (!BTProcessLock) {
       Log.trace(F("Creating BLE buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
@@ -675,7 +687,7 @@ void BLEscan() {
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 void BLEconnect() {
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     Log.notice(F("BLE Connect begin" CR));
     do {
       for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
@@ -742,33 +754,39 @@ void BLEconnect() {
 }
 
 void stopProcessing() {
-  ProcessLock = true;
-  // We stop the scan
-  Log.notice(F("Stopping BLE scan" CR));
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  if (pBLEScan->isScanning()) {
-    pBLEScan->stop();
+  if (BTConfig.enabled) {
+    BTProcessLock = true;
+    // We stop the scan
+    Log.notice(F("Stopping BLE scan" CR));
+    BLEScan* pBLEScan = BLEDevice::getScan();
+    if (pBLEScan->isScanning()) {
+      pBLEScan->stop();
+    }
+
+    if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
+      Log.notice(F("Stopping BLE tasks" CR));
+      //Suspending, deleting tasks and stopping BT to free memory
+      vTaskSuspend(xCoreTaskHandle);
+      vTaskDelete(xCoreTaskHandle);
+      vTaskSuspend(xProcBLETaskHandle);
+      vTaskDelete(xProcBLETaskHandle);
+      xSemaphoreGive(semaphoreBLEOperation);
+    }
   }
-  Log.notice(F("Stopping BLE tasks" CR));
-  //Suspending, deleting tasks and stopping BT to free memory
-  vTaskSuspend(xCoreTaskHandle);
-  vTaskDelete(xCoreTaskHandle);
-  vTaskSuspend(xProcBLETaskHandle);
-  vTaskDelete(xProcBLETaskHandle);
   Log.notice(F("BLE gateway stopped %T, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
   while (true) {
-    if (!ProcessLock) {
+    if (!BTProcessLock) {
       int n = 0;
-      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !ProcessLock) {
+      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !BTProcessLock) {
         n++;
         delay(1000);
       }
       if (client.state() != 0) {
         Log.warning(F("MQTT client disconnected no BLE scan" CR));
-      } else if (!ProcessLock) {
+      } else if (!BTProcessLock) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
           // Launching a connect every TimeBtwConnect
@@ -813,6 +831,7 @@ void deepSleep(uint64_t time_in_us) {
 
   Log.trace(F("Deactivating ESP32 components" CR));
   stopProcessing();
+  ProcessLock = true;
   // Ignore the deprecated warning, this call is necessary here.
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -891,6 +910,7 @@ void setupBT() {
   Log.notice(F("Presence Away Timer: %d" CR), BTConfig.presenceAwayTimer);
   Log.notice(F("Moving Timer: %d" CR), BTConfig.movingTimer);
   Log.notice(F("Force passive scan: %T" CR), BTConfig.forcePassiveScan);
+  Log.notice(F("Enabled BLE: %T" CR), BTConfig.enabled);
 
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
 
@@ -901,10 +921,12 @@ void setupBT() {
   xSemaphoreGive(semaphoreBLEOperation);
 
   BLEQueue = xQueueCreate(QueueSize, sizeof(NimBLEAdvertisedDevice*));
-
-  setupBTTasksAndBLE();
-
-  Log.trace(F("ZgatewayBT multicore ESP32 setup done " CR));
+  if (BTConfig.enabled) {
+    setupBTTasksAndBLE();
+    Log.notice(F("ZgatewayBT multicore ESP32 setup done" CR));
+  } else {
+    Log.notice(F("ZgatewayBT multicore ESP32 setup disabled" CR));
+  }
 }
 
 bool BTtoMQTT() { // for on demand BLE scans
@@ -1230,7 +1252,7 @@ void hass_presence(JsonObject& HomePresence) {
 }
 
 void BTforceScan() {
-  if (!ProcessLock) {
+  if (!BTProcessLock) {
     BTtoMQTT();
     Log.trace(F("Scan done" CR));
     if (BTConfig.bleConnect)
@@ -1243,7 +1265,7 @@ void BTforceScan() {
 void immediateBTAction(void* pvParameters) {
   if (BLEactions.size()) {
     // Immediate action; we need to prevent the normal connection action and stop scanning
-    ProcessLock = true;
+    BTProcessLock = true;
     NimBLEScan* pScan = NimBLEDevice::getScan();
     if (pScan->isScanning()) {
       pScan->stop();
@@ -1261,7 +1283,7 @@ void immediateBTAction(void* pvParameters) {
       std::swap(BLEactions, act_swap);
 
       // Unlock here to allow the action to be performed
-      ProcessLock = false;
+      BTProcessLock = false;
       BLEconnect();
       // back to normal
       std::swap(devices, dev_swap);
@@ -1282,7 +1304,7 @@ void immediateBTAction(void* pvParameters) {
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
       BLEactions.pop_back();
-      ProcessLock = false;
+      BTProcessLock = false;
     }
   }
   vTaskDelete(NULL);

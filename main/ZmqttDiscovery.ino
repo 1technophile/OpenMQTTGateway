@@ -1216,6 +1216,16 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
+  createDiscovery("switch", //set Type
+                  subjectBTtoMQTT, "BT: Enabled", (char*)getUniqueId("enabled", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.enabled }}", //set availability_topic,device_class,value_template,
+                  "{\"enabled\":true,\"save\":true}", "{\"enabled\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
 
 #      define EntitiesCount 8
   const char* obsoleteEntities[EntitiesCount][2] = {
