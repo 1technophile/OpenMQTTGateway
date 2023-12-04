@@ -78,7 +78,7 @@ You should see the gateway connected to your broker by checking with an MQTT cli
 
 To make the auto discovery compatible with OpenHAB you have to send the following command with a retain flag.
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdiscovery":true}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdisc":true}'`
 
 ## Adding the things
 1. From the Administration click on "Things" under "Settings", you should see a number in the INBOX button

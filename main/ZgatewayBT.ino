@@ -122,21 +122,22 @@ String stateBTMeasures(bool start) {
   jo["onlysensors"] = BTConfig.pubOnlySensors;
   jo["randommacs"] = BTConfig.pubRandomMACs;
   jo["hasspresence"] = BTConfig.presenceEnable;
-  jo["presenceTopic"] = BTConfig.presenceTopic;
-  jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+  jo["prestopic"] = BTConfig.presenceTopic;
+  jo["presuseuuid"] = BTConfig.presenceUseBeaconUuid;
   jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
   jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
   jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
   jo["filterConnectable"] = BTConfig.filterConnectable;
   jo["pubadvdata"] = BTConfig.pubAdvData;
-  jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+  jo["pubuuid4topic"] = BTConfig.pubBeaconUuidForTopic;
   jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
   jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
   jo["movingtimer"] = BTConfig.movingTimer;
-  jo["forcepassivescan"] = BTConfig.forcePassiveScan;
+  jo["forcepscn"] = BTConfig.forcePassiveScan;
+  jo["tskstck"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
+  jo["crstck"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
   jo["enabled"] = BTConfig.enabled;
-  jo["bletaskstack"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
-  jo["blecoretaskstack"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
+  jo["scnct"] = scanCount;
 
   if (start) {
     Log.notice(F("BT sys: "));
@@ -211,15 +212,15 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // publish devices which randomly change their MAC addresses
   Config_update(BTdata, "randommacs", BTConfig.pubRandomMACs);
   // Home Assistant presence message topic
-  Config_update(BTdata, "presenceTopic", BTConfig.presenceTopic);
+  Config_update(BTdata, "prestopic", BTConfig.presenceTopic);
   // Home Assistant presence message use iBeacon UUID
-  Config_update(BTdata, "presenceUseBeaconUuid", BTConfig.presenceUseBeaconUuid);
+  Config_update(BTdata, "presuseuuid", BTConfig.presenceUseBeaconUuid);
   // Timer to trigger a device state as offline if not seen
   Config_update(BTdata, "presenceawaytimer", BTConfig.presenceAwayTimer);
   // Timer to trigger a device state as offline if not seen
   Config_update(BTdata, "movingtimer", BTConfig.movingTimer);
   // Force passive scan
-  Config_update(BTdata, "forcepassivescan", BTConfig.forcePassiveScan);
+  Config_update(BTdata, "forcepscn", BTConfig.forcePassiveScan);
   // MinRSSI set
   Config_update(BTdata, "minrssi", BTConfig.minRssi);
   // Send undecoded device data
@@ -231,7 +232,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Publish advertisement data
   Config_update(BTdata, "pubadvdata", BTConfig.pubAdvData);
   // Use iBeacon UUID as topic, instead of sender (random) MAC address
-  Config_update(BTdata, "pubBeaconUuidForTopic", BTConfig.pubBeaconUuidForTopic);
+  Config_update(BTdata, "pubuuid4topic", BTConfig.pubBeaconUuidForTopic);
   // Disable Whitelist & Blacklist
   Config_update(BTdata, "ignoreWBlist", (BTConfig.ignoreWBlist));
   // Enable or disable the BT gateway
@@ -265,18 +266,18 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     jo["onlysensors"] = BTConfig.pubOnlySensors;
     jo["randommacs"] = BTConfig.pubRandomMACs;
     jo["hasspresence"] = BTConfig.presenceEnable;
-    jo["presenceTopic"] = BTConfig.presenceTopic;
-    jo["presenceUseBeaconUuid"] = BTConfig.presenceUseBeaconUuid;
+    jo["prestopic"] = BTConfig.presenceTopic;
+    jo["presuseuuid"] = BTConfig.presenceUseBeaconUuid;
     jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
     jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
     jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
     jo["filterConnectable"] = BTConfig.filterConnectable;
     jo["pubadvdata"] = BTConfig.pubAdvData;
-    jo["pubBeaconUuidForTopic"] = BTConfig.pubBeaconUuidForTopic;
+    jo["pubuuid4topic"] = BTConfig.pubBeaconUuidForTopic;
     jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
     jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
     jo["movingtimer"] = BTConfig.movingTimer;
-    jo["forcepassivescan"] = BTConfig.forcePassiveScan;
+    jo["forcepscn"] = BTConfig.forcePassiveScan;
     jo["enabled"] = BTConfig.enabled;
     // Save config into NVS (non-volatile storage)
     String conf = "";

@@ -497,9 +497,9 @@ void pubMqttDiscovery() {
                   stateClassNone //State Class
   );
   createDiscovery("switch", //set Type
-                  subjectSYStoMQTT, "SYS: Auto discovery", (char*)getUniqueId("discovery", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.discovery }}", //set availability_topic,device_class,value_template,
-                  "{\"discovery\":true,\"save\":true}", "{\"discovery\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectSYStoMQTT, "SYS: Auto discovery", (char*)getUniqueId("disc", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.disc }}", //set availability_topic,device_class,value_template,
+                  "{\"disc\":true,\"save\":true}", "{\"disc\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
@@ -507,9 +507,9 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectSYStoMQTT, "SYS: OpenHAB discovery", (char*)getUniqueId("ohdiscovery", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.ohdiscovery }}", //set availability_topic,device_class,value_template,
-                  "{\"ohdiscovery\":true,\"save\":true}", "{\"ohdiscovery\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectSYStoMQTT, "SYS: OpenHAB discovery", (char*)getUniqueId("ohdisc", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.ohdisc }}", //set availability_topic,device_class,value_template,
+                  "{\"ohdisc\":true,\"save\":true}", "{\"ohdisc\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
@@ -518,9 +518,9 @@ void pubMqttDiscovery() {
   );
 #    ifdef RGB_INDICATORS
   createDiscovery("number", //set Type
-                  subjectSYStoMQTT, "SYS: LED Brightness", (char*)getUniqueId("rgbbrightness", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ (value_json.rgbbrightness/2.55) | round(0) }}", //set availability_topic,device_class,value_template,
-                  "{\"rgbbrightness\":{{ (value*2.55) | round(0) }},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectSYStoMQTT, "SYS: LED Brightness", (char*)getUniqueId("rgbb", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ (value_json.rgbb/2.55) | round(0) }}", //set availability_topic,device_class,value_template,
+                  "{\"rgbb\":{{ (value*2.55) | round(0) }},\"save\":true}", "", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
@@ -1227,7 +1227,7 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
 
-#      define EntitiesCount 8
+#      define EntitiesCount 10
   const char* obsoleteEntities[EntitiesCount][2] = {
       // Remove previously created entities for version < 1.4.0
       {"switch", "active_scan"}, // Replaced by adaptive scan
@@ -1238,7 +1238,9 @@ void pubMqttDiscovery() {
       {"switch", "erase"}, // Now a button
       {"switch", "force_scan"}, // Now a button
       {"sensor", "interval"}, // Now a number
-      {"sensor", "scanbcnct"}}; // Now a number
+      {"sensor", "scanbcnct"}, // Now a number
+      {"switch", "ohdiscovery"}, // Now a new key
+      {"switch", "discovery"}}; // Now a new key
 
   for (int i = 0; i < EntitiesCount; i++) {
     eraseTopic(obsoleteEntities[i][0], (char*)getUniqueId(obsoleteEntities[i][1], "").c_str());
