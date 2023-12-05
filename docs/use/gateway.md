@@ -22,13 +22,13 @@ With Home Assistant, this command is directly available through MQTT auto discov
 ## Auto discovery
 You can deactivate the MQTT auto discovery function, this function enables to automatically create devices/entities with Home Assistant convention.
 ### Deactivate
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"discovery":false}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"disc":false}'`
 
 ### Activate
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"discovery":true}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"disc":true}'`
 
 If you want the settings to be kept upon gateway restart, you can save the state by adding `"save":true` (ESP32 only).
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"discovery":false, "save":true}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"disc":false, "save":true}'`
 
 ::: tip
 Auto discovery is enable by default on release binaries, on platformio (except for UNO). With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
@@ -37,10 +37,10 @@ Auto discovery is enable by default on release binaries, on platformio (except f
 ## AutoDiscovery compatible with OpenHAB (default: false)
 OpenHAB does not support the key `is_defined` in the json template, to remove it at runtime and make the auto discovery compatible you can use the following command with a retain flag.
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdiscovery":true}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdisc":true}'`
 
 If you want the settings to be kept upon gateway restart, you can save the state by adding `"save":true` (ESP32 only).
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdiscovery":true, "save":true}'`
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdisc":true, "save":true}'`
 
 ::: tip
 This command can also be used with other controllers that does not support the is_defined key.

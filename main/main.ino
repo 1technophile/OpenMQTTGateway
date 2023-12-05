@@ -811,10 +811,10 @@ void SYSConfig_init() {
 }
 
 void SYSConfig_fromJson(JsonObject& SYSdata) {
-  Config_update(SYSdata, "discovery", SYSConfig.discovery);
-  Config_update(SYSdata, "ohdiscovery", SYSConfig.ohdiscovery);
+  Config_update(SYSdata, "disc", SYSConfig.discovery);
+  Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
 #  ifdef RGB_INDICATORS
-  Config_update(SYSdata, "rgbbrightness", SYSConfig.rgbbrightness);
+  Config_update(SYSdata, "rgbb", SYSConfig.rgbbrightness);
 #  endif
 }
 #else
@@ -2367,17 +2367,17 @@ void eraseAndRestart() {
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String stateMeasures() {
-  StaticJsonDocument<1024> SYSdata;
+  StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
 
   SYSdata["uptime"] = uptime();
 
   SYSdata["version"] = OMG_VERSION;
 #  ifdef RGB_INDICATORS
-  SYSdata["rgbbrightness"] = SYSConfig.rgbbrightness;
+  SYSdata["rgbb"] = SYSConfig.rgbbrightness;
 #  endif
 #  ifdef ZmqttDiscovery
-  SYSdata["discovery"] = SYSConfig.discovery;
-  SYSdata["ohdiscovery"] = SYSConfig.ohdiscovery;
+  SYSdata["disc"] = SYSConfig.discovery;
+  SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
@@ -2392,22 +2392,21 @@ String stateMeasures() {
   }
 #    endif
   SYSdata["freemem"] = freeMem;
-  SYSdata["mqttport"] = mqtt_port;
-  SYSdata["mqttsecure"] = mqtt_secure;
-  SYSdata["msgproc"] = queueLengthSum;
-  SYSdata["msgspeed"] = round2((float)queueLengthSum / uptime());
-  SYSdata["msgblock"] = blockedMessages;
-  SYSdata["maxqueue"] = maxQueueLength;
+  SYSdata["mqttp"] = mqtt_port;
+  SYSdata["mqtts"] = mqtt_secure;
+  SYSdata["msgprc"] = queueLengthSum;
+  SYSdata["msgblck"] = blockedMessages;
+  SYSdata["maxq"] = maxQueueLength;
 #    ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
-  SYSdata["minfreemem"] = minFreeMem;
+  SYSdata["minmem"] = minFreeMem;
 #      ifndef NO_INT_TEMP_READING
-  SYSdata["tempc"] = intTemperatureRead();
+  SYSdata["tempc"] = round2(intTemperatureRead());
 #      endif
-  SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
+  SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
 
-  SYSdata["ethernet"] = ethConnected;
+  SYSdata["eth"] = ethConnected;
   if (ethConnected) {
 #    ifdef ESP32_ETHERNET
     SYSdata["mac"] = (char*)ETH.macAddress().c_str();
@@ -2428,9 +2427,6 @@ String stateMeasures() {
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
 #    endif
-  SYSdata["interval"] = BTConfig.BLEinterval;
-  SYSdata["intervalcnct"] = BTConfig.intervalConnect;
-  SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
@@ -2468,6 +2464,7 @@ String stateMeasures() {
   _modules.replace("\"", "'");
 
   SYSdata["modules"] = _modules.c_str();
+
   String output;
   serializeJson(SYSdata, output);
   return output;
@@ -2868,9 +2865,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
     }
 #  ifdef RGB_INDICATORS
-    if (SYSdata.containsKey("rgbbrightness") && SYSdata["rgbbrightness"].is<float>()) {
-      if (SYSdata["rgbbrightness"] >= 0 && SYSdata["rgbbrightness"] <= 255) {
-        SYSConfig.rgbbrightness = round2(SYSdata["rgbbrightness"]);
+    if (SYSdata.containsKey("rgbb") && SYSdata["rgbb"].is<float>()) {
+      if (SYSdata["rgbb"] >= 0 && SYSdata["rgbb"] <= 255) {
+        SYSConfig.rgbbrightness = round2(SYSdata["rgbb"]);
         leds.setBrightness(SYSConfig.rgbbrightness);
         leds.show();
 #    ifdef ZactuatorONOFF
@@ -2884,8 +2881,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 #  endif
 #  ifdef ZmqttDiscovery
-    if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
-      SYSConfig.ohdiscovery = SYSdata["ohdiscovery"];
+    if (SYSdata.containsKey("ohdisc") && SYSdata["ohdisc"].is<bool>()) {
+      SYSConfig.ohdiscovery = SYSdata["ohdisc"];
       Log.notice(F("OpenHAB discovery: %T" CR), SYSConfig.ohdiscovery);
       stateMeasures();
     }
@@ -3046,11 +3043,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
 
 #ifdef ZmqttDiscovery
-    if (SYSdata.containsKey("discovery")) {
-      if (SYSdata["discovery"].is<bool>()) {
-        if (SYSdata["discovery"] == true && SYSConfig.discovery == false)
+    if (SYSdata.containsKey("disc")) {
+      if (SYSdata["disc"].is<bool>()) {
+        if (SYSdata["disc"] == true && SYSConfig.discovery == false)
           lastDiscovery = millis();
-        SYSConfig.discovery = SYSdata["discovery"];
+        SYSConfig.discovery = SYSdata["disc"];
         stateMeasures();
         if (SYSConfig.discovery)
           pubMqttDiscovery();
@@ -3063,10 +3060,10 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject jo = jsonBuffer.to<JsonObject>();
-      jo["discovery"] = SYSConfig.discovery;
-      jo["ohdiscovery"] = SYSConfig.ohdiscovery;
+      jo["disc"] = SYSConfig.discovery;
+      jo["ohdisc"] = SYSConfig.ohdiscovery;
 #    ifdef RGB_INDICATORS
-      jo["rgbbrightness"] = SYSConfig.rgbbrightness;
+      jo["rgbb"] = SYSConfig.rgbbrightness;
 #    endif
       // Save config into NVS (non-volatile storage)
       String conf = "";

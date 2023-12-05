@@ -225,11 +225,11 @@ Or by an MQTT command.
 
 To change presence publication topic, use this MQTT command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceTopic":"presence/"}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"prestopic":"presence/"}'`
 
 To use iBeacon UUID for presence, instead of sender (random) MAC address, use this MQTT command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceUseBeaconUuid":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presuseuuid":true}'`
 
 This will change usual payload for iBeacon from:
 `{"id":"60:87:57:4C:9B:C2","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}`
@@ -250,7 +250,7 @@ home/OpenMQTTGateway/BTtoMQTT/5210A84690AC {"id":"52:10:A8:46:90:AC","mac_type":
 
 To use iBeacon UUID as topic, use this MQTT command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubBeaconUuidForTopic":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubuuid4topic":true}'`
 
 Resulting in such messages (for the same iBeacon as previously):
 ```
