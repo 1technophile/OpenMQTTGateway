@@ -1054,7 +1054,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
                                 "True", "False", "",
-                                0, "", "", false, "",
+                                BTConfig.presenceAwayTimer, "", "", false, "",
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone);
               } else if (strcmp(prop.key().c_str(), "device") != 0 && strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors

@@ -79,7 +79,7 @@ Note that you can find apps to simulate beacons and do some tests like [Beacon s
 iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
 
 ::: info
-The `presenceawaytimer` is also used to reset the state of the PIR/motion sensors to `off` when using HA MQTT discovery convention. If the Sensor does not detect a motion, its state will be automatically set to `off` after the `presenceawaytimer`.
+The `presenceawaytimer` is also used to reset the state of the binary sensors, PIR/motion sensors to `off` when using HA MQTT discovery convention. If the Sensor does not detect a motion, its state will be automatically set to `off` after the `presenceawaytimer`.
 :::
 
 ## Receiving signals from BLE devices with accelerometers for movement detection
