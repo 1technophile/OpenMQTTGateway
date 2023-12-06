@@ -14,7 +14,7 @@ On M5Stack boards you may do a long press to these buttons in low power mode 0 (
 You can also do a long press when powering the board to reset it, this press must be done during the first 5 seconds after the start.
 
 ### Wifi interference on sensors when using an ESP ###
-Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP with Wifi enabled. To reduce or elimate the effect the board must be put into Wifi B/G with lower TX power.
+Certain sensors like HC-SR501 is prone to generate false signals / triggers when used on a ESP with Wifi enabled. To reduce or eliminate the effect the board must be put into Wifi B/G with lower TX power.
 
 This can be achieved with the following macro, `WifiGMode` defined true and `WifiPower` to e.g. WIFI_POWER_11dBm (ESP32) or 11 (ESP8266).  
 
