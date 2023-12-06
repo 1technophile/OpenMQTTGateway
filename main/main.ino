@@ -801,26 +801,25 @@ void delayWithOTA(long waitMillis) {
 #endif
 }
 
-#ifdef ZmqttDiscovery
 void SYSConfig_init() {
+#ifdef ZmqttDiscovery
   SYSConfig.discovery = true;
   SYSConfig.ohdiscovery = OpenHABDiscovery;
-#  ifdef RGB_INDICATORS
-  SYSConfig.rgbbrightness = DEAULT_ADJ_BRIGHTNESS;
-#  endif
+#endif
+#ifdef RGB_INDICATORS
+  SYSConfig.rgbbrightness = DEFAULT_ADJ_BRIGHTNESS;
+#endif
 }
 
 void SYSConfig_fromJson(JsonObject& SYSdata) {
+#ifdef ZmqttDiscovery
   Config_update(SYSdata, "disc", SYSConfig.discovery);
   Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
-#  ifdef RGB_INDICATORS
-  Config_update(SYSdata, "rgbb", SYSConfig.rgbbrightness);
-#  endif
-}
-#else
-void SYSConfig_init() {}
-void SYSConfig_fromJson(JsonObject& SYSdata) {}
 #endif
+#ifdef RGB_INDICATORS
+  Config_update(SYSdata, "rgbb", SYSConfig.rgbbrightness);
+#endif
+}
 
 #if defined(ESP32)
 void SYSConfig_load() {
@@ -2699,7 +2698,9 @@ bool checkForUpdates() {
 }
 
 #    else
-bool checkForUpdates() {}
+bool checkForUpdates() {
+  return false;
+}
 #    endif
 #  elif ESP8266
 #    include <ESP8266httpUpdate.h>

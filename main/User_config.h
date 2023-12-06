@@ -521,8 +521,8 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  ifndef ANEOPIX_BRIGHTNESS
 #    define ANEOPIX_BRIGHTNESS 20 // Set Default maximum RGB brightness to approx 10% (0-255 scale)
 #  endif
-#  ifndef DEAULT_ADJ_BRIGHTNESS
-#    define DEAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
+#  ifndef DEFAULT_ADJ_BRIGHTNESS
+#    define DEFAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
 #  endif
 #  ifndef ANEOPIX_COLOR_SCHEME // allow for different color combinations
 #    define ANEOPIX_COLOR_SCHEME 0
