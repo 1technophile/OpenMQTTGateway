@@ -6,7 +6,6 @@
 #    include "ZgatewayBLEConnect.h"
 #    define convertTemp_CtoF(c) ((c * 1.8) + 32)
 
-extern bool BTProcessLock;
 extern std::vector<BLEdevice*> devices;
 
 NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& service,

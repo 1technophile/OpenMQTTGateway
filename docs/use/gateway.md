@@ -203,7 +203,7 @@ The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above 
 
 ## Change the LED indicator brightness
 
-Minimum: 0, Maximum: 255, Default defined by DEAULT_ADJ_BRIGHTNESS
+Minimum: 0, Maximum: 255, Default defined by DEFAULT_ADJ_BRIGHTNESS
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"brightness":200}'`
 

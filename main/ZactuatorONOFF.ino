@@ -289,6 +289,8 @@ void ActuatorTrigger() {
   StaticJsonDocument<64> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)level;
+  ONOFFdata["origin"] = subjectGTWONOFFtoMQTT;
+  handleJsonEnqueue(ONOFFdata, QueueSemaphoreTimeOutTask);
 #  ifdef ESP32
   if (ONOFFConfig.useLastStateOnStart) {
     ONOFFdata["save"] = true;
