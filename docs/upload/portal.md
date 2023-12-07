@@ -27,7 +27,7 @@ For boards with an ethernet port you can also access to the Wifi Manager portal 
 If the board is connected by ethernet, the Wifi and password can be empty. If you fill them the board will use this wifi as a fallback connectivity method.
 :::
 
-* Set your MQTT Server IP
+* Set your MQTT Server IP or domain name (for Home Assistant you can enter `homeassistant.local` if your server is configured with mDNS)
 * Set your MQTT Server Port (default: 1883)
 * Set the MQTT secure connection box to select whether or not the connection should be secure
 * Copy/paste the MQTT server certificate in the MQTT server cert box (only required if using a secure connection), be sure to include the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` markers  
