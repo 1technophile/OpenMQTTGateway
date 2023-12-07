@@ -786,8 +786,8 @@ void coreTask(void* pvParameters) {
         n++;
         delay(1000);
       }
-      if (client.state() != 0) {
-        Log.warning(F("MQTT client disconnected no BLE scan" CR));
+      if (!connected) {
+        Log.warning(F("MQTT client or Network disconnected no BLE scan" CR));
       } else if (!BTProcessLock) {
         if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
           BLEscan();
