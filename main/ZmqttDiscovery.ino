@@ -949,7 +949,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZactuatorONOFF
   Log.trace(F("actuatorONOFFDiscovery" CR));
-  char* actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "", "{\"cmd\":1}", "{\"cmd\":0}", ""};
+  char* actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "{{ value_json.cmd }}", "{\"cmd\":1}", "{\"cmd\":0}", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
 
   //trc(actuatorONOFF[1]);
@@ -959,7 +959,8 @@ void pubMqttDiscovery() {
                   actuatorONOFF[5], actuatorONOFF[6], actuatorONOFF[7],
                   0, Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoONOFF,
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                  stateClassNone //State Class
+                  stateClassNone, //State Class
+                  "0", "1" //state_off, state_on
   );
 #  endif
 
