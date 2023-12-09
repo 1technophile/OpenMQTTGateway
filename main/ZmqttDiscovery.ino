@@ -475,7 +475,7 @@ void pubMqttDiscovery() {
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                  stateClassNone //State Class
+                  stateClassMeasurement //State Class
   );
 #  if defined(ESP8266) || defined(ESP32)
   createDiscovery("sensor", //set Type
@@ -485,7 +485,7 @@ void pubMqttDiscovery() {
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                  stateClassNone //State Class
+                  stateClassMeasurement //State Class
   );
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: IP", (char*)getUniqueId("ip", "").c_str(), //set state_topic,name,uniqueId
@@ -718,7 +718,7 @@ void pubMqttDiscovery() {
                     HTUsensor[i][5], HTUsensor[i][6], HTUsensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
@@ -734,7 +734,7 @@ void pubMqttDiscovery() {
                   LM75sensor[5], LM75sensor[6], LM75sensor[7],
                   0, Gateway_AnnouncementMsg, will_Message, true, "",
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                  stateClassNone //State Class
+                  stateClassMeasurement //State Class
   );
 #  endif
 
@@ -754,7 +754,7 @@ void pubMqttDiscovery() {
                     AHTsensor[i][5], AHTsensor[i][6], AHTsensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
@@ -776,7 +776,7 @@ void pubMqttDiscovery() {
                     DHTsensor[i][5], DHTsensor[i][6], DHTsensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
@@ -815,7 +815,7 @@ void pubMqttDiscovery() {
                     BH1750sensor[i][5], BH1750sensor[i][6], BH1750sensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
@@ -859,7 +859,7 @@ void pubMqttDiscovery() {
                     TEMT6000sensor[i][5], TEMT6000sensor[i][6], TEMT6000sensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
@@ -882,7 +882,7 @@ void pubMqttDiscovery() {
                     TSL2561sensor[i][5], TSL2561sensor[i][6], TSL2561sensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
@@ -937,7 +937,7 @@ void pubMqttDiscovery() {
                     INA226sensor[i][5], INA226sensor[i][6], INA226sensor[i][7],
                     0, Gateway_AnnouncementMsg, will_Message, true, "",
                     "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
-                    stateClassNone //State Class
+                    stateClassMeasurement //State Class
     );
   }
 #  endif
