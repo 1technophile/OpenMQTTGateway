@@ -1732,8 +1732,18 @@ bool loadConfigFromFlash() {
           mqtt_ss_index = json["mqtt_ss_index"].as<uint8_t>();
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
-        if (json.containsKey("ota_pass"))
+        if (json.containsKey("ota_pass")) {
           strcpy(ota_pass, json["ota_pass"]);
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+          // Compare the existing ota_pass if ota_pass = OTAPASSWORD then replace with the last 8 digits of the mac address
+          // This enable user migrating from previous version to have the same WiFi portal password as previously unless they changed it
+          if (strcmp(ota_pass, "OTAPASSWORD") == 0) {
+            String s = WiFi.macAddress();
+            sprintf(ota_pass, "%.2s%.2s%.2s%.2s",
+                    s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+          }
+#  endif
+        }
         if (json.containsKey("ota_server_cert"))
           ota_server_cert = json["ota_server_cert"].as<const char*>();
         result = true;
