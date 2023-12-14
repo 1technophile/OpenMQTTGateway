@@ -7,7 +7,7 @@ OpenMQTTGateway aims to unify various technologies and protocols into a single f
 MQTT, short for Message Queuing Telemetry Transport, is a lightweight messaging protocol ideal for IoT devices.
 
 An MQTT gateway or bridge plays a pivotal role in the MQTT ecosystem:
-* Protocol Translation: It converts non-MQTT protocols (like Zigbee or Bluetooth) into MQTT, enabling broader network communication.
+* Protocol Translation: It converts non-MQTT protocols (like LoRa or Bluetooth) into MQTT, enabling broader network communication.
 * Data Aggregation: Combines data from multiple devices into single messages, optimizing network use.
 * Security: Incorporates features like SSL/TLS encryption to safeguard data during transmission.
 * Device Management: Handles tasks like firmware updates and remote configuration changes.
