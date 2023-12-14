@@ -1,11 +1,12 @@
 {
   "name": "OpenMQTTGateway",
+  "new_install_prompt_erase": true,
   "builds": [
     {
-      "chipFamily": "ESP32",
+      "chipFamily": "ESP32-S3",
       "improv": false,
       "parts": [
-        { "path": "/dev/firmware_build/bootloader_dio_80m.bin", "offset": 4096 },
+        { "path": "/dev/firmware_build/esp32s3-atomS3U-bootloader.bin", "offset": 0 },
         { "path": "/dev/firmware_build/esp32s3-atomS3U-partitions.bin", "offset": 32768 },
         { "path": "/dev/firmware_build/boot_app0.bin", "offset": 57344 },
         { "path": "/dev/firmware_build/esp32s3-atomS3U-firmware.bin", "offset": 65536 }
