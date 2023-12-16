@@ -135,8 +135,6 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define OpenHABDiscovery false
 #endif
 
-boolean OpenHABDisc = OpenHABDiscovery;
-
 // Home assistant autodiscovery value key definition
 #define jsonBatt        "{{ value_json.batt | is_defined }}"
 #define jsonLux         "{{ value_json.lux | is_defined }}"

@@ -73,7 +73,7 @@ If you want to upload the ready-to-go binary from Linux (or any other OS where y
 https://github.com/marcelstoer/nodemcu-pyflasher/releases
 * Execute `NodeMCU-PyFlasher`
 * Set the files and parameters as below:
-![](../img/OpenMQTTgateway_NodeMCU_PyFlasher.png)
+![NodeMCU Py Flasher](../img/OpenMQTTgateway_NodeMCU_PyFlasher.png)
 * Connect your board and select the COM port 
 * Click on *FlashNodeMCU*
 The upload details appears.

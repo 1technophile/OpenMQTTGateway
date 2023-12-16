@@ -295,7 +295,7 @@ void createDiscovery(const char* sensor_type,
   if (retainCmd)
     sensor["retain"] = retainCmd; // Retain command
   if (value_template[0]) {
-    if (strstr(value_template, " | is_defined") != NULL && OpenHABDisc) {
+    if (strstr(value_template, " | is_defined") != NULL && SYSConfig.ohdiscovery) {
       sensor["val_tpl"] = remove_substring(value_template, " | is_defined"); //OpenHAB compatible HA auto discovery
     } else {
       sensor["val_tpl"] = value_template; //HA Auto discovery
@@ -487,7 +487,17 @@ void pubMqttDiscovery() {
   createDiscovery("switch", //set Type
                   subjectSYStoMQTT, "SYS: Auto discovery", (char*)getUniqueId("discovery", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.discovery }}", //set availability_topic,device_class,value_template,
-                  "{\"discovery\":true}", "{\"discovery\":false}", "", //set,payload_on,payload_off,unit_of_meas,
+                  "{\"discovery\":true,\"save\":true}", "{\"discovery\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
+                  "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
+                  stateClassNone, //State Class
+                  "false", "true" //state_off, state_on
+  );
+  createDiscovery("switch", //set Type
+                  subjectSYStoMQTT, "SYS: OpenHAB discovery", (char*)getUniqueId("ohdiscovery", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.ohdiscovery }}", //set availability_topic,device_class,value_template,
+                  "{\"ohdiscovery\":true,\"save\":true}", "{\"ohdiscovery\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain,
@@ -507,11 +517,11 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
   createDiscovery("switch", //set Type
-                  subjectSSD1306toMQTT, "SSD1306: Display metric", (char*)getUniqueId("displaymetric", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.displaymetric }}", //set availability_topic,device_class,value_template,
-                  "{\"displaymetric\":true,\"save\":true}", "{\"displaymetric\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectWebUItoMQTT, "SSD1306: Display metric", (char*)getUniqueId("displayMetric", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.displayMetric }}", //set availability_topic,device_class,value_template,
+                  "{\"displayMetric\":true,\"save\":true}", "{\"displayMetric\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSSD1306set, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoWebUIset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on

@@ -26,8 +26,6 @@
 */
 #ifdef ZsensorRN8209
 
-#  include <esp_task_wdt.h>
-
 #  include "ArduinoJson.h"
 #  include "driver/uart.h"
 #  include "rn8209_flash.h"
@@ -107,7 +105,6 @@ void setupRN8209() {
   cal.EC = RN8209_EC;
   set_user_param(cal);
   init_8209c_interface();
-  esp_task_wdt_init(TimeOutWDTRN8209, true);
   xTaskCreate(rn8209_loop, "rn8209_loop", 5000, NULL, 10, &rn8209TaskHandle);
   esp_task_wdt_add(rn8209TaskHandle);
   Log.trace(F("ZsensorRN8209 setup done " CR));

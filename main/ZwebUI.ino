@@ -1318,9 +1318,9 @@ void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decodin
   if (cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
     WEBUI_TRACE_LOG(F("MQTTtoWebUI json set" CR));
     // properties
-    if (WebUIdata.containsKey("displaymetric")) {
-      displayMetric = WebUIdata["displaymetric"].as<bool>();
-      Log.notice(F("Set displaymetric: %T" CR), displayMetric);
+    if (WebUIdata.containsKey("displayMetric")) {
+      displayMetric = WebUIdata["displayMetric"].as<bool>();
+      Log.notice(F("Set displayMetric: %T" CR), displayMetric);
       success = true;
     }
     // save, load, init, erase
