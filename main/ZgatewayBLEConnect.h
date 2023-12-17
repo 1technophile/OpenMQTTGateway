@@ -6,8 +6,6 @@
 #  include "NimBLEDevice.h"
 #  include "config_BT.h"
 
-extern void pubBT(JsonObject& data);
-
 class zBLEConnect {
 public:
   NimBLEClient* m_pClient;

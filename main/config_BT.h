@@ -29,16 +29,13 @@
 extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
-extern void emptyBTQueue();
+extern void pubMainCore(JsonObject& data);
 extern void launchBTDiscovery(bool overrideDiscovery);
 extern void stopProcessing();
 extern void lowPowerESP32();
 extern String stateBTMeasures(bool);
 
 #ifdef ESP32
-extern int btQueueBlocked;
-extern int btQueueLengthSum;
-extern int btQueueLengthCount;
 #  include "NimBLEDevice.h"
 #endif
 
@@ -119,10 +116,6 @@ extern int btQueueLengthCount;
 #  define HassPresence false //false if we publish into Home Assistant presence topic
 #endif
 
-#ifndef BTQueueSize
-#  define BTQueueSize 4 // lockless queue size for multi core cases (ESP32 currently)
-#endif
-
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200
 //#define HM_BLUE_LED_STOP true //uncomment to stop the blue led light of HM1X
 
@@ -170,8 +163,10 @@ struct BTConfig_s {
   bool pubAdvData; // Publish advertisement data
   bool pubBeaconUuidForTopic; // Use iBeacon UUID as topic, instead of sender (random) MAC address
   bool ignoreWBlist; // Disable Whitelist & Blacklist
-  unsigned long presenceAwayTimer; //Timer that trigger a tracker state as offline if not seen
+  unsigned long presenceAwayTimer; //Timer that trigger a tracker/PIR state as offline/off if not seen
   unsigned long movingTimer; //Timer that trigger a moving sensor state as offline if not seen
+  bool forcePassiveScan; //Force passive scan
+  bool enabled; // Enable or disable the BT gateway
 };
 
 // Global struct to store live BT configuration data
@@ -231,12 +226,9 @@ public:
     LYWSD03MMC,
     MHO_C401,
     DT24_BLE,
-    BM2,
     XMWSDJ04MMC,
     MAX,
   };
 };
-
-JsonObject& getBTJsonObject(const char* json = NULL, bool haPresenceEnabled = true);
 
 #endif

@@ -115,8 +115,8 @@ void IRtoMQTT() {
 
   if (irrecv.decode(&results)) {
     Log.trace(F("Creating IR buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject IRdata = jsonBuffer.to<JsonObject>();
+    StaticJsonDocument<JSON_MSG_BUFFER> IRdataBuffer;
+    JsonObject IRdata = IRdataBuffer.to<JsonObject>();
 
     Log.trace(F("Rcv. IR" CR));
 #  ifdef ESP32
@@ -126,10 +126,8 @@ void IRtoMQTT() {
     IRdata["protocol"] = (int)(results.decode_type);
     IRdata["bits"] = (int)(results.bits);
 #  if defined(ESP8266) || defined(ESP32) //resultToHexidecimal is only available with IRremoteESP8266
-    String hex = resultToHexidecimal(&results);
-    IRdata["hex"] = (const char*)hex.c_str();
-    String protocol = typeToString(results.decode_type, false);
-    IRdata["protocol_name"] = (const char*)protocol.c_str();
+    IRdata["hex"] = resultToHexidecimal(&results);
+    IRdata["protocol_name"] = typeToString(results.decode_type, false);
 #  endif
     String rawCode = "";
     // Dump data
@@ -168,7 +166,8 @@ void IRtoMQTT() {
       Log.notice(F("--no pub unknwn prt--" CR));
     } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
       Log.trace(F("Adv data IRtoMQTT" CR));
-      pub(subjectIRtoMQTT, IRdata);
+      IRdata["origin"] = subjectIRtoMQTT;
+      handleJsonEnqueue(IRdata);
       Log.trace(F("Store val: %D" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatIRwMQTT) {

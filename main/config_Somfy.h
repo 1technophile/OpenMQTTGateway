@@ -39,7 +39,4 @@ const uint32_t somfyRemotes[SOMFY_REMOTE_NUM] = {0x5184c8};
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectMQTTtoSomfy "/commands/MQTTtoSomfy"
 
-/*-------------------INTERNAL DEFINITIONS----------------------*/
-#define CC1101_FREQUENCY_SOMFY 433.42
-
 #endif

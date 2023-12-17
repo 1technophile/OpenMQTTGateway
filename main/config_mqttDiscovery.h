@@ -88,7 +88,7 @@ extern void createDiscovery(const char* sensor_type,
                             int off_delay,
                             const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* command_topic,
                             const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
-                            const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr);
+                            const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr, const char* enum_options = nullptr);
 
 /**
  * @brief Create a message for Discovery Device Trigger. For HA @see https://www.home-assistant.io/integrations/device_trigger.mqtt/
@@ -182,21 +182,35 @@ void announceDeviceTrigger(bool use_gateway_info,
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
 // List of classes available in Home Assistant
 const char* availableHASSClasses[] = {"battery",
-                                      "carbon_monoxide",
                                       "carbon_dioxide",
-                                      "pm10",
-                                      "pm25",
+                                      "carbon_monoxide",
+                                      "current",
+                                      "data_size",
+                                      "distance",
+                                      "door",
+                                      "duration",
+                                      "energy",
+                                      "enum",
+                                      "gas",
                                       "humidity",
                                       "illuminance",
+                                      "irradiance",
+                                      "motion",
+                                      "moving",
+                                      "pm10",
+                                      "pm25",
+                                      "power",
+                                      "power_factor",
+                                      "pressure",
+                                      "problem",
+                                      "restart",
                                       "signal_strength",
                                       "temperature",
                                       "timestamp",
-                                      "pressure",
-                                      "power",
-                                      "current",
-                                      "energy",
-                                      "power_factor",
-                                      "voltage"};
+                                      "voltage",
+                                      "water",
+                                      "weight",
+                                      "window"};
 
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L379
 // List of units available in Home Assistant

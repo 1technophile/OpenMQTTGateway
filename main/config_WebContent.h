@@ -43,14 +43,25 @@
 
 #define configure_1 "<p><form action='wi' method='get'><button>Configure WiFi</button></form></p>"
 #define configure_2 "<p><form action='mq' method='get'><button>Configure MQTT</button></form></p>"
-#if defined(ZgatewayCloud)
+/*#if defined(ZgatewayCloud)
 #  define configure_3 "<p><form action='cl' method='get'><button>Configure Cloud</button></form></p>"
+#else
+#  define configure_3
+#endif*/
+#ifndef ESPWifiManualSetup
+#  define configure_3 "<p><form action='cg' method='get'><button>Configure Gateway</button></form></p>"
 #else
 #  define configure_3
 #endif
 #define configure_4 "<p><form action='wu' method='get'><button>Configure WebUI</button></form></p>"
 #define configure_5 "<p><form action='lo' method='get'><button>Configure Logging</button></form></p>"
-#define configure_6
+#ifdef ZgatewayLORA
+#  define configure_6 "<p><form action='la' method='get'><button>Configure LORA</button></form></p>"
+#elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+#  define configure_6 "<p><form action='rf' method='get'><button>Configure RF</button></form></p>"
+#else
+#  define configure_6
+#endif
 #define configure_7
 #define configure_8
 
@@ -78,7 +89,7 @@ const char config_body[] = body_header "" configure_1 "" configure_2 "" configur
 
 const char reset_body[] = body_header "<div style='text-align:center;'>%s</div><br><div style='text-align:center;'>Device will restart in a few seconds</div><br>" body_footer_main_menu;
 
-const char config_cloud_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>&nbsp;Cloud Configuration&nbsp;</b></span></legend><form method='get' action='cl'><p><label><input id='cl-en' type='checkbox' %s><b>Enable Cloud Connection</b></label></p><br><p><label><input id='cl-lk' type='checkbox' disabled><b>Cloud Account%s Linked</b></label></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset><p><form action='%s' method='get'><input type='hidden' name='macAddress' value='%s'/><input type='hidden' name='redirect_uri' value='%s'/><input type='hidden' name='gateway_name' value='%s'/><input type='hidden' name='uptime' value='%d'/><input type='hidden' name='RT' value='%d'/><button>Link Cloud Account</button></form></p>" body_footer_config_menu;
+//const char config_cloud_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>&nbsp;Cloud Configuration&nbsp;</b></span></legend><form method='get' action='cl'><p><label><input id='cl-en' type='checkbox' %s><b>Enable Cloud Connection</b></label></p><br><p><label><input id='cl-lk' type='checkbox' disabled><b>Cloud Account%s Linked</b></label></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset><p><form action='%s' method='get'><input type='hidden' name='macAddress' value='%s'/><input type='hidden' name='redirect_uri' value='%s'/><input type='hidden' name='gateway_name' value='%s'/><input type='hidden' name='uptime' value='%d'/><input type='hidden' name='RT' value='%d'/><button>Link Cloud Account</button></form></p>" body_footer_config_menu;
 
 const char token_body[] = body_header "<div style='text-align:center;'>Link Cloud Account</div><br><div style='text-align:center;'>Cloud was successfully linked</div><br><div id=but2d style=\"display: block;\"></div><p><form id=but2 style=\"display: block;\" action='cn' method='get'><button>Configuration</button></form></p>";
 
@@ -88,15 +99,123 @@ const char information_body[] = body_header "<style>td {padding: 0px 5px;}</styl
 
 const char upgrade_body[] = body_header "<div id='f1' style='display:block;'><fieldset class=\"set1\"><legend><span><b>Upgrade by Web Server</b></span></legend><form method='get' action='up'><br><b>OTA URL</b><br><input id='o' placeholder=\"OTA_URL\" value=\"%s\"><br><br><button type='submit' class='button bgrn'>Start upgrade</button></form></fieldset><br><br><fieldset class=\"set1\"><legend><span><b>Upgrade to Level</b></span></legend><form method='get' action='up'><p><b>Level</b><br><select id='le'><option value='1'>Latest Release</option><option value='2'>Development</option></select></p><br><button type='submit' class='button bgrn'>Start upgrade</button></form></fieldset></div><div id='f2' style='display:none;text-align:center;'><b>Upload started ...</b></div><div id=but2d style=\"display: block;\"></div><p>" body_footer_main_menu;
 
-const char config_wifi_body[] = body_header "%s<br><div><a href='/wi?scan='><b>Scan for all WiFi Networks</b></a></div><br><fieldset class=\"set1\"><legend><span><b>WiFi Parameters</b></span></legend><form method='get' action='wi'><p><b>WiFi Network</b> () <br><input id='s1' placeholder=\"Type or Select your WiFi Network\" value=\"%s\"></p><p><label><b>WiFi Password</b><input type='checkbox' onclick='sp(\"p1\")'></label><br><input id='p1' type='password' placeholder=\"Enter your WiFi Password\" value=\"%s\"></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+const char config_wifi_body[] = body_header "%s<br><div><a href='/wi?scan='><b>Scan for all WiFi Networks</b></a></div><br><fieldset class=\"set1\"><legend><span><b>WiFi Parameters</b></span></legend><form method='get' action='wi'><p><b>WiFi Network</b> () <br><input id='s1' placeholder=\"Type or Select your WiFi Network\" value=\"%s\"></p><p><label><b>WiFi Password</b></label><br><input id='p1' type='password' placeholder=\"Enter your WiFi Password\" ></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
 
-const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>MQTT Parameters</b></span></legend><form method='get' action='mq'><p><b>MQTT Server</b><br><input id='mh' placeholder=" MQTT_SERVER " value='%s'></p><p><b>MQTT Port</b><br><input id='ml' placeholder=" MQTT_PORT " value='%s'></p><p><b>MQTT Username</b><br><input id='mu' placeholder=" MQTT_USER " value='%s'></p><p><label><b>MQTT Password</b><input type='checkbox' onclick='sp(\"mp\")'></label><br><input id='mp' type='password' placeholder=\"Password\" value='%s'></p><p><b>MQTT Secure Connection</b><br><input id='sc' type='checkbox' %s></p><p><b>Gateway Name</b><br><input id='h' placeholder=" Gateway_Name " value=\"%s\"></p><p><b>MQTT Base Topic</b><br><input id='mt' placeholder='' value='%s'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>MQTT Parameters</b></span></legend><form method='get' action='mq'><p><b>MQTT Server</b><br><input id='mh' placeholder=" MQTT_SERVER " value='%s'></p><p><b>MQTT Port</b><br><input id='ml' placeholder=" MQTT_PORT " value='%s'></p><p><b>MQTT Username</b><br><input id='mu' placeholder=" MQTT_USER " value='%s'></p><p><label><b>MQTT Password</b></label><br><input id='mp' type='password' placeholder=\"Password\" ></p><p><b>MQTT Secure Connection</b><br><input id='sc' type='checkbox' %s></p><p><b>Gateway Name</b><br><input id='h' placeholder=" Gateway_Name " value=\"%s\"></p><p><b>MQTT Base Topic</b><br><input id='mt' placeholder='' value='%s'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
+#ifndef ESPWifiManualSetup
+const char config_gateway_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Gateway Configuration</b></span></legend><form method='get' action='cg'><p><b>Gateway Password (8 characters min)</b><br><input id='gp' type='password' placeholder=\"********\"  minlength='8'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+#endif
 const char config_logging_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>OpenMQTTGateway Logging</b></span></legend><form method='get' action='lo'><p><b>Log Level</b><br><select id='lo'><option %s value='0'>Silent</option><option %s value='1'>Fatal</option><option %s value='2'>Error</option><option %s value='3'>Warning</option><option %s value='4'>Notice</option><option %s value='5'>Trace</option><option %s value='6'>Verbose</option></select></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 const char config_webui_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure WebUI</b></span></legend><form method='get' action='wu'><p><b>Display Metric</b><br><input id='dm' type='checkbox' %s></p><p><b>Secure WebUI</b><br><input id='sw' type='checkbox' %s></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+
+const char config_rf_body[] = body_header
+    "<fieldset class=\"set1\">"
+    "<legend><span><b>Configure RF</b></span></legend>"
+    "<form method='get' action='rf'>"
+
+    "<p><b>Frequency</b><br>"
+    "<input type='number' id='rf' name='rf' step='any' value='%.3f'></p>"
+
+    // Active library dropdown
+    "<p><b>Active library</b><br>"
+    "<select id='ar' name='ar'>%s</select></p>"
+
+    /* // Need testing
+    "<p><b>OOK Threshold</b><br>"
+    "<input type='number' id='oo' name='oo' step='any' value='%d'></p>"
+
+    "<p><b>RSSI Threshold</b><br>"
+    "<input type='number' id='rs' name='rs' step='any' value='%d'></p>"
+*/
+    "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
+    "</form>"
+    "</fieldset>" body_footer_config_menu;
+
+const char config_lora_body[] = body_header
+    "<fieldset class=\"set1\">"
+    "<legend><span><b>Configure LORA</b></span></legend>"
+    "<form method='get' action='la'>"
+
+    "<p><b>Frequency</b><br>"
+    "<select id='lf' name='lf'>"
+    "<option %s value='868000000'>868MHz</option>"
+    "<option %s value='915000000'>915MHz</option>"
+    "<option %s value='433000000'>433MHz</option>"
+    "</select></p>"
+
+    "<p><b>TX Power</b><br>"
+    "<select id='lt' name='lt'>"
+    "<option %s value='0'>0 dBm</option>"
+    "<option %s value='1'>1 dBm</option>"
+    "<option %s value='2'>2 dBm</option>"
+    "<option %s value='3'>3 dBm</option>"
+    "<option %s value='4'>4 dBm</option>"
+    "<option %s value='5'>5 dBm</option>"
+    "<option %s value='6'>6 dBm</option>"
+    "<option %s value='7'>7 dBm</option>"
+    "<option %s value='8'>8 dBm</option>"
+    "<option %s value='9'>9 dBm</option>"
+    "<option %s value='10'>10 dBm</option>"
+    "<option %s value='11'>11 dBm</option>"
+    "<option %s value='12'>12 dBm</option>"
+    "<option %s value='13'>13 dBm</option>"
+    "<option %s value='14'>14 dBm</option>"
+    "</select></p>"
+
+    "<p><b>Spreading Factor</b><br>"
+    "<select id='ls' name='ls'>"
+    "<option %s value='7'>SF7</option>"
+    "<option %s value='8'>SF8</option>"
+    "<option %s value='9'>SF9</option>"
+    "<option %s value='10'>SF10</option>"
+    "<option %s value='11'>SF11</option>"
+    "<option %s value='12'>SF12</option>"
+    "</select></p>"
+
+    "<p><b>Signal Bandwidth</b><br>"
+    "<select id='lb' name='lb'>"
+    "<option %s value='7800'>7.8 kHz</option>"
+    "<option %s value='10400'>10.4 kHz</option>"
+    "<option %s value='15600'>15.6 kHz</option>"
+    "<option %s value='20800'>20.8 kHz</option>"
+    "<option %s value='31250'>31.25 kHz</option>"
+    "<option %s value='41700'>41.7 kHz</option>"
+    "<option %s value='62500'>62.5 kHz</option>"
+    "<option %s value='125000'>125 kHz</option>"
+    "<option %s value='250000'>250 kHz</option>"
+    "<option %s value='500000'>500 kHz</option>"
+    "</select></p>"
+
+    "<p><b>Coding Rate</b><br>"
+    "<select id='lc' name='lc'>"
+    "<option %s value='5'>4/5</option>"
+    "<option %s value='6'>4/6</option>"
+    "<option %s value='7'>4/7</option>"
+    "<option %s value='8'>4/8</option>"
+    "</select></p>"
+
+    "<p><b>Preamble Length</b><br>"
+    "<input type='number' id='ll' name='ll' value='%d'></p>"
+
+    "<p><b>Sync Word</b><br>"
+    "<input type='text' id='lw' name='lw' value='0x%02X'></p>"
+
+    "<p><b>CRC</b><br>"
+    "<input type='checkbox' id='lr' name='lr' %s></p>"
+
+    "<p><b>Invert IQ</b><br>"
+    "<input type='checkbox' id='li' name='li' %s></p>"
+
+    "<p><b>Only known</b><br>"
+    "<input type='checkbox' id='ok' name='ok' %s></p>"
+
+    "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
+    "</form>"
+    "</fieldset>" body_footer_config_menu;
 
 const char footer[] = "<div style='text-align:right;font-size:11px;'><hr/><a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>%s</a></div></div></body></html>";
 

@@ -22,7 +22,7 @@ The gateway will need an MQTT username and password, you have to create a new us
 ![Home Assistant Auto Discovery](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
 
 ::: warning Note
-The max size of the username is 30 and 60 for the password.
+The max size of the username and password is 64 characters.
 :::
 
 OMG will use the auto discovery functionality of home assistant to create gateway and sensors into your HASS instance automatically.
@@ -75,7 +75,7 @@ Alternatively the rssi signal could be used also.
 
 ## MQTT Device Trigger and RF
 
-With OpenMQTTGateway [configured to receive RF signals](./setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](./use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a signal. 
+With OpenMQTTGateway [configured to receive RF signals](../setitup/rf.html) the messages are transmitted as indicated by [RCSwitch based gateway](../use/rf.html#rcswitch-based-gateway), so it is possible to receive a pulse every time the sensor discover a signal. 
 
 With autodiscovery enabled, HomeAssistant will discover a [MQTT Device Trigger](https://www.home-assistant.io/integrations/device_trigger.mqtt/) identified by the value field given in the mqtt argument. 
 

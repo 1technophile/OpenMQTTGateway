@@ -1,5 +1,5 @@
 ---
-title: ESP32 BLE MQTT Gateway
+title: BLE ESP32 gateway
 description: Versatile BLE gateway that scans and decodes data from various Bluetooth devices. It integrates seamlessly with MQTT brokers and controllers like Home Assistant and OpenHAB. Monitor temperature, humidity, pressure, and more for smarter control.
 ---
 # BLE gateway
@@ -26,6 +26,16 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 The plug is available in North America only, other regions are planned.
 
+## Disable or enable the BLE gateway (default: true, available with HA discovery)
+
+If you want to deactivate the BLE gateway:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"enabled":false}'`
+
+If you want to activate the BLE gateway:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"enabled":true}'`
+
 ## Receiving signals from [compatible BLE sensors](https://decoder.theengs.io/devices/devices_by_brand.html) to publish it to an MQTT broker.
 To receive data from BLE sensors you can use an ESP32-based device with a programming USB port or use a Serial adapter.
 
@@ -46,7 +56,7 @@ Once the data has been transmitted to the MQTT broker, it can be easily integrat
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
 ## Receiving signals from BLE tracker devices for Presence detection
-The gateway can detect the BLE trackers from Tile, NUT, TAGIT, ITAG, MiBand, Amazfit and RuuviTag and create automatically a device tracker entity following the Home Assistant discovery convention (if the auto discovery is activated).
+The gateway can detect BLE trackers from Tile, Nut, TagIt and iTag, as well as other devices with additional properties decoding like Mi Band, Amazfit, RuuviTag and others indicated as Presence Trackers in the [compatible BLE devices list](https://decoder.theengs.io/devices/devices.html), and automatically creates a device tracker entity following the Home Assistant discovery convention (if auto discovery is activated).
 To do this activate the "BT: Publish HASS presence" switch in your controller or send the following MQTT command to your broker:
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
 
@@ -67,6 +77,10 @@ Consider the distance estimation as a beta feature.
 Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
 
 iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
+
+::: info
+The `presenceawaytimer` is also used to reset the state of the PIR/motion sensors to `off` when using HA MQTT discovery convention. If the Sensor does not detect a motion, its state will be automatically set to `off` after the `presenceawaytimer`.
+:::
 
 ## Receiving signals from BLE devices with accelerometers for movement detection
 The gateway is designed to detect BLE trackers from BlueCharm and automatically create a binary sensor entity in accordance with the Home Assistant discovery convention, provided that auto discovery is enabled.
@@ -107,7 +121,7 @@ So as to keep your white/black list persistent you can publish it with the retai
 `mosquitto_pub -r -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"white-list":["01:23:14:55:16:15","4C:65:77:88:9C:79","4C:65:A6:66:3C:79"]}'`
 :::
 
-## Setting the time between BLE scans and force a scan
+## Setting the time between BLE scans and force a scan (available with HA discovery)
 
 If you want to change the time between readings you can change the interval by MQTT.
 For example, if you want the BLE to scan every 66 seconds:
@@ -136,25 +150,21 @@ In this case you should deactivate the BLE connection mechanism to avoid concurr
 For certain devices like LYWSD03MMC OpenMQTTGateway use a connection (due to the fact that the advertized data are encrypted), this connection mechanism is launched after every `TimeBtwConnect` per default, you can modify it by following the procedure below.
 :::
 
-## Setting the time between connection attempts
+## Setting the time between connection attempts (default: 60min, available with HA discovery)
 
 If you want to change the time between BLE connect you can change it by MQTT, if you want the BLE connect time to be every 300s:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalcnct":300000}'`
 
-## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors (default: false)
+## Setting if the gateway publishes all the BLE devices scanned or only the detected sensors (default: false, available with HA discovery)
 
 If you want to change this characteristic:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"onlysensors":true}'`
 
-::: tip
-With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
-:::
-
 The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
 
-## Setting if the gateway publishes known devices which randomly change their MAC address
+## Setting if the gateway publishes known devices which randomly change their MAC address (default: false)
 
 The default is false, as such changing MAC addresses cannot be related to specific devices.
 
@@ -162,7 +172,7 @@ If you want to change this characteristic:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"randommacs":true}'`
 
-## Setting if the gateway use adaptive scanning
+## Setting if the gateway use adaptive scanning (default: true, available with HA discovery)
 
 Adaptive scanning lets the gateway decide for you the best passive `interval` and active `intervalacts` scan interval, depending on the characteristics of your devices.
 The gateway retrieves your devices' information from [Theengs Decoder](https://decoder.theengs.io) and adapts its parameters accordingly if a device that requires it is detected.
@@ -173,10 +183,6 @@ If you want to change this characteristic (default:true):
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"adaptivescan":false}'`
 
 Setting Adaptive scanning to `false` will automatically put the gateway to continuous active scanning if no additional manual changes have already been applied.
-
-::: tip
-With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
-:::
 
 An overview with background information to better understand the different setting used:
 
@@ -190,7 +196,7 @@ If adaptive scanning is set to false and you want to manually set these interval
 
 **"acts":true** - the device requires active scanning to broadcast all of it's data for decoding.
 
-## Setting the time between active scanning
+## Setting the time between active scanning (available with HA discovery)
 
 If you have passive scanning activated, but also have some devices which require active scanning, this defines the time interval between two intermittent active scans.
 
@@ -198,23 +204,19 @@ If you want to change the time between active scans you can change it by MQTT. F
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
 
-## Setting the duration of a scan
+## Setting the duration of a scan (available with HA discovery)
 
-If you want to change the default 10 sec duration of each scan cycle to 5 seconds
+If you want to change the default duration of each scan cycle to 5 seconds
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"scanduration":5000}'`
 
-## Setting if the gateway connects to BLE devices eligibles on ESP32
+## Setting if the gateway connects to BLE devices eligibles (default: true, available with HA discovery)
 
 If you want to change this characteristic:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"bleconnect":false}'`
 
-::: tip
-With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
-:::
-
-## Setting if the gateway publish into Home Assistant Home presence topic
+## Setting if the gateway publish into Home Assistant Home presence topic (default: false, available with HA discovery)
 
 If you want to publish to Home Assistant presence topic, you can activate this function by the HASS interface (this command is auto discovered), [here is a yaml example](../integrate/home_assistant.md#mqtt-room-presence).
 Or by an MQTT command.
@@ -223,11 +225,11 @@ Or by an MQTT command.
 
 To change presence publication topic, use this MQTT command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceTopic":"presence/"}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"prestopic":"presence/"}'`
 
 To use iBeacon UUID for presence, instead of sender (random) MAC address, use this MQTT command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presenceUseBeaconUuid":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"presuseuuid":true}'`
 
 This will change usual payload for iBeacon from:
 `{"id":"60:87:57:4C:9B:C2","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}`
@@ -235,7 +237,7 @@ To:
 `{"id":"1de4b189115e45f6b44e509352269977","mac_type":1,"rssi":-78,"distance":7.85288,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66,"mac":"60:87:57:4C:9B:C2"}`
 Note: the MAC address is put in "mac" field.
 
-## Setting if the gateway uses iBeacon UUID as topic, instead of (random) MAC address
+## Setting if the gateway uses iBeacon UUID as topic, instead of (random) MAC address (default: false)
 
 By default, iBeacon are published like other devices, using a topic based on the MAC address of the sender.
 But modern phones randomize their Bluetooth MAC address making it difficult to track iBeacon.
@@ -248,7 +250,7 @@ home/OpenMQTTGateway/BTtoMQTT/5210A84690AC {"id":"52:10:A8:46:90:AC","mac_type":
 
 To use iBeacon UUID as topic, use this MQTT command:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubBeaconUuidForTopic":true}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"pubuuid4topic":true}'`
 
 Resulting in such messages (for the same iBeacon as previously):
 ```
@@ -256,7 +258,7 @@ home/OpenMQTTGateway/BTtoMQTT/1de4b189115e45f6b44e509352269977 {"id":"52:10:A8:4
 home/OpenMQTTGateway/BTtoMQTT/1de4b189115e45f6b44e509352269977 {"id":"7B:63:C6:82:DC:57","mac_type":1,"rssi":-83,"brand":"GENERIC","model":"iBeacon","model_id":"IBEACON","mfid":"4c00","uuid":"1de4b189115e45f6b44e509352269977","major":0,"minor":0,"txpower":-66}
 ```
 
-## Setting the minimum RSSI accepted to publish device data
+## Setting the minimum RSSI accepted to publish device data (default:-100)
 
 If you want to change the minimum RSSI value accepted for a device to be published, you can change it by MQTT. For example if you want to set -80
 
@@ -270,7 +272,7 @@ The default value is set into config_BT.h
 
 ## Store BLE configuration into the gateway
 
-Open MQTT Gateway has the capability to save the current configuration and reload it at startup.
+OpenMQTTGateway has the capability to save the current configuration and reload it at startup.
 
 To store the running configuration into the gateway, use the command:
 
@@ -345,9 +347,8 @@ Response:
 ::: tip
 The `ttl` parameter is the number of attempts to connect (defaults to 1), which occur after the BLE scan completes.  
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
-:::
 
-## SwitchBot Bot control
+## SwitchBot Bot control (available with HA discovery)
 
 SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
 
@@ -384,7 +385,7 @@ To change the default external decoder topic to "undecoded":
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"extDecoderTopic":"undecoded"}'`
 
-## ADVANCED: Filtering out connectable devices
+## ADVANCED: Filtering out connectable devices (default: false)
 
 [With OpenHAB integration](../integrate/openhab2.md), this configuration is highly recommended, otherwise you may encounter incomplete data.
 
@@ -392,7 +393,7 @@ If you want to enable this feature:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"filterConnectable":true}'`
 
-## ADVANCED: Advertisement and advanced data (default: false)
+## ADVANCED: Advertisement and advanced data (default: false, available with HA discovery)
 
 If you want to enable this feature:
 

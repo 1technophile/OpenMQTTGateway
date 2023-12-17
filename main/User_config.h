@@ -89,7 +89,7 @@ const byte ip[] = {192, 168, 1, 99};
 const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield MAC address
 #endif
 
-//#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on ESP32 Ethernet gateway and adapt the settings to your board below, the default parameter are for OLIMEX ESP32 Gateway
+//#define ESP32_ETHERNET=true // Uncomment to use Ethernet module on ESP32 Ethernet gateway and adapt the settings to your board below, the default parameter are for OLIMEX ESP32 gateway
 #ifdef ESP32_ETHERNET
 #  ifndef ETH_PHY_ADDR
 #    define ETH_PHY_ADDR 0
@@ -121,17 +121,14 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #endif
 
 //#define WM_PWD_FROM_MAC true // enable to set the password from the last 8 digits of the ESP MAC address for enhanced security, enabling this option requires to have access to the MAC address, either through a sticker or with serial monitoring
-#ifndef WifiManager_password
-#  define WifiManager_password "your_password" //this is going to be the WPA2-PSK password for the initial setup access point
-#endif
 #ifndef WifiManager_ssid
 #  define WifiManager_ssid Gateway_Name //this is the network name of the initial setup access point
 #endif
 #ifndef WifiManager_ConfigPortalTimeOut
-#  define WifiManager_ConfigPortalTimeOut 120
+#  define WifiManager_ConfigPortalTimeOut 240 //time in seconds for the setup portal to stay open, default 240s
 #endif
-#ifndef WifiManager_TimeOut
-#  define WifiManager_TimeOut 5
+#ifndef WiFi_TimeOut
+#  define WiFi_TimeOut 5
 #endif
 #ifndef WM_DEBUG_LEVEL
 #  define WM_DEBUG_LEVEL 1 // valid values are: DEBUG_ERROR = 0, DEBUG_NOTIFY = 1, DEBUG_VERBOSE = 2, DEBUG_DEV = 3, DEBUG_MAX = 4
@@ -140,9 +137,8 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 /*-------------DEFINE YOUR ADVANCED NETWORK PARAMETERS BELOW----------------*/
 //#define MDNS_SD //uncomment if you  want to use mDNS for discovering automatically your IP server, please note that mDNS with ESP32 can cause the BLE to not work
-#define maxConnectionRetry     10 //maximum MQTT connection attempts before going to wifimanager setup if never connected once
-#define maxConnectionRetryWifi 5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
-#define maxRetryWatchDog       11 //maximum Wifi or MQTT re-connection attempts before restarting
+#define maxConnectionRetryNetwork 5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
+#define maxRetryWatchDog          11 //maximum Wifi or MQTT re-connection attempts before restarting
 
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
@@ -150,7 +146,7 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define parameters_size     60
+#  define parameters_size     65
 #  define mqtt_topic_max_size 150
 #  ifndef mqtt_max_packet_size
 #    ifdef MQTT_HTTPS_FW_UPDATE
@@ -183,6 +179,12 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 #ifndef GeneralTimeOut
 #  define GeneralTimeOut 20 // time out if a task is stuck in seconds (should be more than TimeBetweenReadingRN8209/1000) and more than 3 seconds, the WDT will reset the ESP, used also for MQTT connection
+#endif
+#ifndef QueueSemaphoreTimeOutTask
+#  define QueueSemaphoreTimeOutTask 3000 // time out for semaphore retrieval from a task
+#endif
+#ifndef QueueSemaphoreTimeOutLoop
+#  define QueueSemaphoreTimeOutLoop 100 // time out for semaphore retrieval from the loop
 #endif
 
 #if defined(ESP8266) || defined(ESP32)
@@ -358,9 +360,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
-#ifndef version_Topic
-#  define version_Topic "/version"
-#endif
 #ifndef will_Topic
 #  define will_Topic "/LWT"
 #endif
@@ -408,8 +407,8 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #ifndef ota_hostname
 #  define ota_hostname Gateway_Name
 #endif
-#ifndef ota_password
-#  define ota_password "OTAPASSWORD"
+#ifndef gw_password
+#  define gw_password ""
 #endif
 #ifndef ota_port
 #  define ota_port 8266
@@ -520,7 +519,10 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
 #  endif
 #  ifndef ANEOPIX_BRIGHTNESS
-#    define ANEOPIX_BRIGHTNESS 20 // Set Default RGB brightness to approx 10% (0-255 scale)
+#    define ANEOPIX_BRIGHTNESS 20 // Set Default maximum RGB brightness to approx 10% (0-255 scale)
+#  endif
+#  ifndef DEFAULT_ADJ_BRIGHTNESS
+#    define DEFAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
 #  endif
 #  ifndef ANEOPIX_COLOR_SCHEME // allow for different color combinations
 #    define ANEOPIX_COLOR_SCHEME 0
@@ -597,18 +599,21 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  endif
 #  define ErrorIndicatorON()                              \
     leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
+    leds.setBrightness(SYSConfig.rgbbrightness);          \
     leds.show();
 #  define ErrorIndicatorOFF()                           \
     leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
     leds.show();
 #  define SendReceiveIndicatorON()                                     \
     leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
+    leds.setBrightness(SYSConfig.rgbbrightness);                       \
     leds.show();
 #  define SendReceiveIndicatorOFF()                            \
     leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
     leds.show();
 #  define InfoIndicatorON()                             \
     leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+    leds.setBrightness(SYSConfig.rgbbrightness);        \
     leds.show();
 #  define InfoIndicatorOFF()                           \
     leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
@@ -618,9 +623,11 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 // This enable to have persistence of the indicator to inform the user
 #    define CriticalIndicatorON()                              \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
+      leds2.setBrightness(255);                                \
       leds2.show();
 #    define PowerIndicatorON()                             \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+      leds2.setBrightness(SYSConfig.rgbbrightness);        \
       leds2.show();
 #    define PowerIndicatorOFF()                           \
       leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
@@ -696,6 +703,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
 #define subjectSYStoMQTT             "/SYStoMQTT" // system parameters
+#define subjectLOGtoMQTT             "/LOGtoMQTT" // log informations
 #define subjectRLStoMQTT             "/RLStoMQTT" // latest release information
 #define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
 #define subjectMQTTtoSYSupdate       "/commands/MQTTtoSYS/firmware_update"
@@ -719,7 +727,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #endif
 
 /*-----------PLACEHOLDERS FOR WebUI DISPLAY--------------*/
-#define pubWebUI(...) // display the published message onto the OLED display
+#define pubWebUI(...) // display the published message onto the WebUI display
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
 // The real definitions are in config_M5.h / config_SSD1306.h
@@ -734,7 +742,7 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 
 void connectMQTT();
 #ifndef ESPWifiManualSetup
-void saveMqttConfig();
+void saveConfig();
 #endif
 
 unsigned long uptime();
@@ -765,10 +773,17 @@ unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automa
 #  define isBlack(device)       device->isBlkL
 #  define isDiscovered(device)  device->isDisc
 
+/*--------------------Minimum freeHeap--------------------*/
+// Below this parameter we trigger a restart, this avoid stuck boards like seen in https://github.com/1technophile/OpenMQTTGateway/issues/1693
+#  define MinimumMemory 40000
+
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct SYSConfig_s {
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
+#  ifdef RGB_INDICATORS
+  int rgbbrightness; // brightness of the RGB LED
+#  endif
 };
 
 #endif
@@ -777,6 +792,9 @@ struct SYSConfig_s {
 bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL);
 void storeSignalValue(SIGNAL_SIZE_UL_ULL);
 #endif
+
+// Origin topics
+#define subjectBTtoMQTT "/BTtoMQTT"
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)

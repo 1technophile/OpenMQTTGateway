@@ -616,8 +616,7 @@ void handleWI() {
       response += String(wifi_script);
       response += String(script);
       response += String(style);
-      // wifi_ssid, wifi_password, gateway_name
-      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID(), WiFi.psk());
+      snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID());
       response += String(buffer);
       snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
       response += String(buffer);
@@ -625,8 +624,8 @@ void handleWI() {
       return;
 
     } else if (server.hasArg("save")) {
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> WEBtoSYSBuffer;
+      JsonObject WEBtoSYS = WEBtoSYSBuffer.to<JsonObject>();
       bool update = false;
       if (server.hasArg("s1")) {
         WEBtoSYS["wifi_ssid"] = server.arg("s1");
@@ -679,8 +678,7 @@ void handleWI() {
   response += String(wifi_script);
   response += String(script);
   response += String(style);
-  // wifi_ssid, wifi_password, gateway_name
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID(), WiFi.psk());
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_wifi_body, jsonChar, gateway_name, WiFiScan.c_str(), WiFi.SSID());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -707,8 +705,8 @@ void handleMQ() {
       WEBUI_TRACE_LOG(F("handleMQ Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
     if (server.hasArg("save")) {
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> WEBtoSYSBuffer;
+      JsonObject WEBtoSYS = WEBtoSYSBuffer.to<JsonObject>();
       bool update = false;
 
       if (server.hasArg("mh")) {
@@ -768,18 +766,18 @@ void handleMQ() {
 
 #  ifndef ESPWifiManualSetup
       if (update) {
-        Log.warning(F("[WebUI] Save MQTT and Restart" CR));
+        Log.warning(F("[WebUI] Save MQTT and Reconnect" CR));
 
         char jsonChar[100];
         serializeJson(modules, jsonChar, measureJson(modules) + 1);
         char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save MQTT and Restart").c_str());
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save MQTT and Reconnect").c_str());
         String response = String(buffer);
         response += String(restart_script);
         response += String(script);
         response += String(style);
-        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save MQTT and Restart");
+        snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save MQTT and Reconnect");
         response += String(buffer);
         snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
         response += String(buffer);
@@ -809,12 +807,83 @@ void handleMQ() {
   response += String(script);
   response += String(style);
   // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, mqtt_pass, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
   server.send(200, "text/html", response);
 }
+
+#  ifndef ESPWifiManualSetup
+/**
+ * @brief /CG - Configure gateway Page
+ * T: handleCG: uri: /gw, args: 2, method: 1
+ * T: handleCG Arg: 0, gp=1234
+ * T: handleCG Arg: 1, save=
+ */
+
+void handleCG() {
+  WEBUI_TRACE_LOG(F("handleCG: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  bool update = false;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleCG Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save") && server.hasArg("gp") && strcmp(ota_pass, server.arg("gp").c_str())) {
+      strncpy(ota_pass, server.arg("gp").c_str(), parameters_size);
+      WEBtoSYS["gw_pass"] = ota_pass;
+      update = true;
+    }
+  }
+
+  if (update) {
+    Log.warning(F("[WebUI] Save Password and Restart" CR));
+
+    char jsonChar[100];
+    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save Password and Restart").c_str());
+    String response = String(buffer);
+    response += String(restart_script);
+    response += String(script);
+    response += String(style);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save Password and Restart");
+    response += String(buffer);
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+    response += String(buffer);
+    server.send(200, "text/html", response);
+
+    delay(2000); // Wait for web page to be sent before
+    String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+    String output;
+    serializeJson(WEBtoSYS, output);
+    Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
+    MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+  } else {
+    Log.warning(F("[WebUI] No changes" CR));
+  }
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure gateway").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_gateway_body, jsonChar, gateway_name, ota_pass);
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+#  endif
 
 /**
  * @brief /LO - Configure Logging Page
@@ -851,6 +920,277 @@ void handleLO() {
   response += String(buffer);
   server.send(200, "text/html", response);
 }
+
+#  ifdef ZgatewayLORA
+/**
+ * @brief /LA - Configure LORA Page
+ * T: handleLA: uri: /la, args: 11, method: 1
+ * T: handleLA Arg: 0, lf=868100000
+ * T: handleLA Arg: 1, lt=14
+ * T: handleLA Arg: 2, ls=12
+ * T: handleLA Arg: 3, lb=125
+ * T: handleLA Arg: 4, lc=5
+ * T: handleLA Arg: 5, ll=8
+ * T: handleLA Arg: 6, lw=0
+ * T: handleLA Arg: 7, lr=1
+ * T: handleLA Arg: 8, li=0
+ * T: handleLA Arg: 9, ok=0
+ * T: handleLA Arg: 10, save=
+ */
+void handleLA() {
+  WEBUI_TRACE_LOG(F("handleLA: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleLA Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save")) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject WEBtoLORA = jsonBuffer.to<JsonObject>();
+      bool update = false;
+      if (server.hasArg("lf")) {
+        WEBtoLORA["frequency"] = server.arg("lf");
+        update = true;
+      }
+
+      if (server.hasArg("lt")) {
+        WEBtoLORA["txpower"] = server.arg("lt");
+        update = true;
+      }
+
+      if (server.hasArg("ls")) {
+        WEBtoLORA["spreadingfactor"] = server.arg("ls");
+        update = true;
+      }
+
+      if (server.hasArg("lb")) {
+        WEBtoLORA["signalbandwidth"] = server.arg("lb");
+        update = true;
+      }
+
+      if (server.hasArg("lc")) {
+        WEBtoLORA["codingrate"] = server.arg("lc");
+        update = true;
+      }
+
+      if (server.hasArg("ll")) {
+        WEBtoLORA["preamblelength"] = server.arg("ll");
+        update = true;
+      }
+
+      if (server.hasArg("lw")) {
+        WEBtoLORA["syncword"] = server.arg("lw");
+        update = true;
+      }
+
+      if (server.hasArg("lr")) {
+        WEBtoLORA["enablecrc"] = server.arg("lr");
+        update = true;
+      } else {
+        WEBtoLORA["enablecrc"] = false;
+        update = true;
+      }
+
+      if (server.hasArg("li")) {
+        WEBtoLORA["invertiq"] = server.arg("li");
+        update = true;
+      } else {
+        WEBtoLORA["invertiq"] = false;
+        update = true;
+      }
+
+      if (server.hasArg("ok")) {
+        WEBtoLORA["onlyknown"] = server.arg("ok");
+        update = true;
+      } else {
+        WEBtoLORA["onlyknown"] = false;
+        update = true;
+      }
+      if (update) {
+        Log.notice(F("[WebUI] Save data" CR));
+        WEBtoLORA["save"] = true;
+        LORAConfig_fromJson(WEBtoLORA);
+        stateLORAMeasures();
+        Log.trace(F("[WebUI] LORAConfig end" CR));
+      }
+    }
+  }
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure LORA").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_lora_body,
+           jsonChar,
+           gateway_name,
+           LORAConfig.frequency == 868000000 ? "selected" : "",
+           LORAConfig.frequency == 915000000 ? "selected" : "",
+           LORAConfig.frequency == 433000000 ? "selected" : "",
+           LORAConfig.txPower == 0 ? "selected" : "",
+           LORAConfig.txPower == 1 ? "selected" : "",
+           LORAConfig.txPower == 2 ? "selected" : "",
+           LORAConfig.txPower == 3 ? "selected" : "",
+           LORAConfig.txPower == 4 ? "selected" : "",
+           LORAConfig.txPower == 5 ? "selected" : "",
+           LORAConfig.txPower == 6 ? "selected" : "",
+           LORAConfig.txPower == 7 ? "selected" : "",
+           LORAConfig.txPower == 8 ? "selected" : "",
+           LORAConfig.txPower == 9 ? "selected" : "",
+           LORAConfig.txPower == 10 ? "selected" : "",
+           LORAConfig.txPower == 11 ? "selected" : "",
+           LORAConfig.txPower == 12 ? "selected" : "",
+           LORAConfig.txPower == 13 ? "selected" : "",
+           LORAConfig.txPower == 14 ? "selected" : "",
+           LORAConfig.spreadingFactor == 7 ? "selected" : "",
+           LORAConfig.spreadingFactor == 8 ? "selected" : "",
+           LORAConfig.spreadingFactor == 9 ? "selected" : "",
+           LORAConfig.spreadingFactor == 10 ? "selected" : "",
+           LORAConfig.spreadingFactor == 11 ? "selected" : "",
+           LORAConfig.spreadingFactor == 12 ? "selected" : "",
+           LORAConfig.signalBandwidth == 7800 ? "selected" : "",
+           LORAConfig.signalBandwidth == 10400 ? "selected" : "",
+           LORAConfig.signalBandwidth == 15600 ? "selected" : "",
+           LORAConfig.signalBandwidth == 20800 ? "selected" : "",
+           LORAConfig.signalBandwidth == 31250 ? "selected" : "",
+           LORAConfig.signalBandwidth == 41700 ? "selected" : "",
+           LORAConfig.signalBandwidth == 62500 ? "selected" : "",
+           LORAConfig.signalBandwidth == 125000 ? "selected" : "",
+           LORAConfig.signalBandwidth == 250000 ? "selected" : "",
+           LORAConfig.signalBandwidth == 500000 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 5 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 6 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 7 ? "selected" : "",
+           LORAConfig.codingRateDenominator == 8 ? "selected" : "",
+           LORAConfig.preambleLength,
+           LORAConfig.syncWord,
+           LORAConfig.crc ? "checked" : "",
+           LORAConfig.invertIQ ? "checked" : "",
+           LORAConfig.onlyKnown ? "checked" : "");
+
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+#  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+#    include <map>
+std::map<int, String> activeReceiverOptions = {
+    {0, "Inactive"},
+#    if defined(ZgatewayPilight) && !defined(ZradioSX127x)
+    {1, "PiLight"},
+#    endif
+#    if defined(ZgatewayRF) && !defined(ZradioSX127x)
+    {2, "RF"},
+#    endif
+#    ifdef ZgatewayRTL_433
+    {3, "RTL_433"},
+#    endif
+#    if defined(ZgatewayRF2) && !defined(ZradioSX127x)
+    {4, "RF2 (restart required)"}
+#    endif
+};
+
+bool isValidReceiver(int receiverId) {
+  // Check if the receiverId exists in the activeReceiverOptions map
+  return activeReceiverOptions.find(receiverId) != activeReceiverOptions.end();
+}
+
+String generateActiveReceiverOptions(int currentSelection) {
+  String optionsHtml = "";
+  for (const auto& option : activeReceiverOptions) {
+    optionsHtml += "<option value='" + String(option.first) + "'";
+    if (currentSelection == option.first) {
+      optionsHtml += " selected";
+    }
+    optionsHtml += ">" + option.second + "</option>";
+  }
+  return optionsHtml;
+}
+
+/**
+ * @brief /RF - Configure RF Page
+ * T: handleRF: uri: /rf, args: 2, method: 1
+ * T: handleRF Arg: 0, rf=868.30
+ * T: handleRF Arg: 1, oo=0
+ * T: handleRF Arg: 2, rs=0
+ * T: handleRF Arg: 3, dg=0
+ * T: handleRF Arg: 4, ar=0
+ * T: handleRF Arg: 4, save=
+ */
+
+void handleRF() {
+  WEBUI_TRACE_LOG(F("handleRF: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  bool update = false;
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject WEBtoRF = jsonBuffer.to<JsonObject>();
+
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleRF Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    if (server.hasArg("save")) {
+      if (server.hasArg("rf")) {
+        String freqStr = server.arg("rf");
+        RFConfig.frequency = freqStr.toFloat();
+        if (validFrequency(RFConfig.frequency)) {
+          WEBtoRF["frequency"] = RFConfig.frequency;
+          update = true;
+        } else {
+          Log.warning(F("[WebUI] Invalid Frequency" CR));
+        }
+      }
+      if (server.hasArg("ar")) {
+        int selectedReceiver = server.arg("ar").toInt();
+        if (isValidReceiver(selectedReceiver)) { // Assuming isValidReceiver is a validation function
+          RFConfig.activeReceiver = selectedReceiver;
+          WEBtoRF["activereceiver"] = RFConfig.activeReceiver;
+          update = true;
+        } else {
+          Log.warning(F("[WebUI] Invalid Active Receiver" CR));
+        }
+      }
+      if (server.hasArg("oo")) {
+        RFConfig.newOokThreshold = server.arg("oo").toInt();
+        WEBtoRF["ookthreshold"] = RFConfig.newOokThreshold;
+        update = true;
+      }
+      if (server.hasArg("rs")) {
+        RFConfig.rssiThreshold = server.arg("rs").toInt();
+        WEBtoRF["rssithreshold"] = RFConfig.rssiThreshold;
+        update = true;
+      }
+      if (update) {
+        Log.notice(F("[WebUI] Save data" CR));
+        WEBtoRF["save"] = true;
+        RFConfig_fromJson(WEBtoRF);
+        stateRFMeasures();
+        Log.trace(F("[WebUI] RFConfig end" CR));
+      }
+    }
+  }
+
+  String activeReceiverHtml = generateActiveReceiverOptions(RFConfig.activeReceiver);
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure RF").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_rf_body, jsonChar, gateway_name, RFConfig.frequency, activeReceiverHtml.c_str());
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+#  endif
 
 /**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
@@ -1015,6 +1355,14 @@ void handleIN() {
 #  if defined(ZgatewayCloud)
     informationDisplay += "1<BR>Cloud}2}1";
     informationDisplay += stateCLOUDStatus();
+#  endif
+#  if defined(ZgatewayLORA)
+    informationDisplay += "1<BR>LORA}2}1";
+    informationDisplay += stateLORAMeasures();
+#  endif
+#  if defined(ZgatewayRF)
+    informationDisplay += "1<BR>RF}2}1";
+    informationDisplay += stateRFMeasures();
 #  endif
     informationDisplay += "1<BR>WebUI}2}1";
     informationDisplay += stateWebUIStatus();
@@ -1275,7 +1623,15 @@ void WebUISetup() {
   server.on("/cn", handleCN); // Configuration
   server.on("/wi", handleWI); // Configure Wifi
   server.on("/mq", handleMQ); // Configure MQTT
+#  ifndef ESPWifiManualSetup
+  server.on("/cg", handleCG); // Configure gateway"
+#  endif
   server.on("/wu", handleWU); // Configure WebUI
+#  ifdef ZgatewayLORA
+  server.on("/la", handleLA); // Configure LORA
+#  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+  server.on("/rf", handleRF); // Configure RF
+#  endif
 #  if defined(ZgatewayCloud)
   server.on("/cl", handleCL); // Configure Cloud
   server.on("/tk", handleTK); // Store Device Token
@@ -1352,7 +1708,6 @@ void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decodin
     if (success) {
       stateWebUIStatus();
     } else {
-      // pub(subjectWebUItoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("[ WebUI ] MQTTtoWebUI Fail json" CR), WebUIdata);
     }
   }
@@ -1360,8 +1715,8 @@ void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decodin
 
 String stateWebUIStatus() {
   //Publish display state
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject WebUIdata = jsonBuffer.to<JsonObject>();
+  StaticJsonDocument<JSON_MSG_BUFFER> WebUIdataBuffer;
+  JsonObject WebUIdata = WebUIdataBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
   WebUIdata["webUISecure"] = (bool)webUISecure;
   WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
@@ -1370,7 +1725,8 @@ String stateWebUIStatus() {
   serializeJson(WebUIdata, output);
 
   // WebUIdata["currentMessage"] = currentWebUIMessage;
-  pub(subjectWebUItoMQTT, WebUIdata);
+  WebUIdata["origin"] = subjectWebUItoMQTT;
+  handleJsonEnqueue(WebUIdata);
   return output;
 }
 
@@ -1447,8 +1803,6 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
       //  WEBUI_TRACE_LOG(F("[ webUIPubPrint ] switch %s " CR), message->title);
       switch (webUIHash(message->title)) {
         case webUIHash("SYStoMQTT"): {
-          // {"uptime":456356,"version":"lilygo-rtl_433-test-A-v1.1.1-25-g574177d[lily-cloud]","freemem":125488,"mqttport":"1883","mqttsecure":false,"freestack":3752,"rssi":-36,"SSID":"The_Beach","BSSID":"64:A5:C3:69:C3:38","ip":"192.168.1.239","mac":"4C:75:25:A8:D5:D8","actRec":3,"mhz":433.92,"RTLRssiThresh":-98,"RTLRssi":-108,"RTLAVGRssi":-107,"RTLCnt":121707,"RTLOOKThresh":90,"modules":["LILYGO_OLED","CLOUD","rtl_433"]}
-
           // Line 1
 
           if (data["version"]) {
@@ -2007,6 +2361,58 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             line3 = "power: " + (String)pow + " W";
           }
           line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+
+          // Queue completed message
+
+          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
+            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            free(message);
+          } else {
+            // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
+          }
+          break;
+        }
+#  endif
+#  ifdef ZgatewayLORA
+        case webUIHash("LORAtoMQTT"): {
+          // {"tempc":25.4,"hum":0,"batt":0}
+
+          String line1 = "";
+          if (data.containsKey("tempc")) {
+            char temp[5];
+            float temperature_C = data["tempc"];
+
+            if (displayMetric) {
+              dtostrf(temperature_C, 3, 1, temp);
+              line1 = "temp: " + (String)temp + "°C ";
+            } else {
+              dtostrf(convertTemp_CtoF(temperature_C), 3, 1, temp);
+              line1 = "temp: " + (String)temp + "°F ";
+            }
+          }
+          line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
+
+          // Line 2
+
+          String line2 = "";
+          float humidity = data["hum"];
+          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
+            char hum[5];
+            dtostrf(humidity, 3, 1, hum);
+            line2 += "hum: " + (String)hum + "% ";
+          }
+          line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+
+          // Line 3
+
+          String line3 = "";
+          float adc = data["adc"];
+          if (data.containsKey("adc") && adc <= 100 && adc >= 0) {
+            char cAdc[5];
+            dtostrf(adc, 3, 1, cAdc);
+            line3 += "adc: " + (String)cAdc + "µS/cm ";
+          }
+          line3.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 
           // Queue completed message
 

@@ -1,9 +1,57 @@
 ---
-title: 433Mhz MQTT Gateway
+title: RF gateways (RTL_433/RCSwitch/RF/RF2)
 description: Unlock the potential of RF 433 MHz technology with our universal gateway. Decode signals from various devices, and integrate seamlessly with MQTT systems and controllers like Home Assistant and OpenHAB.
 ---
 
-# RF gateways  (433mhz/315mhz)
+# RF gateways (433mhz/315mhz/868mhz/915mhz)
+
+## What is an RF gateway
+
+An RF (Radio Frequency) gateway is a device that facilitates communication between RF devices and other communication protocols, such as MQTT in this context. Operating at specific frequencies like 433MHz, 315MHz, 868MHz, and 915MHz, these gateways can receive signals from various RF devices, decode them, and then forward the decoded data to systems like Home Assistant, OpenHAB, or any other MQTT-based system.
+
+The primary advantage of using an RF gateway is its ability to bridge the gap between the world of RF devices, which might include sensors, remote controls, and other RF-based gadgets, and modern smart home systems or applications. This enables users to integrate a wide range of devices into their smart home setup, even if those devices were not originally designed for such integration.
+
+In the context of the 433MHz MQTT gateway, the device not only decodes RF signals but also allows for seamless integration with MQTT systems. This means that signals from RF devices can be easily published to MQTT topics, and likewise, MQTT messages can be translated into RF signals for transmission. This two-way communication capability makes the gateway a powerful tool for expanding the capabilities of both RF devices and MQTT systems.
+
+OpenMQTTGateway leverages several libraries for RF communication:
+| Library  | Description | Device Support | Resource Requirements | Flexibility | Integration Capabilities |
+|-|-|-|-|-|-|
+| RTL_433  | Maintained and performant library supporting receiving 433Mhz but also other frequencies (does not support sending)| Wide range of devices | Moderate | Decodes various protocols | Can be integrated with systems supporting Home Assistant Auto Discovery|
+| RCSwitch | Arduino library for 433MHz module communication. | Basic devices | Lightweight | Basic encoding and decoding | Basic integration |
+| Pilight  | Open-source solution for device control and data retrieval. | Broad range of devices and protocols | Moderate | Offers raw and protocol-specific data handling  | Structured data |
+| RF2      | Library focused on KaKu devices and protocol. | Specific devices and protocols| Lightweight | Decoding and encoding capabilities  | Basic integration |
+
+::: info
+RTL_433 library can only receive data, RCSwitch, PiLight, RF2 can receive and transmit.
+:::
+
+## Common parameters accross modules
+
+### Change default frequency (SX127X and CC1101)
+
+The frequency can be can changed by sending an MQTT message or through the WebUI.  Parameter is `frequency` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your board
+
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"frequency":315.026}`
+
+Note that with CC1101 this frequency will be used as the default sending frequency.
+
+### Changing Active Receiver Modules
+
+Switching of the active transceiver (RTL_433 receiver only) module is available between the RF, RF2, and (RTL_433 or Pilight) gateway modules, allowing for changing of signal decoders without redeploying the OpenMQTTGateway package.  Sending a JSON message to the command topic will change the active transceiver module.
+
+To enable the RF gateway module send a json message to the RF gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
+
+1 - PiLight
+2 - RF
+3 - RTL_433
+4 - RF2
+
+Example to receive from the RF gateway:
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRF/config" -m '{"active":2}'`
+
+The active receiver can also be changed with the WebUI.
+
+The OpenMQTTGateway RFtoMQTT status message contains a key `active` which is the current active receiver module.
 
 ## RTL_433 device decoders
 
@@ -12,7 +60,7 @@ This feature is only available on a ESP32 based device with a supported transcei
 ### Supported hardware combinations
 
 - ESP32 based device with a CC1101 transceiver
-- Heltec WiFi LoRa 32 (V2.1) and LilyGo Lora 32 V2.1
+- Heltec WiFi LoRa 32 (V2.1) and LilyGo LoRa 32 V2.1
 - ESP32 DOIT DevKit V1 and Ai-Thinker R01 (SX1278)
 - ESP32 + SX1278/SX1276
 
@@ -102,21 +150,15 @@ Registering protocol [101] "X10 RF"
 Registering protocol [102] "X10 Security"
 ```
 
-### Change receive frequency
-
-Default receive frequency of the module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your board
-
-`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"mhz":315.026}`
-
 ### Change Signal RSSI Threshold Delta
 
 Delta applied to RSSI floor noise level to determine start and end of signal, defaults to 9db.
 
-`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"rssi": 9}`
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"rssiThreshold": 9}`
 
 ### Retrieve current status of receiver
 
-`home/OpenMQTTGateway/commands/MQTTtoRTL_433 {"status":1}`
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"status":1}`
 
 ```
 {"model":"status",
@@ -138,42 +180,6 @@ Delta applied to RSSI floor noise level to determine start and end of signal, de
 "StackHighWaterMark":5528,  - ESP32 Stack
 "freeMem":112880}           - ESP32 memory available
 ```
-
-
-## Changing Active Receiver Modules
-
-### Switching Active Receiver Module
-
-Switching of the active transceiver (RTL_433 receiver only) module is available between the RF, RF2, RTL_433 and Pilight Gateway modules, allowing for changing of signal decoders without redeploying the openMQTTGateway package.  Sending a JSON message to the command topic of the desired receiver will change the active transceiver module.
-
-To enable the RF Gateway module send a json message to the RF Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
-
-Example:
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"active":true}'`
-
-To enable the PiLight Gateway module send a json message to the PiLight Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
-
-Example:
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"active":true}'`
-
-To enable the RF2 Gateway module send a json message to the RF2 Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
-
-Example:
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRF2" -m '{"active":true}'`
-
-To enable the RTL_433 Gateway module send a json message to the RTL_433 Gateway module command subject with the key being 'active', and any value.  The value at this time is ignored. 
-
-Example:
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRTL_433" -m '{"active":true}'`
-
-### Status Messages
-
-The openMQTTGateway status message contains a key `actRec` which is the current active receiver module.
-
-1 - PiLight
-2 - RF
-3 - RTL_433
-4 - RF2
 
 ## RCSwitch based gateway
 
@@ -238,15 +244,15 @@ Example:
 
 Default transmit frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by including the frequency in the transmit message.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board.
 
-`home/OpenMQTTGateway/commands/MQTTto433 {"value":1150,"protocol":6,"length":12,"delay":450,"repeat":8,"mhz":303.732}`
+`home/OpenMQTTGateway/commands/MQTTto433 {"value":1150,"protocol":6,"length":12,"delay":450,"repeat":8,"frequency":303.732}`
 
-Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board
+Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `frequency` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board
 
-`home/OpenMQTTGateway/commands/MQTTto433 {"mhz":315.026}`
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"frequency":433.92}`
 
 Messages received will include the frequency, and when transmitting on a different frequency the module return to the receive frequency afterwards.  ie transmit messages on 303.732 Mhz then receive messages on 433.92 Mhz 
 
-`{"value":4534142,"protocol":6,"length":26,"delay":356,"mhz":315.026}`
+`{"value":4534142,"protocol":6,"length":26,"delay":356,"frequency":315.026}`
 
 You can adjust the tx-power in db for a transmission. Parameter is `cc1101_pa` and valid values in decibel are (-30  -20  -15  -10  -6    0    5    7    10   11   12) Default is max!
 That can be done to reduce range and therefore disturbances with other nearby devices.
@@ -318,6 +324,9 @@ To list the enabled protocols on the Serial -
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"message":"{\"systemcode\":12,\"unitcode\":22,\"off\":1}","protocol":"elro_400_switch"}'`
 
 These commands will transmit by RF the signals to actuate an elro_400 switch.
+
+With a different frequency (CC1101 only):
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoPilight" -m '{"message":"{\"systemcode\":12,\"unitcode\":22,\"off\":1}","protocol":"elro_400_switch","frequency":315.026}'`
 
 #### Using a raw signal
 You can transmit raw signal data by using the "raw" protocol. This uses the Pilight pulse train string format. One such example string, representing a transmission for Nexus protocol weather stations, looks like this: `c:03020202010102020102010101010101010202020201020102020202020101010201010202;p:500,1000,2000,4000;r:12@`. This string represents pulses and gaps directly.

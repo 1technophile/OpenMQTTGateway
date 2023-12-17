@@ -60,6 +60,16 @@ unsigned long timer_sys_checks = 0;
 
 #  define ARDUINOJSON_USE_LONG_LONG     1
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
+
+#  include <queue>
+int queueLength = 0;
+unsigned long queueLengthSum = 0;
+unsigned long blockedMessages = 0;
+int maxQueueLength = 0;
+#  ifndef QueueSize
+#    define QueueSize 18
+#  endif
+
 #endif
 
 /**
@@ -76,8 +86,23 @@ bool ready_to_sleep = false;
 
 #include <string>
 
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+struct JsonBundle {
+  StaticJsonDocument<JSON_MSG_BUFFER> doc;
+};
+
+std::queue<JsonBundle> jsonQueue;
+
+#  ifdef ESP32
+// Mutex  to protect the queue
+SemaphoreHandle_t xQueueMutex;
+#  endif
+
+#endif
+
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
+bool ethConnected = false;
 
 #ifndef ZgatewayGFSunInverter
 // Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
@@ -208,21 +233,17 @@ void setupTLS(bool self_signed = false, uint8_t index = 0);
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
-char mqtt_user[parameters_size + 1] = MQTT_USER; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size + 1] = MQTT_PASS; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size + 1] = MQTT_SERVER;
+char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
+char mqtt_pass[parameters_size] = MQTT_PASS; // not compulsory only if your broker needs authentication
+char mqtt_server[parameters_size] = MQTT_SERVER;
 char mqtt_port[6] = MQTT_PORT;
-char ota_pass[parameters_size + 1] = ota_password;
+char ota_pass[parameters_size] = gw_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
 #  define MAC_NAME_MAX_LEN 30
 char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
-#endif
-#ifdef WM_PWD_FROM_MAC
-#  undef WifiManager_password
-char WifiManager_password[9];
 #endif
 bool connectedOnce = false; //indicate if we have been connected once to MQTT
 bool connected = false; //indicate whether we are currently connected. Used to detected re-connection
@@ -252,7 +273,9 @@ static String ota_server_cert = "";
 #  include <nvs.h>
 #  include <nvs_flash.h>
 
+bool BTProcessLock = true; // Process lock when we want to use a critical function like OTA for example, at start to true so as to wait for critical functions to be performed before BLE start
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
+
 #  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
 #    include <stdio.h>
@@ -264,7 +287,6 @@ bool ProcessLock = false; // Process lock when we want to use a critical functio
 #  ifdef ESP32_ETHERNET
 #    include <ETH.h>
 void WiFiEvent(WiFiEvent_t event);
-static bool esp32EthConnected = false;
 #  endif
 
 #  include <WiFiClientSecure.h>
@@ -393,6 +415,135 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
 
+/*
+ * Publish a message depending on its origin
+ *
+*/
+void pubMainCore(JsonObject& data) {
+  if (data.containsKey("origin")) {
+    pub((char*)data["origin"].as<const char*>(), data);
+#ifdef ZgatewayBT
+    if (data.containsKey("distance")) {
+      String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
+      Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
+      pub_custom_topic((char*)topic.c_str(), data, false);
+    }
+#endif
+  } else {
+    Log.error(F("No origin in JSON filtered" CR));
+  }
+}
+
+// Add a document to the queue
+void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+  if (jsonDoc.size() == 0) {
+    Log.error(F("Empty JSON, skipping" CR));
+    return;
+  }
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+  if (queueLength >= QueueSize) {
+    Log.warning(F("%d Doc(s) in queue, doc blocked" CR), queueLength);
+    blockedMessages++;
+    return;
+  }
+  Log.trace(F("Enqueue JSON" CR));
+  JsonBundle bundle;
+  bundle.doc = jsonDoc;
+  jsonQueue.push(bundle);
+  Log.trace(F("Queue length: %d" CR), jsonQueue.size());
+#else
+  // Pub to main core
+  JsonObject jsonObj = jsonDoc.to<JsonObject>();
+  pubMainCore(jsonObj); // Arduino UNO or other boards with small memory, we don't store and directly publish
+#endif
+}
+
+#ifdef ESP32
+// Semaphore check before enqueueing a document
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout))) {
+    enqueueJsonObject(jsonDoc);
+    xSemaphoreGive(xQueueMutex);
+    return true;
+  } else {
+    Log.error(F("xQueueMutex not taken" CR));
+    blockedMessages++;
+    return false;
+  }
+}
+#else
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+  enqueueJsonObject(jsonDoc);
+  return true;
+}
+#endif
+
+// Semaphore check before enqueueing a document with default timeout QueueSemaphoreTimeOutLoop
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+  return handleJsonEnqueue(jsonDoc, QueueSemaphoreTimeOutLoop);
+}
+
+#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+
+/*
+ * Add the jsonObject id as a topic to the jsonObject origin
+ *
+*/
+void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
+  if (!Jsondata.containsKey("id")) {
+    Log.error(F("No id in Jsondata" CR));
+    return;
+  }
+
+  std::string topic = Jsondata["id"].as<std::string>();
+
+  // Replace ":" in topic
+  size_t pos = topic.find(":");
+  while (pos != std::string::npos) {
+    topic.erase(pos, 1);
+    pos = topic.find(":", pos);
+  }
+#  ifdef ZgatewayBT
+  if (BTConfig.pubBeaconUuidForTopic && !BTConfig.extDecoderEnable && Jsondata.containsKey("model_id") && Jsondata["model_id"].as<std::string>() == "IBEACON") {
+    if (Jsondata.containsKey("uuid")) {
+      topic = Jsondata["uuid"].as<std::string>();
+    } else {
+      Log.error(F("No uuid in Jsondata" CR));
+    }
+  }
+
+  if (BTConfig.extDecoderEnable && !Jsondata.containsKey("model"))
+    topic = BTConfig.extDecoderTopic.c_str();
+#  endif
+  std::string subjectStr(origin);
+  topic = subjectStr + "/" + topic;
+
+  Jsondata["origin"] = topic;
+
+  Log.trace(F("Origin: %s" CR), Jsondata["origin"].as<const char*>());
+}
+
+// Empty the documents queue
+void emptyQueue() {
+  queueLength = jsonQueue.size();
+  if (queueLength > maxQueueLength) {
+    maxQueueLength = queueLength;
+  }
+  if (queueLength == 0) {
+    return;
+  }
+  JsonBundle bundle;
+  Log.trace(F("Dequeue JSON" CR));
+  bundle = jsonQueue.front();
+  jsonQueue.pop();
+  JsonObject obj = bundle.doc.as<JsonObject>();
+  pubMainCore(obj);
+  queueLengthSum++;
+}
+#else
+void emptyQueue() {}
+#endif
+
 /**
  * @brief Publish the payload on default MQTT topic.
  *
@@ -413,6 +564,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  */
 void pub(const char* topicori, JsonObject& data) {
   String dataAsString = "";
+  bool ret = sensor_Retain;
 
 #if defined(ESP8266) || defined(ESP32)
 #  if message_UTCtimestamp == true
@@ -422,7 +574,17 @@ void pub(const char* topicori, JsonObject& data) {
   data["unixtime"] = unixtimestamp();
 #  endif
 #endif
-
+  if (data.containsKey("retain") && data["retain"].is<bool>()) {
+    ret = data["retain"];
+    data.remove("retain");
+  }
+  if (data.containsKey("origin")) { // temporary, in the future use this instead of topicori
+    data.remove("origin");
+  }
+  if (data.size() == 0) {
+    Log.error(F("Empty JSON, not published" CR));
+    return;
+  }
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -443,7 +605,7 @@ void pub(const char* topicori, JsonObject& data) {
 
 #if jsonPublishing
   Log.trace(F("jsonPubl - ON" CR));
-  pubMQTT(topic, dataAsString.c_str());
+  pubMQTT(topic.c_str(), dataAsString.c_str(), ret);
   pubWebUI(topicori, data);
 #endif
 
@@ -630,7 +792,7 @@ void delayWithOTA(long waitMillis) {
     WebUILoop();
 #  endif
 #  ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #  endif
     delay(waitStep);
   }
@@ -639,22 +801,27 @@ void delayWithOTA(long waitMillis) {
 #endif
 }
 
-#ifdef ZmqttDiscovery
 void SYSConfig_init() {
+#ifdef ZmqttDiscovery
   SYSConfig.discovery = true;
   SYSConfig.ohdiscovery = OpenHABDiscovery;
+#endif
+#ifdef RGB_INDICATORS
+  SYSConfig.rgbbrightness = DEFAULT_ADJ_BRIGHTNESS;
+#endif
 }
 
 void SYSConfig_fromJson(JsonObject& SYSdata) {
-  Config_update(SYSdata, "discovery", SYSConfig.discovery);
-  Config_update(SYSdata, "ohdiscovery", SYSConfig.ohdiscovery);
-}
-#else
-void SYSConfig_init() {}
-void SYSConfig_fromJson(JsonObject& SYSdata) {}
+#ifdef ZmqttDiscovery
+  Config_update(SYSdata, "disc", SYSConfig.discovery);
+  Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
 #endif
+#ifdef RGB_INDICATORS
+  Config_update(SYSdata, "rgbb", SYSConfig.rgbbrightness);
+#endif
+}
 
-#if defined(ESP32) && defined(ZmqttDiscovery)
+#if defined(ESP32)
 void SYSConfig_load() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
@@ -690,8 +857,8 @@ void connectMQTT() {
 
   Log.warning(F("MQTT connection..." CR));
 #ifdef ESP32
-  esp_task_wdt_add(NULL);
-  esp_task_wdt_reset();
+  //esp_task_wdt_add(NULL);
+  //esp_task_wdt_reset();
 #endif
   char topic[mqtt_topic_max_size];
   strcpy(topic, mqtt_topic);
@@ -875,6 +1042,12 @@ void setup() {
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
   checkButton();
 #endif
+
+  delay(100); //give time to start the flash and avoid issue when reading the preferences
+
+  SYSConfig_init();
+  SYSConfig_load();
+
   //setup LED status
   SetupIndicatorError();
   SetupIndicatorSendReceive();
@@ -882,13 +1055,13 @@ void setup() {
   SetupIndicators(); // For RGB Leds
 
 #if defined(ESP8266) || defined(ESP32)
-  delay(100); //give time to start the flash and avoid issue when reading the preferences
 #  ifdef ESP8266
 #    ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
   Serial.end();
   Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
 #    endif
 #  elif ESP32
+  xQueueMutex = xSemaphoreCreateMutex();
 #    if DEFAULT_LOW_POWER_MODE != -1 //  don't check preferences value if low power mode is not activated
   preferences.begin(Gateway_Short_Name, false);
   if (preferences.isKey("lowpowermode")) {
@@ -937,7 +1110,7 @@ void setup() {
   }
 #  endif
 #  ifdef ESP32
-  esp_task_wdt_init(GeneralTimeOut, true); //enable panic so ESP32 restarts
+  //esp_task_wdt_init(GeneralTimeOut, true); //enable panic so ESP32 restarts
 #  endif
 /*
  The 2 modules below are not connection dependent so start them before the connectivity functions
@@ -952,18 +1125,27 @@ void setup() {
   modules.add(ZactuatorONOFF);
 #  endif
 
-#  ifdef ESP32_ETHERNET
-  setup_ethernet_esp32();
-#  else // WIFI ESP
-#    if defined(ESPWifiManualSetup)
+#  if defined(ESPWifiManualSetup)
   setup_wifi();
-#    else
-  // In failSafeMode we don't want to setup wifi manager as it has already been done before
-  if (!failSafeMode) setup_wifimanager(false);
+#  else
+  if (loadConfigFromFlash()) {
+    Log.notice(F("Config loaded from flash" CR));
+#    ifdef ESP32_ETHERNET
+    setup_ethernet_esp32();
 #    endif
+    if (!failSafeMode && !ethConnected) setup_wifimanager(false);
+  } else {
+#    ifdef ESP32_ETHERNET
+    setup_ethernet_esp32();
+#    endif
+    Log.notice(F("No config in flash, launching wifi manager" CR));
+    // In failSafeMode we don't want to setup wifi manager as it has already been done before
+    if (!failSafeMode) setup_wifimanager(false);
+  }
+
+#  endif
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
-#  endif
 
   setOTA();
 #else // In case of arduino platform
@@ -978,9 +1160,6 @@ void setup() {
   WebUISetup();
   modules.add(ZwebUI);
 #endif
-
-  SYSConfig_init();
-  SYSConfig_load();
 
 #if defined(ESP8266) || defined(ESP32)
   if (mqtt_secure) {
@@ -1012,7 +1191,11 @@ void setup() {
   client.setCallback(callback);
 
   delay(1500);
-
+#if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+#  ifndef ARDUINO_AVR_UNO
+  setupCommonRF();
+#  endif
+#endif
 #ifdef ZsensorBME280
   setupZsensorBME280();
   modules.add(ZsensorBME280);
@@ -1058,12 +1241,10 @@ void setup() {
   modules.add(ZgatewayLORA);
 #endif
 #ifdef ZgatewayRF
-  setupRF();
   modules.add(ZgatewayRF);
 #  define ACTIVE_RECEIVER ACTIVE_RF
 #endif
 #ifdef ZgatewayRF2
-  setupRF2();
   modules.add(ZgatewayRF2);
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
@@ -1071,9 +1252,7 @@ void setup() {
 #  define ACTIVE_RECEIVER ACTIVE_RF2
 #endif
 #ifdef ZgatewayPilight
-  setupPilight();
   modules.add(ZgatewayPilight);
-  disablePilightReceive();
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
 #  endif
@@ -1128,6 +1307,10 @@ void setup() {
   modules.add(ZactuatorPWM);
 #endif
 #ifdef ZactuatorSomfy
+#  ifdef ACTIVE_RECEIVER
+#    undef ACTIVE_RECEIVER
+#  endif
+#  define ACTIVE_RECEIVER ACTIVE_NONE
   setupSomfy();
   modules.add(ZactuatorSomfy);
 #endif
@@ -1159,20 +1342,12 @@ void setup() {
   setupSHTC3();
 #endif
 #ifdef ZgatewayRTL_433
-  setupRTL_433();
-  modules.add(ZgatewayRTL_433);
 #  ifdef ACTIVE_RECEIVER
 #    undef ACTIVE_RECEIVER
 #  endif
 #  define ACTIVE_RECEIVER ACTIVE_RTL
-#endif
-#if defined(ZgatewayRTL_433) || defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRF2)
-#  ifdef DEFAULT_RECEIVER // Allow defining of default receiver as a compiler directive
-  activeReceiver = DEFAULT_RECEIVER;
-#  else
-  activeReceiver = ACTIVE_RECEIVER;
-#  endif
-  enableActiveReceiver(true);
+  setupRTL_433();
+  modules.add(ZgatewayRTL_433);
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
 
@@ -1189,9 +1364,9 @@ void setup() {
 bool wifi_reconnect_bypass() {
   uint8_t wifi_autoreconnect_cnt = 0;
 #  ifdef ESP32
-  while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
+  while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
 #  else
-  while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
+  while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
 #  endif
     Log.notice(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
@@ -1202,7 +1377,7 @@ bool wifi_reconnect_bypass() {
     delay(1000);
     wifi_autoreconnect_cnt++;
   }
-  if (wifi_autoreconnect_cnt < maxConnectionRetryWifi) {
+  if (wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
     return true;
   } else {
     return false;
@@ -1224,8 +1399,11 @@ void setOTA() {
     ErrorIndicatorON();
     SendReceiveIndicatorON();
     last_ota_activity_millis = millis();
-#  if defined(ZgatewayBT) && defined(ESP32)
+#  ifdef ESP32
+    ProcessLock = true;
+#    ifdef ZgatewayBT
     stopProcessing();
+#    endif
 #  endif
     lpDisplayPrint("OTA in progress");
   });
@@ -1240,7 +1418,7 @@ void setOTA() {
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
 #  ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #  endif
     last_ota_activity_millis = millis();
   });
@@ -1316,6 +1494,10 @@ void setupTLS(bool self_signed, uint8_t index) {
 #  endif
   }
 }
+#else
+bool wifi_reconnect_bypass() {
+  return true;
+}
 #endif
 
 /*
@@ -1327,15 +1509,27 @@ void setupTLS(bool self_signed, uint8_t index) {
   5 - User requested reboot
   6 - OTA Update
   7 - Parameters changed
+  8 - not enough memory to pursue
 */
+#if defined(ESP8266) || defined(ESP32)
 void ESPRestart(byte reason) {
+  delay(1000);
+  StaticJsonDocument<128> jsonBuffer;
+  JsonObject jsondata = jsonBuffer.to<JsonObject>();
+  jsondata["reason"] = reason;
+  jsondata["retain"] = true;
+  jsondata["uptime"] = uptime();
+  pub(subjectLOGtoMQTT, jsondata);
   Log.warning(F("Rebooting for reason code %d" CR), reason);
-#if defined(ESP32)
+#  if defined(ESP32)
   ESP.restart();
-#elif defined(ESP8266)
+#  elif defined(ESP8266)
   ESP.reset();
-#endif
+#  endif
 }
+#else
+void ESPRestart(byte reason) {}
+#endif
 
 #if defined(ESPWifiManualSetup)
 void setup_wifi() {
@@ -1372,7 +1566,7 @@ void setup_wifi() {
     failure_number_ntwk++;
 #  if defined(ESP32) && defined(ZgatewayBT)
     if (lowpowermode) {
-      if (failure_number_ntwk > maxConnectionRetryWifi) {
+      if (failure_number_ntwk > maxConnectionRetryNetwork) {
         lowPowerESP32();
       }
     } else {
@@ -1424,7 +1618,7 @@ void blockingWaitForReset() {
         }
 #    endif
 #    ifdef ESP32
-        esp_task_wdt_delete(NULL);
+        //esp_task_wdt_delete(NULL);
 #    endif
         InfoIndicatorOFF();
         SendReceiveIndicatorOFF();
@@ -1469,7 +1663,7 @@ void checkButton() {
 void checkButton() {}
 #  endif
 
-void saveMqttConfig() {
+void saveConfig() {
   Log.trace(F("saving config" CR));
   DynamicJsonDocument json(512 + ota_server_cert.length() + mqtt_cert.length());
   json["mqtt_server"] = mqtt_server;
@@ -1494,28 +1688,9 @@ void saveMqttConfig() {
   configFile.close();
 }
 
-void setup_wifimanager(bool reset_settings) {
-  delay(10);
-  WiFi.mode(WIFI_STA);
-
-  if (reset_settings)
-    eraseAndRestart();
-
-  String s = WiFi.macAddress();
-#  ifdef USE_MAC_AS_GATEWAY_NAME
-  sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
-          s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
-  strcpy(ota_hostname, WifiManager_ssid);
-  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
-#  endif
-#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
-  sprintf(WifiManager_password, "%.2s%.2s%.2s%.2s",
-          s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
-#  endif
-
-  //read configuration from FS json
+bool loadConfigFromFlash() {
   Log.trace(F("mounting FS..." CR));
+  bool result = false;
 
   if (SPIFFS.begin()) {
     Log.trace(F("mounted file system" CR));
@@ -1557,16 +1732,55 @@ void setup_wifimanager(bool reset_settings) {
           mqtt_ss_index = json["mqtt_ss_index"].as<uint8_t>();
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
-        if (json.containsKey("ota_pass"))
+        if (json.containsKey("ota_pass")) {
           strcpy(ota_pass, json["ota_pass"]);
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+          // Compare the existing ota_pass if ota_pass = OTAPASSWORD then replace with the last 8 digits of the mac address
+          // This enable user migrating from previous version to have the same WiFi portal password as previously unless they changed it
+          if (strcmp(ota_pass, "OTAPASSWORD") == 0) {
+            String s = WiFi.macAddress();
+            sprintf(ota_pass, "%.2s%.2s%.2s%.2s",
+                    s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+          }
+#  endif
+        }
         if (json.containsKey("ota_server_cert"))
           ota_server_cert = json["ota_server_cert"].as<const char*>();
+        result = true;
       } else {
         Log.warning(F("failed to load json config" CR));
       }
       configFile.close();
     }
+  } else {
+    Log.notice(F("no config file found defining default values" CR));
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+    String s = WiFi.macAddress();
+    sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
+            s.c_str(), s.c_str() + 3, s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
+#  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
+    sprintf(ota_pass, "%.2s%.2s%.2s%.2s",
+            s.c_str() + 6, s.c_str() + 9, s.c_str() + 12, s.c_str() + 15);
+#  endif
   }
+
+  return result;
+}
+
+void setup_wifimanager(bool reset_settings) {
+  delay(10);
+  WiFi.mode(WIFI_STA);
+
+  if (reset_settings)
+    eraseAndRestart();
+
+#  ifdef USE_MAC_AS_GATEWAY_NAME
+  String s = WiFi.macAddress();
+  snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
+  strcpy(ota_hostname, WifiManager_ssid);
+  Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
+#  endif
 
   wifiManager.setDebugOutput(WM_DEBUG_LEVEL);
 
@@ -1574,20 +1788,20 @@ void setup_wifimanager(bool reset_settings) {
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
-  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size);
-  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6);
-  WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size);
-  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size);
-  WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size);
+  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size, " minlength='1' maxlength='64' required");
+  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6, " minlength='1' maxlength='5' required");
+  WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size, " maxlength='64'");
+  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size, " input type='password' maxlength='64'");
+  WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size, " minlength='1' maxlength='64' required");
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 4096);
-  WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size);
-  WiFiManagerParameter custom_ota_pass("ota", "ota password", ota_pass, parameters_size);
+  WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size, " minlength='1' maxlength='64' required");
+  WiFiManagerParameter custom_ota_pass("ota", "gateway password", ota_pass, parameters_size, " input type='password' minlength='8' maxlength='64' required");
 #  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
 
-  wifiManager.setConnectTimeout(WifiManager_TimeOut);
+  wifiManager.setConnectTimeout(WiFi_TimeOut);
   //Set timeout before going to portal
   wifiManager.setConfigPortalTimeout(WifiManager_ConfigPortalTimeOut);
 
@@ -1623,11 +1837,15 @@ void setup_wifimanager(bool reset_settings) {
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
 
+#  ifdef ESP32_ETHERNET
+  wifiManager.setBreakAfterConfig(true); // If ethernet is used, we don't want to block the connection by keeping the portal up
+#  endif
+
   if (!wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
   {
 #  ifdef ESP32
     if (lowpowermode < 2) {
-      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, WifiManager_password);
+      displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, ota_pass);
     } else { // in case of low power mode we put the ESP to sleep again if we didn't get connected (typical in case the wifi is down)
 #    ifdef ZgatewayBT
       lowPowerESP32();
@@ -1637,27 +1855,29 @@ void setup_wifimanager(bool reset_settings) {
 
     InfoIndicatorON();
     ErrorIndicatorON();
-    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, WifiManager_password);
+    Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, ota_pass);
 
     //fetches ssid and pass and tries to connect
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
-    if (!wifiManager.autoConnect(WifiManager_ssid, WifiManager_password)) {
-      Log.warning(F("failed to connect and hit timeout" CR));
-      delay(3000);
+    if (!wifiManager.autoConnect(WifiManager_ssid, ota_pass)) {
+      if (!ethConnected) { // If we are using ethernet, we don't want to restart the ESP
+        Log.warning(F("failed to connect and hit timeout" CR));
+        delay(3000);
 
 #  ifdef ESP32
-      /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
-      esp_wifi_set_mode(WIFI_MODE_AP);
-      esp_wifi_start();
-      wifi_config_t conf;
-      esp_wifi_get_config(WIFI_IF_AP, &conf);
-      conf.ap.ssid_hidden = 1;
-      esp_wifi_set_config(WIFI_IF_AP, &conf);
+        /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
+        esp_wifi_set_mode(WIFI_MODE_AP);
+        esp_wifi_start();
+        wifi_config_t conf;
+        esp_wifi_get_config(WIFI_IF_AP, &conf);
+        conf.ap.ssid_hidden = 1;
+        esp_wifi_set_config(WIFI_IF_AP, &conf);
 #  endif
 
-      //restart and try again
-      ESPRestart(3);
+        //restart and try again
+        ESPRestart(3);
+      }
     }
     InfoIndicatorOFF();
     ErrorIndicatorOFF();
@@ -1673,6 +1893,10 @@ void setup_wifimanager(bool reset_settings) {
     strcpy(mqtt_user, custom_mqtt_user.getValue());
     strcpy(mqtt_pass, custom_mqtt_pass.getValue());
     strcpy(mqtt_topic, custom_mqtt_topic.getValue());
+    if (mqtt_topic[strlen(mqtt_topic) - 1] != '/' && strlen(mqtt_topic) < parameters_size) {
+      strcat(mqtt_topic, "/");
+    }
+
     strcpy(gateway_name, custom_gateway_name.getValue());
     strcpy(ota_pass, custom_ota_pass.getValue());
     mqtt_secure = *custom_mqtt_secure.getValue();
@@ -1696,7 +1920,7 @@ void setup_wifimanager(bool reset_settings) {
     }
 #  endif
     //save the custom parameters to FS
-    saveMqttConfig();
+    saveConfig();
   }
 }
 #  ifdef ESP32_ETHERNET
@@ -1721,9 +1945,10 @@ void setup_ethernet_esp32() {
   ethBeginSuccess = ETH.begin();
 #    endif
   Log.trace(F("Connecting to Ethernet" CR));
-  while (!esp32EthConnected) {
+  while (!ethConnected && failure_number_ntwk <= maxConnectionRetryNetwork) {
     delay(500);
     Log.trace(F("." CR));
+    failure_number_ntwk++;
   }
 }
 
@@ -1740,15 +1965,15 @@ void WiFiEvent(WiFiEvent_t event) {
       Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
       Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
       Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
-      esp32EthConnected = true;
+      ethConnected = true;
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       Log.error(F("Ethernet Disconnected" CR));
-      esp32EthConnected = false;
+      ethConnected = false;
       break;
     case ARDUINO_EVENT_ETH_STOP:
       Log.error(F("Ethernet Stopped" CR));
-      esp32EthConnected = false;
+      ethConnected = false;
       break;
     default:
       break;
@@ -1811,7 +2036,7 @@ void loop() {
 #endif
 
 #ifdef ESP32
-  esp_task_wdt_reset();
+  //esp_task_wdt_reset();
 #endif
 
   unsigned long now = millis();
@@ -1824,11 +2049,10 @@ void loop() {
   }
 
 #if defined(ESP8266) || defined(ESP32)
-#  ifdef ESP32_ETHERNET
-  if (esp32EthConnected) {
-#  else
-  if (WiFi.status() == WL_CONNECTED) {
-#  endif
+  if (ethConnected || WiFi.status() == WL_CONNECTED) {
+    if (ethConnected && WiFi.status() == WL_CONNECTED) {
+      WiFi.disconnect(); // we disconnect the wifi as we are connected to ethernet
+    }
     ArduinoOTA.handle();
 #else
   if ((Ethernet.hardwareStatus() != EthernetW5100 && Ethernet.linkStatus() == LinkON) || (Ethernet.hardwareStatus() == EthernetW5100)) { //we are able to detect disconnection only on w5200 and w5500
@@ -1861,7 +2085,6 @@ void loop() {
         stateMeasures();
 #  ifdef ZgatewayBT
         stateBTMeasures(false);
-        btScanWDG();
 #  endif
 #  ifdef ZactuatorONOFF
         stateONOFFMeasures();
@@ -1869,22 +2092,35 @@ void loop() {
 #  ifdef ZdisplaySSD1306
         stateSSD1306Display();
 #  endif
+#  ifdef ZgatewayLORA
+        stateLORAMeasures();
+#  endif
+#  if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+        stateRFMeasures();
+#  endif
 #  if defined(ZwebUI) && defined(ESP32)
         stateWebUIStatus();
 #  endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
-#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
-        checkForUpdates();
-#  endif
 #  if defined(ESP8266) || defined(ESP32)
 #    if message_UTCtimestamp || message_unixtimestamp
         syncNTP();
 #    endif
 #  endif
+        if (!timer_sys_checks) { // Update check at start up only
+#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+          checkForUpdates();
+#  endif
+#  ifdef ZgatewayBT
+          BTProcessLock = !BTConfig.enabled; // Release BLE processes at start if enabled
+#  endif
+        }
+
         timer_sys_checks = millis();
       }
 #endif
+      emptyQueue();
 #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280/BMP280
 #endif
@@ -1944,6 +2180,10 @@ void loop() {
 #endif
 #ifdef ZgatewayLORA
       LORAtoMQTT();
+#  ifdef ZmqttDiscovery
+      if (SYSConfig.discovery)
+        launchLORADiscovery(publishDiscovery);
+#  endif
 #endif
 #ifdef ZgatewayRF
       RFtoMQTT();
@@ -1965,7 +2205,6 @@ void loop() {
       if (SYSConfig.discovery)
         launchBTDiscovery(publishDiscovery);
 #  endif
-      emptyBTQueue();
 #endif
 #ifdef ZgatewaySRFB
       SRFBtoMQTT();
@@ -2005,25 +2244,18 @@ void loop() {
     }
   } else { // disconnected from network
 #ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #endif
     connected = false;
-    Log.warning(F("Network disconnected:" CR));
+    Log.warning(F("Network disconnected" CR));
     ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
 #ifdef ESP32
-    esp_task_wdt_reset();
+    //esp_task_wdt_reset();
 #endif
     ErrorIndicatorOFF();
     delay(2000);
-#if defined(ESP8266) || defined(ESP32) && !defined(ESP32_ETHERNET)
-#  ifdef ESP32 // If used with ESP8266 this method prevent the reconnection
-    WiFi.reconnect();
-#  endif
-    Log.warning(F("wifi" CR));
-#else
-    Log.warning(F("ethernet" CR));
-#endif
+    wifi_reconnect_bypass();
   }
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
@@ -2134,7 +2366,7 @@ void eraseAndRestart() {
   delay(5000);
   ESP.reset();
 #  else
-  esp_task_wdt_delete(NULL);
+  //esp_task_wdt_delete(NULL);
   nvs_flash_erase();
   ESP.restart();
 #  endif
@@ -2144,55 +2376,66 @@ void eraseAndRestart() {
 
 #if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String stateMeasures() {
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject SYSdata = jsonBuffer.to<JsonObject>();
+  StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
+
   SYSdata["uptime"] = uptime();
 
   SYSdata["version"] = OMG_VERSION;
+#  ifdef RGB_INDICATORS
+  SYSdata["rgbb"] = SYSConfig.rgbbrightness;
+#  endif
 #  ifdef ZmqttDiscovery
-  SYSdata["discovery"] = SYSConfig.discovery;
-  SYSdata["ohdiscovery"] = SYSConfig.ohdiscovery;
+  SYSdata["disc"] = SYSConfig.discovery;
+  SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
 #  endif
 #  if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
   uint32_t minFreeMem;
   freeMem = ESP.getFreeHeap();
+#    ifdef ZgatewayRTL_433
+  // Some RTL_433 decoders have memory leak, this is a temporary workaround
+  if (freeMem < MinimumMemory) {
+    Log.error(F("Not enough memory %d, restarting" CR), freeMem);
+    ESPRestart(8);
+  }
+#    endif
   SYSdata["freemem"] = freeMem;
-  SYSdata["mqttport"] = mqtt_port;
-  SYSdata["mqttsecure"] = mqtt_secure;
+  SYSdata["mqttp"] = mqtt_port;
+  SYSdata["mqtts"] = mqtt_secure;
+  SYSdata["msgprc"] = queueLengthSum;
+  SYSdata["msgblck"] = blockedMessages;
+  SYSdata["maxq"] = maxQueueLength;
 #    ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
-  SYSdata["minfreemem"] = minFreeMem;
+  SYSdata["minmem"] = minFreeMem;
 #      ifndef NO_INT_TEMP_READING
-  SYSdata["tempc"] = intTemperatureRead();
+  SYSdata["tempc"] = round2(intTemperatureRead());
 #      endif
-  SYSdata["freestack"] = uxTaskGetStackHighWaterMark(NULL);
+  SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
+
+  SYSdata["eth"] = ethConnected;
+  if (ethConnected) {
 #    ifdef ESP32_ETHERNET
-  SYSdata["mac"] = (char*)ETH.macAddress().c_str();
-  SYSdata["ip"] = ip2CharArray(ETH.localIP());
-  ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
-  SYSdata["linkspeed"] = (int)ETH.linkSpeed();
-#    else
-  long rssi = WiFi.RSSI();
-  SYSdata["rssi"] = rssi;
-  String SSID = WiFi.SSID();
-  SYSdata["SSID"] = SSID;
-  String BSSID = WiFi.BSSIDstr();
-  SYSdata["BSSID"] = BSSID;
-  SYSdata["ip"] = ip2CharArray(WiFi.localIP());
-  String mac = WiFi.macAddress();
-  SYSdata["mac"] = (char*)mac.c_str();
+    SYSdata["mac"] = (char*)ETH.macAddress().c_str();
+    SYSdata["ip"] = ip2CharArray(ETH.localIP());
+    ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
+    SYSdata["linkspeed"] = (int)ETH.linkSpeed();
 #    endif
+  } else {
+    SYSdata["rssi"] = (long)WiFi.RSSI();
+    SYSdata["SSID"] = (char*)WiFi.SSID().c_str();
+    SYSdata["BSSID"] = (char*)WiFi.BSSIDstr().c_str();
+    SYSdata["ip"] = ip2CharArray(WiFi.localIP());
+    SYSdata["mac"] = (char*)WiFi.macAddress().c_str();
+  }
+
 #  endif
 #  ifdef ZgatewayBT
 #    ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
 #    endif
-  SYSdata["interval"] = BTConfig.BLEinterval;
-  SYSdata["intervalcnct"] = BTConfig.intervalConnect;
-  SYSdata["scnct"] = scanCount;
 #  endif
 #  ifdef ZboardM5STACK
   M5.Power.begin();
@@ -2213,26 +2456,10 @@ String stateMeasures() {
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #  endif
-#  if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2)
-  SYSdata["actRec"] = (int)activeReceiver;
-#  endif
-#  if defined(ZradioCC1101) || defined(ZradioSX127x)
-  SYSdata["mhz"] = (float)receiveMhz;
-#  endif
-#  if defined(ZgatewayRTL_433)
-  if (activeReceiver == ACTIVE_RTL) {
-    SYSdata["RTLRssiThresh"] = (int)getRTLrssiThreshold();
-    SYSdata["RTLRssi"] = (int)getRTLCurrentRSSI();
-    SYSdata["RTLAVGRssi"] = (int)getRTLAverageRSSI();
-    SYSdata["RTLCnt"] = (int)getRTLMessageCount();
-#    ifdef ZradioSX127x
-    SYSdata["RTLOOKThresh"] = (int)getOOKThresh();
-#    endif
-  }
-#  endif
   SYSdata["modules"] = modules;
 
-  pub(subjectSYStoMQTT, SYSdata);
+  SYSdata["origin"] = subjectSYStoMQTT;
+  handleJsonEnqueue(SYSdata);
   pubOled(subjectSYStoMQTT, SYSdata);
 
   char jsonChar[100];
@@ -2246,6 +2473,7 @@ String stateMeasures() {
   _modules.replace("\"", "'");
 
   SYSdata["modules"] = _modules.c_str();
+
   String output;
   serializeJson(SYSdata, output);
   return output;
@@ -2333,8 +2561,8 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
 #endif
-#ifdef ZgatewayRTL_433 // ZgatewayRTL_433 is only defined with json publishing due to its numerous parameters
-    MQTTtoRTL_433(topicOri, jsondata);
+#if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+    MQTTtoRFset(topicOri, jsondata);
 #endif
 #if jsonReceiving
 #  ifdef ZgatewayLORA
@@ -2385,7 +2613,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);
 #  endif
-#  ifdef ZwebUI
+#  if defined(ZwebUI) && defined(ESP32)
     MQTTtoWebUI(topicOri, jsondata);
 #  endif
 #endif
@@ -2460,24 +2688,29 @@ bool checkForUpdates() {
     Log.error(F("Error on HTTP request"));
   }
   http.end(); //Free the resources
+  Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
   if (jsondata.containsKey("latest_version")) {
     jsondata["installed_version"] = OMG_VERSION;
     jsondata["entity_picture"] = ENTITY_PICTURE;
     if (!jsondata.containsKey("release_summary"))
       jsondata["release_summary"] = "";
     latestVersion = jsondata["latest_version"].as<String>();
-    pub(subjectRLStoMQTT, jsondata);
+    jsondata["origin"] = subjectRLStoMQTT;
+    jsondata["retain"] = true;
+    handleJsonEnqueue(jsondata);
+
     Log.trace(F("Update file found on server" CR));
     return true;
   } else {
     Log.trace(F("No update file found on server" CR));
     return false;
   }
-  Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
 }
 
 #    else
-bool checkForUpdates() {}
+bool checkForUpdates() {
+  return false;
+}
 #    endif
 #  elif ESP8266
 #    include <ESP8266httpUpdate.h>
@@ -2524,20 +2757,21 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         Log.error(F("Invalid URL" CR));
         return;
       }
-#  if defined(ZgatewayBT)
-      stopProcessing();
-#  endif
 #  ifdef ESP32
-      esp_task_wdt_delete(NULL); // Stop task watchdog during update
+      ProcessLock = true;
+      //esp_task_wdt_delete(NULL); // Stop task watchdog during update
+#    ifdef ZgatewayBT
+      stopProcessing();
+#    endif
 #  endif
       Log.warning(F("Starting firmware update" CR));
 
       SendReceiveIndicatorON();
       ErrorIndicatorON();
-      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-      JsonObject jsondata = jsonBuffer.to<JsonObject>();
+      StaticJsonDocument<JSON_MSG_BUFFER> jsondata;
       jsondata["release_summary"] = "Update in progress ...";
-      pub(subjectRLStoMQTT, jsondata);
+      jsondata["origin"] = subjectRLStoMQTT;
+      handleJsonEnqueue(jsondata);
 
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert && !strstr(url, "http:")) {
@@ -2604,10 +2838,11 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           Log.notice(F("HTTP_UPDATE_OK" CR));
           jsondata["release_summary"] = "Update success !";
           jsondata["installed_version"] = latestVersion;
-          pub(subjectRLStoMQTT, jsondata);
+          jsondata["origin"] = subjectRLStoMQTT;
+          handleJsonEnqueue(jsondata);
           ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
-          saveMqttConfig();
+          saveConfig();
 #  endif
           ESPRestart(6);
           break;
@@ -2624,6 +2859,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
+    bool restartESP = false;
     Log.trace(F("MQTTtoSYS json" CR));
 #if defined(ESP8266) || defined(ESP32)
     if (SYSdata.containsKey("cmd")) {
@@ -2639,16 +2875,35 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
+#  ifdef RGB_INDICATORS
+    if (SYSdata.containsKey("rgbb") && SYSdata["rgbb"].is<float>()) {
+      if (SYSdata["rgbb"] >= 0 && SYSdata["rgbb"] <= 255) {
+        SYSConfig.rgbbrightness = round2(SYSdata["rgbb"]);
+        leds.setBrightness(SYSConfig.rgbbrightness);
+        leds.show();
+#    ifdef ZactuatorONOFF
+        updatePowerIndicator();
+#    endif
+        Log.notice(F("RGB brightness: %d" CR), SYSConfig.rgbbrightness);
+        stateMeasures();
+      } else {
+        Log.error(F("RGB brightness value invalid - ignoring command" CR));
+      }
+    }
+#  endif
 #  ifdef ZmqttDiscovery
-    if (SYSdata.containsKey("ohdiscovery") && SYSdata["ohdiscovery"].is<bool>()) {
-      SYSConfig.ohdiscovery = SYSdata["ohdiscovery"];
+    if (SYSdata.containsKey("ohdisc") && SYSdata["ohdisc"].is<bool>()) {
+      SYSConfig.ohdiscovery = SYSdata["ohdisc"];
       Log.notice(F("OpenHAB discovery: %T" CR), SYSConfig.ohdiscovery);
       stateMeasures();
     }
 #  endif
     if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
-#  if defined(ZgatewayBT) && defined(ESP32)
+#  ifdef ESP32
+      ProcessLock = true;
+#    ifdef ZgatewayBT
       stopProcessing();
+#    endif
 #  endif
       String prev_ssid = WiFi.SSID();
       String prev_pass = WiFi.psk();
@@ -2660,7 +2915,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  if (defined(ESP8266) || defined(ESP32)) && (defined(WifiGMode) || defined(WifiPower))
       setESPWifiProtocolTxPower();
 #  endif
-      WiFi.waitForConnectResult();
+      WiFi.waitForConnectResult(WiFi_TimeOut * 1000);
 
       if (WiFi.status() != WL_CONNECTED) {
         Log.error(F("Failed to connect to new AP; falling back" CR));
@@ -2670,20 +2925,24 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         setESPWifiProtocolTxPower();
 #  endif
       }
-      ESPRestart(7);
+      restartESP = true;
     }
 
     bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
 
-    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name")) {
+    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name") || SYSdata.containsKey("gw_pass")) {
       if (SYSdata.containsKey("mqtt_topic")) {
         strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
       if (SYSdata.containsKey("gateway_name")) {
         strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
       }
+      if (SYSdata.containsKey("gw_pass")) {
+        strncpy(ota_pass, SYSdata["gw_pass"], parameters_size);
+        restartESP = true;
+      }
 #  ifndef ESPWifiManualSetup
-      saveMqttConfig();
+      saveConfig();
 #  endif
       disconnectClient = true; // trigger reconnect in loop using the new topic/name
     }
@@ -2711,8 +2970,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
 #    endif
 
-#    if defined(ZgatewayBT) && defined(ESP32)
+#    ifdef ESP32
+        ProcessLock = true;
+#      ifdef ZgatewayBT
         stopProcessing();
+#      endif
 #    endif
         disconnectClient = false;
         client.disconnect();
@@ -2735,8 +2997,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
         client.setServer(SYSdata["mqtt_server"].as<const char*>(), SYSdata["mqtt_port"].as<unsigned int>());
       } else {
-#    if defined(ZgatewayBT) && defined(ESP32)
+#    ifdef ESP32
+        ProcessLock = true;
+#      ifdef ZgatewayBT
         stopProcessing();
+#      endif
 #    endif
         disconnectClient = false;
         client.disconnect();
@@ -2760,7 +3025,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
           }
         }
 #    ifndef ESPWifiManualSetup
-        saveMqttConfig();
+        saveConfig();
 #    endif
       } else {
         if (update_server) {
@@ -2779,7 +3044,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         connectMQTT();
       }
-      ESPRestart(7);
+      restartESP = true;
     }
 #  endif
 
@@ -2789,11 +3054,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
 
 #ifdef ZmqttDiscovery
-    if (SYSdata.containsKey("discovery")) {
-      if (SYSdata["discovery"].is<bool>()) {
-        if (SYSdata["discovery"] == true && SYSConfig.discovery == false)
+    if (SYSdata.containsKey("disc")) {
+      if (SYSdata["disc"].is<bool>()) {
+        if (SYSdata["disc"] == true && SYSConfig.discovery == false)
           lastDiscovery = millis();
-        SYSConfig.discovery = SYSdata["discovery"];
+        SYSConfig.discovery = SYSdata["disc"];
         stateMeasures();
         if (SYSConfig.discovery)
           pubMqttDiscovery();
@@ -2806,8 +3071,11 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject jo = jsonBuffer.to<JsonObject>();
-      jo["discovery"] = SYSConfig.discovery;
-      jo["ohdiscovery"] = SYSConfig.ohdiscovery;
+      jo["disc"] = SYSConfig.discovery;
+      jo["ohdisc"] = SYSConfig.ohdiscovery;
+#    ifdef RGB_INDICATORS
+      jo["rgbb"] = SYSConfig.rgbbrightness;
+#    endif
       // Save config into NVS (non-volatile storage)
       String conf = "";
       serializeJson(jsonBuffer, conf);
@@ -2818,6 +3086,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 #  endif
 #endif
+    if (restartESP) {
+      ESPRestart(7);
+    }
   }
 }
 

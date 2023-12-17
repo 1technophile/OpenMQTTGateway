@@ -2,21 +2,21 @@ OpenMQTTGateway aims to unify various technologies and protocols into a single f
 
 ![Overview](./img/OpenMQTTGateway.png)
 
-# What is an MQTT Gateway or Bridge ?
+# What is an MQTT gateway or bridge ?
 
 MQTT, short for Message Queuing Telemetry Transport, is a lightweight messaging protocol ideal for IoT devices.
 
-An MQTT Gateway or Bridge plays a pivotal role in the MQTT ecosystem:
-* Protocol Translation: It converts non-MQTT protocols (like Zigbee or Bluetooth) into MQTT, enabling broader network communication.
+An MQTT gateway or bridge plays a pivotal role in the MQTT ecosystem:
+* Protocol Translation: It converts non-MQTT protocols (like LoRa or Bluetooth) into MQTT, enabling broader network communication.
 * Data Aggregation: Combines data from multiple devices into single messages, optimizing network use.
 * Security: Incorporates features like SSL/TLS encryption to safeguard data during transmission.
 * Device Management: Handles tasks like firmware updates and remote configuration changes.
 
-In essence, an MQTT Gateway ensures smooth communication between devices and MQTT brokers, enhancing the efficiency and security of IoT systems.
+In essence, an MQTT gateway ensures smooth communication between devices and MQTT brokers, enhancing the efficiency and security of IoT systems.
 
 # What OpenMQTTGateway can do ?
 
-OpenMQTTGateway integrates with established technologies, such as 433mhz/315mhz protocols and infrared (IR), allowing you to upgrade and repurpose older devices. Additionally, OMG is compatible with modern technologies like Bluetooth Low Energy (BLE) and LORA.
+OpenMQTTGateway integrates with established technologies, such as 433mhz/315mhz protocols and infrared (IR), allowing you to upgrade and repurpose older devices. Additionally, OMG is compatible with modern technologies like Bluetooth Low Energy (BLE) and LoRa.
 
 To have an overview of the supported PIR, door, water, temperature, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
 [compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
@@ -37,7 +37,7 @@ Leveraging OpenMQTTGateway with a controller allows you to:
 * Detect opened door or windows through 433mhz or BLE and alert yourself when leaving
 * Detect water leakage or smoke remotely
 * Actionate a siren if something is going wrong
-* Detect if your far mailbox has been opened by the postman with LORA
+* Detect if your far mailbox has been opened by the postman with LoRa
 * Make smart your old TV or AC system through infrared control
 * Monitor vehicle tire pressure
 
@@ -56,9 +56,17 @@ Under the hood, OpenMQTTGateway offers features such as:
 * Over the air updates
 * Local or cloud, your choice
 
-## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug !
+## Products powered by OpenMQTTGateway
 
-[Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
+### Theengs Bridge, BLE gateway with external antenna
+
+[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerfull BLE to MQTT gateway for over [90 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
+
+[![Theengs bridge view](./img/Theengs-Bridge-ble-gateway.png)](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna)
+
+### Theengs Plug, BLE gateway and Smart Plug
+
+[Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) brings the following features:
 * BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
@@ -66,8 +74,7 @@ Under the hood, OpenMQTTGateway offers features such as:
 
 [![Theengs plug view](./img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
-Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
-The plug is available in North America only, other regions are planned.
+Support the project by purchasing the [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) or the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 ## Media
 

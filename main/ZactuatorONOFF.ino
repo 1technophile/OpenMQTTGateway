@@ -99,6 +99,14 @@ void ONOFFConfig_fromJson(JsonObject& ONOFFdata){};
 void ONOFFConfig_load(){};
 #  endif
 
+void updatePowerIndicator() {
+  if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
+    PowerIndicatorON();
+  } else {
+    PowerIndicatorOFF();
+  }
+}
+
 void setupONOFF() {
 #  ifdef MAX_TEMP_ACTUATOR
   xTaskCreate(overLimitTemp, "overLimitTemp", 4000, NULL, 10, NULL);
@@ -113,14 +121,13 @@ void setupONOFF() {
 #  ifdef ACTUATOR_ONOFF_DEFAULT
   digitalWrite(ACTUATOR_ONOFF_GPIO, ACTUATOR_ONOFF_DEFAULT);
 #  elif defined(ESP32)
-  if (ONOFFConfig.useLastStateOnStart)
+  if (ONOFFConfig.useLastStateOnStart) {
     digitalWrite(ACTUATOR_ONOFF_GPIO, ONOFFConfig.ONOFFState);
-#  endif
-  if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
-    PowerIndicatorON();
   } else {
-    PowerIndicatorOFF();
+    digitalWrite(ACTUATOR_ONOFF_GPIO, !ACTUATOR_ON);
   }
+#  endif
+  updatePowerIndicator();
   Log.trace(F("ZactuatorONOFF setup done" CR));
 }
 
@@ -144,11 +151,10 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       if (ONOFFConfig.useLastStateOnStart) {
         ONOFFdata["save"] = true;
         ONOFFConfig_fromJson(ONOFFdata);
-        ONOFFdata.remove("save");
       }
 #    endif
       // we acknowledge the sending by publishing the value to an acknowledgement topic
-      pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+      stateONOFFMeasures();
     } else {
       if (ONOFFdata["cmd"] == "high_pulse") {
         Log.notice(F("MQTTtoONOFF high_pulse ok" CR));
@@ -191,6 +197,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
 
     // Load config from json if available
     ONOFFConfig_fromJson(ONOFFdata);
+    stateONOFFMeasures();
   }
 }
 #  endif
@@ -282,25 +289,28 @@ void ActuatorTrigger() {
   } else {
     PowerIndicatorOFF();
   }
-  // Send the state of the switch to the broker so as to update the status
-  StaticJsonDocument<64> jsonBuffer;
-  JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
-  ONOFFdata["cmd"] = (int)level;
+
 #  ifdef ESP32
   if (ONOFFConfig.useLastStateOnStart) {
+    StaticJsonDocument<64> jsonBuffer;
+    JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
+    ONOFFdata["cmd"] = (int)level;
     ONOFFdata["save"] = true;
     ONOFFConfig_fromJson(ONOFFdata);
-    ONOFFdata.remove("save");
   }
 #  endif
-  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+  stateONOFFMeasures();
 }
 
 void stateONOFFMeasures() {
   //Publish actuator state
-  StaticJsonDocument<64> jsonBuffer;
+  StaticJsonDocument<128> jsonBuffer;
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)digitalRead(ACTUATOR_ONOFF_GPIO);
-  pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+#  ifdef ESP32
+  ONOFFdata["uselaststate"] = ONOFFConfig.useLastStateOnStart;
+#  endif
+  ONOFFdata["origin"] = subjectGTWONOFFtoMQTT;
+  handleJsonEnqueue(ONOFFdata, QueueSemaphoreTimeOutTask);
 }
 #endif
