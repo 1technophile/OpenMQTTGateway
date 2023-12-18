@@ -1121,6 +1121,15 @@ void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     // Decode the payload
     process_bledata(BLEdata);
+    // Convert prmacs to RMACS until and if OMG gets Identity MAC/IRK decoding
+    if (BLEdata["prmac"]) {
+      BLEdata.remove("prmac");
+      if (BLEdata["track"]) {
+        BLEdata.remove("track");
+      }
+      BLEdata["type"] = "RMAC";
+      Log.trace(F("Potential RMAC (prmac) converted to RMAC" CR));
+    }
     // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       Log.trace(F("Random MAC, device filtered" CR));
