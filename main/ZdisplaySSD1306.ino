@@ -302,6 +302,8 @@ OledSerial::OledSerial(int x) {
   // delay(50);
   // digitalWrite(OLED_RST, HIGH);
   display = new SSD1306Wire(0x3c, OLED_SDA, OLED_SCL, GEOMETRY_128_64);
+#  elif defined(GenericSSD1306)
+  display = new SSD1306Wire(0x3c, OLED_SDA, OLED_SCL, GEOMETRY_128_64);
 #  endif
 }
 
@@ -357,7 +359,7 @@ void OledSerial::flush(void) {
 }
 
 /*
-Erase display and paint it with the color.  Used to 
+Erase display and paint it with the color.  Used to
 */
 void OledSerial::fillScreen(OLEDDISPLAY_COLOR color) {
   if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
