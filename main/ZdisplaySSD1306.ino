@@ -302,7 +302,7 @@ OledSerial::OledSerial(int x) {
   // delay(50);
   // digitalWrite(OLED_RST, HIGH);
   display = new SSD1306Wire(0x3c, OLED_SDA, OLED_SCL, GEOMETRY_128_64);
-#  elif defined(GenericSSD1306)
+#  elif defined(GenericSSD1306) // a generic ssd1306 oled with of size 128*64
   display = new SSD1306Wire(0x3c, OLED_SDA, OLED_SCL, GEOMETRY_128_64);
 #  endif
 }
