@@ -1121,15 +1121,6 @@ void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     // Decode the payload
     process_bledata(BLEdata);
-    // Convert prmacs to RMACS until and if OMG gets Identity MAC/IRK decoding
-    if (BLEdata["prmac"]) {
-      BLEdata.remove("prmac");
-      if (BLEdata["track"]) {
-        BLEdata.remove("track");
-      }
-      BLEdata["type"] = "RMAC";
-      Log.trace(F("Potential RMAC (prmac) converted to RMAC" CR));
-    }
     // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
       Log.trace(F("Random MAC, device filtered" CR));
@@ -1185,6 +1176,17 @@ void process_bledata(JsonObject& BLEdata) {
   Log.trace(F("Processing BLE data %s" CR), BLEdata["id"].as<const char*>());
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
+
+  // Convert prmacs to RMACS until or if OMG gets Identity MAC/IRK decoding
+  if (BLEdata["prmac"]) {
+    BLEdata.remove("prmac");
+    if (BLEdata["track"]) {
+      BLEdata.remove("track");
+    }
+    BLEdata["type"] = "RMAC";
+    Log.trace(F("Potential RMAC (prmac) converted to RMAC" CR));
+  }
+
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
       Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
