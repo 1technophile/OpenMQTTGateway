@@ -52,7 +52,7 @@ This notification pin can be inverted if driving directly or through a transisto
 `#define INVERT_LED_NOTIFY true`
 
 ### RN8209
-You will receive every `TimeBetweenPublishingRN8209` (set into config_RN8209.h) the RN8209 measurements (every 60s per default), or if the difference between the previous current reading and the new reading is more than 0.1A.
+You will receive every `TimeBetweenPublishingRN8209` (set into config_RN8209.h) the RN8209 measurements (every 60s per default), or if the difference between the previous current reading and the new reading is more than 0.1A, or if the difference between the previous voltage reading and the new reading is more than 2V.
 One reading is done every 0.5s.
 
 `home/OpenMQTTGateway/RN8209toMQTT {"volt":120.34,"current":7.92,"power":954.61}`
