@@ -49,6 +49,7 @@ void rn8209_loop(void* mode) {
     uint8_t retc = 1;
     uint8_t retp = 1;
     static float previousCurrent = 0;
+    static float previousVoltage = 0;
     if (ret) {
       uint32_t temp_current = 0;
       retc = rn8209c_read_current(phase_A, &temp_current);
@@ -61,21 +62,25 @@ void rn8209_loop(void* mode) {
         current = current / 10000.0;
         overLimitCurrent(current);
       }
+      if (retv == 0) {
+        voltage = (float)temp_voltage / 1000.0;
+      }
     }
     unsigned long now = millis();
     if ((now > (PublishingTimerRN8209 + TimeBetweenPublishingRN8209) ||
          !PublishingTimerRN8209 ||
-         (abs(current - previousCurrent) > MinCurrentThreshold)) &&
+         (abs(current - previousCurrent) > MinCurrentThreshold) || (abs(voltage - previousVoltage) > MinVoltageThreshold)) &&
         !ProcessLock) {
       StaticJsonDocument<JSON_MSG_BUFFER> RN8209dataBuffer;
       JsonObject RN8209data = RN8209dataBuffer.to<JsonObject>();
       if (retc == 0) {
+        previousCurrent = current;
         RN8209data["current"] = round2(current);
       }
       uint32_t temp_power = 0;
       retp = rn8209c_read_power(phase_A, &temp_power);
       if (retv == 0) {
-        voltage = (float)temp_voltage / 1000.0;
+        previousVoltage = voltage;
         RN8209data["volt"] = round2(voltage);
       }
       if (ret == 1) {
@@ -88,7 +93,6 @@ void rn8209_loop(void* mode) {
         RN8209data["power"] = round2(power);
       }
       PublishingTimerRN8209 = now;
-      previousCurrent = current;
       if (RN8209data) {
         RN8209data["origin"] = subjectRN8209toMQTT;
         handleJsonEnqueue(RN8209data, QueueSemaphoreTimeOutTask);

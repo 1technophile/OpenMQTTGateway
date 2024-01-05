@@ -53,4 +53,7 @@ extern void RN8209toMQTT();
 #ifndef MinCurrentThreshold
 #  define MinCurrentThreshold 0.1 // (A) Minimum current change that will trigger the publishing of the RN8209 measurements
 #endif
+#ifndef MinVoltageThreshold
+#  define MinVoltageThreshold 2 // (V) Minimum voltage change that will trigger the publishing of the RN8209 measurements
+#endif
 #endif
