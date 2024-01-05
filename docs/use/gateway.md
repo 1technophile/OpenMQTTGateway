@@ -71,7 +71,7 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
   "mqtt_secure": "false"
 }'
 ```
-::: info
+::: tip INFO
 By default this function is not available on the pre built binary of RFBridge, in order to have less code size and enable to have OTA update working properly. So as to enable it remove from the rf bridge env:
 ```
 build_flags = '-UMQTTsetMQTT'
@@ -95,7 +95,7 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
   "gateway_name": "name"
 }'
 ```
-::: info
+::: tip INFO
 This will change the subscribed and published mqtt_topic/gateway_name that the gateway uses. No parameters are mandatory, the current topic or gateway name will be used if not supplied.
 :::
 
