@@ -33,7 +33,7 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 
 ![Home Assistant Auto Discovery](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
-::: info
+::: tip INFO
 The Bluetooth and the RTL_433 gateway will create automatically devices and entities, the RF gateway will create DeviceTrigger.
 The OpenMQTTGateway will also be available as a device to monitor its parameters and control it. The sensors (DHT for example) and actuators (relays) are attached to the gateway.
 
