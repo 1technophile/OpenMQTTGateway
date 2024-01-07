@@ -315,7 +315,7 @@ void createDiscovery(const char* sensor_type,
   if (payload_off[0])
     sensor["pl_off"] = payload_off; //payload_off
   if (strcmp(sensor_type, "device_tracker") == 0)
-    sensor["source_type "] = "bluetooth_le"; // payload_install for update
+    sensor["source_type"] = "bluetooth_le"; // payload_install for update
   if (off_delay != 0)
     sensor["off_delay"] = off_delay; //off_delay
   if (payload_available[0])
