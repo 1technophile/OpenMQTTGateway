@@ -32,16 +32,6 @@ jobs:
         run: |
           ESP32_VERSION=$(grep 'esp32_platform\s*=' platformio.ini | cut -d'@' -f2 | tr -d '[:space:]')
           echo "ESP32_PLATFORM_VERSION=${ESP32_VERSION}" >> $GITHUB_ENV
-      - name: Trigger framework installation
-        run: platformio run -e esp32dev-all-test
-      - name: Replace libbtdm_app.a file
-        run: cp lib/esp32-bt-lib/esp32/libbtdm_app.a $HOME/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/ld/libbtdm_app.a
-      - name: Verify file replacement
-        run: |
-          echo "Listing the file at the target location:"
-          ls -ltr $HOME/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/ld/
-          echo "Checking file checksum:"
-          md5sum $HOME/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/ld/libbtdm_app.a 
       - name: Run PlatformIO
         run: |
           export PLATFORMIO_BUILD_FLAGS="'-DDEVELOPMENTOTA=true'"
