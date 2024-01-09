@@ -22,4 +22,13 @@ You can upload the firmware to your ESP device directly from here.
 
 <web-uploader/>
 
+
+## Using OpenMQTTGateway ?
+Support open-source development through sponsorship and gain exclusive access to our private forum. Your questions, issues, and feature requests will receive priority attention, plus you'll gain insider access to our roadmap.
+
+<div style="text-align: center;">
+    <iframe src="https://github.com/sponsors/theengs/button" title="Sponsor Theengs" height="32" width="228" style="border: 0; border-radius: 6px;"></iframe>
+</div>
+
+## Environments characteristics
 The auto-generated table below describes the libraries and the modules of each board configuration.

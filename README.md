@@ -21,6 +21,13 @@ The reference sheet, with the list of all functions, pinouts is [here](https://d
 
 Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgateway.com/upload/web-install.html) (no additional software required) or [build your own configuration](https://docs.openmqttgateway.com/upload/builds.html) with [PlatformIO](https://platformio.org/) or [Arduino IDE](https://www.arduino.cc/en/software)
 
+## Using OpenMQTTGateway ?
+Support open-source development through sponsorship and gain exclusive access to our private forum. Your questions, issues, and feature requests will receive priority attention, plus you'll gain insider access to our roadmap.
+
+<div style="text-align: center;">
+    <iframe src="https://github.com/sponsors/theengs/button" title="Sponsor Theengs" height="32" width="228" style="border: 0; border-radius: 6px;"></iframe>
+</div>
+
 ## Products powered by OpenMQTTGateway
 
 ### Theengs Bridge, BLE gateway with external antenna
