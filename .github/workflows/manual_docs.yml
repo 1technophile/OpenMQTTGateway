@@ -21,6 +21,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests pandas markdown pytablereader tabulate
           npm install
+      - name: Download Common Config
+        run: |
+          curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
       - name: get lastest release tag
         id: last_release
         uses: InsonusK/get-latest-release@v1.0.1
