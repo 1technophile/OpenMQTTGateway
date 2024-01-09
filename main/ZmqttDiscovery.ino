@@ -413,6 +413,9 @@ void createDiscovery(const char* sensor_type,
 }
 
 void eraseTopic(const char* sensor_type, const char* unique_id) {
+  if (sensor_type == NULL || unique_id == NULL) {
+    return;
+  }
   String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
   Log.trace(F("Erase entity discovery %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   pubMQTT((char*)topic.c_str(), "", true);
@@ -1228,7 +1231,7 @@ void pubMqttDiscovery() {
                   "false", "true" //state_off, state_on
   );
 
-#      define EntitiesCount 10
+#      define EntitiesCount 9
   const char* obsoleteEntities[EntitiesCount][2] = {
       // Remove previously created entities for version < 1.4.0
       {"switch", "active_scan"}, // Replaced by adaptive scan
