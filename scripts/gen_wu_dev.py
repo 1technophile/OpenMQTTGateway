@@ -21,6 +21,22 @@ mf_temp32 = string.Template('''{
   ]
 }''')
 
+mf_temp32c3 = string.Template('''{
+  "name": "OpenMQTTGateway",
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "improv": false,
+      "parts": [
+        { "path": "$cp$bl", "offset": 0 },
+        { "path": "$cp$part", "offset": 32768 },
+        { "path": "$cp$boot", "offset": 57344 },
+        { "path": "$cp$bin", "offset": 65536 }
+      ]
+    }
+  ]
+}''')
+
 mf_temp8266 = string.Template('''{
   "name": "OpenMQTTGateway",
   "builds": [
@@ -44,7 +60,11 @@ wu_temp_p1 = '''<template>
     <select>
       <optgroup label="ESP32">'''
 
-wu_temp_p2 = '''
+wu_temp_p2 = '''<template>
+      </optgroup>
+      <optgroup label="ESP32C3">'''
+
+wu_temp_p3 = '''
       </optgroup>
       <optgroup label="ESP8266">'''
 
@@ -86,6 +106,7 @@ bin_path = 'toDeploy/'
 cors_proxy = ''  # 'https://cors.bridged.cc/'
 esp32_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32/bin/bootloader_dio_80m.bin'
 esp32_boot = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/partitions/boot_app0.bin'
+esp32c3_blurl = 'https://github.com/espressif/arduino-esp32/raw/2.0.5/tools/sdk/esp32c3/bin/bootloader_dio_80m.bin'
 
 if not os.path.exists(manif_path):
     os.makedirs(manif_path)
@@ -105,13 +126,20 @@ filename = esp32_blurl.split('/')[-1]
 with open(manif_path + filename, 'wb') as output_file:
     output_file.write(bl_bin.content)
 
+bl_bin_c3 = requests.get(esp32c3_blurl)
+filename_c3 = esp32c3_blurl.split('/')[-1]
+# add C3 at thend of the file name
+filename_c3 = filename_c3.split('.')[0] + '-C3.' + filename_c3.split('.')[1]
+with open(manif_path + filename_c3, 'wb') as output_file:
+    output_file.write(bl_bin_c3.content)
+
 boot_bin = requests.get(esp32_boot)
 filename = esp32_boot.split('/')[-1]
 with open(manif_path + filename, 'wb') as output_file:
     output_file.write(boot_bin.content)
 
 for name in os.listdir(bin_path):
-    if 'firmware.bin' in name and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'theengs' in name or 'lilygo' in name or 'shelly' in name or 'lolin_c3' in name or 'tinypico' in name):
+    if 'firmware.bin' in name and ('esp32c3' not in name ) and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'theengs' in name or 'lilygo' in name or 'shelly' in name or 'lolin_c3' in name or 'tinypico' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
         print('Bin name:' + name)
@@ -132,6 +160,29 @@ for name in os.listdir(bin_path):
         print('Created: ' + os.path.abspath(man_file))
 
 wu_file.write(wu_temp_p2)
+
+for name in os.listdir(bin_path):
+    if 'firmware.bin' in name and ('esp32c3' in name ):
+        fw = name.split('-firmware')[0]
+        man_file = fw + '.manifest.json'
+        print('Bin name:' + name)
+        part_name = name.split('-firmware')[0] + '-partitions.bin'
+        print('Partition name:' + part_name)
+        mani_str = mf_temp32c3.substitute({'cp': cors_proxy, 'part': manif_folder + part_name.split('/')[-1], 'bin': manif_folder + name.split(
+            '/')[-1], 'bl': manif_folder + filename_c3,'boot': manif_folder + esp32_boot.split('/')[-1]})
+
+        with open(manif_path + man_file, 'w') as nf:
+            nf.write(mani_str)
+
+        wu_file.write(wu_temp_opt.substitute(
+            {'mff': manif_folder + man_file, 'mfn': fw}))
+
+        shutil.copyfile(bin_path + name, (manif_path + name))
+        shutil.copyfile(bin_path + part_name, (manif_path + part_name))
+
+        print('Created: ' + os.path.abspath(man_file))
+
+wu_file.write(wu_temp_p3)
 
 for name in os.listdir(bin_path):
     if 'firmware.bin' in name and ('nodemcu' in name or 'sonoff' in name or 'rf-wifi-gateway' in name or 'manual-wifi-test' in name or 'rfbridge' in name):
