@@ -49,7 +49,7 @@ jobs:
           curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
       - name: Build documentation
         run: |
-          python ./scripts/gen_wu_dev.py
+          python ./scripts/gen_wu.py --dev
           npm run docs:build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
