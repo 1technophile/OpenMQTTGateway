@@ -17,7 +17,7 @@ module.exports = {
     ['link', { rel: 'mask-icon', href: '/icons/safari-pinned-tab.svg', color: '#3eaf7c' }],
     ['meta', { name: 'msapplication-TileImage', content: '/favicon-144x144.png' }],
     ['meta', { name: 'msapplication-TileColor', content: '#000000' }],
-    ['script', {type: 'module', src: 'https://unpkg.com/esp-web-tools@3.5.0/dist/web/install-button.js?module'}]
+    ['script', {type: 'module', src: 'https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module'}]
   ],
   themeConfig: {
     repo: '1technophile/OpenMQTTGateway',

@@ -1,3 +1,7 @@
+--- 
+pageClass: table-generated-page
+---
+
 # (Option 1) Upload from the web
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fdocs.openmqttgateway.com%2Fupload%2Fweb-install.html&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
@@ -22,6 +26,7 @@ You can upload the firmware to your ESP device directly from here.
 
 <web-uploader/>
 
+Upload powered by [ESP Web Tools](https://esphome.github.io/esp-web-tools/)
 
 ## Using OpenMQTTGateway ?
 Support open-source development through sponsorship and gain exclusive access to our private forum. Your questions, issues, and feature requests will receive priority attention, plus you'll gain insider access to our roadmap.
