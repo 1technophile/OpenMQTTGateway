@@ -25,9 +25,10 @@ if dev:
     # copy OTA latest version definition
     shutil.copy("scripts/latest_version_dev.json",
                 manif_path + "latest_version_dev.json")
-    # copy the content of bin_path to manif_path
+    # copy the binaries frombin_path to manif_path
     for name in os.listdir(bin_path):
-        shutil.copyfile(bin_path + name, (manif_path + name))
+        if '.bin' in name:
+            shutil.copyfile(bin_path + name, (manif_path + name))
 else:
     print('Generate Web Upload in release mode')
     # copy OTA latest version definition
