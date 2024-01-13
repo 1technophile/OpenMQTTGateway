@@ -126,6 +126,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "14.x"
+      - name: Download Common Config
+        run: |
+          curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
       - name: Install build dependencies
         run: npm install
       - name: Build documentation
