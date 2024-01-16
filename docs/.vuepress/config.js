@@ -106,7 +106,7 @@ module.exports = {
         ]
       }
   ]
-  }
+  },
   plugins: {
     'sitemap': {
       hostname: 'https://docs.openmqttgateway.com',
@@ -123,4 +123,5 @@ module.exports = {
         'https://www.theengs.io/'
       ],
     },
+  }
 }
