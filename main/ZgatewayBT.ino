@@ -1052,6 +1052,14 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 0, "", "", false, "",
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone);
+              } else if (p->sensorModel_id == TheengsDecoder::MUE4094RT && strcmp(prop.value()["unit"], "status") == 0) { // This device does not a broadcast when there is nothing detected so adding a timeout
+                createDiscovery("binary_sensor",
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, prop.value()["name"], value_template.c_str(),
+                                "True", "False", "",
+                                BTConfig.presenceAwayTimer / 1000, "", "", false, "",
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassNone);
               } else if (strcmp(prop.value()["unit"], "status") == 0) {
                 createDiscovery("binary_sensor",
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
