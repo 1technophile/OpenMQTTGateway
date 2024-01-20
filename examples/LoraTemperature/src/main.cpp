@@ -90,13 +90,24 @@ void loop() {
   LoRa.print(msg);
   LoRa.endPacket();
 
-  Serial.println(String(msg));
+  Serial.println(msg);
   
   display.drawString(0, 15, String(NodeId));
   display.drawString(0, 30, "tempc: " + String(temp) + " C");
   display.display();
 
+  delay(5000);
+
+  // Send makerfab soil sensor example packet
+  LoRa.beginPacket();
+  String msg2 = "ID010770 REPLY : SOIL INEDX:5862 H:100.00 T:1.77 ADC:624 BAT:857";
+  LoRa.print(msg2);
+  LoRa.endPacket();
+
+  Serial.println(msg2);
+
   counter++;
+
   digitalWrite(2, HIGH); // turn the LED on (HIGH is the voltage level)
   delay(1000); // wait for a second
   digitalWrite(2, LOW); // turn the LED off by making the voltage LOW
