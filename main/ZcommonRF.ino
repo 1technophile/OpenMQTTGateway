@@ -34,6 +34,8 @@
 void initCC1101() {
 #    ifdef ZradioCC1101 //receiving with CC1101
   // Loop on getCC1101() until it returns true and break after 10 attempts
+  int delayMS = 16;
+  int delayMaxMS = 500;
   for (int i = 0; i < 10; i++) {
     if (ELECHOUSE_cc1101.getCC1101()) {
       Log.notice(F("C1101 spi Connection OK" CR));
@@ -42,8 +44,11 @@ void initCC1101() {
       break;
     } else {
       Log.error(F("C1101 spi Connection Error" CR));
-      delay(500);
+      delay(delayMS);
     }
+    // truncated exponential backoff
+    delayMS = delayMS * 2;
+    if (delayMS > delayMaxMS) delayMS = delayMaxMS;
   }
 #    endif
 }
