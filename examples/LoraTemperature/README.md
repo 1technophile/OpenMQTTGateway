@@ -1,5 +1,6 @@
 # OpenMQTTGateway LoRa Node Example
 This repository contains an example of a LoRa node program designed for the ESP32 platform. The program reads the internal temperature of the ESP32, packages the data into a JSON format, and sends it over LoRa.
+It also sends a constant raw string simulating a Makerfab Soil sensor payload.
 
 ## Features:
 * Uses an SX12XX LoRa module.

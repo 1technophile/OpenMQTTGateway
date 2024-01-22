@@ -428,9 +428,13 @@ void LORAtoMQTT() {
     } else {
       // ascii payload
       std::string packetStrStd = (char*)packet;
-      auto error = deserializeJson(LORAdataBuffer, packetStrStd);
-      if (error) {
-        Log.error(F("LORA packet deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), LORAdataBuffer.capacity());
+      auto result = deserializeJson(LORAdataBuffer, packetStrStd);
+      if (result) {
+        Log.notice(F("LORA packet deserialization failed, not a json, sending raw message" CR));
+        LORAdata = LORAdataBuffer.to<JsonObject>();
+        LORAdata["message"] = (char*)packet;
+      } else {
+        Log.trace(F("LORA packet deserialization OK" CR));
       }
     }
 
@@ -453,6 +457,7 @@ void LORAtoMQTT() {
     } else {
       LORAdataBuffer["origin"] = subjectLORAtoMQTT;
     }
+
     handleJsonEnqueue(LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
