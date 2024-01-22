@@ -20,7 +20,8 @@ With Home Assistant, this command is directly available through MQTT auto discov
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"status"}'`
 
 ## Auto discovery
-You can deactivate the MQTT auto discovery function, this function enables to automatically create devices/entities with Home Assistant convention.
+You can deactivate the MQTT auto-discovery function, which enables you to create devices/entities with the Home Assistant convention automatically. This function is set to `true` at startup for 30 minutes unless you deactivate it.
+
 ### Deactivate
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"disc":false}'`
 
@@ -31,7 +32,7 @@ If you want the settings to be kept upon gateway restart, you can save the state
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"disc":false, "save":true}'`
 
 ::: tip
-Auto discovery is enable by default on release binaries, on platformio (except for UNO). With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
+Auto discovery is enabled by default on release binaries and platformio (except for UNO). With Arduino IDE, please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
 :::
 
 ## AutoDiscovery compatible with OpenHAB (default: false)
