@@ -1791,7 +1791,7 @@ void setup_wifimanager(bool reset_settings) {
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size, " minlength='1' maxlength='64' required");
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6, " minlength='1' maxlength='5' required");
   WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size, " maxlength='64'");
-  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", mqtt_pass, parameters_size, " input type='password' maxlength='64'");
+  WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", MQTT_PASS, parameters_size, " input type='password' maxlength='64'");
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size, " minlength='1' maxlength='64' required");
   WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 4096);
@@ -1891,7 +1891,11 @@ void setup_wifimanager(bool reset_settings) {
     strcpy(mqtt_server, custom_mqtt_server.getValue());
     strcpy(mqtt_port, custom_mqtt_port.getValue());
     strcpy(mqtt_user, custom_mqtt_user.getValue());
-    strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+    // Check if the MQTT password field contains the default value
+    if (strcmp(custom_mqtt_pass.getValue(), MQTT_PASS) != 0) {
+      // If it's not the default password, update the MQTT password
+      strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+    }
     strcpy(mqtt_topic, custom_mqtt_topic.getValue());
     if (mqtt_topic[strlen(mqtt_topic) - 1] != '/' && strlen(mqtt_topic) < parameters_size) {
       strcat(mqtt_topic, "/");
