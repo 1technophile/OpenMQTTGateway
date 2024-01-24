@@ -443,7 +443,7 @@ void updateDevicesStatus() {
 }
 
 void dumpDevices() {
-#  if LOG_LEVEL > 4 // > NOTICE LOG LEVEL
+#  if LOG_LEVEL > LOG_LEVEL_NOTICE
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     Log.trace(F("macAdr %s" CR), p->macAdr);

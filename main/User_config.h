@@ -130,8 +130,8 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #ifndef WiFi_TimeOut
 #  define WiFi_TimeOut 30
 #endif
-#ifndef WM_DEBUG_LEVEL
-#  define WM_DEBUG_LEVEL 1 // valid values are: DEBUG_ERROR = 0, DEBUG_NOTIFY = 1, DEBUG_VERBOSE = 2, DEBUG_DEV = 3, DEBUG_MAX = 4
+#ifndef WM_DEBUG // WiFi Manager debug
+#  define WM_DEBUG 1
 #endif
 //#define WIFIMNG_HIDE_MQTT_CONFIG //Uncomment so as to hide MQTT setting from Wifi manager page
 
