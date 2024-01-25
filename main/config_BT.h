@@ -113,7 +113,7 @@ extern String stateBTMeasures(bool);
 #endif
 
 #ifndef HassPresence
-#  define HassPresence false //false if we publish into Home Assistant presence topic
+#  define HassPresence false //true if we publish into Home Assistant presence topic
 #endif
 
 #define HMSerialSpeed 9600 // Communication speed with the HM module, softwareserial doesn't support 115200

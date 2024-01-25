@@ -5,7 +5,7 @@ description: Versatile Bluetooth gateway that scans and decodes data from variou
 # Bluetooth gateway
 
 The manufacturer agnostic Bluetooth Low Energy (BLE) gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/), allowing you to visualize and analyze information from a wide range of sensors. 
-It can also act as a presence detection gateway by reading the nearby BLE tags or tracker.
+It can also act as a device tracker and presence detection gateway by receiving nearby BLE devices and trackers.
 
 Data are transmitted to an MQTT broker, where it can be used to trigger events and rules, as well as displayed, stored and processed in your favorite controller (Home Assistant, OpenHAB, Jeedom, Domoticz, ioBroker or any MQTT compatible software).
 
@@ -19,6 +19,7 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 * BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
+* Device tracker,
 * Presence detection (beta),
 * Local connectivity first.
 
@@ -56,12 +57,10 @@ Once the data has been transmitted to the MQTT broker, it can be easily integrat
 
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
-## Receiving signals from BLE tracker devices for Presence detection
-The gateway can detect BLE trackers from Tile, Nut, TagIt and iTag, as well as other devices with additional properties decoding like Mi Band, Amazfit, RuuviTag and others indicated as Presence Trackers in the [compatible BLE devices list](https://decoder.theengs.io/devices/devices.html), and automatically creates a device tracker entity following the Home Assistant discovery convention (if auto discovery is activated).
-To do this activate the "BT: Publish HASS presence" switch in your controller or send the following MQTT command to your broker:
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'`
+## Receiving signals from BLE devices for Device Tracker detection
+The gateway will detect BLE trackers from Tile, Nut, TagIt and iTag, as well as other devices with additional properties decoding like Mi Band, Amazfit, RuuviTag and others indicated as Device Trackers in the [compatible BLE devices list](https://decoder.theengs.io/devices/devices.html), and automatically create a device tracker entity following the Home Assistant discovery convention (if auto discovery is activated).
 
-The entity created can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
+The devicen tracker entity created can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
  
 ![Away home Home assistant view](../img/OpenMQTTGateway-BLE-tracker-Home-Assistant.png)
 
@@ -73,15 +72,16 @@ By default `presenceawaytimer` is set to 120s, you can change it from the slider
 
 Generally BLE devices will not broadcast if they are paired so you may need to ensure your beacons is unpaired/disconnected before it will be seen by the gateway.
 
-Consider the distance estimation as a beta feature.
-
 Note that you can find apps to simulate beacons and do some tests like [Beacon simulator](https://play.google.com/store/apps/details?id=net.alea.beaconsimulator)
 
-iOS version >=10 devices advertise without an extra app MAC address, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and cannot be used for presence detection. You must install an app to advertise a fixed MAC address.
+Apple iOS version >=10 devices advertise without an extra MAC address app, nevertheless this address [changes randomly](https://github.com/1technophile/OpenMQTTGateway/issues/71) and can currently only be used with [Theengs Gateway](https://gateway.theengs.io/) and its [Identity MAC Address and Identity Resolving Key](https://gateway.theengs.io/use/use.html#getting-identity-resolving-key-irk-for-apple-watch-iphone-and-ipad) feature.
 
 ::: tip INFO
 The `presenceawaytimer` is also used to reset the state of the PIR/motion sensors to `off` when using HA MQTT discovery convention. If the Sensor does not detect a motion, its state will be automatically set to `off` after the `presenceawaytimer`.
 :::
+
+## Receiving signals from BLE devices for Presence detection
+To do this activate the "BT: Publish HASS presence" switch in your controller or send the following MQTT command to your broker: mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"hasspresence":true}'
 
 ## Receiving signals from BLE devices with accelerometers for movement detection
 The gateway is designed to detect BLE trackers from BlueCharm and automatically create a binary sensor entity in accordance with the Home Assistant discovery convention, provided that auto discovery is enabled.
