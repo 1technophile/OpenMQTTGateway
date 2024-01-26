@@ -403,16 +403,29 @@ void updateDevicesStatus() {
     BLEdevice* p = *it;
     unsigned long now = millis();
     // Device tracker devices
-    if (BTConfig.presenceEnable && (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2)) { // We apply the offline status only for tracking device, can be extended further to all the devices
+    if ((p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABN03 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABN07 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABTEMP ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABTEMP ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM6 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::KKM_K9 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MOKOBEACONXPRO ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MOKOBEACON ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RDL52832 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM1IN1 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM3IN1 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM4IN1 ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
+         p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG)) { // We apply the offline status only for tracking device, can be extended further to all the devices
       if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.presenceAwayTimer) && (now > BTConfig.presenceAwayTimer)) &&
           (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(p)) && !isBlack(p)))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)) {
         StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
@@ -628,7 +641,7 @@ void procBLETask(void* pvParameters) {
           BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
           BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
-        if (advertisedDevice->haveRSSI() && !BTConfig.pubOnlySensors && BTConfig.presenceEnable) {
+        if (advertisedDevice->haveRSSI() && BTConfig.presenceEnable) {
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
@@ -976,15 +989,29 @@ void launchBTDiscovery(bool overrideDiscovery) {
             p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
             p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
             p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
-          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
+          if ((p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABN03 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABN07 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABTEMP ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ABTEMP ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM6 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::KKM_K9 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MOKOBEACONXPRO ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MOKOBEACON ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RDL52832 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM1IN1 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM3IN1 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM4IN1 ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
+               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG)) {
             String tracker_name = String(model_id.c_str()) + "-tracker";
             String tracker_id = macWOdots + "-tracker";
             createDiscovery("device_tracker",
