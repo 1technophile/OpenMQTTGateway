@@ -641,9 +641,6 @@ void handleWI() {
       }
       if (update) {
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-        String output;
-        serializeJson(WEBtoSYS, output);
-        Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
         Log.warning(F("[WebUI] Save WiFi and Restart" CR));
         char jsonChar[100];
         serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -785,9 +782,6 @@ void handleMQ() {
 
         delay(2000); // Wait for web page to be sent before
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-        String output;
-        serializeJson(WEBtoSYS, output);
-        Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
         MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
         return;
       } else {
@@ -860,9 +854,6 @@ void handleCG() {
 
     delay(2000); // Wait for web page to be sent before
     String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-    String output;
-    serializeJson(WEBtoSYS, output);
-    Log.notice(F("[WebUI] MQTTtoSYS %s" CR), output.c_str());
     MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
   } else {
     Log.warning(F("[WebUI] No changes" CR));

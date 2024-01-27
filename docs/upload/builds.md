@@ -42,7 +42,6 @@ build_flags =
   ${env.build_flags}        ; Inherit all the build flags from [env]
   '-DsimpleReceiving=true'  ; Add some of our own build flags
   '-DZmqttDiscovery="HADiscovery"'
-  '-DTRACE=1'
   ;'-DCORE_DEBUG_LEVEL=4'
 ```
 Here, build flags starting with "-D" let us set configuration values you would normally find in `User_config.h` and `config_xx.h` files by specifying them here, overriding the default values set in those files. To include special characters, you can triple escape them with a backslash like so:

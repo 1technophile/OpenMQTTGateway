@@ -1683,7 +1683,6 @@ void saveConfig() {
     Log.error(F("failed to open config file for writing" CR));
   }
 
-  serializeJsonPretty(json, Serial);
   serializeJson(json, configFile);
   configFile.close();
 }
@@ -1711,7 +1710,6 @@ bool loadConfigFromFlash() {
       if (error) {
         Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
       }
-      serializeJsonPretty(json, Serial);
       if (!json.isNull()) {
         Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
         if (json.containsKey("mqtt_server"))
@@ -1782,7 +1780,7 @@ void setup_wifimanager(bool reset_settings) {
   Log.notice(F("OTA Hostname: %s.local" CR), ota_hostname);
 #  endif
 
-  wifiManager.setDebugOutput(WM_DEBUG_LEVEL);
+  wifiManager.setDebugOutput(WM_DEBUG);
 
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
