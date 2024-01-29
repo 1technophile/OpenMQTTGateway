@@ -162,7 +162,7 @@ If you want to change this characteristic:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"onlysensors":true}'`
 
-The gateway will publish only the detected sensors like Mi Flora, Mi jia, LYWSD03MMC... and not the other BLE devices. This is useful if you don't use the gateway for presence detection but only to retrieve sensors data.
+The gateway will publish only detected sensors and trackers like Mi Flora, Mi jia, Mi Band, LYWSD03MMC... or trackers like Tile, Nut, TagIt or iTag, and not any other other BLE devices. This is useful if you don't use the gateway for presence detection with unrecognised trackers.
 
 ## Setting if the gateway publishes known devices which randomly change their MAC address (default: false)
 

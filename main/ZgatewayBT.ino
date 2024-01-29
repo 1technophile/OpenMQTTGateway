@@ -640,8 +640,8 @@ void procBLETask(void* pvParameters) {
           BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
           BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
-        if (advertisedDevice->haveRSSI() && !BTConfig.pubOnlySensors && BTConfig.presenceEnable) {
-          hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
+        if (advertisedDevice->haveRSSI() && BTConfig.presenceEnable) {
+          hass_presence(BLEdata); // this device has an rssi and with either only sensors or not we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
           int serviceDataCount = advertisedDevice->getServiceDataCount();
@@ -1161,7 +1161,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
       BLEdata.remove("track");
     }
     // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
-    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || BLEdata.containsKey("distance")) { // Identified device
+    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model")) { // Identified device
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
