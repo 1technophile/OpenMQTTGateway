@@ -17,7 +17,7 @@ Enable discovery on your MQTT integration in HASS (activated per default).
 
 ![Home Assistant Auto Discovery](../img/OpenMQTTGateway-Configuration-Home-Assistant-Discovery-Integration.png)
 
-The gateway will need an MQTT username and password, you have to create a new user(recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
+The gateway will need an MQTT username and password, you have to create a new user (recommended) into Home Assistant->Configuration->Users (available in admin mode) or use an existing username/pwd combination (not recommended). This user doesn't need to be an administrator.
 
 ![Home Assistant Auto Discovery](../img/OpenMQTTGateway-Configuration-Home-Assistant.png)
 
@@ -34,16 +34,17 @@ OMG will use the auto discovery functionality of home assistant to create gatewa
 ![Home Assistant Auto Discovery](../img/OpenMQTTGateway_Home_Assistant_MQTT_discovery.png)
 
 ::: tip INFO
-The Bluetooth and the RTL_433 gateway will create automatically devices and entities, the RF gateway will create DeviceTrigger.
+The Bluetooth and the RTL_433 gateway will automatically create devices and entities, the RF gateway will create DeviceTrigger.
 The OpenMQTTGateway will also be available as a device to monitor its parameters and control it. The sensors (DHT for example) and actuators (relays) are attached to the gateway.
 
-30 minutes after its activation the auto discovery will be automatically deactivated, you can reactivate it from the gateway controls.
+On first and subsequent startups, auto discovery will start. If you want to prevent this from happening, be sure to manually turn off auto discovery, either by using the UI in Home Assistant, or by publishing to the home/<gatewayname>/commands/MQTTtoSYS/config topic.
+30 minutes after its activation the auto discovery will be automatically deactivated, you can reactivate it from the gateway controls. 
 Some devices may require a button push or motion/contact event to trigger a message and generate the auto discovery.
 :::
 
 ## RTL_433 auto discovery specificity
 
-Even if the RTL_433 gateway will create automatically the devices and entities, you may loose the link to them when you change the batteries. This is proper to the RF devices. In this case new device and entities will be created. You may bypass this by creating entities through manual configuration that filter following the device model and other parameters and don't take into account the id.
+Even if the RTL_433 gateway will create automatically the devices and entities, you may lose the link to them when you change the batteries. This is proper to the RF devices. In this case new device and entities will be created. You may bypass this by creating entities through manual configuration that filter following the device model and other parameters and don't take into account the id.
 Example:
 ```yaml
 mqtt:
