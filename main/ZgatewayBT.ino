@@ -402,17 +402,14 @@ void updateDevicesStatus() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     unsigned long now = millis();
+    // Check for tracker status
+    bool isTracker = false;
+    std::string tag = decoder.getTheengAttribute(p->sensorModel_id, "tag");
+    if (tag.length() >= 4) {
+      isTracker = checkIfIsTracker(tag[3]);
+    }
     // Device tracker devices
-    if (BTConfig.presenceEnable && (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-                                    p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2)) { // We apply the offline status only for tracking device, can be extended further to all the devices
+    if (isTracker) { // We apply the offline status only for tracking device, can be extended further to all the devices
       if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.presenceAwayTimer) && (now > BTConfig.presenceAwayTimer)) &&
           (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(p)) && !isBlack(p)))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)) {
         StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
@@ -585,6 +582,21 @@ std::string convertServiceData(std::string deviceServiceData) {
   spr[2 * serviceDataLength] = 0;
   Log.trace(F("Converted service data (%d) to %s" CR), serviceDataLength, spr);
   return spr;
+}
+
+bool checkIfIsTracker(char ch) {
+  uint8_t data = 0;
+  if (ch >= '0' && ch <= '9')
+    data = ch - '0';
+  else if (ch >= 'a' && ch <= 'f')
+    data = 10 + (ch - 'a');
+
+  if (((data >> 3) & 0x01) == 1) {
+    Log.trace(F("Is Device Tracker" CR));
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void procBLETask(void* pvParameters) {
@@ -971,20 +983,20 @@ void launchBTDiscovery(bool overrideDiscovery) {
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
+
+        // Check for tracker status
+        bool isTracker = false;
+        std::string tag = decoder.getTheengAttribute(p->sensorModel_id, "tag");
+        if (tag.length() >= 4) {
+          isTracker = checkIfIsTracker(tag[3]);
+        }
+
         String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
         if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
             p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
             p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
             p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
-          if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUT ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::NUTALE ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::MIBAND ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TAGIT ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILE ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::TILEN ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::ITAG ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV1 ||
-              p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::RUUVITAG_RAWV2) {
+          if (isTracker) {
             String tracker_name = String(model_id.c_str()) + "-tracker";
             String tracker_id = macWOdots + "-tracker";
             createDiscovery("device_tracker",
