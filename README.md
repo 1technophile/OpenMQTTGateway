@@ -28,19 +28,20 @@ Support open-source development through sponsorship and gain exclusive access to
 
 ## Products powered by OpenMQTTGateway
 
-### Theengs Bridge, BLE gateway with external antenna
+### Theengs Bridge, Bluetooth gateway (BLE) with external antenna
 
 [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerfull BLE to MQTT gateway for over [90 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
 
 [![Theengs bridge view](./docs/img/Theengs-Bridge-ble-gateway.png)](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna)
 
-### Theengs Plug, BLE gateway and Smart Plug
+### Theengs Plug, Bluetooth gateway (BLE) gateway and Smart Plug
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) brings the following features:
 * BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
-* Presence detection (beta).
+* Presence detection (beta),
+* Local connectivity first.
 
 [![Theengs plug view](./docs/img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
