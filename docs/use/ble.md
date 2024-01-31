@@ -1,10 +1,10 @@
 ---
-title: BLE ESP32 gateway
-description: Versatile BLE gateway that scans and decodes data from various Bluetooth devices. It integrates seamlessly with MQTT brokers and controllers like Home Assistant and OpenHAB. Monitor temperature, humidity, pressure, and more for smarter control.
+title: Bluetooth ESP32 gateway
+description: Versatile Bluetooth gateway that scans and decodes data from various Bluetooth Low Energy (BLE) devices. It integrates seamlessly with MQTT brokers and controllers like Home Assistant and OpenHAB. Monitor temperature, humidity, pressure, and more for smarter control.
 ---
-# BLE gateway
+# Bluetooth gateway
 
-The manufacturer agnostic BLE gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/), allowing you to visualize and analyze information from a wide range of sensors. 
+The manufacturer agnostic Bluetooth Low Energy (BLE) gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/), allowing you to visualize and analyze information from a wide range of sensors. 
 It can also act as a presence detection gateway by reading the nearby BLE tags or tracker.
 
 Data are transmitted to an MQTT broker, where it can be used to trigger events and rules, as well as displayed, stored and processed in your favorite controller (Home Assistant, OpenHAB, Jeedom, Domoticz, ioBroker or any MQTT compatible software).
@@ -19,7 +19,8 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 * BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
-* Presence detection (beta).
+* Presence detection (beta),
+* Local connectivity first.
 
 [![Theengs plug view](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
