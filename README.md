@@ -40,6 +40,7 @@ Support open-source development through sponsorship and gain exclusive access to
 * BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
+* Device tracker,
 * Presence detection (beta),
 * Local connectivity first.
 

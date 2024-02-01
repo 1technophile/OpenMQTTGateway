@@ -224,7 +224,7 @@ template:
 
 ### MQTT Room Presence
 
-The publication into presence topic needs to be activated [here is the command](../use/ble.md)
+For the publication into the presence topic the following needs to be activated - [here is the command](../use/ble.html#setting-if-the-gateway-publish-into-home-assistant-home-presence-topic-default-false-available-with-ha-discovery)
 
 ```yaml
 sensor:

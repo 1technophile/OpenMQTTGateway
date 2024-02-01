@@ -23,7 +23,9 @@ If you want to use the BLE decoding capabilities of OpenMQTTGateway with a table
 * BLE to MQTT gateway, tens of Bluetooth devices supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
-* Presence detection (beta).
+* Device tracker,
+* Presence detection (beta),
+* Local connectivity first.
 
 [![Theengs plug view](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
