@@ -1,6 +1,6 @@
 OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
 
-![Overview](./img/OpenMQTTGateway.png)
+![Overview of the protocols and compatible controllers](./img/OpenMQTTGateway.png)
 
 # What is an MQTT gateway or bridge ?
 
@@ -94,19 +94,19 @@ Support the project by purchasing the [Theengs bridge](https://shop.theengs.io/p
 * [SMART PLUG ESP32 OPENMQTTGATEWAY SERVING AS AN BLE MQTT GATEWAY AND A POWER METER](https://www.electronics-lab.com/smart-plug-esp32-openmqttgateway-serving-as-an-ble-mqtt-gateway-and-a-power-meter/)
 
 ### Theengs Plug
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/nUwMt9p2U7o/0.jpg)](https://www.youtube.com/watch?v=nUwMt9p2U7o&t=427s)
+[![Theengs Plug video ElektroMaker](https://img.youtube.com/vi/nUwMt9p2U7o/0.jpg)](https://www.youtube.com/watch?v=nUwMt9p2U7o&t=427s)
 
 ### 433Mhz and BLE
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_gdXR1uklaY/0.jpg)](https://www.youtube.com/watch?v=_gdXR1uklaY)
+[![433Mhz and BLE gateway video by Andreas Spiess](https://img.youtube.com/vi/_gdXR1uklaY/0.jpg)](https://www.youtube.com/watch?v=_gdXR1uklaY)
 
 ### BLE
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/noUROhtf0E0/0.jpg)](https://www.youtube.com/watch?v=noUROhtf0E0)
+[![BLE gateway video by Andreas Spiess](https://img.youtube.com/vi/noUROhtf0E0/0.jpg)](https://www.youtube.com/watch?v=noUROhtf0E0)
 
 ### 433Mhz
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/H-JXWbWjJYE/0.jpg)](https://www.youtube.com/watch?v=H-JXWbWjJYE)
+[![RTL_433 video by TECH MIND](https://img.youtube.com/vi/H-JXWbWjJYE/0.jpg)](https://www.youtube.com/watch?v=H-JXWbWjJYE)
 
 ### LORA
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/6DftaHxDawM/0.jpg)](https://www.youtube.com/watch?v=6DftaHxDawM)
+[![LORA video by Priceless Toolkit](https://img.youtube.com/vi/6DftaHxDawM/0.jpg)](https://www.youtube.com/watch?v=6DftaHxDawM)
 
 ::: warning Note
 The material and information contained in this documentation is for general information purposes only. You should not rely upon the material or information on this documentation as a basis for making any business, legal or any other decisions. There is no warranty given on this documentation content. If you decide to follow the information and materials given it is at your own risk. I will not be liable for any false, inaccurate, inappropriate or incomplete information presented on this website.
