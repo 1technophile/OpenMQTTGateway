@@ -58,3 +58,10 @@ jobs:
           publish_dir: ./docs/.vuepress/dist
           destination_dir: dev
           cname: docs.openmqttgateway.com
+      - name: Running Page Speed Insights
+        uses: jakepartusch/psi-action@v1.3
+        id: psi
+        with:
+          url: "https://docs.openmqttgateway.com/dev/"
+          threshold: 70
+          key: ${{ secrets.APIKEY }}
