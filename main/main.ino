@@ -1835,6 +1835,16 @@ void setup_wifimanager(bool reset_settings) {
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
 
+  if (SPIFFS.begin()) {
+    Log.trace(F("mounted file system" CR));
+    // Check if the config file exists and prevent the portal from showing if yes
+    // Showing the portal if the config file exist would enable access to the configuration data and to the ESP update page
+    // This is a security risk if an attacker has access to the gateway password
+    if (SPIFFS.exists("/config.json")) {
+      wifiManager.setEnableConfigPortal(false);
+    }
+  }
+
 #  ifdef ESP32_ETHERNET
   wifiManager.setBreakAfterConfig(true); // If ethernet is used, we don't want to block the connection by keeping the portal up
 #  endif
