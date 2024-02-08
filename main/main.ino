@@ -292,10 +292,8 @@ void WiFiEvent(WiFiEvent_t event);
 #  include <WiFiClientSecure.h>
 #  include <WiFiMulti.h>
 WiFiMulti wifiMulti;
+#  include <ESPmDNS.h>
 #  include <WiFiManager.h>
-#  ifdef MDNS_SD
-#    include <ESPmDNS.h>
-#  endif
 
 #elif defined(ESP8266)
 #  include <ArduinoOTA.h>
@@ -311,9 +309,7 @@ X509List* pClCert = nullptr;
 PrivateKey* pClKey = nullptr;
 #  endif
 ESP8266WiFiMulti wifiMulti;
-#  ifdef MDNS_SD
-#    include <ESP8266mDNS.h>
-#  endif
+#  include <ESP8266mDNS.h>
 
 #else
 #  include <Ethernet.h>
