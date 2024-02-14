@@ -64,7 +64,7 @@ void MeasureHCSR501() {
 #  ifdef HCSR501_LED_NOTIFY_GPIO
     digitalWrite(HCSR501_LED_NOTIFY_GPIO, pirState == HCSR501_LED_ON);
 #  endif
-    if (HCSR501data.size() > 1) {
+    if (HCSR501data.size() > 0) {
       HCSR501data["origin"] = subjectHCSR501toMQTT;
       handleJsonEnqueue(HCSR501data);
     }
