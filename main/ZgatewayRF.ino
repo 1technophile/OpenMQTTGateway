@@ -228,7 +228,8 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));
     SIGNAL_SIZE_UL_ULL data = RFdata["value"];
-    if (data != 0) {
+    const char* tridata = RFdata["tridata"];
+    if (data != 0 || tridata != 0) {
       int valuePRT = RFdata["protocol"] | 1;
       int valuePLSL = RFdata["delay"] | 350;
       int valueBITS = RFdata["length"] | 24;
@@ -249,7 +250,11 @@ void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
       mySwitch.enableTransmit(RF_EMITTER_GPIO);
       mySwitch.setRepeatTransmit(valueRPT);
       mySwitch.setProtocol(valuePRT, valuePLSL);
-      mySwitch.send(data, valueBITS);
+      if (data != 0) {
+        mySwitch.send(data, valueBITS);
+      } else {
+        mySwitch.sendTriState(tridata);
+      }
       Log.notice(F("MQTTtoRF OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       pub(subjectGTWRFtoMQTT, RFdata);
