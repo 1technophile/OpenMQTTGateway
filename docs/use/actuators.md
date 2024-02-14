@@ -141,8 +141,8 @@ The frequency key is optional, if not set the gateway will use the default frequ
 
 Send PROG command with remote 0:
 
-`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":0,"command":"Prog","frequency":433.92}'`
+`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":0,"command":"Prog","frequency":433.42}'`
 
 Send Up command with remote 1:
 
-`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":1,"command":"Up","frequency":433.92}'`
+`mosquitto_pub -t home/OpenMQTTGateway_Somfy/commands/MQTTtoSomfy -m '{"remote":1,"command":"Up","frequency":433.42}'`
