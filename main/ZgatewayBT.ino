@@ -1028,7 +1028,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                 Log.error(F("JSON deserialization of Theengs properties overflowed (error %s), buffer capacity: %u. Program might crash. Properties json: %s" CR),
                           error.c_str(), jsonBuffer.capacity(), properties.c_str());
               } else {
-                Log.error(F("JSON deserialization of Theengs properties errored: %" CR), 
+                Log.error(F("JSON deserialization of Theengs properties errored: %" CR),
                           error.c_str());
               }
             }
