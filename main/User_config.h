@@ -674,7 +674,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #endif
 
 #if defined(ESP32)
-#  define JSON_MSG_BUFFER    768
+#  define JSON_MSG_BUFFER    816 // adjusted to minimum size covering largest Theengs device JSON properties (RuuviTag_RAWv2)
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoull
 #elif defined(ESP8266)
