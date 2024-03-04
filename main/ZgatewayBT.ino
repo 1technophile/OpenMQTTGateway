@@ -1020,7 +1020,18 @@ void launchBTDiscovery(bool overrideDiscovery) {
           }
           if (!properties.empty()) {
             StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-            deserializeJson(jsonBuffer, properties);
+            auto error = deserializeJson(jsonBuffer, properties);
+            if (error) {
+              if (jsonBuffer.overflowed()) {
+                // This should not happen if JSON_MSG_BUFFER is large enough for
+                // the Theengs json properties
+                Log.error(F("JSON deserialization of Theengs properties overflowed (error %s), buffer capacity: %u. Program might crash. Properties json: %s" CR),
+                          error.c_str(), jsonBuffer.capacity(), properties.c_str());
+              } else {
+                Log.error(F("JSON deserialization of Theengs properties errored: %" CR), 
+                          error.c_str());
+              }
+            }
             for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
               Log.trace(F("Key: %s"), prop.key().c_str());
               Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
