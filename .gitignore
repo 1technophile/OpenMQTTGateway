@@ -7,3 +7,7 @@ node_modules
 main/certs/private*
 lib/*
 !lib/esp32-bt-lib
+CMakeLists.txt
+dependencies.lock
+sdkconfig.*
+!sdkconfig.defaults

@@ -43,7 +43,6 @@ QueueHandle_t BLEQueue;
 #  include <decoder.h>
 #  include <driver/adc.h>
 #  include <esp_bt.h>
-#  include <esp_bt_main.h>
 #  include <esp_wifi.h>
 
 #  include <atomic>
@@ -892,7 +891,11 @@ void setupBTTasksAndBLE() {
   xTaskCreatePinnedToCore(
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
+#  ifdef USE_BLUFI
+      13000,
+#  else
       8500, /* Stack size in bytes */
+#  endif
       NULL, /* Task input parameter */
       2, /* Priority of the task (set higher than core task) */
       &xProcBLETaskHandle, /* Task handle. */

@@ -76,7 +76,7 @@ void MeasureGPIOInput() {
         }
 #    endif
         Log.notice(F("Erasing ESP Config, restarting" CR));
-        setup_wifimanager(true);
+        setupwifi(true);
       }
     } else {
       resetTime = 0;
