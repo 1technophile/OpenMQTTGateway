@@ -13,9 +13,8 @@ def calculate_md5(filepath):
 
 def main():
     print(f"Pre build BLE library replacement script")
-    home_path = os.environ.get('HOME') or os.environ.get('USERPROFILE')
     source_file = 'lib/esp32-bt-lib/esp32/libbtdm_app.a'
-    destination_file = os.path.join(home_path, '.platformio', 'packages', 'framework-arduinoespressif32', 'tools', 'sdk', 'esp32', 'ld', 'libbtdm_app.a')
+    destination_file = os.path.join(env.GetProjectConfig().get("platformio", "packages_dir"), 'framework-arduinoespressif32', 'tools', 'sdk', 'esp32', 'ld', 'libbtdm_app.a')
 
     try:
         shutil.copyfile(source_file, destination_file)
