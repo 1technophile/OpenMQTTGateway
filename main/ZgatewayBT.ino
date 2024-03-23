@@ -1174,6 +1174,16 @@ void PublishDeviceData(JsonObject& BLEdata) {
       BLEdata.remove("cont");
       BLEdata.remove("track");
     }
+
+    // if distance available, check if presenceUseBeaconUuid is true, model_id is IBEACON then set id as uuid
+    if (BLEdata.containsKey("distance")) {
+      if (BTConfig.presenceUseBeaconUuid && BLEdata.containsKey("model_id") && BLEdata["model_id"].as<String>() == "IBEACON") {
+        BLEdata["mac"] = BLEdata["id"].as<std::string>();
+        BLEdata["id"] = BLEdata["uuid"].as<std::string>();
+      }
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+    }
+
     // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model")) { // Identified device
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
@@ -1182,18 +1192,6 @@ void PublishDeviceData(JsonObject& BLEdata) {
       Log.notice(F("Not a sensor device filtered" CR));
       return;
     }
-  } else if (BLEdata.containsKey("distance")) {
-    if (BLEdata.containsKey("servicedatauuid"))
-      BLEdata.remove("servicedatauuid");
-    if (BLEdata.containsKey("servicedata"))
-      BLEdata.remove("servicedata");
-    if (BLEdata.containsKey("manufacturerdata"))
-      BLEdata.remove("manufacturerdata");
-    if (BTConfig.presenceUseBeaconUuid && BLEdata.containsKey("model_id") && BLEdata["model_id"].as<String>() == "IBEACON") {
-      BLEdata["mac"] = BLEdata["id"];
-      BLEdata["id"] = BLEdata["uuid"];
-    }
-    handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
   } else {
     Log.notice(F("Low rssi, device filtered" CR));
     return;
