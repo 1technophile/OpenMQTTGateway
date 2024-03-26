@@ -1586,6 +1586,18 @@ void notFound() {
 void WebUISetup() {
   WEBUI_TRACE_LOG(F("ZwebUI setup start" CR));
 
+  // Initialize mDNS
+  bool mdnsStarted = false;
+  for (int i = 0; i < 10; i++) {
+    if (MDNS.begin(gateway_name)) { // Set the hostname to "<gateway_name>.local"
+      mdnsStarted = true;
+      break;
+    } else {
+      Log.error(F("Error setting up MDNS responder! Attempt number: %d"), i + 1);
+      delayWithOTA(1000);
+    }
+  }
+
   WebUIConfig_load();
   webUIQueue = xQueueCreate(5, sizeof(webUIQueueMessage*));
 
@@ -1632,6 +1644,11 @@ void WebUISetup() {
   server.on("/rt", handleRT); // Reset configuration ( Erase and Restart )
   server.on("/favicon.ico", handleFavicon); // Information
   server.begin();
+
+  if (mdnsStarted) {
+    MDNS.addService("http", "tcp", 80);
+    Log.notice(F("mDNS started, connect to: http://%s.local with username \"admin\" " CR), gateway_name);
+  }
 
   Log.begin(LOG_LEVEL, &WebLog);
 
