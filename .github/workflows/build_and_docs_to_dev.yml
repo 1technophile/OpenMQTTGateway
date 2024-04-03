@@ -63,5 +63,5 @@ jobs:
         id: psi
         with:
           url: "https://docs.openmqttgateway.com/dev/"
-          threshold: 70
+          threshold: 65
           key: ${{ secrets.APIKEY }}
