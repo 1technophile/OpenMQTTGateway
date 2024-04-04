@@ -202,6 +202,8 @@ const char* availableHASSClasses[] = {"battery",
                                       "pm25",
                                       "power",
                                       "power_factor",
+                                      "precipitation",
+                                      "precipitation_intensity",
                                       "pressure",
                                       "problem",
                                       "restart",
@@ -211,6 +213,7 @@ const char* availableHASSClasses[] = {"battery",
                                       "voltage",
                                       "water",
                                       "weight",
+                                      "wind_speed",
                                       "window"};
 
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L379
