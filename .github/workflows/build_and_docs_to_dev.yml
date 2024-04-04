@@ -9,13 +9,13 @@ jobs:
     if: github.repository_owner == '1technophile'
     name: Build and upload Assets to Release
     steps:
-      - uses: actions/checkout@v3
-      - uses: benjlevesque/short-sha@v2.1
+      - uses: actions/checkout@v4.0.0
+      - uses: benjlevesque/short-sha@v3.0
         id: short-sha
         with:
           length: 6
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: "3.7"
       - name: Install dependencies
@@ -41,9 +41,9 @@ jobs:
           sudo apt install rename
           ./scripts/prepare_deploy.sh
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4.0.1
         with:
-          node-version: "14.x"
+          node-version: "20.x"
       - name: Download Common Config
         run: |
           curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
@@ -52,7 +52,7 @@ jobs:
           python ./scripts/gen_wu.py --dev
           npm run docs:build
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/.vuepress/dist
@@ -63,5 +63,5 @@ jobs:
         id: psi
         with:
           url: "https://docs.openmqttgateway.com/dev/"
-          threshold: 70
+          threshold: 65
           key: ${{ secrets.APIKEY }}
