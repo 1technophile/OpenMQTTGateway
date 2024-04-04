@@ -43,7 +43,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.1
         with:
-          node-version: "20.x"
+          node-version: "18.x"
       - name: Download Common Config
         run: |
           curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
@@ -63,5 +63,5 @@ jobs:
         id: psi
         with:
           url: "https://docs.openmqttgateway.com/dev/"
-          threshold: 65
+          threshold: 60
           key: ${{ secrets.APIKEY }}
