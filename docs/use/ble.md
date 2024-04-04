@@ -11,11 +11,25 @@ Data are transmitted to an MQTT broker, where it can be used to trigger events a
 
 With the ability to monitor and analyze data such as temperature, humidity, moisture, luminance, weight, pressure, fine particles, and more, the BLE gateway provides a flexible and customizable solution for integrating BLE technology into your control and monitoring systems.
 
-![BLE sensors and devices](../img/OpenMQTTGateway-sensors-ble.png)
+<div style="text-align: center;">
+    <img src="/img/OpenMQTTGateway-sensors-ble.png" alt="BLE sensors and devices" width="640" height="130">
+</div>
 
-## The first plug-and-play OpenMQTTGateway BLE gateway and Smart Plug!
+## Products powered by OpenMQTTGateway
 
-[Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) is available flashed with OpenMQTTGateway, and brings the functions below:
+### Theengs Bridge, BLE gateway with external antenna
+
+[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerfull BLE to MQTT gateway for over [100 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
+
+<div style="text-align: center;">
+    <a href="https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna" target="_blank" rel="noopener noreferrer">
+    <img src="/img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" width="375" height="501">
+    </a>
+</div>
+
+### Theengs Plug, BLE gateway and Smart Plug
+
+[Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) brings the following features:
 * BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
@@ -23,10 +37,13 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 * Presence detection (beta),
 * Local connectivity first.
 
-[![Theengs plug view](../img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+<div style="text-align: center;">
+    <a href="https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption" target="_blank" rel="noopener noreferrer">
+    <img src="/img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" width="268" height="453">
+    </a>
+</div>
 
-Support the project by purchasing the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
-The plug is available in North America only, other regions are planned.
+Support the project by purchasing the [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) or the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 ## Disable or enable the BLE gateway (default: true, available with HA discovery)
 
