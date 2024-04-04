@@ -1,7 +1,7 @@
 OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
 
 <div style="text-align: center;">
-<img src="/img/OpenMQTTGateway.png" alt="Overview of the protocols and compatible controllers" width="640" height="479">
+<img src="img/OpenMQTTGateway.png" alt="Overview of the protocols and compatible controllers" width="640" height="479">
 </div>
 
 # What is an MQTT gateway or bridge ?
@@ -69,11 +69,11 @@ Support open-source development through sponsorship and gain exclusive access to
 
 ### Theengs Bridge, BLE gateway with external antenna
 
-[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerfull BLE to MQTT gateway for over [90 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
+[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerfull BLE to MQTT gateway for over [100 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna" target="_blank" rel="noopener noreferrer">
-    <img src="/img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" width="375" height="501">
+    <img src="img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" width="375" height="501">
     </a>
 </div>
 
@@ -89,7 +89,7 @@ Support open-source development through sponsorship and gain exclusive access to
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption" target="_blank" rel="noopener noreferrer">
-    <img src="/img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" width="268" height="453">
+    <img src="img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" width="268" height="453">
     </a>
 </div>
 
