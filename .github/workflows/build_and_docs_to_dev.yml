@@ -9,13 +9,13 @@ jobs:
     if: github.repository_owner == '1technophile'
     name: Build and upload Assets to Release
     steps:
-      - uses: actions/checkout@v4.0.0
-      - uses: benjlevesque/short-sha@v3.0
+      - uses: actions/checkout@v3
+      - uses: benjlevesque/short-sha@v2.1
         id: short-sha
         with:
           length: 6
       - name: Set up Python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v4
         with:
           python-version: "3.7"
       - name: Install dependencies
@@ -41,7 +41,7 @@ jobs:
           sudo apt install rename
           ./scripts/prepare_deploy.sh
       - name: Set up Node.js
-        uses: actions/setup-node@v4.0.1
+        uses: actions/setup-node@v3
         with:
           node-version: "18.x"
       - name: Download Common Config
@@ -52,7 +52,7 @@ jobs:
           python ./scripts/gen_wu.py --dev
           npm run docs:build
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3.9.3
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/.vuepress/dist
