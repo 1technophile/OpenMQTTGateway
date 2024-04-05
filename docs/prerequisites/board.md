@@ -15,11 +15,11 @@ If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspb
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
 :::
 
-[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerful BLE to MQTT gateway for over [90 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
+[Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) is a powerful BLE to MQTT gateway for over [100 sensors](https://decoder.theengs.io/devices/devices.html). Equipped with an Ethernet port, and external antenna, ensuring an enhanced range for your BLE sensors. It supports also WiFi connectivity.
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna" target="_blank" rel="noopener noreferrer">
-    <img src="/img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" width="375" height="501">
+    <img src="/img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" style="max-width: 100%; height: auto;">
     </a>
 </div>
 
@@ -33,7 +33,7 @@ If you want to use the BLE decoding capabilities of OpenMQTTGateway with a table
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption" target="_blank" rel="noopener noreferrer">
-    <img src="/img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" width="268" height="453">
+    <img src="/img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" style="max-width: 100%; height: auto;">
     </a>
 </div>
 
