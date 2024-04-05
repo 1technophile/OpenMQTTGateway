@@ -80,7 +80,7 @@ struct RTL_433device {
   bool isDisc;
 };
 
-const char parameters[40][4][24] = {
+const char parameters[50][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"temperature_C", "temperature", "°C", "temperature"},
     {"temperature_1_C", "temperature", "°C", "temperature"},
@@ -88,6 +88,7 @@ const char parameters[40][4][24] = {
     {"temperature_F", "temperature", "°F", "temperature"},
     {"time", "timestamp", "", "timestamp"},
     {"battery_ok", "battery", "%", "battery"},
+    {"battery_mV", "battery", "mV", "voltage"},
     {"humidity", "humidity", "%", "humidity"},
     {"moisture", "moisture", "%", "humidity"},
     {"pressure_hPa", "pressure", "hPa", "pressure"},
@@ -108,19 +109,26 @@ const char parameters[40][4][24] = {
     {"rain_rate_in_h", "rain", "in/h", "precipitation_intensity"},
     {"rssi", "rssi", "dB", "signal_strength"},
     {"snr", "snr", "dB", ""},
-    {"noise", "noise", "dB", ""},
-    {"depth_cm", "depth", "cm", ""},
+    {"noise", "noise", "dB", "sound_pressure"},
+    {"depth_cm", "depth", "cm", "distance"},
     {"power_W", "power", "W", "power"},
     {"light_lux", "light", "lx", "illuminance"},
     {"lux", "lux", "lx", "illuminance"},
     {"uvi", "UVI", "UV index", ""},
     {"uv", "UV", "UV level", ""},
-    {"storm_dist", "storm distance", "mi", ""},
-    {"strike_distance", "strike distance", "mi", ""},
+    {"storm_dist", "storm distance", "mi", "distance"},
+    {"storm_dist_km", "storm distance", "km", "distance"},
+    {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
+    {"strike_distance", "strike distance", "mi", "distance"},
+    {"strike_distance_km", "strike distance", "km", "distance"},
+    {"co2_ppm", "Carbon Dioxide", "ppm", "carbon_dioxide"},
+    {"pm2_5_ug_m3", "PM2.5", "μg/m³", "pm25"},
+    {"pm10_ug_m3", "PM10", "μg/m³", "pm10"},
+    {"estimated_pm10_0_ug_m3", "estimated PM10", "μg/m³", "pm10"},
+    {"pm1_ug_m3", "PM1", "μg/m³", "pm1"},
     {"tamper", "tamper", "", ""},
     {"alarm", "alarm", "", ""},
     {"motion", "motion", "", "motion"},
-    {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
     {"event", "Status", "", "moisture"}};
 #  endif
 #  ifdef RTL_433_DISCOVERY_LOGGING
