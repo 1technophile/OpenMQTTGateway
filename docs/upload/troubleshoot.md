@@ -42,11 +42,6 @@ Most probably a network issue, don't use a guest network and if going through a 
 This is due to a too small MQTT packet size, open User_config.h and set:
 `#define mqtt_max_packet_size 1024`
 
-## Your Arduino with w5100 Ethernet shield does not connect to network until you press Reset button
-If you notice that your Arduino with w5100 Ethernet shield does not connect to network until you press its Reset button, but connects fine if you connect the Arduino with a USB cable to a computer/laptop with the IDE running and open Serial Monitor, the problem is most likely the Ethernet shield and/or the power supply you're using.
-According to this [video](https://www.youtube.com/watch?v=9ZBeprOqC3w&feature=youtu.be), w5100 clones sometimes struggle to initialise because the reset pin wasn't held low long enough. The solution is simple - add a 0.1uF (100nF) capacitor between the pins on the reset switch. You can get more details [here](http://forum.arduino.cc/index.php?topic=28175.15).
-But even with this fix your board might not work well with a specific PSU. I would recommend try at least one different one and also try bigger capacitor (some report using 47uF)
-
 ## ESP Continuous restart or strange behaviour:
 This can be due to corruption of the ESP flash memory, try to erase flash and upload OMG on it again.
 

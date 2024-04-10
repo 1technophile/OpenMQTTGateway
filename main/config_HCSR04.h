@@ -1,7 +1,7 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker  
    Send and receiving command by MQTT
  
    This files enables to set your parameter for the HCSR04 sensor
@@ -26,12 +26,12 @@
    Connection Schemata:
    --------------------
 
-   HC-SR04 ------> Arduino Uno ----------> ESP8266
-   ==============================================
-   Vcc ---------> 5V -------------------> Vu (5V)
-   GND ---------> GND ------------------> GND
-   TRI ---------> Pin D6 ---------------> D6
-   ECH ---------> Pin D7 ---------------> D7
+   HC-SR04 ------> ESP8266
+   =======================
+   Vcc ---------> Vu (5V)
+   GND ---------> GND
+   TRI ---------> D6
+   ECH ---------> D7
    
 */
 #ifndef config_HCSR04_h

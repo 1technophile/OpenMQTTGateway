@@ -1,5 +1,5 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
    Act as a wifi or ethernet gateway between your BLE/433mhz/infrared IR signal and an MQTT broker 
    Send and receiving command by MQTT
@@ -25,14 +25,13 @@
 #include "User_config.h"
 
 #if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
-#  ifndef ARDUINO_AVR_UNO
 
-#    ifdef ZradioCC1101
-#      include <ELECHOUSE_CC1101_SRC_DRV.h>
-#    endif
+#  ifdef ZradioCC1101
+#    include <ELECHOUSE_CC1101_SRC_DRV.h>
+#  endif
 
 void initCC1101() {
-#    ifdef ZradioCC1101 //receiving with CC1101
+#  ifdef ZradioCC1101 //receiving with CC1101
   // Loop on getCC1101() until it returns true and break after 10 attempts
   int delayMS = 16;
   int delayMaxMS = 500;
@@ -50,7 +49,7 @@ void initCC1101() {
     delayMS = delayMS * 2;
     if (delayMS > delayMaxMS) delayMS = delayMaxMS;
   }
-#    endif
+#  endif
 }
 
 void setupCommonRF() {
@@ -71,105 +70,101 @@ bool validFrequency(float mhz) {
 
 int currentReceiver = ACTIVE_NONE;
 
-#    if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
-#      if defined(ESP8266) || defined(ESP32)
+#  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
+#    if defined(ESP8266) || defined(ESP32)
 // Check if a receiver is available
 bool validReceiver(int receiver) {
   switch (receiver) {
-#        ifdef ZgatewayPilight
+#      ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
       return true;
-#        endif
-#        ifdef ZgatewayRF
+#      endif
+#      ifdef ZgatewayRF
     case ACTIVE_RF:
       return true;
-#        endif
-#        ifdef ZgatewayRTL_433
+#      endif
+#      ifdef ZgatewayRTL_433
     case ACTIVE_RTL:
       return true;
-#        endif
-#        ifdef ZgatewayRF2
+#      endif
+#      ifdef ZgatewayRF2
     case ACTIVE_RF2:
       return true;
-#        endif
+#      endif
     default:
       Log.error(F("ERROR: stored receiver %d not available" CR), receiver);
   }
   return false;
 }
-#      endif
 #    endif
+#  endif
 
 void disableCurrentReceiver() {
   Log.trace(F("disableCurrentReceiver: %d" CR), currentReceiver);
   switch (currentReceiver) {
     case ACTIVE_NONE:
       break;
-#    ifdef ZgatewayPilight
+#  ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
       disablePilightReceive();
       break;
-#    endif
-#    ifdef ZgatewayRF
+#  endif
+#  ifdef ZgatewayRF
     case ACTIVE_RF:
       disableRFReceive();
       break;
-#    endif
-#    ifdef ZgatewayRTL_433
+#  endif
+#  ifdef ZgatewayRTL_433
     case ACTIVE_RTL:
       disableRTLreceive();
       break;
-#    endif
-#    ifdef ZgatewayRF2
+#  endif
+#  ifdef ZgatewayRF2
     case ACTIVE_RF2:
       disableRF2Receive();
       break;
-#    endif
-#    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
+#  endif
     default:
       Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
-#    endif
   }
 }
 
 void enableActiveReceiver() {
   Log.trace(F("enableActiveReceiver: %d" CR), RFConfig.activeReceiver);
   switch (RFConfig.activeReceiver) {
-#    ifdef ZgatewayPilight
+#  ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
       initCC1101();
       enablePilightReceive();
       currentReceiver = ACTIVE_PILIGHT;
       break;
-#    endif
-#    ifdef ZgatewayRF
+#  endif
+#  ifdef ZgatewayRF
     case ACTIVE_RF:
       initCC1101();
       enableRFReceive();
       currentReceiver = ACTIVE_RF;
       break;
-#    endif
-#    ifdef ZgatewayRTL_433
+#  endif
+#  ifdef ZgatewayRTL_433
     case ACTIVE_RTL:
       initCC1101();
       enableRTLreceive();
       currentReceiver = ACTIVE_RTL;
       break;
-#    endif
-#    ifdef ZgatewayRF2
+#  endif
+#  ifdef ZgatewayRF2
     case ACTIVE_RF2:
       initCC1101();
       enableRF2Receive();
       currentReceiver = ACTIVE_RF2;
       break;
-#    endif
+#  endif
     case ACTIVE_RECERROR:
       Log.error(F("ERROR: no receiver selected" CR));
       break;
-#    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
     default:
       Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
-#    endif
   }
 }
 
@@ -178,20 +173,20 @@ String stateRFMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject RFdata = jsonBuffer.to<JsonObject>();
   RFdata["active"] = RFConfig.activeReceiver;
-#    if defined(ZradioCC1101) || defined(ZradioSX127x)
+#  if defined(ZradioCC1101) || defined(ZradioSX127x)
   RFdata["frequency"] = RFConfig.frequency;
   if (RFConfig.activeReceiver == ACTIVE_RTL) {
-#      ifdef ZgatewayRTL_433
+#    ifdef ZgatewayRTL_433
     RFdata["rssithreshold"] = (int)getRTLrssiThreshold();
     RFdata["rssi"] = (int)getRTLCurrentRSSI();
     RFdata["avgrssi"] = (int)getRTLAverageRSSI();
     RFdata["count"] = (int)getRTLMessageCount();
-#      endif
-#      ifdef ZradioSX127x
-    RFdata["ookthreshold"] = (int)getOOKThresh();
-#      endif
-  }
 #    endif
+#    ifdef ZradioSX127x
+    RFdata["ookthreshold"] = (int)getOOKThresh();
+#    endif
+  }
+#  endif
   pub(subjectcommonRFtoMQTT, RFdata);
 
   String output;
@@ -211,21 +206,21 @@ void RFConfig_fromJson(JsonObject& RFdata) {
     Config_update(RFdata, "active", RFConfig.activeReceiver);
     success = true;
   }
-#    ifdef ZgatewayRTL_433
+#  ifdef ZgatewayRTL_433
   if (RFdata.containsKey("rssithreshold")) {
     Log.notice(F("RTL_433 RSSI Threshold : %d " CR), RFConfig.rssiThreshold);
     Config_update(RFdata, "rssithreshold", RFConfig.rssiThreshold);
     rtl_433.setRSSIThreshold(RFConfig.rssiThreshold);
     success = true;
   }
-#      if defined(RF_SX1276) || defined(RF_SX1278)
+#    if defined(RF_SX1276) || defined(RF_SX1278)
   if (RFdata.containsKey("ookthreshold")) {
     Config_update(RFdata, "ookthreshold", RFConfig.newOokThreshold);
     Log.notice(F("RTL_433 ookThreshold %d" CR), RFConfig.newOokThreshold);
     rtl_433.setOOKThreshold(RFConfig.newOokThreshold);
     success = true;
   }
-#      endif
+#    endif
   if (RFdata.containsKey("status")) {
     Log.notice(F("RF get status:" CR));
     rtl_433.getStatus();
@@ -234,10 +229,10 @@ void RFConfig_fromJson(JsonObject& RFdata) {
   if (!success) {
     Log.error(F("MQTTtoRF Fail json" CR));
   }
-#    endif
+#  endif
   disableCurrentReceiver();
   enableActiveReceiver();
-#    ifdef ESP32
+#  ifdef ESP32
   if (RFdata.containsKey("erase") && RFdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
@@ -257,10 +252,10 @@ void RFConfig_fromJson(JsonObject& RFdata) {
     jo["frequency"] = RFConfig.frequency;
     jo["active"] = RFConfig.activeReceiver;
 // Don't save those for now, need to be tested
-#      ifdef ZgatewayRTL_433
+#    ifdef ZgatewayRTL_433
 //jo["rssithreshold"] = RFConfig.rssiThreshold;
 //jo["ookthreshold"] = RFConfig.newOokThreshold;
-#      endif
+#    endif
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -269,7 +264,7 @@ void RFConfig_fromJson(JsonObject& RFdata) {
     preferences.end();
     Log.notice(F("RF Config_save: %s, result: %d" CR), conf.c_str(), result);
   }
-#    endif
+#  endif
 }
 
 void RFConfig_init() {
@@ -280,7 +275,7 @@ void RFConfig_init() {
 }
 
 void RFConfig_load() {
-#    ifdef ESP32
+#  ifdef ESP32
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
   if (preferences.isKey("RFConfig")) {
@@ -302,9 +297,9 @@ void RFConfig_load() {
     Log.notice(F("RF Config not found using default" CR));
     enableActiveReceiver();
   }
-#    else
+#  else
   enableActiveReceiver();
-#    endif
+#  endif
 }
 
 void MQTTtoRFset(char* topicOri, JsonObject& RFdata) {
@@ -330,10 +325,4 @@ void MQTTtoRFset(char* topicOri, JsonObject& RFdata) {
     stateRFMeasures();
   }
 }
-#  else
-void RFConfig_init() {}
-void RFConfig_load() {}
-void MQTTtoRFset(char* topicOri, JsonObject& RFdata) {}
-void enableActiveReceiver() {}
-#  endif
 #endif

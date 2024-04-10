@@ -16,7 +16,7 @@ Make your modification,
 * If you want to add a new sensor, name it `ZsensorYYY`, `YYY` replaced by your sensor type, can be more than three letters
 * If you want to add a new actuator, name it `ZactuatorZZZ`, `ZZZ` replaced by your actuator type, can be more than three letters
 
-Review your code, compile it for Arduino Uno, ESP32 and ESP8266
+Review your code, compile it for ESP32 and ESP8266
 
 Test it locally on your hardware config
 

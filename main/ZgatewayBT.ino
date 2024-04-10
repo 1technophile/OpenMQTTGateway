@@ -1,13 +1,11 @@
 /*
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal/BLE  and a MQTT broker
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
    Send and receiving command by MQTT
 
   This gateway enables to:
- - publish MQTT data to a different topic related to BLE devices rssi signal
- - publish MQTT data related to mi flora temperature, moisture, fertility and lux
- - publish MQTT data related to mi jia indoor temperature & humidity sensor
+ - publish MQTT data to a topic related to BLE devices data
 
     Copyright: (c)Florian ROBERT
 

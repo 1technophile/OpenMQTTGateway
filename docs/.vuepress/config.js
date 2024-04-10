@@ -4,7 +4,7 @@ module.exports = {
   ...commonConfig,
   title: 'Theengs OpenMQTTGateway version_tag',
   base: '/',
-  description: 'One gateway, many technologies: MQTT gateway for ESP8266, ESP32, Sonoff RF Bridge or Arduino with bidirectional 433mhz/315mhz/868mhz, Infrared communications, BLE, beacons detection, mi flora / mi jia / LYWSD02/ Mi Scale compatibility, SMS & LORA.',
+  description: 'One gateway, many technologies: MQTT gateway for ESP8266 or ESP32 with bidirectional 433mhz/315mhz/868mhz, Infrared communications, BLE, LoRa, beacons detection, mi flora / mi jia / LYWSD02/ Mi Scale compatibility, SMS & LORA.',
   head: [
     ...commonConfig.head,
     ['script', {type: 'module', src: 'https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module'}]

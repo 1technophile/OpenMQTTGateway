@@ -1,7 +1,7 @@
 /*
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
   This program enables to:
@@ -145,23 +145,17 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 //MQTT Parameters definition
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define parameters_size     65
-#  define mqtt_topic_max_size 150
-#  ifndef mqtt_max_packet_size
-#    ifdef MQTT_HTTPS_FW_UPDATE
-#      ifndef CHECK_OTA_UPDATE
-#        define CHECK_OTA_UPDATE true // enable to check for the presence of a new version for your environment on Github
-#      endif
-#      define mqtt_max_packet_size 2560
-#    else
-#      define mqtt_max_packet_size 1024
+#define parameters_size     65
+#define mqtt_topic_max_size 150
+#ifndef mqtt_max_packet_size
+#  ifdef MQTT_HTTPS_FW_UPDATE
+#    ifndef CHECK_OTA_UPDATE
+#      define CHECK_OTA_UPDATE true // enable to check for the presence of a new version for your environment on Github
 #    endif
+#    define mqtt_max_packet_size 2560
+#  else
+#    define mqtt_max_packet_size 1024
 #  endif
-#else
-#  define parameters_size      30
-#  define mqtt_topic_max_size  75
-#  define mqtt_max_packet_size 128
 #endif
 
 #ifndef MQTT_USER
@@ -429,10 +423,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#      define LED_SEND_RECEIVE 40
 #    elif ESP32
 //#      define LED_SEND_RECEIVE 40
-#    elif __AVR_ATmega2560__ //arduino mega
-//#      define LED_SEND_RECEIVE 40
-#    else //arduino uno/nano
-//#      define LED_SEND_RECEIVE 40
 #    endif
 #  endif
 #  ifndef LED_SEND_RECEIVE_ON
@@ -443,10 +433,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#      define LED_ERROR 42
 #    elif ESP32
 //#      define LED_ERROR 42
-#    elif __AVR_ATmega2560__ //arduino mega
-//#      define LED_ERROR 42
-#    else //arduino uno/nano
-//#      define LED_ERROR 42
 #    endif
 #  endif
 #  ifndef LED_ERROR_ON
@@ -456,10 +442,6 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #    ifdef ESP8266
 //#      define LED_INFO 44
 #    elif ESP32
-//#      define LED_INFO 44
-#    elif __AVR_ATmega2560__ //arduino mega
-//#      define LED_INFO 44
-#    else //arduino uno/nano
 //#      define LED_INFO 44
 #    endif
 #  endif
@@ -681,14 +663,6 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266
 #  define SIGNAL_SIZE_UL_ULL uint64_t
 #  define STRTO_UL_ULL       strtoull
-#elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 1024 or higher
-#  define SIGNAL_SIZE_UL_ULL uint64_t
-#  define STRTO_UL_ULL       strtoul
-#else // boards with smaller memory
-#  define JSON_MSG_BUFFER    64 // Json message max buffer size, don't put 1024 or higher
-#  define SIGNAL_SIZE_UL_ULL uint32_t
-#  define STRTO_UL_ULL       strtoul
 #endif
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)

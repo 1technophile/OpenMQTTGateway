@@ -1,7 +1,7 @@
 /*
   OpenMQTTGateway Addon  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
    This is a Temperature Addon:
@@ -13,12 +13,12 @@
    Connection Schemata:
    --------------------
 
-   LM75 ------> Arduino Uno ----------> ESP8266
+   LM75 ------> ESP8266
    ==============================================
-   Vcc ---------> 5V -------------------> Vu (5V)
-   GND ---------> GND ------------------> GND
-   SCL ---------> Pin A5 ---------------> D1
-   SDA ---------> Pin A4 ---------------> D2
+   Vcc ---------> Vu (5V)
+   GND ---------> GND
+   SCL ---------> D1
+   SDA ---------> D2
 
     This file is part of OpenMQTTGateway.
 

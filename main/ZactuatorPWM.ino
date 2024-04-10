@@ -1,5 +1,5 @@
 /*
-  OpenMQTTGateway - ESP32, ESP8266 or Arduino program for home automation
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
   This actuator enables control over the PWM outputs of microcontrollers.
 

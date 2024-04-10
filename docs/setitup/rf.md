@@ -32,7 +32,6 @@ Heltec LORA V3 is not compatible with RTL_433 library as it is based on an SX126
 ### SRX STX Pinout
 |Board| Receiver Pin| Emitter Pin|
 |-|:-:|:-:|
-|Arduino UNO|D3|D4|
 |ESP8266|D2/**D3**/D1/D8|**RX**/D2|
 |ESP32|**27**/26|12|
 |RF BRIDGE|-|-|
@@ -64,9 +63,6 @@ If the gateway works only when serial monitor is connected don't use D3 use D2 i
 With SRX882 some users reported that D3 is not working use D1 instead in this case and modify config_RF.h accordingly.
 
 ![Addon_RF](../img/OpenMQTTgateway_ESP8266_Addon_RF.png)
-
-## Arduino Hardware setup
-![RF](../img/OpenMQTTgateway_Arduino_Addon_RF.png)
 
 ## SONOFF RF Bridge Hardware setup
 Per default there is no need on modifying the RF Bridge hardware, unless you don't want to use the provided RF controller (EFM8BB1). Indeed if you want to extend the protocols supported by the bridge you can [bypass this controller](https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack) and use the ESP8255 capacities to decode RF Signal.

@@ -13,14 +13,10 @@ The IR setup can work with bc547 and a 4x3 LED-Matrix.
 ## Pinout
 |Board| Receiver Pin| Emitter Pin|
 |-|:-:|:-:|
-|Arduino UNO|D2|D9|
 |ESP8266|D4|D0|
 |ESP32|27/**26**|14|
 
 Connect the Emitter and Receiver to a 5V supply source, and the ground of your supply source to the ground of your board.
-
-## Arduino Hardware setup
-![IR](../img/OpenMQTTgateway_Arduino_Addon_IR.png)
 
 ## ESP8266 Hardware setup
 ![IR](../img/OpenMQTTgateway_ESP8266_Addon_IR.png)
