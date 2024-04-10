@@ -1,7 +1,7 @@
 /*
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
    This files enables to set your parameter for the infrared gateway
@@ -159,17 +159,6 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #  define IR_COOLIX48
 #  define IR_HITACHI_AC264
 #  define IR_HITACHI_AC296
-#elif __AVR_ATmega2560__
-#  define IR_COOLIX
-#  define IR_Whynter
-#  define IR_LG
-#  define IR_Sony
-#  define IR_DISH
-#  define IR_RC5
-#  define IR_Sharp
-#  define IR_SAMSUNG
-#  define IR_Raw
-#  define IR_PANASONIC
 #else //IR supported protocols on arduino uncomment if you want to send with this protocol, NEC protocol is available per default
 //#define IR_COOLIX
 //#define IR_Whynter
@@ -195,10 +184,6 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #    define IR_RECEIVER_GPIO 2 //D4 /replace by 4 with sonoff rf bridge
 #  elif ESP32
 #    define IR_RECEIVER_GPIO 26
-#  elif __AVR_ATmega2560__
-#    define IR_RECEIVER_GPIO 2 // 2 = D2 on arduino mega
-#  else
-#    define IR_RECEIVER_GPIO 0 // 0 = D2 on arduino UNO
 #  endif
 #endif
 
@@ -207,10 +192,6 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 #    define IR_EMITTER_GPIO 16 //D0/ replace by 0 (D3) if you use IR LOLIN controller shield /replace by 5 with sonoff rf bridge
 #  elif ESP32
 #    define IR_EMITTER_GPIO 14
-#  elif __AVR_ATmega2560__
-#    define IR_EMITTER_GPIO 9
-#  else
-#    define IR_EMITTER_GPIO 9
 #  endif
 #endif
 

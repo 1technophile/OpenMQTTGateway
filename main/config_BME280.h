@@ -1,7 +1,7 @@
 /*
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
    Send and receiving command by MQTT
 
    This files enables you to set parameters for the BME280 or BMP280 sensors.
@@ -26,12 +26,12 @@
    Connection Schemata:
    --------------------
 
-   BME280/BMP280 ------> Arduino Uno ----------> ESP8266
-   =====================================================
-   Vcc ----------------> 5V/3.3V     ----------> 5V/3.3V    (5V or 3.3V depends on the BME280/BMP280 board variant)
-   GND ----------------> GND         ----------> GND
-   SCL ----------------> Pin A5      ----------> D1
-   SDA ----------------> Pin A4      ----------> D2
+   BME280/BMP280 ------> ESP8266
+   ==============================
+   Vcc ----------------> 5V/3.3V    (5V or 3.3V depends on the BME280/BMP280 board variant)
+   GND ----------------> GND
+   SCL ----------------> D1
+   SDA ----------------> D2
 
 */
 #ifndef config_BME280_h

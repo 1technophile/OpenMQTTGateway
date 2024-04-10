@@ -1,7 +1,7 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
    Send and receiving command by MQTT
  
   This gateway enables to:
@@ -292,9 +292,7 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       pub(subjectRF2toMQTT, RF2data);
     } else {
-#    ifndef ARDUINO_AVR_UNO // Space issues with the UNO
       pub(subjectGTWRF2toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
-#    endif
       Log.error(F("MQTTtoRF2 failed json read" CR));
     }
     enableActiveReceiver();

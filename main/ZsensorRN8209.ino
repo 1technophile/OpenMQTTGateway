@@ -1,7 +1,7 @@
 /*  
   OpenMQTTGateway Addon  - ESP8266, ESP32 or Arduino program for home automation 
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
    Send and receiving command by MQTT
  
     RN8209 reading Addon

@@ -1,7 +1,7 @@
 /*
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
   This program enables to:
@@ -43,33 +43,28 @@ struct ReceivedSignal {
   SIGNAL_SIZE_UL_ULL value;
   uint32_t time;
 };
-#  if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+
 ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-#  else // boards with smaller memory
-ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}};
-#  endif
+
 #  define struct_size (sizeof(receivedSignal) / sizeof(ReceivedSignal))
 #endif
 
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 //Time used to wait for an interval before checking system measures
 unsigned long timer_sys_measures = 0;
 
 // Time used to wait before system checkings
 unsigned long timer_sys_checks = 0;
 
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#define ARDUINOJSON_USE_LONG_LONG     1
+#define ARDUINOJSON_ENABLE_STD_STRING 1
 
-#  include <queue>
+#include <queue>
 int queueLength = 0;
 unsigned long queueLengthSum = 0;
 unsigned long blockedMessages = 0;
 int maxQueueLength = 0;
-#  ifndef QueueSize
-#    define QueueSize 18
-#  endif
-
+#ifndef QueueSize
+#  define QueueSize 18
 #endif
 
 /**
@@ -86,18 +81,15 @@ bool ready_to_sleep = false;
 
 #include <string>
 
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
 };
 
 std::queue<JsonBundle> jsonQueue;
 
-#  ifdef ESP32
+#ifdef ESP32
 // Mutex  to protect the queue
 SemaphoreHandle_t xQueueMutex;
-#  endif
-
 #endif
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
@@ -440,7 +432,6 @@ void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
     Log.error(F("Empty JSON, skipping" CR));
     return;
   }
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
   if (queueLength >= QueueSize) {
     Log.warning(F("%d Doc(s) in queue, doc blocked" CR), queueLength);
     blockedMessages++;
@@ -451,11 +442,6 @@ void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
   bundle.doc = jsonDoc;
   jsonQueue.push(bundle);
   Log.trace(F("Queue length: %d" CR), jsonQueue.size());
-#else
-  // Pub to main core
-  JsonObject jsonObj = jsonDoc.to<JsonObject>();
-  pubMainCore(jsonObj); // Arduino UNO or other boards with small memory, we don't store and directly publish
-#endif
 }
 
 #ifdef ESP32
@@ -483,8 +469,6 @@ bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
   return handleJsonEnqueue(jsonDoc, QueueSemaphoreTimeOutLoop);
 }
 
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-
 /*
  * Add the jsonObject id as a topic to the jsonObject origin
  *
@@ -503,7 +487,7 @@ void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
     topic.erase(pos, 1);
     pos = topic.find(":", pos);
   }
-#  ifdef ZgatewayBT
+#ifdef ZgatewayBT
   if (BTConfig.pubBeaconUuidForTopic && !BTConfig.extDecoderEnable && Jsondata.containsKey("model_id") && Jsondata["model_id"].as<std::string>() == "IBEACON") {
     if (Jsondata.containsKey("uuid")) {
       topic = Jsondata["uuid"].as<std::string>();
@@ -514,7 +498,7 @@ void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
 
   if (BTConfig.extDecoderEnable && !Jsondata.containsKey("model"))
     topic = BTConfig.extDecoderTopic.c_str();
-#  endif
+#endif
   std::string subjectStr(origin);
   topic = subjectStr + "/" + topic;
 
@@ -540,9 +524,6 @@ void emptyQueue() {
   pubMainCore(obj);
   queueLengthSum++;
 }
-#else
-void emptyQueue() {}
-#endif
 
 /**
  * @brief Publish the payload on default MQTT topic.
@@ -1192,9 +1173,7 @@ void setup() {
 
   delay(1500);
 #if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
-#  ifndef ARDUINO_AVR_UNO
   setupCommonRF();
-#  endif
 #endif
 #ifdef ZsensorBME280
   setupZsensorBME280();
@@ -1351,11 +1330,9 @@ void setup() {
 #endif
   Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
 
-#ifndef ARDUINO_AVR_UNO // Space issues with the UNO
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
   Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
-#endif
   Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
 }
 
@@ -2105,47 +2082,45 @@ void loop() {
 #endif
       connectedOnce = true;
       connected = true;
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
       if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
         timer_sys_measures = millis();
         stateMeasures();
-#  ifdef ZgatewayBT
+#ifdef ZgatewayBT
         stateBTMeasures(false);
-#  endif
-#  ifdef ZactuatorONOFF
+#endif
+#ifdef ZactuatorONOFF
         stateONOFFMeasures();
-#  endif
-#  ifdef ZdisplaySSD1306
+#endif
+#ifdef ZdisplaySSD1306
         stateSSD1306Display();
-#  endif
-#  ifdef ZgatewayLORA
+#endif
+#ifdef ZgatewayLORA
         stateLORAMeasures();
-#  endif
-#  if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
+#endif
+#if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
         stateRFMeasures();
-#  endif
-#  if defined(ZwebUI) && defined(ESP32)
+#endif
+#if defined(ZwebUI) && defined(ESP32)
         stateWebUIStatus();
-#  endif
+#endif
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
-#  if defined(ESP8266) || defined(ESP32)
-#    if message_UTCtimestamp || message_unixtimestamp
+#if defined(ESP8266) || defined(ESP32)
+#  if message_UTCtimestamp || message_unixtimestamp
         syncNTP();
-#    endif
 #  endif
+#endif
         if (!timer_sys_checks) { // Update check at start up only
-#  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
+#if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
           checkForUpdates();
-#  endif
-#  ifdef ZgatewayBT
+#endif
+#ifdef ZgatewayBT
           BTProcessLock = !BTConfig.enabled; // Release BLE processes at start if enabled
-#  endif
+#endif
         }
 
         timer_sys_checks = millis();
       }
-#endif
       emptyQueue();
 #ifdef ZsensorBME280
       MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280/BMP280
@@ -2400,55 +2375,54 @@ void eraseAndRestart() {
 
 #endif
 
-#if defined(ESP8266) || defined(ESP32) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String stateMeasures() {
   StaticJsonDocument<JSON_MSG_BUFFER> SYSdata;
 
   SYSdata["uptime"] = uptime();
 
   SYSdata["version"] = OMG_VERSION;
-#  ifdef RGB_INDICATORS
+#ifdef RGB_INDICATORS
   SYSdata["rgbb"] = SYSConfig.rgbbrightness;
-#  endif
-#  ifdef ZmqttDiscovery
+#endif
+#ifdef ZmqttDiscovery
   SYSdata["disc"] = SYSConfig.discovery;
   SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
-#  endif
-#  if defined(ESP8266) || defined(ESP32)
+#endif
+#if defined(ESP8266) || defined(ESP32)
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
   uint32_t minFreeMem;
   freeMem = ESP.getFreeHeap();
-#    ifdef ZgatewayRTL_433
+#  ifdef ZgatewayRTL_433
   // Some RTL_433 decoders have memory leak, this is a temporary workaround
   if (freeMem < MinimumMemory) {
     Log.error(F("Not enough memory %d, restarting" CR), freeMem);
     ESPRestart(8);
   }
-#    endif
+#  endif
   SYSdata["freemem"] = freeMem;
   SYSdata["mqttp"] = mqtt_port;
   SYSdata["mqtts"] = mqtt_secure;
   SYSdata["msgprc"] = queueLengthSum;
   SYSdata["msgblck"] = blockedMessages;
   SYSdata["maxq"] = maxQueueLength;
-#    ifdef ESP32
+#  ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minmem"] = minFreeMem;
-#      ifndef NO_INT_TEMP_READING
+#    ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = round2(intTemperatureRead());
-#      endif
-  SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
 #    endif
+  SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
+#  endif
 
   SYSdata["eth"] = ethConnected;
   if (ethConnected) {
-#    ifdef ESP32_ETHERNET
+#  ifdef ESP32_ETHERNET
     SYSdata["mac"] = (char*)ETH.macAddress().c_str();
     SYSdata["ip"] = ip2CharArray(ETH.localIP());
     ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
     SYSdata["linkspeed"] = (int)ETH.linkSpeed();
-#    endif
+#  endif
   } else {
     SYSdata["rssi"] = (long)WiFi.RSSI();
     SYSdata["SSID"] = (char*)WiFi.SSID().c_str();
@@ -2457,19 +2431,19 @@ String stateMeasures() {
     SYSdata["mac"] = (char*)WiFi.macAddress().c_str();
   }
 
-#  endif
-#  ifdef ZgatewayBT
-#    ifdef ESP32
+#endif
+#ifdef ZgatewayBT
+#  ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
-#    endif
 #  endif
-#  ifdef ZboardM5STACK
+#endif
+#ifdef ZboardM5STACK
   M5.Power.begin();
   SYSdata["m5battlevel"] = (int8_t)M5.Power.getBatteryLevel();
   SYSdata["m5ischarging"] = (bool)M5.Power.isCharging();
   SYSdata["m5ischargefull"] = (bool)M5.Power.isChargeFull();
-#  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+#endif
+#if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
   M5.Axp.EnableCoulombcounter();
   SYSdata["m5batvoltage"] = (float)M5.Axp.GetBatVoltage();
   SYSdata["m5batcurrent"] = (float)M5.Axp.GetBatCurrent();
@@ -2481,7 +2455,7 @@ String stateMeasures() {
   SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
   SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
-#  endif
+#endif
   SYSdata["modules"] = modules;
 
   SYSdata["origin"] = subjectSYStoMQTT;
@@ -2504,7 +2478,6 @@ String stateMeasures() {
   serializeJson(SYSdata, output);
   return output;
 }
-#endif
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 /**
@@ -3119,7 +3092,6 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 }
 
 #if valueAsATopic && !defined(ZgatewayPilight)
-#  if defined(ESP32) || defined(ESP8266) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
 String toString(uint64_t input) {
   String result = "";
   uint8_t base = 10;
@@ -3137,12 +3109,11 @@ String toString(uint64_t input) {
   return result;
 }
 
-#  else
+#else
 
 String toString(uint32_t input) {
   String result = String(input);
 
   return result;
 }
-#  endif
 #endif

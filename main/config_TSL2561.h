@@ -1,7 +1,7 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal and a MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker  
    Send and receiving command by MQTT
  
    This files exposes light level measured by a TSL2651 module
@@ -27,13 +27,13 @@
    Connection Schemata:
    --------------------
 
-   TSL2561 ------> Arduino Uno ----------> ESP8266
-   ==============================================
-   Vcc ---------> 3.3V -----------------> Vu (3.3V)
-   GND ---------> GND ------------------> GND
-   SCL ---------> Pin A5 ---------------> D1
-   SDA ---------> Pin A4 ---------------> D2
-   ADD ---------> N/C (Not Connected) --> N/C (Not Connected)
+   TSL2561 ------> ESP8266
+   ===================================
+   Vcc ---------> Vu (3.3V)
+   GND ---------> GND
+   SCL ---------> D1
+   SDA ---------> D2
+   ADD ---------> N/C (Not Connected)
 
 */
 #ifndef config_TSL2561_h

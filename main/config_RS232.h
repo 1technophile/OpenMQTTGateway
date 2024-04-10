@@ -1,5 +1,5 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
    Act as a wifi or ethernet gateway between your RS232 device and a MQTT broker 
    Send and receiving command by MQTT
@@ -88,26 +88,18 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 //        ESP8266:     (TX0 GPIO1,  RX0 GPIO3)
 //                     (TX0 GPIO15, RX0 GPIO13) with UART0 swap enabled
 //        ESP32:       (TX0 by RS232_TX_GPIO, RX0 by RS232_RX_GPIO)
-//        ATmega2560:  (TX0 pin1, RX0 pin0)
-//        Arduino Uno: (TX0 pin1, RX0 pin0)
 //
 //  -  1: use HW UART1 (serial1)
 //        ESP8266:     (TX1 GPIO2,  RX none) only transmit available
 //        ESP32:       (TX1 by RS232_TX_GPIO,  RX1 by RS232_RX_GPIO)
-//        ATmega2560:  (TX1 pin18, RX1 pin19)
-//        Arduino Uno: N/A
 //
 //  -  2: use HW UART2 (serial2)
 //        ESP8266:     N/A
 //        ESP32:       (TX2 by RS232_TX_GPIO,  RX2 by RS232_RX_GPIO)
-//        ATmega2560:  (TX2 pin16, RX1 pin17)
-//        Arduino Uno: N/A
 //
 //  -  3: use HW UART3 (serial3)
 //        ESP8266:     N/A
 //        ESP32:       N/A
-//        ATmega2560:  (TX2 pin14, RX1 pin15)
-//        Arduino Uno: N/A
 //
 // defaults
 #  ifdef ESP32
@@ -129,10 +121,6 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 #    define RS232_RX_GPIO 4 //D2
 #  elif defined(ESP32)
 #    define RS232_RX_GPIO 26
-#  elif defined(__AVR_ATmega2560__) && !defined(RS232_UART)
-#    define RS232_RX_GPIO 2 // 2 = D2 on arduino mega
-#  else
-#    define RS232_RX_GPIO 0 // 0 = D2 on arduino UNO
 #  endif
 #endif
 
@@ -142,10 +130,6 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 #    define RS232_TX_GPIO 2 //D4
 #  elif ESP32
 #    define RS232_TX_GPIO 14
-#  elif defined(__AVR_ATmega2560__) && !defined(RS232_UART)
-#    define RS232_TX_GPIO 9
-#  else
-#    define RS232_TX_GPIO 9
 #  endif
 #endif
 

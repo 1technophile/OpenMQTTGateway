@@ -1,7 +1,7 @@
 /*  
-  OpenMQTTGateway  - ESP8266 or Arduino program for home automation 
+  Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a wifi or ethernet gateway between your 433mhz/infrared IR signal  and a MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
    Send and receiving command by MQTT
  
    This files enables to set your parameter for the radiofrequency gateways (ZgatewayRF and ZgatewayRF2) with RCswitch and newremoteswitch library
@@ -223,10 +223,6 @@ RFConfig_s RFConfig;
 #    define RF_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
 #  elif ESP32
 #    define RF_RECEIVER_GPIO 27 // D27 on DOIT ESP32
-#  elif __AVR_ATmega2560__
-#    define RF_RECEIVER_GPIO 1 //1 = D3 on mega
-#  else
-#    define RF_RECEIVER_GPIO 1 //1 = D3 on arduino
 #  endif
 #endif
 
@@ -235,8 +231,6 @@ RFConfig_s RFConfig;
 #    define RF_EMITTER_GPIO 3 // RX on nodemcu if it doesn't work with 3, try with 4 (D2) // put 5 with rf bridge direct mod
 #  elif ESP32
 #    define RF_EMITTER_GPIO 12 // D12 on DOIT ESP32
-#  elif __AVR_ATmega2560__
-#    define RF_EMITTER_GPIO 4
 #  else
 //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/boarddefs.h so as to free pin D3 for RF RECEIVER PIN
 //RF PIN definition

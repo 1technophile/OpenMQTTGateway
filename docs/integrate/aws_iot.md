@@ -78,18 +78,7 @@ Now you should have the following information for the OpenMQTTGateway configurat
 
 ## Modify OpenMQTTGateway configuration
 
-With Arduino IDE, you can update the following field into User_config.h with the information gathered:
-* Gateway_Name
-* `MQTT_SERVER "xxxxxx.iot-eu-amazonaws.com"`
-* `MQTT_PORT "8883"`
-* `AWS_IOT true`
-* ss_server_cert with the root certificate
-* ss_client_cert with the client certificate
-* ss_client_key with the Client key
-* `MQTT_SECURE_SELF_SIGNED 1`
-* `MQTT_SECURE_DEFAULT true`
-
-With PlatformIO you can directly leverage the environment `esp32dev-ble-aws`
+With PlatformIO you can directly leverage the environment `esp32dev-ble-aws` as an example and modify it following your needs.
 
 ## Build and upload
 
