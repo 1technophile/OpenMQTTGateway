@@ -2,15 +2,9 @@
 
 ## Introduction
 
-This section is useful if you want to do advanced configuration of your project or if you choose an Arduino. Indeed the ESP hardware family can be loaded directly without any configuration from your desktop.
+This section is useful if you want to make an advanced project configuration not supported by the pre-built binaries.
 
 Advanced configuration means changing the default pins, the MQTT topics, and all the expert parameters that you can find in [`User_config.h`](https://github.com/1technophile/OpenMQTTGateway/blob/development/main/User_config.h) and in all [`config_XX.h`](https://github.com/1technophile/OpenMQTTGateway/tree/development/main) files. If you don't have to change the default parameters except Wi-Fi and MQTT broker settings, you don't need advanced configuration; you can go directly to the [Upload Binaries](binaries.md) section instead.
-
-To make advanced configurations to OpenMQTTGateway, you have the choice between two development environments:
-* [PlatformIO](https://platformio.org/)
-* [Arduino IDE](https://www.arduino.cc/en/Main/Software)
-
-I recommend using PlatformIO; this way you will not have to search for all the necessary libraries and adequate forks/revisions. If you really want to use Arduino IDE, you need to download the libraries listed [here](https://github.com/1technophile/OpenMQTTGateway/blob/d2dd6138558909b71cc44f69665340247bd5f356/platformio.ini#L55) at the version or revision specified.
 
 ## Configure & Upload with PlatformIO
 
@@ -208,38 +202,6 @@ upload_flags =
   --auth=OTAPASSWORD
   --port=8266
 ```
-
-## Configure & Upload with Arduino IDE
-
-* Download the [CODE](https://github.com/1technophile/OpenMQTTGateway/releases) from github
-* First download the last version of the Arduino IDE from the Arduino [website](https://www.arduino.cc/en/Main/Software)
-* Add ESP32 boards by following this [tutorial](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide)
-* Add ESP8266 boards by following this [tutorial](https://github.com/esp8266/Arduino#installing-with-boards-manager)
-* Download the libraries package corresponding to your board and module wished into the same page (example esp32-m5stick-c-ble-libraries.zip)
-* Unzip the libraries into your Arduino libraries folder (example D:/Users/XXXX/Documents/Arduino/libraries)
-* If necessary replace the spaces into each library folder by _: example rename “ESP32 BLE Arduino” folder to “ESP32_BLE_Arduino”
-* Open the file main.ino from OpenMQTTGateway/main folder with the Arduino IDE
-* Change the settings and the desired gateways into `User_config.h` (uncomment the modules you want)
-
-*Example for the use of RF gateway:*
-
-```cpp
-#define ZgatewayRF "RF" //ESP8266, Arduino, ESP32
-//#define ZgatewayIR "IR" //ESP8266, Arduino, Sonoff RF Bridge
-//#define ZgatewayLORA "LORA" //ESP8266, Arduino, ESP32
-//#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
-//#define ZgatewayBT "BT" //ESP8266, ESP32
-```
-
-* Change the pins or parameters corresponding to the modules chosen, for RF you can change the pins in config_RF.h
-* Choose the board on the Arduino IDE
-* Select the port corresponding to the board
-* Note that for using BLE on ESP32 you will need to select *Minimal SPIFFS* into Tools->Partition Scheme
-* Open the serial monitor and set 115200 baud
-* Upload ➡️
-* You should see the logs in the serial monitor
-
-With an ESP if you did not set your network and MQTT parameters manually you can now open the [web portal configuration](portal.md).
 
 ## API
 With the V0.9 we added the support of json for receiving and publishing.

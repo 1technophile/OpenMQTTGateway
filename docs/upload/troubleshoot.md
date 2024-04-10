@@ -3,8 +3,7 @@
 ## Compilation/build error
 This badge [![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=master)](https://github.com/1technophile/OpenMQTTGateway/actions?query=branch%3Amaster+workflow%3ABuild) show you the state of the compilation of the master and this one [![Build Status](https://github.com/1technophile/OpenMQTTGateway/workflows/Build/badge.svg?branch=development)](https://github.com/1technophile/OpenMQTTGateway/actions?query=branch%3Adevelopment+workflow%3ABuild) for the development branch.
 If you see a green badge this means that the code compilation is OK with the configuration given in the `docs/platformio.ini`.
-Check your IDE environment version, boards version, libraries version before submitting an issue or a question.
-Verify especially that the libraries provided into the [release page](https://github.com/1technophile/OpenMQTTGateway/releases) are located into your "sketchbook folder"/libraries if your are using the Arduino IDE.
+Check your environment, boards , libraries before submitting an issue or a question.
 
 ## ESP32 compilation errors related to WiFi
 If you get one or several of the following errors:
@@ -36,15 +35,6 @@ in config_rf.h
 instead of
 `#define RF_RECEIVER_GPIO 0 // D3 on nodemcu`
 
-## Exception seen on serial monitor:
-Hey I got a callback 
-malloc
-memcpy
-7
-Exception (2):
-
-→ You are not using the last update of ESP8266 into board manager, go to your Arduino IDE and update it, should be at least 2.3.0
-
 ## Repetitive MQTT disconnections or/and commands sent to the gateway not taken into account
 Most probably a network issue, don't use a guest network and if going through a firewall check its rules. To put aside gateway issue, try to connect to a local broker on the same network.
 
@@ -53,7 +43,7 @@ This is due to a too small MQTT packet size, open User_config.h and set:
 `#define mqtt_max_packet_size 1024`
 
 ## Your Arduino with w5100 Ethernet shield does not connect to network until you press Reset button
-If you notice that your Arduino with w5100 Ethernet shield does not connect to network until you press its Reset button, but connects fine if you connect the Arduino with a USB cable to a computer/laptop with Arduino IDE running and open Serial Monitor, the problem is most likely the Ethernet shield and/or the power supply you're using.
+If you notice that your Arduino with w5100 Ethernet shield does not connect to network until you press its Reset button, but connects fine if you connect the Arduino with a USB cable to a computer/laptop with the IDE running and open Serial Monitor, the problem is most likely the Ethernet shield and/or the power supply you're using.
 According to this [video](https://www.youtube.com/watch?v=9ZBeprOqC3w&feature=youtu.be), w5100 clones sometimes struggle to initialise because the reset pin wasn't held low long enough. The solution is simple - add a 0.1uF (100nF) capacitor between the pins on the reset switch. You can get more details [here](http://forum.arduino.cc/index.php?topic=28175.15).
 But even with this fix your board might not work well with a specific PSU. I would recommend try at least one different one and also try bigger capacitor (some report using 47uF)
 

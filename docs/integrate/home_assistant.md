@@ -11,7 +11,7 @@ From Home Assistant site
 
 > The discovery of MQTT devices will enable one to use MQTT devices with only minimal configuration effort on the side of Home Assistant. The configuration is done on the device itself and the topic used by the device.
 
-On OpenMQTTGateway the Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation. Here are a few tips for activating discovery on Home Assistant, but for detailed configuration please refer to the Home Assistant website. 
+On OpenMQTTGateway the Home Assistant discovery is enabled by default on all binaries and platformio configurations. Here are a few tips for activating discovery on Home Assistant, but for detailed configuration please refer to the Home Assistant website. 
 
 Enable discovery on your MQTT integration in HASS (activated per default).
 
