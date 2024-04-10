@@ -32,7 +32,7 @@ If you want the settings to be kept upon gateway restart, you can save the state
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"disc":false, "save":true}'`
 
 ::: tip
-Auto discovery is enabled by default on release binaries and platformio (except for UNO). With Arduino IDE, please read the [advanced configuration section](../upload/advanced-configuration#auto-discovery) of the documentation.
+Auto discovery is enabled by default on release binaries and platformio.
 :::
 
 ## AutoDiscovery compatible with OpenHAB (default: false)

@@ -53,7 +53,7 @@ home/OpenMQTTGateway/SRFBtoMQTT/59365 {"raw":"2B660186042E00E7E5","value":"59365
 It can be useful to avoid warning or errors on certain controllers.
 
 ## Auto discovery
-Home Assistant discovery is enabled by default on all binaries and platformio configurations except for UNO. With Arduino IDE you have to uncomment [ZmqttDiscovery](https://github.com/1technophile/OpenMQTTGateway/blob/0180a0dbd55ed8e0799e30ee84f68070a6f478fa/User_config.h#L99) in User_config.h. 
+Home Assistant discovery is enabled by default on all binaries and platformio configurations.
 
 To have a working discovery setup you need to enable it on your MQTT integration definition in HASS.
 
