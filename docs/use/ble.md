@@ -222,6 +222,10 @@ If you want to change the time between active scans you can change it by MQTT. F
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
 
+::: warning Note
+The active scan interval `intervalacts` can only bet set equal to or higher than the passive scan interval `interval`, as any lower value would not make any sense.
+:::
+
 ## Setting the duration of a scan (available with HA discovery)
 
 If you want to change the default duration of each scan cycle to 5 seconds
