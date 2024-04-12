@@ -45,9 +45,7 @@ void MeasureHCSR501() {
     JsonObject HCSR501data = HCSR501dataBuffer.to<JsonObject>();
     static int pirState = LOW;
     int PresenceValue = digitalRead(HCSR501_GPIO);
-#  if defined(ESP8266) || defined(ESP32)
     yield();
-#  endif
     if (PresenceValue == HIGH) {
       if (pirState == LOW) {
         //turned on

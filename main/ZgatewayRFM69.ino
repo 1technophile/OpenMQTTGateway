@@ -66,7 +66,6 @@ uint32_t gc_checksum() {
   return checksum;
 }
 
-#  if defined(ESP8266) || defined(ESP32)
 void eeprom_setup() {
   EEPROM.begin(4096);
   pGC = (struct _GLOBAL_CONFIG*)EEPROM.getDataPtr();
@@ -84,14 +83,11 @@ void eeprom_setup() {
     EEPROM.commit();
   }
 }
-#  endif
 
 RFM69 radio;
 
 void setupRFM69(void) {
-#  if defined(ESP8266) || defined(ESP32)
   eeprom_setup();
-#  endif
   int freq;
   static const char PROGMEM JSONtemplate[] =
       R"({"msgType":"config","freq":%d,"rfm69hcw":%d,"netid":%d,"power":%d})";

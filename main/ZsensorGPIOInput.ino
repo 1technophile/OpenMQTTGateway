@@ -57,9 +57,7 @@ void MeasureGPIOInput() {
   if ((millis() - lastDebounceTime) > GPIOInputDebounceDelay) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
-#  if defined(ESP8266) || defined(ESP32)
     yield();
-#  endif
 #  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO && !defined(ESPWifiManualSetup)
     if (reading == LOW) {
       if (resetTime == 0) {

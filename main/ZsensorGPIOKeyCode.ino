@@ -49,9 +49,7 @@ void MeasureGPIOKeyCode() {
   {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
-#  if defined(ESP8266) || defined(ESP32)
     yield();
-#  endif
     // if the Input state has changed:
     if (latch > 0 && lastLatchStateGPIOKeyCode != latch) {
       int reading = digitalRead(GPIOKeyCode_D0_GPIO) | (digitalRead(GPIOKeyCode_D1_GPIO) << 1) | (digitalRead(GPIOKeyCode_D2_GPIO) << 2);
