@@ -480,7 +480,6 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassMeasurement //State Class
   );
-#  if defined(ESP8266) || defined(ESP32)
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: Free memory", (char*)getUniqueId("freemem", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "data_size", "{{ value_json.freemem }}", //set availability_topic,device_class,value_template,
@@ -519,7 +518,7 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
-#    ifdef RGB_INDICATORS
+#  ifdef RGB_INDICATORS
   createDiscovery("number", //set Type
                   subjectSYStoMQTT, "SYS: LED Brightness", (char*)getUniqueId("rgbb", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ (value_json.rgbb/2.55) | round(0) }}", //set availability_topic,device_class,value_template,
@@ -529,9 +528,9 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
                   stateClassNone //State Class
   );
-#    endif
+#  endif
 
-#    ifdef ZdisplaySSD1306
+#  ifdef ZdisplaySSD1306
   createDiscovery("switch", //set Type
                   subjectSSD1306toMQTT, "SSD1306: Control", (char*)getUniqueId("onstate", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.onstate }}", //set availability_topic,device_class,value_template,
@@ -561,9 +560,9 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
-#    endif
+#  endif
 
-#    ifndef ESP32_ETHERNET
+#  ifndef ESP32_ETHERNET
   createDiscovery("sensor", //set Type
                   subjectSYStoMQTT, "SYS: RSSI", (char*)getUniqueId("rssi", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "signal_strength", "{{ value_json.rssi }}", //set availability_topic,device_class,value_template,
@@ -573,7 +572,6 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
-#    endif
 #  endif
 #  if defined(ESP32) && !defined(NO_INT_TEMP_READING)
   createDiscovery("sensor", //set Type
