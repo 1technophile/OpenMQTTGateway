@@ -2003,8 +2003,9 @@ void loop() {
       // We have just re-connected if connected was previously false
       bool justReconnected = !connected;
 #ifdef ZmqttDiscovery
-      // Deactivate autodiscovery after DiscoveryAutoOffTimer
-      if (SYSConfig.discovery && (now > lastDiscovery + DiscoveryAutoOffTimer))
+      // Deactivate autodiscovery after DiscoveryAutoOffTimer.
+      // Exception: when discovery_republish_on_reconnect is enabled, we never never automatically disable discovery
+      if (!discovery_republish_on_reconnect && SYSConfig.discovery && (now > lastDiscovery + DiscoveryAutoOffTimer))
         SYSConfig.discovery = false;
       // at first connection we publish the discovery payloads
       // or, when we have just re-connected (only when discovery_republish_on_reconnect is enabled)
