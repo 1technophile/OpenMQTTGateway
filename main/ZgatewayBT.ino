@@ -195,11 +195,20 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   btPresenceParametersDiscovery();
 #  endif
   // Time before before active scan
-  // Scan interval set
-  if (BTdata.containsKey("interval") && BTdata["interval"] != 0)
+  // Scan interval set - and avoid intervalacts to be lower than interval
+  if (BTdata.containsKey("interval") && BTdata["interval"] != 0) {
     Config_update(BTdata, "interval", BTConfig.BLEinterval);
-  // Define if the scan is adaptive or not
-  Config_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
+    if (BTConfig.intervalActiveScan < BTConfig.BLEinterval) {
+      Config_update(BTdata, "interval", BTConfig.intervalActiveScan);
+    }
+  }
+  // Define if the scan is adaptive or not - and avoid intervalacts to be lower than interval
+  if (BTdata.containsKey("intervalacts") && BTdata["intervalacts"] < BTConfig.BLEinterval) {
+    // Config_update(BTdata, "interval", BTConfig.intervalActiveScan);
+    BTConfig.intervalActiveScan = BTConfig.BLEinterval;
+  } else {
+    Config_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
+  }
   // Time before a connect set
   Config_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
