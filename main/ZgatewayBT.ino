@@ -323,7 +323,7 @@ void PublishDeviceData(JsonObject& BLEdata);
 
 atomic_int forceBTScan;
 
-void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0);
+void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type = 0, const char* name = "");
 
 BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 BLEdevice* getDeviceByMac(const char* mac) {
@@ -354,12 +354,11 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
   return true;
 }
 
-void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type) {
+void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type, const char* name) {
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
     Log.error(F("Semaphore NOT taken" CR));
     return;
   }
-
   BLEdevice* device = getDeviceByMac(mac);
   if (device == &NO_BT_DEVICE_FOUND) {
     Log.trace(F("add %s" CR), mac);
@@ -371,6 +370,14 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     device->isBlkL = flags & device_flags_isBlackL;
     device->connect = flags & device_flags_connect;
     device->macType = mac_type;
+    // Check name length
+    if (strlen(name) > 20) {
+      Log.warning(F("Name too long, truncating" CR));
+      strncpy(device->name, name, 20);
+      device->name[20] = '\0';
+    } else {
+      strcpy(device->name, name);
+    }
     device->sensorModel_id = model;
     device->lastUpdate = millis();
     devices.push_back(device);
@@ -992,6 +999,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
         Log.trace(F("properties: %s" CR), properties.c_str());
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
+#    ifdef ForceDeviceName
+        if (p->name[0] != '\0') {
+          model = p->name;
+        }
+#    endif
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
 
         // Check for tracker status
@@ -1225,14 +1237,15 @@ void process_bledata(JsonObject& BLEdata) {
     BLEdata["type"] = "RMAC";
     Log.trace(F("Potential RMAC (prmac) converted to RMAC" CR));
   }
+  const char* deviceName = BLEdata["name"] | "";
 
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
       Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
       if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) { // Device that broadcast and can be connected
-        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
       } else {
-        createOrUpdateDevice(mac, device_flags_init, model_id, mac_type);
+        createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
         if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
           if (BLEdata.containsKey("acts") && BLEdata.containsKey("cont")) {
             if (BLEdata["acts"] && BLEdata["cont"]) {
@@ -1268,14 +1281,14 @@ void process_bledata(JsonObject& BLEdata) {
 
         if (model_id > 0) {
           Log.trace(F("Connectable device found: %s" CR), name.c_str());
-          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
         }
       } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
         const char* service_data = (const char*)(BLEdata["servicedata"] | "");
         if (strstr(service_data, "209800") != NULL) {
           model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
           Log.trace(F("Connectable device found: HHCCJCY01HHCC" CR));
-          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type);
+          createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
         }
       }
     }

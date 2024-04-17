@@ -129,6 +129,10 @@ void announceDeviceTrigger(bool use_gateway_info,
 #  define GATEWAY_MANUFACTURER "OMG_community"
 #endif
 
+#ifndef ForceDeviceName
+#  define ForceDeviceName false // Set to true to force the device name to be from the name of the device and not the model
+#endif
+
 /*-------------- Auto discovery macros-----------------*/
 // Set the line below to true so as to have autodiscovery working with OpenHAB
 #ifndef OpenHABDiscovery
