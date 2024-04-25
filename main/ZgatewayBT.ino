@@ -800,7 +800,7 @@ void stopProcessing() {
       xSemaphoreGive(semaphoreBLEOperation);
     }
   }
-  Log.notice(F("BLE gateway stopped %T, free heap: %d" CR), ESP.getFreeHeap());
+  Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
@@ -906,7 +906,7 @@ void setupBTTasksAndBLE() {
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
 #  ifdef USE_BLUFI
-      13000,
+      13500,
 #  else
       8500, /* Stack size in bytes */
 #  endif

@@ -62,7 +62,6 @@ jobs:
           - "nodemcuv2-rf-cc1101"
           - "nodemcuv2-somfy-cc1101"
           - "manual-wifi-test"
-          - "nodemcuv2-mqtt-fw-test"
           - "rf-wifi-gateway"
           - "nodemcuv2-rf2"
           - "nodemcuv2-rf2-cc1101"

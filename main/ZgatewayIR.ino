@@ -114,7 +114,7 @@ void IRtoMQTT() {
 #  ifdef ESP32
     Log.trace(F("IR Task running on core :%d" CR), xPortGetCoreID());
 #  endif
-    IRdata["value"] = (SIGNAL_SIZE_UL_ULL)(results.value);
+    IRdata["value"] = uint64_t(results.value);
     IRdata["protocol"] = (int)(results.decode_type);
     IRdata["bits"] = (int)(results.bits);
     IRdata["hex"] = resultToHexidecimal(&results);
@@ -141,7 +141,7 @@ void IRtoMQTT() {
     Log.trace(F("raw redirected" CR));
 #  endif
     irrecv.resume(); // Receive the next value
-    SIGNAL_SIZE_UL_ULL MQTTvalue = IRdata["value"].as<SIGNAL_SIZE_UL_ULL>();
+    uint64_t MQTTvalue = IRdata["value"].as<uint64_t>();
     //trc(MQTTvalue);
     if ((pubIRunknownPrtcl == false && IRdata["protocol"].as<int>() == -1)) { // don't publish unknown IR protocol
       Log.notice(F("--no pub unknwn prt--" CR));
@@ -159,7 +159,7 @@ void IRtoMQTT() {
   }
 }
 
-bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, const char* hex, unsigned int valueBITS, uint16_t valueRPT);
+bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char* hex, unsigned int valueBITS, uint16_t valueRPT);
 
 #  if jsonReceiving
 void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
@@ -254,7 +254,7 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
 }
 #  endif
 
-bool sendIdentifiedProtocol(const char* protocol_name, SIGNAL_SIZE_UL_ULL data, const char* hex, unsigned int valueBITS, uint16_t valueRPT) {
+bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char* hex, unsigned int valueBITS, uint16_t valueRPT) {
   uint8_t dataarray[valueBITS];
   if (hex) {
     const char* ptr = NULL;

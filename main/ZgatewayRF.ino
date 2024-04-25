@@ -82,7 +82,7 @@ static char* dec2binWzerofill(unsigned long Dec, unsigned int bitLength) {
 
 #  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery)
 
-void RFtoMQTTdiscovery(SIGNAL_SIZE_UL_ULL MQTTvalue) {
+void RFtoMQTTdiscovery(uint64_t MQTTvalue) {
   //on the fly switch creation from received RF values
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
@@ -114,11 +114,11 @@ void RFtoMQTT() {
 #  ifdef ESP32
     Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
 #  endif
-    SIGNAL_SIZE_UL_ULL MQTTvalue = mySwitch.getReceivedValue();
+    uint64_t MQTTvalue = mySwitch.getReceivedValue();
     int length = mySwitch.getReceivedBitlength();
     const char* binary = dec2binWzerofill(MQTTvalue, length);
 
-    RFdata["value"] = (SIGNAL_SIZE_UL_ULL)MQTTvalue;
+    RFdata["value"] = (uint64_t)MQTTvalue;
     RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
     RFdata["length"] = (int)mySwitch.getReceivedBitlength();
     RFdata["delay"] = (int)mySwitch.getReceivedDelay();
@@ -168,7 +168,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 #    endif
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
-  SIGNAL_SIZE_UL_ULL data = STRTO_UL_ULL(datacallback, NULL, 10); // we will not be able to pass values > 4294967295 on Arduino boards
+  uint64_t data = strtoull(datacallback, NULL, 10); // we will not be able to pass values > 4294967295 on Arduino boards
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined
@@ -227,7 +227,7 @@ void MQTTtoRF(char* topicOri, char* datacallback) {
 void MQTTtoRF(char* topicOri, JsonObject& RFdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
     Log.trace(F("MQTTtoRF json" CR));
-    SIGNAL_SIZE_UL_ULL data = RFdata["value"];
+    uint64_t data = RFdata["value"];
     if (data != 0) {
       int valuePRT = RFdata["protocol"] | 1;
       int valuePLSL = RFdata["delay"] | 350;

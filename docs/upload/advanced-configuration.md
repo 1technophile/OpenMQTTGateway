@@ -10,16 +10,17 @@ The configuration of the broker is not covered here, you should look into the do
 
 ### Prerequisites
 The MQTT broker is configured for TLS and you have access to the CA certificate which was used to sign the MQTT broker certificate.
-You are using ESP8266 or ESP32, for other boards TLS is not supported.
+You are using ESP8266 or ESP32.
 
 ### Configure secure connection in the gateway
-To enable the secure connection and use TLS set the `#define MQTT_DEFAULT_SECURE` to true.
+To enable the secure connection and use TLS set the `#define MQTT_DEFAULT_SECURE` to true at build time, or the `mqtt secure` parameter with WiFi Manager or `mqtt_secure` with MQTT.
 Set `MQTT_SERVER` to the Common Name (CN) of the certificate of the broker.
-This can be the hostname or the IP of the broker.
+
+The server identity can be verified against a certificate or not, if you don't want to use a certicate to verify the server you can uncheck the option `validate cert` with WiFi Manager or set `mqtt_validate` to `false` with MQTT
 
 The CA certificate should be in PEM ascii format.
 If your CA certificate is not in the correct format or you don't know the format, use `openssl` to convert the certificate to the correct format.
-In `User_config.h` replace the `...` with the content of your certificate which is between the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` lines:
+At build time, in `main/certs/default_server_cert.h` replace the `...` with the content of your certificate which is between the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` lines:
 ```cpp
 const char* certificate CERT_ATTRIBUTE = R"EOF("
 -----BEGIN CERTIFICATE-----
@@ -28,7 +29,14 @@ const char* certificate CERT_ATTRIBUTE = R"EOF("
 ")EOF";
 ```
 
-You can know compile and upload to your board and the gateway should connect with TLS to your broker.
+With WiFi Manager copy your certificate from `-----BEGIN CERTIFICATE-----` to  `-----END CERTIFICATE-----` (included) and paste it into the input field:
+```
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+```
+
+This process can also be used for the other certificates, OTA, client key, client certificate if necessary.
 
 ## Add the received "value" at the end of the topic
 For the gateways that publish a "value" parameter on the json (RF, IR...), it is possible to concatenate this parameter at the end of the topic.
