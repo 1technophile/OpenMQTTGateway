@@ -57,7 +57,7 @@
 #  define Gateway_Name "OpenMQTTGateway"
 #endif
 #ifndef Gateway_Short_Name
-#  define Gateway_Short_Name "OMG"
+#  define Gateway_Short_Name "OMG" // 3 characters maximum
 #endif
 
 #ifndef Base_Topic
