@@ -48,10 +48,10 @@ The data is sent in the following JSON format:
 {
   "model": "ESP32CNT",
   "id": "ESP32_MAC_ADDRESS",
+  "count": "COUNTER_IN_LITER",
   "tempc": "TEMPERATURE_IN_CELSIUS",
-  "tempc": "TEMPERATURE_IN_CELSIUS",
-  "tempc": "TEMPERATURE_IN_CELSIUS",
-  "tempc": "TEMPERATURE_IN_CELSIUS"
+  "hum": "HUMIDITY_IN_PERCENTAGE",
+  "batt": "BATTERY_IN_PERCENTAGE"
 }
 ```
 
