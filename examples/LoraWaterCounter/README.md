@@ -39,6 +39,8 @@ The OLED display will show the status of the packet being sent and the current t
 The built-in LED on the ESP32 will blink once every time a packet is sent.
 Monitor the serial output (at 115200 baud rate) to see the JSON formatted data being sent.
 
+If you use arduino load ino file.
+
 ## Data Format:
 The data is sent in the following JSON format:
 
