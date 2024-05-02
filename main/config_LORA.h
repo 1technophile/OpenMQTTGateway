@@ -129,7 +129,9 @@ const char LORAparameters[3][4][12] = {
     // LORA key, name, unit, device_class
     {"tempc", "temperature", "°C", "temperature"},
     {"hum", "humidity", "%", "humidity"},
-    {"moi", "moisture", "%", "humidity"}};
+    {"moi", "moisture", "%", "humidity"},
+    {"batt", "battery", "%", "battery"},
+    {"count", "counter", "L", "water"}};
 
 #endif
 
