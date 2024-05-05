@@ -3,7 +3,9 @@
 #include <WiFi.h>
 #include <Wire.h>
 #include <stdio.h>
+#include <Adafruit_Sensor.h>
 #include <DHT.h>
+#include <DHT_U.h>
 
 #include "SSD1306.h"
 
@@ -23,8 +25,8 @@
 
 #define LED      25
 
-#define DHT_PIN  12
-#define DHT_TYPE DHT22 
+#define DHT_PIN  14
+#define DHT_TYPE DHT22
 
 #define CNT_PIN  34
 
@@ -44,7 +46,7 @@ String rssi = "RSSI --";
 String packSize = "--";
 String packet;
 
-DHT dht(DHT_PIN, DHT_TYPE); //Inizializza oggetto chiamato "dht", parametri: pin a cui è connesso il sensore, tipo di dht 11/22
+DHT_Unified dht(DHT_PIN, DHT_TYPE); //Inizializza oggetto chiamato "dht", parametri: pin a cui è connesso il sensore, tipo di dht 11/22
 
 void ICACHE_RAM_ATTR bounceCheck ();
 
@@ -78,10 +80,35 @@ void setup() {
   
   attachInterrupt (CNT_PIN, bounceCheck, RISING);
 
+  dht.begin();
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  Serial.println(F("------------------------------------"));
+  Serial.println(F("Temperature Sensor"));
+  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
+  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
+  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
+  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("°C"));
+  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("°C"));
+  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("°C"));
+  Serial.println(F("------------------------------------"));
+  // Print humidity sensor details.
+  dht.humidity().getSensor(&sensor);
+  Serial.println(F("Humidity Sensor"));
+  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
+  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
+  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
+  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("%"));
+  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
+  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
+  Serial.println(F("------------------------------------"));
+
   delay(1500);
 }
 
 void loop() {
+  sensors_event_t event1, event2;
+
   display.clear();
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_10);
@@ -90,15 +117,34 @@ void loop() {
   display.drawString(90, 0, String(cntpkt));
 
   String NodeId = WiFi.macAddress();
-  float temp = dht.readTemperature();
-  float hum = dht.readHumidity();
+ // float temp = dht.readTemperature();
+ // float hum = dht.readHumidity();
   float battery = getBattery();
+
+  dht.temperature().getEvent(&event1);
+  if (isnan(event1.temperature)) {
+    Serial.println(F("Error reading temperature!"));
+  }
+  else {
+    Serial.print(F("Temperature: "));
+    Serial.print(event1.temperature);
+    Serial.println(F("°C"));
+  }
+  // Get humidity event and print its value.
+  dht.humidity().getEvent(&event2);
+  if (isnan(event2.relative_humidity)) {
+    Serial.println(F("Error reading humidity!"));
+  }
+  else {
+    Serial.print(F("Humidity: "));
+    Serial.print(event2.relative_humidity);
+    Serial.println(F("%"));
+  }
+
   // send packet
   LoRa.beginPacket();
-  // Build json string to send
-  //per test rimuovere
 
-  String msg = "{\"model\":\"ESP32CNT\",\"id\":\"" + NodeId + "\",\"count\":\"" + String(counter) + "\",\"tempc\":\"" + String(temp) + "\",\"hum\":\"" + String(hum) + "\",\"batt\":\"" + String(battery) + "\"}";
+  String msg = "{\"model\":\"ESP32CNT\",\"id\":\"" + NodeId + "\",\"count\":\"" + String(counter) + "\",\"tempc\":\"" + String(event1.temperature) + "\",\"hum\":\"" + String(event2.relative_humidity) + "\",\"batt\":\"" + String(battery) + "\"}";
   // Send json string
   LoRa.print(msg);
   LoRa.endPacket();
@@ -117,7 +163,8 @@ void loop() {
   digitalWrite(LED, HIGH); // turn the LED on (HIGH is the voltage level)
   delay(1000); // wait for a second
   digitalWrite(LED, LOW); // turn the LED off by making the voltage LOW
-  delay(60000); // wait for 60 seconds
+  //delay(60000); // wait for 60 seconds
+  delay(6000);
 }
 
 void ICACHE_RAM_ATTR bounceCheck (){
