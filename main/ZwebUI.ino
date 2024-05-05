@@ -2148,6 +2148,15 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 properties[property] = "wake: " + wakestr + " ";
               }
 
+              if (data.containsKey("gravity")) {
+                property++;
+                property++;
+                char sgrav[6];
+                float gravityf = data["gravity"];
+                dtostrf(gravityf, 5, 3, sgrav);
+                properties[property] = "SG: " + (String)sgrav + " ";
+              }
+
             } else if (data["type"] == "BBQ") {
               String tempcstr = "";
               int j = 7;
