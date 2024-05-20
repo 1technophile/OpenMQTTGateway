@@ -651,7 +651,7 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
       Log.warning(F("Client not connected, aborting the publication" CR));
     }
   } else {
-    Log.trace(F("[ OMG->MQTT CANCELED] topic: %s msg: %s " CR), topic, payload);
+    Log.notice(F("[ OMG->MQTT CANCELED] topic: %s msg: %s " CR), topic, payload);
   }
 }
 
