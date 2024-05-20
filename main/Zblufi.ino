@@ -57,38 +57,45 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
      * now, as a example, we do it more simply */
   switch (event) {
     case ESP_BLUFI_EVENT_INIT_FINISH:
-      Log.notice(F("BLUFI init finish" CR));
+      Log.trace(F("BLUFI init finish" CR));
       esp_blufi_adv_start();
       break;
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
-      Log.notice(F("BLUFI deinit finish" CR));
+      Log.trace(F("BLUFI deinit finish" CR));
       NimBLEDevice::deinit(true);
       break;
     case ESP_BLUFI_EVENT_BLE_CONNECT:
+      Log.trace(F("BLUFI BLE connect" CR));
       omg_blufi_ble_connected = true;
       esp_blufi_adv_stop();
       blufi_security_init();
       break;
     case ESP_BLUFI_EVENT_BLE_DISCONNECT:
+      Log.trace(F("BLUFI BLE disconnect" CR));
       omg_blufi_ble_connected = false;
       blufi_security_deinit();
       if (WiFi.isConnected()) {
         esp_blufi_deinit();
+#  ifndef ESPWifiManualSetup
+        wifiManager.stopConfigPortal();
+#  endif
       } else {
         esp_blufi_adv_start();
       }
       break;
     case ESP_BLUFI_EVENT_REQ_CONNECT_TO_AP:
-      Log.notice(F("BLUFI requset wifi connect to AP" CR));
+      Log.trace(F("BLUFI request wifi connect to AP" CR));
       WiFi.begin((char*)gl_sta_ssid, (char*)gl_sta_passwd);
       gl_sta_is_connecting = true;
+      blufiConnectAP = true;
       break;
     case ESP_BLUFI_EVENT_REQ_DISCONNECT_FROM_AP:
-      Log.notice(F("BLUFI requset wifi disconnect from AP\n" CR));
+      Log.trace(F("BLUFI request wifi disconnect from AP\n" CR));
       WiFi.disconnect();
+      blufiConnectAP = false;
       break;
     case ESP_BLUFI_EVENT_REPORT_ERROR:
-      Log.notice(F("BLUFI report error, error code %d\n" CR), param->report_error.state);
+      Log.trace(F("BLUFI report error, error code %d\n" CR), param->report_error.state);
       esp_blufi_send_error_info(param->report_error.state);
       break;
     case ESP_BLUFI_EVENT_GET_WIFI_STATUS: {
@@ -109,6 +116,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       break;
     }
     case ESP_BLUFI_EVENT_RECV_SLAVE_DISCONNECT_BLE:
+      Log.trace(F("BLUFI recv slave disconnect a ble connection" CR));
       esp_blufi_disconnect();
       break;
     case ESP_BLUFI_EVENT_RECV_STA_SSID:
@@ -137,20 +145,40 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       }
       if (!json.isNull()) {
         Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
-        if (json.containsKey("mqtt_server"))
-          strcpy(mqtt_server, json["mqtt_server"]);
-        if (json.containsKey("mqtt_port"))
-          strcpy(mqtt_port, json["mqtt_port"]);
-        if (json.containsKey("mqtt_user"))
-          strcpy(mqtt_user, json["mqtt_user"]);
-        if (json.containsKey("mqtt_pass"))
-          strcpy(mqtt_pass, json["mqtt_pass"]);
-        if (json.containsKey("mqtt_topic"))
-          strcpy(mqtt_topic, json["mqtt_topic"]);
-        if (json.containsKey("mqtt_broker_secure"))
-          mqtt_secure = json["mqtt_broker_secure"].as<bool>();
+        if (json.containsKey("mqtt_server") && json["mqtt_server"].is<const char*>() && json["mqtt_server"].as<String>().length() > 0 && json["mqtt_server"].as<String>().length() < parameters_size)
+          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, json["mqtt_server"]);
+        if (json.containsKey("mqtt_port") && json["mqtt_port"].is<const char*>() && json["mqtt_port"].as<String>().length() > 0 && json["mqtt_port"].as<String>().length() < parameters_size)
+          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, json["mqtt_port"]);
+        if (json.containsKey("mqtt_user") && json["mqtt_user"].is<const char*>() && json["mqtt_user"].as<String>().length() > 0 && json["mqtt_user"].as<String>().length() < parameters_size)
+          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, json["mqtt_user"]);
+        if (json.containsKey("mqtt_pass") && json["mqtt_pass"].is<const char*>() && json["mqtt_pass"].as<String>().length() > 0 && json["mqtt_pass"].as<String>().length() < parameters_size)
+          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_pass, json["mqtt_pass"]);
+
+        if (json.containsKey("mqtt_broker_secure") && json["mqtt_broker_secure"].is<bool>())
+          cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure = json["mqtt_broker_secure"].as<bool>();
+        if (json.containsKey("mqtt_iscertvalid") && json["mqtt_iscertvalid"].is<bool>())
+          cnt_parameters_array[CNT_DEFAULT_INDEX].isCertValidate = json["mqtt_iscertvalid"].as<bool>();
+        if (json.containsKey("mqtt_broker_cert") && json["mqtt_broker_cert"].is<const char*>() && json["mqtt_broker_cert"].as<String>().length() > MIN_CERT_LENGTH)
+          cnt_parameters_array[CNT_DEFAULT_INDEX].server_cert = json["mqtt_broker_cert"].as<const char*>();
+        if (json.containsKey("mqtt_client_cert") && json["mqtt_client_cert"].is<const char*>() && json["mqtt_client_cert"].as<String>().length() > MIN_CERT_LENGTH)
+          cnt_parameters_array[CNT_DEFAULT_INDEX].client_cert = json["mqtt_client_cert"].as<const char*>();
+        if (json.containsKey("mqtt_client_key") && json["mqtt_client_key"].is<const char*>() && json["mqtt_client_key"].as<String>().length() > MIN_CERT_LENGTH)
+          cnt_parameters_array[CNT_DEFAULT_INDEX].client_key = json["mqtt_client_key"].as<const char*>();
+        if (json.containsKey("ota_server_cert") && json["ota_server_cert"].is<const char*>() && json["ota_server_cert"].as<String>().length() > MIN_CERT_LENGTH)
+          cnt_parameters_array[CNT_DEFAULT_INDEX].ota_server_cert = json["ota_server_cert"].as<const char*>();
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
+        if (json.containsKey("mqtt_topic"))
+          strcpy(mqtt_topic, json["mqtt_topic"]);
+        if (json.containsKey("ota_pass"))
+          strcpy(ota_pass, json["ota_pass"]);
+
+        if (json.containsKey("cnt_index") && json["cnt_index"].is<int>() && json["cnt_index"].as<int>() > 0 && json["cnt_index"].as<int>() < 3) {
+          cnt_index = json["cnt_index"].as<int>();
+        } else {
+          cnt_index = CNT_DEFAULT_INDEX;
+        }
+
         saveConfig();
       }
       break;

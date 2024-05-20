@@ -1300,4 +1300,6 @@ void pubMqttDiscovery() {
 #    endif
 #  endif
 }
+#else
+void pubMqttDiscovery() {}
 #endif

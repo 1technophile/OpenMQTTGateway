@@ -29,8 +29,6 @@ If the board is connected by ethernet, the Wifi and password can be empty. If yo
 
 * Set your MQTT Server IP or domain name (for Home Assistant you can enter `homeassistant.local` if your server is configured with mDNS)
 * Set your MQTT Server Port (default: 1883)
-* Set the MQTT secure connection box to select whether or not the connection should be secure
-* Copy/paste the MQTT server certificate in the MQTT server cert box (only required if using a secure connection), be sure to include the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` markers  
 * Set your MQTT Server username (optional, 64 characters maximum)
 * Set your MQTT Server password (optional, 64 characters maximum)
 * Set your MQTT base topic if you need to change it (you must keep the / at the end) (default: home/, 64 characters maximum)
@@ -39,6 +37,10 @@ If the board is connected by ethernet, the Wifi and password can be empty. If yo
   * Local and remote OTA
   * WebUI login (login:"admin", password: "")
   * WiFi Manager Access Point password after initial config
+* Set the MQTT secure connection box to select whether or not the connection should be secure
+* Set the certificate validation to select wether or not you want to validate the server identity with a certificate
+* Copy/paste the MQTT server certificate in the MQTT server cert box (only required if using a secure connection), be sure to include the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` markers  
+* Add your certificates
 * Click on save
 
 ![WiFi manager save](../img/OpenMQTTGateway_Wifi_Manager_save.png)

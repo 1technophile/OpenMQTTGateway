@@ -708,34 +708,34 @@ void handleMQ() {
 
       if (server.hasArg("mh")) {
         WEBtoSYS["mqtt_server"] = server.arg("mh");
-        if (strncmp(mqtt_server, server.arg("mh").c_str(), parameters_size)) {
+        if (strncmp(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, server.arg("mh").c_str(), parameters_size)) {
           update = true;
         }
       }
 
       if (server.hasArg("ml")) {
         WEBtoSYS["mqtt_port"] = server.arg("ml");
-        if (strncmp(mqtt_port, server.arg("ml").c_str(), 6)) {
+        if (strncmp(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, server.arg("ml").c_str(), 6)) {
           update = true;
         }
       }
 
       if (server.hasArg("mu")) {
         WEBtoSYS["mqtt_user"] = server.arg("mu");
-        if (strncmp(mqtt_user, server.arg("mu").c_str(), parameters_size)) {
+        if (strncmp(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, server.arg("mu").c_str(), parameters_size)) {
           update = true;
         }
       }
 
       if (server.hasArg("mp")) {
         WEBtoSYS["mqtt_pass"] = server.arg("mp");
-        if (strncmp(mqtt_pass, server.arg("mp").c_str(), parameters_size)) {
+        if (strncmp(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_pass, server.arg("mp").c_str(), parameters_size)) {
           update = true;
         }
       }
 
       // SC - Secure Connection argument is only present when true
-      if (mqtt_secure != server.hasArg("sc")) {
+      if (cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure != server.hasArg("sc")) {
         update = true;
       }
       WEBtoSYS["mqtt_secure"] = server.hasArg("sc");
@@ -764,7 +764,8 @@ void handleMQ() {
 #  ifndef ESPWifiManualSetup
       if (update) {
         Log.warning(F("[WebUI] Save MQTT and Reconnect" CR));
-
+        WEBtoSYS["cnt_index"] = 1; // For the moment we only enable to change index 1 with WebUI
+        WEBtoSYS["save_cnt"] = true;
         char jsonChar[100];
         serializeJson(modules, jsonChar, measureJson(modules) + 1);
         char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
@@ -801,7 +802,7 @@ void handleMQ() {
   response += String(script);
   response += String(style);
   // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, mqtt_server, mqtt_port, mqtt_user, (mqtt_secure ? "checked" : ""), gateway_name, mqtt_topic);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, (cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "checked" : ""), gateway_name, mqtt_topic);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);

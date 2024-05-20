@@ -40,7 +40,7 @@
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
-  SIGNAL_SIZE_UL_ULL value;
+  uint64_t value;
   uint32_t time;
 };
 
@@ -79,10 +79,8 @@ bool ready_to_sleep = false;
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
 
-#include <string>
-
 struct JsonBundle {
-  StaticJsonDocument<JSON_MSG_BUFFER> doc;
+  StaticJsonDocument<JSON_MSG_BUFFER_MAX> doc;
 };
 
 std::queue<JsonBundle> jsonQueue;
@@ -90,6 +88,7 @@ std::queue<JsonBundle> jsonQueue;
 #ifdef ESP32
 // Mutex  to protect the queue
 SemaphoreHandle_t xQueueMutex;
+bool blufiConnectAP = false;
 #endif
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
@@ -220,15 +219,11 @@ struct GfSun2000Data {};
 #endif
 /*------------------------------------------------------------------------*/
 
-void setupTLS(bool self_signed = false, uint8_t index = 0);
+void setupTLS(int index = CNT_DEFAULT_INDEX);
 
 //adding this to bypass the problem of the arduino builder issue 50
 void callback(char* topic, byte* payload, unsigned int length);
 
-char mqtt_user[parameters_size] = MQTT_USER; // not compulsory only if your broker needs authentication
-char mqtt_pass[parameters_size] = MQTT_PASS; // not compulsory only if your broker needs authentication
-char mqtt_server[parameters_size] = MQTT_SERVER;
-char mqtt_port[6] = MQTT_PORT;
 char ota_pass[parameters_size] = gw_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
@@ -249,11 +244,7 @@ static unsigned long last_ota_activity_millis = 0;
 SYSConfig_s SYSConfig;
 
 bool failSafeMode = false;
-static bool mqtt_secure = MQTT_SECURE_DEFAULT;
-static bool mqtt_cert_validate = MQTT_CERT_VALIDATE_DEFAULT;
-static uint8_t mqtt_ss_index = MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT;
-static String mqtt_cert = "";
-static String ota_server_cert = "";
+static int cnt_index = CNT_DEFAULT_INDEX;
 
 #ifdef ESP32
 #  include <ArduinoOTA.h>
@@ -296,7 +287,7 @@ WiFiMulti wifiMulti;
 #  include <FS.h>
 #  include <WiFiManager.h>
 X509List caCert;
-#  if MQTT_SECURE_SELF_SIGNED_CLIENT
+#  if MQTT_SECURE_SIGNED_CLIENT
 X509List* pClCert = nullptr;
 PrivateKey* pClKey = nullptr;
 #  endif
@@ -425,7 +416,7 @@ void pubMainCore(JsonObject& data) {
 }
 
 // Add a document to the queue
-void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER_MAX>& jsonDoc) {
   if (jsonDoc.size() == 0) {
     Log.error(F("Empty JSON, skipping" CR));
     return;
@@ -444,7 +435,7 @@ void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
 
 #ifdef ESP32
 // Semaphore check before enqueueing a document
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER_MAX>& jsonDoc, int timeout) {
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout))) {
     enqueueJsonObject(jsonDoc);
     xSemaphoreGive(xQueueMutex);
@@ -572,7 +563,7 @@ void pub(const char* topicori, JsonObject& data) {
     topic = topic + "/" + protocol + "/" + value;
   }
 #  else
-  SIGNAL_SIZE_UL_ULL value = data["value"];
+  uint64_t value = data["value"];
   if (value != 0) {
     topic = topic + "/" + toString(value);
   }
@@ -592,11 +583,11 @@ void pub(const char* topicori, JsonObject& data) {
 #  if defined(ESP8266)
     yield();
 #  endif
-    if (p.value().is<SIGNAL_SIZE_UL_ULL>() && strcmp(p.key().c_str(), "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an SIGNAL_SIZE_UL_ULL
+    if (p.value().is<uint64_t>() && strcmp(p.key().c_str(), "rssi") != 0) { //test rssi , bypass solution due to the fact that a int is considered as an uint64_t
       if (strcmp(p.key().c_str(), "value") == 0) { // if data is a value we don't integrate the name into the topic
-        pubMQTT(topic, p.value().as<SIGNAL_SIZE_UL_ULL>());
+        pubMQTT(topic, p.value().as<uint64_t>());
       } else { // if data is not a value we integrate the name into the topic
-        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<SIGNAL_SIZE_UL_ULL>());
+        pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<uint64_t>());
       }
     } else if (p.value().is<int>()) {
       pubMQTT(topic + "/" + String(p.key().c_str()), p.value().as<int>());
@@ -651,12 +642,16 @@ void pubMQTT(const char* topic, const char* payload) {
  * @param retainFlag  true if retain the retain Flag
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
-  if (client.connected()) {
-    SendReceiveIndicatorON();
-    Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
-    client.publish(topic, payload, retainFlag);
+  if (SYSConfig.XtoMQTT) {
+    if (client.connected()) {
+      SendReceiveIndicatorON();
+      Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
+      client.publish(topic, payload, retainFlag);
+    } else {
+      Log.warning(F("Client not connected, aborting the publication" CR));
+    }
   } else {
-    Log.warning(F("Client not connected, aborting the publication" CR));
+    Log.trace(F("[ OMG->MQTT CANCELED] topic: %s msg: %s " CR), topic, payload);
   }
 }
 
@@ -738,6 +733,21 @@ void pubMQTT(String topic, unsigned long payload) {
   pubMQTT(topic.c_str(), val);
 }
 
+/*
+* @brief Convert the spaces of the certificate into new lines
+*/
+std::string processCert(const char* cert) {
+  std::string certStr(cert);
+  size_t pos = 0;
+  while ((pos = certStr.find(' ', pos)) != std::string::npos) {
+    if (pos < 4 || (pos >= 27 && pos <= certStr.length() - 25) || pos >= certStr.length() - 4) {
+      certStr.replace(pos, 1, "\n");
+    }
+    pos++;
+  }
+  return certStr;
+}
+
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   // Is string "<mqtt_topic><gateway_name><toAdd>" equal to "<topicOri>"?
   // Compare first part with first chunk
@@ -772,8 +782,9 @@ void delayWithOTA(long waitMillis) {
 }
 
 void SYSConfig_init() {
+  SYSConfig.XtoMQTT = DEFAULT_XtoMQTT;
 #ifdef ZmqttDiscovery
-  SYSConfig.discovery = true;
+  SYSConfig.discovery = DEFAULT_DISCOVERY;
   SYSConfig.ohdiscovery = OpenHABDiscovery;
 #endif
 #ifdef RGB_INDICATORS
@@ -782,6 +793,7 @@ void SYSConfig_init() {
 }
 
 void SYSConfig_fromJson(JsonObject& SYSdata) {
+  Config_update(SYSdata, "xtomqtt", SYSConfig.XtoMQTT);
 #ifdef ZmqttDiscovery
   Config_update(SYSdata, "disc", SYSConfig.discovery);
   Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
@@ -835,9 +847,9 @@ void connectMQTT() {
   client.setBufferSize(mqtt_max_packet_size);
   client.setSocketTimeout(GeneralTimeOut - 1);
 #if AWS_IOT
-  if (client.connect(gateway_name, mqtt_user, mqtt_pass)) { // AWS doesn't support will topic for the moment
+  if (client.connect(gateway_name, cnt_parameters_array[cnt_index].mqtt_user, cnt_parameters_array[cnt_index].mqtt_pass)) { // AWS doesn't support will topic for the moment
 #else
-  if (client.connect(gateway_name, mqtt_user, mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
+  if (client.connect(gateway_name, cnt_parameters_array[cnt_index].mqtt_user, cnt_parameters_array[cnt_index].mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
 
     displayPrint("MQTT connected");
@@ -864,10 +876,10 @@ void connectMQTT() {
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
     Log.warning(F("failed, rc=%d" CR), client.state());
 #if defined(ESP32)
-    if (mqtt_secure)
+    if (cnt_parameters_array[cnt_index].isConnectionSecure)
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->lastError(nullptr, 0));
 #elif defined(ESP8266)
-    if (mqtt_secure)
+    if (cnt_parameters_array[cnt_index].isConnectionSecure)
       Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
 #endif
     ErrorIndicatorON();
@@ -1111,6 +1123,14 @@ void setup() {
 #endif
   Log.trace(F("OpenMQTTGateway mac: %s" CR), WiFi.macAddress().c_str());
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
+  Log.trace(F("OpenMQTTGateway index %d" CR), cnt_index);
+  Log.trace(F("OpenMQTTGateway mqtt server: %s" CR), cnt_parameters_array[cnt_index].mqtt_server);
+  Log.trace(F("OpenMQTTGateway mqtt port: %s" CR), cnt_parameters_array[cnt_index].mqtt_port);
+  Log.trace(F("OpenMQTTGateway mqtt user: %s" CR), cnt_parameters_array[cnt_index].mqtt_user);
+  Log.trace(F("OpenMQTTGateway mqtt topic: %s" CR), mqtt_topic);
+  Log.trace(F("OpenMQTTGateway gateway name: %s" CR), gateway_name);
+  Log.trace(F("OpenMQTTGateway secure connection: %s" CR), cnt_parameters_array[cnt_index].isConnectionSecure ? "true" : "false");
+  Log.trace(F("OpenMQTTGateway validate cert: %s" CR), cnt_parameters_array[cnt_index].isCertValidate ? "true" : "false");
 
   setOTA();
 
@@ -1119,14 +1139,9 @@ void setup() {
   modules.add(ZwebUI);
 #endif
 
-  if (mqtt_secure) {
+  if (cnt_parameters_array[cnt_index].isConnectionSecure) {
     eClient = new WiFiClientSecure;
-    if (mqtt_cert_validate) {
-      setupTLS(MQTT_SECURE_SELF_SIGNED, mqtt_ss_index);
-    } else {
-      WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
-      sClient->setInsecure();
-    }
+    setupTLS(cnt_index);
   } else {
     eClient = new WiFiClient;
   }
@@ -1136,10 +1151,10 @@ void setup() {
   Log.trace(F("Connecting to MQTT by mDNS without MQTT hostname" CR));
   connectMQTTmdns();
 #else
-  uint16_t port = strtol(mqtt_port, NULL, 10);
+  uint16_t port = strtol(cnt_parameters_array[cnt_index].mqtt_port, NULL, 10);
   Log.trace(F("Port: %l" CR), port);
-  Log.trace(F("Mqtt server: %s" CR), mqtt_server);
-  client.setServer(mqtt_server, port);
+  Log.trace(F("Mqtt server: %s" CR), cnt_parameters_array[cnt_index].mqtt_server);
+  client.setServer(cnt_parameters_array[cnt_index].mqtt_server, port);
 #endif
 
   client.setCallback(callback);
@@ -1398,55 +1413,67 @@ void setOTA() {
   ArduinoOTA.begin();
 }
 
-void setupTLS(bool self_signed, uint8_t index) {
+void setupTLS(int index) {
   configTime(0, 0, NTP_SERVER);
   WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
-#if MQTT_SECURE_SELF_SIGNED
-  if (self_signed) {
-    Log.notice(F("Using self signed cert index %u" CR), index);
-#  if defined(ESP32)
-    sClient->setCACert(certs_array[index].server_cert);
-#    if AWS_IOT
-    if (strcmp(mqtt_port, "443") == 0) {
+  Log.notice(F("cnt index used: %d" CR), index);
+  if (!cnt_parameters_array[index].isCertValidate) {
+    Log.notice(F("Disabling cert validation" CR));
+    sClient->setInsecure();
+  } else {
+    Log.notice(F("Enabling cert validation" CR));
+#if defined(ESP32)
+    if (cnt_parameters_array[index].server_cert.length() > MIN_CERT_LENGTH) {
+      sClient->setCACert(cnt_parameters_array[index].server_cert.c_str());
+      Log.notice(F("Server cert found from cert array" CR));
+    } else if (strlen(ss_server_cert) > MIN_CERT_LENGTH) {
+      sClient->setCACert(ss_server_cert);
+      Log.notice(F("Server cert found from ss_server_cert" CR));
+    } else {
+      Log.error(F("No server cert found" CR));
+    }
+
+#  if AWS_IOT
+    if (strcmp(cnt_parameters_array[index].mqtt_port, "443") == 0) {
+      Log.notice(F("Using ALPN" CR));
       sClient->setAlpnProtocols(alpnProtocols);
     }
-#    endif
-#    if MQTT_SECURE_SELF_SIGNED_CLIENT
-    sClient->setCertificate(certs_array[index].client_cert);
-    sClient->setPrivateKey(certs_array[index].client_key);
-#    endif
-#  elif defined(ESP8266)
-    caCert.append(certs_array[index].server_cert);
+#  endif
+#  if MQTT_SECURE_SIGNED_CLIENT
+    if (cnt_parameters_array[index].client_cert.length() > MIN_CERT_LENGTH) {
+      sClient->setCertificate(cnt_parameters_array[index].client_cert.c_str());
+      Log.notice(F("Client cert found from cert array" CR));
+    } else if (strlen(ss_client_cert) > MIN_CERT_LENGTH) {
+      sClient->setCertificate(ss_client_cert);
+      Log.notice(F("Client cert found from ss_client_cert" CR));
+    } else {
+      Log.error(F("No client cert found" CR));
+    }
+    if (cnt_parameters_array[index].client_key.length() > MIN_CERT_LENGTH) {
+      sClient->setPrivateKey(cnt_parameters_array[index].client_key.c_str());
+      Log.notice(F("Client key found from cert array" CR));
+    } else if (strlen(ss_client_key) > MIN_CERT_LENGTH) {
+      sClient->setPrivateKey(ss_client_key);
+      Log.notice(F("Client key found from ss_client_key" CR));
+    } else {
+      Log.error(F("No client key found" CR));
+    }
+#  endif
+#elif defined(ESP8266)
+    caCert.append(cnt_parameters_array[index].server_cert.c_str());
     sClient->setTrustAnchors(&caCert);
     sClient->setBufferSizes(512, 512);
-#    if MQTT_SECURE_SELF_SIGNED_CLIENT
+#  if MQTT_SECURE_SIGNED_CLIENT
     if (pClCert != nullptr) {
       delete pClCert;
     }
     if (pClKey != nullptr) {
       delete pClKey;
     }
-    pClCert = new X509List(certs_array[index].client_cert);
-    pClKey = new PrivateKey(certs_array[index].client_key);
+    pClCert = new X509List(cnt_parameters_array[index].client_cert.c_str());
+    pClKey = new PrivateKey(cnt_parameters_array[index].client_key.c_str());
     sClient->setClientRSACert(pClCert, pClKey);
-#    endif
 #  endif
-  } else
-#endif
-  {
-    if (mqtt_cert.length() > 0) {
-#if defined(ESP32)
-      sClient->setCACert(mqtt_cert.c_str());
-    } else {
-      sClient->setCACert(certificate);
-    }
-#elif defined(ESP8266)
-      caCert.append(mqtt_cert.c_str());
-    } else {
-      caCert.append(certificate);
-    }
-    sClient->setTrustAnchors(&caCert);
-    sClient->setBufferSizes(512, 512);
 #endif
   }
 }
@@ -1611,18 +1638,81 @@ void checkButton() {}
 #  endif
 
 void saveConfig() {
-  Log.trace(F("saving config" CR));
-  DynamicJsonDocument json(512 + ota_server_cert.length() + mqtt_cert.length());
-  json["mqtt_server"] = mqtt_server;
-  json["mqtt_port"] = mqtt_port;
-  json["mqtt_user"] = mqtt_user;
-  json["mqtt_pass"] = mqtt_pass;
+  Log.trace(F("saving configs" CR));
+  int totalSize = 512;
+
+  for (int i = 0; i < 3; ++i) { // index 0 contains the default values from the build, these values can't be changed at runtime
+    if (cnt_parameters_array[i].validConnection) {
+      totalSize += cnt_parameters_array[i].server_cert.length();
+      totalSize += cnt_parameters_array[i].client_cert.length();
+      totalSize += cnt_parameters_array[i].client_key.length();
+      totalSize += cnt_parameters_array[i].ota_server_cert.length();
+    }
+  }
+
+  Log.notice(F("Total size: %d" CR), totalSize);
+
+  DynamicJsonDocument json(512 + totalSize);
+  for (int i = 0; i < 3; ++i) {
+    if (cnt_parameters_array[i].validConnection) {
+      char index_suffix[2];
+      if (i == 0) {
+        index_suffix[0] = '\0';
+      } else {
+        index_suffix[0] = '0' + i;
+        index_suffix[1] = '\0';
+      }
+      char key[mqtt_key_max_size];
+      if (cnt_parameters_array[i].server_cert.length() > MIN_CERT_LENGTH) {
+        strcpy(key, "mqtt_broker_cert");
+        strcat(key, index_suffix);
+        json[key] = cnt_parameters_array[i].server_cert;
+      }
+      if (cnt_parameters_array[i].client_cert.length() > MIN_CERT_LENGTH) {
+        strcpy(key, "mqtt_client_cert");
+        strcat(key, index_suffix);
+        json[key] = cnt_parameters_array[i].client_cert;
+      }
+      if (cnt_parameters_array[i].client_key.length() > MIN_CERT_LENGTH) {
+        strcpy(key, "mqtt_client_key");
+        strcat(key, index_suffix);
+        json[key] = cnt_parameters_array[i].client_key;
+      }
+      if (cnt_parameters_array[i].ota_server_cert.length() > MIN_CERT_LENGTH) {
+        strcpy(key, "ota_server_cert");
+        strcat(key, index_suffix);
+        json[key] = cnt_parameters_array[i].ota_server_cert;
+      }
+      strcpy(key, "mqtt_server");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].mqtt_server;
+      strcpy(key, "mqtt_port");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].mqtt_port;
+      strcpy(key, "mqtt_user");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].mqtt_user;
+      strcpy(key, "mqtt_pass");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].mqtt_pass;
+      strcpy(key, "mqtt_broker_secure");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].isConnectionSecure;
+      strcpy(key, "mqtt_iscertvalid");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].isCertValidate;
+      strcpy(key, "valid_cnt");
+      strcat(key, index_suffix);
+      json[key] = cnt_parameters_array[i].validConnection;
+    }
+  }
+
+  if (cnt_parameters_array[cnt_index].validConnection) {
+    json["cnt_index"] = cnt_index;
+  }
+
   json["mqtt_topic"] = mqtt_topic;
   json["gateway_name"] = gateway_name;
-  json["mqtt_broker_secure"] = mqtt_secure;
-  json["mqtt_broker_cert"] = mqtt_cert;
-  json["mqtt_ss_index"] = mqtt_ss_index;
-  json["ota_server_cert"] = ota_server_cert;
   json["ota_pass"] = ota_pass;
 
   File configFile = SPIFFS.open("/config.json", "w");
@@ -1659,22 +1749,79 @@ bool loadConfigFromFlash() {
       }
       if (!json.isNull()) {
         Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
-        if (json.containsKey("mqtt_server"))
-          strcpy(mqtt_server, json["mqtt_server"]);
-        if (json.containsKey("mqtt_port"))
-          strcpy(mqtt_port, json["mqtt_port"]);
-        if (json.containsKey("mqtt_user"))
-          strcpy(mqtt_user, json["mqtt_user"]);
-        if (json.containsKey("mqtt_pass"))
-          strcpy(mqtt_pass, json["mqtt_pass"]);
+        // Print json to serial port
+        //serializeJsonPretty(json, Serial);
+
+        for (int i = 0; i < 3; ++i) {
+          char index_suffix[2]; // Large enough for 0, 1, or 2 and the null terminator
+          if (i == 0) {
+            index_suffix[0] = '\0'; // Empty string
+          } else {
+            index_suffix[0] = '0' + i; // Convert int to char
+            index_suffix[1] = '\0'; // Null terminator
+          }
+          char key[mqtt_key_max_size];
+          strcpy(key, "mqtt_broker_cert");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].server_cert = json[key].as<const char*>();
+          }
+          strcpy(key, "mqtt_client_cert");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].client_cert = json[key].as<const char*>();
+          }
+          strcpy(key, "mqtt_client_key");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].client_key = json[key].as<const char*>();
+          }
+          strcpy(key, "ota_server_cert");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].ota_server_cert = json[key].as<const char*>();
+          }
+          strcpy(key, "mqtt_server");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            strcpy(cnt_parameters_array[i].mqtt_server, json[key].as<const char*>());
+          }
+          strcpy(key, "mqtt_port");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            strcpy(cnt_parameters_array[i].mqtt_port, json[key].as<const char*>());
+          }
+          strcpy(key, "mqtt_user");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            strcpy(cnt_parameters_array[i].mqtt_user, json[key].as<const char*>());
+          }
+          strcpy(key, "mqtt_pass");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            strcpy(cnt_parameters_array[i].mqtt_pass, json[key].as<const char*>());
+          }
+          strcpy(key, "mqtt_broker_secure");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].isConnectionSecure = json[key].as<bool>();
+          }
+          strcpy(key, "mqtt_iscertvalid");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].isCertValidate = json[key].as<bool>();
+          }
+          strcpy(key, "valid_cnt");
+          strcat(key, index_suffix);
+          if (json.containsKey(key)) {
+            cnt_parameters_array[i].validConnection = json[key].as<bool>();
+          }
+        }
+        if (json.containsKey("cnt_index")) {
+          cnt_index = json["cnt_index"].as<int>();
+        }
         if (json.containsKey("mqtt_topic"))
           strcpy(mqtt_topic, json["mqtt_topic"]);
-        if (json.containsKey("mqtt_broker_secure"))
-          mqtt_secure = json["mqtt_broker_secure"].as<bool>();
-        if (json.containsKey("mqtt_broker_cert"))
-          mqtt_cert = json["mqtt_broker_cert"].as<const char*>();
-        if (json.containsKey("mqtt_ss_index"))
-          mqtt_ss_index = json["mqtt_ss_index"].as<uint8_t>();
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
         if (json.containsKey("ota_pass")) {
@@ -1689,8 +1836,6 @@ bool loadConfigFromFlash() {
           }
 #  endif
         }
-        if (json.containsKey("ota_server_cert"))
-          ota_server_cert = json["ota_server_cert"].as<const char*>();
         result = true;
       } else {
         Log.warning(F("failed to load json config" CR));
@@ -1720,13 +1865,6 @@ void setupwifi(bool reset_settings) {
   if (reset_settings)
     eraseAndRestart();
 
-#  if defined(ESP32) && defined(USE_BLUFI)
-  if (!wifi_reconnect_bypass()) {
-    startBlufi();
-    return;
-  }
-#  endif
-
 #  ifdef USE_MAC_AS_GATEWAY_NAME
   String s = WiFi.macAddress();
   snprintf(WifiManager_ssid, MAC_NAME_MAX_LEN, "%s_%.2s%.2s", Gateway_Short_Name, s.c_str(), s.c_str() + 3);
@@ -1738,17 +1876,24 @@ void setupwifi(bool reset_settings) {
 
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
-  // id/name placeholder/prompt default length
+  // id/name placeholder/prompt default
+  // Index of connection parameters is 1 for onboarding parameters
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
-  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, parameters_size, " minlength='1' maxlength='64' required");
-  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 6, " minlength='1' maxlength='5' required");
-  WiFiManagerParameter custom_mqtt_user("user", "mqtt user", mqtt_user, parameters_size, " maxlength='64'");
+  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, parameters_size, " minlength='1' maxlength='64' required");
+  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, 6, " minlength='1' maxlength='5' required");
+  WiFiManagerParameter custom_mqtt_user("user", "mqtt user", cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, parameters_size, " maxlength='64'");
   WiFiManagerParameter custom_mqtt_pass("pass", "mqtt pass", MQTT_PASS, parameters_size, " input type='password' maxlength='64'");
   WiFiManagerParameter custom_mqtt_topic("topic", "mqtt base topic", mqtt_topic, mqtt_topic_max_size, " minlength='1' maxlength='64' required");
-  WiFiManagerParameter custom_mqtt_secure("secure", "mqtt secure", "1", 2, mqtt_secure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
-  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt broker cert", mqtt_cert.c_str(), 4096);
   WiFiManagerParameter custom_gateway_name("name", "gateway name", gateway_name, parameters_size, " minlength='1' maxlength='64' required");
   WiFiManagerParameter custom_ota_pass("ota", "gateway password", ota_pass, parameters_size, " input type='password' minlength='8' maxlength='64' required");
+  WiFiManagerParameter custom_mqtt_secure("secure", "<br/>mqtt secure", "1", 2, cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
+  WiFiManagerParameter custom_validate_cert("validate", "<br/>validate cert", "1", 2, cnt_parameters_array[CNT_DEFAULT_INDEX].isCertValidate ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
+  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt server cert", cnt_parameters_array[CNT_DEFAULT_INDEX].server_cert.c_str(), 4096);
+  WiFiManagerParameter custom_ota_server_cert("ota_cert", "<br/>ota server cert", cnt_parameters_array[CNT_DEFAULT_INDEX].ota_server_cert.c_str(), 4096);
+#    if MQTT_SECURE_SIGNED_CLIENT
+  WiFiManagerParameter custom_client_cert("client_cert", "<br/>mqtt client cert", cnt_parameters_array[CNT_DEFAULT_INDEX].client_cert.c_str(), 4096);
+  WiFiManagerParameter custom_client_key("client_key", "<br/>mqtt client key", cnt_parameters_array[CNT_DEFAULT_INDEX].client_key.c_str(), 4096);
+#    endif
 #  endif
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -1780,11 +1925,17 @@ void setupwifi(bool reset_settings) {
   wifiManager.addParameter(&custom_mqtt_port);
   wifiManager.addParameter(&custom_mqtt_user);
   wifiManager.addParameter(&custom_mqtt_pass);
-  wifiManager.addParameter(&custom_mqtt_secure);
-  wifiManager.addParameter(&custom_mqtt_cert);
   wifiManager.addParameter(&custom_gateway_name);
   wifiManager.addParameter(&custom_mqtt_topic);
   wifiManager.addParameter(&custom_ota_pass);
+  wifiManager.addParameter(&custom_ota_server_cert);
+  wifiManager.addParameter(&custom_mqtt_secure);
+  wifiManager.addParameter(&custom_validate_cert);
+  wifiManager.addParameter(&custom_mqtt_cert);
+#    if MQTT_SECURE_SIGNED_CLIENT
+  wifiManager.addParameter(&custom_client_cert);
+  wifiManager.addParameter(&custom_client_key);
+#    endif
 #  endif
   //set minimum quality of signal so it ignores AP's under that quality
   wifiManager.setMinimumSignalQuality(MinimumWifiSignalQuality);
@@ -1803,8 +1954,12 @@ void setupwifi(bool reset_settings) {
   wifiManager.setBreakAfterConfig(true); // If ethernet is used, we don't want to block the connection by keeping the portal up
 #  endif
 
-  if (!wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
+  if (!wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal / Blufi
   {
+
+#  if defined(ESP32) && defined(USE_BLUFI)
+    startBlufi();
+#  endif
 #  ifdef ESP32
     if (lowpowermode < 2) {
       displayPrint("Connect your phone to WIFI AP:", WifiManager_ssid, ota_pass);
@@ -1835,10 +1990,12 @@ void setupwifi(bool reset_settings) {
         esp_wifi_get_config(WIFI_IF_AP, &conf);
         conf.ap.ssid_hidden = 1;
         esp_wifi_set_config(WIFI_IF_AP, &conf);
-#  endif
-
-        //restart and try again
+        if (!blufiConnectAP) {
+          ESPRestart(3); // Restart if not connecting with BLUFI
+        }
+#  else
         ESPRestart(3);
+#  endif
       }
     }
     InfoIndicatorOFF();
@@ -1849,14 +2006,15 @@ void setupwifi(bool reset_settings) {
 
   if (shouldSaveConfig) {
     //read updated parameters
+    cnt_index = 1;
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
-    strcpy(mqtt_server, custom_mqtt_server.getValue());
-    strcpy(mqtt_port, custom_mqtt_port.getValue());
-    strcpy(mqtt_user, custom_mqtt_user.getValue());
+    strcpy(cnt_parameters_array[cnt_index].mqtt_server, custom_mqtt_server.getValue());
+    strcpy(cnt_parameters_array[cnt_index].mqtt_port, custom_mqtt_port.getValue());
+    strcpy(cnt_parameters_array[cnt_index].mqtt_user, custom_mqtt_user.getValue());
     // Check if the MQTT password field contains the default value
     if (strcmp(custom_mqtt_pass.getValue(), MQTT_PASS) != 0) {
       // If it's not the default password, update the MQTT password
-      strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+      strcpy(cnt_parameters_array[cnt_index].mqtt_pass, custom_mqtt_pass.getValue());
     }
     strcpy(mqtt_topic, custom_mqtt_topic.getValue());
     if (mqtt_topic[strlen(mqtt_topic) - 1] != '/' && strlen(mqtt_topic) < parameters_size) {
@@ -1865,26 +2023,16 @@ void setupwifi(bool reset_settings) {
 
     strcpy(gateway_name, custom_gateway_name.getValue());
     strcpy(ota_pass, custom_ota_pass.getValue());
-    mqtt_secure = *custom_mqtt_secure.getValue();
-
-    int cert_len = strlen(custom_mqtt_cert.getValue());
-    if (cert_len) {
-      char* cert_in = (char*)custom_mqtt_cert.getValue();
-      while (*cert_in == ' ' || *cert_in == '\t') {
-        cert_in++;
-      }
-
-      char* cert_begin = cert_in;
-      while (*cert_in != NULL) {
-        if (*cert_in == ' ' && (strncmp((cert_in + 1), "CERTIFICATE", 11) != 0)) {
-          *cert_in = '\n';
-        }
-        cert_in++;
-      }
-
-      mqtt_cert = cert_begin;
-    }
+    cnt_parameters_array[cnt_index].isConnectionSecure = *custom_mqtt_secure.getValue();
+    cnt_parameters_array[cnt_index].isCertValidate = *custom_validate_cert.getValue();
+    cnt_parameters_array[cnt_index].server_cert = processCert(custom_mqtt_cert.getValue());
+    cnt_parameters_array[cnt_index].ota_server_cert = processCert(custom_ota_server_cert.getValue());
+#    if MQTT_SECURE_SIGNED_CLIENT
+    cnt_parameters_array[cnt_index].client_cert = processCert(custom_client_cert.getValue());
+    cnt_parameters_array[cnt_index].client_key = processCert(custom_client_key.getValue());
+#    endif
 #  endif
+
     //save the custom parameters to FS
     saveConfig();
   }
@@ -1969,7 +2117,6 @@ void connectMQTTmdns() {
   }
 }
 #endif
-
 void loop() {
 #ifndef ESPWifiManualSetup
   checkButton(); // check if a reset of wifi/mqtt settings is asked
@@ -2329,11 +2476,13 @@ String stateMeasures() {
   }
 #endif
   SYSdata["freemem"] = freeMem;
-  SYSdata["mqttp"] = mqtt_port;
-  SYSdata["mqtts"] = mqtt_secure;
+  SYSdata["mqttp"] = cnt_parameters_array[cnt_index].mqtt_port;
+  SYSdata["mqtts"] = cnt_parameters_array[cnt_index].isConnectionSecure;
+  SYSdata["mqttv"] = cnt_parameters_array[cnt_index].isCertValidate;
   SYSdata["msgprc"] = queueLengthSum;
   SYSdata["msgblck"] = blockedMessages;
   SYSdata["maxq"] = maxQueueLength;
+  SYSdata["cnt_index"] = cnt_index;
 #ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minmem"] = minFreeMem;
@@ -2410,7 +2559,7 @@ String stateMeasures() {
 /**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
-void storeSignalValue(SIGNAL_SIZE_UL_ULL MQTTvalue) {
+void storeSignalValue(uint64_t MQTTvalue) {
   unsigned long now = millis();
   // find oldest value of the buffer
   int o = getMin();
@@ -2445,7 +2594,7 @@ int getMin() {
 /**
  * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
  */
-bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
+bool isAduplicateSignal(uint64_t value) {
   Log.trace(F("isAdupl?" CR));
   for (int i = 0; i < struct_size; i++) {
     if (receivedSignal[i].value == value) {
@@ -2461,7 +2610,7 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
 #endif
 
 void receivingMQTT(char* topicOri, char* datacallback) {
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  StaticJsonDocument<JSON_MSG_BUFFER_MAX> jsonBuffer;
   JsonObject jsondata = jsonBuffer.to<JsonObject>();
   auto error = deserializeJson(jsonBuffer, datacallback);
   if (error) {
@@ -2471,7 +2620,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation)
   if (strstr(topicOri, subjectMultiGTWKey) != NULL) { // storing received value so as to avoid publishing this value if it has been already sent by this or another OpenMQTTGateway
-    SIGNAL_SIZE_UL_ULL data = jsondata.isNull() ? STRTO_UL_ULL(datacallback, NULL, 10) : jsondata["value"];
+    uint64_t data = jsondata.isNull() ? strtoull(datacallback, NULL, 10) : jsondata["value"];
     if (data != 0 && !isAduplicateSignal(data)) {
       storeSignalValue(data);
     }
@@ -2482,7 +2631,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     // log the received json
     String buffer = "";
     serializeJson(jsondata, buffer);
-    Log.notice(F("[ MQTT->OMG ]: %s" CR), buffer.c_str());
+    //Log.notice(F("[ MQTT->OMG ]: %s" CR), buffer.c_str());
 
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
     MQTTtoPilight(topicOri, jsondata);
@@ -2699,11 +2848,12 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       jsondata["origin"] = subjectRLStoMQTT;
       handleJsonEnqueue(jsondata);
 
-      const char* ota_cert = HttpsFwUpdateData["server_cert"];
-      if (!ota_cert && !strstr(url, "http:")) {
-        if (ota_server_cert.length() > 0) {
-          Log.notice(F("Using stored cert" CR));
-          ota_cert = ota_server_cert.c_str();
+      std::string ota_cert = processCert(HttpsFwUpdateData["ota_server_cert"] | "");
+      Log.notice(F("OTA cert: %s" CR), ota_cert.c_str());
+      if (ota_cert.length() < MIN_CERT_LENGTH && !strstr(url, "http:")) {
+        if (cnt_parameters_array[cnt_index].ota_server_cert.length() > MIN_CERT_LENGTH) {
+          Log.notice(F("Using memory cert" CR));
+          ota_cert = cnt_parameters_array[cnt_index].ota_server_cert.c_str();
         } else {
           Log.notice(F("Using config cert" CR));
           ota_cert = OTAserver_cert;
@@ -2724,7 +2874,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 
       } else {
         WiFiClientSecure update_client;
-        if (mqtt_secure) {
+        if (cnt_parameters_array[cnt_index].isConnectionSecure) {
           client.disconnect();
           update_client = *(WiFiClientSecure*)eClient;
         } else {
@@ -2732,13 +2882,13 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         }
 
 #  ifdef ESP32
-        update_client.setCACert(ota_cert);
+        update_client.setCACert(ota_cert.c_str());
         update_client.setTimeout(12);
         httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
         httpUpdate.rebootOnUpdate(false);
         result = httpUpdate.update(update_client, url);
 #  elif ESP8266
-        caCert.append(ota_cert);
+        caCert.append(ota_cert.c_str());
         update_client.setTrustAnchors(&caCert);
         update_client.setTimeout(12000);
         ESPhttpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -2766,7 +2916,8 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           jsondata["installed_version"] = latestVersion;
           jsondata["origin"] = subjectRLStoMQTT;
           handleJsonEnqueue(jsondata);
-          ota_server_cert = ota_cert;
+          if (cnt_index != 0) // We don't enable the change of cert provided at build time
+            cnt_parameters_array[cnt_index].ota_server_cert = ota_cert;
 #  ifndef ESPWifiManualSetup
           saveConfig();
 #  endif
@@ -2782,6 +2933,59 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
   }
 }
 #endif
+
+#ifdef ESP32
+#  include "mbedtls/sha256.h"
+
+std::string generateHash(const std::string& input) {
+  unsigned char hash[32];
+  mbedtls_sha256((unsigned char*)input.c_str(), input.length(), hash, 0);
+
+  char hashString[65]; // Room for null terminator
+  for (int i = 0; i < 32; ++i) {
+    sprintf(&hashString[i * 2], "%02x", hash[i]);
+  }
+
+  return std::string(hashString);
+}
+#else
+std::string generateHash(const std::string& input) {
+  return "Not implemented for ESP8266";
+}
+#endif
+/**
+ * Read the certificates from the memory and publish a hash of the cert to the broker for identification purposes
+*/
+void readCntParameters(int index) {
+  if (index < 0 || index > 2) {
+    Log.error(F("Invalid cnt index" CR));
+    return;
+  }
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject jsondata = jsonBuffer.to<JsonObject>();
+  jsondata["cnt_index"] = index;
+  jsondata["valid_cnt"] = cnt_parameters_array[index].validConnection;
+  if (cnt_parameters_array[index].server_cert.length() > MIN_CERT_LENGTH) {
+    jsondata["mqtt_server_cert_hash"] = generateHash(cnt_parameters_array[index].server_cert);
+  }
+  if (cnt_parameters_array[index].client_cert.length() > MIN_CERT_LENGTH) {
+    jsondata["mqtt_client_cert_hash"] = generateHash(cnt_parameters_array[index].client_cert);
+  }
+  if (cnt_parameters_array[index].client_key.length() > MIN_CERT_LENGTH) {
+    jsondata["mqtt_client_key_hash"] = generateHash(cnt_parameters_array[index].client_key);
+  }
+  if (cnt_parameters_array[index].ota_server_cert.length() > MIN_CERT_LENGTH) {
+    jsondata["ota_server_cert_hash"] = generateHash(cnt_parameters_array[index].ota_server_cert);
+  }
+  jsondata["mqtt_server"] = cnt_parameters_array[index].mqtt_server;
+  jsondata["mqtt_port"] = cnt_parameters_array[index].mqtt_port;
+  jsondata["mqtt_user"] = cnt_parameters_array[index].mqtt_user;
+  jsondata["mqtt_pass"] = generateHash(cnt_parameters_array[index].mqtt_pass);
+  jsondata["mqtt_secure"] = cnt_parameters_array[index].isConnectionSecure;
+  jsondata["mqtt_validate"] = cnt_parameters_array[index].isCertValidate;
+
+  pub(subjectSYStoMQTT, jsondata);
+}
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
@@ -2823,7 +3027,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       stateMeasures();
     }
 #endif
-    if (SYSdata.containsKey("wifi_ssid") && SYSdata.containsKey("wifi_pass")) {
+    if (SYSdata.containsKey("wifi_ssid") && SYSdata["wifi_ssid"].is<char*>() && SYSdata.containsKey("wifi_pass") && SYSdata["wifi_pass"].is<char*>()) {
 #ifdef ESP32
       ProcessLock = true;
 #  ifdef ZgatewayBT
@@ -2855,7 +3059,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
     bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
 
-    if (SYSdata.containsKey("mqtt_topic") || SYSdata.containsKey("gateway_name") || SYSdata.containsKey("gw_pass")) {
+    if ((SYSdata.containsKey("mqtt_topic") && SYSdata["mqtt_topic"].is<char*>()) ||
+        (SYSdata.containsKey("gateway_name") && SYSdata["gateway_name"].is<char*>()) ||
+        (SYSdata.containsKey("gw_pass") && SYSdata["gw_pass"].is<char*>())) {
       if (SYSdata.containsKey("mqtt_topic")) {
         strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
@@ -2873,100 +3079,153 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 
 #ifdef MQTTsetMQTT
-    if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
-      bool update_server = false;
-      bool secure_connect = SYSdata["mqtt_secure"].as<bool>();
-      void* prev_client = nullptr;
-      bool use_ss_cert = SYSdata.containsKey("mqtt_cert_index");
-      uint8_t cert_index = mqtt_ss_index;
 
-      if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port")) {
-        if (!SYSdata.containsKey("mqtt_secure")) {
-          Log.error(F("mqtt_server provided without mqtt_secure defined - ignoring command" CR));
-          return;
-        }
-#  if MQTT_SECURE_SELF_SIGNED
-        if (use_ss_cert) {
-          cert_index = SYSdata["mqtt_cert_index"].as<uint8_t>();
-          if (cert_index >= sizeof(certs_array) / sizeof(ss_certs)) {
-            Log.error(F("mqtt_cert_index invalid - ignoring command" CR));
-            return;
-          }
-        }
-#  endif
+    bool save_cnt = false;
+    bool read_cnt = false;
+    bool test_cnt = false;
+    if (SYSdata.containsKey("save_cnt") && SYSdata["save_cnt"].is<bool>()) {
+      save_cnt = SYSdata["save_cnt"].as<bool>();
+    }
+    if (SYSdata.containsKey("read_cnt") && SYSdata["read_cnt"].is<bool>()) {
+      read_cnt = SYSdata["read_cnt"].as<bool>();
+    }
+    if (SYSdata.containsKey("test_cnt") && SYSdata["test_cnt"].is<bool>()) {
+      test_cnt = SYSdata["test_cnt"].as<bool>();
+    }
 
-#  ifdef ESP32
-        ProcessLock = true;
-#    ifdef ZgatewayBT
-        stopProcessing();
-#    endif
-#  endif
-        disconnectClient = false;
-        client.disconnect();
-        update_server = true;
-        if (secure_connect != mqtt_secure) {
-          prev_client = eClient;
-          if (!mqtt_secure) {
-            eClient = new WiFiClientSecure;
-          } else {
-            Log.warning(F("Switching to unsecure MQTT broker" CR));
-            eClient = new WiFiClient;
-          }
+    int prev_cnt_index = cnt_index;
+    char prev_mqtt_user[parameters_size];
+    strcpy(prev_mqtt_user, cnt_parameters_array[prev_cnt_index].mqtt_user);
+    char prev_mqtt_pass[parameters_size];
+    strcpy(prev_mqtt_pass, cnt_parameters_array[prev_cnt_index].mqtt_pass);
+    char prev_mqtt_server[parameters_size];
+    strcpy(prev_mqtt_server, cnt_parameters_array[prev_cnt_index].mqtt_server);
+    char prev_mqtt_port[6];
+    strcpy(prev_mqtt_port, cnt_parameters_array[prev_cnt_index].mqtt_port);
+    bool prev_mqtt_secure = cnt_parameters_array[prev_cnt_index].isConnectionSecure;
 
-          client.setClient(*(Client*)eClient);
-        }
+    if (SYSdata.containsKey("cnt_index") && SYSdata["cnt_index"].is<int>()) {
+      if (SYSdata["cnt_index"].as<int>() < 0 || SYSdata["cnt_index"].as<int>() > 2) {
+        Log.error(F("Invalid cnt index provided - ignoring command" CR));
+        return;
+      }
+      cnt_index = SYSdata["cnt_index"].as<int>();
+      Log.notice(F("MQTT cnt index %d" CR), cnt_index);
 
-        if (secure_connect) {
-          setupTLS(use_ss_cert, cert_index);
-        }
-
-        client.setServer(SYSdata["mqtt_server"].as<const char*>(), SYSdata["mqtt_port"].as<unsigned int>());
-      } else {
-#  ifdef ESP32
-        ProcessLock = true;
-#    ifdef ZgatewayBT
-        stopProcessing();
-#    endif
-#  endif
-        disconnectClient = false;
-        client.disconnect();
+      if (SYSdata.containsKey("mqtt_user") && SYSdata["mqtt_user"].is<char*>() && SYSdata.containsKey("mqtt_pass") && SYSdata["mqtt_pass"].is<char*>()) {
+        strcpy(cnt_parameters_array[cnt_index].mqtt_user, SYSdata["mqtt_user"]);
+        strcpy(cnt_parameters_array[cnt_index].mqtt_pass, SYSdata["mqtt_pass"]);
+        cnt_parameters_array[cnt_index].validConnection = false;
       }
 
-      String prev_user = mqtt_user;
-      String prev_pass = mqtt_pass;
-      strcpy(mqtt_user, SYSdata["mqtt_user"]);
-      strcpy(mqtt_pass, SYSdata["mqtt_pass"]);
+      if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port") && SYSdata["mqtt_port"].is<char*>() && SYSdata["mqtt_server"].is<char*>()) {
+        strcpy(cnt_parameters_array[cnt_index].mqtt_server, SYSdata["mqtt_server"]);
+        strcpy(cnt_parameters_array[cnt_index].mqtt_port, SYSdata["mqtt_port"]);
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
 
+      if (SYSdata.containsKey("mqtt_secure") && SYSdata["mqtt_secure"].is<bool>()) {
+        cnt_parameters_array[cnt_index].isConnectionSecure = SYSdata["mqtt_secure"].as<bool>();
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
+
+      if (SYSdata.containsKey("mqtt_validate") && SYSdata["mqtt_validate"].is<bool>()) {
+        cnt_parameters_array[cnt_index].isCertValidate = SYSdata["mqtt_validate"].as<bool>();
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
+
+      // Copy the certs to the memory
+      if (SYSdata.containsKey("mqtt_server_cert") && SYSdata["mqtt_server_cert"].is<char*>()) {
+        cnt_parameters_array[cnt_index].server_cert = processCert(SYSdata["mqtt_server_cert"].as<const char*>());
+        Log.trace(F("Assigning server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].server_cert).c_str());
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
+      if (SYSdata.containsKey("mqtt_client_cert") && SYSdata["mqtt_client_cert"].is<char*>()) {
+        cnt_parameters_array[cnt_index].client_cert = processCert(SYSdata["mqtt_client_cert"].as<const char*>());
+        Log.trace(F("Assigning client cert %s" CR), generateHash(cnt_parameters_array[cnt_index].client_cert).c_str());
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
+      if (SYSdata.containsKey("mqtt_client_key") && SYSdata["mqtt_client_key"].is<char*>()) {
+        cnt_parameters_array[cnt_index].client_key = processCert(SYSdata["mqtt_client_key"].as<const char*>());
+        Log.trace(F("Assigning client key %s" CR), generateHash(cnt_parameters_array[cnt_index].client_key).c_str());
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
+      if (SYSdata.containsKey("ota_server_cert") && SYSdata["ota_server_cert"].is<char*>()) {
+        cnt_parameters_array[cnt_index].ota_server_cert = processCert(SYSdata["ota_server_cert"].as<const char*>());
+        Log.trace(F("Assigning OTA server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].ota_server_cert).c_str());
+      }
+      // Read the memory certs hash to MQTT
+      if (read_cnt)
+        readCntParameters(cnt_index);
+    }
+
+    // Change of mqtt secure connection or certs
+    void* prev_client = nullptr;
+
+    if (save_cnt || test_cnt) {
+      // Stop the processing/disconnect
+#  ifdef ESP32
+      ProcessLock = true;
+#    ifdef ZgatewayBT
+      stopProcessing();
+#    endif
+#  endif
+      client.disconnect();
+
+      prev_client = eClient;
+
+      if (cnt_parameters_array[cnt_index].isConnectionSecure) {
+        Log.notice(F("Connecting to secure MQTT broker" CR));
+        eClient = new WiFiClientSecure;
+      } else {
+        Log.warning(F("Connecting to unsecure MQTT broker" CR));
+        eClient = new WiFiClient;
+      }
+      client.setClient(*(Client*)eClient);
+
+      if (cnt_parameters_array[cnt_index].isConnectionSecure) {
+        setupTLS(cnt_index);
+      }
+    }
+
+    if (save_cnt || (test_cnt && !read_cnt)) {
+      Log.notice(F("Attempting connection to new MQTT broker" CR));
+      client.setServer(cnt_parameters_array[cnt_index].mqtt_server, strtol(cnt_parameters_array[cnt_index].mqtt_port, NULL, 10));
+      // Connect the client
       connectMQTT();
-
+      // If the connection is successful we save the parameters to the flash memory
       if (client.connected()) {
-        if (update_server) {
-          strcpy(mqtt_server, SYSdata["mqtt_server"]);
-          strcpy(mqtt_port, SYSdata["mqtt_port"]);
-          mqtt_ss_index = cert_index;
-          if (prev_client != nullptr) {
-            mqtt_secure = !mqtt_secure;
-            delete prev_client;
-          }
+        Log.notice(F("Connection successful" CR));
+        cnt_parameters_array[cnt_index].validConnection = true;
+        readCntParameters(cnt_index);
+
+        if (prev_client != nullptr) {
+          delete prev_client;
         }
 #  ifndef ESPWifiManualSetup
-        saveConfig();
+        if (save_cnt) // Save the new parameters to the flash
+          saveConfig();
 #  endif
-      } else {
-        if (update_server) {
-          if (prev_client != nullptr) {
-            delete eClient;
-            eClient = prev_client;
-            client.setClient(*(Client*)eClient);
-          }
-          uint16_t port = strtol(mqtt_port, NULL, 10);
-          client.setServer(mqtt_server, port);
+      } else { // Revert to previous settings
+        Log.error(F("Connection failed, reverting to previous settings" CR));
+        cnt_index = prev_cnt_index;
+        if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
+          strcpy(cnt_parameters_array[cnt_index].mqtt_user, prev_mqtt_user);
+          strcpy(cnt_parameters_array[cnt_index].mqtt_pass, prev_mqtt_pass);
         }
-        strcpy(mqtt_user, prev_user.c_str());
-        strcpy(mqtt_pass, prev_pass.c_str());
-        if (mqtt_secure) {
-          setupTLS(MQTT_SECURE_SELF_SIGNED, mqtt_ss_index);
+        if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port")) {
+          client.setServer(prev_mqtt_server, strtol(prev_mqtt_port, NULL, 10));
         }
+        // Revert the change of secure connection
+        if (SYSdata.containsKey("mqtt_secure")) {
+          cnt_parameters_array[cnt_index].isConnectionSecure = prev_mqtt_secure;
+        }
+        if (prev_client != nullptr) {
+          delete eClient;
+          eClient = prev_client;
+          client.setClient(*(Client*)eClient);
+        }
+        // Restest the connection
         connectMQTT();
       }
       restartESP = true;
@@ -2977,7 +3236,10 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       client.disconnect();
     }
 
-#ifdef ZmqttDiscovery
+    if (SYSdata.containsKey("xtomqtt") && SYSdata["xtomqtt"].is<bool>()) {
+      SYSConfig.XtoMQTT = SYSdata["xtomqtt"];
+      Log.notice(F("xtomqtt: %T" CR), SYSConfig.XtoMQTT);
+    }
     if (SYSdata.containsKey("disc")) {
       if (SYSdata["disc"].is<bool>()) {
         if (SYSdata["disc"] == true && SYSConfig.discovery == false)
@@ -2991,15 +3253,16 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
       Log.notice(F("Discovery state: %T" CR), SYSConfig.discovery);
     }
-#  ifdef ESP32
+#ifdef ESP32
     if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject jo = jsonBuffer.to<JsonObject>();
       jo["disc"] = SYSConfig.discovery;
       jo["ohdisc"] = SYSConfig.ohdiscovery;
-#    ifdef RGB_INDICATORS
+      jo["xtomqtt"] = SYSConfig.XtoMQTT;
+#  ifdef RGB_INDICATORS
       jo["rgbb"] = SYSConfig.rgbbrightness;
-#    endif
+#  endif
       // Save config into NVS (non-volatile storage)
       String conf = "";
       serializeJson(jsonBuffer, conf);
@@ -3008,7 +3271,6 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       preferences.end();
       Log.notice(F("SYS Config_save: %s, result: %d" CR), conf.c_str(), result);
     }
-#  endif
 #endif
     if (restartESP) {
       ESPRestart(7);

@@ -147,15 +147,28 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 //MQTT Parameters definition
 #define parameters_size     65
 #define mqtt_topic_max_size 150
-#ifndef mqtt_max_packet_size
-#  ifdef MQTT_HTTPS_FW_UPDATE
-#    ifndef CHECK_OTA_UPDATE
-#      define CHECK_OTA_UPDATE true // enable to check for the presence of a new version for your environment on Github
-#    endif
-#    define mqtt_max_packet_size 2560
-#  else
-#    define mqtt_max_packet_size 1024
+#define mqtt_key_max_size   20
+#ifdef MQTT_HTTPS_FW_UPDATE
+#  ifndef CHECK_OTA_UPDATE
+#    define CHECK_OTA_UPDATE true // enable to check for the presence of a new version for your environment on Github
 #  endif
+#endif
+
+#ifndef JSON_MSG_BUFFER
+#  if defined(ESP32)
+#    define JSON_MSG_BUFFER 816 // adjusted to minimum size covering largest Theengs device JSON properties (RuuviTag_RAWv2)
+#  elif defined(ESP8266)
+#    define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266, certificates handling with ESP8266 is not tested
+#  endif
+#  if MQTT_SECURE_DEFAULT
+#    define JSON_MSG_BUFFER_MAX 2048 // Json message buffer size increased to handle certificate changes through MQTT, used for the queue and the coming MQTT messages
+#  else
+#    define JSON_MSG_BUFFER_MAX JSON_MSG_BUFFER
+#  endif
+#endif
+
+#ifndef mqtt_max_topic_size
+#  define mqtt_max_packet_size JSON_MSG_BUFFER_MAX + mqtt_topic_max_size + 10 // maximum size of the MQTT packet
 #endif
 
 #ifndef MQTT_USER
@@ -181,103 +194,103 @@ const byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0x54, 0x95}; //W5100 ethernet shield
 #  define QueueSemaphoreTimeOutLoop 100 // time out for semaphore retrieval from the loop
 #endif
 
-#if defined(ESP8266) || defined(ESP32)
 // Uncomment to use a device running TheengsGateway to decode BLE data. (https://github.com/theengs/gateway)
 // Set the topic to the subscribe topic configured in the TheengGateway
 // #define MQTTDecodeTopic "MQTTDecode"
 
-// The root ca certificate used for validating the MQTT broker
-// The certificate must be in PEM ascii format
-const char* certificate PROGMEM = R"EOF("
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
-")EOF";
+#define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
+#define ATTEMPTS_BEFORE_B  20 // Number of wifi connection attempts before going to B protocol
 
-#  define ATTEMPTS_BEFORE_BG 10 // Number of wifi connection attempts before going to BG protocol
-#  define ATTEMPTS_BEFORE_B  20 // Number of wifi connection attempts before going to B protocol
+#ifndef NTP_SERVER
+#  define NTP_SERVER "pool.ntp.org"
+#endif
 
-#  ifndef NTP_SERVER
-#    define NTP_SERVER "pool.ntp.org"
-#  endif
+#ifndef MQTT_SECURE_DEFAULT
+#  define MQTT_SECURE_DEFAULT false
+#endif
 
-#  ifndef MQTT_SECURE_DEFAULT
-#    define MQTT_SECURE_DEFAULT false
-#  endif
+#ifndef MQTT_CERT_VALIDATE_DEFAULT
+#  define MQTT_CERT_VALIDATE_DEFAULT false
+#endif
 
-#  ifndef MQTT_CERT_VALIDATE_DEFAULT
-#    define MQTT_CERT_VALIDATE_DEFAULT false
-#  endif
+#ifndef AWS_IOT
+#  define AWS_IOT false
+#endif
 
-#  ifndef AWS_IOT
-#    define AWS_IOT false
-#  endif
-
-#  if AWS_IOT
+#if AWS_IOT
 // Enable the use of ALPN for AWS IoT Core with the port 443
 const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
-#  endif
+#endif
 
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.
 
-#  ifdef MQTT_HTTPS_FW_UPDATE
+#ifdef MQTT_HTTPS_FW_UPDATE
 // If used, this should be set to the root CA certificate of the server hosting the firmware.
-#    ifdef PRIVATE_CERTS
-#      include "certs/private_ota_cert.h"
-#    else
-#      include "certs/default_ota_cert.h"
-#    endif
-
-#    ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
-#      define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
-#    endif
-#    if DEVELOPMENTOTA
-#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
-#    else
-#      define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/firmware_build/latest_version.json" //OTA url used to discover new versions of the firmware
-#    endif
-#    define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
-#    define RELEASE_LINK_DEV "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/"
-#    define RELEASE_LINK     "https://github.com/1technophile/OpenMQTTGateway/releases/download/"
+#  ifdef PRIVATE_CERTS
+#    include "certs/private_ota_cert.h"
+#  else
+#    include "certs/default_ota_cert.h"
 #  endif
 
-#  ifndef MQTT_SECURE_SELF_SIGNED
-#    define MQTT_SECURE_SELF_SIGNED 0
+#  ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
+#    define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #  endif
-
-#  ifndef MQTT_SECURE_SELF_SIGNED_CLIENT
-#    define MQTT_SECURE_SELF_SIGNED_CLIENT 1 // If using a self signed certificate for the broker and not using client certificates set this to false or 0
+#  if DEVELOPMENTOTA
+#    define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
+#  else
+#    define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/firmware_build/latest_version.json" //OTA url used to discover new versions of the firmware
 #  endif
+#  define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
+#  define RELEASE_LINK_DEV "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/"
+#  define RELEASE_LINK     "https://github.com/1technophile/OpenMQTTGateway/releases/download/"
+#else
+const char* OTAserver_cert = "";
+#endif
 
-#  ifndef MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT
-#    define MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT 0
-#  endif
+#ifndef MQTT_SECURE_SIGNED_CLIENT
+#  define MQTT_SECURE_SIGNED_CLIENT 0 // If using a signed certificate for the broker and using client certificate/key set this to true or 1
+#endif
 
-#  if MQTT_SECURE_SELF_SIGNED
-#    ifdef PRIVATE_CERTS
-#      include "certs/private_client_cert.h"
-#      include "certs/private_client_key.h"
-#      include "certs/private_server_cert.h"
-#    else
-#      include "certs/default_client_cert.h"
-#      include "certs/default_client_key.h"
-#      include "certs/default_server_cert.h"
-#    endif
+#ifndef CNT_DEFAULT_INDEX
+#  define CNT_DEFAULT_INDEX 0 // Default set of connection parameters
+#endif
 
-struct ss_certs {
-  const char* server_cert;
-  const char* client_cert;
-  const char* client_key;
+#ifdef PRIVATE_CERTS
+#  include "certs/private_client_cert.h"
+#  include "certs/private_client_key.h"
+#  include "certs/private_server_cert.h"
+#else
+#  include "certs/default_client_cert.h"
+#  include "certs/default_client_key.h"
+#  include "certs/default_server_cert.h"
+#endif
+
+#include <string>
+
+struct ss_cnt_parameters {
+  std::string server_cert;
+  std::string client_cert;
+  std::string client_key;
+  std::string ota_server_cert;
+  char mqtt_server[parameters_size];
+  char mqtt_port[6];
+  char mqtt_user[parameters_size];
+  char mqtt_pass[parameters_size];
+  bool isConnectionSecure;
+  bool isCertValidate;
+  bool validConnection;
 };
 
-struct ss_certs certs_array[2] = {
-    {ss_server_cert, ss_client_cert, ss_client_key},
-    {ss_server_cert, ss_client_cert, ss_client_key}};
+// Index 0 is used for connection parameters provided in the build that can be overloaded by WiFi Manager/Onboarding/WebUI,MQTT
+#define CNT_DEFAULT_INDEX 0
+// Index 1 and more are used for connection parameters provided at runtime by MQTT
 
-static_assert(MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT < (sizeof(certs_array) / sizeof(ss_certs)),
-              "Invalid MQTT self signed default index");
-#  endif
-#endif
+ss_cnt_parameters cnt_parameters_array[3] = {
+    {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, true},
+    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
+    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
+
+#define MIN_CERT_LENGTH 200 // Minimum length of a certificate to be considered valid
 
 /**
  * Deep-sleep for the ESP8266.
@@ -655,16 +668,6 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  define valueAsATopic false // define true to integrate msg value into the subject when receiving
 #endif
 
-#if defined(ESP32)
-#  define JSON_MSG_BUFFER    816 // adjusted to minimum size covering largest Theengs device JSON properties (RuuviTag_RAWv2)
-#  define SIGNAL_SIZE_UL_ULL uint64_t
-#  define STRTO_UL_ULL       strtoull
-#elif defined(ESP8266)
-#  define JSON_MSG_BUFFER    512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266
-#  define SIGNAL_SIZE_UL_ULL uint64_t
-#  define STRTO_UL_ULL       strtoull
-#endif
-
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 // variable to avoid duplicates
 #  ifndef time_avoid_duplicate
@@ -715,9 +718,6 @@ char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
 
 void connectMQTT();
-#ifndef ESPWifiManualSetup
-void saveConfig();
-#endif
 
 unsigned long uptime();
 bool cmpToMainTopic(const char*, const char*);
@@ -731,40 +731,43 @@ void pub(const char*, const char*);
 Preferences preferences;
 #endif
 
-#ifdef ZmqttDiscovery
 unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
+#ifndef DEFAULT_DISCOVERY
+#  define DEFAULT_DISCOVERY true
 #endif
 
-#if defined(ESP8266) || defined(ESP32)
-#  include <vector>
+#include <vector>
 // Flags definition for white list, black list, discovery management
-#  define device_flags_init     0 << 0
-#  define device_flags_isDisc   1 << 0
-#  define device_flags_isWhiteL 1 << 1
-#  define device_flags_isBlackL 1 << 2
-#  define device_flags_connect  1 << 3
-#  define isWhite(device)       device->isWhtL
-#  define isBlack(device)       device->isBlkL
-#  define isDiscovered(device)  device->isDisc
+#define device_flags_init     0 << 0
+#define device_flags_isDisc   1 << 0
+#define device_flags_isWhiteL 1 << 1
+#define device_flags_isBlackL 1 << 2
+#define device_flags_connect  1 << 3
+#define isWhite(device)       device->isWhtL
+#define isBlack(device)       device->isBlkL
+#define isDiscovered(device)  device->isDisc
 
 /*--------------------Minimum freeHeap--------------------*/
 // Below this parameter we trigger a restart, this avoid stuck boards like seen in https://github.com/1technophile/OpenMQTTGateway/issues/1693
-#  define MinimumMemory 40000
+#define MinimumMemory 40000
 
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct SYSConfig_s {
+  bool XtoMQTT; // if true the gateway will publish the received data on the MQTT broker
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
-#  ifdef RGB_INDICATORS
+#ifdef RGB_INDICATORS
   int rgbbrightness; // brightness of the RGB LED
-#  endif
+#endif
 };
 
+#ifndef DEFAULT_XtoMQTT
+#  define DEFAULT_XtoMQTT true
 #endif
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
-bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL);
-void storeSignalValue(SIGNAL_SIZE_UL_ULL);
+bool isAduplicateSignal(uint64_t);
+void storeSignalValue(uint64_t);
 #endif
 
 // Origin topics
