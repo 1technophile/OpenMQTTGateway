@@ -886,7 +886,26 @@ void connectMQTT() {
     delayWithOTA(5000);
     ErrorIndicatorOFF();
     delayWithOTA(5000);
+
+    // If we have failed to connect to the MQTT broker, we will try to connect to the next set of connection parameters
     if (failure_number_mqtt > maxRetryWatchDog) {
+#ifndef ESPWifiManualSetup
+      // Look for the next valid connection
+      for (int i = 0; i < cnt_parameters_array_size; i++) {
+        cnt_index++;
+        if (cnt_index >= cnt_parameters_array_size) {
+          cnt_index = 0;
+        }
+        if (cnt_parameters_array[cnt_index].validConnection) {
+          Log.notice(F("Connection %d valid, switching" CR), cnt_index);
+          saveConfig();
+          break;
+        } else {
+          Log.notice(F("Connection %d not valid" CR), cnt_index);
+        }
+      }
+#endif
+
       unsigned long millis_since_last_ota;
       while (
           // When

@@ -284,8 +284,9 @@ struct ss_cnt_parameters {
 // Index 0 is used for connection parameters provided in the build that can be overloaded by WiFi Manager/Onboarding/WebUI,MQTT
 #define CNT_DEFAULT_INDEX 0
 // Index 1 and more are used for connection parameters provided at runtime by MQTT
+#define cnt_parameters_array_size 3
 
-ss_cnt_parameters cnt_parameters_array[3] = {
+ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
     {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, true},
     {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
     {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
