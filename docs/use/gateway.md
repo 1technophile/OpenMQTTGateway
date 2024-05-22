@@ -140,6 +140,10 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
  }'
  ```
 
+::: tip
+If the client can't connect to the MQTT broker corresponding to the current `cnt_index`, it will increment the index to the next valid connection set and restart with it.
+:::
+
 ## Saving/Loading connection parameters/certificates at runtime
 This chapter details the process for managing certificates/connections parameters used for secure MQTT communication with OpenMQTTGateway
 
