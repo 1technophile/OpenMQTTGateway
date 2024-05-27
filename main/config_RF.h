@@ -80,7 +80,7 @@ struct RTL_433device {
   bool isDisc;
 };
 
-const char parameters[50][4][24] = {
+const char parameters[53][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"temperature_C", "temperature", "°C", "temperature"},
     {"temperature_1_C", "temperature", "°C", "temperature"},
@@ -98,6 +98,7 @@ const char parameters[50][4][24] = {
     {"wind_avg_mi_h", "wind average", "mi/h", "wind_speed"},
     {"wind_avg_m_s", "wind average", "m/s", "wind_speed"},
     {"wind_speed_m_s", "wind speed", "m/s", "wind_speed"},
+    {"group", "Group", "", ""},
     {"gust_speed_km_h", "gust speed", "km/h", "wind_speed"},
     {"wind_max_km_h", "wind max", "km/h", "wind_speed"},
     {"wind_max_m_s", "wind max", "m/s", "wind_speed"},
@@ -116,11 +117,13 @@ const char parameters[50][4][24] = {
     {"lux", "lux", "lx", "illuminance"},
     {"uvi", "UVI", "UV index", ""},
     {"uv", "UV", "UV level", ""},
+    {"state", "State", "", ""},
     {"storm_dist", "storm distance", "mi", "distance"},
     {"storm_dist_km", "storm distance", "km", "distance"},
     {"strike_count", "strike count", "", ""}, // from rtl_433_mqtt_hass.py
     {"strike_distance", "strike distance", "mi", "distance"},
     {"strike_distance_km", "strike distance", "km", "distance"},
+    {"unit", "Unit", "", ""},
     {"co2_ppm", "Carbon Dioxide", "ppm", "carbon_dioxide"},
     {"pm2_5_ug_m3", "PM2.5", "μg/m³", "pm25"},
     {"pm10_ug_m3", "PM10", "μg/m³", "pm10"},
