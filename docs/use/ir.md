@@ -107,12 +107,10 @@ In this case the best way is to use hex values instead, but if you can't you may
 In User_config.h replace:
 ```cpp
 # define JSON_MSG_BUFFER 512
-# define mqtt_max_packet_size 1024
 ```
 by
 ```cpp
 # define JSON_MSG_BUFFER 1280
-# define mqtt_max_packet_size 1280
 ```
 
 ## Repeat the IR signal OpenMQTTGateway receive

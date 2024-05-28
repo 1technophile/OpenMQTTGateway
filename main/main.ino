@@ -77,7 +77,9 @@ bool ready_to_sleep = false;
 
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
-#include <PubSubClient.h>
+#include <PicoMQTT.h>
+
+#include <memory>
 
 struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
@@ -221,9 +223,6 @@ struct GfSun2000Data {};
 
 void setupTLS(int index = CNT_DEFAULT_INDEX);
 
-//adding this to bypass the problem of the arduino builder issue 50
-void callback(char* topic, byte* payload, unsigned int length);
-
 char ota_pass[parameters_size] = gw_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
@@ -238,12 +237,12 @@ int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 
 unsigned long timer_led_measures = 0;
-static void* eClient = nullptr;
 static unsigned long last_ota_activity_millis = 0;
 // Global struct to store live SYS configuration data
 SYSConfig_s SYSConfig;
 
 bool failSafeMode = false;
+static bool mqttSetupPending = true;
 static int cnt_index = CNT_DEFAULT_INDEX;
 
 #ifdef ESP32
@@ -300,8 +299,8 @@ ESP8266WiFiMulti wifiMulti;
 #  include <Ethernet.h>
 #endif
 
-// client link to pubsub MQTT
-PubSubClient client;
+std::unique_ptr<::Client> eClient;
+std::unique_ptr<PicoMQTT::Client> mqtt;
 
 template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
 void Config_update(JsonObject& data, const char* key, T& var);
@@ -661,12 +660,12 @@ void pubMQTT(const char* topic, const char* payload) {
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (SYSConfig.XtoMQTT) {
-    if (client.connected()) {
+    if (mqtt->connected()) {
       SendReceiveIndicatorON();
       Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
-      client.publish(topic, payload, retainFlag);
+      mqtt->publish(topic, payload, 0, retainFlag);
     } else {
-      Log.warning(F("Client not connected, aborting the publication" CR));
+      Log.warning(F("MQTT not connected, aborting the publication" CR));
     }
   } else {
     Log.notice(F("[ OMG->MQTT CANCELED] topic: %s msg: %s " CR), topic, payload);
@@ -848,49 +847,117 @@ void SYSConfig_load() {
 void SYSConfig_load() {}
 #endif
 
-#if AWS_IOT
-// Global variables to track reconnections
-unsigned long reconnection_count = 0;
-unsigned long start_reconnection_window_millis = 0;
-// Define a threshold for instability detection
-const unsigned long reconnection_window_millis = 120000;
-const unsigned int reconnection_threshold = 5; // Consider unstable if more than 5 reconnections in 2 minutes
+#if defined(MDNS_SD)
+std::pair<String, uint16_t> discoverMQTTbroker() {
+  Log.trace(F("Browsing for MQTT service" CR));
+  int n = MDNS.queryService("mqtt", "tcp");
+  if (n == 0) {
+    Log.error(F("no services found" CR));
+  } else {
+    Log.trace(F("%d service(s) found" CR), n);
+    for (int i = 0; i < n; ++i) {
+      Log.trace(F("Service %d %s found" CR), i, MDNS.hostname(i).c_str());
+      Log.trace(F("IP %s Port %d" CR), MDNS.IP(i).toString().c_str(), MDNS.port(i));
+    }
+    if (n == 1) {
+      Log.trace(F("One MQTT server found setting parameters" CR));
+      return {MDNS.IP(0).toString(), uint16_t(MDNS.port(0))};
+    } else {
+      Log.error(F("Several MQTT servers found, please deactivate mDNS and set your default server" CR));
+    }
+  }
+  return {"", 0};
+}
 #endif
 
-void connectMQTT() {
-#ifndef ESPWifiManualSetup
-  checkButton(); // check if a reset of wifi/mqtt settings is asked
-#endif
+struct ss_cnt_parameters_backup {
+  ss_cnt_parameters parameters;
+  int cnt_index;
+  bool saveOnSuccess;
+};
 
-  Log.warning(F("MQTT connection..." CR));
-#ifdef ESP32
-  //esp_task_wdt_add(NULL);
-  //esp_task_wdt_reset();
-#endif
-  char topic[mqtt_topic_max_size];
-  strcpy(topic, mqtt_topic);
-  strcat(topic, gateway_name);
-  strcat(topic, will_Topic);
-  client.setBufferSize(mqtt_max_packet_size);
-  client.setSocketTimeout(GeneralTimeOut - 1);
-#if AWS_IOT
-  if (client.connect(gateway_name, cnt_parameters_array[cnt_index].mqtt_user, cnt_parameters_array[cnt_index].mqtt_pass)) { // AWS doesn't support will topic for the moment
-    unsigned long current_millis = millis();
-    if (start_reconnection_window_millis == 0 || current_millis - start_reconnection_window_millis > reconnection_window_millis) {
-      // Reset the count and timestamp at the start of a new window
-      reconnection_count = 0;
-      start_reconnection_window_millis = current_millis;
+static std::unique_ptr<ss_cnt_parameters_backup> cnt_parameters_backup;
+
+void setupMQTT() {
+  Log.notice(F("Reconfiguring MQTT client..." CR));
+
+  const auto& parameters = cnt_parameters_array[cnt_index];
+
+  // free the old MQTT client and underlying connection
+  mqtt.reset();
+  eClient.reset();
+  failure_number_mqtt = 0;
+
+  // configure socket
+  if (parameters.isConnectionSecure) {
+    eClient.reset(new WiFiClientSecure);
+    if (parameters.isCertValidate) {
+      setupTLS(cnt_index);
+    } else {
+      static_cast<WiFiClientSecure*>(eClient.get())->setInsecure();
     }
-    reconnection_count++; // Increment reconnection count
-    Log.trace(F("MQTT connection count: %d" CR), reconnection_count);
-    if (reconnection_count > reconnection_threshold && SYSConfig.XtoMQTT) {
-      // Detected instability in MQTT connection
-      Log.warning(F("MQTT connection instability detected: %d reconnections in the last %d seconds" CR), reconnection_count, reconnection_window_millis / 1000);
-      // Stop xtoMQTT to see if it helps and still enables to receive data
-      SYSConfig.XtoMQTT = false;
-    }
+  } else {
+    eClient.reset(new WiFiClient);
+  }
+
+#if defined(MDNS_SD)
+  Log.trace(F("Connecting to MQTT by mDNS without MQTT hostname" CR));
+  const auto discovered_broker = discoverMQTTbroker();
+  const auto broker_host = discovered_broker.first.c_str();
+  const auto broker_port = discovered_broker.second;
 #else
-  if (client.connect(gateway_name, cnt_parameters_array[cnt_index].mqtt_user, cnt_parameters_array[cnt_index].mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
+  const auto broker_host = parameters.mqtt_server;
+  const auto broker_port = String(parameters.mqtt_port).toInt();
+#endif
+
+  Log.trace(F("Mqtt server: %s" CR), broker_host);
+  Log.trace(F("Port: %u" CR), broker_port);
+
+  mqtt.reset(new PicoMQTT::Client(*eClient, broker_host, broker_port, gateway_name,
+                                  parameters.mqtt_user, parameters.mqtt_pass,
+                                  0, // minimum reconnect attempt interval [ms]
+                                  60 * 1000, // keep alive interval [ms]
+                                  (GeneralTimeOut - 1) * 1000 // socket timeout [ms]
+                                  ));
+
+#if AWS_IOT
+  // AWS doesn't support will topic for the moment
+  mqtt->will.topic = "";
+  mqtt->will.payload = "";
+  mqtt->will.qos = 0;
+  mqtt->will.retain = false;
+#else
+  mqtt->will.topic = String(mqtt_topic) + gateway_name + will_Topic;
+  mqtt->will.payload = will_Message;
+  mqtt->will.qos = will_QoS;
+  mqtt->will.retain = will_Retain;
+#endif
+
+  mqtt->connected_callback = [] {
+#if AWS_IOT
+    {
+      // Define a threshold for instability detection
+      constexpr unsigned int reconnection_threshold = 5;
+      constexpr unsigned long reconnection_window_millis = 120000; // Consider unstable if more than 5 reconnections in 2 minutes
+
+      static unsigned int reconnection_count = 0;
+      static unsigned long start_reconnection_window_millis = 0;
+
+      const unsigned long current_millis = millis();
+      if (start_reconnection_window_millis == 0 || current_millis - start_reconnection_window_millis > reconnection_window_millis) {
+        // Reset the count and timestamp at the start of a new window
+        reconnection_count = 0;
+        start_reconnection_window_millis = current_millis;
+      }
+      reconnection_count++; // Increment reconnection count
+      Log.trace(F("MQTT connection count: %d" CR), reconnection_count);
+      if (reconnection_count > reconnection_threshold && SYSConfig.XtoMQTT) {
+        // Detected instability in MQTT connection
+        Log.warning(F("MQTT connection instability detected: %d reconnections in the last %d seconds" CR), reconnection_count, reconnection_window_millis / 1000);
+        // Stop xtoMQTT to see if it helps and still enables to receive data
+        SYSConfig.XtoMQTT = false;
+      }
+    }
 #endif
 
     displayPrint("MQTT connected");
@@ -898,37 +965,58 @@ void connectMQTT() {
     failure_number_mqtt = 0;
     // Once connected, publish an announcement...
     pub(will_Topic, Gateway_AnnouncementMsg, will_Retain);
-    //Subscribing to topic
-    char topic2[mqtt_topic_max_size];
-    strcpy(topic2, mqtt_topic);
-    strcat(topic2, gateway_name);
-    strcat(topic2, subjectMQTTtoX);
-    if (client.subscribe(topic2)) {
-#ifdef ZgatewayRF
-      client.subscribe(subjectMultiGTWRF); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
+
+    if (cnt_parameters_backup) {
+      // this was the first attempt to connect to a new server and it succeeded
+      Log.notice(F("MQTT connection successful" CR));
+      cnt_parameters_array[cnt_index].validConnection = true;
+      readCntParameters(cnt_index);
+
+#ifndef ESPWifiManualSetup
+      if (cnt_parameters_backup->saveOnSuccess) // Save the new parameters to the flash
+        saveConfig();
 #endif
-#ifdef ZgatewayIR
-      client.subscribe(subjectMultiGTWIR); // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
-#endif
-      Log.trace(F("Subscription OK to the subjects %s" CR), topic2);
+
+      cnt_parameters_backup.reset();
+      ESPRestart(7);
     }
-  } else {
+  };
+
+  mqtt->connection_failure_callback = [] {
+    if (WiFi.status() != WL_CONNECTED) {
+      // No WiFi connection, MQTT couldn't connect, ignore this failure
+      return;
+    }
     failure_number_mqtt++; // we count the failure
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
-    Log.warning(F("failed, rc=%d" CR), client.state());
+
+    const auto& parameters = cnt_parameters_array[cnt_index];
+
+    if (parameters.isConnectionSecure) {
+      WiFiClientSecure* client = static_cast<WiFiClientSecure*>(eClient.get());
 #if defined(ESP32)
-    if (cnt_parameters_array[cnt_index].isConnectionSecure)
-      Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->lastError(nullptr, 0));
+      Log.warning(F("failed, ssl error code=%d" CR), client->lastError(nullptr, 0));
 #elif defined(ESP8266)
-    if (cnt_parameters_array[cnt_index].isConnectionSecure)
-      Log.warning(F("failed, ssl error code=%d" CR), ((WiFiClientSecure*)eClient)->getLastSSLError());
+      Log.warning(F("failed, ssl error code=%d" CR), client->getLastSSLError());
 #endif
+    }
+
+    if (cnt_parameters_backup) {
+      // this was the first attempt to connect to a new server and it failed, revert to old settings
+      Log.error(F("MQTT connection failed, reverting to previous settings" CR));
+      cnt_parameters_array[cnt_index] = cnt_parameters_backup->parameters;
+      cnt_index = cnt_parameters_backup->cnt_index;
+      mqttSetupPending = true;
+      cnt_parameters_backup.reset();
+      ESPRestart(7);
+      return;
+    }
+
     ErrorIndicatorON();
     delayWithOTA(5000);
     ErrorIndicatorOFF();
     delayWithOTA(5000);
 
-    // If we have failed to connect to the MQTT broker, we will try to connect to the next set of connection parameters
     if (failure_number_mqtt > maxRetryWatchDog) {
 #ifndef ESPWifiManualSetup
       // Look for the next valid connection
@@ -946,7 +1034,6 @@ void connectMQTT() {
         }
       }
 #endif
-
       unsigned long millis_since_last_ota;
       while (
           // When
@@ -962,29 +1049,21 @@ void connectMQTT() {
       }
       ESPRestart(1);
     }
-  }
-}
+  };
 
-// Callback function, when the gateway receive an MQTT value on the topics subscribed this function is called
-void callback(char* topic, byte* payload, unsigned int length) {
-  // In order to republish this payload, a copy must be made
-  // as the original payload buffer will be overwritten whilst
-  // constructing the PUBLISH packet.
-  Log.trace(F("Hey I got a callback %s" CR), topic);
-  // Allocate the correct amount of memory for the payload copy
-  byte* p = (byte*)malloc(length + 1);
-  // Copy the payload to the new buffer
-  memcpy(p, payload, length);
-  // Conversion to a printable string
-  p[length] = '\0';
-  //launch the function to treat received data if this data concern OpenMQTTGateway
-  if ((strstr(topic, subjectMultiGTWKey) != NULL) ||
-      (strstr(topic, subjectGTWSendKey) != NULL) ||
-      (strstr(topic, subjectMQTTtoSYSupdate) != NULL))
-    receivingMQTT(topic, (char*)p);
+  mqtt->subscribe(String(mqtt_topic) + gateway_name + subjectMQTTtoX, receivingMQTT, mqtt_max_payload_size);
 
-  // Free the memory
-  free(p);
+#ifdef ZgatewayRF
+  // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
+  mqtt->subscribe(subjectMultiGTWRF, receivingMQTT, mqtt_max_payload_size);
+#endif
+
+#ifdef ZgatewayIR
+  // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
+  mqtt->subscribe(subjectMultiGTWIR, receivingMQTT, mqtt_max_payload_size);
+#endif
+
+  mqtt->begin();
 }
 
 #if defined(ESP32) && (defined(WifiGMode) || defined(WifiPower))
@@ -1205,26 +1284,6 @@ void setup() {
   modules.add(ZwebUI);
 #endif
 
-  if (cnt_parameters_array[cnt_index].isConnectionSecure) {
-    eClient = new WiFiClientSecure;
-    setupTLS(cnt_index);
-  } else {
-    eClient = new WiFiClient;
-  }
-  client.setClient(*(Client*)eClient);
-
-#if defined(MDNS_SD)
-  Log.trace(F("Connecting to MQTT by mDNS without MQTT hostname" CR));
-  connectMQTTmdns();
-#else
-  uint16_t port = strtol(cnt_parameters_array[cnt_index].mqtt_port, NULL, 10);
-  Log.trace(F("Port: %l" CR), port);
-  Log.trace(F("Mqtt server: %s" CR), cnt_parameters_array[cnt_index].mqtt_server);
-  client.setServer(cnt_parameters_array[cnt_index].mqtt_server, port);
-#endif
-
-  client.setCallback(callback);
-
   delay(1500);
 #if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
   setupCommonRF();
@@ -1382,7 +1441,7 @@ void setup() {
   setupRTL_433();
   modules.add(ZgatewayRTL_433);
 #endif
-  Log.trace(F("mqtt_max_packet_size: %d" CR), mqtt_max_packet_size);
+  Log.trace(F("mqtt_max_payload_size: %d" CR), mqtt_max_payload_size);
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -1481,7 +1540,7 @@ void setOTA() {
 
 void setupTLS(int index) {
   configTime(0, 0, NTP_SERVER);
-  WiFiClientSecure* sClient = (WiFiClientSecure*)eClient;
+  WiFiClientSecure* sClient = static_cast<WiFiClientSecure*>(eClient.get());
   Log.notice(F("cnt index used: %d" CR), index);
   if (!cnt_parameters_array[index].isCertValidate) {
     Log.notice(F("Disabling cert validation" CR));
@@ -2195,27 +2254,6 @@ void WiFiEvent(WiFiEvent_t event) {
 #  endif
 #endif
 
-#if defined(MDNS_SD)
-void connectMQTTmdns() {
-  Log.trace(F("Browsing for MQTT service" CR));
-  int n = MDNS.queryService("mqtt", "tcp");
-  if (n == 0) {
-    Log.error(F("no services found" CR));
-  } else {
-    Log.trace(F("%d service(s) found" CR), n);
-    for (int i = 0; i < n; ++i) {
-      Log.trace(F("Service %d %s found" CR), i, MDNS.hostname(i).c_str());
-      Log.trace(F("IP %s Port %d" CR), MDNS.IP(i).toString().c_str(), MDNS.port(i));
-    }
-    if (n == 1) {
-      Log.trace(F("One MQTT server found setting parameters" CR));
-      client.setServer(MDNS.IP(0), int(MDNS.port(0)));
-    } else {
-      Log.error(F("Several MQTT servers found, please deactivate mDNS and set your default server" CR));
-    }
-  }
-}
-#endif
 void loop() {
 #ifndef ESPWifiManualSetup
   checkButton(); // check if a reset of wifi/mqtt settings is asked
@@ -2224,6 +2262,11 @@ void loop() {
 #ifdef ESP32
   //esp_task_wdt_reset();
 #endif
+
+  if (mqttSetupPending) {
+    setupMQTT();
+    mqttSetupPending = false;
+  }
 
   unsigned long now = millis();
 
@@ -2243,11 +2286,12 @@ void loop() {
 #if defined(ZwebUI) && defined(ESP32)
     WebUILoop();
 #endif
-    if (client.loop()) { // MQTT client is still connected
+    mqtt->loop();
+    if (mqtt->connected()) { // MQTT client is still connected
       InfoIndicatorON();
       failure_number_ntwk = 0;
       // We have just re-connected if connected was previously false
-      bool justReconnected = !connected;
+      const bool justReconnected = !connected;
 #ifdef ZmqttDiscovery
       // Deactivate autodiscovery after DiscoveryAutoOffTimer.
       // Exception: when discovery_republish_on_reconnect is enabled, we never never automatically disable discovery
@@ -2419,7 +2463,6 @@ void loop() {
     } else {
       // MQTT disconnected
       connected = false;
-      connectMQTT();
     }
   } else { // disconnected from network
 #ifdef ESP32
@@ -2984,8 +3027,9 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       } else {
         WiFiClientSecure update_client;
         if (cnt_parameters_array[cnt_index].isConnectionSecure) {
-          client.disconnect();
-          update_client = *(WiFiClientSecure*)eClient;
+          mqtt.reset();
+          mqttSetupPending = true;
+          update_client = *static_cast<WiFiClientSecure*>(eClient.get());
         } else {
           syncNTP();
         }
@@ -3126,7 +3170,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
       String prev_ssid = WiFi.SSID();
       String prev_pass = WiFi.psk();
-      client.disconnect();
+      // NOTE: There's no need to disconnect MQTT manually
       WiFi.disconnect(true);
 
       Log.warning(F("Attempting connection to new AP %s" CR), (const char*)SYSdata["wifi_ssid"]);
@@ -3147,8 +3191,6 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       restartESP = true;
     }
 
-    bool disconnectClient = false; // Trigger client.disconnet if a user/password change doesn't
-
     if ((SYSdata.containsKey("mqtt_topic") && SYSdata["mqtt_topic"].is<char*>()) ||
         (SYSdata.containsKey("gateway_name") && SYSdata["gateway_name"].is<char*>()) ||
         (SYSdata.containsKey("gw_pass") && SYSdata["gw_pass"].is<char*>())) {
@@ -3165,7 +3207,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifndef ESPWifiManualSetup
       saveConfig();
 #endif
-      disconnectClient = true; // trigger reconnect in loop using the new topic/name
+      mqttSetupPending = true; // trigger reconnect in loop using the new topic/name
     }
 
 #ifdef MQTTsetMQTT
@@ -3173,6 +3215,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     bool save_cnt = false;
     bool read_cnt = false;
     bool test_cnt = false;
+
     if (SYSdata.containsKey("save_cnt") && SYSdata["save_cnt"].is<bool>()) {
       save_cnt = SYSdata["save_cnt"].as<bool>();
     }
@@ -3183,23 +3226,20 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       test_cnt = SYSdata["test_cnt"].as<bool>();
     }
 
-    int prev_cnt_index = cnt_index;
-    char prev_mqtt_user[parameters_size];
-    strcpy(prev_mqtt_user, cnt_parameters_array[prev_cnt_index].mqtt_user);
-    char prev_mqtt_pass[parameters_size];
-    strcpy(prev_mqtt_pass, cnt_parameters_array[prev_cnt_index].mqtt_pass);
-    char prev_mqtt_server[parameters_size];
-    strcpy(prev_mqtt_server, cnt_parameters_array[prev_cnt_index].mqtt_server);
-    char prev_mqtt_port[6];
-    strcpy(prev_mqtt_port, cnt_parameters_array[prev_cnt_index].mqtt_port);
-    bool prev_mqtt_secure = cnt_parameters_array[prev_cnt_index].isConnectionSecure;
-
     if (SYSdata.containsKey("cnt_index") && SYSdata["cnt_index"].is<int>()) {
       if (SYSdata["cnt_index"].as<int>() < 0 || SYSdata["cnt_index"].as<int>() > 2) {
         Log.error(F("Invalid cnt index provided - ignoring command" CR));
         return;
       }
+
+      // we're overwrittng parameters, create a backup to be able to revert
+      cnt_parameters_backup.reset(new ss_cnt_parameters_backup());
+      cnt_parameters_backup->cnt_index = cnt_index;
+      cnt_parameters_backup->saveOnSuccess = save_cnt;
+
       cnt_index = SYSdata["cnt_index"].as<int>();
+      cnt_parameters_backup->parameters = cnt_parameters_array[cnt_index];
+
       Log.notice(F("MQTT cnt index %d" CR), cnt_index);
 
       if (SYSdata.containsKey("mqtt_user") && SYSdata["mqtt_user"].is<char*>() && SYSdata.containsKey("mqtt_pass") && SYSdata["mqtt_pass"].is<char*>()) {
@@ -3244,6 +3284,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         cnt_parameters_array[cnt_index].ota_server_cert = processCert(SYSdata["ota_server_cert"].as<const char*>());
         Log.trace(F("Assigning OTA server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].ota_server_cert).c_str());
       }
+
       // Read the memory certs hash to MQTT
       if (read_cnt)
         readCntParameters(cnt_index);
@@ -3260,73 +3301,13 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       stopProcessing();
 #    endif
 #  endif
-      client.disconnect();
 
-      prev_client = eClient;
-
-      if (cnt_parameters_array[cnt_index].isConnectionSecure) {
-        Log.notice(F("Connecting to secure MQTT broker" CR));
-        eClient = new WiFiClientSecure;
-      } else {
-        Log.warning(F("Connecting to unsecure MQTT broker" CR));
-        eClient = new WiFiClient;
-      }
-      client.setClient(*(Client*)eClient);
-
-      if (cnt_parameters_array[cnt_index].isConnectionSecure) {
-        setupTLS(cnt_index);
-      }
-    }
-
-    if (save_cnt || (test_cnt && !read_cnt)) {
-      Log.notice(F("Attempting connection to new MQTT broker" CR));
-      client.setServer(cnt_parameters_array[cnt_index].mqtt_server, strtol(cnt_parameters_array[cnt_index].mqtt_port, NULL, 10));
-      // Connect the client
-      connectMQTT();
-      // If the connection is successful we save the parameters to the flash memory
-      if (client.connected()) {
-        Log.notice(F("Connection successful" CR));
-        cnt_parameters_array[cnt_index].validConnection = true;
-        readCntParameters(cnt_index);
-
-        if (prev_client != nullptr) {
-          delete prev_client;
-        }
-#  ifndef ESPWifiManualSetup
-        if (save_cnt) // Save the new parameters to the flash
-          saveConfig();
-#  endif
-      } else { // Revert to previous settings
-        Log.error(F("Connection failed, reverting to previous settings" CR));
-        cnt_index = prev_cnt_index;
-        if (SYSdata.containsKey("mqtt_user") && SYSdata.containsKey("mqtt_pass")) {
-          strcpy(cnt_parameters_array[cnt_index].mqtt_user, prev_mqtt_user);
-          strcpy(cnt_parameters_array[cnt_index].mqtt_pass, prev_mqtt_pass);
-        }
-        if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port")) {
-          client.setServer(prev_mqtt_server, strtol(prev_mqtt_port, NULL, 10));
-        }
-        // Revert the change of secure connection
-        if (SYSdata.containsKey("mqtt_secure")) {
-          cnt_parameters_array[cnt_index].isConnectionSecure = prev_mqtt_secure;
-        }
-        if (prev_client != nullptr) {
-          delete eClient;
-          eClient = prev_client;
-          client.setClient(*(Client*)eClient);
-        }
-        // Restest the connection
-        connectMQTT();
-        // If the parameters given does not enable to connect we want to exit directly and not take into account any associated parameters with the connection
-        ESPRestart(7);
-      }
-      restartESP = true;
+      mqttSetupPending = true;
+    } else {
+      // no request to test or save the parameters, forget the old settings
+      cnt_parameters_backup.reset();
     }
 #endif
-
-    if (disconnectClient) {
-      client.disconnect();
-    }
 
     if (SYSdata.containsKey("xtomqtt") && SYSdata["xtomqtt"].is<bool>()) {
       SYSConfig.XtoMQTT = SYSdata["xtomqtt"];

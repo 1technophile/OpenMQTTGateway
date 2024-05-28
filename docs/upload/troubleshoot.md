@@ -38,9 +38,9 @@ instead of
 ## Repetitive MQTT disconnections or/and commands sent to the gateway not taken into account
 Most probably a network issue, don't use a guest network and if going through a firewall check its rules. To put aside gateway issue, try to connect to a local broker on the same network.
 
-## You don't see the messages appearing on your broker but they appears on the serial monitor
-This is due to a too small MQTT packet size, open User_config.h and set:
-`#define mqtt_max_packet_size 1024`
+## OMG ignores messages sent to it via MQTT
+This can happen if the messages are too big and exceed the internal buffer size limit.  To fix this, check the size of the message you're sending (in bytes).  Next, open `User_config.h` and set `mqtt_max_payload_size` to be greater than that size, e.g.:
+`#define mqtt_max_payload_size 1024`
 
 ## ESP Continuous restart or strange behaviour:
 This can be due to corruption of the ESP flash memory, try to erase flash and upload OMG on it again.
