@@ -175,7 +175,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           } else if (strcmp(parameters[i][0], "event") == 0 && strcmp(pdevice->modelName, "Govee-Water") == 0) { //the entity will detect Water Leak Event and go back to Off state after 60seconds
             createDiscovery("binary_sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
-                            "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                            "", "moisture", (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
                             "Water Leak", "", parameters[i][2], //set,payload_on,payload_off,unit_of_meas,
                             60, //set  off_delay
                             "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
