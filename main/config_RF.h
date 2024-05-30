@@ -83,8 +83,8 @@ struct RTL_433device {
 const char parameters[53][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"alarm", "Alarm", "", ""},
-    {"battery_mV", "Battery", "mV", "voltage"},
-    {"battery_ok", "Battery", "%", "battery"},
+    {"battery_mV", "Battery Voltage", "mV", "voltage"},
+    {"battery_ok", "Battery", "", "battery"},
     {"co2_ppm", "Carbon Dioxide", "ppm", "carbon_dioxide"},
     {"depth_cm", "Depth", "cm", "distance"},
     {"estimated_pm10_0_ug_m3", "Estimated PM10", "μg/m³", "pm10"},
