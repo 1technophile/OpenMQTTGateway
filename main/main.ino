@@ -1896,7 +1896,6 @@ void setupwifi(bool reset_settings) {
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default
-  // Index of connection parameters is 1 for onboarding parameters
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
   WiFiManagerParameter custom_mqtt_server("server", "mqtt server", cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, parameters_size, " minlength='1' maxlength='64' required");
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, 6, " minlength='1' maxlength='5' required");
@@ -2025,7 +2024,7 @@ void setupwifi(bool reset_settings) {
 
   if (shouldSaveConfig) {
     //read updated parameters
-    cnt_index = 1;
+    cnt_index = CNT_DEFAULT_INDEX;
 #  ifndef WIFIMNG_HIDE_MQTT_CONFIG
     strcpy(cnt_parameters_array[cnt_index].mqtt_server, custom_mqtt_server.getValue());
     strcpy(cnt_parameters_array[cnt_index].mqtt_port, custom_mqtt_port.getValue());
@@ -2050,6 +2049,8 @@ void setupwifi(bool reset_settings) {
     cnt_parameters_array[cnt_index].client_cert = processCert(custom_client_cert.getValue());
     cnt_parameters_array[cnt_index].client_key = processCert(custom_client_key.getValue());
 #    endif
+    // We suppose the connection is valid (could be tested before)
+    cnt_parameters_array[cnt_index].validConnection = true;
 #  endif
 
     //save the custom parameters to FS
