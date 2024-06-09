@@ -88,12 +88,10 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, const char* 
     if (strlcpy(device->modelName, model, modelNameSize) > modelNameSize) {
       Log.warning(F("[rtl_433] Device model %s exceeds available space" CR), model); // Remove from production release ?
     };
-    // #1909 begin
     if (strlcpy(device->type, type, typeSize) > typeSize) {
       Log.warning(F("[rtl_433] Device type %s exceeds available space" CR), type); // Remove from production release ?
     }
     DISCOVERY_TRACE_LOG(F("[rtl_433] Device type is %s." CR), device->type); // Remove from production release ?
-    // #1909 end
     device->isDisc = flags & device_flags_isDisc;
     RTL_433devices.push_back(device);
     newRTL_433Devices++;
@@ -144,7 +142,6 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
 #    if valueAsATopic
           // Remove the key from the unique id to extract the device id
           String idWoKeyAndModel = idWoKey;
-          // #1909 check if type is given 
           if (strcmp(pdevice->type, "null")) {
             idWoKeyAndModel.remove(0, (strlen(pdevice->modelName) + strlen(pdevice->type) + 1)); // type is present
             topic = topic + "/" + String(pdevice->type) + "/" + String(pdevice->modelName); 
@@ -253,8 +250,8 @@ void rtl_433_Callback(char* message) {
   unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round((float)RFrtl_433_ESPdata["temperature_C"]);
   String topic = subjectRTL_433toMQTT;
   String model = RFrtl_433_ESPdata["model"];
-  String type = RFrtl_433_ESPdata["type"];      // #1909
-  Log.notice(F("type: %s" CR), type.c_str());   // #1909
+  String type = RFrtl_433_ESPdata["type"];      
+  Log.notice(F("type: %s" CR), type.c_str());   
   String uniqueid;
 
   const char naming_keys[5][8] = {"type", "model", "subtype", "channel", "id"}; // from rtl_433_mqtt_hass.py
@@ -275,7 +272,7 @@ void rtl_433_Callback(char* message) {
 
   uniqueid.replace("/", "-");
 
-  DISCOVERY_TRACE_LOG(F("uniqueid: %s" CR), uniqueid.c_str());  // #1909
+  DISCOVERY_TRACE_LOG(F("uniqueid: %s" CR), uniqueid.c_str());  
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
     if (SYSConfig.discovery)

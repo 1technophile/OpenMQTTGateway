@@ -73,12 +73,12 @@ extern void launchRTL_433Discovery(bool overrideDiscovery);
 
 #    define uniqueIdSize  60 // longest model + longest key
 #    define modelNameSize 31 // longest model
-#    define typeSize      10 // longest type  // #1909
+#    define typeSize      10 // longest type  
 
 struct RTL_433device {
   char uniqueId[uniqueIdSize];
   char modelName[modelNameSize];
-  char type[typeSize];    // #1909
+  char type[typeSize];  
   bool isDisc;
 };
 
