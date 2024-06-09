@@ -66,11 +66,12 @@ void dumpRTL_433Devices() {
     RTL_433device* p = *it;
     DISCOVERY_TRACE_LOG(F("uniqueId %s" CR), p->uniqueId);
     DISCOVERY_TRACE_LOG(F("modelName %s" CR), p->modelName);
+    DISCOVERY_TRACE_LOG(F("type %s" CR), p->type);
     DISCOVERY_TRACE_LOG(F("isDisc %d" CR), p->isDisc);
   }
 }
 
-void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flags) {
+void createOrUpdateDeviceRTL_433(const char* id, const char* model, const char* type, uint8_t flags) {
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(30000)) == pdFALSE) {
     Log.error(F("[rtl_433] semaphorecreateOrUpdateDeviceRTL_433 Semaphore NOT taken" CR));
     return;
@@ -85,8 +86,14 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, uint8_t flag
       Log.warning(F("[rtl_433] Device id %s exceeds available space" CR), id); // Remove from production release ?
     };
     if (strlcpy(device->modelName, model, modelNameSize) > modelNameSize) {
-      Log.warning(F("[rtl_433] Device model %s exceeds available space" CR), id); // Remove from production release ?
+      Log.warning(F("[rtl_433] Device model %s exceeds available space" CR), model); // Remove from production release ?
     };
+    // #1909 begin
+    if (strlcpy(device->type, type, typeSize) > typeSize) {
+      Log.warning(F("[rtl_433] Device type %s exceeds available space" CR), type); // Remove from production release ?
+    }
+    DISCOVERY_TRACE_LOG(F("[rtl_433] Device type is %s." CR), device->type); // Remove from production release ?
+    // #1909 end
     device->isDisc = flags & device_flags_isDisc;
     RTL_433devices.push_back(device);
     newRTL_433Devices++;
@@ -137,10 +144,17 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
 #    if valueAsATopic
           // Remove the key from the unique id to extract the device id
           String idWoKeyAndModel = idWoKey;
-          idWoKeyAndModel.remove(0, strlen(pdevice->modelName));
-          idWoKeyAndModel.replace("-", "/");
+          // #1909 check if type is given 
+          if (strcmp(pdevice->type, "null")) {
+            idWoKeyAndModel.remove(0, (strlen(pdevice->modelName) + strlen(pdevice->type) + 1)); // type is present
+            topic = topic + "/" + String(pdevice->type) + "/" + String(pdevice->modelName); 
+          } else {
+            idWoKeyAndModel.remove(0, (strlen(pdevice->modelName))); 
+            topic = topic + "/" + String(pdevice->modelName); 
+          }
           DISCOVERY_TRACE_LOG(F("idWoKeyAndModel %s" CR), idWoKeyAndModel.c_str());
-          topic = topic + "/" + String(pdevice->modelName) + idWoKeyAndModel;
+          idWoKeyAndModel.replace("-", "/");
+          topic = topic + idWoKeyAndModel; 
 #    endif
           if (strcmp(parameters[i][0], "tamper") == 0 || strcmp(parameters[i][0], "alarm") == 0 || strcmp(parameters[i][0], "motion") == 0) {
             createDiscovery("binary_sensor", //set Type
@@ -207,7 +221,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
   }
 }
 
-void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, const char* uniqueid) {
+void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, const char* type, const char* uniqueid) {
   //Sanitize model name
   String modelSanitized = model;
   modelSanitized.replace(" ", "_");
@@ -221,7 +235,7 @@ void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, con
   for (int i = 0; i < numRows; i++) {
     if (RFrtl_433_ESPdata.containsKey(parameters[i][0])) {
       String key_id = String(uniqueid) + "-" + String(parameters[i][0]);
-      createOrUpdateDeviceRTL_433((char*)key_id.c_str(), (char*)modelSanitized.c_str(), device_flags_init);
+      createOrUpdateDeviceRTL_433((char*)key_id.c_str(), (char*)modelSanitized.c_str(), (char*)type, device_flags_init);
     }
   }
 }
@@ -239,6 +253,8 @@ void rtl_433_Callback(char* message) {
   unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round((float)RFrtl_433_ESPdata["temperature_C"]);
   String topic = subjectRTL_433toMQTT;
   String model = RFrtl_433_ESPdata["model"];
+  String type = RFrtl_433_ESPdata["type"];      // #1909
+  Log.notice(F("type: %s" CR), type.c_str());   // #1909
   String uniqueid;
 
   const char naming_keys[5][8] = {"type", "model", "subtype", "channel", "id"}; // from rtl_433_mqtt_hass.py
@@ -259,11 +275,11 @@ void rtl_433_Callback(char* message) {
 
   uniqueid.replace("/", "-");
 
-  // Log.notice(F("uniqueid: %s" CR), uniqueid.c_str());
+  DISCOVERY_TRACE_LOG(F("uniqueid: %s" CR), uniqueid.c_str());  // #1909
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
     if (SYSConfig.discovery)
-      storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)uniqueid.c_str());
+      storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)type.c_str(), (char*)uniqueid.c_str());
 #  endif
     //RFrtl_433_ESPdata["origin"] = (char*)topic.c_str();
     //handleJsonEnqueue(RFrtl_433_ESPdata);
