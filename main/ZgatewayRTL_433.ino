@@ -144,14 +144,14 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           String idWoKeyAndModel = idWoKey;
           if (strcmp(pdevice->type, "null")) {
             idWoKeyAndModel.remove(0, (strlen(pdevice->modelName) + strlen(pdevice->type) + 1)); // type is present
-            topic = topic + "/" + String(pdevice->type) + "/" + String(pdevice->modelName); 
+            topic = topic + "/" + String(pdevice->type) + "/" + String(pdevice->modelName);
           } else {
-            idWoKeyAndModel.remove(0, (strlen(pdevice->modelName))); 
-            topic = topic + "/" + String(pdevice->modelName); 
+            idWoKeyAndModel.remove(0, (strlen(pdevice->modelName)));
+            topic = topic + "/" + String(pdevice->modelName);
           }
           DISCOVERY_TRACE_LOG(F("idWoKeyAndModel %s" CR), idWoKeyAndModel.c_str());
           idWoKeyAndModel.replace("-", "/");
-          topic = topic + idWoKeyAndModel; 
+          topic = topic + idWoKeyAndModel;
 #    endif
           if (strcmp(parameters[i][0], "tamper") == 0 || strcmp(parameters[i][0], "alarm") == 0 || strcmp(parameters[i][0], "motion") == 0) {
             createDiscovery("binary_sensor", //set Type
@@ -250,8 +250,8 @@ void rtl_433_Callback(char* message) {
   unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round((float)RFrtl_433_ESPdata["temperature_C"]);
   String topic = subjectRTL_433toMQTT;
   String model = RFrtl_433_ESPdata["model"];
-  String type = RFrtl_433_ESPdata["type"];      
-  Log.notice(F("type: %s" CR), type.c_str());   
+  String type = RFrtl_433_ESPdata["type"];
+  Log.notice(F("type: %s" CR), type.c_str());
   String uniqueid;
 
   const char naming_keys[5][8] = {"type", "model", "subtype", "channel", "id"}; // from rtl_433_mqtt_hass.py
@@ -272,7 +272,7 @@ void rtl_433_Callback(char* message) {
 
   uniqueid.replace("/", "-");
 
-  DISCOVERY_TRACE_LOG(F("uniqueid: %s" CR), uniqueid.c_str());  
+  DISCOVERY_TRACE_LOG(F("uniqueid: %s" CR), uniqueid.c_str());
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
     if (SYSConfig.discovery)
