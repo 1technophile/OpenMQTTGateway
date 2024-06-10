@@ -80,6 +80,7 @@ jobs:
           - "lolin_c3_mini"
           - "thingpulse-espgateway"
           - "theengs-bridge"
+          - "theengs-bridge-v11"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:

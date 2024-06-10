@@ -1138,6 +1138,12 @@ void setup() {
 #    ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
 #    endif
+
+#    if SELF_TEST
+    // Check serial input to trigger a Self Test sequence if required
+    checkSerial();
+#    endif
+
     Log.notice(F("No config in flash, launching wifi manager" CR));
     // In failSafeMode we don't want to setup wifi manager as it has already been done before
     if (!failSafeMode) setup_wifimanager(false);
@@ -1510,6 +1516,7 @@ bool wifi_reconnect_bypass() {
   6 - OTA Update
   7 - Parameters changed
   8 - not enough memory to pursue
+  9 - SELFTEST end
 */
 #if defined(ESP8266) || defined(ESP32)
 void ESPRestart(byte reason) {
@@ -1753,7 +1760,7 @@ bool loadConfigFromFlash() {
       configFile.close();
     }
   } else {
-    Log.notice(F("no config file found defining default values" CR));
+    Log.notice(F("No config file found defining default values" CR));
 #  ifdef USE_MAC_AS_GATEWAY_NAME
     String s = WiFi.macAddress();
     sprintf(gateway_name, "%.2s%.2s%.2s%.2s%.2s%.2s",
@@ -1941,14 +1948,21 @@ void setup_ethernet_esp32() {
   ETH.config(ip, gateway, subnet, Dns);
   ethBeginSuccess = ETH.begin();
 #    else
-  Log.trace(F("Spl eth cfg" CR));
+  Log.notice(F("Spl eth cfg" CR));
   ethBeginSuccess = ETH.begin();
 #    endif
-  Log.trace(F("Connecting to Ethernet" CR));
-  while (!ethConnected && failure_number_ntwk <= maxConnectionRetryNetwork) {
-    delay(500);
-    Log.trace(F("." CR));
-    failure_number_ntwk++;
+  if (ethBeginSuccess) {
+    Log.notice(F("Ethernet started" CR));
+    Log.notice(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
+    Log.notice(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
+    Log.notice(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
+    while (!ethConnected && failure_number_ntwk <= maxConnectionRetryNetwork) {
+      delay(500);
+      Log.notice(F("." CR));
+      failure_number_ntwk++;
+    }
+  } else {
+    Log.error(F("Ethernet not started" CR));
   }
 }
 
