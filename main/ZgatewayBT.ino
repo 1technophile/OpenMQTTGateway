@@ -156,10 +156,6 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   if (startup == false) {
     if (BTdata.containsKey("hasspresence") && BTdata["hasspresence"] == false && BTConfig.presenceEnable == true) {
       BTdata["adaptivescan"] = true;
-#  ifdef ZmqttDiscovery
-      // Remove discovered entities
-      eraseTopic("number", (char*)getUniqueId("presenceawaytimer", "").c_str());
-#  endif
     } else if (BTdata.containsKey("hasspresence") && BTdata["hasspresence"] == true && BTConfig.presenceEnable == false) {
       BTdata["adaptivescan"] = false;
     }

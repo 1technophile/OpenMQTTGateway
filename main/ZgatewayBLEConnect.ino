@@ -301,6 +301,8 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       float volt = ((output[2] | (output[1] << 8)) >> 4) / 100.0f;
       BLEdata["volt"] = volt;
       Log.trace(F("volt: %F" CR), volt);
+      // to avoid the BM2 device tracker going offline because of the voltage MQTT message without an RSSI value
+      BLEdata["rssi"] = -60;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
     } else {

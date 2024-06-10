@@ -423,17 +423,15 @@ void eraseTopic(const char* sensor_type, const char* unique_id) {
 
 #  ifdef ZgatewayBT
 void btPresenceParametersDiscovery() {
-  if (BTConfig.presenceEnable) {
-    createDiscovery("number", //set Type
-                    subjectBTtoMQTT, "BT: Presence detection timer", (char*)getUniqueId("presenceawaytimer", "").c_str(), //set state_topic,name,uniqueId
-                    will_Topic, "", "{{ value_json.presenceawaytimer/60000 }}", //set availability_topic,device_class,value_template,
-                    "{\"presenceawaytimer\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
-                    0, //set  off_delay
-                    Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
-                    "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
-                    stateClassNone //State Class
-    );
-  }
+  createDiscovery("number", //set Type
+                  subjectBTtoMQTT, "BT: Presence/Tracker timeout", (char*)getUniqueId("presenceawaytimer", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.presenceawaytimer/60000 }}", //set availability_topic,device_class,value_template,
+                  "{\"presenceawaytimer\":{{value*60000}},\"save\":true}", "", "min", //set,payload_on,payload_off,unit_of_meas,
+                  0, //set  off_delay
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                  "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain,
+                  stateClassNone //State Class
+  );
 }
 
 void btScanParametersDiscovery() {
