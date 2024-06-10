@@ -256,6 +256,7 @@ const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
 #    define MQTT_SECURE_SELF_SIGNED_CLIENT 1 // If using a self signed certificate for the broker and not using client certificates set this to false or 0
 #  endif
 
+
 #  ifndef MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT
 #    define MQTT_SECURE_SELF_SIGNED_INDEX_DEFAULT 0
 #  endif

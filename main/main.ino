@@ -2786,7 +2786,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       jsondata["release_summary"] = "Update in progress ...";
       jsondata["origin"] = subjectRLStoMQTT;
       handleJsonEnqueue(jsondata);
-
       const char* ota_cert = HttpsFwUpdateData["server_cert"];
       if (!ota_cert && !strstr(url, "http:")) {
         if (ota_server_cert.length() > 0) {
