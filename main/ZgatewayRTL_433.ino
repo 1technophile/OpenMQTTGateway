@@ -125,13 +125,11 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           String idWoKey = pdevice->uniqueId;
           idWoKey.remove(idWoKey.length() - (strlen(parameters[i][0]) + 1));
           DISCOVERY_TRACE_LOG(F("idWoKey %s" CR), idWoKey.c_str());
-          String value_template = "{{ value_json." + String(parameters[i][0]) + " | is_defined }}";
-          if (strcmp(parameters[i][0], "battery_ok") == 0) {
-            if (SYSConfig.ohdiscovery) {
-              value_template = "{{ value_json." + String(parameters[i][0]) + " * 99 + 1 }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
-            } else {
-              value_template = "{{ float(value_json." + String(parameters[i][0]) + ") * 99 + 1 | is_defined }}"; // https://github.com/merbanan/rtl_433/blob/93f0f30c28cfb6b82b8cc3753415b01a85bee91d/examples/rtl_433_mqtt_hass.py#L187
-            }
+          String value_template = "";
+          if (SYSConfig.ohdiscovery) {
+            value_template = "{{ value_json." + String(parameters[i][0]) + " }}";
+          } else {
+            value_template = "{{ value_json." + String(parameters[i][0]) + " | is_defined }}";
           }
           String topic = subjectRTL_433toMQTT;
 #    if valueAsATopic
@@ -142,7 +140,34 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           DISCOVERY_TRACE_LOG(F("idWoKeyAndModel %s" CR), idWoKeyAndModel.c_str());
           topic = topic + "/" + String(pdevice->modelName) + idWoKeyAndModel;
 #    endif
-          if (strcmp(parameters[i][0], "tamper") == 0 || strcmp(parameters[i][0], "alarm") == 0 || strcmp(parameters[i][0], "motion") == 0) {
+          if (strcmp(parameters[i][0], "battery_ok") == 0) {
+            if (strcmp(pdevice->modelName, "Govee-Water") == 0 || strcmp(pdevice->modelName, "Govee-Contact") == 0 || strcmp(pdevice->modelName, "Archos-TBH") == 0 || strcmp(pdevice->modelName, "FineOffset-WH31L") == 0 || strcmp(pdevice->modelName, "Fineoffset-WH45") == 0 || strcmp(pdevice->modelName, "Fineoffset-WN34") == 0 || strcmp(pdevice->modelName, "Fineoffset-WS80") == 0 || strcmp(pdevice->modelName, "Fineoffset-WH0290") == 0 || strcmp(pdevice->modelName, "Fineoffset-WH51") == 0 || strcmp(pdevice->modelName, "Kedsum-TH") == 0 || strcmp(pdevice->modelName, "AVE") == 0 || strcmp(pdevice->modelName, "TPMS") == 0) {
+              if (SYSConfig.ohdiscovery) {
+                value_template = "{{ (value_json." + String(parameters[i][0]) + " * 100) | round(0)}}";
+              } else {
+                value_template = "{{ (float(value_json." + String(parameters[i][0]) + ") * 100) | round(0) | is_defined }}";
+              }
+              createDiscovery("sensor", //set Type
+                              (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
+                              "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                              "", "", "%", //set,payload_on,payload_off,unit_of_meas,
+                              0, //set  off_delay
+                              "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                              (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
+                              stateClassMeasurement //State Class
+              );
+            } else {
+              createDiscovery("binary_sensor", //set Type
+                              (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
+                              "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
+                              "0", "1", "", //set,payload_on,payload_off,unit_of_meas,
+                              0, //set  off_delay
+                              "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
+                              (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
+                              "" //State Class
+              );
+            }
+          } else if (strcmp(parameters[i][0], "tamper") == 0 || strcmp(parameters[i][0], "alarm") == 0 || strcmp(parameters[i][0], "motion") == 0) {
             createDiscovery("binary_sensor", //set Type
                             (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
                             "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
