@@ -215,6 +215,8 @@ const char* certificate PROGMEM = R"EOF("
 #    define MQTT_CERT_VALIDATE_DEFAULT false
 #  endif
 
+#  define GITHUB_OTA_SERVER_CERT_HASH "d4d211b4553af9fac371f24c2268d59d2b0fec6b9aa0fdbbde068f078d7daf86" // SHA256 fingerprint of the certificate used by the OTA server
+
 #  ifndef AWS_IOT
 #    define AWS_IOT false
 #  endif

@@ -1695,6 +1695,22 @@ void saveConfig() {
   configFile.close();
 }
 
+#  ifdef ESP32
+#    include "mbedtls/sha256.h"
+
+std::string generateHash(const std::string& input) {
+  unsigned char hash[32];
+  mbedtls_sha256((unsigned char*)input.c_str(), input.length(), hash, 0);
+
+  char hashString[65]; // Room for null terminator
+  for (int i = 0; i < 32; ++i) {
+    sprintf(&hashString[i * 2], "%02x", hash[i]);
+  }
+
+  return std::string(hashString);
+}
+#  endif
+
 bool loadConfigFromFlash() {
   Log.trace(F("mounting FS..." CR));
   bool result = false;
@@ -1751,8 +1767,22 @@ bool loadConfigFromFlash() {
           }
 #  endif
         }
-        if (json.containsKey("ota_server_cert"))
+        if (json.containsKey("ota_server_cert")) {
+#  ifdef ESP32
+          // Read hash from the file
+          std::string hash = generateHash(json["ota_server_cert"]);
+          // Compare the hash with the expected hash
+          if (hash == GITHUB_OTA_SERVER_CERT_HASH) {
+            // Do nothing
+            Log.warning(F("Old Github OTA server detected, skipping" CR));
+          } else {
+            Log.notice(F("OTA server cert hash: %s" CR), hash.c_str());
+            ota_server_cert = json["ota_server_cert"].as<const char*>();
+          }
+#  else
           ota_server_cert = json["ota_server_cert"].as<const char*>();
+#  endif
+        }
         result = true;
       } else {
         Log.warning(F("failed to load json config" CR));
