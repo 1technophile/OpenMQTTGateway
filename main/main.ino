@@ -1947,11 +1947,11 @@ void setupwifi(bool reset_settings) {
   WiFiManagerParameter custom_ota_pass("ota", "gateway password", ota_pass, parameters_size, " input type='password' minlength='8' maxlength='64' required");
   WiFiManagerParameter custom_mqtt_secure("secure", "<br/>mqtt secure", "1", 2, cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
   WiFiManagerParameter custom_validate_cert("validate", "<br/>validate cert", "1", 2, cnt_parameters_array[CNT_DEFAULT_INDEX].isCertValidate ? "type=\"checkbox\" checked" : "type=\"checkbox\"");
-  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt server cert", cnt_parameters_array[CNT_DEFAULT_INDEX].server_cert.c_str(), 4096);
-  WiFiManagerParameter custom_ota_server_cert("ota_cert", "<br/>ota server cert", cnt_parameters_array[CNT_DEFAULT_INDEX].ota_server_cert.c_str(), 4096);
+  WiFiManagerParameter custom_mqtt_cert("cert", "<br/>mqtt server cert", "", 4096);
+  WiFiManagerParameter custom_ota_server_cert("ota_cert", "<br/>ota server cert", "", 4096);
 #    if MQTT_SECURE_SIGNED_CLIENT
-  WiFiManagerParameter custom_client_cert("client_cert", "<br/>mqtt client cert", cnt_parameters_array[CNT_DEFAULT_INDEX].client_cert.c_str(), 4096);
-  WiFiManagerParameter custom_client_key("client_key", "<br/>mqtt client key", cnt_parameters_array[CNT_DEFAULT_INDEX].client_key.c_str(), 4096);
+  WiFiManagerParameter custom_client_cert("client_cert", "<br/>mqtt client cert", "", 4096);
+  WiFiManagerParameter custom_client_key("client_key", "<br/>mqtt client key", "", 4096);
 #    endif
 #  endif
   //WiFiManager
@@ -2084,11 +2084,19 @@ void setupwifi(bool reset_settings) {
     strcpy(ota_pass, custom_ota_pass.getValue());
     cnt_parameters_array[cnt_index].isConnectionSecure = *custom_mqtt_secure.getValue();
     cnt_parameters_array[cnt_index].isCertValidate = *custom_validate_cert.getValue();
-    cnt_parameters_array[cnt_index].server_cert = processCert(custom_mqtt_cert.getValue());
-    cnt_parameters_array[cnt_index].ota_server_cert = processCert(custom_ota_server_cert.getValue());
+    if (strlen(custom_mqtt_cert.getValue()) > MIN_CERT_LENGTH) {
+      cnt_parameters_array[cnt_index].server_cert = processCert(custom_mqtt_cert.getValue());
+    }
+    if (strlen(custom_ota_server_cert.getValue()) > MIN_CERT_LENGTH) {
+      cnt_parameters_array[cnt_index].ota_server_cert = processCert(custom_ota_server_cert.getValue());
+    }
 #    if MQTT_SECURE_SIGNED_CLIENT
-    cnt_parameters_array[cnt_index].client_cert = processCert(custom_client_cert.getValue());
-    cnt_parameters_array[cnt_index].client_key = processCert(custom_client_key.getValue());
+    if (strlen(custom_client_cert.getValue()) > MIN_CERT_LENGTH) {
+      cnt_parameters_array[cnt_index].client_cert = processCert(custom_client_cert.getValue());
+    }
+    if (strlen(custom_client_key.getValue()) > MIN_CERT_LENGTH) {
+      cnt_parameters_array[cnt_index].client_key = processCert(custom_client_key.getValue());
+    }
 #    endif
 #  endif
     // We suppose the connection is valid (could be tested before)
@@ -2814,7 +2822,17 @@ bool checkForUpdates() {
   HTTPClient http;
   http.setTimeout((GeneralTimeOut - 1) * 1000); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-  http.begin(OTA_JSON_URL, OTAserver_cert);
+
+  std::string ota_cert;
+  if (cnt_parameters_array[cnt_index].ota_server_cert.length() > MIN_CERT_LENGTH) {
+    Log.notice(F("Using memory cert" CR));
+    ota_cert = cnt_parameters_array[cnt_index].ota_server_cert;
+  } else {
+    Log.notice(F("Using config cert" CR));
+    ota_cert = OTAserver_cert;
+  }
+
+  http.begin(OTA_JSON_URL, ota_cert.c_str());
   int httpCode = http.GET();
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jsondata = jsonBuffer.to<JsonObject>();
