@@ -179,6 +179,9 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
           cnt_index = CNT_DEFAULT_INDEX;
         }
 
+        // We suppose the connection is valid (could be tested before)
+        cnt_parameters_array[cnt_index].validConnection = true;
+
         saveConfig();
       }
       break;

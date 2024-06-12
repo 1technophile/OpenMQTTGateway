@@ -1872,6 +1872,9 @@ bool loadConfigFromFlash() {
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
             cnt_parameters_array[i].validConnection = json[key].as<bool>();
+          } else {
+            // For backward compatibility, if valid_cnt is not found, we assume the connection is valid
+            cnt_parameters_array[i].validConnection = true;
           }
         }
         if (json.containsKey("cnt_index")) {
@@ -2087,9 +2090,9 @@ void setupwifi(bool reset_settings) {
     cnt_parameters_array[cnt_index].client_cert = processCert(custom_client_cert.getValue());
     cnt_parameters_array[cnt_index].client_key = processCert(custom_client_key.getValue());
 #    endif
+#  endif
     // We suppose the connection is valid (could be tested before)
     cnt_parameters_array[cnt_index].validConnection = true;
-#  endif
 
     //save the custom parameters to FS
     saveConfig();
