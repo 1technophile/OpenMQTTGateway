@@ -236,13 +236,13 @@ const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
 #    define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #  endif
 #  if DEVELOPMENTOTA
-#    define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
+#    define OTA_JSON_URL "https://ota.openmqttgateway.com/binaries/dev/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
 #  else
-#    define OTA_JSON_URL "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/firmware_build/latest_version.json" //OTA url used to discover new versions of the firmware
+#    define OTA_JSON_URL "https://ota.openmqttgateway.com/binaries/latest_version.json" //OTA url used to discover new versions of the firmware
 #  endif
 #  define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
-#  define RELEASE_LINK_DEV "https://github.com/1technophile/OpenMQTTGateway/raw/gh-pages/dev/firmware_build/"
-#  define RELEASE_LINK     "https://github.com/1technophile/OpenMQTTGateway/releases/download/"
+#  define RELEASE_LINK_DEV "https://ota.openmqttgateway.com/binaries/dev/"
+#  define RELEASE_LINK     "https://ota.openmqttgateway.com/binaries/"
 #else
 const char* OTAserver_cert = "";
 #endif
