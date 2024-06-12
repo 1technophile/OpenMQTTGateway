@@ -1,15 +1,15 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
- 
+
    This files enables to set your parameter for the radiofrequency gateways (ZgatewayRF and ZgatewayRF2) with RCswitch and newremoteswitch library
-  
+
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -73,10 +73,12 @@ extern void launchRTL_433Discovery(bool overrideDiscovery);
 
 #    define uniqueIdSize  60 // longest model + longest key
 #    define modelNameSize 31 // longest model
+#    define typeSize      10 // longest type
 
 struct RTL_433device {
   char uniqueId[uniqueIdSize];
   char modelName[modelNameSize];
+  char type[typeSize];
   bool isDisc;
 };
 
