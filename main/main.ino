@@ -2822,7 +2822,17 @@ bool checkForUpdates() {
   HTTPClient http;
   http.setTimeout((GeneralTimeOut - 1) * 1000); // -1 to avoid WDT
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-  http.begin(OTA_JSON_URL, OTAserver_cert);
+
+  std::string ota_cert;
+  if (cnt_parameters_array[cnt_index].ota_server_cert.length() > MIN_CERT_LENGTH) {
+    Log.notice(F("Using memory cert" CR));
+    ota_cert = cnt_parameters_array[cnt_index].ota_server_cert;
+  } else {
+    Log.notice(F("Using config cert" CR));
+    ota_cert = OTAserver_cert;
+  }
+
+  http.begin(OTA_JSON_URL, ota_cert.c_str());
   int httpCode = http.GET();
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jsondata = jsonBuffer.to<JsonObject>();
