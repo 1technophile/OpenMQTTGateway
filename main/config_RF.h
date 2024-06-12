@@ -82,7 +82,7 @@ struct RTL_433device {
   bool isDisc;
 };
 
-const char parameters[53][4][24] = {
+const char parameters[51][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"alarm", "Alarm", "", ""},
     {"battery_mV", "Battery Voltage", "mV", "voltage"},
