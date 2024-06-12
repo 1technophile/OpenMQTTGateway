@@ -31,7 +31,7 @@ void addTestMessage(JsonArray& data, String name, String value, String result) {
 }
 
 void testDevice() {
-  StaticJsonDocument<1200> doc;
+  StaticJsonDocument<1280> doc;
   JsonArray data = doc.to<JsonArray>();
 
   addTestMessage(data, "Mac Address", String(WiFi.macAddress()), "OK");
@@ -46,6 +46,7 @@ void testDevice() {
   addTestMessage(data, "ETH Link Speed", String(ETH.linkSpeed()) + "Mbs", ETH.linkSpeed() ? "OK" : "NOK");
   addTestMessage(data, "Build Date", String(__DATE__), "OK");
   addTestMessage(data, "Build Time", String(__TIME__), "OK");
+  Serial.println();
   serializeJson(doc, Serial);
   Serial.println();
 }

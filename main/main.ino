@@ -446,10 +446,28 @@ bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER_MAX>& jsonDoc, i
     return false;
   }
 }
+
+#  include "mbedtls/sha256.h"
+
+std::string generateHash(const std::string& input) {
+  unsigned char hash[32];
+  mbedtls_sha256((unsigned char*)input.c_str(), input.length(), hash, 0);
+
+  char hashString[65]; // Room for null terminator
+  for (int i = 0; i < 32; ++i) {
+    sprintf(&hashString[i * 2], "%02x", hash[i]);
+  }
+
+  return std::string(hashString);
+}
 #else
 bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
   enqueueJsonObject(jsonDoc);
   return true;
+}
+
+std::string generateHash(const std::string& input) {
+  return "Not implemented for ESP8266";
 }
 #endif
 
@@ -1805,7 +1823,20 @@ bool loadConfigFromFlash() {
           strcpy(key, "ota_server_cert");
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
-            cnt_parameters_array[i].ota_server_cert = json[key].as<const char*>();
+#  ifdef ESP32
+            // Read hash from the file
+            std::string hash = generateHash(json["ota_server_cert"]);
+            // Compare the hash with the expected hash
+            if (hash == GITHUB_OTA_SERVER_CERT_HASH) {
+              // Do nothing
+              Log.warning(F("Old Github OTA server detected, skipping" CR));
+            } else {
+              Log.notice(F("OTA server cert hash: %s" CR), hash.c_str());
+              cnt_parameters_array[i].ota_server_cert = json["ota_server_cert"].as<const char*>();
+            }
+#  else
+            cnt_parameters_array[i].ota_server_cert = json["ota_server_cert"].as<const char*>();
+#  endif
           }
           strcpy(key, "mqtt_server");
           strcat(key, index_suffix);
@@ -2968,25 +2999,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 }
 #endif
 
-#ifdef ESP32
-#  include "mbedtls/sha256.h"
-
-std::string generateHash(const std::string& input) {
-  unsigned char hash[32];
-  mbedtls_sha256((unsigned char*)input.c_str(), input.length(), hash, 0);
-
-  char hashString[65]; // Room for null terminator
-  for (int i = 0; i < 32; ++i) {
-    sprintf(&hashString[i * 2], "%02x", hash[i]);
-  }
-
-  return std::string(hashString);
-}
-#else
-std::string generateHash(const std::string& input) {
-  return "Not implemented for ESP8266";
-}
-#endif
 /**
  * Read the certificates from the memory and publish a hash of the cert to the broker for identification purposes
 */
