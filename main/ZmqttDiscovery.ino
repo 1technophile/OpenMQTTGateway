@@ -667,6 +667,7 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+#  ifdef MQTT_HTTPS_FW_UPDATE
   createDiscovery("update", //set Type
                   subjectRLStoMQTT, "SYS: Firmware Update", (char*)getUniqueId("update", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "firmware", "", //set availability_topic,device_class,value_template,
@@ -676,6 +677,8 @@ void pubMqttDiscovery() {
                   "", "", "", "", false, // device name, device manufacturer, device model, device ID, retain
                   stateClassNone //State Class
   );
+#  endif
+
 #  ifdef ZsensorBME280
 #    define BMEparametersCount 5
   Log.trace(F("bme280Discovery" CR));
