@@ -125,7 +125,12 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
     if (overrideDiscovery || !isDiscovered(pdevice)) {
       size_t numRows = sizeof(parameters) / sizeof(parameters[0]);
       for (int i = 0; i < numRows; i++) {
-        if (strstr(pdevice->uniqueId, parameters[i][0]) != 0) {
+        char deviceKeyParameter[25];
+        memcpy(deviceKeyParameter, &pdevice->uniqueId[strlen(pdevice->uniqueId) - strlen(parameters[i][0])], strlen(parameters[i][0]));
+        deviceKeyParameter[strlen(parameters[i][0])] = '\0';
+        Log.trace(F("deviceKeyParameter: %s" CR), deviceKeyParameter);
+
+        if (strcmp(deviceKeyParameter, parameters[i][0]) == 0) {
           // Remove the key from the unique id to extract the device id
           String idWoKey = pdevice->uniqueId;
           idWoKey.remove(idWoKey.length() - (strlen(parameters[i][0]) + 1));
