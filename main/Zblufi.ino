@@ -137,7 +137,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       Log.notice(F("Recv Custom Data %" PRIu32 CR), param->custom_data.data_len);
       esp_log_buffer_hex("Custom Data", param->custom_data.data, param->custom_data.data_len);
 
-      DynamicJsonDocument json(1024);
+      DynamicJsonDocument json(JSON_MSG_BUFFER_MAX);
       auto error = deserializeJson(json, param->custom_data.data);
       if (error) {
         Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
