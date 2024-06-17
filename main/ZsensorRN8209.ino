@@ -110,7 +110,7 @@ void setupRN8209() {
   cal.EC = RN8209_EC;
   set_user_param(cal);
   init_8209c_interface();
-  xTaskCreate(rn8209_loop, "rn8209_loop", 5500, NULL, 10, &rn8209TaskHandle);
+  xTaskCreate(rn8209_loop, "rn8209_loop", RN8209_TASK_STACK_SIZE_OVERRIDE, NULL, 10, &rn8209TaskHandle);
   //esp_task_wdt_add(rn8209TaskHandle);
   Log.trace(F("ZsensorRN8209 setup done " CR));
 }

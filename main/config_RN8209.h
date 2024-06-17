@@ -43,6 +43,10 @@ extern void RN8209toMQTT();
 #  define RN8209_EC 28250
 #endif
 
+#ifndef RN8209_TASK_STACK_SIZE_OVERRIDE
+#  define RN8209_TASK_STACK_SIZE_OVERRIDE 5500
+#endif
+
 #ifndef TimeBetweenReadingRN8209
 #  define TimeBetweenReadingRN8209 500 // time between 2 RN8209 readings in ms
 #endif
