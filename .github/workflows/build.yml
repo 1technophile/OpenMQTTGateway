@@ -56,7 +56,7 @@ jobs:
           - "nodemcuv2-fastled-test"
           - "nodemcuv2-2g"
           - "nodemcuv2-ir"
-          - "nodemcuv2-rs232"
+          - "nodemcuv2-serial"
           - "avatto-bakeey-ir"
           - "nodemcuv2-rf"
           - "nodemcuv2-rf-cc1101"
