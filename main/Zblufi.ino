@@ -127,7 +127,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_RECV_STA_PASSWD:
       strncpy((char*)gl_sta_passwd, (char*)param->sta_passwd.passwd, param->sta_passwd.passwd_len);
       gl_sta_passwd[param->sta_passwd.passwd_len] = '\0';
-      Log.notice(F("Recv STA PASSWORD %s" CR), gl_sta_passwd);
+      Log.notice(F("Recv STA PASSWORD" CR));
       break;
     case ESP_BLUFI_EVENT_GET_WIFI_LIST: {
       WiFi.scanNetworks(true);
