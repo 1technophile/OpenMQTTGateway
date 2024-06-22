@@ -80,7 +80,7 @@ bool ready_to_sleep = false;
 #include <PubSubClient.h>
 
 struct JsonBundle {
-  StaticJsonDocument<JSON_MSG_BUFFER_MAX> doc;
+  StaticJsonDocument<JSON_MSG_BUFFER> doc;
 };
 
 std::queue<JsonBundle> jsonQueue;
@@ -416,7 +416,7 @@ void pubMainCore(JsonObject& data) {
 }
 
 // Add a document to the queue
-void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER_MAX>& jsonDoc) {
+void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
   if (jsonDoc.size() == 0) {
     Log.error(F("Empty JSON, skipping" CR));
     return;
@@ -435,7 +435,7 @@ void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER_MAX>& jsonDoc) {
 
 #ifdef ESP32
 // Semaphore check before enqueueing a document
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER_MAX>& jsonDoc, int timeout) {
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout))) {
     enqueueJsonObject(jsonDoc);
     xSemaphoreGive(xQueueMutex);
