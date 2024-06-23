@@ -1269,6 +1269,27 @@ void PublishDeviceData(JsonObject& BLEdata) {
       Log.notice(F("Not a sensor device filtered" CR));
       return;
     }
+
+#    if BLEDecoder
+    if (enableMultiGTWSync && BLEdata.containsKey("model_id") && BLEdata.containsKey("id")) {
+      // Publish tracker sync message
+      bool isTracker = false;
+      std::string tag = decoder.getTheengAttribute(BLEdata["model_id"].as<const char*>(), "tag");
+      if (tag.length() >= 4) {
+        isTracker = checkIfIsTracker(tag[3]);
+      }
+
+      if (isTracker) {
+        StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+        JsonObject TrackerSyncdata = BLEdataBuffer.to<JsonObject>();
+        TrackerSyncdata["gatewayid"] = gateway_name;
+        TrackerSyncdata["trackerid"] = BLEdata["id"].as<const char*>();
+        String topic = String(mqtt_topic) + String(subjectTrackerSync);
+        TrackerSyncdata["topic"] = topic.c_str();
+        enqueueJsonObject(TrackerSyncdata);
+      }
+    }
+#    endif
   } else {
     Log.notice(F("Low rssi, device filtered" CR));
     return;
@@ -1552,6 +1573,14 @@ void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
     } else {
       Log.error(F("BLE busy - command not sent" CR));
       gatewayState = GatewayState::ERROR;
+    }
+  } else if (strstr(topicOri, subjectTrackerSync) != NULL) {
+    if (BTdata.containsKey("gatewayid") && BTdata.containsKey("trackerid") && BTdata["gatewayid"] != gateway_name) {
+      BLEdevice* device = getDeviceByMac(BTdata["trackerid"].as<const char*>());
+      if (device != &NO_BT_DEVICE_FOUND && device->lastUpdate != 0) {
+        device->lastUpdate = 0;
+        Log.notice(F("Tracker %s disassociated by gateway %s" CR), BTdata["trackerid"].as<const char*>(), BTdata["gatewayid"].as<const char*>());
+      }
     }
   }
 }
