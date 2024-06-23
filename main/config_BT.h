@@ -43,6 +43,7 @@ extern String stateBTMeasures(bool);
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 #define subjectMQTTtoBT    "/commands/MQTTtoBT"
+#define subjectTrackerSync "theengs/internal/trackersync"
 // Uncomment to send undecoded device data to another gateway device for decoding
 // #define MQTTDecodeTopic    "undecoded"
 #ifndef UseExtDecoder
@@ -131,6 +132,9 @@ unsigned long scanCount = 0;
 #ifndef useBeaconUuidForTopic
 #  define useBeaconUuidForTopic false // define true to use iBeacon UUID as topic, instead of sender (random) MAC address
 #endif
+
+// gateway_mac for internal tracker sync
+String gateway_mac = "";
 
 /*--------------HOME ASSISTANT ROOM PRESENCE--------------*/
 #define subjectHomePresence "presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)

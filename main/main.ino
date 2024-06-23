@@ -572,7 +572,17 @@ void pub(const char* topicori, JsonObject& data) {
   }
   serializeJson(data, dataAsString);
   Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
-  String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  // String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  String topic = "";
+#if defined(ZgatewayBT)
+  if ((strcmp(topicori, subjectTrackerSync) == 0)) {
+    topic = subjectTrackerSync;
+  } else {
+    topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  }
+#else
+  topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+#endif
 #if valueAsATopic
 #  ifdef ZgatewayPilight
   String value = data["value"];
@@ -889,6 +899,10 @@ void connectMQTT() {
 #endif
       Log.trace(F("Subscription OK to the subjects %s" CR), topic2);
     }
+#ifdef ZgatewayBT
+    client.subscribe("theengs/internal/#"); // BT internal topic channel - currently only for "theengs/internal/trackersync"
+    Log.trace(F("Subscription to 'theengs/internal/#'" CR));
+#endif
   } else {
     failure_number_mqtt++; // we count the failure
     Log.warning(F("failure_number_mqtt: %d" CR), failure_number_mqtt);
@@ -957,6 +971,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   //launch the function to treat received data if this data concern OpenMQTTGateway
   if ((strstr(topic, subjectMultiGTWKey) != NULL) ||
       (strstr(topic, subjectGTWSendKey) != NULL) ||
+      (strstr(topic, "theengs/internal") != NULL) ||
       (strstr(topic, subjectMQTTtoSYSupdate) != NULL))
     receivingMQTT(topic, (char*)p);
 
@@ -2585,6 +2600,7 @@ String stateMeasures() {
   }
 
 #ifdef ZgatewayBT
+  gateway_mac = SYSdata["mac"].as<String>();
 #  ifdef ESP32
   SYSdata["lowpowermode"] = (int)lowpowermode;
 #  endif
