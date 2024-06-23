@@ -848,6 +848,15 @@ void SYSConfig_load() {
 void SYSConfig_load() {}
 #endif
 
+#if AWS_IOT
+// Global variables to track reconnections
+unsigned long reconnection_count = 0;
+unsigned long start_reconnection_window_millis = 0;
+// Define a threshold for instability detection
+const unsigned long reconnection_window_millis = 120000;
+const unsigned int reconnection_threshold = 5; // Consider unstable if more than 5 reconnections in 2 minutes
+#endif
+
 void connectMQTT() {
 #ifndef ESPWifiManualSetup
   checkButton(); // check if a reset of wifi/mqtt settings is asked
@@ -866,6 +875,20 @@ void connectMQTT() {
   client.setSocketTimeout(GeneralTimeOut - 1);
 #if AWS_IOT
   if (client.connect(gateway_name, cnt_parameters_array[cnt_index].mqtt_user, cnt_parameters_array[cnt_index].mqtt_pass)) { // AWS doesn't support will topic for the moment
+    unsigned long current_millis = millis();
+    if (start_reconnection_window_millis == 0 || current_millis - start_reconnection_window_millis > reconnection_window_millis) {
+      // Reset the count and timestamp at the start of a new window
+      reconnection_count = 0;
+      start_reconnection_window_millis = current_millis;
+    }
+    reconnection_count++; // Increment reconnection count
+    Log.trace(F("MQTT connection count: %d" CR), reconnection_count);
+    if (reconnection_count > reconnection_threshold && SYSConfig.XtoMQTT) {
+      // Detected instability in MQTT connection
+      Log.warning(F("MQTT connection instability detected: %d reconnections in the last %d seconds" CR), reconnection_count, reconnection_window_millis / 1000);
+      // Stop xtoMQTT to see if it helps and still enables to receive data
+      SYSConfig.XtoMQTT = false;
+    }
 #else
   if (client.connect(gateway_name, cnt_parameters_array[cnt_index].mqtt_user, cnt_parameters_array[cnt_index].mqtt_pass, topic, will_QoS, will_Retain, will_Message)) {
 #endif
@@ -3294,6 +3317,8 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         }
         // Restest the connection
         connectMQTT();
+        // If the parameters given does not enable to connect we want to exit directly and not take into account any associated parameters with the connection
+        ESPRestart(7);
       }
       restartESP = true;
     }
