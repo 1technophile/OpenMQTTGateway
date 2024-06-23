@@ -376,11 +376,49 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     }
     device->sensorModel_id = model;
     device->lastUpdate = millis();
+
+    // publish tracker sync message
+    bool isTracker = false;
+    std::string tag = decoder.getTheengAttribute(device->sensorModel_id, "tag");
+    if (tag.length() >= 4) {
+      isTracker = checkIfIsTracker(tag[3]);
+    }
+
+    if (isTracker) {
+      Log.trace(F("Tracker LastUpdate %u" CR), device->lastUpdate);
+      StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+      JsonObject TrackerSyncdata = BLEdataBuffer.to<JsonObject>();
+      TrackerSyncdata["gatewayid"] = gateway_mac;
+      TrackerSyncdata["tracker"] = device->macAdr;
+      String origin = subjectTrackerSync;
+      TrackerSyncdata["origin"] = origin;
+      handleJsonEnqueue(TrackerSyncdata);
+    }
+
     devices.push_back(device);
     newDevices++;
   } else {
     Log.trace(F("update %s" CR), mac);
     device->lastUpdate = millis();
+
+    // publish tracker sync message
+    bool isTracker = false;
+    std::string tag = decoder.getTheengAttribute(device->sensorModel_id, "tag");
+    if (tag.length() >= 4) {
+      isTracker = checkIfIsTracker(tag[3]);
+    }
+
+    if (isTracker) {
+      Log.trace(F("Tracker LastUpdate %u" CR), device->lastUpdate);
+      StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+      JsonObject TrackerSyncdata = BLEdataBuffer.to<JsonObject>();
+      TrackerSyncdata["gatewayid"] = gateway_mac;
+      TrackerSyncdata["tracker"] = device->macAdr;
+      String origin = subjectTrackerSync;
+      TrackerSyncdata["origin"] = origin;
+      handleJsonEnqueue(TrackerSyncdata);
+    }
+
     device->macType = mac_type;
 
     if (flags & device_flags_isDisc) {
@@ -1497,6 +1535,20 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     }
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     MQTTtoBTAction(BTdata);
+  } else if (strstr(topicOri, "theengs/internal") != NULL) {
+    if (strcmp(topicOri, subjectTrackerSync) == 0) {
+      if (BTdata["gatewayid"] != gateway_mac) {
+        for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+          if ((strcmp((*it)->macAdr, BTdata["tracker"]) == 0)) {
+            BLEdevice* p = *it;
+            if (p->lastUpdate != 0) {
+              p->lastUpdate = 0;
+              Log.notice(F("Tracker %s disassociated" CR), p->macAdr);
+            }
+          }
+        }
+      }
+    }
   }
 }
 #endif
