@@ -1134,6 +1134,10 @@ void setupMQTT() {
   mqtt->subscribe(subjectMultiGTWIR, receivingDATA, mqtt_max_payload_size);
 #  endif
 
+#  if enableMultiGTWSync
+  mqtt->subscribe(String(mqtt_topic) + subjectTrackerSync, receivingDATA, mqtt_max_payload_size);
+#  endif
+
   mqtt->begin();
 }
 #endif
