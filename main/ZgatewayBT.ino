@@ -902,7 +902,7 @@ void setupBTTasksAndBLE() {
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
 #  ifdef USE_BLUFI
-      13500,
+      12000,
 #  else
       8500, /* Stack size in bytes */
 #  endif
