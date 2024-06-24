@@ -26,7 +26,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #if defined(ESP32) && defined(USE_BLUFI)
-
+#  include "NimBLEDevice.h"
 #  include "esp_blufi_api.h"
 
 extern "C" {
