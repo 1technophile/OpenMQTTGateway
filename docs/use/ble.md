@@ -75,13 +75,11 @@ Once the data has been transmitted to the MQTT broker, it can be easily integrat
 Examples of compatible sensors among [our list](https://decoder.theengs.io/devices/devices_by_brand.html: Mi Flora, Mi jia, LYWDS02, LYWSD03MMC, ClearGrass, Mi scale, iBBQ, TPMS
 
 ## Receiving signals from BLE devices for Device Tracker detection
-The gateway will detect BLE trackers from Tile, Nut, TagIt and iTag, as well as other devices with additional properties decoding like Mi Band, Amazfit, RuuviTag and others indicated as Device Trackers in the [compatible BLE devices list](https://decoder.theengs.io/devices/devices.html), and automatically create a device tracker entity following the Home Assistant discovery convention (if auto discovery is activated).
+The gateway will detect BLE trackers from Tile, Nut, TagIt, iTAG, Gigaset G-Tag and TicWatch GTH (Pro), as well as other devices with additional properties decoding like Mi Band, Amazfit, RuuviTag and others indicated as Device Trackers in the [compatible BLE devices list](https://decoder.theengs.io/devices/devices.html), and automatically create a device tracker entity following the Home Assistant discovery convention (if auto discovery is activated).
 
 The devicen tracker entity created can be attached to a person to leverage presence detection. The `away` or `not home` state is triggered if the BLE tracker is not detected during the timer defined by `presenceawaytimer`.
  
 ![Away home Home assistant view](../img/OpenMQTTGateway-BLE-tracker-Home-Assistant.png)
-
-If you have multiple gateways, your BLE trackers may not be detected temporary by one gateway but still by the others. In this case you will see the tracker appears offline briefly and online again once it is detected by the others gateways.
 
 By default `presenceawaytimer` is set to 120s, you can change it from the slider in your controller or with the following command (ms)
 
