@@ -1616,13 +1616,16 @@ void setupTLS(int index) {
   9 - SELFTEST end
 */
 void ESPRestart(byte reason) {
-  delay(1000);
   StaticJsonDocument<128> jsonBuffer;
   JsonObject jsondata = jsonBuffer.to<JsonObject>();
   jsondata["reason"] = reason;
   jsondata["retain"] = true;
   jsondata["uptime"] = uptime();
   pub(subjectLOGtoMQTT, jsondata);
+  // Clean queue
+  while (!jsonQueue.empty()) {
+    jsonQueue.pop();
+  }
   Log.warning(F("Rebooting for reason code %d" CR), reason);
 #if defined(ESP32)
   ESP.restart();
