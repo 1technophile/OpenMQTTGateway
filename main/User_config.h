@@ -162,8 +162,8 @@
 #  endif
 #endif
 
-#ifndef mqtt_max_topic_size
-#  define mqtt_max_packet_size JSON_MSG_BUFFER_MAX + mqtt_topic_max_size + 10 // maximum size of the MQTT packet
+#ifndef mqtt_max_payload_size
+#  define mqtt_max_payload_size JSON_MSG_BUFFER_MAX // maximum size of the MQTT payload
 #endif
 
 #ifndef MQTT_USER

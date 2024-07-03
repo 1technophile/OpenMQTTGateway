@@ -803,7 +803,7 @@ void coreTask(void* pvParameters) {
   while (true) {
     if (!BTProcessLock) {
       int n = 0;
-      while (client.state() != 0 && n <= InitialMQTTConnectionTimeout && !BTProcessLock) {
+      while (mqtt->connected() && n <= InitialMQTTConnectionTimeout && !BTProcessLock) {
         n++;
         delay(1000);
       }

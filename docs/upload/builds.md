@@ -18,7 +18,7 @@ PlatformIO config files work on the concept of overriding. At first, a very simp
 [env]
 framework = arduino
 lib_deps =
-  ${libraries.pubsubclient}
+  ${libraries.picomqtt}
   ${libraries.arduinojson}
   ${libraries.arduinolog}
 build_flags =
