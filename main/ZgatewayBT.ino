@@ -1591,16 +1591,14 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     KnownBTActions(BTdata);
     MQTTtoBTAction(BTdata);
-  } else if (strstr(topicOri, "theengs/internal") != NULL) {
-    if (strcmp(topicOri, subjectTrackerSync) == 0) {
-      if (BTdata["gatewayid"] != gateway_mac) {
-        for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
-          if ((strcmp((*it)->macAdr, BTdata["tracker"]) == 0)) {
-            BLEdevice* p = *it;
-            if (p->lastUpdate != 0) {
-              p->lastUpdate = 0;
-              Log.notice(F("Tracker %s disassociated by gateway %s" CR), p->macAdr, BTdata["gatewayid"].as<const char*>());
-            }
+  } else if (strcmp(topicOri, subjectTrackerSync) == 0) {
+    if (BTdata["gatewayid"] != gateway_mac) {
+      for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
+        if ((strcmp((*it)->macAdr, BTdata["tracker"]) == 0)) {
+          BLEdevice* p = *it;
+          if (p->lastUpdate != 0) {
+            p->lastUpdate = 0;
+            Log.notice(F("Tracker %s disassociated by gateway %s" CR), p->macAdr, BTdata["gatewayid"].as<const char*>());
           }
         }
       }
