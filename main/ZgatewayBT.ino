@@ -101,7 +101,7 @@ void BTConfig_init() {
   BTConfig.presenceAwayTimer = PresenceAwayTimer;
   BTConfig.movingTimer = MovingTimer;
   BTConfig.forcePassiveScan = false;
-  BTConfig.enabled = true;
+  BTConfig.enabled = EnableBT;
 }
 
 unsigned long timeBetweenConnect = 0;
