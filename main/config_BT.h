@@ -118,6 +118,10 @@ extern String stateBTMeasures(bool);
 #  define HassPresence false //true if we publish into Home Assistant presence topic
 #endif
 
+#ifndef EnableBT
+#  define EnableBT true
+#endif
+
 #ifndef BLE_CNCT_TIMEOUT
 #  define BLE_CNCT_TIMEOUT 3000
 #endif
