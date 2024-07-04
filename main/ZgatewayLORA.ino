@@ -347,6 +347,21 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject jo = jsonBuffer.to<JsonObject>();
     jo["frequency"] = LORAConfig.frequency;
+    jo["txpower"] = LORAConfig.txPower;
+    jo["spreadingfactor"] = LORAConfig.spreadingFactor;
+    jo["signalbandwidth"] = LORAConfig.signalBandwidth;
+    jo["codingrate"] = LORAConfig.codingRateDenominator;
+    jo["preamblelength"] = LORAConfig.preambleLength;
+    if (LORAConfig.syncWord < 0 || LORAConfig.syncWord > 255) {
+      Log.error(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
+    } else {
+      char syncWordHex[5];
+      snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
+      jo["syncword"] = syncWordHex;
+    }
+    jo["enablecrc"] = LORAConfig.crc;
+    jo["invertiq"] = LORAConfig.invertIQ;
+    jo["onlyknown"] = LORAConfig.onlyKnown;
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -541,10 +556,13 @@ String stateLORAMeasures() {
   LORAdata["signalbandwidth"] = LORAConfig.signalBandwidth;
   LORAdata["codingrate"] = LORAConfig.codingRateDenominator;
   LORAdata["preamblelength"] = LORAConfig.preambleLength;
-  // Convert syncWord to a hexadecimal string and store it in the JSON
-  char syncWordHex[5]; // Enough space for 0xXX and null terminator
-  snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
-  LORAdata["syncword"] = syncWordHex;
+  if (LORAConfig.syncWord < 0 || LORAConfig.syncWord > 255) {
+    Log.error(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
+  } else {
+    char syncWordHex[5];
+    snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
+    LORAdata["syncword"] = syncWordHex;
+  }
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
   LORAdata["onlyknown"] = LORAConfig.onlyKnown;
