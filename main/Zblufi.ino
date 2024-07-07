@@ -145,6 +145,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       }
       if (!json.isNull()) {
         Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
+#  if !MQTT_BROKER_MODE
         if (json.containsKey("mqtt_server") && json["mqtt_server"].is<const char*>() && json["mqtt_server"].as<String>().length() > 0 && json["mqtt_server"].as<String>().length() < parameters_size)
           strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, json["mqtt_server"]);
         if (json.containsKey("mqtt_port") && json["mqtt_port"].is<const char*>() && json["mqtt_port"].as<String>().length() > 0 && json["mqtt_port"].as<String>().length() < parameters_size)
@@ -166,12 +167,6 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
           cnt_parameters_array[CNT_DEFAULT_INDEX].client_key = json["mqtt_client_key"].as<const char*>();
         if (json.containsKey("ota_server_cert") && json["ota_server_cert"].is<const char*>() && json["ota_server_cert"].as<String>().length() > MIN_CERT_LENGTH)
           cnt_parameters_array[CNT_DEFAULT_INDEX].ota_server_cert = json["ota_server_cert"].as<const char*>();
-        if (json.containsKey("gateway_name"))
-          strcpy(gateway_name, json["gateway_name"]);
-        if (json.containsKey("mqtt_topic"))
-          strcpy(mqtt_topic, json["mqtt_topic"]);
-        if (json.containsKey("ota_pass"))
-          strcpy(ota_pass, json["ota_pass"]);
 
         if (json.containsKey("cnt_index") && json["cnt_index"].is<int>() && json["cnt_index"].as<int>() > 0 && json["cnt_index"].as<int>() < 3) {
           cnt_index = json["cnt_index"].as<int>();
@@ -181,6 +176,14 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 
         // We suppose the connection is valid (could be tested before)
         cnt_parameters_array[cnt_index].validConnection = true;
+#  endif
+
+        if (json.containsKey("gateway_name"))
+          strcpy(gateway_name, json["gateway_name"]);
+        if (json.containsKey("mqtt_topic"))
+          strcpy(mqtt_topic, json["mqtt_topic"]);
+        if (json.containsKey("ota_pass"))
+          strcpy(ota_pass, json["ota_pass"]);
 
         saveConfig();
       }
