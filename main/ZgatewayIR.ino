@@ -174,6 +174,7 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
     }
     if (data != 0 || raw) {
       Log.trace(F("MQTTtoIR value || raw  detected" CR));
+      irrecv.disableIRIn();
       bool signalSent = false;
       const char* protocol_name = IRdata["protocol_name"];
       unsigned int valueBITS = IRdata["bits"] | 0;
