@@ -212,6 +212,15 @@
 #  define AWS_IOT false
 #endif
 
+#ifndef MQTT_BROKER_MODE
+#  define MQTT_BROKER_MODE false
+#endif
+
+#if MQTT_BROKER_MODE
+// In MQTT broker mode the MQTT web config is not needed
+#  define WIFIMNG_HIDE_MQTT_CONFIG true
+#endif
+
 #define GITHUB_OTA_SERVER_CERT_HASH "d4d211b4553af9fac371f24c2268d59d2b0fec6b9aa0fdbbde068f078d7daf86" // SHA256 fingerprint of the certificate used by the OTA server
 
 #if AWS_IOT
@@ -264,6 +273,7 @@ const char* OTAserver_cert = "";
 
 #include <string>
 
+#if !MQTT_BROKER_MODE
 struct ss_cnt_parameters {
   std::string server_cert;
   std::string client_cert;
@@ -279,14 +289,15 @@ struct ss_cnt_parameters {
 };
 
 // Index 0 is used for connection parameters provided in the build that can be overloaded by WiFi Manager/Onboarding/WebUI,MQTT
-#define CNT_DEFAULT_INDEX 0
+#  define CNT_DEFAULT_INDEX 0
 // Index 1 and more are used for connection parameters provided at runtime by MQTT
-#define cnt_parameters_array_size 3
+#  define cnt_parameters_array_size 3
 
 ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
     {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
     {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
     {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
+#endif
 
 #define MIN_CERT_LENGTH 200 // Minimum length of a certificate to be considered valid
 
