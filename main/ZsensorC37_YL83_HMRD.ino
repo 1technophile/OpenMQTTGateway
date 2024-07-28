@@ -68,11 +68,10 @@ void MeasureC37_YL83_HMRDWater() {
     if (C37_YL83_HMRDdata.size() > 0) {
       C37_YL83_HMRDdata["origin"] = C37_YL83_HMRD_TOPIC;
       handleJsonEnqueue(C37_YL83_HMRDdata);
-      delay(10);
-#  if defined(DEEP_SLEEP_IN_US) || defined(ESP32_EXT0_WAKE_PIN)
-      if (sensorDigitalValue == 1) //No water detected, all good we can sleep
-        ready_to_sleep = true;
-#  endif
+      if (sensorDigitalValue == 1) { //No water detected, all good we can sleep
+        if (SYSConfig.powerMode > 0)
+          ready_to_sleep = true;
+      }
     }
     persistedanalog = sensorAnalogValue;
     persisteddigital = sensorDigitalValue;

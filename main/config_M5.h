@@ -74,7 +74,7 @@ extern void loopM5();
 // Simple construct for displaying message in lcd and oled displays
 
 #define displayPrint(...) \
-  if (lowpowermode < 2) M5Print(__VA_ARGS__) // only print if not in low power mode
+  if (SYSConfig.powerMode < 1) M5Print(__VA_ARGS__) // only print if not in low power mode
 #define lpDisplayPrint(...) M5Print(__VA_ARGS__) // print in low power mode
 
 void M5Print(char*, char* = "", char* = "");

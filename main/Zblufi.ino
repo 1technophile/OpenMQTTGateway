@@ -66,6 +66,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       break;
     case ESP_BLUFI_EVENT_BLE_CONNECT:
       Log.trace(F("BLUFI BLE connect" CR));
+      gatewayState = GatewayState::ONBOARDING;
       omg_blufi_ble_connected = true;
       esp_blufi_adv_stop();
       blufi_security_init();
@@ -75,11 +76,13 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       omg_blufi_ble_connected = false;
       blufi_security_deinit();
       if (WiFi.isConnected()) {
+        gatewayState = GatewayState::NTWK_CONNECTED;
         esp_blufi_deinit();
 #  ifndef ESPWifiManualSetup
         wifiManager.stopConfigPortal();
 #  endif
       } else {
+        gatewayState = GatewayState::WAITING_ONBOARDING;
         esp_blufi_adv_start();
       }
       break;

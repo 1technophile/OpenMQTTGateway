@@ -47,6 +47,10 @@ If you want the settings to be kept upon gateway restart, you can save the state
 This command can also be used with other controllers that does not support the is_defined key.
 :::
 
+## Activate Offline mode
+
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"offline":true,"save":true}'`
+
 ## Change the WiFi credentials
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"wifi_ssid":"ssid", "wifi_pass":"password"}'`

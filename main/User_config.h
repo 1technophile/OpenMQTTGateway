@@ -163,7 +163,7 @@
 #endif
 
 #ifndef mqtt_max_payload_size
-#  define mqtt_max_payload_size JSON_MSG_BUFFER_MAX // maximum size of the MQTT payload
+#  define mqtt_max_payload_size JSON_MSG_BUFFER_MAX + mqtt_topic_max_size + 10 // maximum size of the MQTT payload
 #endif
 
 #ifndef MQTT_USER
@@ -302,16 +302,6 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #define MIN_CERT_LENGTH 200 // Minimum length of a certificate to be considered valid
 
 /**
- * Deep-sleep for the ESP8266.
- * Set the wake pin.
- */
-#if defined(DEEP_SLEEP_IN_US) && defined(ESP8266)
-#  ifndef ESP8266_DEEP_SLEEP_WAKE_PIN
-#    define ESP8266_DEEP_SLEEP_WAKE_PIN D0
-#  endif
-#endif
-
-/**
  * Ext wake for Deep-sleep for the ESP32.
  * Set the wake pin state.
  */
@@ -321,16 +311,23 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #  endif
 #endif
 
-/*------------------DEEP SLEEP parameters ------------------*/
-//DEFAULT_LOW_POWER_MODE -1 to normal mode, low power mode can't be used on this build
-//DEFAULT_LOW_POWER_MODE 0 to normal mode (no power consumption optimisations)
-//DEFAULT_LOW_POWER_MODE 1 to activate deep sleep
-//DEFAULT_LOW_POWER_MODE 2 to activate deep sleep (LCD is turned OFF)
-#ifdef ESP32
-#  ifndef DEFAULT_LOW_POWER_MODE
-#    define DEFAULT_LOW_POWER_MODE -1
+#ifdef ESP32_EXT1_WAKE_PIN
+#  ifndef ESP32_EXT1_WAKE_PIN_STATE
+#    define ESP32_EXT1_WAKE_PIN_STATE 1
 #  endif
-int lowpowermode = DEFAULT_LOW_POWER_MODE;
+#endif
+
+#ifndef DEEP_SLEEP_IN_US
+#  define DEEP_SLEEP_IN_US 60000000 // 1 minute
+#endif
+
+/*------------------DEEP SLEEP parameters ------------------*/
+//DEFAULT_LOW_POWER_MODE DEACTIVATED low power mode can't be used on this build to prevent bricking devices that does not support low power mode
+//DEFAULT_LOW_POWER_MODE ALWAYS_ON normal mode (no power consumption optimisations)
+//DEFAULT_LOW_POWER_MODE INTERVAL to activate deep sleep with intervals and action wake up
+//DEFAULT_LOW_POWER_MODE ACTION to activate deep sleep with action wake up
+#ifndef DEFAULT_LOW_POWER_MODE
+#  define DEFAULT_LOW_POWER_MODE DEACTIVATED
 #endif
 
 /*-------------DEFINE THE MODULES YOU WANT BELOW----------------*/
@@ -715,9 +712,15 @@ Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IN
 #endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
-#define subjectMQTTtoX     "/commands/#"
-#define subjectMultiGTWKey "toMQTT"
-#define subjectGTWSendKey  "MQTTto"
+#ifndef subjectMQTTtoX
+#  define subjectMQTTtoX "/commands/#"
+#endif
+#ifndef subjectMultiGTWKey
+#  define subjectMultiGTWKey "toMQTT"
+#endif
+#ifndef subjectGTWSendKey
+#  define subjectGTWSendKey "MQTTto"
+#endif
 
 // key used for launching commands to the gateway
 #define restartCmd "restart"
@@ -735,7 +738,9 @@ Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IN
 #  endif
 #endif
 
-#define TimeBetweenReadingSYS        120 // time between (s) system readings (like memory)
+#ifndef TimeBetweenReadingSYS
+#  define TimeBetweenReadingSYS 120 // time between (s) system readings (like memory)
+#endif
 #define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
@@ -807,6 +812,11 @@ unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automa
 #define isBlack(device)       device->isBlkL
 #define isDiscovered(device)  device->isDisc
 
+enum PowerMode { DEACTIVATED = -1,
+                 ALWAYS_ON,
+                 INTERVAL,
+                 ACTION };
+
 /*--------------------Minimum freeHeap--------------------*/
 // Below this parameter we trigger a restart, this avoid stuck boards like seen in https://github.com/1technophile/OpenMQTTGateway/issues/1693
 #define MinimumMemory 40000
@@ -814,15 +824,20 @@ unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automa
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct SYSConfig_s {
   bool XtoMQTT; // if true the gateway will publish the received data on the MQTT broker
+  bool offline;
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
 #ifdef RGB_INDICATORS
   int rgbbrightness; // brightness of the RGB LED
 #endif
+  enum PowerMode powerMode;
 };
 
 #ifndef DEFAULT_XtoMQTT
 #  define DEFAULT_XtoMQTT true
+#endif
+#ifndef DEFAULT_OFFLINE
+#  define DEFAULT_OFFLINE false
 #endif
 
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
