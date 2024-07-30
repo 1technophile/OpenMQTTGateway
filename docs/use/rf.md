@@ -154,7 +154,7 @@ Registering protocol [102] "X10 Security"
 
 Delta applied to RSSI floor noise level to determine start and end of signal, defaults to 9db.
 
-`home/OpenMQTTGateway/commands/MQTTtoRF/config {"rssiThreshold": 9}`
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"rssithreshold": 9}`
 
 ### Retrieve current status of receiver
 
