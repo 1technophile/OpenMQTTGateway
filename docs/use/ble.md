@@ -143,8 +143,8 @@ So as to keep your white/black list persistent you can publish it with the retai
 
 ## Setting the time between BLE scans and force a scan (available with HA discovery)
 
-If you want to change the time between readings you can change the interval by MQTT.
-For example, if you want the BLE to scan every 66 seconds:
+If you want to change the time between readings you can change the interval by MQTT. `adaptivescan` parameter needs to be `false` for the `interval` change to be taken into account.
+Example if you want the BLE to scan every 66 seconds:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":66000}'`
 
@@ -160,9 +160,9 @@ Once the forced scan has completed, the previous scan interval value will be res
 
 The default value `TimeBtwRead` is set into config_BT.h or into your .ini file for platformio users.
 
-If you want to scan continuously for BLE devices, for example for beacon location you can set the interval to 1ms:
+If you want to scan continuously for BLE devices, for example for beacon location you can set the interval to 100ms:
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":1}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":100}'`
 
 In this case you should deactivate the BLE connection mechanism to avoid concurrency between scan and connections (see chapter below, bleconnect).
 
@@ -220,7 +220,7 @@ If adaptive scanning is set to false and you want to manually set these interval
 
 If you have passive scanning activated, but also have some devices which require active scanning, this defines the time interval between two intermittent active scans.
 
-If you want to change the time between active scans you can change it by MQTT. For setting the active scan interval time to every 5 minutes:
+If you want to change the time between active scans you can change it by MQTT, `adaptivescan` parameter needs to be `false` for the `intervalacts` change to be taken into account. Example for setting the active scan interval time to every 5 minutes:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
 
