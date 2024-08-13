@@ -766,7 +766,7 @@ void handleMQ() {
 #  ifndef ESPWifiManualSetup
       if (update) {
         Log.warning(F("[WebUI] Save MQTT and Reconnect" CR));
-        WEBtoSYS["cnt_index"] = 1; // For the moment we only enable to change index 1 with WebUI
+        WEBtoSYS["cnt_index"] = CNT_DEFAULT_INDEX;
         WEBtoSYS["save_cnt"] = true;
         char jsonChar[100];
         serializeJson(modules, jsonChar, measureJson(modules) + 1);
