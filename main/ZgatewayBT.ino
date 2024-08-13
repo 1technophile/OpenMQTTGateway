@@ -1057,14 +1057,14 @@ void launchBTDiscovery(bool overrideDiscovery) {
               String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
-              if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") != 0) {
+              if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
                 String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
                 String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
                 createDiscovery("switch", //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, "switch", value_template.c_str(),
                                 payload_on.c_str(), payload_off.c_str(), "", 0,
-                                Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBTset,
+                                Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone, "off", "on");
               } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
@@ -1377,7 +1377,7 @@ void startBTActionTask() {
   xTaskCreatePinnedToCore(
       immediateBTAction, /* Function to implement the task */
       "imActTask", /* Name of the task */
-      5120, /* Stack size in bytes */
+      8000, /* Stack size in bytes */
       NULL, /* Task input parameter */
       3, /* Priority of the task (set higher than core task) */
       &th, /* Task handle. */

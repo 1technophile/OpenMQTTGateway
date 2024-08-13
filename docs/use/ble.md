@@ -371,6 +371,7 @@ Response:
 ::: tip
 The `ttl` parameter is the number of attempts to connect (defaults to 1), which occur after the BLE scan completes.  
 `value_type` can be one of: STRING, HEX, INT, FLOAT. Default is STRING if omitted in the message.
+:::
 
 ## SwitchBot Bot control (available with HA discovery)
 
