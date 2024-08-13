@@ -1377,7 +1377,7 @@ void startBTActionTask() {
   xTaskCreatePinnedToCore(
       immediateBTAction, /* Function to implement the task */
       "imActTask", /* Name of the task */
-      5120, /* Stack size in bytes */
+      8000, /* Stack size in bytes */
       NULL, /* Task input parameter */
       3, /* Priority of the task (set higher than core task) */
       &th, /* Task handle. */
