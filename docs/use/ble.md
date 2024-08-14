@@ -375,7 +375,7 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 
 ## SwitchBot Bot control (available with HA discovery)
 
-SwitchBot Bot devices are automatically discovered and available as a device in the configuration menu of home assistant.
+SwitchBot Bot devices are automatically discovered and available as a device in the Home Assistant Settings menu.
 
 ::: tip
 If the SwitchBot mode is changed the ESP32 must be restarted. 
@@ -383,11 +383,11 @@ If the SwitchBot mode is changed the ESP32 must be restarted.
 
 The device can also be controlled over MQTT with a simplified BLE write command.
 
-### Example command to set the SwitchBot state to ON:
+### Example command to set the SwitchBot Bot state to ON:
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "SBS1":"on",
-  "mac":"AA:BB:CC:DD:EE:FF"
+  "id":"AA:BB:CC:DD:EE:FF"
 }'
 ```
 Response (assuming success):
@@ -395,6 +395,54 @@ Response (assuming success):
 {
   "id":"AA:BB:CC:DD:EE:FF",
   "state":"on"
+}
+```
+
+## SwitchBot Blind Tilt control (available with HA discovery)
+
+SwitchBot Blind Tilt devices are automatically discovered and available as a device in the settings Home Assistant Settings menu. The following commands are supported:
+* Open
+* Close down
+* Set a percentage
+
+The device can also be controlled over MQTT with a simplified BLE write command.
+
+### Example command to set the SwitchBot Blind Tilt state to OPEN:
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W270160X",
+  "tilt":"open",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+
+### Example command to set the SwitchBot Blind Tilt state to CLOSE_DOWN:
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W270160X",
+  "tilt":"close_down",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+
+### Example command to set the SwitchBot Blind Tilt state to CLOSE_UP:
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W270160X",
+  "tilt":"close_up",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+
+### Example command to set the SwitchBot Blind Tilt state to a percentage (0-100):
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W270160X",
+  "tilt":55,
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+
+### Response (assuming success):
+The Switchbot Blind Tilt response :
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "tilt":55,
+  "open":90,
+  "direction":"up"
 }
 ```
 

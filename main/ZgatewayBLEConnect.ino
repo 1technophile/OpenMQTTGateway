@@ -500,5 +500,105 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
   return result;
 }
 
+/*-----------------------SBBT HANDLING-----------------------*/
+void SBBT_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
+  if (m_taskHandle == nullptr) {
+    return; // unexpected notification
+  }
+  if (!BTProcessLock) {
+    Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
+
+    if (length) {
+      m_notifyVal = *pData;
+    } else {
+      Log.notice(F("Invalid notification data" CR));
+      return;
+    }
+  } else {
+    Log.trace(F("Callback process canceled by BTProcessLock" CR));
+  }
+
+  xTaskNotifyGive(m_taskHandle);
+}
+
+bool SBBT_connect::processActions(std::vector<BLEAction>& actions) {
+  NimBLEUUID serviceUUID("cba20d00-224d-11e6-9fb8-0002a5d5c51b");
+  NimBLEUUID charUUID("cba20002-224d-11e6-9fb8-0002a5d5c51b");
+  NimBLEUUID notifyCharUUID("cba20003-224d-11e6-9fb8-0002a5d5c51b");
+  static byte OPEN[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x32};
+  static byte CLOSE_DOWN[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x00};
+  static byte CLOSE_UP[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x64};
+  static byte MOVE[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x00};
+
+  bool result = false;
+  if (actions.size() > 0) {
+    for (auto& it : actions) {
+      if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
+        NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
+        NimBLERemoteCharacteristic* pNotifyChar = getCharacteristic(serviceUUID, notifyCharUUID);
+        int value = -1;
+        if (it.value_type == BLE_VAL_INT) {
+          value = std::stoi(it.value);
+        }
+        if (it.write && pChar && pNotifyChar) {
+          Log.trace(F("processing Switchbot %s" CR), it.value.c_str());
+          if (pNotifyChar->subscribe(true,
+                                     std::bind(&SBBT_connect::notifyCB,
+                                               this, std::placeholders::_1, std::placeholders::_2,
+                                               std::placeholders::_3, std::placeholders::_4),
+                                     true)) {
+            if (it.value == "open" && it.value_type == BLE_VAL_STRING) {
+              result = pChar->writeValue(OPEN, 7, false);
+              value = 50;
+            } else if (it.value == "close_down" && it.value_type == BLE_VAL_STRING) {
+              result = pChar->writeValue(CLOSE_DOWN, 7, false);
+              value = 0;
+            } else if (it.value == "close_up" && it.value_type == BLE_VAL_STRING) {
+              result = pChar->writeValue(CLOSE_UP, 7, false);
+              value = 100;
+            } else if (it.value_type == BLE_VAL_INT) {
+              if (value >= 0 && value <= 100) {
+                byte posByte = (byte)value;
+                MOVE[6] = posByte;
+                result = pChar->writeValue(MOVE, 7, false);
+              }
+            }
+
+            if (result) {
+              m_taskHandle = xTaskGetCurrentTaskHandle();
+              if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(BLE_CNCT_TIMEOUT)) == pdFALSE) {
+                m_taskHandle = nullptr;
+              }
+              result = m_notifyVal == 0x01;
+            }
+          }
+        }
+
+        it.complete = result;
+        if (result || it.ttl <= 1) {
+          StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+          JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
+          BLEdata["id"] = it.addr;
+          BLEdata["tilt"] = value;
+          if (value == 50) {
+            BLEdata["open"] = 100;
+            BLEdata["direction"] = "-";
+          } else if (value < 50) {
+            BLEdata["open"] = value * 2;
+            BLEdata["direction"] = "down";
+          } else if (value > 50) {
+            BLEdata["open"] = (100 - value) * 2;
+            BLEdata["direction"] = "up";
+          }
+          buildTopicFromId(BLEdata, subjectBTtoMQTT);
+          handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 #  endif //ZgatewayBT
 #endif //ESP32
