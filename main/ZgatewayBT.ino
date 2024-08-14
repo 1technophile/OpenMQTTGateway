@@ -742,6 +742,9 @@ void BLEconnect() {
           } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1) {
             SBS1_connect BLEclient(addr);
             BLEclient.processActions(BLEactions);
+          } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBBT) {
+            SBBT_connect BLEclient(addr);
+            BLEclient.processActions(BLEactions);
           } else {
             GENERIC_connect BLEclient(addr);
             if (BLEclient.processActions(BLEactions)) {
@@ -1058,8 +1061,8 @@ void launchBTDiscovery(bool overrideDiscovery) {
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
-                String payload_on = "{\"SBS1\":\"on\",\"mac\":\"" + String(p->macAdr) + "\"}";
-                String payload_off = "{\"SBS1\":\"off\",\"mac\":\"" + String(p->macAdr) + "\"}";
+                String payload_on = "{\"SBS1\":\"on\",\"id\":\"" + String(p->macAdr) + "\"}";
+                String payload_off = "{\"SBS1\":\"off\",\"id\":\"" + String(p->macAdr) + "\"}";
                 createDiscovery("switch", //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, "switch", value_template.c_str(),
@@ -1067,6 +1070,16 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone, "off", "on");
+              } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBBT && strcmp(prop.key().c_str(), "open") == 0) {
+                value_template = "{% if value_json.direction == \"up\" -%} {{ 100 - value_json.open/2 }}{% elif value_json.direction == \"down\" %}{{ value_json.open/2 }}{% else %} {{ value_json.open/2 }}{%- endif %}";
+                String command_template = "{\"model_id\":\"W270160X\",\"tilt\":{{ value | int }},\"id\":\"" + String(p->macAdr) + "\"}";
+                createDiscovery("cover", //set Type
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, "cover", value_template.c_str(),
+                                "50", "", "", 0,
+                                Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassNone, nullptr, nullptr, nullptr, command_template.c_str());
               } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
                          strcmp(prop.key().c_str(), "weighing_mode") == 0) {
                 createDiscovery("sensor",
@@ -1388,13 +1401,38 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   BLEAction action;
   memset(&action, 0, sizeof(BLEAction));
   if (BTdata.containsKey("SBS1")) {
-    strcpy(action.addr, (const char*)BTdata["mac"]);
+    strcpy(action.addr, (const char*)BTdata["id"]);
     action.write = true;
     std::string val = BTdata["SBS1"].as<std::string>(); // Fix #1694
     action.value = val;
     action.ttl = 1;
     createOrUpdateDevice(action.addr, device_flags_connect,
                          TheengsDecoder::BLE_ID_NUM::SBS1, 1);
+    BLEactions.push_back(action);
+    startBTActionTask();
+    return;
+  }
+
+  if (BTdata.containsKey("model_id") && BTdata["model_id"].is<const char*>() && BTdata["model_id"] == "W270160X") {
+    if (!BTdata.containsKey("id")) {
+      Log.error(F("BLE mac address missing" CR));
+      return;
+    }
+    strcpy(action.addr, (const char*)BTdata["id"]);
+    action.write = true;
+    if (BTdata.containsKey("tilt") && BTdata["tilt"].is<int>()) {
+      action.value_type = BLE_VAL_INT;
+    } else if (BTdata.containsKey("tilt") && BTdata["tilt"].is<const char*>()) {
+      action.value_type = BLE_VAL_STRING;
+    } else {
+      Log.error(F("BLE value type invalid" CR));
+      return;
+    }
+    std::string val = BTdata["tilt"].as<std::string>(); // Fix #1694
+    action.value = val;
+    action.ttl = 3;
+    createOrUpdateDevice(action.addr, device_flags_connect,
+                         TheengsDecoder::BLE_ID_NUM::SBBT, 1);
     BLEactions.push_back(action);
     startBTActionTask();
     return;

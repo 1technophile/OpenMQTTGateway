@@ -88,7 +88,7 @@ extern void createDiscovery(const char* sensor_type,
                             int off_delay,
                             const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* command_topic,
                             const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
-                            const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr, const char* enum_options = nullptr);
+                            const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr, const char* enum_options = nullptr, const char* command_template = nullptr);
 
 /**
  * @brief Create a message for Discovery Device Trigger. For HA @see https://www.home-assistant.io/integrations/device_trigger.mqtt/

@@ -239,8 +239,8 @@ void createDiscovery(const char* sensor_type,
                      int off_delay,
                      const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
-                     const char* state_class, const char* state_off, const char* state_on, const char* enum_options) {
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+                     const char* state_class, const char* state_off, const char* state_on, const char* enum_options, const char* command_template) {
+  StaticJsonDocument<1024> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
   // If a component cannot render it's state (f.i. KAKU relays) no state topic
@@ -249,7 +249,7 @@ void createDiscovery(const char* sensor_type,
   // (separate on and off icons) allows for multiple
   // subsequent on commands. This is required for dimming on KAKU relays like
   // the ACM-300.
-  if (st_topic[0]) {
+  if (st_topic && st_topic[0]) {
     char state_topic[mqtt_topic_max_size];
     // If not an entity belonging to the gateway we put wild card for the location and gateway name
     // allowing to have the entity detected by several gateways and a consistent discovery topic among the gateways
@@ -260,10 +260,14 @@ void createDiscovery(const char* sensor_type,
       strcpy(state_topic, "+/+");
     }
     strcat(state_topic, st_topic);
-    sensor["stat_t"] = state_topic;
+    if (strcmp(sensor_type, "cover") == 0) {
+      sensor["tilt_status_t"] = state_topic; // tilt_status_topic for cover
+    } else {
+      sensor["stat_t"] = state_topic;
+    }
   }
 
-  if (availability_topic[0] && gateway_entity) {
+  if (availability_topic && availability_topic[0] && gateway_entity) {
     char avty_topic[mqtt_topic_max_size];
     strcpy(avty_topic, mqtt_topic);
     strcat(avty_topic, gateway_name);
@@ -271,7 +275,7 @@ void createDiscovery(const char* sensor_type,
     sensor["avty_t"] = avty_topic;
   }
 
-  if (device_class[0]) {
+  if (device_class && device_class[0]) {
     // We check if the class belongs to HAAS classes list
     int num_classes = sizeof(availableHASSClasses) / sizeof(availableHASSClasses[0]);
     for (int i = 0; i < num_classes; i++) { // see class list and size into config_mqttDiscovery.h
@@ -281,7 +285,7 @@ void createDiscovery(const char* sensor_type,
     }
   }
 
-  if (unit_of_meas[0]) {
+  if (unit_of_meas && unit_of_meas[0]) {
     // We check if the class belongs to HAAS units list
     int num_units = sizeof(availableHASSUnits) / sizeof(availableHASSUnits[0]);
     for (int i = 0; i < num_units; i++) { // see units list and size into config_mqttDiscovery.h
@@ -294,26 +298,45 @@ void createDiscovery(const char* sensor_type,
   sensor["uniq_id"] = unique_id; //unique_id
   if (retainCmd)
     sensor["retain"] = retainCmd; // Retain command
-  if (value_template[0]) {
+  if (value_template && value_template[0]) {
     if (strstr(value_template, " | is_defined") != NULL && SYSConfig.ohdiscovery) {
       sensor["val_tpl"] = remove_substring(value_template, " | is_defined"); //OpenHAB compatible HA auto discovery
     } else {
-      sensor["val_tpl"] = value_template; //HA Auto discovery
+      if (strcmp(sensor_type, "cover") == 0) {
+        sensor["tilt_status_tpl"] = value_template; // tilt_status_template for cover
+      } else {
+        sensor["val_tpl"] = value_template; //HA Auto discovery
+      }
     }
   }
-  if (payload_on[0]) {
+  if (payload_on && payload_on[0]) {
     if (strcmp(sensor_type, "button") == 0) {
       sensor["pl_prs"] = payload_on; // payload_press for a button press
     } else if (strcmp(sensor_type, "number") == 0) {
       sensor["cmd_tpl"] = payload_on; // payload_on for a switch
     } else if (strcmp(sensor_type, "update") == 0) {
-      sensor["payload_install"] = payload_on; // payload_install for update
+      sensor["pl_inst"] = payload_on; // payload_install for update
+    } else if (strcmp(sensor_type, "cover") == 0) {
+      int value = std::stoi(payload_on);
+      sensor["tilt_opnd_val"] = value; // tilt_open_value for cover
     } else {
       sensor["pl_on"] = payload_on; // payload_on for the rest
     }
   }
-  if (payload_off[0])
-    sensor["pl_off"] = payload_off; //payload_off
+  if (payload_off && payload_off[0]) {
+    if (strcmp(sensor_type, "cover") == 0) {
+      sensor["pl_cls"] = payload_off; // payload_close for cover
+    } else {
+      sensor["pl_off"] = payload_off; //payload_off
+    }
+  }
+  if (command_template && command_template[0]) {
+    if (strcmp(sensor_type, "cover") == 0) {
+      sensor["tilt_cmd_tpl"] = command_template; //command_template
+    } else {
+      sensor["cmd_tpl"] = command_template; //command_template
+    }
+  }
   if (strcmp(sensor_type, "device_tracker") == 0)
     sensor["source_type"] = "bluetooth_le"; // payload_install for update
   if (off_delay != 0)
@@ -323,7 +346,7 @@ void createDiscovery(const char* sensor_type,
   if (payload_not_available[0])
     sensor["pl_not_avail"] = payload_not_available; //payload_off
   if (state_class && state_class[0])
-    sensor["state_class"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
+    sensor["stat_cla"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
   if (state_on != nullptr)
     if (strcmp(state_on, "true") == 0) {
       sensor["stat_on"] = true;
@@ -341,7 +364,11 @@ void createDiscovery(const char* sensor_type,
     strcpy(command_topic, mqtt_topic);
     strcat(command_topic, gateway_name);
     strcat(command_topic, cmd_topic);
-    sensor["cmd_t"] = command_topic; //command_topic
+    if (strcmp(sensor_type, "cover") == 0) {
+      sensor["tilt_cmd_t"] = command_topic; // tilt_command_topic for cover
+    } else {
+      sensor["cmd_t"] = command_topic; //command_topic
+    }
   }
 
   if (enum_options != nullptr) {
