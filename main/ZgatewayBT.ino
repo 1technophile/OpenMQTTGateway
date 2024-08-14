@@ -1061,8 +1061,8 @@ void launchBTDiscovery(bool overrideDiscovery) {
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
-                String payload_on = "{\"SBS1\":\"on\",\"id\":\"" + String(p->macAdr) + "\"}";
-                String payload_off = "{\"SBS1\":\"off\",\"id\":\"" + String(p->macAdr) + "\"}";
+                String payload_on = "{\"model_id\":\"X1\",\"cmd\":\"on\",\"id\":\"" + String(p->macAdr) + "\"}";
+                String payload_off = "{\"model_id\":\"X1\",\"cmd\":\"off\",\"id\":\"" + String(p->macAdr) + "\"}";
                 createDiscovery("switch", //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, "switch", value_template.c_str(),
@@ -1070,6 +1070,17 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone, "off", "on");
+                unique_id = macWOdots + "-press";
+                entity_name = String(model_id.c_str()) + "-press";
+                String payload_press = "{\"model_id\":\"X1\",\"cmd\":\"press\",\"id\":\"" + String(p->macAdr) + "\"}";
+                createDiscovery("button", //set Type
+                                discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
+                                will_Topic, "button", "",
+                                payload_press.c_str(), "", "", //set,payload_on,payload_off,unit_of_meas,
+                                0, //set  off_delay
+                                Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
+                                model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                                stateClassNone);
               } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBBT && strcmp(prop.key().c_str(), "open") == 0) {
                 value_template = "{% if value_json.direction == \"up\" -%} {{ 100 - value_json.open/2 }}{% elif value_json.direction == \"down\" %}{{ value_json.open/2 }}{% else %} {{ value_json.open/2 }}{%- endif %}";
                 String command_template = "{\"model_id\":\"W270160X\",\"tilt\":{{ value | int }},\"id\":\"" + String(p->macAdr) + "\"}";
@@ -1400,12 +1411,12 @@ void startBTActionTask() {
 void MQTTtoBTAction(JsonObject& BTdata) {
   BLEAction action;
   memset(&action, 0, sizeof(BLEAction));
-  if (BTdata.containsKey("SBS1")) {
+  if (BTdata.containsKey("model_id") && BTdata["model_id"].is<const char*>() && BTdata["model_id"] == "X1") {
     strcpy(action.addr, (const char*)BTdata["id"]);
     action.write = true;
-    std::string val = BTdata["SBS1"].as<std::string>(); // Fix #1694
+    std::string val = BTdata["cmd"].as<std::string>(); // Fix #1694
     action.value = val;
-    action.ttl = 1;
+    action.ttl = 3;
     createOrUpdateDevice(action.addr, device_flags_connect,
                          TheengsDecoder::BLE_ID_NUM::SBS1, 1);
     BLEactions.push_back(action);

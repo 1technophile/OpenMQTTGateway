@@ -453,6 +453,9 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
   NimBLEUUID notifyCharUUID("cba20003-224d-11e6-9fb8-0002a5d5c51b");
   static byte ON[] = {0x57, 0x01, 0x01};
   static byte OFF[] = {0x57, 0x01, 0x02};
+  static byte PRESS[] = {0x57, 0x01, 0x00};
+  static byte DOWN[] = {0x57, 0x01, 0x03};
+  static byte UP[] = {0x57, 0x01, 0x04};
 
   bool result = false;
   if (actions.size() > 0) {
@@ -470,8 +473,14 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
                                      true)) {
             if (it.value == "on") {
               result = pChar->writeValue(ON, 3, false);
-            } else {
+            } else if (it.value == "off") {
               result = pChar->writeValue(OFF, 3, false);
+            } else if (it.value == "press") {
+              result = pChar->writeValue(PRESS, 3, false);
+            } else if (it.value == "down") {
+              result = pChar->writeValue(DOWN, 3, false);
+            } else if (it.value == "up") {
+              result = pChar->writeValue(UP, 3, false);
             }
 
             if (result) {
@@ -489,7 +498,7 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
           StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
           JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
           BLEdata["id"] = it.addr;
-          BLEdata["state"] = result ? it.value : it.value == "on" ? "off" : "on";
+          BLEdata["state"] = it.value;
           buildTopicFromId(BLEdata, subjectBTtoMQTT);
           handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
         }

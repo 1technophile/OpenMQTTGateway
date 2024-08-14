@@ -375,7 +375,12 @@ The `ttl` parameter is the number of attempts to connect (defaults to 1), which 
 
 ## SwitchBot Bot control (available with HA discovery)
 
-SwitchBot Bot devices are automatically discovered and available as a device in the Home Assistant Settings menu.
+SwitchBot Bot devices are automatically discovered and available as a device in the Home Assistant Settings menu. The following commands are supported:
+* Press
+* On
+* Off
+* Up
+* Down
 
 ::: tip
 If the SwitchBot mode is changed the ESP32 must be restarted. 
@@ -383,13 +388,51 @@ If the SwitchBot mode is changed the ESP32 must be restarted.
 
 The device can also be controlled over MQTT with a simplified BLE write command.
 
-### Example command to set the SwitchBot Bot state to ON:
+### Set the SwitchBot Bot state to ON:
 ```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
-  "SBS1":"on",
+  "model_id":"X1",
+  "cmd":"on",
   "id":"AA:BB:CC:DD:EE:FF"
 }'
 ```
+
+### Set the SwitchBot Bot state to OFF:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"X1",
+  "cmd":"off",
+  "id":"AA:BB:CC:DD:EE:FF"
+}'
+```
+
+### Set the SwitchBot Bot to PRESS:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"X1",
+  "cmd":"press",
+  "id":"AA:BB:CC:DD:EE:FF"
+}'
+```
+
+### Set the SwitchBot Bot to go UP:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"X1",
+  "cmd":"up",
+  "id":"AA:BB:CC:DD:EE:FF"
+}'
+```
+
+### Set the SwitchBot Bot to go DOWN:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"X1",
+  "cmd":"down",
+  "id":"AA:BB:CC:DD:EE:FF"
+}'
+```
+
 Response (assuming success):
 ```
 {
@@ -407,33 +450,41 @@ SwitchBot Blind Tilt devices are automatically discovered and available as a dev
 
 The device can also be controlled over MQTT with a simplified BLE write command.
 
-### Example command to set the SwitchBot Blind Tilt state to OPEN:
+### Set the SwitchBot Blind Tilt state to OPEN:
+```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "model_id":"W270160X",
   "tilt":"open",
   "id":"AA:BB:CC:DD:EE:FF"
   }'
+```
 
-### Example command to set the SwitchBot Blind Tilt state to CLOSE_DOWN:
+### Set the SwitchBot Blind Tilt state to CLOSE_DOWN:
+```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "model_id":"W270160X",
   "tilt":"close_down",
   "id":"AA:BB:CC:DD:EE:FF"
   }'
+```
 
-### Example command to set the SwitchBot Blind Tilt state to CLOSE_UP:
+### Set the SwitchBot Blind Tilt state to CLOSE_UP:
+```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "model_id":"W270160X",
   "tilt":"close_up",
   "id":"AA:BB:CC:DD:EE:FF"
   }'
+```
 
-### Example command to set the SwitchBot Blind Tilt state to a percentage (0-100):
+### Set the SwitchBot Blind Tilt state to a percentage (0-100):
+```
 mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   "model_id":"W270160X",
   "tilt":55,
   "id":"AA:BB:CC:DD:EE:FF"
   }'
+```
 
 ### Response (assuming success):
 The Switchbot Blind Tilt response :
