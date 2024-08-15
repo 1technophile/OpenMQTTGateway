@@ -158,7 +158,7 @@
 #  if MQTT_SECURE_DEFAULT
 #    define JSON_MSG_BUFFER_MAX 2048 // Json message buffer size increased to handle certificate changes through MQTT, used for the queue and the coming MQTT messages
 #  else
-#    define JSON_MSG_BUFFER_MAX JSON_MSG_BUFFER
+#    define JSON_MSG_BUFFER_MAX 898 // Minimum size for the cover MQTT discovery message
 #  endif
 #endif
 
