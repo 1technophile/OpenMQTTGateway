@@ -12,7 +12,7 @@ Data are transmitted to an MQTT broker, where it can be used to trigger events a
 With the ability to monitor and analyze data such as temperature, humidity, moisture, luminance, weight, pressure, fine particles, and more, the BLE gateway provides a flexible and customizable solution for integrating BLE technology into your control and monitoring systems.
 
 <div style="text-align: center;">
-    <img src="/img/OpenMQTTGateway-sensors-ble.png" alt="BLE sensors and devices" style="max-width: 100%; height: auto;">
+    <img src="../img/OpenMQTTGateway-sensors-ble.png" alt="BLE sensors and devices" style="max-width: 100%; height: auto;">
 </div>
 
 ## Products powered by OpenMQTTGateway
@@ -23,7 +23,7 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna" target="_blank" rel="noopener noreferrer">
-    <img src="/img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" style="max-width: 100%; height: auto;">
+    <img src="../img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" style="max-width: 100%; height: auto;">
     </a>
 </div>
 
@@ -39,7 +39,7 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption" target="_blank" rel="noopener noreferrer">
-    <img src="/img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" style="max-width: 100%; height: auto;">
+    <img src="../img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" style="max-width: 100%; height: auto;">
     </a>
 </div>
 
