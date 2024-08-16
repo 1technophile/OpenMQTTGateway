@@ -1333,7 +1333,7 @@ void setup() {
   Log.trace(F("OpenMQTTGateway index %d" CR), cnt_index);
   Log.trace(F("OpenMQTTGateway mqtt topic: %s" CR), mqtt_topic);
 #ifdef ZmqttDiscovery
-  Log.trace(F("OpenMQTTGateway mqtt topic: %s" CR), discovery_prefix);
+  Log.trace(F("OpenMQTTGateway mqtt discovery prefix: %s" CR), discovery_prefix);
 #endif
   Log.trace(F("OpenMQTTGateway gateway name: %s" CR), gateway_name);
 #if !MQTT_BROKER_MODE
