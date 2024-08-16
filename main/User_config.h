@@ -373,7 +373,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
-//#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
+//#define ZgatewaySERIAL   "SERIAL"  //ESP8266, Arduino, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef will_Topic

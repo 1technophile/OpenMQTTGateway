@@ -216,8 +216,8 @@ struct GfSun2000Data {};
 #if defined(ZdisplaySSD1306)
 #  include "config_SSD1306.h"
 #endif
-#if defined(ZgatewayRS232)
-#  include "config_RS232.h"
+#if defined(ZgatewaySERIAL)
+#  include "config_SERIAL.h"
 #endif
 /*------------------------------------------------------------------------*/
 
@@ -1490,9 +1490,9 @@ void setup() {
   setupDHT();
   modules.add(ZsensorDHT);
 #endif
-#ifdef ZgatewayRS232
-  setupRS232();
-  modules.add(ZgatewayRS232);
+#ifdef ZgatewaySERIAL
+  setupSERIAL();
+  modules.add(ZgatewaySERIAL);
 #endif
 #ifdef ZsensorSHTC3
   setupSHTC3();
@@ -2520,8 +2520,8 @@ void loop() {
       if (RFM69toMQTT())
         Log.trace(F("RFM69toMQTT OK" CR));
 #endif
-#ifdef ZgatewayRS232
-      RS232toMQTT();
+#ifdef ZgatewaySERIAL
+      SERIALtoMQTT();
 #endif
 #ifdef ZactuatorFASTLED
       FASTLEDLoop();
@@ -2898,8 +2898,8 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef ZactuatorSomfy
     MQTTtoSomfy(topicOri, jsondata);
 #  endif
-#  ifdef ZgatewayRS232
-    MQTTtoRS232(topicOri, jsondata);
+#  ifdef ZgatewaySERIAL
+    MQTTtoSERIAL(topicOri, jsondata);
 #  endif
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);

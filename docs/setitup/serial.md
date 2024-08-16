@@ -1,4 +1,4 @@
-# RS232 gateway
+# Serial/RS232 gateway
 ## Compatible parts
 |Module|Purpose|Where to Buy|
 |-|-|-|
