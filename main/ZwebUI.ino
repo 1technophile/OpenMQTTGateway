@@ -692,7 +692,8 @@ void handleWI() {
  * T: handleMQ Arg: 4, sc=on
  * T: handleMQ Arg: 5, h=
  * T: handleMQ Arg: 6, mt=home/
- * T: handleMQ Arg: 7, save=
+ * T: handleMQ Arg: 7 dp=homeassistant
+ * T: handleMQ Arg: 8, save=
  */
 void handleMQ() {
   WEBUI_TRACE_LOG(F("handleMQ: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -761,6 +762,11 @@ void handleMQ() {
         if (strncmp(mqtt_topic, server.arg("mt").c_str(), parameters_size)) {
           update = true;
         }
+      if (server.hasArg("dp")) {
+        WEBtoSYS["discovery_prefix"] = server.arg("dp");
+        if (strncmp(discovery_prefix, server.arg("dp").c_str(), parameters_size)) {
+          update = true;
+        }
       }
 
 #  ifndef ESPWifiManualSetup
@@ -803,11 +809,11 @@ void handleMQ() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), topic (mt)
+  // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), mqtt topic (mt), discovery prefix (dp)
 #  if MQTT_BROKER_MODE
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, "", "1883", "", "", gateway_name, mqtt_topic);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, "", "1883", "", "", gateway_name, mqtt_topic, discovery_prefix);
 #  else
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, (cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "checked" : ""), gateway_name, mqtt_topic);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, (cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "checked" : ""), gateway_name, mqtt_topic, discovery_prefix);
 #  endif
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
