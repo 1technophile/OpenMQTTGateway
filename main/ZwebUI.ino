@@ -766,7 +766,7 @@ void handleMQ() {
 #  ifdef ZmqttDiscovery 
       if (server.hasArg("dp")) {
         WEBtoSYS["discovery_prefix"] = server.arg("dp");
-        if (strncmp(discovery_prefix, server.arg("dp").c_str(), mqtt_topic_max_size)) {
+        if (strncmp(discovery_prefix, server.arg("dp").c_str(), parameters_size)) {
           update = true;
         }
       }
