@@ -601,41 +601,56 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
       leds.begin();                      \
       leds2.begin();
 #  endif
-#  define ErrorIndicatorON()                              \
-    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
-    leds.setBrightness(SYSConfig.rgbbrightness);          \
-    leds.show();
-#  define ErrorIndicatorOFF()                           \
-    leds.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
-    leds.show();
-#  define SendReceiveIndicatorON()                                     \
-    leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
-    leds.setBrightness(SYSConfig.rgbbrightness);                       \
-    leds.show();
-#  define SendReceiveIndicatorOFF()                            \
-    leds.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
-    leds.show();
-#  define InfoIndicatorON()                             \
-    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
-    leds.setBrightness(SYSConfig.rgbbrightness);        \
-    leds.show();
-#  define InfoIndicatorOFF()                           \
-    leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
-    leds.show();
+#  ifndef LED_ERROR
+#    define LED_ERROR leds
+#  endif
+#  ifndef LED_SR
+#    define LED_SR leds
+#  endif
+#  ifndef LED_INFO
+#    define LED_INFO leds
+#  endif
+#  define ErrorIndicatorON()                                   \
+    LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
+    LED_ERROR.setBrightness(SYSConfig.rgbbrightness);          \
+    LED_ERROR.show();
+#  define ErrorIndicatorOFF()                                \
+    LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
+    LED_ERROR.show();
+#  define SendReceiveIndicatorON()                                       \
+    LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
+    LED_SR.setBrightness(SYSConfig.rgbbrightness);                       \
+    LED_SR.show();
+#  define SendReceiveIndicatorOFF()                              \
+    LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
+    LED_SR.show();
+#  define InfoIndicatorON()                                 \
+    LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+    LED_INFO.setBrightness(SYSConfig.rgbbrightness);        \
+    LED_INFO.show();
+#  define InfoIndicatorOFF()                               \
+    LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
+    LED_INFO.show();
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Used for relay power indicator
 // For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
 // This enable to have persistence of the indicator to inform the user
-#    define CriticalIndicatorON()                              \
-      leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
-      leds2.setBrightness(255);                                \
-      leds2.show();
-#    define PowerIndicatorON()                             \
-      leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
-      leds2.setBrightness(SYSConfig.rgbbrightness);        \
-      leds2.show();
-#    define PowerIndicatorOFF()                           \
-      leds2.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
-      leds2.show();
+#    ifndef LED_CRITICAL
+#      define LED_CRITICAL leds2
+#    endif
+#    ifndef LED_POWER
+#      define LED_POWER leds2
+#    endif
+#    define CriticalIndicatorON()                                     \
+      LED_CRITICAL.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
+      LED_CRITICAL.setBrightness(255);                                \
+      LED_CRITICAL.show();
+#    define PowerIndicatorON()                                 \
+      LED_POWER.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+      LED_POWER.setBrightness(SYSConfig.rgbbrightness);        \
+      LED_POWER.show();
+#    define PowerIndicatorOFF()                               \
+      LED_POWER.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
+      LED_POWER.show();
 #  endif
 #  define SetupIndicatorInfo()
 #  define SetupIndicatorSendReceive()
