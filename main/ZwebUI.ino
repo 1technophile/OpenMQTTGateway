@@ -762,6 +762,7 @@ void handleMQ() {
         if (strncmp(mqtt_topic, server.arg("mt").c_str(), parameters_size)) {
           update = true;
         }
+      }
       if (server.hasArg("dp")) {
         WEBtoSYS["discovery_prefix"] = server.arg("dp");
         if (strncmp(discovery_prefix, server.arg("dp").c_str(), parameters_size)) {
