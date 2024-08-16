@@ -3291,7 +3291,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
       if (SYSdata.containsKey("discovery_prefix")) {
         strncpy(discovery_prefix, SYSdata["discovery_prefix"], parameters_size);
-        restartESP = true;
+        restartESP = true; //Need to reset so all devices get re-discovered & published to new discovery_prefix
       }
       if (SYSdata.containsKey("gateway_name")) {
         strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
