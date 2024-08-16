@@ -460,6 +460,9 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  ifndef LED_ERROR_ON
 #    define LED_ERROR_ON HIGH
 #  endif
+#  ifndef LED_ON_ON
+#    define LED_ON_ON HIGH
+#  endif
 #  ifndef LED_INFO
 #    ifdef ESP8266
 //#      define LED_INFO 44
@@ -470,7 +473,13 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  ifndef LED_INFO_ON
 #    define LED_INFO_ON HIGH
 #  endif
-
+#  ifdef LED_ON
+#    define SetupIndicatorError() \
+      pinMode(LED_ON, OUTPUT);
+#    define ONIndicatorON() digitalWrite(LED_ON, LED_ON_ON)
+#  else
+#    define ONIndicatorON()
+#  endif
 #  ifdef LED_ERROR
 #    define SetupIndicatorError() \
       pinMode(LED_ERROR, OUTPUT); \
@@ -518,6 +527,10 @@ Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_IND_
 // assume the same LED type
 Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IND_TYPE);
 #  endif
+#  ifdef ANEOPIX_IND_DATA_GPIO3
+// assume the same LED type
+Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IND_TYPE);
+#  endif
 
 #  ifndef RGB_LED_POWER
 #    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
@@ -532,6 +545,9 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #    define ANEOPIX_COLOR_SCHEME 0
 #  endif
 // Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
+#  ifndef ANEOPIX_ON_LED
+#    define ANEOPIX_ON_LED 0 // First Led
+#  endif
 #  ifndef ANEOPIX_INFO_LED
 #    define ANEOPIX_INFO_LED 0 // First Led
 #  endif
@@ -586,7 +602,7 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #    define ANEOPIX_BOOT        ANEOPIX_AQUA
 #    define ANEOPIX_OFF         ANEOPIX_BLACK
 #  endif
-#  ifndef ANEOPIX_IND_DATA_GPIO2
+#  if !defined(ANEOPIX_IND_DATA_GPIO2) && !defined(ANEOPIX_IND_DATA_GPIO3)
 // during boot the RGB LED is on to signal also reboots
 #    define SetupIndicators()                             \
       pinMode(RGB_LED_POWER, OUTPUT);                     \
@@ -594,12 +610,19 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
       leds.begin();                                       \
       leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BOOT); \
       leds.show();
-#  else
+#  elif defined(ANEOPIX_IND_DATA_GPIO2) && !defined(ANEOPIX_IND_DATA_GPIO3)
 #    define SetupIndicators()            \
       pinMode(RGB_LED_POWER, OUTPUT);    \
       digitalWrite(RGB_LED_POWER, HIGH); \
       leds.begin();                      \
       leds2.begin();
+#  else
+#    define SetupIndicators()            \
+      pinMode(RGB_LED_POWER, OUTPUT);    \
+      digitalWrite(RGB_LED_POWER, HIGH); \
+      leds.begin();                      \
+      leds2.begin();                     \
+      leds3.begin();
 #  endif
 #  ifndef LED_ERROR
 #    define LED_ERROR leds
@@ -610,6 +633,13 @@ Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IN
 #  ifndef LED_INFO
 #    define LED_INFO leds
 #  endif
+#  ifndef LED_ON
+#    define LED_ON leds
+#  endif
+#  define ONIndicatorON()                                \
+    LED_ON.setPixelColor(ANEOPIX_ON_LED, ANEOPIX_POWER); \
+    LED_ON.setBrightness(SYSConfig.rgbbrightness);       \
+    LED_ON.show();
 #  define ErrorIndicatorON()                                   \
     LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
     LED_ERROR.setBrightness(SYSConfig.rgbbrightness);          \

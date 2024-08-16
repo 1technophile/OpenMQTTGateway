@@ -1232,6 +1232,7 @@ void setup() {
   SetupIndicatorSendReceive();
   SetupIndicatorInfo();
   SetupIndicators(); // For RGB Leds
+  ONIndicatorON();
 
 #ifdef ESP8266
 #  ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
