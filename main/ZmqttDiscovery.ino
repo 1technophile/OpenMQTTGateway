@@ -187,7 +187,7 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
   sensor["device"] = device; //device representing the board
 
   /* Publish on the topic */
-  String topic_to_publish = String(discovery_Topic) + "/device_automation/" + String(unique_id) + "/config";
+  String topic_to_publish = String(discovery_prefix) + "/device_automation/" + String(unique_id) + "/config";
   Log.trace(F("Announce Device Trigger  %s" CR), topic_to_publish.c_str());
   pub_custom_topic((char*)topic_to_publish.c_str(), sensor, true);
 }
@@ -434,7 +434,7 @@ void createDiscovery(const char* sensor_type,
 
   sensor["device"] = device;
 
-  String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
+  String topic = String(discovery_prefix) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
   Log.trace(F("Announce Device %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   pub_custom_topic((char*)topic.c_str(), sensor, true);
 }
@@ -443,7 +443,7 @@ void eraseTopic(const char* sensor_type, const char* unique_id) {
   if (sensor_type == NULL || unique_id == NULL) {
     return;
   }
-  String topic = String(discovery_Topic) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
+  String topic = String(discovery_prefix) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
   Log.trace(F("Erase entity discovery %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   pubMQTT((char*)topic.c_str(), "", true);
 }
