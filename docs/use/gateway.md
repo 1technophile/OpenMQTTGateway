@@ -85,11 +85,12 @@ build_flags = '-UMQTTsetMQTT'
 If the new connection fails the gateway will fallback to the previous connection.
 :::
 
-## Change the MQTT main topic and or gateway name
+## Change the MQTT main topic, discovery prefix, and or gateway name
 ```
 mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
 '{
   "mqtt_topic": "topic/",
+  "discovery_prefix": "prefix",
   "gateway_name": "name"
 }'
 ```
