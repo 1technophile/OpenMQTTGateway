@@ -1044,7 +1044,7 @@ void setupMQTT() {
   };
 
   mqtt->connection_failure_callback = [] {
-    if (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED && ethConnected == false) {
       // No WiFi connection, MQTT couldn't connect, ignore this failure
       return;
     }
