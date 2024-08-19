@@ -105,6 +105,22 @@
 #define subjectMQTTtoSSD1306set "/commands/MQTTtoSSD1306/config"
 #define subjectSSD1306toMQTT    "/SSD1306toMQTT"
 
+/*-------------------Display Blanking via Touch----------------------*/
+
+#ifdef DISPLAY_BLANKING
+#  ifndef DISPLAY_BLANKING_TOUCH_GPIO
+#    define DISPLAY_BLANKING_TOUCH_GPIO 2 // GPIO pin for touch sensor
+#  endif
+#  ifndef DISPLAY_BLANKING_START
+#    define DISPLAY_BLANKING_START 30 // 30 seconds after last touch
+#  endif
+#  ifndef DISPLAY_BLANKING_THRESHOLD
+#    define DISPLAY_BLANKING_THRESHOLD 10
+#  endif
+#  define TOUCH_READINGS  100 // Number of readings to average
+#  define TOUCH_THRESHOLD 0.2 // 20% change in reading
+#endif
+
 /*-------------------EXTERNAL FUNCTIONS----------------------*/
 
 extern void setupSSD1306();

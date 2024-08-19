@@ -38,6 +38,9 @@
 #  include "ArduinoLog.h"
 #  include "User_config.h"
 #  include "config_SSD1306.h"
+#  ifdef DISPLAY_BLANKING
+#    include "driver/touch_sensor.h"
+#  endif
 
 SemaphoreHandle_t semaphoreOLEDOperation;
 
@@ -83,6 +86,17 @@ void setupSSD1306() {
 boolean logoDisplayed = false;
 unsigned long nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
 
+#  ifdef DISPLAY_BLANKING
+unsigned long blankingStart = uptime() + DISPLAY_BLANKING_START;
+
+touch_value_t touchReadings[TOUCH_READINGS] = {0};
+touch_value_t touchCurrentReading = 0;
+int touchIndex = 0;
+int touchTotal = 0;
+int touchAverage = 0;
+int touchThreshold = 0;
+#  endif
+
 /*
 module loop, for use in Arduino loop
 */
@@ -92,6 +106,26 @@ void loopSSD1306() {
 
   long enough since the last message and display not being used and a queue message waiting
   */
+
+#  ifdef DISPLAY_BLANKING
+  // Log.trace(F("touchAverage %d, touchCurrentReading %d, touchThreshold %d" CR), touchAverage, touchCurrentReading, touchThreshold);
+  touchTotal = touchTotal - touchReadings[touchIndex];
+  touchCurrentReading = touchRead(DISPLAY_BLANKING_TOUCH_GPIO);
+  touchReadings[touchIndex] = touchCurrentReading;
+  touchTotal = touchTotal + touchReadings[touchIndex];
+  touchIndex = (touchIndex + 1) % TOUCH_READINGS;
+  touchAverage = touchTotal / TOUCH_READINGS;
+  touchThreshold = touchAverage * TOUCH_THRESHOLD;
+
+  if ((touchCurrentReading > touchAverage + touchThreshold || touchCurrentReading < touchAverage - touchThreshold) && displayState) {
+    blankingStart = uptime() + DISPLAY_BLANKING_START;
+    Oled.display->displayOn();
+  }
+  if (uptime() > blankingStart && displayState) {
+    Oled.display->displayOff();
+  }
+#  endif
+
   if (jsonDisplay && displayState) {
     if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && currentWebUIMessage && newSSD1306Message) {
       if (!Oled.displayPage(currentWebUIMessage)) {
