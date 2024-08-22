@@ -1,6 +1,7 @@
 .pio
 .vscode
 *_env.ini
+*.pem
 **/.DS_Store
 node_modules
 *.ps1
