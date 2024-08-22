@@ -340,7 +340,7 @@ protected:
     // Whenever a client subscribes successfully to some topic, see if this is likely a subscription to a
     // autodiscovery topic.  If it is, fire handle_autodiscovery().
     const String pattern(topic);
-    const bool is_autodiscovery_subscription = (pattern == "#") || (pattern.startsWith(String(discovery_Topic) + "/"));
+    const bool is_autodiscovery_subscription = (pattern == "#") || (pattern.startsWith(String(discovery_prefix) + "/"));
     if (is_autodiscovery_subscription)
       handle_autodiscovery();
   }
@@ -1333,6 +1333,9 @@ void setup() {
   Log.trace(F("OpenMQTTGateway ip: %s" CR), WiFi.localIP().toString().c_str());
   Log.trace(F("OpenMQTTGateway index %d" CR), cnt_index);
   Log.trace(F("OpenMQTTGateway mqtt topic: %s" CR), mqtt_topic);
+#ifdef ZmqttDiscovery
+  Log.trace(F("OpenMQTTGateway mqtt discovery prefix: %s" CR), discovery_prefix);
+#endif
   Log.trace(F("OpenMQTTGateway gateway name: %s" CR), gateway_name);
 #if !MQTT_BROKER_MODE
   Log.trace(F("OpenMQTTGateway mqtt server: %s" CR), cnt_parameters_array[cnt_index].mqtt_server);
@@ -1913,6 +1916,9 @@ void saveConfig() {
 #  endif
 
   json["mqtt_topic"] = mqtt_topic;
+#  ifdef ZmqttDiscovery
+  json["discovery_prefix"] = discovery_prefix;
+#  endif
   json["gateway_name"] = gateway_name;
   json["ota_pass"] = ota_pass;
 
@@ -2041,6 +2047,10 @@ bool loadConfigFromFlash() {
 #  endif
         if (json.containsKey("mqtt_topic"))
           strcpy(mqtt_topic, json["mqtt_topic"]);
+#  ifdef ZmqttDiscovery
+        if (json.containsKey("discovery_prefix"))
+          strcpy(discovery_prefix, json["discovery_prefix"]);
+#  endif
         if (json.containsKey("gateway_name"))
           strcpy(gateway_name, json["gateway_name"]);
         if (json.containsKey("ota_pass")) {
@@ -3280,11 +3290,20 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
 
     if ((SYSdata.containsKey("mqtt_topic") && SYSdata["mqtt_topic"].is<char*>()) ||
+#ifdef ZmqttDiscovery
+        (SYSdata.containsKey("discovery_prefix") && SYSdata["discovery_prefix"].is<char*>()) ||
+#endif
         (SYSdata.containsKey("gateway_name") && SYSdata["gateway_name"].is<char*>()) ||
         (SYSdata.containsKey("gw_pass") && SYSdata["gw_pass"].is<char*>())) {
       if (SYSdata.containsKey("mqtt_topic")) {
         strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
+#ifdef ZmqttDiscovery
+      if (SYSdata.containsKey("discovery_prefix")) {
+        strncpy(discovery_prefix, SYSdata["discovery_prefix"], parameters_size);
+        restartESP = true; //Need to reset so all devices get re-discovered & published to new discovery_prefix
+      }
+#endif
       if (SYSdata.containsKey("gateway_name")) {
         strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
       }

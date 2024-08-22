@@ -112,9 +112,14 @@ void announceDeviceTrigger(bool use_gateway_info,
                            char* device_model,
                            char* device_mac);
 
-#ifndef discovery_Topic
-#  define discovery_Topic "homeassistant"
+#ifdef discovery_Topic //Deprecated - use discovery_Prefix instead
+#  define discovery_Prefix "homeassistant"
 #endif
+#ifndef discovery_Prefix
+#  define discovery_Prefix "homeassistant"
+#endif
+char discovery_prefix[parameters_size + 1] = discovery_Prefix;
+
 // discovery_republish_on_reconnect false to publish discovery topics over MQTT only with first connect
 // discovery_republish_on_reconnect true to always republish discovery topics over MQTT when connection is re-established
 #ifndef discovery_republish_on_reconnect
