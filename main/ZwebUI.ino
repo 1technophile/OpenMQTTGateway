@@ -763,7 +763,7 @@ void handleMQ() {
           update = true;
         }
       }
-#  ifdef ZmqttDiscovery 
+#  ifdef ZmqttDiscovery
       if (server.hasArg("dp")) {
         WEBtoSYS["discovery_prefix"] = server.arg("dp");
         if (strncmp(discovery_prefix, server.arg("dp").c_str(), parameters_size)) {
@@ -814,17 +814,17 @@ void handleMQ() {
   response += String(style);
   // mqtt server (mh), mqtt port (ml), mqtt username (mu), mqtt password (mp), secure connection (sc), server certificate (msc), mqtt topic (mt), discovery prefix (dp) (last one only #ifdef ZmqttDiscovery)
 #  if MQTT_BROKER_MODE
-  #  ifdef ZmqttDiscovery 
+#    ifdef ZmqttDiscovery
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, "", "1883", "", "", gateway_name, mqtt_topic, discovery_prefix);
-  #  else
+#    else
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, "", "1883", "", "", gateway_name, mqtt_topic);
-  #  endif
+#    endif
 #  else
-  #  ifdef ZmqttDiscovery 
+#    ifdef ZmqttDiscovery
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, (cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "checked" : ""), gateway_name, mqtt_topic, discovery_prefix);
-  # else
+#    else
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_mqtt_body, jsonChar, gateway_name, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, (cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure ? "checked" : ""), gateway_name, mqtt_topic);
-  #  endif
+#    endif
 #  endif
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
