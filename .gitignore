@@ -12,3 +12,4 @@ CMakeLists.txt
 dependencies.lock
 sdkconfig.*
 !sdkconfig.defaults
+__pycache__
