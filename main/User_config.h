@@ -460,8 +460,8 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  ifndef LED_ERROR_ON
 #    define LED_ERROR_ON HIGH
 #  endif
-#  ifndef LED_ON_ON
-#    define LED_ON_ON HIGH
+#  ifndef RGB_LED_ON_ON
+#    define RGB_LED_ON_ON HIGH
 #  endif
 #  ifndef LED_INFO
 #    ifdef ESP8266
@@ -473,10 +473,10 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  ifndef LED_INFO_ON
 #    define LED_INFO_ON HIGH
 #  endif
-#  ifdef LED_ON
+#  ifdef RGB_LED_ON
 #    define SetupIndicatorError() \
-      pinMode(LED_ON, OUTPUT);
-#    define ONIndicatorON() digitalWrite(LED_ON, LED_ON_ON)
+      pinMode(RGB_LED_ON, OUTPUT);
+#    define ONIndicatorON() digitalWrite(RGB_LED_ON, RGB_LED_ON_ON)
 #  else
 #    define ONIndicatorON()
 #  endif
@@ -605,62 +605,68 @@ Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IN
 #  if !defined(ANEOPIX_IND_DATA_GPIO2) && !defined(ANEOPIX_IND_DATA_GPIO3)
 // during boot the RGB LED is on to signal also reboots
 #    define SetupIndicators()                             \
-      pinMode(RGB_LED_POWER, OUTPUT);                     \
-      digitalWrite(RGB_LED_POWER, HIGH);                  \
+      if (RGB_LED_POWER > -1) {                           \
+        pinMode(RGB_LED_POWER, OUTPUT);                   \
+        digitalWrite(RGB_LED_POWER, HIGH);                \
+      }                                                   \
       leds.begin();                                       \
       leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BOOT); \
       leds.show();
 #  elif defined(ANEOPIX_IND_DATA_GPIO2) && !defined(ANEOPIX_IND_DATA_GPIO3)
-#    define SetupIndicators()            \
-      pinMode(RGB_LED_POWER, OUTPUT);    \
-      digitalWrite(RGB_LED_POWER, HIGH); \
-      leds.begin();                      \
+#    define SetupIndicators()              \
+      if (RGB_LED_POWER > -1) {            \
+        pinMode(RGB_LED_POWER, OUTPUT);    \
+        digitalWrite(RGB_LED_POWER, HIGH); \
+      }                                    \
+      leds.begin();                        \
       leds2.begin();
 #  else
-#    define SetupIndicators()            \
-      pinMode(RGB_LED_POWER, OUTPUT);    \
-      digitalWrite(RGB_LED_POWER, HIGH); \
-      leds.begin();                      \
-      leds2.begin();                     \
+#    define SetupIndicators()              \
+      if (RGB_LED_POWER > -1) {            \
+        pinMode(RGB_LED_POWER, OUTPUT);    \
+        digitalWrite(RGB_LED_POWER, HIGH); \
+      }                                    \
+      leds.begin();                        \
+      leds2.begin();                       \
       leds3.begin();
 #  endif
-#  ifndef LED_ERROR
-#    define LED_ERROR leds
+#  ifndef RGB_LED_ERROR
+#    define RGB_LED_ERROR leds
 #  endif
-#  ifndef LED_SR
-#    define LED_SR leds
+#  ifndef RGB_LED_SR
+#    define RGB_LED_SR leds
 #  endif
-#  ifndef LED_INFO
-#    define LED_INFO leds
+#  ifndef RGB_LED_INFO
+#    define RGB_LED_INFO leds
 #  endif
-#  ifndef LED_ON
-#    define LED_ON leds
+#  ifndef RGB_LED_ON
+#    define RGB_LED_ON leds
 #  endif
-#  define ONIndicatorON()                                \
-    LED_ON.setPixelColor(ANEOPIX_ON_LED, ANEOPIX_POWER); \
-    LED_ON.setBrightness(SYSConfig.rgbbrightness);       \
-    LED_ON.show();
-#  define ErrorIndicatorON()                                   \
-    LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
-    LED_ERROR.setBrightness(SYSConfig.rgbbrightness);          \
-    LED_ERROR.show();
-#  define ErrorIndicatorOFF()                                \
-    LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
-    LED_ERROR.show();
-#  define SendReceiveIndicatorON()                                       \
-    LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
-    LED_SR.setBrightness(SYSConfig.rgbbrightness);                       \
-    LED_SR.show();
-#  define SendReceiveIndicatorOFF()                              \
-    LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
-    LED_SR.show();
-#  define InfoIndicatorON()                                 \
-    LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
-    LED_INFO.setBrightness(SYSConfig.rgbbrightness);        \
-    LED_INFO.show();
-#  define InfoIndicatorOFF()                               \
-    LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
-    LED_INFO.show();
+#  define ONIndicatorON()                                    \
+    RGB_LED_ON.setPixelColor(ANEOPIX_ON_LED, ANEOPIX_POWER); \
+    RGB_LED_ON.setBrightness(SYSConfig.rgbbrightness);       \
+    RGB_LED_ON.show();
+#  define ErrorIndicatorON()                                       \
+    RGB_LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
+    RGB_LED_ERROR.setBrightness(SYSConfig.rgbbrightness);          \
+    RGB_LED_ERROR.show();
+#  define ErrorIndicatorOFF()                                    \
+    RGB_LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
+    RGB_LED_ERROR.show();
+#  define SendReceiveIndicatorON()                                           \
+    RGB_LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
+    RGB_LED_SR.setBrightness(SYSConfig.rgbbrightness);                       \
+    RGB_LED_SR.show();
+#  define SendReceiveIndicatorOFF()                                  \
+    RGB_LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
+    RGB_LED_SR.show();
+#  define InfoIndicatorON()                                     \
+    RGB_LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
+    RGB_LED_INFO.setBrightness(SYSConfig.rgbbrightness);        \
+    RGB_LED_INFO.show();
+#  define InfoIndicatorOFF()                                   \
+    RGB_LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
+    RGB_LED_INFO.show();
 #  ifdef ANEOPIX_IND_DATA_GPIO2 // Used for relay power indicator
 // For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
 // This enable to have persistence of the indicator to inform the user
