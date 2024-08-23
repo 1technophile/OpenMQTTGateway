@@ -273,13 +273,34 @@ The `server_cert` parameter is optional. If the update server has changed or cer
 The pre-built binaries for **rfbridge** and **avatto-bakeey-ir** have the above WiFi and MQTT broker credentials and the Firmware update via MQTT options disabled. This is due to the restricted available flash, so as to still be able to use OTA firmware updates for these boards.
 :::
 
+# Communication layers
+
+## MQTT
+OpenMQTTGateway uses per default MQTT on top of Ethernet or WiFi for communicating (default: true).
+The MQTT communication can be deactivated with the following command:
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"mqtt":false}'`
+Once activated the MQTT API is no longer accessible
+
+## Serial
+Added to MQTT, OpenMQTTGateway cans use Serial to transmit or receive json data (default: false):
+`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"serial":true}'`
+
+The build need to have the following macro:
+```
+  '-DZgatewaySERIAL="SERIAL"'
+```
+
+An example scenario is a slave offline ESP32 dedicated to RF decoding connected to another online ESP32 through Serial.
+
+# Indicators
+
 ## Change the LED indicator brightness
 
 Minimum: 0, Maximum: 255, Default defined by DEFAULT_ADJ_BRIGHTNESS
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"brightness":200}'`
 
-# State LED usage
+## State LED usage
 
 The gateway can support up to 3 LED to display its operating state:
 * LED_INFO 

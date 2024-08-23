@@ -6,7 +6,7 @@ The SERIAL gateway can be used to send and receive data from the serial connecti
 
 Simply publish the message you wish to transmit, minus the prefix and postfix. For example, to send the "Turn On" signal for a Mitsubishi XD221U projector, the code is simply '!' so you would use the command
 
-`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSERIAL -m  '{"value": "!"}'`
+`mosquitto_pub -t home/OpenMQTTGateway/commands/XtoSERIAL -m  '{"value": "!"}'`
 
 It will automatically add the prefix and postfix you set in [config_SERIAL.h](https://github.com/1technophile/OpenMQTTGateway/blob/master/main/config_SERIAL.h).
 

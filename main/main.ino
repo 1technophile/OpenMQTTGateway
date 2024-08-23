@@ -451,18 +451,31 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 }
 
 /*
- * Publish a message depending on its origin
+ * Dispatch json messages towards the communication layer
  *
 */
-void pubMainCore(JsonObject& data) {
+void jsonDispatch(JsonObject& data) {
   if (data.containsKey("origin")) {
-    pub((char*)data["origin"].as<const char*>(), data);
+#if message_UTCtimestamp == true
+    data["UTCtime"] = UTCtimestamp();
+#endif
+#if message_unixtimestamp == true
+    data["unixtime"] = unixtimestamp();
+#endif
+    pubWebUI((char*)data["origin"].as<const char*>(), data);
+    if (SYSConfig.mqtt && !SYSConfig.offline) {
+      pub((char*)data["origin"].as<const char*>(), data);
 #ifdef ZgatewayBT
-    if (data.containsKey("distance")) {
-      String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
-      Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
-      pub_custom_topic((char*)topic.c_str(), data, false);
+      if (data.containsKey("distance")) {
+        String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
+        Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
+        pub_custom_topic((char*)topic.c_str(), data, false);
+      }
+#endif
     }
+#ifdef ZgatewaySERIAL
+    if (SYSConfig.serial)
+      XtoSERIAL("", data);
 #endif
   } else {
     Log.error(F("No origin in JSON filtered" CR));
@@ -480,7 +493,6 @@ void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
     blockedMessages++;
     return;
   }
-  Log.trace(F("Enqueue JSON" CR));
   JsonBundle bundle;
   bundle.doc = jsonDoc;
   jsonQueue.push(bundle);
@@ -582,7 +594,7 @@ void emptyQueue() {
   bundle = jsonQueue.front();
   jsonQueue.pop();
   JsonObject obj = bundle.doc.as<JsonObject>();
-  pubMainCore(obj);
+  jsonDispatch(obj);
   queueLengthSum++;
 }
 
@@ -605,14 +617,7 @@ void pub(const char* topicori, const char* payload, bool retainFlag) {
  * @param data The Json Object that represents the message
  */
 void pub(const char* topicori, JsonObject& data) {
-  String dataAsString = "";
   bool ret = sensor_Retain;
-#if message_UTCtimestamp == true
-  data["UTCtime"] = UTCtimestamp();
-#endif
-#if message_unixtimestamp == true
-  data["unixtime"] = unixtimestamp();
-#endif
   if (data.containsKey("retain") && data["retain"].is<bool>()) {
     ret = data["retain"];
     data.remove("retain");
@@ -624,8 +629,6 @@ void pub(const char* topicori, JsonObject& data) {
     Log.error(F("Empty JSON, not published" CR));
     return;
   }
-  serializeJson(data, dataAsString);
-  Log.notice(F("Send on %s msg %s" CR), topicori, dataAsString.c_str());
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
 #if valueAsATopic
 #  ifdef ZgatewayPilight
@@ -643,9 +646,9 @@ void pub(const char* topicori, JsonObject& data) {
 #endif
 
 #if jsonPublishing
-  Log.trace(F("jsonPubl - ON" CR));
+  String dataAsString = "";
+  serializeJson(data, dataAsString);
   pubMQTT(topic.c_str(), dataAsString.c_str(), ret);
-  pubWebUI(topicori, data);
 #endif
 
 #if simplePublishing
@@ -714,10 +717,10 @@ void pubMQTT(const char* topic, const char* payload) {
  * @param retainFlag  true if retain the retain Flag
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
-  if (SYSConfig.XtoMQTT && !SYSConfig.offline) {
+  if (SYSConfig.mqtt && !SYSConfig.offline) {
     if (mqtt && mqtt->connected()) {
       SendReceiveIndicatorON();
-      Log.trace(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
+      Log.notice(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
       mqtt->publish(topic, payload, 0, retainFlag);
     } else {
       Log.warning(F("MQTT not connected, aborting the publication" CR));
@@ -854,7 +857,8 @@ void delayWithOTA(long waitMillis) {
 }
 
 void SYSConfig_init() {
-  SYSConfig.XtoMQTT = DEFAULT_XtoMQTT;
+  SYSConfig.mqtt = DEFAULT_MQTT;
+  SYSConfig.serial = DEFAULT_SERIAL;
   SYSConfig.offline = DEFAULT_OFFLINE;
 #ifdef ZmqttDiscovery
   SYSConfig.discovery = DEFAULT_DISCOVERY;
@@ -867,7 +871,8 @@ void SYSConfig_init() {
 }
 
 void SYSConfig_fromJson(JsonObject& SYSdata) {
-  Config_update(SYSdata, "xtomqtt", SYSConfig.XtoMQTT);
+  Config_update(SYSdata, "mqtt", SYSConfig.mqtt);
+  Config_update(SYSdata, "serial", SYSConfig.serial);
   Config_update(SYSdata, "offline", SYSConfig.offline);
 #ifdef ZmqttDiscovery
   Config_update(SYSdata, "disc", SYSConfig.discovery);
@@ -883,7 +888,8 @@ void SYSConfig_fromJson(JsonObject& SYSdata) {
 void SYSConfig_save() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject SYSdata = jsonBuffer.to<JsonObject>();
-  SYSdata["xtomqtt"] = SYSConfig.XtoMQTT;
+  SYSdata["mqtt"] = SYSConfig.mqtt;
+  SYSdata["serial"] = SYSConfig.serial;
   SYSdata["offline"] = SYSConfig.offline;
   SYSdata["powermode"] = SYSConfig.powerMode;
 #  ifdef ZmqttDiscovery
@@ -1044,11 +1050,11 @@ void setupMQTT() {
       }
       reconnection_count++; // Increment reconnection count
       Log.trace(F("MQTT connection count: %d" CR), reconnection_count);
-      if (reconnection_count > reconnection_threshold && SYSConfig.XtoMQTT) {
+      if (reconnection_count > reconnection_threshold && SYSConfig.mqtt) {
         // Detected instability in MQTT connection
         Log.warning(F("MQTT connection instability detected: %d reconnections in the last %d seconds" CR), reconnection_count, reconnection_window_millis / 1000);
         // Stop xtoMQTT to see if it helps and still enables to receive data
-        SYSConfig.XtoMQTT = false;
+        SYSConfig.mqtt = false;
       }
     }
 #  endif
@@ -2483,7 +2489,6 @@ void loop() {
         }
         timer_sys_checks = millis();
       }
-      emptyQueue();
     }
   } else if (!SYSConfig.offline) { // disconnected from network
 #ifdef ESP32
@@ -2622,6 +2627,9 @@ void loop() {
     launchRTL_433Discovery(false);
 #  endif
 #endif
+  // Empty the queue
+  emptyQueue();
+  // Sleep if ready
   if (ready_to_sleep) {
     sleep();
   }
@@ -2939,7 +2947,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTtoSomfy(topicOri, jsondata);
 #  endif
 #  ifdef ZgatewaySERIAL
-    MQTTtoSERIAL(topicOri, jsondata);
+    XtoSERIAL(topicOri, jsondata);
 #  endif
 #  ifdef MQTT_HTTPS_FW_UPDATE
     MQTTHttpsFWUpdate(topicOri, jsondata);
@@ -3448,9 +3456,13 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #  endif
 #endif
 
-    if (SYSdata.containsKey("xtomqtt") && SYSdata["xtomqtt"].is<bool>()) {
-      SYSConfig.XtoMQTT = SYSdata["xtomqtt"];
-      Log.notice(F("xtomqtt: %T" CR), SYSConfig.XtoMQTT);
+    if (SYSdata.containsKey("mqtt") && SYSdata["mqtt"].is<bool>()) {
+      SYSConfig.mqtt = SYSdata["mqtt"];
+      Log.notice(F("xtomqtt: %T" CR), SYSConfig.mqtt);
+    }
+    if (SYSdata.containsKey("serial") && SYSdata["serial"].is<bool>()) {
+      SYSConfig.serial = SYSdata["serial"];
+      Log.notice(F("SERIAL: %T" CR), SYSConfig.serial);
     }
     if (SYSdata.containsKey("offline") && SYSdata["offline"].is<bool>()) {
       SYSConfig.offline = SYSdata["offline"];
