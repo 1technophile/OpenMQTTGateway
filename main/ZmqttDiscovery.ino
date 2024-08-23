@@ -1310,20 +1310,20 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
-#      if DEFAULT_LOW_POWER_MODE != -1
+#      if DEFAULT_LOW_POWER_MODE != DEACTIVATED
   createDiscovery("switch", //set Type
-                  subjectSYStoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("lowpowermode", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.lowpowermode | bool }}", //set availability_topic,device_class,value_template,
-                  "{\"lowpowermode\":2}", "{\"lowpowermode\":0}", "", //set,payload_on,payload_off,unit_of_meas,
+                  subjectSYStoMQTT, "SYS: Low Power Mode command", (char*)getUniqueId("powermode", "").c_str(), //set state_topic,name,uniqueId
+                  will_Topic, "", "{{ value_json.powermode | bool }}", //set availability_topic,device_class,value_template,
+                  "{\"powermode\":1,\"save\":true}", "{\"powermode\":0,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoBTset, //set,payload_available,payload_not available,is a gateway entity, command topic
+                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_available,payload_not available,is a gateway entity, command topic
                   "", "", "", "", true, // device name, device manufacturer, device model, device MAC, retain
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
 #      else
   // Remove previously created switch for version < 1.4.0
-  eraseTopic("switch", (char*)getUniqueId("lowpowermode", "").c_str());
+  eraseTopic("switch", (char*)getUniqueId("powermode", "").c_str());
 #      endif
 #    endif
 #  endif

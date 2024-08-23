@@ -131,7 +131,7 @@ extern String stateSSD1306Display();
 // Simple construct for displaying message in lcd and oled displays
 
 #define displayPrint(...) \
-  if (lowpowermode < 2) ssd1306Print(__VA_ARGS__) // only print if not in low power mode
+  if (SYSConfig.powerMode < 1) ssd1306Print(__VA_ARGS__) // only print if not in low power mode
 #define lpDisplayPrint(...) ssd1306Print(__VA_ARGS__) // print in low power mode
 
 void ssd1306Print(char*, char*, char*);

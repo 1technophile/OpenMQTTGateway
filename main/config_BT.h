@@ -32,7 +32,6 @@ extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
 extern void pubMainCore(JsonObject& data);
 extern void launchBTDiscovery(bool overrideDiscovery);
 extern void stopProcessing();
-extern void lowPowerESP32();
 extern String stateBTMeasures(bool);
 
 #ifdef ESP32

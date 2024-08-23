@@ -77,7 +77,7 @@ build_flags =
   '-DMQTT_USER="lolin-esp32"'
   '-DMQTT_PASS="abcdefghi"'
   '-DMQTT_SERVER="192.168.1.17"'
-  '-DDEFAULT_LOW_POWER_MODE=2'
+  '-DDEFAULT_LOW_POWER_MODE=INTERVAL'
 
 ;hacked Sonoff RF-Bridge
 [env:sonoff-rfbridge-hacked]

@@ -39,7 +39,6 @@ QueueHandle_t BLEQueue;
 #  include <NimBLEScan.h>
 #  include <NimBLEUtils.h>
 #  include <decoder.h>
-#  include <driver/adc.h>
 #  include <esp_bt.h>
 #  include <esp_wifi.h>
 
@@ -805,32 +804,23 @@ void stopProcessing() {
 void coreTask(void* pvParameters) {
   while (true) {
     if (!BTProcessLock) {
-      int n = 0;
-      while (mqtt->connected() && n <= InitialMQTTConnectionTimeout && !BTProcessLock) {
-        n++;
-        delay(1000);
-      }
-      if (!mqtt->connected()) {
-        Log.warning(F("MQTT client or Network disconnected no BLE scan" CR));
-      } else if (!BTProcessLock) {
-        if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
-          BLEscan();
-          // Launching a connect every TimeBtwConnect
-          if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
-            timeBetweenConnect = millis();
-            BLEconnect();
-          }
-          //dumpDevices();
-          Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
-          xSemaphoreGive(semaphoreBLEOperation);
-        } else {
-          Log.error(F("Failed to start scan - BLE busy" CR));
+      if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+        BLEscan();
+        // Launching a connect every TimeBtwConnect
+        if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
+          timeBetweenConnect = millis();
+          BLEconnect();
         }
+        //dumpDevices();
+        Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
+        xSemaphoreGive(semaphoreBLEOperation);
+      } else {
+        Log.error(F("Failed to start scan - BLE busy" CR));
       }
-      if (lowpowermode > 0) {
-        lowPowerESP32();
+      if (SYSConfig.powerMode > 0) {
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
         if (scan == 1) BTforceScan();
+        ready_to_sleep = true;
       } else {
         for (int interval = BTConfig.BLEinterval, waitms; interval > 0; interval -= waitms) {
           int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst);
@@ -843,64 +833,9 @@ void coreTask(void* pvParameters) {
   }
 }
 
-#  if DEFAULT_LOW_POWER_MODE != -1
-void lowPowerESP32() { // low power mode
-  Log.trace(F("Going to deep sleep for: %l s" CR), (TimeBtwRead / 1000));
-  deepSleep(TimeBtwRead * 1000);
-}
-
-void deepSleep(uint64_t time_in_us) {
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
-  sleepScreen();
-  esp_sleep_enable_ext0_wakeup((gpio_num_t)SLEEP_BUTTON, LOW);
-#    endif
-
-  Log.trace(F("Deactivating ESP32 components" CR));
-  stopProcessing();
-  ProcessLock = true;
-  // Ignore the deprecated warning, this call is necessary here.
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  adc_power_off();
-#    pragma GCC diagnostic pop
-  esp_wifi_stop();
-  esp_deep_sleep(time_in_us);
-}
-#  else
-void lowPowerESP32() {}
-#  endif
-
-void changelowpowermode(int newLowPowerMode) {
-#  if DEFAULT_LOW_POWER_MODE != -1
-  Log.notice(F("Changing LOW POWER mode to: %d" CR), newLowPowerMode);
-#    if defined(ZboardM5STACK) || defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
-  if (lowpowermode == 2) {
-#      ifdef ZboardM5STACK
-    M5.Lcd.wakeup();
-#      endif
-#      if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
-    M5.Axp.SetLDO2(true);
-    M5.Lcd.begin();
-#      endif
-  }
-  char lpm[2];
-  sprintf(lpm, "%d", newLowPowerMode);
-  M5Print("Changing LOW POWER mode to:", lpm, "");
-#    endif
-  lowpowermode = newLowPowerMode;
-  preferences.begin(Gateway_Short_Name, false);
-  int result = preferences.putUInt("lowpowermode", lowpowermode);
-  Log.notice(F("BT LPM config save result: %d" CR), result);
-  preferences.end();
-  // Publish the states to update the controller switch status
-  stateMeasures();
-#  endif
-}
-
 void setupBTTasksAndBLE() {
   BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
   BLEDevice::init("");
-
   xTaskCreatePinnedToCore(
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
@@ -936,7 +871,6 @@ void setupBT() {
   Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
   Log.notice(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
   Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
-  Log.notice(F("Low Power Mode: %d" CR), lowpowermode);
   Log.notice(F("Presence Away Timer: %d" CR), BTConfig.presenceAwayTimer);
   Log.notice(F("Moving Timer: %d" CR), BTConfig.movingTimer);
   Log.notice(F("Force passive scan: %T" CR), BTConfig.forcePassiveScan);
@@ -953,6 +887,8 @@ void setupBT() {
   BLEQueue = xQueueCreate(QueueSize, sizeof(NimBLEAdvertisedDevice*));
   if (BTConfig.enabled) {
     setupBTTasksAndBLE();
+    if (SYSConfig.offline) // We start the BLE scan if we are offline, if not we wait for MQTT connection
+      BTProcessLock = false;
     Log.notice(F("ZgatewayBT multicore ESP32 setup done" CR));
   } else {
     Log.notice(F("ZgatewayBT multicore ESP32 setup disabled" CR));
@@ -1541,9 +1477,6 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // Load config from json if available
     BTConfig_fromJson(BTdata);
 
-    if (BTdata.containsKey("lowpowermode")) {
-      changelowpowermode((int)BTdata["lowpowermode"]);
-    }
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     MQTTtoBTAction(BTdata);
   }

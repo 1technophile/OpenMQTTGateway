@@ -13,3 +13,4 @@ dependencies.lock
 sdkconfig.*
 !sdkconfig.defaults
 __pycache__
+*.pem
