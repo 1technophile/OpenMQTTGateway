@@ -583,8 +583,8 @@ void emptyQueue() {
   Log.trace(F("Dequeue JSON" CR));
 #ifdef ESP32
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
-	Log.error(F("xQueueMutex not taken" CR));
-	return;
+	  Log.error(F("xQueueMutex not taken" CR));
+	  return;
   }
 #endif
   bundle = jsonQueue.front();
@@ -728,8 +728,8 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (SYSConfig.XtoMQTT && !SYSConfig.offline) {
 #ifdef ESP32
     if (xSemaphoreTake(xMqttMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
-        Log.error(F("xMqttMutex not taken" CR));
-		return;
+      Log.error(F("xMqttMutex not taken" CR));
+		  return;
     }
 #endif
     if (mqtt && mqtt->connected()) {
@@ -2458,11 +2458,11 @@ void loop() {
 #endif
 #ifdef ESP32
     if (xSemaphoreTake(xMqttMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdTRUE) {
-	  mqtt->loop();
-	  xSemaphoreGive(xMqttMutex);	  
+	    mqtt->loop();
+	    xSemaphoreGive(xMqttMutex);	  
     } else {
-	  Log.error(F("xMqttMutex not taken" CR));
-	}
+	    Log.error(F("xMqttMutex not taken" CR));
+	  }
 #else
     mqtt->loop();
 #endif
