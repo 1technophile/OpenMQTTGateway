@@ -1,4 +1,4 @@
-f/*
+/*
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
    Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
