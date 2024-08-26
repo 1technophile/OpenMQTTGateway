@@ -581,8 +581,17 @@ void emptyQueue() {
   }
   JsonBundle bundle;
   Log.trace(F("Dequeue JSON" CR));
+#ifdef ESP32
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
+	Log.error(F("xQueueMutex not taken" CR));
+	return;
+  }
+#endif
   bundle = jsonQueue.front();
   jsonQueue.pop();
+#ifdef ESP32
+  xSemaphoreGive(xQueueMutex);
+#endif
   JsonObject obj = bundle.doc.as<JsonObject>();
   pubMainCore(obj);
   queueLengthSum++;
