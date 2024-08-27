@@ -1079,7 +1079,7 @@ void setupMQTT() {
   };
 
   mqtt->connection_failure_callback = [] {
-    if (WiFi.status() != WL_CONNECTED || ethConnected == false || SYSConfig.offline) {
+    if ((WiFi.status() != WL_CONNECTED && ethConnected == false) || SYSConfig.offline) {
       // No network connection or offline, ignore this failure
       return;
     }
