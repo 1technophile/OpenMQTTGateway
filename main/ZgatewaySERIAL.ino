@@ -37,6 +37,7 @@ SoftwareSerial SERIALSoftSerial(SERIAL_RX_GPIO, SERIAL_TX_GPIO); // RX, TX
 // use pointer to stream class for serial communication to make code
 // compatible with both softwareSerial as hardwareSerial.
 Stream* SERIALStream = NULL;
+unsigned long msgCount = 0;
 
 void setupSERIAL() {
 //Initalize serial port
@@ -125,67 +126,80 @@ void SERIALtoMQTT() {
   }
 }
 
-#  elif SERIALtoMQTTmode == 1 // Convert recievee JSON data to multiple MQTT topics based (nested) keys
+#  elif SERIALtoMQTTmode == 1 // Convert received JSON data to one or multiple MQTT topics
 void SERIALtoMQTT() {
   // Assumes valid JSON data at SERIAL interface. Use (nested) keys to split JSON data in separate
   // sub-MQTT-topics up to the defined nesting level.
   if (SERIALStream->available()) {
-    Log.trace(F("SERIALtoMQTT" CR));
-
     // Allocate the JSON document
     StaticJsonDocument<JSON_MSG_BUFFER> SERIALBuffer;
     JsonObject SERIALdata = SERIALBuffer.to<JsonObject>();
 
-    // JSON validation
-    StaticJsonDocument<0> emptyDoc;
-    StaticJsonDocument<0> filter;
-    DeserializationError validationError = deserializeJson(emptyDoc, *SERIALStream, DeserializationOption::Filter(filter));
-    if (validationError == DeserializationError::Ok) {
-      Log.trace(F("SERIAL data is valid JSON" CR));
-    } else {
-      Log.error(F("SERIAL data is not valid JSON" CR));
-      return;
-    }
+    // Read the entire JSON string from the serial stream
+    String jsonString = SERIALStream->readStringUntil('\n');
+    Log.trace(F("SERIAL msg received: %s" CR), jsonString.c_str());
 
-    // Read the JSON document from the "link" serial port
-    DeserializationError err = deserializeJson(SERIALBuffer, *SERIALStream);
+    int startIndex = 0;
+    while (startIndex < jsonString.length()) {
+      int endIndex = jsonString.indexOf(SERIALPost, startIndex) + strlen(SERIALPost);
+      if (endIndex == -1) {
+        endIndex = jsonString.length();
+      }
+      // Extract the individual JSON message
+      String singleJsonString = jsonString.substring(startIndex, endIndex);
+      // Check if the JSON string contains the prefix and postfix
+      if (singleJsonString.startsWith(SERIALPre) && singleJsonString.endsWith(SERIALPost)) {
+        // Remove the prefix and postfix
+        singleJsonString = singleJsonString.substring(strlen(SERIALPre), singleJsonString.length() - strlen(SERIALPost));
+      } else {
+        Log.error(F("Invalid SERIAL message format: %s" CR), singleJsonString.c_str());
+        return;
+      }
 
-    // Check if the JSON object is empty
-    if (SERIALBuffer.isNull() || SERIALBuffer.size() == 0) {
-      Log.error(F("SERIAL data is empty JSON object" CR));
-      return;
-    }
+      // Check if the JSON string is complete (basic check for curly braces)
+      if (singleJsonString.indexOf('{') == -1 || singleJsonString.indexOf('}') == -1) {
+        Log.error(F("Incomplete JSON string: %s" CR), singleJsonString.c_str());
+        return;
+      }
 
-    if (err == DeserializationError::Ok) {
+      // Read the JSON document from the JSON string
+      DeserializationError err = deserializeJson(SERIALBuffer, singleJsonString);
+
+      if (err == DeserializationError::Ok) {
+        // Check if the JSON object is empty
+        if (SERIALBuffer.isNull() || SERIALBuffer.size() == 0) {
+          Log.error(F("SERIAL data is empty JSON object: %s" CR), jsonString.c_str());
+          return;
+        }
 // JSON received
 #    if jsonPublishing
-      // send as json
-      if (SERIALdata.containsKey("origin")) {
-        if (SERIALdata["origin"] == "BT") {
+        // send as json
+        if (SERIALdata.containsKey("origin")) {
+          if (SERIALdata["origin"] == "BT") {
 //Decode the BT data
 #      ifdef ZgatewayBT
-          SERIALdata.remove("origin");
-          PublishDeviceData(SERIALdata);
+            SERIALdata.remove("origin");
+            PublishDeviceData(SERIALdata);
 #      endif
+          } else {
+            handleJsonEnqueue(SERIALdata);
+          }
+        } else {
+          SERIALdata["origin"] = subjectSERIALtoMQTT;
+          handleJsonEnqueue(SERIALdata);
         }
-      } else {
-        SERIALdata["origin"] = subjectSERIALtoMQTT;
-        handleJsonEnqueue(SERIALdata);
-      }
 
 #    endif
 #    if simplePublishing
-      // send as MQTT topics
-      char topic[mqtt_topic_max_size + 1] = subjectSERIALtoMQTT;
-      sendMQTTfromNestedJson(SERIALBuffer.as<JsonVariant>(), topic, 0, SERIALmaxJSONlevel);
+        // send as MQTT topics
+        char topic[mqtt_topic_max_size + 1] = subjectSERIALtoMQTT;
+        sendMQTTfromNestedJson(SERIALBuffer.as<JsonVariant>(), topic, 0, SERIALmaxJSONlevel);
 #    endif
-    } else {
-      // Print error to serial log
-      Log.error(F("Error in SERIALJSONtoMQTT, deserializeJson() returned %s" CR), err.c_str());
-
-      // Flush all bytes in the "link" serial port buffer
-      while (SERIALStream->available() > 0)
-        SERIALStream->read();
+      } else {
+        // Print error to serial log
+        Log.error(F("Error in SERIALJSONtoMQTT, deserializeJson() returned %s" CR), err.c_str());
+      }
+      startIndex = endIndex;
     }
   }
 }
@@ -228,19 +242,23 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
 }
 #  endif
 
-void MQTTtoSERIAL(char* topicOri, JsonObject& SERIALdata) {
-  Log.trace(F("json" CR));
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSERIAL)) {
-    Log.trace(F("MQTTtoSERIAL json" CR));
-    const char* data = SERIALdata["value"];
+void XtoSERIAL(const char* topicOri, JsonObject& SERIALdata) {
+  if (cmpToMainTopic(topicOri, subjectXtoSERIAL) || SYSConfig.serial) {
+    Log.trace(F(" MQTTtoSERIAL" CR));
     const char* prefix = SERIALdata["prefix"] | SERIALPre;
     const char* postfix = SERIALdata["postfix"] | SERIALPost;
-    Log.trace(F("Value set: %s" CR), data);
-    Log.trace(F("Prefix set: %s" CR), prefix);
-    Log.trace(F("Postfix set: %s" CR), postfix);
+    std::string data;
     SERIALStream->print(prefix);
-    SERIALStream->print(data);
+    if (SYSConfig.serial) {
+      SERIALdata["msgcount"] = msgCount++;
+      serializeJson(SERIALdata, data);
+    } else if (SERIALdata.containsKey("value")) {
+      data = SERIALdata["value"].as<std::string>();
+    }
+    Log.notice(F("[ OMG->SERIAL ] data: %s" CR), data.c_str());
+    SERIALStream->print(data.c_str());
     SERIALStream->print(postfix);
+    delay(10);
   }
 }
 #endif

@@ -29,7 +29,6 @@
 extern void setupBT();
 extern bool BTtoMQTT();
 extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
-extern void pubMainCore(JsonObject& data);
 extern void launchBTDiscovery(bool overrideDiscovery);
 extern void stopProcessing();
 extern String stateBTMeasures(bool);

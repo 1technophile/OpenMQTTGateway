@@ -823,7 +823,8 @@ enum PowerMode { DEACTIVATED = -1,
 
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
 struct SYSConfig_s {
-  bool XtoMQTT; // if true the gateway will publish the received data on the MQTT broker
+  bool mqtt; // if true the gateway will publish the received data on the MQTT broker
+  bool serial; // if true the gateway will publish the received data on the SERIAL
   bool offline;
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
@@ -833,8 +834,11 @@ struct SYSConfig_s {
   enum PowerMode powerMode;
 };
 
-#ifndef DEFAULT_XtoMQTT
-#  define DEFAULT_XtoMQTT true
+#ifndef DEFAULT_MQTT
+#  define DEFAULT_MQTT true
+#endif
+#ifndef DEFAULT_SERIAL
+#  define DEFAULT_SERIAL false
 #endif
 #ifndef DEFAULT_OFFLINE
 #  define DEFAULT_OFFLINE false
