@@ -121,6 +121,16 @@ extern String stateBTMeasures(bool);
 #  define EnableBT true
 #endif
 
+#ifndef BLEDecoder
+#  define BLEDecoder true //true if we use the Theengs decoder
+#endif
+
+#if !BLEDecoder
+#  define UNKWNON_MODEL -1
+#else
+#  define UNKWNON_MODEL TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL
+#endif
+
 #ifndef BLE_CNCT_TIMEOUT
 #  define BLE_CNCT_TIMEOUT 3000
 #endif

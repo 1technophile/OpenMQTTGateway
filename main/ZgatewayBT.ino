@@ -38,7 +38,6 @@ QueueHandle_t BLEQueue;
 #  include <NimBLEDevice.h>
 #  include <NimBLEScan.h>
 #  include <NimBLEUtils.h>
-#  include <decoder.h>
 #  include <esp_bt.h>
 #  include <esp_wifi.h>
 
@@ -53,7 +52,10 @@ using namespace std;
 // Global struct to store live BT configuration data
 BTConfig_s BTConfig;
 
+#  if BLEDecoder
+#    include <decoder.h>
 TheengsDecoder decoder;
+#  endif
 
 static TaskHandle_t xCoreTaskHandle;
 static TaskHandle_t xProcBLETaskHandle;
@@ -75,7 +77,7 @@ static BLEdevice NO_BT_DEVICE_FOUND = {{0},
                                        false,
                                        false,
                                        false,
-                                       TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL};
+                                       UNKWNON_MODEL};
 static bool oneWhite = false;
 
 void BTConfig_init() {
@@ -115,25 +117,27 @@ String stateBTMeasures(bool start) {
   jo["intervalacts"] = BTConfig.intervalActiveScan;
   jo["intervalcnct"] = BTConfig.intervalConnect;
   jo["scanduration"] = BTConfig.scanDuration;
-  jo["onlysensors"] = BTConfig.pubOnlySensors;
-  jo["randommacs"] = BTConfig.pubRandomMACs;
   jo["hasspresence"] = BTConfig.presenceEnable;
   jo["prestopic"] = BTConfig.presenceTopic;
   jo["presuseuuid"] = BTConfig.presenceUseBeaconUuid;
   jo["minrssi"] = -abs(BTConfig.minRssi); // Always export as negative value
   jo["extDecoderEnable"] = BTConfig.extDecoderEnable;
   jo["extDecoderTopic"] = BTConfig.extDecoderTopic;
-  jo["filterConnectable"] = BTConfig.filterConnectable;
-  jo["pubadvdata"] = BTConfig.pubAdvData;
   jo["pubuuid4topic"] = BTConfig.pubBeaconUuidForTopic;
   jo["ignoreWBlist"] = BTConfig.ignoreWBlist;
-  jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
-  jo["movingtimer"] = BTConfig.movingTimer;
   jo["forcepscn"] = BTConfig.forcePassiveScan;
   jo["tskstck"] = uxTaskGetStackHighWaterMark(xProcBLETaskHandle);
   jo["crstck"] = uxTaskGetStackHighWaterMark(xCoreTaskHandle);
   jo["enabled"] = BTConfig.enabled;
   jo["scnct"] = scanCount;
+#  if BLEDecoder
+  jo["onlysensors"] = BTConfig.pubOnlySensors;
+  jo["randommacs"] = BTConfig.pubRandomMACs;
+  jo["filterConnectable"] = BTConfig.filterConnectable;
+  jo["pubadvdata"] = BTConfig.pubAdvData;
+  jo["presenceawaytimer"] = BTConfig.presenceAwayTimer;
+  jo["movingtimer"] = BTConfig.movingTimer;
+#  endif
 
   if (start) {
     Log.notice(F("BT sys: "));
@@ -343,7 +347,7 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
   for (int i = 0; i < size; i++) {
     const char* mac = BTdata[jsonKey][i];
     createOrUpdateDevice(mac, (isWhite ? device_flags_isWhiteL : device_flags_isBlackL),
-                         TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL);
+                         UNKWNON_MODEL);
   }
 
   return true;
@@ -390,7 +394,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
       device->connect = true;
     }
 
-    if (model != TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL) {
+    if (model != UNKWNON_MODEL) {
       device->sensorModel_id = model;
     }
 
@@ -412,6 +416,7 @@ void updateDevicesStatus() {
     unsigned long now = millis();
     // Check for tracker status
     bool isTracker = false;
+#  if BLEDecoder
     std::string tag = decoder.getTheengAttribute(p->sensorModel_id, "tag");
     if (tag.length() >= 4) {
       isTracker = checkIfIsTracker(tag[3]);
@@ -444,6 +449,7 @@ void updateDevicesStatus() {
         p->lastUpdate = 0;
       }
     }
+#  endif
   }
 }
 
@@ -708,6 +714,7 @@ void BLEscan() {
 /**
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
+#  if BLEDecoder
 void BLEconnect() {
   if (!BTProcessLock) {
     Log.notice(F("BLE Connect begin" CR));
@@ -777,6 +784,9 @@ void BLEconnect() {
     Log.notice(F("BLE Connect end" CR));
   }
 }
+#  else
+void BLEconnect() {}
+#  endif
 
 void stopProcessing() {
   if (BTConfig.enabled) {
@@ -908,7 +918,7 @@ boolean valid_service_data(const char* data, int size) {
   return false;
 }
 
-#  ifdef ZmqttDiscovery
+#  if defined(ZmqttDiscovery) && BLEDecoder == true
 // This function always should be called from the main core as it generates direct mqtt messages
 // When overrideDiscovery=true, we publish discovery messages of known devices (even if no new)
 void launchBTDiscovery(bool overrideDiscovery) {
@@ -950,7 +960,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 
         String discovery_topic = String(subjectBTtoMQTT) + "/" + macWOdots;
         if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
-            p->sensorModel_id > TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL &&
+            p->sensorModel_id > UNKWNON_MODEL &&
             p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
             p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
           if (isTracker) {
@@ -1124,55 +1134,6 @@ void launchBTDiscovery(bool overrideDiscovery) {
     }
   }
 }
-#  endif
-
-void PublishDeviceData(JsonObject& BLEdata) {
-  if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
-    // Decode the payload
-    process_bledata(BLEdata);
-    // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
-    if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
-      Log.trace(F("Random MAC, device filtered" CR));
-      return;
-    }
-    // If pubAdvData is false we don't publish the adv data
-    if (!BTConfig.pubAdvData) {
-      BLEdata.remove("servicedatauuid");
-      BLEdata.remove("servicedata");
-      BLEdata.remove("manufacturerdata");
-      BLEdata.remove("mac_type");
-      BLEdata.remove("adv_type");
-      // tag device properties
-      // BLEdata.remove("type");   type is used by the WebUI module to determine the template used to display the signal
-      BLEdata.remove("cidc");
-      BLEdata.remove("acts");
-      BLEdata.remove("cont");
-      BLEdata.remove("track");
-    }
-
-    // if distance available, check if presenceUseBeaconUuid is true, model_id is IBEACON then set id as uuid
-    if (BLEdata.containsKey("distance")) {
-      if (BTConfig.presenceUseBeaconUuid && BLEdata.containsKey("model_id") && BLEdata["model_id"].as<String>() == "IBEACON") {
-        BLEdata["mac"] = BLEdata["id"].as<std::string>();
-        BLEdata["id"] = BLEdata["uuid"].as<std::string>();
-      }
-      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
-    }
-
-    // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
-    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model")) { // Identified device
-      buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
-    } else {
-      Log.notice(F("Not a sensor device filtered" CR));
-      return;
-    }
-  } else {
-    Log.notice(F("Low rssi, device filtered" CR));
-    return;
-  }
-}
-
 void process_bledata(JsonObject& BLEdata) {
   yield(); // Necessary to let the loop run in case of connectivity issues
   if (!BLEdata.containsKey("id")) {
@@ -1254,6 +1215,72 @@ void process_bledata(JsonObject& BLEdata) {
     Log.trace(F("No eligible device found " CR));
   }
 }
+void PublishDeviceData(JsonObject& BLEdata) {
+  if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
+    // Decode the payload
+    process_bledata(BLEdata);
+    // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
+    if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
+      Log.trace(F("Random MAC, device filtered" CR));
+      return;
+    }
+    // If pubAdvData is false we don't publish the adv data
+    if (!BTConfig.pubAdvData) {
+      BLEdata.remove("servicedatauuid");
+      BLEdata.remove("servicedata");
+      BLEdata.remove("manufacturerdata");
+      BLEdata.remove("mac_type");
+      BLEdata.remove("adv_type");
+      // tag device properties
+      // BLEdata.remove("type");   type is used by the WebUI module to determine the template used to display the signal
+      BLEdata.remove("cidc");
+      BLEdata.remove("acts");
+      BLEdata.remove("cont");
+      BLEdata.remove("track");
+    }
+    // if distance available, check if presenceUseBeaconUuid is true, model_id is IBEACON then set id as uuid
+    if (BLEdata.containsKey("distance")) {
+      if (BTConfig.presenceUseBeaconUuid && BLEdata.containsKey("model_id") && BLEdata["model_id"].as<String>() == "IBEACON") {
+        BLEdata["mac"] = BLEdata["id"].as<std::string>();
+        BLEdata["id"] = BLEdata["uuid"].as<std::string>();
+      }
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+    }
+
+    // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
+    if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || !BLEDecoder) { // Identified device
+      buildTopicFromId(BLEdata, subjectBTtoMQTT);
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+    } else {
+      Log.notice(F("Not a sensor device filtered" CR));
+      return;
+    }
+  } else {
+    Log.notice(F("Low rssi, device filtered" CR));
+    return;
+  }
+}
+#  else
+void launchBTDiscovery(bool overrideDiscovery) {}
+void process_bledata(JsonObject& BLEdata) {}
+void PublishDeviceData(JsonObject& BLEdata) {
+  if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
+    // if distance available, check if presenceUseBeaconUuid is true, model_id is IBEACON then set id as uuid
+    if (BLEdata.containsKey("distance")) {
+      if (BTConfig.presenceUseBeaconUuid && BLEdata.containsKey("model_id") && BLEdata["model_id"].as<String>() == "IBEACON") {
+        BLEdata["mac"] = BLEdata["id"].as<std::string>();
+        BLEdata["id"] = BLEdata["uuid"].as<std::string>();
+      }
+      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+    }
+    buildTopicFromId(BLEdata, subjectBTtoMQTT);
+    handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+  } else {
+    Log.notice(F("Low rssi, device filtered" CR));
+    return;
+  }
+}
+#  endif
 
 void hass_presence(JsonObject& HomePresence) {
   int BLErssi = HomePresence["rssi"];
@@ -1344,7 +1371,8 @@ void startBTActionTask() {
       1); /* Core where the task should run */
 }
 
-void MQTTtoBTAction(JsonObject& BTdata) {
+#  if BLEDecoder
+void KnownBTActions(JsonObject& BTdata) {
   BLEAction action;
   memset(&action, 0, sizeof(BLEAction));
   if (BTdata.containsKey("model_id") && BTdata["model_id"].is<const char*>() && BTdata["model_id"] == "X1") {
@@ -1384,7 +1412,14 @@ void MQTTtoBTAction(JsonObject& BTdata) {
     startBTActionTask();
     return;
   }
+}
+#  else
+void KnownBTActions(JsonObject& BTdata) {}
+#  endif
 
+void MQTTtoBTAction(JsonObject& BTdata) {
+  BLEAction action;
+  memset(&action, 0, sizeof(BLEAction));
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
   action.addr_type = BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0;
   action.value_type = BLE_VAL_STRING;
@@ -1429,7 +1464,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   }
 
   createOrUpdateDevice(action.addr, device_flags_connect,
-                       TheengsDecoder::BLE_ID_NUM::UNKNOWN_MODEL,
+                       UNKWNON_MODEL,
                        action.addr_type);
 
   BLEactions.push_back(action);
@@ -1478,6 +1513,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     BTConfig_fromJson(BTdata);
 
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
+    KnownBTActions(BTdata);
     MQTTtoBTAction(BTdata);
   }
 }
