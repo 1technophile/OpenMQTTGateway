@@ -258,7 +258,7 @@ void XtoSERIAL(const char* topicOri, JsonObject& SERIALdata) {
     Log.notice(F("[ OMG->SERIAL ] data: %s" CR), data.c_str());
     SERIALStream->print(data.c_str());
     SERIALStream->print(postfix);
-    vTaskDelay(10 / portTICK_PERIOD_MS); // delay to avoid serial buffer overflow
+    delay(10);
   }
 }
 #endif
