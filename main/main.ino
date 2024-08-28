@@ -95,6 +95,8 @@ std::queue<String> jsonQueue;
 #  include <driver/adc.h>
 // Mutex  to protect the queue
 SemaphoreHandle_t xQueueMutex;
+// Mutex to protect mqtt publish
+SemaphoreHandle_t xMqttMutex;
 bool blufiConnectAP = false;
 #endif
 
@@ -732,6 +734,12 @@ void pubMQTT(const char* topic, const char* payload) {
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (SYSConfig.mqtt && !SYSConfig.offline) {
+#ifdef ESP32
+    if (xSemaphoreTake(xMqttMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
+      Log.error(F("xMqttMutex not taken" CR));
+      return;
+    }
+#endif
     if (mqtt && mqtt->connected()) {
       SendReceiveIndicatorON();
       Log.notice(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
@@ -739,6 +747,9 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
     } else {
       Log.warning(F("MQTT not connected, aborting the publication" CR));
     }
+#ifdef ESP32
+    xSemaphoreGive(xMqttMutex);
+#endif
   } else {
     Log.notice(F("[ OMG->MQTT deactivated or offline] topic: %s msg: %s " CR), topic, payload);
   }
@@ -1300,6 +1311,7 @@ void setup() {
 #  endif
 #elif ESP32
   xQueueMutex = xSemaphoreCreateMutex();
+  xMqttMutex = xSemaphoreCreateMutex();
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
 #  endif
