@@ -9,7 +9,7 @@
  - publish MQTT data to a different topic related to received signals (RF, IR, BLE, GSM)
 
   Copyright: (c)Florian ROBERT
-fxque
+
     This file is part of OpenMQTTGateway.
 
     OpenMQTTGateway is free software: you can redistribute it and/or modify
