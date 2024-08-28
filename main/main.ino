@@ -61,7 +61,7 @@ unsigned long timer_sys_measures = 0;
 // Time used to wait before system checkings
 unsigned long timer_sys_checks = 0;
 
-#define ARDUINOJSON_USE_LONG_LONG 1
+#define ARDUINOJSON_USE_LONG_LONG     1
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 
 #include <queue>
