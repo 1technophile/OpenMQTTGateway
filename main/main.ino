@@ -61,7 +61,7 @@ unsigned long timer_sys_measures = 0;
 // Time used to wait before system checkings
 unsigned long timer_sys_checks = 0;
 
-#define ARDUINOJSON_USE_LONG_LONG     1
+#define ARDUINOJSON_USE_LONG_LONG 1
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 
 #include <queue>
@@ -499,9 +499,9 @@ boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, in
 #ifdef ESP32
   // Semaphore check before enqueueing a document
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout)) == pdFALSE) {
-	Log.error(F("xQueueMutex not taken" CR));
-	blockedMessages++;
-	return false;
+    Log.error(F("xQueueMutex not taken" CR));
+    blockedMessages++;
+    return false;
   }
 #endif
   jsonQueue.push(jsonString);
@@ -590,12 +590,12 @@ void emptyQueue() {
     return;
   }
   Log.trace(F("Dequeue JSON" CR));
-  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);  
-  JsonObject obj = jsonBuffer.to<JsonObject>();  
+  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);
+  JsonObject obj = jsonBuffer.to<JsonObject>();
 #ifdef ESP32
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
-	Log.error(F("xQueueMutex not taken" CR));
-	return;
+    Log.error(F("xQueueMutex not taken" CR));
+    return;
   }
 #endif
   Log.notice(F("Dequeue JSON: %s" CR), jsonQueue.front().c_str()); //JJKCRAP
@@ -605,9 +605,9 @@ void emptyQueue() {
   xSemaphoreGive(xQueueMutex);
 #endif
   if (error) {
-	Log.error(F("deserialize pop json.Queue failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    Log.error(F("deserialize pop json.Queue failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
   } else {
-	pubMainCore(obj);
+    pubMainCore(obj);
   }
   queueLengthSum++;
 }
