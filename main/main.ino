@@ -607,7 +607,7 @@ void emptyQueue() {
   if (error) {
     Log.error(F("deserialize jsonQueue.front() failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
   } else {
-    pubMainCore(obj);
+    jsonDispatch(obj);
   }
   queueLengthSum++;
 }
