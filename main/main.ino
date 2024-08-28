@@ -734,7 +734,7 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
       Log.warning(F("MQTT not connected, aborting the publication" CR));
     }
 #ifdef ESP32
-  xSemaphoreGive(xMqttMutex);
+    xSemaphoreGive(xMqttMutex);
 #endif
   } else {
     Log.notice(F("[ OMG->MQTT deactivated or offline] topic: %s msg: %s " CR), topic, payload);
