@@ -605,7 +605,7 @@ void emptyQueue() {
   xSemaphoreGive(xQueueMutex);
 #endif
   if (error) {
-    Log.error(F("deserialize pop json.Queue failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    Log.error(F("deserialize jsonQueue.front() failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
   } else {
     pubMainCore(obj);
   }
