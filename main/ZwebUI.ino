@@ -1636,10 +1636,10 @@ void WebUISetup() {
   server.on("/up", handleUP); // Firmware Upgrade
 #  endif
   server.on("/cn", handleCN); // Configuration
-  server.on("/wi", handleWI); // Configure Wifi
-  server.on("/mq", handleMQ); // Configure MQTT
+  server.on("/wi", HTTP_POST, handleWI); // Configure Wifi
+  server.on("/mq", HTTP_POST, handleMQ); // Configure MQTT
 #  ifndef ESPWifiManualSetup
-  server.on("/cg", handleCG); // Configure gateway"
+  server.on("/cg", HTTP_POST, handleCG); // Configure gateway"
 #  endif
   server.on("/wu", handleWU); // Configure WebUI
 #  ifdef ZgatewayLORA
