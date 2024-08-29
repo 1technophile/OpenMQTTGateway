@@ -59,7 +59,7 @@ void GFSunInverterDataHandler(GfSun2000Data data) {
   jdata["register"] = jregister;
 #  endif
   jdata["origin"] = subjectRFtoMQTT;
-  handleJsonEnqueue(jdata);
+  enqueueJsonObject(jdata);
 }
 
 void GFSunInverterErrorHandler(int errorId, char* errorMessage) {
@@ -72,7 +72,7 @@ void GFSunInverterErrorHandler(int errorId, char* errorMessage) {
   jdata["msg"] = errorMessage;
   jdata["id"] = errorId;
   jdata["origin"] = subjectRFtoMQTT;
-  handleJsonEnqueue(jdata);
+  enqueueJsonObject(jdata);
 }
 
 void setupGFSunInverter() {

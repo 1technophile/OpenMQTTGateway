@@ -67,7 +67,7 @@ void MeasureC37_YL83_HMRDWater() {
     }
     if (C37_YL83_HMRDdata.size() > 0) {
       C37_YL83_HMRDdata["origin"] = C37_YL83_HMRD_TOPIC;
-      handleJsonEnqueue(C37_YL83_HMRDdata);
+      enqueueJsonObject(C37_YL83_HMRDdata);
       if (sensorDigitalValue == 1) { //No water detected, all good we can sleep
         if (SYSConfig.powerMode > 0)
           ready_to_sleep = true;

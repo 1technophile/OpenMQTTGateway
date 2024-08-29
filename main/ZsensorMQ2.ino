@@ -67,7 +67,7 @@ void MeasureGasMQ2() {
     MQ2data["gas"] = analogRead(MQ2SENSORADCPIN);
     MQ2data["detected"] = digitalRead(MQ2SENSORDETECTPIN) == HIGH ? "false" : "true";
     MQ2data["origin"] = subjectMQ2toMQTT;
-    handleJsonEnqueue(MQ2data);
+    enqueueJsonObject(MQ2data);
   }
 }
 #endif

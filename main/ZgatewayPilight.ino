@@ -81,11 +81,11 @@ void pilightCallback(const String& protocol, const String& message, int status,
     RFPiLightdata["repeats"] = (int)repeats;
     RFPiLightdata["status"] = (int)status;
     RFPiLightdata["origin"] = subjectPilighttoMQTT;
-    handleJsonEnqueue(RFPiLightdata);
+    enqueueJsonObject(RFPiLightdata);
     if (repeatPilightwMQTT) {
       Log.trace(F("Pub Pilight for rpt" CR));
       RFPiLightdata["origin"] = subjectMQTTtoPilight;
-      handleJsonEnqueue(RFPiLightdata);
+      enqueueJsonObject(RFPiLightdata);
     }
   }
 }
@@ -108,7 +108,7 @@ void pilightRawCallback(const uint16_t* pulses, size_t length) {
 
   // Enqueue data
   RFPiLightdata["origin"] = subjectPilighttoMQTT;
-  handleJsonEnqueue(RFPiLightdata);
+  enqueueJsonObject(RFPiLightdata);
 }
 #  endif
 

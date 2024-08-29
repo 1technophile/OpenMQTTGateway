@@ -89,12 +89,14 @@ struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
 };
 
-std::queue<JsonBundle> jsonQueue;
+std::queue<std::string> jsonQueue;
 
 #ifdef ESP32
 #  include <driver/adc.h>
 // Mutex  to protect the queue
 SemaphoreHandle_t xQueueMutex;
+// Mutex to protect mqtt publish
+SemaphoreHandle_t xMqttMutex;
 bool blufiConnectAP = false;
 #endif
 
@@ -483,36 +485,41 @@ void jsonDispatch(JsonObject& data) {
 }
 
 // Add a document to the queue
-void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
   if (jsonDoc.size() == 0) {
     Log.error(F("Empty JSON, skipping" CR));
-    return;
+    return true;
   }
   if (queueLength >= QueueSize) {
     Log.warning(F("%d Doc(s) in queue, doc blocked" CR), queueLength);
     blockedMessages++;
-    return;
+    return false;
   }
-  JsonBundle bundle;
-  bundle.doc = jsonDoc;
-  jsonQueue.push(bundle);
-  Log.trace(F("Queue length: %d" CR), jsonQueue.size());
-}
-
+  Log.trace(F("Enqueue JSON" CR));
+  std::string jsonString;
+  serializeJson(jsonDoc, jsonString);
 #ifdef ESP32
-// Semaphore check before enqueueing a document
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
-  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout))) {
-    enqueueJsonObject(jsonDoc);
-    xSemaphoreGive(xQueueMutex);
-    return true;
-  } else {
+  // Semaphore check before enqueueing a document
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout)) == pdFALSE) {
     Log.error(F("xQueueMutex not taken" CR));
     blockedMessages++;
     return false;
   }
+#endif
+  jsonQueue.push(jsonString);
+#ifdef ESP32
+  xSemaphoreGive(xQueueMutex);
+#endif
+  Log.trace(F("Queue length: %d" CR), jsonQueue.size());
+  return true;
 }
 
+// Semaphore check before enqueueing a document with default timeout QueueSemaphoreTimeOutLoop
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+  return enqueueJsonObject(jsonDoc, QueueSemaphoreTimeOutLoop);
+}
+
+#ifdef ESP32
 #  include "mbedtls/sha256.h"
 
 std::string generateHash(const std::string& input) {
@@ -527,20 +534,10 @@ std::string generateHash(const std::string& input) {
   return std::string(hashString);
 }
 #else
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
-  enqueueJsonObject(jsonDoc);
-  return true;
-}
-
 std::string generateHash(const std::string& input) {
   return "Not implemented for ESP8266";
 }
 #endif
-
-// Semaphore check before enqueueing a document with default timeout QueueSemaphoreTimeOutLoop
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
-  return handleJsonEnqueue(jsonDoc, QueueSemaphoreTimeOutLoop);
-}
 
 /*
  * Add the jsonObject id as a topic to the jsonObject origin
@@ -589,12 +586,25 @@ void emptyQueue() {
   if (queueLength == 0) {
     return;
   }
-  JsonBundle bundle;
   Log.trace(F("Dequeue JSON" CR));
-  bundle = jsonQueue.front();
+  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);
+  JsonObject obj = jsonBuffer.to<JsonObject>();
+#ifdef ESP32
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
+    Log.error(F("xQueueMutex not taken" CR));
+    return;
+  }
+#endif
+  auto error = deserializeJson(jsonBuffer, jsonQueue.front());
   jsonQueue.pop();
-  JsonObject obj = bundle.doc.as<JsonObject>();
-  jsonDispatch(obj);
+#ifdef ESP32
+  xSemaphoreGive(xQueueMutex);
+#endif
+  if (error) {
+    Log.error(F("deserialize jsonQueue.front() failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+  } else {
+    jsonDispatch(obj);
+  }
   queueLengthSum++;
 }
 
@@ -718,6 +728,12 @@ void pubMQTT(const char* topic, const char* payload) {
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (SYSConfig.mqtt && !SYSConfig.offline) {
+#ifdef ESP32
+    if (xSemaphoreTake(xMqttMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
+      Log.error(F("xMqttMutex not taken" CR));
+      return;
+    }
+#endif
     if (mqtt && mqtt->connected()) {
       SendReceiveIndicatorON();
       Log.notice(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
@@ -725,6 +741,9 @@ void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
     } else {
       Log.warning(F("MQTT not connected, aborting the publication" CR));
     }
+#ifdef ESP32
+    xSemaphoreGive(xMqttMutex);
+#endif
   } else {
     Log.notice(F("[ OMG->MQTT deactivated or offline] topic: %s msg: %s " CR), topic, payload);
   }
@@ -1286,6 +1305,7 @@ void setup() {
 #  endif
 #elif ESP32
   xQueueMutex = xSemaphoreCreateMutex();
+  xMqttMutex = xSemaphoreCreateMutex();
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
   setupM5();
 #  endif
@@ -2799,7 +2819,7 @@ String stateMeasures() {
   SYSdata["modules"] = modules;
 
   SYSdata["origin"] = subjectSYStoMQTT;
-  handleJsonEnqueue(SYSdata);
+  enqueueJsonObject(SYSdata);
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, 99);
@@ -3048,7 +3068,7 @@ bool checkForUpdates() {
     latestVersion = jsondata["latest_version"].as<String>();
     jsondata["origin"] = subjectRLStoMQTT;
     jsondata["retain"] = true;
-    handleJsonEnqueue(jsondata);
+    enqueueJsonObject(jsondata);
 
     Log.trace(F("Update file found on server" CR));
     return true;
@@ -3123,7 +3143,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       StaticJsonDocument<JSON_MSG_BUFFER> jsondata;
       jsondata["release_summary"] = "Update in progress ...";
       jsondata["origin"] = subjectRLStoMQTT;
-      handleJsonEnqueue(jsondata);
+      enqueueJsonObject(jsondata);
 
       std::string ota_cert = processCert(HttpsFwUpdateData["ota_server_cert"] | "");
       Log.notice(F("OTA cert: %s" CR), ota_cert.c_str());
@@ -3199,7 +3219,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           jsondata["release_summary"] = "Update success !";
           jsondata["installed_version"] = latestVersion;
           jsondata["origin"] = subjectRLStoMQTT;
-          handleJsonEnqueue(jsondata);
+          enqueueJsonObject(jsondata);
 #  if !MQTT_BROKER_MODE
           if (cnt_index != 0) // We don't enable the change of cert provided at build time
             cnt_parameters_array[cnt_index].ota_server_cert = ota_cert;
@@ -3338,7 +3358,6 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifdef ZmqttDiscovery
       if (SYSdata.containsKey("discovery_prefix")) {
         strncpy(discovery_prefix, SYSdata["discovery_prefix"], parameters_size);
-        restartESP = true; //Need to reset so all devices get re-discovered & published to new discovery_prefix
       }
 #endif
       if (SYSdata.containsKey("gateway_name")) {
