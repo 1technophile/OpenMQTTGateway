@@ -64,7 +64,7 @@ void MeasureHCSR501() {
 #  endif
     if (HCSR501data.size() > 0) {
       HCSR501data["origin"] = subjectHCSR501toMQTT;
-      handleJsonEnqueue(HCSR501data);
+      enqueueJsonObject(HCSR501data);
     }
   }
 }

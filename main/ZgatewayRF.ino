@@ -146,14 +146,14 @@ void RFtoMQTT() {
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       RFdata["origin"] = subjectRFtoMQTT;
-      handleJsonEnqueue(RFdata);
+      enqueueJsonObject(RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
       Log.trace(F("Store val: %u" CR), (unsigned long)MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatRFwMQTT) {
         Log.trace(F("Pub RF for rpt" CR));
         RFdata["origin"] = subjectMQTTtoRF;
-        handleJsonEnqueue(RFdata);
+        enqueueJsonObject(RFdata);
       }
     }
   }

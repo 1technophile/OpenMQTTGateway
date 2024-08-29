@@ -91,7 +91,7 @@ bool _2GtoMQTT() {
     A6l.deleteSMS(unreadSMSLocs[i]); // we delete the SMS received
     Log.trace(F("Adv data 2GtoMQTT" CR));
     SMSdata["origin"] = subject2GtoMQTT;
-    return handleJsonEnqueue(SMSdata);
+    return enqueueJsonObject(SMSdata);
   }
   return false;
 }

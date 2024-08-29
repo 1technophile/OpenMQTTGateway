@@ -188,7 +188,7 @@ void MeasureTempHumAndPressure() {
         Log.trace(F("Same Altitude Feet don't send it" CR));
       }
       BME280data["origin"] = BMETOPIC;
-      handleJsonEnqueue(BME280data);
+      enqueueJsonObject(BME280data);
     }
 
     persisted_bme_tempc = BmeTempC;

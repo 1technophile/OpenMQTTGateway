@@ -101,7 +101,7 @@ void MeasureLightIntensity() {
         Log.trace(F("Same wattsm2 don't send it" CR));
       }
       BH1750data["origin"] = subjectBH1750toMQTT;
-      handleJsonEnqueue(BH1750data);
+      enqueueJsonObject(BH1750data);
     }
     persistedll = Lux;
     persistedlf = ftcd;

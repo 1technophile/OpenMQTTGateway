@@ -158,7 +158,7 @@ void MeasureDS1820Temp() {
           }
           String origin = String(OW_TOPIC) + "/" + ds1820_addr[i];
           DS1820data["origin"] = origin;
-          handleJsonEnqueue(DS1820data);
+          enqueueJsonObject(DS1820data);
           if (SYSConfig.powerMode > 0)
             ready_to_sleep = true;
         } else {
