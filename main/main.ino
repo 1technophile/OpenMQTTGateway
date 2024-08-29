@@ -89,7 +89,7 @@ struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
 };
 
-std::queue<JsonBundle> jsonQueue;
+std::queue<String> jsonQueue;
 
 #ifdef ESP32
 #  include <driver/adc.h>
@@ -485,36 +485,46 @@ void jsonDispatch(JsonObject& data) {
 }
 
 // Add a document to the queue
-void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
   if (jsonDoc.size() == 0) {
     Log.error(F("Empty JSON, skipping" CR));
-    return;
+    return true;
   }
   if (queueLength >= QueueSize) {
     Log.warning(F("%d Doc(s) in queue, doc blocked" CR), queueLength);
     blockedMessages++;
-    return;
+    return false;
   }
-  JsonBundle bundle;
-  bundle.doc = jsonDoc;
-  jsonQueue.push(bundle);
-  Log.trace(F("Queue length: %d" CR), jsonQueue.size());
-}
-
+  Log.trace(F("Enqueue JSON" CR));
+  String jsonString;
+  serializeJson(jsonDoc, jsonString);
 #ifdef ESP32
-// Semaphore check before enqueueing a document
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
-  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout))) {
-    enqueueJsonObject(jsonDoc);
-    xSemaphoreGive(xQueueMutex);
-    return true;
-  } else {
+  // Semaphore check before enqueueing a document
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout)) == pdFALSE) {
     Log.error(F("xQueueMutex not taken" CR));
     blockedMessages++;
     return false;
   }
+#endif
+  jsonQueue.push(jsonString);
+#ifdef ESP32
+  xSemaphoreGive(xQueueMutex);
+#endif
+  Log.trace(F("Queue length: %d" CR), jsonQueue.size());
+  return true;
 }
 
+// Semaphore check before enqueueing a document
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+  return enqueueJsonObject(jsonDoc, timeout);
+}
+
+// Semaphore check before enqueueing a document with default timeout QueueSemaphoreTimeOutLoop
+bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+  return handleJsonEnqueue(jsonDoc, QueueSemaphoreTimeOutLoop);
+}
+
+#ifdef ESP32
 #  include "mbedtls/sha256.h"
 
 std::string generateHash(const std::string& input) {
@@ -529,20 +539,10 @@ std::string generateHash(const std::string& input) {
   return std::string(hashString);
 }
 #else
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
-  enqueueJsonObject(jsonDoc);
-  return true;
-}
-
 std::string generateHash(const std::string& input) {
   return "Not implemented for ESP8266";
 }
 #endif
-
-// Semaphore check before enqueueing a document with default timeout QueueSemaphoreTimeOutLoop
-bool handleJsonEnqueue(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
-  return handleJsonEnqueue(jsonDoc, QueueSemaphoreTimeOutLoop);
-}
 
 /*
  * Add the jsonObject id as a topic to the jsonObject origin
@@ -591,12 +591,25 @@ void emptyQueue() {
   if (queueLength == 0) {
     return;
   }
-  JsonBundle bundle;
   Log.trace(F("Dequeue JSON" CR));
-  bundle = jsonQueue.front();
+  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);
+  JsonObject obj = jsonBuffer.to<JsonObject>();
+#ifdef ESP32
+  if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
+    Log.error(F("xQueueMutex not taken" CR));
+    return;
+  }
+#endif
+  auto error = deserializeJson(jsonBuffer, jsonQueue.front());
   jsonQueue.pop();
-  JsonObject obj = bundle.doc.as<JsonObject>();
-  jsonDispatch(obj);
+#ifdef ESP32
+  xSemaphoreGive(xQueueMutex);
+#endif
+  if (error) {
+    Log.error(F("deserialize jsonQueue.front() failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+  } else {
+    jsonDispatch(obj);
+  }
   queueLengthSum++;
 }
 
