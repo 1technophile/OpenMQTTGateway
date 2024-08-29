@@ -773,7 +773,6 @@ Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IN
 
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
 // The real definitions are in config_M5.h / config_SSD1306.h
-#define pubOled(...)        // display the published message onto the OLED display
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 

@@ -2800,7 +2800,6 @@ String stateMeasures() {
 
   SYSdata["origin"] = subjectSYStoMQTT;
   handleJsonEnqueue(SYSdata);
-  pubOled(subjectSYStoMQTT, SYSdata);
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, 99);
