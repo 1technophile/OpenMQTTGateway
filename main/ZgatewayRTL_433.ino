@@ -311,7 +311,6 @@ void rtl_433_Callback(char* message) {
     RFrtl_433_ESPdata["origin"] = (char*)topic.c_str();
     enqueueJsonObject(RFrtl_433_ESPdata);
     storeSignalValue(MQTTvalue);
-    pubOled((char*)topic.c_str(), RFrtl_433_ESPdata);
   }
 #  ifdef MEMORY_DEBUG
   Log.trace(F("Post rtl_433_Callback: %d" CR), ESP.getFreeHeap());
