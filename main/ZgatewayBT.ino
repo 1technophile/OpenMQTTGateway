@@ -290,7 +290,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     preferences.begin(Gateway_Short_Name, false);
     int result = preferences.putString("BTConfig", conf);
     preferences.end();
-    Log.notice(F("BT config save: %s, result: %d" CR), conf.c_str(), result);
+    Log.notice(F("BT config save, result: %d" CR), result);
   }
 }
 
@@ -576,9 +576,6 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
     */
 // core task implementation thanks to https://techtutorialsx.com/2017/05/09/esp32-running-code-on-a-specific-core/
 
-//core on which the BLE detection task will run
-static int taskCore = 0;
-
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
     BLEAdvertisedDevice* ad = new BLEAdvertisedDevice(*advertisedDevice);
@@ -835,7 +832,7 @@ void coreTask(void* pvParameters) {
         for (int interval = BTConfig.BLEinterval, waitms; interval > 0; interval -= waitms) {
           int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst);
           if (scan == 1) BTforceScan(); // should we break after this?
-          delay(waitms = interval > 100 ? 100 : interval); // 100ms
+          delay(waitms = interval > MinTimeBtwScan ? MinTimeBtwScan : interval);
         }
       }
     }
@@ -867,7 +864,7 @@ void setupBTTasksAndBLE() {
       NULL, /* Task input parameter */
       1, /* Priority of the task */
       &xCoreTaskHandle, /* Task handle. */
-      taskCore); /* Core where the task should run */
+      0); /* Core where the task should run */
 }
 
 void setupBT() {

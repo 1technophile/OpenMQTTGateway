@@ -260,6 +260,7 @@ static int cnt_index = CNT_DEFAULT_INDEX;
 
 bool BTProcessLock = true; // Process lock when we want to use a critical function like OTA for example, at start to true so as to wait for critical functions to be performed before BLE start
 bool ProcessLock = false; // Process lock when we want to use a critical function like OTA for example
+static TaskHandle_t emptyQueueTaskHandle;
 
 #  if !defined(NO_INT_TEMP_READING)
 // ESP32 internal temperature reading
@@ -451,6 +452,17 @@ char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/que
 bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
   return s != "0";
 }
+#ifdef ESP32
+/*
+* Empty the documents queue
+*/
+void emptyQueueTask(void* pvParameters) {
+  for (;;) {
+    emptyQueue();
+    vTaskDelay(pdMS_TO_TICKS(100)); // Let time for the other tasks
+  }
+}
+#endif
 
 /*
  * Dispatch json messages towards the communication layer
@@ -596,6 +608,8 @@ void emptyQueue() {
   }
 #endif
   auto error = deserializeJson(jsonBuffer, jsonQueue.front());
+  // Log remaining task stack
+  Log.notice(F("Task stack: %d" CR), uxTaskGetStackHighWaterMark(NULL));
   jsonQueue.pop();
 #ifdef ESP32
   xSemaphoreGive(xQueueMutex);
@@ -724,7 +738,7 @@ void pubMQTT(const char* topic, const char* payload) {
  *
  * @param topic the topic
  * @param payload the payload
- * @param retainFlag  true if retain the retain Flag
+ * @param retainFlag  true if retain Flag
  */
 void pubMQTT(const char* topic, const char* payload, bool retainFlag) {
   if (SYSConfig.mqtt && !SYSConfig.offline) {
@@ -1401,6 +1415,17 @@ void setup() {
 #endif
 
   delay(1500);
+#ifdef ESP32
+  xTaskCreatePinnedToCore(
+      emptyQueueTask, /* Task function. */
+      "emptyQueueTask", /* name of task. */
+      7000, /* Stack size of task */
+      NULL, /* parameter of the task */
+      3, /* priority of the task */
+      &emptyQueueTaskHandle, /* Task handle to keep track of created task */
+      1); /* pin task to core 1 */
+#endif
+
 #if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
   setupCommonRF();
 #endif
@@ -2461,7 +2486,13 @@ void loop() {
 #if defined(ZwebUI) && defined(ESP32)
     WebUILoop();
 #endif
-    mqtt->loop();
+#ifdef ESP8266
+    mqtt->loop(); // MQTT client loop for ESP8266, see emptyQueueTask for ESP32 (Higher priority than the loop)
+#else
+    if (uxSemaphoreGetCount(xMqttMutex) == 1) { // Loop only if the MQTT mutex is free, to avoid sending a packet while a message is being sent
+      mqtt->loop();
+    }
+#endif
     if (mqtt->connected()) { // MQTT client is still connected
       InfoIndicatorON();
       failure_number_ntwk = 0;
@@ -2647,8 +2678,10 @@ void loop() {
     launchRTL_433Discovery(false);
 #  endif
 #endif
-  // Empty the queue
+    // Empty the queue if ESP8266
+#ifdef ESP8266
   emptyQueue();
+#endif
   // Sleep if ready
   if (ready_to_sleep) {
     sleep();
@@ -2779,6 +2812,7 @@ String stateMeasures() {
   SYSdata["tempc"] = round2(intTemperatureRead());
 #  endif
   SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
+  SYSdata["qstck"] = uxTaskGetStackHighWaterMark(emptyQueueTaskHandle);
   SYSdata["powermode"] = SYSConfig.powerMode;
 #endif
 
