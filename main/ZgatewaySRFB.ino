@@ -121,13 +121,13 @@ void _rfbDecode() {
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
       Log.trace(F("Adv data SRFBtoMQTT" CR));
       SRFBdata["origin"] = subjectSRFBtoMQTT;
-      handleJsonEnqueue(SRFBdata);
+      enqueueJsonObject(SRFBdata);
       Log.trace(F("Store val: %lu" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatSRFBwMQTT) {
         Log.trace(F("Publish SRFB for rpt" CR));
         SRFBdata["origin"] = subjectMQTTtoSRFB;
-        handleJsonEnqueue(SRFBdata);
+        enqueueJsonObject(SRFBdata);
       }
     }
     _rfbAck();

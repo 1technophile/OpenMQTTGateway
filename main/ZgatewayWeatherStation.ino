@@ -36,7 +36,7 @@ void PairedDeviceAdded(byte newID) {
   RFdata["sensor"] = newID;
   RFdata["action"] = "paired";
   RFdata["origin"] = subjectRFtoMQTT;
-  handleJsonEnqueue(RFdata);
+  enqueueJsonObject(RFdata);
   wsdr.pair(NULL, PairedDeviceAdded);
 }
 
@@ -56,7 +56,7 @@ void sendWindSpeedData(byte id, float wind_speed, byte battery_status) {
     RFdata["wind_speed"] = wind_speed;
     RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
-    handleJsonEnqueue(RFdata);
+    enqueueJsonObject(RFdata);
     Log.trace(F("Store wind speed val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
@@ -71,7 +71,7 @@ void sendRainData(byte id, float rain_volume, byte battery_status) {
     RFdata["rain_volume"] = rain_volume;
     RFdata["battery"] = bitRead(battery_status, 1) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
-    handleJsonEnqueue(RFdata);
+    enqueueJsonObject(RFdata);
     Log.trace(F("Store rain_volume: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
@@ -87,7 +87,7 @@ void sendWindData(byte id, int wind_direction, float wind_gust, byte battery_sta
     RFdata["wind_gust"] = wind_gust;
     RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
-    handleJsonEnqueue(RFdata);
+    enqueueJsonObject(RFdata);
     Log.trace(F("Store wind data val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
@@ -104,7 +104,7 @@ void sendTemperatureData(byte id, float temperature, int humidity, byte battery_
     RFdata["humidity"] = humidity;
     RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
-    handleJsonEnqueue(RFdata);
+    enqueueJsonObject(RFdata);
     Log.trace(F("Store temp val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }

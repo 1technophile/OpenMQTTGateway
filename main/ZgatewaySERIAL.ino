@@ -182,11 +182,11 @@ void SERIALtoMQTT() {
             PublishDeviceData(SERIALdata);
 #      endif
           } else {
-            handleJsonEnqueue(SERIALdata);
+            enqueueJsonObject(SERIALdata);
           }
         } else {
           SERIALdata["origin"] = subjectSERIALtoMQTT;
-          handleJsonEnqueue(SERIALdata);
+          enqueueJsonObject(SERIALdata);
         }
 
 #    endif

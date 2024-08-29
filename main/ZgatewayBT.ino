@@ -148,7 +148,7 @@ String stateBTMeasures(bool start) {
   String output;
   serializeJson(jo, output);
   jo["origin"] = subjectBTtoMQTT;
-  handleJsonEnqueue(jo, QueueSemaphoreTimeOutTask);
+  enqueueJsonObject(jo, QueueSemaphoreTimeOutTask);
   return (output);
 }
 
@@ -430,7 +430,7 @@ void updateDevicesStatus() {
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
         buildTopicFromId(BLEdata, subjectBTtoMQTT);
-        handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+        enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
         // We set the lastUpdate to 0 to avoid replublishing the offline state
         p->lastUpdate = 0;
       }
@@ -444,7 +444,7 @@ void updateDevicesStatus() {
         BLEdata["id"] = p->macAdr;
         BLEdata["state"] = "offline";
         buildTopicFromId(BLEdata, subjectBTtoMQTT);
-        handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+        enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
         // We set the lastUpdate to 0 to avoid replublishing the offline state
         p->lastUpdate = 0;
       }
@@ -1244,13 +1244,13 @@ void PublishDeviceData(JsonObject& BLEdata) {
         BLEdata["mac"] = BLEdata["id"].as<std::string>();
         BLEdata["id"] = BLEdata["uuid"].as<std::string>();
       }
-      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+      enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     }
 
     // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || !BLEDecoder) { // Identified device
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+      enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
       Log.notice(F("Not a sensor device filtered" CR));
       return;
@@ -1271,10 +1271,10 @@ void PublishDeviceData(JsonObject& BLEdata) {
         BLEdata["mac"] = BLEdata["id"].as<std::string>();
         BLEdata["id"] = BLEdata["uuid"].as<std::string>();
       }
-      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+      enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     }
     buildTopicFromId(BLEdata, subjectBTtoMQTT);
-    handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+    enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
   } else {
     Log.notice(F("Low rssi, device filtered" CR));
     return;
@@ -1351,7 +1351,7 @@ void immediateBTAction(void* pvParameters) {
       BLEdata["id"] = BLEactions.back().addr;
       BLEdata["success"] = false;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
-      handleJsonEnqueue(BLEdata, QueueSemaphoreTimeOutTask);
+      enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
       BLEactions.pop_back();
       BTProcessLock = false;
     }

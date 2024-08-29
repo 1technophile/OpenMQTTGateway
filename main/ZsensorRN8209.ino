@@ -95,7 +95,7 @@ void rn8209_loop(void* mode) {
       PublishingTimerRN8209 = now;
       if (RN8209data) {
         RN8209data["origin"] = subjectRN8209toMQTT;
-        handleJsonEnqueue(RN8209data, QueueSemaphoreTimeOutTask);
+        enqueueJsonObject(RN8209data, QueueSemaphoreTimeOutTask);
       }
     }
     //esp_task_wdt_reset();

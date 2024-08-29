@@ -94,7 +94,7 @@ void MeasureADC() {
         ADCdata["mvolt_scaled"] = (int)voltage; // real scaled/calibrated value in mV
 #  endif
         ADCdata["origin"] = ADCTOPIC;
-        handleJsonEnqueue(ADCdata);
+        enqueueJsonObject(ADCdata);
         persistedadc = val;
       }
     }

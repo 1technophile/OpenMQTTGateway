@@ -105,7 +105,7 @@ void MeasureLightIntensityTSL2561() {
         TSL2561data["ftcd"] = (float)(event.light) / 10.764;
         TSL2561data["wattsm2"] = (float)(event.light) / 683.0;
         TSL2561data["origin"] = subjectTSL12561toMQTT;
-        handleJsonEnqueue(TSL2561data);
+        enqueueJsonObject(TSL2561data);
       } else {
         Log.trace(F("Same lux value, do not send" CR));
       }

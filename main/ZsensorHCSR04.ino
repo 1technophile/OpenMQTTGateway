@@ -69,7 +69,7 @@ void MeasureDistance() {
         Log.trace(F("HC SR04 Distance hasn't changed" CR));
       }
       distance = d;
-      handleJsonEnqueue(HCSR04data);
+      enqueueJsonObject(HCSR04data);
     }
   }
 }
