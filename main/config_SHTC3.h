@@ -27,7 +27,7 @@
 #define config_SHTC3_h
 
 extern void setupSHTC3();
-extern void SHTC3toMQTT();
+extern void SHTC3toX();
 
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/

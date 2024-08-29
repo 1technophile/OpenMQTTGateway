@@ -110,7 +110,7 @@ void sendTemperatureData(byte id, float temperature, int humidity, byte battery_
   }
 }
 
-void ZgatewayWeatherStationtoMQTT() {
+void ZgatewayWeatherStationtoX() {
   char newData = wsdr.readData();
   switch (newData) {
     case 'T':

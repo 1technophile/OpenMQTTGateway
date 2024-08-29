@@ -134,7 +134,7 @@ void setupONOFF() {
 }
 
 #  if jsonReceiving
-void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
+void XtoONOFF(const char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
     int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
@@ -207,7 +207,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
 #  endif
 
 #  if simpleReceiving
-void MQTTtoONOFF(char* topicOri, char* datacallback) {
+void XtoONOFF(const char* topicOri, const char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
     char* endptr = NULL;

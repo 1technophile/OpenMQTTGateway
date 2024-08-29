@@ -27,7 +27,7 @@
 #define config_ADC_h
 
 extern void setupADC();
-extern void ADCtoMQTT();
+extern void ADCtoX();
 extern void MeasureADC();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/

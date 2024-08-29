@@ -143,7 +143,8 @@ void MeasureTouch() {
       if (!isOn) { // when turning off, send the duration the button was on
         touchData["onDuration"] = now - button->onTime + TOUCH_MIN_DURATION;
       }
-      pub(TOUCHTOPIC, touchData);
+      touchData["origin"] = subjectTouchtoMQTT;
+      enqueueJsonObject(touchData);
       button->timePublished = now;
     }
     // adjust measure time so that min(avg of all buttons) is around 60 (between 40 and 80)

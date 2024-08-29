@@ -185,7 +185,8 @@ String stateRFMeasures() {
 #    endif
   }
 #  endif
-  pub(subjectcommonRFtoMQTT, RFdata);
+  RFdata["origin"] = subjectcommonRFtoMQTT;
+  enqueueJsonObject(RFdata);
 
   String output;
   serializeJson(RFdata, output);
@@ -300,7 +301,7 @@ void RFConfig_load() {
 #  endif
 }
 
-void MQTTtoRFset(char* topicOri, JsonObject& RFdata) {
+void XtoRFset(const char* topicOri, JsonObject& RFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
     Log.trace(F("MQTTtoRF json set" CR));
 

@@ -27,9 +27,9 @@
 #define config_RFM69_h
 
 extern void setupRFM69();
-extern bool RFM69toMQTT();
-extern void MQTTtoRFM69(char* topicOri, char* datacallback);
-extern void MQTTtoRFM69(char* topicOri, JsonObject& RFdata);
+extern bool RFM69toX();
+extern void XtoRFM69(const char* topicOri, const char* datacallback);
+extern void XtoRFM69(const char* topicOri, JsonObject& RFdata);
 /*----------------------RFM69 topics & parameters -------------------------*/
 // Topic where the message from RFM69 will be published by the gateway,
 // appended with the nodeID of the sender

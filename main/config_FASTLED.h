@@ -26,8 +26,8 @@
 
 extern void setupFASTLED();
 extern void FASTLEDLoop();
-extern void MQTTtoFASTLED(char*, char*);
-extern void MQTTtoFASTLED(char*, JsonObject&);
+extern void XtoFASTLED(const char*, const char*);
+extern void XtoFASTLED(const char*, JsonObject&);
 /*-------------------FASTLED topics & parameters----------------------*/
 //FASTLED MQTT Subjects
 #define subjectMQTTtoFASTLED              "/commands/MQTTtoFASTLED"

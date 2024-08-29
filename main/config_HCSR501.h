@@ -27,7 +27,7 @@
 #define config_HCSR501_h
 
 extern void setupHCSR501();
-extern void HCSR501toMQTT();
+extern void HCSR501toX();
 extern void MeasureHCSR501();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/

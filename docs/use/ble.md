@@ -143,7 +143,6 @@ So as to keep your white/black list persistent you can publish it with the retai
 
 ## Setting the time between BLE scans and force a scan (available with HA discovery)
 
-If you want to change the time between readings you can change the interval by MQTT. `adaptivescan` parameter needs to be `false` for the `interval` change to be taken into account.
 Example if you want the BLE to scan every 66 seconds:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":66000}'`
@@ -151,6 +150,8 @@ Example if you want the BLE to scan every 66 seconds:
 you can also force a scan to be done by the following command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"interval":0}'`
+
+Changing the interval between scans will deactivate adaptive scanning.
 
 ::: tip
 With Home Assistant, this command is directly available through MQTT auto discovery as a switch into the HASS OpenMQTTGateway device entities list.
@@ -210,7 +211,7 @@ An overview with background information to better understand the different setti
 
 **Active scanning:** With this scanning mode the gateway sends out requests for sensor broadcasts first, before then picking up the broadcast advertisement data. Some devices require this request before they send out all data in their broadcasts. The interval for this active scanning with request first is set by [{"intervalacts":300000}](#setting-the-time-between-active-scanning)
 
-If adaptive scanning is set to false and you want to manually set these intervals, setting [Publishing advertisement and advanced data](#advanced-publishing-advertisement-and-advanced-data-default-false) to true will show you additional data about which of your devices require active scanning and/or continuous scanning, so that you can tune these setting to your devices and your individual requirements of their data.
+Setting [Publishing advertisement and advanced data](#advanced-publishing-advertisement-and-advanced-data-default-false) to true will show you additional data about which of your devices require active scanning and/or continuous scanning, so that you can tune these setting to your devices and your individual requirements of their data.
 
 **"cont":true** - the device requires continuous scanning. If passive ({"interval":100}) or active ({"intervalacts":100}) depends on the additional device specification.
 
@@ -220,9 +221,11 @@ If adaptive scanning is set to false and you want to manually set these interval
 
 If you have passive scanning activated, but also have some devices which require active scanning, this defines the time interval between two intermittent active scans.
 
-If you want to change the time between active scans you can change it by MQTT, `adaptivescan` parameter needs to be `false` for the `intervalacts` change to be taken into account. Example for setting the active scan interval time to every 5 minutes:
+Example for setting the active scan interval time to every 5 minutes:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"intervalacts":300000}'`
+
+Changing the active scan interval will deactivate adaptive scanning.
 
 ::: warning Note
 The active scan interval `intervalacts` can only bet set equal to or higher than the passive scan interval `interval`, as any lower value would not make any sense.

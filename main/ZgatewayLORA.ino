@@ -222,7 +222,7 @@ uint8_t _determineDevice(JsonObject& LORAdata) {
 /*
 Create JSON information from WiPhone packet
  */
-boolean _WiPhoneToMQTT(byte* packet, JsonObject& LORAdata) {
+boolean _WiPhonetoX(byte* packet, JsonObject& LORAdata) {
   // Decode the LoRa packet and send over MQTT
   wiphone_message* msg = (wiphone_message*)packet;
 
@@ -403,7 +403,7 @@ void setupLORA() {
   Log.trace(F("ZgatewayLORA setup done" CR));
 }
 
-void LORAtoMQTT() {
+void LORAtoX() {
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
     StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
@@ -427,7 +427,7 @@ void LORAtoMQTT() {
     packet[packetSize] = 0;
     uint8_t deviceId = _determineDevice(packet, packetSize);
     if (deviceId == WIPHONE) {
-      _WiPhoneToMQTT(packet, LORAdata);
+      _WiPhonetoX(packet, LORAdata);
     } else if (binary) {
       if (LORAConfig.onlyKnown) {
         Log.trace(F("Ignoring non identifiable packet" CR));
@@ -483,7 +483,7 @@ void LORAtoMQTT() {
 }
 
 #  if jsonReceiving
-void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
+void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
@@ -507,7 +507,8 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
       LoRa.endPacket();
       Log.trace(F("MQTTtoLORA OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      pub(subjectGTWLORAtoMQTT, LORAdata);
+      LORAdata["origin"] = subjectGTWLORAtoMQTT;
+      enqueueJsonObject(LORAdata);
     } else {
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
@@ -535,7 +536,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 }
 #  endif
 #  if simpleReceiving
-void MQTTtoLORA(char* topicOri, char* LORAarray) { // json object decoding
+void XtoLORA(const char* topicOri, const char* LORAarray) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
     LoRa.print(LORAarray);
@@ -566,8 +567,8 @@ String stateLORAMeasures() {
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
   LORAdata["onlyknown"] = LORAConfig.onlyKnown;
-
-  pub(subjectGTWLORAtoMQTT, LORAdata);
+  LORAdata["origin"] = subjectGTWLORAtoMQTT;
+  enqueueJsonObject(LORAdata);
 
   String output;
   serializeJson(LORAdata, output);

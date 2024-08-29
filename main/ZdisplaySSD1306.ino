@@ -152,7 +152,7 @@ Handler for mqtt commands sent to the module
 - log-oled: boolean
   Enable / Disable display of log messages on display
 */
-void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object decoding
+void XtoSSD1306(const char* topicOri, JsonObject& SSD1306data) { // json object decoding
   bool success = false;
   if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
     Log.trace(F("MQTTtoSSD1306 json set" CR));
@@ -222,7 +222,7 @@ void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object dec
     if (success) {
       stateSSD1306Display();
     } else {
-      Log.error(F("[ SSD1306 ] MQTTtoSSD1306 Fail json" CR), SSD1306data);
+      Log.error(F("[ SSD1306 ] XtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
 }

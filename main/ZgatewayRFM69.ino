@@ -134,7 +134,7 @@ void setupRFM69(void) {
   }
 }
 
-bool RFM69toMQTT(void) {
+bool RFM69toX(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone()) {
     StaticJsonDocument<JSON_MSG_BUFFER> RFM69dataBuffer;
@@ -162,7 +162,8 @@ bool RFM69toMQTT(void) {
     RFM69data["data"] = (char*)data;
     RFM69data["rssi"] = (int)radio.RSSI;
     RFM69data["senderid"] = (int)radio.SENDERID;
-    pub(buff, RFM69data);
+    RFM69data["origin"] = buff;
+    enqueueJsonObject(RFM69data);
 
     return true;
   } else {
@@ -171,7 +172,7 @@ bool RFM69toMQTT(void) {
 }
 
 #  if simpleReceiving
-void MQTTtoRFM69(char* topicOri, char* datacallback) {
+void XtoRFM69(const char* topicOri, const char* datacallback) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     Log.trace(F("MQTTtoRFM69 data analysis" CR));
     char data[RF69_MAX_DATA_LEN + 1];
@@ -200,7 +201,7 @@ void MQTTtoRFM69(char* topicOri, char* datacallback) {
 }
 #  endif
 #  if jsonReceiving
-void MQTTtoRFM69(char* topicOri, JsonObject& RFM69data) {
+void XtoRFM69(const char* topicOri, JsonObject& RFM69data) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     const char* data = RFM69data["data"];
     Log.trace(F("MQTTtoRFM69 json data analysis" CR));

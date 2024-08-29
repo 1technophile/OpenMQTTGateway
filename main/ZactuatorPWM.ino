@@ -191,12 +191,12 @@ void PWMLoop() {
   }
 }
 
-boolean PWMtoMQTT() {
+boolean PWMtoX() {
   return false;
 }
 
 #  if jsonReceiving
-void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
+void XtoPWM(const char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));
     // Parse the target value for each channel

@@ -27,8 +27,7 @@
 #define config_BT_h
 
 extern void setupBT();
-extern bool BTtoMQTT();
-extern void MQTTtoBT(char* topicOri, JsonObject& RFdata);
+extern void XtoBT(const char* topicOri, JsonObject& RFdata);
 extern void launchBTDiscovery(bool overrideDiscovery);
 extern void stopProcessing();
 extern String stateBTMeasures(bool);

@@ -125,7 +125,7 @@
 
 extern void setupSSD1306();
 extern void loopSSD1306();
-extern void MQTTtoSSD1306(char*, JsonObject&);
+extern void XtoSSD1306(const char*, JsonObject&);
 extern String stateSSD1306Display();
 
 // Simple construct for displaying message in lcd and oled displays

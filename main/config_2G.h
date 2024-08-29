@@ -27,9 +27,9 @@
 #define config_2G_h
 
 extern void setup2G();
-extern bool _2GtoMQTT();
-extern void MQTTto2G(char* topicOri, char* datacallback);
-extern void MQTTto2G(char* topicOri, JsonObject& SMSdata);
+extern bool _2GtoX();
+extern void Xto2G(const char* topicOri, const char* datacallback);
+extern void Xto2G(const char* topicOri, JsonObject& SMSdata);
 /*-------------------2G topics & parameters----------------------*/
 //433Mhz MQTT Subjects and keys
 #define subjectMQTTto2G    "/commands/MQTTto2G"

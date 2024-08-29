@@ -27,7 +27,7 @@
 #define config_RN8209_h
 
 extern void setupRN8209();
-extern void RN8209toMQTT();
+extern void RN8209toX();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectRN8209toMQTT "/RN8209toMQTT"

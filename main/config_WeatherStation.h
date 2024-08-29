@@ -30,7 +30,7 @@
 #include <ArduinoJson.h>
 
 extern void setupWeatherStation();
-extern void ZgatewayWeatherStationtoMQTT();
+extern void ZgatewayWeatherStationtoX();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectRFtoMQTT "/433toMQTT"

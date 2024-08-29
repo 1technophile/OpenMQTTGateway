@@ -27,7 +27,7 @@
 
 extern void setupPWM();
 extern void PWMLoop();
-extern void MQTTtoPWM(char*, JsonObject&);
+extern void XtoPWM(const char*, JsonObject&);
 
 #define subjectMQTTtoPWM          "/commands/MQTTtoPWM"
 #define subjectMQTTtoPWMset       subjectMQTTtoPWM "/set" //set channel(s) with JSON struct {"r":0-1,"g":0-1,"b":0-1,"w0":0-1,"w0":0-1,"fade":<fade time in seconds>}

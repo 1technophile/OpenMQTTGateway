@@ -27,7 +27,7 @@
 #define config_GPIOKeyCode_h
 
 extern void setupGPIOKeyCode();
-extern void GPIOKeyCodetoMQTT();
+extern void GPIOKeyCodetoX();
 extern void MeasureGPIOKeyCode();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/

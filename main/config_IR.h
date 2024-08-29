@@ -27,9 +27,9 @@
 #define config_IR_h
 
 extern void setupIR();
-extern void IRtoMQTT();
-extern void MQTTtoIR(char* topicOri, char* datacallback);
-extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
+extern void IRtoX();
+extern void XtoIR(const char* topicOri, const char* datacallback);
+extern void XtoIR(const char* topicOri, JsonObject& RFdata);
 /*-------------------IR topics & parameters----------------------*/
 //IR MQTT Subjects
 #define subjectGTWIRtoMQTT     "/IRtoMQTT"

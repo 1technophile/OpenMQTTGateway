@@ -102,7 +102,7 @@ void setupIR() {
   Log.trace(F("ZgatewayIR setup done " CR));
 }
 
-void IRtoMQTT() {
+void IRtoX() {
   decode_results results;
 
   if (irrecv.decode(&results)) {
@@ -162,7 +162,7 @@ void IRtoMQTT() {
 bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char* hex, unsigned int valueBITS, uint16_t valueRPT);
 
 #  if jsonReceiving
-void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
+void XtoIR(const char* topicOri, JsonObject& IRdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoIR)) {
     Log.trace(F("MQTTtoIR json" CR));
     uint64_t data = IRdata["value"];
@@ -245,7 +245,8 @@ void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
       }
       if (signalSent) { // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
         Log.notice(F("MQTTtoIR OK" CR));
-        pub(subjectGTWIRtoMQTT, IRdata);
+        IRdata["origin"] = subjectGTWIRtoMQTT;
+        enqueueJsonObject(IRdata);
       }
       irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
     } else {

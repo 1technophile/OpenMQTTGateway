@@ -94,7 +94,7 @@ void receivingCommandTask(void* pvParameters) {
       jsonBlufi.remove("target");
       char jsonStr[JSON_MSG_BUFFER_MAX];
       serializeJson(jsonBlufi, jsonStr);
-      receivingMQTT(topic, jsonStr);
+      receivingDATA(topic, jsonStr);
     } else {
       Log.notice(F("No target found in the received command using SYS target, default index and save command" CR));
       if (!json.containsKey("cnt_index")) {
@@ -105,7 +105,7 @@ void receivingCommandTask(void* pvParameters) {
       snprintf(topic, sizeof(topic), "%s%s%s", mqtt_topic, gateway_name, subjectMQTTtoSYSset);
       char jsonStr[JSON_MSG_BUFFER_MAX];
       serializeJson(jsonBlufi, jsonStr);
-      receivingMQTT(topic, jsonStr);
+      receivingDATA(topic, jsonStr);
     }
   }
 

@@ -27,8 +27,8 @@
 #define config_SERIAL_h
 
 extern void setupSERIAL();
-extern void SERIALtoMQTT();
-extern void XtoSERIAL(const char* topicOri, JsonObject& SERIALdata);
+extern void SERIALtoX();
+extern bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata);
 
 /*-------------------SERIAL topics & parameters----------------------*/
 
@@ -66,7 +66,7 @@ extern void XtoSERIAL(const char* topicOri, JsonObject& SERIALdata);
 #define SERIALmaxJSONlevel 2 // Max nested level in which JSON keys are converted to seperate sub-topics
 
 // settings for MQTT to SERIAL
-#define subjectXtoSERIAL "/commands/XtoSERIAL"
+#define subjectMQTTtoSERIAL "/commands/MQTTtoSERIAL"
 #ifndef SERIALPre
 #  define SERIALPre "00" // The prefix for the SERIAL message
 #endif

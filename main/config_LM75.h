@@ -39,7 +39,7 @@
 #define config_LM75_h
 
 extern void setupLM75();
-extern void LM75toMQTT();
+extern void LM75toX();
 
 #define lm75_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadinglm75 30000
