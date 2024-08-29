@@ -118,7 +118,7 @@ void RF2toMQTT() {
       RF2toMQTTdiscovery(RF2data);
 #  endif
     RF2data["origin"] = subjectRF2toMQTT;
-    handleJsonEnqueue(RF2data);
+    enqueueJsonObject(RF2data);
   }
 }
 

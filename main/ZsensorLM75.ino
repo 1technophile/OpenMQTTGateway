@@ -88,7 +88,7 @@ void MeasureTemp() {
         LM75data["tempc"] = (float)lm75TempC;
         LM75data["tempf"] = (float)lm75TempF;
         LM75data["origin"] = LM75TOPIC;
-        handleJsonEnqueue(LM75data);
+        enqueueJsonObject(LM75data);
       } else {
         Log.notice(F("Same Temp. Don't send it" CR));
       }

@@ -101,7 +101,7 @@ void MeasureTempHum() {
         Log.notice(F("Same Humidity. Don't send it" CR));
       }
       HTU21data["origin"] = HTUTOPIC;
-      handleJsonEnqueue(HTU21data);
+      enqueueJsonObject(HTU21data);
     }
     persisted_htu_tempc = HtuTempC;
     persisted_htu_hum = HtuHum;

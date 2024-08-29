@@ -69,7 +69,7 @@ void MeasureTempAndHum() {
         Log.trace(F("Same temp don't send it" CR));
       }
       DHTdata["origin"] = DHTTOPIC;
-      handleJsonEnqueue(DHTdata);
+      enqueueJsonObject(DHTdata);
     }
     persistedh = h;
     persistedt = t;

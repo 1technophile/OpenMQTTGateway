@@ -311,6 +311,6 @@ void stateONOFFMeasures() {
   ONOFFdata["uselaststate"] = ONOFFConfig.useLastStateOnStart;
 #  endif
   ONOFFdata["origin"] = subjectGTWONOFFtoMQTT;
-  handleJsonEnqueue(ONOFFdata, QueueSemaphoreTimeOutTask);
+  enqueueJsonObject(ONOFFdata, QueueSemaphoreTimeOutTask);
 }
 #endif

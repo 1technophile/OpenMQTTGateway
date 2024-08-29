@@ -68,7 +68,7 @@ void MeasureLightIntensityTEMT6000() {
       TEMT6000data["ftcd"] = (float)(lux) / 10.764;
       TEMT6000data["wattsm2"] = (float)(lux) / 683.0;
       TEMT6000data["origin"] = subjectTEMT6000toMQTT;
-      handleJsonEnqueue(TEMT6000data);
+      enqueueJsonObject(TEMT6000data);
     } else {
       Log.trace(F("Same lux value, do not send" CR));
     }

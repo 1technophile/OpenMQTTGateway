@@ -1741,7 +1741,7 @@ String stateWebUIStatus() {
 
   // WebUIdata["currentMessage"] = currentWebUIMessage;
   WebUIdata["origin"] = subjectWebUItoMQTT;
-  handleJsonEnqueue(WebUIdata);
+  enqueueJsonObject(WebUIdata);
   return output;
 }
 

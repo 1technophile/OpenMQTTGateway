@@ -473,11 +473,11 @@ void LORAtoMQTT() {
       LORAdataBuffer["origin"] = subjectLORAtoMQTT;
     }
 
-    handleJsonEnqueue(LORAdata);
+    enqueueJsonObject(LORAdata);
     if (repeatLORAwMQTT) {
       Log.trace(F("Pub LORA for rpt" CR));
       LORAdata["origin"] = subjectMQTTtoLORA;
-      handleJsonEnqueue(LORAdata);
+      enqueueJsonObject(LORAdata);
     }
   }
 }
