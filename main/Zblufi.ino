@@ -28,9 +28,25 @@
 #if defined(ESP32) && defined(USE_BLUFI)
 #  include "NimBLEDevice.h"
 #  include "esp_blufi_api.h"
+#  include "esp_timer.h"
 
 extern "C" {
 #  include "esp_blufi.h"
+}
+
+static esp_timer_handle_t connection_timer = nullptr;
+
+struct pkt_info {
+  uint8_t* pkt;
+  int pkt_len;
+};
+
+#  define DATA_PACKAGE_VALUE       0x02
+#  define DATA_SUBTYPE_CUSTOM_DATA 0x07
+#  define FRAME_CTRL_DEFAULT       0x00 // Assuming no encryption or checksum on notifications for simplicity
+
+uint8_t getTypeValue(uint8_t packageType, uint8_t subType) {
+  return (packageType << 2) | subType;
 }
 
 /* store the station info for send back to phone */
@@ -52,6 +68,122 @@ int blufi_aes_decrypt(uint8_t iv8, uint8_t* crypt_data, int crypt_len);
 uint16_t blufi_crc_checksum(uint8_t iv8, uint8_t* data, int len);
 void blufi_security_deinit(void);
 
+uint8_t getNextSequence() {
+  static uint8_t sequence = 0;
+  return sequence++;
+}
+
+struct ReceivingCommandTaskData {
+  uint8_t* data;
+  uint32_t data_len;
+};
+
+// Task function to handle receivingCommand
+void receivingCommandTask(void* pvParameters) {
+  ReceivingCommandTaskData* taskData = static_cast<ReceivingCommandTaskData*>(pvParameters);
+
+  DynamicJsonDocument json(JSON_MSG_BUFFER_MAX);
+  JsonObject jsonBlufi = json.to<JsonObject>();
+  auto error = deserializeJson(json, taskData->data, taskData->data_len);
+  if (error) {
+    Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
+  } else {
+    if (jsonBlufi.containsKey("target") && jsonBlufi["target"].is<char*>()) {
+      char topic[(parameters_size)*2 + jsonBlufi["target"].size() + 1];
+      snprintf(topic, sizeof(topic), "%s%s%s", mqtt_topic, gateway_name, jsonBlufi["target"].as<const char*>());
+      jsonBlufi.remove("target");
+      char jsonStr[JSON_MSG_BUFFER_MAX];
+      serializeJson(jsonBlufi, jsonStr);
+      receivingMQTT(topic, jsonStr);
+    } else {
+      Log.notice(F("No target found in the received command using SYS target, default index and save command" CR));
+      if (!json.containsKey("cnt_index")) {
+        json["cnt_index"] = CNT_DEFAULT_INDEX;
+        json["save_cnt"] = true;
+      }
+      char topic[(parameters_size)*2 + strlen(subjectMQTTtoSYSset) + 1];
+      snprintf(topic, sizeof(topic), "%s%s%s", mqtt_topic, gateway_name, subjectMQTTtoSYSset);
+      char jsonStr[JSON_MSG_BUFFER_MAX];
+      serializeJson(jsonBlufi, jsonStr);
+      receivingMQTT(topic, jsonStr);
+    }
+  }
+
+  // Clean up dynamically allocated memory, if any
+  if (taskData->data) {
+    free(taskData->data);
+  }
+  delete taskData;
+
+  // Delete the task when finished
+  vTaskDelete(NULL);
+}
+
+// We create a task to remove the load from the Bluetooth task
+void createReceivingCommandTask(uint8_t* data, uint32_t data_len) {
+  // Allocate memory for task data and copy over the data
+  ReceivingCommandTaskData* taskData = new ReceivingCommandTaskData;
+  taskData->data = static_cast<uint8_t*>(malloc(data_len));
+  memcpy(taskData->data, data, data_len);
+  taskData->data_len = data_len;
+
+  // Create the task
+  xTaskCreate(receivingCommandTask, "ReceivingCmdTask", 10000, taskData, 5, NULL);
+}
+
+void sendCustomDataNotification(const char* message) {
+  if (!omg_blufi_ble_connected) {
+    return;
+  }
+  size_t messageLength = strlen(message);
+  uint8_t notification[messageLength + 4];
+  notification[0] = getTypeValue(DATA_PACKAGE_VALUE, DATA_SUBTYPE_CUSTOM_DATA);
+  notification[1] = FRAME_CTRL_DEFAULT;
+  notification[2] = getNextSequence();
+  notification[3] = static_cast<uint8_t>(messageLength);
+  memcpy(&notification[4], message, messageLength);
+
+  struct pkt_info pkts;
+  pkts.pkt = notification;
+  pkts.pkt_len = sizeof(notification);
+  esp_blufi_send_notify(&pkts);
+}
+
+#  ifdef BT_CONNECTION_TIMEOUT_MS
+void connection_timeout_callback(void* arg) {
+  if (omg_blufi_ble_connected) {
+    Log.notice(F("BluFi connection timeout reached. Disconnecting." CR));
+    esp_blufi_disconnect();
+    omg_blufi_ble_connected = false;
+  }
+}
+
+void restart_connection_timer() {
+  if (connection_timer == nullptr) {
+    esp_timer_create_args_t timer_args = {
+        .callback = connection_timeout_callback,
+        .arg = NULL,
+        .name = "blufi_connection_timer"};
+    esp_timer_create(&timer_args, &connection_timer);
+  }
+
+  esp_timer_stop(connection_timer); // Stop the timer if it's running
+  esp_err_t ret = esp_timer_start_once(connection_timer, BT_CONNECTION_TIMEOUT_MS * 1000);
+  if (ret != ESP_OK) {
+    Log.error(F("Failed to start connection timer: %d" CR), ret);
+  }
+}
+
+void stop_connection_timer() {
+  if (connection_timer != nullptr) {
+    esp_timer_stop(connection_timer);
+  }
+}
+#  else
+void restart_connection_timer() {}
+void stop_connection_timer() {}
+#  endif
+
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* param) {
   /* actually, should post to blufi_task handle the procedure,
      * now, as a example, we do it more simply */
@@ -63,39 +195,43 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
       Log.trace(F("BLUFI deinit finish" CR));
       NimBLEDevice::deinit(true);
+      if (connection_timer != nullptr) {
+        esp_timer_delete(connection_timer);
+        connection_timer = nullptr;
+      }
       break;
     case ESP_BLUFI_EVENT_BLE_CONNECT:
       Log.trace(F("BLUFI BLE connect" CR));
       gatewayState = GatewayState::ONBOARDING;
       omg_blufi_ble_connected = true;
+      restart_connection_timer();
       esp_blufi_adv_stop();
       blufi_security_init();
       break;
     case ESP_BLUFI_EVENT_BLE_DISCONNECT:
       Log.trace(F("BLUFI BLE disconnect" CR));
       omg_blufi_ble_connected = false;
-      blufi_security_deinit();
-      if (WiFi.isConnected()) {
+      stop_connection_timer();
+      if (mqtt && mqtt->connected()) {
+        gatewayState = GatewayState::BROKER_CONNECTED;
+      } else if (ethConnected || WiFi.status() == WL_CONNECTED) {
         gatewayState = GatewayState::NTWK_CONNECTED;
-        esp_blufi_deinit();
-#  ifndef ESPWifiManualSetup
-        wifiManager.stopConfigPortal();
-#  endif
-      } else {
+      } else if (mqttSetupPending) {
         gatewayState = GatewayState::WAITING_ONBOARDING;
-        esp_blufi_adv_start();
+      } else {
+        gatewayState = GatewayState::OFFLINE;
       }
+      blufi_security_deinit();
+      esp_blufi_adv_start();
       break;
     case ESP_BLUFI_EVENT_REQ_CONNECT_TO_AP:
       Log.trace(F("BLUFI request wifi connect to AP" CR));
       WiFi.begin((char*)gl_sta_ssid, (char*)gl_sta_passwd);
       gl_sta_is_connecting = true;
-      blufiConnectAP = true;
       break;
     case ESP_BLUFI_EVENT_REQ_DISCONNECT_FROM_AP:
       Log.trace(F("BLUFI request wifi disconnect from AP\n" CR));
       WiFi.disconnect();
-      blufiConnectAP = false;
       break;
     case ESP_BLUFI_EVENT_REPORT_ERROR:
       Log.trace(F("BLUFI report error, error code %d\n" CR), param->report_error.state);
@@ -103,7 +239,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       break;
     case ESP_BLUFI_EVENT_GET_WIFI_STATUS: {
       esp_blufi_extra_info_t info;
-      if (WiFi.isConnected()) {
+      if (gatewayState == GatewayState::NTWK_CONNECTED) {
         memset(&info, 0, sizeof(esp_blufi_extra_info_t));
         memcpy(info.sta_bssid, gl_sta_bssid, 6);
         info.sta_bssid_set = true;
@@ -139,57 +275,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA: {
       Log.notice(F("Recv Custom Data %" PRIu32 CR), param->custom_data.data_len);
       esp_log_buffer_hex("Custom Data", param->custom_data.data, param->custom_data.data_len);
-
-      DynamicJsonDocument json(JSON_MSG_BUFFER_MAX);
-      auto error = deserializeJson(json, param->custom_data.data);
-      if (error) {
-        Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
-        break;
-      }
-      if (!json.isNull()) {
-        Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
-#  if !MQTT_BROKER_MODE
-        if (json.containsKey("mqtt_server") && json["mqtt_server"].is<const char*>() && json["mqtt_server"].as<String>().length() > 0 && json["mqtt_server"].as<String>().length() < parameters_size)
-          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_server, json["mqtt_server"]);
-        if (json.containsKey("mqtt_port") && json["mqtt_port"].is<const char*>() && json["mqtt_port"].as<String>().length() > 0 && json["mqtt_port"].as<String>().length() < parameters_size)
-          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_port, json["mqtt_port"]);
-        if (json.containsKey("mqtt_user") && json["mqtt_user"].is<const char*>() && json["mqtt_user"].as<String>().length() > 0 && json["mqtt_user"].as<String>().length() < parameters_size)
-          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_user, json["mqtt_user"]);
-        if (json.containsKey("mqtt_pass") && json["mqtt_pass"].is<const char*>() && json["mqtt_pass"].as<String>().length() > 0 && json["mqtt_pass"].as<String>().length() < parameters_size)
-          strcpy(cnt_parameters_array[CNT_DEFAULT_INDEX].mqtt_pass, json["mqtt_pass"]);
-
-        if (json.containsKey("mqtt_broker_secure") && json["mqtt_broker_secure"].is<bool>())
-          cnt_parameters_array[CNT_DEFAULT_INDEX].isConnectionSecure = json["mqtt_broker_secure"].as<bool>();
-        if (json.containsKey("mqtt_iscertvalid") && json["mqtt_iscertvalid"].is<bool>())
-          cnt_parameters_array[CNT_DEFAULT_INDEX].isCertValidate = json["mqtt_iscertvalid"].as<bool>();
-        if (json.containsKey("mqtt_broker_cert") && json["mqtt_broker_cert"].is<const char*>() && json["mqtt_broker_cert"].as<String>().length() > MIN_CERT_LENGTH)
-          cnt_parameters_array[CNT_DEFAULT_INDEX].server_cert = json["mqtt_broker_cert"].as<const char*>();
-        if (json.containsKey("mqtt_client_cert") && json["mqtt_client_cert"].is<const char*>() && json["mqtt_client_cert"].as<String>().length() > MIN_CERT_LENGTH)
-          cnt_parameters_array[CNT_DEFAULT_INDEX].client_cert = json["mqtt_client_cert"].as<const char*>();
-        if (json.containsKey("mqtt_client_key") && json["mqtt_client_key"].is<const char*>() && json["mqtt_client_key"].as<String>().length() > MIN_CERT_LENGTH)
-          cnt_parameters_array[CNT_DEFAULT_INDEX].client_key = json["mqtt_client_key"].as<const char*>();
-        if (json.containsKey("ota_server_cert") && json["ota_server_cert"].is<const char*>() && json["ota_server_cert"].as<String>().length() > MIN_CERT_LENGTH)
-          cnt_parameters_array[CNT_DEFAULT_INDEX].ota_server_cert = json["ota_server_cert"].as<const char*>();
-
-        if (json.containsKey("cnt_index") && json["cnt_index"].is<int>() && json["cnt_index"].as<int>() > 0 && json["cnt_index"].as<int>() < 3) {
-          cnt_index = json["cnt_index"].as<int>();
-        } else {
-          cnt_index = CNT_DEFAULT_INDEX;
-        }
-
-        // We suppose the connection is valid (could be tested before)
-        cnt_parameters_array[cnt_index].validConnection = true;
-#  endif
-
-        if (json.containsKey("gateway_name"))
-          strcpy(gateway_name, json["gateway_name"]);
-        if (json.containsKey("mqtt_topic"))
-          strcpy(mqtt_topic, json["mqtt_topic"]);
-        if (json.containsKey("ota_pass"))
-          strcpy(ota_pass, json["ota_pass"]);
-
-        saveConfig();
-      }
+      createReceivingCommandTask(param->custom_data.data, param->custom_data.data_len);
       break;
     }
     case ESP_BLUFI_EVENT_RECV_USERNAME:
@@ -214,6 +300,10 @@ void wifi_event_handler(arduino_event_id_t event) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP: {
+      gatewayState = GatewayState::NTWK_CONNECTED;
+#  ifndef ESPWifiManualSetup
+      wifiManager.stopConfigPortal();
+#  endif
       gl_sta_is_connecting = false;
       esp_blufi_extra_info_t info;
       memset(&info, 0, sizeof(esp_blufi_extra_info_t));
@@ -230,33 +320,30 @@ void wifi_event_handler(arduino_event_id_t event) {
     case ARDUINO_EVENT_WIFI_SCAN_DONE: {
       uint16_t apCount = WiFi.scanComplete();
       if (apCount == 0) {
-        Log.notice(F("No AP found" CR));
+        Log.error(F("No AP found" CR));
         break;
       }
-      wifi_ap_record_t* ap_list = (wifi_ap_record_t*)malloc(sizeof(wifi_ap_record_t) * apCount);
-      if (!ap_list) {
-        Log.error(F("malloc error, ap_list is NULL"));
-        break;
-      }
-      ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&apCount, ap_list));
+      Log.trace(F("AP found, count: %d" CR), apCount);
       esp_blufi_ap_record_t* blufi_ap_list = (esp_blufi_ap_record_t*)malloc(apCount * sizeof(esp_blufi_ap_record_t));
       if (!blufi_ap_list) {
-        if (ap_list) {
-          free(ap_list);
-        }
-        Log.error(F("malloc error, blufi_ap_list is NULL" CR));
+        Log.error(F("Failed to allocate memory for AP list" CR));
         break;
       }
       for (int i = 0; i < apCount; ++i) {
-        blufi_ap_list[i].rssi = ap_list[i].rssi;
-        memcpy(blufi_ap_list[i].ssid, ap_list[i].ssid, sizeof(ap_list[i].ssid));
+        Log.notice(F("%d: %s, Ch:%d (%ddBm)" CR), i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i));
+        blufi_ap_list[i].rssi = WiFi.RSSI(i);
+        size_t ssidLength = strlen(WiFi.SSID(i).c_str());
+        if (ssidLength > sizeof(blufi_ap_list[i].ssid) - 1) {
+          ssidLength = sizeof(blufi_ap_list[i].ssid) - 1;
+        }
+        memcpy(blufi_ap_list[i].ssid, WiFi.SSID(i).c_str(), ssidLength);
+        blufi_ap_list[i].ssid[ssidLength] = '\0';
       }
-
       if (omg_blufi_ble_connected == true) {
-        esp_blufi_send_wifi_list(apCount, blufi_ap_list);
+        if (esp_blufi_send_wifi_list(apCount, blufi_ap_list) != ESP_OK) {
+          Log.error(F("Failed to send WiFi list" CR));
+        }
       }
-
-      free(ap_list);
       free(blufi_ap_list);
       break;
     }
@@ -273,6 +360,14 @@ static esp_blufi_callbacks_t example_callbacks = {
     .decrypt_func = blufi_aes_decrypt,
     .checksum_func = blufi_crc_checksum,
 };
+
+bool isBlufiConnected() {
+  return omg_blufi_ble_connected;
+}
+
+bool isStaConnecting() {
+  return gl_sta_is_connecting;
+}
 
 bool startBlufi() {
   esp_err_t ret = ESP_OK;

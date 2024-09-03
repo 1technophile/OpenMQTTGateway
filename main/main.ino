@@ -97,7 +97,6 @@ std::queue<std::string> jsonQueue;
 SemaphoreHandle_t xQueueMutex;
 // Mutex to protect mqtt publish
 SemaphoreHandle_t xMqttMutex;
-bool blufiConnectAP = false;
 #endif
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
@@ -2236,7 +2235,7 @@ void setupwifi(bool reset_settings) {
   wifiManager.setBreakAfterConfig(true); // If ethernet is used, we don't want to block the connection by keeping the portal up
 #  endif
 
-  if (!SYSConfig.offline && !wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal / Blufi
+  if (!SYSConfig.offline && !wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
   {
     InfoIndicatorON();
     ErrorIndicatorON();
@@ -2246,31 +2245,37 @@ void setupwifi(bool reset_settings) {
     //if it does not connect it starts an access point with the specified name
     //and goes into a blocking loop awaiting configuration
     if (!wifiManager.autoConnect(WifiManager_ssid, ota_pass)) {
-      if (!ethConnected) { // If we are using ethernet, we don't want to restart the ESP
-        Log.warning(F("failed to connect and hit timeout" CR));
-        delay(3000);
+      Log.warning(F("failed to connect and hit timeout" CR));
+      delay(3000);
 
 #  ifdef ESP32
-        /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
-        esp_wifi_set_mode(WIFI_MODE_AP);
-        esp_wifi_start();
-        wifi_config_t conf;
-        esp_wifi_get_config(WIFI_IF_AP, &conf);
-        conf.ap.ssid_hidden = 1;
-        esp_wifi_set_config(WIFI_IF_AP, &conf);
-        if (!blufiConnectAP) {
-          ESPRestart(3); // Restart if not connecting with BLUFI
-        }
-#  else
-        ESPRestart(3);
+      /* Workaround for bug in arduino core that causes the AP to become unsecure on reboot */
+      esp_wifi_set_mode(WIFI_MODE_AP);
+      esp_wifi_start();
+      wifi_config_t conf;
+      esp_wifi_get_config(WIFI_IF_AP, &conf);
+      conf.ap.ssid_hidden = 1;
+      esp_wifi_set_config(WIFI_IF_AP, &conf);
 #  endif
+
+      bool shouldRestart = (gatewayState != GatewayState::BROKER_CONNECTED && gatewayState != GatewayState::NTWK_CONNECTED);
+
+#  ifdef USE_BLUFI
+      shouldRestart = shouldRestart && !isStaConnecting();
+#  endif
+      // Restart/sleep only if not connected
+      if (shouldRestart) {
+#  ifdef DEEP_SLEEP_IN_US
+        sleep();
+#  endif
+        ESPRestart(3);
       }
     }
     InfoIndicatorOFF();
     ErrorIndicatorOFF();
   }
 
-  displayPrint("Wifi connected");
+  displayPrint("Network connected");
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -2369,6 +2374,7 @@ void WiFiEvent(WiFiEvent_t event) {
       Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
       Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
       Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
+      gatewayState = GatewayState::NTWK_CONNECTED;
       ethConnected = true;
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
@@ -2523,7 +2529,8 @@ void loop() {
 #endif
     ErrorIndicatorOFF();
     delay(2000);
-    wifi_reconnect_bypass();
+    if (!wifi_reconnect_bypass())
+      sleep();
   }
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
@@ -3412,8 +3419,12 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         cnt_parameters_array[cnt_index].validConnection = false;
       }
 
-      if (SYSdata.containsKey("mqtt_server") && SYSdata.containsKey("mqtt_port") && SYSdata["mqtt_port"].is<char*>() && SYSdata["mqtt_server"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_server") && SYSdata["mqtt_server"].is<char*>()) {
         strcpy(cnt_parameters_array[cnt_index].mqtt_server, SYSdata["mqtt_server"]);
+        cnt_parameters_array[cnt_index].validConnection = false;
+      }
+
+      if (SYSdata.containsKey("mqtt_port") && SYSdata["mqtt_port"].is<char*>()) {
         strcpy(cnt_parameters_array[cnt_index].mqtt_port, SYSdata["mqtt_port"]);
         cnt_parameters_array[cnt_index].validConnection = false;
       }
