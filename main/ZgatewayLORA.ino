@@ -484,7 +484,7 @@ void LORAtoMQTT() {
 
 #  if jsonReceiving
 void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
     const char* hex = LORAdata["hex"];
@@ -512,7 +512,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
   }
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
     Log.trace(F("MQTTtoLORA json set" CR));
     /*
      * Configuration modifications priorities:
@@ -536,7 +536,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 #  endif
 #  if simpleReceiving
 void MQTTtoLORA(char* topicOri, char* LORAarray) { // json object decoding
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
     LoRa.print(LORAarray);
     LoRa.endPacket();

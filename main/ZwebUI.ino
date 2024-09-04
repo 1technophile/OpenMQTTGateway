@@ -1686,7 +1686,7 @@ void WebUILoop() {
 
 void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decoding
   bool success = false;
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
     WEBUI_TRACE_LOG(F("MQTTtoWebUI json set" CR));
     // properties
     if (WebUIdata.containsKey("displayMetric")) {

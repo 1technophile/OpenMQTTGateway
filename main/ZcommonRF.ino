@@ -301,7 +301,7 @@ void RFConfig_load() {
 }
 
 void MQTTtoRFset(char* topicOri, JsonObject& RFdata) {
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
     Log.trace(F("MQTTtoRF json set" CR));
 
     /*

@@ -243,7 +243,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
 #  if jsonReceiving
 void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
 
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
     Log.trace(F("MQTTtoRF2 json" CR));
     int boolSWITCHTYPE = RF2data["switchType"] | 99;
     bool success = false;
