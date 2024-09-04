@@ -154,7 +154,7 @@ Handler for mqtt commands sent to the module
 */
 void MQTTtoSSD1306(char* topicOri, JsonObject& SSD1306data) { // json object decoding
   bool success = false;
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
     Log.trace(F("MQTTtoSSD1306 json set" CR));
     // properties
     if (SSD1306data.containsKey("onstate")) {

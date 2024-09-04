@@ -172,7 +172,7 @@ bool RFM69toMQTT(void) {
 
 #  if simpleReceiving
 void MQTTtoRFM69(char* topicOri, char* datacallback) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     Log.trace(F("MQTTtoRFM69 data analysis" CR));
     char data[RF69_MAX_DATA_LEN + 1];
     memcpy(data, (void*)datacallback, RF69_MAX_DATA_LEN);
@@ -201,7 +201,7 @@ void MQTTtoRFM69(char* topicOri, char* datacallback) {
 #  endif
 #  if jsonReceiving
 void MQTTtoRFM69(char* topicOri, JsonObject& RFM69data) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     const char* data = RFM69data["data"];
     Log.trace(F("MQTTtoRFM69 json data analysis" CR));
     if (data) {

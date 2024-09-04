@@ -103,7 +103,7 @@ void MQTTtoFASTLED(char* topicOri, JsonObject& jsonData) {
   //trc(topicOri);
   //number = (long)strtol(&datacallback[1], NULL, 16);
 
-  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetled)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetled)) {
     Log.trace(F("MQTTtoFASTLED JSON analysis" CR));
     int ledNr = jsonData["led"];
     Log.notice(F("Led numero: %d" CR), ledNr);
@@ -126,19 +126,19 @@ void MQTTtoFASTLED(char* topicOri, char* datacallback) {
   Log.trace(F("MQTTtoFASTLED: " CR));
   currentLEDState = GENERAL;
   long number = 0;
-  if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLED)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoFASTLED)) {
     number = (long)strtol(&datacallback[1], NULL, 16);
     Log.notice(F("Number: %l" CR), number);
     for (int i = 0; i < FASTLED_NUM_LEDS; i++) {
       leds[i] = number;
     }
     FastLED.show();
-  } else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetbrightness)) {
+  } else if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetbrightness)) {
     number = (long)strtol(&datacallback[1], NULL, 16);
     Log.notice(F("Number: %l" CR), number);
     FastLED.setBrightness(number);
     FastLED.show();
-  } else if (cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetanimation)) {
+  } else if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoFASTLEDsetanimation)) {
     String payload = datacallback;
     Log.notice(F("Datacallback: %s" CR), datacallback);
     if (strstr(datacallback, "fire") != NULL) {

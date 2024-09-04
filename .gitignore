@@ -8,6 +8,7 @@ node_modules
 main/certs/private*
 lib/*
 !lib/esp32-bt-lib
+!lib/TheengsUtils
 CMakeLists.txt
 dependencies.lock
 sdkconfig.*

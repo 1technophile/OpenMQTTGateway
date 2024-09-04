@@ -75,13 +75,13 @@ void rn8209_loop(void* mode) {
       JsonObject RN8209data = RN8209dataBuffer.to<JsonObject>();
       if (retc == 0) {
         previousCurrent = current;
-        RN8209data["current"] = round2(current);
+        RN8209data["current"] = TheengsUtils::round2(current);
       }
       uint32_t temp_power = 0;
       retp = rn8209c_read_power(phase_A, &temp_power);
       if (retv == 0) {
         previousVoltage = voltage;
-        RN8209data["volt"] = round2(voltage);
+        RN8209data["volt"] = TheengsUtils::round2(voltage);
       }
       if (ret == 1) {
         power = temp_power;
@@ -90,7 +90,7 @@ void rn8209_loop(void* mode) {
       }
       if (retp == 0) {
         power = power / 10000.0;
-        RN8209data["power"] = round2(power);
+        RN8209data["power"] = TheengsUtils::round2(power);
       }
       PublishingTimerRN8209 = now;
       if (RN8209data) {

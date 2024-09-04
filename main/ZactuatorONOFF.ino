@@ -133,7 +133,7 @@ void setupONOFF() {
 
 #  if jsonReceiving
 void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
     int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
     int gpio = ONOFFdata["gpio"] | ACTUATOR_ONOFF_GPIO;
@@ -179,7 +179,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       }
     }
   }
-  if (cmpToMainTopic(topicOri, subjectMQTTtoONOFFset)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoONOFFset)) {
     Log.trace(F("MQTTtoONOFF json set" CR));
     /*
      * Configuration modifications priorities:
@@ -204,7 +204,7 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
 
 #  if simpleReceiving
 void MQTTtoONOFF(char* topicOri, char* datacallback) {
-  if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
+  if ((TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
     char* endptr = NULL;
     long gpio = strtol(datacallback, &endptr, 10);
