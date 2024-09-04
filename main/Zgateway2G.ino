@@ -100,7 +100,7 @@ void MQTTto2G(char* topicOri, char* datacallback) {
   String data = datacallback;
   String topic = topicOri;
 
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTto2G)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTto2G)) {
     Log.trace(F("MQTTto2G data analysis" CR));
     // 2G DATA ANALYSIS
     String phone_number = "";
@@ -128,7 +128,7 @@ void MQTTto2G(char* topicOri, char* datacallback) {
 
 #  if jsonReceiving
 void MQTTto2G(char* topicOri, JsonObject& SMSdata) {
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTto2G)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTto2G)) {
     const char* sms = SMSdata["message"];
     const char* phone = SMSdata["phone"];
     Log.trace(F("MQTTto2G json data analysis" CR));

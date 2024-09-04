@@ -32,7 +32,6 @@ public:
     static String toString(uint64_t input);
     static std::string processCert(const char* cert);
     static std::string generateHash(const std::string& input);
-    static bool cmpToMainTopic(const char* topicOri, const char* toAdd);
     static unsigned long uptime();
     static void syncNTP();
     static int unixtimestamp();

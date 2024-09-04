@@ -53,17 +53,25 @@ std::string TheengsUtils::processCert(const char* cert) {
   return certStr;
 }
 
-std::string TheengsUtils::generateHash(const std::string& input) {
-  // Implementation depends on your hash function
-  // This is a placeholder
-  return "hash_placeholder";
-}
+#ifdef ESP32
+#  include "mbedtls/sha256.h"
 
-bool TheengsUtils::cmpToMainTopic(const char* topicOri, const char* toAdd) {
-  // Implementation depends on mqtt_topic and gateway_name
-  // You might need to pass these as parameters or make them class members
-  return false;
+std::string TheengsUtils::generateHash(const std::string& input) {
+  unsigned char hash[32];
+  mbedtls_sha256((unsigned char*)input.c_str(), input.length(), hash, 0);
+
+  char hashString[65]; // Room for null terminator
+  for (int i = 0; i < 32; ++i) {
+    sprintf(&hashString[i * 2], "%02x", hash[i]);
+  }
+
+  return std::string(hashString);
 }
+#else
+std::string TheengsUtils::generateHash(const std::string& input) {
+  return "Not implemented for ESP8266";
+}
+#endif
 
 unsigned long TheengsUtils::uptime() {
   static unsigned long lastUptime = 0;

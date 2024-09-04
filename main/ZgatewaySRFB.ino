@@ -245,7 +245,7 @@ void MQTTtoSRFB(char* topicOri, JsonObject& SRFBdata) {
   // RF DATA ANALYSIS
   const char* raw = SRFBdata["raw"];
   int valueRPT = SRFBdata["repeat"] | 1;
-  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoSRFB)) {
+  if (cmpToMainTopic(topicOri, subjectMQTTtoSRFB)) {
     Log.trace(F("MQTTtoSRFB json" CR));
     if (raw) { // send raw in priority when defined in the json
       Log.trace(F("MQTTtoSRFB raw ok" CR));
