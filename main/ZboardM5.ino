@@ -117,7 +117,7 @@ void loopM5() {
 }
 
 void MQTTtoM5(char* topicOri, JsonObject& M5data) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoM5set)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoM5set)) {
     Log.trace(F("MQTTtoM5 json set" CR));
     // Log display set between M5 lcd (true) and serial monitor (false)
     if (M5data.containsKey("log-lcd")) {

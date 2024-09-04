@@ -50,7 +50,7 @@ void setupSomfy() {
 
 #  if jsonReceiving
 void MQTTtoSomfy(char* topicOri, JsonObject& jsonData) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSomfy)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoSomfy)) {
     Log.trace(F("MQTTtoSomfy json data analysis" CR));
     float txFrequency = jsonData["frequency"] | RFConfig.frequency;
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on

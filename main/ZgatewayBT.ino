@@ -1474,7 +1474,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
 }
 
 void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoBTset)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoBTset)) {
     Log.trace(F("MQTTtoBT json set" CR));
 
     // Black list & white list set
@@ -1512,7 +1512,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     // Load config from json if available
     BTConfig_fromJson(BTdata);
 
-  } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
+  } else if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     KnownBTActions(BTdata);
     MQTTtoBTAction(BTdata);
   }

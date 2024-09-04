@@ -163,7 +163,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 
 #  if jsonReceiving
 void MQTTtoIR(char* topicOri, JsonObject& IRdata) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoIR)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoIR)) {
     Log.trace(F("MQTTtoIR json" CR));
     uint64_t data = IRdata["value"];
     const char* raw = IRdata["raw"];

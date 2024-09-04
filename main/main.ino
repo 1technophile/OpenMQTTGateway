@@ -85,6 +85,8 @@ bool ready_to_sleep = false;
 
 #include <memory>
 
+#include "TheengsUtils.h"
+
 struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
 };
@@ -372,85 +374,6 @@ void Config_update(JsonObject& data, const char* key, T& var) {
   }
 }
 
-void revert_hex_data(const char* in, char* out, int l) {
-  //reverting array 2 by 2 to get the data in good order
-  int i = l - 2, j = 0;
-  while (i != -2) {
-    if (i % 2 == 0)
-      out[j] = in[i + 1];
-    else
-      out[j] = in[i - 1];
-    j++;
-    i--;
-  }
-  out[l - 1] = '\0';
-}
-
-/**
- * Retrieve an unsigned long value from a char array extract representing hexadecimal data, reversed or not,
- * This value can represent a negative value if canBeNegative is set to true
- */
-long value_from_hex_data(const char* service_data, int offset, int data_length, bool reverse, bool canBeNegative = true) {
-  char data[data_length + 1];
-  memcpy(data, &service_data[offset], data_length);
-  data[data_length] = '\0';
-  long value;
-  if (reverse) {
-    // reverse data order
-    char rev_data[data_length + 1];
-    revert_hex_data(data, rev_data, data_length + 1);
-    value = strtol(rev_data, NULL, 16);
-  } else {
-    value = strtol(data, NULL, 16);
-  }
-  if (value > 65000 && data_length <= 4 && canBeNegative)
-    value = value - 65535;
-  Log.trace(F("value %D" CR), value);
-  return value;
-}
-
-/*
- rounds a number to 2 decimal places
- example: round(3.14159) -> 3.14
-*/
-double round2(double value) {
-  return (int)(value * 100 + 0.5) / 100.0;
-}
-
-/*
-From an hexa char array ("A220EE...") to a byte array (half the size)
- */
-bool _hexToRaw(const char* in, byte* out, int rawSize) {
-  if (strlen(in) != rawSize * 2)
-    return false;
-  char tmp[3] = {0};
-  for (unsigned char p = 0; p < rawSize; p++) {
-    memcpy(tmp, &in[p * 2], 2);
-    out[p] = strtol(tmp, NULL, 16);
-  }
-  return true;
-}
-
-/*
-From a byte array to an hexa char array ("A220EE...", double the size)
- */
-bool _rawToHex(byte* in, char* out, int rawSize) {
-  for (unsigned char p = 0; p < rawSize; p++) {
-    sprintf_P(&out[p * 2], PSTR("%02X" CR), in[p]);
-  }
-  return true;
-}
-
-char* ip2CharArray(IPAddress ip) { //from Nick Lee https://stackoverflow.com/questions/28119653/arduino-display-ethernet-localip
-  static char a[16];
-  sprintf(a, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-  return a;
-}
-
-bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
-  return s != "0";
-}
-
 /*
  * Dispatch json messages towards the communication layer
  *
@@ -458,10 +381,10 @@ bool to_bool(String const& s) { // thanks Chris Jester-Young from stackoverflow
 void jsonDispatch(JsonObject& data) {
   if (data.containsKey("origin")) {
 #if message_UTCtimestamp == true
-    data["UTCtime"] = UTCtimestamp();
+    data["UTCtime"] = TheengsUtils::UTCtimestamp();
 #endif
 #if message_unixtimestamp == true
-    data["unixtime"] = unixtimestamp();
+    data["unixtime"] = TheengsUtils::unixtimestamp();
 #endif
     pubWebUI((char*)data["origin"].as<const char*>(), data);
     if (SYSConfig.mqtt && !SYSConfig.offline) {
@@ -649,7 +572,7 @@ void pub(const char* topicori, JsonObject& data) {
 #  else
   uint64_t value = data["value"];
   if (value != 0) {
-    topic = topic + "/" + toString(value);
+    topic = topic + "/" + TheengsUtils::toString(value);
   }
 #  endif
 #endif
@@ -824,37 +747,6 @@ void pubMQTT(String topic, unsigned long payload) {
   char val[11];
   sprintf(val, "%lu", payload);
   pubMQTT(topic.c_str(), val);
-}
-
-/*
-* @brief Convert the spaces of the certificate into new lines
-*/
-std::string processCert(const char* cert) {
-  std::string certStr(cert);
-  size_t pos = 0;
-  while ((pos = certStr.find(' ', pos)) != std::string::npos) {
-    if (pos < 4 || (pos >= 27 && pos <= certStr.length() - 25) || pos >= certStr.length() - 4) {
-      certStr.replace(pos, 1, "\n");
-    }
-    pos++;
-  }
-  return certStr;
-}
-
-bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
-  // Is string "<mqtt_topic><gateway_name><toAdd>" equal to "<topicOri>"?
-  // Compare first part with first chunk
-  if (strncmp(topicOri, mqtt_topic, strlen(mqtt_topic)) != 0)
-    return false;
-  // Move pointer of sizeof chunk
-  topicOri += strlen(mqtt_topic);
-  // And so on...
-  if (strncmp(topicOri, gateway_name, strlen(gateway_name)) != 0)
-    return false;
-  topicOri += strlen(gateway_name);
-  if (strncmp(topicOri, toAdd, strlen(toAdd)) != 0)
-    return false;
-  return true;
 }
 
 void delayWithOTA(long waitMillis) {
@@ -2298,17 +2190,17 @@ void setupwifi(bool reset_settings) {
     cnt_parameters_array[cnt_index].isConnectionSecure = *custom_mqtt_secure.getValue();
     cnt_parameters_array[cnt_index].isCertValidate = *custom_validate_cert.getValue();
     if (strlen(custom_mqtt_cert.getValue()) > MIN_CERT_LENGTH) {
-      cnt_parameters_array[cnt_index].server_cert = processCert(custom_mqtt_cert.getValue());
+      cnt_parameters_array[cnt_index].server_cert = TheengsUtils::processCert(custom_mqtt_cert.getValue());
     }
     if (strlen(custom_ota_server_cert.getValue()) > MIN_CERT_LENGTH) {
-      cnt_parameters_array[cnt_index].ota_server_cert = processCert(custom_ota_server_cert.getValue());
+      cnt_parameters_array[cnt_index].ota_server_cert = TheengsUtils::processCert(custom_ota_server_cert.getValue());
     }
 #      if MQTT_SECURE_SIGNED_CLIENT
     if (strlen(custom_client_cert.getValue()) > MIN_CERT_LENGTH) {
-      cnt_parameters_array[cnt_index].client_cert = processCert(custom_client_cert.getValue());
+      cnt_parameters_array[cnt_index].client_cert = TheengsUtils::processCert(custom_client_cert.getValue());
     }
     if (strlen(custom_client_key.getValue()) > MIN_CERT_LENGTH) {
-      cnt_parameters_array[cnt_index].client_key = processCert(custom_client_key.getValue());
+      cnt_parameters_array[cnt_index].client_key = TheengsUtils::processCert(custom_client_key.getValue());
     }
 #      endif
 #    endif
@@ -2503,7 +2395,7 @@ void loop() {
       }
       if (now > (timer_sys_checks + (TimeBetweenCheckingSYS * 1000)) || !timer_sys_checks) {
 #if message_UTCtimestamp || message_unixtimestamp
-        syncNTP();
+        TheengsUtils::syncNTP();
 #endif
         if (!timer_sys_checks) { // Update check at start up only
 #if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
@@ -2697,34 +2589,6 @@ float intTemperatureRead() {
 }
 #endif
 
-void syncNTP() {
-  configTime(0, 0, NTP_SERVER);
-  time_t now = time(nullptr);
-  uint8_t count = 0;
-  Log.trace(F("Waiting for NTP time sync" CR));
-  while ((now < 8 * 3600 * 2) && count++ < 60) {
-    delay(500);
-    now = time(nullptr);
-  }
-
-  if (count >= 60) {
-    Log.error(F("Unable to update - invalid time" CR));
-    return;
-  }
-}
-
-int unixtimestamp() {
-  return time(nullptr);
-}
-
-String UTCtimestamp() {
-  time_t now;
-  time(&now);
-  char buffer[sizeof "yyyy-MM-ddThh:mm:ssZ"];
-  strftime(buffer, sizeof buffer, "%FT%TZ", gmtime(&now));
-  return buffer;
-}
-
 /*
  Erase flash and restart the ESP
 */
@@ -2783,7 +2647,7 @@ String stateMeasures() {
   minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minmem"] = minFreeMem;
 #  ifndef NO_INT_TEMP_READING
-  SYSdata["tempc"] = round2(intTemperatureRead());
+  SYSdata["tempc"] = TheengsUtils::round2(intTemperatureRead());
 #  endif
   SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
   SYSdata["powermode"] = SYSConfig.powerMode;
@@ -2793,7 +2657,7 @@ String stateMeasures() {
   if (ethConnected) {
 #ifdef ESP32_ETHERNET
     SYSdata["mac"] = (char*)ETH.macAddress().c_str();
-    SYSdata["ip"] = ip2CharArray(ETH.localIP());
+    SYSdata["ip"] = TheengsUtils::ip2CharArray(ETH.localIP());
     ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
     SYSdata["linkspeed"] = (int)ETH.linkSpeed();
 #endif
@@ -2801,7 +2665,7 @@ String stateMeasures() {
     SYSdata["rssi"] = (long)WiFi.RSSI();
     SYSdata["SSID"] = (char*)WiFi.SSID().c_str();
     SYSdata["BSSID"] = (char*)WiFi.BSSIDstr().c_str();
-    SYSdata["ip"] = ip2CharArray(WiFi.localIP());
+    SYSdata["ip"] = TheengsUtils::ip2CharArray(WiFi.localIP());
     SYSdata["mac"] = (char*)WiFi.macAddress().c_str();
   }
 #ifdef ZboardM5STACK
@@ -3152,7 +3016,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       jsondata["origin"] = subjectRLStoMQTT;
       enqueueJsonObject(jsondata);
 
-      std::string ota_cert = processCert(HttpsFwUpdateData["ota_server_cert"] | "");
+      std::string ota_cert = TheengsUtils::processCert(HttpsFwUpdateData["ota_server_cert"] | "");
       Log.notice(F("OTA cert: %s" CR), ota_cert.c_str());
       if (ota_cert.length() < MIN_CERT_LENGTH && !strstr(url, "http:")) {
 #  if !MQTT_BROKER_MODE
@@ -3189,7 +3053,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         } else
 #  endif
         {
-          syncNTP();
+          TheengsUtils::syncNTP();
         }
 
 #  ifdef ESP32
@@ -3284,7 +3148,7 @@ void readCntParameters(int index) {
 #endif
 
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
     bool restartESP = false;
     Log.trace(F("MQTTtoSYS json" CR));
     if (SYSdata.containsKey("cmd")) {
@@ -3303,7 +3167,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifdef RGB_INDICATORS
     if (SYSdata.containsKey("rgbb") && SYSdata["rgbb"].is<float>()) {
       if (SYSdata["rgbb"] >= 0 && SYSdata["rgbb"] <= 255) {
-        SYSConfig.rgbbrightness = round2(SYSdata["rgbb"]);
+        SYSConfig.rgbbrightness = TheengsUtils::round2(SYSdata["rgbb"]);
         leds.setBrightness(SYSConfig.rgbbrightness);
         leds.show();
 #  ifdef ZactuatorONOFF
@@ -3441,22 +3305,22 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
       // Copy the certs to the memory
       if (SYSdata.containsKey("mqtt_server_cert") && SYSdata["mqtt_server_cert"].is<char*>()) {
-        cnt_parameters_array[cnt_index].server_cert = processCert(SYSdata["mqtt_server_cert"].as<const char*>());
+        cnt_parameters_array[cnt_index].server_cert = TheengsUtils::processCert(SYSdata["mqtt_server_cert"].as<const char*>());
         Log.trace(F("Assigning server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].server_cert).c_str());
         cnt_parameters_array[cnt_index].validConnection = false;
       }
       if (SYSdata.containsKey("mqtt_client_cert") && SYSdata["mqtt_client_cert"].is<char*>()) {
-        cnt_parameters_array[cnt_index].client_cert = processCert(SYSdata["mqtt_client_cert"].as<const char*>());
+        cnt_parameters_array[cnt_index].client_cert = TheengsUtils::processCert(SYSdata["mqtt_client_cert"].as<const char*>());
         Log.trace(F("Assigning client cert %s" CR), generateHash(cnt_parameters_array[cnt_index].client_cert).c_str());
         cnt_parameters_array[cnt_index].validConnection = false;
       }
       if (SYSdata.containsKey("mqtt_client_key") && SYSdata["mqtt_client_key"].is<char*>()) {
-        cnt_parameters_array[cnt_index].client_key = processCert(SYSdata["mqtt_client_key"].as<const char*>());
+        cnt_parameters_array[cnt_index].client_key = TheengsUtils::processCert(SYSdata["mqtt_client_key"].as<const char*>());
         Log.trace(F("Assigning client key %s" CR), generateHash(cnt_parameters_array[cnt_index].client_key).c_str());
         cnt_parameters_array[cnt_index].validConnection = false;
       }
       if (SYSdata.containsKey("ota_server_cert") && SYSdata["ota_server_cert"].is<char*>()) {
-        cnt_parameters_array[cnt_index].ota_server_cert = processCert(SYSdata["ota_server_cert"].as<const char*>());
+        cnt_parameters_array[cnt_index].ota_server_cert = TheengsUtils::processCert(SYSdata["ota_server_cert"].as<const char*>());
         Log.trace(F("Assigning OTA server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].ota_server_cert).c_str());
       }
 
@@ -3534,30 +3398,3 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
   }
 }
-
-#if valueAsATopic && !defined(ZgatewayPilight)
-String toString(uint64_t input) {
-  String result = "";
-  uint8_t base = 10;
-
-  do {
-    char c = input % base;
-    input /= base;
-
-    if (c < 10)
-      c += '0';
-    else
-      c += 'A' - 10;
-    result = c + result;
-  } while (input);
-  return result;
-}
-
-#else
-
-String toString(uint32_t input) {
-  String result = String(input);
-
-  return result;
-}
-#endif

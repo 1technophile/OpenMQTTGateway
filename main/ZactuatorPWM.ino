@@ -197,7 +197,7 @@ boolean PWMtoMQTT() {
 
 #  if jsonReceiving
 void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoPWMset)) {
     Log.trace(F("MQTTtoPWM JSON analysis" CR));
     // Parse the target value for each channel
     int modifiedChannelBits = 0;
@@ -230,7 +230,7 @@ void MQTTtoPWM(char* topicOri, JsonObject& jsonData) {
       }
     }
     fadeIsComplete = false; // The values will start to change during PWMLoop
-  } else if (cmpToMainTopic(topicOri, subjectMQTTtoPWMcalibrate)) {
+  } else if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoPWMcalibrate)) {
     // Read the optional calibration data for each channel
     for (int i = 0; i < kNumChannels; ++i) {
       char key[64];

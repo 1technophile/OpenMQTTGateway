@@ -1288,9 +1288,9 @@ void handleCL() {
 
   requestToken = esp_random();
 #    ifdef ESP32_ETHERNET
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_cloud_body, jsonChar, gateway_name, " cloud checked", " Not", (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)ETH.macAddress().c_str(), ("http://" + String(TheengsUtils::ip2CharArray(ETH.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
 #    else
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_cloud_body, jsonChar, gateway_name, cloudEnabled, deviceToken, (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_cloud_body, jsonChar, gateway_name, cloudEnabled, deviceToken, (String(CLOUDGATEWAY) + "token/start").c_str(), (char*)WiFi.macAddress().c_str(), ("http://" + String(TheengsUtils::ip2CharArray(WiFi.localIP())) + "/").c_str(), gateway_name, uptime(), requestToken);
 #    endif
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
@@ -1686,7 +1686,7 @@ void WebUILoop() {
 
 void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decoding
   bool success = false;
-  if (cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
     WEBUI_TRACE_LOG(F("MQTTtoWebUI json set" CR));
     // properties
     if (WebUIdata.containsKey("displayMetric")) {

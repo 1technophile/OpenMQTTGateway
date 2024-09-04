@@ -243,7 +243,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
 #  endif
 
 void XtoSERIAL(const char* topicOri, JsonObject& SERIALdata) {
-  if (cmpToMainTopic(topicOri, subjectXtoSERIAL) || SYSConfig.serial) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectXtoSERIAL) || SYSConfig.serial) {
     Log.trace(F(" MQTTtoSERIAL" CR));
     const char* prefix = SERIALdata["prefix"] | SERIALPre;
     const char* postfix = SERIALdata["postfix"] | SERIALPost;

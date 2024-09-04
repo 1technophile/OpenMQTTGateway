@@ -141,7 +141,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
   //We look into the subject to see if a special RF protocol is defined
   String topic = topicOri;
   bool boolSWITCHTYPE;
-  boolSWITCHTYPE = to_bool(datacallback);
+  boolSWITCHTYPE = TheengsUtils::to_bool(datacallback);
   bool isDimCommand = false;
 
   long valueCODE = 0;
@@ -243,7 +243,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
 #  if jsonReceiving
 void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
 
-  if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
     Log.trace(F("MQTTtoRF2 json" CR));
     int boolSWITCHTYPE = RF2data["switchType"] | 99;
     bool success = false;

@@ -435,7 +435,7 @@ void LORAtoMQTT() {
       }
       // We have non-ascii data: create hex string of the data
       char hex[packetSize * 2 + 1];
-      _rawToHex(packet, hex, packetSize);
+      TheengsUtils::_rawToHex(packet, hex, packetSize);
       // Terminate with a null character
       hex[packetSize * 2] = 0;
 
@@ -484,7 +484,7 @@ void LORAtoMQTT() {
 
 #  if jsonReceiving
 void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     Log.trace(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
     const char* hex = LORAdata["hex"];
@@ -497,7 +497,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
       } else if (hex) {
         // We have hex data: create convert to binary
         byte raw[strlen(hex) / 2];
-        _hexToRaw(hex, raw, sizeof(raw));
+        TheengsUtils::_hexToRaw(hex, raw, sizeof(raw));
         LoRa.write((uint8_t*)raw, sizeof(raw));
       } else {
         // ascii payload
@@ -512,7 +512,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
       Log.error(F("MQTTtoLORA Fail json" CR));
     }
   }
-  if (cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
     Log.trace(F("MQTTtoLORA json set" CR));
     /*
      * Configuration modifications priorities:
@@ -536,7 +536,7 @@ void MQTTtoLORA(char* topicOri, JsonObject& LORAdata) { // json object decoding
 #  endif
 #  if simpleReceiving
 void MQTTtoLORA(char* topicOri, char* LORAarray) { // json object decoding
-  if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     LoRa.beginPacket();
     LoRa.print(LORAarray);
     LoRa.endPacket();

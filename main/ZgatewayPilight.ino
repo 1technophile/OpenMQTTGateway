@@ -154,7 +154,7 @@ void PilighttoMQTT() {
 }
 
 void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
-  if (cmpToMainTopic(topicOri, subjectMQTTtoPilightProtocol)) {
+  if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoPilightProtocol)) {
     bool success = false;
     if (Pilightdata.containsKey("reset")) {
       rf.limitProtocols(rf.availableProtocols());
@@ -194,7 +194,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilightProtocol Fail json" CR));
     }
-  } else if (cmpToMainTopic(topicOri, subjectMQTTtoPilight)) {
+  } else if (TheengsUtils::cmpToMainTopic(topicOri, subjectMQTTtoPilight)) {
     const char* message = Pilightdata["message"];
     Log.notice(F("MQTTtoPilight message: %s" CR), message);
     const char* protocol = Pilightdata["protocol"];
