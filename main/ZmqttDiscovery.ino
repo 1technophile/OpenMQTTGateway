@@ -260,8 +260,10 @@ void createDiscovery(const char* sensor_type,
       strcpy(state_topic, "+/+");
     }
     strcat(state_topic, st_topic);
-    if (strcmp(sensor_type, "cover") == 0) {
-      sensor["tilt_status_t"] = state_topic; // tilt_status_topic for cover
+    if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
+      sensor["tilt_status_t"] = state_topic; // tilt_status_topic for blind
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+      sensor["pos_t"] = state_topic; // position_topic for curtain
     } else {
       sensor["stat_t"] = state_topic;
     }
@@ -302,8 +304,10 @@ void createDiscovery(const char* sensor_type,
     if (strstr(value_template, " | is_defined") != NULL && SYSConfig.ohdiscovery) {
       sensor["val_tpl"] = remove_substring(value_template, " | is_defined"); //OpenHAB compatible HA auto discovery
     } else {
-      if (strcmp(sensor_type, "cover") == 0) {
-        sensor["tilt_status_tpl"] = value_template; // tilt_status_template for cover
+      if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
+        sensor["tilt_status_tpl"] = value_template; // tilt_status_template for blind
+      } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+        sensor["pos_tpl"] = value_template; // position_template for curtain
       } else {
         sensor["val_tpl"] = value_template; //HA Auto discovery
       }
@@ -316,23 +320,31 @@ void createDiscovery(const char* sensor_type,
       sensor["cmd_tpl"] = payload_on; // payload_on for a switch
     } else if (strcmp(sensor_type, "update") == 0) {
       sensor["pl_inst"] = payload_on; // payload_install for update
-    } else if (strcmp(sensor_type, "cover") == 0) {
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
       int value = std::stoi(payload_on);
-      sensor["tilt_opnd_val"] = value; // tilt_open_value for cover
+      sensor["tilt_opnd_val"] = value; // tilt_open_value for blind
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+      int value = std::stoi(payload_on);
+      sensor["pos_open"] = value; // open value for curtain
     } else {
       sensor["pl_on"] = payload_on; // payload_on for the rest
     }
   }
   if (payload_off && payload_off[0]) {
-    if (strcmp(sensor_type, "cover") == 0) {
+    if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
       sensor["pl_cls"] = payload_off; // payload_close for cover
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+      int value = std::stoi(payload_off);
+      sensor["pos_clsd"] = value; // closed value for curtain
     } else {
       sensor["pl_off"] = payload_off; //payload_off
     }
   }
   if (command_template && command_template[0]) {
-    if (strcmp(sensor_type, "cover") == 0) {
+    if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
       sensor["tilt_cmd_tpl"] = command_template; //command_template
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+      sensor["set_pos_tpl"] = command_template; //command_template
     } else {
       sensor["cmd_tpl"] = command_template; //command_template
     }
@@ -364,8 +376,10 @@ void createDiscovery(const char* sensor_type,
     strcpy(command_topic, mqtt_topic);
     strcat(command_topic, gateway_name);
     strcat(command_topic, cmd_topic);
-    if (strcmp(sensor_type, "cover") == 0) {
+    if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
       sensor["tilt_cmd_t"] = command_topic; // tilt_command_topic for cover
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+      sensor["set_pos_t"] = command_topic; // position_command_topic for curtain
     } else {
       sensor["cmd_t"] = command_topic; //command_topic
     }

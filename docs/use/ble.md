@@ -486,6 +486,15 @@ mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
   }'
 ```
 
+### Set the SwitchBot Blind Tilt to Stop:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W270160X",
+  "tilt":"stop",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+```
+
 ### Response (assuming success):
 The Switchbot Blind Tilt response :
 ```
@@ -494,6 +503,58 @@ The Switchbot Blind Tilt response :
   "tilt":55,
   "open":90,
   "direction":"up"
+}
+```
+
+## SwitchBot Curtain 3 control (available with HA discovery)
+
+SwitchBot Curtain 3 devices are automatically discovered and available as a device in the settings Home Assistant Settings menu. The following commands are supported:
+* Set a percentage
+
+The device can also be controlled over MQTT with a simplified BLE write command.
+
+### Set the SwitchBot Curtain state to OPEN:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W070160X",
+  "position":"open",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+```
+
+### Set the SwitchBot Curtain state to CLOSE:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W070160X",
+  "position":"close",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+```
+
+### Set the SwitchBot Curtain to a percentage (0-100):
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W070160X",
+  "position":55,
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+```
+
+### Set the SwitchBot Curtain to Stop:
+```
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT -m '{
+  "model_id":"W070160X",
+  "position":"stop",
+  "id":"AA:BB:CC:DD:EE:FF"
+  }'
+```
+
+### Response (assuming success):
+The Switchbot Curtain response :
+```
+{
+  "id":"AA:BB:CC:DD:EE:FF",
+  "position":55,
 }
 ```
 
