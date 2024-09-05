@@ -64,8 +64,6 @@ void MeasureGPIOInput() {
         resetTime = millis();
       } else if ((millis() - resetTime) > 3000) {
         Log.trace(F("Button Held" CR));
-        InfoIndicatorOFF();
-        SendReceiveIndicatorOFF();
 // Switching off the relay during reset or failsafe operations
 #    ifdef ZactuatorONOFF
         uint8_t level = digitalRead(ACTUATOR_ONOFF_GPIO);

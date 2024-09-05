@@ -434,260 +434,84 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #  define ota_timeout_millis 30000
 #endif
 
-/*-------------ERRORS, INFOS, SEND RECEIVE Display through LED----------------*/
-#ifndef RGB_INDICATORS // Management of Errors, reception/emission and informations indicators with basic LED
-/*-------------DEFINE PINs FOR STATUS LEDs----------------*/
-#  ifndef LED_SEND_RECEIVE
-#    ifdef ESP8266
-//#      define LED_SEND_RECEIVE 40
-#    elif ESP32
-//#      define LED_SEND_RECEIVE 40
-#    endif
-#  endif
-#  ifndef LED_SEND_RECEIVE_ON
-#    define LED_SEND_RECEIVE_ON HIGH
-#  endif
-#  ifndef LED_ERROR
-#    ifdef ESP8266
-//#      define LED_ERROR 42
-#    elif ESP32
-//#      define LED_ERROR 42
-#    endif
-#  endif
-#  ifndef LED_ERROR_ON
-#    define LED_ERROR_ON HIGH
-#  endif
-#  ifndef RGB_LED_ON_ON
-#    define RGB_LED_ON_ON HIGH
-#  endif
-#  ifndef LED_INFO
-#    ifdef ESP8266
-//#      define LED_INFO 44
-#    elif ESP32
-//#      define LED_INFO 44
-#    endif
-#  endif
-#  ifndef LED_INFO_ON
-#    define LED_INFO_ON HIGH
-#  endif
-#  ifdef RGB_LED_ON
-#    define SetupIndicatorError() \
-      pinMode(RGB_LED_ON, OUTPUT);
-#    define ONIndicatorON() digitalWrite(RGB_LED_ON, RGB_LED_ON_ON)
-#  else
-#    define ONIndicatorON()
-#  endif
-#  ifdef LED_ERROR
-#    define SetupIndicatorError() \
-      pinMode(LED_ERROR, OUTPUT); \
-      ErrorIndicatorOFF();
-#    define ErrorIndicatorON()  digitalWrite(LED_ERROR, LED_ERROR_ON)
-#    define ErrorIndicatorOFF() digitalWrite(LED_ERROR, !LED_ERROR_ON)
-#  else
-#    define SetupIndicatorError()
-#    define ErrorIndicatorON()
-#    define ErrorIndicatorOFF()
-#  endif
-#  ifdef LED_SEND_RECEIVE
-#    define SetupIndicatorSendReceive()  \
-      pinMode(LED_SEND_RECEIVE, OUTPUT); \
-      SendReceiveIndicatorOFF();
-#    define SendReceiveIndicatorON()  digitalWrite(LED_SEND_RECEIVE, LED_SEND_RECEIVE_ON)
-#    define SendReceiveIndicatorOFF() digitalWrite(LED_SEND_RECEIVE, !LED_SEND_RECEIVE_ON)
-#  else
-#    define SetupIndicatorSendReceive()
-#    define SendReceiveIndicatorON()
-#    define SendReceiveIndicatorOFF()
-#  endif
-#  ifdef LED_INFO
-#    define SetupIndicatorInfo() \
-      pinMode(LED_INFO, OUTPUT); \
-      InfoIndicatorOFF();
-#    define InfoIndicatorON()  digitalWrite(LED_INFO, LED_INFO_ON)
-#    define InfoIndicatorOFF() digitalWrite(LED_INFO, !LED_INFO_ON)
-#  else
-#    define SetupIndicatorInfo()
-#    define InfoIndicatorON()
-#    define InfoIndicatorOFF()
-#  endif
-#  define CriticalIndicatorON() // Not used
-#  define PowerIndicatorON()    // Not used
-#  define PowerIndicatorOFF()   // Not used
-#  define SetupIndicators()     // Not used
-#else // Management of Errors, reception/emission and informations indicators with RGB LED
-#  include <Adafruit_NeoPixel.h>
-#  ifndef ANEOPIX_IND_TYPE // needs library constants
-#    define ANEOPIX_IND_TYPE NEO_GRB + NEO_KHZ800 // ws2812 and alike
-#  endif
-Adafruit_NeoPixel leds(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO, ANEOPIX_IND_TYPE);
-#  ifdef ANEOPIX_IND_DATA_GPIO2 // Only used for Critical Indicator
-// assume the same LED type
-Adafruit_NeoPixel leds2(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO2, ANEOPIX_IND_TYPE);
-#  endif
-#  ifdef ANEOPIX_IND_DATA_GPIO3
-// assume the same LED type
-Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IND_TYPE);
-#  endif
+// LED index depending on state, each state can have a different LED index or be grouped if there is a limited number of LEDs
+#ifndef LED_ERROR
+#  define LED_ERROR 0
+#endif
+#ifndef LED_PROCESSING
+#  define LED_PROCESSING 0
+#endif
+#ifndef LED_BROKER
+#  define LED_BROKER 0
+#endif
+#ifndef LED_NETWORK
+#  define LED_NETWORK 0
+#endif
+#ifndef LED_POWER
+#  define LED_POWER -1
+#endif
 
-#  ifndef RGB_LED_POWER
-#    define RGB_LED_POWER -1 // If the RGB Led is linked to GPIO pin for power define it here
+// Single standard LED pin
+#ifndef LED_PIN
+#  ifdef LED_BUILTIN
+#    define LED_PIN LED_BUILTIN
 #  endif
-#  ifndef ANEOPIX_BRIGHTNESS
-#    define ANEOPIX_BRIGHTNESS 20 // Set Default maximum RGB brightness to approx 10% (0-255 scale)
+#endif
+#ifndef LED_PIN_ON
+#  define LED_PIN_ON HIGH
+#endif
+#ifndef LED_ACTUATOR_ONOFF
+#  ifdef LED_BUILTIN
+#    define LED_ACTUATOR_ONOFF LED_BUILTIN
 #  endif
-#  ifndef DEFAULT_ADJ_BRIGHTNESS
-#    define DEFAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
-#  endif
-#  ifndef ANEOPIX_COLOR_SCHEME // allow for different color combinations
-#    define ANEOPIX_COLOR_SCHEME 0
-#  endif
-// Allow to set LED used (for example thingpulse gateway has 4 we use them independently)
-#  ifndef ANEOPIX_ON_LED
-#    define ANEOPIX_ON_LED 0 // First Led
-#  endif
-#  ifndef ANEOPIX_INFO_LED
-#    define ANEOPIX_INFO_LED 0 // First Led
-#  endif
-#  ifndef ANEOPIX_SEND_RECEIVE_LED
-#    define ANEOPIX_SEND_RECEIVE_LED 0 // First Led
-#  endif
-#  ifndef ANEOPIX_ERROR_LED
-#    define ANEOPIX_ERROR_LED 0 // First Led
-#  endif
-#  ifndef ANEOPIX_CRITICAL_LED
-#    define ANEOPIX_CRITICAL_LED 0 // First Led
-#  endif
-// compile time calculation of color values
-#  define ANEOPIX_RED     ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16
-#  define ANEOPIX_RED_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 16 // dimmed /4
-#  define ANEOPIX_ORANGE  (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
-                             (((0xA5 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
-#  define ANEOPIX_GOLD (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 16) | \
-                           (((0xD7 * ANEOPIX_BRIGHTNESS) >> 8) << 8)
-#  define ANEOPIX_GREEN     ((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8
-#  define ANEOPIX_GREEN_DIM ((0x3F * ANEOPIX_BRIGHTNESS) >> 8) << 8 // dimmed /4
-#  define ANEOPIX_AQUA      (((0xFF * ANEOPIX_BRIGHTNESS) >> 8) << 8) | \
-                           (0xFF * ANEOPIX_BRIGHTNESS) >> 8
-#  define ANEOPIX_BLUE     (0xFF * ANEOPIX_BRIGHTNESS) >> 8
-#  define ANEOPIX_BLUE_DIM (0x3F * ANEOPIX_BRIGHTNESS) >> 8 // dimmed /4
-#  define ANEOPIX_BLACK    0
+#endif
 
-#  if ANEOPIX_COLOR_SCHEME == 0
-// original color combination remains default
-#    define ANEOPIX_INFO        ANEOPIX_GREEN
-#    define ANEOPIX_ERROR       ANEOPIX_ORANGE
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_BLUE
-#    define ANEOPIX_CRITICAL    ANEOPIX_RED // second led
-#    define ANEOPIX_POWER       ANEOPIX_GREEN // second led
-#    define ANEOPIX_BOOT        ANEOPIX_BLACK // unused
-#    define ANEOPIX_OFF         ANEOPIX_BLACK
-// color combinations tested for good visibility of onboard leds
-#  elif ANEOPIX_COLOR_SCHEME == 1
-#    define ANEOPIX_INFO        ANEOPIX_GREEN_DIM // dimmed green info background
-#    define ANEOPIX_ERROR       ANEOPIX_RED_DIM
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD // bright gold  = sending
-#    define ANEOPIX_CRITICAL    ANEOPIX_BLACK // unused
-#    define ANEOPIX_POWER       ANEOPIX_BLACK // unused
-#    define ANEOPIX_BOOT        ANEOPIX_AQUA
-#    define ANEOPIX_OFF         ANEOPIX_BLACK
-#  else
-#    define ANEOPIX_INFO        ANEOPIX_BLUE_DIM // dimmed blue info background
-#    define ANEOPIX_ERROR       ANEOPIX_RED_DIM
-#    define ANEOPIX_SENDRECEIVE ANEOPIX_GOLD // bright gold  = sending
-#    define ANEOPIX_CRITICAL    ANEOPIX_BLACK // unused
-#    define ANEOPIX_POWER       ANEOPIX_BLACK // unused
-#    define ANEOPIX_BOOT        ANEOPIX_AQUA
-#    define ANEOPIX_OFF         ANEOPIX_BLACK
-#  endif
-#  if !defined(ANEOPIX_IND_DATA_GPIO2) && !defined(ANEOPIX_IND_DATA_GPIO3)
-// during boot the RGB LED is on to signal also reboots
-#    define SetupIndicators()                             \
-      if (RGB_LED_POWER > -1) {                           \
-        pinMode(RGB_LED_POWER, OUTPUT);                   \
-        digitalWrite(RGB_LED_POWER, HIGH);                \
-      }                                                   \
-      leds.begin();                                       \
-      leds.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_BOOT); \
-      leds.show();
-#  elif defined(ANEOPIX_IND_DATA_GPIO2) && !defined(ANEOPIX_IND_DATA_GPIO3)
-#    define SetupIndicators()              \
-      if (RGB_LED_POWER > -1) {            \
-        pinMode(RGB_LED_POWER, OUTPUT);    \
-        digitalWrite(RGB_LED_POWER, HIGH); \
-      }                                    \
-      leds.begin();                        \
-      leds2.begin();
-#  else
-#    define SetupIndicators()              \
-      if (RGB_LED_POWER > -1) {            \
-        pinMode(RGB_LED_POWER, OUTPUT);    \
-        digitalWrite(RGB_LED_POWER, HIGH); \
-      }                                    \
-      leds.begin();                        \
-      leds2.begin();                       \
-      leds3.begin();
-#  endif
-#  ifndef RGB_LED_ERROR
-#    define RGB_LED_ERROR leds
-#  endif
-#  ifndef RGB_LED_SR
-#    define RGB_LED_SR leds
-#  endif
-#  ifndef RGB_LED_INFO
-#    define RGB_LED_INFO leds
-#  endif
-#  ifndef RGB_LED_ON
-#    define RGB_LED_ON leds
-#  endif
-#  define ONIndicatorON()                                    \
-    RGB_LED_ON.setPixelColor(ANEOPIX_ON_LED, ANEOPIX_POWER); \
-    RGB_LED_ON.setBrightness(SYSConfig.rgbbrightness);       \
-    RGB_LED_ON.show();
-#  define ErrorIndicatorON()                                       \
-    RGB_LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_ERROR); \
-    RGB_LED_ERROR.setBrightness(SYSConfig.rgbbrightness);          \
-    RGB_LED_ERROR.show();
-#  define ErrorIndicatorOFF()                                    \
-    RGB_LED_ERROR.setPixelColor(ANEOPIX_ERROR_LED, ANEOPIX_OFF); \
-    RGB_LED_ERROR.show();
-#  define SendReceiveIndicatorON()                                           \
-    RGB_LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_SENDRECEIVE); \
-    RGB_LED_SR.setBrightness(SYSConfig.rgbbrightness);                       \
-    RGB_LED_SR.show();
-#  define SendReceiveIndicatorOFF()                                  \
-    RGB_LED_SR.setPixelColor(ANEOPIX_SEND_RECEIVE_LED, ANEOPIX_OFF); \
-    RGB_LED_SR.show();
-#  define InfoIndicatorON()                                     \
-    RGB_LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
-    RGB_LED_INFO.setBrightness(SYSConfig.rgbbrightness);        \
-    RGB_LED_INFO.show();
-#  define InfoIndicatorOFF()                                   \
-    RGB_LED_INFO.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
-    RGB_LED_INFO.show();
-#  ifdef ANEOPIX_IND_DATA_GPIO2 // Used for relay power indicator
-// For the critical ON indicator there is no method to turn it off, the only way is to unplug the device
-// This enable to have persistence of the indicator to inform the user
-#    ifndef LED_CRITICAL
-#      define LED_CRITICAL leds2
-#    endif
-#    ifndef LED_POWER
-#      define LED_POWER leds2
-#    endif
-#    define CriticalIndicatorON()                                     \
-      LED_CRITICAL.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_CRITICAL); \
-      LED_CRITICAL.setBrightness(255);                                \
-      LED_CRITICAL.show();
-#    define PowerIndicatorON()                                 \
-      LED_POWER.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_INFO); \
-      LED_POWER.setBrightness(SYSConfig.rgbbrightness);        \
-      LED_POWER.show();
-#    define PowerIndicatorOFF()                               \
-      LED_POWER.setPixelColor(ANEOPIX_INFO_LED, ANEOPIX_OFF); \
-      LED_POWER.show();
-#  endif
-#  define SetupIndicatorInfo()
-#  define SetupIndicatorSendReceive()
-#  define SetupIndicatorError()
+// TODO adapt to other boards
+#ifndef DEFAULT_ADJ_BRIGHTNESS
+#  define DEFAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
+#endif
+
+#ifndef LED_POWER_COLOR
+#  define LED_POWER_COLOR 0x00FF00 // Green
+#endif
+#ifndef LED_PROCESSING_COLOR
+#  define LED_PROCESSING_COLOR 0x0000FF // Blue
+#endif
+#ifndef LED_WAITING_ONBOARD_COLOR
+#  define LED_WAITING_ONBOARD_COLOR 0xFFA500 // Orange
+#endif
+#ifndef LED_ONBOARD_COLOR
+#  define LED_ONBOARD_COLOR 0xFFFF00 // Yellow
+#endif
+#ifndef LED_NETWORK_OK_COLOR
+#  define LED_NETWORK_OK_COLOR 0x00FF00 // Green
+#endif
+#ifndef LED_NETWORK_ERROR_COLOR
+#  define LED_NETWORK_ERROR_COLOR 0xFFA500 // Orange
+#endif
+#ifndef LED_BROKER_OK_COLOR
+#  define LED_BROKER_OK_COLOR 0x00FF00 // Green
+#endif
+#ifndef LED_BROKER_ERROR_COLOR
+#  define LED_BROKER_ERROR_COLOR 0xFFA500 // Orange
+#endif
+#ifndef LED_OFFLINE_COLOR
+#  define LED_OFFLINE_COLOR 0x0000FF // Blue
+#endif
+#ifndef LED_OTA_LOCAL_COLOR
+#  define LED_OTA_LOCAL_COLOR 0xFF00FF // Magenta
+#endif
+#ifndef LED_OTA_REMOTE_COLOR
+#  define LED_OTA_REMOTE_COLOR 0x8000FF // Purple
+#endif
+#ifndef LED_ERROR_COLOR
+#  define LED_ERROR_COLOR 0xFF0000 // Red
+#endif
+#ifndef LED_ACTUATOR_ONOFF_COLOR
+#  define LED_ACTUATOR_ONOFF_COLOR 0x00FF00 // Green
+#endif
+#ifndef LED_COLOR_BLACK
+#  define LED_COLOR_BLACK 0x000000
 #endif
 
 #ifdef ESP8266
@@ -827,7 +651,7 @@ struct SYSConfig_s {
   bool offline;
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
-#ifdef RGB_INDICATORS
+#ifdef LED_ADDRESSABLE
   int rgbbrightness; // brightness of the RGB LED
 #endif
   enum PowerMode powerMode;

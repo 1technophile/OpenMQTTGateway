@@ -300,17 +300,97 @@ Minimum: 0, Maximum: 255, Default defined by DEFAULT_ADJ_BRIGHTNESS
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"brightness":200}'`
 
-## State LED usage
+## Understanding LED Indicators in OpenMQTTGateway
+With boards having one or several RGB Led, OpenMQTTGateway uses them to provide visual feedback about its current state. This guide will help you interpret these LED signals to understand what's happening with your gateway.
 
-The gateway can support up to 3 LED to display its operating state:
-* LED_INFO 
-switched ON when network and MQTT connection are OK
-5s ON, 5s OFF when MQTT is disconnected
-2s ON, 2s OFF when NETWORK is disconnected
+## LED Color Guide
+OpenMQTTGateway uses a variety of colors to indicate different states:
 
-* LED_RECEIVE
-Blink for `TimeLedON` 1s when the gateway receive a signal from one of its module so as to send to MQTT
+Green (0x00FF00): Indicates normal operation or successful connections
+Blue (0x0000FF): Shows processing or offline status
+Orange (0xFFA500): Indicates waiting states or minor issues
+Yellow (0xFFFF00): Used during the onboarding process
+Red (0xFF0000): Signals an error state
+Magenta (0xFF00FF): Indicates local Over-The-Air (OTA) updates
+Purple (0x8000FF): Shows remote OTA updates are in progress
 
-* LED_SEND
-Blink for `TimeLedON` 1s when the gateway send a signal with one of its module from an MQTT command
+## Understanding Gateway States
+Here's what different LED behaviors mean:
 
+### Power On
+
+Color: Green
+Behavior: Solid light
+Meaning: The gateway is powered and operational
+
+### Processing
+
+Color: Blue
+Behavior: Blinking (3 times)
+Meaning: The gateway is processing data
+
+### Waiting for Onboarding
+
+Color: Orange
+Behavior: Solid light
+Meaning: The gateway is ready to be set up
+
+### Onboarding in Progress
+
+Color: Yellow
+Behavior: Solid light
+Meaning: The gateway is being configured
+
+### Network Connected
+
+Color: Green
+Behavior: Solid light
+Meaning: Successfully connected to the network
+
+### Network Disconnected
+
+Color: Orange
+Behavior: Blinking
+Meaning: Lost connection to the network
+
+### MQTT Broker Connected
+
+Color: Green
+Behavior: Solid light
+Meaning: Successfully connected to the MQTT broker
+
+### MQTT Broker Disconnected
+
+Color: Orange
+Behavior: Blinking
+Meaning: Lost connection to the MQTT broker
+
+### Offline
+
+Color: Blue
+Behavior: Blinking
+Meaning: The gateway is offline
+
+### Local OTA Update
+
+Color: Magenta
+Behavior: Blinking
+Meaning: A local Over-The-Air update is in progress
+
+### Remote OTA Update
+
+Color: Purple
+Behavior: Blinking
+Meaning: A remote Over-The-Air update is in progress
+
+### Error
+
+Color: Red
+Behavior: Blinking (3 times)
+Meaning: An error has occurred
+
+### Actuator On/Off
+
+Color: Green
+Behavior: Depends on actuator state
+Meaning: Indicates the state of a connected actuator

@@ -1937,7 +1937,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             // Queue completed message
 
             if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-              Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+              Log.warning(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
               free(message);
             } else {
               // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
@@ -2003,7 +2003,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           // Queue completed message
 
           if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            Log.warning(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
             free(message);
           } else {
             // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
@@ -2331,7 +2331,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
               line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
               if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-                Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+                Log.warning(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
                 free(message);
               } else {
                 // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
@@ -2389,7 +2389,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           // Queue completed message
 
           if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            Log.warning(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
             free(message);
           } else {
             // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);
@@ -2441,7 +2441,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           // Queue completed message
 
           if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            Log.error(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
+            Log.warning(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
             free(message);
           } else {
             // Log.notice(F("[ WebUI ] Queued %s" CR), message->title);

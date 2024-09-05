@@ -38,7 +38,8 @@ enum GatewayState {
   BROKER_DISCONNECTED,
   LOCAL_OTA_IN_PROGRESS,
   REMOTE_OTA_IN_PROGRESS,
-  SLEEPING
+  SLEEPING,
+  ERROR
 };
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 
@@ -86,7 +87,10 @@ bool ready_to_sleep = false;
 
 #include <memory>
 
+#include "LEDManager.h"
 #include "TheengsUtils.h"
+
+LEDManager ledManager;
 
 struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
@@ -382,6 +386,8 @@ void Config_update(JsonObject& data, const char* key, T& var) {
 bool jsonDispatch(JsonObject& data) {
   bool res = false;
   if (data.containsKey("origin")) {
+    GatewayState previousGatewayState = gatewayState;
+    gatewayState = GatewayState::PROCESSING;
 #if message_UTCtimestamp == true
     data["UTCtime"] = TheengsUtils::UTCtimestamp();
 #endif
@@ -405,8 +411,10 @@ bool jsonDispatch(JsonObject& data) {
       res = true;
     }
 #endif
+    gatewayState = previousGatewayState; // restore the previous state
   } else {
     Log.error(F("No origin in JSON filtered" CR));
+    gatewayState = GatewayState::ERROR;
   }
   return res;
 }
@@ -416,6 +424,7 @@ boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, in
   receivedMessages++;
   if (jsonDoc.size() == 0) {
     Log.error(F("Empty JSON, skipping" CR));
+    gatewayState = GatewayState::ERROR;
     return true;
   }
   if (queueLength >= QueueSize) {
@@ -430,6 +439,7 @@ boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, in
   // Semaphore check before enqueueing a document
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(timeout)) == pdFALSE) {
     Log.error(F("xQueueMutex not taken" CR));
+    gatewayState = GatewayState::ERROR;
     blockedMessages++;
     return false;
   }
@@ -474,6 +484,7 @@ std::string generateHash(const std::string& input) {
 void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
   if (!Jsondata.containsKey("id")) {
     Log.error(F("No id in Jsondata" CR));
+    gatewayState = GatewayState::ERROR;
     return;
   }
 
@@ -491,6 +502,7 @@ void buildTopicFromId(JsonObject& Jsondata, const char* origin) {
       topic = Jsondata["uuid"].as<std::string>();
     } else {
       Log.error(F("No uuid in Jsondata" CR));
+      gatewayState = GatewayState::ERROR;
     }
   }
 
@@ -520,6 +532,7 @@ void emptyQueue() {
 #ifdef ESP32
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
     Log.error(F("xQueueMutex not taken" CR));
+    gatewayState = GatewayState::ERROR;
     return;
   }
 #endif
@@ -530,6 +543,7 @@ void emptyQueue() {
 #endif
   if (error) {
     Log.error(F("deserialize jsonQueue.front() failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    gatewayState = GatewayState::ERROR;
   } else {
     if (jsonDispatch(obj))
       queueLengthSum++;
@@ -566,6 +580,7 @@ bool pub(const char* topicori, JsonObject& data) {
   }
   if (data.size() == 0) {
     Log.error(F("Empty JSON, not published" CR));
+    gatewayState = GatewayState::ERROR;
     return res;
   }
   String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
@@ -662,11 +677,11 @@ bool pubMQTT(const char* topic, const char* payload, bool retainFlag) {
 #ifdef ESP32
     if (xSemaphoreTake(xMqttMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
       Log.error(F("xMqttMutex not taken" CR));
+      gatewayState = GatewayState::ERROR;
       return res;
     }
 #endif
     if (mqtt && mqtt->connected()) {
-      SendReceiveIndicatorON();
       Log.notice(F("[ OMG->MQTT ] topic: %s msg: %s " CR), topic, payload);
       res = mqtt->publish(topic, payload, 0, retainFlag);
     } else {
@@ -784,7 +799,7 @@ void SYSConfig_init() {
   SYSConfig.discovery = DEFAULT_DISCOVERY;
   SYSConfig.ohdiscovery = OpenHABDiscovery;
 #endif
-#ifdef RGB_INDICATORS
+#ifdef LED_ADDRESSABLE
   SYSConfig.rgbbrightness = DEFAULT_ADJ_BRIGHTNESS;
 #endif
   SYSConfig.powerMode = DEFAULT_LOW_POWER_MODE;
@@ -798,7 +813,7 @@ void SYSConfig_fromJson(JsonObject& SYSdata) {
   Config_update(SYSdata, "disc", SYSConfig.discovery);
   Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
 #endif
-#ifdef RGB_INDICATORS
+#ifdef LED_ADDRESSABLE
   Config_update(SYSdata, "rgbb", SYSConfig.rgbbrightness);
 #endif
   Config_update(SYSdata, "powermode", SYSConfig.powerMode);
@@ -816,7 +831,7 @@ void SYSConfig_save() {
   SYSdata["disc"] = SYSConfig.discovery;
   SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
 #  endif
-#  ifdef RGB_INDICATORS
+#  ifdef LED_ADDRESSABLE
   SYSdata["rgbb"] = SYSConfig.rgbbrightness;
 #  endif
   String conf = "";
@@ -855,6 +870,7 @@ void SYSConfig_load() {
     preferences.end();
     if (error) {
       Log.error(F("SYS config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      gatewayState = GatewayState::ERROR;
       return;
     }
     if (jsonBuffer.isNull()) {
@@ -878,7 +894,7 @@ std::pair<String, uint16_t> discoverMQTTbroker() {
   Log.trace(F("Browsing for MQTT service" CR));
   int n = MDNS.queryService("mqtt", "tcp");
   if (n == 0) {
-    Log.error(F("no services found" CR));
+    Log.warning(F("no services found" CR));
   } else {
     Log.trace(F("%d service(s) found" CR), n);
     for (int i = 0; i < n; ++i) {
@@ -889,7 +905,7 @@ std::pair<String, uint16_t> discoverMQTTbroker() {
       Log.trace(F("One MQTT server found setting parameters" CR));
       return {MDNS.IP(0).toString(), uint16_t(MDNS.port(0))};
     } else {
-      Log.error(F("Several MQTT servers found, please deactivate mDNS and set your default server" CR));
+      Log.warning(F("Several MQTT servers found, please deactivate mDNS and set your default server" CR));
     }
   }
   return {"", 0};
@@ -1043,6 +1059,7 @@ void setupMQTT() {
     if (cnt_parameters_backup) {
       // this was the first attempt to connect to a new server and it failed, revert to old settings
       Log.error(F("MQTT connection failed, reverting to previous settings" CR));
+      gatewayState = GatewayState::ERROR;
       cnt_parameters_array[cnt_index] = cnt_parameters_backup->parameters;
       cnt_index = cnt_parameters_backup->cnt_index;
       mqttSetupPending = true;
@@ -1051,10 +1068,7 @@ void setupMQTT() {
       return;
     }
 
-    ErrorIndicatorON();
-    delayWithOTA(5000);
-    ErrorIndicatorOFF();
-    delayWithOTA(5000);
+    delayWithOTA(10000);
 
     if (failure_number_mqtt > maxRetryWatchDog) {
 #  ifndef ESPWifiManualSetup
@@ -1114,12 +1128,14 @@ void setESPWifiProtocolTxPower() {
 #  if WifiGMode == true
   if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G) != ESP_OK) {
     Log.error(F("Failed to change WifiMode." CR));
+    gatewayState = GatewayState::ERROR;
   }
 #  endif
 
 #  if WifiGMode == false
   if (esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N) != ESP_OK) {
     Log.error(F("Failed to change WifiMode." CR));
+    gatewayState = GatewayState::ERROR;
   }
 #  endif
 
@@ -1153,12 +1169,14 @@ void setESPWifiProtocolTxPower() {
 #  if WifiGMode == true
   if (!wifi_set_phy_mode(PHY_MODE_11G)) {
     Log.error(F("Failed to change WifiMode." CR));
+    gatewayState = GatewayState::ERROR;
   }
 #  endif
 
 #  if WifiGMode == false
   if (!wifi_set_phy_mode(PHY_MODE_11N)) {
     Log.error(F("Failed to change WifiMode." CR));
+    gatewayState = GatewayState::ERROR;
   }
 #  endif
 
@@ -1190,6 +1208,88 @@ void setESPWifiProtocolTxPower() {
 }
 #endif
 
+#ifdef ESP32
+void updateAndHandleLEDsTask(void* pvParameters) {
+  for (;;) {
+    updateAndHandleLEDsTask();
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
+}
+#endif
+
+void updateAndHandleLEDsTask() {
+  static GatewayState previousGatewayState;
+  if (previousGatewayState != gatewayState) {
+#ifdef LED_POWER
+    ledManager.setMode(0, LED_POWER, LEDManager::STATIC, LED_POWER_COLOR, -1);
+#endif
+    switch (gatewayState) {
+      case PROCESSING:
+#ifdef LED_PROCESSING
+        ledManager.setMode(0, LED_PROCESSING, LEDManager::BLINK, LED_PROCESSING_COLOR, 3);
+#endif
+        break;
+      case WAITING_ONBOARDING:
+#ifdef LED_BROKER
+        ledManager.setMode(0, LED_BROKER, LEDManager::STATIC, LED_WAITING_ONBOARD_COLOR, -1);
+#endif
+        break;
+      case ONBOARDING:
+#ifdef LED_BROKER
+        ledManager.setMode(0, LED_BROKER, LEDManager::STATIC, LED_ONBOARD_COLOR, -1);
+#endif
+        break;
+      case NTWK_CONNECTED:
+#ifdef LED_NETWORK
+        ledManager.setMode(0, LED_NETWORK, LEDManager::STATIC, LED_NETWORK_OK_COLOR, -1);
+#endif
+        break;
+      case BROKER_CONNECTED:
+#ifdef LED_BROKER
+        ledManager.setMode(0, LED_BROKER, LEDManager::STATIC, LED_BROKER_OK_COLOR, -1);
+#endif
+        break;
+      case NTWK_DISCONNECTED:
+#ifdef LED_NETWORK
+        ledManager.setMode(0, LED_NETWORK, LEDManager::BLINK, LED_NETWORK_ERROR_COLOR, -1);
+#endif
+        break;
+      case BROKER_DISCONNECTED:
+#ifdef LED_BROKER
+        ledManager.setMode(0, LED_BROKER, LEDManager::BLINK, LED_BROKER_ERROR_COLOR, -1);
+#endif
+        break;
+      case SLEEPING:
+        ledManager.setMode(0, -1, LEDManager::OFF, 0, -1);
+        break;
+      case OFFLINE:
+#ifdef LED_NETWORK
+        ledManager.setMode(0, LED_NETWORK, LEDManager::BLINK, LED_OFFLINE_COLOR, -1);
+#endif
+        break;
+      case LOCAL_OTA_IN_PROGRESS:
+#ifdef LED_PROCESSING
+        ledManager.setMode(0, LED_PROCESSING, LEDManager::BLINK, LED_OTA_LOCAL_COLOR, -1);
+#endif
+        break;
+      case REMOTE_OTA_IN_PROGRESS:
+#ifdef LED_PROCESSING
+        ledManager.setMode(0, LED_PROCESSING, LEDManager::BLINK, LED_OTA_REMOTE_COLOR, -1);
+#endif
+        break;
+      case ERROR:
+#ifdef LED_ERROR
+        ledManager.setMode(0, LED_ERROR, LEDManager::BLINK, LED_ERROR_COLOR, 3);
+#endif
+        break;
+      default:
+        break;
+    }
+    previousGatewayState = gatewayState;
+  }
+  ledManager.update();
+}
+
 void setup() {
   //Launch serial for debugging purposes
   Serial.begin(SERIAL_BAUD);
@@ -1208,12 +1308,17 @@ void setup() {
   if (SYSConfig.offline)
     gatewayState = GatewayState::OFFLINE;
 
-  //setup LED status
-  SetupIndicatorError();
-  SetupIndicatorSendReceive();
-  SetupIndicatorInfo();
-  SetupIndicators(); // For RGB Leds
-  ONIndicatorON();
+#ifdef LED_ADDRESSABLE
+#  ifdef LED_ADDRESSABLE_PIN1
+  ledManager.addLEDStrip(LED_ADDRESSABLE_PIN1, LED_ADDRESSABLE_NUM);
+#  endif
+#  ifdef LED_ADDRESSABLE_PIN2
+  ledManager.addLEDStrip(LED_ADDRESSABLE_PIN2, LED_ADDRESSABLE_NUM);
+#  endif
+  ledManager.setBrightness(SYSConfig.rgbbrightness);
+#elif LED_PIN
+  ledManager.addLEDStrip(LED_PIN, 1);
+#endif
 
 #ifdef ESP8266
 #  ifndef ZgatewaySRFB // if we are not in sonoff rf bridge case we apply the ESP8266 GPIO optimization
@@ -1221,6 +1326,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
 #  endif
 #elif ESP32
+  xTaskCreate(updateAndHandleLEDsTask, "updateAndHandleLEDsTask", 2500, NULL, 1, NULL);
   xQueueMutex = xSemaphoreCreateMutex();
   xMqttMutex = xSemaphoreCreateMutex();
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
@@ -1239,6 +1345,7 @@ void setup() {
   gpio_num_t wake_pin0 = static_cast<gpio_num_t>(ESP32_EXT0_WAKE_PIN);
   if (esp_sleep_enable_ext0_wakeup(wake_pin0, ESP32_EXT0_WAKE_PIN_STATE) != ESP_OK) {
     Log.error(F("Failed to set deep sleep EXT0 Wakeup." CR));
+    gatewayState = GatewayState::ERROR;
   }
 #endif
 #ifdef ESP32_EXT1_WAKE_PIN
@@ -1247,6 +1354,7 @@ void setup() {
   esp_sleep_ext1_wakeup_mode_t wake_state1 = static_cast<esp_sleep_ext1_wakeup_mode_t>(ESP32_EXT1_WAKE_PIN_STATE);
   if (esp_sleep_enable_ext1_wakeup(wake_pin_bitmask, wake_state1) != ESP_OK) {
     Log.error(F("Failed to set deep sleep EXT1 Wakeup." CR));
+    gatewayState = GatewayState::ERROR;
   }
 #endif
 #ifdef ESP32
@@ -1526,8 +1634,6 @@ void setOTA() {
 
   ArduinoOTA.onStart([]() {
     Log.trace(F("Start OTA, lock other functions" CR));
-    ErrorIndicatorON();
-    SendReceiveIndicatorON();
     last_ota_activity_millis = millis();
 #ifdef ESP32
     ProcessLock = true;
@@ -1540,24 +1646,18 @@ void setOTA() {
   ArduinoOTA.onEnd([]() {
     Log.trace(F("\nOTA done" CR));
     last_ota_activity_millis = 0;
-    ErrorIndicatorOFF();
-    SendReceiveIndicatorOFF();
     lpDisplayPrint("OTA done");
     ESPRestart(6);
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Log.trace(F("Progress: %u%%\r" CR), (progress / (total / 100)));
     gatewayState = GatewayState::LOCAL_OTA_IN_PROGRESS;
-#ifdef ESP32
-    //esp_task_wdt_reset();
-#endif
     last_ota_activity_millis = millis();
   });
   ArduinoOTA.onError([](ota_error_t error) {
     last_ota_activity_millis = millis();
-    ErrorIndicatorOFF();
-    SendReceiveIndicatorOFF();
     Serial.printf("Error[%u]: ", error);
+    gatewayState = GatewayState::ERROR;
     if (error == OTA_AUTH_ERROR)
       Log.error(F("Auth Failed" CR));
     else if (error == OTA_BEGIN_ERROR)
@@ -1592,6 +1692,7 @@ void setupTLS(int index) {
       Log.notice(F("Server cert found from ss_server_cert" CR));
     } else {
       Log.error(F("No server cert found" CR));
+      gatewayState = GatewayState::ERROR;
     }
 
 #    if AWS_IOT
@@ -1609,6 +1710,7 @@ void setupTLS(int index) {
       Log.notice(F("Client cert found from ss_client_cert" CR));
     } else {
       Log.error(F("No client cert found" CR));
+      gatewayState = GatewayState::ERROR;
     }
     if (cnt_parameters_array[index].client_key.length() > MIN_CERT_LENGTH) {
       sClient->setPrivateKey(cnt_parameters_array[index].client_key.c_str());
@@ -1618,6 +1720,7 @@ void setupTLS(int index) {
       Log.notice(F("Client key found from ss_client_key" CR));
     } else {
       Log.error(F("No client key found" CR));
+      gatewayState = GatewayState::ERROR;
     }
 #    endif
 #  elif defined(ESP8266)
@@ -1696,6 +1799,7 @@ void setup_wifi() {
 
   if (!WiFi.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
     Log.error(F("Wifi STA Failed to configure" CR));
+    gatewayState = GatewayState::ERROR;
   }
 
 #  endif
@@ -1757,11 +1861,6 @@ void blockingWaitForReset() {
           ActuatorTrigger();
         }
 #    endif
-#    ifdef ESP32
-        //esp_task_wdt_delete(NULL);
-#    endif
-        InfoIndicatorOFF();
-        SendReceiveIndicatorOFF();
         // Checking if the flash has already been erased to identify if we erase it or go into failsafe mode
         // going to failsafe mode is done by doing a long button press from a state where the flash has already been erased
         if (SPIFFS.begin()) {
@@ -1892,6 +1991,7 @@ void saveConfig() {
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
     Log.error(F("failed to open config file for writing" CR));
+    gatewayState = GatewayState::ERROR;
   }
 
   serializeJson(json, configFile);
@@ -1920,6 +2020,7 @@ bool loadConfigFromFlash() {
       auto error = deserializeJson(json, configFile);
       if (error) {
         Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
+        gatewayState = GatewayState::ERROR;
       }
       if (!json.isNull()) {
         Log.trace(F("\nparsed json, size: %u" CR), json.memoryUsage());
@@ -2155,8 +2256,6 @@ void setupwifi(bool reset_settings) {
 
   if (!SYSConfig.offline && !wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
   {
-    InfoIndicatorON();
-    ErrorIndicatorON();
     Log.notice(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, ota_pass);
     gatewayState = GatewayState::ONBOARDING;
     //fetches ssid and pass and tries to connect
@@ -2189,11 +2288,10 @@ void setupwifi(bool reset_settings) {
         ESPRestart(3);
       }
     }
-    InfoIndicatorOFF();
-    ErrorIndicatorOFF();
   }
 
   displayPrint("Network connected");
+  gatewayState = GatewayState::NTWK_CONNECTED;
 
   if (shouldSaveConfig) {
     //read updated parameters
@@ -2276,6 +2374,7 @@ void setup_ethernet_esp32() {
     }
   } else {
     Log.error(F("Ethernet not started" CR));
+    gatewayState = GatewayState::ERROR;
   }
 }
 
@@ -2296,11 +2395,11 @@ void WiFiEvent(WiFiEvent_t event) {
       ethConnected = true;
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
-      Log.error(F("Ethernet Disconnected" CR));
+      Log.warning(F("Ethernet Disconnected" CR));
       ethConnected = false;
       break;
     case ARDUINO_EVENT_ETH_STOP:
-      Log.error(F("Ethernet Stopped" CR));
+      Log.warning(F("Ethernet Stopped" CR));
       ethConnected = false;
       break;
     default:
@@ -2357,8 +2456,8 @@ void loop() {
   checkButton(); // check if a reset of wifi/mqtt settings is asked
 #endif
 
-#ifdef ESP32
-  //esp_task_wdt_reset();
+#ifdef ESP8266
+  updateAndHandleLEDsTask(); // With ESP8266 we need to update the LEDs in the loop
 #endif
   if (!SYSConfig.offline) {
     if (mqttSetupPending) {
@@ -2372,8 +2471,6 @@ void loop() {
   // Switch off of the LED after TimeLedON
   if (now > (timer_led_measures + (TimeLedON * 1000))) {
     timer_led_measures = millis();
-    InfoIndicatorOFF();
-    SendReceiveIndicatorOFF();
   }
 
   if (ethConnected || WiFi.status() == WL_CONNECTED) {
@@ -2387,7 +2484,6 @@ void loop() {
 #endif
     mqtt->loop();
     if (mqtt->connected()) { // MQTT client is still connected
-      InfoIndicatorON();
       failure_number_ntwk = 0;
 
 #ifdef ZmqttDiscovery
@@ -2435,20 +2531,13 @@ void loop() {
       }
     }
   } else if (!SYSConfig.offline) { // disconnected from network
-#ifdef ESP32
-    //esp_task_wdt_reset();
-#endif
     Log.warning(F("Network disconnected" CR));
     gatewayState = GatewayState::NTWK_DISCONNECTED;
-    ErrorIndicatorON();
-    delay(2000); // add a delay to avoid ESP32 crash and reset
-#ifdef ESP32
-    //esp_task_wdt_reset();
-#endif
-    ErrorIndicatorOFF();
-    delay(2000);
-    if (!wifi_reconnect_bypass())
+    if (!wifi_reconnect_bypass()) {
       sleep();
+    } else {
+      gatewayState = GatewayState::NTWK_CONNECTED;
+    }
   }
 // Function that doesn't need an active connection
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
@@ -2641,7 +2730,7 @@ String stateMeasures() {
   SYSdata["uptime"] = uptime();
 
   SYSdata["version"] = OMG_VERSION;
-#ifdef RGB_INDICATORS
+#ifdef LED_ADDRESSABLE
   SYSdata["rgbb"] = SYSConfig.rgbbrightness;
 #endif
 #ifdef ZmqttDiscovery
@@ -2656,6 +2745,7 @@ String stateMeasures() {
   // Some RTL_433 decoders have memory leak, this is a temporary workaround
   if (freeMem < MinimumMemory) {
     Log.error(F("Not enough memory %d, restarting" CR), freeMem);
+    gatewayState = GatewayState::ERROR;
     ESPRestart(8);
   }
 #endif
@@ -2796,6 +2886,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
   auto error = deserializeJson(jsonBuffer, datacallback);
   if (error) {
     Log.error(F("deserialize MQTT data failed: %s" CR), error.c_str());
+    gatewayState = GatewayState::ERROR;
     return;
   }
 
@@ -2873,7 +2964,6 @@ void receivingMQTT(char* topicOri, char* datacallback) {
     MQTTtoWebUI(topicOri, jsondata);
 #  endif
 #endif
-    SendReceiveIndicatorON();
 
     MQTTtoSYS(topicOri, jsondata);
   } else { // not a json object --> simple decoding
@@ -2950,11 +3040,13 @@ bool checkForUpdates() {
     auto error = deserializeJson(jsonBuffer, payload);
     if (error) {
       Log.error(F("Deserialize MQTT data failed: %s" CR), error.c_str());
+      gatewayState = GatewayState::ERROR;
     }
     Log.trace(F("HttpCode %d" CR), httpCode);
     Log.trace(F("Payload %s" CR), payload.c_str());
   } else {
     Log.error(F("Error on HTTP request"));
+    gatewayState = GatewayState::ERROR;
   }
   http.end(); //Free the resources
   Log.notice(F("Update check done, free heap: %d"), ESP.getFreeHeap());
@@ -2994,6 +3086,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       if (url) {
         if (!strstr((url + (strlen(url) - 5)), ".bin")) {
           Log.error(F("Invalid firmware extension" CR));
+          gatewayState = GatewayState::ERROR;
           return;
         }
 #  if MQTT_HTTPS_FW_UPDATE_USE_PASSWORD > 0
@@ -3001,10 +3094,12 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
         if (pwd) {
           if (strcmp(pwd, ota_pass) != 0) {
             Log.error(F("Invalid OTA password" CR));
+            gatewayState = GatewayState::ERROR;
             return;
           }
         } else {
           Log.error(F("No password sent" CR));
+          gatewayState = GatewayState::ERROR;
           return;
         }
 #  endif
@@ -3024,11 +3119,11 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  endif
       } else {
         Log.error(F("Invalid URL" CR));
+        gatewayState = GatewayState::ERROR;
         return;
       }
 #  ifdef ESP32
       ProcessLock = true;
-      //esp_task_wdt_delete(NULL); // Stop task watchdog during update
 #    ifdef ZgatewayBT
       stopProcessing();
 #    endif
@@ -3036,8 +3131,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
       Log.warning(F("Starting firmware update" CR));
       gatewayState = GatewayState::REMOTE_OTA_IN_PROGRESS;
 
-      SendReceiveIndicatorON();
-      ErrorIndicatorON();
       StaticJsonDocument<JSON_MSG_BUFFER> jsondata;
       jsondata["release_summary"] = "Update in progress ...";
       jsondata["origin"] = subjectRLStoMQTT;
@@ -3106,6 +3199,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  elif ESP8266
           Log.error(F("HTTP_UPDATE_FAILED Error (%d): %s\n" CR), ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
 #  endif
+          gatewayState = GatewayState::ERROR;
           break;
 
         case HTTP_UPDATE_NO_UPDATES:
@@ -3129,9 +3223,6 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
           break;
       }
 
-      SendReceiveIndicatorOFF();
-      ErrorIndicatorOFF();
-
       ESPRestart(6);
     }
   }
@@ -3144,7 +3235,7 @@ void MQTTHttpsFWUpdate(char* topicOri, JsonObject& HttpsFwUpdateData) {
 */
 void readCntParameters(int index) {
   if (index < 0 || index > 2) {
-    Log.error(F("Invalid cnt index" CR));
+    Log.warning(F("Invalid cnt index" CR));
     return;
   }
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
@@ -3191,19 +3282,18 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         stateMeasures();
       }
     }
-#ifdef RGB_INDICATORS
+#ifdef LED_ADDRESSABLE
     if (SYSdata.containsKey("rgbb") && SYSdata["rgbb"].is<float>()) {
       if (SYSdata["rgbb"] >= 0 && SYSdata["rgbb"] <= 255) {
         SYSConfig.rgbbrightness = TheengsUtils::round2(SYSdata["rgbb"]);
-        leds.setBrightness(SYSConfig.rgbbrightness);
-        leds.show();
+        ledManager.setBrightness(SYSConfig.rgbbrightness);
 #  ifdef ZactuatorONOFF
         updatePowerIndicator();
 #  endif
         Log.notice(F("RGB brightness: %d" CR), SYSConfig.rgbbrightness);
         stateMeasures();
       } else {
-        Log.error(F("RGB brightness value invalid - ignoring command" CR));
+        Log.warning(F("RGB brightness value invalid - ignoring command" CR));
       }
     }
 #endif
@@ -3234,7 +3324,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       WiFi.waitForConnectResult(WiFi_TimeOut * 1000);
 
       if (WiFi.status() != WL_CONNECTED) {
-        Log.error(F("Failed to connect to new AP; falling back" CR));
+        Log.warning(F("Failed to connect to new AP; falling back" CR));
         WiFi.disconnect(true);
         WiFi.begin(prev_ssid.c_str(), prev_pass.c_str());
 #if defined(WifiGMode) || defined(WifiPower)
@@ -3290,7 +3380,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
 
     if (SYSdata.containsKey("cnt_index") && SYSdata["cnt_index"].is<int>()) {
       if (SYSdata["cnt_index"].as<int>() < 0 || SYSdata["cnt_index"].as<int>() > 2) {
-        Log.error(F("Invalid cnt index provided - ignoring command" CR));
+        Log.warning(F("Invalid cnt index provided - ignoring command" CR));
         return;
       }
 
@@ -3413,7 +3503,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         if (SYSConfig.discovery)
           pubMqttDiscovery();
       } else {
-        Log.error(F("Discovery command not a boolean" CR));
+        Log.warning(F("Discovery command not a boolean" CR));
       }
       Log.notice(F("Discovery state: %T" CR), SYSConfig.discovery);
     }
