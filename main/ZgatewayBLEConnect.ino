@@ -538,6 +538,7 @@ bool SBBT_connect::processActions(std::vector<BLEAction>& actions) {
   static byte CLOSE_DOWN[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x00};
   static byte CLOSE_UP[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x64};
   static byte MOVE[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x00};
+  static byte STOP[] = {0x57, 0x0f, 0x45, 0x01, 0x00, 0x01};
 
   bool result = false;
   if (actions.size() > 0) {
@@ -545,7 +546,7 @@ bool SBBT_connect::processActions(std::vector<BLEAction>& actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
         NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
         NimBLERemoteCharacteristic* pNotifyChar = getCharacteristic(serviceUUID, notifyCharUUID);
-        int value = -1;
+        int value = -99;
         if (it.value_type == BLE_VAL_INT) {
           value = std::stoi(it.value);
         }
@@ -565,12 +566,16 @@ bool SBBT_connect::processActions(std::vector<BLEAction>& actions) {
             } else if (it.value == "close_up" && it.value_type == BLE_VAL_STRING) {
               result = pChar->writeValue(CLOSE_UP, 7, false);
               value = 100;
+            } else if (it.value == "stop" && it.value_type == BLE_VAL_STRING) {
+              result = pChar->writeValue(STOP, 6, false);
             } else if (it.value_type == BLE_VAL_INT) {
               if (value >= 0 && value <= 100) {
                 byte posByte = (byte)value;
                 MOVE[6] = posByte;
                 result = pChar->writeValue(MOVE, 7, false);
               }
+            } else if (value == -1 && it.value_type == BLE_VAL_INT) {
+              result = pChar->writeValue(STOP, 6, false);
             }
 
             if (result) {
@@ -588,14 +593,15 @@ bool SBBT_connect::processActions(std::vector<BLEAction>& actions) {
           StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
           JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
           BLEdata["id"] = it.addr;
-          BLEdata["tilt"] = value;
+          if (value != -99 || value != -1)
+            BLEdata["tilt"] = value;
           if (value == 50) {
             BLEdata["open"] = 100;
             BLEdata["direction"] = "-";
-          } else if (value < 50) {
+          } else if (value < 50 && value >= 0) {
             BLEdata["open"] = value * 2;
             BLEdata["direction"] = "down";
-          } else if (value > 50) {
+          } else if (value > 50 && value <= 100) {
             BLEdata["open"] = (100 - value) * 2;
             BLEdata["direction"] = "up";
           }
@@ -637,7 +643,7 @@ bool SBCU_connect::processActions(std::vector<BLEAction>& actions) {
   static byte CLOSE[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x64};
   static byte OPEN[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x00};
   static byte MOVE[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x01, 0x00};
-  static byte STOP[] = {0x57, 0x0f, 0x45, 0x01, 0x01, 0x00, 0x01};
+  static byte STOP[] = {0x57, 0x0f, 0x45, 0x01, 0x00, 0x01};
 
   bool result = false;
   if (actions.size() > 0) {
@@ -645,7 +651,7 @@ bool SBCU_connect::processActions(std::vector<BLEAction>& actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
         NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
         NimBLERemoteCharacteristic* pNotifyChar = getCharacteristic(serviceUUID, notifyCharUUID);
-        int value = -1;
+        int value = -99;
         if (it.value_type == BLE_VAL_INT) {
           value = std::stoi(it.value);
         }
@@ -663,13 +669,15 @@ bool SBCU_connect::processActions(std::vector<BLEAction>& actions) {
               result = pChar->writeValue(CLOSE, 7, false);
               value = 0;
             } else if (it.value == "stop" && it.value_type == BLE_VAL_STRING) {
-              result = pChar->writeValue(STOP, 7, false);
+              result = pChar->writeValue(STOP, 6, false);
             } else if (it.value_type == BLE_VAL_INT) {
               if (value >= 0 && value <= 100) {
                 byte posByte = (byte)value;
                 MOVE[6] = posByte;
                 result = pChar->writeValue(MOVE, 7, false);
               }
+            } else if (value == -1 && it.value_type == BLE_VAL_INT) {
+              result = pChar->writeValue(STOP, 6, false);
             }
 
             if (result) {
@@ -687,7 +695,8 @@ bool SBCU_connect::processActions(std::vector<BLEAction>& actions) {
           StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
           JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
           BLEdata["id"] = it.addr;
-          BLEdata["position"] = value;
+          if (value != -99 || value != -1)
+            BLEdata["position"] = value;
           buildTopicFromId(BLEdata, subjectBTtoMQTT);
           enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
         }
