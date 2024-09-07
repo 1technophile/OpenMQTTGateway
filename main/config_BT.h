@@ -38,11 +38,11 @@ extern String stateBTMeasures(bool);
 #endif
 
 /*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/
-#define subjectBTtoMQTT    "/BTtoMQTT"
-#define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
-#define subjectMQTTtoBT    "/commands/MQTTtoBT"
+#define subjectBTtoMQTT     "/BTtoMQTT"
+#define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
+#define subjectMQTTtoBT     "/commands/MQTTtoBT"
 #define subjectMultiGTWSync "$THEENGS/internal/";
-#define subjectTrackerSync "$THEENGS/internal/trackersync"
+#define subjectTrackerSync  "$THEENGS/internal/trackersync"
 // Uncomment to send undecoded device data to another gateway device for decoding
 // #define MQTTDecodeTopic    "undecoded"
 #ifndef UseExtDecoder
