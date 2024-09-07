@@ -379,7 +379,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     }
     device->sensorModel_id = model;
     device->lastUpdate = millis();
-
+#  if BLEDecoder
     if (enableMultiGTWSync) {
       // Publish tracker sync message
       bool isTracker = false;
@@ -399,12 +399,14 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
         enqueueJsonObject(TrackerSyncdata);
       }
     }
+#  endif
     devices.push_back(device);
     newDevices++;
   } else {
     Log.trace(F("update %s" CR), mac);
     device->lastUpdate = millis();
 
+#  if BLEDecoder
     if (enableMultiGTWSync) {
       // Publish tracker sync message
       bool isTracker = false;
@@ -424,6 +426,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
         enqueueJsonObject(TrackerSyncdata);
       }
     }
+#  endif
 
     device->macType = mac_type;
 
@@ -1594,7 +1597,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     KnownBTActions(BTdata);
     MQTTtoBTAction(BTdata);
-  } else if (strstr(topicOri, "theengs/internal") != NULL && enableMultiGTWSync) {
+  } else if (strstr(topicOri, subjectMultiGTWSync) != NULL && enableMultiGTWSync && UseExtDecoder) {
     if (strcmp(topicOri, subjectTrackerSync) == 0) {
       if (BTdata["gatewayid"] != gateway_mac) {
         for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
