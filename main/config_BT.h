@@ -41,7 +41,8 @@ extern String stateBTMeasures(bool);
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 #define subjectMQTTtoBT    "/commands/MQTTtoBT"
-#define subjectTrackerSync "theengs/internal/trackersync"
+#define subjectMultiGTWSync "$THEENGS/internal/";
+#define subjectTrackerSync "$THEENGS/internal/trackersync"
 // Uncomment to send undecoded device data to another gateway device for decoding
 // #define MQTTDecodeTopic    "undecoded"
 #ifndef UseExtDecoder
@@ -147,6 +148,10 @@ unsigned long scanCount = 0;
 
 // gateway_mac for internal tracker sync
 String gateway_mac = "";
+
+#ifndef enableMultiGTWSync
+#  define enableMultiGTWSync true // //define true to use tracker and closest control devices sync across OpenMQTTGateway and Theengs Gateway gateways
+#endif
 
 /*--------------HOME ASSISTANT ROOM PRESENCE--------------*/
 #define subjectHomePresence "presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
