@@ -396,7 +396,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
         TrackerSyncdata["tracker"] = device->macAdr;
         String origin = subjectTrackerSync;
         TrackerSyncdata["origin"] = origin;
-        handleJsonEnqueue(TrackerSyncdata);
+        enqueueJsonObject(TrackerSyncdata);
       }
     }
     devices.push_back(device);
@@ -421,7 +421,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
         TrackerSyncdata["tracker"] = device->macAdr;
         String origin = subjectTrackerSync;
         TrackerSyncdata["origin"] = origin;
-        handleJsonEnqueue(TrackerSyncdata);
+        enqueueJsonObject(TrackerSyncdata);
       }
     }
 
