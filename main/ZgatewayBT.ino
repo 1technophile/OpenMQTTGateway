@@ -1249,6 +1249,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
       BLEdata.remove("acts");
       BLEdata.remove("cont");
       BLEdata.remove("track");
+      BLEdata.remove("ctrl");
     }
     // if distance available, check if presenceUseBeaconUuid is true, model_id is IBEACON then set id as uuid
     if (BLEdata.containsKey("distance")) {
