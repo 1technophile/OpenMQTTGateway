@@ -731,7 +731,7 @@ Adafruit_NeoPixel leds3(ANEOPIX_IND_NUM_LEDS, ANEOPIX_IND_DATA_GPIO3, ANEOPIX_IN
 #  define valueAsATopic false // define true to integrate msg value into the subject when receiving
 #endif
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433) || defined(ZgatewayBT)
 // variable to avoid duplicates
 #  ifndef time_avoid_duplicate
 #    define time_avoid_duplicate 3000 // if you want to avoid duplicate MQTT message received set this to > 0, the value is the time in milliseconds during which we don't publish duplicates

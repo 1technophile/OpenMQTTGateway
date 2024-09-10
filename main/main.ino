@@ -1092,16 +1092,16 @@ void setupMQTT() {
 
   mqtt->subscribe(String(mqtt_topic) + gateway_name + subjectMQTTtoX, receivingMQTT, mqtt_max_payload_size);
 
+// topics on which other OMG will publish, this board will store these msg and don't republish them if they have been already published after the current time - time_avoid_duplicate
 #  ifdef ZgatewayRF
-  // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
   mqtt->subscribe(subjectMultiGTWRF, receivingMQTT, mqtt_max_payload_size);
 #  endif
-
 #  ifdef ZgatewayIR
-  // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
   mqtt->subscribe(subjectMultiGTWIR, receivingMQTT, mqtt_max_payload_size);
 #  endif
-
+#  ifdef ZgatewayBT
+  mqtt->subscribe(subjectMultiGTWBT, receivingMQTT, mqtt_max_payload_size);
+#  endif
   mqtt->begin();
 }
 #endif

@@ -383,7 +383,6 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     newDevices++;
   } else {
     Log.trace(F("update %s" CR), mac);
-    device->lastUpdate = millis();
     device->macType = mac_type;
 
     if (flags & device_flags_isDisc) {
@@ -414,26 +413,17 @@ void updateDevicesStatus() {
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
     unsigned long now = millis();
-    // Check for tracker status
-    bool isTracker = false;
 #  if BLEDecoder
-    std::string tag = decoder.getTheengAttribute(p->sensorModel_id, "tag");
-    if (tag.length() >= 4) {
-      isTracker = checkIfIsTracker(tag[3]);
-    }
-    // Device tracker devices
-    if (isTracker) { // We apply the offline status only for tracking device, can be extended further to all the devices
-      if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.presenceAwayTimer) && (now > BTConfig.presenceAwayTimer)) &&
-          (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(p)) && !isBlack(p)))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)) {
-        StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
-        JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-        BLEdata["id"] = p->macAdr;
-        BLEdata["state"] = "offline";
-        buildTopicFromId(BLEdata, subjectBTtoMQTT);
-        enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
-        // We set the lastUpdate to 0 to avoid replublishing the offline state
-        p->lastUpdate = 0;
-      }
+    if ((p->lastUpdate != 0) && (p->lastUpdate < (now - BTConfig.presenceAwayTimer) && (now > BTConfig.presenceAwayTimer)) &&
+        (BTConfig.ignoreWBlist || ((!oneWhite || isWhite(p)) && !isBlack(p)))) { // Only if WBlist is disabled OR ((no white MAC OR this MAC is white) AND not a black listed MAC)) {
+      StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
+      BLEdata["id"] = p->macAdr;
+      BLEdata["state"] = "offline";
+      buildTopicFromId(BLEdata, subjectBTtoMQTT);
+      enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
+      // We set the lastUpdate to 0 to avoid replublishing the offline state
+      p->lastUpdate = 0;
     }
     // Moving detection devices (devices with an accelerometer)
     if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
@@ -1263,6 +1253,17 @@ void PublishDeviceData(JsonObject& BLEdata) {
 
     // If the device is not a sensor and pubOnlySensors is true we don't publish this payload
     if (!BTConfig.pubOnlySensors || BLEdata.containsKey("model") || !BLEDecoder) { // Identified device
+      // Check last update of the device
+      if (BLEdata.containsKey("model_id") && BLEdata.containsKey("id")) {
+        BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
+        if (device != &NO_BT_DEVICE_FOUND) {
+          long delta = millis() - device->lastUpdate;
+          if (delta < time_avoid_duplicate) {
+            Log.notice(F("Device not published due to recent update for %s %s , %dms" CR), device->macAdr, BLEdata["model_id"].as<const char*>(), delta);
+            return;
+          }
+        }
+      }
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
@@ -1553,6 +1554,15 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     KnownBTActions(BTdata);
     MQTTtoBTAction(BTdata);
+  } else if ((strstr(topicOri, subjectMultiGTWKey) != NULL)) {
+    if (BTdata.containsKey("state") && BTdata["state"].is<const char*>() && BTdata["state"] == "offline")
+      return;
+    // We update the device timestamp when we receive a message from any gateway
+    BLEdevice* device = getDeviceByMac(BTdata["id"].as<const char*>());
+    if (device != &NO_BT_DEVICE_FOUND) {
+      Log.notice(F("Received BT Device %s Last update %d" CR), device->macAdr, device->lastUpdate);
+      device->lastUpdate = millis();
+    }
   }
 }
 #endif
