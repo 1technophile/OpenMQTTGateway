@@ -3,9 +3,10 @@ module.exports = {
   markdown: {
     lineNumbers: true
   },
-  title: 'Theengs',
-  description: 'Manufacturer agnostic open source set of solutions to read BLE sensors',
+  title: 'Theengs: BLE RF LoRa applications and MQTT gateways',
+  description: 'Theengs: the open-source interoperability platform that bridges hundreds of sensors into one interface. Compatible with major IoT and home automation solutions like AWS, OpenHAB, Home Assistant, and Jeedom. It supports MQTT protocol, enabling efficient integration and automation.',
   head: [
+    ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1' }],
     ['link', { rel: "apple-touch-icon", sizes: "180x180", href: ".apple-touch-icon.png" }],
     ['link', { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" }],
     ['link', { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" }],
