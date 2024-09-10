@@ -785,9 +785,9 @@ void connectMQTT();
 
 unsigned long uptime();
 bool cmpToMainTopic(const char*, const char*);
-void pub(const char*, const char*, bool);
+bool pub(const char*, const char*, bool);
 // void pub(const char*, JsonObject&);
-void pub(const char*, const char*);
+bool pub(const char*, const char*);
 // void pub_custom_topic(const char*, JsonObject&, boolean);
 
 #if defined(ESP32)
