@@ -681,6 +681,7 @@ void procBLETask(void* pvParameters) {
       updateDevicesStatus();
     }
     delete (advertisedDevice);
+    vTaskDelay(10);
   }
 }
 
