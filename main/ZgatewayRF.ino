@@ -96,13 +96,13 @@ void RFtoMQTTdiscovery(uint64_t MQTTvalue) {
 #    endif
 
   String theUniqueId = getUniqueId(String(switchRF[0]), "-" + String(switchRF[1]));
-  String subType = String(switchRF[0]);
+  String type = String(switchRF[0]);
 
   announceDeviceTrigger(
       false,
       (char*)discovery_topic.c_str(),
-      "", 
-      (char*)subType.c_str(),
+      (char*)type.c_str(),
+      "",
       (char*)theUniqueId.c_str(),
       "", "", "", "");
 }
