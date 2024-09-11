@@ -88,6 +88,10 @@ bool ready_to_sleep = false;
 
 #include "TheengsUtils.h"
 
+#ifdef ZgatewayBT
+#  include "config_BT.h"
+#endif
+
 struct JsonBundle {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
 };
@@ -568,7 +572,18 @@ bool pub(const char* topicori, JsonObject& data) {
     Log.error(F("Empty JSON, not published" CR));
     return res;
   }
-  String topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  // Publish THEENGSINTERNAL topic separately
+  String topic = "";
+#ifdef ZgatewayBT
+  if (strstr(topicori, subjectMultiGTWSync) != NULL && ZgatewayBT) {
+    topic = String(topicori);
+  } else {
+    topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+  }
+#else
+  topic = String(mqtt_topic) + String(gateway_name) + String(topicori);
+#endif
+
 #if valueAsATopic
 #  ifdef ZgatewayPilight
   String value = data["value"];
@@ -2684,9 +2699,13 @@ String stateMeasures() {
   if (ethConnected) {
 #ifdef ESP32_ETHERNET
     SYSdata["mac"] = (char*)ETH.macAddress().c_str();
+
     SYSdata["ip"] = TheengsUtils::ip2CharArray(ETH.localIP());
     ETH.fullDuplex() ? SYSdata["fd"] = (bool)"true" : SYSdata["fd"] = (bool)"false";
     SYSdata["linkspeed"] = (int)ETH.linkSpeed();
+#  ifdef ZgatewayBT
+    gateway_mac = (char*)ETH.macAddress().c_str();
+#  endif
 #endif
   } else {
     SYSdata["rssi"] = (long)WiFi.RSSI();
@@ -2694,6 +2713,9 @@ String stateMeasures() {
     SYSdata["BSSID"] = (char*)WiFi.BSSIDstr().c_str();
     SYSdata["ip"] = TheengsUtils::ip2CharArray(WiFi.localIP());
     SYSdata["mac"] = (char*)WiFi.macAddress().c_str();
+#ifdef ZgatewayBT
+    gateway_mac = (char*)WiFi.macAddress().c_str();
+#endif
   }
 #ifdef ZboardM5STACK
   M5.Power.begin();

@@ -38,9 +38,11 @@ extern String stateBTMeasures(bool);
 #endif
 
 /*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/
-#define subjectBTtoMQTT    "/BTtoMQTT"
-#define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
-#define subjectMQTTtoBT    "/commands/MQTTtoBT"
+#define subjectBTtoMQTT     "/BTtoMQTT"
+#define subjectMQTTtoBTset  "/commands/MQTTtoBT/config"
+#define subjectMQTTtoBT     "/commands/MQTTtoBT"
+#define subjectMultiGTWSync "theengsinternal/"
+#define subjectTrackerSync  "theengsinternal/trackersync"
 // Uncomment to send undecoded device data to another gateway device for decoding
 // #define MQTTDecodeTopic    "undecoded"
 #ifndef UseExtDecoder
@@ -142,6 +144,13 @@ unsigned long scanCount = 0;
 
 #ifndef useBeaconUuidForTopic
 #  define useBeaconUuidForTopic false // define true to use iBeacon UUID as topic, instead of sender (random) MAC address
+#endif
+
+// gateway_mac for internal tracker sync
+String gateway_mac = "";
+
+#ifndef enableMultiGTWSync
+#  define enableMultiGTWSync true // //define true to use tracker and closest control devices sync across OpenMQTTGateway and Theengs Gateway gateways
 #endif
 
 /*--------------HOME ASSISTANT ROOM PRESENCE--------------*/
