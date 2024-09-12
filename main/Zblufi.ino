@@ -396,7 +396,25 @@ bool startBlufi() {
   NimBLEDevice::init(advName);
   esp_blufi_gatt_svr_init();
   ble_gatts_start();
+  Log.notice(F("BLUFI started" CR));
   return esp_blufi_profile_init() == ESP_OK;
+}
+
+bool stopBlufi() {
+  esp_err_t result = ESP_OK;
+  if (omg_blufi_ble_connected) {
+    esp_blufi_disconnect();
+    delay(50);
+  }
+
+  ble_gap_adv_stop();
+  result = esp_blufi_profile_deinit();
+  if (result != ESP_OK) {
+    Log.error(F("Failed to deinit blufi profile: %d" CR), result);
+    return false;
+  }
+  Log.notice(F("BLUFI stopped" CR));
+  return true;
 }
 
 #endif // defined(ESP32) && defined(USE_BLUFI)
