@@ -95,12 +95,14 @@ void RFtoMQTTdiscovery(uint64_t MQTTvalue) {
   String discovery_topic = String(subjectRFtoMQTT);
 #    endif
 
-  String theUniqueId = getUniqueId("-" + String(switchRF[0]), "-" + String(switchRF[1]));
+  String theUniqueId = getUniqueId(String(switchRF[0]), "-" + String(switchRF[1]));
+  String subType = String(switchRF[0]);
 
   announceDeviceTrigger(
       false,
       (char*)discovery_topic.c_str(),
-      "", "",
+      "recieved", 
+      (char*)subType.c_str(),
       (char*)theUniqueId.c_str(),
       "", "", "", "");
 }
@@ -118,6 +120,7 @@ void RFtoMQTT() {
     int length = mySwitch.getReceivedBitlength();
     const char* binary = dec2binWzerofill(MQTTvalue, length);
 
+    RFdata["action"] = String("recieved");
     RFdata["value"] = (uint64_t)MQTTvalue;
     RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
     RFdata["length"] = (int)mySwitch.getReceivedBitlength();
@@ -146,6 +149,8 @@ void RFtoMQTT() {
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       RFdata["origin"] = subjectRFtoMQTT;
+      enqueueJsonObject(RFdata);
+      RFdata["action"] = String("");
       enqueueJsonObject(RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
       Log.trace(F("Store val: %u" CR), (unsigned long)MQTTvalue);
