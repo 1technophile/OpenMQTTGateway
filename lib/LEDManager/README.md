@@ -30,6 +30,9 @@ build_flags =
     -DLED_ADDRESSABLE=true
     ; For non-addressable LEDs, comment out the line above
     
+    ; If the Addressable LED requires power
+    -DLED_ADDRESSABLE_POWER=15
+
     ; Optional timing configurations:
     -DBLINK_INTERVAL=500
     -DPULSE_INTERVAL=30
