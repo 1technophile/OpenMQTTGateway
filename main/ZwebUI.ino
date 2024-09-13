@@ -2278,7 +2278,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 properties[property] = "impedance: " + (String)imp + "ohm ";
               }
             } else if (data["type"] == "UNIQ") {
-              if (data["model_id"] == "M1017") {
+              if (data["model_id"] == "M1017" || data["model_id"] == "HOBOMX2001") {
                 if (data.containsKey("lvl_cm")) {
                   property++;
                   char lvl[5];
