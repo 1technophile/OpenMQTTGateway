@@ -100,11 +100,13 @@ void ONOFFConfig_load(){};
 #  endif
 
 void updatePowerIndicator() {
+#  ifdef LED_ACTUATOR_ONOFF
   if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) {
-    PowerIndicatorON();
+    ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ACTUATOR_ONOFF_COLOR);
   } else {
-    PowerIndicatorOFF();
+    ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_COLOR_BLACK);
   }
+#  endif
 }
 
 void setupONOFF() {
@@ -142,11 +144,13 @@ void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
       Log.notice(F("GPIO number: %d" CR), gpio);
       pinMode(gpio, OUTPUT);
       digitalWrite(gpio, boolSWITCHTYPE);
+#    ifdef LED_ACTUATOR_ONOFF
       if (boolSWITCHTYPE == ACTUATOR_ON) {
-        PowerIndicatorON();
+        ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ACTUATOR_ONOFF_COLOR);
       } else {
-        PowerIndicatorOFF();
+        ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_COLOR_BLACK);
       }
+#    endif
 #    ifdef ESP32
       if (ONOFFConfig.useLastStateOnStart) {
         ONOFFdata["save"] = true;
@@ -221,11 +225,13 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
       ON = false;
 
     digitalWrite(gpio, ON);
+#    ifdef LED_ACTUATOR_ONOFF
     if (ON == ACTUATOR_ON) {
-      PowerIndicatorON();
+      ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ACTUATOR_ONOFF_COLOR);
     } else {
-      PowerIndicatorOFF();
+      ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_COLOR_BLACK);
     }
+#    endif
     // we acknowledge the sending by publishing the value to an acknowledgement topic
     char b = ON;
     pub(subjectGTWONOFFtoMQTT, &b);
@@ -246,7 +252,9 @@ void overLimitTemp(void* pvParameters) {
       if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with the previous condition, but it is better to trigger the digitalRead only if the previous condition is met to avoid the digitalRead
         Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
         ActuatorTrigger();
-        CriticalIndicatorON();
+#      ifdef LED_ACTUATOR_ONOFF
+        ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ERROR_COLOR, -1);
+#      endif
       }
     }
     previousInternalTempc = internalTempc;
@@ -266,7 +274,9 @@ void overLimitCurrent(float RN8209current) {
     if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with the previous condition, but it is better to trigger the digitalRead only if the previous condition is met to avoid the digitalRead
       Log.error(F("[ActuatorONOFF] OverCurrent detected ( %F > %F ) switching OFF Actuator" CR), RN8209current, MAX_CURRENT_ACTUATOR);
       ActuatorTrigger();
-      CriticalIndicatorON();
+#    ifdef LED_ACTUATOR_ONOFF
+      ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ERROR_COLOR, -1);
+#    endif
     }
   }
   RN8209previousCurrent = RN8209current;
@@ -284,11 +294,13 @@ void ActuatorTrigger() {
   uint8_t level = !digitalRead(ACTUATOR_ONOFF_GPIO);
   Log.trace(F("Actuator triggered %d" CR), level);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
+#  ifdef LED_ACTUATOR_ONOFF
   if (level == ACTUATOR_ON) {
-    PowerIndicatorON();
+    ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ACTUATOR_ONOFF_COLOR);
   } else {
-    PowerIndicatorOFF();
+    ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_COLOR_BLACK);
   }
+#  endif
 
 #  ifdef ESP32
   if (ONOFFConfig.useLastStateOnStart) {

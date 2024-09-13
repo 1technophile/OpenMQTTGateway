@@ -203,6 +203,5 @@ void M5Print(char* line1, char* line2, char* line3) {
   M5.Lcd.drawString(line2, 5, M5.Lcd.height() * 0.8, 1);
   M5.Lcd.drawString(line3, 5, M5.Lcd.height() * 0.9, 1);
   delay(2000);
-  InfoIndicatorOFF(); // to switch off no need of condition
 }
 #endif

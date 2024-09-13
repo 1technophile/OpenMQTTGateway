@@ -53,8 +53,13 @@ void testDevice() {
 
 void testLeds() {
   Log.notice(F("LED Test" CR));
-  InfoIndicatorON();
-  SendReceiveIndicatorON();
+  ledManager.setMode(0, 0, LEDManager::Mode::STATIC, LED_NETWORK_OK_COLOR, -1);
+  delay(1000);
+  ledManager.setMode(0, 1, LEDManager::Mode::STATIC, LED_NETWORK_OK_COLOR, -1);
+  delay(1000);
+  ledManager.setMode(0, 2, LEDManager::Mode::STATIC, LED_NETWORK_OK_COLOR, -1);
+  delay(1000);
+  ledManager.setMode(0, 3, LEDManager::Mode::STATIC, LED_NETWORK_OK_COLOR, -1);
   Log.notice(F("LED Test Finished" CR));
 }
 

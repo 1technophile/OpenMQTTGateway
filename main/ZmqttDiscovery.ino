@@ -557,7 +557,7 @@ void pubMqttDiscovery() {
                   stateClassNone, //State Class
                   "false", "true" //state_off, state_on
   );
-#  ifdef RGB_INDICATORS
+#  ifdef LED_ADDRESSABLE
   createDiscovery("number", //set Type
                   subjectSYStoMQTT, "SYS: LED Brightness", (char*)getUniqueId("rgbb", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ (value_json.rgbb/2.55) | round(0) }}", //set availability_topic,device_class,value_template,
