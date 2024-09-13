@@ -28,6 +28,10 @@ void LEDManager::addLEDStrip(int pin, int numLeds) {
   LEDStrip ledStrip;
   ledStrip.pin = pin;
 #ifdef LED_ADDRESSABLE
+  if (LED_ADDRESSABLE_POWER > -1) {
+    pinMode(LED_ADDRESSABLE_POWER, OUTPUT);
+    digitalWrite(LED_ADDRESSABLE_POWER, HIGH);
+  }
   ledStrip.strip = new Adafruit_NeoPixel(numLeds, pin, NEO_GRB + NEO_KHZ800);
   ledStrip.strip->begin();
   ledStrip.strip->show();
