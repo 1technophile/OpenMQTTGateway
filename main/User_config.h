@@ -648,6 +648,7 @@ enum PowerMode { DEACTIVATED = -1,
 struct SYSConfig_s {
   bool mqtt; // if true the gateway will publish the received data on the MQTT broker
   bool serial; // if true the gateway will publish the received data on the SERIAL
+  bool blufi; // if true the gateway will be accesible with blufi
   bool offline;
   bool discovery; // HA discovery convention
   bool ohdiscovery; // OH discovery specificities
@@ -662,6 +663,9 @@ struct SYSConfig_s {
 #endif
 #ifndef DEFAULT_SERIAL
 #  define DEFAULT_SERIAL false
+#endif
+#ifndef DEFAULT_BLUFI
+#  define DEFAULT_BLUFI true
 #endif
 #ifndef DEFAULT_OFFLINE
 #  define DEFAULT_OFFLINE false
