@@ -1387,67 +1387,62 @@ void startBTActionTask() {
 
 #  if BLEDecoder
 void KnownBTActions(JsonObject& BTdata) {
-  BLEAction action;
-  memset(&action, 0, sizeof(BLEAction));
-  if (BTdata.containsKey("model_id") && BTdata["model_id"].is<const char*>() && BTdata["model_id"] == "X1") {
-    strcpy(action.addr, (const char*)BTdata["id"]);
-    action.write = true;
-    std::string val = BTdata["cmd"].as<std::string>(); // Fix #1694
-    action.value = val;
-    action.ttl = 3;
-    createOrUpdateDevice(action.addr, device_flags_connect,
-                         TheengsDecoder::BLE_ID_NUM::SBS1, 1);
-    BLEactions.push_back(action);
-    startBTActionTask();
+  if (!BTdata.containsKey("id")) {
+    Log.error(F("BLE mac address missing" CR));
+    gatewayState = GatewayState::ERROR;
     return;
   }
+  BLEAction action;
+  memset(&action, 0, sizeof(BLEAction));
+  strcpy(action.addr, (const char*)BTdata["id"]);
+  action.write = true;
+  action.ttl = 3;
+  bool res = false;
   if (BTdata.containsKey("model_id") && BTdata["model_id"].is<const char*>()) {
-    if (BTdata["model_id"] == "W270160X") {
-      if (!BTdata.containsKey("id")) {
-        Log.error(F("BLE mac address missing" CR));
-        return;
+    if (BTdata["model_id"] == "X1") {
+      if (BTdata.containsKey("cmd") && BTdata["cmd"].is<const char*>()) {
+        action.value_type = BLE_VAL_STRING;
+        std::string val = BTdata["cmd"].as<std::string>(); // Fix #1694
+        action.value = val;
+        createOrUpdateDevice(action.addr, device_flags_connect,
+                             TheengsDecoder::BLE_ID_NUM::SBS1, 1);
+        res = true;
       }
-      strcpy(action.addr, (const char*)BTdata["id"]);
-      action.write = true;
+    } else if (BTdata["model_id"] == "W270160X") {
       if (BTdata.containsKey("tilt") && BTdata["tilt"].is<int>()) {
         action.value_type = BLE_VAL_INT;
+        res = true;
       } else if (BTdata.containsKey("tilt") && BTdata["tilt"].is<const char*>()) {
         action.value_type = BLE_VAL_STRING;
-      } else {
-        Log.error(F("BLE value type invalid" CR));
-        return;
+        res = true;
       }
-      std::string val = BTdata["tilt"].as<std::string>(); // Fix #1694
-      action.value = val;
-      action.ttl = 3;
-      createOrUpdateDevice(action.addr, device_flags_connect,
-                           TheengsDecoder::BLE_ID_NUM::SBBT, 1);
-      BLEactions.push_back(action);
-      startBTActionTask();
-      return;
+      if (res) {
+        std::string val = BTdata["tilt"].as<std::string>(); // Fix #1694
+        action.value = val;
+        createOrUpdateDevice(action.addr, device_flags_connect,
+                             TheengsDecoder::BLE_ID_NUM::SBBT, 1);
+      }
     } else if (BTdata["model_id"] == "W070160X") {
-      if (!BTdata.containsKey("id")) {
-        Log.error(F("BLE mac address missing" CR));
-        return;
-      }
-      strcpy(action.addr, (const char*)BTdata["id"]);
-      action.write = true;
       if (BTdata.containsKey("position") && BTdata["position"].is<int>()) {
         action.value_type = BLE_VAL_INT;
+        res = true;
       } else if (BTdata.containsKey("position") && BTdata["position"].is<const char*>()) {
         action.value_type = BLE_VAL_STRING;
-      } else {
-        Log.error(F("BLE value type invalid" CR));
-        return;
+        res = true;
       }
-      std::string val = BTdata["position"].as<std::string>(); // Fix #1694
-      action.value = val;
-      action.ttl = 3;
-      createOrUpdateDevice(action.addr, device_flags_connect,
-                           TheengsDecoder::BLE_ID_NUM::SBCU, 1);
+      if (res) {
+        std::string val = BTdata["position"].as<std::string>(); // Fix #1694
+        action.value = val;
+        createOrUpdateDevice(action.addr, device_flags_connect,
+                             TheengsDecoder::BLE_ID_NUM::SBCU, 1);
+      }
+    }
+    if (res) {
       BLEactions.push_back(action);
       startBTActionTask();
-      return;
+    } else {
+      Log.error(F("BLE action not recognized" CR));
+      gatewayState = GatewayState::ERROR;
     }
   }
 }
