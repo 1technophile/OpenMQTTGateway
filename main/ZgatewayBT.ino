@@ -1551,8 +1551,14 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
     BTConfig_fromJson(BTdata);
 
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
-    KnownBTActions(BTdata);
-    MQTTtoBTAction(BTdata);
+    if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
+      KnownBTActions(BTdata);
+      MQTTtoBTAction(BTdata);
+      xSemaphoreGive(semaphoreBLEOperation);
+    } else {
+      Log.error(F("BLE busy - command not sent" CR));
+      gatewayState = GatewayState::ERROR;
+    }
   }
 }
 #endif
