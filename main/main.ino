@@ -795,6 +795,9 @@ void SYSConfig_init() {
   SYSConfig.mqtt = DEFAULT_MQTT;
   SYSConfig.serial = DEFAULT_SERIAL;
   SYSConfig.offline = DEFAULT_OFFLINE;
+#if USE_BLUFI
+  SYSConfig.blufi = DEFAULT_BLUFI;
+#endif
 #ifdef ZmqttDiscovery
   SYSConfig.discovery = DEFAULT_DISCOVERY;
   SYSConfig.ohdiscovery = OpenHABDiscovery;
@@ -809,6 +812,9 @@ void SYSConfig_fromJson(JsonObject& SYSdata) {
   Config_update(SYSdata, "mqtt", SYSConfig.mqtt);
   Config_update(SYSdata, "serial", SYSConfig.serial);
   Config_update(SYSdata, "offline", SYSConfig.offline);
+#if USE_BLUFI
+  Config_update(SYSdata, "blufi", SYSConfig.blufi);
+#endif
 #ifdef ZmqttDiscovery
   Config_update(SYSdata, "disc", SYSConfig.discovery);
   Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
@@ -827,6 +833,9 @@ void SYSConfig_save() {
   SYSdata["serial"] = SYSConfig.serial;
   SYSdata["offline"] = SYSConfig.offline;
   SYSdata["powermode"] = SYSConfig.powerMode;
+#  if USE_BLUFI
+  SYSdata["blufi"] = SYSConfig.blufi;
+#  endif
 #  ifdef ZmqttDiscovery
   SYSdata["disc"] = SYSConfig.discovery;
   SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
@@ -1374,7 +1383,8 @@ void setup() {
 #endif
 
 #if defined(ESP32) && defined(USE_BLUFI)
-  startBlufi();
+  if (SYSConfig.blufi)
+    startBlufi();
 #endif
 
 #if defined(ESPWifiManualSetup)
@@ -2733,6 +2743,9 @@ String stateMeasures() {
 #ifdef LED_ADDRESSABLE
   SYSdata["rgbb"] = SYSConfig.rgbbrightness;
 #endif
+#if USE_BLUFI
+  SYSdata["blufi"] = SYSConfig.blufi;
+#endif
 #ifdef ZmqttDiscovery
   SYSdata["disc"] = SYSConfig.discovery;
   SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
@@ -3268,6 +3281,7 @@ void readCntParameters(int index) {
 void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoSYSset)) {
     bool restartESP = false;
+    bool publishState = false;
     Log.trace(F("MQTTtoSYS json" CR));
     if (SYSdata.containsKey("cmd")) {
       const char* cmd = SYSdata["cmd"];
@@ -3279,7 +3293,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         setupwifi(true);
 #endif
       } else if (strstr(cmd, statusCmd) != NULL) { //erase and restart
-        stateMeasures();
+        publishState = true;
       }
     }
 #ifdef LED_ADDRESSABLE
@@ -3291,7 +3305,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
         updatePowerIndicator();
 #  endif
         Log.notice(F("RGB brightness: %d" CR), SYSConfig.rgbbrightness);
-        stateMeasures();
+        publishState = true;
       } else {
         Log.warning(F("RGB brightness value invalid - ignoring command" CR));
       }
@@ -3301,7 +3315,7 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     if (SYSdata.containsKey("ohdisc") && SYSdata["ohdisc"].is<bool>()) {
       SYSConfig.ohdiscovery = SYSdata["ohdisc"];
       Log.notice(F("OpenHAB discovery: %T" CR), SYSConfig.ohdiscovery);
-      stateMeasures();
+      publishState = true;
     }
 #endif
     if (SYSdata.containsKey("wifi_ssid") && SYSdata["wifi_ssid"].is<char*>() && SYSdata.containsKey("wifi_pass") && SYSdata["wifi_pass"].is<char*>()) {
@@ -3494,12 +3508,26 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
       SYSConfig.powerMode = SYSdata["powermode"];
       Log.notice(F("Power mode: %d" CR), SYSConfig.powerMode);
     }
+#if USE_BLUFI
+    if (SYSdata.containsKey("blufi") && SYSdata["blufi"].is<bool>()) {
+      bool res = false;
+      if (SYSdata["blufi"] && !SYSConfig.blufi) { // Start Blufi
+        res = startBlufi();
+      } else if (!SYSdata["blufi"] && SYSConfig.blufi) { // Stop Blufi
+        res = stopBlufi();
+      }
+      if (res)
+        SYSConfig.blufi = SYSdata["blufi"];
+      publishState = true;
+      Log.notice(F("Blufi: %T" CR), SYSConfig.blufi);
+    }
+#endif
     if (SYSdata.containsKey("disc")) {
       if (SYSdata["disc"].is<bool>()) {
         if (SYSdata["disc"] == true && SYSConfig.discovery == false)
           lastDiscovery = millis();
         SYSConfig.discovery = SYSdata["disc"];
-        stateMeasures();
+        publishState = true;
         if (SYSConfig.discovery)
           pubMqttDiscovery();
       } else {
@@ -3509,6 +3537,9 @@ void MQTTtoSYS(char* topicOri, JsonObject& SYSdata) { // json object decoding
     }
     if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
       SYSConfig_save();
+    }
+    if (publishState) {
+      stateMeasures();
     }
     if (restartESP) {
       ESPRestart(7);
