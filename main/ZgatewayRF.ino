@@ -101,7 +101,7 @@ void RFtoMQTTdiscovery(uint64_t MQTTvalue) {
   announceDeviceTrigger(
       false,
       (char*)discovery_topic.c_str(),
-      "recieved", 
+      "recieved",
       (char*)subType.c_str(),
       (char*)theUniqueId.c_str(),
       "", "", "", "");
