@@ -101,7 +101,7 @@ void RFtoMQTTdiscovery(uint64_t MQTTvalue) {
   announceDeviceTrigger(
       false,
       (char*)discovery_topic.c_str(),
-      "recieved",
+      "received",
       (char*)subType.c_str(),
       (char*)theUniqueId.c_str(),
       "", "", "", "");
@@ -120,7 +120,7 @@ void RFtoMQTT() {
     int length = mySwitch.getReceivedBitlength();
     const char* binary = dec2binWzerofill(MQTTvalue, length);
 
-    RFdata["action"] = String("recieved");
+    RFdata["action"] = String("received");
     RFdata["value"] = (uint64_t)MQTTvalue;
     RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
     RFdata["length"] = (int)mySwitch.getReceivedBitlength();
