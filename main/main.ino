@@ -1230,65 +1230,65 @@ void updateAndHandleLEDsTask() {
   static GatewayState previousGatewayState;
   if (previousGatewayState != gatewayState) {
 #ifdef LED_POWER
-    ledManager.setMode(0, LED_POWER, LEDManager::STATIC, LED_POWER_COLOR, -1);
+    ledManager.setMode(STRIP_POWER, LED_POWER, LEDManager::STATIC, LED_POWER_COLOR, -1);
 #endif
     switch (gatewayState) {
       case PROCESSING:
 #ifdef LED_PROCESSING
-        ledManager.setMode(0, LED_PROCESSING, LEDManager::BLINK, LED_PROCESSING_COLOR, 3);
+        ledManager.setMode(STRIP_PROCESSING, LED_PROCESSING, LEDManager::BLINK, LED_PROCESSING_COLOR, 3);
 #endif
         break;
       case WAITING_ONBOARDING:
 #ifdef LED_BROKER
-        ledManager.setMode(0, LED_BROKER, LEDManager::STATIC, LED_WAITING_ONBOARD_COLOR, -1);
+        ledManager.setMode(STRIP_BROKER, LED_BROKER, LEDManager::STATIC, LED_WAITING_ONBOARD_COLOR, -1);
 #endif
         break;
       case ONBOARDING:
 #ifdef LED_BROKER
-        ledManager.setMode(0, LED_BROKER, LEDManager::STATIC, LED_ONBOARD_COLOR, -1);
+        ledManager.setMode(STRIP_BROKER, LED_BROKER, LEDManager::STATIC, LED_ONBOARD_COLOR, -1);
 #endif
         break;
       case NTWK_CONNECTED:
 #ifdef LED_NETWORK
-        ledManager.setMode(0, LED_NETWORK, LEDManager::STATIC, LED_NETWORK_OK_COLOR, -1);
+        ledManager.setMode(STRIP_NETWORK, LED_NETWORK, LEDManager::STATIC, LED_NETWORK_OK_COLOR, -1);
 #endif
         break;
       case BROKER_CONNECTED:
 #ifdef LED_BROKER
-        ledManager.setMode(0, LED_BROKER, LEDManager::STATIC, LED_BROKER_OK_COLOR, -1);
+        ledManager.setMode(STRIP_BROKER, LED_BROKER, LEDManager::STATIC, LED_BROKER_OK_COLOR, -1);
 #endif
         break;
       case NTWK_DISCONNECTED:
 #ifdef LED_NETWORK
-        ledManager.setMode(0, LED_NETWORK, LEDManager::BLINK, LED_NETWORK_ERROR_COLOR, -1);
+        ledManager.setMode(STRIP_NETWORK, LED_NETWORK, LEDManager::BLINK, LED_NETWORK_ERROR_COLOR, -1);
 #endif
         break;
       case BROKER_DISCONNECTED:
 #ifdef LED_BROKER
-        ledManager.setMode(0, LED_BROKER, LEDManager::BLINK, LED_BROKER_ERROR_COLOR, -1);
+        ledManager.setMode(STRIP_BROKER, LED_BROKER, LEDManager::BLINK, LED_BROKER_ERROR_COLOR, -1);
 #endif
         break;
       case SLEEPING:
-        ledManager.setMode(0, -1, LEDManager::OFF, 0, -1);
+        ledManager.setMode(-1, -1, LEDManager::OFF, 0, -1);
         break;
       case OFFLINE:
 #ifdef LED_NETWORK
-        ledManager.setMode(0, LED_NETWORK, LEDManager::BLINK, LED_OFFLINE_COLOR, -1);
+        ledManager.setMode(STRIP_NETWORK, LED_NETWORK, LEDManager::BLINK, LED_OFFLINE_COLOR, -1);
 #endif
         break;
       case LOCAL_OTA_IN_PROGRESS:
 #ifdef LED_PROCESSING
-        ledManager.setMode(0, LED_PROCESSING, LEDManager::BLINK, LED_OTA_LOCAL_COLOR, -1);
+        ledManager.setMode(STRIP_PROCESSING, LED_PROCESSING, LEDManager::BLINK, LED_OTA_LOCAL_COLOR, -1);
 #endif
         break;
       case REMOTE_OTA_IN_PROGRESS:
 #ifdef LED_PROCESSING
-        ledManager.setMode(0, LED_PROCESSING, LEDManager::BLINK, LED_OTA_REMOTE_COLOR, -1);
+        ledManager.setMode(STRIP_PROCESSING, LED_PROCESSING, LEDManager::BLINK, LED_OTA_REMOTE_COLOR, -1);
 #endif
         break;
       case ERROR:
 #ifdef LED_ERROR
-        ledManager.setMode(0, LED_ERROR, LEDManager::BLINK, LED_ERROR_COLOR, 3);
+        ledManager.setMode(STRIP_ERROR, LED_ERROR, LEDManager::BLINK, LED_ERROR_COLOR, 3);
 #endif
         break;
       default:
@@ -1323,6 +1323,9 @@ void setup() {
 #  endif
 #  ifdef LED_ADDRESSABLE_PIN2
   ledManager.addLEDStrip(LED_ADDRESSABLE_PIN2, LED_ADDRESSABLE_NUM);
+#  endif
+#  ifdef LED_ADDRESSABLE_PIN3
+  ledManager.addLEDStrip(LED_ADDRESSABLE_PIN3, LED_ADDRESSABLE_NUM);
 #  endif
   ledManager.setBrightness(SYSConfig.rgbbrightness);
 #elif LED_PIN

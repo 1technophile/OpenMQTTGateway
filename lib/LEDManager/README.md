@@ -62,10 +62,10 @@ void setup() {
 
 void loop() {
     #ifdef LED_ADDRESSABLE
-    // Set all LEDs on the strip to static green
+    // Set all LEDs on the first strip to static green
     ledManager.setMode(0, -1, LEDManager::STATIC, LED_COLOR_GREEN);
     
-    // Blink first 5 LEDs red for 3 times
+    // Blink first 5 LEDs red for 3 times on the first strip
     for (int i = 0; i < 5; i++) {
         ledManager.setMode(0, i, LEDManager::BLINK, LED_COLOR_RED, 3);
     }
@@ -73,7 +73,7 @@ void loop() {
     // Set first LED to static green
     ledManager.setMode(0, 0, LEDManager::STATIC, LED_COLOR_GREEN);
     
-    // Blink second LED red
+    // Blink second strip LED red
     ledManager.setMode(1, 0, LEDManager::BLINK, LED_COLOR_RED, 3);
     #endif
 

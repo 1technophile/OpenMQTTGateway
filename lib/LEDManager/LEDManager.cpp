@@ -54,6 +54,10 @@ void LEDManager::setMode(int stripIndex, int ledIndex, Mode mode, uint32_t color
     } else if (ledIndex >= 0 && ledIndex < ledStrips[stripIndex].ledStates.size()) {
       setModeForSingleLED(stripIndex, ledIndex, mode, color, durationOrBlinkCount);
     }
+  } else if (stripIndex == -1) {
+    for (int i = 0; i < ledStrips.size(); i++) {
+      setMode(i, ledIndex, mode, color, durationOrBlinkCount);
+    }
   }
 }
 

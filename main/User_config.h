@@ -447,8 +447,22 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #ifndef LED_NETWORK
 #  define LED_NETWORK 0
 #endif
-#ifndef LED_POWER
-#  define LED_POWER -1
+
+// LED Strip index
+#ifndef STRIP_ERROR
+#  define STRIP_ERROR 0
+#endif
+#ifndef STRIP_PROCESSING
+#  define STRIP_PROCESSING 0
+#endif
+#ifndef STRIP_BROKER
+#  define STRIP_BROKER 0
+#endif
+#ifndef STRIP_NETWORK
+#  define STRIP_NETWORK 0
+#endif
+#ifndef STRIP_POWER
+#  define STRIP_POWER 0
 #endif
 
 // Single standard LED pin
