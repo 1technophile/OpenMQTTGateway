@@ -20,6 +20,20 @@ MQTT Display ON command:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m {"onstate":true}`
 
+#### Usage of a touch GPIO display blanking
+
+Support can be enabled to use a GPIO pin as a simple touch sensor to enable the display.  When enabled, the display will blank after 30 seconds, and when GPIO 2 is touched, the display will enable for 30 seconds.  For testing a wire was connected to the GPIO pin.
+
+This can be enabled with the compiler directive `-DDISPLAY_BLANKING=true`
+
+Blanking Compiler Directives
+
+| Directive | Default | Description |
+| - | - | - |
+| DISPLAY_BLANKING | false | Enables touch based display blanking |
+| DISPLAY_BLANKING_TOUCH_GPIO | 2 | GPIO pin to use the touch.  Must be a touch supported GPIO pin |
+| DISPLAY_BLANKING_START | 30 | Seconds to wait before disabling the display |
+
 ### Brightness
 The display brightness can be set between 0-100%.
 
