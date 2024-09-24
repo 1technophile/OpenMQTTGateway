@@ -113,7 +113,8 @@ void announceDeviceTrigger(bool use_gateway_info,
                            char* device_mac);
 
 #ifdef discovery_Topic //Deprecated - use discovery_Prefix instead
-#  define discovery_Prefix "homeassistant"
+#  pragma message("compiler directive discovery_Topic is deprecated, use discovery_Prefix instead")
+#  define discovery_Prefix discovery_Topic
 #endif
 #ifndef discovery_Prefix
 #  define discovery_Prefix "homeassistant"
