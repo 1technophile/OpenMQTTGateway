@@ -79,6 +79,7 @@ jobs:
           - "theengs-bridge"
           - "esp32dev-ble-idf"
           - "theengs-bridge-v11"
+          - "theengs-plug"
           - "esp32dev-ble-broker"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
