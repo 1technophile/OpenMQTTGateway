@@ -281,7 +281,6 @@ void rtl_433_Callback(char* message) {
   String topic = subjectRTL_433toMQTT;
   String model = RFrtl_433_ESPdata["model"];
   String type = RFrtl_433_ESPdata["type"];
-  Log.notice(F("type: %s" CR), type.c_str());
   String uniqueid;
 
   const char naming_keys[5][8] = {"type", "model", "subtype", "channel", "id"}; // from rtl_433_mqtt_hass.py
