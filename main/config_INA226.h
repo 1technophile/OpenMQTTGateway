@@ -27,7 +27,7 @@
 #define config_INA226_h
 
 extern void setupINA226();
-extern void INA226toMQTT();
+extern void INA226toX();
 extern void MeasureINA226();
 
 /*----------------------------USER PARAMETERS-----------------------------*/

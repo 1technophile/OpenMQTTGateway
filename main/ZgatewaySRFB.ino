@@ -67,7 +67,7 @@ void _rfbSend(byte* message, int times) {
   }
 }
 
-bool SRFBtoMQTT() {
+bool SRFBtoX() {
   static bool receiving = false;
 
   while (Serial.available()) {
@@ -145,7 +145,7 @@ void _rfbAck() {
 }
 
 #  if simpleReceiving
-void MQTTtoSRFB(char* topicOri, char* datacallback) {
+void XtoSRFB(const char* topicOri, const char* datacallback) {
   // RF DATA ANALYSIS
   String topic = topicOri;
   int valueRPT = 0;
@@ -241,7 +241,7 @@ void MQTTtoSRFB(char* topicOri, char* datacallback) {
 }
 #  endif
 #  if jsonReceiving
-void MQTTtoSRFB(char* topicOri, JsonObject& SRFBdata) {
+void XtoSRFB(const char* topicOri, JsonObject& SRFBdata) {
   // RF DATA ANALYSIS
   const char* raw = SRFBdata["raw"];
   int valueRPT = SRFBdata["repeat"] | 1;
@@ -300,7 +300,8 @@ void MQTTtoSRFB(char* topicOri, JsonObject& SRFBdata) {
 
         Log.notice(F("MQTTtoSRFB OK" CR));
         _rfbSend(message_b, valueRPT);
-        pub(subjectGTWSRFBtoMQTT, SRFBdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
+        SRFBdata["origin"] = subjectGTWSRFBtoMQTT;
+        enqueueJsonObject(SRFBdata); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       } else {
         Log.error(F("MQTTtoSRFB error decoding value" CR));
       }

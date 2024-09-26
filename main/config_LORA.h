@@ -27,9 +27,9 @@
 #define config_LORA_h
 
 extern void setupLORA();
-extern void LORAtoMQTT();
-extern void MQTTtoLORA(char* topicOri, char* datacallback);
-extern void MQTTtoLORA(char* topicOri, JsonObject& RFdata);
+extern void LORAtoX();
+extern void XtoLORA(const char* topicOri, const char* datacallback);
+extern void XtoLORA(const char* topicOri, JsonObject& RFdata);
 /*----------------------LORA topics & parameters-------------------------*/
 #define subjectLORAtoMQTT    "/LORAtoMQTT"
 #define subjectMQTTtoLORA    "/commands/MQTTtoLORA"

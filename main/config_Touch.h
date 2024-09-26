@@ -28,10 +28,10 @@
 #define config_Touch_h
 
 extern void setupTouch();
-extern void touchToMQTT();
+extern void touchtoX();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
-#define TOUCHTOPIC "/touchToMQTT"
+#define subjectTouchtoMQTT "/touchToMQTT"
 
 // Time between readings of the touch sensor. Don't make it too short, as
 // reading one touch sensor takes 0.5 ms.

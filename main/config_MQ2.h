@@ -37,7 +37,7 @@
 #define config_MQ2_h
 
 extern void setupZsensorMQ2();
-extern void MQ2toMQTT();
+extern void MQ2toX();
 
 #ifndef MQ2SENSORADCPIN
 #  ifdef ESP32

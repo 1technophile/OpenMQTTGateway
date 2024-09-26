@@ -149,11 +149,11 @@ void loadPilightConfig() {
   }
 }
 
-void PilighttoMQTT() {
+void PilighttoX() {
   rf.loop();
 }
 
-void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
+void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPilightProtocol)) {
     bool success = false;
     if (Pilightdata.containsKey("reset")) {
@@ -189,7 +189,8 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
 
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      pub(subjectGTWPilighttoMQTT, Pilightdata);
+      Pilightdata["origin"] = subjectGTWPilighttoMQTT;
+      enqueueJsonObject(Pilightdata);
     } else {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilightProtocol Fail json" CR));
@@ -251,7 +252,7 @@ void MQTTtoPilight(char* topicOri, JsonObject& Pilightdata) {
       Log.trace(F("MQTTtoPilight msg & protocol ok" CR));
       int msgLength = rf.send(protocol, message);
       if (msgLength > 0) {
-        Log.trace(F("Adv data MQTTtoPilight push state via PilighttoMQTT" CR));
+        Log.trace(F("Adv data XtoPilight push state via PilighttoMQTT" CR));
         // Acknowledgement
         pub(subjectGTWPilighttoMQTT, message);
         success = true;

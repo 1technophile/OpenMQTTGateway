@@ -171,11 +171,6 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
       BTdata["interval"] = TimeBtwRead;
       BTdata["intervalacts"] = TimeBtwActive;
       BTdata["scanduration"] = Scan_duration;
-#  ifdef ZmqttDiscovery
-      // Remove discovered entities
-      eraseTopic("number", (char*)getUniqueId("interval", "").c_str());
-      eraseTopic("number", (char*)getUniqueId("intervalacts", "").c_str());
-#  endif
     }
     // Identify if the gateway is enabled or not and stop start accordingly
     if (BTdata.containsKey("enabled") && BTdata["enabled"] == false && BTConfig.enabled == true) {
@@ -185,7 +180,6 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
       setupBTTasksAndBLE();
     }
   }
-  Config_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
   // Home Assistant presence message
   Config_update(BTdata, "hasspresence", BTConfig.presenceEnable);
 #  ifdef ZmqttDiscovery
@@ -196,6 +190,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   // Time before before active scan
   // Scan interval set - and avoid intervalacts to be lower than interval
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0) {
+    BTConfig.adaptiveScan = false;
     Config_update(BTdata, "interval", BTConfig.BLEinterval);
     if (BTConfig.intervalActiveScan < BTConfig.BLEinterval) {
       Config_update(BTdata, "interval", BTConfig.intervalActiveScan);
@@ -203,11 +198,14 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   }
   // Define if the scan is adaptive or not - and avoid intervalacts to be lower than interval
   if (BTdata.containsKey("intervalacts") && BTdata["intervalacts"] < BTConfig.BLEinterval) {
+    BTConfig.adaptiveScan = false;
     // Config_update(BTdata, "interval", BTConfig.intervalActiveScan);
     BTConfig.intervalActiveScan = BTConfig.BLEinterval;
   } else {
     Config_update(BTdata, "intervalacts", BTConfig.intervalActiveScan);
   }
+  //  Adaptive scan set
+  Config_update(BTdata, "adaptivescan", BTConfig.adaptiveScan);
   // Time before a connect set
   Config_update(BTdata, "intervalcnct", BTConfig.intervalConnect);
   // publish all BLE devices discovered or  only the identified sensors (like temperature sensors)
@@ -633,7 +631,7 @@ void procBLETask(void* pvParameters) {
       BLEdata["id"] = mac_address;
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
-      Log.notice(F("Device detected: %s" CR), BLEdata["id"].as<const char*>());
+      Log.notice(F("BT Device detected: %s" CR), BLEdata["id"].as<const char*>());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
       if (BTConfig.filterConnectable && device->connect) {
@@ -901,17 +899,10 @@ void setupBT() {
   BLEQueue = xQueueCreate(QueueSize, sizeof(NimBLEAdvertisedDevice*));
   if (BTConfig.enabled) {
     setupBTTasksAndBLE();
-    if (SYSConfig.offline) // We start the BLE scan if we are offline, if not we wait for MQTT connection
-      BTProcessLock = false;
     Log.notice(F("ZgatewayBT multicore ESP32 setup done" CR));
   } else {
     Log.notice(F("ZgatewayBT multicore ESP32 setup disabled" CR));
   }
-}
-
-bool BTtoMQTT() { // for on demand BLE scans
-  BLEscan();
-  return true;
 }
 
 boolean valid_service_data(const char* data, int size) {
@@ -1147,6 +1138,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
     }
   }
 }
+#  else
+void launchBTDiscovery(bool overrideDiscovery) {}
+#  endif
+
+#  if BLEDecoder
 void process_bledata(JsonObject& BLEdata) {
   yield(); // Necessary to let the loop run in case of connectivity issues
   if (!BLEdata.containsKey("id")) {
@@ -1222,6 +1218,7 @@ void process_bledata(JsonObject& BLEdata) {
         }
       }
     }
+  } else {
     Log.trace(F("Random MAC or iBeacon device filtered" CR));
   }
   if (!BTConfig.extDecoderEnable && model_id < 0) {
@@ -1258,6 +1255,9 @@ void PublishDeviceData(JsonObject& BLEdata) {
         BLEdata["mac"] = BLEdata["id"].as<std::string>();
         BLEdata["id"] = BLEdata["uuid"].as<std::string>();
       }
+      String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
+      Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
+      BLEdata["topic"] = topic;
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     }
 
@@ -1275,7 +1275,6 @@ void PublishDeviceData(JsonObject& BLEdata) {
   }
 }
 #  else
-void launchBTDiscovery(bool overrideDiscovery) {}
 void process_bledata(JsonObject& BLEdata) {}
 void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
@@ -1316,7 +1315,7 @@ void hass_presence(JsonObject& HomePresence) {
 
 void BTforceScan() {
   if (!BTProcessLock) {
-    BTtoMQTT();
+    BLEscan();
     Log.trace(F("Scan done" CR));
     if (BTConfig.bleConnect)
       BLEconnect();
@@ -1450,7 +1449,7 @@ void KnownBTActions(JsonObject& BTdata) {
 void KnownBTActions(JsonObject& BTdata) {}
 #  endif
 
-void MQTTtoBTAction(JsonObject& BTdata) {
+void XtoBTAction(JsonObject& BTdata) {
   BLEAction action;
   memset(&action, 0, sizeof(BLEAction));
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
@@ -1506,7 +1505,7 @@ void MQTTtoBTAction(JsonObject& BTdata) {
   }
 }
 
-void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
+void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoBTset)) {
     Log.trace(F("MQTTtoBT json set" CR));
 
@@ -1548,7 +1547,7 @@ void MQTTtoBT(char* topicOri, JsonObject& BTdata) { // json object decoding
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoBT)) {
     if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
       KnownBTActions(BTdata);
-      MQTTtoBTAction(BTdata);
+      XtoBTAction(BTdata);
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
       Log.error(F("BLE busy - command not sent" CR));

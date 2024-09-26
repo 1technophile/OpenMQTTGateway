@@ -101,7 +101,7 @@ void RF2toMQTTdiscovery(JsonObject& data) {
 }
 #  endif
 
-void RF2toMQTT() {
+void RF2toX() {
   if (rf2rd.hasNewData) {
     StaticJsonDocument<JSON_MSG_BUFFER> RF2dataBuffer;
     JsonObject RF2data = RF2dataBuffer.to<JsonObject>();
@@ -132,7 +132,7 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 }
 
 #  if simpleReceiving
-void MQTTtoRF2(char* topicOri, char* datacallback) {
+void XtoRF2(const char* topicOri, const char* datacallback) {
   NewRemoteReceiver::disable();
   pinMode(RF_EMITTER_GPIO, OUTPUT);
   initCC1101();
@@ -224,7 +224,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
     MQTTswitchType = String(boolSWITCHTYPE);
     MQTTdimLevel = String(valueDIM);
     String MQTTRF2string;
-    Log.trace(F("Adv data MQTTtoRF2 push state via RF2toMQTT" CR));
+    Log.trace(F("Adv data XtoRF2 push state via RF2toMQTT" CR));
     if (isDimCommand) {
       MQTTRF2string = subjectRF2toMQTT + String("/") + RF2codeKey + MQTTAddress + String("/") + RF2unitKey + MQTTunit + String("/") + RF2groupKey + MQTTgroupBit + String("/") + RF2dimKey + String("/") + RF2periodKey + MQTTperiod;
       pub((char*)MQTTRF2string.c_str(), (char*)MQTTdimLevel.c_str());
@@ -241,7 +241,7 @@ void MQTTtoRF2(char* topicOri, char* datacallback) {
 #  endif
 
 #  if jsonReceiving
-void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
+void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
     Log.trace(F("MQTTtoRF2 json" CR));
@@ -290,7 +290,8 @@ void MQTTtoRF2(char* topicOri, JsonObject& RF2data) { // json object decoding
     }
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-      pub(subjectRF2toMQTT, RF2data);
+      RF2data["origin"] = subjectRF2toMQTT;
+      enqueueJsonObject(RF2data);
     } else {
       pub(subjectGTWRF2toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRF2 failed json read" CR));

@@ -102,7 +102,7 @@ void webUIPubPrint(const char*, JsonObject&);
 #endif
 void WebUISetup();
 void WebUILoop();
-void MQTTtoWebUI(char*, JsonObject&);
+void XtoWebUI(const char*, JsonObject&);
 
 String stateWebUIStatus();
 

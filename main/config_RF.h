@@ -31,24 +31,24 @@
 
 #ifdef ZgatewayRF
 extern void setupRF();
-extern void RFtoMQTT();
-extern void MQTTtoRF(char* topicOri, char* datacallback);
-extern void MQTTtoRF(char* topicOri, JsonObject& RFdata);
+extern void RFtoX();
+extern void XtoRF(const char* topicOri, const char* datacallback);
+extern void XtoRF(const char* topicOri, JsonObject& RFdata);
 extern void disableRFReceive();
 extern void enableRFReceive();
 #endif
 #ifdef ZgatewayRF2
-extern void RF2toMQTT();
-extern void MQTTtoRF2(char* topicOri, char* datacallback);
-extern void MQTTtoRF2(char* topicOri, JsonObject& RFdata);
+extern void RF2toX();
+extern void XtoRF2(const char* topicOri, const char* datacallback);
+extern void XtoRF2(const char* topicOri, JsonObject& RFdata);
 extern void disableRF2Receive();
 extern void enableRF2Receive();
 #endif
 #ifdef ZgatewayPilight
 extern void setupPilight();
-extern void PilighttoMQTT();
-extern void MQTTtoPilight(char* topicOri, char* datacallback);
-extern void MQTTtoPilight(char* topicOri, JsonObject& RFdata);
+extern void PilighttoX();
+extern void XtoPilight(const char* topicOri, const char* datacallback);
+extern void XtoPilight(const char* topicOri, JsonObject& RFdata);
 extern void disablePilightReceive();
 extern void enablePilightReceive();
 #endif

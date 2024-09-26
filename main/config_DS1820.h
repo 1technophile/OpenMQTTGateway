@@ -27,7 +27,7 @@
 #define config_DS1820_h
 
 extern void setupZsensorDS1820();
-extern void DS1820toMQTT();
+extern void DS1820toX();
 extern void MeasureDS1820Temp();
 extern void pubOneWire_HADiscovery();
 

@@ -151,14 +151,14 @@
 
 #ifndef JSON_MSG_BUFFER
 #  if defined(ESP32)
-#    define JSON_MSG_BUFFER 816 // adjusted to minimum size covering largest Theengs device JSON properties (RuuviTag_RAWv2)
+#    define JSON_MSG_BUFFER 1024 // adjusted to minimum size covering largest home assistant discovery messages
 #  elif defined(ESP8266)
 #    define JSON_MSG_BUFFER 512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266, certificates handling with ESP8266 is not tested
 #  endif
 #  if MQTT_SECURE_DEFAULT
 #    define JSON_MSG_BUFFER_MAX 2048 // Json message buffer size increased to handle certificate changes through MQTT, used for the queue and the coming MQTT messages
 #  else
-#    define JSON_MSG_BUFFER_MAX 898 // Minimum size for the cover MQTT discovery message
+#    define JSON_MSG_BUFFER_MAX 1024 // Minimum size for the cover MQTT discovery message
 #  endif
 #endif
 
@@ -480,7 +480,6 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #  endif
 #endif
 
-// TODO adapt to other boards
 #ifndef DEFAULT_ADJ_BRIGHTNESS
 #  define DEFAULT_ADJ_BRIGHTNESS 255 // Set Default RGB adjustable brightness
 #endif
@@ -582,12 +581,22 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #define TimeBetweenCheckingSYS       3600 // time between (s) system checkings (like updates)
 #define TimeLedON                    1 // time LED are ON
 #define InitialMQTTConnectionTimeout 10 // time estimated (s) before the board is connected to MQTT
-#define subjectSYStoMQTT             "/SYStoMQTT" // system parameters
-#define subjectLOGtoMQTT             "/LOGtoMQTT" // log informations
-#define subjectRLStoMQTT             "/RLStoMQTT" // latest release information
-#define subjectMQTTtoSYSset          "/commands/MQTTtoSYS/config"
-#define subjectMQTTtoSYSupdate       "/commands/MQTTtoSYS/firmware_update"
-#define TimeToResetAtStart           5000 // Time we allow the user at start for the reset command by button press
+#ifndef subjectSYStoMQTT
+#  define subjectSYStoMQTT "/SYStoMQTT" // system parameters
+#endif
+#ifndef subjectLOGtoMQTT
+#  define subjectLOGtoMQTT "/LOGtoMQTT" // log informations
+#endif
+#ifndef subjectRLStoMQTT
+#  define subjectRLStoMQTT "/RLStoMQTT" // latest release information
+#endif
+#ifndef subjectMQTTtoSYSset
+#  define subjectMQTTtoSYSset "/commands/MQTTtoSYS/config"
+#endif
+#ifndef subjectMQTTtoSYSupdate
+#  define subjectMQTTtoSYSupdate "/commands/MQTTtoSYS/firmware_update"
+#endif
+#define TimeToResetAtStart 5000 // Time we allow the user at start for the reset command by button press
 /*-------------------DEFINE LOG LEVEL----------------------*/
 #ifndef LOG_LEVEL
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
@@ -624,9 +633,7 @@ void connectMQTT();
 unsigned long uptime();
 bool cmpToMainTopic(const char*, const char*);
 bool pub(const char*, const char*, bool);
-// void pub(const char*, JsonObject&);
 bool pub(const char*, const char*);
-// void pub_custom_topic(const char*, JsonObject&, boolean);
 
 #if defined(ESP32)
 #  include <Preferences.h>
@@ -689,9 +696,6 @@ struct SYSConfig_s {
 bool isAduplicateSignal(uint64_t);
 void storeSignalValue(uint64_t);
 #endif
-
-// Origin topics
-#define subjectBTtoMQTT "/BTtoMQTT"
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)

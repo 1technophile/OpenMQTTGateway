@@ -76,7 +76,7 @@ void signalStrengthAnalysis() {
   }
 }
 
-bool _2GtoMQTT() {
+bool _2GtoX() {
   // Get the memory locations of unread SMS messages.
   unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
   Log.trace(F("Creating SMS  buffer" CR));
@@ -96,7 +96,7 @@ bool _2GtoMQTT() {
   return false;
 }
 #  if simpleReceiving
-void MQTTto2G(char* topicOri, char* datacallback) {
+void Xto2G(const char* topicOri, const char* datacallback) {
   String data = datacallback;
   String topic = topicOri;
 
@@ -127,7 +127,7 @@ void MQTTto2G(char* topicOri, char* datacallback) {
 #  endif
 
 #  if jsonReceiving
-void MQTTto2G(char* topicOri, JsonObject& SMSdata) {
+void Xto2G(const char* topicOri, JsonObject& SMSdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTto2G)) {
     const char* sms = SMSdata["message"];
     const char* phone = SMSdata["phone"];

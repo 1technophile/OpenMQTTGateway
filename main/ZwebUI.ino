@@ -658,7 +658,7 @@ void handleWI() {
         server.send(200, "text/html", response);
 
         delay(2000); // Wait for web page to be sent before
-        MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+        XtoSYS((char*)topic.c_str(), WEBtoSYS);
         return;
       } else {
         Log.warning(F("[WebUI] No changes" CR));
@@ -794,7 +794,7 @@ void handleMQ() {
 
         delay(2000); // Wait for web page to be sent before
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-        MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+        XtoSYS((char*)topic.c_str(), WEBtoSYS);
         return;
       } else {
         Log.warning(F("[WebUI] No changes" CR));
@@ -878,7 +878,7 @@ void handleCG() {
 
     delay(2000); // Wait for web page to be sent before
     String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-    MQTTtoSYS((char*)topic.c_str(), WEBtoSYS);
+    XtoSYS((char*)topic.c_str(), WEBtoSYS);
   } else {
     Log.warning(F("[WebUI] No changes" CR));
   }
@@ -1454,7 +1454,7 @@ void handleUP() {
 
         String output;
         serializeJson(WEBtoSYS, output);
-        Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
+        Log.notice(F("[WebUI] XtoSYSupdate %s" CR), output.c_str());
       }
 
       String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSupdate);
@@ -1470,7 +1470,7 @@ void handleUP() {
 
           String output;
           serializeJson(WEBtoSYS, output);
-          Log.notice(F("[WebUI] MQTTtoSYSupdate %s" CR), output.c_str());
+          Log.notice(F("[WebUI] XtoSYSupdate %s" CR), output.c_str());
         }
 
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSupdate);
@@ -1534,7 +1534,7 @@ void handleCS() {
       String command = c1.substring(c1.indexOf(' ') + 1);
       if (command.length()) {
         WEBUI_TRACE_LOG(F("[WebUI] handleCS inject MQTT Command topic: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
-        receivingMQTT((char*)cmdTopic.c_str(), (char*)command.c_str());
+        receivingDATA(cmdTopic.c_str(), command.c_str());
       } else {
         Log.warning(F("[WebUI] Missing command: '%s', command: '%s'" CR), cmdTopic.c_str(), command.c_str());
       }
@@ -1684,7 +1684,7 @@ void WebUILoop() {
   }
 }
 
-void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decoding
+void XtoWebUI(const char* topicOri, JsonObject& WebUIdata) { // json object decoding
   bool success = false;
   if (cmpToMainTopic(topicOri, subjectMQTTtoWebUIset)) {
     WEBUI_TRACE_LOG(F("MQTTtoWebUI json set" CR));
@@ -1723,7 +1723,7 @@ void MQTTtoWebUI(char* topicOri, JsonObject& WebUIdata) { // json object decodin
     if (success) {
       stateWebUIStatus();
     } else {
-      Log.error(F("[ WebUI ] MQTTtoWebUI Fail json" CR), WebUIdata);
+      Log.error(F("[ WebUI ] XtoWebUI Fail json" CR), WebUIdata);
     }
   }
 }

@@ -116,7 +116,7 @@ void loopM5() {
   previousLogLevel = currentLogLevel;
 }
 
-void MQTTtoM5(char* topicOri, JsonObject& M5data) { // json object decoding
+void XtoM5(const char* topicOri, JsonObject& M5data) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoM5set)) {
     Log.trace(F("MQTTtoM5 json set" CR));
     // Log display set between M5 lcd (true) and serial monitor (false)

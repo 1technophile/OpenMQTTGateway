@@ -94,11 +94,11 @@ void FASTLEDLoop() {
   FastLED.show();
 }
 
-boolean FASTLEDtoMQTT() {
+boolean FASTLEDtoX() {
   return false;
 }
 #  if jsonReceiving
-void MQTTtoFASTLED(char* topicOri, JsonObject& jsonData) {
+void XtoFASTLED(const char* topicOri, JsonObject& jsonData) {
   currentLEDState = GENERAL;
   //trc(topicOri);
   //number = (long)strtol(&datacallback[1], NULL, 16);
@@ -122,7 +122,7 @@ void MQTTtoFASTLED(char* topicOri, JsonObject& jsonData) {
 #  endif
 
 #  if simpleReceiving
-void MQTTtoFASTLED(char* topicOri, char* datacallback) {
+void XtoFASTLED(const char* topicOri, const char* datacallback) {
   Log.trace(F("MQTTtoFASTLED: " CR));
   currentLEDState = GENERAL;
   long number = 0;

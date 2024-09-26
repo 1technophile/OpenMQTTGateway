@@ -25,7 +25,7 @@
 #define config_C37_YL83_HMRD_h
 
 extern void setupZsensorC37_YL83_HMRD();
-extern void C37_YL83_HMRDtoMQTT();
+extern void C37_YL83_HMRDtoX();
 extern void MeasureC37_YL83_HMRDWater();
 
 /*----------------------------USER PARAMETERS-----------------------------*/
