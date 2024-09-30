@@ -166,6 +166,45 @@ mqtt:
       qos: "0"
       retain: true
 ```
+### RF gateway mode - Pilight, RF, kaku
+insert an include statement in HA configuration.yaml
+```bash
+grep homed ./configuration.yaml 
+mqtt: !include homed-mqtt.yaml
+```
+In the example, the included file is homed-mqtt.yaml. It provides an mqtt select entity with the ability to show and also change via dropdown - the desired mode of the RF receiver gateway. In the homed-mqtt.yaml snippet, the device section (as it is optional) is ommited,
+```yaml
+select:
+  - name: 'RF: Mode receive'
+    unique_id: espdevcho-rf-mode
+    #platform: mqtt
+    availability_topic: home/espdevcho/LWT # espdevcho is a particular name of the gateway, instead of the default OpenMQTTGateway
+    payload_available: online
+    payload_not_available: offline
+    options: 
+      - "Pilight"
+      - "RF classic"
+      - "RF2 kaku"
+    state_topic: home/espdevcho/RFtoMQTT # espdevcho is a particular name of the gateway, instead of the default OpenMQTTGateway
+    value_template: >
+      {% if value_json.active == 1 %} Pilight
+      {% elif value_json.active == 2 %} RF classic
+      {% elif value_json.active == 4 %} RF2 kaku
+      {% endif %}
+    #unit_of_measurement: s
+    command_topic: home/espdevcho/commands/MQTTtoRF/config # espdevcho is a particular name of the gateway, instead of the default OpenMQTTGateway
+    command_template: >
+      {% set value_map = {
+             "Pilight": 1,
+             "RF classic": 2,
+             "RF2 kaku": 4,
+         }
+      %}
+      {"active":{{ value_map[value] }}}
+    device:
+      configuration_url: http://192.168.1.11/ # device section is optional. It is almost ommited in this example. Values here will update the corresponding device, if it already exist
+
+```
 
 ### Mijia Thermometer BLE
 
