@@ -851,7 +851,7 @@ void setupBTTasksAndBLE() {
   xTaskCreatePinnedToCore(
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
-#  ifdef USE_BLUFI
+#  if defined(USE_ESP_IDF) || defined(USE_BLUFI)
       12500,
 #  else
       8500, /* Stack size in bytes */
