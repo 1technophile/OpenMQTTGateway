@@ -39,6 +39,15 @@ SoftwareSerial SERIALSoftSerial(SERIAL_RX_GPIO, SERIAL_TX_GPIO); // RX, TX
 Stream* SERIALStream = NULL;
 //unsigned long msgCount = 0;
 
+bool receiverReady = false;
+unsigned long lastHeartbeatReceived = 0;
+unsigned long lastHeartbeatAckReceived = 0;
+unsigned long lastHeartbeatSent = 0;
+const unsigned long heartbeatTimeout = 15000; // 15 seconds timeout for ack
+const unsigned long maxHeartbeatInterval = 60000; // Maximum interval of 1 minute
+unsigned long heartbeatInterval = 5000; // 5 seconds
+bool isOverflow = false;
+
 void setupSERIAL() {
 //Initalize serial port
 #  ifdef SERIAL_UART // Hardware serial
@@ -135,17 +144,30 @@ void sendHeartbeat() {
   SERIALStream->flush();
 }
 
-unsigned long lastHeartbeatSent = 0;
-const unsigned long heartbeatInterval = 5000; // 5 seconds
-bool isOverflow = false;
+void sendHeartbeatAck() {
+  SERIALStream->print(SERIALPre);
+  SERIALStream->print("{\"type\":\"heartbeat_ack\"}");
+  SERIALStream->print(SERIALPost);
+  SERIALStream->flush();
+  Log.notice(F("Sent heartbeat ack" CR));
+}
 
 void SERIALtoX() {
   static String buffer = ""; // Static buffer to store incomplete messages
 
   unsigned long currentTime = millis();
 
-  // Send heartbeat if it's time and we don't have an overflow
+  // Check if it's time to send a heartbeat and we're not in overflow
   if (!isOverflow && currentTime - lastHeartbeatSent > heartbeatInterval) {
+    // Check if we received an ack for the last heartbeat
+    if (currentTime - lastHeartbeatAckReceived > heartbeatTimeout) {
+      // No ack received, increase the interval (with a maximum limit)
+      heartbeatInterval = min(heartbeatInterval * 2, maxHeartbeatInterval);
+      Log.warning(F("No heartbeat ack received. Increasing interval to %lu ms" CR), heartbeatInterval);
+    } else {
+      // Ack received, reset the interval
+      heartbeatInterval = 5000;
+    }
     sendHeartbeat();
     lastHeartbeatSent = currentTime;
   }
@@ -171,6 +193,9 @@ void SERIALtoX() {
         // Check if this is a heartbeat message
         if (SERIALdata.containsKey("type") && strcmp(SERIALdata["type"], "heartbeat") == 0) {
           handleHeartbeat();
+        } else if (SERIALdata.containsKey("type") && strcmp(SERIALdata["type"], "heartbeat_ack") == 0) {
+          lastHeartbeatAckReceived = currentTime;
+          Log.notice(F("Heartbeat ack received" CR));
         } else {
           // Process normal messages
           Log.notice(F("SERIAL msg received: %s" CR), jsonString.c_str());
@@ -247,10 +272,6 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
 }
 #  endif
 
-bool receiverReady = false;
-unsigned long lastHeartbeatReceived = 0;
-const unsigned long heartbeatTimeout = 6000; // 5 seconds
-
 bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata) {
   bool res = false;
   unsigned long currentTime = millis();
@@ -300,5 +321,6 @@ void handleHeartbeat() {
   receiverReady = true;
   lastHeartbeatReceived = millis();
   Log.trace(F("Heartbeat received. Receiver is ready." CR));
+  sendHeartbeatAck();
 }
 #endif

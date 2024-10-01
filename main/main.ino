@@ -1391,14 +1391,14 @@ void setup() {
 #endif
 
 #if defined(ESPWifiManualSetup)
-  setup_wifi();
+  setupWiFiFromBuild();
 #else
   if (loadConfigFromFlash()) {
     Log.notice(F("Config loaded from flash" CR));
 #  ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
 #  endif
-    if (!failSafeMode && !ethConnected) setupwifi(false);
+    if (!failSafeMode && !ethConnected) setupWiFiManager(false);
   } else {
 #  ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
@@ -1411,7 +1411,7 @@ void setup() {
 
     Log.notice(F("No config in flash, launching wifi manager" CR));
     // In failSafeMode we don't want to setup wifi manager as it has already been done before
-    if (!failSafeMode) setupwifi(false);
+    if (!failSafeMode) setupWiFiManager(false);
   }
 
 #endif
@@ -1785,7 +1785,7 @@ void ESPRestart(byte reason) {
 }
 
 #if defined(ESPWifiManualSetup)
-void setup_wifi() {
+void setupWiFiFromBuild() {
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(wifi_ssid, wifi_password);
   Log.trace(F("Connecting to %s" CR), wifi_ssid);
@@ -1877,7 +1877,7 @@ void blockingWaitForReset() {
           Log.trace(F("mounted file system" CR));
           if (SPIFFS.exists("/config.json")) {
             Log.notice(F("Erasing ESP Config, restarting" CR));
-            setupwifi(true);
+            setupWiFiManager(true);
           }
         }
         delay(30000);
@@ -1885,7 +1885,7 @@ void blockingWaitForReset() {
           Log.notice(F("Going into failsafe mode without peripherals" CR));
           // Failsafe mode enable to connect to Wifi or change the firmware without the peripherals setup
           failSafeMode = true;
-          setupwifi(false);
+          setupWiFiManager(false);
         }
       }
     }
@@ -2165,7 +2165,7 @@ bool loadConfigFromFlash() {
   return result;
 }
 
-void setupwifi(bool reset_settings) {
+void setupWiFiManager(bool reset_settings) {
   delay(10);
   WiFi.mode(WIFI_STA);
 
@@ -2290,8 +2290,8 @@ void setupwifi(bool reset_settings) {
 #  ifdef USE_BLUFI
       shouldRestart = shouldRestart && !isStaConnecting();
 #  endif
-      // Restart/sleep only if not connected
-      if (shouldRestart) {
+      // Restart/sleep only if not connected and not serial communication mode
+      if (shouldRestart && !SYSConfig.serial) {
 #  ifdef DEEP_SLEEP_IN_US
         sleep();
 #  endif
@@ -2475,23 +2475,21 @@ void loop() {
       mqttSetupPending = false;
     }
     // When online the MQTT connection callback release the processes
-  } else { // Offline mode
-    if (firstStart) {
+  }
+  if (firstStart) {
 #ifdef ZgatewaySERIAL
-      if (SYSConfig.serial && isSerialReady()) {
+    if (SYSConfig.serial && isSerialReady()) {
 #  ifdef ZgatewayBT
-        BTProcessLock = !BTConfig.enabled;
+      BTProcessLock = !BTConfig.enabled;
 #  endif
-        ProcessLock = false;
-        firstStart = false;
-      }
-#else
       ProcessLock = false;
       firstStart = false;
-#endif
     }
+#else
+    ProcessLock = false;
+    firstStart = false;
+#endif
   }
-
   unsigned long now = millis();
 
 #ifdef ZgatewaySERIAL // Serial is a module and a communication layer so it's always processed
@@ -2529,7 +2527,7 @@ void loop() {
         SYSConfig.discovery = false;
 #endif
     }
-  } else if (!SYSConfig.offline) { // disconnected from network
+  } else if (!SYSConfig.offline && !SYSConfig.serial) { // disconnected from network
     Log.warning(F("Network disconnected" CR));
     gatewayState = GatewayState::NTWK_DISCONNECTED;
     if (!wifi_reconnect_bypass()) {
@@ -3332,7 +3330,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
         ESPRestart(5);
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
 #ifndef ESPWifiManualSetup
-        setupwifi(true);
+        setupWiFiManager(true);
 #endif
       } else if (strstr(cmd, statusCmd) != NULL) { //erase and restart
         publishState = true;
