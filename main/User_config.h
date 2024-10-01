@@ -257,10 +257,6 @@ const char* OTAserver_cert = "";
 #  define MQTT_SECURE_SIGNED_CLIENT 0 // If using a signed certificate for the broker and using client certificate/key set this to true or 1
 #endif
 
-#ifndef CNT_DEFAULT_INDEX
-#  define CNT_DEFAULT_INDEX 0 // Default set of connection parameters
-#endif
-
 #ifdef PRIVATE_CERTS
 #  include "certs/private_client_cert.h"
 #  include "certs/private_client_key.h"
@@ -272,6 +268,10 @@ const char* OTAserver_cert = "";
 #endif
 
 #include <string>
+
+#ifndef CNT_DEFAULT_INDEX
+#  define CNT_DEFAULT_INDEX 0 // Default set of connection parameters
+#endif
 
 #if !MQTT_BROKER_MODE
 struct ss_cnt_parameters {
@@ -288,9 +288,6 @@ struct ss_cnt_parameters {
   bool validConnection;
 };
 
-// Index 0 is used for connection parameters provided in the build that can be overloaded by WiFi Manager/Onboarding/WebUI,MQTT
-#  define CNT_DEFAULT_INDEX 0
-// Index 1 and more are used for connection parameters provided at runtime by MQTT
 #  define cnt_parameters_array_size 3
 
 ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
