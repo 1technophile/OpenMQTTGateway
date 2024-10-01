@@ -1029,7 +1029,7 @@ void setupMQTT() {
 
     if (cnt_parameters_backup) {
       // this was the first attempt to connect to a new server and it succeeded
-      Log.notice(F("MQTT connection successful" CR));
+      Log.notice(F("MQTT connection parameters %d successful" CR), cnt_index);
       cnt_parameters_array[cnt_index].validConnection = true;
       readCntParameters(cnt_index);
 
@@ -1754,6 +1754,7 @@ void setupTLS(int index) {
 
 /*
   Reboot for Reason Codes
+  0 - Erase and Restart
   1 - Repeated MQTT Connection Failure
   2 - Repeated WiFi Connection Failure
   3 - Failed WiFiManager configuration portal
@@ -1863,7 +1864,7 @@ void blockingWaitForReset() {
       Log.trace(F("Trigger button Pressed" CR));
       delay(3000); // reset delay hold
       if (digitalRead(TRIGGER_GPIO) == LOW) {
-        Log.trace(F("Button Held" CR));
+        Log.notice(F("Button Held" CR));
 // Switching off the relay during reset or failsafe operations
 #    ifdef ZactuatorONOFF
         uint8_t level = digitalRead(ACTUATOR_ONOFF_GPIO);
@@ -1877,7 +1878,10 @@ void blockingWaitForReset() {
           Log.trace(F("mounted file system" CR));
           if (SPIFFS.exists("/config.json")) {
             Log.notice(F("Erasing ESP Config, restarting" CR));
-            setupWiFiManager(true);
+            erase(true);
+          } else {
+            Log.notice(F("Erasing ESP Config, without restart" CR));
+            erase(false);
           }
         }
         delay(30000);
@@ -1887,6 +1891,7 @@ void blockingWaitForReset() {
           failSafeMode = true;
           setupWiFiManager(false);
         }
+        ESPRestart(5);
       }
     }
   }
@@ -2114,8 +2119,9 @@ bool loadConfigFromFlash() {
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
             cnt_parameters_array[i].validConnection = json[key].as<bool>();
-          } else {
-            // For backward compatibility, if valid_cnt is not found, we assume the connection is valid
+          } else if (i == CNT_DEFAULT_INDEX) {
+            // For backward compatibility, if valid_cnt is not found, we assume the connection is valid for CNT_DEFAULT_INDEX
+            Log.warning(F("valid_cnt not found, assuming connection is valid" CR));
             cnt_parameters_array[i].validConnection = true;
           }
         }
@@ -2170,7 +2176,7 @@ void setupWiFiManager(bool reset_settings) {
   WiFi.mode(WIFI_STA);
 
   if (reset_settings)
-    eraseAndRestart();
+    erase(true);
 
 #  ifdef USE_MAC_AS_GATEWAY_NAME
   String s = WiFi.macAddress();
@@ -2374,9 +2380,6 @@ void setup_ethernet_esp32() {
 #    endif
   if (ethBeginSuccess) {
     Log.notice(F("Ethernet started" CR));
-    Log.notice(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
-    Log.notice(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
-    Log.notice(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
     while (!ethConnected && failure_number_ntwk <= maxConnectionRetryNetwork) {
       delay(500);
       Log.notice(F("." CR));
@@ -2398,9 +2401,9 @@ void WiFiEvent(WiFiEvent_t event) {
       Log.notice(F("Ethernet Connected" CR));
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
-      Log.trace(F("OpenMQTTGateway MAC: %s" CR), ETH.macAddress().c_str());
-      Log.trace(F("OpenMQTTGateway IP: %s" CR), ETH.localIP().toString().c_str());
-      Log.trace(F("OpenMQTTGateway link speed: %d Mbps" CR), ETH.linkSpeed());
+      Log.notice(F("OpenMQTTGateway Ethernet MAC: %s" CR), ETH.macAddress().c_str());
+      Log.notice(F("OpenMQTTGateway Ethernet IP: %s" CR), ETH.localIP().toString().c_str());
+      Log.notice(F("OpenMQTTGateway Ethernet link speed: %d Mbps" CR), ETH.linkSpeed());
       gatewayState = GatewayState::NTWK_CONNECTED;
       ethConnected = true;
       break;
@@ -2725,7 +2728,7 @@ float intTemperatureRead() {
 /*
  Erase flash and restart the ESP
 */
-void eraseAndRestart() {
+void erase(bool restart) {
   Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
 
 #if defined(ESP8266)
@@ -2734,12 +2737,11 @@ void eraseAndRestart() {
   wifiManager.resetSettings();
 #  endif
   delay(5000);
-  ESP.reset();
 #else
-  //esp_task_wdt_delete(NULL);
   nvs_flash_erase();
-  ESP.restart();
 #endif
+  if (restart)
+    ESPRestart(0);
 }
 
 String stateMeasures() {

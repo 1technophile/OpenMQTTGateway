@@ -46,7 +46,7 @@ QueueHandle_t webUIQueue;
 WebServer server(80);
 
 /*------------------- External functions ----------------------*/
-extern void eraseAndRestart();
+extern void erase(bool restart);
 extern unsigned long uptime();
 
 /*------------------- Web Console Globals ----------------------*/
@@ -1237,7 +1237,7 @@ void handleRT() {
     response += String(buffer);
     server.send(200, "text/html", response);
 
-    eraseAndRestart();
+    erase(true);
   } else {
     handleCN();
   }
