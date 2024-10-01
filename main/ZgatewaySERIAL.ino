@@ -149,7 +149,7 @@ void sendHeartbeatAck() {
   SERIALStream->print("{\"type\":\"heartbeat_ack\"}");
   SERIALStream->print(SERIALPost);
   SERIALStream->flush();
-  Log.notice(F("Sent heartbeat ack" CR));
+  Log.trace(F("Sent heartbeat ack" CR));
 }
 
 void SERIALtoX() {

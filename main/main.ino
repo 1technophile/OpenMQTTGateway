@@ -1872,6 +1872,14 @@ void blockingWaitForReset() {
           ActuatorTrigger();
         }
 #    endif
+        ledManager.setMode(-1, -1, LEDManager::STATIC, LED_WAITING_ONBOARD_COLOR, -1);
+#    ifdef SecondaryModule
+        // Erase the secondary module config
+        String eraseCmdStr = "{\"cmd\":\"" + String(eraseCmd) + "\"}";
+        Log.notice(F("Erasing secondary module config: %s" CR), eraseCmdStr.c_str());
+        receivingDATA(subjectMQTTtoSYSsetSecondaryModule, eraseCmdStr.c_str());
+        delay(5000);
+#    endif
         // Checking if the flash has already been erased to identify if we erase it or go into failsafe mode
         // going to failsafe mode is done by doing a long button press from a state where the flash has already been erased
         if (SPIFFS.begin()) {
