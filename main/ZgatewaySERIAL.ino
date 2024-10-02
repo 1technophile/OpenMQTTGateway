@@ -205,6 +205,12 @@ void SERIALtoX() {
           } else {
             // send as json
             if (SERIALdata.containsKey("origin") || SERIALdata.containsKey("topic")) {
+#      ifdef ZmqttDiscovery
+              // We need to assign the discovery message to the primary module instead of the secondary module
+              if (SERIALdata.containsKey("device") && SERIALdata["device"].containsKey("via_device")) {
+                SERIALdata["device"]["via_device"] = gateway_name;
+              }
+#      endif
               enqueueJsonObject(SERIALdata);
             } else {
               SERIALdata["origin"] = subjectSERIALtoMQTT;
