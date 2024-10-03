@@ -1766,6 +1766,13 @@ void setupTLS(int index) {
   9 - SELFTEST end
 */
 void ESPRestart(byte reason) {
+#ifdef SecondaryModule
+  // Erase the secondary module config
+  String restartCmdStr = "{\"cmd\":\"" + String(restartCmd) + "\"}";
+  Log.notice(F("Restarting secondary module : %s" CR), restartCmdStr.c_str());
+  receivingDATA(subjectMQTTtoSYSsetSecondaryModule, restartCmdStr.c_str());
+  delay(2000);
+#endif
   StaticJsonDocument<128> jsonBuffer;
   JsonObject jsondata = jsonBuffer.to<JsonObject>();
   jsondata["reason"] = reason;
@@ -1873,13 +1880,6 @@ void blockingWaitForReset() {
         }
 #    endif
         ledManager.setMode(-1, -1, LEDManager::STATIC, LED_WAITING_ONBOARD_COLOR, -1);
-#    ifdef SecondaryModule
-        // Erase the secondary module config
-        String eraseCmdStr = "{\"cmd\":\"" + String(eraseCmd) + "\"}";
-        Log.notice(F("Erasing secondary module config: %s" CR), eraseCmdStr.c_str());
-        receivingDATA(subjectMQTTtoSYSsetSecondaryModule, eraseCmdStr.c_str());
-        delay(5000);
-#    endif
         // Checking if the flash has already been erased to identify if we erase it or go into failsafe mode
         // going to failsafe mode is done by doing a long button press from a state where the flash has already been erased
         if (SPIFFS.begin()) {
@@ -2737,6 +2737,13 @@ float intTemperatureRead() {
  Erase flash and restart the ESP
 */
 void erase(bool restart) {
+#ifdef SecondaryModule
+  // Erase the secondary module config
+  String eraseCmdStr = "{\"cmd\":\"" + String(eraseCmd) + "\"}";
+  Log.notice(F("Erasing secondary module config: %s" CR), eraseCmdStr.c_str());
+  receivingDATA(subjectMQTTtoSYSsetSecondaryModule, eraseCmdStr.c_str());
+  delay(2000);
+#endif
   Log.trace(F("Formatting requested, result: %d" CR), SPIFFS.format());
 
 #if defined(ESP8266)

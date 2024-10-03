@@ -852,7 +852,7 @@ void setupBTTasksAndBLE() {
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
 #  if defined(USE_ESP_IDF) || defined(USE_BLUFI)
-      12500,
+      13500,
 #  else
       8500, /* Stack size in bytes */
 #  endif
