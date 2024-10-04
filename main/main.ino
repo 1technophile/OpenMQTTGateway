@@ -1393,13 +1393,14 @@ void setup() {
 #if defined(ESPWifiManualSetup)
   setupWiFiFromBuild();
 #else
-  if (loadConfigFromFlash()) {
+  if (loadConfigFromFlash()) { // Config present
     Log.notice(F("Config loaded from flash" CR));
 #  ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
 #  endif
-    if (!failSafeMode && !ethConnected) setupWiFiManager(false);
-  } else {
+    // If not in failSafeMode and no connection to the network with Ethernet, launch the wifi manager
+    if (!failSafeMode && !ethConnected) setupWiFiManager();
+  } else { // No config in flash
 #  ifdef ESP32_ETHERNET
     setup_ethernet_esp32();
 #  endif
@@ -1411,7 +1412,7 @@ void setup() {
 
     Log.notice(F("No config in flash, launching wifi manager" CR));
     // In failSafeMode we don't want to setup wifi manager as it has already been done before
-    if (!failSafeMode) setupWiFiManager(false);
+    if (!failSafeMode) setupWiFiManager();
   }
 
 #endif
@@ -1879,7 +1880,7 @@ void blockingWaitForReset() {
           ActuatorTrigger();
         }
 #    endif
-        ledManager.setMode(-1, -1, LEDManager::STATIC, LED_WAITING_ONBOARD_COLOR, -1);
+        gatewayState = GatewayState::WAITING_ONBOARDING;
         // Checking if the flash has already been erased to identify if we erase it or go into failsafe mode
         // going to failsafe mode is done by doing a long button press from a state where the flash has already been erased
         if (SPIFFS.begin()) {
@@ -1887,9 +1888,6 @@ void blockingWaitForReset() {
           if (SPIFFS.exists("/config.json")) {
             Log.notice(F("Erasing ESP Config, restarting" CR));
             erase(true);
-          } else {
-            Log.notice(F("Erasing ESP Config, without restart" CR));
-            erase(false);
           }
         }
         delay(30000);
@@ -1897,9 +1895,8 @@ void blockingWaitForReset() {
           Log.notice(F("Going into failsafe mode without peripherals" CR));
           // Failsafe mode enable to connect to Wifi or change the firmware without the peripherals setup
           failSafeMode = true;
-          setupWiFiManager(false);
+          setupWiFiManager();
         }
-        ESPRestart(5);
       }
     }
   }
@@ -2179,12 +2176,9 @@ bool loadConfigFromFlash() {
   return result;
 }
 
-void setupWiFiManager(bool reset_settings) {
+void setupWiFiManager() {
   delay(10);
   WiFi.mode(WIFI_STA);
-
-  if (reset_settings)
-    erase(true);
 
 #  ifdef USE_MAC_AS_GATEWAY_NAME
   String s = WiFi.macAddress();
@@ -3346,10 +3340,8 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       if (strstr(cmd, restartCmd) != NULL) { //restart
         ESPRestart(5);
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
-#ifndef ESPWifiManualSetup
-        setupWiFiManager(true);
-#endif
-      } else if (strstr(cmd, statusCmd) != NULL) { //erase and restart
+        erase(true);
+      } else if (strstr(cmd, statusCmd) != NULL) {
         publishState = true;
       }
     }
