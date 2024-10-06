@@ -120,7 +120,6 @@ void RFtoMQTT() {
     int length = mySwitch.getReceivedBitlength();
     const char* binary = dec2binWzerofill(MQTTvalue, length);
 
-    RFdata["action"] = String("received");
     RFdata["value"] = (uint64_t)MQTTvalue;
     RFdata["protocol"] = (int)mySwitch.getReceivedProtocol();
     RFdata["length"] = (int)mySwitch.getReceivedBitlength();
@@ -149,8 +148,6 @@ void RFtoMQTT() {
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       RFdata["origin"] = subjectRFtoMQTT;
-      enqueueJsonObject(RFdata);
-      RFdata["action"] = String("");
       enqueueJsonObject(RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
       Log.trace(F("Store val: %u" CR), (unsigned long)MQTTvalue);
