@@ -179,6 +179,9 @@ String stateRFMeasures() {
     RFdata["rssi"] = (int)getRTLCurrentRSSI();
     RFdata["avgrssi"] = (int)getRTLAverageRSSI();
     RFdata["count"] = (int)getRTLMessageCount();
+    // Capture high water mark of rtl_433_Decoder stack since it can run out and trigger reboot
+    extern TaskHandle_t rtl_433_DecoderHandle;
+    RFdata["rtl433_stack"] = (int)uxTaskGetStackHighWaterMark(rtl_433_DecoderHandle);
 #    endif
 #    ifdef ZradioSX127x
     RFdata["ookthreshold"] = (int)getOOKThresh();
