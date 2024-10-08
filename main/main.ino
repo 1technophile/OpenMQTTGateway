@@ -3367,7 +3367,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       publishState = true;
     }
 #endif
-    if (SYSdata.containsKey("wifi_ssid") && SYSdata["wifi_ssid"].is<char*>() && SYSdata.containsKey("wifi_pass") && SYSdata["wifi_pass"].is<char*>()) {
+    if (SYSdata.containsKey("wifi_ssid") && SYSdata["wifi_ssid"].is<const char*>() && SYSdata.containsKey("wifi_pass") && SYSdata["wifi_pass"].is<const char*>()) {
 #ifdef ESP32
       ProcessLock = true;
 #  ifdef ZgatewayBT
@@ -3397,12 +3397,12 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       restartESP = true;
     }
 
-    if ((SYSdata.containsKey("mqtt_topic") && SYSdata["mqtt_topic"].is<char*>()) ||
+    if ((SYSdata.containsKey("mqtt_topic") && SYSdata["mqtt_topic"].is<const char*>()) ||
 #ifdef ZmqttDiscovery
-        (SYSdata.containsKey("discovery_prefix") && SYSdata["discovery_prefix"].is<char*>()) ||
+        (SYSdata.containsKey("discovery_prefix") && SYSdata["discovery_prefix"].is<const char*>()) ||
 #endif
-        (SYSdata.containsKey("gateway_name") && SYSdata["gateway_name"].is<char*>()) ||
-        (SYSdata.containsKey("gw_pass") && SYSdata["gw_pass"].is<char*>())) {
+        (SYSdata.containsKey("gateway_name") && SYSdata["gateway_name"].is<const char*>()) ||
+        (SYSdata.containsKey("gw_pass") && SYSdata["gw_pass"].is<const char*>())) {
       if (SYSdata.containsKey("mqtt_topic")) {
         strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
       }
@@ -3457,18 +3457,18 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 
       Log.notice(F("MQTT cnt index %d" CR), cnt_index);
 
-      if (SYSdata.containsKey("mqtt_user") && SYSdata["mqtt_user"].is<char*>() && SYSdata.containsKey("mqtt_pass") && SYSdata["mqtt_pass"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_user") && SYSdata["mqtt_user"].is<const char*>() && SYSdata.containsKey("mqtt_pass") && SYSdata["mqtt_pass"].is<const char*>()) {
         strcpy(cnt_parameters_array[cnt_index].mqtt_user, SYSdata["mqtt_user"]);
         strcpy(cnt_parameters_array[cnt_index].mqtt_pass, SYSdata["mqtt_pass"]);
         cnt_parameters_array[cnt_index].validConnection = false;
       }
 
-      if (SYSdata.containsKey("mqtt_server") && SYSdata["mqtt_server"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_server") && SYSdata["mqtt_server"].is<const char*>()) {
         strcpy(cnt_parameters_array[cnt_index].mqtt_server, SYSdata["mqtt_server"]);
         cnt_parameters_array[cnt_index].validConnection = false;
       }
 
-      if (SYSdata.containsKey("mqtt_port") && SYSdata["mqtt_port"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_port") && SYSdata["mqtt_port"].is<const char*>()) {
         strcpy(cnt_parameters_array[cnt_index].mqtt_port, SYSdata["mqtt_port"]);
         cnt_parameters_array[cnt_index].validConnection = false;
       }
@@ -3484,22 +3484,22 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
 
       // Copy the certs to the memory
-      if (SYSdata.containsKey("mqtt_server_cert") && SYSdata["mqtt_server_cert"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_server_cert") && SYSdata["mqtt_server_cert"].is<const char*>()) {
         cnt_parameters_array[cnt_index].server_cert = TheengsUtils::processCert(SYSdata["mqtt_server_cert"].as<const char*>());
         Log.trace(F("Assigning server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].server_cert).c_str());
         cnt_parameters_array[cnt_index].validConnection = false;
       }
-      if (SYSdata.containsKey("mqtt_client_cert") && SYSdata["mqtt_client_cert"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_client_cert") && SYSdata["mqtt_client_cert"].is<const char*>()) {
         cnt_parameters_array[cnt_index].client_cert = TheengsUtils::processCert(SYSdata["mqtt_client_cert"].as<const char*>());
         Log.trace(F("Assigning client cert %s" CR), generateHash(cnt_parameters_array[cnt_index].client_cert).c_str());
         cnt_parameters_array[cnt_index].validConnection = false;
       }
-      if (SYSdata.containsKey("mqtt_client_key") && SYSdata["mqtt_client_key"].is<char*>()) {
+      if (SYSdata.containsKey("mqtt_client_key") && SYSdata["mqtt_client_key"].is<const char*>()) {
         cnt_parameters_array[cnt_index].client_key = TheengsUtils::processCert(SYSdata["mqtt_client_key"].as<const char*>());
         Log.trace(F("Assigning client key %s" CR), generateHash(cnt_parameters_array[cnt_index].client_key).c_str());
         cnt_parameters_array[cnt_index].validConnection = false;
       }
-      if (SYSdata.containsKey("ota_server_cert") && SYSdata["ota_server_cert"].is<char*>()) {
+      if (SYSdata.containsKey("ota_server_cert") && SYSdata["ota_server_cert"].is<const char*>()) {
         cnt_parameters_array[cnt_index].ota_server_cert = TheengsUtils::processCert(SYSdata["ota_server_cert"].as<const char*>());
         Log.trace(F("Assigning OTA server cert %s" CR), generateHash(cnt_parameters_array[cnt_index].ota_server_cert).c_str());
       }
