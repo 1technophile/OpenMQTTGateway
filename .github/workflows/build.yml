@@ -81,6 +81,8 @@ jobs:
           - "theengs-bridge-v11"
           - "theengs-plug"
           - "esp32dev-ble-broker"
+          - "esp32s3-m5stack-stamps3"
+          - "esp32c3u-m5stamp"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:
