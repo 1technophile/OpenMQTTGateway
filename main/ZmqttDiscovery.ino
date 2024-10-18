@@ -130,7 +130,7 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
     strcat(state_topic, gateway_name);
 
     strcat(state_topic, topic);
-    sensor["topic"] = state_topic;
+    sensor["info_topic"] = state_topic;
   }
 
   /* Set The Devices */
@@ -187,7 +187,7 @@ void announceDeviceTrigger(bool use_gateway_info, char* topic, char* type, char*
   sensor["device"] = device; //device representing the board
 
   /* Publish on the topic */
-  String topic_to_publish = String(discovery_prefix) + "/device_automation/" + String(unique_id) + "/config";
+  String topic_to_publish = String(discovery_prefix) + "/device_automation/" + String(Gateway_Short_Name) + "/" + String(unique_id) + "/config";
   Log.trace(F("Announce Device Trigger  %s" CR), topic_to_publish.c_str());
   sensor["topic"] = topic_to_publish;
   sensor["retain"] = true;
