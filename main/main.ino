@@ -585,7 +585,17 @@ bool pub(JsonObject& data) {
     data.remove("origin");
   } else if (data.containsKey("topic") && data["topic"].is<const char*>()) {
     topic = data["topic"].as<const char*>();
-    data.remove("topic");
+    if (data.containsKey("info_topic") && data["info_topic"].is<const char*>()) {
+      // Sometimes it is necessary to provide information about the publishing topic, not just use it.
+      // This is the case, for example, for the RF2MQTT device trigger announcement message where the
+      // temporary variable info_topic provides information about the topic that will be used to publish the message,
+      // and it can be different of current message topic (This is a clever pun, I hope it's clear).
+      data["topic"].set(data["info_topic"]);
+      data.remove("info_topic");
+    } else {
+      data.remove("topic");
+    }
+
   } else {
     Log.error(F("No topic or origin in JSON, not published" CR));
     gatewayState = GatewayState::ERROR;
