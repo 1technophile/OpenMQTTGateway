@@ -1901,7 +1901,7 @@ void blockingWaitForReset() {
           Log.trace(F("mounted file system" CR));
           if (SPIFFS.exists("/config.json")) {
             Log.notice(F("Erasing ESP Config, restarting" CR));
-            erase(true);
+            eraseConfig();
           }
         }
         delay(30000);
@@ -2742,9 +2742,9 @@ float intTemperatureRead() {
 #endif
 
 /*
- Erase flash and restart the ESP
+ Erase config and restart the ESP
 */
-void erase(bool restart) {
+void eraseConfig() {
 #ifdef SecondaryModule
   // Erase the secondary module config
   String eraseCmdStr = "{\"cmd\":\"" + String(eraseCmd) + "\"}";
@@ -2756,15 +2756,11 @@ void erase(bool restart) {
 
 #if defined(ESP8266)
   WiFi.disconnect(true);
-#  ifndef ESPWifiManualSetup
-  wifiManager.resetSettings();
-#  endif
-  delay(5000);
+  ESP.eraseConfig();
 #else
   nvs_flash_erase();
 #endif
-  if (restart)
-    ESPRestart(0);
+  ESPRestart(0);
 }
 
 String stateMeasures() {
@@ -3354,7 +3350,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       if (strstr(cmd, restartCmd) != NULL) { //restart
         ESPRestart(5);
       } else if (strstr(cmd, eraseCmd) != NULL) { //erase and restart
-        erase(true);
+        eraseConfig();
       } else if (strstr(cmd, statusCmd) != NULL) {
         publishState = true;
       }

@@ -73,7 +73,7 @@ void MeasureGPIOInput() {
         }
 #    endif
         Log.notice(F("Erasing ESP Config, restarting" CR));
-        erase(true);
+        eraseConfig();
       }
     } else {
       resetTime = 0;
