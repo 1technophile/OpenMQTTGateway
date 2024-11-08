@@ -526,7 +526,7 @@ void emptyQueue() {
     return;
   }
   Log.trace(F("Dequeue JSON" CR));
-  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);
+  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER_MAX);
   JsonObject obj = jsonBuffer.to<JsonObject>();
 #ifdef ESP32
   if (xSemaphoreTake(xQueueMutex, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
