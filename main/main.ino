@@ -1662,7 +1662,7 @@ void setOTA() {
 #ifdef ESP32
     ProcessLock = true;
 #  ifdef ZgatewayBT
-    stopProcessing();
+    stopProcessing(true);
 #  endif
 #endif
     lpDisplayPrint("OTA in progress");
@@ -2455,7 +2455,7 @@ void sleep() {
 #  endif
   Log.trace(F("Deactivating ESP32 components" CR));
 #  ifdef ZgatewayBT
-  stopProcessing();
+  stopProcessing(true);
   ProcessLock = true;
 #  endif
 #  pragma GCC diagnostic push
@@ -3199,10 +3199,10 @@ void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData) {
 #  ifdef ESP32
       ProcessLock = true;
 #    ifdef ZgatewayBT
-      stopProcessing();
+      stopProcessing(true);
 #    endif
 #  endif
-      Log.warning(F("Starting firmware update" CR));
+      Log.warning(F("Starting firmware update with %d freeHeap" CR), ESP.getFreeHeap());
       gatewayState = GatewayState::REMOTE_OTA_IN_PROGRESS;
 
       StaticJsonDocument<JSON_MSG_BUFFER> jsondata;
@@ -3244,11 +3244,9 @@ void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData) {
           mqtt.reset();
           mqttSetupPending = true;
           update_client = *static_cast<WiFiClientSecure*>(eClient.get());
-        } else
-#  endif
-        {
-          TheengsUtils::syncNTP();
         }
+#  endif
+        TheengsUtils::syncNTP();
 
 #  ifdef ESP32
         update_client.setCACert(ota_cert.c_str());
@@ -3381,7 +3379,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 #ifdef ESP32
       ProcessLock = true;
 #  ifdef ZgatewayBT
-      stopProcessing();
+      stopProcessing(true);
 #  endif
 #endif
       String prev_ssid = WiFi.SSID();
@@ -3527,7 +3525,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 #    ifdef ESP32
       ProcessLock = true;
 #      ifdef ZgatewayBT
-      stopProcessing();
+      stopProcessing(true);
 #      endif
 #    endif
 

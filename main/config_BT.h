@@ -29,7 +29,7 @@
 extern void setupBT();
 extern void XtoBT(const char* topicOri, JsonObject& RFdata);
 extern void launchBTDiscovery(bool overrideDiscovery);
-extern void stopProcessing();
+extern void stopProcessing(bool deinit);
 extern String stateBTMeasures(bool);
 
 #ifdef ESP32

@@ -174,7 +174,8 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     }
     // Identify if the gateway is enabled or not and stop start accordingly
     if (BTdata.containsKey("enabled") && BTdata["enabled"] == false && BTConfig.enabled == true) {
-      stopProcessing();
+      // Stop the gateway but without deinit to enable a future BT restart
+      stopProcessing(false);
     } else if (BTdata.containsKey("enabled") && BTdata["enabled"] == true && BTConfig.enabled == false) {
       BTProcessLock = false;
       setupBTTasksAndBLE();
@@ -790,7 +791,7 @@ void BLEconnect() {
 void BLEconnect() {}
 #  endif
 
-void stopProcessing() {
+void stopProcessing(bool deinit) {
   if (BTConfig.enabled) {
     BTProcessLock = true;
     // We stop the scan
@@ -809,6 +810,9 @@ void stopProcessing() {
       vTaskDelete(xProcBLETaskHandle);
       xSemaphoreGive(semaphoreBLEOperation);
     }
+    // Using deinit to free memory, should only be used if we are going to restart the gateway
+    if (deinit)
+      BLEDevice::deinit(true);
   }
   Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
 }
