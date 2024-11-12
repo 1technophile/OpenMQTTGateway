@@ -183,11 +183,6 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
   }
   // Home Assistant presence message
   Config_update(BTdata, "hasspresence", BTConfig.presenceEnable);
-#  ifdef ZmqttDiscovery
-  // Create discovery entities
-  btScanParametersDiscovery();
-  btPresenceParametersDiscovery();
-#  endif
   // Time before before active scan
   // Scan interval set - and avoid intervalacts to be lower than interval
   if (BTdata.containsKey("interval") && BTdata["interval"] != 0) {
