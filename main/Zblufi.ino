@@ -239,10 +239,14 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       break;
     case ESP_BLUFI_EVENT_GET_WIFI_STATUS: {
       esp_blufi_extra_info_t info;
-      if (gatewayState == GatewayState::NTWK_CONNECTED) {
+      Log.trace(F("BLUFI get wifi status" CR));
+      if (gl_sta_ssid_len > 0 && gl_sta_ssid[0] != '\0') {
+        Log.trace(F("SSID exists" CR));
         memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-        memcpy(info.sta_bssid, gl_sta_bssid, 6);
-        info.sta_bssid_set = true;
+        if (memcmp(gl_sta_bssid, "\0\0\0\0\0\0", 6) != 0) {
+          memcpy(info.sta_bssid, gl_sta_bssid, 6);
+          info.sta_bssid_set = true;
+        }
         info.sta_ssid = gl_sta_ssid;
         info.sta_ssid_len = gl_sta_ssid_len;
         esp_blufi_send_wifi_conn_report(WIFI_MODE_STA, ESP_BLUFI_STA_CONN_SUCCESS, 0, &info);
@@ -305,16 +309,23 @@ void wifi_event_handler(arduino_event_id_t event) {
       wifiManager.stopConfigPortal();
 #  endif
       gl_sta_is_connecting = false;
-      esp_blufi_extra_info_t info;
-      memset(&info, 0, sizeof(esp_blufi_extra_info_t));
-      memcpy(info.sta_bssid, gl_sta_bssid, 6);
+      esp_blufi_extra_info_t info = {};
+      const String current_ssid = WiFi.SSID();
+      gl_sta_ssid_len = std::min(current_ssid.length(), sizeof(gl_sta_ssid) - 1);
+      std::copy_n(current_ssid.c_str(), gl_sta_ssid_len, gl_sta_ssid);
+      gl_sta_ssid[gl_sta_ssid_len] = '\0';
+      uint8_t* bssid = WiFi.BSSID();
+      if (bssid) {
+        std::copy_n(bssid, 6, gl_sta_bssid);
+      }
       info.sta_bssid_set = true;
       info.sta_ssid = gl_sta_ssid;
       info.sta_ssid_len = gl_sta_ssid_len;
+      std::copy_n(gl_sta_bssid, 6, info.sta_bssid);
       if (omg_blufi_ble_connected == true) {
         esp_blufi_send_wifi_conn_report(WIFI_MODE_STA, ESP_BLUFI_STA_CONN_SUCCESS, 0, &info);
       }
-
+      Log.notice(F("Connected to SSID: %s" CR), gl_sta_ssid);
       break;
     }
     case ARDUINO_EVENT_WIFI_SCAN_DONE: {
