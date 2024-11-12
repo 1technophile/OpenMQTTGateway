@@ -2307,7 +2307,7 @@ void setupWiFiManager() {
       esp_wifi_set_config(WIFI_IF_AP, &conf);
 #  endif
 
-      bool shouldRestart = (gatewayState != GatewayState::BROKER_CONNECTED && gatewayState != GatewayState::NTWK_CONNECTED);
+      bool shouldRestart = (gatewayState != GatewayState::BROKER_CONNECTED && !ethConnected && gatewayState != GatewayState::NTWK_CONNECTED);
 
 #  ifdef USE_BLUFI
       shouldRestart = shouldRestart && !isStaConnecting();
