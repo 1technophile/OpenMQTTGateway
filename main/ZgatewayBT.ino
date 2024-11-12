@@ -1359,22 +1359,27 @@ void immediateBTAction(void* pvParameters) {
     }
 
     if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
-      // swap the vectors so only this device is processed
-      std::vector<BLEdevice*> dev_swap;
-      dev_swap.push_back(getDeviceByMac(BLEactions.back().addr));
-      std::swap(devices, dev_swap);
+      if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdTRUE) {
+        // swap the vectors so only this device is processed
+        std::vector<BLEdevice*> dev_swap;
+        dev_swap.push_back(getDeviceByMac(BLEactions.back().addr));
+        std::swap(devices, dev_swap);
 
-      std::vector<BLEAction> act_swap;
-      act_swap.push_back(BLEactions.back());
-      BLEactions.pop_back();
-      std::swap(BLEactions, act_swap);
+        std::vector<BLEAction> act_swap;
+        act_swap.push_back(BLEactions.back());
+        BLEactions.pop_back();
+        std::swap(BLEactions, act_swap);
 
-      // Unlock here to allow the action to be performed
-      BTProcessLock = false;
-      BLEconnect();
-      // back to normal
-      std::swap(devices, dev_swap);
-      std::swap(BLEactions, act_swap);
+        // Unlock here to allow the action to be performed
+        BTProcessLock = false;
+        BLEconnect();
+        // back to normal
+        std::swap(devices, dev_swap);
+        std::swap(BLEactions, act_swap);
+        xSemaphoreGive(semaphoreCreateOrUpdateDevice);
+      } else {
+        Log.error(F("CreateOrUpdate Semaphore NOT taken" CR));
+      }
 
       // If we stopped the scheduled connect for this action, do the scheduled now
       if (millis() > (timeBetweenConnect + BTConfig.intervalConnect) && BTConfig.bleConnect) {
@@ -1383,7 +1388,8 @@ void immediateBTAction(void* pvParameters) {
       }
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
-      Log.error(F("BLE busy - command not sent" CR));
+      Log.error(F("BLE busy - immediateBTAction not sent" CR));
+      gatewayState = GatewayState::ERROR;
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       BLEdata["id"] = BLEactions.back().addr;
@@ -1575,7 +1581,7 @@ void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
       XtoBTAction(BTdata);
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
-      Log.error(F("BLE busy - command not sent" CR));
+      Log.error(F("BLE busy - BTActions not sent" CR));
       gatewayState = GatewayState::ERROR;
     }
   } else if (strstr(topicOri, subjectTrackerSync) != NULL) {

@@ -317,6 +317,11 @@ By the way, if you want to load the default built-in configuration (on any board
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoBT/config -m '{"init":true}'`
 Note that it will not change the stored configuration, `erase` or `save` is still needed to overwrite the saved configuration.
 
+## Controlling devices
+::: tip
+To control devices reliably, set the interval between scans to at least 5 seconds and the scan duration to 1 second to ensure commands are successfully transmitted to your devices.
+:::
+
 ## Read/write BLE characteristics over MQTT
 
 The gateway can read and write BLE characteristics from devices and provide the results in an MQTT message.  
