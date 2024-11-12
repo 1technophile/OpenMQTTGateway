@@ -142,11 +142,7 @@ void sendCustomDataNotification(const char* message) {
   notification[2] = getNextSequence();
   notification[3] = static_cast<uint8_t>(messageLength);
   memcpy(&notification[4], message, messageLength);
-
-  struct pkt_info pkts;
-  pkts.pkt = notification;
-  pkts.pkt_len = sizeof(notification);
-  esp_blufi_send_notify(&pkts);
+  esp_blufi_send_custom_data(notification, sizeof(notification));
 }
 
 #  ifdef BT_CONNECTION_TIMEOUT_MS
