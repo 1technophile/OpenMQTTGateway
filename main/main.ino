@@ -934,6 +934,9 @@ void setupMQTT() {
 
   mqtt.reset(new MQTTServer());
   mqtt->begin();
+#  ifdef ZgatewayBT
+  BTProcessLock = !BTConfig.enabled; // Release BLE processes at start if enabled
+#  endif
 }
 #else
 
