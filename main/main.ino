@@ -69,7 +69,7 @@ bool firstStart = true;
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 
 #include <queue>
-int queueLength = 0;
+int queueLength = -1; // We want to give one cycle of the loop before starting modules that are big msgs producers (example BT), to avoid queue overloading
 unsigned long queueLengthSum = 0;
 unsigned long blockedMessages = 0;
 unsigned long receivedMessages = 0;
@@ -522,7 +522,7 @@ void emptyQueue() {
   if (queueLength > maxQueueLength) {
     maxQueueLength = queueLength;
   }
-  if (queueLength == 0) {
+  if (queueLength <= 0) {
     return;
   }
   Log.trace(F("Dequeue JSON" CR));
