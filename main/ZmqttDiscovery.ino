@@ -329,7 +329,11 @@ void createDiscovery(const char* sensor_type,
       int value = std::stoi(payload_on);
       sensor["pos_open"] = value; // open value for curtain
     } else {
-      sensor["pl_on"] = payload_on; // payload_on for the rest
+      if (strcmp(payload_on, "True") == 0 || strcmp(payload_on, "true") == 0) {
+        sensor["pl_on"] = true;
+      } else {
+        sensor["pl_on"] = payload_on; // payload_on for the rest
+      }
     }
   }
   if (payload_off && payload_off[0]) {
@@ -339,7 +343,11 @@ void createDiscovery(const char* sensor_type,
       int value = std::stoi(payload_off);
       sensor["pos_clsd"] = value; // closed value for curtain
     } else {
-      sensor["pl_off"] = payload_off; //payload_off
+      if (strcmp(payload_off, "False") == 0 || strcmp(payload_off, "false") == 0) {
+        sensor["pl_off"] = false;
+      } else {
+        sensor["pl_off"] = payload_off; //payload_off for the rest
+      }
     }
   }
   if (command_template && command_template[0]) {
