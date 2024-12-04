@@ -18,3 +18,7 @@ sdkconfig.*
 !sdkconfig.defaults
 __pycache__
 *.pem
+/SquareLine/JC3248W535/backup
+/SquareLine/JC3248W535/autosave
+/SquareLine/autosave
+/SquareLine/backup

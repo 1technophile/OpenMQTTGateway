@@ -1,0 +1,21 @@
+{
+  "deftheme": {
+    "name": "Default",
+    "properties": [
+      {
+        "nid": -220585934,
+        "strtype": "THEME_COLOR",
+        "strval": "HK Orange",
+        "intarray": [
+          245,
+          124,
+          0,
+          255
+        ],
+        "InheritedType": 0
+      }
+    ]
+  },
+  "themes": [],
+  "selected_theme": "Default"
+}
