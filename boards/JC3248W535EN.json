@@ -1,0 +1,44 @@
+{
+  "build": {
+    "arduino": {
+      "ldscript": "esp32s3_out.ld",
+      "memory_type": "qio_opi",
+      "partitions": "default_16MB.csv"
+    },
+    "core": "esp32",
+    "extra_flags": [
+      "'-D ESP32S3'",
+      "'-D ARDUINO_ESP32S3_DEV'",
+      "'-D BOARD_HAS_PSRAM'",
+      "'-D ARDUINO_USB_MODE=1'",
+      "'-D ARDUINO_RUNNING_CORE=1'",
+      "'-D ARDUINO_EVENT_RUNNING_CORE=1'",
+      "'-D ARDUINO_USB_CDC_ON_BOOT=1'",
+      "'-D JC3248W535CIY'",
+      "'-D DISPLAY_WIDTH=320'",
+      "'-D DISPLAY_HEIGHT=480'",
+      "'-D LVGL_ROTATION=90'"
+    ],
+    "f_cpu": "240000000L",
+    "f_flash": "80000000L",
+    "flash_mode": "dio",
+    "hwids": [["0X303A", "0x1001"]],
+    "mcu": "esp32s3",
+    "variant": "esp32s3"
+  },
+  "connectivity": ["wifi", "bluetooth"],
+  "debug": {
+    "openocd_target": "esp32s3.cfg"
+  },
+  "frameworks": ["arduino", "espidf"],
+  "name": "ESP32-S3 3.5-inch capacitive touch IPS module 8M PSRAM 16M FLASH Arduino LVGL development 320 * 480",
+  "upload": {
+    "flash_size": "16MB",
+    "maximum_ram_size": 327680,
+    "maximum_size": 16777216,
+    "require_upload_port": true,
+    "speed": 921600
+  },
+  "url": "https://www.aliexpress.com/item/1005007566332450.html?src=google",
+  "vendor": "JC3248W535C"
+}

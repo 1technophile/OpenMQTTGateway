@@ -10,6 +10,8 @@ lib/*
 !lib/esp32-bt-lib
 !lib/TheengsUtils
 !lib/LEDManager
+!lib/gfxDisplay
+!lib/sqlUI
 CMakeLists.txt
 dependencies.lock
 sdkconfig.*
