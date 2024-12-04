@@ -13,11 +13,12 @@ lv_obj_set_style_bg_color(ui_bootScreen, lv_color_hex(0x080101), LV_PART_MAIN | 
 lv_obj_set_style_bg_opa(ui_bootScreen, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image1 = lv_image_create(ui_bootScreen);
-lv_image_set_src(ui_Image1, &ui_img_homebridge_color_round_png);
+lv_image_set_src(ui_Image1, &ui_img_openmqttgateway_logo_mini_512_png);
 lv_obj_set_width( ui_Image1, LV_SIZE_CONTENT);  /// 320
 lv_obj_set_height( ui_Image1, LV_SIZE_CONTENT);   /// 320
 lv_obj_set_align( ui_Image1, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Image1, LV_OBJ_FLAG_CLICKABLE );   /// Flags
 lv_obj_remove_flag( ui_Image1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_image_set_scale(ui_Image1,150);
 
 }

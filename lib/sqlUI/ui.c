@@ -27,6 +27,7 @@ lv_obj_t *ui_hkButtonContainer2;
 lv_obj_t *ui_hkButtonContainer3;
 lv_obj_t *ui_hkButtonContainer4;
 lv_obj_t *ui____initial_actions0;
+const lv_image_dsc_t *ui_imgset_openmqttgateway_logo_mini_[1] = {&ui_img_openmqttgateway_logo_mini_512_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16

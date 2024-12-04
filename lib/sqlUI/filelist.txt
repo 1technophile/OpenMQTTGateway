@@ -8,6 +8,7 @@ ui_themes.c
 ui.c
 components/ui_comp_hook.c
 ui_helpers.c
+images/ui_img_openmqttgateway_logo_mini_512_png.c
 images/ui_img_homebridge_color_round_png.c
 images/ui_img_lightoff_png.c
 images/ui_img_lightbulb_png.c
