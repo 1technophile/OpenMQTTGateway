@@ -2054,7 +2054,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 }
               }
 
-              if (data.containsKey("extprobe")) {
+              if (data.containsKey("extprobe") && data["extprobe"]) {
                 property++;
                 properties[property] = " ext. probe";
               }
