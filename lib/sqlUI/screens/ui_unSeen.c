@@ -19,34 +19,9 @@ lv_obj_set_style_pad_bottom(ui_unSeen, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_row(ui_unSeen, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_unSeen, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_hkButtonContainer2 = ui_hkButtonContainer_create(ui_unSeen);
-lv_obj_set_x( ui_hkButtonContainer2, 0 );
-lv_obj_set_y( ui_hkButtonContainer2, 0 );
-lv_obj_remove_state( ui_hkButtonContainer2, LV_STATE_CHECKED );   /// States
-
-
-
-
-
-
-
-ui_hkButtonContainer3 = ui_hkButtonContainer_create(ui_unSeen);
-lv_obj_set_x( ui_hkButtonContainer3, 0 );
-lv_obj_set_y( ui_hkButtonContainer3, 0 );
-lv_obj_add_state( ui_hkButtonContainer3, LV_STATE_CHECKED );     /// States
-
-
-
-
-
-
-
-ui_hkButtonContainer4 = ui_hkButtonContainer_create(ui_unSeen);
-lv_obj_set_x( ui_hkButtonContainer4, 0 );
-lv_obj_set_y( ui_hkButtonContainer4, 0 );
-
-
-
+ui_omgLabelContainer = ui_omgLabelContainer_create(ui_unSeen);
+lv_obj_set_x( ui_omgLabelContainer, 0 );
+lv_obj_set_y( ui_omgLabelContainer, 0 );
 
 
 

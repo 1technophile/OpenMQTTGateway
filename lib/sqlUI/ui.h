@@ -39,14 +39,12 @@ extern lv_obj_t *ui_mainScreen;
 // SCREEN: ui_unSeen
 void ui_unSeen_screen_init(void);
 extern lv_obj_t *ui_unSeen;
-extern lv_obj_t *ui_hkButtonContainer2;
-extern lv_obj_t *ui_hkButtonContainer3;
-extern lv_obj_t *ui_hkButtonContainer4;
+extern lv_obj_t *ui_omgLabelContainer;
 extern lv_obj_t *ui____initial_actions0;
 
 LV_IMG_DECLARE( ui_img_openmqttgateway_logo_mini_512_png);   // assets/Openmqttgateway_logo_mini_512.png
-LV_IMG_DECLARE( ui_img_homebridge_color_round_png);   // assets/homebridge_color_round.png
 LV_IMG_DECLARE( ui_img_lightoff_png);   // assets/LightOff.png
+LV_IMG_DECLARE( ui_img_homebridge_color_round_png);   // assets/homebridge_color_round.png
 LV_IMG_DECLARE( ui_img_lightbulb_png);   // assets/lightbulb.png
 
 

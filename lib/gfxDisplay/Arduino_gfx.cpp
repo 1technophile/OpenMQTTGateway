@@ -1,6 +1,6 @@
 /*Using LVGL with Arduino requires some extra steps:
  *Be sure to read the docs here: https://docs.lvgl.io/master/get-started/platforms/arduino.html  */
-
+#ifdef LVGL_ARDUINO_GFX
 #include <lvgl.h>
 
 /*To use the built-in examples and demos of LVGL uncomment the includes below respectively.
@@ -236,3 +236,4 @@ void arduinoGFXLoop()
 #endif
 #endif // !DIRECT_MODE
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef LVGL_ARDUINO_GFX
 /*******************************************************************************
  * Touch libraries:
  * XPT2046: https://github.com/PaulStoffregen/XPT2046_Touchscreen.git
@@ -203,3 +204,4 @@ bool touch_released()
 
   return false;
 }
+#endif
