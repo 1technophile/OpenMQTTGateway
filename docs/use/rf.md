@@ -39,12 +39,12 @@ Note that with CC1101 this frequency will be used as the default sending frequen
 
 Switching of the active transceiver (RTL_433 receiver only) module is available between the RF, RF2, and (RTL_433 or Pilight) gateway modules, allowing for changing of signal decoders without redeploying the OpenMQTTGateway package.  Sending a JSON message to the command topic will change the active transceiver module.
 
-To change the RF gateway module, which will receive, send a json message to the RF gateway module command subject (home/OpenMQTTGateway/commands/MQTTtoRF/config) with the corresponding value of the key "active" 
+To change the RF gateway module, which will receive, send a json message to the RF gateway module command subject (home/OpenMQTTGateway/commands/MQTTtoRF/config) with the corresponding value of the key "active". Add these numbers together to enable multiple modules (e.g. to enable Pilight and RF, send 3, since 1 (for Pilight) + 2 (for RF) = 3).
 
 1 - PiLight<br>
 2 - RF<br>
-3 - RTL_433<br>
-4 - RF2
+4 - RTL_433<br>
+8 - RF2
 
 Example to receive from the RF gateway:
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRF/config" -m '{"active":2}'`

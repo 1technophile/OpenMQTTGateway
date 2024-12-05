@@ -195,8 +195,8 @@ const char parameters[51][4][24] = {
  * Active  Module
  * 1 = ZgatewayPilight
  * 2 = ZgatewayRF
- * 3 = ZgatewayRTL_433
- * 4 = ZgatewayRF2
+ * 4 = ZgatewayRTL_433
+ * 8 = ZgatewayRF2
  */
 
 struct RFConfig_s {
@@ -210,8 +210,8 @@ struct RFConfig_s {
 #define ACTIVE_RECERROR 0
 #define ACTIVE_PILIGHT  1
 #define ACTIVE_RF       2
-#define ACTIVE_RTL      3
-#define ACTIVE_RF2      4
+#define ACTIVE_RTL      4
+#define ACTIVE_RF2      8
 
 RFConfig_s RFConfig;
 
@@ -223,11 +223,25 @@ RFConfig_s RFConfig;
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
-#ifndef RF_RECEIVER_GPIO
+#ifndef RF_PILIGHT_RECEIVER_GPIO
 #  ifdef ESP8266
-#    define RF_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
+#    define RF_PILIGHT_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
 #  elif ESP32
-#    define RF_RECEIVER_GPIO 27 // D27 on DOIT ESP32
+#    define RF_PILIGHT_RECEIVER_GPIO 27 // D27 on DOIT ESP32
+#  endif
+#endif
+#ifndef RF_RF_RECEIVER_GPIO
+#  ifdef ESP8266
+#    define RF_RF_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
+#  elif ESP32
+#    define RF_RF_RECEIVER_GPIO 27 // D27 on DOIT ESP32
+#  endif
+#endif
+#ifndef RF_RF2_RECEIVER_GPIO
+#  ifdef ESP8266
+#    define RF_RF2_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
+#  elif ESP32
+#    define RF_RF2_RECEIVER_GPIO 27 // D27 on DOIT ESP32
 #  endif
 #endif
 

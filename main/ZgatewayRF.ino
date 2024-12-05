@@ -220,7 +220,7 @@ void XtoRF(const char* topicOri, const char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
   ELECHOUSE_cc1101.SetRx(RFConfig.frequency);
   mySwitch.disableTransmit();
-  mySwitch.enableReceive(RF_RECEIVER_GPIO);
+  mySwitch.enableReceive(RF_RF_RECEIVER_GPIO);
 #    endif
 }
 #  endif
@@ -275,14 +275,14 @@ void enableRFReceive() {
   Log.notice(F("Enable RF Receiver: %FMhz" CR), RFConfig.frequency);
   //RF init parameters
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+  Log.notice(F("RF_RF_RECEIVER_GPIO: %d " CR), RF_RF_RECEIVER_GPIO);
 
 #  ifdef RF_DISABLE_TRANSMIT
   mySwitch.disableTransmit();
 #  else
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
 #  endif
-  receiveInterupt = RF_RECEIVER_GPIO;
+  receiveInterupt = RF_RF_RECEIVER_GPIO;
   mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
   mySwitch.enableReceive(receiveInterupt);
   Log.trace(F("ZgatewayRF command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF);

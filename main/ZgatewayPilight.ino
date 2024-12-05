@@ -294,7 +294,7 @@ extern void disablePilightReceive() {
 extern void enablePilightReceive() {
   Log.notice(F("Switching to Pilight Receiver: %F" CR), RFConfig.frequency);
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+  Log.notice(F("RF_PILIGHT_RECEIVER_GPIO: %d " CR), RF_PILIGHT_RECEIVER_GPIO);
   Log.trace(F("ZgatewayPilight command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoPilight);
 
   initCC1101();
@@ -305,7 +305,7 @@ extern void enablePilightReceive() {
     rf.setPulseTrainCallBack(pilightRawCallback);
   }
 #  endif
-  rf.initReceiver(RF_RECEIVER_GPIO);
+  rf.initReceiver(RF_PILIGHT_RECEIVER_GPIO);
   pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   rf.enableReceiver();
   loadPilightConfig();

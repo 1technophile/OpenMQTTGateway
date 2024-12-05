@@ -308,10 +308,10 @@ void disableRF2Receive() {
 
 void enableRF2Receive() {
   Log.trace(F("enableRF2Receive" CR));
-  NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
+  NewRemoteReceiver::init(RF_RF2_RECEIVER_GPIO, 2, rf2Callback);
 
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+  Log.notice(F("RF_RF2_RECEIVER_GPIO: %d " CR), RF_RF2_RECEIVER_GPIO);
   Log.trace(F("ZgatewayRF2 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF2);
   pinMode(RF_EMITTER_GPIO, OUTPUT);
   digitalWrite(RF_EMITTER_GPIO, LOW);

@@ -1,13 +1,13 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a wifi or ethernet gateway between your BLE/433mhz/infrared IR signal and an MQTT broker 
+   Act as a wifi or ethernet gateway between your BLE/433mhz/infrared IR signal and an MQTT broker
    Send and receiving command by MQTT
-  
+
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -70,99 +70,75 @@ bool validFrequency(float mhz) {
 
 int currentReceiver = ACTIVE_NONE;
 
-#  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
-// Check if a receiver is available
-bool validReceiver(int receiver) {
-  switch (receiver) {
-#    ifdef ZgatewayPilight
-    case ACTIVE_PILIGHT:
-      return true;
-#    endif
-#    ifdef ZgatewayRF
-    case ACTIVE_RF:
-      return true;
-#    endif
-#    ifdef ZgatewayRTL_433
-    case ACTIVE_RTL:
-      return true;
-#    endif
-#    ifdef ZgatewayRF2
-    case ACTIVE_RF2:
-      return true;
-#    endif
-    default:
-      Log.error(F("ERROR: stored receiver %d not available" CR), receiver);
-  }
-  return false;
-}
-#  endif
-
 void disableCurrentReceiver() {
   Log.trace(F("disableCurrentReceiver: %d" CR), currentReceiver);
-  switch (currentReceiver) {
-    case ACTIVE_NONE:
-      break;
+  if (currentReceiver == ACTIVE_NONE) {
+    return;
+  }
+  bool recognized = false;
 #  ifdef ZgatewayPilight
-    case ACTIVE_PILIGHT:
-      disablePilightReceive();
-      break;
+  if ((currentReceiver & ACTIVE_PILIGHT) == ACTIVE_PILIGHT) {
+    disablePilightReceive();
+    recognized = true;
+  }
 #  endif
 #  ifdef ZgatewayRF
-    case ACTIVE_RF:
-      disableRFReceive();
-      break;
+  if ((currentReceiver & ACTIVE_RF) == ACTIVE_RF) {
+    disableRFReceive();
+    recognized = true;
+  }
 #  endif
 #  ifdef ZgatewayRTL_433
-    case ACTIVE_RTL:
-      disableRTLreceive();
-      break;
+  if ((currentReceiver & ACTIVE_RTL) == ACTIVE_RTL) {
+    disableRTLreceive();
+    recognized = true;
+  }
 #  endif
 #  ifdef ZgatewayRF2
-    case ACTIVE_RF2:
-      disableRF2Receive();
-      break;
+  if ((currentReceiver & ACTIVE_RF2) == ACTIVE_RF2) {
+    disableRF2Receive();
+    recognized = true;
+  }
 #  endif
-    default:
-      Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
+  if (!recognized) {
+    Log.error(F("ERROR: unsupported receiver %d" CR), currentReceiver); // This should be currentReceiver, not RFConfig.activeReceiver
   }
 }
 
 void enableActiveReceiver() {
   Log.trace(F("enableActiveReceiver: %d" CR), RFConfig.activeReceiver);
-  switch (RFConfig.activeReceiver) {
+  initCC1101(); // Okay to do this even with an invalid receiver selected, right?
+  bool recognized = false;
 #  ifdef ZgatewayPilight
-    case ACTIVE_PILIGHT:
-      initCC1101();
-      enablePilightReceive();
-      currentReceiver = ACTIVE_PILIGHT;
-      break;
+  if ((RFConfig.activeReceiver & ACTIVE_PILIGHT) == ACTIVE_PILIGHT) {
+    enablePilightReceive();
+    recognized = true;
+  }
 #  endif
 #  ifdef ZgatewayRF
-    case ACTIVE_RF:
-      initCC1101();
-      enableRFReceive();
-      currentReceiver = ACTIVE_RF;
-      break;
+  if ((RFConfig.activeReceiver & ACTIVE_RF) == ACTIVE_RF) {
+    enableRFReceive();
+    recognized = true;
+  }
 #  endif
 #  ifdef ZgatewayRTL_433
-    case ACTIVE_RTL:
-      initCC1101();
-      enableRTLreceive();
-      currentReceiver = ACTIVE_RTL;
-      break;
+  if ((RFConfig.activeReceiver & ACTIVE_RTL) == ACTIVE_RTL) {
+    enableRTLreceive();
+    recognized = true;
+  }
 #  endif
 #  ifdef ZgatewayRF2
-    case ACTIVE_RF2:
-      initCC1101();
-      enableRF2Receive();
-      currentReceiver = ACTIVE_RF2;
-      break;
+  if ((RFConfig.activeReceiver & ACTIVE_RF2) == ACTIVE_RF2) {
+    enableRF2Receive();
+    recognized = true;
+  }
 #  endif
-    case ACTIVE_RECERROR:
-      Log.error(F("ERROR: no receiver selected" CR));
-      break;
-    default:
-      Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
+  if (recognized) {
+    currentReceiver = RFConfig.activeReceiver;
+  } else if (RFConfig.activeReceiver == ACTIVE_RECERROR) {
+    Log.error(F("ERROR: no receiver selected" CR));
+  } else {
+    Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
   }
 }
 
@@ -173,7 +149,7 @@ String stateRFMeasures() {
   RFdata["active"] = RFConfig.activeReceiver;
 #  if defined(ZradioCC1101) || defined(ZradioSX127x)
   RFdata["frequency"] = RFConfig.frequency;
-  if (RFConfig.activeReceiver == ACTIVE_RTL) {
+  if ((RFConfig.activeReceiver & ACTIVE_RTL) == ACTIVE_RTL) {
 #    ifdef ZgatewayRTL_433
     RFdata["rssithreshold"] = (int)getRTLrssiThreshold();
     RFdata["rssi"] = (int)getRTLCurrentRSSI();
