@@ -55,7 +55,10 @@ Arduino_DataBus *bus = new Arduino_ESP32QSPI(
 Arduino_GFX *g = new Arduino_AXS15231B(bus, GFX_NOT_DEFINED /* RST */, 2 /* rotation */, false /* IPS */, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 #define CANVAS
 Arduino_Canvas *gfx = new Arduino_Canvas(DISPLAY_WIDTH, DISPLAY_HEIGHT, g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */);
-
+#define TOUCH_IICSDA 4
+#define TOUCH_IICSCL 8
+#define ALS_ADDRESS 0x3B
+uint8_t read_touchpad_cmd[8] = {0xb5, 0xab, 0xa5, 0x5a, 0x0, 0x0, 0x0, 0x8};
 #endif /* !defined(DISPLAY_DEV_KIT) */
 /*******************************************************************************
  * End of Arduino_GFX setting

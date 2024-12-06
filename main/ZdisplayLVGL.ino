@@ -62,7 +62,7 @@ module loop, for use in Arduino loop
 
 bool firstRun = true;
 
-const int MAX_TILES = 32;
+const int MAX_TILES = 4;
 lv_obj_t* tiles[MAX_TILES] = {nullptr};
 int messageCount = 0;
 int headIndex = 0; // Tracks the next index to overwrite
