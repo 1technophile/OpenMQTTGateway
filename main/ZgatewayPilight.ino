@@ -49,6 +49,7 @@ void pilightCallback(const String& protocol, const String& message, int status,
     JsonObject RFPiLightdata = RFPiLightdataBuffer.to<JsonObject>();
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
     JsonObject msg = jsonBuffer2.to<JsonObject>();
+
     if (message.length() > 0) {
       auto error = deserializeJson(jsonBuffer2, message);
       if (error) {
@@ -57,25 +58,26 @@ void pilightCallback(const String& protocol, const String& message, int status,
       }
       RFPiLightdata["message"] = msg;
     }
+
     if (protocol.length() > 0) {
       RFPiLightdata["protocol"] = protocol;
     }
-    if (deviceID.length() > 0) {
-      RFPiLightdata["value"] = deviceID;
-      const char* device_id = deviceID.c_str();
-      if (!strlen(device_id) && !msg.isNull()) {
-        // deviceID returned from Pilight is only extracted from id field
-        // but some device may use another name as unique identifier
-        char* choices[] = {"key", "unit", "device_id", "systemcode", "unitcode", "programcode"};
 
-        for (uint8_t i = 0; i < 6; i++) {
-          if (msg[choices[i]]) {
-            device_id = (const char*)msg[choices[i]];
-            break;
-          }
+    if (deviceID.length() > 0) {
+      // If deviceID is non-empty, use it directly for value
+      RFPiLightdata["value"] = deviceID;
+    } else if (!msg.isNull()) {
+      // deviceID returned from Pilight is only extracted from id field
+      // but some device may use another name as unique identifier
+      char* choices[] = {"key", "unit", "device_id", "systemcode", "unitcode", "programcode"};
+
+      for (uint8_t i = 0; i < 6; i++) {
+        if (msg.containsKey(choices[i])) {
+          // Set value directly from msg; supports both strings and integers
+          RFPiLightdata["value"] = msg[choices[i]];
+          break;
         }
       }
-      RFPiLightdata["value"] = device_id;
     }
 
     RFPiLightdata["repeats"] = (int)repeats;
