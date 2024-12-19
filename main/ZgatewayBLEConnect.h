@@ -12,7 +12,7 @@ public:
   TaskHandle_t m_taskHandle = nullptr;
   zBLEConnect(NimBLEAddress& addr) {
     m_pClient = NimBLEDevice::createClient(addr);
-    m_pClient->setConnectTimeout(5);
+    m_pClient->setConnectTimeout(5000);
   }
   virtual ~zBLEConnect() { NimBLEDevice::deleteClient(m_pClient); }
   virtual bool writeData(BLEAction* action);

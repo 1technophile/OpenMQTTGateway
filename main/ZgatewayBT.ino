@@ -1,7 +1,7 @@
 /*
   OpenMQTTGateway  - ESP8266 or Arduino program for home automation
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
   This gateway enables to:
@@ -573,15 +573,15 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
 //core on which the BLE detection task will run
 static int taskCore = 0;
 
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice* advertisedDevice) {
-    BLEAdvertisedDevice* ad = new BLEAdvertisedDevice(*advertisedDevice);
+class ScanCallbacks : public NimBLEScanCallbacks {
+  void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
+    NimBLEAdvertisedDevice* ad = new NimBLEAdvertisedDevice(*advertisedDevice);
     if (xQueueSend(BLEQueue, &ad, 0) != pdTRUE) {
       Log.error(F("BLEQueue full" CR));
       delete (ad);
     }
   }
-};
+} scanCallbacks;
 
 std::string convertServiceData(std::string deviceServiceData) {
   int serviceDataLength = (int)deviceServiceData.length();
@@ -618,13 +618,7 @@ void procBLETask(void* pvParameters) {
       Log.trace(F("Creating BLE buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      std::string mac_address = advertisedDevice->getAddress().toString();
-
-      for (char& c : mac_address) {
-        c = std::toupper(c);
-      }
-
-      BLEdata["id"] = mac_address;
+      BLEdata["id"] = advertisedDevice->getAddress().toString();
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
       Log.notice(F("BT Device detected: %s" CR), BLEdata["id"].as<const char*>());
@@ -640,16 +634,14 @@ void procBLETask(void* pvParameters) {
         if (advertisedDevice->haveName())
           BLEdata["name"] = (char*)advertisedDevice->getName().c_str();
         if (advertisedDevice->haveManufacturerData()) {
-          char* manufacturerdata = BLEUtils::buildHexData(NULL, (uint8_t*)advertisedDevice->getManufacturerData().data(), advertisedDevice->getManufacturerData().length());
-          BLEdata["manufacturerdata"] = manufacturerdata;
-          free(manufacturerdata);
+          BLEdata["manufacturerdata"] = NimBLEUtils::dataToHexString((uint8_t*)advertisedDevice->getManufacturerData().data(),
+                                                                     advertisedDevice->getManufacturerData().length());
         }
-        if (advertisedDevice->haveRSSI())
-          BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
+        BLEdata["rssi"] = (int)advertisedDevice->getRSSI();
         if (advertisedDevice->haveTXPower())
           BLEdata["txpower"] = (int8_t)advertisedDevice->getTXPower();
-        if (advertisedDevice->haveRSSI() && BTConfig.presenceEnable) {
-          hass_presence(BLEdata); // this device has an rssi and with either only sensors or not we can use it for home assistant room presence component
+        if (BTConfig.presenceEnable) {
+          hass_presence(BLEdata); // with either only sensors or not we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
           int serviceDataCount = advertisedDevice->getServiceDataCount();
@@ -689,8 +681,7 @@ void BLEscan() {
   }
   Log.notice(F("Scan begin" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
-  MyAdvertisedDeviceCallbacks myCallbacks;
-  pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+  pBLEScan->setScanCallbacks(&scanCallbacks);
   if ((millis() > (timeBetweenActive + BTConfig.intervalActiveScan) || BTConfig.intervalActiveScan == BTConfig.BLEinterval) && !BTConfig.forcePassiveScan) {
     pBLEScan->setActiveScan(true);
     timeBetweenActive = millis();
@@ -699,7 +690,7 @@ void BLEscan() {
   }
   pBLEScan->setInterval(BLEScanInterval);
   pBLEScan->setWindow(BLEScanWindow);
-  BLEScanResults foundDevices = pBLEScan->start(BTConfig.scanDuration / 1000, false);
+  NimBLEScanResults foundDevices = pBLEScan->getResults(BTConfig.scanDuration, false);
   if (foundDevices.getCount())
     scanCount++;
   Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
@@ -762,7 +753,7 @@ void BLEconnect() {
             for (auto& it : BLEactions) {
               if (!it.complete && --it.ttl) {
                 swap.push_back(it);
-              } else if (memcmp(it.addr, p->macAdr, sizeof(it.addr)) == 0) {
+              } else if (it.addr == NimBLEAddress(p->macAdr, p->macType)) {
                 if (p->sensorModel_id != BLEconectable::id::DT24_BLE &&
                     p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
                     p->sensorModel_id != BLEconectable::id::LYWSD03MMC &&
@@ -845,7 +836,9 @@ void coreTask(void* pvParameters) {
 }
 
 void setupBTTasksAndBLE() {
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
   BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
+#  endif
   BLEDevice::init("");
   xTaskCreatePinnedToCore(
       procBLETask, /* Function to implement the task */
@@ -1357,7 +1350,7 @@ void immediateBTAction(void* pvParameters) {
       if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdTRUE) {
         // swap the vectors so only this device is processed
         std::vector<BLEdevice*> dev_swap;
-        dev_swap.push_back(getDeviceByMac(BLEactions.back().addr));
+        dev_swap.push_back(getDeviceByMac(BLEactions.back().addr.toString().c_str()));
         std::swap(devices, dev_swap);
 
         std::vector<BLEAction> act_swap;
@@ -1387,7 +1380,7 @@ void immediateBTAction(void* pvParameters) {
       gatewayState = GatewayState::ERROR;
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      BLEdata["id"] = BLEactions.back().addr;
+      BLEdata["id"] = BLEactions.back().addr.toString().c_str();
       BLEdata["success"] = false;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
@@ -1417,9 +1410,8 @@ void KnownBTActions(JsonObject& BTdata) {
     gatewayState = GatewayState::ERROR;
     return;
   }
-  BLEAction action;
-  memset(&action, 0, sizeof(BLEAction));
-  strcpy(action.addr, (const char*)BTdata["id"]);
+
+  BLEAction action{};
   action.write = true;
   action.ttl = 3;
   bool res = false;
@@ -1429,7 +1421,7 @@ void KnownBTActions(JsonObject& BTdata) {
         action.value_type = BLE_VAL_STRING;
         std::string val = BTdata["cmd"].as<std::string>(); // Fix #1694
         action.value = val;
-        createOrUpdateDevice(action.addr, device_flags_connect,
+        createOrUpdateDevice(BTdata["id"].as<const char*>(), device_flags_connect,
                              TheengsDecoder::BLE_ID_NUM::SBS1, 1);
         res = true;
       }
@@ -1444,7 +1436,7 @@ void KnownBTActions(JsonObject& BTdata) {
       if (res) {
         std::string val = BTdata["tilt"].as<std::string>(); // Fix #1694
         action.value = val;
-        createOrUpdateDevice(action.addr, device_flags_connect,
+        createOrUpdateDevice(BTdata["id"].as<const char*>(), device_flags_connect,
                              TheengsDecoder::BLE_ID_NUM::SBBT, 1);
       }
     } else if (BTdata["model_id"] == "W070160X") {
@@ -1458,11 +1450,12 @@ void KnownBTActions(JsonObject& BTdata) {
       if (res) {
         std::string val = BTdata["position"].as<std::string>(); // Fix #1694
         action.value = val;
-        createOrUpdateDevice(action.addr, device_flags_connect,
+        createOrUpdateDevice(BTdata["id"].as<const char*>(), device_flags_connect,
                              TheengsDecoder::BLE_ID_NUM::SBCU, 1);
       }
     }
     if (res) {
+      action.addr = NimBLEAddress(BTdata["id"].as<std::string>(), 1);
       BLEactions.push_back(action);
       startBTActionTask();
     } else {
@@ -1476,10 +1469,8 @@ void KnownBTActions(JsonObject& BTdata) {}
 #  endif
 
 void XtoBTAction(JsonObject& BTdata) {
-  BLEAction action;
-  memset(&action, 0, sizeof(BLEAction));
+  BLEAction action{};
   action.ttl = BTdata.containsKey("ttl") ? (uint8_t)BTdata["ttl"] : 1;
-  action.addr_type = BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0;
   action.value_type = BLE_VAL_STRING;
   if (BTdata.containsKey("value_type")) {
     String vt = BTdata["value_type"];
@@ -1502,7 +1493,7 @@ void XtoBTAction(JsonObject& BTdata) {
       BTdata.containsKey("ble_write_service") &&
       BTdata.containsKey("ble_write_char") &&
       BTdata.containsKey("ble_write_value")) {
-    strcpy(action.addr, (const char*)BTdata["ble_write_address"]);
+    action.addr = NimBLEAddress(BTdata["ble_write_address"].as<std::string>(), BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0);
     action.service = NimBLEUUID((const char*)BTdata["ble_write_service"]);
     action.characteristic = NimBLEUUID((const char*)BTdata["ble_write_char"]);
     std::string val = BTdata["ble_write_value"].as<std::string>(); // Fix #1694
@@ -1512,7 +1503,7 @@ void XtoBTAction(JsonObject& BTdata) {
   } else if (BTdata.containsKey("ble_read_address") &&
              BTdata.containsKey("ble_read_service") &&
              BTdata.containsKey("ble_read_char")) {
-    strcpy(action.addr, (const char*)BTdata["ble_read_address"]);
+    action.addr = NimBLEAddress(BTdata["ble_read_address"].as<std::string>(), BTdata.containsKey("mac_type") ? BTdata["mac_type"].as<int>() : 0);
     action.service = NimBLEUUID((const char*)BTdata["ble_read_service"]);
     action.characteristic = NimBLEUUID((const char*)BTdata["ble_read_char"]);
     action.write = false;
@@ -1521,9 +1512,7 @@ void XtoBTAction(JsonObject& BTdata) {
     return;
   }
 
-  createOrUpdateDevice(action.addr, device_flags_connect,
-                       UNKWNON_MODEL,
-                       action.addr_type);
+  createOrUpdateDevice(action.addr.toString().c_str(), device_flags_connect, UNKWNON_MODEL, action.addr.getType());
 
   BLEactions.push_back(action);
   if (BTdata.containsKey("immediate") && BTdata["immediate"].as<bool>()) {

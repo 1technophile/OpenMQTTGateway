@@ -1,15 +1,15 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
- 
+
    This files enables to set your parameter for the bluetooth low energy gateway (beacons detection)
-  
+
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -34,6 +34,7 @@ extern String stateBTMeasures(bool);
 
 #ifdef ESP32
 #  include "NimBLEDevice.h"
+
 #endif
 
 /*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/
@@ -208,9 +209,8 @@ enum ble_val_type {
 };
 
 struct BLEAction {
-  std::string value;
-  char addr[18];
-  int addr_type;
+  NimBLEAttValue value;
+  NimBLEAddress addr;
   NimBLEUUID service;
   NimBLEUUID characteristic;
   bool write;

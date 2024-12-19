@@ -44,11 +44,12 @@ bool zBLEConnect::writeData(BLEAction* action) {
         }
 
         std::vector<uint8_t> buf;
+        buf.reserve(len / 2);
         for (auto i = 0; i < len; i += 2) {
-          std::string temp = action->value.substr(i, 2);
-          buf.push_back((uint8_t)strtoul(temp.c_str(), nullptr, 16));
+          char sVal[3] = {action->value[i], action->value[i + 1], 0};
+          buf.push_back((uint8_t)strtoul(sVal, nullptr, 16));
         }
-        return pChar->writeValue((const uint8_t*)&buf[0], buf.size(), !pChar->canWriteNoResponse());
+        return pChar->writeValue(&buf[0], buf.size(), !pChar->canWriteNoResponse());
       }
       case BLE_VAL_INT:
         return pChar->writeValue(strtol(action->value.c_str(), nullptr, 0), !pChar->canWriteNoResponse());
@@ -80,13 +81,13 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
       if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
         DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
         JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-        BLEdata["id"] = it.addr;
+        BLEdata["id"] = m_pClient->getPeerAddress().toString().c_str();
         BLEdata["service"] = it.service.toString();
         BLEdata["characteristic"] = it.characteristic.toString();
 
         if (it.write) {
           Log.trace(F("processing BLE write" CR));
-          BLEdata["write"] = it.value;
+          BLEdata["write"] = std::string(it.value);
           result = writeData(&it);
         } else {
           Log.trace(F("processing BLE read" CR));
@@ -94,9 +95,7 @@ bool zBLEConnect::processActions(std::vector<BLEAction>& actions) {
           if (result) {
             switch (it.value_type) {
               case BLE_VAL_HEX: {
-                char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)it.value.c_str(), it.value.length());
-                BLEdata["read"] = pHex;
-                free(pHex);
+                BLEdata["read"] = NimBLEUtils::dataToHexString(it.value.data(), it.value.size());
                 break;
               }
               case BLE_VAL_INT: {
@@ -141,19 +140,18 @@ void LYWSD03MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pD
       Log.trace(F("Device identified creating BLE buffer" CR));
       DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      String mac_address = m_pClient->getPeerAddress().toString().c_str();
-      mac_address.toUpperCase();
+      auto mac_addr = m_pClient->getPeerAddress().toString().c_str();
       for (std::vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
-        if ((strcmp(p->macAdr, (char*)mac_address.c_str()) == 0)) {
+        if ((strcmp(p->macAdr, mac_addr) == 0)) {
           if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC)
             BLEdata["model"] = "LYWSD03MMC";
           else if (p->sensorModel_id == BLEconectable::id::MHO_C401)
             BLEdata["model"] = "MHO-C401";
         }
       }
-      BLEdata["id"] = (char*)mac_address.c_str();
-      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_address.c_str());
+      BLEdata["id"] = mac_addr;
+      Log.trace(F("Device identified in CB: %s" CR), mac_addr);
       BLEdata["tempc"] = (float)((pData[0] | (pData[1] << 8)) * 0.01);
       BLEdata["tempf"] = (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.01));
       BLEdata["hum"] = (float)(pData[2]);
@@ -212,11 +210,10 @@ void DT24_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, s
       Log.trace(F("Device identified creating BLE buffer" CR));
       DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      String mac_address = m_pClient->getPeerAddress().toString().c_str();
-      mac_address.toUpperCase();
+      auto mac_address = m_pClient->getPeerAddress().toString().c_str();
       BLEdata["model"] = "DT24";
-      BLEdata["id"] = (char*)mac_address.c_str();
-      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_address.c_str());
+      BLEdata["id"] = mac_address;
+      Log.trace(F("Device identified in CB: %s" CR), mac_address);
       BLEdata["volt"] = (float)(((m_data[4] * 256 * 256) + (m_data[5] * 256) + m_data[6]) / 10.0);
       BLEdata["current"] = (float)(((m_data[7] * 256 * 256) + (m_data[8] * 256) + m_data[9]) / 1000.0);
       BLEdata["power"] = (float)(((m_data[10] * 256 * 256) + (m_data[11] * 256) + m_data[12]) / 10.0);
@@ -269,10 +266,8 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       Log.trace(F("Device identified creating BLE buffer" CR));
       DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      String mac_address = m_pClient->getPeerAddress().toString().c_str();
-      mac_address.toUpperCase();
       BLEdata["model"] = "BM2 Battery Monitor";
-      BLEdata["id"] = (char*)mac_address.c_str();
+      BLEdata["id"] = m_pClient->getPeerAddress().toString().c_str();
       mbedtls_aes_context aes;
       mbedtls_aes_init(&aes);
       unsigned char output[16];
@@ -356,10 +351,8 @@ void HHCCJCY01HHCC_connect::publishData() {
       batteryValue = val2[0];
       DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      String mac_address = m_pClient->getPeerAddress().toString().c_str();
-      mac_address.toUpperCase();
       BLEdata["model"] = "HHCCJCY01HHCC";
-      BLEdata["id"] = (char*)mac_address.c_str();
+      BLEdata["id"] = m_pClient->getPeerAddress().toString().c_str();
       BLEdata["batt"] = (int)batteryValue;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
@@ -383,11 +376,10 @@ void XMWSDJ04MMC_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* p
       Log.trace(F("Device identified creating BLE buffer" CR));
       DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      String mac_address = m_pClient->getPeerAddress().toString().c_str();
-      mac_address.toUpperCase();
+      auto mac_address = m_pClient->getPeerAddress().toString().c_str();
       BLEdata["model"] = "XMWSDJ04MMC";
-      BLEdata["id"] = (char*)mac_address.c_str();
-      Log.trace(F("Device identified in CB: %s" CR), (char*)mac_address.c_str());
+      BLEdata["id"] = mac_address;
+      Log.trace(F("Device identified in CB: %s" CR), mac_address);
       BLEdata["tempc"] = (float)((pData[0] | (pData[1] << 8)) * 0.1);
       BLEdata["tempf"] = (float)(convertTemp_CtoF((pData[0] | (pData[1] << 8)) * 0.1));
       BLEdata["hum"] = (float)((pData[2] | (pData[3] << 8)) * 0.1);
@@ -460,7 +452,7 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
   bool result = false;
   if (actions.size() > 0) {
     for (auto& it : actions) {
-      if (NimBLEAddress(it.addr) == m_pClient->getPeerAddress()) {
+      if (it.addr == m_pClient->getPeerAddress()) {
         NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
         NimBLERemoteCharacteristic* pNotifyChar = getCharacteristic(serviceUUID, notifyCharUUID);
 
@@ -497,8 +489,8 @@ bool SBS1_connect::processActions(std::vector<BLEAction>& actions) {
         if (result || it.ttl <= 1) {
           StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
           JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-          BLEdata["id"] = it.addr;
-          BLEdata["state"] = it.value;
+          BLEdata["id"] = m_pClient->getPeerAddress().toString().c_str();
+          BLEdata["state"] = std::string(it.value);
           buildTopicFromId(BLEdata, subjectBTtoMQTT);
           enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
         }
@@ -592,7 +584,7 @@ bool SBBT_connect::processActions(std::vector<BLEAction>& actions) {
         if (result || it.ttl <= 1) {
           StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
           JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-          BLEdata["id"] = it.addr;
+          BLEdata["id"] = it.addr.toString().c_str();
           if (value != -99 || value != -1)
             BLEdata["tilt"] = value;
           if (value == 50) {
@@ -694,7 +686,7 @@ bool SBCU_connect::processActions(std::vector<BLEAction>& actions) {
         if (result || it.ttl <= 1) {
           StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
           JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-          BLEdata["id"] = it.addr;
+          BLEdata["id"] = it.addr.toString().c_str();
           if (value != -99 || value != -1)
             BLEdata["position"] = value;
           buildTopicFromId(BLEdata, subjectBTtoMQTT);

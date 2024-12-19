@@ -386,7 +386,7 @@ bool startBlufi() {
     return false;
   }
 
-  if (NimBLEDevice::getInitialized()) {
+  if (NimBLEDevice::isInitialized()) {
     NimBLEDevice::deinit(true);
     delay(50);
   }
