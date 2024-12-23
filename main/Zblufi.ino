@@ -27,6 +27,7 @@
 */
 #if defined(ESP32) && defined(USE_BLUFI)
 #  include "NimBLEDevice.h"
+#  include "NimBLEOta.h"
 #  include "esp_blufi_api.h"
 #  include "esp_timer.h"
 
@@ -35,6 +36,9 @@ extern "C" {
 }
 
 static esp_timer_handle_t connection_timer = nullptr;
+static NimBLEOta* pNimBLEOta;
+static NimBLECharacteristic* pCommandCharacteristic;
+static NimBLECharacteristic* pRecvFwCharacteristic;
 
 struct pkt_info {
   uint8_t* pkt;
@@ -183,6 +187,8 @@ void stop_connection_timer() {}
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* param) {
   /* actually, should post to blufi_task handle the procedure,
      * now, as a example, we do it more simply */
+  ble_gap_conn_desc desc;
+
   switch (event) {
     case ESP_BLUFI_EVENT_INIT_FINISH:
       Log.trace(F("BLUFI init finish" CR));
@@ -201,6 +207,10 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       gatewayState = GatewayState::ONBOARDING;
       omg_blufi_ble_connected = true;
       restart_connection_timer();
+      ble_gap_conn_find(param->connect.conn_id, &desc);
+      // Blufi dosn't provide a callback for subscribe so we emulate it here.
+      pCommandCharacteristic->getCallbacks()->onSubscribe(pCommandCharacteristic, *(NimBLEConnInfo*)&desc, 2);
+      pRecvFwCharacteristic->getCallbacks()->onSubscribe(pRecvFwCharacteristic, *(NimBLEConnInfo*)&desc, 2);
       esp_blufi_adv_stop();
       blufi_security_init();
       break;
@@ -217,6 +227,9 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       } else {
         gatewayState = GatewayState::OFFLINE;
       }
+      ble_gap_conn_find(param->connect.conn_id, &desc);
+      pCommandCharacteristic->getCallbacks()->onSubscribe(pCommandCharacteristic, *(NimBLEConnInfo*)&desc, 0);
+      pRecvFwCharacteristic->getCallbacks()->onSubscribe(pRecvFwCharacteristic, *(NimBLEConnInfo*)&desc, 0);
       blufi_security_deinit();
       esp_blufi_adv_start();
       break;
@@ -401,7 +414,14 @@ bool startBlufi() {
   }
   snprintf(advName, sizeof(advName), Gateway_Short_Name "_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   NimBLEDevice::init(advName);
+  NimBLEDevice::setMTU(517);
+  NimBLEDevice::createServer(); // this initializes the GATT server so we need to reset it for blufi to init
+  ble_gatts_reset();
   esp_blufi_gatt_svr_init();
+  pNimBLEOta = new NimBLEOta();
+  NimBLEService* pNimBLEOtaSvc = pNimBLEOta->start();
+  pCommandCharacteristic = pNimBLEOtaSvc->getCharacteristic(NimBLEUUID((uint16_t)0x8022));
+  pRecvFwCharacteristic = pNimBLEOtaSvc->getCharacteristic(NimBLEUUID((uint16_t)0x8020));
   ble_gatts_start();
   Log.notice(F("BLUFI started" CR));
   return esp_blufi_profile_init() == ESP_OK;
