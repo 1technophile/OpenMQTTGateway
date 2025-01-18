@@ -670,7 +670,6 @@ struct SYSConfig_s {
   bool blufi; // if true the gateway will be accesible with blufi
   bool offline;
   bool discovery; // HA discovery convention
-  bool ohdiscovery; // OH discovery specificities
 #ifdef LED_ADDRESSABLE
   int rgbbrightness; // brightness of the RGB LED
 #endif

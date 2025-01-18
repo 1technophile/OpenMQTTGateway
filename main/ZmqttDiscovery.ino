@@ -303,16 +303,12 @@ void createDiscovery(const char* sensor_type,
   if (retainCmd)
     sensor["retain"] = retainCmd; // Retain command
   if (value_template && value_template[0]) {
-    if (strstr(value_template, " | is_defined") != NULL && SYSConfig.ohdiscovery) {
-      sensor["val_tpl"] = remove_substring(value_template, " | is_defined"); //OpenHAB compatible HA auto discovery
+    if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
+      sensor["tilt_status_tpl"] = value_template; // tilt_status_template for blind
+    } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
+      sensor["pos_tpl"] = value_template; // position_template for curtain
     } else {
-      if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "blind") == 0) {
-        sensor["tilt_status_tpl"] = value_template; // tilt_status_template for blind
-      } else if (strcmp(sensor_type, "cover") == 0 && strcmp(state_class, "curtain") == 0) {
-        sensor["pos_tpl"] = value_template; // position_template for curtain
-      } else {
-        sensor["val_tpl"] = value_template; //HA Auto discovery
-      }
+      sensor["val_tpl"] = value_template; //HA Auto discovery
     }
   }
   if (payload_on && payload_on[0]) {
@@ -585,16 +581,6 @@ void pubMqttDiscovery() {
                   subjectSYStoMQTT, "SYS: Auto discovery", (char*)getUniqueId("disc", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.disc }}", //set availability_topic,device_class,value_template,
                   "{\"disc\":true,\"save\":true}", "{\"disc\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
-                  0, //set  off_delay
-                  Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
-                  "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
-                  stateClassNone, //State Class
-                  "false", "true" //state_off, state_on
-  );
-  createDiscovery("switch", //set Type
-                  subjectSYStoMQTT, "SYS: OpenHAB discovery", (char*)getUniqueId("ohdisc", "").c_str(), //set state_topic,name,uniqueId
-                  will_Topic, "", "{{ value_json.ohdisc }}", //set availability_topic,device_class,value_template,
-                  "{\"ohdisc\":true,\"save\":true}", "{\"ohdisc\":false,\"save\":true}", "", //set,payload_on,payload_off,unit_of_meas,
                   0, //set  off_delay
                   Gateway_AnnouncementMsg, will_Message, true, subjectMQTTtoSYSset, //set,payload_avalaible,payload_not avalaible   ,is a gateway entity, command topic
                   "", "", "", "", false, // device name, device manufacturer, device model, device MAC, retain,
@@ -1327,7 +1313,6 @@ void pubMqttDiscovery() {
       {"switch", "force_scan"}, // Now a button
       {"sensor", "interval"}, // Now a number
       {"sensor", "scanbcnct"}, // Now a number
-      {"switch", "ohdiscovery"}, // Now a new key
       {"switch", "discovery"}}; // Now a new key
 
   for (int i = 0; i < EntitiesCount; i++) {

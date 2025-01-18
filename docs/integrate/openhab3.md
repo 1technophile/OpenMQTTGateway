@@ -76,13 +76,6 @@ Or use another upload method from the Upload section that requires credentials b
 
 You should see the gateway connected to your broker by checking with an MQTT client like MQTT Explorer.
 
-To make the auto discovery compatible with OpenHAB you have to send the following command with a retain flag.
-
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdisc":true}'`
-
-You can also activate OpenHAB auto discovery by adding the gateway as a Thing, Model, and switching the button to ON. The name of the channel to add is "SYS: OpenHAB discovery".
-Once activated restart OpenMQTTGateway.
-
 ## Adding the things
 1. From the Administration click on "Things" under "Settings", you should see a number in the INBOX button
 

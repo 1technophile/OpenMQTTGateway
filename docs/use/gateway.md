@@ -35,18 +35,6 @@ If you want the settings to be kept upon gateway restart, you can save the state
 Auto discovery is enabled by default on release binaries and platformio.
 :::
 
-## AutoDiscovery compatible with OpenHAB (default: false)
-OpenHAB does not support the key `is_defined` in the json template, to remove it at runtime and make the auto discovery compatible you can use the following command with a retain flag.
-
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdisc":true}'`
-
-If you want the settings to be kept upon gateway restart, you can save the state by adding `"save":true` (ESP32 only).
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"ohdisc":true, "save":true}'`
-
-::: tip
-This command can also be used with other controllers that does not support the is_defined key.
-:::
-
 ## Activate Offline mode
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"offline":true,"save":true}'`

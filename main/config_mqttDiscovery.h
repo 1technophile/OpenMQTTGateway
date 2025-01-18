@@ -140,11 +140,6 @@ char discovery_prefix[parameters_size + 1] = discovery_Prefix;
 #endif
 
 /*-------------- Auto discovery macros-----------------*/
-// Set the line below to true so as to have autodiscovery working with OpenHAB
-#ifndef OpenHABDiscovery
-#  define OpenHABDiscovery false
-#endif
-
 // Home assistant autodiscovery value key definition
 #define jsonBatt        "{{ value_json.batt | is_defined }}"
 #define jsonLux         "{{ value_json.lux | is_defined }}"

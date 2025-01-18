@@ -805,7 +805,6 @@ void SYSConfig_init() {
 #endif
 #ifdef ZmqttDiscovery
   SYSConfig.discovery = DEFAULT_DISCOVERY;
-  SYSConfig.ohdiscovery = OpenHABDiscovery;
 #endif
 #ifdef LED_ADDRESSABLE
   SYSConfig.rgbbrightness = DEFAULT_ADJ_BRIGHTNESS;
@@ -822,7 +821,6 @@ void SYSConfig_fromJson(JsonObject& SYSdata) {
 #endif
 #ifdef ZmqttDiscovery
   Config_update(SYSdata, "disc", SYSConfig.discovery);
-  Config_update(SYSdata, "ohdisc", SYSConfig.ohdiscovery);
 #endif
 #ifdef LED_ADDRESSABLE
   Config_update(SYSdata, "rgbb", SYSConfig.rgbbrightness);
@@ -843,7 +841,6 @@ void SYSConfig_save() {
 #  endif
 #  ifdef ZmqttDiscovery
   SYSdata["disc"] = SYSConfig.discovery;
-  SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
 #  endif
 #  ifdef LED_ADDRESSABLE
   SYSdata["rgbb"] = SYSConfig.rgbbrightness;
@@ -2782,7 +2779,6 @@ String stateMeasures() {
   SYSdata["serial"] = SYSConfig.serial;
 #ifdef ZmqttDiscovery
   SYSdata["disc"] = SYSConfig.discovery;
-  SYSdata["ohdisc"] = SYSConfig.ohdiscovery;
 #endif
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
@@ -3369,13 +3365,6 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       } else {
         Log.warning(F("RGB brightness value invalid - ignoring command" CR));
       }
-    }
-#endif
-#ifdef ZmqttDiscovery
-    if (SYSdata.containsKey("ohdisc") && SYSdata["ohdisc"].is<bool>()) {
-      SYSConfig.ohdiscovery = SYSdata["ohdisc"];
-      Log.notice(F("OpenHAB discovery: %T" CR), SYSConfig.ohdiscovery);
-      publishState = true;
     }
 #endif
     if (SYSdata.containsKey("wifi_ssid") && SYSdata["wifi_ssid"].is<const char*>() && SYSdata.containsKey("wifi_pass") && SYSdata["wifi_pass"].is<const char*>()) {
