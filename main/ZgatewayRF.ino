@@ -28,6 +28,8 @@
 #include "User_config.h"
 
 #ifdef ZgatewayRF
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
@@ -37,7 +39,22 @@
 
 RCSwitch mySwitch = RCSwitch();
 
-//SOME CONVERSION function from https://github.com/sui77/rc-switch/tree/master/examples/ReceiveDemo_Advanced
+/**
+ * @brief Converts a binary string to a tristate string.
+ *
+ * This function takes a binary string as input and converts it to a tristate string.
+ * The tristate string is composed of '0', '1', and 'F' characters, where:
+ * - '0' represents "00" in the binary string
+ * - '1' represents "11" in the binary string
+ * - 'F' represents "01" in the binary string
+ *
+ * If the input binary string contains any other combination, the function returns "-".
+ * 
+ * @note CONVERSION function from https://github.com/sui77/rc-switch/tree/master/examples/ReceiveDemo_Advanced
+ *
+ * @param bin The input binary string.
+ * @return A pointer to the tristate string.
+ */
 static const char* bin2tristate(const char* bin) {
   static char returnValue[50];
   int pos = 0;
@@ -59,6 +76,22 @@ static const char* bin2tristate(const char* bin) {
   return returnValue;
 }
 
+/**
+ * @brief Converts a decimal number to a binary string with zero fill.
+ *
+ * This function takes an unsigned long decimal number and converts it to a binary string
+ * representation, ensuring that the resulting string is zero-padded to the specified bit length.
+ *
+ * @param Dec The decimal number to be converted.
+ * @param bitLength The length of the resulting binary string, including leading zeros.
+ * @return A pointer to a static character array containing the binary string representation.
+ *
+ * @note The returned string is stored in a static buffer, so it will be overwritten by subsequent
+ * calls to this function. The buffer size is fixed at 64 characters.
+ * 
+ * @note CONVERSION function from https://github.com/sui77/rc-switch/tree/master/examples/ReceiveDemo_Advanced
+ *
+ */
 static char* dec2binWzerofill(unsigned long Dec, unsigned int bitLength) {
   static char bin[64];
   unsigned int i = 0;
@@ -80,41 +113,74 @@ static char* dec2binWzerofill(unsigned long Dec, unsigned int bitLength) {
   return bin;
 }
 
-#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery)
-
+#  if defined(ZmqttDiscovery) && defined(RF_on_HAS_as_DeviceTrigger)
+/**
+ * @brief Publishes RF signal data to MQTT for Home Assistant Device Trigger.
+ *
+ * This function creates a Home Assistant configuration message
+ * for an RF signal received by the gateway. It constructs the necessary
+ * MQTT topic and payload to announce the RF signal as a device trigger
+ * in Home Assistant.
+ *
+ * @param MQTTvalue The RF signal value to be published to MQTT.
+ */
 void RFtoMQTTdiscovery(uint64_t MQTTvalue) {
-  //on the fly switch creation from received RF values
   char val[11];
   sprintf(val, "%lu", MQTTvalue);
-  Log.trace(F("RF Entity Discovered, create HA Discovery CFG" CR));
-  char* switchRF[2] = {val, "RF"};
-  Log.trace(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
+  String deviceName = String(gateway_name) + " RF Receiver";
+  String deviceUniqueId = getUniqueId("RF", "");
+  String iSignal = String(val);
 #    if valueAsATopic
-  String discovery_topic = String(subjectRFtoMQTT) + "/" + String(switchRF[0]);
+  String discovery_topic = String(subjectRFtoMQTT) + "/" + iSignal;
 #    else
   String discovery_topic = String(subjectRFtoMQTT);
 #    endif
 
-  String theUniqueId = getUniqueId(String(switchRF[0]), "-" + String(switchRF[1]));
-  String subType = String(switchRF[0]);
-
+  Log.trace(F("[RF] Entity Discovered, create HA Discovery CFG" CR));
   announceDeviceTrigger(
-      false,
-      (char*)discovery_topic.c_str(),
-      "received",
-      (char*)subType.c_str(),
-      (char*)theUniqueId.c_str(),
-      "", "", "", "");
+      discovery_topic.c_str(), // topic
+      "received", // type
+      iSignal.c_str(), // subtype
+      deviceUniqueId.c_str(), // Device unique id
+      "{{value.binary}}", // value template
+      true, // gateway_info_as_device
+      null, // device name
+      null, // device manufacturer
+      null, // device model
+      null); // device ID
 }
 #  endif
 
+/**
+ * @brief Processes received RF signals and converts them to JSON format for further handling.
+ * 
+ * This function checks if an RF signal is available, extracts relevant data from the signal,
+ * and stores it in a JSON object. It also handles duplicate signal detection and optionally
+ * publishes the signal data for MQTT discovery and repetition.
+ * 
+ * @note This function is designed to work with both ESP32 and ESP8266 platforms.
+ * 
+ * @details The function performs the following steps:
+ * - Checks if an RF signal is available.
+ * - Logs the reception of the RF signal.
+ * - Extracts the value, protocol, length, delay, tristate, and binary representation of the signal.
+ * - For ESP32 and ESP8266, extracts the raw data of the signal.
+ * - If the ZradioCC1101 is defined, includes the frequency in the JSON object.
+ * - Resets the availability status of the RF signal.
+ * - Checks for duplicate signals and processes the signal if it is not a duplicate.
+ * - Optionally publishes the signal data for MQTT discovery and repetition.
+ * 
+ * @param None
+ * @return void
+ */
 void RFtoX() {
   if (mySwitch.available()) {
     StaticJsonDocument<JSON_MSG_BUFFER> RFdataBuffer;
     JsonObject RFdata = RFdataBuffer.to<JsonObject>();
-    Log.trace(F("Rcv. RF" CR));
 #  ifdef ESP32
-    Log.trace(F("RF Task running on core :%d" CR), xPortGetCoreID());
+    Log.trace(F("[RF] Rcv. RF - Task running on core :%d" CR), xPortGetCoreID());
+#  else
+    Log.trace(F("[RF] Rcv. RF" CR));
 #  endif
     uint64_t MQTTvalue = mySwitch.getReceivedValue();
     int length = mySwitch.getReceivedBitlength();
@@ -137,36 +203,61 @@ void RFtoX() {
     }
     RFdata["raw"] = rawDump;
 #  endif
+
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
     RFdata["frequency"] = RFConfig.frequency;
 #  endif
+
     mySwitch.resetAvailable();
 
     if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
-#  if defined(ZmqttDiscovery) && !defined(RF_DISABLE_TRANSMIT) && defined(RFmqttDiscovery) //component creation for HA
+#  if defined(ZmqttDiscovery) && defined(RF_on_HAS_as_DeviceTrigger) 
       if (SYSConfig.discovery)
         RFtoMQTTdiscovery(MQTTvalue);
 #  endif
       RFdata["origin"] = subjectRFtoMQTT;
       enqueueJsonObject(RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
-      Log.trace(F("Store val: %u" CR), (unsigned long)MQTTvalue);
+      Log.trace(F("[RF] Store val: %u" CR), (unsigned long)MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatRFwMQTT) {
-        Log.trace(F("Pub RF for rpt" CR));
+        Log.trace(F("[RF] Pub RF for rpt" CR));
         RFdata["origin"] = subjectMQTTtoRF;
         enqueueJsonObject(RFdata);
       }
+    } else {
+      Log.debug(F("[RF] RF signal received but already managed" CR));
     }
+  } else {
+    Log.debug(F("[RF] No RF signal received" CR));
   }
 }
 
-#  if simpleReceiving
+#  if simpleReceiving // FALSE MEAN you don't want to use old way reception analysis
+/**
+ * @brief Transmits RF signals based on the provided MQTT topic and data.
+ *
+ * This function processes the MQTT topic and data to determine the RF protocol,
+ * pulse length, and number of bits to use for transmission. It then transmits
+ * the RF signal using the specified parameters. If no specific parameters are
+ * provided, default values are used.
+ *
+ * @param topicOri The original MQTT topic string.
+ * @param datacallback The data to be transmitted, provided as a string.
+ *
+ * The function performs the following steps:
+ * 1. Disables the current RF receiver and enables the transmitter if ZradioCC1101 is defined.
+ * 2. Converts the data string to a 64-bit unsigned integer.
+ * 3. Analyzes the topic string to extract RF protocol, pulse length, and bit count.
+ * 4. Transmits the RF signal using the extracted or default parameters.
+ * 5. Publishes an acknowledgment to the GTWRF topic.
+ * 6. Re-enables the RF receiver and disables the transmitter if ZradioCC1101 is defined.
+ */
 void XtoRF(const char* topicOri, const char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   disableCurrentReceiver();
   ELECHOUSE_cc1101.SetTx(RFConfig.frequency);
-  Log.notice(F("Transmit frequency: %F" CR), RFConfig.frequency);
+  Log.notice(F("[RF] Transmit frequency: %F" CR), RFConfig.frequency);
 #    endif
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
@@ -196,22 +287,20 @@ void XtoRF(const char* topicOri, const char* datacallback) {
   }
 
   if ((cmpToMainTopic(topicOri, subjectMQTTtoRF)) && (valuePRT == 0) && (valuePLSL == 0) && (valueBITS == 0)) {
-    Log.trace(F("MQTTtoRF dflt" CR));
+    Log.trace(F("[RF] MQTTtoRF dflt" CR));
     mySwitch.setProtocol(1, 350);
     mySwitch.send(data, 24);
     // Acknowledgement to the GTWRF topic
     pub(subjectGTWRFtoMQTT, datacallback);
   } else if ((valuePRT != 0) || (valuePLSL != 0) || (valueBITS != 0)) {
-    Log.trace(F("MQTTtoRF usr par." CR));
+    Log.trace(F("[RF] MQTTtoRF usr par." CR));
     if (valuePRT == 0)
       valuePRT = 1;
     if (valuePLSL == 0)
       valuePLSL = 350;
     if (valueBITS == 0)
       valueBITS = 24;
-    Log.notice(F("RF Protocol:%d" CR), valuePRT);
-    Log.notice(F("RF Pulse Lgth: %d" CR), valuePLSL);
-    Log.notice(F("Bits nb: %d" CR), valueBITS);
+    Log.notice(F("[RF] Protocol: %d, Pulse Lgth: %d, Bits nb: %d" CR), valuePRT, valuePLSL, valueBITS);
     mySwitch.setProtocol(valuePRT, valuePLSL);
     mySwitch.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic
@@ -225,34 +314,53 @@ void XtoRF(const char* topicOri, const char* datacallback) {
 }
 #  endif
 
-#  if jsonReceiving
-void XtoRF(const char* topicOri, JsonObject& RFdata) { // json object decoding
+#  if jsonReceiving // FALSE MEAN you don't want to use Json  reception analysis
+/**
+ * @brief Handles the conversion of MQTT messages to RF signals.
+ *
+ * This function decodes a JSON object received via MQTT and transmits the corresponding RF signal.
+ * It supports different RF protocols and configurations.
+ *
+ * @param topicOri The original MQTT topic.
+ * @param RFdata The JSON object containing RF data to be transmitted.
+ *
+ * The JSON object should contain the following fields:
+ * - "value": The RF signal value to be transmitted (required).
+ * - "protocol": The RF protocol to be used (optional, default is 1).
+ * - "delay": The pulse length in microseconds (optional, default is 350).
+ * - "length": The number of bits in the RF signal (optional, default is 24).
+ * - "repeat": The number of times the RF signal should be repeated (optional, default is RF_EMITTER_REPEAT).
+ * - "txpower": The transmission power for CC1101 (optional, default is RF_CC1101_TXPOWER).
+ * - "frequency": The transmission frequency for CC1101 (optional, default is RFConfig.frequency).
+ *
+ * The function logs the transmission details and acknowledges the sending by publishing the value to an acknowledgement topic.
+ * It also restores the default repeat transmit value after sending the signal.
+ */
+void XtoRF(const char* topicOri, JsonObject& RFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
-    Log.trace(F("MQTTtoRF json" CR));
+    Log.trace(F("[RF] MQTTtoRF json" CR));
     uint64_t data = RFdata["value"];
     if (data != 0) {
       int valuePRT = RFdata["protocol"] | 1;
       int valuePLSL = RFdata["delay"] | 350;
       int valueBITS = RFdata["length"] | 24;
       int valueRPT = RFdata["repeat"] | RF_EMITTER_REPEAT;
-      Log.notice(F("RF Protocol:%d" CR), valuePRT);
-      Log.notice(F("RF Pulse Lgth: %d" CR), valuePLSL);
-      Log.notice(F("Bits nb: %d" CR), valueBITS);
+      Log.notice(F("[RF] Protocol:%d, Pulse Lgth: %d, Bits nb: %d" CR), valuePRT, valuePLSL, valueBITS);
       disableCurrentReceiver();
 #    ifdef ZradioCC1101
       initCC1101();
       int txPower = RFdata["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
-      Log.notice(F("CC1101 TX Power: %d" CR), txPower);
+      Log.notice(F("[RF] CC1101 TX Power: %d" CR), txPower);
       float txFrequency = RFdata["frequency"] | RFConfig.frequency;
       ELECHOUSE_cc1101.SetTx(txFrequency);
-      Log.notice(F("Transmit frequency: %F" CR), txFrequency);
+      Log.notice(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif
       mySwitch.enableTransmit(RF_EMITTER_GPIO);
       mySwitch.setRepeatTransmit(valueRPT);
       mySwitch.setProtocol(valuePRT, valuePLSL);
       mySwitch.send(data, valueBITS);
-      Log.notice(F("MQTTtoRF OK" CR));
+      Log.notice(F("[RF] MQTTtoRF OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       RFdata["origin"] = subjectGTWRFtoMQTT;
       enqueueJsonObject(RFdata);
@@ -264,28 +372,51 @@ void XtoRF(const char* topicOri, JsonObject& RFdata) { // json object decoding
 }
 #  endif
 
-int receiveInterupt = -1;
-
+/**
+ * @brief Disables the RF receiver.
+ *
+ * This function disables the RF receiver by calling the disableReceive method
+ * on the mySwitch object. It also logs a trace message indicating that the RF
+ * receiver has been disabled, along with the GPIO pin number used for the RF
+ * receiver.
+ *
+ * @note THIS SEEMS LIKE A DEAD CODE. THE FUNCTION IS NOT CALLED ANYWHERE.
+ */
 void disableRFReceive() {
-  Log.trace(F("disableRFReceive %d" CR), receiveInterupt);
+  Log.trace(F("[RF] disable RFReceive %d" CR), RF_RECEIVER_GPIO);
   mySwitch.disableReceive();
 }
 
+/**
+ * @brief Enables the RF receiver and optionally the RF transmitter.
+ *
+ * This function initializes the RF receiver on the specified GPIO pin and, if not disabled, 
+ * initializes the RF transmitter on the specified GPIO pin. It also sets the RF frequency 
+ * and logs the configuration details.
+ *
+ * @param rfFrequency The frequency for the RF communication in MHz. Default is RFConfig.frequency.
+ * @param rfReceiverGPIO The GPIO pin number for the RF receiver. Default is RF_RECEIVER_GPIO.
+ * @param rfEmitterGPIO The GPIO pin number for the RF transmitter. Default is RF_EMITTER_GPIO.
+ *
+ * @note If RF_DISABLE_TRANSMIT is defined, the RF transmitter will be disabled.
+ */
 void enableRFReceive() {
-  Log.notice(F("Enable RF Receiver: %FMhz" CR), RFConfig.frequency);
-  //RF init parameters
-  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+  float rfFrequency = RFConfig.frequency;
+  int rfReceiverGPIO = RF_RECEIVER_GPIO;
+  int rfEmitterGPIO = RF_EMITTER_GPIO;
+  Log.notice(F("[RF] Enable RF Receiver: %fMhz, RF_EMITTER_GPIO: %d, RF_RECEIVER_GPIO: %d" CR), rfFrequency, rfEmitterGPIO, rfReceiverGPIO);
+  receiveInterupt = rfReceiverGPIO;
 
 #  ifdef RF_DISABLE_TRANSMIT
   mySwitch.disableTransmit();
 #  else
-  mySwitch.enableTransmit(RF_EMITTER_GPIO);
+  mySwitch.enableTransmit(rfEmitterGPIO);
 #  endif
-  receiveInterupt = RF_RECEIVER_GPIO;
-  mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
-  mySwitch.enableReceive(receiveInterupt);
-  Log.trace(F("ZgatewayRF command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF);
-  Log.trace(F("ZgatewayRF setup done" CR));
+
+  mySwitch.setRepeatTransmit(rfEmitterGPIO);
+  mySwitch.enableReceive(rfReceiverGPIO);
+
+  Log.trace(F("[RF] Setup command topic: %s%s%s\n Setup done" CR), (const char*)mqtt_topic, (const char*)gateway_name, (const char*)subjectMQTTtoRF);
 }
+
 #endif

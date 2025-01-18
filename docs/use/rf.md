@@ -105,82 +105,114 @@ Delta applied to RSSI floor noise level to determine start and end of signal, de
 
 ## RCSwitch based gateway
 
-### Receiving data from RF signal
+The [RCSwitch](https://github.com/1technophile/rc-switch.git) library is an Arduino library that facilitates communication with 433MHz RF modules. It is designed to be lightweight and easy to use, making it suitable for basic RF communication tasks. The library supports both sending and receiving of RF signals, allowing for integration with various RF devices such as remote controls, sensors, and switches.
 
-Subscribe to all the messages with mosquitto or open your MQTT client software:
+To enable this module during compilation, add the flag `'-DZgatewayRF="RF"'` or uncomment the line `#define ZgatewayRF "RF"` in the `User_config.h` file.
 
-`    sudo mosquitto_sub -t +/# -v`
 
-Generate your RF signals by pressing a remote button or other and you should see :
+Other useful definitions can be:
 
-`home/OpenMQTTGateway/433toMQTT {"value":1315156,"protocol":1,"length":24,"delay":317}`
+* `#define RF_DISABLE_TRANSMIT` To disable the transmit functions and free up the pin for other uses, add (or uncomment) this line to the `config_rf.h` file.
+* `#define repeatRFwMQTT true` To enable repeating the RF signal received by the gateway, set this parameter to true in the `config_rf.h` file.
+* `#define RF_on_HAS_as_DeviceTrigger` To send a Home Assistant Device Trigger Message for each RF signal received, add (or uncomment) this line in the `config_rf.h` file. Note that this action also depends on the `ZmqttDiscovery` settings.
+* `#define RF_on_HAS_as_MQTT_Sensor` To send a Home Assistant MQTT sensor message for each RF signal received, add (or uncomment) this line in the `config_rf.h` file. Note that this action also depends on the `ZmqttDiscovery` settings.
 
-### Disabling Transmit function to safe a PIN
 
-To disable transmit functions to allow the use of another pin, add the following to the config_rf.h file :
 
-`#define RF_DISABLE_TRANSMIT`
+### Handling RF signal over MQTT 
+In this chapter, the process of receiving and sending RF signals using MQTT will be explored. By subscribing to MQTT topics and publishing messages, RF devices can be seamlessly integrated with an MQTT broker. 
 
-### Send data by MQTT to convert it on RF signal 
+#### Receiving Data from RF Signal
 
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156}'`
+To receive data from an RF signal, follow these steps:
 
-This command will send by RF the code 1315156 and use the default parameters (protocol 1, delay 350)
+1. Subscribe to all messages using mosquitto or open your MQTT client software:
+    ```sh
+    sudo mosquitto_sub -t +/# -v
+    ```
 
-Arduino IDE serial data received when publishing data by MQTT
+2. Generate your RF signals by pressing a remote button or other RF device. You should see output similar to:
+    ```json
+    home/OpenMQTTGateway/433toMQTT {"value":1315156,"protocol":1,"length":24,"delay":317}
+    ```
+
+
+#### Send data by MQTT to convert it to an RF signal
+
+To send an RF signal using MQTT, you can publish a message to the topic `home/OpenMQTTGateway/commands/MQTTto433` with the desired value. For example:
+
+```sh
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156}'
+```
+
+This command will send the RF code `1315156` using the default parameters (protocol 1, delay 350).
+
+When publishing data via MQTT, the Arduino IDE serial monitor will display the received value and the corresponding MQTT topic:
 
 ![Serial data](../img/OpenMQTTGateway_serial1.jpg)
 
-We see that the Arduino receive the value 1315156 on the MQTT subject "MQTTto433" and send the data by RF
+In this example, the Arduino receives the value `1315156` on the MQTT topic `MQTTto433` and transmits the data via RF.
 
-Arduino IDE serial data received when receiving data by 433Mhz
+Similarly, when receiving data via 433MHz, the Arduino IDE serial monitor will show the received data:
 
 ![Serial data 2](../img/OpenMQTTGateway_serial2.jpg)
 
 ### Send data by MQTT with advanced RF parameters
 
-RF sending support three advanced parameters: bits length, RF protocol and RF pulselength
+RF sending supports three advanced parameters: bits length, RF protocol, and RF pulse length.
 
--if you want to use a bits number different than 24 put inside your topic "length":24 for example
-
--if you want to use a different RCswitch protocol put inside your payload the protocol number 2, "protocol":2.
-
--if you want to use a pulselength 315 put inside your topic "delay":315
+- To use a different bits number, include `"length":24` in your payload.
+- To use a different RCSwitch protocol, include `"protocol":2` in your payload.
+- To use a different pulse length, include `"delay":315` in your payload.
 
 Example:
-`mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315}'`
-will make RCSwitch use the protocol 2 with a pulselength of 315ms and a bits number of 24 with a power of 5
 
-### Repeat the RF signal OpenMQTTGateway receive
-So as to repeat the RF signal received by the gateway once set the following parameter to true in config_RF.h
+```sh
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315}'
+```
 
-`#define repeatRFwMQTT true`
+This command will make RCSwitch use protocol 2 with a pulse length of 315ms and a bits number of 24.
 
-### Repeat the RF signal several times
-You can add a "repeat" key/value to the MQTTto433 JSON message to override the default number of repeats.
+
+#### Repeat the RF signal several time
+
+You can add a "repeat" key/value to the MQTTto433 JSON message to override the default number of repeats. Ensure that `repeatRFwMQTT` is enabled at compile time.
 
 Example:
-`home/OpenMQTTGateway/commands/MQTTto433 {"value":1315156,"protocol":1,"length":24,"delay":317, "repeat":10}`
+```sh
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":1,"length":24,"delay":317,"repeat":10}'
+```
 
-### Set Transmit and Receive Frequency and Transmit Power of CC1101 Transceiver
+#### Set Transmit and Receive Frequency and Transmit Power of CC1101 Transceiver
 
-Default transmit frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by including the frequency in the transmit message.  Parameter is `mhz` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board.
+The default transmit frequency of the CC1101 module is 433.92 MHz. This can be changed by including the desired frequency in the transmit message. The parameter is `frequency`, and valid values are 300-348 MHz, 387-464 MHz, and 779-928 MHz. Actual frequency support will depend on your CC1101 board.
 
-`home/OpenMQTTGateway/commands/MQTTto433 {"value":1150,"protocol":6,"length":12,"delay":450,"repeat":8,"frequency":303.732}`
+Example:
+```sh
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1150,"protocol":6,"length":12,"delay":450,"repeat":8,"frequency":303.732}'
+```
 
-Default receive frequency of the CC1101 module is 433.92 Mhz, and this can be can changed by sending a message with the frequency.  Parameter is `frequency` and valid values are 300-348 Mhz, 387-464Mhz and 779-928Mhz.  Actual frequency support will depend on your CC1101 board
+The default receive frequency of the CC1101 module is also 433.92 MHz. This can be changed by sending a message with the desired frequency. The parameter is `frequency`, and valid values are 300-348 MHz, 387-464 MHz, and 779-928 MHz. Actual frequency support will depend on your CC1101 board.
 
-`home/OpenMQTTGateway/commands/MQTTtoRF/config {"frequency":433.92}`
+Example:
+```sh
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoRF/config" -m '{"frequency":433.92}'
+```
 
-Messages received will include the frequency, and when transmitting on a different frequency the module return to the receive frequency afterwards.  ie transmit messages on 303.732 Mhz then receive messages on 433.92 Mhz 
+Messages received will include the frequency, and when transmitting on a different frequency, the module will return to the receive frequency afterward. For example, transmit messages on 303.732 MHz and then receive messages on 433.92 MHz.
 
-`{"value":4534142,"protocol":6,"length":26,"delay":356,"frequency":315.026}`
+Example received message:
+```json
+{"value":4534142,"protocol":6,"length":26,"delay":356,"frequency":315.026}
+```
 
-You can adjust the tx-power in db for a transmission. Parameter is `cc1101_pa` and valid values in decibel are (-30  -20  -15  -10  -6    0    5    7    10   11   12) Default is max!
-That can be done to reduce range and therefore disturbances with other nearby devices.
-If you want to send a transmission with a power of 5 db than use the message 
+You can also adjust the transmit power (tx-power) in decibels (dB) for a transmission. The parameter is `cc1101_pa`, and valid values in decibels are -30, -20, -15, -10, -6, 0, 5, 7, 10, 11, and 12. The default is the maximum value. Adjusting the transmit power can help reduce range and minimize disturbances with other nearby devices.
 
-`{"value":1315156,"protocol":2,"length":24,"delay":315, "cc1101_pa":5}`
+Example:
+```sh
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTto433" -m '{"value":1315156,"protocol":2,"length":24,"delay":315,"cc1101_pa":5}'
+```
+
 
 
 ## Pilight gateway
