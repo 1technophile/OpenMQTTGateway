@@ -153,6 +153,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
           }
           DISCOVERY_TRACE_LOG(F("idWoKeyAndModel %s" CR), idWoKeyAndModel.c_str());
           idWoKeyAndModel.replace("-", "/");
+          idWoKeyAndModel.replace("//", "/-");
           topic = topic + idWoKeyAndModel;
 #    endif
           if (strcmp(parameters[i][0], "battery_ok") == 0) {
