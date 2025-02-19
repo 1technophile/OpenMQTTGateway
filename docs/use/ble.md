@@ -4,7 +4,7 @@ description: Versatile Bluetooth gateway that scans and decodes data from variou
 ---
 # Bluetooth gateway
 
-The manufacturer agnostic Bluetooth Low Energy (BLE) gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/), allowing you to visualize and analyze information from a wide range of sensors. 
+The manufacturer agnostic Bluetooth Low Energy (BLE) gateway acts as a powerful BLE scanner and decoder of [Bluetooth devices](https://decoder.theengs.io/devices/devices.html), allowing you to visualize and analyze information from a wide range of sensors. 
 It can also act as a device tracker and presence detection gateway by receiving nearby BLE devices and trackers.
 
 Data are transmitted to an MQTT broker, where it can be used to trigger events and rules, as well as displayed, stored and processed in your favorite controller (Home Assistant, OpenHAB, Jeedom, Domoticz, ioBroker or any MQTT compatible software).
@@ -30,7 +30,7 @@ With the ability to monitor and analyze data such as temperature, humidity, mois
 ### Theengs Plug, BLE gateway and Smart Plug
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) brings the following features:
-* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://decoder.theengs.io/devices/devices.html) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
 * Device tracker,

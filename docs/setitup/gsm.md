@@ -1,10 +1,10 @@
 # GSM 2G gateway
 ## Compatible parts
 
-|Module|Purpose|Where to Buy|
-|-|-|-|
-|A6|GSM GPRS module|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|A7|GSM GPRS module with GPS|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|Module|Purpose|
+|-|-|
+|A6|GSM GPRS module|
+|A7|GSM GPRS module with GPS|
 
 ## Hardware setup
 

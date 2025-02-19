@@ -1,32 +1,57 @@
-# Devices
+# Supported Devices
 
-You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported devices](https://compatible.openmqttgateway.com/index.php/devices/).
+OpenMQTTGateway supports a wide range of devices across multiple communication protocols. Below are the categories and details of supported devices.
 
-Added to that is an overview of devices supported by OpenMQTTGateway:
+## Bluetooth (BLE) Devices
 
-## For radio frequency devices 
-OpenMQTTGateway can support a wide range of 433mhz/315mhz devices, all the ones with SC5262 / SC5272, HX2262 / HX2272, PT2262 / PT2272, EV1527, RT1527, FP1527, HS1527 chipsets are supported by the RF gateway. Added to that RF2 support Kaku and Pilight an [huge list](https://wiki.pilight.org/devices). 
-Note that for the moment RF, RF2 and Pilight can not be activated on the same boards together.
+OpenMQTTGateway can scan all Bluetooth Low Energy (BLE) devices that advertise their data, making it ideal for presence detection. Additionally, it retrieves measurements from supported devices with minimal impact on battery life by reading advertisements. In some cases, the gateway briefly connects to retrieve specific parameters or control the device.
 
-![boards](../img/OpenMQTTGateway_devices_rf1.png ':size=250%')
-![boards](../img/OpenMQTTGateway_devices_rf2.png ':size=250%')
-![boards](../img/OpenMQTTGateway_devices_rf3.png ':size=250%')
+Currently, OpenMQTTGateway supports [more than 110 Bluetooth devices](https://decoder.theengs.io/devices/devices.html), including:
 
-## For BLE devices 
-OpenMQTTGateway is able to scan all the BLE devices that advertise their data so as to do presence detection. 
-Added to that it retrieves the measures from the devices mentioned and linked to below. By default the data are read from the advertisements (no or very little impact on device battery life). For some devices we may connect briefly only to retrieve one or several parameters.
+- **Mi Flora** (plant monitoring)
+- **Xiaomi scales**
+- **Inkbird, Govee, and ThermoPro** thermo-hygrometers and BBQ thermometers
+- **SwitchBot** devices (monitoring and control)
+- **And many more!**
 
-OpenMQTTGateway currently supports the decoding of [more than 100 Bluetooth devices](https://decoder.theengs.io/devices/devices.html), which include popular devices like Mi Flora, Xiaomi scales, Inkbird, Govee and ThermoPro thermo-hygrometers and BBQ thermometers, SwitchBot devices status and many more.
+For additional BLE modifications and custom firmware, check out:
+- [ATC_MiThermometer (2)](https://github.com/atc1441/ATC_MiThermometer)
+- [ATC_MiThermometer (3)](https://github.com/pvvx/ATC_MiThermometer)
 
-::: tip
-- (2) See https://github.com/atc1441/ATC_MiThermometer
-- (3) See https://github.com/pvvx/ATC_MiThermometer
-:::
+![BLE Devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
 
-![devices](../img/OpenMQTTGateway_devices_ble.png ':size=250%')
+---
 
-## For infrared IR devices 
-The list of supported devices for ESP is [here](https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md), and [here](https://github.com/1technophile/OpenMQTTGateway/blob/6f73160d1421bebf2c1bbc9b8017978ff5b16520/main/config_IR.h#L123) for Arduino boards, as there is also the possibility of using raw and global cache (ESP) sending possibilities of this gateway is huge!
+## Radio Frequency (RF) Devices
 
-## LORA
-LoRa is more dedicated at this moment for tinkering and DIY and there is no Off the shelves devices compatible to my knowledge with this gateway.
+OpenMQTTGateway supports a broad range of **315MHz, 433MHz, and 815MHz** devices, primarily through [RTL_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP). Additionally, it supports devices using the following chipsets:
+
+- **SC5262 / SC5272**
+- **HX2262 / HX2272**
+- **PT2262 / PT2272**
+- **EV1527 / RT1527 / FP1527 / HS1527**
+
+For **RF2**, OpenMQTTGateway also supports **KaKu and Pilight**, covering an extensive range of devices listed in the [Pilight wiki](https://wiki.pilight.org/devices).
+
+⚠ **Note:** RF, RF2, RTL_433 and Pilight cannot be enabled on the same board simultaneously.
+
+![RF Boards](../img/OpenMQTTGateway_devices_rf1.png ':size=250%')  
+![RF Boards](../img/OpenMQTTGateway_devices_rf2.png ':size=250%')  
+![RF Boards](../img/OpenMQTTGateway_devices_rf3.png ':size=250%')
+
+---
+
+## Infrared (IR) Devices
+
+OpenMQTTGateway supports infrared (IR) communication, enabling control of IR-based devices.
+
+- Supported **ESP-based devices**: [List here](https://github.com/crankyoldgit/IRremoteESP8266/blob/master/SupportedProtocols.md)
+- Supported **Arduino-based devices**: [List here](https://github.com/1technophile/OpenMQTTGateway/blob/6f73160d1421bebf2c1bbc9b8017978ff5b16520/main/config_IR.h#L123)
+
+The gateway also supports **raw IR signal transmission** and **Global Cache IR sending**, greatly expanding its compatibility.
+
+---
+
+## LoRa Devices
+
+LoRa support in OpenMQTTGateway is currently focused on **DIY and experimentation**. At this time, a few LoRa devices are known to be compatible with the gateway.
