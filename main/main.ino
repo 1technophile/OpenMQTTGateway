@@ -25,7 +25,44 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "User_config.h"
+
+#define ARDUINOJSON_USE_LONG_LONG     1
+#define ARDUINOJSON_ENABLE_STD_STRING 1
+
+#include "main_utils.h"
+
+#if defined(ESP32)
+#  include <Preferences.h>
+Preferences preferences;
+#endif
+
+//Avoid multiple definition of the same strutucture from User_config.h
+#if !MQTT_BROKER_MODE
+struct ss_cnt_parameters {
+  std::string server_cert;
+  std::string client_cert;
+  std::string client_key;
+  std::string ota_server_cert;
+  char mqtt_server[parameters_size];
+  char mqtt_port[6];
+  char mqtt_user[parameters_size];
+  char mqtt_pass[parameters_size];
+  bool isConnectionSecure;
+  bool isCertValidate;
+  bool validConnection;
+};
+
+#  define cnt_parameters_array_size 3
+
+ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
+    {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
+    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
+    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
+#endif
+
+unsigned long lastDiscovery = DEFAULT_LAST_DISCOVERY; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 
 enum GatewayState {
   WAITING_ONBOARDING,
@@ -65,9 +102,6 @@ unsigned long timer_sys_checks = 0;
 // First Start of offline mode modules
 bool firstStart = true;
 
-#define ARDUINOJSON_USE_LONG_LONG     1
-#define ARDUINOJSON_ENABLE_STD_STRING 1
-
 #include <queue>
 int queueLength = -1; // We want to give one cycle of the loop before starting modules that are big msgs producers (example BT), to avoid queue overloading
 unsigned long queueLengthSum = 0;
@@ -94,10 +128,6 @@ bool ready_to_sleep = false;
 #include "TheengsUtils.h"
 
 LEDManager ledManager;
-
-struct JsonBundle {
-  StaticJsonDocument<JSON_MSG_BUFFER> doc;
-};
 
 std::queue<std::string> jsonQueue;
 
@@ -236,10 +266,11 @@ struct GfSun2000Data {};
 #  include "config_SERIAL.h"
 #endif
 /*------------------------------------------------------------------------*/
-
-void setupTLS(int index = CNT_DEFAULT_INDEX);
+/*-----------------done load all configurations---------------------------*/
+/*------------------------------------------------------------------------*/
 
 char ota_pass[parameters_size] = gw_password;
+
 #ifdef USE_MAC_AS_GATEWAY_NAME
 #  undef WifiManager_ssid
 #  undef ota_hostname
@@ -247,16 +278,22 @@ char ota_pass[parameters_size] = gw_password;
 char WifiManager_ssid[MAC_NAME_MAX_LEN];
 char ota_hostname[MAC_NAME_MAX_LEN];
 #endif
+
 int failure_number_ntwk = 0; // number of failure connecting to network
+
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 
 static unsigned long last_ota_activity_millis = 0;
+
 // Global struct to store live SYS configuration data
 SYSConfig_s SYSConfig;
 
 bool failSafeMode = false;
+
 bool ProcessLock = true; // Process lock when we want to use a critical function like OTA for example
+
 static bool mqttSetupPending = true;
+
 static int cnt_index = CNT_DEFAULT_INDEX;
 
 #ifdef ESP32
@@ -312,6 +349,75 @@ ESP8266WiFiMulti wifiMulti;
 #  include <Ethernet.h>
 #endif
 
+/*
+---------------------  Start Global Object Definitions
+*/
+#include <mqtt/MQTTPublisher.h>
+class MQTTPublisherAdapter : public MQTTPublisher {
+public:
+  bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
+    return enqueueJsonObject(jsonDoc);
+  }
+};
+MQTTPublisherAdapter iMQTTPublisherAdapter;
+
+#if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
+// This section of code sets up the RF (Radio Frequency) part of the gateway
+
+#  include <rf/RFConfig.h>
+
+// First, create the structure that will hold the RF configurations
+#  if defined(ESP32)
+RFConfig iRFConfig(preferences);
+#  else
+RFConfig iRFConfig;
+#  endif
+
+#  include <rf/ZCommonRF.h>
+
+// Then, create the object that represents the RF gateway service
+ZCommonRF iZCommonRF(iMQTTPublisherAdapter, iRFConfig);
+
+#  ifdef ZgatewayRF
+// If the rcswitch is to be used, instantiate the RF module and attach it to the RF gateway service
+#    include "rf/rcswitch/ZGatewayRF.h"
+ZGatewayRF iZGatewayRF(iZCommonRF);
+
+#  endif // ZgatewayRF
+
+// TODO: Add other RF modules here
+
+#endif // defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
+
+#if MQTT_BROKER_MODE
+#  include "mqtt/ZCommonMQTT.h"
+std::unique_ptr<MQTTServer> mqtt;
+mqtt.set_autodiscovery_callback(handle_autodiscovery);
+#else
+std::unique_ptr< ::Client> eClient;
+std::unique_ptr<PicoMQTT::Client> mqtt;
+#endif
+
+/*
+---------------------  Start Function Definitions
+*/
+
+
+
+template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
+void Config_update(JsonObject& data, const char* key, T& var);
+template <typename T>
+void Config_update(JsonObject& data, const char* key, T& var) {
+  if (data.containsKey(key)) {
+    if (var != data[key].as<T>()) {
+      var = data[key].as<T>();
+      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
+    } else {
+      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
+    }
+  }
+}
+
 void handle_autodiscovery() {
 #ifdef ZmqttDiscovery
   static bool connectedOnce = false;
@@ -336,49 +442,6 @@ void handle_autodiscovery() {
 
   connectedOnce = true;
 #endif
-}
-
-#if MQTT_BROKER_MODE
-
-class MQTTServer : public PicoMQTT::Server {
-public:
-  size_t get_client_count() const {
-    return clients.size();
-  }
-
-  bool connected() const {
-    return !clients.empty();
-  }
-
-protected:
-  virtual void on_subscribe(const char* client_id, const char* topic) override {
-    // Whenever a client subscribes successfully to some topic, see if this is likely a subscription to a
-    // autodiscovery topic.  If it is, fire handle_autodiscovery().
-    const String pattern(topic);
-    const bool is_autodiscovery_subscription = (pattern == "#") || (pattern.startsWith(String(discovery_prefix) + "/"));
-    if (is_autodiscovery_subscription)
-      handle_autodiscovery();
-  }
-};
-
-std::unique_ptr<MQTTServer> mqtt;
-#else
-std::unique_ptr< ::Client> eClient;
-std::unique_ptr<PicoMQTT::Client> mqtt;
-#endif
-
-template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
-void Config_update(JsonObject& data, const char* key, T& var);
-template <typename T>
-void Config_update(JsonObject& data, const char* key, T& var) {
-  if (data.containsKey(key)) {
-    if (var != data[key].as<T>()) {
-      var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
-    } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
-    }
-  }
 }
 
 /*
@@ -856,6 +919,19 @@ void SYSConfig_save() {
 void SYSConfig_save() {}
 #endif
 
+/**
+ * @brief Compares a given topic string with a constructed topic string.
+ *
+ * This function checks if the provided `topicOri` string is equal to the 
+ * concatenation of `mqtt_topic`, `gateway_name`, and `toAdd`. It first 
+ * checks if `topicOri` is exactly equal to `toAdd`. If not, it then 
+ * constructs a new string by concatenating `mqtt_topic`, `gateway_name`, 
+ * and `toAdd`, and compares it with `topicOri`.
+ *
+ * @param topicOri The original topic string to compare.
+ * @param toAdd The string to add to the constructed topic string.
+ * @return true if `topicOri` matches the constructed topic string, false otherwise.
+ */
 bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
   if (strcmp(topicOri, toAdd) == 0)
     return true;
@@ -1313,6 +1389,10 @@ void updateAndHandleLEDsTask() {
 }
 
 void setup() {
+#ifdef ZgatewayRF
+  iZCommonRF.addGatewayRF(ACTIVE_RF, &iZGatewayRF);
+#endif
+
   //Launch serial for debugging purposes
   Serial.begin(SERIAL_BAUD);
   Log.begin(LOG_LEVEL, &Serial);
@@ -1455,7 +1535,10 @@ void setup() {
 
   delay(1500);
 #if defined(ZgatewayRF) || defined(ZgatewayPilight) || defined(ZgatewayRTL_433) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
-  setupCommonRF();
+
+  //setupCommonRF();
+  iZCommonRF.setupCommonRF();
+
 #endif
 #ifdef ZsensorBME280
   setupZsensorBME280();
@@ -2572,7 +2655,8 @@ void loop() {
       stateLORAMeasures();
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
-      stateRFMeasures();
+      //stateRFMeasures();
+      iZCommonRF.stateRFMeasures();
 #endif
 #if defined(ZwebUI) && defined(ESP32)
       stateWebUIStatus();
@@ -2650,7 +2734,8 @@ void loop() {
 #  endif
 #endif
 #ifdef ZgatewayRF
-    RFtoX();
+    //RFtoX();
+    iZCommonRF.getCurrentGatewayRF()->RFtoX();
 #endif
 #ifdef ZgatewayRF2
     RF2toX();
@@ -2982,14 +3067,16 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
     XtoPilight(strTopicOri.c_str(), jsondata);
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
-    XtoRFset(strTopicOri.c_str(), jsondata);
+    //XtoRFset(strTopicOri.c_str(), jsondata);
+    iZCommonRF.XtoRFset(strTopicOri.c_str(), jsondata);
 #endif
 #if jsonReceiving
 #  ifdef ZgatewayLORA
     XtoLORA(strTopicOri.c_str(), jsondata);
 #  endif
 #  ifdef ZgatewayRF
-    XtoRF(strTopicOri.c_str(), jsondata);
+    //XtoRF(strTopicOri.c_str(), jsondata);
+    iZCommonRF.getCurrentGatewayRF()->XtoRF(strTopicOri.c_str(), jsondata);
 #  endif
 #  ifdef ZgatewayRF2
     XtoRF2(strTopicOri.c_str(), jsondata);
@@ -3045,7 +3132,8 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
     XtoLORA(strTopicOri.c_str(), datacallback);
 #  endif
 #  ifdef ZgatewayRF
-    XtoRF(strTopicOri.c_str(), datacallback);
+    //XtoRF(strTopicOri.c_str(), datacallback);
+    iZCommonRF.getCurrentGatewayRF()->XtoRF(strTopicOri.c_str(), datacallback);
 #  endif
 #  ifdef ZgatewayRF315
     XtoRF315(strTopicOri.c_str(), datacallback);

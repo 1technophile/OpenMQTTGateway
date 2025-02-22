@@ -67,12 +67,14 @@
 
 /*------------------- End of Compiler Directives ----------------------*/
 
-#define WEBUI_SECURE                                                                    \
-  if (webUISecure) {                                                                    \
-    if (!server.authenticate(www_username, ota_pass)) {                                 \
-      return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse); \
-    }                                                                                   \
-  }
+#if WEBUI_AUTH
+#  define WEBUI_SECURE                                                                    \
+      if (!server.authenticate(www_username, ota_pass)) {                                 \
+        return server.requestAuthentication(DIGEST_AUTH, gateway_name, authFailResponse); \
+      }                                                                                   \
+#else
+#  define WEBUI_SECURE
+#endif
 
 #define MAX_WIFI_NETWORKS_TO_SHOW 10
 

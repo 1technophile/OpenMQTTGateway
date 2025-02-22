@@ -26,6 +26,7 @@
 #  include <ArduinoJson.h>
 #  include <SPIFFS.h>
 #  include <WebServer.h> // Docs for this are here - https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer
+#  include <rf/RFConfig.h>
 
 #  include "ArduinoLog.h"
 #  include "config_WebContent.h"
@@ -1150,9 +1151,8 @@ void handleRF() {
     if (server.hasArg("save")) {
       if (server.hasArg("rf")) {
         String freqStr = server.arg("rf");
-        RFConfig.frequency = freqStr.toFloat();
-        if (validFrequency(RFConfig.frequency)) {
-          WEBtoRF["frequency"] = RFConfig.frequency;
+        if (iRFConfig.setFrequency(freqStr.toFloat())) {
+          WEBtoRF["frequency"] = iRFConfig.getFrequency();
           update = true;
         } else {
           Log.warning(F("[WebUI] Invalid Frequency" CR));
@@ -1161,34 +1161,34 @@ void handleRF() {
       if (server.hasArg("ar")) {
         int selectedReceiver = server.arg("ar").toInt();
         if (isValidReceiver(selectedReceiver)) { // Assuming isValidReceiver is a validation function
-          RFConfig.activeReceiver = selectedReceiver;
-          WEBtoRF["activereceiver"] = RFConfig.activeReceiver;
+          iRFConfig.setActiveReceiver(selectedReceiver);
+          WEBtoRF["activereceiver"] = iRFConfig.getActiveReceiver();
           update = true;
         } else {
           Log.warning(F("[WebUI] Invalid Active Receiver" CR));
         }
       }
       if (server.hasArg("oo")) {
-        RFConfig.newOokThreshold = server.arg("oo").toInt();
-        WEBtoRF["ookthreshold"] = RFConfig.newOokThreshold;
+        iRFConfig.setNewOokThreshold(server.arg("oo").toInt());
+        WEBtoRF["ookthreshold"] = iRFConfig.getNewOokThreshold();
         update = true;
       }
       if (server.hasArg("rs")) {
-        RFConfig.rssiThreshold = server.arg("rs").toInt();
-        WEBtoRF["rssithreshold"] = RFConfig.rssiThreshold;
+        iRFConfig.setRssiThreshold(server.arg("rs").toInt());
+        WEBtoRF["rssithreshold"] = iRFConfig.getRssiThreshold();
         update = true;
       }
       if (update) {
         Log.notice(F("[WebUI] Save data" CR));
         WEBtoRF["save"] = true;
-        RFConfig_fromJson(WEBtoRF);
-        stateRFMeasures();
+        iRFConfig.from(WEBtoRF);
+        iZCommonRF.stateRFMeasures();
         Log.trace(F("[WebUI] RFConfig end" CR));
       }
     }
   }
 
-  String activeReceiverHtml = generateActiveReceiverOptions(RFConfig.activeReceiver);
+  String activeReceiverHtml = generateActiveReceiverOptions(iRFConfig.getActiveReceiver());
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -1199,7 +1199,7 @@ void handleRF() {
   response += String(script);
   response += String(style);
 
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_rf_body, jsonChar, gateway_name, RFConfig.frequency, activeReceiverHtml.c_str());
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_rf_body, jsonChar, gateway_name, iRFConfig.getFrequency(), activeReceiverHtml.c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1377,7 +1377,7 @@ void handleIN() {
 #  endif
 #  if defined(ZgatewayRF)
     informationDisplay += "1<BR>RF}2}1";
-    informationDisplay += stateRFMeasures();
+    informationDisplay += iZCommonRF.stateRFMeasures();
 #  endif
     informationDisplay += "1<BR>WebUI}2}1";
     informationDisplay += stateWebUIStatus();

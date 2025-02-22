@@ -149,20 +149,6 @@
 #  endif
 #endif
 
-#ifndef JSON_MSG_BUFFER
-#  if defined(ESP32)
-#    define JSON_MSG_BUFFER 1024 // adjusted to minimum size covering largest home assistant discovery messages
-#    if MQTT_SECURE_DEFAULT
-#      define JSON_MSG_BUFFER_MAX 2048 // Json message buffer size increased to handle certificate changes through MQTT, used for the queue and the coming MQTT messages
-#    else
-#      define JSON_MSG_BUFFER_MAX 1024 // Minimum size for the cover MQTT discovery message
-#    endif
-#  elif defined(ESP8266)
-#    define JSON_MSG_BUFFER     512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266, certificates handling with ESP8266 is not tested
-#    define JSON_MSG_BUFFER_MAX 832 // Minimum size for MQTT discovery message
-#  endif
-#endif
-
 #ifndef mqtt_max_payload_size
 #  define mqtt_max_payload_size JSON_MSG_BUFFER_MAX + mqtt_topic_max_size + 10 // maximum size of the MQTT payload
 #endif
@@ -272,29 +258,6 @@ const char* OTAserver_cert = "";
 
 #ifndef CNT_DEFAULT_INDEX
 #  define CNT_DEFAULT_INDEX 0 // Default set of connection parameters
-#endif
-
-#if !MQTT_BROKER_MODE
-struct ss_cnt_parameters {
-  std::string server_cert;
-  std::string client_cert;
-  std::string client_key;
-  std::string ota_server_cert;
-  char mqtt_server[parameters_size];
-  char mqtt_port[6];
-  char mqtt_user[parameters_size];
-  char mqtt_pass[parameters_size];
-  bool isConnectionSecure;
-  bool isCertValidate;
-  bool validConnection;
-};
-
-#  define cnt_parameters_array_size 3
-
-ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
-    {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
-    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
-    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
 #endif
 
 #define MIN_CERT_LENGTH 200 // Minimum length of a certificate to be considered valid
@@ -629,16 +592,13 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 void connectMQTT();
 
 unsigned long uptime();
-bool cmpToMainTopic(const char*, const char*);
 bool pub(const char*, const char*, bool);
 bool pub(const char*, const char*);
 
-#if defined(ESP32)
-#  include <Preferences.h>
-Preferences preferences;
+#ifndef DEFAULT_LAST_DISCOVERY
+#  define DEFAULT_LAST_DISCOVERY 0 // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 #endif
 
-unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 #ifndef DEFAULT_DISCOVERY
 #  define DEFAULT_DISCOVERY true
 #endif
@@ -687,11 +647,6 @@ struct SYSConfig_s {
 #endif
 #ifndef DEFAULT_OFFLINE
 #  define DEFAULT_OFFLINE false
-#endif
-
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
-bool isAduplicateSignal(uint64_t);
-void storeSignalValue(uint64_t);
 #endif
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)

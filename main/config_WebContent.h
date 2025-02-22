@@ -26,6 +26,8 @@
 #ifndef config_WebContent_h
 #define config_WebContent_h
 
+#include "User_config.h"
+
 /*------------------- ----------------------*/
 
 // TODO: Create a script to generate these from WebPack
