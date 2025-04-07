@@ -28,6 +28,7 @@
 #include <ArduinoLog.h>
 
 #include "User_config.h"
+#include "esp_mac.h"
 
 #ifdef ZmqttDiscovery
 #  include "config_mqttDiscovery.h"
@@ -55,7 +56,7 @@ String getUniqueId(String name, String sufix) {
 #  if defined(ZgatewayBT) || defined(SecondaryModule)
 /**
  * Create a discover messages form a list of attribute
- * 
+ *
  * @param mac the MAC address
  * @param sensorList[][0] = component type
  * @param sensorList[][1] = name
@@ -94,15 +95,15 @@ void createDiscoveryFromList(const char* mac,
 #  endif
 
 /**
- * @brief Announce that the Gateway have the ability to raise Trigger. 
- * This function provide the configuration of the MQTT Device trigger ( @see https://www.home-assistant.io/integrations/device_trigger.mqtt/ ). 
- * All messages published by this function will be interpreted as configuration messages of Gateway Triggers. 
+ * @brief Announce that the Gateway have the ability to raise Trigger.
+ * This function provide the configuration of the MQTT Device trigger ( @see https://www.home-assistant.io/integrations/device_trigger.mqtt/ ).
+ * All messages published by this function will be interpreted as configuration messages of Gateway Triggers.
  * Instead, all messages published on the "triggerTopic" will be interpreted as Gateway trigger.
  *
  * @param triggerTopic          Mandatory - The MQTT topic subscribed to receive trigger events.
  * @param type                  The type of the trigger, e.g. button_short_press. Entries supported by the HA Frontend: button_short_press, button_short_release, button_long_press, button_long_release, button_double_press, button_triple_press, button_quadruple_press, button_quintuple_press. If set to an unsupported value, will render as subtype type, e.g. button_1 spammed with type set to spammed and subtype set to button_1
  * @param subtype               The subtype of the trigger, e.g. button_1. Entries supported by the HA frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6. If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
- * @param object_id             The object_id of the trigger. 
+ * @param object_id             The object_id of the trigger.
  * @param value_template        The template to render the value of the trigger. The template can use the variables trigger.id, trigger.type, trigger.subtype, trigger.payload, trigger.payload_json, trigger.topic, trigger.timestamp, trigger.value, trigger.value_json. The template can be a string or a JSON object. If the template is a JSON object, it must be a valid JSON object. If the template is a string, it will be rendered as a string. If the template is a JSON object, it will be rendered as a JSON object.
  */
 void announceGatewayTrigger(const char* triggerTopic,
@@ -116,7 +117,7 @@ void announceGatewayTrigger(const char* triggerTopic,
 
   /**
    * The type of automation, must be ‘trigger’.
-   * @see https://www.home-assistant.io/integrations/device_trigger.mqtt/#automation_type 
+   * @see https://www.home-assistant.io/integrations/device_trigger.mqtt/#automation_type
    */
   sensor["automation_type"] = "trigger";
 
@@ -146,7 +147,7 @@ void announceGatewayTrigger(const char* triggerTopic,
   }
 
   /**
-   * The type of the trigger, e.g. button_short_press. 
+   * The type of the trigger, e.g. button_short_press.
    * Entries supported by the HA frontend: button_short_press, button_short_release, button_long_press, button_long_release, button_double_press, button_triple_press, button_quadruple_press, button_quintuple_press.
    * If set to an unsupported value, will render as subtype type, e.g. button_1 spammed with type set to spammed and subtype set to button_1
    */
@@ -157,8 +158,8 @@ void announceGatewayTrigger(const char* triggerTopic,
   }
 
   /**
-   * The subtype of the trigger, e.g. turn_on. 
-   * Entries supported by the frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6. 
+   * The subtype of the trigger, e.g. turn_on.
+   * Entries supported by the frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6.
    * If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
    */
   if (subtype && subtype[0] != 0) {
@@ -187,7 +188,7 @@ void announceGatewayTrigger(const char* triggerTopic,
   }
 
   /*
-  * A list of connections of the device to the outside world as a list of tuples [connection_type, connection_identifier]. 
+  * A list of connections of the device to the outside world as a list of tuples [connection_type, connection_identifier].
   * For example the MAC address of a network interface: "connections": [["mac", "02:5b:26:a8:dc:12"]].
   */
   JsonArray connections = device.createNestedArray("connections");
@@ -223,12 +224,12 @@ void announceGatewayTrigger(const char* triggerTopic,
     sensor["value_template"] = String(value_template);
   }
 
-  /* Publish on the topic 
-     The discovery topic needs to be: <discovery_prefix>/device_automation/[<node_id>/]<object_id>/config. 
-     
-     Note that only one trigger may be defined per unique discovery topic. 
+  /* Publish on the topic
+     The discovery topic needs to be: <discovery_prefix>/device_automation/[<node_id>/]<object_id>/config.
+
+     Note that only one trigger may be defined per unique discovery topic.
      Also note that the combination of type and subtype should be unique for a device.
-   
+
    */
 
   String topic_to_publish = String(discovery_prefix) + "/device_automation/" + String(unique_id) + "/" + object_id + "/config";
@@ -254,7 +255,7 @@ std::string remove_substring(std::string s, const std::string& p) {
 
 /**
  * @brief Generate message and publish it on an MQTT discovery explorer. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
- * 
+ *
  * @param sensor_type the Type
  * @param st_topic set state topic,
  * @param s_name set name,
@@ -268,15 +269,15 @@ std::string remove_substring(std::string s, const std::string& p) {
  * @param off_delay set off_delay
  * @param payload_available set payload_available,
  * @param payload_not_available set payload_not_available
- * @param gateway_entity set is a gateway entity, 
+ * @param gateway_entity set is a gateway entity,
  * @param cmd_topic set command topic
- * @param device_name set device name, 
- * @param device_manufacturer set device manufacturer, 
- * @param device_model set device model, 
- * @param device_id set device(BLE)/entity(RTL_433) identification, 
+ * @param device_name set device name,
+ * @param device_manufacturer set device manufacturer,
+ * @param device_model set device model,
+ * @param device_id set device(BLE)/entity(RTL_433) identification,
  * @param retainCmd set retain
  * @param state_class set state class
- * 
+ *
  * */
 void createDiscovery(const char* sensor_type,
                      const char* st_topic, const char* s_name, const char* unique_id,
