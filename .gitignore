@@ -16,3 +16,4 @@ sdkconfig.*
 !sdkconfig.defaults
 __pycache__
 *.pem
+managed_components

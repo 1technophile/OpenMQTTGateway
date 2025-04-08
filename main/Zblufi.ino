@@ -29,6 +29,7 @@
 #  include "NimBLEDevice.h"
 #  include "NimBLEOta.h"
 #  include "esp_blufi_api.h"
+#  include "esp_mac.h"
 #  include "esp_timer.h"
 
 extern "C" {
@@ -93,7 +94,7 @@ void receivingCommandTask(void* pvParameters) {
     Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
   } else {
     if (jsonBlufi.containsKey("target") && jsonBlufi["target"].is<char*>()) {
-      char topic[(parameters_size)*2 + jsonBlufi["target"].size() + 1];
+      char topic[(parameters_size) * 2 + jsonBlufi["target"].size() + 1];
       snprintf(topic, sizeof(topic), "%s%s%s", mqtt_topic, gateway_name, jsonBlufi["target"].as<const char*>());
       jsonBlufi.remove("target");
       char jsonStr[JSON_MSG_BUFFER_MAX];
@@ -105,7 +106,7 @@ void receivingCommandTask(void* pvParameters) {
         json["cnt_index"] = CNT_DEFAULT_INDEX;
         json["save_cnt"] = true;
       }
-      char topic[(parameters_size)*2 + strlen(subjectMQTTtoSYSset) + 1];
+      char topic[(parameters_size) * 2 + strlen(subjectMQTTtoSYSset) + 1];
       snprintf(topic, sizeof(topic), "%s%s%s", mqtt_topic, gateway_name, subjectMQTTtoSYSset);
       char jsonStr[JSON_MSG_BUFFER_MAX];
       serializeJson(jsonBlufi, jsonStr);
