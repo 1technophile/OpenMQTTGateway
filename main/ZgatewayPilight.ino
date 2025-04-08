@@ -29,6 +29,8 @@
 
 #ifdef ZgatewayPilight
 
+#include "config_RF.h"
+
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif

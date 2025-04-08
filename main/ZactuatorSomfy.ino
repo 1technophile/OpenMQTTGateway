@@ -1,15 +1,15 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
- 
+
   This actor enables to:
  - receive MQTT data from a topic and send Somfy RTS remote control signals corresponding to the received MQTT data
-  
+
     Copyright (C) 2020 Leon Kiefer
 
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -22,6 +22,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
+#include "config_RF.h"
 
 #ifdef ZactuatorSomfy
 

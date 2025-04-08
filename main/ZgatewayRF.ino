@@ -1,17 +1,17 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
- 
+
   This gateway enables to:
  - receive MQTT data from a topic and send RF 433Mhz signal corresponding to the received MQTT data
  - publish MQTT data to a different topic related to received 433Mhz signal
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -31,6 +31,7 @@
 #  include <ArduinoJson.h>
 #  include <ArduinoLog.h>
 
+#  include "config_RF.h"
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
@@ -49,7 +50,7 @@ RCSwitch mySwitch = RCSwitch();
  * - 'F' represents "01" in the binary string
  *
  * If the input binary string contains any other combination, the function returns "-".
- * 
+ *
  * @note CONVERSION function from https://github.com/sui77/rc-switch/tree/master/examples/ReceiveDemo_Advanced
  *
  * @param bin The input binary string.
@@ -88,7 +89,7 @@ static const char* bin2tristate(const char* bin) {
  *
  * @note The returned string is stored in a static buffer, so it will be overwritten by subsequent
  * calls to this function. The buffer size is fixed at 64 characters.
- * 
+ *
  * @note CONVERSION function from https://github.com/sui77/rc-switch/tree/master/examples/ReceiveDemo_Advanced
  *
  */
@@ -146,13 +147,13 @@ void announceGatewayTriggerTypeToHASS(uint64_t MQTTvalue) {
 
 /**
  * @brief Processes received RF signals and converts them to JSON format for further handling.
- * 
+ *
  * This function checks if an RF signal is available, extracts relevant data from the signal,
  * and stores it in a JSON object. It also handles duplicate signal detection and optionally
  * publishes the signal data for MQTT discovery and repetition.
- * 
+ *
  * @note This function is designed to work with both ESP32 and ESP8266 platforms.
- * 
+ *
  * @details The function performs the following steps:
  * - Checks if an RF signal is available.
  * - Logs the reception of the RF signal.
@@ -162,7 +163,7 @@ void announceGatewayTriggerTypeToHASS(uint64_t MQTTvalue) {
  * - Resets the availability status of the RF signal.
  * - Checks for duplicate signals and processes the signal if it is not a duplicate.
  * - Optionally publishes the signal data for MQTT discovery and repetition.
- * 
+ *
  * @param None
  * @return void
  */
@@ -384,8 +385,8 @@ void disableRFReceive() {
 /**
  * @brief Enables the RF receiver and optionally the RF transmitter.
  *
- * This function initializes the RF receiver on the specified GPIO pin and, if not disabled, 
- * initializes the RF transmitter on the specified GPIO pin. It also sets the RF frequency 
+ * This function initializes the RF receiver on the specified GPIO pin and, if not disabled,
+ * initializes the RF transmitter on the specified GPIO pin. It also sets the RF frequency
  * and logs the configuration details.
  *
  * @param rfFrequency The frequency for the RF communication in MHz. Default is RFConfig.frequency.
