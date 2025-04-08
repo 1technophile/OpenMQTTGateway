@@ -77,7 +77,8 @@ static BLEdevice NO_BT_DEVICE_FOUND = {{0},
                                        false,
                                        false,
                                        false,
-                                       UNKWNON_MODEL};
+                                       (int)UNKWNON_MODEL,
+                                       0,};
 static bool oneWhite = false;
 
 void BTConfig_init() {
