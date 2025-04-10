@@ -106,13 +106,6 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = CNT_PARAMS_A
 Preferences preferences;
 #endif
 
-#ifndef ZgatewayGFSunInverter
-// Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
-// Unfortunately it ignores #if directives.
-// This is a simple workaround for this problem.
-struct GfSun2000Data {};
-#endif
-
 // Modules config inclusion
 #if defined(ZwebUI) && defined(ESP32)
 #  include "config_WebUI.h"
