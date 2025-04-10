@@ -22,17 +22,26 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
-#include "config_RF.h"
 
 #ifdef ZactuatorSomfy
-
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <EEPROM.h>
 #  include <EEPROMRollingCodeStorage.h>
 #  include <SomfyRemote.h>
 
+#  include "config_RF.h"
+#  include "config_Somfy.h"
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
+
+void disableCurrentReceiver();
+void enableActiveReceiver();
+void initCC1101();
+void setupSomfy();
 
 void setupSomfy() {
   pinMode(RF_EMITTER_GPIO, OUTPUT);
