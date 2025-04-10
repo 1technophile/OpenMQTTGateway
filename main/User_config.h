@@ -226,7 +226,8 @@
 
 #if AWS_IOT
 // Enable the use of ALPN for AWS IoT Core with the port 443
-const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
+#  define ALPN_PROTOCOLS \
+    { "x-amzn-mqtt-ca", NULL }
 #endif
 
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.

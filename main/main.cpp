@@ -1726,6 +1726,7 @@ void setupTLS(int index) {
 #    if AWS_IOT
     if (strcmp(cnt_parameters_array[index].mqtt_port, "443") == 0) {
       Log.notice(F("Using ALPN" CR));
+      static const char* alpnProtocols[] = ALPN_PROTOCOLS;
       sClient->setAlpnProtocols(alpnProtocols);
     }
 #    endif
@@ -3582,8 +3583,10 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
           lastDiscovery = millis();
         SYSConfig.discovery = SYSdata["disc"];
         publishState = true;
-        if (SYSConfig.discovery)
+        if (SYSConfig.discovery) {
+          extern void pubMqttDiscovery();
           pubMqttDiscovery();
+        }
       } else {
         Log.warning(F("Discovery command not a boolean" CR));
       }
