@@ -242,6 +242,7 @@ bool pubMQTT(const char* topic, double payload);
 bool pubMQTT(String topic, unsigned long payload);
 void checkButton();
 void ESPRestart(byte reason);
+void eraseConfig();
 void readCntParameters(int index);
 void saveConfig();
 void receivingDATA(const char* topicOri, const char* datacallback);
@@ -258,7 +259,7 @@ String stateRFMeasures();
 int getMin();
 void XtoRFset(const char* topicOri, JsonObject& RFdata);
 void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData);
-
+void setup_ethernet_esp32();
 void setupTLS(int index = CNT_DEFAULT_INDEX);
 void XtoSYS(const char* topicOri, JsonObject& SYSdata);
 

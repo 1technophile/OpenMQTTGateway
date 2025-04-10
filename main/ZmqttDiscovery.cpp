@@ -29,7 +29,9 @@
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
 #include <WiFi.h>
-
+#ifdef ESP32_ETHERNET
+#  include <ETH.h>
+#endif
 #include "User_config.h"
 #include "esp_mac.h"
 
