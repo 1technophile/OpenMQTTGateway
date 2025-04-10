@@ -28,11 +28,34 @@
 #include "User_config.h"
 
 #ifdef ZgatewayIR
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+bool pubMQTT(const char* topic, const char* payload);
+bool pubMQTT(const char* topic, const char* payload, bool retainFlag);
+bool pubMQTT(String topic, const char* payload);
+bool pubMQTT(const char* topic, unsigned long payload);
+bool pubMQTT(const char* topic, unsigned long long payload);
+bool pubMQTT(const char* topic, String payload);
+bool pubMQTT(String topic, String payload);
+bool pubMQTT(String topic, int payload);
+bool pubMQTT(String topic, unsigned long long payload);
+bool pubMQTT(String topic, float payload);
+bool pubMQTT(const char* topic, float payload);
+bool pubMQTT(const char* topic, int payload);
+bool pubMQTT(const char* topic, unsigned int payload);
+bool pubMQTT(const char* topic, long payload);
+bool pubMQTT(const char* topic, double payload);
+bool pubMQTT(String topic, unsigned long payload);
 
 #  include <IRrecv.h> // Needed if you want to receive IR commands.
 #  include <IRremoteESP8266.h>
 #  include <IRsend.h> // Needed if you want to send IR commands.
 #  include <IRutils.h>
+
+#  include "config_IR.h"
 #  ifdef DumpMode // in dump mode we increase the size of the buffer to catch big codes
 IRrecv irrecv(IR_RECEIVER_GPIO, 1024, 15U, true);
 #  else

@@ -142,7 +142,7 @@ String getUniqueId(String name, String sufix) {
 }
 
 #  if defined(ZgatewayBT) || defined(SecondaryModule)
-#  include "config_BT.h"
+#    include "config_BT.h"
 /**
  * Create a discover messages form a list of attribute
  *
@@ -1326,7 +1326,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayPilight
-#  include "config_RF.h"
+#    include "config_RF.h"
 
   // Sensor to display RF received value
   Log.trace(F("gatewayPilightDiscovery" CR));
@@ -1350,6 +1350,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayIR
+#    include "config_IR.h"
   // Sensor to display IR received value
   Log.trace(F("gatewayIRDiscovery" CR));
   char* gatewayIR[8] = {"sensor", "gatewayIR", "", "", jsonVal, "", "", ""};
