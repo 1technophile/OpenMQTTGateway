@@ -1,12 +1,20 @@
 #ifdef ESP32
 #  include "User_config.h"
 #  ifdef ZgatewayBT
+#    define ARDUINOJSON_USE_LONG_LONG     1
+#    define ARDUINOJSON_ENABLE_STD_STRING 1
 #    include "ArduinoJson.h"
 #    include "ArduinoLog.h"
 #    include "ZgatewayBLEConnect.h"
+#    include "mbedtls/aes.h"
+
 #    define convertTemp_CtoF(c) ((c * 1.8) + 32)
 
 extern std::vector<BLEdevice*> devices;
+extern bool BTProcessLock;
+
+void buildTopicFromId(JsonObject& Jsondata, const char* origin);
+boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
 
 NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& service,
                                                            const NimBLEUUID& characteristic) {

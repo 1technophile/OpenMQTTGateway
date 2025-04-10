@@ -28,6 +28,8 @@
 #include "User_config.h"
 
 #ifdef ZgatewayRF
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
 #  include <ArduinoJson.h>
 #  include <ArduinoLog.h>
 
@@ -37,6 +39,10 @@
 #  endif
 
 #  include <RCSwitch.h> // library for controling Radio frequency switch
+
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+void disableCurrentReceiver();
+void enableActiveReceiver();
 
 RCSwitch mySwitch = RCSwitch();
 

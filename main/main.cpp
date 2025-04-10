@@ -26,21 +26,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "User_config.h"
+#include "Zglobal.h"
 
-enum GatewayState {
-  WAITING_ONBOARDING,
-  ONBOARDING,
-  OFFLINE,
-  NTWK_CONNECTED,
-  BROKER_CONNECTED,
-  PROCESSING,
-  NTWK_DISCONNECTED,
-  BROKER_DISCONNECTED,
-  LOCAL_OTA_IN_PROGRESS,
-  REMOTE_OTA_IN_PROGRESS,
-  SLEEPING,
-  ERROR
-};
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 
 // Macros and structure to enable the duplicates removing on the following gateways
@@ -74,9 +61,6 @@ unsigned long queueLengthSum = 0;
 unsigned long blockedMessages = 0;
 unsigned long receivedMessages = 0;
 int maxQueueLength = 0;
-#ifndef QueueSize
-#  define QueueSize 18
-#endif
 
 /**
  * Deep-sleep for the ESP8266 & ESP32 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
@@ -112,6 +96,15 @@ SemaphoreHandle_t xMqttMutex;
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
 bool ethConnected = false;
+char mqtt_topic[parameters_size + 1] = Base_Topic;
+char gateway_name[parameters_size + 1] = Gateway_Name;
+unsigned long lastDiscovery = 0;
+ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = CNT_PARAMS_ARR;
+
+#if defined(ESP32)
+#  include <Preferences.h>
+Preferences preferences;
+#endif
 
 #ifndef ZgatewayGFSunInverter
 // Arduino IDE compiles, it automatically creates all the header declarations for all the functions you have in your *.ino file.
@@ -237,7 +230,44 @@ struct GfSun2000Data {};
 #endif
 /*------------------------------------------------------------------------*/
 
+bool pub(JsonObject& data);
+bool pubMQTT(const char* topic, const char* payload);
+bool pubMQTT(const char* topic, const char* payload, bool retainFlag);
+bool pubMQTT(String topic, const char* payload);
+bool pubMQTT(const char* topic, unsigned long payload);
+bool pubMQTT(const char* topic, unsigned long long payload);
+bool pubMQTT(const char* topic, String payload);
+bool pubMQTT(String topic, String payload);
+bool pubMQTT(String topic, int payload);
+bool pubMQTT(String topic, unsigned long long payload);
+bool pubMQTT(String topic, float payload);
+bool pubMQTT(const char* topic, float payload);
+bool pubMQTT(const char* topic, int payload);
+bool pubMQTT(const char* topic, unsigned int payload);
+bool pubMQTT(const char* topic, long payload);
+bool pubMQTT(const char* topic, double payload);
+bool pubMQTT(String topic, unsigned long payload);
+void checkButton();
+void ESPRestart(byte reason);
+void readCntParameters(int index);
+void saveConfig();
+void receivingDATA(const char* topicOri, const char* datacallback);
+void updateAndHandleLEDsTask(void* pvParameters);
+void updateAndHandleLEDsTask();
+bool loadConfigFromFlash();
+void setupWiFiManager();
+void setOTA();
+void setupCommonRF();
+void sleep();
+bool checkForUpdates();
+String stateMeasures();
+String stateRFMeasures();
+int getMin();
+void XtoRFset(const char* topicOri, JsonObject& RFdata);
+void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData);
+
 void setupTLS(int index = CNT_DEFAULT_INDEX);
+void XtoSYS(const char* topicOri, JsonObject& SYSdata);
 
 char ota_pass[parameters_size] = gw_password;
 #ifdef USE_MAC_AS_GATEWAY_NAME
@@ -367,8 +397,6 @@ std::unique_ptr< ::Client> eClient;
 std::unique_ptr<PicoMQTT::Client> mqtt;
 #endif
 
-template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
-void Config_update(JsonObject& data, const char* key, T& var);
 template <typename T>
 void Config_update(JsonObject& data, const char* key, T& var) {
   if (data.containsKey(key)) {
@@ -1503,21 +1531,12 @@ void setup() {
 #endif
 #ifdef ZgatewayRF
   modules.add(ZgatewayRF);
-#  define ACTIVE_RECEIVER ACTIVE_RF
 #endif
 #ifdef ZgatewayRF2
   modules.add(ZgatewayRF2);
-#  ifdef ACTIVE_RECEIVER
-#    undef ACTIVE_RECEIVER
-#  endif
-#  define ACTIVE_RECEIVER ACTIVE_RF2
 #endif
 #ifdef ZgatewayPilight
   modules.add(ZgatewayPilight);
-#  ifdef ACTIVE_RECEIVER
-#    undef ACTIVE_RECEIVER
-#  endif
-#  define ACTIVE_RECEIVER ACTIVE_PILIGHT
 #endif
 #ifdef ZgatewayWeatherStation
   setupWeatherStation();
@@ -1568,10 +1587,6 @@ void setup() {
   modules.add(ZactuatorPWM);
 #endif
 #ifdef ZactuatorSomfy
-#  ifdef ACTIVE_RECEIVER
-#    undef ACTIVE_RECEIVER
-#  endif
-#  define ACTIVE_RECEIVER ACTIVE_NONE
   setupSomfy();
   modules.add(ZactuatorSomfy);
 #endif
@@ -1599,10 +1614,6 @@ void setup() {
   setupSHTC3();
 #endif
 #ifdef ZgatewayRTL_433
-#  ifdef ACTIVE_RECEIVER
-#    undef ACTIVE_RECEIVER
-#  endif
-#  define ACTIVE_RECEIVER ACTIVE_RTL
   setupRTL_433();
   modules.add(ZgatewayRTL_433);
 #endif

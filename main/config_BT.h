@@ -135,7 +135,7 @@ extern String stateBTMeasures(bool);
 #  define BLE_CNCT_TIMEOUT 3000
 #endif
 
-unsigned long scanCount = 0;
+extern unsigned long scanCount;
 
 #ifndef pubBLEAdvData
 #  define pubBLEAdvData false // define true if you want to publish all advertisement data

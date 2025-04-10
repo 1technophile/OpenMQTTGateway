@@ -289,12 +289,15 @@ struct ss_cnt_parameters {
   bool validConnection;
 };
 
+#  define CNT_PARAMS_ARR                                                                                                                                                     \
+    {                                                                                                                                                                        \
+      {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}, \
+          {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},                                            \
+      { "", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false }                                               \
+    }
 #  define cnt_parameters_array_size 3
 
-ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
-    {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
-    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
-    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
+extern ss_cnt_parameters cnt_parameters_array[];
 #endif
 
 #define MIN_CERT_LENGTH 200 // Minimum length of a certificate to be considered valid
@@ -623,8 +626,8 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 
 /*----------- SHARED WITH OMG MODULES --------------*/
 
-char mqtt_topic[parameters_size + 1] = Base_Topic;
-char gateway_name[parameters_size + 1] = Gateway_Name;
+extern char mqtt_topic[];
+extern char gateway_name[];
 
 void connectMQTT();
 
@@ -635,10 +638,10 @@ bool pub(const char*, const char*);
 
 #if defined(ESP32)
 #  include <Preferences.h>
-Preferences preferences;
+extern Preferences preferences;
 #endif
 
-unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
+extern unsigned long lastDiscovery; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 #ifndef DEFAULT_DISCOVERY
 #  define DEFAULT_DISCOVERY true
 #endif
@@ -696,5 +699,9 @@ void storeSignalValue(uint64_t);
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
+
+#ifndef QueueSize
+#  define QueueSize 18
+#endif
 
 #endif

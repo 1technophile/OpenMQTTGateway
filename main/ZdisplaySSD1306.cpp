@@ -50,6 +50,7 @@ boolean displayFlip = DISPLAY_FLIP;
 boolean displayState = DISPLAY_STATE;
 boolean idlelogo = DISPLAY_IDLE_LOGO;
 uint8_t displayBrightness = DISPLAY_BRIGHTNESS;
+bool newSSD1306Message = false; // Flag to indicate new message to display
 
 /*
 Toogle log display

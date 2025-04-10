@@ -72,6 +72,8 @@ IRsend irsend(IR_EMITTER_GPIO, IR_EMITTER_INVERTED);
 #    define WHYNTER_BITS 32U
 #  endif
 
+bool pubMQTT(const char* topic, const char* payload, bool retainFlag);
+
 // The function below comes from IRMQTTServer.INO on IRremoteESP8266 project from @crankyoldgit
 uint64_t getUInt64fromHex(char const* str) {
   uint64_t result = 0;

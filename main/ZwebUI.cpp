@@ -1,13 +1,13 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
 
     Copyright: (c)Florian ROBERT
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -23,9 +23,12 @@
 */
 #include "User_config.h"
 #if defined(ZwebUI) && defined(ESP32)
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
 #  include <ArduinoJson.h>
 #  include <SPIFFS.h>
 #  include <WebServer.h> // Docs for this are here - https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer
+#  include <WiFi.h>
 
 #  include "ArduinoLog.h"
 #  include "config_WebContent.h"
@@ -45,9 +48,27 @@ QueueHandle_t webUIQueue;
 
 WebServer server(80);
 
+webUIQueueMessage* currentWebUIMessage;
+
+extern JsonArray modules;
+extern char discovery_prefix[];
+extern String latestVersion;
+
+bool WebUIConfig_save();
+void sendRestartPage();
+bool WebUIConfig_load();
+void WebUIConfig_init();
+void addLog(const uint8_t* buffer, size_t size);
+
 /*------------------- External functions ----------------------*/
 extern void eraseConfig();
 extern unsigned long uptime();
+extern void ESPRestart(byte reason);
+extern void XtoSYS(const char* topicOri, JsonObject& SYSdata);
+extern String stateMeasures();
+extern void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData);
+extern void receivingDATA(const char* topicOri, const char* datacallback);
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 /*------------------- Web Console Globals ----------------------*/
 
@@ -284,30 +305,6 @@ void AddLogData(uint32_t loglevel, const char* log_data, const char* log_data_pa
   }
 }
 
-bool NeedLogRefresh(uint32_t req_loglevel, uint32_t index) {
-  if (!log_buffer) {
-    return false;
-  } // Leave now if there is no buffer available
-
-#  ifdef ESP32
-  // this takes the mutex, and will be release when the class is destroyed -
-  // i.e. when the functon leaves  You CAN call mutex.give() to leave early.
-  TasAutoMutex mutex((SemaphoreHandle_t*)&log_buffer_mutex);
-#  endif // ESP32
-
-  // Skip initial buffer fill
-  if (strlen(log_buffer) < LOG_BUFFER_SIZE / 2) {
-    return false;
-  }
-
-  char* line;
-  size_t len;
-  if (!GetLog(req_loglevel, &index, &line, &len)) {
-    return false;
-  }
-  return ((line - log_buffer) < LOG_BUFFER_SIZE / 4);
-}
-
 bool GetLog(uint32_t req_loglevel, uint32_t* index_p, char** entry_pp, size_t* len_p) {
   if (!log_buffer) {
     return false;
@@ -365,6 +362,30 @@ bool GetLog(uint32_t req_loglevel, uint32_t* index_p, char** entry_pp, size_t* l
   return false;
 }
 
+bool NeedLogRefresh(uint32_t req_loglevel, uint32_t index) {
+  if (!log_buffer) {
+    return false;
+  } // Leave now if there is no buffer available
+
+#  ifdef ESP32
+  // this takes the mutex, and will be release when the class is destroyed -
+  // i.e. when the functon leaves  You CAN call mutex.give() to leave early.
+  TasAutoMutex mutex((SemaphoreHandle_t*)&log_buffer_mutex);
+#  endif // ESP32
+
+  // Skip initial buffer fill
+  if (strlen(log_buffer) < LOG_BUFFER_SIZE / 2) {
+    return false;
+  }
+
+  char* line;
+  size_t len;
+  if (!GetLog(req_loglevel, &index, &line, &len)) {
+    return false;
+  }
+  return ((line - log_buffer) < LOG_BUFFER_SIZE / 4);
+}
+
 /*------------------- Local functions ----------------------*/
 
 #  ifdef WEBUI_DEVELOPMENT
@@ -394,7 +415,7 @@ bool exists(String path) {
 
 /**
  * @brief / - Page
- * 
+ *
  */
 void handleRoot() {
   WEBUI_TRACE_LOG(F("handleRoot: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -454,7 +475,7 @@ void handleRoot() {
 
 /**
  * @brief /CN - Configuration Page
- * 
+ *
  */
 void handleCN() {
   WEBUI_SECURE
@@ -688,7 +709,7 @@ void handleWI() {
  * T: handleMQ Arg: 0, mh=192.168.1.11
  * T: handleMQ Arg: 1, ml=1883
  * T: handleMQ Arg: 2, mu=1234
- * T: handleMQ Arg: 3, mp= 
+ * T: handleMQ Arg: 3, mp=
  * T: handleMQ Arg: 4, sc=on
  * T: handleMQ Arg: 5, h=
  * T: handleMQ Arg: 6, mt=home/
@@ -1108,6 +1129,18 @@ std::map<int, String> activeReceiverOptions = {
 #    endif
 };
 
+struct RFConfig_s {
+  float frequency;
+  int rssiThreshold;
+  int newOokThreshold;
+  int activeReceiver;
+};
+extern RFConfig_s RFConfig;
+
+bool validFrequency(float mhz);
+void RFConfig_fromJson(JsonObject& RFdata);
+String stateRFMeasures();
+
 bool isValidReceiver(int receiverId) {
   // Check if the receiverId exists in the activeReceiverOptions map
   return activeReceiverOptions.find(receiverId) != activeReceiverOptions.end();
@@ -1209,7 +1242,7 @@ void handleRF() {
 
 /**
  * @brief /RT - Reset configuration ( Erase and Restart ) from Configuration menu
- * 
+ *
  */
 void handleRT() {
   WEBUI_TRACE_LOG(F("handleRT: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1246,7 +1279,7 @@ void handleRT() {
 #  if defined(ZgatewayCloud)
 /**
  * @brief /CL - Cloud Configuration
- * 
+ *
  */
 void handleCL() {
   WEBUI_TRACE_LOG(F("handleCL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1300,7 +1333,7 @@ void handleCL() {
 
 /**
  * @brief /TK - Receive Cloud Device Token
- * 
+ *
  */
 void handleTK() {
   WEBUI_TRACE_LOG(F("handleTK: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1343,7 +1376,7 @@ void handleTK() {
 
 /**
  * @brief /IN - Information Page
- * 
+ *
  */
 void handleIN() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1360,6 +1393,7 @@ void handleIN() {
 
 // }1 json-oled }2 true } }1 Cloud }2 cloudEnabled}2true}1c
 #  if defined(ZgatewayBT)
+    String stateBTMeasures(bool start);
     informationDisplay += "1<BR>BT}2}1"; // }1 the bracket is not needed as the previous message ends with }
     informationDisplay += stateBTMeasures(false);
 #  endif
@@ -1421,7 +1455,7 @@ void handleIN() {
 
 /**
  * @brief /handleFavicon - Send Favicon
- * 
+ *
  */
 void handleFavicon() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1432,7 +1466,7 @@ void handleFavicon() {
 #  if defined(ESP32) && defined(MQTT_HTTPS_FW_UPDATE)
 /**
  * @brief /UP - Firmware Upgrade Page
- * 
+ *
  */
 void handleUP() {
   WEBUI_TRACE_LOG(F("handleUP: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1518,7 +1552,7 @@ void sendRestartPage() {
 
 /**
  * @brief /CS - Serial Console and Command Line
- * 
+ *
  */
 void handleCS() {
   WEBUI_TRACE_LOG(F("handleCS: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -1583,7 +1617,7 @@ void handleCS() {
 
 /**
  * @brief Page not found handler
- * 
+ *
  */
 void notFound() {
   WEBUI_SECURE
@@ -1674,7 +1708,9 @@ void WebUILoop() {
   if (uptime() >= nextWebUIMessage && uxQueueMessagesWaiting(webUIQueue)) {
     webUIQueueMessage* message = nullptr;
     xQueueReceive(webUIQueue, &message, portMAX_DELAY);
+#  if defined(ZdisplaySSD1306)
     newSSD1306Message = true;
+#  endif
 
     if (currentWebUIMessage) {
       free(currentWebUIMessage);

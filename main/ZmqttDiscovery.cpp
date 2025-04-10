@@ -24,14 +24,102 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define ARDUINOJSON_USE_LONG_LONG     1
+#define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
+#include <WiFi.h>
 
 #include "User_config.h"
 #include "esp_mac.h"
 
+extern bool ethConnected;
+extern JsonArray modules;
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+bool pubMQTT(const char* topic, const char* payload, bool retainFlag);
+
 #ifdef ZmqttDiscovery
 #  include "config_mqttDiscovery.h"
+char discovery_prefix[parameters_size + 1] = discovery_Prefix;
+// From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
+// List of classes available in Home Assistant
+const char* availableHASSClasses[] = {"battery_charging",
+                                      "battery",
+                                      "carbon_dioxide",
+                                      "carbon_monoxide",
+                                      "current",
+                                      "data_size",
+                                      "distance",
+                                      "door",
+                                      "duration",
+                                      "energy",
+                                      "enum",
+                                      "gas",
+                                      "humidity",
+                                      "illuminance",
+                                      "irradiance",
+                                      "lock",
+                                      "motion",
+                                      "moving",
+                                      "pm1",
+                                      "pm10",
+                                      "pm25",
+                                      "power_factor",
+                                      "power",
+                                      "precipitation_intensity",
+                                      "precipitation",
+                                      "pressure",
+                                      "problem",
+                                      "restart",
+                                      "signal_strength",
+                                      "sound_pressure",
+                                      "temperature",
+                                      "timestamp",
+                                      "voltage",
+                                      "water",
+                                      "weight",
+                                      "wind_speed",
+                                      "window"};
+
+// From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L379
+// List of units available in Home Assistant
+const char* availableHASSUnits[] = {"W",
+                                    "kW",
+                                    "V",
+                                    "kWh",
+                                    "A",
+                                    "W",
+                                    "°C",
+                                    "°F",
+                                    "ms",
+                                    "s",
+                                    "min",
+                                    "hPa",
+                                    "L",
+                                    "kg",
+                                    "lb",
+                                    "µS/cm",
+                                    "ppm",
+                                    "μg/m³",
+                                    "m³",
+                                    "mg/m³",
+                                    "m/s²",
+                                    "mV",
+                                    "lx",
+                                    "Ω",
+                                    "%",
+                                    "bar",
+                                    "bpm",
+                                    "dB",
+                                    "dBm",
+                                    "B",
+                                    "UV index",
+                                    "m/s",
+                                    "km/h",
+                                    "°",
+                                    "mm",
+                                    "mm/h",
+                                    "cm"};
 
 String getMacAddress() {
   uint8_t baseMac[6];
@@ -54,6 +142,7 @@ String getUniqueId(String name, String sufix) {
 }
 
 #  if defined(ZgatewayBT) || defined(SecondaryModule)
+#  include "config_BT.h"
 /**
  * Create a discover messages form a list of attribute
  *

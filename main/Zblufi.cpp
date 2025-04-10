@@ -63,6 +63,7 @@ static uint8_t gl_sta_passwd[64];
 static int gl_sta_ssid_len;
 static bool gl_sta_is_connecting = false;
 static esp_blufi_extra_info_t gl_sta_conn_info;
+extern bool ethConnected;
 
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* param);
 void wifi_event_handler(arduino_event_id_t event);

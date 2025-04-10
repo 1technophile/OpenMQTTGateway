@@ -29,7 +29,7 @@
 #ifdef ZgatewayRTL_433
 
 #  include <ArduinoJson.h>
-#  include <config_RF.h>
+#  include "config_RF.h"
 #  include <rtl_433_ESP.h>
 
 #  include "ArduinoLog.h"

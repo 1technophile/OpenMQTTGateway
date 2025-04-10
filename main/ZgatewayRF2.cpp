@@ -1,17 +1,17 @@
-/*  
+/*
   Theengs OpenMQTTGateway - We Unite Sensors in One Open-Source Interface
 
-   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker 
+   Act as a gateway between your 433mhz, infrared IR, BLE, LoRa signal and one interface like an MQTT broker
    Send and receiving command by MQTT
- 
+
   This gateway enables to:
  - publish MQTT data to a different topic related to received 433Mhz signal DIO/new kaku protocol
 
     Copyright: (c)Florian ROBERT
     Copyright: (c)Randy Simons http://randysimons.nl/
-  
+
     This file is part of OpenMQTTGateway.
-    
+
     OpenMQTTGateway is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -43,6 +43,9 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/
 
 #  include <NewRemoteReceiver.h>
 #  include <NewRemoteTransmitter.h>
+
+void disableCurrentReceiver();
+void enableActiveReceiver();
 
 struct RF2rxd {
   unsigned int period;
