@@ -28,8 +28,13 @@
 #include "User_config.h"
 
 #ifdef ZgatewayPilight
+#define ARDUINOJSON_USE_LONG_LONG     1
+#define ARDUINOJSON_ENABLE_STD_STRING 1
+#include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+#  include <SPIFFS.h>
 
-#include "config_RF.h"
+#  include "config_RF.h"
 
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
@@ -42,6 +47,12 @@ ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 // raw output support
 bool pilightRawEnabled = 0;
 #  endif
+
+boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+void disableCurrentReceiver();
+void initCC1101();
+void enableActiveReceiver();
 
 void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {

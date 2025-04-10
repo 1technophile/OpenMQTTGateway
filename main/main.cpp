@@ -2990,6 +2990,7 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
     //Log.notice(F("[ MQTT->OMG ]: %s" CR), buffer.c_str());
 
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
+    extern void XtoPilight(const char* topicOri, JsonObject& RFdata);
     XtoPilight(strTopicOri.c_str(), jsondata);
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)

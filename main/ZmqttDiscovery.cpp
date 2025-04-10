@@ -1326,6 +1326,8 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayPilight
+#  include "config_RF.h"
+
   // Sensor to display RF received value
   Log.trace(F("gatewayPilightDiscovery" CR));
   char* gatewayPilight[8] = {"sensor", "gatewayPilight", "", "", jsonMsg, "", "", ""};

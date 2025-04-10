@@ -27,7 +27,6 @@
 #define config_RF_h
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
 #ifdef ZgatewayRF
 extern void setupRF();
@@ -47,8 +46,6 @@ extern void enableRF2Receive();
 #ifdef ZgatewayPilight
 extern void setupPilight();
 extern void PilighttoX();
-extern void XtoPilight(const char* topicOri, const char* datacallback);
-extern void XtoPilight(const char* topicOri, JsonObject& RFdata);
 extern void disablePilightReceive();
 extern void enablePilightReceive();
 #endif
