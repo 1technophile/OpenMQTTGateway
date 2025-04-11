@@ -1163,6 +1163,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZactuatorONOFF
+  #include "config_ONOFF.h"
   Log.trace(F("actuatorONOFFDiscovery" CR));
   char* actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "{{ value_json.cmd }}", "{\"cmd\":1}", "{\"cmd\":0}", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement

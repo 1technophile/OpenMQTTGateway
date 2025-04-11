@@ -29,6 +29,17 @@
 #include "User_config.h"
 
 #ifdef ZactuatorONOFF
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+
+#  include "LEDManager.h"
+#  include "config_ONOFF.h"
+
+extern LEDManager ledManager;
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+extern boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
 
 #  ifdef ESP32
 // Global struct to store live ONOFF configuration data
@@ -94,9 +105,9 @@ void ONOFFConfig_load() {
   }
 }
 #  else
-void ONOFFConfig_init(){};
-void ONOFFConfig_fromJson(JsonObject& ONOFFdata){};
-void ONOFFConfig_load(){};
+void ONOFFConfig_init() {};
+void ONOFFConfig_fromJson(JsonObject& ONOFFdata) {};
+void ONOFFConfig_load() {};
 #  endif
 
 void updatePowerIndicator() {
