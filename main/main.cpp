@@ -2503,6 +2503,7 @@ void loop() {
   }
   if (firstStart) {
 #ifdef ZgatewaySERIAL
+    extern bool isSerialReady();
     if (SYSConfig.serial && isSerialReady()) {
 #  ifdef ZgatewayBT
       BTProcessLock = !BTConfig.enabled;

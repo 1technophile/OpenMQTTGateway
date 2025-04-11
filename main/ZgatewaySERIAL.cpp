@@ -28,6 +28,13 @@
 #include "User_config.h"
 
 #ifdef ZgatewaySERIAL
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+
+#  include "Zglobal.h"
+#  include "config_SERIAL.h"
 
 #  ifndef SERIAL_UART // software serial mode
 #    include <SoftwareSerial.h>
@@ -48,6 +55,8 @@ const TickType_t semaphoreTimeout = pdMS_TO_TICKS(1000); // 1 second timeout
 #    define SEMAPHORE_SERIAL_GIVE
 #  endif
 
+extern SYSConfig_s SYSConfig;
+
 // use pointer to stream class for serial communication to make code
 // compatible with both softwareSerial as hardwareSerial.
 Stream* SERIALStream = NULL;
@@ -63,6 +72,9 @@ const unsigned long heartbeatAckCheckInterval = 5000; // Check for ack every 5 s
 const unsigned long maxHeartbeatInterval = 60000; // Maximum interval of 1 minute
 unsigned long heartbeatInterval = 5000; // 5 seconds
 bool isOverflow = false;
+
+static void sendHeartbeat();
+static void sendHeartbeatAck();
 
 void setupSERIAL() {
 //Initalize serial port
