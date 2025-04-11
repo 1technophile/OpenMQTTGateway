@@ -28,12 +28,16 @@
 #define ARDUINOJSON_ENABLE_STD_STRING 1
 #include <ArduinoJson.h>
 #include <ArduinoLog.h>
-#include <WiFi.h>
+#ifdef ESP8266
+#  include <ESP8266WiFi.h>
+#elif defined(ESP32)
+#  include <WiFi.h>
+#include "esp_mac.h"
+#endif
 #ifdef ESP32_ETHERNET
 #  include <ETH.h>
 #endif
 #include "User_config.h"
-#include "esp_mac.h"
 
 extern bool ethConnected;
 extern JsonArray modules;
