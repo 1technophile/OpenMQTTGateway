@@ -29,6 +29,15 @@
 #include "User_config.h"
 
 #ifdef ZsensorGPIOInput
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+
+#  include "config_GPIOInput.h"
+
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
 #  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
 unsigned long resetTime = 0;
 #  endif

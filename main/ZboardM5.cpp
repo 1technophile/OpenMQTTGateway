@@ -29,6 +29,12 @@
 #include "User_config.h"
 
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+
+#  include "config_M5.h"
 #  ifdef ZboardM5STICKC
 #    include <M5StickC.h>
 #  endif
@@ -41,6 +47,13 @@
 #  ifdef ZboardM5TOUGH
 #    include <M5Tough.h>
 #  endif
+
+void wakeScreen(int brightness);
+void displayIntro(int i, int X, int Y);
+void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool circle4, bool circle5, bool circle6);
+void sleepScreen();
+void setBrightness(int brightness);
+
 void logToLCD(bool display) {
   display ? Log.begin(LOG_LEVEL_LCD, &M5.Lcd) : Log.begin(LOG_LEVEL, &Serial); // Log on LCD following LOG_LEVEL_LCD
 }

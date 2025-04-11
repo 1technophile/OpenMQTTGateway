@@ -1113,6 +1113,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorGPIOInput
+#    include "config_GPIOInput.h"
   Log.trace(F("GPIOInputDiscovery" CR));
   char* GPIOInputsensor[8] = {"binary_sensor", "GPIOInput", "", "", jsonGpio, INPUT_GPIO_ON_VALUE, INPUT_GPIO_OFF_VALUE, ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement

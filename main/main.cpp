@@ -3023,6 +3023,7 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
     XtoPWM(strTopicOri.c_str(), jsondata);
 #  endif
 #  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
+    void XtoM5(const char* topicOri, JsonObject& M5data);
     XtoM5(strTopicOri.c_str(), jsondata);
 #  endif
 #  if defined(ZdisplaySSD1306)
