@@ -30,7 +30,16 @@
 #ifdef Zgateway2G
 
 #  include <A6lib.h> // library for controling A6 or A7 module
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
 #  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+#  include "config_2G.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+void signalStrengthAnalysis();
+void setupGSM(bool deleteSMS);
 
 // Instantiate the library with TxPin, RxPin.
 A6lib A6l(_2G_TX_GPIO, _2G_RX_GPIO); //D6 to A6 RX, D7 to A6 TX

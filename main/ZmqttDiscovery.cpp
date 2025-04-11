@@ -32,7 +32,8 @@
 #  include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #  include <WiFi.h>
-#include "esp_mac.h"
+
+#  include "esp_mac.h"
 #endif
 #ifdef ESP32_ETHERNET
 #  include <ETH.h>
@@ -1375,6 +1376,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef Zgateway2G
+#    include "config_2G.h"
   // Sensor to display 2G received value
   Log.trace(F("gateway2GDiscovery" CR));
   char* gateway2G[8] = {"sensor", "gateway2G", "", "", jsonMsg, "", "", ""};
