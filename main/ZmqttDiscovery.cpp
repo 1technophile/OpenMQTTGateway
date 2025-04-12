@@ -741,6 +741,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZdisplaySSD1306
+#    include "config_SSD1306.h"
   createDiscovery("switch", //set Type
                   subjectSSD1306toMQTT, "SSD1306: Control", (char*)getUniqueId("onstate", "").c_str(), //set state_topic,name,uniqueId
                   will_Topic, "", "{{ value_json.onstate }}", //set availability_topic,device_class,value_template,
@@ -1163,7 +1164,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZactuatorONOFF
-  #include "config_ONOFF.h"
+#    include "config_ONOFF.h"
   Log.trace(F("actuatorONOFFDiscovery" CR));
   char* actuatorONOFF[8] = {"switch", "actuatorONOFF", "", "", "{{ value_json.cmd }}", "{\"cmd\":1}", "{\"cmd\":0}", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement

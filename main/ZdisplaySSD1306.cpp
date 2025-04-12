@@ -33,14 +33,64 @@
 
 #if defined(ZdisplaySSD1306)
 
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
 #  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 
-#  include "ArduinoLog.h"
+#  include "SSD1306Wire.h"
 #  include "User_config.h"
 #  include "config_SSD1306.h"
 #  ifdef DISPLAY_BLANKING
 #    include "driver/touch_sensor.h"
 #  endif
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+// This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
+
+class OledSerial : public Stream {
+public:
+  OledSerial(int);
+  void begin();
+  void drawLogo(int xshift, int yshift);
+  boolean displayPage(webUIQueueMessage*);
+
+  SSD1306Wire* display;
+
+  int available(void); // Dummy functions
+  int peek(void); // Dummy functions
+  int read(void); // Dummy functions
+  void flush(void); // Dummy functions
+
+  void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
+
+  // This is a bit of lazy programmer simplification for the semaphore and core detecting code.  Not sure if it is truly space efficient.
+
+  inline size_t write(uint8_t x) {
+    return write(&x, 1);
+  }
+
+  size_t write(const uint8_t* buffer, size_t size);
+  inline size_t write(const char* buffer, size_t size) {
+    return write((uint8_t*)buffer, size);
+  }
+  inline size_t write(const char* s) {
+    return write((uint8_t*)s, strlen(s));
+  }
+  inline size_t write(unsigned long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(unsigned int n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(int n) {
+    return write((uint8_t)n);
+  }
+} Oled(0); // Oled object
 
 SemaphoreHandle_t semaphoreOLEDOperation;
 
@@ -52,6 +102,9 @@ boolean idlelogo = DISPLAY_IDLE_LOGO;
 uint8_t displayBrightness = DISPLAY_BRIGHTNESS;
 bool newSSD1306Message = false; // Flag to indicate new message to display
 
+void SSD1306Config_init();
+bool SSD1306Config_load();
+void SSD1306Config_save();
 /*
 Toogle log display
 */
@@ -317,7 +370,6 @@ void ssd1306Print(char* line1) {
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
-OledSerial Oled(0); // Not sure about this, came from Hardwareserial
 OledSerial::OledSerial(int x) {
 #  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
   pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278

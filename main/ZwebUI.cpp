@@ -53,6 +53,7 @@ webUIQueueMessage* currentWebUIMessage;
 extern JsonArray modules;
 extern char discovery_prefix[];
 extern String latestVersion;
+extern SYSConfig_s SYSConfig;
 
 bool WebUIConfig_save();
 void sendRestartPage();
