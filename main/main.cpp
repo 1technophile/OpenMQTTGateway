@@ -1895,6 +1895,7 @@ void blockingWaitForReset() {
         Log.notice(F("Button Held" CR));
 // Switching off the relay during reset or failsafe operations
 #    ifdef ZactuatorONOFF
+        extern void ActuatorTrigger();
         uint8_t level = digitalRead(ACTUATOR_ONOFF_GPIO);
         if (level == ACTUATOR_ON) {
           ActuatorTrigger();

@@ -36,7 +36,8 @@
 
 #  include "config_GPIOInput.h"
 
-bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+extern void ActuatorTrigger();
 
 #  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
 unsigned long resetTime = 0;

@@ -997,6 +997,8 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorADC
+#    include "config_ADC.h"
+
   Log.trace(F("ADCDiscovery" CR));
   char* ADCsensor[8] = {"sensor", "adc", "", "", jsonAdc, "", "", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
