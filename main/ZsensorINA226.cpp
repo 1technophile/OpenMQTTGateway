@@ -35,7 +35,18 @@
 #include "User_config.h"
 
 #ifdef ZsensorINA226
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <Wire.h>
+
+#include "config_INA226.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+static void writeRegister(byte reg, word value);
+static word readRegister(byte reg);
 
 float rShunt = 0.1; // Shunt Widerstand festlegen, hier 0.1 Ohm
 const int INA226_ADDR = 0x40; // A0 und A1 auf GND > Adresse 40 Hex auf Seite 18 im Datenblatt
@@ -77,7 +88,7 @@ void MeasureINA226() {
   }
 }
 
-static void writeRegister(byte reg, word value) {
+void writeRegister(byte reg, word value) {
   Wire.beginTransmission(INA226_ADDR);
   Wire.write(reg);
   Wire.write((value >> 8) & 0xFF);
@@ -85,7 +96,7 @@ static void writeRegister(byte reg, word value) {
   Wire.endTransmission();
 }
 
-static word readRegister(byte reg) {
+word readRegister(byte reg) {
   word res = 0x0000;
   Wire.beginTransmission(INA226_ADDR);
   Wire.write(reg);
