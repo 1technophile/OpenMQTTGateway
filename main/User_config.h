@@ -252,7 +252,7 @@
 #  define RELEASE_LINK_DEV "https://ota.openmqttgateway.com/binaries/dev/"
 #  define RELEASE_LINK     "https://ota.openmqttgateway.com/binaries/"
 #else
-const char* OTAserver_cert = "";
+static const char* OTAserver_cert = "";
 #endif
 
 #ifndef MQTT_SECURE_SIGNED_CLIENT
