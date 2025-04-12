@@ -99,7 +99,9 @@ bool ethConnected = false;
 char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
+#if !MQTT_BROKER_MODE
 ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = CNT_PARAMS_ARR;
+#endif
 
 #if defined(ESP32)
 #  include <Preferences.h>
