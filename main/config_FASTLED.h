@@ -82,7 +82,7 @@ extern void XtoFASTLED(const char*, JsonObject&);
 #  define FASTLED_ESP8266_D1_GPIO_ORDER
 #  define FASTLED_DATA_GPIO D2 // only D2 works by me
 //#define FASTLED_CLOCK_GPIO 13
-#elif ESP32
+#elif defined(ESP32)
 #  ifndef FASTLED_DATA_GPIO
 #    define FASTLED_DATA_GPIO 16
 #  endif
