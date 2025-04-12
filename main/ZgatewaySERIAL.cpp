@@ -57,6 +57,9 @@ const TickType_t semaphoreTimeout = pdMS_TO_TICKS(1000); // 1 second timeout
 
 extern SYSConfig_s SYSConfig;
 
+extern void receivingDATA(const char* topicOri, const char* datacallback);
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
 // use pointer to stream class for serial communication to make code
 // compatible with both softwareSerial as hardwareSerial.
 Stream* SERIALStream = NULL;
@@ -75,6 +78,7 @@ bool isOverflow = false;
 
 static void sendHeartbeat();
 static void sendHeartbeatAck();
+static void handleHeartbeat();
 
 void setupSERIAL() {
 //Initalize serial port
