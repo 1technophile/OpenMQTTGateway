@@ -3374,6 +3374,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
         SYSConfig.rgbbrightness = TheengsUtils::round2(SYSdata["rgbb"]);
         ledManager.setBrightness(SYSConfig.rgbbrightness);
 #  ifdef ZactuatorONOFF
+        extern void updatePowerIndicator();
         updatePowerIndicator();
 #  endif
         Log.notice(F("RGB brightness: %d" CR), SYSConfig.rgbbrightness);

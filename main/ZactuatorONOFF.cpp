@@ -40,6 +40,7 @@
 extern LEDManager ledManager;
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 extern boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
+extern void ActuatorTrigger();
 
 #  ifdef ESP32
 template <typename T>
@@ -135,7 +136,6 @@ void updatePowerIndicator() {
 //Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
 #  ifdef MAX_TEMP_ACTUATOR
 extern float intTemperatureRead();
-extern void ActuatorTrigger();
 
 void overLimitTemp(void* pvParameters) {
 #    if defined(ESP32) && !defined(NO_INT_TEMP_READING)

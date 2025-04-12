@@ -34,10 +34,12 @@
 #  include <ArduinoJson.h>
 #  include <ArduinoLog.h>
 
+#  include "Zglobal.h"
 #  include "config_GPIOInput.h"
 
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 extern void ActuatorTrigger();
+extern void eraseConfig();
 
 #  if defined(TRIGGER_GPIO) && INPUT_GPIO == TRIGGER_GPIO
 unsigned long resetTime = 0;
