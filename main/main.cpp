@@ -1443,6 +1443,7 @@ void setup() {
 
 #  if SELF_TEST
     // Check serial input to trigger a Self Test sequence if required
+    extern void checkSerial();
     checkSerial();
 #  endif
 
