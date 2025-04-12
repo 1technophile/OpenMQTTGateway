@@ -24,7 +24,13 @@
 
 #ifdef ZactuatorFASTLED
 
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <FastLED.h>
+
+#  include "config_FASTLED.h"
 
 enum LEDState {
   OFF,
@@ -40,6 +46,8 @@ bool blinkLED[FASTLED_NUM_LEDS];
 const long blinkInterval = 300;
 const long fireUpdate = 10;
 CRGBPalette16 gPal;
+
+void Fire2012WithPalette();
 
 void setupFASTLED() {
   Log.notice(F("FASTLED_DATA_GPIO: %d" CR), FASTLED_DATA_GPIO);
