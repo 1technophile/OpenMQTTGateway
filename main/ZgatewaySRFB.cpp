@@ -31,9 +31,21 @@
 #include "User_config.h"
 
 #ifdef ZgatewaySRFB
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+#  include <TheengsUtils.h>
+
+#  include "config_SRFB.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 unsigned char _uartbuf[RF_MESSAGE_SIZE + 3] = {0};
 unsigned char _uartpos = 0;
+
+void _rfbDecode();
+void _rfbAck();
 
 void setupSRFB() {
   Log.trace(F("ZgatewaySRFB setup done " CR));

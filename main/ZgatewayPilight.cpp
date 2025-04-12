@@ -28,11 +28,16 @@
 #include "User_config.h"
 
 #ifdef ZgatewayPilight
-#define ARDUINOJSON_USE_LONG_LONG     1
-#define ARDUINOJSON_ENABLE_STD_STRING 1
-#include <ArduinoJson.h>
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
 #  include <ArduinoLog.h>
-#  include <SPIFFS.h>
+
+#  if defined(ESP32)
+#    include <SPIFFS.h>
+#  else
+#    include <FS.h>
+#  endif
 
 #  include "config_RF.h"
 

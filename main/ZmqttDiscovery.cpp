@@ -1337,6 +1337,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewaySRFB
+#    include "config_SRFB.h"
   // Sensor to display RF received value
   Log.trace(F("gatewaySRFBDiscovery" CR));
   char* gatewaySRFB[8] = {"sensor", "gatewaySRFB", "", "", jsonVal, "", "", ""};
