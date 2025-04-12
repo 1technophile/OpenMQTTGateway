@@ -68,6 +68,10 @@
 #include "User_config.h"
 
 #ifdef ZactuatorPWM
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 
 #  include "config_PWM.h"
 
@@ -128,8 +132,7 @@ void setupPWM() {
     // Configure the pin for PWM output.
     // I think this is the fastest frequency that allows for a 16-bit
     // duty cycle on an ESP32
-    ledcSetup(i, 625.0, kNumDutyCycleBits);
-    ledcAttachPin(channelPins[i], i);
+    ledcAttachChannel(channelPins[i], 625.0, kNumDutyCycleBits, i);
 #  endif
     calibrationMinLinear[i] = 0.f;
     calibrationMaxLinear[i] = 1.f;
