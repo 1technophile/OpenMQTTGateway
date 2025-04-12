@@ -223,6 +223,12 @@ Preferences preferences;
 #if defined(ZgatewaySERIAL)
 #  include "config_SERIAL.h"
 #endif
+#if defined(USE_BLUFI) && defined(ESP32)
+extern bool isBlufiConnected();
+extern bool isStaConnecting();
+extern bool startBlufi();
+extern bool stopBlufi();
+#endif
 /*------------------------------------------------------------------------*/
 
 bool pub(JsonObject& data);
@@ -282,7 +288,7 @@ SYSConfig_s SYSConfig;
 
 bool failSafeMode = false;
 bool ProcessLock = true; // Process lock when we want to use a critical function like OTA for example
-static bool mqttSetupPending = true;
+bool mqttSetupPending = true;
 static int cnt_index = CNT_DEFAULT_INDEX;
 
 #ifdef ESP32

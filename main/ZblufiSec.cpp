@@ -6,8 +6,11 @@
 
 #if defined(ESP32) && defined(USE_BLUFI)
 
+#  include <ArduinoLog.h>
+
 #  include "esp_blufi_api.h"
 #  include "esp_crc.h"
+#  include "esp_random.h"
 #  include "mbedtls/aes.h"
 #  include "mbedtls/dhm.h"
 #  include "mbedtls/md5.h"

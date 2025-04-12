@@ -26,8 +26,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #if defined(ESP32) && defined(USE_BLUFI)
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+#  include <PicoMQTT.h>
+#  include <WiFiManager.h>
+
 #  include "NimBLEDevice.h"
 #  include "NimBLEOta.h"
+#  include "User_config.h"
+#  include "Zglobal.h"
 #  include "esp_blufi_api.h"
 #  include "esp_mac.h"
 #  include "esp_timer.h"
@@ -35,6 +44,8 @@
 extern "C" {
 #  include "esp_blufi.h"
 }
+
+extern void receivingDATA(const char* topicOri, const char* datacallback);
 
 static esp_timer_handle_t connection_timer = nullptr;
 static NimBLEOta* pNimBLEOta;
@@ -64,6 +75,9 @@ static int gl_sta_ssid_len;
 static bool gl_sta_is_connecting = false;
 static esp_blufi_extra_info_t gl_sta_conn_info;
 extern bool ethConnected;
+extern bool mqttSetupPending;
+extern std::unique_ptr<PicoMQTT::Client> mqtt;
+extern WiFiManager wifiManager;
 
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* param);
 void wifi_event_handler(arduino_event_id_t event);
@@ -322,7 +336,7 @@ void wifi_event_handler(arduino_event_id_t event) {
       gl_sta_is_connecting = false;
       esp_blufi_extra_info_t info = {};
       const String current_ssid = WiFi.SSID();
-      gl_sta_ssid_len = std::min(current_ssid.length(), sizeof(gl_sta_ssid) - 1);
+      gl_sta_ssid_len = std::min<uint32_t>(current_ssid.length(), sizeof(gl_sta_ssid) - 1);
       std::copy_n(current_ssid.c_str(), gl_sta_ssid_len, gl_sta_ssid);
       gl_sta_ssid[gl_sta_ssid_len] = '\0';
       uint8_t* bssid = WiFi.BSSID();
