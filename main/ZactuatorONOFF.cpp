@@ -132,6 +132,34 @@ void updatePowerIndicator() {
 #  endif
 }
 
+//Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
+#  ifdef MAX_TEMP_ACTUATOR
+extern float intTemperatureRead();
+extern void ActuatorTrigger();
+
+void overLimitTemp(void* pvParameters) {
+#    if defined(ESP32) && !defined(NO_INT_TEMP_READING)
+  for (;;) {
+    static float previousInternalTempc = 0;
+    float internalTempc = intTemperatureRead();
+    Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
+    // We switch OFF the actuator if the temperature of the ESP32 is more than MAX_TEMP_ACTUATOR two consecutive times, so as to avoid false single readings to trigger the relay OFF.
+    if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR) {
+      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with the previous condition, but it is better to trigger the digitalRead only if the previous condition is met to avoid the digitalRead
+        Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
+        ActuatorTrigger();
+#      ifdef LED_ACTUATOR_ONOFF
+        ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ERROR_COLOR, -1);
+#      endif
+      }
+    }
+    previousInternalTempc = internalTempc;
+    vTaskDelay(TimeBetweenReadingIntTemp);
+  }
+#    endif
+}
+#  endif
+
 void setupONOFF() {
 #  ifdef MAX_TEMP_ACTUATOR
   xTaskCreate(overLimitTemp, "overLimitTemp", 4000, NULL, 10, NULL);
@@ -259,31 +287,6 @@ void XtoONOFF(const char* topicOri, const char* datacallback) {
     char b = ON;
     pub(subjectGTWONOFFtoMQTT, &b);
   }
-}
-#  endif
-
-//Check regularly temperature of the ESP32 board and switch OFF the relay if temperature is more than MAX_TEMP_ACTUATOR
-#  ifdef MAX_TEMP_ACTUATOR
-void overLimitTemp(void* pvParameters) {
-#    if defined(ESP32) && !defined(NO_INT_TEMP_READING)
-  for (;;) {
-    static float previousInternalTempc = 0;
-    float internalTempc = intTemperatureRead();
-    Log.trace(F("Internal temperature of the ESP32 %F" CR), internalTempc);
-    // We switch OFF the actuator if the temperature of the ESP32 is more than MAX_TEMP_ACTUATOR two consecutive times, so as to avoid false single readings to trigger the relay OFF.
-    if (internalTempc > MAX_TEMP_ACTUATOR && previousInternalTempc > MAX_TEMP_ACTUATOR) {
-      if (digitalRead(ACTUATOR_ONOFF_GPIO) == ACTUATOR_ON) { // This could be with the previous condition, but it is better to trigger the digitalRead only if the previous condition is met to avoid the digitalRead
-        Log.error(F("[ActuatorONOFF] OverTemperature detected ( %F > %F ) switching OFF Actuator" CR), internalTempc, MAX_TEMP_ACTUATOR);
-        ActuatorTrigger();
-#      ifdef LED_ACTUATOR_ONOFF
-        ledManager.setMode(LED_ACTUATOR_ONOFF, 0, LEDManager::Mode::STATIC, LED_ERROR_COLOR, -1);
-#      endif
-      }
-    }
-    previousInternalTempc = internalTempc;
-    vTaskDelay(TimeBetweenReadingIntTemp);
-  }
-#    endif
 }
 #  endif
 
