@@ -28,18 +28,54 @@
 #include "User_config.h"
 
 #ifdef ZgatewayLORA
-
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <LoRa.h>
 #  include <SPI.h>
+#  include <TheengsUtils.h>
 #  include <Wire.h>
+
+#  include "config_LORA.h"
+#  include "config_mqttDiscovery.h"
 
 #  define WIPHONE_MESSAGE_MAGIC   0x6c6d
 #  define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
 #  define WIPHONE_MAX_MESSAGE_LEN 230
 
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+extern void buildTopicFromId(JsonObject& Jsondata, const char* origin);
+template <typename T>
+void Config_update(JsonObject& data, const char* key, T& var) {
+  if (data.containsKey(key)) {
+    if (var != data[key].as<T>()) {
+      var = data[key].as<T>();
+      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
+    } else {
+      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
+    }
+  }
+}
+
+extern SYSConfig_s SYSConfig;
+
 LORAConfig_s LORAConfig;
 
+void LORAConfig_fromJson(JsonObject& LORAdata);
+String stateLORAMeasures();
+
 #  ifdef ZmqttDiscovery
+#    include "config_mqttDiscovery.h"
+extern void createDiscovery(const char* sensor_type,
+                            const char* st_topic, const char* s_name, const char* unique_id,
+                            const char* availability_topic, const char* device_class, const char* value_template,
+                            const char* payload_on, const char* payload_off, const char* unit_of_meas,
+                            int off_delay,
+                            const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
+                            const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
+                            const char* state_class, const char* state_off, const char* state_on, const char* enum_options, const char* command_template);
+
 SemaphoreHandle_t semaphorecreateOrUpdateDeviceLORA;
 std::vector<LORAdevice*> LORAdevices;
 int newLORADevices = 0;
@@ -390,8 +426,7 @@ void setupLORA() {
 
   if (!LoRa.begin(LORAConfig.frequency)) {
     Log.error(F("ZgatewayLORA setup failed!" CR));
-    while (1)
-      ;
+    while (1);
   }
   LoRa.receive();
   Log.notice(F("LORA_SCK: %d" CR), LORA_SCK);

@@ -1283,6 +1283,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayLORA
+#    include "config_LORA.h"
   // Sensor to display RF received value
   Log.trace(F("gatewayLORADiscovery" CR));
   char* gatewayLORA[8] = {"sensor", "gatewayLORA", "", "", jsonMsg, "", "", ""};

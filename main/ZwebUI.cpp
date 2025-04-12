@@ -959,6 +959,11 @@ void handleLO() {
 }
 
 #  ifdef ZgatewayLORA
+#    include "config_LORA.h"
+extern void LORAConfig_fromJson(JsonObject& LORAdata);
+extern String stateLORAMeasures();
+extern LORAConfig_s LORAConfig;
+
 /**
  * @brief /LA - Configure LORA Page
  * T: handleLA: uri: /la, args: 11, method: 1

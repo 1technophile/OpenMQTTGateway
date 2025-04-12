@@ -2577,6 +2577,7 @@ void loop() {
       stateSSD1306Display();
 #endif
 #ifdef ZgatewayLORA
+      extern String stateLORAMeasures();
       stateLORAMeasures();
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
