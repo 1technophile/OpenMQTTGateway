@@ -1230,6 +1230,8 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayRF2
+#    include "config_RF.h"
+
   // Sensor to display RF received value
   Log.trace(F("gatewayRF2Discovery" CR));
   char* gatewayRF2[8] = {"sensor", "gatewayRF2", "", "", jsonAddress, "", "", ""};
