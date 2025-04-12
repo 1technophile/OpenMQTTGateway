@@ -38,6 +38,10 @@
 #include "User_config.h"
 
 #ifdef ZsensorHTU21
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <stdint.h>
 
 #  include "SparkFunHTU21D.h"
@@ -49,6 +53,8 @@ unsigned long timehtu21 = 0;
 
 //Global sensor object
 HTU21D htuSensor;
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 void setupZsensorHTU21() {
   delay(10); // Gives the Sensor enough time to turn on
