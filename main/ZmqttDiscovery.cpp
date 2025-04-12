@@ -918,6 +918,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorHTU21
+#    include "config_HTU21.h"
 #    define HTUparametersCount 2
   Log.trace(F("htu21Discovery" CR));
   char* HTUsensor[HTUparametersCount][8] = {
@@ -1146,6 +1147,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorINA226
+#    include "config_INA226.h"
 #    define INA226parametersCount 3
   Log.trace(F("INA226Discovery" CR));
   char* INA226sensor[INA226parametersCount][8] = {
@@ -1193,6 +1195,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorRN8209
+#    include "config_RN8209.h"
 #    define RN8209parametersCount 4
   Log.trace(F("RN8209Discovery" CR));
   char* RN8209sensor[RN8209parametersCount][8] = {
