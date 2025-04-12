@@ -48,8 +48,4 @@ extern void MeasureLightIntensityTSL2561();
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectTSL12561toMQTT "/LIGHTtoMQTT"
 
-//Time used to wait for an interval before resending measured values
-unsigned long timetsl2561 = 0;
-//int TSL2561_i2c_addr = 0x37; // Light Sensor I2C Address (Set in Adafruit library)
-
 #endif

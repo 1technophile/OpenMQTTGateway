@@ -36,9 +36,19 @@
 #include "User_config.h"
 
 #ifdef ZsensorMQ2
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 
 #  include "Wire.h"
+#  include "config_MQ2.h"
 #  include "math.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+//Time used to wait for an interval before resending measured values
+unsigned long timemq2 = 0;
 
 void setupZsensorMQ2() {
   Log.notice(F("Setup MQ2 detection on pin: %d" CR), MQ2SENSORDETECTPIN);

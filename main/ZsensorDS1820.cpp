@@ -26,8 +26,14 @@
 #include "User_config.h"
 
 #ifdef ZsensorDS1820
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <DallasTemperature.h>
 #  include <OneWire.h>
+
+#  include "config_DS1820.h"
 
 OneWire owbus(DS1820_OWBUS_GPIO);
 DallasTemperature ds1820(&owbus);
@@ -37,6 +43,18 @@ static uint8_t ds1820_count = 0;
 static uint8_t ds1820_resolution[OW_MAX_SENSORS];
 static String ds1820_type[OW_MAX_SENSORS];
 static String ds1820_addr[OW_MAX_SENSORS];
+
+extern SYSConfig_s SYSConfig;
+extern bool ready_to_sleep;
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+extern void createDiscovery(const char* sensor_type,
+                            const char* st_topic, const char* s_name, const char* unique_id,
+                            const char* availability_topic, const char* device_class, const char* value_template,
+                            const char* payload_on, const char* payload_off, const char* unit_of_meas,
+                            int off_delay,
+                            const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
+                            const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
+                            const char* state_class, const char* state_off, const char* state_on, const char* enum_options, const char* command_template);
 
 void setupZsensorDS1820() {
   Log.trace(F("DS1820: configured pin: %d for 1-wire bus" CR), DS1820_OWBUS_GPIO);
@@ -100,6 +118,8 @@ void setupZsensorDS1820() {
 void pubOneWire_HADiscovery() {
   // If zmqttDiscovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
 #  ifdef ZmqttDiscovery
+#    include "config_mqttDiscovery.h"
+
   // If zmqtt discovery is enabled, create a sensor topic for each DS18b20 sensor found on the bus, using addr as uniqueID
   if (SYSConfig.discovery) {
     for (int index = 0; index < ds1820_count; index++) {

@@ -893,6 +893,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorBME280
+#    include "config_BME280.h"
 #    define BMEparametersCount 5
   Log.trace(F("bme280Discovery" CR));
   char* BMEsensor[BMEparametersCount][8] = {
@@ -954,6 +955,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorAHTx0
+#    include "config_AHTx0.h"
 #    define AHTparametersCount 2
   Log.trace(F("AHTx0Discovery" CR));
   char* AHTsensor[AHTparametersCount][8] = {
@@ -975,6 +977,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorDHT
+#    include "config_DHT.h"
 #    define DHTparametersCount 2
   Log.trace(F("DHTDiscovery" CR));
   char* DHTsensor[DHTparametersCount][8] = {
@@ -1015,6 +1018,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorBH1750
+#    include "config_BH1750.h"
 #    define BH1750parametersCount 3
   Log.trace(F("BH1750Discovery" CR));
   char* BH1750sensor[BH1750parametersCount][8] = {
@@ -1038,6 +1042,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorMQ2
+#    include "config_MQ2.h"
 #    define MQ2parametersCount 2
   Log.trace(F("MQ2Discovery" CR));
   char* MQ2sensor[MQ2parametersCount][8] = {
@@ -1059,6 +1064,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorTEMT6000
+#    include "config_TEMT6000.h"
 #    define TEMT6000parametersCount 3
   Log.trace(F("TEMT6000Discovery" CR));
   char* TEMT6000sensor[TEMT6000parametersCount][8] = {
@@ -1082,6 +1088,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorTSL2561
+#    include "config_TSL2561.h"
 #    define TSL2561parametersCount 3
   Log.trace(F("TSL2561Discovery" CR));
   char* TSL2561sensor[TSL2561parametersCount][8] = {
@@ -1105,6 +1112,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorHCSR501
+#    include "config_HCSR501.h"
   Log.trace(F("HCSR501Discovery" CR));
   char* HCSR501sensor[8] = {"binary_sensor", "hcsr501", "", "motion", jsonPresence, "true", "false", ""};
   //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
@@ -1161,6 +1169,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZsensorDS1820
+  extern void pubOneWire_HADiscovery();
   // Publish any DS1820 sensors found on the OneWire bus
   pubOneWire_HADiscovery();
 #  endif
@@ -1256,6 +1265,7 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayRFM69
+#    include "config_RFM69.h"
   // Sensor to display RF received value
   Log.trace(F("gatewayRFM69Discovery" CR));
   char* gatewayRFM69[8] = {"sensor", "gatewayRFM69", "", "", jsonVal, "", "", ""};

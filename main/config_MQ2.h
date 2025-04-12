@@ -62,7 +62,4 @@ extern void MQ2toX();
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectMQ2toMQTT "/GAStoMQTT/mq2"
 
-//Time used to wait for an interval before resending measured values
-unsigned long timemq2 = 0;
-
 #endif

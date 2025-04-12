@@ -29,6 +29,14 @@
 #include "User_config.h"
 
 #ifdef ZsensorHCSR501
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+
+#  include "config_HCSR501.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 void setupHCSR501() {
   Log.notice(F("HCSR501 pin: %d" CR), HCSR501_GPIO);

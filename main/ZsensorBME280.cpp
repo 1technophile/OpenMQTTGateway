@@ -40,13 +40,22 @@
 #include "User_config.h"
 
 #ifdef ZsensorBME280
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <stdint.h>
 
 #  include "SparkFunBME280.h"
 #  include "Wire.h" // Library for communication with I2C / TWI devices
+#  include "config_BME280.h"
 
-//Global sensor object
-BME280 mySensor;
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+//Time used to wait for an interval before resending measured values
+static unsigned long timebme280 = 0;
+static int BME280_i2c_addr = BME280_I2C_ADDR; // Default I2C address for BME280 is 0x76, for BMP280 is 0x77
+static BME280 mySensor;
 
 void setupZsensorBME280() {
   // Allow custom pins on ESP Platforms

@@ -31,15 +31,26 @@
 #include "User_config.h"
 
 #ifdef ZgatewayRFM69
-
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 #  include <EEPROM.h>
 #  include <RFM69.h> //https://www.github.com/lowpowerlab/rfm69
 
-char RadioConfig[128];
+#  include "config_RFM69.h"
 
-// vvvvvvvvv Global Configuration vvvvvvvvvvv
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
-struct _GLOBAL_CONFIG {
+static char RadioConfig[128];
+static const char* PROGMEM ENCRYPTKEY = RFM69_ENCRYPTKEY;
+static const char* PROGMEM MDNS_NAME = RFM69_MDNS_NAME;
+static const char* PROGMEM MQTT_BROKER = RFM69_MQTT_BROKER;
+static const char* PROGMEM RFM69AP_NAME = RFM69_RFM69AP_NAME
+
+    // vvvvvvvvv Global Configuration vvvvvvvvvvv
+
+    struct _GLOBAL_CONFIG {
   uint32_t checksum;
   char rfmapname[32];
   char encryptkey[16 + 1];
@@ -75,8 +86,8 @@ void eeprom_setup() {
     memset(pGC, 0, sizeof(*pGC));
     strcpy_P(pGC->encryptkey, ENCRYPTKEY);
     strcpy_P(pGC->rfmapname, RFM69AP_NAME);
-    pGC->networkid = NETWORKID;
-    pGC->nodeid = NODEID;
+    pGC->networkid = RFM69_NETWORKID;
+    pGC->nodeid = RFM69_NODEID;
     pGC->powerlevel = ((IS_RFM69HCW) ? 0x80 : 0x00) | POWER_LEVEL;
     pGC->rfmfrequency = FREQUENCY;
     pGC->checksum = gc_checksum();

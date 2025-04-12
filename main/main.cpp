@@ -2612,6 +2612,7 @@ void loop() {
     MeasureLightIntensity(); //Addon to measure Light Intensity with a BH1750
 #endif
 #ifdef ZsensorMQ2
+    extern void MeasureGasMQ2();
     MeasureGasMQ2();
 #endif
 #ifdef ZsensorTEMT6000

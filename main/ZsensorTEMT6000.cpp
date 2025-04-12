@@ -38,9 +38,19 @@
 #include "User_config.h"
 
 #ifdef ZsensorTEMT6000
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 
 #  include "Wire.h"
+#  include "config_TEMT6000.h"
 #  include "math.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+//Time used to wait for an interval before resending measured values
+static unsigned long timetemt6000 = 0;
 
 void setupZsensorTEMT6000() {
   Log.notice(F("Setup TEMT6000 on pin: %i" CR), TEMT6000LIGHTSENSORPIN);

@@ -39,10 +39,16 @@
 
 #ifdef ZsensorAHTx0
 #  include <stdint.h>
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
 
 #  include "Adafruit_AHTX0.h"
 #  include "Wire.h" // Library for communication with I2C / TWI devices
 #  include "config_AHTx0.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 //Time used to wait for an interval before resending measured values
 unsigned long timeAHTx0 = 0;

@@ -39,8 +39,20 @@
 #include "User_config.h"
 
 #ifdef ZsensorBH1750
+#  define ARDUINOJSON_USE_LONG_LONG     1
+#  define ARDUINOJSON_ENABLE_STD_STRING 1
+#  include <ArduinoJson.h>
+#  include <ArduinoLog.h>
+
 #  include "Wire.h" // Library for communication with I2C / TWI devices
 #  include "math.h" // Library for trig and exponential functions
+#  include "config_BH1750.h"
+
+extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+
+//Time used to wait for an interval before resending measured values
+static unsigned long timebh1750 = 0;
+static int BH1750_i2c_addr = BH1750_I2C_ADDR;
 
 void setupZsensorBH1750() {
   Log.notice(F("Setup BH1750 on adress: %H" CR), BH1750_i2c_addr);
