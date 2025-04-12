@@ -30,11 +30,11 @@
 #  define ARDUINOJSON_USE_LONG_LONG     1
 #  define ARDUINOJSON_ENABLE_STD_STRING 1
 #  include <ArduinoJson.h>
-#  include "config_RF.h"
 #  include <rtl_433_ESP.h>
 
 #  include "ArduinoLog.h"
 #  include "User_config.h"
+#  include "config_RF.h"
 #  ifdef ZmqttDiscovery
 #    include "config_mqttDiscovery.h"
 #  endif
@@ -42,7 +42,8 @@
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 extern SYSConfig_s SYSConfig;
 
-char messageBuffer[JSON_MSG_BUFFER];
+static char messageBuffer[JSON_MSG_BUFFER];
+rtl_433_ESP rtl_433;
 
 #  ifdef ZmqttDiscovery
 SemaphoreHandle_t semaphorecreateOrUpdateDeviceRTL_433;

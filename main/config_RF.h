@@ -50,8 +50,6 @@ extern void disablePilightReceive();
 extern void enablePilightReceive();
 #endif
 #ifdef ZgatewayRTL_433
-#  include <rtl_433_ESP.h>
-rtl_433_ESP rtl_433;
 
 extern void RTL_433Loop();
 extern void setupRTL_433();

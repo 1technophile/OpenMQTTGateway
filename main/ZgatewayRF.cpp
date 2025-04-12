@@ -36,6 +36,7 @@
 #  include "config_RF.h"
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
+extern void initCC1101();
 #  endif
 
 #  include <RCSwitch.h> // library for controling Radio frequency switch
