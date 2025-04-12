@@ -1429,6 +1429,7 @@ void setup() {
 #endif
 
 #if defined(ESPWifiManualSetup)
+  extern void setupWiFiFromBuild();
   setupWiFiFromBuild();
 #else
   if (loadConfigFromFlash()) { // Config present
