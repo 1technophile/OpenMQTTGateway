@@ -42,6 +42,8 @@
 #    include "config_SSD1306.h"
 #  endif
 
+extern String stateRFMeasures();
+
 uint32_t requestToken = 0;
 
 QueueHandle_t webUIQueue;
@@ -1145,7 +1147,6 @@ extern RFConfig_s RFConfig;
 
 bool validFrequency(float mhz);
 void RFConfig_fromJson(JsonObject& RFdata);
-String stateRFMeasures();
 
 bool isValidReceiver(int receiverId) {
   // Check if the receiverId exists in the activeReceiverOptions map
