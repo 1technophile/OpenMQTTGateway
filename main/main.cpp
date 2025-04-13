@@ -2724,6 +2724,7 @@ void loop() {
   if (ready_to_sleep) {
     sleep();
   }
+  delay(1);
 }
 
 /**
