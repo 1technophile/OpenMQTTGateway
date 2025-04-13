@@ -531,7 +531,7 @@ extern ss_cnt_parameters cnt_parameters_array[];
 
 #ifdef ESP8266
 //#  define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
-#elif ESP32
+#elif defined(ESP32)
 //#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 //#  define NO_INT_TEMP_READING true //Define if we don't want internal temperature reading for the ESP32
 #endif

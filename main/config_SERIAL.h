@@ -131,7 +131,7 @@ extern bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata);
 // define transmit pin (for software serial and/or ESP32)
 #  if defined(ESP8266) && !defined(SERIAL_UART)
 #    define SERIAL_TX_GPIO 2 //D4
-#  elif ESP32
+#  elif defined(ESP32)
 #    define SERIAL_TX_GPIO 14
 #  endif
 #endif

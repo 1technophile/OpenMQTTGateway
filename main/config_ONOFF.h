@@ -70,7 +70,7 @@ extern void stateONOFFMeasures();
 #ifndef ACTUATOR_ONOFF_GPIO
 #  ifdef ESP8266
 #    define ACTUATOR_ONOFF_GPIO 15 //12 for sonoff basic relay
-#  elif ESP32
+#  elif defined(ESP32)
 #    define ACTUATOR_ONOFF_GPIO 15
 #  else
 #    define ACTUATOR_ONOFF_GPIO 13

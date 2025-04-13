@@ -1381,7 +1381,7 @@ void setup() {
   Serial.end();
   Serial.begin(SERIAL_BAUD, SERIAL_8N1, SERIAL_TX_ONLY); // enable on ESP8266 to free some pin
 #  endif
-#elif ESP32
+#elif defined(ESP32)
   xTaskCreate(updateAndHandleLEDsTask, "updateAndHandleLEDsTask", 2500, NULL, 1, NULL);
   xQueueMutex = xSemaphoreCreateMutex();
   xMqttMutex = xSemaphoreCreateMutex();
