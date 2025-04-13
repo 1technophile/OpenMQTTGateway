@@ -880,7 +880,7 @@ void setupBTTasksAndBLE() {
   BLEDevice::setScanDuplicateCacheSize(BLEScanDuplicateCacheSize);
 #  endif
   BLEDevice::init("");
-  xTaskCreatePinnedToCore(
+  xTaskCreateUniversal(
       procBLETask, /* Function to implement the task */
       "procBLETask", /* Name of the task */
 #  if defined(USE_ESP_IDF) || defined(USE_BLUFI)
@@ -894,7 +894,7 @@ void setupBTTasksAndBLE() {
       1); /* Core where the task should run */
 
   // we setup a task with priority one to avoid conflict with other gateways
-  xTaskCreatePinnedToCore(
+  xTaskCreateUniversal(
       coreTask, /* Function to implement the task */
       "coreTask", /* Name of the task */
       5120, /* Stack size in bytes */
@@ -1433,7 +1433,7 @@ void immediateBTAction(void* pvParameters) {
 
 void startBTActionTask() {
   TaskHandle_t th;
-  xTaskCreatePinnedToCore(
+  xTaskCreateUniversal(
       immediateBTAction, /* Function to implement the task */
       "imActTask", /* Name of the task */
       8000, /* Stack size in bytes */
