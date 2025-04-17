@@ -3099,8 +3099,7 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
 String latestVersion;
 #  ifdef ESP32
 #    include <HTTPClient.h>
-
-#    include "zzHTTPUpdate.h"
+#    include <HTTPUpdate.h>
 
 #    if CHECK_OTA_UPDATE
 /**
