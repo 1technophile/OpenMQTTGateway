@@ -38,6 +38,8 @@
 #    include "config_mqttDiscovery.h"
 #  endif
 
+#  include <vector>
+
 static char messageBuffer[JSON_MSG_BUFFER];
 rtl_433_ESP rtl_433;
 
