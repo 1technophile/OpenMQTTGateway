@@ -30,16 +30,11 @@
 #include "User_config.h"
 
 #ifdef ZsensorDHT
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <DHT.h>
 #  include <DHT_U.h>
 
 #  include "config_DHT.h"
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+#  include "omg_common.h"
 
 DHT dht(DHT_RECEIVER_GPIO, DHT_SENSOR_TYPE);
 

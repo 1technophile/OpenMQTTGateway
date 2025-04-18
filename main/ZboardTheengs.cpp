@@ -1,7 +1,5 @@
 #if SELF_TEST
 #  include <Arduino.h>
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <ETH.h>
 #  include <LEDManager.h>
 #  include <WiFi.h>
@@ -9,6 +7,7 @@
 #  include <esp_system.h>
 
 #  include "User_config.h"
+#  include "omg_common.h"
 
 extern LEDManager ledManager;
 extern void ESPRestart(byte reason);

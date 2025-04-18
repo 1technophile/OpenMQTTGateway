@@ -26,17 +26,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #if defined(ESP32) && defined(USE_BLUFI)
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
+#  include "omg_common.h"
 #  include <PicoMQTT.h>
 #  include <WiFiManager.h>
 
 #  include "NimBLEDevice.h"
 #  include "NimBLEOta.h"
 #  include "User_config.h"
-#  include "Zglobal.h"
 #  include "esp_blufi_api.h"
 #  include "esp_mac.h"
 #  include "esp_timer.h"

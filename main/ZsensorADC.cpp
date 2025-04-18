@@ -29,14 +29,8 @@
 #include "User_config.h"
 
 #ifdef ZsensorADC
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "config_ADC.h"
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+#  include "omg_common.h"
 
 #  if defined(ESP8266)
 ADC_MODE(ADC_TOUT);

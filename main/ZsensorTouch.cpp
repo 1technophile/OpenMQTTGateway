@@ -23,17 +23,12 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <Arduino.h>
-#include <HardwareSerial.h>
 
-#define ARDUINOJSON_USE_LONG_LONG     1
-#define ARDUINOJSON_ENABLE_STD_STRING 1
-#include "ArduinoJson.h"
 #include "User_config.h"
-#include "config_Touch.h"
 
 #ifdef ZsensorTouch
-
+#  include "config_Touch.h"
+#  include "omg_common.h"
 #  ifndef ESP32
 #    error Only supported on esp32
 #  endif

@@ -26,6 +26,8 @@
 #ifndef config_IR_h
 #define config_IR_h
 
+#include "omg_common.h"
+
 extern void setupIR();
 extern void IRtoX();
 extern void XtoIR(const char* topicOri, const char* datacallback);

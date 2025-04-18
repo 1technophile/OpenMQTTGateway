@@ -28,27 +28,7 @@
 #include "User_config.h"
 
 #ifdef ZgatewayIR
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
-bool pubMQTT(const char* topic, const char* payload);
-bool pubMQTT(const char* topic, const char* payload, bool retainFlag);
-bool pubMQTT(String topic, const char* payload);
-bool pubMQTT(const char* topic, unsigned long payload);
-bool pubMQTT(const char* topic, unsigned long long payload);
-bool pubMQTT(const char* topic, String payload);
-bool pubMQTT(String topic, String payload);
-bool pubMQTT(String topic, int payload);
-bool pubMQTT(String topic, unsigned long long payload);
-bool pubMQTT(String topic, float payload);
-bool pubMQTT(const char* topic, float payload);
-bool pubMQTT(const char* topic, int payload);
-bool pubMQTT(const char* topic, unsigned int payload);
-bool pubMQTT(const char* topic, long payload);
-bool pubMQTT(const char* topic, double payload);
-bool pubMQTT(String topic, unsigned long payload);
+#  include "omg_common.h"
 
 #  include <IRrecv.h> // Needed if you want to receive IR commands.
 #  include <IRremoteESP8266.h>
@@ -94,8 +74,6 @@ IRsend irsend(IR_EMITTER_GPIO, IR_EMITTER_INVERTED);
 #  ifndef WHYNTER_BITS
 #    define WHYNTER_BITS 32U
 #  endif
-
-bool pubMQTT(const char* topic, const char* payload, bool retainFlag);
 
 // The function below comes from IRMQTTServer.INO on IRremoteESP8266 project from @crankyoldgit
 uint64_t getUInt64fromHex(char const* str) {

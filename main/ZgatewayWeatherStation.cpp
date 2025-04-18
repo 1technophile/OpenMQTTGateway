@@ -26,15 +26,10 @@
 #include "User_config.h"
 
 #ifdef ZgatewayWeatherStation
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <WeatherStationDataRx.h>
 
 #  include "config_WeatherStation.h"
-
-bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+#  include "omg_common.h"
 
 WeatherStationDataRx wsdr(RF_WS_RECEIVER_GPIO, true);
 

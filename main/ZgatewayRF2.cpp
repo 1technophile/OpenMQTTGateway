@@ -36,13 +36,9 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/
 #include "User_config.h"
 
 #ifdef ZgatewayRF2
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "TheengsUtils.h"
 #  include "config_RF.h"
+#  include "omg_common.h"
 
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
@@ -65,8 +61,6 @@ struct RF2rxd {
 
 RF2rxd rf2rd;
 
-extern SYSConfig_s SYSConfig;
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 extern void initCC1101();
 
 #  ifdef ZmqttDiscovery

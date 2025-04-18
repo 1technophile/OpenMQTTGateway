@@ -24,6 +24,8 @@
 #ifndef config_FASTLED_h
 #define config_FASTLED_h
 
+#include "omg_common.h"
+
 extern void setupFASTLED();
 extern void FASTLEDLoop();
 extern void XtoFASTLED(const char*, const char*);

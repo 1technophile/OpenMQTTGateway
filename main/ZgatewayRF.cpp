@@ -28,12 +28,8 @@
 #include "User_config.h"
 
 #ifdef ZgatewayRF
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "config_RF.h"
+#  include "omg_common.h"
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 extern void initCC1101();
@@ -41,7 +37,6 @@ extern void initCC1101();
 
 #  include <RCSwitch.h> // library for controling Radio frequency switch
 
-bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 void disableCurrentReceiver();
 void enableActiveReceiver();
 

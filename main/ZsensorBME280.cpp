@@ -40,17 +40,12 @@
 #include "User_config.h"
 
 #ifdef ZsensorBME280
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <stdint.h>
 
 #  include "SparkFunBME280.h"
 #  include "Wire.h" // Library for communication with I2C / TWI devices
 #  include "config_BME280.h"
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+#  include "omg_common.h"
 
 //Time used to wait for an interval before resending measured values
 static unsigned long timebme280 = 0;

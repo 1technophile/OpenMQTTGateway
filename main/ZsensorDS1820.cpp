@@ -26,14 +26,11 @@
 #include "User_config.h"
 
 #ifdef ZsensorDS1820
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <DallasTemperature.h>
 #  include <OneWire.h>
 
 #  include "config_DS1820.h"
+#  include "omg_common.h"
 
 OneWire owbus(DS1820_OWBUS_GPIO);
 DallasTemperature ds1820(&owbus);
@@ -44,9 +41,6 @@ static uint8_t ds1820_resolution[OW_MAX_SENSORS];
 static String ds1820_type[OW_MAX_SENSORS];
 static String ds1820_addr[OW_MAX_SENSORS];
 
-extern SYSConfig_s SYSConfig;
-extern bool ready_to_sleep;
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 extern void createDiscovery(const char* sensor_type,
                             const char* st_topic, const char* s_name, const char* unique_id,
                             const char* availability_topic, const char* device_class, const char* value_template,

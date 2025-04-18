@@ -26,7 +26,7 @@
 #ifndef config_RF_h
 #define config_RF_h
 
-#include <Arduino.h>
+#include "omg_common.h"
 
 #ifdef ZgatewayRF
 extern void setupRF();

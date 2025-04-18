@@ -28,10 +28,6 @@
 #include "User_config.h"
 
 #ifdef ZgatewayLORA
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <LoRa.h>
 #  include <SPI.h>
 #  include <TheengsUtils.h>
@@ -39,26 +35,11 @@
 
 #  include "config_LORA.h"
 #  include "config_mqttDiscovery.h"
+#  include "omg_common.h"
 
 #  define WIPHONE_MESSAGE_MAGIC   0x6c6d
 #  define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
 #  define WIPHONE_MAX_MESSAGE_LEN 230
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
-extern void buildTopicFromId(JsonObject& Jsondata, const char* origin);
-template <typename T>
-void Config_update(JsonObject& data, const char* key, T& var) {
-  if (data.containsKey(key)) {
-    if (var != data[key].as<T>()) {
-      var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
-    } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
-    }
-  }
-}
-
-extern SYSConfig_s SYSConfig;
 
 LORAConfig_s LORAConfig;
 

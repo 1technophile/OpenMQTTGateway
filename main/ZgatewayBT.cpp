@@ -29,16 +29,12 @@ Thanks to wolass https://github.com/wolass for suggesting me HM 10 and dinosd ht
 #include "User_config.h"
 
 #ifdef ZgatewayBT
-#  include "Zglobal.h"
+#  include "omg_common.h"
 
 SemaphoreHandle_t semaphoreCreateOrUpdateDevice;
 SemaphoreHandle_t semaphoreBLEOperation;
 QueueHandle_t BLEQueue;
 unsigned long scanCount = 0;
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <NimBLEAdvertisedDevice.h>
 #  include <NimBLEDevice.h>
 #  include <NimBLEScan.h>
@@ -50,6 +46,7 @@ unsigned long scanCount = 0;
 
 #  include "ZgatewayBLEConnect.h"
 #  include "config_mqttDiscovery.h"
+#  include "omg_common.h"
 #  include "soc/timer_group_reg.h"
 #  include "soc/timer_group_struct.h"
 
@@ -90,24 +87,7 @@ static BLEdevice NO_BT_DEVICE_FOUND = {
 static bool oneWhite = false;
 
 extern bool BTProcessLock;
-extern bool ready_to_sleep;
 extern int queueLength;
-extern SYSConfig_s SYSConfig;
-
-boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
-bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
-void buildTopicFromId(JsonObject& Jsondata, const char* origin);
-template <typename T>
-void Config_update(JsonObject& data, const char* key, T& var) {
-  if (data.containsKey(key)) {
-    if (var != data[key].as<T>()) {
-      var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
-    } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
-    }
-  }
-}
 
 void setupBTTasksAndBLE();
 bool checkIfIsTracker(char ch);

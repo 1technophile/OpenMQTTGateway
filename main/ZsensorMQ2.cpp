@@ -36,16 +36,10 @@
 #include "User_config.h"
 
 #ifdef ZsensorMQ2
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "Wire.h"
 #  include "config_MQ2.h"
 #  include "math.h"
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+#  include "omg_common.h"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timemq2 = 0;

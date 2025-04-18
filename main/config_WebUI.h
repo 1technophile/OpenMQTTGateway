@@ -26,8 +26,9 @@
 #ifndef config_WebUI_h
 #define config_WebUI_h
 
-#include <ArduinoJson.h>
 #include <Wire.h>
+
+#include "omg_common.h"
 
 #define WEBUI_TEXT_WIDTH 128
 

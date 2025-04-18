@@ -26,6 +26,8 @@
 #ifndef config_ONOFF_h
 #define config_ONOFF_h
 
+#include "omg_common.h"
+
 extern void setupONOFF();
 extern void XtoONOFF(const char* topicOri, const char* datacallback);
 extern void XtoONOFF(const char* topicOri, JsonObject& RFdata);

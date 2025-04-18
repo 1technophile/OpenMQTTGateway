@@ -43,6 +43,7 @@
 #  include "Temperature_LM75_Derived.h"
 #  include "Wire.h" // Library for communication with I2C / TWI devices
 #  include "config_LM75.h"
+#  include "omg_common.h"
 
 //Time used to wait for an interval before resending measured values
 unsigned long timelm75 = 0;

@@ -27,6 +27,8 @@
 #ifndef config_SRFB_h
 #define config_SRFB_h
 
+#include "omg_common.h"
+
 extern void setupSRFB();
 extern bool SRFBtoX();
 extern void XtoSRFB(const char* topicOri, const char* datacallback);

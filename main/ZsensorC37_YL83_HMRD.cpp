@@ -24,20 +24,13 @@
 #include "User_config.h"
 
 #ifdef ZsensorC37_YL83_HMRD
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "config_C37_YL83_HMRD.h"
+#  include "omg_common.h"
+
 //Time used to wait for an interval before resending temp and hum
 unsigned long timeC37YL83HMRD = 0;
 unsigned int persistedanalog = 0;
 unsigned int persisteddigital = 0;
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
-extern bool ready_to_sleep;
-extern SYSConfig_s SYSConfig;
 
 void setupZsensorC37_YL83_HMRD() {
   pinMode(C37_YL83_HMRD_Digital_GPIO, INPUT);

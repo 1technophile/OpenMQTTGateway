@@ -625,60 +625,14 @@ extern ss_cnt_parameters cnt_parameters_array[];
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 
-/*----------- SHARED WITH OMG MODULES --------------*/
-
-extern char mqtt_topic[];
-extern char gateway_name[];
-
-void connectMQTT();
-
-unsigned long uptime();
-bool cmpToMainTopic(const char*, const char*);
-bool pub(const char*, const char*, bool);
-bool pub(const char*, const char*);
-
-#if defined(ESP32)
-#  include <Preferences.h>
-extern Preferences preferences;
-#endif
-
-extern unsigned long lastDiscovery; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
-#ifndef DEFAULT_DISCOVERY
-#  define DEFAULT_DISCOVERY true
-#endif
-
-#include <vector>
-// Flags definition for white list, black list, discovery management
-#define device_flags_init     0 << 0
-#define device_flags_isDisc   1 << 0
-#define device_flags_isWhiteL 1 << 1
-#define device_flags_isBlackL 1 << 2
-#define device_flags_connect  1 << 3
-#define isWhite(device)       device->isWhtL
-#define isBlack(device)       device->isBlkL
-#define isDiscovered(device)  device->isDisc
-
-enum PowerMode { DEACTIVATED = -1,
-                 ALWAYS_ON,
-                 INTERVAL,
-                 ACTION };
-
 /*--------------------Minimum freeHeap--------------------*/
 // Below this parameter we trigger a restart, this avoid stuck boards like seen in https://github.com/1technophile/OpenMQTTGateway/issues/1693
 #define MinimumMemory 40000
 
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
-struct SYSConfig_s {
-  bool mqtt; // if true the gateway will publish the received data on the MQTT broker
-  bool serial; // if true the gateway will publish the received data on the SERIAL
-  bool blufi; // if true the gateway will be accesible with blufi
-  bool offline;
-  bool discovery; // HA discovery convention
-#ifdef LED_ADDRESSABLE
-  int rgbbrightness; // brightness of the RGB LED
+#ifndef DEFAULT_DISCOVERY
+#  define DEFAULT_DISCOVERY true
 #endif
-  enum PowerMode powerMode;
-};
 
 #ifndef DEFAULT_MQTT
 #  define DEFAULT_MQTT true

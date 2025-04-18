@@ -3,6 +3,8 @@
 #ifdef ZsensorSHTC3
 #  include <SparkFun_SHTC3.h>
 
+#  include "omg_common.h"
+
 SHTC3 mySHTC3;
 
 //Time used to wait for an interval before resending temp and hum

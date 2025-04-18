@@ -31,21 +31,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "User_config.h"
+
 #if defined(ZdisplaySSD1306)
-
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "SSD1306Wire.h"
-#  include "User_config.h"
 #  include "config_SSD1306.h"
+#  include "omg_common.h"
 #  ifdef DISPLAY_BLANKING
 #    include "driver/touch_sensor.h"
 #  endif
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 

@@ -29,12 +29,8 @@
 #include "User_config.h"
 
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "config_M5.h"
+#  include "omg_common.h"
 #  ifdef ZboardM5STICKC
 #    include <M5StickC.h>
 #  endif

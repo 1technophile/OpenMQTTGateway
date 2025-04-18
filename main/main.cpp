@@ -25,8 +25,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "User_config.h"
-#include "Zglobal.h"
+
+#include <PicoMQTT.h>
+
+#include <memory>
+#include <queue>
+
+#include "LEDManager.h"
+#include "TheengsUtils.h"
+#include "omg_common.h"
 
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 
@@ -43,6 +50,12 @@ ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0
 #  define struct_size (sizeof(receivedSignal) / sizeof(ReceivedSignal))
 #endif
 
+int queueLength = -1; // We want to give one cycle of the loop before starting modules that are big msgs producers (example BT), to avoid queue overloading
+unsigned long queueLengthSum = 0;
+unsigned long blockedMessages = 0;
+unsigned long receivedMessages = 0;
+int maxQueueLength = 0;
+
 //Time used to wait for an interval before measures
 unsigned long timer_sys_measures = 0;
 
@@ -52,30 +65,11 @@ unsigned long timer_sys_checks = 0;
 // First Start of offline mode modules
 bool firstStart = true;
 
-#define ARDUINOJSON_USE_LONG_LONG     1
-#define ARDUINOJSON_ENABLE_STD_STRING 1
-
-#include <queue>
-int queueLength = -1; // We want to give one cycle of the loop before starting modules that are big msgs producers (example BT), to avoid queue overloading
-unsigned long queueLengthSum = 0;
-unsigned long blockedMessages = 0;
-unsigned long receivedMessages = 0;
-int maxQueueLength = 0;
-
 /**
  * Deep-sleep for the ESP8266 & ESP32 we need some form of indicator that we have posted the measurements and am ready to deep sleep.
  * Set this to true in the sensor code after publishing the measurement.
  */
 bool ready_to_sleep = false;
-
-#include <ArduinoJson.h>
-#include <ArduinoLog.h>
-#include <PicoMQTT.h>
-
-#include <memory>
-
-#include "LEDManager.h"
-#include "TheengsUtils.h"
 
 LEDManager ledManager;
 
@@ -399,18 +393,6 @@ std::unique_ptr< ::Client> eClient;
 std::unique_ptr<PicoMQTT::Client> mqtt;
 #endif
 
-template <typename T>
-void Config_update(JsonObject& data, const char* key, T& var) {
-  if (data.containsKey(key)) {
-    if (var != data[key].as<T>()) {
-      var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
-    } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
-    }
-  }
-}
-
 /*
  * Dispatch json messages towards the communication layer
  *
@@ -449,7 +431,7 @@ bool jsonDispatch(JsonObject& data) {
 }
 
 // Add a document to the queue
-boolean enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
+bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout) {
   receivedMessages++;
   if (jsonDoc.size() == 0) {
     Log.error(F("Empty JSON, skipping" CR));

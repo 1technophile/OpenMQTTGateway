@@ -29,12 +29,8 @@
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "config_RF.h"
+#  include "omg_common.h"
 
 #  ifdef ZgatewayRTL_433
 #    include <rtl_433_ESP.h>
@@ -44,18 +40,6 @@ extern rtl_433_ESP rtl_433;
 RFConfig_s RFConfig;
 void RFConfig_init();
 void RFConfig_load();
-bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
-template <typename T>
-void Config_update(JsonObject& data, const char* key, T& var) {
-  if (data.containsKey(key)) {
-    if (var != data[key].as<T>()) {
-      var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
-    } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
-    }
-  }
-}
 
 void initCC1101() {
 #  ifdef ZradioCC1101 //receiving with CC1101

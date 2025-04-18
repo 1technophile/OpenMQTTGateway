@@ -26,21 +26,17 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include "User_config.h"
+
 #ifdef ZgatewayRTL_433
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
 #  include <rtl_433_ESP.h>
 
-#  include "ArduinoLog.h"
-#  include "User_config.h"
 #  include "config_RF.h"
+#  include "omg_common.h"
 #  ifdef ZmqttDiscovery
 #    include "config_mqttDiscovery.h"
 #  endif
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
-extern SYSConfig_s SYSConfig;
 
 static char messageBuffer[JSON_MSG_BUFFER];
 rtl_433_ESP rtl_433;

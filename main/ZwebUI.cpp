@@ -23,14 +23,10 @@
 */
 #include "User_config.h"
 #if defined(ZwebUI) && defined(ESP32)
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
 #  include <SPIFFS.h>
 #  include <WebServer.h> // Docs for this are here - https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer
 #  include <WiFi.h>
 
-#  include "ArduinoLog.h"
 #  include "config_WebContent.h"
 #  include "config_WebUI.h"
 
@@ -55,7 +51,6 @@ webUIQueueMessage* currentWebUIMessage;
 extern JsonArray modules;
 extern char discovery_prefix[];
 extern String latestVersion;
-extern SYSConfig_s SYSConfig;
 
 bool WebUIConfig_save();
 void sendRestartPage();
@@ -71,7 +66,6 @@ extern void XtoSYS(const char* topicOri, JsonObject& SYSdata);
 extern String stateMeasures();
 extern void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData);
 extern void receivingDATA(const char* topicOri, const char* datacallback);
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 /*------------------- Web Console Globals ----------------------*/
 

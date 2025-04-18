@@ -28,13 +28,8 @@
 #include "User_config.h"
 
 #ifdef ZgatewaySERIAL
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
-#  include "Zglobal.h"
 #  include "config_SERIAL.h"
+#  include "omg_common.h"
 
 #  ifndef SERIAL_UART // software serial mode
 #    include <SoftwareSerial.h>
@@ -55,10 +50,7 @@ const TickType_t semaphoreTimeout = pdMS_TO_TICKS(1000); // 1 second timeout
 #    define SEMAPHORE_SERIAL_GIVE
 #  endif
 
-extern SYSConfig_s SYSConfig;
-
 extern void receivingDATA(const char* topicOri, const char* datacallback);
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 
 // use pointer to stream class for serial communication to make code
 // compatible with both softwareSerial as hardwareSerial.

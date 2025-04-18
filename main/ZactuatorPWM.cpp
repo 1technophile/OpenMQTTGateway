@@ -68,12 +68,8 @@
 #include "User_config.h"
 
 #ifdef ZactuatorPWM
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
-
 #  include "config_PWM.h"
+#  include "omg_common.h"
 
 static long previousUpdateTime = 0; // milliseconds
 static long currentUpdateTime = 0; // milliseconds

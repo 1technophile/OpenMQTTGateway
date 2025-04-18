@@ -26,6 +26,8 @@
 #ifndef config_SERIAL_h
 #define config_SERIAL_h
 
+#include "omg_common.h"
+
 extern void setupSERIAL();
 extern void SERIALtoX();
 extern bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata);

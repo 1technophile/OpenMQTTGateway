@@ -27,20 +27,16 @@
 #include "User_config.h"
 
 #ifdef ZsensorRN8209
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
+#  include <TheengsUtils.h>
 #  include <driver/uart.h>
 #  include <rn8209_flash.h>
 #  include <rn8209c_user.h>
-#  include <TheengsUtils.h>
 
 #  include "config_RN8209.h"
+#  include "omg_common.h"
 
 extern "C" bool init_8209c_interface();
 extern void overLimitCurrent(float RN8209current);
-extern void enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
 
 extern bool ProcessLock;
 

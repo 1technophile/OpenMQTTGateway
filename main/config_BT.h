@@ -26,6 +26,8 @@
 #ifndef config_BT_h
 #define config_BT_h
 
+#include "omg_common.h"
+
 extern void setupBT();
 extern void XtoBT(const char* topicOri, JsonObject& RFdata);
 extern void launchBTDiscovery(bool overrideDiscovery);
@@ -34,7 +36,6 @@ extern String stateBTMeasures(bool);
 
 #ifdef ESP32
 #  include "NimBLEDevice.h"
-
 #endif
 
 /*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/

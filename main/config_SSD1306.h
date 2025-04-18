@@ -34,10 +34,8 @@
 #ifndef config_SSD1306_h
 #define config_SSD1306_h
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
-
 #include "config_WebUI.h"
+#include "omg_common.h"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 

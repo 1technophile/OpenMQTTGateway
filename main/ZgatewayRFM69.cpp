@@ -31,16 +31,11 @@
 #include "User_config.h"
 
 #ifdef ZgatewayRFM69
-#  define ARDUINOJSON_USE_LONG_LONG     1
-#  define ARDUINOJSON_ENABLE_STD_STRING 1
-#  include <ArduinoJson.h>
-#  include <ArduinoLog.h>
 #  include <EEPROM.h>
 #  include <RFM69.h> //https://www.github.com/lowpowerlab/rfm69
 
 #  include "config_RFM69.h"
-
-extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
+#  include "omg_common.h"
 
 static char RadioConfig[128];
 static const char* PROGMEM ENCRYPTKEY = RFM69_ENCRYPTKEY;

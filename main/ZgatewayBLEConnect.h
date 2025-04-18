@@ -2,9 +2,9 @@
 #define zBLEConnect_h
 
 #ifdef ESP32
-#  include "ArduinoJson.h"
 #  include "NimBLEDevice.h"
 #  include "config_BT.h"
+#  include "omg_common.h"
 
 class zBLEConnect {
 public:

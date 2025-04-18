@@ -26,9 +26,6 @@
 #ifndef config_WeatherStation_h
 #define config_WeatherStation_h
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
-
 extern void setupWeatherStation();
 extern void ZgatewayWeatherStationtoX();
 /*----------------------------USER PARAMETERS-----------------------------*/

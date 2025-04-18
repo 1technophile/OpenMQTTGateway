@@ -26,7 +26,7 @@
 #include "User_config.h"
 
 #ifdef ZsensorGPIOKeyCode
-#include <ArduinoLog.h>
+#include "omg_common.h"
 #include "config_GPIOKeyCode.h"
 
 int InputStateGPIOKeyCode = 0x0f; // Set to 3 so that it reads on startup
