@@ -26,7 +26,7 @@
 #ifndef config_BT_h
 #define config_BT_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupBT();
 extern void XtoBT(const char* topicOri, JsonObject& RFdata);

@@ -26,7 +26,7 @@
 #ifndef config_LORA_h
 #define config_LORA_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupLORA();
 extern void LORAtoX();

@@ -26,7 +26,7 @@
 #ifndef config_SERIAL_h
 #define config_SERIAL_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupSERIAL();
 extern void SERIALtoX();

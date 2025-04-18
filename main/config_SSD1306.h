@@ -34,8 +34,8 @@
 #ifndef config_SSD1306_h
 #define config_SSD1306_h
 
+#include "TheengsCommon.h"
 #include "config_WebUI.h"
-#include "omg_common.h"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
 

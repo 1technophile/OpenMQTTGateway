@@ -27,7 +27,7 @@
 #ifndef config_SRFB_h
 #define config_SRFB_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupSRFB();
 extern bool SRFBtoX();

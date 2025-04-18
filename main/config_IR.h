@@ -26,7 +26,7 @@
 #ifndef config_IR_h
 #define config_IR_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupIR();
 extern void IRtoX();

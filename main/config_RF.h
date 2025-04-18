@@ -26,7 +26,7 @@
 #ifndef config_RF_h
 #define config_RF_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 #ifdef ZgatewayRF
 extern void setupRF();

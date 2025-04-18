@@ -26,7 +26,7 @@
 #ifndef config_ONOFF_h
 #define config_ONOFF_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupONOFF();
 extern void XtoONOFF(const char* topicOri, const char* datacallback);

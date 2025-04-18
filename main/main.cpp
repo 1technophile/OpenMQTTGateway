@@ -32,8 +32,8 @@
 #include <queue>
 
 #include "LEDManager.h"
+#include "TheengsCommon.h"
 #include "TheengsUtils.h"
-#include "omg_common.h"
 
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 

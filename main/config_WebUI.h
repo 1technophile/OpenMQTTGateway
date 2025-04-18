@@ -28,7 +28,7 @@
 
 #include <Wire.h>
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 #define WEBUI_TEXT_WIDTH 128
 

@@ -25,7 +25,7 @@
 #ifndef config_PWM_h
 #define config_PWM_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 // PWM MQTT Subjects
 
 extern void setupPWM();

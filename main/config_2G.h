@@ -26,7 +26,7 @@
 #ifndef config_2G_h
 #define config_2G_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setup2G();
 extern bool _2GtoX();

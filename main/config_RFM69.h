@@ -26,7 +26,7 @@
 #ifndef config_RFM69_h
 #define config_RFM69_h
 
-#include "omg_common.h"
+#include "TheengsCommon.h"
 
 extern void setupRFM69();
 extern bool RFM69toX();
