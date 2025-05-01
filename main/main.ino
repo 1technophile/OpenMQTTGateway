@@ -385,8 +385,13 @@ ZGatewayRF iZGatewayRF(iZCommonRF);
 
 #  ifdef ZgatewayRF2
 #    include "rf/newremoteswitch/ZGatewayRF2.h"
-ZGatewayRF2 iZGatewayRF2(SYSConfig ,iZCommonRF);
+ZGatewayRF2 iZGatewayRF2(SYSConfig, iZCommonRF);
 #  endif // ZgatewayRF2
+
+#  ifdef ZgatewayPilight
+#    include "rf/pilight/ZGatewayPilight.h"
+ZGatewayPilight iZGatewayPilight(iRFConfig, RF_EMITTER_GPIO, iZCommonRF);
+#  endif // ZgatewayPilight
 
 // ****************************************  TODO: Add other RF modules here
 
@@ -1395,6 +1400,10 @@ void setup() {
 #endif
 #ifdef ZgatewayRF2
   iZCommonRF.addGatewayRF(ACTIVE_RF2, &iZGatewayRF2);
+#endif
+
+#ifdef ZgatewayPilight
+  iZCommonRF.addGatewayRF(ACTIVE_PILIGHT, &iZGatewayPilight);
 #endif
 
   //Launch serial for debugging purposes
@@ -2737,9 +2746,10 @@ void loop() {
       launchLORADiscovery(false);
 #  endif
 #endif
-#ifdef ZgatewayRF || ZgatewayRF2
+#ifdef ZgatewayRF || ZgatewayRF2 || ZgatewayPilight
     //RFtoX();
     //RF2toX();
+    //PilighttoX();
     iZCommonRF.getCurrentGatewayRF()->RFtoX();
 #endif
 #ifdef ZgatewayWeatherStation
@@ -2748,9 +2758,7 @@ void loop() {
 #ifdef ZgatewayGFSunInverter
     ZgatewayGFSunInverterMQTT();
 #endif
-#ifdef ZgatewayPilight
-    PilighttoX();
-#endif
+
 #ifdef ZgatewayBT
 #  ifdef ZmqttDiscovery
     if (SYSConfig.discovery)
@@ -3066,7 +3074,8 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
     //Log.notice(F("[ MQTT->OMG ]: %s" CR), buffer.c_str());
 
 #ifdef ZgatewayPilight // ZgatewayPilight is only defined with json publishing due to its numerous parameters
-    XtoPilight(strTopicOri.c_str(), jsondata);
+    //XtoPilight(strTopicOri.c_str(), jsondata);
+    iZCommonRF.getCurrentGatewayRF()->XtoRF(strTopicOri.c_str(), jsondata);
 #endif
 #if defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
     //XtoRFset(strTopicOri.c_str(), jsondata);

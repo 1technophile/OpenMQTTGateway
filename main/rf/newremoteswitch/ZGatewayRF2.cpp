@@ -339,7 +339,9 @@ void ZGatewayRF2::disableRF2Receive() {
 
 void ZGatewayRF2::enableRF2Receive(int rfReceiverGPIO, int rfEmitterGPIO) {
   Log.trace(F("enableRF2Receive" CR));
-  NewRemoteReceiver::init(rfReceiverGPIO, 2, ZGatewayRF2::rf2Callback);
+  NewRemoteReceiver::init(rfReceiverGPIO, 2, [this](unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
+    this->rf2Callback(period, address, groupBit, unit, switchType);
+  });
 
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), rfEmitterGPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), rfReceiverGPIO);

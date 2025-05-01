@@ -29,20 +29,23 @@
 
 #ifdef ZgatewayPilight
 
+#  include <ArduinoLog.h>
+#  include <ESPiLight.h>
+#  include <config_RF.h>
+
+#  include "ZGatewayPilight.h"
+
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
+#  include <SPIFFS.h>
 
-#  include <ESPiLight.h>
-ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
+ZGatewayPilight::ZGatewayPilight(RFConfig& iRFConfig, int rfEmitterGPIO, ZCommonRF& iZCommonRF) : AbstractGatewayRF(iZCommonRF), iRFConfig(iRFConfig) {
+  rf = ESPiLight(rfEmitterGPIO); // use -1 to disable transmitter
+}
 
-#  ifdef Pilight_rawEnabled
-// raw output support
-bool pilightRawEnabled = 0;
-#  endif
-
-void pilightCallback(const String& protocol, const String& message, int status,
-                     size_t repeats, const String& deviceID) {
+void ZGatewayPilight::pilightCallback(const String& protocol, const String& message, int status,
+                                      size_t repeats, const String& deviceID) {
   if (status == VALID) {
     Log.trace(F("Creating RF PiLight buffer" CR));
     StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
@@ -83,17 +86,17 @@ void pilightCallback(const String& protocol, const String& message, int status,
     RFPiLightdata["repeats"] = (int)repeats;
     RFPiLightdata["status"] = (int)status;
     RFPiLightdata["origin"] = subjectPilighttoMQTT;
-    enqueueJsonObject(RFPiLightdata);
+    rfHandler.getPublisher().enqueueJsonObject(RFPiLightdata);
     if (repeatPilightwMQTT) {
       Log.trace(F("Pub Pilight for rpt" CR));
       RFPiLightdata["origin"] = subjectMQTTtoPilight;
-      enqueueJsonObject(RFPiLightdata);
+      rfHandler.getPublisher().enqueueJsonObject(RFPiLightdata);
     }
   }
 }
 
 #  ifdef Pilight_rawEnabled
-void pilightRawCallback(const uint16_t* pulses, size_t length) {
+void ZGatewayPilight::pilightRawCallback(const uint16_t* pulses, size_t length) {
   uint16_t pulse;
 
   if (!pilightRawEnabled) {
@@ -114,7 +117,7 @@ void pilightRawCallback(const uint16_t* pulses, size_t length) {
 }
 #  endif
 
-void savePilightConfig() {
+void ZGatewayPilight::savePilightConfig() {
   Log.trace(F("saving Pilight config" CR));
   DynamicJsonDocument json(4096);
   deserializeJson(json, rf.enabledProtocols());
@@ -129,7 +132,7 @@ void savePilightConfig() {
   configFile.close();
 }
 
-void loadPilightConfig() {
+void ZGatewayPilight::loadPilightConfig() {
   Log.trace(F("reading Pilight config file" CR));
   File configFile = SPIFFS.open("/pilight.json", "r");
   if (configFile) {
@@ -151,11 +154,37 @@ void loadPilightConfig() {
   }
 }
 
-void PilighttoX() {
+bool ZGatewayPilight::enableReceive(float rfFrequency, int rfReceiverGPIO, int rfEmitterGPIO) {
+  try {
+    enablePilightReceive(rfFrequency, rfReceiverGPIO, rfEmitterGPIO);
+    return true;
+  } catch (const std::exception& e) {
+    Log.error(F("[RF] Error enabling RF receive: %s" CR), e.what());
+    return false;
+  } catch (...) {
+    Log.error(F("[RF] Unknown error enabling RF receive" CR));
+    return false;
+  }
+};
+
+bool ZGatewayPilight::disableReceive() {
+  try {
+    disablePilightReceive();
+    return true;
+  } catch (const std::exception& e) {
+    Log.error(F("[RF] Error disabling RF receive: %s" CR), e.what());
+    return false;
+  } catch (...) {
+    Log.error(F("[RF] Unknown error disabling RF receive" CR));
+    return false;
+  }
+};
+
+void ZGatewayPilight::RFtoX() {
   rf.loop();
 }
 
-void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
+void ZGatewayPilight::XtoRF(const char* topicOri, JsonObject& Pilightdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoPilightProtocol)) {
     bool success = false;
     if (Pilightdata.containsKey("reset")) {
@@ -194,7 +223,7 @@ void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       Pilightdata["origin"] = subjectGTWPilighttoMQTT;
-      enqueueJsonObject(Pilightdata);
+      rfHandler.getPublisher().enqueueJsonObject(Pilightdata);
     } else {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilightProtocol Fail json" CR));
@@ -205,11 +234,11 @@ void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
     const char* protocol = Pilightdata["protocol"];
     Log.notice(F("MQTTtoPilight protocol: %s" CR), protocol);
     const char* raw = Pilightdata["raw"];
-    float txFrequency = Pilightdata["frequency"] | RFConfig.frequency;
+    float txFrequency = Pilightdata["frequency"] | iRFConfig.getFrequency();
     bool success = false;
-    disableCurrentReceiver();
-    initCC1101();
+    rfHandler.disableCurrentReceiver();
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
+    initCC1101();
     ELECHOUSE_cc1101.SetTx(txFrequency);
     Log.notice(F("Transmit frequency: %F" CR), txFrequency);
 #  endif
@@ -283,32 +312,36 @@ void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
       pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoPilight Fail json" CR));
     }
-    enableActiveReceiver();
+    rfHandler.enableActiveReceiver();
   }
 }
 
-extern void disablePilightReceive() {
+void ZGatewayPilight::disablePilightReceive() {
   Log.trace(F("disablePilightReceive" CR));
   rf.initReceiver(-1);
   rf.disableReceiver();
 };
 
-extern void enablePilightReceive() {
-  Log.notice(F("Switching to Pilight Receiver: %F" CR), RFConfig.frequency);
-  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+void ZGatewayPilight::enablePilightReceive(float rfFrequency, int rfReceiverGPIO, int rfEmitterGPIO) {
+  Log.notice(F("Switching to Pilight Receiver: %F" CR), rfFrequency);
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), rfEmitterGPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), rfReceiverGPIO);
   Log.trace(F("ZgatewayPilight command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoPilight);
-
+#  ifdef ZradioCC1101 // set Receive off and Transmitt on
   initCC1101();
-
-  rf.setCallback(pilightCallback);
+#  endif
+  rf.setCallback([this](const String& protocol, const String& message, int status, size_t repeats, const String& deviceID) {
+    this->pilightCallback(protocol, message, status, repeats, deviceID);
+  });
 #  ifdef Pilight_rawEnabled
   if (pilightRawEnabled) {
-    rf.setPulseTrainCallBack(pilightRawCallback);
+    rf.setPulseTrainCallBack([this](const uint16_t* pulses, size_t length) {
+      this->pilightRawCallback(pulses, length);
+    });
   }
 #  endif
-  rf.initReceiver(RF_RECEIVER_GPIO);
-  pinMode(RF_EMITTER_GPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
+  rf.initReceiver(rfReceiverGPIO);
+  pinMode(rfEmitterGPIO, OUTPUT); // Set this here, because if this is the RX pin it was reset to INPUT by Serial.end();
   rf.enableReceiver();
   loadPilightConfig();
   Log.trace(F("ZgatewayPilight setup done " CR));
