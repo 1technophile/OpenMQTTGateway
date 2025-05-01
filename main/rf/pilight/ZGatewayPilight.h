@@ -7,9 +7,9 @@
 #  include <ArduinoJson.h>
 #  include <ESPiLight.h>
 #  include <rf/AbstractGatewayRF.h>
-#  include <rf/RFConfig.h>
 
 class ZCommonRF;
+class RFConfig;
 
 class ZGatewayPilight : public AbstractGatewayRF {
 public:

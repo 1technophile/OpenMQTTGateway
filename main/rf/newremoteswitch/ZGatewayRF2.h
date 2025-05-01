@@ -16,7 +16,7 @@ struct RF2rxd {
   bool hasNewData;
 };
 
-RF2rxd rf2rd;
+static RF2rxd rf2rd;
 
 class ZCommonRF;
 
@@ -47,7 +47,7 @@ private:
   void RF2toMQTTdiscovery(JsonObject& data);
 #  endif
 
-  void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType);
+  static void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType);
 
   /* data */
   void disableRF2Receive();

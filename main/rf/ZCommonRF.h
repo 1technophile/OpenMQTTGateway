@@ -35,15 +35,13 @@
 #  endif
 
 #  include <main_utils.h>
-#  include <mqtt/MQTTPublisher.h>
-#  include <rf/RFConfig.h>
-#  include <rf/AbstractGatewayRF.h> 
-
+#  include <rf/AbstractGatewayRF.h>
 
 #  include <unordered_map>
 
 // Forward declaration of RFConfig
 class RFConfig;
+class MQTTPublisher;
 
 /**
  * @brief The ZCommonRF class provides a common interface for RF communication.

@@ -48,6 +48,7 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/
 #  include <NewRemoteReceiver.h>
 #  include <NewRemoteTransmitter.h>
 #  include <config_RF.h>
+#  include <mqtt/MQTTPublisher.h>
 #  include <rf/ZCommonRF.h>
 
 #  include "TheengsUtils.h"
@@ -339,9 +340,7 @@ void ZGatewayRF2::disableRF2Receive() {
 
 void ZGatewayRF2::enableRF2Receive(int rfReceiverGPIO, int rfEmitterGPIO) {
   Log.trace(F("enableRF2Receive" CR));
-  NewRemoteReceiver::init(rfReceiverGPIO, 2, [this](unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
-    this->rf2Callback(period, address, groupBit, unit, switchType);
-  });
+  NewRemoteReceiver::init(rfReceiverGPIO, 2, ZGatewayRF2::rf2Callback);
 
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), rfEmitterGPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), rfReceiverGPIO);

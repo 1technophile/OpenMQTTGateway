@@ -8,11 +8,12 @@
 
 #include <ArduinoJson.h>
 #include <main_utils.h>
-#include <rf/ZCommonRF.h>
 
 #if defined(ESP32)
 class Preferences;
 #endif
+
+class ZCommonRF;
 
 /**
  * @class RFConfig
