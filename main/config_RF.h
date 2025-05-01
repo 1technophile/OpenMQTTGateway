@@ -29,13 +29,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#ifdef ZgatewayRF2
-extern void RF2toX();
-extern void XtoRF2(const char* topicOri, const char* datacallback);
-extern void XtoRF2(const char* topicOri, JsonObject& RFdata);
-extern void disableRF2Receive();
-extern void enableRF2Receive();
-#endif
 #ifdef ZgatewayPilight
 extern void setupPilight();
 extern void PilighttoX();

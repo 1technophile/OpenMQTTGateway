@@ -33,31 +33,60 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m 
 Command example for dimming:
 sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/DIM 8
 */
-#include "User_config.h"
 
 #ifdef ZgatewayRF2
+
+#  include "ZgatewayRF2.h"
+
+//#  include "User_config.h"
 
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
 
+#  include <ArduinoLog.h>
 #  include <NewRemoteReceiver.h>
 #  include <NewRemoteTransmitter.h>
+#  include <config_RF.h>
+#  include <rf/ZCommonRF.h>
 
-struct RF2rxd {
-  unsigned int period;
-  unsigned long address;
-  unsigned long groupBit;
-  unsigned long unit;
-  unsigned long switchType;
-  bool hasNewData;
+#  include "TheengsUtils.h"
+
+ZGatewayRF2::ZGatewayRF2(SYSConfig_s& gatewayConfig, ZCommonRF& iZCommonRF) : AbstractGatewayRF(iZCommonRF) {
+  gatewayConfig = gatewayConfig;
+}
+
+bool ZGatewayRF2::enableReceive(float rfFrequency, int rfReceiverGPIO, int rfEmitterGPIO) {
+  try {
+    enableRF2Receive(rfReceiverGPIO, rfEmitterGPIO);
+    return true;
+  } catch (const std::exception& e) {
+    Log.error(F("[RF] Error enabling RF receive: %s" CR), e.what());
+    return false;
+  } catch (...) {
+    Log.error(F("[RF] Unknown error enabling RF receive" CR));
+    return false;
+  }
 };
 
-RF2rxd rf2rd;
+bool ZGatewayRF2::disableReceive() {
+  try {
+    disableRF2Receive();
+    return true;
+  } catch (const std::exception& e) {
+    Log.error(F("[RF] Error disabling RF receive: %s" CR), e.what());
+    return false;
+  } catch (...) {
+    Log.error(F("[RF] Unknown error disabling RF receive" CR));
+    return false;
+  }
+};
 
 #  ifdef ZmqttDiscovery
+#    include <config_mqttDiscovery.h>
+
 //Register for autodiscover in Home Assistant
-void RF2toMQTTdiscovery(JsonObject& data) {
+void ZGatewayRF2::RF2toMQTTdiscovery(JsonObject& data) {
   Log.trace(F("switchRF2Discovery" CR));
   String payloadonstr;
   String payloadoffstr;
@@ -101,7 +130,7 @@ void RF2toMQTTdiscovery(JsonObject& data) {
 }
 #  endif
 
-void RF2toX() {
+void ZGatewayRF2::RFtoX() {
   if (rf2rd.hasNewData) {
     StaticJsonDocument<JSON_MSG_BUFFER> RF2dataBuffer;
     JsonObject RF2data = RF2dataBuffer.to<JsonObject>();
@@ -114,15 +143,15 @@ void RF2toX() {
     RF2data["address"] = (unsigned long)rf2rd.address;
     RF2data["switchType"] = (int)rf2rd.switchType;
 #  ifdef ZmqttDiscovery //component creation for HA
-    if (SYSConfig.discovery)
+    if (gatewayConfig.discovery)
       RF2toMQTTdiscovery(RF2data);
 #  endif
     RF2data["origin"] = subjectRF2toMQTT;
-    enqueueJsonObject(RF2data);
+    rfHandler.getPublisher().enqueueJsonObject(RF2data);
   }
 }
 
-void rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
+void ZGatewayRF2::rf2Callback(unsigned int period, unsigned long address, unsigned long groupBit, unsigned long unit, unsigned long switchType) {
   rf2rd.period = period;
   rf2rd.address = address;
   rf2rd.groupBit = groupBit;
@@ -132,10 +161,12 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 }
 
 #  if simpleReceiving
-void XtoRF2(const char* topicOri, const char* datacallback) {
-  disableCurrentReceiver();
+void ZGatewayRF2::XtoRF(const char* topicOri, const char* datacallback) {
+  rfHandler.disableCurrentReceiver();
   pinMode(RF_EMITTER_GPIO, OUTPUT);
+#    ifdef ZradioCC1101 //receiving with CC1101
   initCC1101();
+#    endif
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined
@@ -236,21 +267,23 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
 #    ifdef ZradioCC1101
   ELECHOUSE_cc1101.SetRx(RFConfig.frequency); // set Receive on
 #    endif
-  enableActiveReceiver();
+  rfHandler.enableActiveReceiver();
 }
 #  endif
 
 #  if jsonReceiving
-void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
+void ZGatewayRF2::XtoRF(const char* topicOri, JsonObject& RF2data) { // json object decoding
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
     Log.trace(F("MQTTtoRF2 json" CR));
     int boolSWITCHTYPE = RF2data["switchType"] | 99;
     bool success = false;
     if (boolSWITCHTYPE != 99) {
-      disableCurrentReceiver();
+      rfHandler.disableCurrentReceiver();
       pinMode(RF_EMITTER_GPIO, OUTPUT);
+#    ifdef ZradioCC1101 //receiving with CC1101
       initCC1101();
+#    endif
       Log.trace(F("MQTTtoRF2 switch type ok" CR));
       bool isDimCommand = boolSWITCHTYPE == 2;
       unsigned long valueCODE = RF2data["address"];
@@ -289,30 +322,30 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
     if (success) {
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       RF2data["origin"] = subjectRF2toMQTT;
-      enqueueJsonObject(RF2data);
+      rfHandler.getPublisher().enqueueJsonObject(RF2data);
     } else {
       pub(subjectGTWRF2toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
       Log.error(F("MQTTtoRF2 failed json read" CR));
     }
-    enableActiveReceiver();
+    rfHandler.enableActiveReceiver();
   }
 }
 #  endif
 
-void disableRF2Receive() {
+void ZGatewayRF2::disableRF2Receive() {
   Log.trace(F("disableRF2Receive" CR));
   NewRemoteReceiver::disable();
 }
 
-void enableRF2Receive() {
+void ZGatewayRF2::enableRF2Receive(int rfReceiverGPIO, int rfEmitterGPIO) {
   Log.trace(F("enableRF2Receive" CR));
-  NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
+  NewRemoteReceiver::init(rfReceiverGPIO, 2, ZGatewayRF2::rf2Callback);
 
-  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
-  Log.trace(F("ZgatewayRF2 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF2);
-  pinMode(RF_EMITTER_GPIO, OUTPUT);
-  digitalWrite(RF_EMITTER_GPIO, LOW);
+  Log.notice(F("RF_EMITTER_GPIO: %d " CR), rfEmitterGPIO);
+  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), rfReceiverGPIO);
+  //Log.trace(F("ZgatewayRF2 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF2);
+  pinMode(rfEmitterGPIO, OUTPUT);
+  digitalWrite(rfEmitterGPIO, LOW);
   Log.trace(F("ZgatewayRF2 setup done " CR));
 }
 

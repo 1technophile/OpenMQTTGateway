@@ -27,6 +27,8 @@
 #ifndef config_mqttDiscovery_h
 #define config_mqttDiscovery_h
 
+#include <User_config.h>
+
 extern String getUniqueId(String name, String sufix);
 extern void pubMqttDiscovery();
 

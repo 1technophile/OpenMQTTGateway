@@ -3,6 +3,7 @@
 #include <config_RF.h>
 #include <main_utils.h>
 #include <rf/RFConfig.h>
+#include <user_config.h>
 
 #if defined(ESP32)
 #  include <Preferences.h>

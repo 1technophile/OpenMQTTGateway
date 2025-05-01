@@ -379,13 +379,16 @@ RFConfig iRFConfig;
 ZCommonRF iZCommonRF(iMQTTPublisherAdapter, iRFConfig);
 
 #  ifdef ZgatewayRF
-// If the rcswitch is to be used, instantiate the RF module and attach it to the RF gateway service
 #    include "rf/rcswitch/ZGatewayRF.h"
 ZGatewayRF iZGatewayRF(iZCommonRF);
-
 #  endif // ZgatewayRF
 
-// TODO: Add other RF modules here
+#  ifdef ZgatewayRF2
+#    include "rf/newremoteswitch/ZGatewayRF2.h"
+ZGatewayRF2 iZGatewayRF2(SYSConfig ,iZCommonRF);
+#  endif // ZgatewayRF2
+
+// ****************************************  TODO: Add other RF modules here
 
 #endif // defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 
@@ -401,8 +404,6 @@ std::unique_ptr<PicoMQTT::Client> mqtt;
 /*
 ---------------------  Start Function Definitions
 */
-
-
 
 template <typename T> // Declared here to avoid pre-compilation issue (missing "template" in auto declaration by pio)
 void Config_update(JsonObject& data, const char* key, T& var);
@@ -1391,6 +1392,9 @@ void updateAndHandleLEDsTask() {
 void setup() {
 #ifdef ZgatewayRF
   iZCommonRF.addGatewayRF(ACTIVE_RF, &iZGatewayRF);
+#endif
+#ifdef ZgatewayRF2
+  iZCommonRF.addGatewayRF(ACTIVE_RF2, &iZGatewayRF2);
 #endif
 
   //Launch serial for debugging purposes
@@ -2733,12 +2737,10 @@ void loop() {
       launchLORADiscovery(false);
 #  endif
 #endif
-#ifdef ZgatewayRF
+#ifdef ZgatewayRF || ZgatewayRF2
     //RFtoX();
+    //RF2toX();
     iZCommonRF.getCurrentGatewayRF()->RFtoX();
-#endif
-#ifdef ZgatewayRF2
-    RF2toX();
 #endif
 #ifdef ZgatewayWeatherStation
     ZgatewayWeatherStationtoX();
@@ -3074,12 +3076,10 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
 #  ifdef ZgatewayLORA
     XtoLORA(strTopicOri.c_str(), jsondata);
 #  endif
-#  ifdef ZgatewayRF
+#  ifdef ZgatewayRF || ZgatewayRF2
     //XtoRF(strTopicOri.c_str(), jsondata);
+    //XtoRF2(strTopicOri.c_str(), jsondata);
     iZCommonRF.getCurrentGatewayRF()->XtoRF(strTopicOri.c_str(), jsondata);
-#  endif
-#  ifdef ZgatewayRF2
-    XtoRF2(strTopicOri.c_str(), jsondata);
 #  endif
 #  ifdef Zgateway2G
     Xto2G(strTopicOri.c_str(), jsondata);
@@ -3131,16 +3131,15 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
 #  ifdef ZgatewayLORA
     XtoLORA(strTopicOri.c_str(), datacallback);
 #  endif
-#  ifdef ZgatewayRF
+#  ifdef ZgatewayRF || ZgatewayRF2
     //XtoRF(strTopicOri.c_str(), datacallback);
     iZCommonRF.getCurrentGatewayRF()->XtoRF(strTopicOri.c_str(), datacallback);
+    //XtoRF2(strTopicOri.c_str(), datacallback);
 #  endif
 #  ifdef ZgatewayRF315
     XtoRF315(strTopicOri.c_str(), datacallback);
 #  endif
-#  ifdef ZgatewayRF2
-    XtoRF2(strTopicOri.c_str(), datacallback);
-#  endif
+
 #  ifdef Zgateway2G
     Xto2G(strTopicOri.c_str(), datacallback);
 #  endif
