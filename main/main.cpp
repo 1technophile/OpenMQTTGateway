@@ -1420,6 +1420,7 @@ void setup() {
   extern void setupWiFiFromBuild();
   setupWiFiFromBuild();
 #else
+  WiFi.mode(WIFI_STA);
   if (loadConfigFromFlash()) { // Config present
     Log.notice(F("Config loaded from flash" CR));
 #  ifdef ESP32_ETHERNET
@@ -2191,7 +2192,6 @@ bool loadConfigFromFlash() {
 
 void setupWiFiManager() {
   delay(10);
-  WiFi.mode(WIFI_STA);
 
 #  ifdef USE_MAC_AS_GATEWAY_NAME
   String s = WiFi.macAddress();
