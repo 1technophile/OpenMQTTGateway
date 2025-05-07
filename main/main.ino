@@ -80,19 +80,6 @@ enum GatewayState {
 };
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 
-// Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
-// array to store previous received RFs, IRs codes and their timestamps
-struct ReceivedSignal {
-  uint64_t value;
-  uint32_t time;
-};
-
-ReceivedSignal receivedSignal[] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-
-#  define struct_size (sizeof(receivedSignal) / sizeof(ReceivedSignal))
-#endif
-
 //Time used to wait for an interval before measures
 unsigned long timer_sys_measures = 0;
 
@@ -352,11 +339,15 @@ ESP8266WiFiMulti wifiMulti;
 /*
 ---------------------  Start Global Object Definitions
 */
-#include <mqtt/MQTTPublisher.h>
+#include <MQTTPublisher.h>
 class MQTTPublisherAdapter : public MQTTPublisher {
 public:
   bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc) {
     return enqueueJsonObject(jsonDoc);
+  }
+
+  bool cmpToMainTopic(const char* topicOri, const char* toAdd) {
+    return cmpToMainTopic(topicOri, toAdd);
   }
 };
 MQTTPublisherAdapter iMQTTPublisherAdapter;
@@ -364,7 +355,7 @@ MQTTPublisherAdapter iMQTTPublisherAdapter;
 #if defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZgatewayPilight) || defined(ZactuatorSomfy) || defined(ZgatewayRTL_433)
 // This section of code sets up the RF (Radio Frequency) part of the gateway
 
-#  include <rf/RFConfig.h>
+#  include <RFConfig.h>
 
 // First, create the structure that will hold the RF configurations
 #  if defined(ESP32)
@@ -373,23 +364,23 @@ RFConfig iRFConfig(preferences);
 RFConfig iRFConfig;
 #  endif
 
-#  include <rf/ZCommonRF.h>
+#  include <ZCommonRF.h>
 
 // Then, create the object that represents the RF gateway service
 ZCommonRF iZCommonRF(iMQTTPublisherAdapter, iRFConfig);
 
 #  ifdef ZgatewayRF
-#    include "rf/rcswitch/ZGatewayRF.h"
+#    include <rcswitch/ZGatewayRF.h>
 ZGatewayRF iZGatewayRF(iZCommonRF);
 #  endif // ZgatewayRF
 
 #  ifdef ZgatewayRF2
-#    include "rf/newremoteswitch/ZGatewayRF2.h"
+#    include <newremoteswitch/ZGatewayRF2.h>
 ZGatewayRF2 iZGatewayRF2(SYSConfig, iZCommonRF);
 #  endif // ZgatewayRF2
 
 #  ifdef ZgatewayPilight
-#    include "rf/pilight/ZGatewayPilight.h"
+#    include <pilight/ZGatewayPilight.h>
 ZGatewayPilight iZGatewayPilight(iRFConfig, RF_EMITTER_GPIO, iZCommonRF);
 #  endif // ZgatewayPilight
 
@@ -2964,60 +2955,6 @@ String stateMeasures() {
   Log.notice(F("SYS json: %s" CR), output.c_str());
   return output;
 }
-
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
-/**
- * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
- */
-void storeSignalValue(uint64_t MQTTvalue) {
-  unsigned long now = millis();
-  // find oldest value of the buffer
-  int o = getMin();
-  Log.trace(F("Min ind: %d" CR), o);
-  // replace it by the new one
-  receivedSignal[o].value = MQTTvalue;
-  receivedSignal[o].time = now;
-
-  // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
-  Log.trace(F("store code : %u / %u" CR), (unsigned long)receivedSignal[o].value, receivedSignal[o].time);
-  Log.trace(F("Col: val/timestamp" CR));
-  for (int i = 0; i < struct_size; i++) {
-    Log.trace(F("mem code : %u / %u" CR), (unsigned long)receivedSignal[i].value, receivedSignal[i].time);
-  }
-}
-
-/**
- * get oldest time index from the values array from RF, IR, SRFB or Weather stations so as to avoid duplicates
- */
-int getMin() {
-  unsigned int minimum = receivedSignal[0].time;
-  int minindex = 0;
-  for (int i = 1; i < struct_size; i++) {
-    if (receivedSignal[i].time < minimum) {
-      minimum = receivedSignal[i].time;
-      minindex = i;
-    }
-  }
-  return minindex;
-}
-
-/**
- * Check if signal values from RF, IR, SRFB or Weather stations are duplicates
- */
-bool isAduplicateSignal(uint64_t value) {
-  Log.trace(F("isAdupl?" CR));
-  for (int i = 0; i < struct_size; i++) {
-    if (receivedSignal[i].value == value) {
-      unsigned long now = millis();
-      if (now - receivedSignal[i].time < time_avoid_duplicate) { // change
-        Log.trace(F("no pub. dupl" CR));
-        return true;
-      }
-    }
-  }
-  return false;
-}
-#endif
 
 void receivingDATA(const char* topicOri, const char* datacallback) {
   std::string strTopicOri = topicOri;

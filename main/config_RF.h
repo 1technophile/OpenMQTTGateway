@@ -29,14 +29,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-#ifdef ZgatewayPilight
-extern void setupPilight();
-extern void PilighttoX();
-extern void XtoPilight(const char* topicOri, const char* datacallback);
-extern void XtoPilight(const char* topicOri, JsonObject& RFdata);
-extern void disablePilightReceive();
-extern void enablePilightReceive();
-#endif
 #ifdef ZgatewayRTL_433
 #  include <rtl_433_ESP.h>
 rtl_433_ESP rtl_433;
