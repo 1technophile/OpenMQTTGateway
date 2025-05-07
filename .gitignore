@@ -10,6 +10,9 @@ lib/*
 !lib/esp32-bt-lib
 !lib/TheengsUtils
 !lib/LEDManager
+!lib/mqtt
+!lib/rf
+!lib/signals
 CMakeLists.txt
 dependencies.lock
 sdkconfig.*
