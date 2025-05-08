@@ -58,7 +58,7 @@ void setupSomfy() {
 void XtoSomfy(const char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoSomfy)) {
     THEENGS_LOG_TRACE(F("MQTTtoSomfy json data analysis" CR));
-    float txFrequency = jsonData["frequency"] | RFConfig.frequency;
+    float txFrequency = jsonData["frequency"] | iRFConfig.getFrequency();
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
     disableCurrentReceiver();
     ELECHOUSE_cc1101.SetTx(txFrequency);

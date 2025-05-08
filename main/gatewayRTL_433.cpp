@@ -327,8 +327,8 @@ void RTL_433Loop() {
 }
 
 extern void enableRTLreceive() {
-  THEENGS_LOG_NOTICE(F("Enable RTL_433 Receiver: %FMhz" CR), RFConfig.frequency);
-  rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, RFConfig.frequency);
+  THEENGS_LOG_NOTICE(F("Enable RTL_433 Receiver: %FMhz" CR), iRFConfig.getFrequency());
+  rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, iRFConfig.getFrequency());
   rtl_433.enableReceiver();
 }
 

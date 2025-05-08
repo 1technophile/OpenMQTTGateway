@@ -218,7 +218,7 @@ void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
     const char* protocol = Pilightdata["protocol"];
     THEENGS_LOG_NOTICE(F("MQTTtoPilight protocol: %s" CR), protocol);
     const char* raw = Pilightdata["raw"];
-    float txFrequency = Pilightdata["frequency"] | RFConfig.frequency;
+    float txFrequency = Pilightdata["frequency"] | iRFConfig.getFrequency();
     bool success = false;
     disableCurrentReceiver();
     initCC1101();
@@ -307,7 +307,7 @@ extern void disablePilightReceive() {
 };
 
 extern void enablePilightReceive() {
-  THEENGS_LOG_NOTICE(F("Switching to Pilight Receiver: %F" CR), RFConfig.frequency);
+  THEENGS_LOG_NOTICE(F("Switching to Pilight Receiver: %F" CR), iRFConfig.getFrequency());
   THEENGS_LOG_NOTICE(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   THEENGS_LOG_NOTICE(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   THEENGS_LOG_TRACE(F("gatewayPilight command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoPilight);
