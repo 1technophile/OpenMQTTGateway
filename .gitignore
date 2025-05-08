@@ -10,6 +10,7 @@ lib/*
 !lib/esp32-bt-lib
 !lib/TheengsUtils
 !lib/LEDManager
+
 CMakeLists.txt
 dependencies.lock
 sdkconfig.*
@@ -18,7 +19,7 @@ __pycache__
 *.pem
 managed_components
 
-
 .github/chatmodes
+.github/instructions
 .github/prompts
 .github/*instructions.md

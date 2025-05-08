@@ -149,19 +149,7 @@
 #  endif
 #endif
 
-#ifndef JSON_MSG_BUFFER
-#  if defined(ESP32)
-#    define JSON_MSG_BUFFER 1024 // adjusted to minimum size covering largest home assistant discovery messages
-#    if MQTT_SECURE_DEFAULT
-#      define JSON_MSG_BUFFER_MAX 2048 // Json message buffer size increased to handle certificate changes through MQTT, used for the queue and the coming MQTT messages
-#    else
-#      define JSON_MSG_BUFFER_MAX 1024 // Minimum size for the cover MQTT discovery message
-#    endif
-#  elif defined(ESP8266)
-#    define JSON_MSG_BUFFER     512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266, certificates handling with ESP8266 is not tested
-#    define JSON_MSG_BUFFER_MAX 832 // Minimum size for MQTT discovery message
-#  endif
-#endif
+#include <MSG_defaults.h> // to get JSON_MSG_BUFFER_MAX definition
 
 #ifndef mqtt_max_payload_size
 #  define mqtt_max_payload_size JSON_MSG_BUFFER_MAX + mqtt_topic_max_size + 10 // maximum size of the MQTT payload
@@ -227,7 +215,7 @@
 #if AWS_IOT
 // Enable the use of ALPN for AWS IoT Core with the port 443
 #  define ALPN_PROTOCOLS \
-    { "x-amzn-mqtt-ca", NULL }
+    {"x-amzn-mqtt-ca", NULL}
 #endif
 
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.

@@ -1,0 +1,139 @@
+name: 🚀 Custom Release Build
+
+on:
+  push:
+    tags:
+      - "v*-o*" # Matches tags like v1.8.0-o1, v1.8.1-o2, etc.
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  CUSTOM_SUFFIX: "o"
+
+jobs:
+  version-bump:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup PowerShell
+        shell: pwsh
+        run: |
+          # Install required modules if needed
+          Write-Host "PowerShell setup complete"
+
+      - name: Bump Version
+        id: bump
+        shell: pwsh
+        run: |
+          $newVersion = .\scripts\version-manager.ps1 ${{ github.event.inputs.version_type }}
+          echo "new_version=$newVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git push origin HEAD:${{ github.ref_name }}
+
+  build:
+    needs: [version-bump]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment:
+          - esp32dev-all-test
+          - esp32-theengs-bridge
+          - esp8266-rf
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Build firmware
+        run: pio run -e ${{ matrix.environment }}
+
+      - name: Run tests
+        run: pio test -e test
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.environment }}
+          path: .pio/build/${{ matrix.environment }}/firmware.*
+
+  release:
+    needs: [build]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          body: |
+            ## Custom OpenMQTTGateway Build ${{ github.ref_name }}
+
+            ### Features
+            - Custom RF signal filtering
+            - Enhanced BLE connectivity
+            - Optimized for specific hardware configurations
+
+            ### Changes
+            - Based on upstream OpenMQTTGateway
+            - Custom modifications for enhanced performance
+
+            ### Installation
+            1. Download the appropriate firmware for your board
+            2. Flash using your preferred method (OTA, esptool, etc.)
+
+            ### Support
+            For issues specific to these custom builds, please open an issue in this repository.
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

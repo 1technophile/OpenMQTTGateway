@@ -1,0 +1,27 @@
+name: 🧪 Run Tests
+
+on:
+  push:
+    branches: [main, development, feature/*]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  native-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      - name: Run Native Tests
+        run: pio test -e test
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "Test execution completed"
+          echo "Check the logs above for detailed results"
