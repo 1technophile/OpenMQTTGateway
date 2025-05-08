@@ -1115,6 +1115,8 @@ void handleLA() {
 }
 #  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
 #    include <map>
+
+#    include "rf/RFConfiguration.h"
 std::map<int, String> activeReceiverOptions = {
     {0, "Inactive"},
 #    if defined(ZgatewayPilight) && !defined(ZradioSX127x)
@@ -1131,16 +1133,7 @@ std::map<int, String> activeReceiverOptions = {
 #    endif
 };
 
-struct RFConfig_s {
-  float frequency;
-  int rssiThreshold;
-  int newOokThreshold;
-  int activeReceiver;
-};
-extern RFConfig_s RFConfig;
-
-bool validFrequency(float mhz);
-void RFConfig_fromJson(JsonObject& RFdata);
+extern RFConfiguration iRFConfig;
 
 bool isValidReceiver(int receiverId) {
   // Check if the receiverId exists in the activeReceiverOptions map
@@ -1168,8 +1161,9 @@ String generateActiveReceiverOptions(int currentSelection) {
  * T: handleRF Arg: 3, dg=0
  * T: handleRF Arg: 4, ar=0
  * T: handleRF Arg: 4, save=
- */
-
+ * TODO: need a review, it's a bit strance set the config in the iRFConfig attribute and then
+ *       setup a message and finally call the loadFromMessage
+  */
 void handleRF() {
   WEBUI_TRACE_LOG(F("handleRF: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
@@ -1184,9 +1178,10 @@ void handleRF() {
     if (server.hasArg("save")) {
       if (server.hasArg("rf")) {
         String freqStr = server.arg("rf");
-        RFConfig.frequency = freqStr.toFloat();
-        if (validFrequency(RFConfig.frequency)) {
-          WEBtoRF["frequency"] = RFConfig.frequency;
+        float freq = freqStr.toFloat();
+        if (iRFConfig.validFrequency(freq)) {
+          iRFConfig.setFrequency(freq);
+          WEBtoRF["frequency"] = iRFConfig.getFrequency();
           update = true;
         } else {
           Log.warning(F("[WebUI] Invalid Frequency" CR));
@@ -1195,34 +1190,34 @@ void handleRF() {
       if (server.hasArg("ar")) {
         int selectedReceiver = server.arg("ar").toInt();
         if (isValidReceiver(selectedReceiver)) { // Assuming isValidReceiver is a validation function
-          RFConfig.activeReceiver = selectedReceiver;
-          WEBtoRF["activereceiver"] = RFConfig.activeReceiver;
+          iRFConfig.setActiveReceiver(selectedReceiver);
+          WEBtoRF["activereceiver"] = iRFConfig.getActiveReceiver();
           update = true;
         } else {
           Log.warning(F("[WebUI] Invalid Active Receiver" CR));
         }
       }
       if (server.hasArg("oo")) {
-        RFConfig.newOokThreshold = server.arg("oo").toInt();
-        WEBtoRF["ookthreshold"] = RFConfig.newOokThreshold;
+        iRFConfig.setNewOokThreshold(server.arg("oo").toInt());
+        WEBtoRF["ookthreshold"] = iRFConfig.getNewOokThreshold();
         update = true;
       }
       if (server.hasArg("rs")) {
-        RFConfig.rssiThreshold = server.arg("rs").toInt();
-        WEBtoRF["rssithreshold"] = RFConfig.rssiThreshold;
+        iRFConfig.setRssiThreshold(server.arg("rs").toInt());
+        WEBtoRF["rssithreshold"] = iRFConfig.getRssiThreshold();
         update = true;
       }
       if (update) {
         Log.notice(F("[WebUI] Save data" CR));
         WEBtoRF["save"] = true;
-        RFConfig_fromJson(WEBtoRF);
+        iRFConfig.loadFromMessage(WEBtoRF);
         stateRFMeasures();
-        Log.trace(F("[WebUI] RFConfig end" CR));
+        Log.trace(F("[WebUI] RFConfiguration end" CR));
       }
     }
   }
 
-  String activeReceiverHtml = generateActiveReceiverOptions(RFConfig.activeReceiver);
+  String activeReceiverHtml = generateActiveReceiverOptions(iRFConfig.getActiveReceiver());
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -1233,7 +1228,7 @@ void handleRF() {
   response += String(script);
   response += String(style);
 
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_rf_body, jsonChar, gateway_name, RFConfig.frequency, activeReceiverHtml.c_str());
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_rf_body, jsonChar, gateway_name, iRFConfig.getFrequency(), activeReceiverHtml.c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);

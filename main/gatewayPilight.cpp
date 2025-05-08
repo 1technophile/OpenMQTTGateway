@@ -218,7 +218,7 @@ void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
     const char* protocol = Pilightdata["protocol"];
     Log.notice(F("MQTTtoPilight protocol: %s" CR), protocol);
     const char* raw = Pilightdata["raw"];
-    float txFrequency = Pilightdata["frequency"] | RFConfig.frequency;
+    float txFrequency = Pilightdata["frequency"] | iRFConfig.getFrequency();
     bool success = false;
     disableCurrentReceiver();
     initCC1101();
@@ -307,7 +307,7 @@ extern void disablePilightReceive() {
 };
 
 extern void enablePilightReceive() {
-  Log.notice(F("Switching to Pilight Receiver: %F" CR), RFConfig.frequency);
+  Log.notice(F("Switching to Pilight Receiver: %F" CR), iRFConfig.getFrequency());
   Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
   Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   Log.trace(F("gatewayPilight command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoPilight);

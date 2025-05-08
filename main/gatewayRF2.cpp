@@ -245,7 +245,7 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
     }
   }
 #    ifdef ZradioCC1101
-  ELECHOUSE_cc1101.SetRx(RFConfig.frequency); // set Receive on
+  ELECHOUSE_cc1101.SetRx(iRFConfig.getFrequency()); // set Receive on
 #    endif
   enableActiveReceiver();
 }

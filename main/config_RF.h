@@ -26,10 +26,12 @@
 #ifndef config_RF_h
 #define config_RF_h
 
+#include <rf/RFConfiguration.h>
+extern RFConfiguration iRFConfig;
+
 #include "TheengsCommon.h"
 
 #ifdef ZgatewayRF
-extern void setupRF();
 extern void RFtoX();
 extern void XtoRF(const char* topicOri, const char* datacallback);
 extern void XtoRF(const char* topicOri, JsonObject& RFdata);
@@ -198,13 +200,6 @@ const char parameters[51][4][24] = {
  * 4 = ZgatewayRF2
  */
 
-struct RFConfig_s {
-  float frequency;
-  int rssiThreshold;
-  int newOokThreshold;
-  int activeReceiver;
-};
-
 #define ACTIVE_NONE     -1
 #define ACTIVE_RECERROR 0
 #define ACTIVE_PILIGHT  1
@@ -223,8 +218,6 @@ struct RFConfig_s {
 #else
 #  define ACTIVE_RECEIVER ACTIVE_NONE
 #endif
-
-extern RFConfig_s RFConfig;
 
 /*-------------------CC1101 DefaultTXPower----------------------*/
 //Adjust the default TX-Power for sending radio if ZradioCC1101 is used.
