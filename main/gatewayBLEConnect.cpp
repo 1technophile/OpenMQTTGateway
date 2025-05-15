@@ -9,6 +9,9 @@
 extern std::vector<BLEdevice*> devices;
 extern bool BTProcessLock;
 
+QueueHandle_t BLEJsonQueue = nullptr;
+TaskHandle_t BLEJsonTaskHandle = nullptr;
+
 NimBLERemoteCharacteristic* zBLEConnect::getCharacteristic(const NimBLEUUID& service,
                                                            const NimBLEUUID& characteristic) {
   BLERemoteCharacteristic* pRemoteCharacteristic = nullptr;
@@ -320,6 +323,55 @@ void BM2_connect::publishData() {
   if (pChar && pChar->canNotify()) {
     Log.trace(F("Registering notification" CR));
     if (pChar->subscribe(true, std::bind(&BM2_connect::notifyCB, this,
+                                         std::placeholders::_1, std::placeholders::_2,
+                                         std::placeholders::_3, std::placeholders::_4))) {
+      m_taskHandle = xTaskGetCurrentTaskHandle();
+      if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(BLE_CNCT_TIMEOUT)) == pdFALSE) {
+        m_taskHandle = nullptr;
+      }
+    } else {
+      Log.notice(F("Failed registering notification" CR));
+    }
+  }
+}
+
+/*-----------------------ALLPOWERS HANDLING-----------------------*/
+void ALLPOWERS_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
+  if (m_taskHandle == nullptr) {
+    return; // unexpected notification
+  }
+  if (!BTProcessLock) {
+    Log.trace(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
+    if (length == 16 || length == 14) {
+      Log.trace(F("Device identified creating BLE buffer" CR));
+      DynamicJsonDocument* doc = new DynamicJsonDocument(JSON_MSG_BUFFER);
+      JsonObject BLEdata = doc->to<JsonObject>();
+      BLEdata["id"] = m_pClient->getPeerAddress().toString();
+      BLEdata["servicedata"] = NimBLEUtils::dataToHexString(pData, length);
+      BLEdata["servicedatauuid"] = "0xfff0";
+      // Log.notice(F("Device servicedata: %s" CR), BLEdata["servicedata"].as<std::string>().c_str());
+      BLEdata["rssi"] = -60;
+
+      xQueueSend(BLEJsonQueue, &doc, portMAX_DELAY);
+    } else {
+      Log.notice(F("Invalid notification data" CR));
+      return;
+    }
+  } else {
+    Log.notice(F("Callback process canceled by BTProcessLock" CR));
+  }
+
+  xTaskNotifyGive(m_taskHandle);
+}
+
+void ALLPOWERS_connect::publishData() {
+  NimBLEUUID serviceUUID("fff0");
+  NimBLEUUID charUUID("fff1");
+  NimBLERemoteCharacteristic* pChar = getCharacteristic(serviceUUID, charUUID);
+
+  if (pChar && pChar->canNotify()) {
+    Log.trace(F("Registering notification" CR));
+    if (pChar->subscribe(true, std::bind(&ALLPOWERS_connect::notifyCB, this,
                                          std::placeholders::_1, std::placeholders::_2,
                                          std::placeholders::_3, std::placeholders::_4))) {
       m_taskHandle = xTaskGetCurrentTaskHandle();

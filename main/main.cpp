@@ -124,6 +124,7 @@ Preferences preferences;
 #endif
 #ifdef ZgatewayBT
 #  include "config_BT.h"
+#  include "BLEJsonQueue.h"
 #endif
 #ifdef ZgatewayIR
 #  include "config_IR.h"
@@ -1541,6 +1542,7 @@ void setup() {
 #ifdef ZgatewayBT
   setupBT();
   modules.add(ZgatewayBT);
+  startBLEJsonTask();
 #endif
 #ifdef ZgatewayRFM69
   setupRFM69();
@@ -1605,6 +1607,7 @@ void setup() {
   setupRTL_433();
   modules.add(ZgatewayRTL_433);
 #endif
+
   Log.trace(F("mqtt_max_payload_size: %d" CR), mqtt_max_payload_size);
   SYSConfig.offline ? Log.notice(F("Offline enabled" CR)) : Log.notice(F("Offline disabled" CR));
   char jsonChar[100];

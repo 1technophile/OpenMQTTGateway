@@ -5,6 +5,8 @@
 #  include "NimBLEDevice.h"
 #  include "TheengsCommon.h"
 #  include "config_BT.h"
+// NOLINTNEXTLINE(build/include_order)
+#  include "BLEJsonQueue.h"
 
 class zBLEConnect {
 public:
@@ -45,6 +47,15 @@ class BM2_connect : public zBLEConnect {
 
 public:
   BM2_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  void publishData() override;
+};
+
+class ALLPOWERS_connect : public zBLEConnect {
+  //std::vector<uint8_t> m_data;
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  ALLPOWERS_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
   void publishData() override;
 };
 
