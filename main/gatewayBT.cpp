@@ -1400,7 +1400,7 @@ void immediateBTAction(void* pvParameters) {
       gatewayState = GatewayState::ERROR;
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
-      BLEdata["id"] = BLEactions.back().addr.toString().c_str();
+      BLEdata["id"] = BLEactions.back().addr.toString();
       BLEdata["success"] = false;
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
