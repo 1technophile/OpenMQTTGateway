@@ -81,7 +81,7 @@ static BLEdevice NO_BT_DEVICE_FOUND = {
     false,
     false,
     false,
-    (int)UNKWNON_MODEL,
+    (char)UNKWNON_MODEL,
     0,
 };
 static bool oneWhite = false;
@@ -381,7 +381,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     if (strlen(name) > 20) {
       Log.warning(F("Name too long, truncating" CR));
       strncpy(device->name, name, 20);
-      device->name[20] = '\0';
+      device->name[19] = '\0';
     } else {
       strcpy(device->name, name);
     }
@@ -1107,8 +1107,8 @@ void launchBTDiscovery(bool overrideDiscovery) {
             }
           }
         } else {
-          if (p->sensorModel_id > BLEconectable::id::MIN &&
-                  p->sensorModel_id < BLEconectable::id::MAX ||
+          if ((p->sensorModel_id > BLEconectable::id::MIN &&
+                  p->sensorModel_id < BLEconectable::id::MAX) ||
               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
             // Discovery of sensors from which we retrieve data only by connect
             if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
@@ -1224,7 +1224,7 @@ void process_bledata(JsonObject& BLEdata) {
       } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
         const char* service_data = (const char*)(BLEdata["servicedata"] | "");
         if (strstr(service_data, "209800") != NULL) {
-          model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
+          model_id = TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
           Log.trace(F("Connectable device found: HHCCJCY01HHCC" CR));
           createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
         }
