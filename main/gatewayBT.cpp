@@ -1308,7 +1308,6 @@ void PublishDeviceData(JsonObject& BLEdata) {
   }
 }
 #  else
-void process_bledata(JsonObject& BLEdata) {}
 void PublishDeviceData(JsonObject& BLEdata) {
   if (abs((int)BLEdata["rssi"] | 0) < abs(BTConfig.minRssi)) { // process only the devices close enough
     // if distance available, check if presenceUseBeaconUuid is true, model_id is IBEACON then set id as uuid
