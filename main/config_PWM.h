@@ -22,7 +22,10 @@
 */
 
 /*-------------------PWM topics & parameters----------------------*/
+#ifndef config_PWM_h
+#define config_PWM_h
 
+#include "TheengsCommon.h"
 // PWM MQTT Subjects
 
 extern void setupPWM();
@@ -55,3 +58,5 @@ extern void XtoPWM(const char*, JsonObject&);
 #ifndef PWM_DEFAULT_GAMMA
 #  define PWM_DEFAULT_GAMMA 2.2f
 #endif
+
+#endif // config_PWM_h

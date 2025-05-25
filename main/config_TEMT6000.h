@@ -49,7 +49,4 @@ extern void MeasureLightIntensityTEMT6000();
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectTEMT6000toMQTT "/LIGHTtoMQTT"
 
-//Time used to wait for an interval before resending measured values
-unsigned long timetemt6000 = 0;
-
 #endif

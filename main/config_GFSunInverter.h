@@ -27,10 +27,6 @@
 #ifndef config_GFSunInverter_h
 #define config_GFSunInverter_h
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <GfSun2000.h>
-
 extern void setupGFSunInverter();
 extern void ZgatewayGFSunInverterMQTT();
 

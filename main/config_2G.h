@@ -26,6 +26,8 @@
 #ifndef config_2G_h
 #define config_2G_h
 
+#include "TheengsCommon.h"
+
 extern void setup2G();
 extern bool _2GtoX();
 extern void Xto2G(const char* topicOri, const char* datacallback);

@@ -226,7 +226,8 @@
 
 #if AWS_IOT
 // Enable the use of ALPN for AWS IoT Core with the port 443
-const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
+#  define ALPN_PROTOCOLS \
+    { "x-amzn-mqtt-ca", NULL }
 #endif
 
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.
@@ -251,7 +252,7 @@ const char* alpnProtocols[] = {"x-amzn-mqtt-ca", NULL};
 #  define RELEASE_LINK_DEV "https://ota.openmqttgateway.com/binaries/dev/"
 #  define RELEASE_LINK     "https://ota.openmqttgateway.com/binaries/"
 #else
-const char* OTAserver_cert = "";
+static const char* OTAserver_cert = "";
 #endif
 
 #ifndef MQTT_SECURE_SIGNED_CLIENT
@@ -289,12 +290,15 @@ struct ss_cnt_parameters {
   bool validConnection;
 };
 
+#  define CNT_PARAMS_ARR                                                                                                                                                     \
+    {                                                                                                                                                                        \
+      {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}, \
+          {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},                                            \
+      { "", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false }                                               \
+    }
 #  define cnt_parameters_array_size 3
 
-ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
-    {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
-    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},
-    {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}};
+extern ss_cnt_parameters cnt_parameters_array[];
 #endif
 
 #define MIN_CERT_LENGTH 200 // Minimum length of a certificate to be considered valid
@@ -527,7 +531,7 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 
 #ifdef ESP8266
 //#  define TRIGGER_GPIO 14 // pin D5 as full reset button (long press >10s)
-#elif ESP32
+#elif defined(ESP32)
 //#  define TRIGGER_GPIO 0 // boot button as full reset button (long press >10s)
 //#  define NO_INT_TEMP_READING true //Define if we don't want internal temperature reading for the ESP32
 #endif
@@ -621,60 +625,14 @@ ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = {
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
 
-/*----------- SHARED WITH OMG MODULES --------------*/
-
-char mqtt_topic[parameters_size + 1] = Base_Topic;
-char gateway_name[parameters_size + 1] = Gateway_Name;
-
-void connectMQTT();
-
-unsigned long uptime();
-bool cmpToMainTopic(const char*, const char*);
-bool pub(const char*, const char*, bool);
-bool pub(const char*, const char*);
-
-#if defined(ESP32)
-#  include <Preferences.h>
-Preferences preferences;
-#endif
-
-unsigned long lastDiscovery = 0; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
-#ifndef DEFAULT_DISCOVERY
-#  define DEFAULT_DISCOVERY true
-#endif
-
-#include <vector>
-// Flags definition for white list, black list, discovery management
-#define device_flags_init     0 << 0
-#define device_flags_isDisc   1 << 0
-#define device_flags_isWhiteL 1 << 1
-#define device_flags_isBlackL 1 << 2
-#define device_flags_connect  1 << 3
-#define isWhite(device)       device->isWhtL
-#define isBlack(device)       device->isBlkL
-#define isDiscovered(device)  device->isDisc
-
-enum PowerMode { DEACTIVATED = -1,
-                 ALWAYS_ON,
-                 INTERVAL,
-                 ACTION };
-
 /*--------------------Minimum freeHeap--------------------*/
 // Below this parameter we trigger a restart, this avoid stuck boards like seen in https://github.com/1technophile/OpenMQTTGateway/issues/1693
 #define MinimumMemory 40000
 
 /*----------------CONFIGURABLE PARAMETERS-----------------*/
-struct SYSConfig_s {
-  bool mqtt; // if true the gateway will publish the received data on the MQTT broker
-  bool serial; // if true the gateway will publish the received data on the SERIAL
-  bool blufi; // if true the gateway will be accesible with blufi
-  bool offline;
-  bool discovery; // HA discovery convention
-#ifdef LED_ADDRESSABLE
-  int rgbbrightness; // brightness of the RGB LED
+#ifndef DEFAULT_DISCOVERY
+#  define DEFAULT_DISCOVERY true
 #endif
-  enum PowerMode powerMode;
-};
 
 #ifndef DEFAULT_MQTT
 #  define DEFAULT_MQTT true
@@ -696,5 +654,9 @@ void storeSignalValue(uint64_t);
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)
 #define convertTemp_FtoC(f) ((f - 32) * 5 / 9)
+
+#ifndef QueueSize
+#  define QueueSize 18
+#endif
 
 #endif

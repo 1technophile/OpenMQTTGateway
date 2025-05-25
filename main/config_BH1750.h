@@ -47,8 +47,7 @@ extern void MeasureLightIntensity();
 /*----------------------------USER PARAMETERS-----------------------------*/
 /*-------------DEFINE YOUR MQTT PARAMETERS BELOW----------------*/
 #define subjectBH1750toMQTT "/BH1750toMQTT"
-//Time used to wait for an interval before resending measured values
-unsigned long timebh1750 = 0;
-int BH1750_i2c_addr = 0x23; // Light Sensor I2C Address
+
+#define BH1750_I2C_ADDR 0x23; // Light Sensor I2C Address
 
 #endif

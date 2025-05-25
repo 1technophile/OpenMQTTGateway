@@ -53,9 +53,7 @@ extern void MeasureTempHumAndPressure();
 #  define BMETOPIC "/CLIMAtoMQTT/bme"
 #endif
 
-//Time used to wait for an interval before resending measured values
-unsigned long timebme280 = 0;
-int BME280_i2c_addr = 0x76; // Bosch BME280 I2C Address
+#define BME280_I2C_ADDR 0x76
 
 // Only supported for ESP
 #ifndef BME280_PIN_SDA

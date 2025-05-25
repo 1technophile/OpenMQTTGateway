@@ -34,11 +34,7 @@
 #ifndef config_SSD1306_h
 #define config_SSD1306_h
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <Wire.h>
-
-#include "SSD1306Wire.h"
+#include "TheengsCommon.h"
 #include "config_WebUI.h"
 
 /*-------------------DEFINE LOG LEVEL----------------------*/
@@ -139,54 +135,5 @@ void ssd1306Print(char*, char*);
 void ssd1306Print(char*);
 
 /*-------------------End of Global Variables----------------------*/
-
-// This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
-
-class OledSerial : public Stream {
-public:
-  OledSerial(int);
-  void begin();
-  void drawLogo(int xshift, int yshift);
-  boolean displayPage(webUIQueueMessage*);
-
-  SSD1306Wire* display;
-
-  int available(void); // Dummy functions
-  int peek(void); // Dummy functions
-  int read(void); // Dummy functions
-  void flush(void); // Dummy functions
-
-  void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
-
-  // This is a bit of lazy programmer simplification for the semaphore and core detecting code.  Not sure if it is truly space efficient.
-
-  inline size_t write(uint8_t x) {
-    return write(&x, 1);
-  }
-
-  size_t write(const uint8_t* buffer, size_t size);
-  inline size_t write(const char* buffer, size_t size) {
-    return write((uint8_t*)buffer, size);
-  }
-  inline size_t write(const char* s) {
-    return write((uint8_t*)s, strlen(s));
-  }
-  inline size_t write(unsigned long n) {
-    return write((uint8_t)n);
-  }
-  inline size_t write(long n) {
-    return write((uint8_t)n);
-  }
-  inline size_t write(unsigned int n) {
-    return write((uint8_t)n);
-  }
-  inline size_t write(int n) {
-    return write((uint8_t)n);
-  }
-
-protected:
-};
-
-extern OledSerial Oled;
 
 #endif

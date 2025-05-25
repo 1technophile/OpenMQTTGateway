@@ -26,6 +26,8 @@
 #ifndef config_ONOFF_h
 #define config_ONOFF_h
 
+#include "TheengsCommon.h"
+
 extern void setupONOFF();
 extern void XtoONOFF(const char* topicOri, const char* datacallback);
 extern void XtoONOFF(const char* topicOri, JsonObject& RFdata);
@@ -70,7 +72,7 @@ extern void stateONOFFMeasures();
 #ifndef ACTUATOR_ONOFF_GPIO
 #  ifdef ESP8266
 #    define ACTUATOR_ONOFF_GPIO 15 //12 for sonoff basic relay
-#  elif ESP32
+#  elif defined(ESP32)
 #    define ACTUATOR_ONOFF_GPIO 15
 #  else
 #    define ACTUATOR_ONOFF_GPIO 13
