@@ -36,6 +36,7 @@
 #  include "esp_blufi_api.h"
 #  include "esp_mac.h"
 #  include "esp_timer.h"
+#  include "services/gap/ble_svc_gap.h"
 
 extern "C" {
 #  include "esp_blufi.h"
@@ -47,6 +48,7 @@ static esp_timer_handle_t connection_timer = nullptr;
 static NimBLEOta* pNimBLEOta;
 static NimBLECharacteristic* pCommandCharacteristic;
 static NimBLECharacteristic* pRecvFwCharacteristic;
+static uint8_t omg_blufi_mfg_data[] = {0xFF, 0xFF, 'O', gatewayState};
 
 struct pkt_info {
   uint8_t* pkt;
@@ -196,16 +198,39 @@ void restart_connection_timer() {}
 void stop_connection_timer() {}
 #  endif
 
+void start_blufi_advertising() {
+  esp_blufi_adv_start();
+  ble_hs_adv_fields fields;
+  ble_uuid16_t blufi_uuid = BLE_UUID16_INIT(BLUFI_APP_UUID);
+  memset(&fields, 0, sizeof(fields));
+  fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
+  const char* name = ble_svc_gap_device_name();
+  fields.name = (uint8_t*)name;
+  fields.name_len = strlen(name);
+  fields.name_is_complete = true;
+  fields.uuids16 = &blufi_uuid;
+  fields.num_uuids16 = 1;
+  fields.uuids16_is_complete = true;
+  fields.mfg_data = omg_blufi_mfg_data;
+  fields.mfg_data_len = sizeof(omg_blufi_mfg_data);
+  auto rc = ble_gap_adv_set_fields(&fields);
+  if (rc != 0) {
+    Log.error(F("Failed to set BLE advertising fields: %d" CR), rc);
+  } else {
+    Log.trace(F("BLE advertising fields set successfully" CR));
+  }
+}
+
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* param) {
   /* actually, should post to blufi_task handle the procedure,
      * now, as a example, we do it more simply */
   ble_gap_conn_desc desc;
 
   switch (event) {
-    case ESP_BLUFI_EVENT_INIT_FINISH:
+    case ESP_BLUFI_EVENT_INIT_FINISH: {
       Log.trace(F("BLUFI init finish" CR));
-      esp_blufi_adv_start();
-      break;
+      start_blufi_advertising();
+    }
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
       Log.trace(F("BLUFI deinit finish" CR));
       NimBLEDevice::deinit(true);
@@ -243,7 +268,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       pCommandCharacteristic->getCallbacks()->onSubscribe(pCommandCharacteristic, *(NimBLEConnInfo*)&desc, 0);
       pRecvFwCharacteristic->getCallbacks()->onSubscribe(pRecvFwCharacteristic, *(NimBLEConnInfo*)&desc, 0);
       blufi_security_deinit();
-      esp_blufi_adv_start();
+      start_blufi_advertising();
       break;
     case ESP_BLUFI_EVENT_REQ_CONNECT_TO_AP:
       Log.trace(F("BLUFI request wifi connect to AP" CR));
