@@ -36,6 +36,7 @@
 #include "TheengsUtils.h"
 
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
+static GatewayState previousGatewayState = gatewayState;
 
 // Macros and structure to enable the duplicates removing on the following gateways
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
@@ -222,6 +223,7 @@ extern bool isBlufiConnected();
 extern bool isStaConnecting();
 extern bool startBlufi();
 extern bool stopBlufi();
+extern void set_blufi_mfg_data();
 #endif
 /*------------------------------------------------------------------------*/
 
@@ -1252,7 +1254,6 @@ void updateAndHandleLEDsTask(void* pvParameters) {
 #endif
 
 void updateAndHandleLEDsTask() {
-  static GatewayState previousGatewayState;
   if (previousGatewayState != gatewayState) {
 #ifdef LED_POWER
     ledManager.setMode(STRIP_POWER, LED_POWER, LEDManager::STATIC, LED_POWER_COLOR, -1);
@@ -2555,6 +2556,17 @@ void loop() {
       gatewayState = GatewayState::NTWK_CONNECTED;
     }
   }
+
+#if defined(ESP32) && defined(USE_BLUFI)
+  if (SYSConfig.blufi) {
+    if (gatewayState != previousGatewayState) {
+      Log.notice(F("Gateway state changed to: %d" CR), gatewayState);
+      previousGatewayState = gatewayState;
+      set_blufi_mfg_data();
+    }
+  }
+#endif
+
   if (!ProcessLock) {
     if (now > (timer_sys_measures + (TimeBetweenReadingSYS * 1000)) || !timer_sys_measures) {
       timer_sys_measures = millis();

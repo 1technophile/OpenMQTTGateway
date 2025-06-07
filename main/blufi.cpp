@@ -53,8 +53,6 @@ static NimBLECharacteristic* pRecvFwCharacteristic;
 #  define BLUFI_MFG_ID 0xFFFF // Default Manufacturer ID if not defined
 #endif
 
-static uint8_t omg_blufi_mfg_data[] = {BLUFI_MFG_ID, BLUFI_MFG_ID >> 8, 'O', gatewayState};
-
 struct pkt_info {
   uint8_t* pkt;
   int pkt_len;
@@ -203,8 +201,7 @@ void restart_connection_timer() {}
 void stop_connection_timer() {}
 #  endif
 
-void start_blufi_advertising() {
-  esp_blufi_adv_start();
+void set_blufi_mfg_data () {
   ble_hs_adv_fields fields;
   ble_uuid16_t blufi_uuid = BLE_UUID16_INIT(BLUFI_APP_UUID);
   memset(&fields, 0, sizeof(fields));
@@ -216,6 +213,7 @@ void start_blufi_advertising() {
   fields.uuids16 = &blufi_uuid;
   fields.num_uuids16 = 1;
   fields.uuids16_is_complete = true;
+  uint8_t omg_blufi_mfg_data[] = {BLUFI_MFG_ID, BLUFI_MFG_ID >> 8, 'O', gatewayState};
   fields.mfg_data = omg_blufi_mfg_data;
   fields.mfg_data_len = sizeof(omg_blufi_mfg_data);
   auto rc = ble_gap_adv_set_fields(&fields);
@@ -224,6 +222,11 @@ void start_blufi_advertising() {
   } else {
     Log.trace(F("BLE advertising fields set successfully" CR));
   }
+}
+
+void start_blufi_advertising() {
+  esp_blufi_adv_start();
+  set_blufi_mfg_data();
 }
 
 static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t* param) {
