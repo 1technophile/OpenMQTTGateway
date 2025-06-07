@@ -48,7 +48,12 @@ static esp_timer_handle_t connection_timer = nullptr;
 static NimBLEOta* pNimBLEOta;
 static NimBLECharacteristic* pCommandCharacteristic;
 static NimBLECharacteristic* pRecvFwCharacteristic;
-static uint8_t omg_blufi_mfg_data[] = {0xFF, 0xFF, 'O', gatewayState};
+
+#ifndef BLUFI_MFG_ID
+#  define BLUFI_MFG_ID 0xFFFF // Default Manufacturer ID if not defined
+#endif
+
+static uint8_t omg_blufi_mfg_data[] = {BLUFI_MFG_ID, BLUFI_MFG_ID >> 8, 'O', gatewayState};
 
 struct pkt_info {
   uint8_t* pkt;
