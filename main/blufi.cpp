@@ -235,6 +235,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
     case ESP_BLUFI_EVENT_INIT_FINISH: {
       Log.trace(F("BLUFI init finish" CR));
       start_blufi_advertising();
+      break;
     }
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
       Log.trace(F("BLUFI deinit finish" CR));
