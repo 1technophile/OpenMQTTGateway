@@ -26,6 +26,8 @@
 #ifndef config_BT_h
 #define config_BT_h
 
+#include "TheengsCommon.h"
+
 extern void setupBT();
 extern void XtoBT(const char* topicOri, JsonObject& RFdata);
 extern void launchBTDiscovery(bool overrideDiscovery);
@@ -34,7 +36,6 @@ extern String stateBTMeasures(bool);
 
 #ifdef ESP32
 #  include "NimBLEDevice.h"
-
 #endif
 
 /*-----------BT TOPICS & COMPILATION PARAMETERS-----------*/
@@ -135,7 +136,7 @@ extern String stateBTMeasures(bool);
 #  define BLE_CNCT_TIMEOUT 3000
 #endif
 
-unsigned long scanCount = 0;
+extern unsigned long scanCount;
 
 #ifndef pubBLEAdvData
 #  define pubBLEAdvData false // define true if you want to publish all advertisement data

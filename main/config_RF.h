@@ -26,8 +26,7 @@
 #ifndef config_RF_h
 #define config_RF_h
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
+#include "TheengsCommon.h"
 
 #ifdef ZgatewayRF
 extern void setupRF();
@@ -47,14 +46,10 @@ extern void enableRF2Receive();
 #ifdef ZgatewayPilight
 extern void setupPilight();
 extern void PilighttoX();
-extern void XtoPilight(const char* topicOri, const char* datacallback);
-extern void XtoPilight(const char* topicOri, JsonObject& RFdata);
 extern void disablePilightReceive();
 extern void enablePilightReceive();
 #endif
 #ifdef ZgatewayRTL_433
-#  include <rtl_433_ESP.h>
-rtl_433_ESP rtl_433;
 
 extern void RTL_433Loop();
 extern void setupRTL_433();
@@ -217,7 +212,19 @@ struct RFConfig_s {
 #define ACTIVE_RTL      3
 #define ACTIVE_RF2      4
 
-RFConfig_s RFConfig;
+#ifdef ZgatewayRF
+#  define ACTIVE_RECEIVER ACTIVE_RF
+#elif defined(ZgatewayRF2)
+#  define ACTIVE_RECEIVER ACTIVE_RF2
+#elif defined(ZgatewayPilight)
+#  define ACTIVE_RECEIVER ACTIVE_PILIGHT
+#elif defined(ZgatewayRTL_433)
+#  define ACTIVE_RECEIVER ACTIVE_RTL
+#else
+#  define ACTIVE_RECEIVER ACTIVE_NONE
+#endif
+
+extern RFConfig_s RFConfig;
 
 /*-------------------CC1101 DefaultTXPower----------------------*/
 //Adjust the default TX-Power for sending radio if ZradioCC1101 is used.
@@ -230,7 +237,7 @@ RFConfig_s RFConfig;
 #ifndef RF_RECEIVER_GPIO
 #  ifdef ESP8266
 #    define RF_RECEIVER_GPIO 0 // D3 on nodemcu // put 4 with rf bridge direct mod
-#  elif ESP32
+#  elif defined(ESP32)
 #    define RF_RECEIVER_GPIO 27 // D27 on DOIT ESP32
 #  endif
 #endif
@@ -238,7 +245,7 @@ RFConfig_s RFConfig;
 #ifndef RF_EMITTER_GPIO
 #  ifdef ESP8266
 #    define RF_EMITTER_GPIO 3 // RX on nodemcu if it doesn't work with 3, try with 4 (D2) // put 5 with rf bridge direct mod
-#  elif ESP32
+#  elif defined(ESP32)
 #    define RF_EMITTER_GPIO 12 // D12 on DOIT ESP32
 #  else
 //IMPORTANT NOTE: On arduino UNO connect IR emitter pin to D9 , comment #define IR_USE_TIMER2 and uncomment #define IR_USE_TIMER1 on library <library>IRremote/boarddefs.h so as to free pin D3 for RF RECEIVER PIN

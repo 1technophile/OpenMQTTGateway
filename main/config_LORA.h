@@ -26,6 +26,8 @@
 #ifndef config_LORA_h
 #define config_LORA_h
 
+#include "TheengsCommon.h"
+
 extern void setupLORA();
 extern void LORAtoX();
 extern void XtoLORA(const char* topicOri, const char* datacallback);

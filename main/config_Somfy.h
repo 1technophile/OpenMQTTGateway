@@ -24,8 +24,7 @@
 #ifndef config_Somfy_h
 #define config_Somfy_h
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
+#include "TheengsCommon.h"
 
 extern void setupSomfy();
 extern void XtoSomfy(const char* topicOri, JsonObject& RFdata);

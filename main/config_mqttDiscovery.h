@@ -32,7 +32,7 @@ extern void pubMqttDiscovery();
 
 /**
  * Create a discover messages form a list of attribute
- * 
+ *
  * @param mac the MAC address
  * @param sensorList[][0] = component type
  * @param sensorList[][1] = name
@@ -57,7 +57,7 @@ extern void createDiscoveryFromList(const char* mac,
 
 /**
  * @brief Generate message and publish it on an MQTT discovery exploiter. For HA @see https://www.home-assistant.io/docs/mqtt/discovery/
- * 
+ *
  * @param sensor_type the Type
  * @param st_topic set state topic,
  * @param s_name set name,
@@ -71,15 +71,15 @@ extern void createDiscoveryFromList(const char* mac,
  * @param off_delay set off_delay
  * @param payload_available set payload_available,
  * @param payload_not_available set payload_not_available
- * @param gateway_entity set is a gateway entity, 
+ * @param gateway_entity set is a gateway entity,
  * @param cmd_topic set command topic
- * @param device_name set device name, 
- * @param device_manufacturer set device manufacturer, 
- * @param device_model set device model, 
- * @param device_mac set device MAC, 
+ * @param device_name set device name,
+ * @param device_manufacturer set device manufacturer,
+ * @param device_model set device model,
+ * @param device_mac set device MAC,
  * @param retainCmd set retain
  * @param state_class set state class
- * 
+ *
  * */
 extern void createDiscovery(const char* sensor_type,
                             const char* state_topic, const char* s_name, const char* unique_id,
@@ -95,7 +95,7 @@ extern void createDiscovery(const char* sensor_type,
  * @param topic                 Mandatory - The MQTT topic subscribed to receive trigger events.
  * @param type                  The type of the trigger, e.g. button_short_press. Entries supported by the HA Frontend: button_short_press, button_short_release, button_long_press, button_long_release, button_double_press, button_triple_press, button_quadruple_press, button_quintuple_press. If set to an unsupported value, will render as subtype type, e.g. button_1 spammed with type set to spammed and subtype set to button_1
  * @param subtype               The subtype of the trigger, e.g. button_1. Entries supported by the HA frontend: turn_on, turn_off, button_1, button_2, button_3, button_4, button_5, button_6. If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
-  * @param object_id             The object_id of the trigger.   
+  * @param object_id             The object_id of the trigger.
  * @param value_template        The template to render the value of the trigger. The template can use the variables trigger.id, trigger.type, trigger.subtype, trigger.payload, trigger.payload_json, trigger.topic, trigger.timestamp, trigger.value, trigger.value_json. The template can be a string or a JSON object. If the template is a JSON object, it must be a valid JSON object. If the template is a string, it will be rendered as a string. If the template is a JSON object, it will be rendered as a JSON object.
  */
 void announceGatewayTrigger(const char* topic,
@@ -111,7 +111,7 @@ void announceGatewayTrigger(const char* topic,
 #ifndef discovery_Prefix
 #  define discovery_Prefix "homeassistant"
 #endif
-char discovery_prefix[parameters_size + 1] = discovery_Prefix;
+extern char discovery_prefix[];
 
 // discovery_republish_on_reconnect false to publish discovery topics over MQTT only with first connect
 // discovery_republish_on_reconnect true to always republish discovery topics over MQTT when connection is re-established
@@ -175,86 +175,6 @@ char discovery_prefix[parameters_size + 1] = discovery_Prefix;
 #define stateClassMeasurement     "measurement"
 #define stateClassTotal           "total"
 #define stateClassTotalIncreasing "total_increasing"
-
-// From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
-// List of classes available in Home Assistant
-const char* availableHASSClasses[] = {"battery_charging",
-                                      "battery",
-                                      "carbon_dioxide",
-                                      "carbon_monoxide",
-                                      "current",
-                                      "data_size",
-                                      "distance",
-                                      "door",
-                                      "duration",
-                                      "energy",
-                                      "enum",
-                                      "gas",
-                                      "humidity",
-                                      "illuminance",
-                                      "irradiance",
-                                      "lock",
-                                      "motion",
-                                      "moving",
-                                      "pm1",
-                                      "pm10",
-                                      "pm25",
-                                      "power_factor",
-                                      "power",
-                                      "precipitation_intensity",
-                                      "precipitation",
-                                      "pressure",
-                                      "problem",
-                                      "restart",
-                                      "signal_strength",
-                                      "sound_pressure",
-                                      "temperature",
-                                      "timestamp",
-                                      "voltage",
-                                      "water",
-                                      "weight",
-                                      "wind_speed",
-                                      "window"};
-
-// From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L379
-// List of units available in Home Assistant
-const char* availableHASSUnits[] = {"W",
-                                    "kW",
-                                    "V",
-                                    "kWh",
-                                    "A",
-                                    "W",
-                                    "°C",
-                                    "°F",
-                                    "ms",
-                                    "s",
-                                    "min",
-                                    "hPa",
-                                    "L",
-                                    "kg",
-                                    "lb",
-                                    "µS/cm",
-                                    "ppm",
-                                    "μg/m³",
-                                    "m³",
-                                    "mg/m³",
-                                    "m/s²",
-                                    "mV",
-                                    "lx",
-                                    "Ω",
-                                    "%",
-                                    "bar",
-                                    "bpm",
-                                    "dB",
-                                    "dBm",
-                                    "B",
-                                    "UV index",
-                                    "m/s",
-                                    "km/h",
-                                    "°",
-                                    "mm",
-                                    "mm/h",
-                                    "cm"};
 
 // Define the command used to update through OTA depending if we want to update from dev nightly or latest release
 #if DEVELOPMENTOTA
