@@ -44,7 +44,7 @@
 
 #  include <ESPiLight.h>
 ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
-
+extern int currentReceiver;
 #  ifdef Pilight_rawEnabled
 // raw output support
 bool pilightRawEnabled = 0;

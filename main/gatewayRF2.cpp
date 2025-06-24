@@ -42,6 +42,7 @@ sudo mosquitto_pub -t home/commands/MQTTtoRF2/CODE_8233372/UNIT_0/PERIOD_272 -m/
 
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
+extern void initCC1101();
 #  endif
 
 #  include <NewRemoteReceiver.h>
@@ -60,8 +61,6 @@ struct RF2rxd {
 };
 
 RF2rxd rf2rd;
-
-extern void initCC1101();
 
 #  ifdef ZmqttDiscovery
 #    include "config_mqttDiscovery.h"
@@ -146,7 +145,15 @@ void rf2Callback(unsigned int period, unsigned long address, unsigned long group
 void XtoRF2(const char* topicOri, const char* datacallback) {
   disableCurrentReceiver();
   pinMode(RF_EMITTER_GPIO, OUTPUT);
+#    ifdef ZradioCC1101
   initCC1101();
+  int txPower = RF_CC1101_TXPOWER;
+  ELECHOUSE_cc1101.setPA((int)txPower);
+  Log.notice(F("[RF] CC1101 TX Power: %d" CR), txPower);
+  float txFrequency = RFConfig.frequency;
+  ELECHOUSE_cc1101.SetTx(txFrequency);
+  Log.notice(F("[RF] Transmit frequency: %F" CR), txFrequency);
+#    endif
 
   // RF DATA ANALYSIS
   //We look into the subject to see if a special RF protocol is defined
@@ -261,7 +268,15 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
     if (boolSWITCHTYPE != 99) {
       disableCurrentReceiver();
       pinMode(RF_EMITTER_GPIO, OUTPUT);
+#    ifdef ZradioCC1101
       initCC1101();
+      int txPower = RF2data["txpower"] | RF_CC1101_TXPOWER;
+      ELECHOUSE_cc1101.setPA((int)txPower);
+      Log.notice(F("[RF] CC1101 TX Power: %d" CR), txPower);
+      float txFrequency = RF2data["frequency"] | RFConfig.frequency;
+      ELECHOUSE_cc1101.SetTx(txFrequency);
+      Log.notice(F("[RF] Transmit frequency: %F" CR), txFrequency);
+#    endif
       Log.trace(F("MQTTtoRF2 switch type ok" CR));
       bool isDimCommand = boolSWITCHTYPE == 2;
       unsigned long valueCODE = RF2data["address"];
