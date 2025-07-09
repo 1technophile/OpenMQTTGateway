@@ -202,6 +202,10 @@ void stop_connection_timer() {}
 #  endif
 
 void set_blufi_mfg_data () {
+  if (!NimBLEDevice::isInitialized() || !NimBLEDevice::getAdvertising()->isAdvertising()) {
+    Log.notice(F("Unable to set advertising data" CR));
+    return;
+  }
   ble_hs_adv_fields fields;
   ble_uuid16_t blufi_uuid = BLE_UUID16_INIT(BLUFI_APP_UUID);
   memset(&fields, 0, sizeof(fields));
