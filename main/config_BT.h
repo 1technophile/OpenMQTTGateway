@@ -150,10 +150,6 @@ extern unsigned long scanCount;
 #  define enableMultiGTWSync true // //define true to use tracker and closest control devices sync across OpenMQTTGateway and Theengs Gateway gateways
 #endif
 
-#ifndef DISPLAY_DEVICE_NAME
-#  define DISPLAY_DEVICE_NAME false // Set to true to force the device name to be from the name of the device and not the model
-#endif
-
 /*--------------HOME ASSISTANT ROOM PRESENCE--------------*/
 #define subjectHomePresence "presence/" // will send Home Assistant room presence message to this topic (first part is same for all rooms, second is room name)
 
