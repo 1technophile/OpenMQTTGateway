@@ -586,7 +586,7 @@ void createDiscovery(const char* sensor_type,
 
     // generate unique device name by adding the second half of the device_id only if device_name and device_id are different and we don't want to use the BLE name
     if (device_name[0]) {
-      #if defined(ZwebUI) && defined(ESP32)  // displayDeviceName only applies when running with the WebUI and ESP32
+      #if defined(ZgatewayBT)  // displayDeviceName only applies when running with the WebUI and ESP32
         if (strcmp(device_id, device_name) != 0 && device_id[0] && !displayDeviceName) {
       #else !ForceDeviceName  // Support ForceDeviceName for esp8266's
         if (strcmp(device_id, device_name) != 0 && device_id[0] && !ForceDeviceName) {
