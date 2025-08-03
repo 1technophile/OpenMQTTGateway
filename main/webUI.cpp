@@ -84,7 +84,6 @@ bool reset_web_log_flag = false; // Reset web console log
 const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
 bool webUISecure = WEBUI_AUTH;
-boolean displayMetric = DISPLAY_METRIC;
 
 /*********************************************************************************************\
  * ESP32 AutoMutex

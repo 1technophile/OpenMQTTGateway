@@ -657,6 +657,10 @@ bool isAduplicateSignal(uint64_t);
 void storeSignalValue(uint64_t);
 #endif
 
+#ifndef DISPLAY_METRIC
+#  define DISPLAY_METRIC true // Units used for display of sensor data
+#endif
+
 #ifdef ZgatewayBT
 #  ifndef BLEDecoder
 #    define BLEDecoder true //true if we use the Theengs decoder

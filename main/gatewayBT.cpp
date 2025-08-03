@@ -77,6 +77,8 @@ vector<BLEAction> BLEactions;
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
+boolean displayMetric = DISPLAY_METRIC;
+
 static BLEdevice NO_BT_DEVICE_FOUND = {
     {0},
     0,

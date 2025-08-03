@@ -38,10 +38,6 @@
 #  define WEB_TEMPLATE_BUFFER_MAX_SIZE 3000 // Max size of the template buffer
 #endif
 
-#ifndef DISPLAY_METRIC
-#  define DISPLAY_METRIC true // Units used for display of sensor data
-#endif
-
 #ifndef DISPLAY_WEBUI_INTERVAL
 #  define DISPLAY_WEBUI_INTERVAL 3 // Number of seconds between json message displays
 #endif
