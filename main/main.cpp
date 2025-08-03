@@ -93,6 +93,7 @@ JsonArray modules = modulesBuffer.to<JsonArray>();
 bool ethConnected = false;
 char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
+char ble_aes[parameters_size] = BLE_AES;
 unsigned long lastDiscovery = 0;
 #if !MQTT_BROKER_MODE
 ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = CNT_PARAMS_ARR;
@@ -2023,6 +2024,7 @@ void saveConfig() {
 #  endif
   json["gateway_name"] = gateway_name;
   json["ota_pass"] = ota_pass;
+  json["ble_aes"] = ble_aes;
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -2170,6 +2172,9 @@ bool loadConfigFromFlash() {
           }
 #  endif
         }
+        if (json.containsKey("ble_aes")) {
+          strcpy(ble_aes, json["ble_aes"]);
+        }        
         result = true;
       } else {
         Log.warning(F("failed to load json config" CR));
@@ -3431,6 +3436,9 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
       if (SYSdata.containsKey("gateway_name")) {
         strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
+      }
+      if (SYSdata.containsKey("ble_aes")) {
+        strncpy(ble_aes, SYSdata["ble_aes"], parameters_size);
       }
       if (SYSdata.containsKey("gw_pass")) {
         strncpy(ota_pass, SYSdata["gw_pass"], parameters_size);

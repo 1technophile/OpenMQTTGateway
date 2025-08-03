@@ -960,6 +960,62 @@ void handleLO() {
   server.send(200, "text/html", response);
 }
 
+#  ifdef BLEDecryptor
+/**
+ * @brief /BL - Config BLE
+ * T: handleBL: uri: /bl, args: 3, method: 1
+ * T: handleBL Arg: 0, dn=on - Force Device Name
+ * T: handleBL Arg: 1, bk=on - BLE AES Key
+ * T: handleBL Arg: 2, save=
+ */
+void handleBL() {
+  WEBUI_TRACE_LOG(F("handleBL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+
+  if (server.args()) {
+    for (uint8_t i = 0; i < server.args(); i++) {
+      WEBUI_TRACE_LOG(F("handleBL Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
+    }
+    bool update = false;
+
+    if (server.hasArg("save")) {
+      if (server.hasArg("bk")) {
+        WEBtoSYS["ble_aes"] = server.arg("bk");
+        update = true;
+      }
+
+      if (update) {
+        Log.warning(F("[BLE] Save Config" CR));
+        String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+        XtoSYS((char*)topic.c_str(), WEBtoSYS);
+        // forceDeviceName = WEBtoSYS["force_device_name"].as<bool>();
+        strcpy(ble_aes, WEBtoSYS["ble_aes"]);
+      } else {
+        Log.warning(F("[BLE] No changes" CR));
+      }
+    }
+  }
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+
+  char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure BLE").c_str());
+  String response = String(buffer);
+  response += String(script);
+  response += String(style);
+  int logLevel = Log.getLevel();
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body, jsonChar, gateway_name, ble_aes);
+  response += String(buffer);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
+  response += String(buffer);
+  server.send(200, "text/html", response);
+}
+#  endif
+
 #  ifdef ZgatewayLORA
 #    include "config_LORA.h"
 extern void LORAConfig_fromJson(JsonObject& LORAdata);
@@ -1693,6 +1749,10 @@ void WebUISetup() {
   server.on("/tk", handleTK); // Store Device Token
 #  endif
   server.on("/lo", handleLO); // Configure Logging
+
+#  ifdef BLEDecryptor
+  server.on("/bl", handleBL); // Configure BLE
+#  endif
 
   server.on("/rt", handleRT); // Reset configuration ( Erase and Restart )
   server.on("/favicon.ico", handleFavicon); // Information

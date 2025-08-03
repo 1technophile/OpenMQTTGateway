@@ -293,8 +293,8 @@ struct ss_cnt_parameters {
 #  define CNT_PARAMS_ARR                                                                                                                                                     \
     {                                                                                                                                                                        \
       {ss_server_cert, ss_client_cert, ss_client_key, OTAserver_cert, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}, \
-          {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},                                            \
-      { "", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false }                                               \
+      {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false},                                                \
+      {"", "", "", "", MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS, MQTT_SECURE_DEFAULT, MQTT_CERT_VALIDATE_DEFAULT, false}                                                 \
     }
 #  define cnt_parameters_array_size 3
 
@@ -655,6 +655,18 @@ extern ss_cnt_parameters cnt_parameters_array[];
 #if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
 bool isAduplicateSignal(uint64_t);
 void storeSignalValue(uint64_t);
+#endif
+
+#ifdef ZgatewayBT
+#  ifndef BLEDecoder
+#    define BLEDecoder true //true if we use the Theengs decoder
+#    ifndef BLEDecryptor
+#      define BLEDecryptor true //true if decrypt encrypted PVVX or BTHome v2 service data
+#    endif
+#  endif
+#endif
+#ifndef BLE_AES
+#  define BLE_AES "00112233445566778899001122334455"
 #endif
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)

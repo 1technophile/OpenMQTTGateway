@@ -62,7 +62,11 @@
 #else
 #  define configure_6
 #endif
-#define configure_7
+#ifdef BLEDecryptor
+#  define configure_7 "<p><form action='bl' method='post'><button>Configure BLE</button></form></p>"
+#else
+#  define configure_7
+#endif
 #define configure_8
 
 /*------------------- ----------------------*/
@@ -218,6 +222,10 @@ const char config_lora_body[] = body_header
     "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
     "</form>"
     "</fieldset>" body_footer_config_menu;
+
+#ifdef BLEDecryptor
+const char config_ble_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure BLE</b></span></legend><form method='get' action='bl'><p><b>BLE AES Key (32 Char Hex)</b><br><input id='bk' name='bk' minlength='32' maxlength='32' placeholder=" BLE_AES " value='%s'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+#endif
 
 const char footer[] = "<div style='text-align:right;font-size:11px;'><hr/><a href='https://community.openmqttgateway.com' target='_blank' style='color:#aaa;'>%s</a></div></div></body></html>";
 

@@ -57,6 +57,9 @@ BTConfig_s BTConfig;
 
 #  if BLEDecoder
 #    include <decoder.h>
+#    if BLEDecryptor
+#      include "mbedtls/ccm.h"
+#    endif
 TheengsDecoder decoder;
 #  endif
 
@@ -518,18 +521,28 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
   createDiscoveryFromList(mac, BM2sensor, BM2parametersCount, "BM2", "Generic", sensorModel_id);
 }
 
-void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
+void LYWSD03MMCDiscovery(const char* mac, const char* device_name, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
+  const char* jsonTemp;
+  const char* tempChar;
+  if (displayMetric) {
+    jsonTemp = jsonTempc;
+    tempChar = "°C";
+  } else {
+    jsonTemp = jsonTempf;
+    tempChar = "°F";
+  }
+
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
-      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "Battery", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "Voltage", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "Temperature", mac, "temperature", jsonTemp, "", "", tempChar, stateClassMeasurement},
+      {"sensor", "Humidity", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, "LYWSD03MMC", "Xiaomi", sensorModel);
+  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, device_name, "Xiaomi", sensorModel);
 }
 
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
@@ -576,7 +589,7 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 }
 
 #  else
-void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
+void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel, const char* device_name) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
@@ -1133,7 +1146,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               stateClassNone);
             }
             if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
-              LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
+              LYWSD03MMCDiscovery(macWOdots.c_str(), model.c_str(), "LYWSD03MMC");
             }
             if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
               MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
@@ -1159,6 +1172,18 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void launchBTDiscovery(bool overrideDiscovery) {}
 #  endif
 
+#  if BLEDecryptor
+// ** TODO - Hex string to bytes, there is probably a function for this already just need to find it 
+int hexToBytes(String hex, uint8_t *out, size_t maxLen) {
+  int len = hex.length();
+  if (len % 2 || len / 2 > maxLen) return -1;
+  for (int i = 0, j = 0; i < len; i += 2, j++) {
+    out[j] = (uint8_t) strtol(hex.substring(i, i + 2).c_str(), nullptr, 16);
+  }
+  return len / 2;
+}
+#  endif
+
 #  if BLEDecoder
 void process_bledata(JsonObject& BLEdata) {
   yield(); // Necessary to let the loop run in case of connectivity issues
@@ -1170,6 +1195,110 @@ void process_bledata(JsonObject& BLEdata) {
   Log.trace(F("Processing BLE data %s" CR), BLEdata["id"].as<const char*>());
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
+
+# if BLEDecryptor
+  if (BLEdata["encr"]) {
+    // Decrypting BTHome v2 payload
+
+    // Set BLE AES Key string from UI
+    unsigned char bleaeskey[16];  
+    int keylen = hexToBytes(ble_aes, bleaeskey, 16);
+    if (keylen != 16) {
+      Log.error(F("[BTHomeDecrypt] Invalid key length %d" CR), keylen);
+      return;
+    }
+    mbedtls_ccm_context ctx;
+    mbedtls_ccm_init(&ctx);
+    if (mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, bleaeskey, 128) != 0) {
+        Log.error(F("[BTHomeDecrypt] Failed to set AES key" CR));
+        return;
+    }    
+
+    uint8_t nonce[13];                               // Build nonce
+    String macWOdots = BLEdata["id"].as<String>();   // Mac Address without dots
+    macWOdots.replace(":", "");
+    unsigned char macAddress[6];
+    int maclen = hexToBytes(macWOdots, macAddress, 6);
+    if (maclen != 6) {
+      Log.error(F("[BTHomeDecrypt] Invalid MAC Address length %d" CR), maclen);
+      return;
+    }
+    memcpy(nonce, macAddress, 6);
+    nonce[6] = 0xD2;                                  // UUID
+    nonce[7] = 0xFC;
+    nonce[8] = 0x41;                                  // BTHome Device Data encrypted payload byte
+    unsigned char ctr[4];                             // Counter
+    int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 4);
+    if (ctrlen != 4) {
+      Log.error(F("[BTHomeDecrypt] Invalid counter length %d" CR), ctrlen);
+      return;
+    }
+    memcpy(&nonce[9], ctr, 4);
+
+    // Ciphertext
+    int cipherlen = sizeof(BLEdata["cipher"].as<String>());
+    unsigned char ciphertext[cipherlen];
+    int ciphertextlen = hexToBytes(BLEdata["cipher"].as<String>(), ciphertext, cipherlen);
+
+    // Decrypted payload
+    unsigned char decrypted[ciphertextlen];
+
+    // Message Integrity Check (MIC)
+    unsigned char mic[4];
+    int miclen = hexToBytes(BLEdata["mic"].as<String>(), mic, 4);
+    if (miclen != 4) {
+      Log.error(F("[BTHomeDecrypt] Invalid MIC length %d" CR), miclen);
+      return;
+    }
+
+    // Decrypt ciphertext
+    int ret = mbedtls_ccm_auth_decrypt(
+        &ctx,                   // AES Key
+        ciphertextlen,          // length of ciphertext
+        nonce, sizeof(nonce),   // Nonce
+        nullptr, 0,             // No AAD
+        ciphertext,             // input ciphertext
+        decrypted,              // output plaintext
+        mic, sizeof(mic)        // Message Integrity Check
+    );
+
+    if (ret == 0) {
+      Log.notice(F("[BTHomeDecrypt] BTHome v2 decryption successful" CR));
+    } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
+        Log.error(F("[BTHomeDecrypt] Authentication failed." CR));
+        return;
+    } else {
+        Log.error(F("[BTHomeDecrypt] Decryption failed with error: -0x%04x" CR), -ret);
+        return;
+    }
+
+    // Build new servicedata
+    uint8_t newservicedata[3 + ciphertextlen];
+    newservicedata[0] = 0x40;  // Decrypted BTHome
+    newservicedata[1] = 0x00;  // Packet counter which the PVVX BTHome non-encrypted has but the encrypted does not
+    newservicedata[2] = 0x00;  // **TODO Convert the ctr to the packet counter or just stick with 0?
+    memcpy(&newservicedata[3], decrypted, ciphertextlen);
+
+    // Replace service data and call the decoder again
+    BLEdata["servicedata"] = NimBLEUtils::dataToHexString(newservicedata, 3 + ciphertextlen);
+    model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
+    Log.trace(F("[BTHomeDecrypt] Decrypted model_id %d" CR), model_id);
+
+    // Remove the cipher fields from BLEdata
+    BLEdata.remove("encr");
+    BLEdata.remove("cipher");
+    BLEdata.remove("ctr");
+    BLEdata.remove("mic");
+
+  }
+#  endif
+  // Update model_id for LYWSD03MMC devices
+  if (model_id >= 0) {
+    std::string model_id_str = BLEdata["model_id"].as<string>();
+    if (model_id_str.compare("LYWSD03MMC") >= 0) {
+      model_id = BLEconectable::id::LYWSD03MMC;
+    }
+  }
 
   // Convert prmacs to RMACS until or if OMG gets Identity MAC/IRK decoding
   if (BLEdata["prmac"]) {
@@ -1213,6 +1342,7 @@ void process_bledata(JsonObject& BLEdata) {
     } else {
       if (BLEdata.containsKey("name")) { // Connectable only devices
         std::string name = BLEdata["name"];
+        Log.trace(F("Device LYWSD03MMC found: %d" CR), name.compare("LYWSD03MMC"));
         if (name.compare("LYWSD03MMC") == 0)
           model_id = BLEconectable::id::LYWSD03MMC;
         else if (name.compare("DT24-BLE") == 0)
