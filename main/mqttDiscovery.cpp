@@ -586,7 +586,7 @@ void createDiscovery(const char* sensor_type,
 
     // generate unique device name by adding the second half of the device_id only if device_name and device_id are different and we don't want to use the BLE name
     if (device_name[0]) {
-      if (strcmp(device_id, device_name) != 0 && device_id[0] && !ForceDeviceName) {
+      if (strcmp(device_id, device_name) != 0 && device_id[0] && !displayDeviceName) {
         device["name"] = device_name + String("-") + String(device_id + 6);
       } else {
         device["name"] = device_name;

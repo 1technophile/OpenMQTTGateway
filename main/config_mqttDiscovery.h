@@ -127,10 +127,6 @@ extern char discovery_prefix[];
 #  define GATEWAY_MANUFACTURER "OMG_community"
 #endif
 
-#ifndef ForceDeviceName
-#  define ForceDeviceName false // Set to true to force the device name to be from the name of the device and not the model
-#endif
-
 /*-------------- Auto discovery macros-----------------*/
 // Home assistant autodiscovery value key definition
 #define jsonBatt        "{{ value_json.batt | is_defined }}"

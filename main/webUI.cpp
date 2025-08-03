@@ -85,6 +85,7 @@ const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
 bool webUISecure = WEBUI_AUTH;
 boolean displayMetric = DISPLAY_METRIC;
+boolean displayDeviceName = DISPLAY_DEVICE_NAME;
 
 /*********************************************************************************************\
  * ESP32 AutoMutex
@@ -502,7 +503,8 @@ void handleCN() {
 /**
  * @brief /WU - Configuration Page
  * T: handleWU: uri: /wu, args: 3, method: 1
- * T: handleWU Arg: 0, dm=on - displayMetric
+ * T: handleWU Arg: 0, dm=1 - displayMetric
+ * T: handleWU Arg: 0, dn=1 - displayDeviceName 
  * T: handleWU Arg: 1, sw=on - webUISecure
  * T: handleWU Arg: 2, save=
  */
@@ -515,10 +517,19 @@ void handleWU() {
     }
     bool update = false;
 
-    if (displayMetric != server.hasArg("dm")) {
+    if (server.hasArg("dm") && server.arg("dm").toInt() != displayMetric) {
+      WEBUI_TRACE_LOG(F("handleWU Update displayMetric from: %d" CR), displayMetric);
+      displayMetric = server.arg("dm").toInt();
+      WEBUI_TRACE_LOG(F("handleWU Update displayMetric to: %d" CR), displayMetric);
       update = true;
     }
-    displayMetric = server.hasArg("dm");
+
+    if (server.hasArg("dn") && server.arg("dn").toInt() != displayDeviceName) {
+      WEBUI_TRACE_LOG(F("handleWU Update displayDeviceName from: %d" CR), displayDeviceName);
+      displayDeviceName = server.arg("dn").toInt();
+      WEBUI_TRACE_LOG(F("handleWU Update displayDeviceName from: %d" CR), displayDeviceName);
+      update = true;
+    }
 
     if (webUISecure != server.hasArg("sw")) {
       update = true;
@@ -540,7 +551,7 @@ void handleWU() {
   response += String(script);
   response += String(style);
   int logLevel = Log.getLevel();
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (webUISecure ? "checked" : ""));
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "selected" : ""), (!displayMetric ? "selected" : ""), (!displayDeviceName ? "selected" : ""), (displayDeviceName ? "selected" : ""), (webUISecure ? "checked" : ""));
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1770,6 +1781,7 @@ String stateWebUIStatus() {
   StaticJsonDocument<JSON_MSG_BUFFER> WebUIdataBuffer;
   JsonObject WebUIdata = WebUIdataBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
+  WebUIdata["displayDeviceName"] = (bool)displayDeviceName;
   WebUIdata["webUISecure"] = (bool)webUISecure;
   WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
 
@@ -1786,6 +1798,7 @@ bool WebUIConfig_save() {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["displayMetric"] = (bool)displayMetric;
+  jo["displayDeviceName"] = (bool)displayDeviceName;
   jo["webUISecure"] = (bool)webUISecure;
   // Save config into NVS (non-volatile storage)
   String conf = "";
@@ -1799,6 +1812,7 @@ bool WebUIConfig_save() {
 
 void WebUIConfig_init() {
   displayMetric = DISPLAY_METRIC;
+  displayDeviceName = DISPLAY_DEVICE_NAME;
   webUISecure = WEBUI_AUTH;
   Log.notice(F("WebUI config initialised" CR));
 }
@@ -1819,6 +1833,7 @@ bool WebUIConfig_load() {
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
     displayMetric = jo["displayMetric"].as<bool>();
+    displayDeviceName = jo["displayDeviceName"].as<bool>();
     webUISecure = jo["webUISecure"].as<bool>();
     return true;
   } else {

@@ -62,6 +62,7 @@ extern bool ready_to_sleep;
 extern char mqtt_topic[];
 extern char gateway_name[];
 extern unsigned long lastDiscovery; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
+extern bool displayDeviceName;
 
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);

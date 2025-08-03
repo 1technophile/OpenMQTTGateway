@@ -951,11 +951,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
         Log.trace(F("properties: %s" CR), properties.c_str());
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
-#    if ForceDeviceName
-        if (p->name[0] != '\0') {
-          model = p->name;
+        if (displayDeviceName) {
+          if (p->name[0] != '\0') {
+            model = p->name;
+          }
         }
-#    endif
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
 
         // Check for tracker status
@@ -1010,7 +1010,12 @@ void launchBTDiscovery(bool overrideDiscovery) {
               Log.trace(F("Key: %s"), prop.key().c_str());
               Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
               Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
-              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+              String entity_name = "";
+              if (displayDeviceName) {
+                entity_name = String(model.c_str()) + "-" + String(prop.key().c_str());
+              } else {
+                entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+              }
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
