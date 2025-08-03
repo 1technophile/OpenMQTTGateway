@@ -518,16 +518,12 @@ void handleWU() {
     bool update = false;
 
     if (server.hasArg("dm") && server.arg("dm").toInt() != displayMetric) {
-      WEBUI_TRACE_LOG(F("handleWU Update displayMetric from: %d" CR), displayMetric);
       displayMetric = server.arg("dm").toInt();
-      WEBUI_TRACE_LOG(F("handleWU Update displayMetric to: %d" CR), displayMetric);
       update = true;
     }
 
     if (server.hasArg("dn") && server.arg("dn").toInt() != displayDeviceName) {
-      WEBUI_TRACE_LOG(F("handleWU Update displayDeviceName from: %d" CR), displayDeviceName);
       displayDeviceName = server.arg("dn").toInt();
-      WEBUI_TRACE_LOG(F("handleWU Update displayDeviceName from: %d" CR), displayDeviceName);
       update = true;
     }
 
