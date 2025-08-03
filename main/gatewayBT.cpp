@@ -88,6 +88,7 @@ static bool oneWhite = false;
 
 extern bool BTProcessLock;
 extern int queueLength;
+boolean displayDeviceName = DISPLAY_DEVICE_NAME;
 
 void setupBTTasksAndBLE();
 bool checkIfIsTracker(char ch);

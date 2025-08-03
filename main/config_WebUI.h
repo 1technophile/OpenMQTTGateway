@@ -42,10 +42,6 @@
 #  define DISPLAY_METRIC true // Units used for display of sensor data
 #endif
 
-#ifndef DISPLAY_DEVICE_NAME
-#  define DISPLAY_DEVICE_NAME false // Set to true to force the device name to be from the name of the device and not the model
-#endif
-
 #ifndef DISPLAY_WEBUI_INTERVAL
 #  define DISPLAY_WEBUI_INTERVAL 3 // Number of seconds between json message displays
 #endif

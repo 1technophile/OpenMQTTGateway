@@ -85,7 +85,6 @@ const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
 bool webUISecure = WEBUI_AUTH;
 boolean displayMetric = DISPLAY_METRIC;
-boolean displayDeviceName = DISPLAY_DEVICE_NAME;
 
 /*********************************************************************************************\
  * ESP32 AutoMutex
@@ -1808,7 +1807,6 @@ bool WebUIConfig_save() {
 
 void WebUIConfig_init() {
   displayMetric = DISPLAY_METRIC;
-  displayDeviceName = DISPLAY_DEVICE_NAME;
   webUISecure = WEBUI_AUTH;
   Log.notice(F("WebUI config initialised" CR));
 }

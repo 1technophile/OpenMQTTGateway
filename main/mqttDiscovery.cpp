@@ -588,10 +588,8 @@ void createDiscovery(const char* sensor_type,
     if (device_name[0]) {
       #if defined(ZwebUI) && defined(ESP32)  // displayDeviceName only applies when running with the WebUI and ESP32
         if (strcmp(device_id, device_name) != 0 && device_id[0] && !displayDeviceName) {
-      #elif !ForceDeviceName  // Support ForceDeviceName for esp8266's
+      #else !ForceDeviceName  // Support ForceDeviceName for esp8266's
         if (strcmp(device_id, device_name) != 0 && device_id[0] && !ForceDeviceName) {
-      #else
-        if (strcmp(device_id, device_name) != 0 && device_id[0]) {
       #endif
         device["name"] = device_name + String("-") + String(device_id + 6);
       } else {
