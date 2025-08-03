@@ -122,7 +122,6 @@ extern String stateBTMeasures(bool);
 #  define EnableBT true
 #endif
 
-
 #if !BLEDecoder
 #  define UNKWNON_MODEL -1
 #else
