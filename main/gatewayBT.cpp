@@ -77,7 +77,9 @@ vector<BLEAction> BLEactions;
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
+#if !defined(ZwebUI)
 boolean displayMetric = DISPLAY_METRIC;
+#endif
 
 static BLEdevice NO_BT_DEVICE_FOUND = {
     {0},
