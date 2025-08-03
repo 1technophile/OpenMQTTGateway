@@ -951,7 +951,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
         Log.trace(F("properties: %s" CR), properties.c_str());
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
-        if (displayDeviceName) {
+        if (displayDeviceName || ForceDeviceName) {
           if (p->name[0] != '\0') {
             model = p->name;
           }
@@ -1011,7 +1011,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
               Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
               Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
               String entity_name = "";
-              if (displayDeviceName) {
+              if (displayDeviceName || ForceDeviceName) {
                 entity_name = String(model.c_str()) + "-" + String(prop.key().c_str());
               } else {
                 entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
