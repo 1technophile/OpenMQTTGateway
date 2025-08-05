@@ -593,6 +593,7 @@ void createDiscovery(const char* sensor_type,
       }
     }
 
+    device["via_device"] = String(gateway_name); //device name of the board
   }
 
   sensor["device"] = device;

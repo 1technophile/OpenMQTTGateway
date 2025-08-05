@@ -958,6 +958,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 #    if ForceDeviceName
         if (p->name[0] != '\0') {
           model = p->name;
+        }
 #    endif       
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
 
@@ -1397,13 +1398,6 @@ void process_bledata(JsonObject& BLEdata) {
 
   }
 #  endif
-  // Update model_id for LYWSD03MMC devices
-  if (model_id >= 0) {
-    std::string model_id_str = BLEdata["model_id"].as<string>();
-    if (model_id_str.compare("LYWSD03MMC") >= 0) {
-      model_id = BLEconectable::id::LYWSD03MMC;
-    }
-  }
 
   // Convert prmacs to RMACS until or if OMG gets Identity MAC/IRK decoding
   if (BLEdata["prmac"]) {
