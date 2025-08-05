@@ -46,6 +46,7 @@ or with the runtime command
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m {"brightness":50}`
 
 ### Units of measurement displayed either Metric or Imperial
+To have applicable device properties displayed in Imperial units, e.g. °F for temperature.
 
 This can be set with the compiler directive `-DDISPLAY_METRIC=false`.
 
