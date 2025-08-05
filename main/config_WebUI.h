@@ -42,6 +42,10 @@
 #  define DISPLAY_WEBUI_INTERVAL 3 // Number of seconds between json message displays
 #endif
 
+#ifndef DISPLAY_METRIC
+#  define DISPLAY_METRIC true // Units used for display of sensor data
+#endif
+
 #ifdef WEBUI_DEVELOPMENT
 #  pragma message("[WebUI] Usage of SPIFFS for missing WebUI content enabled")
 #  define FILESYSTEM SPIFFS

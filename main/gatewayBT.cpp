@@ -496,9 +496,7 @@ void strupp(char* beg) {
 void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 7
   Log.trace(F("DT24Discovery" CR));
-  const char* temperatureJson;
-  const char* temperatureCharacter;
-    
+
   const char* DT24sensor[DT24parametersCount][9] = {
       {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
       {"sensor", "amp", mac, "current", jsonCurrent, "", "", "A", stateClassMeasurement},
@@ -542,8 +540,6 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
-  const char* temperatureJson;
-  const char* temperatureCharacter;
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
@@ -558,8 +554,6 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 #    define HHCCJCY01HHCCparametersCount 5
   Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
-  const char* temperatureJson;
-  const char* temperatureCharacter;
   const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
@@ -575,8 +569,6 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define XMWSDJ04MMCparametersCount 4
   Log.trace(F("XMWSDJ04MMCDiscovery" CR));
-  const char* temperatureJson;
-  const char* temperatureCharacter;
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
@@ -589,7 +581,7 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 }
 
 #  else
-void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel, const char* device_name) {}
+void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}

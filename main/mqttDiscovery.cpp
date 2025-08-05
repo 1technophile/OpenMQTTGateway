@@ -43,7 +43,6 @@
 
 extern bool ethConnected;
 extern JsonArray modules;
-String gateway_mac;
 
 char discovery_prefix[parameters_size + 1] = discovery_Prefix;
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
@@ -565,7 +564,6 @@ void createDiscovery(const char* sensor_type,
 
     device["sw"] = OMG_VERSION;
     identifiers.add(String(getMacAddress()));
-    gateway_mac = getMacAddress();
   } else {
     //The Connections
     if (device_id[0]) {
@@ -595,7 +593,6 @@ void createDiscovery(const char* sensor_type,
       }
     }
 
-    device["via_device"] = String(gateway_mac); //mac address of the gateway so that the devices link to the gateway
   }
 
   sensor["device"] = device;

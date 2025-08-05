@@ -519,6 +519,7 @@ void handleWU() {
     if (displayMetric != server.hasArg("dm")) {
       update = true;
     }
+    displayMetric = server.hasArg("dm");
 
     if (webUISecure != server.hasArg("sw")) {
       update = true;
@@ -955,23 +956,6 @@ void handleLO() {
 }
 
 #  ifdef BLEDecryptor
-size_t count_tokens( const char *s1, const char *s2 )
-{
-  size_t n = 0;
-  while (*s1)
-  {
-      s1 += strspn( s1, s2 );
-      if (*s1)
-      {
-          ++n;
-          s1 += strcspn( s1, s2 );
-      }
-  }
-
-  return n;
-}
-
-
 /**
  * @brief /BL - Config BLE
  * T: handleBL: uri: /bl, args: 3, method: 1

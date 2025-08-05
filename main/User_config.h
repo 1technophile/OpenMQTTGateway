@@ -604,11 +604,6 @@ extern ss_cnt_parameters cnt_parameters_array[];
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
 
-/*-------------------DEFINE DISPLAY NAME-------------------*/
-#ifndef DISPLAY_DEVICE_NAME
-#  define DISPLAY_DEVICE_NAME false // Set to true to force the device name to be from the name of the device and not the model
-#endif
-
 /*-------------------ESP Wifi band and tx power ---------------------*/
 //Certain sensors are sensitive to Wifi which can cause interference with their normal operation
 //For example it can cause false triggers on a PIR HC-SR501
@@ -657,14 +652,7 @@ bool isAduplicateSignal(uint64_t);
 void storeSignalValue(uint64_t);
 #endif
 
-#ifndef DISPLAY_METRIC
-#  define DISPLAY_METRIC true // Units used for display of sensor data
-#endif
-
 #ifdef ZgatewayBT
-#  ifndef BLEDecoder
-#    define BLEDecoder true //true if we use the Theengs decoder
-#  endif
 #  ifndef BLEDecryptor
 #    define BLEDecryptor true //true if decrypt encrypted PVVX or BTHome v2 service data
 #  endif
