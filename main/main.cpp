@@ -292,7 +292,6 @@ bool failSafeMode = false;
 bool ProcessLock = true; // Process lock when we want to use a critical function like OTA for example
 bool mqttSetupPending = true;
 static int cnt_index = CNT_DEFAULT_INDEX;
-boolean displayDeviceName = DISPLAY_DEVICE_NAME;
 
 #ifdef ESP32
 #  include <ArduinoOTA.h>

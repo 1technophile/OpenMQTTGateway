@@ -78,10 +78,6 @@ vector<BLEAction> BLEactions;
 vector<BLEdevice*> devices;
 int newDevices = 0;
 
-#if !defined(ZwebUI)
-boolean displayMetric = DISPLAY_METRIC;
-#endif
-
 static BLEdevice NO_BT_DEVICE_FOUND = {
     {0},
     0,
@@ -502,13 +498,6 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
   Log.trace(F("DT24Discovery" CR));
   const char* temperatureJson;
   const char* temperatureCharacter;
-  if (displayMetric) {
-    temperatureJson = jsonTempc;
-    temperatureCharacter = "°C";
-  } else {
-    temperatureJson = jsonTempf;
-    temperatureCharacter = "°F";
-  }
     
   const char* DT24sensor[DT24parametersCount][9] = {
       {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
@@ -516,7 +505,7 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
       {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
       {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
       {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
-      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},      
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       {"binary_sensor", "inUse", mac, "power", jsonInuse, "", "", "", stateClassNone}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -536,28 +525,18 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
   createDiscoveryFromList(mac, BM2sensor, BM2parametersCount, "BM2", "Generic", sensorModel_id);
 }
 
-void LYWSD03MMCDiscovery(const char* mac, const char* device_name, const char* sensorModel) {
+void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
-  const char* temperatureJson;
-  const char* temperatureCharacter;
-  if (displayMetric) {
-    temperatureJson = jsonTempc;
-    temperatureCharacter = "°C";
-  } else {
-    temperatureJson = jsonTempf;
-    temperatureCharacter = "°F";
-  }
-
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, device_name, "Xiaomi", sensorModel);
+  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, "LYWSD03MMC", "Xiaomi", sensorModel);
 }
 
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
@@ -565,18 +544,10 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
   Log.trace(F("MHO_C401Discovery" CR));
   const char* temperatureJson;
   const char* temperatureCharacter;
-  if (displayMetric) {
-    temperatureJson = jsonTempc;
-    temperatureCharacter = "°C";
-  } else {
-    temperatureJson = jsonTempf;
-    temperatureCharacter = "°F";
-  }
-
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -589,17 +560,9 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
   Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
   const char* temperatureJson;
   const char* temperatureCharacter;
-  if (displayMetric) {
-    temperatureJson = jsonTempc;
-    temperatureCharacter = "°C";
-  } else {
-    temperatureJson = jsonTempf;
-    temperatureCharacter = "°F";
-  }
-
   const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       {"sensor", "lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
       {"sensor", "fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
       {"sensor", "moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
@@ -614,18 +577,10 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
   Log.trace(F("XMWSDJ04MMCDiscovery" CR));
   const char* temperatureJson;
   const char* temperatureCharacter;
-  if (displayMetric) {
-    temperatureJson = jsonTempc;
-    temperatureCharacter = "°C";
-  } else {
-    temperatureJson = jsonTempf;
-    temperatureCharacter = "°F";
-  }
-
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -1009,11 +964,10 @@ void launchBTDiscovery(bool overrideDiscovery) {
         Log.trace(F("properties: %s" CR), properties.c_str());
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
-        if (displayDeviceName || ForceDeviceName) {
-          if (p->name[0] != '\0') {
-            model = p->name;
-          }
-        }
+#    if ForceDeviceName
+        if (p->name[0] != '\0') {
+          model = p->name;
+#    endif       
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
 
         // Check for tracker status
@@ -1068,12 +1022,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
               Log.trace(F("Key: %s"), prop.key().c_str());
               Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
               Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
-              String entity_name = "";
-              if (displayDeviceName || ForceDeviceName) {
-                entity_name = String(model.c_str()) + "-" + String(prop.key().c_str());
-              } else {
-                entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
-              }
+              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
@@ -1191,7 +1140,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               stateClassNone);
             }
             if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
-              LYWSD03MMCDiscovery(macWOdots.c_str(), model.c_str(), "LYWSD03MMC");
+              LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
             }
             if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
               MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
@@ -1507,7 +1456,6 @@ void process_bledata(JsonObject& BLEdata) {
     } else {
       if (BLEdata.containsKey("name")) { // Connectable only devices
         std::string name = BLEdata["name"];
-        Log.trace(F("Device LYWSD03MMC found: %d" CR), name.compare("LYWSD03MMC"));
         if (name.compare("LYWSD03MMC") == 0)
           model_id = BLEconectable::id::LYWSD03MMC;
         else if (name.compare("DT24-BLE") == 0)
