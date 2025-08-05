@@ -28,7 +28,11 @@ Ability to change the mqtt settings, if the change is unsuccessful it will rever
 
 ## WebUI
 
-Ability to change the display of temperature sensors to Celsius or Fahrenheit, display the advertised device name or the device model_id and disable the WebUI Authentication
+Ability to change the units of measurement displayed either Metric or Imperial, display the advertised device name or the device model_id and disable the WebUI Authentication
+
+## Bluetooth Low Energy - BLE
+
+Ability to add the default AES BLE decryption key, and multiple per-device `macaddress:aeskey`
 
 ## Logging
 

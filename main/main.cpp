@@ -3475,7 +3475,9 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
         StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> jsonBLEBuffer;
         ble_aes_keys = jsonBLEBuffer.to<JsonObject>();
       }
+#  ifndef ESPWifiManualSetup
       saveConfig();
+#  endif
     }
 #endif
 
