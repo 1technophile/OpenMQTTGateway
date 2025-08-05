@@ -496,7 +496,6 @@ void strupp(char* beg) {
 void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 7
   Log.trace(F("DT24Discovery" CR));
-
   const char* DT24sensor[DT24parametersCount][9] = {
       {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
       {"sensor", "amp", mac, "current", jsonCurrent, "", "", "A", stateClassMeasurement},

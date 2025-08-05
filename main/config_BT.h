@@ -122,9 +122,9 @@ extern String stateBTMeasures(bool);
 #  define EnableBT true
 #endif
 
-#  ifndef BLEDecoder
-#    define BLEDecoder true //true if we use the Theengs decoder
-#  endif
+#ifndef BLEDecoder
+#  define BLEDecoder true //true if we use the Theengs decoder
+#endif
 
 #if !BLEDecoder
 #  define UNKWNON_MODEL -1
