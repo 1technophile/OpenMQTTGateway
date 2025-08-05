@@ -59,6 +59,7 @@ BTConfig_s BTConfig;
 #    include <decoder.h>
 #    if BLEDecryptor
 #      include "mbedtls/ccm.h"
+#      include "mbedtls/aes.h"
 #    endif
 TheengsDecoder decoder;
 #  endif
@@ -499,13 +500,23 @@ void strupp(char* beg) {
 void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 7
   Log.trace(F("DT24Discovery" CR));
+  const char* temperatureJson;
+  const char* temperatureCharacter;
+  if (displayMetric) {
+    temperatureJson = jsonTempc;
+    temperatureCharacter = "°C";
+  } else {
+    temperatureJson = jsonTempf;
+    temperatureCharacter = "°F";
+  }
+    
   const char* DT24sensor[DT24parametersCount][9] = {
       {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
       {"sensor", "amp", mac, "current", jsonCurrent, "", "", "A", stateClassMeasurement},
       {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
       {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
       {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},      
       {"binary_sensor", "inUse", mac, "power", jsonInuse, "", "", "", stateClassNone}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -528,21 +539,21 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
 void LYWSD03MMCDiscovery(const char* mac, const char* device_name, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
-  const char* jsonTemp;
-  const char* tempChar;
+  const char* temperatureJson;
+  const char* temperatureCharacter;
   if (displayMetric) {
-    jsonTemp = jsonTempc;
-    tempChar = "°C";
+    temperatureJson = jsonTempc;
+    temperatureCharacter = "°C";
   } else {
-    jsonTemp = jsonTempf;
-    tempChar = "°F";
+    temperatureJson = jsonTempf;
+    temperatureCharacter = "°F";
   }
 
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
-      {"sensor", "Battery", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "Voltage", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "Temperature", mac, "temperature", jsonTemp, "", "", tempChar, stateClassMeasurement},
-      {"sensor", "Humidity", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
+      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -552,10 +563,20 @@ void LYWSD03MMCDiscovery(const char* mac, const char* device_name, const char* s
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
+  const char* temperatureJson;
+  const char* temperatureCharacter;
+  if (displayMetric) {
+    temperatureJson = jsonTempc;
+    temperatureCharacter = "°C";
+  } else {
+    temperatureJson = jsonTempf;
+    temperatureCharacter = "°F";
+  }
+
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
       {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -566,9 +587,19 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 #    define HHCCJCY01HHCCparametersCount 5
   Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
+  const char* temperatureJson;
+  const char* temperatureCharacter;
+  if (displayMetric) {
+    temperatureJson = jsonTempc;
+    temperatureCharacter = "°C";
+  } else {
+    temperatureJson = jsonTempf;
+    temperatureCharacter = "°F";
+  }
+
   const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
       {"sensor", "lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
       {"sensor", "fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
       {"sensor", "moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
@@ -581,10 +612,20 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define XMWSDJ04MMCparametersCount 4
   Log.trace(F("XMWSDJ04MMCDiscovery" CR));
+  const char* temperatureJson;
+  const char* temperatureCharacter;
+  if (displayMetric) {
+    temperatureJson = jsonTempc;
+    temperatureCharacter = "°C";
+  } else {
+    temperatureJson = jsonTempf;
+    temperatureCharacter = "°F";
+  }
+
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
       {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
       {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "temp", mac, "temperature", temperatureJson, "", "", temperatureCharacter, stateClassMeasurement},
       {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
@@ -1186,6 +1227,15 @@ int hexToBytes(String hex, uint8_t *out, size_t maxLen) {
   }
   return len / 2;
 }
+// Reverse bytes
+void reverseBytes(uint8_t *data, size_t length) {
+    size_t i;
+    for (i = 0; i < length / 2; i++) {
+        uint8_t temp = data[i];
+        data[i] = data[length - 1 - i];
+        data[length - 1 - i] = temp;
+    }
+}
 #  endif
 
 #  if BLEDecoder
@@ -1201,92 +1251,203 @@ void process_bledata(JsonObject& BLEdata) {
   int mac_type = BLEdata["mac_type"].as<int>();
 
 # if BLEDecryptor
-  if (BLEdata["encr"]) {
-    // Decrypting BTHome v2 payload
+  if (BLEdata["encr"] && (BLEdata["encr"].as<int>() >0 && BLEdata["encr"].as<int>() <=2)) {
+    // Decrypting Encrypted BLE Data PVVX, BTHome or Victron
+    Log.trace(F("[BLEDecryptor] Decrypt ENCR:%d ModelID:%s Payload:%s" CR), BLEdata["encr"].as<int>(), BLEdata["model_id"].as<const char*>(), BLEdata["cipher"].as<const char*>());
 
-    // Set BLE AES Key string from UI
-    unsigned char bleaeskey[16];  
-    int keylen = hexToBytes(ble_aes, bleaeskey, 16);
-    if (keylen != 16) {
-      Log.error(F("[BTHomeDecrypt] Invalid key length %d" CR), keylen);
-      return;
-    }
-    mbedtls_ccm_context ctx;
-    mbedtls_ccm_init(&ctx);
-    if (mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, bleaeskey, 128) != 0) {
-        Log.error(F("[BTHomeDecrypt] Failed to set AES key" CR));
-        return;
-    }    
-
-    uint8_t nonce[13];                               // Build nonce
+    // MAC address
     String macWOdots = BLEdata["id"].as<String>();   // Mac Address without dots
     macWOdots.replace(":", "");
     unsigned char macAddress[6];
     int maclen = hexToBytes(macWOdots, macAddress, 6);
     if (maclen != 6) {
-      Log.error(F("[BTHomeDecrypt] Invalid MAC Address length %d" CR), maclen);
+      Log.error(F("[BLEDecryptor] Invalid MAC Address length %d" CR), maclen);
       return;
     }
-    memcpy(nonce, macAddress, 6);
-    nonce[6] = 0xD2;                                  // UUID
-    nonce[7] = 0xFC;
-    nonce[8] = 0x41;                                  // BTHome Device Data encrypted payload byte
-    unsigned char ctr[4];                             // Counter
-    int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 4);
-    if (ctrlen != 4) {
-      Log.error(F("[BTHomeDecrypt] Invalid counter length %d" CR), ctrlen);
-      return;
-    }
-    memcpy(&nonce[9], ctr, 4);
 
-    // Ciphertext
+    // AES decryption key
+    unsigned char bleaeskey[16];
+    int bleaeskeylength = 0;
+    if (ble_aes_keys.containsKey(macWOdots)){
+      Log.trace(F("[BLEDecryptor] Custom AES key %s" CR), ble_aes_keys[macWOdots].as<const char*>());
+      bleaeskeylength = hexToBytes(ble_aes_keys[macWOdots], bleaeskey, 16);
+    } else {
+      Log.trace(F("[BLEDecryptor] Default AES key" CR));
+      bleaeskeylength = hexToBytes(ble_aes, bleaeskey, 16);
+    }
+    // Check AES Key
+    if (bleaeskeylength != 16) {
+      Log.error(F("[BLEDecryptor] Invalid key length %d" CR), bleaeskeylength);
+      return;
+    }
+
+    // Build nonce and aad
+    uint8_t nonce[13];                               
+    int noncelength = 0;
+    unsigned char aad[1];
+    int aadLength;
+
+    if (BLEdata["encr"].as<int>() == 1){        // PVVX Encrypted
+      noncelength = 11;                         // 11 bytes
+      reverseBytes(macAddress, 6);              // 6 bytes: device address in reverse
+      memcpy(nonce, macAddress, 6);
+      int maclen = hexToBytes(macWOdots, macAddress, 6);
+
+      unsigned char servicedata[16];
+      int servicedatalen = hexToBytes(BLEdata["servicedata"].as<String>(), servicedata, 16);
+      nonce[6] = servicedatalen + 3;            // 1 byte : length of (service data + type and UUID)
+      nonce[7] = 0x16;                          // 1 byte : "16" -> AD type for "Service Data - 16-bit UUID"
+      nonce[8] = 0x1A;                          // 2 bytes: "1a18" -> UUID 181a in little-endian
+      nonce[9] = 0x18;                          //
+      unsigned char ctr[1];                     // 1 byte : counter
+      int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 1);
+      if (ctrlen != 1) {
+        Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
+        return;
+      }
+      nonce[10] = ctr[0];
+      aad[0] = 0x11;
+      aadLength = 1;
+      Log.trace(F("[BLEDecryptor] PVVX nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
+
+    } else if (BLEdata["encr"].as<int>() == 2){         // BTHome V2 Encrypted
+      noncelength = 13;                                 // 13 bytes
+      memcpy(nonce, macAddress, 6);
+      nonce[6] = 0xD2;                                  // UUID
+      nonce[7] = 0xFC;
+      nonce[8] = 0x41;                                  // BTHome Device Data encrypted payload byte
+      unsigned char ctr[4];                             // Counter
+      int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 4);
+      if (ctrlen != 4) {
+        Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
+        return;
+      }
+      memcpy(&nonce[9], ctr, 4);
+      aad[0] = 0x00;
+      aadLength = 0;
+      Log.trace(F("[BLEDecryptor] BTHomeV2 nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
+
+    } else if (BLEdata["encr"].as<int>() == 3){
+      noncelength = 8;                                 // Victron has a 8 byte nonce
+      memset(nonce, 0, 8);
+      unsigned char ctr[2]; 
+      int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 2);
+      if (ctrlen != 2) {
+        Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
+        return;
+      }
+      memcpy(nonce, ctr, 2);
+      Log.trace(F("[BLEDecryptor] Victron nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
+    } else {
+      return;  // No match
+    }
+    
+    // Ciphertext to bytes
     int cipherlen = sizeof(BLEdata["cipher"].as<String>());
     unsigned char ciphertext[cipherlen];
     int ciphertextlen = hexToBytes(BLEdata["cipher"].as<String>(), ciphertext, cipherlen);
-
-    // Decrypted payload
-    unsigned char decrypted[ciphertextlen];
-
-    // Message Integrity Check (MIC)
-    unsigned char mic[4];
-    int miclen = hexToBytes(BLEdata["mic"].as<String>(), mic, 4);
-    if (miclen != 4) {
-      Log.error(F("[BTHomeDecrypt] Invalid MIC length %d" CR), miclen);
-      return;
-    }
+    unsigned char decrypted[ciphertextlen];      // Decrypted payload
 
     // Decrypt ciphertext
-    int ret = mbedtls_ccm_auth_decrypt(
+    if (BLEdata["encr"].as<int>() == 1 || BLEdata["encr"].as<int>() == 2) {
+      // Decrypt PVVX and BTHome V2 ciphertext using AES CCM
+      mbedtls_ccm_context ctx;
+      mbedtls_ccm_init(&ctx);
+      if (mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, bleaeskey, 128) != 0) {
+          Log.error(F("[BLEDecryptor] Failed to set AES key to mbedtls" CR));
+          return;
+      }    
+
+      // Message Integrity Check (MIC)
+      unsigned char mic[4];
+      int miclen = hexToBytes(BLEdata["mic"].as<String>(), mic, 4);
+      if (miclen != 4) {
+        Log.error(F("[BLEDecryptor] Invalid MIC length %d" CR), miclen);
+        return;
+      }
+
+      int ret = mbedtls_ccm_auth_decrypt(
+          &ctx,                   // AES Key
+          ciphertextlen,          // length of ciphertext
+          nonce, noncelength,     // Nonce
+          aad, aadLength,         // AAD
+          ciphertext,             // input ciphertext
+          decrypted,              // output plaintext
+          mic, sizeof(mic)        // Message Integrity Check
+      );
+
+      if (ret == 0) {
+        Log.notice(F("[BLEDecryptor] Decryption successful" CR));
+      } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
+          Log.error(F("[BLEDecryptor] Authentication failed." CR));
+          return;
+      } else {
+          Log.error(F("[BLEDecryptor] Decryption failed with error: %X" CR), ret);
+          return;
+      }
+
+      // Build new servicedata
+      if (BLEdata["encr"].as<int>() == 1){            // PVVX
+        BLEdata["servicedata"] = NimBLEUtils::dataToHexString(decrypted, ciphertextlen);
+      } else if (BLEdata["encr"].as<int>() == 2) {    // BTHomeV2
+        // Build new servicedata
+        uint8_t newservicedata[3 + ciphertextlen];
+        newservicedata[0] = 0x40;      // Decrypted BTHomeV2 Packet Type
+        newservicedata[1] = 0x00;      // Packet counter which the PVVX BTHome non-encrypted has but the encrypted does not
+        newservicedata[2] = 0x00;      // **TODO Convert the ctr to the packet counter or just stick with 0?
+        memcpy(&newservicedata[3], decrypted, ciphertextlen);
+        BLEdata["servicedata"] = NimBLEUtils::dataToHexString(newservicedata, ciphertextlen + 3);
+      } else {
+        return;
+      }
+      Log.trace(F("[BLEDecryptor] Decrypted servicedata %s" CR), BLEdata["servicedata"].as<const char*>());
+
+    } else if (BLEdata["encr"].as<int>() == 3) {
+      // Decrypt Victron Energy encrypted advertisements.
+      mbedtls_aes_context ctx;
+      mbedtls_aes_init(&ctx);
+      mbedtls_aes_setkey_enc(&ctx, bleaeskey, 128);
+
+      size_t nc_off = 0;
+      unsigned char stream_block[16]; // Must be 16 bytes (AES block size)
+      memset(stream_block, 0, 16);
+
+      int ret = mbedtls_aes_crypt_ctr(
         &ctx,                   // AES Key
         ciphertextlen,          // length of ciphertext
-        nonce, sizeof(nonce),   // Nonce
-        nullptr, 0,             // No AAD
+        &nc_off,
+        nonce,
+        stream_block,
         ciphertext,             // input ciphertext
-        decrypted,              // output plaintext
-        mic, sizeof(mic)        // Message Integrity Check
-    );
+        decrypted               // output plaintext
+      );
 
-    if (ret == 0) {
-      Log.notice(F("[BTHomeDecrypt] BTHome v2 decryption successful" CR));
-    } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
-        Log.error(F("[BTHomeDecrypt] Authentication failed." CR));
-        return;
-    } else {
-        Log.error(F("[BTHomeDecrypt] Decryption failed with error: -0x%04x" CR), -ret);
-        return;
+      if (ret == 0) {
+        Log.notice(F("[BLEDecryptor] Victron Decryption successful" CR));
+      } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
+          Log.error(F("[BLEDecryptor] Victron Authentication failed." CR));
+          return;
+      } else {
+          Log.error(F("[BLEDecryptor] Victron decryption failed with error: %X" CR), ret);
+          return;
+      }
+
+      // Build new manufacturerdata
+      unsigned char manufacturerdata[10 + ciphertextlen];
+      int manufacturerdatalen = hexToBytes(BLEdata["manufacturerdata"].as<String>(), manufacturerdata, 10);
+      manufacturerdata[2] = 0x11;  // Replace byte 2 with "11" indicate decrypted data
+      manufacturerdata[7] = 0xff;  // Replace byte 7 with "ff" to indicate decrypted data
+      manufacturerdata[8] = 0xff;  // Replace byte 8 with "ff" to indicate decrypted data
+      memcpy(&manufacturerdata[8], decrypted, ciphertextlen);  // Append the decrypted payload to the manufacturer data
+      BLEdata["manufacturerdata"] = NimBLEUtils::dataToHexString(manufacturerdata, 10 + ciphertextlen);  // Rebuild manufacturerdata
+      Log.trace(F("[BLEDecryptor] Victron decrypted manufacturerdata %s" CR), BLEdata["manufacturerdata"].as<const char*>());
     }
 
-    // Build new servicedata
-    uint8_t newservicedata[3 + ciphertextlen];
-    newservicedata[0] = 0x40;  // Decrypted BTHome
-    newservicedata[1] = 0x00;  // Packet counter which the PVVX BTHome non-encrypted has but the encrypted does not
-    newservicedata[2] = 0x00;  // **TODO Convert the ctr to the packet counter or just stick with 0?
-    memcpy(&newservicedata[3], decrypted, ciphertextlen);
-
-    // Replace service data and call the decoder again
-    BLEdata["servicedata"] = NimBLEUtils::dataToHexString(newservicedata, 3 + ciphertextlen);
+    // Print before and after decoder post decryption
+    // serializeJsonPretty(BLEdata, Serial);
     model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
-    Log.trace(F("[BTHomeDecrypt] Decrypted model_id %d" CR), model_id);
+    // serializeJsonPretty(BLEdata, Serial);
+    Log.trace(F("[BLEDecryptor] Decrypted model_id %d" CR), model_id);    
 
     // Remove the cipher fields from BLEdata
     BLEdata.remove("encr");

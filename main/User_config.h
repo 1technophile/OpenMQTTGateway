@@ -664,13 +664,16 @@ void storeSignalValue(uint64_t);
 #ifdef ZgatewayBT
 #  ifndef BLEDecoder
 #    define BLEDecoder true //true if we use the Theengs decoder
-#    ifndef BLEDecryptor
-#      define BLEDecryptor true //true if decrypt encrypted PVVX or BTHome v2 service data
-#    endif
 #  endif
-#endif
-#ifndef BLE_AES
-#  define BLE_AES "00112233445566778899001122334455"
+#  ifndef BLEDecryptor
+#    define BLEDecryptor true //true if decrypt encrypted PVVX or BTHome v2 service data
+#  endif
+#  ifndef JSON_BLE_AES_CUSTOM_KEYS
+#    define JSON_BLE_AES_CUSTOM_KEYS 42 * 6 // 42 byte BLE Custom Key * 6 
+#  endif
+#  ifndef BLE_AES
+#    define BLE_AES "00112233445566778899001122334455"
+#  endif
 #endif
 
 #define convertTemp_CtoF(c) ((c * 1.8) + 32)

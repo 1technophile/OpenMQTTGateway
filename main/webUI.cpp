@@ -27,6 +27,7 @@
 #  include <WebServer.h> // Docs for this are here - https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer
 #  include <WiFi.h>
 
+#  include "TheengsCommon.h"
 #  include "config_WebContent.h"
 #  include "config_WebUI.h"
 
@@ -961,6 +962,23 @@ void handleLO() {
 }
 
 #  ifdef BLEDecryptor
+size_t count_tokens( const char *s1, const char *s2 )
+{
+  size_t n = 0;
+  while (*s1)
+  {
+      s1 += strspn( s1, s2 );
+      if (*s1)
+      {
+          ++n;
+          s1 += strcspn( s1, s2 );
+      }
+  }
+
+  return n;
+}
+
+
 /**
  * @brief /BL - Config BLE
  * T: handleBL: uri: /bl, args: 3, method: 1
@@ -981,8 +999,30 @@ void handleBL() {
     bool update = false;
 
     if (server.hasArg("save")) {
+
+      // Default BLE AES Key
       if (server.hasArg("bk")) {
         WEBtoSYS["ble_aes"] = server.arg("bk");
+        update = true;
+      }
+
+      // Split Custom BLE AES key pair string add to config 
+      if (server.hasArg("kp")) {
+        String kp = server.arg("kp");
+        while (kp.length() > 0) {
+          int kpindex = kp.indexOf(' ');
+          if (kpindex == -1) {
+            if (kp.indexOf(':') == 12) {
+              WEBtoSYS["ble_aes_keys"][kp.substring(0, 12)] = kp.substring(13, 45);
+            }
+            break;
+          } else {
+            if (kp.indexOf(':') == 12) {
+              WEBtoSYS["ble_aes_keys"][kp.substring(0, 12)] = kp.substring(13, 45);
+            }
+            kp = kp.substring(kpindex+1);
+          }
+        }
         update = true;
       }
 
@@ -990,13 +1030,22 @@ void handleBL() {
         Log.warning(F("[BLE] Save Config" CR));
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
         XtoSYS((char*)topic.c_str(), WEBtoSYS);
-        // forceDeviceName = WEBtoSYS["force_device_name"].as<bool>();
-        strcpy(ble_aes, WEBtoSYS["ble_aes"]);
       } else {
         Log.warning(F("[BLE] No changes" CR));
       }
     }
   }
+
+  // Build BLE Key Pair string 
+  std::string aeskeysstring;
+  JsonObject root = ble_aes_keys.as<JsonObject>();
+  for (JsonPair kv : root) {
+    aeskeysstring += kv.key().c_str();
+    aeskeysstring += ":";
+    aeskeysstring += kv.value().as<const char*>();
+    aeskeysstring += " ";
+  }
+  aeskeysstring.pop_back();
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -1005,10 +1054,11 @@ void handleBL() {
 
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Configure BLE").c_str());
   String response = String(buffer);
+  response += String(ble_script);
   response += String(script);
   response += String(style);
   int logLevel = Log.getLevel();
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body, jsonChar, gateway_name, ble_aes);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body, jsonChar, gateway_name, ble_aes, aeskeysstring.c_str());
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1751,7 +1801,7 @@ void WebUISetup() {
   server.on("/lo", handleLO); // Configure Logging
 
 #  ifdef BLEDecryptor
-  server.on("/bl", handleBL); // Configure BLE
+  server.on("/bl", HTTP_POST, handleBL); // Configure BLE
 #  endif
 
   server.on("/rt", handleRT); // Reset configuration ( Erase and Restart )
