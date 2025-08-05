@@ -65,9 +65,9 @@ extern unsigned long lastDiscovery; // Time of the last discovery to trigger aut
 extern bool displayDeviceName;
 extern boolean displayMetric;
 
-# if BLEDecryptor
-  extern char ble_aes[];
-  extern StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
+#if BLEDecryptor
+extern char ble_aes[];
+extern StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
 #endif
 
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
