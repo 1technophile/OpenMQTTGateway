@@ -959,7 +959,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
         if (p->name[0] != '\0') {
           model = p->name;
         }
-#    endif       
+#    endif
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
 
         // Check for tracker status
