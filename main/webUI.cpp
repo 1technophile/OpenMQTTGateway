@@ -502,10 +502,10 @@ void handleCN() {
 /**
  * @brief /WU - Configuration Page
  * T: handleWU: uri: /wu, args: 3, method: 1
- * T: handleWU Arg: 0, dm=1 - displayMetric
- * T: handleWU Arg: 0, dn=1 - displayDeviceName 
- * T: handleWU Arg: 1, sw=on - webUISecure
- * T: handleWU Arg: 2, save=
+ * T: handleWU Arg: 0, dm=on - displayMetric
+ * T: handleWU Arg: 1, dn=1 - displayDeviceName 
+ * T: handleWU Arg: 2, sw=on - webUISecure
+ * T: handleWU Arg: 3, save=
  */
 void handleWU() {
   WEBUI_TRACE_LOG(F("handleWU: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
@@ -516,10 +516,10 @@ void handleWU() {
     }
     bool update = false;
 
-    if (server.hasArg("dm") && server.arg("dm").toInt() != displayMetric) {
-      displayMetric = server.arg("dm").toInt();
-      update = true;
-    }
+    if (displayMetric != server.hasArg("dm")) {
+       update = true;
+     }
+    displayMetric = server.hasArg("dm");
 
     if (server.hasArg("dn") && server.arg("dn").toInt() != displayDeviceName) {
       displayDeviceName = server.arg("dn").toInt();
@@ -546,7 +546,7 @@ void handleWU() {
   response += String(script);
   response += String(style);
   int logLevel = Log.getLevel();
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "selected" : ""), (!displayMetric ? "selected" : ""), (!displayDeviceName ? "selected" : ""), (displayDeviceName ? "selected" : ""), (webUISecure ? "checked" : ""));
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (!displayDeviceName ? "selected" : ""), (displayDeviceName ? "selected" : ""), (webUISecure ? "checked" : ""));
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);

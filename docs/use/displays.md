@@ -45,10 +45,10 @@ or with the runtime command
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoSSD1306/config -m {"brightness":50}`
 
-### Celsius or Fahrenheit property units
-To have applicable device temperature properties displayed in °C Celsius or °F Fahrenheit.
+### Metric or Imperial property units
+To have applicable device properties displayed in Imperial units, e.g. °F for temperature.
 
-This can be set with the compiler directive `-DDISPLAY_METRIC=false` for Fahrenheit or via the Configure WebUI Property `Display temperature`
+This can be set with the compiler directive `-DDISPLAY_METRIC=false`.
 
 As the display Metric setting is being defined in the WebUI part of OpenMQTTGateway changes need to be sent there with the runtime command
 
