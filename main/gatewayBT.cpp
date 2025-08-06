@@ -1223,7 +1223,7 @@ void process_bledata(JsonObject& BLEdata) {
     }
 
     // Build nonce and aad
-    uint8_t nonce[13];                               
+    uint8_t nonce[16];
     int noncelength = 0;
     unsigned char aad[1];
     int aadLength;
@@ -1269,16 +1269,15 @@ void process_bledata(JsonObject& BLEdata) {
       Log.trace(F("[BLEDecryptor] BTHomeV2 nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
 
     } else if (BLEdata["encr"].as<int>() == 3){
-      noncelength = 8;                                 // Victron has a 8 byte nonce
-      memset(nonce, 0, 8);
-      unsigned char ctr[2]; 
-      int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 2);
-      if (ctrlen != 2) {
-        Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
+      nonce[16] = {0};                            // Victron has a 16 byte zero padded nonce with IV bytes 6,7
+      unsigned char iv[2];
+      int ivlen = hexToBytes(BLEdata["ctr"].as<String>(), iv, 2);
+      if (ivlen != 2) {
+        Log.error(F("[BLEDecryptor] Invalid iv length %d" CR), ivlen);
         return;
       }
-      memcpy(nonce, ctr, 2);
-      Log.trace(F("[BLEDecryptor] Victron nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
+      memcpy(nonce, iv, 2);
+      Log.trace(F("[BLEDecryptor] Victron nonce %s" CR), NimBLEUtils::dataToHexString(nonce, 16).c_str());
     } else {
       return;  // No match
     }
@@ -1316,6 +1315,7 @@ void process_bledata(JsonObject& BLEdata) {
           decrypted,              // output plaintext
           mic, sizeof(mic)        // Message Integrity Check
       );
+      mbedtls_ccm_free(&ctx);
 
       if (ret == 0) {
         Log.notice(F("[BLEDecryptor] Decryption successful" CR));
@@ -1345,23 +1345,22 @@ void process_bledata(JsonObject& BLEdata) {
 
     } else if (BLEdata["encr"].as<int>() == 3) {
       // Decrypt Victron Energy encrypted advertisements.
+      size_t nc_off = 0;
+      uint8_t stream_block[16] = {0};
+
       mbedtls_aes_context ctx;
       mbedtls_aes_init(&ctx);
       mbedtls_aes_setkey_enc(&ctx, bleaeskey, 128);
-
-      size_t nc_off = 0;
-      unsigned char stream_block[16]; // Must be 16 bytes (AES block size)
-      memset(stream_block, 0, 16);
-
       int ret = mbedtls_aes_crypt_ctr(
         &ctx,                   // AES Key
         ciphertextlen,          // length of ciphertext
         &nc_off,
-        nonce,
+        nonce,                  // 16 byte nonce with 2 bytes iv
         stream_block,
         ciphertext,             // input ciphertext
         decrypted               // output plaintext
       );
+      mbedtls_aes_free(&ctx);
 
       if (ret == 0) {
         Log.notice(F("[BLEDecryptor] Victron Decryption successful" CR));
