@@ -503,8 +503,8 @@ void handleCN() {
 /**
  * @brief /WU - Configuration Page
  * T: handleWU: uri: /wu, args: 3, method: 1
- * T: handleWU Arg: 0, dm=1 - displayMetric
- * T: handleWU Arg: 1, sw=1 - webUISecure
+ * T: handleWU Arg: 0, dm=on - displayMetric
+ * T: handleWU Arg: 1, sw=on - webUISecure
  * T: handleWU Arg: 2, save=
  */
 void handleWU() {
