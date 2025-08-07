@@ -517,8 +517,8 @@ void handleWU() {
     bool update = false;
 
     if (displayMetric != server.hasArg("dm")) {
-       update = true;
-     }
+      update = true;
+    }
     displayMetric = server.hasArg("dm");
 
     if (server.hasArg("dn") && server.arg("dn").toInt() != displayDeviceName) {

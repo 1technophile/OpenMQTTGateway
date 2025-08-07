@@ -28,7 +28,7 @@ Ability to change the mqtt settings, if the change is unsuccessful it will rever
 
 ## WebUI
 
-Ability to change the display of temperature sensors to Celsius or Fahrenheit, display the advertised device name or the device model_id and disable the WebUI Authentication
+Ability to change the display of sensor to Metric or Imperial, display the device name as the Bluetooth advertised device name or the model id and disable the WebUI Authentication
 
 ## Logging
 
