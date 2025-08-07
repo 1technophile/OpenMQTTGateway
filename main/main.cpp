@@ -94,6 +94,12 @@ bool ethConnected = false;
 char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
+
+#ifdef BLEDecryptor
+  char ble_aes[parameters_size] = BLE_AES;
+  StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
+#endif
+
 #if !MQTT_BROKER_MODE
 ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = CNT_PARAMS_ARR;
 #endif
@@ -2022,6 +2028,10 @@ void saveConfig() {
 #  endif
   json["gateway_name"] = gateway_name;
   json["ota_pass"] = ota_pass;
+#  ifdef BLEDecryptor
+  json["ble_aes"] = ble_aes;
+  json["ble_aes_keys"] = ble_aes_keys;
+#  endif
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -2169,6 +2179,16 @@ bool loadConfigFromFlash() {
           }
 #  endif
         }
+#  ifdef BLEDecryptor
+        if (json.containsKey("ble_aes")) {
+          strcpy(ble_aes, json["ble_aes"]);
+          Log.trace(F("loaded default BLE AES key %s" CR), ble_aes);
+        }        
+        if (json.containsKey("ble_aes_keys")) {
+          ble_aes_keys = json["ble_aes_keys"];
+          Log.trace(F("loaded %d custom BLE AES keys" CR), ble_aes_keys.size());
+        }        
+#  endif
         result = true;
       } else {
         Log.warning(F("failed to load json config" CR));
@@ -3440,6 +3460,25 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
       mqttSetupPending = true; // trigger reconnect in loop using the new topic/name
     }
+
+#ifdef BLEDecryptor
+    if (SYSdata.containsKey("ble_aes") || SYSdata.containsKey("ble_aes_keys")) {
+      if (SYSdata.containsKey("ble_aes")) {
+        strncpy(ble_aes, SYSdata["ble_aes"], parameters_size);
+      }
+      if (SYSdata.containsKey("ble_aes_keys")) {
+        Log.warning(F("Contains ble_aes_keys" CR));
+        ble_aes_keys = SYSdata["ble_aes_keys"];
+      } else {
+        // If no keys are passed clear the object.
+        StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> jsonBLEBuffer;
+        ble_aes_keys = jsonBLEBuffer.to<JsonObject>();
+      }
+#  ifndef ESPWifiManualSetup
+      saveConfig();
+#  endif
+    }
+#endif
 
 #if !MQTT_BROKER_MODE
 #  ifdef MQTTsetMQTT
