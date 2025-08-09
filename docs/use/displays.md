@@ -55,14 +55,13 @@ As the display Metric setting is being defined in the WebUI part of OpenMQTTGate
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoWebUI/config -m {"displayMetric":false}`
 
 ### Display name as advetised Bluetooth name or `model_id` 
-There is a build property of ForceDeviceName which forces devices when they are added in Home Assistant auto-discovery to be created with their Bluetooth advertised name isntead of their `model_id`. The default naming is `model_id` with `{"displayDeviceName":true}`. 
+There is a build property of ForceDeviceName which forces devices when they are added in Home Assistant auto-discovery to be created with their Bluetooth advertised name isntead of their `model_id`. The default naming is `model_id` with `{"displayDeviceName":true}`. If you have enabled auto-discovery then a restart is required.
 
 This can also be adjusted in the WebUI by switching the Configure WebUI Device naming between `Model ID` (false) or `Device name` (true)
 
 This can also be changed with the runtime command.
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoWebUI/config -m {"displayDeviceName":true}`
-
 
 ### Rotating the display by 180 degrees
 
