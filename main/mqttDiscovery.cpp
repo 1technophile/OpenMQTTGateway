@@ -44,6 +44,8 @@
 extern bool ethConnected;
 extern JsonArray modules;
 
+// Using Home Assistant MQTT abbreviations to shorten names as per https://github.com/home-assistant/core/blob/dev/homeassistant/components/mqtt/abbreviations.py
+
 char discovery_prefix[parameters_size + 1] = discovery_Prefix;
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
 // List of classes available in Home Assistant
@@ -218,14 +220,14 @@ void announceGatewayTrigger(const char* triggerTopic,
    * The type of automation, must be ‘trigger’.
    * @see https://www.home-assistant.io/integrations/device_trigger.mqtt/#automation_type
    */
-  sensor["automation_type"] = "trigger";
+  sensor["atype"] = "trigger";  // automation_type
 
   /**
    * Must be device_automation. Only allowed and required in MQTT auto discovery device messages.
    * @see https://www.home-assistant.io/integrations/device_trigger.mqtt/#platform
    * @see https://www.home-assistant.io/integrations/mqtt/#device-discovery-payload
    */
-  sensor["platform "] = "device_automation";
+  sensor["p"] = "device_automation";  // platform
 
   // The MQTT topic subscribed to receive trigger events.
   if (triggerTopic && triggerTopic[0]) {
@@ -262,9 +264,9 @@ void announceGatewayTrigger(const char* triggerTopic,
    * If set to an unsupported value, will render as subtype type, e.g. left_button pressed with type set to button_short_press and subtype set to left_button
    */
   if (subtype && subtype[0] != 0) {
-    sensor["subtype"] = subtype;
+    sensor["stype"] = subtype;  // subtype
   } else {
-    sensor["subtype"] = "turn_on";
+    sensor["stype"] = "turn_on";
   }
 
   // ------------------   START DEVICE DECLARATION  --------------------------------------------------
@@ -280,24 +282,24 @@ void announceGatewayTrigger(const char* triggerTopic,
   // A link to the webpage that can manage the configuration of this device.
   if (ethConnected) {
 #  ifdef ESP32_ETHERNET
-    device["configuration_url"] = String("http://") + String(ETH.localIP().toString()) + String("/"); //configuration_url
+    device["cu"] = String("http://") + String(ETH.localIP().toString()) + String("/"); // configuration_url
 #  endif
   } else {
-    device["configuration_url"] = String("http://") + String(WiFi.localIP().toString()) + String("/"); //configuration_url
+    device["cu"] = String("http://") + String(WiFi.localIP().toString()) + String("/"); // configuration_url
   }
 
   /*
   * A list of connections of the device to the outside world as a list of tuples [connection_type, connection_identifier].
   * For example the MAC address of a network interface: "connections": [["mac", "02:5b:26:a8:dc:12"]].
   */
-  JsonArray connections = device.createNestedArray("connections");
+  JsonArray connections = device.createNestedArray("cns");  // connections
   JsonArray connection_mac = connections.createNestedArray();
   connection_mac.add("mac");
   connection_mac.add(getMacAddress());
 
   // A list of IDs that uniquely identify the device. For example a serial number.
   String unique_id = String(getMacAddress());
-  JsonArray identifiers = device.createNestedArray("identifiers");
+  JsonArray identifiers = device.createNestedArray("ids");  // identifiers
   identifiers.add(unique_id);
 
   // The manufacturer of the device.
@@ -317,10 +319,10 @@ void announceGatewayTrigger(const char* triggerTopic,
   device["sw"] = OMG_VERSION;
   // ------------------   END DEVICE DECLARATION  ------------------ //
 
-  sensor["device"] = device; //device representing the board
+  sensor["dev"] = device; //device representing the board
 
   if (value_template && value_template[0]) {
-    sensor["value_template"] = String(value_template);
+    sensor["val_tpl"] = String(value_template);
   }
 
   /* Publish on the topic
@@ -500,9 +502,9 @@ void createDiscovery(const char* sensor_type,
     }
   }
   if (strcmp(sensor_type, "device_tracker") == 0)
-    sensor["source_type"] = "bluetooth_le"; // payload_install for update
+    sensor["src_type"] = "bluetooth_le"; // source_type - payload_install for update
   if (off_delay != 0)
-    sensor["off_delay"] = off_delay; //off_delay
+    sensor["off_dly"] = off_delay; // off_delay
   if (payload_available[0])
     sensor["pl_avail"] = payload_available; // payload_on
   if (payload_not_available[0])
@@ -536,7 +538,7 @@ void createDiscovery(const char* sensor_type,
   }
 
   if (enum_options != nullptr) {
-    sensor["options"] = enum_options;
+    sensor["ops"] = enum_options; // options
   }
 
   StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
@@ -596,7 +598,7 @@ void createDiscovery(const char* sensor_type,
     device["via_device"] = String(getMacAddress()); //mac address of the gateway so that the devices link to the gateway
   }
 
-  sensor["device"] = device;
+  sensor["dev"] = device; // device
 
   String topic = String(discovery_prefix) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
   Log.trace(F("Announce Device %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
