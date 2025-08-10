@@ -1018,7 +1018,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                             model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                             stateClassNone);
           }
-          if (p->sensorModel_id >= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_ATC && p->sensorModel_id <= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_PVVX_BTHOME_2 ) {
+          if (displayDeviceName && p->sensorModel_id >= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_ATC && p->sensorModel_id <= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_PVVX_BTHOME_2 ) {
             xxWSD0xMMCDiscovery(macWOdots.c_str(), p->name, model_id.c_str());
           } else if (!properties.empty()) {
             StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
@@ -1044,7 +1044,6 @@ void launchBTDiscovery(bool overrideDiscovery) {
               } else {
                 entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
               }              
-              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
