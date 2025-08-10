@@ -582,21 +582,25 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel) {
   Log.trace(F("xxWSD0xMMCDiscovery" CR));
   int xxWSD0xMMCparametersCount = 5;
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_DECR") != 0) xxWSD0xMMCparametersCount = 5;
   if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) xxWSD0xMMCparametersCount = 7;
   const char* xxWSD0xMMCsensor[xxWSD0xMMCparametersCount][9] = {
       {"sensor", "Battery", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "Voltage", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
       {"sensor", "Temperature", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
       {"sensor", "Humidity", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement},
       {"sensor", "RSSI", mac, "signal_strength", jsonRSSI, "", "", "dB", stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement, state class
+  };
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_DECR") != 0) { // Encrypted PVVX don't have Voltage
+    const char* voltage[9] = {"sensor", "Voltage", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement};
+    memcpy(&xxWSD0xMMCsensor[4], voltage, sizeof(voltage));
   };
   if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) {
     const char* power[9] = {"sensor", "Power", mac, "", jsonPower, "", "", "", stateClassNone};
     memcpy(&xxWSD0xMMCsensor[5], power, sizeof(power));
     const char* open[9] = {"sensor", "Opening", mac, "", jsonOpen, "", "", "", stateClassNone};
     memcpy(&xxWSD0xMMCsensor[6], open, sizeof(open));
-  }
+  };
   createDiscoveryFromList(mac, xxWSD0xMMCsensor, xxWSD0xMMCparametersCount, name, "Xiaomi", sensorModel);
 }
 

@@ -444,6 +444,7 @@ void createDiscovery(const char* sensor_type,
   }
   sensor["name"] = s_name; //name
   sensor["uniq_id"] = unique_id; //unique_id
+  sensor["obj_id"] = unique_id; // object_id aka entity_id default value as unique_id
   if (retainCmd)
     sensor["retain"] = retainCmd; // Retain command
   if (value_template && value_template[0]) {
