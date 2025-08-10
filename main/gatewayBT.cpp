@@ -579,6 +579,27 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, XMWSDJ04MMCsensor, XMWSDJ04MMCparametersCount, "XMWSDJ04MMC", "Xiaomi", sensorModel);
 }
 
+void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel) {
+  Log.trace(F("xxWSD0xMMCDiscovery" CR));
+  int xxWSD0xMMCparametersCount = 5;
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) xxWSD0xMMCparametersCount = 7;
+  const char* xxWSD0xMMCsensor[xxWSD0xMMCparametersCount][9] = {
+      {"sensor", "Battery", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "Voltage", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
+      {"sensor", "Temperature", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "Humidity", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement},
+      {"sensor", "RSSI", mac, "signal_strength", jsonRSSI, "", "", "dB", stateClassMeasurement}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement, state class
+  };
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) {
+    const char* power[9] = {"sensor", "Power", mac, "", jsonPower, "", "", "", stateClassNone};
+    memcpy(xxWSD0xMMCsensor[4], power, 9);
+    const char* open[9] = {"sensor", "Opening", mac, "", jsonOpen, "", "", "", stateClassNone};
+    memcpy(xxWSD0xMMCsensor[5], open, 9);
+  }
+  createDiscoveryFromList(mac, xxWSD0xMMCsensor, xxWSD0xMMCparametersCount, name, "Xiaomi", sensorModel);
+}
+
 #  else
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
@@ -586,6 +607,7 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 void BM2Discovery(const char* mac, const char* sensorModel_id) {}
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
+void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel_id) {}
 #  endif
 
 /*
@@ -996,7 +1018,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
                             model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                             stateClassNone);
           }
-          if (!properties.empty()) {
+          if (p->sensorModel_id >= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_ATC && p->sensorModel_id <= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_PVVX_BTHOME_2 ) {
+            xxWSD0xMMCDiscovery(macWOdots.c_str(), p->name, model_id.c_str());
+          } else if (!properties.empty()) {
             StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
             auto error = deserializeJson(jsonBuffer, properties);
             if (error) {
