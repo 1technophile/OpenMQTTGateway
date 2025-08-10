@@ -593,9 +593,9 @@ void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorMo
   };
   if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) {
     const char* power[9] = {"sensor", "Power", mac, "", jsonPower, "", "", "", stateClassNone};
-    memcpy(xxWSD0xMMCsensor[5], power, 9);
+    memcpy(&xxWSD0xMMCsensor[5], power, sizeof(power));
     const char* open[9] = {"sensor", "Opening", mac, "", jsonOpen, "", "", "", stateClassNone};
-    memcpy(xxWSD0xMMCsensor[6], open, 9);
+    memcpy(&xxWSD0xMMCsensor[6], open, sizeof(open));
   }
   createDiscoveryFromList(mac, xxWSD0xMMCsensor, xxWSD0xMMCparametersCount, name, "Xiaomi", sensorModel);
 }
