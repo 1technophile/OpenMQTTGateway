@@ -579,6 +579,31 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
   createDiscoveryFromList(mac, XMWSDJ04MMCsensor, XMWSDJ04MMCparametersCount, "XMWSDJ04MMC", "Xiaomi", sensorModel);
 }
 
+void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel) {
+  Log.trace(F("xxWSD0xMMCDiscovery" CR));
+  int xxWSD0xMMCparametersCount = 5;
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_DECR") != 0) xxWSD0xMMCparametersCount = 5;
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) xxWSD0xMMCparametersCount = 7;
+  const char* xxWSD0xMMCsensor[xxWSD0xMMCparametersCount][9] = {
+      {"sensor", "Battery", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
+      {"sensor", "Temperature", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
+      {"sensor", "Humidity", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement},
+      {"sensor", "RSSI", mac, "signal_strength", jsonRSSI, "", "", "dB", stateClassMeasurement}
+      //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement, state class
+  };
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_DECR") != 0) { // Encrypted PVVX don't have Voltage
+    const char* voltage[9] = {"sensor", "Voltage", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement};
+    memcpy(&xxWSD0xMMCsensor[4], voltage, sizeof(voltage));
+  };
+  if (strcmp(sensorModel, "LYWSD03MMC/MJWSD05MMC_PVVX_BTHOME") == 0) {
+    const char* power[9] = {"sensor", "Power", mac, "", jsonPower, "", "", "", stateClassNone};
+    memcpy(&xxWSD0xMMCsensor[5], power, sizeof(power));
+    const char* open[9] = {"sensor", "Opening", mac, "", jsonOpen, "", "", "", stateClassNone};
+    memcpy(&xxWSD0xMMCsensor[6], open, sizeof(open));
+  };
+  createDiscoveryFromList(mac, xxWSD0xMMCsensor, xxWSD0xMMCparametersCount, name, "Xiaomi", sensorModel);
+}
+
 #  else
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {}
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {}
@@ -586,6 +611,7 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 void BM2Discovery(const char* mac, const char* sensorModel_id) {}
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
+void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel) {}
 #  endif
 
 /*
@@ -955,11 +981,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
         Log.trace(F("properties: %s" CR), properties.c_str());
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
-#    if ForceDeviceName
-        if (p->name[0] != '\0') {
-          model = p->name;
+        if (displayDeviceName || ForceDeviceName) {
+          if (p->name[0] != '\0') {
+            model = p->name;
+          }
         }
-#    endif
         std::string model_id = decoder.getTheengAttribute(p->sensorModel_id, "model_id");
 
         // Check for tracker status
@@ -996,7 +1022,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
                             model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                             stateClassNone);
           }
-          if (!properties.empty()) {
+          if (displayDeviceName && p->sensorModel_id >= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_ATC && p->sensorModel_id <= TheengsDecoder::BLE_ID_NUM::LYWSD03MMC_PVVX_BTHOME_2 ) {
+            xxWSD0xMMCDiscovery(macWOdots.c_str(), p->name, model_id.c_str());
+          } else if (!properties.empty()) {
             StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
             auto error = deserializeJson(jsonBuffer, properties);
             if (error) {
@@ -1014,7 +1042,12 @@ void launchBTDiscovery(bool overrideDiscovery) {
               Log.trace(F("Key: %s"), prop.key().c_str());
               Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
               Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
-              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+              String entity_name = "";
+              if (displayDeviceName || ForceDeviceName) {
+                entity_name = String(model.c_str()) + "-" + String(prop.key().c_str());
+              } else {
+                entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
+              }
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
@@ -1423,7 +1456,7 @@ void process_bledata(JsonObject& BLEdata) {
               BTConfig.intervalActiveScan = MinTimeBtwScan;
               BTConfig.scanDuration = MinScanDuration;
               Log.notice(F("Active and continuous scanning required, parameters adapted" CR));
-              stateBTMeasures(false);
+              // stateBTMeasures(false); // Disabling as it casues a segfault
             }
           } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
             if (BLEdata["cont"]) {
@@ -1432,7 +1465,7 @@ void process_bledata(JsonObject& BLEdata) {
                 BTConfig.scanDuration = MinScanDuration;
               }
               Log.notice(F("Passive continuous scanning required, parameters adapted" CR));
-              stateBTMeasures(false);
+              // stateBTMeasures(false); // Disabling as it casues a segfault
             }
           }
         }
