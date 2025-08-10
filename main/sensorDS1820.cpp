@@ -122,9 +122,9 @@ void pubOneWire_HADiscovery() {
                       (char*)("DS12B20_" + String(index + 1) + "_c").c_str(),
                       (char*)(ds1820_addr[index] + "_c").c_str(),
                       will_Topic,
-                      "temperature",
+                      HASS_CLASS_TEMPERATURE,
                       jsonTempc,
-                      "", "", "°C",
+                      "", "", HASS_UNIT_CELSIUS,
                       0, "", "", true, "",
                       "", "", "", "", false,
                       stateClassMeasurement // state class

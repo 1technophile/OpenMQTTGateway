@@ -497,13 +497,13 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 7
   Log.trace(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][9] = {
-      {"sensor", "volt", mac, "voltage", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "amp", mac, "current", jsonCurrent, "", "", "A", stateClassMeasurement},
-      {"sensor", "watt", mac, "power", jsonPower, "", "", "W", stateClassMeasurement},
-      {"sensor", "watt-hour", mac, "power", jsonEnergy, "", "", "kWh", stateClassMeasurement},
-      {"sensor", "price", mac, "", jsonMsg, "", "", "", stateClassNone},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"binary_sensor", "inUse", mac, "power", jsonInuse, "", "", "", stateClassNone}
+      {HASS_TYPE_SENSOR, "volt", mac, HASS_CLASS_VOLTAGE, jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "amp", mac, HASS_CLASS_CURRENT, jsonCurrent, "", "", HASS_UNIT_AMP, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "watt", mac, HASS_CLASS_POWER, jsonPower, "", "", "W", stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "watt-hour", mac, HASS_CLASS_POWER, jsonEnergy, "", "", HASS_UNIT_KWH, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "price", mac, "", jsonMsg, "", "", "", stateClassNone},
+      {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_BINARY_SENSOR, "inUse", mac, HASS_CLASS_POWER, jsonInuse, "", "", "", stateClassNone}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -514,8 +514,8 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
 #    define BM2parametersCount 2
   Log.trace(F("BM2Discovery" CR));
   const char* BM2sensor[BM2parametersCount][9] = {
-      {"sensor", "volt", mac, "voltage", jsonVoltBM2, "", "", "V", stateClassMeasurement}, // We use a json definition that retrieve only data from the BM2 decoder, as this sensor also advertize volt as an iBeacon
-      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement}
+      {HASS_TYPE_SENSOR, "volt", mac, HASS_CLASS_VOLTAGE, jsonVoltBM2, "", "", HASS_UNIT_VOLT, stateClassMeasurement}, // We use a json definition that retrieve only data from the BM2 decoder, as this sensor also advertize volt as an iBeacon
+      {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -526,10 +526,10 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
   Log.trace(F("LYWSD03MMCDiscovery" CR));
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
-      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "hum", mac, HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -540,10 +540,10 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
   Log.trace(F("MHO_C401Discovery" CR));
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
-      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "hum", mac, HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -554,11 +554,11 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 #    define HHCCJCY01HHCCparametersCount 5
   Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
   const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
-      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "lux", mac, "illuminance", jsonLux, "", "", "lx", stateClassMeasurement},
-      {"sensor", "fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
-      {"sensor", "moi", mac, "", jsonMoi, "", "", "%", stateClassMeasurement}
+      {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "lux", mac, HASS_CLASS_ILLUMINANCE, jsonLux, "", "", "lx", stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "fer", mac, "", jsonFer, "", "", "µS/cm", stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "moi", mac, "", jsonMoi, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -569,10 +569,10 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define XMWSDJ04MMCparametersCount 4
   Log.trace(F("XMWSDJ04MMCDiscovery" CR));
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
-      {"sensor", "batt", mac, "battery", jsonBatt, "", "", "%", stateClassMeasurement},
-      {"sensor", "volt", mac, "", jsonVolt, "", "", "V", stateClassMeasurement},
-      {"sensor", "temp", mac, "temperature", jsonTempc, "", "", "°C", stateClassMeasurement},
-      {"sensor", "hum", mac, "humidity", jsonHum, "", "", "%", stateClassMeasurement}
+      {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "hum", mac, HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
@@ -977,7 +977,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
           if (isTracker) {
             String tracker_name = String(model_id.c_str()) + "-tracker";
             String tracker_id = macWOdots + "-tracker";
-            createDiscovery("device_tracker",
+            createDiscovery(HASS_TYPE_DEVICE_TRACKER,
                             discovery_topic.c_str(), tracker_name.c_str(), tracker_id.c_str(),
                             will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
                             "", "", "",
@@ -988,7 +988,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
           if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BC08) {
             String sensor_name = String(model_id.c_str()) + "-moving";
             String sensor_id = macWOdots + "-moving";
-            createDiscovery("binary_sensor",
+            createDiscovery(HASS_TYPE_BINARY_SENSOR,
                             discovery_topic.c_str(), sensor_name.c_str(), sensor_id.c_str(),
                             will_Topic, "moving", "{% if value_json.get('accx') -%}on{%- else -%}off{%- endif %}",
                             "on", "off", "",
@@ -1020,9 +1020,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
                 String payload_on = "{\"model_id\":\"X1\",\"cmd\":\"on\",\"id\":\"" + String(p->macAdr) + "\"}";
                 String payload_off = "{\"model_id\":\"X1\",\"cmd\":\"off\",\"id\":\"" + String(p->macAdr) + "\"}";
-                createDiscovery("switch", //set Type
+                createDiscovery(HASS_TYPE_SWITCH, //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                                will_Topic, "switch", value_template.c_str(),
+                                will_Topic, HASS_TYPE_SWITCH, value_template.c_str(),
                                 payload_on.c_str(), payload_off.c_str(), "", 0,
                                 Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
@@ -1030,9 +1030,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
                 unique_id = macWOdots + "-press";
                 entity_name = String(model_id.c_str()) + "-press";
                 String payload_press = "{\"model_id\":\"X1\",\"cmd\":\"press\",\"id\":\"" + String(p->macAdr) + "\"}";
-                createDiscovery("button", //set Type
+                createDiscovery(HASS_TYPE_BUTTON, //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                                will_Topic, "button", "",
+                                will_Topic, HASS_TYPE_BUTTON, "",
                                 payload_press.c_str(), "", "", //set,payload_on,payload_off,unit_of_meas,
                                 0, //set  off_delay
                                 Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
@@ -1041,25 +1041,25 @@ void launchBTDiscovery(bool overrideDiscovery) {
               } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBBT && strcmp(prop.key().c_str(), "open") == 0) {
                 value_template = "{% if value_json.direction == \"up\" -%} {{ 100 - value_json.open/2 }}{% elif value_json.direction == \"down\" %}{{ value_json.open/2 }}{% else %} {{ value_json.open/2 }}{%- endif %}";
                 String command_template = "{\"model_id\":\"W270160X\",\"tilt\":{{ value | int }},\"id\":\"" + String(p->macAdr) + "\"}";
-                createDiscovery("cover", //set Type
+                createDiscovery(HASS_TYPE_COVER, //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                                will_Topic, "cover", value_template.c_str(),
+                                will_Topic, HASS_TYPE_COVER, value_template.c_str(),
                                 "50", "", "", 0,
                                 Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 "blind", nullptr, nullptr, nullptr, command_template.c_str());
               } else if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBCU && strcmp(prop.key().c_str(), "position") == 0) {
                 String command_template = "{\"model_id\":\"W070160X\",\"position\":{{ value | int }},\"id\":\"" + String(p->macAdr) + "\"}";
-                createDiscovery("cover", //set Type
+                createDiscovery(HASS_TYPE_COVER, //set Type
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
-                                will_Topic, "cover", "{{ value_json.position }}",
+                                will_Topic, HASS_TYPE_COVER, "{{ value_json.position }}",
                                 "0", "100", "", 0,
                                 Gateway_AnnouncementMsg, will_Message, false, subjectMQTTtoBT,
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 "curtain", nullptr, nullptr, nullptr, command_template.c_str());
               } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
                          strcmp(prop.key().c_str(), "weighing_mode") == 0) {
-                createDiscovery("sensor",
+                createDiscovery(HASS_TYPE_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, "enum", value_template.c_str(),
                                 "", "", prop.value()["unit"],
@@ -1068,7 +1068,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 stateClassMeasurement, nullptr, nullptr, "[\"person\",\"object\"]");
               } else if ((p->sensorModel_id == TheengsDecoder::XMTZC04HMKG || p->sensorModel_id == TheengsDecoder::XMTZC04HMLB || p->sensorModel_id == TheengsDecoder::XMTZC05HMKG || p->sensorModel_id == TheengsDecoder::XMTZC05HMLB) &&
                          strcmp(prop.key().c_str(), "unit") == 0) {
-                createDiscovery("sensor",
+                createDiscovery(HASS_TYPE_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, "enum", value_template.c_str(),
                                 "", "", prop.value()["unit"],
@@ -1076,7 +1076,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassMeasurement, nullptr, nullptr, "[\"lb\",\"kg\",\"jin\"]");
               } else if (strcmp(prop.value()["unit"], "string") == 0 && strcmp(prop.key().c_str(), "mac") != 0) {
-                createDiscovery("sensor",
+                createDiscovery(HASS_TYPE_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
                                 "", "", "",
@@ -1084,7 +1084,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone);
               } else if (p->sensorModel_id == TheengsDecoder::MUE4094RT && strcmp(prop.value()["unit"], "status") == 0) { // This device does not a broadcast when there is nothing detected so adding a timeout
-                createDiscovery("binary_sensor",
+                createDiscovery(HASS_TYPE_BINARY_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
                                 "True", "False", "",
@@ -1092,7 +1092,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone);
               } else if (strcmp(prop.value()["unit"], "status") == 0) {
-                createDiscovery("binary_sensor",
+                createDiscovery(HASS_TYPE_BINARY_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
                                 "True", "False", "",
@@ -1100,7 +1100,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassNone);
               } else if (strcmp(prop.key().c_str(), "device") != 0 && strcmp(prop.key().c_str(), "mac") != 0) { // Exception on device and mac as these ones are not sensors
-                createDiscovery("sensor",
+                createDiscovery(HASS_TYPE_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
                                 "", "", prop.value()["unit"],
@@ -1113,7 +1113,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 
           String rssi_name = String(model_id.c_str()) + "-rssi";    // rssi diagnostic entity_category
           String rssi_id = macWOdots + "-rssi";
-          createDiscovery("sensor",
+          createDiscovery(HASS_TYPE_SENSOR,
                           discovery_topic.c_str(), rssi_name.c_str(), rssi_id.c_str(),
                           will_Topic, "signal_strength", jsonRSSI,
                           "", "", "dB",
@@ -1134,7 +1134,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
               BM2Discovery(macWOdots.c_str(), "BM2");
               // Device tracker discovery
               String tracker_id = macWOdots + "-tracker";
-              createDiscovery("device_tracker",
+              createDiscovery(HASS_TYPE_DEVICE_TRACKER,
                               discovery_topic.c_str(), "BM2-tracker", tracker_id.c_str(),
                               will_Topic, "occupancy", "{% if value_json.get('rssi') -%}home{%- else -%}not_home{%- endif %}",
                               "", "", "",

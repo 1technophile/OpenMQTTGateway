@@ -162,7 +162,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
               createDiscovery("sensor", //set Type
                               (char*)topic.c_str(), parameters[i][1], pdevice->uniqueId, //set state_topic,name,uniqueId
                               "", parameters[i][3], (char*)value_template.c_str(), //set availability_topic,device_class,value_template,
-                              "", "", "%", //set,payload_on,payload_off,unit_of_meas,
+                              "", "", HASS_UNIT_PERCENT, //set,payload_on,payload_off,unit_of_meas,
                               0, //set  off_delay
                               "", "", false, "", //set,payload_available,payload_not available   ,is a gateway entity, command topic
                               (char*)idWoKey.c_str(), "", pdevice->modelName, (char*)idWoKey.c_str(), false, // device name, device manufacturer, device model, device ID, retain
