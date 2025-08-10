@@ -607,7 +607,7 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {}
 void DT24Discovery(const char* mac, const char* sensorModel_id) {}
 void BM2Discovery(const char* mac, const char* sensorModel_id) {}
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel_id) {}
-void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel_id) {}
+void xxWSD0xMMCDiscovery(const char* mac, const char* name, const char* sensorModel) {}
 #  endif
 
 /*
@@ -1043,7 +1043,8 @@ void launchBTDiscovery(bool overrideDiscovery) {
                 entity_name = String(model.c_str()) + "-" + String(prop.key().c_str());
               } else {
                 entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
-              }
+              }              
+              String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
               if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::SBS1 && strcmp(prop.key().c_str(), "state") == 0) {
