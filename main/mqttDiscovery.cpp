@@ -597,7 +597,7 @@ void createDiscovery(const char* sensor_type,
       }
     }
 
-    device["via_device"] = String(gateway_name); //device name of the board
+    device["via_device"] = String(getMacAddress()); //mac address of the gateway so that the devices link to the gateway
   }
 
   sensor["device"] = device;
