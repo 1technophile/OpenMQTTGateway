@@ -378,6 +378,11 @@ std::string remove_substring(std::string s, const std::string& p) {
  * @param device_id set device(BLE)/entity(RTL_433) identification,
  * @param retainCmd set retain
  * @param state_class set state class
+ * @param state_off state off value
+ * @param state_on state on value
+ * @param enum_options options
+ * @param command_template command template
+ * @param diagnostic_entity true if entity_category is diagnostic
  *
  * */
 void createDiscovery(const char* sensor_type,
@@ -387,7 +392,8 @@ void createDiscovery(const char* sensor_type,
                      int off_delay,
                      const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* cmd_topic,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
-                     const char* state_class, const char* state_off, const char* state_on, const char* enum_options, const char* command_template) {
+                     const char* state_class, const char* state_off, const char* state_on, const char* enum_options,
+                     const char* command_template, bool diagnostic_entity) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
@@ -535,6 +541,10 @@ void createDiscovery(const char* sensor_type,
     } else {
       sensor["cmd_t"] = command_topic; //command_topic
     }
+  }
+
+  if (diagnostic_entity) {  // entity_category
+    sensor["ent_cat"] = "diagnostic";
   }
 
   if (enum_options != nullptr) {

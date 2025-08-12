@@ -1110,6 +1110,17 @@ void launchBTDiscovery(bool overrideDiscovery) {
               }
             }
           }
+
+          String rssi_name = String(model_id.c_str()) + "-rssi";    // rssi diagnostic entity_category
+          String rssi_id = macWOdots + "-rssi";
+          createDiscovery("sensor",
+                          discovery_topic.c_str(), rssi_name.c_str(), rssi_id.c_str(),
+                          will_Topic, "signal_strength", jsonRSSI,
+                          "", "", "dB",
+                          0, "", "", false, "",
+                          model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                          stateClassMeasurement, nullptr, nullptr, nullptr, nullptr, true);
+
         } else {
           if ((p->sensorModel_id > BLEconectable::id::MIN &&
                   p->sensorModel_id < BLEconectable::id::MAX) ||

@@ -79,6 +79,11 @@ extern void createDiscoveryFromList(const char* mac,
  * @param device_mac set device MAC,
  * @param retainCmd set retain
  * @param state_class set state class
+ * @param state_off state off value
+ * @param state_on state on value
+ * @param enum_options options
+ * @param command_template command template
+ * @param diagnostic_entity true if entity_category is diagnostic
  *
  * */
 extern void createDiscovery(const char* sensor_type,
@@ -88,7 +93,8 @@ extern void createDiscovery(const char* sensor_type,
                             int off_delay,
                             const char* payload_available, const char* payload_not_available, bool gateway_entity, const char* command_topic,
                             const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_mac, bool retainCmd,
-                            const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr, const char* enum_options = nullptr, const char* command_template = nullptr);
+                            const char* state_class, const char* state_off = nullptr, const char* state_on = nullptr, const char* enum_options = nullptr,
+                            const char* command_template = nullptr, bool diagnostic_entity = false);
 
 /**
  * @brief Create a message for Discovery Device Trigger. For HA @see https://www.home-assistant.io/integrations/device_trigger.mqtt/
@@ -170,6 +176,7 @@ extern char discovery_prefix[];
 #define jsonInuse       "{{ value_json.power | is_defined | float > 0 }}"
 #define jsonInuseRN8209 "{% if value_json.power > 0.02 -%} on {% else %} off {%- endif %}"
 #define jsonVoltBM2     "{% if value_json.uuid is not defined and value_json.volt is defined -%} {{value_json.volt}} {%- endif %}"
+#define jsonRSSI        "{{ value_json.rssi | is_defined }}"
 
 #define stateClassNone            ""
 #define stateClassMeasurement     "measurement"
