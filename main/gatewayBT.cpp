@@ -1203,7 +1203,7 @@ void process_bledata(JsonObject& BLEdata) {
   int mac_type = BLEdata["mac_type"].as<int>();
 
 # if BLEDecryptor
-  if (BLEdata["encr"] && (BLEdata["encr"].as<int>() >0 && BLEdata["encr"].as<int>() <=2)) {
+  if (BLEdata["encr"] && (BLEdata["encr"].as<int>() > 0 && BLEdata["encr"].as<int>() <= 3)) {
     // Decrypting Encrypted BLE Data PVVX, BTHome or Victron
     Log.trace(F("[BLEDecryptor] Decrypt ENCR:%d ModelID:%s Payload:%s" CR), BLEdata["encr"].as<int>(), BLEdata["model_id"].as<const char*>(), BLEdata["cipher"].as<const char*>());
 
