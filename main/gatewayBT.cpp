@@ -58,8 +58,8 @@ BTConfig_s BTConfig;
 #  if BLEDecoder
 #    include <decoder.h>
 #    if BLEDecryptor
-#      include "mbedtls/ccm.h"
 #      include "mbedtls/aes.h"
+#      include "mbedtls/ccm.h"
 #    endif
 TheengsDecoder decoder;
 #  endif
@@ -1111,7 +1111,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
             }
           }
 
-          String rssi_name = String(model_id.c_str()) + "-rssi";    // rssi diagnostic entity_category
+          String rssi_name = String(model_id.c_str()) + "-rssi"; // rssi diagnostic entity_category
           String rssi_id = macWOdots + "-rssi";
           createDiscovery("sensor",
                           discovery_topic.c_str(), rssi_name.c_str(), rssi_id.c_str(),
@@ -1123,7 +1123,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 
         } else {
           if ((p->sensorModel_id > BLEconectable::id::MIN &&
-                  p->sensorModel_id < BLEconectable::id::MAX) ||
+               p->sensorModel_id < BLEconectable::id::MAX) ||
               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
             // Discovery of sensors from which we retrieve data only by connect
             if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
@@ -1170,23 +1170,24 @@ void launchBTDiscovery(bool overrideDiscovery) {}
 #  endif
 
 #  if BLEDecryptor
-// ** TODO - Hex string to bytes, there is probably a function for this already just need to find it 
-int hexToBytes(String hex, uint8_t *out, size_t maxLen) {
+// ** TODO - Hex string to bytes, there is probably a function for this already just need to find it
+int hexToBytes(String hex, uint8_t* out, size_t maxLen) {
   int len = hex.length();
-  if (len % 2 || len / 2 > maxLen) return -1;
-  for (int i = 0, j = 0; i < len; i += 2, j++) {
-    out[j] = (uint8_t) strtol(hex.substring(i, i + 2).c_str(), nullptr, 16);
+  int bytesToWrite = min(len / 2, (int)maxLen);
+  if (len % 2) return -1; // Odd length is invalid
+  for (int i = 0, j = 0; j < bytesToWrite; i += 2, j++) {
+    out[j] = (uint8_t)strtol(hex.substring(i, i + 2).c_str(), nullptr, 16);
   }
-  return len / 2;
+  return bytesToWrite;
 }
 // Reverse bytes
-void reverseBytes(uint8_t *data, size_t length) {
-    size_t i;
-    for (i = 0; i < length / 2; i++) {
-        uint8_t temp = data[i];
-        data[i] = data[length - 1 - i];
-        data[length - 1 - i] = temp;
-    }
+void reverseBytes(uint8_t* data, size_t length) {
+  size_t i;
+  for (i = 0; i < length / 2; i++) {
+    uint8_t temp = data[i];
+    data[i] = data[length - 1 - i];
+    data[length - 1 - i] = temp;
+  }
 }
 #  endif
 
@@ -1202,13 +1203,13 @@ void process_bledata(JsonObject& BLEdata) {
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
 
-# if BLEDecryptor
+#    if BLEDecryptor
   if (BLEdata["encr"] && (BLEdata["encr"].as<int>() > 0 && BLEdata["encr"].as<int>() <= 3)) {
     // Decrypting Encrypted BLE Data PVVX, BTHome or Victron
     Log.trace(F("[BLEDecryptor] Decrypt ENCR:%d ModelID:%s Payload:%s" CR), BLEdata["encr"].as<int>(), BLEdata["model_id"].as<const char*>(), BLEdata["cipher"].as<const char*>());
 
     // MAC address
-    String macWOdots = BLEdata["id"].as<String>();   // Mac Address without dots
+    String macWOdots = BLEdata["id"].as<String>(); // Mac Address without dots
     macWOdots.replace(":", "");
     unsigned char macAddress[6];
     int maclen = hexToBytes(macWOdots, macAddress, 6);
@@ -1220,7 +1221,7 @@ void process_bledata(JsonObject& BLEdata) {
     // AES decryption key
     unsigned char bleaeskey[16];
     int bleaeskeylength = 0;
-    if (ble_aes_keys.containsKey(macWOdots)){
+    if (ble_aes_keys.containsKey(macWOdots)) {
       Log.trace(F("[BLEDecryptor] Custom AES key %s" CR), ble_aes_keys[macWOdots].as<const char*>());
       bleaeskeylength = hexToBytes(ble_aes_keys[macWOdots], bleaeskey, 16);
     } else {
@@ -1239,19 +1240,19 @@ void process_bledata(JsonObject& BLEdata) {
     unsigned char aad[1];
     int aadLength;
 
-    if (BLEdata["encr"].as<int>() == 1){        // PVVX Encrypted
-      noncelength = 11;                         // 11 bytes
-      reverseBytes(macAddress, 6);              // 6 bytes: device address in reverse
+    if (BLEdata["encr"].as<int>() == 1) { // PVVX Encrypted
+      noncelength = 11; // 11 bytes
+      reverseBytes(macAddress, 6); // 6 bytes: device address in reverse
       memcpy(nonce, macAddress, 6);
       int maclen = hexToBytes(macWOdots, macAddress, 6);
 
       unsigned char servicedata[16];
       int servicedatalen = hexToBytes(BLEdata["servicedata"].as<String>(), servicedata, 16);
-      nonce[6] = servicedatalen + 3;            // 1 byte : length of (service data + type and UUID)
-      nonce[7] = 0x16;                          // 1 byte : "16" -> AD type for "Service Data - 16-bit UUID"
-      nonce[8] = 0x1A;                          // 2 bytes: "1a18" -> UUID 181a in little-endian
-      nonce[9] = 0x18;                          //
-      unsigned char ctr[1];                     // 1 byte : counter
+      nonce[6] = servicedatalen + 3; // 1 byte : length of (service data + type and UUID)
+      nonce[7] = 0x16; // 1 byte : "16" -> AD type for "Service Data - 16-bit UUID"
+      nonce[8] = 0x1A; // 2 bytes: "1a18" -> UUID 181a in little-endian
+      nonce[9] = 0x18; //
+      unsigned char ctr[1]; // 1 byte : counter
       int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 1);
       if (ctrlen != 1) {
         Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
@@ -1262,13 +1263,13 @@ void process_bledata(JsonObject& BLEdata) {
       aadLength = 1;
       Log.trace(F("[BLEDecryptor] PVVX nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
 
-    } else if (BLEdata["encr"].as<int>() == 2){         // BTHome V2 Encrypted
-      noncelength = 13;                                 // 13 bytes
+    } else if (BLEdata["encr"].as<int>() == 2) { // BTHome V2 Encrypted
+      noncelength = 13; // 13 bytes
       memcpy(nonce, macAddress, 6);
-      nonce[6] = 0xD2;                                  // UUID
+      nonce[6] = 0xD2; // UUID
       nonce[7] = 0xFC;
-      nonce[8] = 0x41;                                  // BTHome Device Data encrypted payload byte
-      unsigned char ctr[4];                             // Counter
+      nonce[8] = 0x41; // BTHome Device Data encrypted payload byte
+      unsigned char ctr[4]; // Counter
       int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 4);
       if (ctrlen != 4) {
         Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
@@ -1279,8 +1280,8 @@ void process_bledata(JsonObject& BLEdata) {
       aadLength = 0;
       Log.trace(F("[BLEDecryptor] BTHomeV2 nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
 
-    } else if (BLEdata["encr"].as<int>() == 3){
-      nonce[16] = {0};                            // Victron has a 16 byte zero padded nonce with IV bytes 6,7
+    } else if (BLEdata["encr"].as<int>() == 3) {
+      nonce[16] = {0}; // Victron has a 16 byte zero padded nonce with IV bytes 6,7
       unsigned char iv[2];
       int ivlen = hexToBytes(BLEdata["ctr"].as<String>(), iv, 2);
       if (ivlen != 2) {
@@ -1288,16 +1289,18 @@ void process_bledata(JsonObject& BLEdata) {
         return;
       }
       memcpy(nonce, iv, 2);
+      memset(nonce + 2, 0, 14); // 14 bytes: zero padding
       Log.trace(F("[BLEDecryptor] Victron nonce %s" CR), NimBLEUtils::dataToHexString(nonce, 16).c_str());
     } else {
-      return;  // No match
+      return; // No match
     }
-    
+
     // Ciphertext to bytes
-    int cipherlen = sizeof(BLEdata["cipher"].as<String>());
+    String cipherHex = BLEdata["cipher"].as<String>();
+    int cipherlen = cipherHex.length() / 2; // Number of bytes in ciphertext
     unsigned char ciphertext[cipherlen];
     int ciphertextlen = hexToBytes(BLEdata["cipher"].as<String>(), ciphertext, cipherlen);
-    unsigned char decrypted[ciphertextlen];      // Decrypted payload
+    unsigned char decrypted[cipherlen];
 
     // Decrypt ciphertext
     if (BLEdata["encr"].as<int>() == 1 || BLEdata["encr"].as<int>() == 2) {
@@ -1305,9 +1308,9 @@ void process_bledata(JsonObject& BLEdata) {
       mbedtls_ccm_context ctx;
       mbedtls_ccm_init(&ctx);
       if (mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, bleaeskey, 128) != 0) {
-          Log.error(F("[BLEDecryptor] Failed to set AES key to mbedtls" CR));
-          return;
-      }    
+        Log.error(F("[BLEDecryptor] Failed to set AES key to mbedtls" CR));
+        return;
+      }
 
       // Message Integrity Check (MIC)
       unsigned char mic[4];
@@ -1318,35 +1321,39 @@ void process_bledata(JsonObject& BLEdata) {
       }
 
       int ret = mbedtls_ccm_auth_decrypt(
-          &ctx,                   // AES Key
-          ciphertextlen,          // length of ciphertext
-          nonce, noncelength,     // Nonce
-          aad, aadLength,         // AAD
-          ciphertext,             // input ciphertext
-          decrypted,              // output plaintext
-          mic, sizeof(mic)        // Message Integrity Check
+          &ctx, // AES Key
+          ciphertextlen, // length of ciphertext
+          nonce, noncelength, // Nonce
+          aad, aadLength, // AAD
+          ciphertext, // input ciphertext
+          decrypted, // output plaintext
+          mic, sizeof(mic) // Message Integrity Check
       );
       mbedtls_ccm_free(&ctx);
 
       if (ret == 0) {
         Log.notice(F("[BLEDecryptor] Decryption successful" CR));
       } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
-          Log.error(F("[BLEDecryptor] Authentication failed." CR));
-          return;
+        if (ble_aes_keys.containsKey(macWOdots)) {
+          Log.error(F("[BLEDecryptor] Decryption failed for %s with key %s" CR), macWOdots.c_str(), ble_aes_keys[macWOdots].as<const char*>());
+        } else {
+          Log.error(F("[BLEDecryptor] Decryption failed for %s with default key" CR), macWOdots.c_str());
+        }
+        return;
       } else {
-          Log.error(F("[BLEDecryptor] Decryption failed with error: %X" CR), ret);
-          return;
+        Log.error(F("[BLEDecryptor] Decryption failed with error: %X" CR), ret);
+        return;
       }
 
       // Build new servicedata
-      if (BLEdata["encr"].as<int>() == 1){            // PVVX
+      if (BLEdata["encr"].as<int>() == 1) { // PVVX
         BLEdata["servicedata"] = NimBLEUtils::dataToHexString(decrypted, ciphertextlen);
-      } else if (BLEdata["encr"].as<int>() == 2) {    // BTHomeV2
+      } else if (BLEdata["encr"].as<int>() == 2) { // BTHomeV2
         // Build new servicedata
         uint8_t newservicedata[3 + ciphertextlen];
-        newservicedata[0] = 0x40;      // Decrypted BTHomeV2 Packet Type
-        newservicedata[1] = 0x00;      // Packet counter which the PVVX BTHome non-encrypted has but the encrypted does not
-        newservicedata[2] = 0x00;      // **TODO Convert the ctr to the packet counter or just stick with 0?
+        newservicedata[0] = 0x40; // Decrypted BTHomeV2 Packet Type
+        newservicedata[1] = 0x00; // Packet counter which the PVVX BTHome non-encrypted has but the encrypted does not
+        newservicedata[2] = 0x00; // **TODO Convert the ctr to the packet counter or just stick with 0?
         memcpy(&newservicedata[3], decrypted, ciphertextlen);
         BLEdata["servicedata"] = NimBLEUtils::dataToHexString(newservicedata, ciphertextlen + 3);
       } else {
@@ -1363,34 +1370,34 @@ void process_bledata(JsonObject& BLEdata) {
       mbedtls_aes_init(&ctx);
       mbedtls_aes_setkey_enc(&ctx, bleaeskey, 128);
       int ret = mbedtls_aes_crypt_ctr(
-        &ctx,                   // AES Key
-        ciphertextlen,          // length of ciphertext
-        &nc_off,
-        nonce,                  // 16 byte nonce with 2 bytes iv
-        stream_block,
-        ciphertext,             // input ciphertext
-        decrypted               // output plaintext
+          &ctx, // AES Key
+          ciphertextlen, // length of ciphertext
+          &nc_off,
+          nonce, // 16 byte nonce with 2 bytes iv
+          stream_block,
+          ciphertext, // input ciphertext
+          decrypted // output plaintext
       );
       mbedtls_aes_free(&ctx);
 
       if (ret == 0) {
         Log.notice(F("[BLEDecryptor] Victron Decryption successful" CR));
       } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
-          Log.error(F("[BLEDecryptor] Victron Authentication failed." CR));
-          return;
+        Log.error(F("[BLEDecryptor] Victron Authentication failed." CR));
+        return;
       } else {
-          Log.error(F("[BLEDecryptor] Victron decryption failed with error: %X" CR), ret);
-          return;
+        Log.error(F("[BLEDecryptor] Victron decryption failed with error: %X" CR), ret);
+        return;
       }
 
       // Build new manufacturerdata
       unsigned char manufacturerdata[10 + ciphertextlen];
       int manufacturerdatalen = hexToBytes(BLEdata["manufacturerdata"].as<String>(), manufacturerdata, 10);
-      manufacturerdata[2] = 0x11;  // Replace byte 2 with "11" indicate decrypted data
-      manufacturerdata[7] = 0xff;  // Replace byte 7 with "ff" to indicate decrypted data
-      manufacturerdata[8] = 0xff;  // Replace byte 8 with "ff" to indicate decrypted data
-      memcpy(&manufacturerdata[8], decrypted, ciphertextlen);  // Append the decrypted payload to the manufacturer data
-      BLEdata["manufacturerdata"] = NimBLEUtils::dataToHexString(manufacturerdata, 10 + ciphertextlen);  // Rebuild manufacturerdata
+      manufacturerdata[2] = 0x11; // Replace byte 2 with "11" indicate decrypted data
+      manufacturerdata[7] = 0xff; // Replace byte 7 with "ff" to indicate decrypted data
+      manufacturerdata[8] = 0xff; // Replace byte 8 with "ff" to indicate decrypted data
+      memcpy(&manufacturerdata[10], decrypted, ciphertextlen); // Append the decrypted payload to the manufacturer data
+      BLEdata["manufacturerdata"] = NimBLEUtils::dataToHexString(manufacturerdata, 10 + ciphertextlen); // Rebuild manufacturerdata
       Log.trace(F("[BLEDecryptor] Victron decrypted manufacturerdata %s" CR), BLEdata["manufacturerdata"].as<const char*>());
     }
 
@@ -1398,16 +1405,15 @@ void process_bledata(JsonObject& BLEdata) {
     // serializeJsonPretty(BLEdata, Serial);
     model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
     // serializeJsonPretty(BLEdata, Serial);
-    Log.trace(F("[BLEDecryptor] Decrypted model_id %d" CR), model_id);    
+    Log.trace(F("[BLEDecryptor] Decrypted model_id %d" CR), model_id);
 
     // Remove the cipher fields from BLEdata
     BLEdata.remove("encr");
     BLEdata.remove("cipher");
     BLEdata.remove("ctr");
     BLEdata.remove("mic");
-
   }
-#  endif
+#    endif
 
   // Convert prmacs to RMACS until or if OMG gets Identity MAC/IRK decoding
   if (BLEdata["prmac"]) {
