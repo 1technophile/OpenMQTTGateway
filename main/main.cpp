@@ -95,7 +95,7 @@ char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
 
-#ifdef BLEDecryptor
+#if BLEDecryptor
   char ble_aes[parameters_size] = BLE_AES;
   StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
 #endif
@@ -2028,7 +2028,7 @@ void saveConfig() {
 #  endif
   json["gateway_name"] = gateway_name;
   json["ota_pass"] = ota_pass;
-#  ifdef BLEDecryptor
+#  if BLEDecryptor
   json["ble_aes"] = ble_aes;
   json["ble_aes_keys"] = ble_aes_keys;
 #  endif
@@ -2179,7 +2179,7 @@ bool loadConfigFromFlash() {
           }
 #  endif
         }
-#  ifdef BLEDecryptor
+#  if BLEDecryptor
         if (json.containsKey("ble_aes")) {
           strcpy(ble_aes, json["ble_aes"]);
           Log.trace(F("loaded default BLE AES key %s" CR), ble_aes);
@@ -3461,7 +3461,7 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       mqttSetupPending = true; // trigger reconnect in loop using the new topic/name
     }
 
-#ifdef BLEDecryptor
+#if BLEDecryptor
     if (SYSdata.containsKey("ble_aes") || SYSdata.containsKey("ble_aes_keys")) {
       if (SYSdata.containsKey("ble_aes")) {
         strncpy(ble_aes, SYSdata["ble_aes"], parameters_size);

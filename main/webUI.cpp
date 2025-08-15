@@ -955,7 +955,7 @@ void handleLO() {
   server.send(200, "text/html", response);
 }
 
-#  ifdef BLEDecryptor
+#  if BLEDecryptor
 /**
  * @brief /BL - Config BLE
  * T: handleBL: uri: /bl, args: 3, method: 1
@@ -1777,7 +1777,7 @@ void WebUISetup() {
 #  endif
   server.on("/lo", handleLO); // Configure Logging
 
-#  ifdef BLEDecryptor
+#  if BLEDecryptor
   server.on("/bl", HTTP_POST, handleBL); // Configure BLE
 #  endif
 

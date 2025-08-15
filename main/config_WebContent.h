@@ -62,7 +62,7 @@
 #else
 #  define configure_6
 #endif
-#ifdef BLEDecryptor
+#if BLEDecryptor
 #  define configure_7 "<p><form action='bl' method='post'><button>Configure BLE</button></form></p>"
 #else
 #  define configure_7
@@ -223,7 +223,7 @@ const char config_lora_body[] = body_header
     "</form>"
     "</fieldset>" body_footer_config_menu;
 
-#ifdef BLEDecryptor
+#if BLEDecryptor
 const char config_ble_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure BLE</b></span></legend><form method='post' action='bl'><p><b>BLE AES Default Key (32 char hex)</b></p><input id='bk' name='bk' minlength='32' maxlength='32' placeholder=" BLE_AES " value='%s' oninput='bkv()'><p id='bke' style='color:red;'></p><hr><p><b>BLE Key Pairs</b></p><p>MacAddress:AESKey with space separator</p><p><textarea id='kp' name='kp' placeholder='A4C138012345:00112233445566778899001122334455' rows='3' cols='46' oninput='kpv()'>%s</textarea></p><p id='kpe' style='color:red;'></p><br><button id='s' name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 
 // Client side javascript validation of the Default AES Key is hex, and the custom keys are in the correct format. This pushes the theengs-bridge-v11 way of the file size, so reducing it now and leaving it commented out
