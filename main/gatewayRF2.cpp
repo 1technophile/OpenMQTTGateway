@@ -68,7 +68,7 @@ extern String getUniqueId(String name, String sufix);
 
 //Register for autodiscover in Home Assistant
 void RF2toMQTTdiscovery(JsonObject& data) {
-  Log.trace(F("switchRF2Discovery" CR));
+  THEENGS_LOG_TRACE(F("switchRF2Discovery" CR));
   String payloadonstr;
   String payloadoffstr;
 
@@ -95,7 +95,7 @@ void RF2toMQTTdiscovery(JsonObject& data) {
   // component type,name,availability topic,device class,value template,payload
   // on, payload off, unit of measurement
 
-  Log.trace(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
+  THEENGS_LOG_TRACE(F("CreateDiscoverySwitch: %s" CR), switchRF[1]);
 
   // As RF2 433Mhz switches do not render their state, no state topic should be
   // provided in the discovery. This will cause the switch to be in optimistic
@@ -117,7 +117,7 @@ void RF2toX() {
     JsonObject RF2data = RF2dataBuffer.to<JsonObject>();
     rf2rd.hasNewData = false;
 
-    Log.trace(F("Rcv. RF2" CR));
+    THEENGS_LOG_TRACE(F("Rcv. RF2" CR));
     RF2data["unit"] = (int)rf2rd.unit;
     RF2data["groupBit"] = (int)rf2rd.groupBit;
     RF2data["period"] = (int)rf2rd.period;
@@ -149,10 +149,10 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
   initCC1101();
   int txPower = RF_CC1101_TXPOWER;
   ELECHOUSE_cc1101.setPA((int)txPower);
-  Log.notice(F("[RF] CC1101 TX Power: %d" CR), txPower);
+  THEENGS_LOG_NOTICE(F("[RF] CC1101 TX Power: %d" CR), txPower);
   float txFrequency = RFConfig.frequency;
   ELECHOUSE_cc1101.SetTx(txFrequency);
-  Log.notice(F("[RF] Transmit frequency: %F" CR), txFrequency);
+  THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif
 
   // RF DATA ANALYSIS
@@ -172,35 +172,35 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
   if (pos != -1) {
     pos = pos + +strlen(RF2codeKey);
     valueCODE = (topic.substring(pos, pos + 8)).toInt();
-    Log.notice(F("RF2 code: %l" CR), valueCODE);
+    THEENGS_LOG_NOTICE(F("RF2 code: %l" CR), valueCODE);
   }
   int pos2 = topic.lastIndexOf(RF2periodKey);
   if (pos2 != -1) {
     pos2 = pos2 + strlen(RF2periodKey);
     valuePERIOD = (topic.substring(pos2, pos2 + 3)).toInt();
-    Log.notice(F("RF2 Period: %d" CR), valuePERIOD);
+    THEENGS_LOG_NOTICE(F("RF2 Period: %d" CR), valuePERIOD);
   }
   int pos3 = topic.lastIndexOf(RF2unitKey);
   if (pos3 != -1) {
     pos3 = pos3 + strlen(RF2unitKey);
     valueUNIT = (topic.substring(pos3, topic.indexOf("/", pos3))).toInt();
-    Log.notice(F("Unit: %d" CR), valueUNIT);
+    THEENGS_LOG_NOTICE(F("Unit: %d" CR), valueUNIT);
   }
   int pos4 = topic.lastIndexOf(RF2groupKey);
   if (pos4 != -1) {
     pos4 = pos4 + strlen(RF2groupKey);
     valueGROUP = (topic.substring(pos4, pos4 + 1)).toInt();
-    Log.notice(F("RF2 Group: %d" CR), valueGROUP);
+    THEENGS_LOG_NOTICE(F("RF2 Group: %d" CR), valueGROUP);
   }
   int pos5 = topic.lastIndexOf(RF2dimKey);
   if (pos5 != -1) {
     isDimCommand = true;
     valueDIM = atoi(datacallback);
-    Log.notice(F("RF2 Dim: %d" CR), valueDIM);
+    THEENGS_LOG_NOTICE(F("RF2 Dim: %d" CR), valueDIM);
   }
 
   if ((topic == subjectMQTTtoRF2) || (valueCODE != 0) || (valueUNIT != -1) || (valuePERIOD != 0)) {
-    Log.trace(F("MQTTtoRF2" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoRF2" CR));
     if (valueCODE == 0)
       valueCODE = 8233378;
     if (valueUNIT == -1)
@@ -208,9 +208,9 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
     if (valuePERIOD == 0)
       valuePERIOD = 272;
     NewRemoteReceiver::disable();
-    Log.trace(F("Creating transmitter" CR));
+    THEENGS_LOG_TRACE(F("Creating transmitter" CR));
     NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_GPIO, valuePERIOD, RF2_EMITTER_REPEAT);
-    Log.trace(F("Sending data" CR));
+    THEENGS_LOG_TRACE(F("Sending data" CR));
     if (valueGROUP) {
       if (isDimCommand) {
         transmitter.sendGroupDim(valueDIM);
@@ -224,7 +224,7 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
         transmitter.sendUnit(valueUNIT, boolSWITCHTYPE);
       }
     }
-    Log.trace(F("Data sent" CR));
+    THEENGS_LOG_TRACE(F("Data sent" CR));
     NewRemoteReceiver::enable();
 
     // Publish state change back to MQTT
@@ -242,7 +242,7 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
     MQTTswitchType = String(boolSWITCHTYPE);
     MQTTdimLevel = String(valueDIM);
     String MQTTRF2string;
-    Log.trace(F("Adv data XtoRF2 push state via RF2toMQTT" CR));
+    THEENGS_LOG_TRACE(F("Adv data XtoRF2 push state via RF2toMQTT" CR));
     if (isDimCommand) {
       MQTTRF2string = subjectRF2toMQTT + String("/") + RF2codeKey + MQTTAddress + String("/") + RF2unitKey + MQTTunit + String("/") + RF2groupKey + MQTTgroupBit + String("/") + RF2dimKey + String("/") + RF2periodKey + MQTTperiod;
       pub((char*)MQTTRF2string.c_str(), (char*)MQTTdimLevel.c_str());
@@ -262,7 +262,7 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
 void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF2)) {
-    Log.trace(F("MQTTtoRF2 json" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoRF2 json" CR));
     int boolSWITCHTYPE = RF2data["switchType"] | 99;
     bool success = false;
     if (boolSWITCHTYPE != 99) {
@@ -272,12 +272,12 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
       initCC1101();
       int txPower = RF2data["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
-      Log.notice(F("[RF] CC1101 TX Power: %d" CR), txPower);
+      THEENGS_LOG_NOTICE(F("[RF] CC1101 TX Power: %d" CR), txPower);
       float txFrequency = RF2data["frequency"] | RFConfig.frequency;
       ELECHOUSE_cc1101.SetTx(txFrequency);
-      Log.notice(F("[RF] Transmit frequency: %F" CR), txFrequency);
+      THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif
-      Log.trace(F("MQTTtoRF2 switch type ok" CR));
+      THEENGS_LOG_TRACE(F("MQTTtoRF2 switch type ok" CR));
       bool isDimCommand = boolSWITCHTYPE == 2;
       unsigned long valueCODE = RF2data["address"];
       int valueUNIT = RF2data["unit"] | -1;
@@ -285,7 +285,7 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
       int valueGROUP = RF2data["group"];
       int valueDIM = RF2data["dim"] | -1;
       if ((valueCODE != 0) || (valueUNIT != -1) || (valuePERIOD != 0)) {
-        Log.trace(F("MQTTtoRF2" CR));
+        THEENGS_LOG_TRACE(F("MQTTtoRF2" CR));
         if (valueCODE == 0)
           valueCODE = 8233378;
         if (valueUNIT == -1)
@@ -293,7 +293,7 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
         if (valuePERIOD == 0)
           valuePERIOD = 272;
         NewRemoteTransmitter transmitter(valueCODE, RF_EMITTER_GPIO, valuePERIOD, RF2_EMITTER_REPEAT);
-        Log.trace(F("Sending" CR));
+        THEENGS_LOG_TRACE(F("Sending" CR));
         if (valueGROUP) {
           if (isDimCommand) {
             transmitter.sendGroupDim(valueDIM);
@@ -307,7 +307,7 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
             transmitter.sendUnit(valueUNIT, boolSWITCHTYPE);
           }
         }
-        Log.notice(F("MQTTtoRF2 OK" CR));
+        THEENGS_LOG_NOTICE(F("MQTTtoRF2 OK" CR));
 
         success = true;
       }
@@ -318,7 +318,7 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
       enqueueJsonObject(RF2data);
     } else {
       pub(subjectGTWRF2toMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
-      Log.error(F("MQTTtoRF2 failed json read" CR));
+      THEENGS_LOG_ERROR(F("MQTTtoRF2 failed json read" CR));
     }
     enableActiveReceiver();
   }
@@ -326,20 +326,20 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
 #  endif
 
 void disableRF2Receive() {
-  Log.trace(F("disableRF2Receive" CR));
+  THEENGS_LOG_TRACE(F("disableRF2Receive" CR));
   NewRemoteReceiver::disable();
 }
 
 void enableRF2Receive() {
-  Log.trace(F("enableRF2Receive" CR));
+  THEENGS_LOG_TRACE(F("enableRF2Receive" CR));
   NewRemoteReceiver::init(RF_RECEIVER_GPIO, 2, rf2Callback);
 
-  Log.notice(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
-  Log.notice(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
-  Log.trace(F("gatewayRF2 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF2);
+  THEENGS_LOG_NOTICE(F("RF_EMITTER_GPIO: %d " CR), RF_EMITTER_GPIO);
+  THEENGS_LOG_NOTICE(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
+  THEENGS_LOG_TRACE(F("gatewayRF2 command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoRF2);
   pinMode(RF_EMITTER_GPIO, OUTPUT);
   digitalWrite(RF_EMITTER_GPIO, LOW);
-  Log.trace(F("gatewayRF2 setup done " CR));
+  THEENGS_LOG_TRACE(F("gatewayRF2 setup done " CR));
 }
 
 #endif

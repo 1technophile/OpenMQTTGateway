@@ -52,12 +52,12 @@ void initCC1101() {
     ELECHOUSE_cc1101.setSpiPin(RF_MODULE_SCK, RF_MODULE_MISO, RF_MODULE_MOSI, RF_MODULE_CS);
 #    endif
     if (ELECHOUSE_cc1101.getCC1101()) {
-      Log.notice(F("C1101 spi Connection OK" CR));
+      THEENGS_LOG_NOTICE(F("C1101 spi Connection OK" CR));
       ELECHOUSE_cc1101.Init();
       ELECHOUSE_cc1101.SetRx(RFConfig.frequency);
       break;
     } else {
-      Log.error(F("C1101 spi Connection Error" CR));
+      THEENGS_LOG_ERROR(F("C1101 spi Connection Error" CR));
       delay(delayMS);
     }
     // truncated exponential backoff
@@ -106,14 +106,14 @@ bool validReceiver(int receiver) {
       return true;
 #    endif
     default:
-      Log.error(F("ERROR: stored receiver %d not available" CR), receiver);
+      THEENGS_LOG_ERROR(F("ERROR: stored receiver %d not available" CR), receiver);
   }
   return false;
 }
 #  endif
 
 void disableCurrentReceiver() {
-  Log.trace(F("disableCurrentReceiver: %d" CR), currentReceiver);
+  THEENGS_LOG_TRACE(F("disableCurrentReceiver: %d" CR), currentReceiver);
   switch (currentReceiver) {
     case ACTIVE_NONE:
       break;
@@ -138,12 +138,12 @@ void disableCurrentReceiver() {
       break;
 #  endif
     default:
-      Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
+      THEENGS_LOG_ERROR(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
   }
 }
 
 void enableActiveReceiver() {
-  Log.trace(F("enableActiveReceiver: %d" CR), RFConfig.activeReceiver);
+  THEENGS_LOG_TRACE(F("enableActiveReceiver: %d" CR), RFConfig.activeReceiver);
   switch (RFConfig.activeReceiver) {
 #  ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
@@ -174,10 +174,10 @@ void enableActiveReceiver() {
       break;
 #  endif
     case ACTIVE_RECERROR:
-      Log.error(F("ERROR: no receiver selected" CR));
+      THEENGS_LOG_ERROR(F("ERROR: no receiver selected" CR));
       break;
     default:
-      Log.error(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
+      THEENGS_LOG_ERROR(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
   }
 }
 
@@ -215,17 +215,17 @@ void RFConfig_fromJson(JsonObject& RFdata) {
   bool success = false;
   if (RFdata.containsKey("frequency") && validFrequency(RFdata["frequency"])) {
     Config_update(RFdata, "frequency", RFConfig.frequency);
-    Log.notice(F("RF Receive mhz: %F" CR), RFConfig.frequency);
+    THEENGS_LOG_NOTICE(F("RF Receive mhz: %F" CR), RFConfig.frequency);
     success = true;
   }
   if (RFdata.containsKey("active")) {
-    Log.notice(F("RF receiver active: %d" CR), RFConfig.activeReceiver);
+    THEENGS_LOG_NOTICE(F("RF receiver active: %d" CR), RFConfig.activeReceiver);
     Config_update(RFdata, "active", RFConfig.activeReceiver);
     success = true;
   }
 #  ifdef ZgatewayRTL_433
   if (RFdata.containsKey("rssithreshold")) {
-    Log.notice(F("RTL_433 RSSI Threshold : %d " CR), RFConfig.rssiThreshold);
+    THEENGS_LOG_NOTICE(F("RTL_433 RSSI Threshold : %d " CR), RFConfig.rssiThreshold);
     Config_update(RFdata, "rssithreshold", RFConfig.rssiThreshold);
     rtl_433.setRSSIThreshold(RFConfig.rssiThreshold);
     success = true;
@@ -233,18 +233,18 @@ void RFConfig_fromJson(JsonObject& RFdata) {
 #    if defined(RF_SX1276) || defined(RF_SX1278)
   if (RFdata.containsKey("ookthreshold")) {
     Config_update(RFdata, "ookthreshold", RFConfig.newOokThreshold);
-    Log.notice(F("RTL_433 ookThreshold %d" CR), RFConfig.newOokThreshold);
+    THEENGS_LOG_NOTICE(F("RTL_433 ookThreshold %d" CR), RFConfig.newOokThreshold);
     rtl_433.setOOKThreshold(RFConfig.newOokThreshold);
     success = true;
   }
 #    endif
   if (RFdata.containsKey("status")) {
-    Log.notice(F("RF get status:" CR));
+    THEENGS_LOG_NOTICE(F("RF get status:" CR));
     rtl_433.getStatus();
     success = true;
   }
   if (!success) {
-    Log.error(F("MQTTtoRF Fail json" CR));
+    THEENGS_LOG_ERROR(F("MQTTtoRF Fail json" CR));
   }
 #  endif
   disableCurrentReceiver();
@@ -255,11 +255,11 @@ void RFConfig_fromJson(JsonObject& RFdata) {
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("RFConfig")) {
       int result = preferences.remove("RFConfig");
-      Log.notice(F("RF config erase result: %d" CR), result);
+      THEENGS_LOG_NOTICE(F("RF config erase result: %d" CR), result);
       preferences.end();
       return; // Erase prevails on save, so skipping save
     } else {
-      Log.notice(F("RF config not found" CR));
+      THEENGS_LOG_NOTICE(F("RF config not found" CR));
       preferences.end();
     }
   }
@@ -279,7 +279,7 @@ void RFConfig_fromJson(JsonObject& RFdata) {
     preferences.begin(Gateway_Short_Name, false);
     int result = preferences.putString("RFConfig", conf);
     preferences.end();
-    Log.notice(F("RF Config_save: %s, result: %d" CR), conf.c_str(), result);
+    THEENGS_LOG_NOTICE(F("RF Config_save: %s, result: %d" CR), conf.c_str(), result);
   }
 #  endif
 }
@@ -299,19 +299,19 @@ void RFConfig_load() {
     auto error = deserializeJson(jsonBuffer, preferences.getString("RFConfig", "{}"));
     preferences.end();
     if (error) {
-      Log.error(F("RF Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      THEENGS_LOG_ERROR(F("RF Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
       return;
     }
     if (jsonBuffer.isNull()) {
-      Log.warning(F("RF Config is null" CR));
+      THEENGS_LOG_WARNING(F("RF Config is null" CR));
       return;
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
     RFConfig_fromJson(jo);
-    Log.notice(F("RF Config loaded" CR));
+    THEENGS_LOG_NOTICE(F("RF Config loaded" CR));
   } else {
     preferences.end();
-    Log.notice(F("RF Config not found using default" CR));
+    THEENGS_LOG_NOTICE(F("RF Config not found using default" CR));
     enableActiveReceiver();
   }
 #  else
@@ -321,7 +321,7 @@ void RFConfig_load() {
 
 void XtoRFset(const char* topicOri, JsonObject& RFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
-    Log.trace(F("MQTTtoRF json set" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoRF json set" CR));
 
     /*
      * Configuration modifications priorities:

@@ -82,7 +82,7 @@ void setupTouch() {
   status[9].pin = TOUCH_GPIO_9;
 #  endif
   for (int i = 0; i < TOUCH_SENSORS; i++) {
-    Log.notice(F("TOUCH_GPIO_%d: %d" CR), i, status[i].pin);
+    THEENGS_LOG_NOTICE(F("TOUCH_GPIO_%d: %d" CR), i, status[i].pin);
   }
   touchTimeRead = millis() - TOUCH_TIME_BETWEEN_READINGS; // so we get a first reading at the beginning
 }

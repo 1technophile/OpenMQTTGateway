@@ -97,9 +97,9 @@ void Config_update(JsonObject& data, const char* key, T& var) {
   if (data.containsKey(key)) {
     if (var != data[key].as<T>()) {
       var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
+      THEENGS_LOG_NOTICE(F("Config %s changed to: %T" CR), key, data[key].as<T>());
     } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
+      THEENGS_LOG_NOTICE(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
     }
   }
 }

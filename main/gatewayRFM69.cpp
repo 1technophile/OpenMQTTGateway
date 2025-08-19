@@ -77,7 +77,7 @@ void eeprom_setup() {
   pGC = (struct _GLOBAL_CONFIG*)EEPROM.getDataPtr();
   // if checksum bad init GC else use GC values
   if (gc_checksum() != pGC->checksum) {
-    Log.trace(F("Factory reset" CR));
+    THEENGS_LOG_TRACE(F("Factory reset" CR));
     memset(pGC, 0, sizeof(*pGC));
     strcpy_P(pGC->encryptkey, ENCRYPTKEY);
     strcpy_P(pGC->rfmapname, RFM69AP_NAME);
@@ -103,7 +103,7 @@ void setupRFM69(void) {
 
   // Initialize radio
   if (!radio.initialize(pGC->rfmfrequency, pGC->nodeid, pGC->networkid)) {
-    Log.error(F("gatewayRFM69 initialization failed" CR));
+    THEENGS_LOG_ERROR(F("gatewayRFM69 initialization failed" CR));
   }
 
   if (GC_IS_RFM69HCW) {
@@ -131,12 +131,12 @@ void setupRFM69(void) {
       freq = -1;
       break;
   }
-  Log.notice(F("gatewayRFM69 Listening and transmitting at: %d" CR), freq);
+  THEENGS_LOG_NOTICE(F("gatewayRFM69 Listening and transmitting at: %d" CR), freq);
 
   size_t len = snprintf_P(RadioConfig, sizeof(RadioConfig), JSONtemplate,
                           freq, GC_IS_RFM69HCW, pGC->networkid, GC_POWER_LEVEL);
   if (len >= sizeof(RadioConfig)) {
-    Log.trace(F("\n\n*** RFM69 config truncated ***\n" CR));
+    THEENGS_LOG_TRACE(F("\n\n*** RFM69 config truncated ***\n" CR));
   }
 }
 
@@ -161,7 +161,7 @@ bool RFM69toX(void) {
     }
     //updateClients(senderId, rssi, (const char *)data);
 
-    Log.trace(F("Data received: %s" CR), (const char*)data);
+    THEENGS_LOG_TRACE(F("Data received: %s" CR), (const char*)data);
 
     char buff[sizeof(subjectRFM69toMQTT) + 4];
     sprintf(buff, "%s/%d", subjectRFM69toMQTT, SENDERID);
@@ -180,7 +180,7 @@ bool RFM69toX(void) {
 #  if simpleReceiving
 void XtoRFM69(const char* topicOri, const char* datacallback) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
-    Log.trace(F("MQTTtoRFM69 data analysis" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoRFM69 data analysis" CR));
     char data[RF69_MAX_DATA_LEN + 1];
     memcpy(data, (void*)datacallback, RF69_MAX_DATA_LEN);
     data[RF69_MAX_DATA_LEN] = '\0';
@@ -192,16 +192,16 @@ void XtoRFM69(const char* topicOri, const char* datacallback) {
     if (pos != -1) {
       pos = pos + +strlen(RFM69receiverKey);
       valueRCV = (topic.substring(pos, pos + 3)).toInt();
-      Log.notice(F("RFM69 receiver ID: %d" CR), valueRCV);
+      THEENGS_LOG_NOTICE(F("RFM69 receiver ID: %d" CR), valueRCV);
     }
     if (radio.sendWithRetry(valueRCV, data, strlen(data), 10)) {
-      Log.notice(F(" OK " CR));
+      THEENGS_LOG_NOTICE(F(" OK " CR));
       // Acknowledgement to the GTWRF topic
       char buff[sizeof(subjectGTWRFM69toMQTT) + 4];
       sprintf(buff, "%s/%d", subjectGTWRFM69toMQTT, radio.SENDERID);
       pub(buff, data);
     } else {
-      Log.error(F("RFM69 sending failed" CR));
+      THEENGS_LOG_ERROR(F("RFM69 sending failed" CR));
     }
   }
 }
@@ -210,21 +210,21 @@ void XtoRFM69(const char* topicOri, const char* datacallback) {
 void XtoRFM69(const char* topicOri, JsonObject& RFM69data) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFM69)) {
     const char* data = RFM69data["data"];
-    Log.trace(F("MQTTtoRFM69 json data analysis" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoRFM69 json data analysis" CR));
     if (data) {
-      Log.trace(F("MQTTtoRFM69 data ok" CR));
+      THEENGS_LOG_TRACE(F("MQTTtoRFM69 data ok" CR));
       int valueRCV = RFM69data["receiverid"] | defaultRFM69ReceiverId; //default receiver id value
-      Log.notice(F("RFM69 receiver ID: %d" CR), valueRCV);
+      THEENGS_LOG_NOTICE(F("RFM69 receiver ID: %d" CR), valueRCV);
       if (radio.sendWithRetry(valueRCV, data, strlen(data), 10)) {
-        Log.notice(F(" OK " CR));
+        THEENGS_LOG_NOTICE(F(" OK " CR));
         // Acknowledgement to the GTWRF topic
         RFM69data["origin"] = subjectGTWRFM69toMQTT;
         enqueueJsonObject(RFM69data);
       } else {
-        Log.error(F("MQTTtoRFM69 sending failed" CR));
+        THEENGS_LOG_ERROR(F("MQTTtoRFM69 sending failed" CR));
       }
     } else {
-      Log.error(F("MQTTtoRFM69 failed json read" CR));
+      THEENGS_LOG_ERROR(F("MQTTtoRFM69 failed json read" CR));
     }
   }
 }

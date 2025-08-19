@@ -43,7 +43,7 @@ int InputState = 3; // Set to 3 so that it reads on startup
 int previousInputState = 3;
 
 void setupGPIOInput() {
-  Log.notice(F("Reading GPIO at pin: %d" CR), INPUT_GPIO);
+  THEENGS_LOG_NOTICE(F("Reading GPIO at pin: %d" CR), INPUT_GPIO);
   pinMode(INPUT_GPIO, GPIO_INPUT_TYPE); // declare GPIOInput pin as input_pullup to prevent floating. Pin will be high when not connected to ground
 }
 
@@ -69,7 +69,7 @@ void MeasureGPIOInput() {
       if (resetTime == 0) {
         resetTime = millis();
       } else if ((millis() - resetTime) > 3000) {
-        Log.trace(F("Button Held" CR));
+        THEENGS_LOG_TRACE(F("Button Held" CR));
         gatewayState = GatewayState::WAITING_ONBOARDING;
 // Switching off the relay during reset or failsafe operations
 #    ifdef ZactuatorONOFF
@@ -78,7 +78,7 @@ void MeasureGPIOInput() {
           ActuatorTrigger();
         }
 #    endif
-        Log.notice(F("Erasing ESP Config, restarting" CR));
+        THEENGS_LOG_NOTICE(F("Erasing ESP Config, restarting" CR));
         eraseConfig();
       }
     } else {
@@ -87,7 +87,7 @@ void MeasureGPIOInput() {
 #  endif
     // if the Input state has changed:
     if (reading != InputState) {
-      Log.trace(F("Creating GPIOInput buffer" CR));
+      THEENGS_LOG_TRACE(F("Creating GPIOInput buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> GPIOdataBuffer;
       JsonObject GPIOdata = GPIOdataBuffer.to<JsonObject>();
       if (InputState == HIGH) {

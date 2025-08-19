@@ -47,7 +47,7 @@
 static unsigned long timetemt6000 = 0;
 
 void setupZsensorTEMT6000() {
-  Log.notice(F("Setup TEMT6000 on pin: %i" CR), TEMT6000LIGHTSENSORPIN);
+  THEENGS_LOG_NOTICE(F("Setup TEMT6000 on pin: %i" CR), TEMT6000LIGHTSENSORPIN);
   pinMode(TEMT6000LIGHTSENSORPIN, INPUT);
 }
 
@@ -56,7 +56,7 @@ void MeasureLightIntensityTEMT6000() {
     static uint32_t persisted_lux;
     timetemt6000 = millis();
 
-    Log.trace(F("Creating TEMT6000 buffer" CR));
+    THEENGS_LOG_TRACE(F("Creating TEMT6000 buffer" CR));
     StaticJsonDocument<JSON_MSG_BUFFER> TEMT6000dataBuffer;
     JsonObject TEMT6000data = TEMT6000dataBuffer.to<JsonObject>();
 
@@ -74,7 +74,7 @@ void MeasureLightIntensityTEMT6000() {
       TEMT6000data["origin"] = subjectTEMT6000toMQTT;
       enqueueJsonObject(TEMT6000data);
     } else {
-      Log.trace(F("Same lux value, do not send" CR));
+      THEENGS_LOG_TRACE(F("Same lux value, do not send" CR));
     }
   }
 }

@@ -99,22 +99,22 @@ void setupIR() {
 
   irrecv.enableIRIn(); // Start the receiver
 
-  Log.notice(F("IR_EMITTER_GPIO: %d " CR), IR_EMITTER_GPIO);
-  Log.notice(F("IR_RECEIVER_GPIO: %d " CR), IR_RECEIVER_GPIO);
-  Log.trace(F("gatewayIR setup done " CR));
+  THEENGS_LOG_NOTICE(F("IR_EMITTER_GPIO: %d " CR), IR_EMITTER_GPIO);
+  THEENGS_LOG_NOTICE(F("IR_RECEIVER_GPIO: %d " CR), IR_RECEIVER_GPIO);
+  THEENGS_LOG_TRACE(F("gatewayIR setup done " CR));
 }
 
 void IRtoX() {
   decode_results results;
 
   if (irrecv.decode(&results)) {
-    Log.trace(F("Creating IR buffer" CR));
+    THEENGS_LOG_TRACE(F("Creating IR buffer" CR));
     StaticJsonDocument<JSON_MSG_BUFFER> IRdataBuffer;
     JsonObject IRdata = IRdataBuffer.to<JsonObject>();
 
-    Log.trace(F("Rcv. IR" CR));
+    THEENGS_LOG_TRACE(F("Rcv. IR" CR));
 #  ifdef ESP32
-    Log.trace(F("IR Task running on core :%d" CR), xPortGetCoreID());
+    THEENGS_LOG_TRACE(F("IR Task running on core :%d" CR), xPortGetCoreID());
 #  endif
     IRdata["value"] = uint64_t(results.value);
     IRdata["protocol"] = (int)(results.decode_type);
@@ -140,21 +140,21 @@ void IRtoX() {
       rawsend[i] = results.rawbuf[i];
     }
     irsend.sendRaw(rawsend, results.rawlen, RawFrequency);
-    Log.trace(F("raw redirected" CR));
+    THEENGS_LOG_TRACE(F("raw redirected" CR));
 #  endif
     irrecv.resume(); // Receive the next value
     uint64_t MQTTvalue = IRdata["value"].as<uint64_t>();
     //trc(MQTTvalue);
     if ((pubIRunknownPrtcl == false && IRdata["protocol"].as<int>() == -1)) { // don't publish unknown IR protocol
-      Log.notice(F("--no pub unknwn prt--" CR));
+      THEENGS_LOG_NOTICE(F("--no pub unknwn prt--" CR));
     } else if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of IR -->MQTT
-      Log.trace(F("Adv data IRtoMQTT" CR));
+      THEENGS_LOG_TRACE(F("Adv data IRtoMQTT" CR));
       IRdata["origin"] = subjectIRtoMQTT;
       enqueueJsonObject(IRdata);
-      Log.trace(F("Store val: %D" CR), MQTTvalue);
+      THEENGS_LOG_TRACE(F("Store val: %D" CR), MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatIRwMQTT) {
-        Log.trace(F("Pub. IR for rpt" CR));
+        THEENGS_LOG_TRACE(F("Pub. IR for rpt" CR));
         pubMQTT(subjectForwardMQTTtoIR, MQTTvalue);
       }
     }
@@ -166,16 +166,16 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  if jsonReceiving
 void XtoIR(const char* topicOri, JsonObject& IRdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoIR)) {
-    Log.trace(F("MQTTtoIR json" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoIR json" CR));
     uint64_t data = IRdata["value"];
     const char* raw = IRdata["raw"];
     const char* hex = IRdata["hex"];
     if (hex) { // we privilegiate the hex usage over the value one (less risk of error)
-      Log.trace(F("hex: %s" CR), hex);
+      THEENGS_LOG_TRACE(F("hex: %s" CR), hex);
       data = getUInt64fromHex(hex);
     }
     if (data != 0 || raw) {
-      Log.trace(F("MQTTtoIR value || raw  detected" CR));
+      THEENGS_LOG_TRACE(F("MQTTtoIR value || raw  detected" CR));
       irrecv.disableIRIn();
       bool signalSent = false;
       const char* protocol_name = IRdata["protocol_name"];
@@ -183,7 +183,7 @@ void XtoIR(const char* topicOri, JsonObject& IRdata) {
       uint16_t valueRPT = IRdata["repeat"] | repeatIRwNumber;
 
       if (raw) {
-        Log.trace(F("Raw: %s" CR), raw);
+        THEENGS_LOG_TRACE(F("Raw: %s" CR), raw);
         unsigned int s = strlen(raw);
         //number of "," value count
         int count = 0;
@@ -194,7 +194,7 @@ void XtoIR(const char* topicOri, JsonObject& IRdata) {
         }
 #    ifdef IR_GC
         if (strcmp(protocol_name, "GC") == 0) { // sending GC data from https://irdb.globalcache.com
-          Log.trace(F("GC" CR));
+          THEENGS_LOG_TRACE(F("GC" CR));
           //buffer allocation from char datacallback
           uint16_t GC[count + 1];
           String value = "";
@@ -215,7 +215,7 @@ void XtoIR(const char* topicOri, JsonObject& IRdata) {
 #    endif
 #    ifdef IR_RAW
         if (strcmp(protocol_name, "Raw") == 0) { // sending Raw data
-          Log.trace(F("Raw" CR));
+          THEENGS_LOG_TRACE(F("Raw" CR));
           //buffer allocation from char datacallback
           uint16_t Raw[count + 1];
           String value = "";
@@ -235,24 +235,24 @@ void XtoIR(const char* topicOri, JsonObject& IRdata) {
         }
 #    endif
       } else if (protocol_name && (strcmp(protocol_name, "NEC") != 0)) {
-        Log.trace(F("Using Identified Protocol: %s  bits: %d repeat: %d" CR), protocol_name, valueBITS, valueRPT);
+        THEENGS_LOG_TRACE(F("Using Identified Protocol: %s  bits: %d repeat: %d" CR), protocol_name, valueBITS, valueRPT);
         signalSent = sendIdentifiedProtocol(protocol_name, data, hex, valueBITS, valueRPT);
       } else {
-        Log.trace(F("Using NEC protocol" CR));
-        Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+        THEENGS_LOG_TRACE(F("Using NEC protocol" CR));
+        THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
         if (valueBITS == 0)
           valueBITS = NEC_BITS;
         irsend.sendNEC(data, valueBITS, valueRPT);
         signalSent = true;
       }
       if (signalSent) { // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
-        Log.notice(F("MQTTtoIR OK" CR));
+        THEENGS_LOG_NOTICE(F("MQTTtoIR OK" CR));
         IRdata["origin"] = subjectGTWIRtoMQTT;
         enqueueJsonObject(IRdata);
       }
       irrecv.enableIRIn(); // ReStart the IR receiver (if not restarted it is not able to receive data)
     } else {
-      Log.error(F("MQTTtoIR failed json read" CR));
+      THEENGS_LOG_ERROR(F("MQTTtoIR failed json read" CR));
     }
   }
 }
@@ -268,12 +268,12 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
       ptr += 2;
     }
     for (int i = 0; i < valueBITS; i++) {
-      Log.trace(F("%x"), dataarray[i]);
+      THEENGS_LOG_TRACE(F("%x"), dataarray[i]);
     }
   }
 #  ifdef IR_WHYNTER
   if (strcmp(protocol_name, "WHYNTER") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = WHYNTER_BITS;
     irsend.sendWhynter(data, valueBITS, valueRPT);
@@ -282,7 +282,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_LG
   if (strcmp(protocol_name, "LG") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = LG_BITS;
     irsend.sendLG(data, valueBITS, valueRPT);
@@ -291,7 +291,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SONY
   if (strcmp(protocol_name, "SONY") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = SONY_20_BITS;
     irsend.sendSony(data, valueBITS, valueRPT);
@@ -300,7 +300,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DISH
   if (strcmp(protocol_name, "DISH") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = DISH_BITS;
     irsend.sendDISH(data, valueBITS, valueRPT);
@@ -309,7 +309,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_RC5
   if (strcmp(protocol_name, "RC5") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = RC5_BITS;
     irsend.sendRC5(data, valueBITS, valueRPT);
@@ -318,7 +318,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_RC6
   if (strcmp(protocol_name, "RC6") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = RC6_MODE0_BITS;
     irsend.sendRC6(data, valueBITS, valueRPT);
@@ -327,7 +327,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SHARP
   if (strcmp(protocol_name, "SHARP") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = SHARP_BITS;
     irsend.sendSharpRaw(data, valueBITS, valueRPT);
@@ -336,7 +336,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SAMSUNG
   if (strcmp(protocol_name, "SAMSUNG") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = SAMSUNG_BITS;
     irsend.sendSAMSUNG(data, valueBITS, valueRPT);
@@ -345,7 +345,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_JVC
   if (strcmp(protocol_name, "JVC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = JVC_BITS;
     irsend.sendJVC(data, valueBITS, valueRPT);
@@ -354,7 +354,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_PANASONIC
   if (strcmp(protocol_name, "PANASONIC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = PANASONIC_BITS;
     irsend.sendPanasonic(PanasonicAddress, data, valueBITS, valueRPT);
@@ -364,8 +364,8 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 
 #  ifdef IR_COOLIX
   if (strcmp(protocol_name, "COOLIX") == 0) {
-    Log.trace(F("Sending %s:" CR), protocol_name);
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_TRACE(F("Sending %s:" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kCoolixBits;
     if (valueRPT == repeatIRwNumber)
@@ -376,8 +376,8 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_RCMM
   if (strcmp(protocol_name, "RCMM") == 0) {
-    Log.trace(F("Sending %s:" CR), protocol_name);
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_TRACE(F("Sending %s:" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kRCMMBits;
     irsend.sendRCMM(data, valueBITS, valueRPT);
@@ -386,7 +386,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DENON
   if (strcmp(protocol_name, "DENON") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = DENON_BITS;
     irsend.sendDenon(data, valueBITS, valueRPT);
@@ -395,7 +395,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_GICABLE
   if (strcmp(protocol_name, "GICABLE") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kGicableBits;
     if (valueRPT == repeatIRwNumber)
@@ -406,7 +406,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SHERWOOD
   if (strcmp(protocol_name, "SHERWOOD") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSherwoodBits;
     if (valueRPT == repeatIRwNumber)
@@ -417,7 +417,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHI
   if (strcmp(protocol_name, "MITSUBISHI") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishiBits;
     if (valueRPT == repeatIRwNumber)
@@ -428,7 +428,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_NIKAI
   if (strcmp(protocol_name, "NIKAI") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kNikaiBits;
     irsend.sendNikai(data, valueBITS, valueRPT);
@@ -437,7 +437,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MIDEA
   if (strcmp(protocol_name, "MIDEA") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMideaBits;
     if (valueRPT == repeatIRwNumber)
@@ -448,7 +448,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MAGIQUEST
   if (strcmp(protocol_name, "MAGIQUEST") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMagiquestBits;
     irsend.sendMagiQuest(data, valueBITS, valueRPT);
@@ -457,7 +457,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_LASERTAG
   if (strcmp(protocol_name, "LASERTAG") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kLasertagBits;
     if (valueRPT == repeatIRwNumber)
@@ -468,7 +468,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_CARRIER_AC
   if (strcmp(protocol_name, "CARRIER_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kCarrierAcBits;
     if (valueRPT == repeatIRwNumber)
@@ -479,7 +479,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHI2
   if (strcmp(protocol_name, "MITSUBISHI2") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishiBits;
     if (valueRPT == repeatIRwNumber)
@@ -490,7 +490,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_AIWA_RC_T501
   if (strcmp(protocol_name, "AIWA_RC_T501") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kAiwaRcT501Bits;
     if (valueRPT == repeatIRwNumber)
@@ -501,7 +501,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN
   if (strcmp(protocol_name, "DAIKIN") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikinStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -512,7 +512,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_KELVINATOR
   if (strcmp(protocol_name, "KELVINATOR") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kKelvinatorStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -523,7 +523,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHI_AC
   if (strcmp(protocol_name, "MITSUBISHI_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishiACStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -534,7 +534,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SANYO
   if (strcmp(protocol_name, "SANYOLC7461") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSanyoLC7461Bits;
     irsend.sendSanyoLC7461(data, valueBITS, valueRPT);
@@ -543,7 +543,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_GREE
   if (strcmp(protocol_name, "GREE") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kGreeStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -554,7 +554,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_ARGO
   if (strcmp(protocol_name, "ARGO") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kArgoStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -565,7 +565,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TROTEC
   if (strcmp(protocol_name, "TROTEC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kTrotecStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -576,7 +576,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TOSHIBA_AC
   if (strcmp(protocol_name, "TOSHIBA_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kToshibaACBits;
     if (valueRPT == repeatIRwNumber)
@@ -595,7 +595,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HAIER_AC
   if (strcmp(protocol_name, "HAIER_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHaierACStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -606,7 +606,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC
   if (strcmp(protocol_name, "HITACHI_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAcStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -617,7 +617,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC1
   if (strcmp(protocol_name, "HITACHI_AC1") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc1StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -628,7 +628,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC2
   if (strcmp(protocol_name, "HITACHI_AC2") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc2StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -639,7 +639,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HAIER_AC_YRW02
   if (strcmp(protocol_name, "HAIER_AC_YRW02") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHaierACYRW02StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -650,7 +650,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_WHIRLPOOL_AC
   if (strcmp(protocol_name, "WHIRLPOOL_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kWhirlpoolAcStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -661,7 +661,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SAMSUNG_AC
   if (strcmp(protocol_name, "SAMSUNG_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSamsungAcStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -672,7 +672,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_LUTRON
   if (strcmp(protocol_name, "LUTRON") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kLutronBits;
     irsend.sendLutron(data, valueBITS, valueRPT);
@@ -681,7 +681,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_ELECTRA_AC
   if (strcmp(protocol_name, "ELECTRA_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kElectraAcStateLength;
     irsend.sendElectraAC(dataarray, valueBITS, valueRPT);
@@ -690,7 +690,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_PANASONIC_AC
   if (strcmp(protocol_name, "PANASONIC_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kPanasonicAcStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -701,7 +701,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_PIONEER
   if (strcmp(protocol_name, "PIONEER") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kPioneerBits;
     irsend.sendPioneer(data, valueBITS, valueRPT);
@@ -710,7 +710,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_LG2
   if (strcmp(protocol_name, "LG2") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kLgBits;
     irsend.sendLG2(data, valueBITS, valueRPT);
@@ -725,7 +725,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN2
   if (strcmp(protocol_name, "DAIKIN2") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikin2StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -736,7 +736,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_VESTEL_AC
   if (strcmp(protocol_name, "VESTEL_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kVestelAcBits;
     irsend.sendVestelAc(data, valueBITS, valueRPT);
@@ -745,7 +745,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SAMSUNG36
   if (strcmp(protocol_name, "SAMSUNG36") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSamsung36Bits;
     irsend.sendSamsung36(data, valueBITS, valueRPT);
@@ -754,7 +754,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TCL112AC
   if (strcmp(protocol_name, "TCL112AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kTcl112AcStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -765,7 +765,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TECO
   if (strcmp(protocol_name, "TECO") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kTecoBits;
     irsend.sendTeco(data, valueBITS, valueRPT);
@@ -774,7 +774,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_LEGOPF
   if (strcmp(protocol_name, "LEGOPF") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kLegoPfBits;
     if (valueRPT == repeatIRwNumber)
@@ -785,7 +785,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHIHEAVY88
   if (strcmp(protocol_name, "MITSUBISHIHEAVY88") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishiHeavy88StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -796,7 +796,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHIHEAVY152
   if (strcmp(protocol_name, "MITSUBISHIHEAVY152") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishiHeavy152StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -807,7 +807,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN216
   if (strcmp(protocol_name, "DAIKIN216") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikin216StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -818,7 +818,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SHARP_AC
   if (strcmp(protocol_name, "SHARP_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSharpAcStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -829,7 +829,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_GOODWEATHER
   if (strcmp(protocol_name, "GOODWEATHER_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kGoodweatherBits;
     if (valueRPT == repeatIRwNumber)
@@ -840,7 +840,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_INAX
   if (strcmp(protocol_name, "INAX") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kInaxBits;
     if (valueRPT == repeatIRwNumber)
@@ -851,7 +851,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN160
   if (strcmp(protocol_name, "DAIKIN160") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikin160StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -862,7 +862,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_NEOCLIMA
   if (strcmp(protocol_name, "NEOCLIMA") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kNeoclimaStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -873,7 +873,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN176
   if (strcmp(protocol_name, "DAIKIN176") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikin176StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -884,7 +884,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN128
   if (strcmp(protocol_name, "DAIKIN128") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikin128StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -895,7 +895,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_AMCOR
   if (strcmp(protocol_name, "AMCOR") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kAmcorStateLength;
     if (valueRPT == repeatIRwNumber)
@@ -906,7 +906,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DAIKIN152
   if (strcmp(protocol_name, "DAIKIN152") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDaikin152StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -917,7 +917,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHI136
   if (strcmp(protocol_name, "MITSUBISHI136") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishi136StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -928,7 +928,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MITSUBISHI112
   if (strcmp(protocol_name, "MITSUBISHI112") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kMitsubishi112StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -939,7 +939,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC424
   if (strcmp(protocol_name, "HITACHI_AC424") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc424StateLength;
     if (valueRPT == repeatIRwNumber)
@@ -950,7 +950,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SONY_38K
   if (strcmp(protocol_name, "SONY_38K") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, (uint16_t)(kSonyMinRepeat + 1));
     if (valueBITS == 0)
@@ -961,7 +961,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_EPSON
   if (strcmp(protocol_name, "EPSON") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kEpsonMinRepeat);
     if (valueBITS == 0)
@@ -972,7 +972,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SYMPHONY
   if (strcmp(protocol_name, "SYMPHONY") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kSymphonyDefaultRepeat);
     if (valueBITS == 0)
@@ -983,18 +983,18 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC3
   if (strcmp(protocol_name, "HITACHI_AC3") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kHitachiAcDefaultRepeat);
     if (valueBITS == 0)
-      Log.error(F("For this protocol you should have a BIT number as there is no default one defined" CR));
+      THEENGS_LOG_ERROR(F("For this protocol you should have a BIT number as there is no default one defined" CR));
     irsend.sendHitachiAc3(dataarray, valueBITS, valueRPT);
     return true;
   }
 #  endif
 #  ifdef IR_DAIKIN64
   if (strcmp(protocol_name, "DAIKIN64") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kDaikin64DefaultRepeat);
     if (valueBITS == 0)
@@ -1005,7 +1005,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_AIRWELL
   if (strcmp(protocol_name, "AIRWELL") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kAirwellMinRepeats);
     if (valueBITS == 0)
@@ -1016,7 +1016,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DELONGHI_AC
   if (strcmp(protocol_name, "DELONGHI_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kDelonghiAcDefaultRepeat);
     if (valueBITS == 0)
@@ -1027,7 +1027,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_DOSHISHA
   if (strcmp(protocol_name, "DOSHISHA") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kDoshishaBits;
     irsend.sendDoshisha(data, valueBITS, valueRPT);
@@ -1036,7 +1036,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_CARRIER_AC40
   if (strcmp(protocol_name, "CARRIER_AC40") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kCarrierAc40MinRepeat);
     if (valueBITS == 0)
@@ -1047,7 +1047,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_CARRIER_AC64
   if (strcmp(protocol_name, "CARRIER_AC64") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kCarrierAc64MinRepeat);
     if (valueBITS == 0)
@@ -1058,7 +1058,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC344
   if (strcmp(protocol_name, "HITACHI_AC344") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc344StateLength;
     irsend.sendHitachiAc344(dataarray, valueBITS, valueRPT);
@@ -1067,7 +1067,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_CORONA_AC
   if (strcmp(protocol_name, "CORONA_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kCoronaAcStateLength;
     irsend.sendCoronaAc(dataarray, valueBITS, valueRPT);
@@ -1076,7 +1076,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MIDEA24
   if (strcmp(protocol_name, "MIDEA24") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kMidea24MinRepeat);
     if (valueBITS == 0)
@@ -1087,7 +1087,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_ZEPEAL
   if (strcmp(protocol_name, "EPEAL") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kZepealMinRepeat);
     if (valueBITS == 0)
@@ -1098,7 +1098,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SANYO_AC
   if (strcmp(protocol_name, "SANYO_AC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSanyoAcStateLength;
     irsend.sendSanyoAc(dataarray, valueBITS, valueRPT);
@@ -1107,7 +1107,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_VOLTAS
   if (strcmp(protocol_name, "VOLTAS") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kVoltasStateLength;
     irsend.sendVoltas(dataarray, valueBITS, valueRPT);
@@ -1116,7 +1116,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_METZ
   if (strcmp(protocol_name, "METZ") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kMetzMinRepeat);
     if (valueBITS == 0)
@@ -1127,7 +1127,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TRANSCOLD
   if (strcmp(protocol_name, "TRANSCOLD") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kTranscoldDefaultRepeat);
     if (valueBITS == 0)
@@ -1138,7 +1138,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TECHNIBEL_AC
   if (strcmp(protocol_name, "TECHNIBELAC") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kTechnibelAcDefaultRepeat);
     if (valueBITS == 0)
@@ -1149,7 +1149,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MIRAGE
   if (strcmp(protocol_name, "MIRAGE") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kMirageMinRepeat);
     if (valueBITS == 0)
@@ -1160,7 +1160,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_ELITESCREENS
   if (strcmp(protocol_name, "ELITESCREENS") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kEliteScreensDefaultRepeat);
     if (valueBITS == 0)
@@ -1171,7 +1171,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_PANASONIC_AC32
   if (strcmp(protocol_name, "PANASONIC_AC32") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kPioneerBits;
     irsend.sendPanasonicAC32(data, valueBITS, valueRPT);
@@ -1180,7 +1180,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_MILESTAG2
   if (strcmp(protocol_name, "MILESTAG2") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueRPT == repeatIRwNumber)
       valueRPT = std::max(valueRPT, kMilesMinRepeat);
     if (valueBITS == 0)
@@ -1191,7 +1191,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_ECOCLIM
   if (strcmp(protocol_name, "ECOCLIM") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kEcoclimBits;
     irsend.sendEcoclim(data, valueBITS, valueRPT);
@@ -1200,7 +1200,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_XMP
   if (strcmp(protocol_name, "XMP") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kXmpBits;
     irsend.sendXmp(data, valueBITS, valueRPT);
@@ -1209,7 +1209,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_KELON168
   if (strcmp(protocol_name, "KELON168") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kKelon168Bits;
     irsend.sendKelon168(dataarray, valueBITS, valueRPT);
@@ -1218,7 +1218,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TEKNOPOINT
   if (strcmp(protocol_name, "TEKNOPOINT") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kTeknopointBits;
     irsend.sendTeknopoint(dataarray, valueBITS, valueRPT);
@@ -1227,7 +1227,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HAIER_AC176
   if (strcmp(protocol_name, "HAIER_AC176") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHaierAC176Bits;
     irsend.sendHaierAC176(dataarray, valueBITS, valueRPT);
@@ -1236,7 +1236,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_BOSE
   if (strcmp(protocol_name, "BOSE") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kBoseBits;
     irsend.sendBose(data, valueBITS, valueRPT);
@@ -1245,7 +1245,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_SANYO_AC88
   if (strcmp(protocol_name, "SANYO_AC88") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kSanyoAc88Bits;
     irsend.sendSanyoAc88(dataarray, valueBITS, valueRPT);
@@ -1254,7 +1254,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_TROTEC_3550
   if (strcmp(protocol_name, "TROTEC_3550") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kTrotecBits;
     irsend.sendTrotec3550(dataarray, valueBITS, valueRPT);
@@ -1263,7 +1263,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_ARRIS
   if (strcmp(protocol_name, "ARRIS") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kArrisBits;
     irsend.sendArris(data, valueBITS, valueRPT);
@@ -1272,7 +1272,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_RHOSS
   if (strcmp(protocol_name, "RHOSS") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kRhossBits;
     irsend.sendRhoss(dataarray, valueBITS, valueRPT);
@@ -1281,7 +1281,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_AIRTON
   if (strcmp(protocol_name, "AIRTON") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kAirtonBits;
     irsend.sendAirton(data, valueBITS, valueRPT);
@@ -1290,7 +1290,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_COOLIX48
   if (strcmp(protocol_name, "COOLIX48") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kCoolix48Bits;
     irsend.sendCoolix48(data, valueBITS, valueRPT);
@@ -1299,7 +1299,7 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC264
   if (strcmp(protocol_name, "HITACHI_AC264") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc264Bits;
     irsend.sendHitachiAc264(dataarray, valueBITS, valueRPT);
@@ -1308,14 +1308,14 @@ bool sendIdentifiedProtocol(const char* protocol_name, uint64_t data, const char
 #  endif
 #  ifdef IR_HITACHI_AC296
   if (strcmp(protocol_name, "HITACHI_AC296") == 0) {
-    Log.notice(F("Sending IR signal with %s" CR), protocol_name);
+    THEENGS_LOG_NOTICE(F("Sending IR signal with %s" CR), protocol_name);
     if (valueBITS == 0)
       valueBITS = kHitachiAc296Bits;
     irsend.sendHitachiAc296(dataarray, valueBITS, valueRPT);
     return true;
   }
 #  endif
-  Log.warning(F("Unknown IR protocol" CR));
+  THEENGS_LOG_WARNING(F("Unknown IR protocol" CR));
   return false;
 }
 #endif

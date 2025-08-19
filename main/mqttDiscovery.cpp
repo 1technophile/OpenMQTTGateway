@@ -298,7 +298,7 @@ void announceGatewayTrigger(const char* triggerTopic,
      */
     sensor["info_topic"] = state_topic;
   } else {
-    Log.error(F("[RF] Error: topic is mandatory for device trigger Discovery" CR));
+    THEENGS_LOG_ERROR(F("[RF] Error: topic is mandatory for device trigger Discovery" CR));
     return;
   }
 
@@ -389,7 +389,7 @@ void announceGatewayTrigger(const char* triggerTopic,
    */
 
   String topic_to_publish = String(discovery_prefix) + "/device_automation/" + String(unique_id) + "/" + object_id + "/config";
-  Log.trace(F("Announce Gatewy Trigger  %s" CR), topic_to_publish.c_str());
+  THEENGS_LOG_TRACE(F("Announce Gatewy Trigger  %s" CR), topic_to_publish.c_str());
   sensor["topic"] = topic_to_publish;
   sensor["retain"] = true;
   enqueueJsonObject(sensor);
@@ -667,7 +667,7 @@ void createDiscovery(const char* sensor_type,
   sensor["dev"] = device; // device
 
   String topic = String(discovery_prefix) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
-  Log.trace(F("Announce Device %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
+  THEENGS_LOG_TRACE(F("Announce Device %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   sensor["topic"] = topic;
   sensor["retain"] = true;
   enqueueJsonObject(sensor);
@@ -678,7 +678,7 @@ void eraseTopic(const char* sensor_type, const char* unique_id) {
     return;
   }
   String topic = String(discovery_prefix) + "/" + String(sensor_type) + "/" + String(unique_id) + "/config";
-  Log.trace(F("Erase entity discovery %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
+  THEENGS_LOG_TRACE(F("Erase entity discovery %s on  %s" CR), String(sensor_type).c_str(), topic.c_str());
   pubMQTT((char*)topic.c_str(), "", true);
 }
 
@@ -706,7 +706,7 @@ void btScanParametersDiscovery() {
 #  endif
 
 void pubMqttDiscovery() {
-  Log.trace(F("omgStatusDiscovery" CR));
+  THEENGS_LOG_TRACE(F("omgStatusDiscovery" CR));
 
   // System sensors and controls - using extended 13-column format with macros
   const char* systemEntities[][13] = {
@@ -815,7 +815,7 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "BME: Altitude", "bme-altim", "", jsonAltim, "", "", HASS_UNIT_METER, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "BME: Altitude (ft)", "bme-altift", "", jsonAltif, "", "", HASS_UNIT_FT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("bme280Discovery" CR));
+  THEENGS_LOG_TRACE(F("bme280Discovery" CR));
   createDiscoveryFromList(nullptr, BMEsensor, 5, nullptr, nullptr, nullptr,
                           true, BMETOPIC, will_Topic, nullptr);
 #  endif
@@ -826,13 +826,13 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "HTU: Temperature", "htu-temp", HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "HTU: Humidity", "htu-hum", HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("htu21Discovery" CR));
+  THEENGS_LOG_TRACE(F("htu21Discovery" CR));
   createDiscoveryFromList(nullptr, HTUsensor, 2, nullptr, nullptr, nullptr,
                           true, HTUTOPIC, will_Topic, nullptr);
 #  endif
 
 #  ifdef ZsensorLM75
-  Log.trace(F("LM75Discovery" CR));
+  THEENGS_LOG_TRACE(F("LM75Discovery" CR));
   const char* LM75sensor[][13] = {
       {HASS_TYPE_SENSOR, "LM75: Temperature", "lm75-temp", HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
@@ -846,7 +846,7 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "AHT: Temperature", "aht-temp", HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "AHT: Humidity", "aht-hum", HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("AHTx0Discovery" CR));
+  THEENGS_LOG_TRACE(F("AHTx0Discovery" CR));
   createDiscoveryFromList(nullptr, AHTsensor, 2, nullptr, nullptr, nullptr,
                           true, AHTTOPIC, will_Topic, nullptr);
 #  endif
@@ -857,14 +857,14 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "DHT: Temperature", "dht-temp", HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "DHT: Humidity", "dht-hum", HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("DHTDiscovery" CR));
+  THEENGS_LOG_TRACE(F("DHTDiscovery" CR));
   createDiscoveryFromList(nullptr, DHTsensor, 2, nullptr, nullptr, nullptr,
                           true, DHTTOPIC, will_Topic, nullptr);
 #  endif
 
 #  ifdef ZsensorADC
 #    include "config_ADC.h"
-  Log.trace(F("ADCDiscovery" CR));
+  THEENGS_LOG_TRACE(F("ADCDiscovery" CR));
   const char* ADCsensor[][13] = {
       {HASS_TYPE_SENSOR, "ADC", "adc", "", jsonAdc, "", "", "", stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
@@ -879,7 +879,7 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "BH1750: ftCd", "BH1750-ftcd", HASS_CLASS_IRRADIANCE, jsonFtcd, "", "", "", stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "BH1750: wattsm2", "BH1750-wm2", HASS_CLASS_IRRADIANCE, jsonWm2, "", "", HASS_UNIT_WM2, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("BH1750Discovery" CR));
+  THEENGS_LOG_TRACE(F("BH1750Discovery" CR));
   createDiscoveryFromList(nullptr, BH1750sensor, 3, nullptr, nullptr, nullptr,
                           true, subjectBH1750toMQTT, will_Topic, nullptr);
 #  endif
@@ -890,7 +890,7 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "MQ2: gas", "MQ2-gas", HASS_CLASS_GAS, jsonVal, "", "", HASS_UNIT_PPM, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_BINARY_SENSOR, "MQ2", "", HASS_CLASS_GAS, jsonPresence, "true", "false", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("MQ2Discovery" CR));
+  THEENGS_LOG_TRACE(F("MQ2Discovery" CR));
   createDiscoveryFromList(nullptr, MQ2sensor, 2, nullptr, nullptr, nullptr,
                           true, subjectMQ2toMQTT, will_Topic, nullptr);
 #  endif
@@ -902,7 +902,7 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "TEMT6000: ftCd", "TEMT6000-ftcd", HASS_CLASS_IRRADIANCE, jsonFtcd, "", "", "", stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "TEMT6000: wattsm2", "TEMT6000-wm2", HASS_CLASS_IRRADIANCE, jsonWm2, "", "", HASS_UNIT_WM2, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("TEMT6000Discovery" CR));
+  THEENGS_LOG_TRACE(F("TEMT6000Discovery" CR));
   createDiscoveryFromList(nullptr, TEMT6000sensor, 3, nullptr, nullptr, nullptr,
                           true, subjectTEMT6000toMQTT, will_Topic, nullptr);
 #  endif
@@ -914,14 +914,14 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "TSL2561: ftCd", "TSL2561-ftcd", HASS_CLASS_IRRADIANCE, jsonFtcd, "", "", "", stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "TSL2561: wattsm2", "TSL2561-wm2", HASS_CLASS_IRRADIANCE, jsonWm2, "", "", HASS_UNIT_WM2, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("TSL2561Discovery" CR));
+  THEENGS_LOG_TRACE(F("TSL2561Discovery" CR));
   createDiscoveryFromList(nullptr, TSL2561sensor, 3, nullptr, nullptr, nullptr,
                           true, subjectTSL12561toMQTT, will_Topic, nullptr);
 #  endif
 
 #  ifdef ZsensorHCSR501
 #    include "config_HCSR501.h"
-  Log.trace(F("HCSR501Discovery" CR));
+  THEENGS_LOG_TRACE(F("HCSR501Discovery" CR));
   const char* HCSR501sensor[][13] = {
       {HASS_TYPE_BINARY_SENSOR, "hcsr501", "", HASS_CLASS_MOTION, jsonPresence, "true", "false", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -931,7 +931,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZsensorGPIOInput
 #    include "config_GPIOInput.h"
-  Log.trace(F("GPIOInputDiscovery" CR));
+  THEENGS_LOG_TRACE(F("GPIOInputDiscovery" CR));
   const char* GPIOInputsensor[][13] = {
       {HASS_TYPE_BINARY_SENSOR, "GPIOInput", "", "", jsonGpio, INPUT_GPIO_ON_VALUE, INPUT_GPIO_OFF_VALUE, "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -946,7 +946,7 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "INA226: current", "INA226-current", HASS_CLASS_CURRENT, jsonCurrent, "", "", HASS_UNIT_AMP, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "INA226: power", "INA226-power", HASS_CLASS_POWER, jsonPower, "", "", HASS_UNIT_WATT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("INA226Discovery" CR));
+  THEENGS_LOG_TRACE(F("INA226Discovery" CR));
   createDiscoveryFromList(nullptr, INA226sensor, 3, nullptr, nullptr, nullptr,
                           true, subjectINA226toMQTT, will_Topic, nullptr);
 #  endif
@@ -959,7 +959,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZactuatorONOFF
 #    include "config_ONOFF.h"
-  Log.trace(F("actuatorONOFFDiscovery" CR));
+  THEENGS_LOG_TRACE(F("actuatorONOFFDiscovery" CR));
   const char* actuatorONOFF[][13] = {
       {HASS_TYPE_SWITCH, "actuatorONOFF", "actuatorONOFF", "", "{{ value_json.cmd }}", "{\"cmd\":1}", "{\"cmd\":0}", "", stateClassNone, "0", "1", nullptr, subjectMQTTtoONOFF}};
 
@@ -975,14 +975,14 @@ void pubMqttDiscovery() {
       {HASS_TYPE_SENSOR, "NRG: power", "power", HASS_CLASS_POWER, jsonPower, "", "", HASS_UNIT_WATT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_BINARY_SENSOR, "NRG: inUse", "inUse", HASS_CLASS_POWER, jsonInuseRN8209, "on", "off", "", stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
 
-  Log.trace(F("RN8209Discovery" CR));
+  THEENGS_LOG_TRACE(F("RN8209Discovery" CR));
   createDiscoveryFromList(nullptr, RN8209sensor, 4, nullptr, nullptr, nullptr,
                           true, subjectRN8209toMQTT, will_Topic, nullptr);
 #  endif
 
 // Gateway sensors for various modules
 #  if defined(ZgatewayRF) && defined(RF_on_HAS_as_MQTTSensor)
-  Log.trace(F("gatewayRFDiscovery" CR));
+  THEENGS_LOG_TRACE(F("gatewayRFDiscovery" CR));
   const char* gatewayRF[][13] = {
       {HASS_TYPE_SENSOR, "gatewayRF", "", "", jsonVal, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -998,7 +998,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZgatewayRF2
 #    include "config_RF.h"
-  Log.trace(F("gatewayRF2Discovery" CR));
+  THEENGS_LOG_TRACE(F("gatewayRF2Discovery" CR));
   const char* gatewayRF2[][13] = {
       {HASS_TYPE_SENSOR, "gatewayRF2", "", "", jsonAddress, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -1014,7 +1014,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZgatewayRFM69
 #    include "config_RFM69.h"
-  Log.trace(F("gatewayRFM69Discovery" CR));
+  THEENGS_LOG_TRACE(F("gatewayRFM69Discovery" CR));
   const char* gatewayRFM69[][13] = {
       {HASS_TYPE_SENSOR, "gatewayRFM69", "", "", jsonVal, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -1024,7 +1024,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZgatewayLORA
 #    include "config_LORA.h"
-  Log.trace(F("gatewayLORADiscovery" CR));
+  THEENGS_LOG_TRACE(F("gatewayLORADiscovery" CR));
   const char* gatewayLORA[][13] = {
       {HASS_TYPE_SENSOR, "gatewayLORA", "", "", jsonMsg, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -1043,7 +1043,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZgatewaySRFB
 #    include "config_SRFB.h"
-  Log.trace(F("gatewaySRFBDiscovery" CR));
+  THEENGS_LOG_TRACE(F("gatewaySRFBDiscovery" CR));
   const char* gatewaySRFB[][13] = {
       {HASS_TYPE_SENSOR, "gatewaySRFB", "", "", jsonVal, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -1053,7 +1053,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZgatewayPilight
 #    include "config_RF.h"
-  Log.trace(F("gatewayPilightDiscovery" CR));
+  THEENGS_LOG_TRACE(F("gatewayPilightDiscovery" CR));
   const char* gatewayPilight[][13] = {
       {HASS_TYPE_SENSOR, "gatewayPilight", "", "", jsonMsg, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -1069,7 +1069,7 @@ void pubMqttDiscovery() {
 
 #  ifdef ZgatewayIR
 #    include "config_IR.h"
-  Log.trace(F("gatewayIRDiscovery" CR));
+  THEENGS_LOG_TRACE(F("gatewayIRDiscovery" CR));
   const char* gatewayIR[][13] = {
       {HASS_TYPE_SENSOR, "gatewayIR", "", "", jsonVal, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 
@@ -1079,7 +1079,7 @@ void pubMqttDiscovery() {
 
 #  ifdef Zgateway2G
 #    include "config_2G.h"
-  Log.trace(F("gateway2GDiscovery" CR));
+  THEENGS_LOG_TRACE(F("gateway2GDiscovery" CR));
   const char* gateway2G[][13] = {
       {HASS_TYPE_SENSOR, "gateway2G", "", "", jsonMsg, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
 

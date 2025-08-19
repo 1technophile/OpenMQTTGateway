@@ -67,7 +67,7 @@ static LORAdevice NO_LORA_DEVICE_FOUND = {{0},
 
 LORAdevice* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 LORAdevice* getDeviceById(const char* id) {
-  Log.trace(F("getDeviceById %s" CR), id);
+  THEENGS_LOG_TRACE(F("getDeviceById %s" CR), id);
 
   for (std::vector<LORAdevice*>::iterator it = LORAdevices.begin(); it != LORAdevices.end(); ++it) {
     if ((strcmp((*it)->uniqueId, id) == 0)) {
@@ -80,34 +80,34 @@ LORAdevice* getDeviceById(const char* id) {
 void dumpLORADevices() {
   for (std::vector<LORAdevice*>::iterator it = LORAdevices.begin(); it != LORAdevices.end(); ++it) {
     LORAdevice* p = *it;
-    Log.trace(F("uniqueId %s" CR), p->uniqueId);
-    Log.trace(F("modelName %s" CR), p->modelName);
-    Log.trace(F("isDisc %d" CR), p->isDisc);
+    THEENGS_LOG_TRACE(F("uniqueId %s" CR), p->uniqueId);
+    THEENGS_LOG_TRACE(F("modelName %s" CR), p->modelName);
+    THEENGS_LOG_TRACE(F("isDisc %d" CR), p->isDisc);
   }
 }
 
 void createOrUpdateDeviceLORA(const char* id, const char* model, uint8_t flags) {
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(30000)) == pdFALSE) {
-    Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
+    THEENGS_LOG_ERROR(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
     return;
   }
 
   LORAdevice* device = getDeviceById(id);
   if (device == &NO_LORA_DEVICE_FOUND) {
-    Log.trace(F("add %s" CR), id);
+    THEENGS_LOG_TRACE(F("add %s" CR), id);
     //new device
     device = new LORAdevice();
     if (strlcpy(device->uniqueId, id, uniqueIdSize) > uniqueIdSize) {
-      Log.warning(F("[LORA] Device id %s exceeds available space" CR), id); // Remove from production release ?
+      THEENGS_LOG_WARNING(F("[LORA] Device id %s exceeds available space" CR), id); // Remove from production release ?
     };
     if (strlcpy(device->modelName, model, modelNameSize) > modelNameSize) {
-      Log.warning(F("[LORA] Device model %s exceeds available space" CR), id); // Remove from production release ?
+      THEENGS_LOG_WARNING(F("[LORA] Device model %s exceeds available space" CR), id); // Remove from production release ?
     };
     device->isDisc = flags & device_flags_isDisc;
     LORAdevices.push_back(device);
     newLORADevices++;
   } else {
-    Log.trace(F("update %s" CR), id);
+    THEENGS_LOG_TRACE(F("update %s" CR), id);
 
     if (flags & device_flags_isDisc) {
       device->isDisc = true;
@@ -123,7 +123,7 @@ void launchLORADiscovery(bool overrideDiscovery) {
   if (!overrideDiscovery && newLORADevices == 0)
     return;
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(QueueSemaphoreTimeOutLoop)) == pdFALSE) {
-    Log.error(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
+    THEENGS_LOG_ERROR(F("[LORA] semaphorecreateOrUpdateDeviceLORA Semaphore NOT taken" CR));
     return;
   }
   newLORADevices = 0;
@@ -131,7 +131,7 @@ void launchLORADiscovery(bool overrideDiscovery) {
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
   for (std::vector<LORAdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     LORAdevice* pdevice = *it;
-    Log.trace(F("Device id %s" CR), pdevice->uniqueId);
+    THEENGS_LOG_TRACE(F("Device id %s" CR), pdevice->uniqueId);
     // Do not launch discovery for the LORAdevices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
     if (overrideDiscovery || !isDiscovered(pdevice)) {
       size_t numRows = sizeof(LORAparameters) / sizeof(LORAparameters[0]);
@@ -140,7 +140,7 @@ void launchLORADiscovery(bool overrideDiscovery) {
           // Remove the key from the unique id to extract the device id
           String idWoKey = pdevice->uniqueId;
           idWoKey.remove(idWoKey.length() - (strlen(LORAparameters[i][0]) + 1));
-          Log.trace(F("idWoKey %s" CR), idWoKey.c_str());
+          THEENGS_LOG_TRACE(F("idWoKey %s" CR), idWoKey.c_str());
           String value_template = "{{ value_json." + String(LORAparameters[i][0]) + " | is_defined }}";
 
           String topic = idWoKey;
@@ -161,10 +161,10 @@ void launchLORADiscovery(bool overrideDiscovery) {
         }
       }
       if (!pdevice->isDisc) {
-        Log.trace(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
+        THEENGS_LOG_TRACE(F("Device id %s was not discovered" CR), pdevice->uniqueId); // Remove from production release ?
       }
     } else {
-      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
+      THEENGS_LOG_TRACE(F("Device already discovered or that doesn't require discovery %s" CR), pdevice->uniqueId);
     }
   }
 }
@@ -298,21 +298,21 @@ void LORAConfig_load() {
   if (preferences.isKey("LORAConfig")) {
     auto error = deserializeJson(jsonBuffer, preferences.getString("LORAConfig", "{}"));
     preferences.end();
-    Log.notice(F("LORA Config loaded" CR));
+    THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
     if (error) {
-      Log.error(F("LORA Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      THEENGS_LOG_ERROR(F("LORA Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
       return;
     }
     if (jsonBuffer.isNull()) {
-      Log.warning(F("LORA Config is null" CR));
+      THEENGS_LOG_WARNING(F("LORA Config is null" CR));
       return;
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
     LORAConfig_fromJson(jo);
-    Log.notice(F("LORA Config loaded" CR));
+    THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
   } else {
     preferences.end();
-    Log.notice(F("LORA Config not found" CR));
+    THEENGS_LOG_NOTICE(F("LORA Config not found" CR));
   }
 }
 
@@ -332,7 +332,7 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   if (LORAdata.containsKey("syncword")) {
     String syncWordStr = LORAdata["syncword"].as<String>();
     LORAConfig.syncWord = hexStringToByte(syncWordStr);
-    Log.notice(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+    THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
   }
   Config_update(LORAdata, "enablecrc", LORAConfig.crc);
   Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
@@ -352,11 +352,11 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("LORAConfig")) {
       int result = preferences.remove("LORAConfig");
-      Log.notice(F("LORA config erase result: %d" CR), result);
+      THEENGS_LOG_NOTICE(F("LORA config erase result: %d" CR), result);
       preferences.end();
       return; // Erase prevails on save, so skipping save
     } else {
-      Log.notice(F("LORA config not found" CR));
+      THEENGS_LOG_NOTICE(F("LORA config not found" CR));
       preferences.end();
     }
   }
@@ -370,7 +370,7 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
     jo["codingrate"] = LORAConfig.codingRateDenominator;
     jo["preamblelength"] = LORAConfig.preambleLength;
     if (LORAConfig.syncWord < 0 || LORAConfig.syncWord > 255) {
-      Log.error(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
+      THEENGS_LOG_ERROR(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
     } else {
       char syncWordHex[5];
       snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
@@ -385,7 +385,7 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
     preferences.begin(Gateway_Short_Name, false);
     int result = preferences.putString("LORAConfig", conf);
     preferences.end();
-    Log.notice(F("LORA Config_save: %s, result: %d" CR), conf.c_str(), result);
+    THEENGS_LOG_NOTICE(F("LORA Config_save: %s, result: %d" CR), conf.c_str(), result);
   }
 }
 
@@ -396,7 +396,7 @@ void setupLORA() {
   semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
 #  endif
-  Log.notice(F("LORA Frequency: %d" CR), LORAConfig.frequency);
+  THEENGS_LOG_NOTICE(F("LORA Frequency: %d" CR), LORAConfig.frequency);
 #  ifdef ESP8266
   SPI.begin();
 #  else
@@ -406,17 +406,17 @@ void setupLORA() {
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
 
   if (!LoRa.begin(LORAConfig.frequency)) {
-    Log.error(F("gatewayLORA setup failed!" CR));
+    THEENGS_LOG_ERROR(F("gatewayLORA setup failed!" CR));
     while (1);
   }
   LoRa.receive();
-  Log.notice(F("LORA_SCK: %d" CR), LORA_SCK);
-  Log.notice(F("LORA_MISO: %d" CR), LORA_MISO);
-  Log.notice(F("LORA_MOSI: %d" CR), LORA_MOSI);
-  Log.notice(F("LORA_SS: %d" CR), LORA_SS);
-  Log.notice(F("LORA_RST: %d" CR), LORA_RST);
-  Log.notice(F("LORA_DI0: %d" CR), LORA_DI0);
-  Log.trace(F("gatewayLORA setup done" CR));
+  THEENGS_LOG_NOTICE(F("LORA_SCK: %d" CR), LORA_SCK);
+  THEENGS_LOG_NOTICE(F("LORA_MISO: %d" CR), LORA_MISO);
+  THEENGS_LOG_NOTICE(F("LORA_MOSI: %d" CR), LORA_MOSI);
+  THEENGS_LOG_NOTICE(F("LORA_SS: %d" CR), LORA_SS);
+  THEENGS_LOG_NOTICE(F("LORA_RST: %d" CR), LORA_RST);
+  THEENGS_LOG_NOTICE(F("LORA_DI0: %d" CR), LORA_DI0);
+  THEENGS_LOG_TRACE(F("gatewayLORA setup done" CR));
 }
 
 void LORAtoX() {
@@ -424,7 +424,7 @@ void LORAtoX() {
   if (packetSize) {
     StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
     JsonObject LORAdata = LORAdataBuffer.to<JsonObject>();
-    Log.trace(F("Rcv. LORA" CR));
+    THEENGS_LOG_TRACE(F("Rcv. LORA" CR));
 #  ifdef ESP32
     String taskMessage = "LORA Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
@@ -446,7 +446,7 @@ void LORAtoX() {
       _WiPhonetoX(packet, LORAdata);
     } else if (binary) {
       if (LORAConfig.onlyKnown) {
-        Log.trace(F("Ignoring non identifiable packet" CR));
+        THEENGS_LOG_TRACE(F("Ignoring non identifiable packet" CR));
         return;
       }
       // We have non-ascii data: create hex string of the data
@@ -461,11 +461,11 @@ void LORAtoX() {
       std::string packetStrStd = (char*)packet;
       auto result = deserializeJson(LORAdataBuffer, packetStrStd);
       if (result) {
-        Log.notice(F("LORA packet deserialization failed, not a json, sending raw message" CR));
+        THEENGS_LOG_NOTICE(F("LORA packet deserialization failed, not a json, sending raw message" CR));
         LORAdata = LORAdataBuffer.to<JsonObject>();
         LORAdata["message"] = (char*)packet;
       } else {
-        Log.trace(F("LORA packet deserialization OK" CR));
+        THEENGS_LOG_TRACE(F("LORA packet deserialization OK" CR));
       }
     }
 
@@ -491,7 +491,7 @@ void LORAtoX() {
 
     enqueueJsonObject(LORAdata);
     if (repeatLORAwMQTT) {
-      Log.trace(F("Pub LORA for rpt" CR));
+      THEENGS_LOG_TRACE(F("Pub LORA for rpt" CR));
       LORAdata["origin"] = subjectMQTTtoLORA;
       enqueueJsonObject(LORAdata);
     }
@@ -501,7 +501,7 @@ void LORAtoX() {
 #  if jsonReceiving
 void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
-    Log.trace(F("MQTTtoLORA json" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
     const char* hex = LORAdata["hex"];
     LORAConfig_fromJson(LORAdata);
@@ -521,16 +521,16 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
       }
 
       LoRa.endPacket();
-      Log.trace(F("MQTTtoLORA OK" CR));
+      THEENGS_LOG_TRACE(F("MQTTtoLORA OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       LORAdata["origin"] = subjectGTWLORAtoMQTT;
       enqueueJsonObject(LORAdata);
     } else {
-      Log.error(F("MQTTtoLORA Fail json" CR));
+      THEENGS_LOG_ERROR(F("MQTTtoLORA Fail json" CR));
     }
   }
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
-    Log.trace(F("MQTTtoLORA json set" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoLORA json set" CR));
     /*
      * Configuration modifications priorities:
      *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
@@ -557,7 +557,7 @@ void XtoLORA(const char* topicOri, const char* LORAarray) { // json object decod
     LoRa.beginPacket();
     LoRa.print(LORAarray);
     LoRa.endPacket();
-    Log.notice(F("MQTTtoLORA OK" CR));
+    THEENGS_LOG_NOTICE(F("MQTTtoLORA OK" CR));
     // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     pub(subjectGTWLORAtoMQTT, LORAarray);
   }
@@ -574,7 +574,7 @@ String stateLORAMeasures() {
   LORAdata["codingrate"] = LORAConfig.codingRateDenominator;
   LORAdata["preamblelength"] = LORAConfig.preambleLength;
   if (LORAConfig.syncWord < 0 || LORAConfig.syncWord > 255) {
-    Log.error(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
+    THEENGS_LOG_ERROR(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
   } else {
     char syncWordHex[5];
     snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);

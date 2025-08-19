@@ -86,7 +86,7 @@ void setupSERIAL() {
   Serial.swap(); // swap UART0 ports from (GPIO1,GPIO3) to (GPIO15,GPIO13)
 #      endif
   SERIALStream = &Serial;
-  Log.notice(F("SERIAL HW UART0" CR));
+  THEENGS_LOG_NOTICE(F("SERIAL HW UART0" CR));
 
 #    elif SERIAL_UART == 1 // init UART1
   Serial1.end(); // stop if already initialized
@@ -96,7 +96,7 @@ void setupSERIAL() {
   Serial1.begin(SERIALBaud, SERIAL_8N1);
 #      endif
   SERIALStream = &Serial1;
-  Log.notice(F("SERIAL HW UART1" CR));
+  THEENGS_LOG_NOTICE(F("SERIAL HW UART1" CR));
 
 #    elif SERIAL_UART == 2 // init UART2
   Serial2.end(); // stop if already initialized
@@ -106,13 +106,13 @@ void setupSERIAL() {
   Serial2.begin(SERIALBaud, SERIAL_8N1);
 #      endif
   SERIALStream = &Serial2;
-  Log.notice(F("SERIAL HW UART2" CR));
+  THEENGS_LOG_NOTICE(F("SERIAL HW UART2" CR));
 
 #    elif SERIAL_UART == 3 // init UART3
   Serial3.end(); // stop if already initialized
   Serial3.begin(SERIALBaud, SERIAL_8N1);
   SERIALStream = &Serial3;
-  Log.notice(F("SERIAL HW UART3" CR));
+  THEENGS_LOG_NOTICE(F("SERIAL HW UART3" CR));
 #    endif
 
 #  else // Software serial
@@ -122,14 +122,14 @@ void setupSERIAL() {
   SERIALSoftSerial.begin(SERIALBaud);
   SERIALStream = &SERIALSoftSerial; // get stream of serial
 
-  Log.notice(F("SERIAL_RX_GPIO: %d" CR), SERIAL_RX_GPIO);
-  Log.notice(F("SERIAL_TX_GPIO: %d" CR), SERIAL_TX_GPIO);
+  THEENGS_LOG_NOTICE(F("SERIAL_RX_GPIO: %d" CR), SERIAL_RX_GPIO);
+  THEENGS_LOG_NOTICE(F("SERIAL_TX_GPIO: %d" CR), SERIAL_TX_GPIO);
 #  endif
 
 #  ifdef ESP32
   serialSemaphore = xSemaphoreCreateMutex();
   if (serialSemaphore == NULL) {
-    Log.error(F("Failed to create serialSemaphore" CR));
+    THEENGS_LOG_ERROR(F("Failed to create serialSemaphore" CR));
   }
 #  endif
 
@@ -137,8 +137,8 @@ void setupSERIAL() {
   while (SERIALStream->available() > 0)
     SERIALStream->read();
 
-  Log.notice(F("SERIALBaud: %d" CR), SERIALBaud);
-  Log.trace(F("gatewaySERIAL setup done" CR));
+  THEENGS_LOG_NOTICE(F("SERIALBaud: %d" CR), SERIALBaud);
+  THEENGS_LOG_TRACE(F("gatewaySERIAL setup done" CR));
 }
 
 #  if SERIALtoMQTTmode == 0 // Convert received data to single MQTT topic
@@ -146,7 +146,7 @@ void SERIALtoX() {
   // Send all SERIAL output (up to SERIALInPost char revieved) as MQTT message
   //This function is Blocking, but there should only ever be a few bytes, usually an ACK or a NACK.
   if (SERIALStream->available()) {
-    Log.trace(F("SERIALtoMQTT" CR));
+    THEENGS_LOG_TRACE(F("SERIALtoMQTT" CR));
     static char SERIALdata[MAX_INPUT];
     static unsigned int input_pos = 0;
     static char inChar;
@@ -161,7 +161,7 @@ void SERIALtoX() {
     input_pos = 0;
 
     char* output = SERIALdata + sizeof(SERIALPre) - 1;
-    Log.notice(F("SERIAL data: %s" CR), output);
+    THEENGS_LOG_NOTICE(F("SERIAL data: %s" CR), output);
     pub(subjectSERIALtoMQTT, output);
   }
 }
@@ -173,10 +173,10 @@ void sendHeartbeat() {
     SERIALStream->print("{\"type\":\"heartbeat\"}");
     SERIALStream->print(SERIALPost);
     SERIALStream->flush();
-    Log.notice(F("Sent Serial heartbeat" CR));
+    THEENGS_LOG_NOTICE(F("Sent Serial heartbeat" CR));
     SEMAPHORE_SERIAL_GIVE;
   } else {
-    Log.error(F("Failed to take serialSemaphore" CR));
+    THEENGS_LOG_ERROR(F("Failed to take serialSemaphore" CR));
   }
 }
 
@@ -186,10 +186,10 @@ void sendHeartbeatAck() {
     SERIALStream->print("{\"type\":\"heartbeat_ack\"}");
     SERIALStream->print(SERIALPost);
     SERIALStream->flush();
-    Log.notice(F("Sent heartbeat ack" CR));
+    THEENGS_LOG_NOTICE(F("Sent heartbeat ack" CR));
     SEMAPHORE_SERIAL_GIVE;
   } else {
-    Log.error(F("Failed to take serialSemaphore" CR));
+    THEENGS_LOG_ERROR(F("Failed to take serialSemaphore" CR));
   }
 }
 
@@ -210,7 +210,7 @@ void SERIALtoX() {
       // No ack received, increase the interval (with a maximum limit)
       unsigned long newHeartbeatInterval = heartbeatInterval * 1.25;
       heartbeatInterval = min(newHeartbeatInterval, maxHeartbeatInterval);
-      Log.warning(F("No heartbeat ack received. Increasing interval to %lu ms" CR), heartbeatInterval);
+      THEENGS_LOG_WARNING(F("No heartbeat ack received. Increasing interval to %lu ms" CR), heartbeatInterval);
       receiverReady = false;
     } else {
       // Ack received, reset the interval
@@ -245,10 +245,10 @@ void SERIALtoX() {
         } else if (SERIALdata.containsKey("type") && strcmp(SERIALdata["type"], "heartbeat_ack") == 0) {
           lastHeartbeatAckReceived = now;
           receiverReady = true;
-          Log.notice(F("Heartbeat ack received" CR));
+          THEENGS_LOG_NOTICE(F("Heartbeat ack received" CR));
         } else {
           // Process normal messages
-          Log.notice(F("SERIAL msg received: %s" CR), jsonString.c_str());
+          THEENGS_LOG_NOTICE(F("SERIAL msg received: %s" CR), jsonString.c_str());
 #    if jsonPublishing
           if (SERIALdata.containsKey("target")) {
             receivingDATA("", jsonString.c_str());
@@ -276,18 +276,18 @@ void SERIALtoX() {
         }
       } else {
         // Print error to serial log
-        Log.error(F("Error in SERIALJSONtoMQTT, deserializeJson() returned %s" CR), err.c_str());
+        THEENGS_LOG_ERROR(F("Error in SERIALJSONtoMQTT, deserializeJson() returned %s" CR), err.c_str());
       }
 
       // Clear the buffer for the next message
       buffer = "";
     } else if (buffer.endsWith(SERIALPost)) {
       // If the buffer ends with the postfix but does not start with the prefix, clear it
-      Log.error(F("Buffer error, clearing buffer. Partial content: %s" CR), buffer.c_str());
+      THEENGS_LOG_ERROR(F("Buffer error, clearing buffer. Partial content: %s" CR), buffer.c_str());
       buffer = "";
     } else if (buffer.length() > JSON_MSG_BUFFER) {
       // If the buffer gets too large without finding a complete message, clear it
-      Log.error(F("Buffer overflow, clearing buffer. Partial content: %s" CR), buffer.c_str());
+      THEENGS_LOG_ERROR(F("Buffer overflow, clearing buffer. Partial content: %s" CR), buffer.c_str());
       buffer = "";
       isOverflow = true;
     }
@@ -302,7 +302,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
     for (JsonPair pair : obj.as<JsonObject>()) {
       // check if new key still fits in topic cstring
       const char* key = pair.key().c_str();
-      Log.trace(F("level=%d, key='%s'" CR), level, pair.key().c_str());
+      THEENGS_LOG_TRACE(F("level=%d, key='%s'" CR), level, pair.key().c_str());
       if (topicLength + 2 + strlen(key) <= mqtt_topic_max_size) {
         // add new level to existing topic cstring
         topic[topicLength] = '/'; // add slash
@@ -315,7 +315,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
         // restore topic
         topic[topicLength] = '\0';
       } else {
-        Log.error(F("Nested key '%s' at level %d does not fit within max topic length of %d, skipping"),
+        THEENGS_LOG_ERROR(F("Nested key '%s' at level %d does not fit within max topic length of %d, skipping"),
                   key, level, mqtt_topic_max_size);
       }
     }
@@ -324,7 +324,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
     // output value at current json level
     char output[MAX_INPUT + 1];
     serializeJson(obj, output, MAX_INPUT);
-    Log.notice(F("level=%d, topic=%s, value: %s\n"), level, topic, output);
+    THEENGS_LOG_NOTICE(F("level=%d, topic=%s, value: %s\n"), level, topic, output);
 
     // send MQTT message
     pub(topic, &output[0]);
@@ -338,7 +338,7 @@ bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata) {
     if (receiverReady && (cmpToMainTopic(topicOri, subjectMQTTtoSERIAL) ||
                           (SYSConfig.serial && SERIALdata.containsKey("origin") && SERIALdata["origin"].is<const char*>()) ||
                           (SYSConfig.serial && SERIALdata.containsKey("topic") && SERIALdata["topic"].is<const char*>()))) {
-      Log.trace(F("XtoSERIAL" CR));
+      THEENGS_LOG_TRACE(F("XtoSERIAL" CR));
       // Prepare the data string
       std::string data;
       if (SYSConfig.serial ||
@@ -358,13 +358,13 @@ bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata) {
       SERIALStream->print(postfix);
       SERIALStream->flush();
 
-      Log.notice(F("[ OMG->SERIAL ] data sent: %s" CR), data.c_str());
+      THEENGS_LOG_NOTICE(F("[ OMG->SERIAL ] data sent: %s" CR), data.c_str());
       res = true;
       delay(100);
     }
     SEMAPHORE_SERIAL_GIVE;
   } else {
-    Log.error(F("Failed to take serialSemaphore" CR));
+    THEENGS_LOG_ERROR(F("Failed to take serialSemaphore" CR));
   }
   return res;
 }

@@ -8,6 +8,7 @@
 
 #  include <ArduinoLog.h>
 
+#  include "User_config.h"
 #  include "esp_blufi_api.h"
 #  include "esp_crc.h"
 #  include "esp_random.h"
@@ -52,7 +53,7 @@ extern "C" void btc_blufi_report_error(esp_blufi_error_state_t state);
 
 void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_data, int* output_len, bool* need_free) {
   if (data == NULL || len < 3) {
-    Log.error(F("BLUFI Invalid data format" CR));
+    THEENGS_LOG_ERROR(F("BLUFI Invalid data format" CR));
     btc_blufi_report_error(ESP_BLUFI_DATA_FORMAT_ERROR);
     return;
   }
@@ -61,7 +62,7 @@ void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_da
   uint8_t type = data[0];
 
   if (blufi_sec == NULL) {
-    Log.error(F("BLUFI Security is not initialized" CR));
+    THEENGS_LOG_ERROR(F("BLUFI Security is not initialized" CR));
     btc_blufi_report_error(ESP_BLUFI_INIT_SECURITY_ERROR);
     return;
   }
@@ -77,19 +78,19 @@ void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_da
       if (blufi_sec->dh_param == NULL) {
         blufi_sec->dh_param_len = 0; /* Reset length to avoid using unallocated memory */
         btc_blufi_report_error(ESP_BLUFI_DH_MALLOC_ERROR);
-        Log.error(F("%s, malloc failed\n" CR), __func__);
+        THEENGS_LOG_ERROR(F("%s, malloc failed\n" CR), __func__);
         return;
       }
       break;
     case SEC_TYPE_DH_PARAM_DATA: {
       if (blufi_sec->dh_param == NULL) {
-        Log.error(F("%s, blufi_sec->dh_param == NULL" CR), __func__);
+        THEENGS_LOG_ERROR(F("%s, blufi_sec->dh_param == NULL" CR), __func__);
         btc_blufi_report_error(ESP_BLUFI_DH_PARAM_ERROR);
         return;
       }
 
       if (len < (blufi_sec->dh_param_len + 1)) {
-        Log.error(F("%s, invalid dh param len" CR), __func__);
+        THEENGS_LOG_ERROR(F("%s, invalid dh param len" CR), __func__);
         btc_blufi_report_error(ESP_BLUFI_DH_PARAM_ERROR);
         return;
       }
@@ -98,7 +99,7 @@ void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_da
       memcpy(blufi_sec->dh_param, &data[1], blufi_sec->dh_param_len);
       ret = mbedtls_dhm_read_params(&blufi_sec->dhm, &param, &param[blufi_sec->dh_param_len]);
       if (ret) {
-        Log.error(F("%s read param failed %d" CR), __func__, ret);
+        THEENGS_LOG_ERROR(F("%s read param failed %d" CR), __func__, ret);
         btc_blufi_report_error(ESP_BLUFI_READ_PARAM_ERROR);
         return;
       }
@@ -108,14 +109,14 @@ void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_da
       const int dhm_len = mbedtls_dhm_get_len(&blufi_sec->dhm);
 
       if (dhm_len > DH_SELF_PUB_KEY_LEN) {
-        Log.error(F("%s dhm len not support %d" CR), __func__, dhm_len);
+        THEENGS_LOG_ERROR(F("%s dhm len not support %d" CR), __func__, dhm_len);
         btc_blufi_report_error(ESP_BLUFI_DH_PARAM_ERROR);
         return;
       }
 
       ret = mbedtls_dhm_make_public(&blufi_sec->dhm, dhm_len, blufi_sec->self_public_key, DH_SELF_PUB_KEY_LEN, myrand, NULL);
       if (ret) {
-        Log.error(F("%s make public failed %d" CR), __func__, ret);
+        THEENGS_LOG_ERROR(F("%s make public failed %d" CR), __func__, ret);
         btc_blufi_report_error(ESP_BLUFI_MAKE_PUBLIC_ERROR);
         return;
       }
@@ -126,7 +127,7 @@ void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_da
                                     &blufi_sec->share_len,
                                     myrand, NULL);
       if (ret) {
-        Log.error(F("%s mbedtls_dhm_calc_secret failed %d" CR), __func__, ret);
+        THEENGS_LOG_ERROR(F("%s mbedtls_dhm_calc_secret failed %d" CR), __func__, ret);
         btc_blufi_report_error(ESP_BLUFI_DH_PARAM_ERROR);
         return;
       }
@@ -134,7 +135,7 @@ void blufi_dh_negotiate_data_handler(uint8_t* data, int len, uint8_t** output_da
       ret = mbedtls_md5(blufi_sec->share_key, blufi_sec->share_len, blufi_sec->psk);
 
       if (ret) {
-        Log.error(F("%s mbedtls_md5 failed %d" CR), __func__, ret);
+        THEENGS_LOG_ERROR(F("%s mbedtls_md5 failed %d" CR), __func__, ret);
         btc_blufi_report_error(ESP_BLUFI_CALC_MD5_ERROR);
         return;
       }

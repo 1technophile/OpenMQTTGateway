@@ -53,7 +53,7 @@ Generic_LM75 lm75Sensor;
 
 void setupZsensorLM75() {
   delay(10); // Gives the Sensor enough time to turn on
-  Log.notice(F("LM75 Initialized - begin()" CR));
+  THEENGS_LOG_NOTICE(F("LM75 Initialized - begin()" CR));
 
 #  if defined(ESP32)
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -64,7 +64,7 @@ void setupZsensorLM75() {
 
 void MeasureTemp() {
   if (millis() > (timelm75 + TimeBetweenReadinglm75)) {
-    Log.trace(F("Read LM75 Sensor" CR));
+    THEENGS_LOG_TRACE(F("Read LM75 Sensor" CR));
 
     timelm75 = millis();
     static float persisted_lm75_tempc;
@@ -72,15 +72,15 @@ void MeasureTemp() {
     float lm75TempC = lm75Sensor.readTemperatureC();
 
     if (lm75TempC >= 998) {
-      Log.error(F("Failed to read from sensor LM75!" CR));
+      THEENGS_LOG_ERROR(F("Failed to read from sensor LM75!" CR));
       return;
     }
 
     // Check if reads failed and exit early (to try again).
     if (isnan(lm75TempC)) {
-      Log.error(F("Failed to read from sensor HLM75!" CR));
+      THEENGS_LOG_ERROR(F("Failed to read from sensor HLM75!" CR));
     } else {
-      Log.notice(F("Creating LM75 buffer" CR));
+      THEENGS_LOG_NOTICE(F("Creating LM75 buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> LM75dataBuffer;
       JsonObject LM75data = LM75dataBuffer.to<JsonObject>();
       // Generate Temperature in degrees C
@@ -91,7 +91,7 @@ void MeasureTemp() {
         LM75data["origin"] = LM75TOPIC;
         enqueueJsonObject(LM75data);
       } else {
-        Log.notice(F("Same Temp. Don't send it" CR));
+        THEENGS_LOG_NOTICE(F("Same Temp. Don't send it" CR));
       }
     }
     persisted_lm75_tempc = lm75TempC;

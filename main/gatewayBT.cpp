@@ -158,7 +158,7 @@ String stateBTMeasures(bool start) {
 #  endif
 
   if (start) {
-    Log.notice(F("BT sys: "));
+    THEENGS_LOG_NOTICE(F("BT sys: "));
     serializeJsonPretty(jsonBuffer, Serial);
     Serial.println();
     return ""; // Do not try to erase/write/send config at startup
@@ -262,12 +262,12 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("BTConfig")) {
       int result = preferences.remove("BTConfig");
-      Log.notice(F("BT config erase result: %d" CR), result);
+      THEENGS_LOG_NOTICE(F("BT config erase result: %d" CR), result);
       preferences.end();
       return; // Erase prevails on save, so skipping save
     } else {
       preferences.end();
-      Log.notice(F("BT config not found" CR));
+      THEENGS_LOG_NOTICE(F("BT config not found" CR));
     }
   }
 
@@ -302,7 +302,7 @@ void BTConfig_fromJson(JsonObject& BTdata, bool startup = false) {
     preferences.begin(Gateway_Short_Name, false);
     int result = preferences.putString("BTConfig", conf);
     preferences.end();
-    Log.notice(F("BT config save: %s, result: %d" CR), conf.c_str(), result);
+    THEENGS_LOG_NOTICE(F("BT config save: %s, result: %d" CR), conf.c_str(), result);
   }
 }
 
@@ -312,21 +312,21 @@ void BTConfig_load() {
   if (preferences.isKey("BTConfig")) {
     auto error = deserializeJson(jsonBuffer, preferences.getString("BTConfig", "{}"));
     preferences.end();
-    Log.notice(F("BT config loaded" CR));
+    THEENGS_LOG_NOTICE(F("BT config loaded" CR));
     if (error) {
-      Log.error(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      THEENGS_LOG_ERROR(F("BT config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
       return;
     }
     if (jsonBuffer.isNull()) {
-      Log.warning(F("BT config is null" CR));
+      THEENGS_LOG_WARNING(F("BT config is null" CR));
       return;
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
     BTConfig_fromJson(jo, true); // Never send MQTT message with config
-    Log.notice(F("BT config loaded" CR));
+    THEENGS_LOG_NOTICE(F("BT config loaded" CR));
   } else {
     preferences.end();
-    Log.notice(F("BT config not found" CR));
+    THEENGS_LOG_NOTICE(F("BT config not found" CR));
   }
 }
 
@@ -338,7 +338,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
 
 BLEdevice* getDeviceByMac(const char* mac); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
 BLEdevice* getDeviceByMac(const char* mac) {
-  Log.trace(F("getDeviceByMac %s" CR), mac);
+  THEENGS_LOG_TRACE(F("getDeviceByMac %s" CR), mac);
 
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     if ((strcmp((*it)->macAdr, mac) == 0)) {
@@ -349,7 +349,7 @@ BLEdevice* getDeviceByMac(const char* mac) {
 }
 
 bool updateWorB(JsonObject& BTdata, bool isWhite) {
-  Log.trace(F("update WorB" CR));
+  THEENGS_LOG_TRACE(F("update WorB" CR));
   const char* jsonKey = isWhite ? "white-list" : "black-list";
 
   int size = BTdata[jsonKey].size();
@@ -367,12 +367,12 @@ bool updateWorB(JsonObject& BTdata, bool isWhite) {
 
 void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_type, const char* name) {
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(30000)) == pdFALSE) {
-    Log.error(F("Semaphore NOT taken" CR));
+    THEENGS_LOG_ERROR(F("Semaphore NOT taken" CR));
     return;
   }
   BLEdevice* device = getDeviceByMac(mac);
   if (device == &NO_BT_DEVICE_FOUND) {
-    Log.trace(F("add %s" CR), mac);
+    THEENGS_LOG_TRACE(F("add %s" CR), mac);
     //new device
     device = new BLEdevice();
     strcpy(device->macAdr, mac);
@@ -383,7 +383,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     device->macType = mac_type;
     // Check name length
     if (strlen(name) > 20) {
-      Log.warning(F("Name too long, truncating" CR));
+      THEENGS_LOG_WARNING(F("Name too long, truncating" CR));
       strncpy(device->name, name, 20);
       device->name[19] = '\0';
     } else {
@@ -394,7 +394,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     devices.push_back(device);
     newDevices++;
   } else {
-    Log.trace(F("update %s" CR), mac);
+    THEENGS_LOG_TRACE(F("update %s" CR), mac);
     device->lastUpdate = millis();
     device->macType = mac_type;
 
@@ -475,14 +475,14 @@ void dumpDevices() {
 #  if LOG_LEVEL > LOG_LEVEL_NOTICE
   for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
     BLEdevice* p = *it;
-    Log.trace(F("macAdr %s" CR), p->macAdr);
-    Log.trace(F("macType %d" CR), p->macType);
-    Log.trace(F("isDisc %d" CR), p->isDisc);
-    Log.trace(F("isWhtL %d" CR), p->isWhtL);
-    Log.trace(F("isBlkL %d" CR), p->isBlkL);
-    Log.trace(F("connect %d" CR), p->connect);
-    Log.trace(F("sensorModel_id %d" CR), p->sensorModel_id);
-    Log.trace(F("LastUpdate %u" CR), p->lastUpdate);
+    THEENGS_LOG_TRACE(F("macAdr %s" CR), p->macAdr);
+    THEENGS_LOG_TRACE(F("macType %d" CR), p->macType);
+    THEENGS_LOG_TRACE(F("isDisc %d" CR), p->isDisc);
+    THEENGS_LOG_TRACE(F("isWhtL %d" CR), p->isWhtL);
+    THEENGS_LOG_TRACE(F("isBlkL %d" CR), p->isBlkL);
+    THEENGS_LOG_TRACE(F("connect %d" CR), p->connect);
+    THEENGS_LOG_TRACE(F("sensorModel_id %d" CR), p->sensorModel_id);
+    THEENGS_LOG_TRACE(F("LastUpdate %u" CR), p->lastUpdate);
   }
 #  endif
 }
@@ -495,7 +495,7 @@ void strupp(char* beg) {
 #  ifdef ZmqttDiscovery
 void DT24Discovery(const char* mac, const char* sensorModel_id) {
 #    define DT24parametersCount 7
-  Log.trace(F("DT24Discovery" CR));
+  THEENGS_LOG_TRACE(F("DT24Discovery" CR));
   const char* DT24sensor[DT24parametersCount][9] = {
       {HASS_TYPE_SENSOR, "volt", mac, HASS_CLASS_VOLTAGE, jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "amp", mac, HASS_CLASS_CURRENT, jsonCurrent, "", "", HASS_UNIT_AMP, stateClassMeasurement},
@@ -512,7 +512,7 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
 
 void BM2Discovery(const char* mac, const char* sensorModel_id) {
 #    define BM2parametersCount 2
-  Log.trace(F("BM2Discovery" CR));
+  THEENGS_LOG_TRACE(F("BM2Discovery" CR));
   const char* BM2sensor[BM2parametersCount][9] = {
       {HASS_TYPE_SENSOR, "volt", mac, HASS_CLASS_VOLTAGE, jsonVoltBM2, "", "", HASS_UNIT_VOLT, stateClassMeasurement}, // We use a json definition that retrieve only data from the BM2 decoder, as this sensor also advertize volt as an iBeacon
       {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
@@ -524,7 +524,7 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
 
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define LYWSD03MMCparametersCount 4
-  Log.trace(F("LYWSD03MMCDiscovery" CR));
+  THEENGS_LOG_TRACE(F("LYWSD03MMCDiscovery" CR));
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
       {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
@@ -538,7 +538,7 @@ void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
 
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 #    define MHO_C401parametersCount 4
-  Log.trace(F("MHO_C401Discovery" CR));
+  THEENGS_LOG_TRACE(F("MHO_C401Discovery" CR));
   const char* MHO_C401sensor[MHO_C401parametersCount][9] = {
       {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
@@ -552,7 +552,7 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
 
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 #    define HHCCJCY01HHCCparametersCount 5
-  Log.trace(F("HHCCJCY01HHCCDiscovery" CR));
+  THEENGS_LOG_TRACE(F("HHCCJCY01HHCCDiscovery" CR));
   const char* HHCCJCY01HHCCsensor[HHCCJCY01HHCCparametersCount][9] = {
       {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
@@ -567,7 +567,7 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
 
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
 #    define XMWSDJ04MMCparametersCount 4
-  Log.trace(F("XMWSDJ04MMCDiscovery" CR));
+  THEENGS_LOG_TRACE(F("XMWSDJ04MMCDiscovery" CR));
   const char* XMWSDJ04MMCsensor[XMWSDJ04MMCparametersCount][9] = {
       {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
@@ -601,7 +601,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
     NimBLEAdvertisedDevice* ad = new NimBLEAdvertisedDevice(*advertisedDevice);
     if (xQueueSend(BLEQueue, &ad, 0) != pdTRUE) {
-      Log.error(F("BLEQueue full" CR));
+      THEENGS_LOG_ERROR(F("BLEQueue full" CR));
       delete (ad);
     }
   }
@@ -612,7 +612,7 @@ std::string convertServiceData(std::string deviceServiceData) {
   char spr[2 * serviceDataLength + 1];
   for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
   spr[2 * serviceDataLength] = 0;
-  Log.trace(F("Converted service data (%d) to %s" CR), serviceDataLength, spr);
+  THEENGS_LOG_TRACE(F("Converted service data (%d) to %s" CR), serviceDataLength, spr);
   return spr;
 }
 
@@ -624,7 +624,7 @@ bool checkIfIsTracker(char ch) {
     data = 10 + (ch - 'a');
 
   if (((data >> 3) & 0x01) == 1) {
-    Log.trace(F("Is Device Tracker" CR));
+    THEENGS_LOG_TRACE(F("Is Device Tracker" CR));
     return true;
   } else {
     return false;
@@ -639,17 +639,17 @@ void procBLETask(void* pvParameters) {
     // Feed the watchdog
     //esp_task_wdt_reset();
     if (!BTProcessLock) {
-      Log.trace(F("Creating BLE buffer" CR));
+      THEENGS_LOG_TRACE(F("Creating BLE buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       BLEdata["id"] = advertisedDevice->getAddress().toString();
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
       BLEdata["adv_type"] = advertisedDevice->getAdvType();
-      Log.notice(F("BT Device detected: %s" CR), BLEdata["id"].as<const char*>());
+      THEENGS_LOG_NOTICE(F("BT Device detected: %s" CR), BLEdata["id"].as<const char*>());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
       if (BTConfig.filterConnectable && device->connect) {
-        Log.notice(F("Filtered connectable device" CR));
+        THEENGS_LOG_NOTICE(F("Filtered connectable device" CR));
         delete (advertisedDevice);
         continue;
       }
@@ -669,15 +669,15 @@ void procBLETask(void* pvParameters) {
         }
         if (advertisedDevice->haveServiceData()) {
           int serviceDataCount = advertisedDevice->getServiceDataCount();
-          Log.trace(F("Get services data number: %d" CR), serviceDataCount);
+          THEENGS_LOG_TRACE(F("Get services data number: %d" CR), serviceDataCount);
           for (int j = 0; j < serviceDataCount; j++) {
             StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBufferTemp;
             JsonObject BLEdataTemp = BLEdataBufferTemp.to<JsonObject>();
             BLEdataBufferTemp = BLEdataBuffer;
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));
-            Log.trace(F("Service data: %s" CR), service_data.c_str());
+            THEENGS_LOG_TRACE(F("Service data: %s" CR), service_data.c_str());
             std::string serviceDatauuid = advertisedDevice->getServiceDataUUID(j).toString();
-            Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
+            THEENGS_LOG_TRACE(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
             BLEdataTemp["servicedata"] = (char*)service_data.c_str();
             BLEdataTemp["servicedatauuid"] = (char*)serviceDatauuid.c_str();
             PublishDeviceData(BLEdataTemp);
@@ -686,7 +686,7 @@ void procBLETask(void* pvParameters) {
           PublishDeviceData(BLEdata);
         }
       } else {
-        Log.trace(F("Filtered MAC device" CR));
+        THEENGS_LOG_TRACE(F("Filtered MAC device" CR));
       }
       updateDevicesStatus();
     }
@@ -703,7 +703,7 @@ void BLEscan() {
   while (uxQueueMessagesWaiting(BLEQueue) || queueLength != 0) { // the criteria on queueLength could be adjusted to parallelize the scan and the queue processing
     delay(1); // Wait for queue to empty, a yield here instead of the delay cause the WDT to trigger
   }
-  Log.notice(F("Scan begin" CR));
+  THEENGS_LOG_NOTICE(F("Scan begin" CR));
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setScanCallbacks(&scanCallbacks);
   if ((millis() > (timeBetweenActive + BTConfig.intervalActiveScan) || BTConfig.intervalActiveScan == BTConfig.BLEinterval) && !BTConfig.forcePassiveScan) {
@@ -717,8 +717,8 @@ void BLEscan() {
   NimBLEScanResults foundDevices = pBLEScan->getResults(BTConfig.scanDuration, false);
   if (foundDevices.getCount())
     scanCount++;
-  Log.notice(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
-  Log.trace(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
+  THEENGS_LOG_NOTICE(F("Found %d devices, scan number %d end" CR), foundDevices.getCount(), scanCount);
+  THEENGS_LOG_TRACE(F("Process BLE stack free: %u" CR), uxTaskGetStackHighWaterMark(xProcBLETaskHandle));
 }
 
 /**
@@ -727,12 +727,12 @@ void BLEscan() {
 #  if BLEDecoder
 void BLEconnect() {
   if (!BTProcessLock) {
-    Log.notice(F("BLE Connect begin" CR));
+    THEENGS_LOG_NOTICE(F("BLE Connect begin" CR));
     do {
       for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
         if (p->connect) {
-          Log.trace(F("Model to connect found: %s" CR), p->macAdr);
+          THEENGS_LOG_TRACE(F("Model to connect found: %s" CR), p->macAdr);
           NimBLEAddress addr((const char*)p->macAdr, p->macType);
           if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC ||
               p->sensorModel_id == BLEconectable::id::MHO_C401) {
@@ -794,7 +794,7 @@ void BLEconnect() {
         }
       }
     } while (BLEactions.size() > 0);
-    Log.notice(F("BLE Connect end" CR));
+    THEENGS_LOG_NOTICE(F("BLE Connect end" CR));
   }
 }
 #  else
@@ -805,14 +805,14 @@ void stopProcessing(bool deinit) {
   if (BTConfig.enabled) {
     BTProcessLock = true;
     // We stop the scan
-    Log.notice(F("Stopping BLE scan" CR));
+    THEENGS_LOG_NOTICE(F("Stopping BLE scan" CR));
     BLEScan* pBLEScan = BLEDevice::getScan();
     if (pBLEScan->isScanning()) {
       pBLEScan->stop();
     }
 
     if (xSemaphoreTake(semaphoreBLEOperation, pdMS_TO_TICKS(5000)) == pdTRUE) {
-      Log.notice(F("Stopping BLE tasks" CR));
+      THEENGS_LOG_NOTICE(F("Stopping BLE tasks" CR));
       //Suspending, deleting tasks and stopping BT to free memory
       vTaskSuspend(xCoreTaskHandle);
       vTaskDelete(xCoreTaskHandle);
@@ -824,7 +824,7 @@ void stopProcessing(bool deinit) {
     if (deinit)
       BLEDevice::deinit(true);
   }
-  Log.notice(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
+  THEENGS_LOG_NOTICE(F("BLE gateway stopped, free heap: %d" CR), ESP.getFreeHeap());
 }
 
 void coreTask(void* pvParameters) {
@@ -838,10 +838,10 @@ void coreTask(void* pvParameters) {
           BLEconnect();
         }
         //dumpDevices();
-        Log.trace(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
+        THEENGS_LOG_TRACE(F("CoreTask stack free: %u" CR), uxTaskGetStackHighWaterMark(xCoreTaskHandle));
         xSemaphoreGive(semaphoreBLEOperation);
       } else {
-        Log.error(F("Failed to start scan - BLE busy" CR));
+        THEENGS_LOG_ERROR(F("Failed to start scan - BLE busy" CR));
       }
       if (SYSConfig.powerMode > 0) {
         int scan = atomic_exchange_explicit(&forceBTScan, 0, ::memory_order_seq_cst); // is this enough, it will wait the full deepsleep...
@@ -891,18 +891,18 @@ void setupBTTasksAndBLE() {
 void setupBT() {
   BTConfig_init();
   BTConfig_load();
-  Log.notice(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
-  Log.notice(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
-  Log.notice(F("BLE scan duration: %d" CR), BTConfig.scanDuration);
-  Log.notice(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
-  Log.notice(F("Publishing random MAC devices: %T" CR), BTConfig.pubRandomMACs);
-  Log.notice(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
-  Log.notice(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
-  Log.notice(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
-  Log.notice(F("Presence Away Timer: %d" CR), BTConfig.presenceAwayTimer);
-  Log.notice(F("Moving Timer: %d" CR), BTConfig.movingTimer);
-  Log.notice(F("Force passive scan: %T" CR), BTConfig.forcePassiveScan);
-  Log.notice(F("Enabled BLE: %T" CR), BTConfig.enabled);
+  THEENGS_LOG_NOTICE(F("BLE scans interval: %d" CR), BTConfig.BLEinterval);
+  THEENGS_LOG_NOTICE(F("BLE connects interval: %d" CR), BTConfig.intervalConnect);
+  THEENGS_LOG_NOTICE(F("BLE scan duration: %d" CR), BTConfig.scanDuration);
+  THEENGS_LOG_NOTICE(F("Publishing only BLE sensors: %T" CR), BTConfig.pubOnlySensors);
+  THEENGS_LOG_NOTICE(F("Publishing random MAC devices: %T" CR), BTConfig.pubRandomMACs);
+  THEENGS_LOG_NOTICE(F("Adaptive BLE scan: %T" CR), BTConfig.adaptiveScan);
+  THEENGS_LOG_NOTICE(F("Active BLE scan interval: %d" CR), BTConfig.intervalActiveScan);
+  THEENGS_LOG_NOTICE(F("minrssi: %d" CR), -abs(BTConfig.minRssi));
+  THEENGS_LOG_NOTICE(F("Presence Away Timer: %d" CR), BTConfig.presenceAwayTimer);
+  THEENGS_LOG_NOTICE(F("Moving Timer: %d" CR), BTConfig.movingTimer);
+  THEENGS_LOG_NOTICE(F("Force passive scan: %T" CR), BTConfig.forcePassiveScan);
+  THEENGS_LOG_NOTICE(F("Enabled BLE: %T" CR), BTConfig.enabled);
 
   atomic_init(&forceBTScan, 0); // in theory, we don't need this
 
@@ -915,9 +915,9 @@ void setupBT() {
   BLEQueue = xQueueCreate(QueueSize, sizeof(NimBLEAdvertisedDevice*));
   if (BTConfig.enabled) {
     setupBTTasksAndBLE();
-    Log.notice(F("gatewayBT multicore ESP32 setup done" CR));
+    THEENGS_LOG_NOTICE(F("gatewayBT multicore ESP32 setup done" CR));
   } else {
-    Log.notice(F("gatewayBT multicore ESP32 setup disabled" CR));
+    THEENGS_LOG_NOTICE(F("gatewayBT multicore ESP32 setup disabled" CR));
   }
 }
 
@@ -936,7 +936,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
   if (!overrideDiscovery && newDevices == 0)
     return;
   if (xSemaphoreTake(semaphoreCreateOrUpdateDevice, pdMS_TO_TICKS(QueueSemaphoreTimeOutTask)) == pdFALSE) {
-    Log.error(F("Semaphore NOT taken" CR));
+    THEENGS_LOG_ERROR(F("Semaphore NOT taken" CR));
     return;
   }
   newDevices = 0;
@@ -944,15 +944,15 @@ void launchBTDiscovery(bool overrideDiscovery) {
   xSemaphoreGive(semaphoreCreateOrUpdateDevice);
   for (vector<BLEdevice*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     BLEdevice* p = *it;
-    Log.trace(F("Device mac %s" CR), p->macAdr);
+    THEENGS_LOG_TRACE(F("Device mac %s" CR), p->macAdr);
     // Do not launch discovery for the devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (iBeacon, GAEN and Microsoft CDP)
     if (overrideDiscovery || !isDiscovered(p)) {
       String macWOdots = String(p->macAdr);
       macWOdots.replace(":", "");
       if (p->sensorModel_id >= 0) {
-        Log.trace(F("Looking for Model_id: %d" CR), p->sensorModel_id);
+        THEENGS_LOG_TRACE(F("Looking for Model_id: %d" CR), p->sensorModel_id);
         std::string properties = decoder.getTheengProperties(p->sensorModel_id);
-        Log.trace(F("properties: %s" CR), properties.c_str());
+        THEENGS_LOG_TRACE(F("properties: %s" CR), properties.c_str());
         std::string brand = decoder.getTheengAttribute(p->sensorModel_id, "brand");
         std::string model = decoder.getTheengAttribute(p->sensorModel_id, "model");
 #    if ForceDeviceName
@@ -1003,17 +1003,17 @@ void launchBTDiscovery(bool overrideDiscovery) {
               if (jsonBuffer.overflowed()) {
                 // This should not happen if JSON_MSG_BUFFER is large enough for
                 // the Theengs json properties
-                Log.error(F("JSON deserialization of Theengs properties overflowed (error %s), buffer capacity: %u. Program might crash. Properties json: %s" CR),
+                THEENGS_LOG_ERROR(F("JSON deserialization of Theengs properties overflowed (error %s), buffer capacity: %u. Program might crash. Properties json: %s" CR),
                           error.c_str(), jsonBuffer.capacity(), properties.c_str());
               } else {
-                Log.error(F("JSON deserialization of Theengs properties errored: %" CR),
+                THEENGS_LOG_ERROR(F("JSON deserialization of Theengs properties errored: %" CR),
                           error.c_str());
               }
             }
             for (JsonPair prop : jsonBuffer["properties"].as<JsonObject>()) {
-              Log.trace(F("Key: %s"), prop.key().c_str());
-              Log.trace(F("Unit: %s"), prop.value()["unit"].as<const char*>());
-              Log.trace(F("Name: %s"), prop.value()["name"].as<const char*>());
+              THEENGS_LOG_TRACE(F("Key: %s"), prop.key().c_str());
+              THEENGS_LOG_TRACE(F("Unit: %s"), prop.value()["unit"].as<const char*>());
+              THEENGS_LOG_TRACE(F("Name: %s"), prop.value()["name"].as<const char*>());
               String entity_name = String(model_id.c_str()) + "-" + String(prop.key().c_str());
               String unique_id = macWOdots + "-" + String(prop.key().c_str());
               String value_template = "{{ value_json." + String(prop.key().c_str()) + " | is_defined }}";
@@ -1155,13 +1155,13 @@ void launchBTDiscovery(bool overrideDiscovery) {
               HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
             }
           } else {
-            Log.trace(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
+            THEENGS_LOG_TRACE(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
           }
         }
       }
       p->isDisc = true; // we don't need the semaphore and all the search magic via createOrUpdateDevice
     } else {
-      Log.trace(F("Device already discovered or that doesn't require discovery %s" CR), p->macAdr);
+      THEENGS_LOG_TRACE(F("Device already discovered or that doesn't require discovery %s" CR), p->macAdr);
     }
   }
 }
@@ -1195,18 +1195,18 @@ void reverseBytes(uint8_t* data, size_t length) {
 void process_bledata(JsonObject& BLEdata) {
   yield(); // Necessary to let the loop run in case of connectivity issues
   if (!BLEdata.containsKey("id")) {
-    Log.error(F("No mac address in the payload" CR));
+    THEENGS_LOG_ERROR(F("No mac address in the payload" CR));
     return;
   }
   const char* mac = BLEdata["id"].as<const char*>();
-  Log.trace(F("Processing BLE data %s" CR), BLEdata["id"].as<const char*>());
+  THEENGS_LOG_TRACE(F("Processing BLE data %s" CR), BLEdata["id"].as<const char*>());
   int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
   int mac_type = BLEdata["mac_type"].as<int>();
 
 #    if BLEDecryptor
   if (BLEdata["encr"] && (BLEdata["encr"].as<int>() > 0 && BLEdata["encr"].as<int>() <= 3)) {
     // Decrypting Encrypted BLE Data PVVX, BTHome or Victron
-    Log.trace(F("[BLEDecryptor] Decrypt ENCR:%d ModelID:%s Payload:%s" CR), BLEdata["encr"].as<int>(), BLEdata["model_id"].as<const char*>(), BLEdata["cipher"].as<const char*>());
+    THEENGS_LOG_TRACE(F("[BLEDecryptor] Decrypt ENCR:%d ModelID:%s Payload:%s" CR), BLEdata["encr"].as<int>(), BLEdata["model_id"].as<const char*>(), BLEdata["cipher"].as<const char*>());
 
     // MAC address
     String macWOdots = BLEdata["id"].as<String>(); // Mac Address without dots
@@ -1214,7 +1214,7 @@ void process_bledata(JsonObject& BLEdata) {
     unsigned char macAddress[6];
     int maclen = hexToBytes(macWOdots, macAddress, 6);
     if (maclen != 6) {
-      Log.error(F("[BLEDecryptor] Invalid MAC Address length %d" CR), maclen);
+      THEENGS_LOG_ERROR(F("[BLEDecryptor] Invalid MAC Address length %d" CR), maclen);
       return;
     }
 
@@ -1222,15 +1222,15 @@ void process_bledata(JsonObject& BLEdata) {
     unsigned char bleaeskey[16];
     int bleaeskeylength = 0;
     if (ble_aes_keys.containsKey(macWOdots)) {
-      Log.trace(F("[BLEDecryptor] Custom AES key %s" CR), ble_aes_keys[macWOdots].as<const char*>());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] Custom AES key %s" CR), ble_aes_keys[macWOdots].as<const char*>());
       bleaeskeylength = hexToBytes(ble_aes_keys[macWOdots], bleaeskey, 16);
     } else {
-      Log.trace(F("[BLEDecryptor] Default AES key" CR));
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] Default AES key" CR));
       bleaeskeylength = hexToBytes(ble_aes, bleaeskey, 16);
     }
     // Check AES Key
     if (bleaeskeylength != 16) {
-      Log.error(F("[BLEDecryptor] Invalid key length %d" CR), bleaeskeylength);
+      THEENGS_LOG_ERROR(F("[BLEDecryptor] Invalid key length %d" CR), bleaeskeylength);
       return;
     }
 
@@ -1255,13 +1255,13 @@ void process_bledata(JsonObject& BLEdata) {
       unsigned char ctr[1]; // 1 byte : counter
       int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 1);
       if (ctrlen != 1) {
-        Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
         return;
       }
       nonce[10] = ctr[0];
       aad[0] = 0x11;
       aadLength = 1;
-      Log.trace(F("[BLEDecryptor] PVVX nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] PVVX nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
 
     } else if (BLEdata["encr"].as<int>() == 2) { // BTHome V2 Encrypted
       noncelength = 13; // 13 bytes
@@ -1272,25 +1272,25 @@ void process_bledata(JsonObject& BLEdata) {
       unsigned char ctr[4]; // Counter
       int ctrlen = hexToBytes(BLEdata["ctr"].as<String>(), ctr, 4);
       if (ctrlen != 4) {
-        Log.error(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Invalid counter length %d" CR), ctrlen);
         return;
       }
       memcpy(&nonce[9], ctr, 4);
       aad[0] = 0x00;
       aadLength = 0;
-      Log.trace(F("[BLEDecryptor] BTHomeV2 nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] BTHomeV2 nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
 
     } else if (BLEdata["encr"].as<int>() == 3) {
       nonce[16] = {0}; // Victron has a 16 byte zero padded nonce with IV bytes 6,7
       unsigned char iv[2];
       int ivlen = hexToBytes(BLEdata["ctr"].as<String>(), iv, 2);
       if (ivlen != 2) {
-        Log.error(F("[BLEDecryptor] Invalid iv length %d" CR), ivlen);
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Invalid iv length %d" CR), ivlen);
         return;
       }
       memcpy(nonce, iv, 2);
       memset(nonce + 2, 0, 14); // 14 bytes: zero padding
-      Log.trace(F("[BLEDecryptor] Victron nonce %s" CR), NimBLEUtils::dataToHexString(nonce, 16).c_str());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] Victron nonce %s" CR), NimBLEUtils::dataToHexString(nonce, 16).c_str());
     } else {
       return; // No match
     }
@@ -1308,7 +1308,7 @@ void process_bledata(JsonObject& BLEdata) {
       mbedtls_ccm_context ctx;
       mbedtls_ccm_init(&ctx);
       if (mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, bleaeskey, 128) != 0) {
-        Log.error(F("[BLEDecryptor] Failed to set AES key to mbedtls" CR));
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Failed to set AES key to mbedtls" CR));
         return;
       }
 
@@ -1316,7 +1316,7 @@ void process_bledata(JsonObject& BLEdata) {
       unsigned char mic[4];
       int miclen = hexToBytes(BLEdata["mic"].as<String>(), mic, 4);
       if (miclen != 4) {
-        Log.error(F("[BLEDecryptor] Invalid MIC length %d" CR), miclen);
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Invalid MIC length %d" CR), miclen);
         return;
       }
 
@@ -1332,16 +1332,16 @@ void process_bledata(JsonObject& BLEdata) {
       mbedtls_ccm_free(&ctx);
 
       if (ret == 0) {
-        Log.notice(F("[BLEDecryptor] Decryption successful" CR));
+        THEENGS_LOG_NOTICE(F("[BLEDecryptor] Decryption successful" CR));
       } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
         if (ble_aes_keys.containsKey(macWOdots)) {
-          Log.error(F("[BLEDecryptor] Decryption failed for %s with key %s" CR), macWOdots.c_str(), ble_aes_keys[macWOdots].as<const char*>());
+          THEENGS_LOG_ERROR(F("[BLEDecryptor] Decryption failed for %s with key %s" CR), macWOdots.c_str(), ble_aes_keys[macWOdots].as<const char*>());
         } else {
-          Log.error(F("[BLEDecryptor] Decryption failed for %s with default key" CR), macWOdots.c_str());
+          THEENGS_LOG_ERROR(F("[BLEDecryptor] Decryption failed for %s with default key" CR), macWOdots.c_str());
         }
         return;
       } else {
-        Log.error(F("[BLEDecryptor] Decryption failed with error: %X" CR), ret);
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Decryption failed with error: %X" CR), ret);
         return;
       }
 
@@ -1359,7 +1359,7 @@ void process_bledata(JsonObject& BLEdata) {
       } else {
         return;
       }
-      Log.trace(F("[BLEDecryptor] Decrypted servicedata %s" CR), BLEdata["servicedata"].as<const char*>());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] Decrypted servicedata %s" CR), BLEdata["servicedata"].as<const char*>());
 
     } else if (BLEdata["encr"].as<int>() == 3) {
       // Decrypt Victron Energy encrypted advertisements.
@@ -1381,12 +1381,12 @@ void process_bledata(JsonObject& BLEdata) {
       mbedtls_aes_free(&ctx);
 
       if (ret == 0) {
-        Log.notice(F("[BLEDecryptor] Victron Decryption successful" CR));
+        THEENGS_LOG_NOTICE(F("[BLEDecryptor] Victron Decryption successful" CR));
       } else if (ret == MBEDTLS_ERR_CCM_AUTH_FAILED) {
-        Log.error(F("[BLEDecryptor] Victron Authentication failed." CR));
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Victron Authentication failed." CR));
         return;
       } else {
-        Log.error(F("[BLEDecryptor] Victron decryption failed with error: %X" CR), ret);
+        THEENGS_LOG_ERROR(F("[BLEDecryptor] Victron decryption failed with error: %X" CR), ret);
         return;
       }
 
@@ -1398,14 +1398,14 @@ void process_bledata(JsonObject& BLEdata) {
       manufacturerdata[8] = 0xff; // Replace byte 8 with "ff" to indicate decrypted data
       memcpy(&manufacturerdata[10], decrypted, ciphertextlen); // Append the decrypted payload to the manufacturer data
       BLEdata["manufacturerdata"] = NimBLEUtils::dataToHexString(manufacturerdata, 10 + ciphertextlen); // Rebuild manufacturerdata
-      Log.trace(F("[BLEDecryptor] Victron decrypted manufacturerdata %s" CR), BLEdata["manufacturerdata"].as<const char*>());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] Victron decrypted manufacturerdata %s" CR), BLEdata["manufacturerdata"].as<const char*>());
     }
 
     // Print before and after decoder post decryption
     // serializeJsonPretty(BLEdata, Serial);
     model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
     // serializeJsonPretty(BLEdata, Serial);
-    Log.trace(F("[BLEDecryptor] Decrypted model_id %d" CR), model_id);
+    THEENGS_LOG_TRACE(F("[BLEDecryptor] Decrypted model_id %d" CR), model_id);
 
     // Remove the cipher fields from BLEdata
     BLEdata.remove("encr");
@@ -1422,13 +1422,13 @@ void process_bledata(JsonObject& BLEdata) {
       BLEdata.remove("track");
     }
     BLEdata["type"] = "RMAC";
-    Log.trace(F("Potential RMAC (prmac) converted to RMAC" CR));
+    THEENGS_LOG_TRACE(F("Potential RMAC (prmac) converted to RMAC" CR));
   }
   const char* deviceName = BLEdata["name"] | "";
 
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
-      Log.trace(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
+      THEENGS_LOG_TRACE(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
       if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) { // Device that broadcast and can be connected
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
       } else {
@@ -1439,7 +1439,7 @@ void process_bledata(JsonObject& BLEdata) {
               BTConfig.BLEinterval = MinTimeBtwScan;
               BTConfig.intervalActiveScan = MinTimeBtwScan;
               BTConfig.scanDuration = MinScanDuration;
-              Log.notice(F("Active and continuous scanning required, parameters adapted" CR));
+              THEENGS_LOG_NOTICE(F("Active and continuous scanning required, parameters adapted" CR));
               stateBTMeasures(false);
             }
           } else if (BLEdata.containsKey("cont") && BTConfig.BLEinterval != MinTimeBtwScan) {
@@ -1448,7 +1448,7 @@ void process_bledata(JsonObject& BLEdata) {
               if ((BLEdata["type"].as<string>()).compare("CTMO") == 0) {
                 BTConfig.scanDuration = MinScanDuration;
               }
-              Log.notice(F("Passive continuous scanning required, parameters adapted" CR));
+              THEENGS_LOG_NOTICE(F("Passive continuous scanning required, parameters adapted" CR));
               stateBTMeasures(false);
             }
           }
@@ -1467,23 +1467,23 @@ void process_bledata(JsonObject& BLEdata) {
           model_id = BLEconectable::id::XMWSDJ04MMC;
 
         if (model_id > 0) {
-          Log.trace(F("Connectable device found: %s" CR), name.c_str());
+          THEENGS_LOG_TRACE(F("Connectable device found: %s" CR), name.c_str());
           createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
         }
       } else if (BTConfig.extDecoderEnable && model_id < 0 && BLEdata.containsKey("servicedata")) {
         const char* service_data = (const char*)(BLEdata["servicedata"] | "");
         if (strstr(service_data, "209800") != NULL) {
           model_id = TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC;
-          Log.trace(F("Connectable device found: HHCCJCY01HHCC" CR));
+          THEENGS_LOG_TRACE(F("Connectable device found: HHCCJCY01HHCC" CR));
           createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
         }
       }
     }
   } else {
-    Log.trace(F("Random MAC or iBeacon device filtered" CR));
+    THEENGS_LOG_TRACE(F("Random MAC or iBeacon device filtered" CR));
   }
   if (!BTConfig.extDecoderEnable && model_id < 0) {
-    Log.trace(F("No eligible device found " CR));
+    THEENGS_LOG_TRACE(F("No eligible device found " CR));
   }
 }
 void PublishDeviceData(JsonObject& BLEdata) {
@@ -1492,7 +1492,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
     process_bledata(BLEdata);
     // If the device is a random MAC and pubRandomMACs is false we don't publish this payload
     if (!BTConfig.pubRandomMACs && (BLEdata["type"].as<string>()).compare("RMAC") == 0) {
-      Log.trace(F("Random MAC, device filtered" CR));
+      THEENGS_LOG_TRACE(F("Random MAC, device filtered" CR));
       return;
     }
     // If pubAdvData is false we don't publish the adv data
@@ -1517,7 +1517,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
         BLEdata["id"] = BLEdata["uuid"].as<std::string>();
       }
       String topic = String(mqtt_topic) + BTConfig.presenceTopic + String(gateway_name);
-      Log.trace(F("Pub HA Presence %s" CR), topic.c_str());
+      THEENGS_LOG_TRACE(F("Pub HA Presence %s" CR), topic.c_str());
       BLEdata["topic"] = topic;
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     }
@@ -1527,7 +1527,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
       buildTopicFromId(BLEdata, subjectBTtoMQTT);
       enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
     } else {
-      Log.notice(F("Not a sensor device filtered" CR));
+      THEENGS_LOG_NOTICE(F("Not a sensor device filtered" CR));
       return;
     }
 
@@ -1552,7 +1552,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
     }
 #    endif
   } else {
-    Log.notice(F("Low rssi, device filtered" CR));
+    THEENGS_LOG_NOTICE(F("Low rssi, device filtered" CR));
     return;
   }
 }
@@ -1571,7 +1571,7 @@ void PublishDeviceData(JsonObject& BLEdata) {
     buildTopicFromId(BLEdata, subjectBTtoMQTT);
     enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
   } else {
-    Log.notice(F("Low rssi, device filtered" CR));
+    THEENGS_LOG_NOTICE(F("Low rssi, device filtered" CR));
     return;
   }
 }
@@ -1579,11 +1579,11 @@ void PublishDeviceData(JsonObject& BLEdata) {
 
 void hass_presence(JsonObject& HomePresence) {
   int BLErssi = HomePresence["rssi"];
-  Log.trace(F("BLErssi %d" CR), BLErssi);
+  THEENGS_LOG_TRACE(F("BLErssi %d" CR), BLErssi);
   int txPower = HomePresence["txpower"] | 0;
   if (txPower >= 0)
     txPower = -59; //if tx power is not found we set a default calibration value
-  Log.trace(F("TxPower: %d" CR), txPower);
+  THEENGS_LOG_TRACE(F("TxPower: %d" CR), txPower);
   double ratio = BLErssi * 1.0 / txPower;
   double distance;
   if (ratio < 1.0) {
@@ -1592,17 +1592,17 @@ void hass_presence(JsonObject& HomePresence) {
     distance = (0.89976) * pow(ratio, 7.7095) + 0.111;
   }
   HomePresence["distance"] = distance;
-  Log.trace(F("Ble distance %D" CR), distance);
+  THEENGS_LOG_TRACE(F("Ble distance %D" CR), distance);
 }
 
 void BTforceScan() {
   if (!BTProcessLock) {
     BLEscan();
-    Log.trace(F("Scan done" CR));
+    THEENGS_LOG_TRACE(F("Scan done" CR));
     if (BTConfig.bleConnect)
       BLEconnect();
   } else {
-    Log.trace(F("Cannot launch scan due to other process running" CR));
+    THEENGS_LOG_TRACE(F("Cannot launch scan due to other process running" CR));
   }
 }
 
@@ -1635,7 +1635,7 @@ void immediateBTAction(void* pvParameters) {
         std::swap(BLEactions, act_swap);
         xSemaphoreGive(semaphoreCreateOrUpdateDevice);
       } else {
-        Log.error(F("CreateOrUpdate Semaphore NOT taken" CR));
+        THEENGS_LOG_ERROR(F("CreateOrUpdate Semaphore NOT taken" CR));
       }
 
       // If we stopped the scheduled connect for this action, do the scheduled now
@@ -1645,7 +1645,7 @@ void immediateBTAction(void* pvParameters) {
       }
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
-      Log.error(F("BLE busy - immediateBTAction not sent" CR));
+      THEENGS_LOG_ERROR(F("BLE busy - immediateBTAction not sent" CR));
       gatewayState = GatewayState::ERROR;
       StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
@@ -1675,7 +1675,7 @@ void startBTActionTask() {
 #  if BLEDecoder
 void KnownBTActions(JsonObject& BTdata) {
   if (!BTdata.containsKey("id")) {
-    Log.error(F("BLE mac address missing" CR));
+    THEENGS_LOG_ERROR(F("BLE mac address missing" CR));
     gatewayState = GatewayState::ERROR;
     return;
   }
@@ -1728,7 +1728,7 @@ void KnownBTActions(JsonObject& BTdata) {
       BLEactions.push_back(action);
       startBTActionTask();
     } else {
-      Log.error(F("BLE action not recognized" CR));
+      THEENGS_LOG_ERROR(F("BLE action not recognized" CR));
       gatewayState = GatewayState::ERROR;
     }
   }
@@ -1751,12 +1751,12 @@ void XtoBTAction(JsonObject& BTdata) {
     else if (vt == "FLOAT")
       action.value_type = BLE_VAL_FLOAT;
     else if (vt != "STRING") {
-      Log.error(F("BLE value type invalid %s" CR), vt.c_str());
+      THEENGS_LOG_ERROR(F("BLE value type invalid %s" CR), vt.c_str());
       return;
     }
   }
 
-  Log.trace(F("BLE ACTION TTL = %u" CR), action.ttl);
+  THEENGS_LOG_TRACE(F("BLE ACTION TTL = %u" CR), action.ttl);
   action.complete = false;
   if (BTdata.containsKey("ble_write_address") &&
       BTdata.containsKey("ble_write_service") &&
@@ -1768,7 +1768,7 @@ void XtoBTAction(JsonObject& BTdata) {
     std::string val = BTdata["ble_write_value"].as<std::string>(); // Fix #1694
     action.value = val;
     action.write = true;
-    Log.trace(F("BLE ACTION Write" CR));
+    THEENGS_LOG_TRACE(F("BLE ACTION Write" CR));
   } else if (BTdata.containsKey("ble_read_address") &&
              BTdata.containsKey("ble_read_service") &&
              BTdata.containsKey("ble_read_char")) {
@@ -1776,7 +1776,7 @@ void XtoBTAction(JsonObject& BTdata) {
     action.service = NimBLEUUID((const char*)BTdata["ble_read_service"]);
     action.characteristic = NimBLEUUID((const char*)BTdata["ble_read_char"]);
     action.write = false;
-    Log.trace(F("BLE ACTION Read" CR));
+    THEENGS_LOG_TRACE(F("BLE ACTION Read" CR));
   } else {
     return;
   }
@@ -1791,7 +1791,7 @@ void XtoBTAction(JsonObject& BTdata) {
 
 void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoBTset)) {
-    Log.trace(F("MQTTtoBT json set" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoBT json set" CR));
 
     // Black list & white list set
     bool WorBupdated;
@@ -1807,7 +1807,7 @@ void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
 
     // Force scan now
     if (BTdata.containsKey("interval") && BTdata["interval"] == 0) {
-      Log.notice(F("BLE forced scan" CR));
+      THEENGS_LOG_NOTICE(F("BLE forced scan" CR));
       atomic_store_explicit(&forceBTScan, 1, ::memory_order_seq_cst); // ask the other core to do the scan for us
     }
 
@@ -1834,7 +1834,7 @@ void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
       XtoBTAction(BTdata);
       xSemaphoreGive(semaphoreBLEOperation);
     } else {
-      Log.error(F("BLE busy - BTActions not sent" CR));
+      THEENGS_LOG_ERROR(F("BLE busy - BTActions not sent" CR));
       gatewayState = GatewayState::ERROR;
     }
   } else if (strstr(topicOri, subjectTrackerSync) != NULL) {
@@ -1842,7 +1842,7 @@ void XtoBT(const char* topicOri, JsonObject& BTdata) { // json object decoding
       BLEdevice* device = getDeviceByMac(BTdata["trackerid"].as<const char*>());
       if (device != &NO_BT_DEVICE_FOUND && device->lastUpdate != 0) {
         device->lastUpdate = 0;
-        Log.notice(F("Tracker %s disassociated by gateway %s" CR), BTdata["trackerid"].as<const char*>(), BTdata["gatewayid"].as<const char*>());
+        THEENGS_LOG_NOTICE(F("Tracker %s disassociated by gateway %s" CR), BTdata["trackerid"].as<const char*>(), BTdata["gatewayid"].as<const char*>());
       }
     }
   }

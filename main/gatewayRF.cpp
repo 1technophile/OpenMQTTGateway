@@ -136,7 +136,7 @@ void announceGatewayTriggerTypeToHASS(uint64_t MQTTvalue) {
 #    else
   String discovery_topic = String(subjectRFtoMQTT);
 #    endif
-  Log.trace(F("[RF] Entity Discovered, create HA Discovery CFG" CR));
+  THEENGS_LOG_TRACE(F("[RF] Entity Discovered, create HA Discovery CFG" CR));
   announceGatewayTrigger(
       discovery_topic.c_str(), // topic
       "Received", // type
@@ -174,9 +174,9 @@ void RFtoX() {
     StaticJsonDocument<JSON_MSG_BUFFER> RFdataBuffer;
     JsonObject RFdata = RFdataBuffer.to<JsonObject>();
 #  ifdef ESP32
-    Log.trace(F("[RF] Rcv. RF - Task running on core :%d" CR), xPortGetCoreID());
+    THEENGS_LOG_TRACE(F("[RF] Rcv. RF - Task running on core :%d" CR), xPortGetCoreID());
 #  else
-    Log.trace(F("[RF] Rcv. RF" CR));
+    THEENGS_LOG_TRACE(F("[RF] Rcv. RF" CR));
 #  endif
     uint64_t MQTTvalue = mySwitch.getReceivedValue();
     int length = mySwitch.getReceivedBitlength();
@@ -214,15 +214,15 @@ void RFtoX() {
       RFdata["origin"] = subjectRFtoMQTT;
       enqueueJsonObject(RFdata);
       // Casting "receivedSignal[o].value" to (unsigned long) because ArduinoLog doesn't support uint64_t for ESP's
-      Log.trace(F("[RF] Store val: %u" CR), (unsigned long)MQTTvalue);
+      THEENGS_LOG_TRACE(F("[RF] Store val: %u" CR), (unsigned long)MQTTvalue);
       storeSignalValue(MQTTvalue);
       if (repeatRFwMQTT) {
-        Log.trace(F("[RF] Pub RF for rpt" CR));
+        THEENGS_LOG_TRACE(F("[RF] Pub RF for rpt" CR));
         RFdata["origin"] = subjectMQTTtoRF;
         enqueueJsonObject(RFdata);
       }
     } else {
-      Log.trace(F("[RF] RF signal received but already managed" CR));
+      THEENGS_LOG_TRACE(F("[RF] RF signal received but already managed" CR));
     }
   }
   // else {
@@ -254,7 +254,7 @@ void XtoRF(const char* topicOri, const char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   disableCurrentReceiver();
   ELECHOUSE_cc1101.SetTx(RFConfig.frequency);
-  Log.notice(F("[RF] Transmit frequency: %F" CR), RFConfig.frequency);
+  THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), RFConfig.frequency);
 #    endif
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
@@ -284,20 +284,20 @@ void XtoRF(const char* topicOri, const char* datacallback) {
   }
 
   if ((cmpToMainTopic(topicOri, subjectMQTTtoRF)) && (valuePRT == 0) && (valuePLSL == 0) && (valueBITS == 0)) {
-    Log.trace(F("[RF] MQTTtoRF dflt" CR));
+    THEENGS_LOG_TRACE(F("[RF] MQTTtoRF dflt" CR));
     mySwitch.setProtocol(1, 350);
     mySwitch.send(data, 24);
     // Acknowledgement to the GTWRF topic
     pub(subjectGTWRFtoMQTT, datacallback);
   } else if ((valuePRT != 0) || (valuePLSL != 0) || (valueBITS != 0)) {
-    Log.trace(F("[RF] MQTTtoRF usr par." CR));
+    THEENGS_LOG_TRACE(F("[RF] MQTTtoRF usr par." CR));
     if (valuePRT == 0)
       valuePRT = 1;
     if (valuePLSL == 0)
       valuePLSL = 350;
     if (valueBITS == 0)
       valueBITS = 24;
-    Log.notice(F("[RF] Protocol: %d, Pulse Lgth: %d, Bits nb: %d" CR), valuePRT, valuePLSL, valueBITS);
+    THEENGS_LOG_NOTICE(F("[RF] Protocol: %d, Pulse Lgth: %d, Bits nb: %d" CR), valuePRT, valuePLSL, valueBITS);
     mySwitch.setProtocol(valuePRT, valuePLSL);
     mySwitch.send(data, valueBITS);
     // Acknowledgement to the GTWRF topic
@@ -335,29 +335,29 @@ void XtoRF(const char* topicOri, const char* datacallback) {
  */
 void XtoRF(const char* topicOri, JsonObject& RFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRF)) {
-    Log.trace(F("[RF] MQTTtoRF json" CR));
+    THEENGS_LOG_TRACE(F("[RF] MQTTtoRF json" CR));
     uint64_t data = RFdata["value"];
     if (data != 0) {
       int valuePRT = RFdata["protocol"] | 1;
       int valuePLSL = RFdata["delay"] | 350;
       int valueBITS = RFdata["length"] | 24;
       int valueRPT = RFdata["repeat"] | RF_EMITTER_REPEAT;
-      Log.notice(F("[RF] Protocol:%d, Pulse Lgth: %d, Bits nb: %d" CR), valuePRT, valuePLSL, valueBITS);
+      THEENGS_LOG_NOTICE(F("[RF] Protocol:%d, Pulse Lgth: %d, Bits nb: %d" CR), valuePRT, valuePLSL, valueBITS);
       disableCurrentReceiver();
 #    ifdef ZradioCC1101
       initCC1101();
       int txPower = RFdata["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
-      Log.notice(F("[RF] CC1101 TX Power: %d" CR), txPower);
+      THEENGS_LOG_NOTICE(F("[RF] CC1101 TX Power: %d" CR), txPower);
       float txFrequency = RFdata["frequency"] | RFConfig.frequency;
       ELECHOUSE_cc1101.SetTx(txFrequency);
-      Log.notice(F("[RF] Transmit frequency: %F" CR), txFrequency);
+      THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif
       mySwitch.enableTransmit(RF_EMITTER_GPIO);
       mySwitch.setRepeatTransmit(valueRPT);
       mySwitch.setProtocol(valuePRT, valuePLSL);
       mySwitch.send(data, valueBITS);
-      Log.notice(F("[RF] MQTTtoRF OK" CR));
+      THEENGS_LOG_NOTICE(F("[RF] MQTTtoRF OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       RFdata["origin"] = subjectGTWRFtoMQTT;
       enqueueJsonObject(RFdata);
@@ -380,7 +380,7 @@ void XtoRF(const char* topicOri, JsonObject& RFdata) {
  * @note THIS SEEMS LIKE A DEAD CODE. THE FUNCTION IS NOT CALLED ANYWHERE.
  */
 void disableRFReceive() {
-  Log.trace(F("[RF] disable RFReceive %d" CR), RF_RECEIVER_GPIO);
+  THEENGS_LOG_TRACE(F("[RF] disable RFReceive %d" CR), RF_RECEIVER_GPIO);
   mySwitch.disableReceive();
 }
 
@@ -401,7 +401,7 @@ void enableRFReceive(
     float rfFrequency = RFConfig.frequency,
     int rfReceiverGPIO = RF_RECEIVER_GPIO,
     int rfEmitterGPIO = RF_EMITTER_GPIO) {
-  Log.notice(F("[RF] Enable RF Receiver: %fMhz, RF_EMITTER_GPIO: %d, RF_RECEIVER_GPIO: %d" CR), rfFrequency, rfEmitterGPIO, rfReceiverGPIO);
+  THEENGS_LOG_NOTICE(F("[RF] Enable RF Receiver: %fMhz, RF_EMITTER_GPIO: %d, RF_RECEIVER_GPIO: %d" CR), rfFrequency, rfEmitterGPIO, rfReceiverGPIO);
 
 #  ifdef RF_DISABLE_TRANSMIT
   mySwitch.disableTransmit();
@@ -412,7 +412,7 @@ void enableRFReceive(
   mySwitch.setRepeatTransmit(rfEmitterGPIO);
   mySwitch.enableReceive(rfReceiverGPIO);
 
-  Log.trace(F("[RF] Setup command topic: %s%s%s\n Setup done" CR), (const char*)mqtt_topic, (const char*)gateway_name, (const char*)subjectMQTTtoRF);
+  THEENGS_LOG_TRACE(F("[RF] Setup command topic: %s%s%s\n Setup done" CR), (const char*)mqtt_topic, (const char*)gateway_name, (const char*)subjectMQTTtoRF);
 }
 
 #endif

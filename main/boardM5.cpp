@@ -64,7 +64,7 @@ void setBrightness(int brightness) {
 }
 
 void setupM5() {
-  Log.notice(F("Setup M5" CR));
+  THEENGS_LOG_NOTICE(F("Setup M5" CR));
   pinMode(SLEEP_BUTTON, INPUT);
   // M5 stack 320*240
   // M5StickC 160*80
@@ -76,11 +76,11 @@ void setupM5() {
   Log.begin(LOG_LEVEL_LCD, &M5.Lcd); // Log on LCD following LOG_LEVEL_LCD
 #  endif
 
-  Log.notice(F("Setup M5 end" CR));
+  THEENGS_LOG_NOTICE(F("Setup M5 end" CR));
 }
 
 void sleepScreen() {
-  Log.trace(F("Screen going to sleep" CR));
+  THEENGS_LOG_TRACE(F("Screen going to sleep" CR));
 #  if defined(ZboardM5STACK)
   M5.begin(false, false, false); // M5.lcd.sleep() provokes a reset of the ESP
 #  endif
@@ -91,7 +91,7 @@ void sleepScreen() {
 }
 
 void wakeScreen(int brightness) {
-  Log.trace(F("Screen wake up" CR));
+  THEENGS_LOG_TRACE(F("Screen wake up" CR));
   M5.begin();
   M5.Lcd.setCursor(0, 0, (M5.Lcd.height() > 200) ? 4 : 2);
   M5.Lcd.setTextSize(1);
@@ -127,18 +127,18 @@ void loopM5() {
 
 void XtoM5(const char* topicOri, JsonObject& M5data) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoM5set)) {
-    Log.trace(F("MQTTtoM5 json set" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoM5 json set" CR));
     // Log display set between M5 lcd (true) and serial monitor (false)
     if (M5data.containsKey("log-lcd")) {
       bool displayOnLCD = M5data["log-lcd"];
-      Log.notice(F("Set lcd log: %T" CR), displayOnLCD);
+      THEENGS_LOG_NOTICE(F("Set lcd log: %T" CR), displayOnLCD);
       logToLCD(displayOnLCD);
     }
   }
 }
 
 void displayIntro(int i, int X, int Y) {
-  Log.trace(F("Intro display on screen" CR));
+  THEENGS_LOG_TRACE(F("Intro display on screen" CR));
   drawLogo(i, X, Y, false, true, false, false, false, false);
   delay(50);
   drawLogo(i, X, Y, false, false, true, false, false, false);

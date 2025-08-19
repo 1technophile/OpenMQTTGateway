@@ -107,7 +107,7 @@ void receivingCommandTask(void* pvParameters) {
   JsonObject jsonBlufi = json.to<JsonObject>();
   auto error = deserializeJson(json, taskData->data, taskData->data_len);
   if (error) {
-    Log.error(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
+    THEENGS_LOG_ERROR(F("deserialize config failed: %s, buffer capacity: %u" CR), error.c_str(), json.capacity());
   } else {
     if (jsonBlufi.containsKey("target") && jsonBlufi["target"].is<char*>()) {
       char topic[(parameters_size) * 2 + jsonBlufi["target"].size() + 1];
@@ -117,7 +117,7 @@ void receivingCommandTask(void* pvParameters) {
       serializeJson(jsonBlufi, jsonStr);
       receivingDATA(topic, jsonStr);
     } else {
-      Log.notice(F("No target found in the received command using SYS target, default index and save command" CR));
+      THEENGS_LOG_NOTICE(F("No target found in the received command using SYS target, default index and save command" CR));
       if (!json.containsKey("cnt_index")) {
         json["cnt_index"] = CNT_DEFAULT_INDEX;
         json["save_cnt"] = true;
@@ -169,7 +169,7 @@ void sendCustomDataNotification(const char* message) {
 #  ifdef BT_CONNECTION_TIMEOUT_MS
 void connection_timeout_callback(void* arg) {
   if (omg_blufi_ble_connected) {
-    Log.notice(F("BluFi connection timeout reached. Disconnecting." CR));
+    THEENGS_LOG_NOTICE(F("BluFi connection timeout reached. Disconnecting." CR));
     esp_blufi_disconnect();
     omg_blufi_ble_connected = false;
   }
@@ -187,7 +187,7 @@ void restart_connection_timer() {
   esp_timer_stop(connection_timer); // Stop the timer if it's running
   esp_err_t ret = esp_timer_start_once(connection_timer, BT_CONNECTION_TIMEOUT_MS * 1000);
   if (ret != ESP_OK) {
-    Log.error(F("Failed to start connection timer: %d" CR), ret);
+    THEENGS_LOG_ERROR(F("Failed to start connection timer: %d" CR), ret);
   }
 }
 
@@ -203,7 +203,7 @@ void stop_connection_timer() {}
 
 void set_blufi_mfg_data () {
   if (!NimBLEDevice::isInitialized() || !NimBLEDevice::getAdvertising()->isAdvertising()) {
-    Log.notice(F("Unable to set advertising data" CR));
+    THEENGS_LOG_NOTICE(F("Unable to set advertising data" CR));
     return;
   }
   ble_hs_adv_fields fields;
@@ -222,9 +222,9 @@ void set_blufi_mfg_data () {
   fields.mfg_data_len = sizeof(omg_blufi_mfg_data);
   auto rc = ble_gap_adv_set_fields(&fields);
   if (rc != 0) {
-    Log.error(F("Failed to set BLE advertising fields: %d" CR), rc);
+    THEENGS_LOG_ERROR(F("Failed to set BLE advertising fields: %d" CR), rc);
   } else {
-    Log.trace(F("BLE advertising fields set successfully" CR));
+    THEENGS_LOG_TRACE(F("BLE advertising fields set successfully" CR));
   }
 }
 
@@ -240,12 +240,12 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
 
   switch (event) {
     case ESP_BLUFI_EVENT_INIT_FINISH: {
-      Log.trace(F("BLUFI init finish" CR));
+      THEENGS_LOG_TRACE(F("BLUFI init finish" CR));
       start_blufi_advertising();
       break;
     }
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
-      Log.trace(F("BLUFI deinit finish" CR));
+      THEENGS_LOG_TRACE(F("BLUFI deinit finish" CR));
       NimBLEDevice::deinit(true);
       if (connection_timer != nullptr) {
         esp_timer_delete(connection_timer);
@@ -253,7 +253,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       }
       break;
     case ESP_BLUFI_EVENT_BLE_CONNECT:
-      Log.trace(F("BLUFI BLE connect" CR));
+      THEENGS_LOG_TRACE(F("BLUFI BLE connect" CR));
       gatewayState = GatewayState::ONBOARDING;
       omg_blufi_ble_connected = true;
       restart_connection_timer();
@@ -265,7 +265,7 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       blufi_security_init();
       break;
     case ESP_BLUFI_EVENT_BLE_DISCONNECT:
-      Log.trace(F("BLUFI BLE disconnect" CR));
+      THEENGS_LOG_TRACE(F("BLUFI BLE disconnect" CR));
       omg_blufi_ble_connected = false;
       stop_connection_timer();
       if (mqtt && mqtt->connected()) {
@@ -284,23 +284,23 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       start_blufi_advertising();
       break;
     case ESP_BLUFI_EVENT_REQ_CONNECT_TO_AP:
-      Log.trace(F("BLUFI request wifi connect to AP" CR));
+      THEENGS_LOG_TRACE(F("BLUFI request wifi connect to AP" CR));
       WiFi.begin((char*)gl_sta_ssid, (char*)gl_sta_passwd);
       gl_sta_is_connecting = true;
       break;
     case ESP_BLUFI_EVENT_REQ_DISCONNECT_FROM_AP:
-      Log.trace(F("BLUFI request wifi disconnect from AP\n" CR));
+      THEENGS_LOG_TRACE(F("BLUFI request wifi disconnect from AP\n" CR));
       WiFi.disconnect();
       break;
     case ESP_BLUFI_EVENT_REPORT_ERROR:
-      Log.trace(F("BLUFI report error, error code %d\n" CR), param->report_error.state);
+      THEENGS_LOG_TRACE(F("BLUFI report error, error code %d\n" CR), param->report_error.state);
       esp_blufi_send_error_info(param->report_error.state);
       break;
     case ESP_BLUFI_EVENT_GET_WIFI_STATUS: {
       esp_blufi_extra_info_t info;
-      Log.trace(F("BLUFI get wifi status" CR));
+      THEENGS_LOG_TRACE(F("BLUFI get wifi status" CR));
       if (gl_sta_ssid_len > 0 && gl_sta_ssid[0] != '\0') {
-        Log.trace(F("SSID exists" CR));
+        THEENGS_LOG_TRACE(F("SSID exists" CR));
         memset(&info, 0, sizeof(esp_blufi_extra_info_t));
         if (memcmp(gl_sta_bssid, "\0\0\0\0\0\0", 6) != 0) {
           memcpy(info.sta_bssid, gl_sta_bssid, 6);
@@ -318,25 +318,25 @@ static void example_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_para
       break;
     }
     case ESP_BLUFI_EVENT_RECV_SLAVE_DISCONNECT_BLE:
-      Log.trace(F("BLUFI recv slave disconnect a ble connection" CR));
+      THEENGS_LOG_TRACE(F("BLUFI recv slave disconnect a ble connection" CR));
       esp_blufi_disconnect();
       break;
     case ESP_BLUFI_EVENT_RECV_STA_SSID:
       strncpy((char*)gl_sta_ssid, (char*)param->sta_ssid.ssid, param->sta_ssid.ssid_len);
       gl_sta_ssid[param->sta_ssid.ssid_len] = '\0';
-      Log.notice(F("Recv STA SSID %s" CR), gl_sta_ssid);
+      THEENGS_LOG_NOTICE(F("Recv STA SSID %s" CR), gl_sta_ssid);
       break;
     case ESP_BLUFI_EVENT_RECV_STA_PASSWD:
       strncpy((char*)gl_sta_passwd, (char*)param->sta_passwd.passwd, param->sta_passwd.passwd_len);
       gl_sta_passwd[param->sta_passwd.passwd_len] = '\0';
-      Log.notice(F("Recv STA PASSWORD" CR));
+      THEENGS_LOG_NOTICE(F("Recv STA PASSWORD" CR));
       break;
     case ESP_BLUFI_EVENT_GET_WIFI_LIST: {
       WiFi.scanNetworks(true);
       break;
     }
     case ESP_BLUFI_EVENT_RECV_CUSTOM_DATA: {
-      Log.notice(F("Recv Custom Data %" PRIu32 CR), param->custom_data.data_len);
+      THEENGS_LOG_NOTICE(F("Recv Custom Data %" PRIu32 CR), param->custom_data.data_len);
       esp_log_buffer_hex("Custom Data", param->custom_data.data, param->custom_data.data_len);
       createReceivingCommandTask(param->custom_data.data, param->custom_data.data_len);
       break;
@@ -384,23 +384,23 @@ void wifi_event_handler(arduino_event_id_t event) {
       if (omg_blufi_ble_connected == true) {
         esp_blufi_send_wifi_conn_report(WIFI_MODE_STA, ESP_BLUFI_STA_CONN_SUCCESS, 0, &info);
       }
-      Log.notice(F("Connected to SSID: %s" CR), gl_sta_ssid);
+      THEENGS_LOG_NOTICE(F("Connected to SSID: %s" CR), gl_sta_ssid);
       break;
     }
     case ARDUINO_EVENT_WIFI_SCAN_DONE: {
       uint16_t apCount = WiFi.scanComplete();
       if (apCount == 0) {
-        Log.error(F("No AP found" CR));
+        THEENGS_LOG_ERROR(F("No AP found" CR));
         break;
       }
-      Log.trace(F("AP found, count: %d" CR), apCount);
+      THEENGS_LOG_TRACE(F("AP found, count: %d" CR), apCount);
       esp_blufi_ap_record_t* blufi_ap_list = (esp_blufi_ap_record_t*)malloc(apCount * sizeof(esp_blufi_ap_record_t));
       if (!blufi_ap_list) {
-        Log.error(F("Failed to allocate memory for AP list" CR));
+        THEENGS_LOG_ERROR(F("Failed to allocate memory for AP list" CR));
         break;
       }
       for (int i = 0; i < apCount; ++i) {
-        Log.notice(F("%d: %s, Ch:%d (%ddBm)" CR), i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i));
+        THEENGS_LOG_NOTICE(F("%d: %s, Ch:%d (%ddBm)" CR), i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i));
         blufi_ap_list[i].rssi = WiFi.RSSI(i);
         size_t ssidLength = strlen(WiFi.SSID(i).c_str());
         if (ssidLength > sizeof(blufi_ap_list[i].ssid) - 1) {
@@ -411,7 +411,7 @@ void wifi_event_handler(arduino_event_id_t event) {
       }
       if (omg_blufi_ble_connected == true) {
         if (esp_blufi_send_wifi_list(apCount, blufi_ap_list) != ESP_OK) {
-          Log.error(F("Failed to send WiFi list" CR));
+          THEENGS_LOG_ERROR(F("Failed to send WiFi list" CR));
         }
       }
       free(blufi_ap_list);
@@ -445,7 +445,7 @@ bool startBlufi() {
 
   ret = esp_blufi_register_callbacks(&example_callbacks);
   if (ret) {
-    Log.error(F("%s blufi register failed, error code = %x" CR), __func__, ret);
+    THEENGS_LOG_ERROR(F("%s blufi register failed, error code = %x" CR), __func__, ret);
     return false;
   }
 
@@ -459,7 +459,7 @@ bool startBlufi() {
   char advName[17] = {0};
   // Check length of Gateway_Short_Name
   if (strlen(Gateway_Short_Name) > 3) {
-    Log.error(F("Gateway_Short_Name is too long, max 3 characters" CR));
+    THEENGS_LOG_ERROR(F("Gateway_Short_Name is too long, max 3 characters" CR));
     return false;
   }
   snprintf(advName, sizeof(advName), Gateway_Short_Name "_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -473,7 +473,7 @@ bool startBlufi() {
   pCommandCharacteristic = pNimBLEOtaSvc->getCharacteristic(NimBLEUUID((uint16_t)0x8022));
   pRecvFwCharacteristic = pNimBLEOtaSvc->getCharacteristic(NimBLEUUID((uint16_t)0x8020));
   ble_gatts_start();
-  Log.notice(F("BLUFI started" CR));
+  THEENGS_LOG_NOTICE(F("BLUFI started" CR));
   return esp_blufi_profile_init() == ESP_OK;
 }
 
@@ -487,10 +487,10 @@ bool stopBlufi() {
   ble_gap_adv_stop();
   result = esp_blufi_profile_deinit();
   if (result != ESP_OK) {
-    Log.error(F("Failed to deinit blufi profile: %d" CR), result);
+    THEENGS_LOG_ERROR(F("Failed to deinit blufi profile: %d" CR), result);
     return false;
   }
-  Log.notice(F("BLUFI stopped" CR));
+  THEENGS_LOG_NOTICE(F("BLUFI stopped" CR));
   return true;
 }
 
