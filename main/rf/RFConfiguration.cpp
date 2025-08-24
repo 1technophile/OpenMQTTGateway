@@ -8,14 +8,12 @@ extern rtl_433_ESP rtl_433;
 #endif
 
 // Constructor
-RFConfiguration::RFConfiguration(RFReceiver& receiver) : iRFReceiver(receiver), whiteList(nullptr), whiteListSize(0), blackList(nullptr), blackListSize(0) {
+RFConfiguration::RFConfiguration(RFReceiver& receiver) : iRFReceiver(receiver) {
   reInit();
 }
 
 // Destructor
 RFConfiguration::~RFConfiguration() {
-  delete[] whiteList;
-  delete[] blackList;
 }
 
 // Getters and Setters
@@ -51,35 +49,6 @@ void RFConfiguration::setActiveReceiver(int receiver) {
   activeReceiver = receiver;
 }
 
-bool RFConfiguration::isWhitelistIgnored() const {
-  return ignoreWhitelist;
-}
-
-void RFConfiguration::setIgnoreWhitelist(bool ignore) {
-  ignoreWhitelist = ignore;
-}
-
-bool RFConfiguration::isBlacklistIgnored() const {
-  return ignoreBlacklist;
-}
-
-void RFConfiguration::setIgnoreBlacklist(bool ignore) {
-  ignoreBlacklist = ignore;
-}
-
-// Utility methods
-void RFConfiguration::clearWhiteList() {
-  delete[] whiteList;
-  whiteList = nullptr;
-  whiteListSize = 0;
-}
-
-void RFConfiguration::clearBlackList() {
-  delete[] blackList;
-  blackList = nullptr;
-  blackListSize = 0;
-}
-
 /**
  * @brief Initializes the RFConfiguration  with default values.
  * 
@@ -96,10 +65,6 @@ void RFConfiguration::reInit() {
   activeReceiver = ACTIVE_RECEIVER;
   rssiThreshold = 0;
   newOokThreshold = 0;
-  ignoreWhitelist = false;
-  ignoreBlacklist = false;
-  clearWhiteList();
-  clearBlackList();
 }
 
 /**
@@ -272,14 +237,7 @@ void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
  */
 void RFConfiguration::fromJson(JsonObject& RFdata) {
   bool success = false;
-  if (RFdata.containsKey("white-list")) {
-    success = commandSetWhiteorBlackList(RFdata, true);
-    Log.notice(F("RF white-list updated" CR));
-  }
-  if (RFdata.containsKey("black-list")) {
-    success = commandSetWhiteorBlackList(RFdata, false);
-    Log.notice(F("RF black-list updated" CR));
-  }
+
   if (RFdata.containsKey("frequency") && validFrequency(RFdata["frequency"])) {
     Config_update(RFdata, "frequency", frequency);
     Log.notice(F("RF Receive mhz: %F" CR), frequency);
@@ -344,66 +302,11 @@ void RFConfiguration::toJson(JsonObject& RFdata) {
   RFdata["rssithreshold"] = rssiThreshold;
   RFdata["ookthreshold"] = newOokThreshold;
   RFdata["active"] = activeReceiver;
-  RFdata["ignoreWhitelist"] = ignoreWhitelist;
-  RFdata["ignoreBlacklist"] = ignoreBlacklist;
 
   // Add white-list vector to the JSON object
   JsonArray whiteListArray = RFdata.createNestedArray("white-list");
-  for (size_t i = 0; i < whiteListSize; ++i) {
-    whiteListArray.add(whiteList[i]);
-  }
   // Add black-list vector to the JSON object
   JsonArray blackListArray = RFdata.createNestedArray("black-list");
-  for (size_t i = 0; i < blackListSize; ++i) {
-    blackListArray.add(blackList[i]);
-  }
-}
-
-/**
- * @brief Checks if a given MQTT value is present in the blacklist.
- *
- * This function determines whether the specified MQTT value is included
- * in the blacklist defined in the  If the `ignoreBlacklist` 
- * flag in RFConfiguration is set to true, the function will always return false,
- * effectively bypassing the blacklist check.
- *
- * @param MQTTvalue The MQTT value to check against the blacklist.
- * @return true if the MQTT value is in the blacklist and the blacklist
- *         check is not ignored; false otherwise.
- */
-bool RFConfiguration::inBlackList(uint64_t MQTTvalue) {
-  if (ignoreBlacklist) {
-    return false;
-  }
-  for (size_t i = 0; i < blackListSize; ++i) {
-    if (blackList[i] == MQTTvalue) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * @brief Checks if a given MQTT value is in the whitelist.
- *
- * This function determines whether the specified MQTT value is present
- * in the whitelist. If the whitelist is disabled (via the `ignoreWhitelist`
- * flag) or is empty, the function will always return true.
- *
- * @param MQTTvalue The MQTT value to check against the whitelist.
- * @return true if the whitelist is disabled, empty, or the value is found in the whitelist.
- * @return false if the value is not in the whitelist.
- */
-bool RFConfiguration::inWhiteList(uint64_t MQTTvalue) {
-  if (ignoreWhitelist || whiteListSize == 0) {
-    return true;
-  }
-  for (size_t i = 0; i < whiteListSize; ++i) {
-    if (whiteList[i] == MQTTvalue) {
-      return true;
-    }
-  }
-  return false;
 }
 
 /**
@@ -426,49 +329,4 @@ bool RFConfiguration::validFrequency(float mhz) {
   if (mhz >= 779 && mhz <= 928)
     return true;
   return false;
-}
-
-/**
- * @brief Updates the white or black list of RF devices.
- *
- * This function updates the white or black list of RF devices based on the provided JSON object.
- * It iterates through the list of devices and creates or updates them in the system.
- *
- * @param RFdata The JSON object containing the RF data.
- * @param isWhite A boolean indicating whether to update the white list (true) or black list (false).
- * @return true if the update was successful, false otherwise.
- */
-bool RFConfiguration::commandSetWhiteorBlackList(JsonObject& RFdata, bool isWhite) {
-  Log.trace(F("RF update WorB" CR));
-  const char* jsonKey = isWhite ? "white-list" : "black-list";
-
-  int size = RFdata[jsonKey].size();
-  if (size == 0)
-    return false;
-
-  if (isWhite) {
-    clearWhiteList();
-  } else {
-    clearBlackList();
-  }
-
-  for (int i = 0; i < size; i++) {
-    const char* value = RFdata[jsonKey][i];
-    if (value != NULL) {
-      uint64_t MQTTvalue = strtoull(value, NULL, 10);
-      if (isWhite) {
-        whiteList = (uint64_t*)realloc(whiteList, (whiteListSize + 1) * sizeof(uint64_t));
-        whiteList[whiteListSize++] = MQTTvalue;
-        Log.trace(F("[RF] White list updated with value: %s" CR), value);
-      } else {
-        blackList = (uint64_t*)realloc(blackList, (blackListSize + 1) * sizeof(uint64_t));
-        blackList[blackListSize++] = MQTTvalue;
-        Log.trace(F("[RF] Black list updated with value: %s" CR), value);
-      }
-    } else {
-      Log.error(F("[RF] Error updating WorB: NULL value" CR));
-      return false;
-    }
-  }
-  return true;
 }

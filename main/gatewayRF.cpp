@@ -207,7 +207,7 @@ void RFtoX() {
 
     mySwitch.resetAvailable();
 
-    if (MQTTvalue != 0 && !isAduplicateSignal(MQTTvalue) && !iRFConfig.inBlackList(MQTTvalue) && iRFConfig.inWhiteList(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
+    if (MQTTvalue != 0 && !isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
 #  if defined(ZmqttDiscovery) && defined(RF_on_HAS_as_DeviceTrigger)
       if (SYSConfig.discovery)
         announceGatewayTriggerTypeToHASS(MQTTvalue);
