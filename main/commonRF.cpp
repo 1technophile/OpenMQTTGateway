@@ -43,6 +43,11 @@ int currentReceiver = ACTIVE_NONE;
 extern void enableActiveReceiver();
 extern void disableCurrentReceiver();
 
+// Note: this is currently just a simple wrapper used to make everything work.
+// It prevents introducing external dependencies on newly added C++ structures,
+// and acts as a first approach to mask the concrete implementations (rf, rf2,
+// pilight, etc.). Later this can be extended or replaced by more complete driver
+// abstractions without changing the rest of the system.
 class ZCommonRFWrapper : public RFReceiver {
 public:
   ZCommonRFWrapper() : RFReceiver() {}

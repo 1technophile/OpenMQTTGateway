@@ -24,16 +24,6 @@ public:
   int getActiveReceiver() const;
   void setActiveReceiver(int receiver);
 
-  bool isWhitelistIgnored() const;
-  void setIgnoreWhitelist(bool ignore);
-
-  bool isBlacklistIgnored() const;
-  void setIgnoreBlacklist(bool ignore);
-
-  // Utility methods
-  void clearWhiteList();
-  void clearBlackList();
-
   /**
    * Initializes the  structure with default values.
    * 
@@ -104,24 +94,6 @@ public:
   void toJson(JsonObject& RFdata);
 
   /**
-   * Checks if a given MQTT value is present in the blacklist.
-   *
-   * @param MQTTvalue The MQTT value to check against the blacklist.
-   * @return true if the MQTT value is in the blacklist and the blacklist
-   *         check is not ignored; false otherwise.
-   */
-  bool inBlackList(uint64_t MQTTvalue);
-
-  /**
-   * Checks if a given MQTT value is in the whitelist.
-   *
-   * @param MQTTvalue The MQTT value to check against the whitelist.
-   * @return true if the whitelist is disabled, empty, or the value is found in the whitelist.
-   * @return false if the value is not in the whitelist.
-   */
-  bool inWhiteList(uint64_t MQTTvalue);
-
-  /**
    * @brief Validates if the given frequency is within the acceptable ranges for the CC1101 module.
    *
    * The CC1101 module supports the following frequency ranges:
@@ -141,14 +113,6 @@ private:
   int rssiThreshold;
   int newOokThreshold;
   int activeReceiver;
-  bool ignoreWhitelist;
-  bool ignoreBlacklist;
-  uint64_t* whiteList;
-  size_t whiteListSize;
-  uint64_t* blackList;
-  size_t blackListSize;
-
-  bool commandSetWhiteorBlackList(JsonObject& RFdata, bool isWhite);
 };
 
 #endif // RFCONFIG_H
