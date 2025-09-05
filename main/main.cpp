@@ -936,7 +936,7 @@ std::pair<String, uint16_t> discoverMQTTbroker() {
     }
     if (n == 1) {
       THEENGS_LOG_TRACE(F("One MQTT server found setting parameters" CR));
-      return {MDNS.IP(0).toString(), uint16_t(MDNS.port(0))};
+      return {MDNS.hostname(0).c_str(), uint16_t(MDNS.port(0))};
     } else {
       THEENGS_LOG_WARNING(F("Several MQTT servers found, please deactivate mDNS and set your default server" CR));
     }
