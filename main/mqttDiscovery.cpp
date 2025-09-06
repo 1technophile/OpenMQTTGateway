@@ -43,7 +43,7 @@
 
 extern bool ethConnected;
 extern JsonArray modules;
-extern uint16_t expireAfter;
+uint16_t expireAfter = String(EXPIRE_AFTER).toInt();
 
 // Using Home Assistant MQTT abbreviations to shorten names as per https://github.com/home-assistant/core/blob/dev/homeassistant/components/mqtt/abbreviations.py
 

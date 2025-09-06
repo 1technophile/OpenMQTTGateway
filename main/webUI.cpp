@@ -28,8 +28,8 @@
 #  include <WiFi.h>
 
 #  include "TheengsCommon.h"
-#  include "config_WebUI.h"
 #  include "config_WebContent.h"
+#  include "config_WebUI.h"
 
 #  if defined(ZgatewayCloud)
 #    include "config_Cloud.h"
@@ -86,7 +86,7 @@ const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
 bool webUISecure = WEBUI_AUTH;
 boolean displayMetric = DISPLAY_METRIC;
-uint16_t expireAfter = String(EXPIRE_AFTER).toInt();
+extern uint16_t expireAfter;
 
 /*********************************************************************************************\
  * ESP32 AutoMutex
