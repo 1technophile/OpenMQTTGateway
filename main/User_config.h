@@ -707,4 +707,8 @@ void storeSignalValue(uint64_t);
 #  define QueueSize 18
 #endif
 
+#ifndef EXPIRE_AFTER
+#  define EXPIRE_AFTER "0"
+#endif
+
 #endif

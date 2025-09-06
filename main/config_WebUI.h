@@ -66,10 +66,6 @@
 #  define WEBUI_LOGIN "admin"
 #endif
 
-#ifndef EXPIRE_AFTER
-#  define EXPIRE_AFTER "0"
-#endif
-
 extern char ota_pass[];
 
 /*------------------- End of Compiler Directives ----------------------*/
