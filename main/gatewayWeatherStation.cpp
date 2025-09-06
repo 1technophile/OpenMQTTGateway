@@ -45,10 +45,10 @@ void PairedDeviceAdded(byte newID) {
 }
 
 void setupWeatherStation() {
-  Log.notice(F("RF_WS_RECEIVER_GPIO %d" CR), RF_WS_RECEIVER_GPIO);
+  THEENGS_LOG_NOTICE(F("RF_WS_RECEIVER_GPIO %d" CR), RF_WS_RECEIVER_GPIO);
   wsdr.begin();
   wsdr.pair(NULL, PairedDeviceAdded);
-  Log.trace(F("gatewayWeatherStation setup done " CR));
+  THEENGS_LOG_TRACE(F("gatewayWeatherStation setup done " CR));
 }
 
 void sendWindSpeedData(byte id, float wind_speed, byte battery_status) {
@@ -61,7 +61,7 @@ void sendWindSpeedData(byte id, float wind_speed, byte battery_status) {
     RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
     enqueueJsonObject(RFdata);
-    Log.trace(F("Store wind speed val: %lu" CR), MQTTvalue);
+    THEENGS_LOG_TRACE(F("Store wind speed val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
 }
@@ -76,7 +76,7 @@ void sendRainData(byte id, float rain_volume, byte battery_status) {
     RFdata["battery"] = bitRead(battery_status, 1) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
     enqueueJsonObject(RFdata);
-    Log.trace(F("Store rain_volume: %lu" CR), MQTTvalue);
+    THEENGS_LOG_TRACE(F("Store rain_volume: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
 }
@@ -92,7 +92,7 @@ void sendWindData(byte id, int wind_direction, float wind_gust, byte battery_sta
     RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
     enqueueJsonObject(RFdata);
-    Log.trace(F("Store wind data val: %lu" CR), MQTTvalue);
+    THEENGS_LOG_TRACE(F("Store wind data val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
 }
@@ -109,7 +109,7 @@ void sendTemperatureData(byte id, float temperature, int humidity, byte battery_
     RFdata["battery"] = bitRead(battery_status, 0) == 0 ? "OK" : "Low";
     RFdata["origin"] = subjectRFtoMQTT;
     enqueueJsonObject(RFdata);
-    Log.trace(F("Store temp val: %lu" CR), MQTTvalue);
+    THEENGS_LOG_TRACE(F("Store temp val: %lu" CR), MQTTvalue);
     storeSignalValue(MQTTvalue);
   }
 }
@@ -118,22 +118,22 @@ void ZgatewayWeatherStationtoX() {
   char newData = wsdr.readData();
   switch (newData) {
     case 'T':
-      Log.trace(F("Temperature" CR));
+      THEENGS_LOG_TRACE(F("Temperature" CR));
       sendTemperatureData(wsdr.sensorID(), wsdr.readTemperature(), wsdr.readHumidity(), wsdr.batteryStatus());
       break;
 
     case 'S':
-      Log.trace(F("Wind speed" CR));
+      THEENGS_LOG_TRACE(F("Wind speed" CR));
       sendWindSpeedData(wsdr.sensorID(), wsdr.readWindSpeed(), wsdr.batteryStatus());
       break;
 
     case 'G':
-      Log.trace(F("Wind direction" CR));
+      THEENGS_LOG_TRACE(F("Wind direction" CR));
       sendWindData(wsdr.sensorID(), wsdr.readWindDirection(), wsdr.readWindGust(), wsdr.batteryStatus());
       break;
 
     case 'R':
-      Log.trace(F("Rain volume" CR));
+      THEENGS_LOG_TRACE(F("Rain volume" CR));
       sendRainData(wsdr.sensorID(), wsdr.readRainVolume(), wsdr.batteryStatus());
       break;
 

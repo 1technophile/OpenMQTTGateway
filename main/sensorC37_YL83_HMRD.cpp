@@ -34,14 +34,14 @@ unsigned int persisteddigital = 0;
 
 void setupZsensorC37_YL83_HMRD() {
   pinMode(C37_YL83_HMRD_Digital_GPIO, INPUT);
-  Log.trace(F("C37_YL83_HMRD: digital configured pin: %d" CR), C37_YL83_HMRD_Digital_GPIO);
+  THEENGS_LOG_TRACE(F("C37_YL83_HMRD: digital configured pin: %d" CR), C37_YL83_HMRD_Digital_GPIO);
 
   pinMode(C37_YL83_HMRD_Analog_GPIO, INPUT);
-  Log.trace(F("C37_YL83_HMRD: Analog configured pin: %d" CR), C37_YL83_HMRD_Analog_GPIO);
+  THEENGS_LOG_TRACE(F("C37_YL83_HMRD: Analog configured pin: %d" CR), C37_YL83_HMRD_Analog_GPIO);
 
 #  ifdef C37_YL83_HMRD_Analog_RESOLUTION
   analogReadResolution(C37_YL83_HMRD_Analog_RESOLUTION);
-  Log.trace(F("C37_YL83_HMRD: resolution: %d" CR), C37_YL83_HMRD_Analog_RESOLUTION);
+  THEENGS_LOG_TRACE(F("C37_YL83_HMRD: resolution: %d" CR), C37_YL83_HMRD_Analog_RESOLUTION);
 #  endif
 }
 
@@ -54,18 +54,18 @@ void MeasureC37_YL83_HMRDWater() {
     int sensorDigitalValue = digitalRead(C37_YL83_HMRD_Digital_GPIO); // Read the analog value from sensor
     int sensorAnalogValue = analogRead(C37_YL83_HMRD_Analog_GPIO);
 
-    Log.trace(F("Creating C37_YL83_HMRD buffer" CR));
+    THEENGS_LOG_TRACE(F("Creating C37_YL83_HMRD buffer" CR));
     StaticJsonDocument<JSON_MSG_BUFFER> C37_YL83_HMRDdataBuffer;
     JsonObject C37_YL83_HMRDdata = C37_YL83_HMRDdataBuffer.to<JsonObject>();
     if (sensorDigitalValue != persisteddigital || C37_YL83_HMRD_ALWAYS) {
       C37_YL83_HMRDdata["detected"] = (sensorDigitalValue == 1 ? "false" : "true");
     } else {
-      Log.trace(F("Same digital don't send it" CR));
+      THEENGS_LOG_TRACE(F("Same digital don't send it" CR));
     }
     if (sensorAnalogValue != persistedanalog || C37_YL83_HMRD_ALWAYS) {
       C37_YL83_HMRDdata["reading"] = sensorAnalogValue;
     } else {
-      Log.trace(F("Same analog don't send it" CR));
+      THEENGS_LOG_TRACE(F("Same analog don't send it" CR));
     }
     if (C37_YL83_HMRDdata.size() > 0) {
       C37_YL83_HMRDdata["origin"] = C37_YL83_HMRD_TOPIC;

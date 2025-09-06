@@ -119,7 +119,7 @@ void setupRN8209() {
   init_8209c_interface();
   xTaskCreate(rn8209_loop, "rn8209_loop", RN8209_TASK_STACK_SIZE_OVERRIDE, NULL, 10, &rn8209TaskHandle);
   //esp_task_wdt_add(rn8209TaskHandle);
-  Log.trace(F("sensorRN8209 setup done " CR));
+  THEENGS_LOG_TRACE(F("sensorRN8209 setup done " CR));
 }
 
 #endif // ZsensorRN8209

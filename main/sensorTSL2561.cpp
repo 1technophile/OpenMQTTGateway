@@ -57,24 +57,24 @@ Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 1234
 void displaySensorDetails(void) {
   sensor_t sensor;
   tsl.getSensor(&sensor);
-  Log.trace(F("------------------------------------" CR));
-  Log.trace(("Sensor: %s" CR), sensor.name);
-  Log.trace(("Driver Ver: %s" CR), sensor.version);
-  Log.trace(("Unique ID: %s" CR), sensor.sensor_id);
-  Log.trace(("Max Value: %s lux" CR), sensor.max_value);
-  Log.trace(("Min Value: %s lux" CR), sensor.min_value);
-  Log.trace(("Resolution: %s lux" CR), sensor.resolution);
-  Log.trace(F("------------------------------------" CR));
+  THEENGS_LOG_TRACE(F("------------------------------------" CR));
+  THEENGS_LOG_TRACE(("Sensor: %s" CR), sensor.name);
+  THEENGS_LOG_TRACE(("Driver Ver: %s" CR), sensor.version);
+  THEENGS_LOG_TRACE(("Unique ID: %s" CR), sensor.sensor_id);
+  THEENGS_LOG_TRACE(("Max Value: %s lux" CR), sensor.max_value);
+  THEENGS_LOG_TRACE(("Min Value: %s lux" CR), sensor.min_value);
+  THEENGS_LOG_TRACE(("Resolution: %s lux" CR), sensor.resolution);
+  THEENGS_LOG_TRACE(F("------------------------------------" CR));
   delay(500);
 }
 
 void setupZsensorTSL2561() {
-  Log.notice(F("Setup TSL2561 on adress: %H" CR), TSL2561_ADDR_FLOAT);
+  THEENGS_LOG_NOTICE(F("Setup TSL2561 on adress: %H" CR), TSL2561_ADDR_FLOAT);
   Wire.begin();
   Wire.beginTransmission(TSL2561_ADDR_FLOAT);
 
   if (!tsl.begin()) {
-    Log.error(F("No TSL2561 detected" CR));
+    THEENGS_LOG_ERROR(F("No TSL2561 detected" CR));
   }
 
   // enable auto ranging
@@ -86,7 +86,7 @@ void setupZsensorTSL2561() {
   // tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);  /* medium resolution and speed   */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_402MS);
 
-  Log.trace(F("TSL2561 Initialized. Printing detials now." CR));
+  THEENGS_LOG_TRACE(F("TSL2561 Initialized. Printing detials now." CR));
   displaySensorDetails();
 }
 
@@ -95,7 +95,7 @@ void MeasureLightIntensityTSL2561() {
     static uint32_t persisted_lux;
     timetsl2561 = millis();
 
-    Log.trace(F("Creating TSL2561 buffer" CR));
+    THEENGS_LOG_TRACE(F("Creating TSL2561 buffer" CR));
     StaticJsonDocument<JSON_MSG_BUFFER> TSL2561dataBuffer;
     JsonObject TSL2561data = TSL2561dataBuffer.to<JsonObject>();
 
@@ -113,10 +113,10 @@ void MeasureLightIntensityTSL2561() {
         TSL2561data["origin"] = subjectTSL12561toMQTT;
         enqueueJsonObject(TSL2561data);
       } else {
-        Log.trace(F("Same lux value, do not send" CR));
+        THEENGS_LOG_TRACE(F("Same lux value, do not send" CR));
       }
     } else {
-      Log.error(F("Failed to read from TSL2561" CR));
+      THEENGS_LOG_ERROR(F("Failed to read from TSL2561" CR));
     }
   }
 }

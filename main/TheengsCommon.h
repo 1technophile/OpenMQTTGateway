@@ -63,6 +63,11 @@ extern char mqtt_topic[];
 extern char gateway_name[];
 extern unsigned long lastDiscovery; // Time of the last discovery to trigger automaticaly to off after DiscoveryAutoOffTimer
 
+#if BLEDecryptor
+extern char ble_aes[];
+extern StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
+#endif
+
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc, int timeout);
 extern bool enqueueJsonObject(const StaticJsonDocument<JSON_MSG_BUFFER>& jsonDoc);
 extern void buildTopicFromId(JsonObject& Jsondata, const char* origin);
@@ -92,9 +97,9 @@ void Config_update(JsonObject& data, const char* key, T& var) {
   if (data.containsKey(key)) {
     if (var != data[key].as<T>()) {
       var = data[key].as<T>();
-      Log.notice(F("Config %s changed to: %T" CR), key, data[key].as<T>());
+      THEENGS_LOG_NOTICE(F("Config %s changed to: %T" CR), key, data[key].as<T>());
     } else {
-      Log.notice(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
+      THEENGS_LOG_NOTICE(F("Config %s unchanged, currently: %T" CR), key, data[key].as<T>());
     }
   }
 }

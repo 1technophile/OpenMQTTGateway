@@ -113,15 +113,15 @@ module setup, for use in Arduino setup
 void setupSSD1306() {
   SSD1306Config_init();
   SSD1306Config_load();
-  Log.trace(F("Setup SSD1306 Display" CR));
-  Log.trace(F("displaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306set);
-  Log.trace(F("displaySSD1306 log-oled: %T" CR), logToOLEDDisplay);
-  Log.trace(F("displaySSD1306 json-oled: %T" CR), jsonDisplay);
-  Log.trace(F("displaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
-  Log.trace(F("displaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), idlelogo);
-  Log.trace(F("displaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
+  THEENGS_LOG_TRACE(F("Setup SSD1306 Display" CR));
+  THEENGS_LOG_TRACE(F("displaySSD1306 command topic: %s" CR), subjectMQTTtoSSD1306set);
+  THEENGS_LOG_TRACE(F("displaySSD1306 log-oled: %T" CR), logToOLEDDisplay);
+  THEENGS_LOG_TRACE(F("displaySSD1306 json-oled: %T" CR), jsonDisplay);
+  THEENGS_LOG_TRACE(F("displaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
+  THEENGS_LOG_TRACE(F("displaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), idlelogo);
+  THEENGS_LOG_TRACE(F("displaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
   Oled.begin();
-  Log.notice(F("Setup SSD1306 Display end" CR));
+  THEENGS_LOG_NOTICE(F("Setup SSD1306 Display end" CR));
 
 #  if LOG_TO_OLED
   Log.begin(LOG_LEVEL_OLED, &Oled); // Log on OLED following LOG_LEVEL_OLED
@@ -156,7 +156,7 @@ void loopSSD1306() {
   */
 
 #  ifdef DISPLAY_BLANKING
-  // Log.trace(F("touchAverage %d, touchCurrentReading %d, touchThreshold %d" CR), touchAverage, touchCurrentReading, touchThreshold);
+  // THEENGS_LOG_TRACE(F("touchAverage %d, touchCurrentReading %d, touchThreshold %d" CR), touchAverage, touchCurrentReading, touchThreshold);
   touchTotal = touchTotal - touchReadings[touchIndex];
   touchCurrentReading = touchRead(DISPLAY_BLANKING_TOUCH_GPIO);
   touchReadings[touchIndex] = touchCurrentReading;
@@ -177,7 +177,7 @@ void loopSSD1306() {
   if (jsonDisplay && displayState) {
     if (uptime() >= nextDisplayPage && uxSemaphoreGetCount(semaphoreOLEDOperation) && currentWebUIMessage && newSSD1306Message) {
       if (!Oled.displayPage(currentWebUIMessage)) {
-        Log.warning(F("[ssd1306] displayPage failed: %s" CR), currentWebUIMessage->title);
+        THEENGS_LOG_WARNING(F("[ssd1306] displayPage failed: %s" CR), currentWebUIMessage->title);
       }
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       logoDisplayed = false;
@@ -203,21 +203,21 @@ Handler for mqtt commands sent to the module
 void XtoSSD1306(const char* topicOri, JsonObject& SSD1306data) { // json object decoding
   bool success = false;
   if (cmpToMainTopic(topicOri, subjectMQTTtoSSD1306set)) {
-    Log.trace(F("MQTTtoSSD1306 json set" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoSSD1306 json set" CR));
     // properties
     if (SSD1306data.containsKey("onstate")) {
       displayState = SSD1306data["onstate"].as<bool>();
-      Log.notice(F("Set display state: %T" CR), displayState);
+      THEENGS_LOG_NOTICE(F("Set display state: %T" CR), displayState);
       success = true;
     }
     if (SSD1306data.containsKey("brightness")) {
       displayBrightness = SSD1306data["brightness"].as<int>();
-      Log.notice(F("Set brightness: %d" CR), displayBrightness);
+      THEENGS_LOG_NOTICE(F("Set brightness: %d" CR), displayBrightness);
       success = true;
     }
     if (SSD1306data.containsKey("log-oled")) {
       logToOLEDDisplay = SSD1306data["log-oled"].as<bool>();
-      Log.notice(F("Set OLED log: %T" CR), logToOLEDDisplay);
+      THEENGS_LOG_NOTICE(F("Set OLED log: %T" CR), logToOLEDDisplay);
       logToOLED(logToOLEDDisplay);
       if (logToOLEDDisplay) {
         jsonDisplay = false;
@@ -229,7 +229,7 @@ void XtoSSD1306(const char* topicOri, JsonObject& SSD1306data) { // json object 
         logToOLEDDisplay = false;
         logToOLED(logToOLEDDisplay);
       }
-      Log.notice(F("Set json-oled: %T" CR), jsonDisplay);
+      THEENGS_LOG_NOTICE(F("Set json-oled: %T" CR), jsonDisplay);
       success = true;
     }
     if (SSD1306data.containsKey("idlelogo")) {
@@ -238,7 +238,7 @@ void XtoSSD1306(const char* topicOri, JsonObject& SSD1306data) { // json object 
     }
     if (SSD1306data.containsKey("display-flip")) {
       displayFlip = SSD1306data["display-flip"].as<bool>();
-      Log.notice(F("Set display-flip: %T" CR), displayFlip);
+      THEENGS_LOG_NOTICE(F("Set display-flip: %T" CR), displayFlip);
       success = true;
     }
     // save, load, init, erase
@@ -248,13 +248,13 @@ void XtoSSD1306(const char* topicOri, JsonObject& SSD1306data) { // json object 
     } else if (SSD1306data.containsKey("load") && SSD1306data["load"]) {
       success = SSD1306Config_load();
       if (success) {
-        Log.notice(F("SSD1306 config loaded" CR));
+        THEENGS_LOG_NOTICE(F("SSD1306 config loaded" CR));
       }
     } else if (SSD1306data.containsKey("init") && SSD1306data["init"]) {
       SSD1306Config_init();
       success = true;
       if (success) {
-        Log.notice(F("SSD1306 config initialised" CR));
+        THEENGS_LOG_NOTICE(F("SSD1306 config initialised" CR));
       }
     } else if (SSD1306data.containsKey("erase") && SSD1306data["erase"]) {
       // Erase config from NVS (non-volatile storage)
@@ -264,13 +264,13 @@ void XtoSSD1306(const char* topicOri, JsonObject& SSD1306data) { // json object 
       }
       preferences.end();
       if (success) {
-        Log.notice(F("SSD1306 config erased" CR));
+        THEENGS_LOG_NOTICE(F("SSD1306 config erased" CR));
       }
     }
     if (success) {
       stateSSD1306Display();
     } else {
-      Log.error(F("[ SSD1306 ] XtoSSD1306 Fail json" CR), SSD1306data);
+      THEENGS_LOG_ERROR(F("[ SSD1306 ] XtoSSD1306 Fail json" CR), SSD1306data);
     }
   }
 }
@@ -290,7 +290,7 @@ void SSD1306Config_save() {
   preferences.begin(Gateway_Short_Name, false);
   int result = preferences.putString("SSD1306Config", conf);
   preferences.end();
-  Log.notice(F("SSD1306 Config_save: %s, result: %d" CR), conf.c_str(), result);
+  THEENGS_LOG_NOTICE(F("SSD1306 Config_save: %s, result: %d" CR), conf.c_str(), result);
 }
 
 void SSD1306Config_init() {
@@ -300,7 +300,7 @@ void SSD1306Config_init() {
   jsonDisplay = JSON_TO_OLED;
   idlelogo = DISPLAY_IDLE_LOGO;
   displayFlip = DISPLAY_FLIP;
-  Log.notice(F("SSD1306 config initialised" CR));
+  THEENGS_LOG_NOTICE(F("SSD1306 config initialised" CR));
 }
 
 bool SSD1306Config_load() {
@@ -310,11 +310,11 @@ bool SSD1306Config_load() {
     auto error = deserializeJson(jsonBuffer, preferences.getString("SSD1306Config", "{}"));
     preferences.end();
     if (error) {
-      Log.error(F("SSD1306 config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+      THEENGS_LOG_ERROR(F("SSD1306 config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
       return false;
     }
     if (jsonBuffer.isNull()) {
-      Log.warning(F("SSD1306 config is null" CR));
+      THEENGS_LOG_WARNING(F("SSD1306 config is null" CR));
       return false;
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
@@ -324,11 +324,11 @@ bool SSD1306Config_load() {
     jsonDisplay = jo["json-oled"].as<bool>();
     idlelogo = jo["idlelogo"].as<bool>();
     displayFlip = jo["display-flip"].as<bool>();
-    Log.notice(F("Saved SSD1306 config loaded" CR));
+    THEENGS_LOG_NOTICE(F("Saved SSD1306 config loaded" CR));
     return true;
   } else {
     preferences.end();
-    Log.notice(F("No SSD1306 config to load" CR));
+    THEENGS_LOG_NOTICE(F("No SSD1306 config to load" CR));
     return false;
   }
 }

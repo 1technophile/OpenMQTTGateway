@@ -15,16 +15,16 @@ void errorDecoder(SHTC3_Status_TypeDef message) // The errorDecoder function pri
 {
   switch (message) {
     case SHTC3_Status_Nominal:
-      Log.notice(F("Nominal"));
+      THEENGS_LOG_NOTICE(F("Nominal"));
       break;
     case SHTC3_Status_Error:
-      Log.error(F("Error"));
+      THEENGS_LOG_ERROR(F("Error"));
       break;
     case SHTC3_Status_CRC_Fail:
-      Log.error(F("CRC Fail"));
+      THEENGS_LOG_ERROR(F("CRC Fail"));
       break;
     default:
-      Log.error(F("Unknown return code"));
+      THEENGS_LOG_ERROR(F("Unknown return code"));
       break;
   }
 }
@@ -46,21 +46,21 @@ void MeasureTempAndHum() {
       float h = mySHTC3.toPercent();
       // Check if any reads failed and exit early (to try again).
       if (isnan(h) || isnan(t)) {
-        Log.error(F("Failed to read from SHTC3 sensor!" CR));
+        THEENGS_LOG_ERROR(F("Failed to read from SHTC3 sensor!" CR));
       } else {
-        Log.trace(F("Creating SHTC3 buffer" CR));
+        THEENGS_LOG_TRACE(F("Creating SHTC3 buffer" CR));
         StaticJsonDocument<JSON_MSG_BUFFER> SHTC3dataBuffer;
         JsonObject SHTC3data = SHTC3dataBuffer.to<JsonObject>();
         if (h != persistedh || shtc3_always) {
           SHTC3data["hum"] = (float)h;
         } else {
-          Log.trace(F("Same hum don't send it" CR));
+          THEENGS_LOG_TRACE(F("Same hum don't send it" CR));
         }
         if (t != persistedt || shtc3_always) {
           SHTC3data["tempc"] = (float)t;
           SHTC3data["tempf"] = mySHTC3.toDegF();
         } else {
-          Log.trace(F("Same temp don't send it" CR));
+          THEENGS_LOG_TRACE(F("Same temp don't send it" CR));
         }
         SHTC3data["origin"] = SHTC3TOPIC;
         enqueueJsonObject(SHTC3data);
@@ -69,7 +69,7 @@ void MeasureTempAndHum() {
       persistedt = t;
     } else {
       errorDecoder(mySHTC3.lastStatus);
-      Log.error(F("Failed to read from SHTC3 sensor!" CR));
+      THEENGS_LOG_ERROR(F("Failed to read from SHTC3 sensor!" CR));
     }
   }
 }

@@ -84,6 +84,8 @@ jobs:
           - "esp32dev-ble-broker"
           - "esp32s3-m5stack-stamps3"
           - "esp32c3u-m5stamp"
+          - "lilygo-t3-s3-rtl_433"
+          - "lilygo-t3-s3-rtl_433-fsk"
     runs-on: ubuntu-latest
     name: Build with PlatformIO
     steps:

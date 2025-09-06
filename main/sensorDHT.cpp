@@ -42,7 +42,7 @@ DHT dht(DHT_RECEIVER_GPIO, DHT_SENSOR_TYPE);
 unsigned long timedht = 0;
 
 void setupDHT() {
-  Log.notice(F("Reading DHT on pin: %d" CR), DHT_RECEIVER_GPIO);
+  THEENGS_LOG_NOTICE(F("Reading DHT on pin: %d" CR), DHT_RECEIVER_GPIO);
 }
 
 void MeasureTempAndHum() {
@@ -55,21 +55,21 @@ void MeasureTempAndHum() {
     float t = dht.readTemperature();
     // Check if any reads failed and exit early (to try again).
     if (isnan(h) || isnan(t)) {
-      Log.error(F("Failed to read from DHT sensor!" CR));
+      THEENGS_LOG_ERROR(F("Failed to read from DHT sensor!" CR));
     } else {
-      Log.trace(F("Creating DHT buffer" CR));
+      THEENGS_LOG_TRACE(F("Creating DHT buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> DHTdataBuffer;
       JsonObject DHTdata = DHTdataBuffer.to<JsonObject>();
       if (h != persistedh || dht_always) {
         DHTdata["hum"] = (float)h;
       } else {
-        Log.trace(F("Same hum don't send it" CR));
+        THEENGS_LOG_TRACE(F("Same hum don't send it" CR));
       }
       if (t != persistedt || dht_always) {
         DHTdata["tempc"] = (float)t;
         DHTdata["tempf"] = dht.convertCtoF(t);
       } else {
-        Log.trace(F("Same temp don't send it" CR));
+        THEENGS_LOG_TRACE(F("Same temp don't send it" CR));
       }
       DHTdata["origin"] = DHTTOPIC;
       enqueueJsonObject(DHTdata);

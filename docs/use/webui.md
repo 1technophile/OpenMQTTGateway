@@ -30,6 +30,10 @@ Ability to change the mqtt settings, if the change is unsuccessful it will rever
 
 Ability to change the display of sensor to Metric or Imperial, and disable the WebUI Authentication
 
+## Bluetooth Low Energy - BLE
+
+Ability to add the default AES BLE decryption key, and multiple per-device `macaddress:aeskey` allowing for devices that cannot have their AES key changed.
+
 ## Logging
 
 Ability to temporarily change the logging level.

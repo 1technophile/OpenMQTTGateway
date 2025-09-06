@@ -53,9 +53,9 @@
 #endif
 
 #ifdef WEBUI_TRACE_LOGGING
-#  define WEBUI_TRACE_LOG(...) Log.trace(__VA_ARGS__)
+#  define WEBUI_TRACE_LOG(...) THEENGS_LOG_TRACE(__VA_ARGS__)
 #else
-#  define WEBUI_TRACE_LOG(...)
+#  define WEBUI_TRACE_LOG(...) ((void)0)
 #endif
 
 #ifndef WEBUI_AUTH

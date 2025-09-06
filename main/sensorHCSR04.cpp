@@ -36,8 +36,8 @@
 unsigned long timeHCSR04 = 0;
 
 void setupHCSR04() {
-  Log.notice(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_GPIO);
-  Log.notice(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_GPIO);
+  THEENGS_LOG_NOTICE(F("HCSR04 trigger pin: %d" CR), HCSR04_TRI_GPIO);
+  THEENGS_LOG_NOTICE(F("HCSR04 echo pin: %d" CR), HCSR04_ECH_GPIO);
   pinMode(HCSR04_TRI_GPIO, OUTPUT); // declare HC SR-04 trigger GPIO as output
   pinMode(HCSR04_ECH_GPIO, INPUT); // declare HC SR-04 echo GPIO as input
 }
@@ -45,7 +45,7 @@ void setupHCSR04() {
 void MeasureDistance() {
   if (millis() > (timeHCSR04 + TimeBetweenReadingHCSR04)) {
     timeHCSR04 = millis();
-    Log.trace(F("Creating HCSR04 buffer" CR));
+    THEENGS_LOG_TRACE(F("Creating HCSR04 buffer" CR));
     StaticJsonDocument<JSON_MSG_BUFFER> HCSR04dataBuffer;
     JsonObject HCSR04data = HCSR04dataBuffer.to<JsonObject>();
     digitalWrite(HCSR04_TRI_GPIO, LOW);
@@ -55,20 +55,20 @@ void MeasureDistance() {
     digitalWrite(HCSR04_TRI_GPIO, LOW);
     unsigned long duration = pulseIn(HCSR04_ECH_GPIO, HIGH);
     if (isnan(duration)) {
-      Log.error(F("Failed to read from HC SR04 sensor!" CR));
+      THEENGS_LOG_ERROR(F("Failed to read from HC SR04 sensor!" CR));
     } else {
       static unsigned int distance = 99999;
       unsigned int d = duration / 58.2;
       HCSR04data["distance"] = (int)d;
       if (d > distance) {
         HCSR04data["direction"] = "away";
-        Log.trace(F("HC SR04 Distance changed" CR));
+        THEENGS_LOG_TRACE(F("HC SR04 Distance changed" CR));
       } else if (d < distance) {
         HCSR04data["direction"] = "towards";
-        Log.trace(F("HC SR04 Distance changed" CR));
+        THEENGS_LOG_TRACE(F("HC SR04 Distance changed" CR));
       } else if (HCSR04_always) {
         HCSR04data["direction"] = "static";
-        Log.trace(F("HC SR04 Distance hasn't changed" CR));
+        THEENGS_LOG_TRACE(F("HC SR04 Distance hasn't changed" CR));
       }
       distance = d;
       enqueueJsonObject(HCSR04data);

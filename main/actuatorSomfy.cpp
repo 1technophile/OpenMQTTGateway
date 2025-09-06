@@ -45,29 +45,29 @@ void setupSomfy() {
 
 #  if defined(ESP32)
   if (!EEPROM.begin(max(4, SOMFY_REMOTE_NUM * 2))) {
-    Log.error(F("failed to initialise EEPROM" CR));
+    THEENGS_LOG_ERROR(F("failed to initialise EEPROM" CR));
   }
 #  elif defined(ESP8266)
   EEPROM.begin(max(4, SOMFY_REMOTE_NUM * 2));
 #  endif
 
-  Log.trace(F("actuatorSomfy setup done " CR));
+  THEENGS_LOG_TRACE(F("actuatorSomfy setup done " CR));
 }
 
 #  if jsonReceiving
 void XtoSomfy(const char* topicOri, JsonObject& jsonData) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoSomfy)) {
-    Log.trace(F("MQTTtoSomfy json data analysis" CR));
+    THEENGS_LOG_TRACE(F("MQTTtoSomfy json data analysis" CR));
     float txFrequency = jsonData["frequency"] | RFConfig.frequency;
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
     disableCurrentReceiver();
     ELECHOUSE_cc1101.SetTx(txFrequency);
-    Log.notice(F("Transmit frequency: %F" CR), txFrequency);
+    THEENGS_LOG_NOTICE(F("Transmit frequency: %F" CR), txFrequency);
 #    endif
 
     const int remoteIndex = jsonData["remote"];
     if (remoteIndex >= SOMFY_REMOTE_NUM) {
-      Log.warning(F("actuatorSomfy remote does not exist" CR));
+      THEENGS_LOG_WARNING(F("actuatorSomfy remote does not exist" CR));
       return;
     }
     const String commandData = jsonData["command"];
