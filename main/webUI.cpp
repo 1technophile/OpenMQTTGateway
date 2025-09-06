@@ -27,8 +27,8 @@
 #  include <WebServer.h> // Docs for this are here - https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer
 #  include <WiFi.h>
 
-#  include "config_WebContent.h"
 #  include "config_WebUI.h"
+#  include "config_WebContent.h"
 
 #  if defined(ZgatewayCloud)
 #    include "config_Cloud.h"
@@ -85,6 +85,7 @@ const char* www_username = WEBUI_LOGIN;
 String authFailResponse = "Authentication Failed";
 bool webUISecure = WEBUI_AUTH;
 boolean displayMetric = DISPLAY_METRIC;
+uint16_t expireAfter = String(EXPIRE_AFTER).toInt();
 
 /*********************************************************************************************\
  * ESP32 AutoMutex
@@ -501,9 +502,10 @@ void handleCN() {
 
 /**
  * @brief /WU - Configuration Page
- * T: handleWU: uri: /wu, args: 3, method: 1
+ * T: handleWU: uri: /wu, args: 4, method: 1
  * T: handleWU Arg: 0, dm=on - displayMetric
  * T: handleWU Arg: 1, sw=on - webUISecure
+ * T: handleWU Arg: 2, ea=0 - expireAfter
  * T: handleWU Arg: 2, save=
  */
 void handleWU() {
@@ -525,6 +527,11 @@ void handleWU() {
     }
     webUISecure = server.hasArg("sw");
 
+    if (server.hasArg("ea") && expireAfter != server.arg("ea").toInt()) {
+      expireAfter = server.arg("ea").toInt();
+      update = true;
+    }
+
     if (server.hasArg("save") && update) {
       WebUIConfig_save();
     }
@@ -540,7 +547,7 @@ void handleWU() {
   response += String(script);
   response += String(style);
   int logLevel = Log.getLevel();
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (webUISecure ? "checked" : ""));
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_webui_body, jsonChar, gateway_name, (displayMetric ? "checked" : ""), (webUISecure ? "checked" : ""), expireAfter);
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -1696,6 +1703,7 @@ void WebUISetup() {
 
   Log.trace(F("[WebUI] displayMetric %T" CR), displayMetric);
   Log.trace(F("[WebUI] WebUI Secure %T" CR), webUISecure);
+  Log.trace(F("[WebUI] Expire After %u" CR), expireAfter);
   Log.notice(F("OpenMQTTGateway URL: http://%s/" CR), WiFi.localIP().toString().c_str());
   displayPrint("URL: http://", (char*)WiFi.localIP().toString().c_str());
   Log.notice(F("webUI setup done" CR));
@@ -1771,6 +1779,7 @@ String stateWebUIStatus() {
   JsonObject WebUIdata = WebUIdataBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
   WebUIdata["webUISecure"] = (bool)webUISecure;
+  WebUIdata["expireAfter"] = expireAfter;
   WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
 
   String output;
@@ -1787,6 +1796,7 @@ bool WebUIConfig_save() {
   JsonObject jo = jsonBuffer.to<JsonObject>();
   jo["displayMetric"] = (bool)displayMetric;
   jo["webUISecure"] = (bool)webUISecure;
+  jo["expireAfter"] = expireAfter;
   // Save config into NVS (non-volatile storage)
   String conf = "";
   serializeJson(jsonBuffer, conf);
@@ -1800,6 +1810,7 @@ bool WebUIConfig_save() {
 void WebUIConfig_init() {
   displayMetric = DISPLAY_METRIC;
   webUISecure = WEBUI_AUTH;
+  expireAfter = String(EXPIRE_AFTER).toInt();
   Log.notice(F("WebUI config initialised" CR));
 }
 
@@ -1820,6 +1831,7 @@ bool WebUIConfig_load() {
     JsonObject jo = jsonBuffer.as<JsonObject>();
     displayMetric = jo["displayMetric"].as<bool>();
     webUISecure = jo["webUISecure"].as<bool>();
+    expireAfter = jo["expireAfter"].as<uint16_t>();
     return true;
   } else {
     preferences.end();

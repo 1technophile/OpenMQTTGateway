@@ -43,6 +43,7 @@
 
 extern bool ethConnected;
 extern JsonArray modules;
+extern uint16_t expireAfter;
 
 char discovery_prefix[parameters_size + 1] = discovery_Prefix;
 // From https://github.com/home-assistant/core/blob/d7ac4bd65379e11461c7ce0893d3533d8d8b8cbf/homeassistant/const.py#L225
@@ -509,8 +510,8 @@ void createDiscovery(const char* sensor_type,
     sensor["pl_not_avail"] = payload_not_available; //payload_off
   if (state_class && state_class[0]) {
     sensor["stat_cla"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
-    if (strcmp(state_class, "measurement") == 0)
-      sensor["exp_aft"] = 3600; // handle stale sensors
+    if (expireAfter > 0 && strcmp(state_class, "measurement") == 0)
+      sensor["exp_aft"] = expireAfter; // handle stale sensors
   }
   if (state_on != nullptr)
     if (strcmp(state_on, "true") == 0) {
