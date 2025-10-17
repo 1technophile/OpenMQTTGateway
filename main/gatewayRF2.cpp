@@ -150,7 +150,7 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
   int txPower = RF_CC1101_TXPOWER;
   ELECHOUSE_cc1101.setPA((int)txPower);
   THEENGS_LOG_NOTICE(F("[RF] CC1101 TX Power: %d" CR), txPower);
-  float txFrequency = RFConfig.frequency;
+  float txFrequency = iRFConfig.getFrequency();
   ELECHOUSE_cc1101.SetTx(txFrequency);
   THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif
@@ -252,7 +252,7 @@ void XtoRF2(const char* topicOri, const char* datacallback) {
     }
   }
 #    ifdef ZradioCC1101
-  ELECHOUSE_cc1101.SetRx(RFConfig.frequency); // set Receive on
+  ELECHOUSE_cc1101.SetRx(iRFConfig.getFrequency()); // set Receive on
 #    endif
   enableActiveReceiver();
 }
@@ -273,7 +273,7 @@ void XtoRF2(const char* topicOri, JsonObject& RF2data) { // json object decoding
       int txPower = RF2data["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
       THEENGS_LOG_NOTICE(F("[RF] CC1101 TX Power: %d" CR), txPower);
-      float txFrequency = RF2data["frequency"] | RFConfig.frequency;
+      float txFrequency = RF2data["frequency"] | iRFConfig.getFrequency();
       ELECHOUSE_cc1101.SetTx(txFrequency);
       THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif

@@ -30,6 +30,7 @@
 #ifdef ZgatewayRF
 #  include "TheengsCommon.h"
 #  include "config_RF.h"
+
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 extern void initCC1101();
@@ -201,12 +202,12 @@ void RFtoX() {
 #  endif
 
 #  ifdef ZradioCC1101 // set Receive off and Transmitt on
-    RFdata["frequency"] = RFConfig.frequency;
+    RFdata["frequency"] = iRFConfig.getFrequency();
 #  endif
 
     mySwitch.resetAvailable();
 
-    if (!isAduplicateSignal(MQTTvalue) && MQTTvalue != 0) { // conditions to avoid duplications of RF -->MQTT
+    if (MQTTvalue != 0 && !isAduplicateSignal(MQTTvalue)) { // conditions to avoid duplications of RF -->MQTT
 #  if defined(ZmqttDiscovery) && defined(RF_on_HAS_as_DeviceTrigger)
       if (SYSConfig.discovery)
         announceGatewayTriggerTypeToHASS(MQTTvalue);
@@ -253,8 +254,8 @@ void RFtoX() {
 void XtoRF(const char* topicOri, const char* datacallback) {
 #    ifdef ZradioCC1101 // set Receive off and Transmitt on
   disableCurrentReceiver();
-  ELECHOUSE_cc1101.SetTx(RFConfig.frequency);
-  THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), RFConfig.frequency);
+  ELECHOUSE_cc1101.SetTx(iRFConfig.getFrequency());
+  THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), iRFConfig.getFrequency());
 #    endif
   mySwitch.disableReceive();
   mySwitch.enableTransmit(RF_EMITTER_GPIO);
@@ -304,7 +305,7 @@ void XtoRF(const char* topicOri, const char* datacallback) {
     pub(subjectGTWRFtoMQTT, datacallback); // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
   }
 #    ifdef ZradioCC1101 // set Receive on and Transmitt off
-  ELECHOUSE_cc1101.SetRx(RFConfig.frequency);
+  ELECHOUSE_cc1101.SetRx(iRFConfig.getFrequency());
   mySwitch.disableTransmit();
   mySwitch.enableReceive(RF_RECEIVER_GPIO);
 #    endif
@@ -328,7 +329,7 @@ void XtoRF(const char* topicOri, const char* datacallback) {
  * - "length": The number of bits in the RF signal (optional, default is 24).
  * - "repeat": The number of times the RF signal should be repeated (optional, default is RF_EMITTER_REPEAT).
  * - "txpower": The transmission power for CC1101 (optional, default is RF_CC1101_TXPOWER).
- * - "frequency": The transmission frequency for CC1101 (optional, default is RFConfig.frequency).
+ * - "frequency": The transmission frequency for CC1101 (optional, default is iRFConfig.getFrequency()).
  *
  * The function logs the transmission details and acknowledges the sending by publishing the value to an acknowledgement topic.
  * It also restores the default repeat transmit value after sending the signal.
@@ -349,7 +350,7 @@ void XtoRF(const char* topicOri, JsonObject& RFdata) {
       int txPower = RFdata["txpower"] | RF_CC1101_TXPOWER;
       ELECHOUSE_cc1101.setPA((int)txPower);
       THEENGS_LOG_NOTICE(F("[RF] CC1101 TX Power: %d" CR), txPower);
-      float txFrequency = RFdata["frequency"] | RFConfig.frequency;
+      float txFrequency = RFdata["frequency"] | iRFConfig.getFrequency();
       ELECHOUSE_cc1101.SetTx(txFrequency);
       THEENGS_LOG_NOTICE(F("[RF] Transmit frequency: %F" CR), txFrequency);
 #    endif
@@ -391,14 +392,14 @@ void disableRFReceive() {
  * initializes the RF transmitter on the specified GPIO pin. It also sets the RF frequency
  * and logs the configuration details.
  *
- * @param rfFrequency The frequency for the RF communication in MHz. Default is RFConfig.frequency.
+ * @param rfFrequency The frequency for the RF communication in MHz. Default is iRFConfig.getFrequency().
  * @param rfReceiverGPIO The GPIO pin number for the RF receiver. Default is RF_RECEIVER_GPIO.
  * @param rfEmitterGPIO The GPIO pin number for the RF transmitter. Default is RF_EMITTER_GPIO.
  *
  * @note If RF_DISABLE_TRANSMIT is defined, the RF transmitter will be disabled.
  */
 void enableRFReceive(
-    float rfFrequency = RFConfig.frequency,
+    float rfFrequency = iRFConfig.getFrequency(),
     int rfReceiverGPIO = RF_RECEIVER_GPIO,
     int rfEmitterGPIO = RF_EMITTER_GPIO) {
   THEENGS_LOG_NOTICE(F("[RF] Enable RF Receiver: %fMhz, RF_EMITTER_GPIO: %d, RF_RECEIVER_GPIO: %d" CR), rfFrequency, rfEmitterGPIO, rfReceiverGPIO);

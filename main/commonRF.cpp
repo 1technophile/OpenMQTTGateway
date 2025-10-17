@@ -29,6 +29,8 @@
 #  ifdef ZradioCC1101
 #    include <ELECHOUSE_CC1101_SRC_DRV.h>
 #  endif
+#  include <rf/RFConfiguration.h>
+
 #  include "TheengsCommon.h"
 #  include "config_RF.h"
 
@@ -37,10 +39,28 @@
 extern rtl_433_ESP rtl_433;
 #  endif
 
-RFConfig_s RFConfig;
-void RFConfig_init();
-void RFConfig_load();
+int currentReceiver = ACTIVE_NONE;
+extern void enableActiveReceiver();
+extern void disableCurrentReceiver();
 
+// Note: this is currently just a simple wrapper used to make everything work.
+// It prevents introducing external dependencies on newly added C++ structures,
+// and acts as a first approach to mask the concrete implementations (rf, rf2,
+// pilight, etc.). Later this can be extended or replaced by more complete driver
+// abstractions without changing the rest of the system.
+class ZCommonRFWrapper : public RFReceiver {
+public:
+  ZCommonRFWrapper() : RFReceiver() {}
+  void enable() override { enableActiveReceiver(); }
+  void disable() override { disableCurrentReceiver(); }
+
+  int getReceiverID() const override { return currentReceiver; }
+};
+
+ZCommonRFWrapper iRFReceiver;
+RFConfiguration iRFConfig(iRFReceiver);
+
+//TODO review
 void initCC1101() {
 #  ifdef ZradioCC1101 //receiving with CC1101
   // Loop on getCC1101() until it returns true and break after 10 attempts
@@ -54,7 +74,7 @@ void initCC1101() {
     if (ELECHOUSE_cc1101.getCC1101()) {
       THEENGS_LOG_NOTICE(F("C1101 spi Connection OK" CR));
       ELECHOUSE_cc1101.Init();
-      ELECHOUSE_cc1101.SetRx(RFConfig.frequency);
+      ELECHOUSE_cc1101.SetRx(iRFConfig.getFrequency());
       break;
     } else {
       THEENGS_LOG_ERROR(F("C1101 spi Connection Error" CR));
@@ -68,22 +88,9 @@ void initCC1101() {
 }
 
 void setupCommonRF() {
-  RFConfig_init();
-  RFConfig_load();
+  iRFConfig.reInit();
+  iRFConfig.loadFromStorage();
 }
-
-bool validFrequency(float mhz) {
-  //  CC1101 valid frequencies 300-348 MHZ, 387-464MHZ and 779-928MHZ.
-  if (mhz >= 300 && mhz <= 348)
-    return true;
-  if (mhz >= 387 && mhz <= 464)
-    return true;
-  if (mhz >= 779 && mhz <= 928)
-    return true;
-  return false;
-}
-
-int currentReceiver = ACTIVE_NONE;
 
 #  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
 // Check if a receiver is available
@@ -138,13 +145,13 @@ void disableCurrentReceiver() {
       break;
 #  endif
     default:
-      THEENGS_LOG_ERROR(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
+      THEENGS_LOG_ERROR(F("ERROR: unsupported receiver %d" CR), iRFConfig.getActiveReceiver());
   }
 }
 
 void enableActiveReceiver() {
-  THEENGS_LOG_TRACE(F("enableActiveReceiver: %d" CR), RFConfig.activeReceiver);
-  switch (RFConfig.activeReceiver) {
+  THEENGS_LOG_TRACE(F("enableActiveReceiver: %d" CR), iRFConfig.getActiveReceiver());
+  switch (iRFConfig.getActiveReceiver()) {
 #  ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
       initCC1101();
@@ -155,7 +162,7 @@ void enableActiveReceiver() {
 #  ifdef ZgatewayRF
     case ACTIVE_RF:
       initCC1101();
-      enableRFReceive(RFConfig.frequency, RF_RECEIVER_GPIO, RF_EMITTER_GPIO);
+      enableRFReceive(iRFConfig.getFrequency(), RF_RECEIVER_GPIO, RF_EMITTER_GPIO);
       currentReceiver = ACTIVE_RF;
       break;
 #  endif
@@ -177,7 +184,7 @@ void enableActiveReceiver() {
       THEENGS_LOG_ERROR(F("ERROR: no receiver selected" CR));
       break;
     default:
-      THEENGS_LOG_ERROR(F("ERROR: unsupported receiver %d" CR), RFConfig.activeReceiver);
+      THEENGS_LOG_ERROR(F("ERROR: unsupported receiver %d" CR), iRFConfig.getActiveReceiver());
   }
 }
 
@@ -185,10 +192,13 @@ String stateRFMeasures() {
   //Publish RTL_433 state
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject RFdata = jsonBuffer.to<JsonObject>();
-  RFdata["active"] = RFConfig.activeReceiver;
+
+  // load the configuration
+  iRFConfig.toJson(RFdata);
+
+  // load the current state
 #  if defined(ZradioCC1101) || defined(ZradioSX127x)
-  RFdata["frequency"] = RFConfig.frequency;
-  if (RFConfig.activeReceiver == ACTIVE_RTL) {
+  if (iRFConfig.getActiveReceiver() == ACTIVE_RTL) {
 #    ifdef ZgatewayRTL_433
     RFdata["rssithreshold"] = (int)getRTLrssiThreshold();
     RFdata["rssi"] = (int)getRTLCurrentRSSI();
@@ -211,134 +221,12 @@ String stateRFMeasures() {
   return output;
 }
 
-void RFConfig_fromJson(JsonObject& RFdata) {
-  bool success = false;
-  if (RFdata.containsKey("frequency") && validFrequency(RFdata["frequency"])) {
-    Config_update(RFdata, "frequency", RFConfig.frequency);
-    THEENGS_LOG_NOTICE(F("RF Receive mhz: %F" CR), RFConfig.frequency);
-    success = true;
-  }
-  if (RFdata.containsKey("active")) {
-    THEENGS_LOG_NOTICE(F("RF receiver active: %d" CR), RFConfig.activeReceiver);
-    Config_update(RFdata, "active", RFConfig.activeReceiver);
-    success = true;
-  }
-#  ifdef ZgatewayRTL_433
-  if (RFdata.containsKey("rssithreshold")) {
-    THEENGS_LOG_NOTICE(F("RTL_433 RSSI Threshold : %d " CR), RFConfig.rssiThreshold);
-    Config_update(RFdata, "rssithreshold", RFConfig.rssiThreshold);
-    rtl_433.setRSSIThreshold(RFConfig.rssiThreshold);
-    success = true;
-  }
-#    if defined(RF_SX1276) || defined(RF_SX1278)
-  if (RFdata.containsKey("ookthreshold")) {
-    Config_update(RFdata, "ookthreshold", RFConfig.newOokThreshold);
-    THEENGS_LOG_NOTICE(F("RTL_433 ookThreshold %d" CR), RFConfig.newOokThreshold);
-    rtl_433.setOOKThreshold(RFConfig.newOokThreshold);
-    success = true;
-  }
-#    endif
-  if (RFdata.containsKey("status")) {
-    THEENGS_LOG_NOTICE(F("RF get status:" CR));
-    rtl_433.getStatus();
-    success = true;
-  }
-  if (!success) {
-    THEENGS_LOG_ERROR(F("MQTTtoRF Fail json" CR));
-  }
-#  endif
-  disableCurrentReceiver();
-  enableActiveReceiver();
-#  ifdef ESP32
-  if (RFdata.containsKey("erase") && RFdata["erase"].as<bool>()) {
-    // Erase config from NVS (non-volatile storage)
-    preferences.begin(Gateway_Short_Name, false);
-    if (preferences.isKey("RFConfig")) {
-      int result = preferences.remove("RFConfig");
-      THEENGS_LOG_NOTICE(F("RF config erase result: %d" CR), result);
-      preferences.end();
-      return; // Erase prevails on save, so skipping save
-    } else {
-      THEENGS_LOG_NOTICE(F("RF config not found" CR));
-      preferences.end();
-    }
-  }
-  if (RFdata.containsKey("save") && RFdata["save"].as<bool>()) {
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-    JsonObject jo = jsonBuffer.to<JsonObject>();
-    jo["frequency"] = RFConfig.frequency;
-    jo["active"] = RFConfig.activeReceiver;
-// Don't save those for now, need to be tested
-#    ifdef ZgatewayRTL_433
-//jo["rssithreshold"] = RFConfig.rssiThreshold;
-//jo["ookthreshold"] = RFConfig.newOokThreshold;
-#    endif
-    // Save config into NVS (non-volatile storage)
-    String conf = "";
-    serializeJson(jsonBuffer, conf);
-    preferences.begin(Gateway_Short_Name, false);
-    int result = preferences.putString("RFConfig", conf);
-    preferences.end();
-    THEENGS_LOG_NOTICE(F("RF Config_save: %s, result: %d" CR), conf.c_str(), result);
-  }
-#  endif
-}
-
-void RFConfig_init() {
-  RFConfig.frequency = RF_FREQUENCY;
-  RFConfig.activeReceiver = ACTIVE_RECEIVER;
-  RFConfig.rssiThreshold = 0;
-  RFConfig.newOokThreshold = 0;
-}
-
-void RFConfig_load() {
-#  ifdef ESP32
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  preferences.begin(Gateway_Short_Name, true);
-  if (preferences.isKey("RFConfig")) {
-    auto error = deserializeJson(jsonBuffer, preferences.getString("RFConfig", "{}"));
-    preferences.end();
-    if (error) {
-      THEENGS_LOG_ERROR(F("RF Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
-      return;
-    }
-    if (jsonBuffer.isNull()) {
-      THEENGS_LOG_WARNING(F("RF Config is null" CR));
-      return;
-    }
-    JsonObject jo = jsonBuffer.as<JsonObject>();
-    RFConfig_fromJson(jo);
-    THEENGS_LOG_NOTICE(F("RF Config loaded" CR));
-  } else {
-    preferences.end();
-    THEENGS_LOG_NOTICE(F("RF Config not found using default" CR));
-    enableActiveReceiver();
-  }
-#  else
-  enableActiveReceiver();
-#  endif
-}
-
 void XtoRFset(const char* topicOri, JsonObject& RFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoRFset)) {
     THEENGS_LOG_TRACE(F("MQTTtoRF json set" CR));
 
-    /*
-     * Configuration modifications priorities:
-     *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
-     *  Then parameters included in json are taken in account
-     *  Finally `erase=true` and `save=true` commands are executed (if both are present, ERASE prevails on SAVE)
-     */
-    if (RFdata.containsKey("init") && RFdata["init"].as<bool>()) {
-      // Restore the default (initial) configuration
-      RFConfig_init();
-    } else if (RFdata.containsKey("load") && RFdata["load"].as<bool>()) {
-      // Load the saved configuration, if not initialised
-      RFConfig_load();
-    }
+    iRFConfig.loadFromMessage(RFdata);
 
-    // Load config from json if available
-    RFConfig_fromJson(RFdata);
     stateRFMeasures();
   }
 }

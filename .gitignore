@@ -17,3 +17,8 @@ sdkconfig.*
 __pycache__
 *.pem
 managed_components
+
+
+.github/chatmodes
+.github/prompts
+.github/*instructions.md
