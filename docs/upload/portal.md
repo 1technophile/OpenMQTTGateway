@@ -61,6 +61,7 @@ You can configure your MQTT server credentials and network configuration before 
 ``` ini
 [env:esp32-olimex-gtw-ble]
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = esp32-gateway
 board_build.partitions = min_spiffs.csv
 lib_deps =
