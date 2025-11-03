@@ -7,6 +7,7 @@ default_envs =
 ;esp32 1
 [env:esp32dev-ble-1]
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = esp32dev
 board_build.partitions = min_spiffs.csv
 lib_deps =
@@ -26,6 +27,7 @@ monitor_speed = 115200
 ;esp32 2
 [env:esp32dev-ble-2]
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = esp32dev
 board_build.partitions = min_spiffs.csv
 lib_deps =
@@ -60,6 +62,7 @@ board_build.flash_mode = dout
 
 [env:esp32-lolin32lite-ble-lp]
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = lolin32
 board_build.partitions = min_spiffs.csv
 lib_deps =
@@ -201,6 +204,7 @@ custom_hardware = Pool temp sensor first version
 
 [env:wemos-d1-uno32-HM-RD-deepsleep-waterleak] ;C-37, YL-83, HM-RD leak detector powered by battery using ESP32 Deepsleep and EXT0 wake by sensor state
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = wemos_d1_uno32
 board_build.partitions = min_spiffs.csv
 lib_deps =

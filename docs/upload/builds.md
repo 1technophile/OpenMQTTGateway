@@ -151,6 +151,7 @@ Example to add IR to `esp32dev-rf` add the `build_flags` below to the env defini
 ``` ini
 [env:esp32dev-rf]
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = esp32dev
 lib_deps =
   ${com-esp.lib_deps}
@@ -187,6 +188,7 @@ With PIO you can also upload the firmware through Over the Air, so as to do that
 ``` ini
 [env:esp32-ble]
 platform = ${com.esp32_platform}
+platform_packages = ${com.esp32_platform_packages}
 board = esp32dev
 board_build.partitions = min_spiffs.csv
 lib_deps =
