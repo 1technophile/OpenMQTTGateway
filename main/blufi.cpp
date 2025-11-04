@@ -217,7 +217,7 @@ void set_blufi_mfg_data () {
   fields.uuids16 = &blufi_uuid;
   fields.num_uuids16 = 1;
   fields.uuids16_is_complete = true;
-  uint8_t omg_blufi_mfg_data[] = {BLUFI_MFG_ID, BLUFI_MFG_ID >> 8, 'O', gatewayState};
+  uint8_t omg_blufi_mfg_data[] = {BLUFI_MFG_ID & 0xFF, (BLUFI_MFG_ID >> 8) & 0xFF, 'O', gatewayState};
   fields.mfg_data = omg_blufi_mfg_data;
   fields.mfg_data_len = sizeof(omg_blufi_mfg_data);
   auto rc = ble_gap_adv_set_fields(&fields);
