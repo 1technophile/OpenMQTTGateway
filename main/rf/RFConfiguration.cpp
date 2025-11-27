@@ -1,6 +1,7 @@
-#include "RFConfiguration.h"
-
+#include <TheengsLogs.h>
 #include <config_RF.h>
+#include <rf/RFConfiguration.h>
+#include <storage/IStorage.h>
 
 #ifdef ZgatewayRTL_433
 #  include <rtl_433_ESP.h>
@@ -8,7 +9,7 @@ extern rtl_433_ESP rtl_433;
 #endif
 
 // Constructor
-RFConfiguration::RFConfiguration(RFReceiver& receiver) : iRFReceiver(receiver) {
+RFConfiguration::RFConfiguration(RFBaseGateway& receiver, IStorage& storageRef) : AbstractStorageObject(storageRef, "RFConfig"), iRFReceiver(receiver) {
   reInit();
 }
 
@@ -68,65 +69,6 @@ void RFConfiguration::reInit() {
 }
 
 /**
- * @brief Erases the RF configuration from non-volatile storage (NVS).
- *
- * This function removes the RF configuration stored in NVS. It checks if
- * the configuration exists and, if so, removes it. If the configuration
- * is not found, a notice is logged.
- *
- * @note This function is only available on ESP32 platforms.
- */
-void RFConfiguration::eraseStorage() {
-#ifdef ESP32
-  // Erase config from NVS (non-volatile storage)
-  preferences.begin(Gateway_Short_Name, false);
-  if (preferences.isKey("RFConfig")) {
-    int result = preferences.remove("RFConfig");
-    Log.notice(F("RF config erase result: %d" CR), result);
-  } else {
-    Log.notice(F("RF config not found" CR));
-  }
-  preferences.end();
-#else
-  Log.warning(F("RF Config Erase not support with this board" CR));
-#endif
-}
-
-/**
-   * @brief Saves the RF configuration to non-volatile storage (NVS).
-   *
-   * This function serializes the RF configuration data into a JSON object
-   * and saves it to NVS. The saved configuration includes frequency, active
-   * receiver, and other relevant parameters.
-   *
-   * @note This function is only available on ESP32 platforms.
-   * @note Ensure that the `JSON_MSG_BUFFER` is large enough to hold the
-   *       serialized configuration data to avoid deserialization errors.
-   */
-void RFConfiguration::saveOnStorage() {
-#ifdef ESP32
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject jo = jsonBuffer.to<JsonObject>();
-  toJson(jo);
-#  ifdef ZgatewayRTL_433
-  // FROM ORIGINAL CONFIGURATION:
-  // > Don't save those for now, need to be tested
-  jo.remove("rssithreshold");
-  jo.remove("ookthreshold");
-#  endif
-  // Save config into NVS (non-volatile storage)
-  String conf = "";
-  serializeJson(jsonBuffer, conf);
-  preferences.begin(Gateway_Short_Name, false);
-  int result = preferences.putString("RFConfig", conf);
-  preferences.end();
-  Log.notice(F("RF Config_save: %s, result: %d" CR), conf.c_str(), result);
-#else
-  Log.warning(F("RF Config_save not support with this board" CR));
-#endif
-}
-
-/**
  * @brief Loads the RF configuration from persistent storage and applies it.
  *
  * This function retrieves the RF configuration stored in non-volatile
@@ -138,32 +80,10 @@ void RFConfiguration::saveOnStorage() {
  *       it uses the Preferences library to access stored configuration data.
  *       For other platforms, it directly enables the active receiver.
  */
-void RFConfiguration::loadFromStorage() {
-#ifdef ESP32
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  preferences.begin(Gateway_Short_Name, true);
-  if (preferences.isKey("RFConfig")) {
-    auto error = deserializeJson(jsonBuffer, preferences.getString("RFConfig", "{}"));
-    preferences.end();
-    if (error) {
-      Log.error(F("RF Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
-      return;
-    }
-    if (jsonBuffer.isNull()) {
-      Log.warning(F("RF Config is null" CR));
-      return;
-    }
-    JsonObject jo = jsonBuffer.as<JsonObject>();
-    fromJson(jo);
-    Log.notice(F("RF Config loaded" CR));
-  } else {
-    preferences.end();
-    Log.notice(F("RF Config not found using default" CR));
-    iRFReceiver.enable();
-  }
-#else
+bool RFConfiguration::loadFromStorage() {
+  bool out = AbstractStorageObject::loadFromStorage();
   iRFReceiver.enable();
-#endif
+  return out;
 }
 
 /**
@@ -197,17 +117,17 @@ void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
     loadFromStorage();
   }
 
-  fromJson(RFdata);
+  from(RFdata);
 
   iRFReceiver.disable();
   iRFReceiver.enable();
 
   if (RFdata.containsKey("erase") && RFdata["erase"].as<bool>()) {
     eraseStorage();
-    Log.notice(F("RF Config erased" CR));
+    THEENGS_LOG_NOTICE(F("RF Config erased" CR));
   } else if (RFdata.containsKey("save") && RFdata["save"].as<bool>()) {
     saveOnStorage();
-    Log.notice(F("RF Config saved" CR));
+    THEENGS_LOG_NOTICE(F("RF Config saved" CR));
   }
 }
 
@@ -235,43 +155,57 @@ void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
  * Logs messages to indicate the success or failure of each update operation.
  * If no valid keys are found in the JSON object, an error message is logged.
  */
-void RFConfiguration::fromJson(JsonObject& RFdata) {
-  bool success = false;
+void RFConfiguration::from(JsonObject& RFdata) {
+  short success = 0;
+  short total = 0;
 
+  total += 1;
   if (RFdata.containsKey("frequency") && validFrequency(RFdata["frequency"])) {
-    Config_update(RFdata, "frequency", frequency);
-    Log.notice(F("RF Receive mhz: %F" CR), frequency);
-    success = true;
+    frequency = RFdata["frequency"].as<float>();
+    THEENGS_LOG_NOTICE(F("RF updated Receive mhz: %F" CR), frequency);
+    success += 1;
+  } else {
+    THEENGS_LOG_WARNING(F("RF updated Frequency Missing" CR));
   }
+
+  total += 1;
   if (RFdata.containsKey("active")) {
-    Config_update(RFdata, "active", activeReceiver);
-    Log.notice(F("RF receiver active: %d" CR), activeReceiver);
-    success = true;
+    activeReceiver = RFdata["active"].as<int>();
+    THEENGS_LOG_NOTICE(F("RF receiver active: %d" CR), activeReceiver);
+    success += 1;
+  } else {
+    THEENGS_LOG_WARNING(F("RF updated Active Missing" CR));
   }
 #ifdef ZgatewayRTL_433
+  total += 1;
   if (RFdata.containsKey("rssithreshold")) {
-    Log.notice(F("RTL_433 RSSI Threshold : %d " CR), rssiThreshold);
-    Config_update(RFdata, "rssithreshold", rssiThreshold);
+    THEENGS_LOG_NOTICE(F("RTL_433 RSSI Threshold : %d " CR), rssiThreshold);
+    rssiThreshold = RFdata["rssithreshold"].as<int>();
     rtl_433.setRSSIThreshold(rssiThreshold);
-    success = true;
+    success += 1;
   }
 #  if defined(RF_SX1276) || defined(RF_SX1278)
+  total += 1;
   if (RFdata.containsKey("ookthreshold")) {
-    Config_update(RFdata, "ookthreshold", newOokThreshold);
-    Log.notice(F("RTL_433 ookThreshold %d" CR), newOokThreshold);
+    newOokThreshold = RFdata["ookthreshold"].as<int>();
+    THEENGS_LOG_NOTICE(F("RTL_433 ookThreshold %d" CR), newOokThreshold);
     rtl_433.setOOKThreshold(newOokThreshold);
-    success = true;
+    success += 1;
   }
 #  endif
+  total += 1;
   if (RFdata.containsKey("status")) {
-    Log.notice(F("RF get status:" CR));
+    THEENGS_LOG_NOTICE(F("RF get status:" CR));
     rtl_433.getStatus();
-    success = true;
+    success += 1;
   }
-  if (!success) {
-    Log.error(F("MQTTtoRF Fail json" CR));
-  }
+
 #endif
+  if (success == total) {
+    THEENGS_LOG_NOTICE(F("MQTTtoRF Update Success" CR));
+  } else if (success < total) {
+    THEENGS_LOG_WARNING(F("MQTTtoRF Fail update" CR));
+  }
 }
 
 /**
@@ -297,16 +231,11 @@ void RFConfiguration::fromJson(JsonObject& RFdata) {
  *   "black-list": [<int>, ...]     // Array of black-list values
  * }
  */
-void RFConfiguration::toJson(JsonObject& RFdata) {
+void RFConfiguration::to(JsonObject& RFdata) {
   RFdata["frequency"] = frequency;
   RFdata["rssithreshold"] = rssiThreshold;
   RFdata["ookthreshold"] = newOokThreshold;
   RFdata["active"] = activeReceiver;
-
-  // Add white-list vector to the JSON object
-  JsonArray whiteListArray = RFdata.createNestedArray("white-list");
-  // Add black-list vector to the JSON object
-  JsonArray blackListArray = RFdata.createNestedArray("black-list");
 }
 
 /**

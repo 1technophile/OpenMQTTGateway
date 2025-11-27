@@ -1,7 +1,10 @@
 // The certificate must be in PEM ascii format.
 // The default certificate is for ota.openmqttgateway.com
 #pragma once
-#include <Arduino.h>
+// Make compatible with both Arduino and native testing environments
+#ifndef PROGMEM
+#  define PROGMEM
+#endif
 
 static const char* OTAserver_cert PROGMEM = R"EOF("
 -----BEGIN CERTIFICATE-----

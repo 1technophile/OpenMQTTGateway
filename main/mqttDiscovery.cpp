@@ -40,6 +40,9 @@
 #    include <ETH.h>
 #  endif
 #  include "config_mqttDiscovery.h"
+#  if defined(ZgatewayRF2) || defined(ZgatewayPilight)
+#    include "config_RF.h"
+#  endif
 
 extern bool ethConnected;
 extern JsonArray modules;
@@ -599,7 +602,7 @@ void createDiscovery(const char* sensor_type,
     }
   }
 
-  if (diagnostic_entity) {  // entity_category
+  if (diagnostic_entity) { // entity_category
     sensor["ent_cat"] = "diagnostic";
   }
 
@@ -997,7 +1000,6 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayRF2
-#    include "config_RF.h"
   THEENGS_LOG_TRACE(F("gatewayRF2Discovery" CR));
   const char* gatewayRF2[][13] = {
       {HASS_TYPE_SENSOR, "gatewayRF2", "", "", jsonAddress, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};
@@ -1052,7 +1054,6 @@ void pubMqttDiscovery() {
 #  endif
 
 #  ifdef ZgatewayPilight
-#    include "config_RF.h"
   THEENGS_LOG_TRACE(F("gatewayPilightDiscovery" CR));
   const char* gatewayPilight[][13] = {
       {HASS_TYPE_SENSOR, "gatewayPilight", "", "", jsonMsg, "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr}};

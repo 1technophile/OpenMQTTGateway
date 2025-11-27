@@ -27,6 +27,7 @@
 */
 #ifndef user_config_h
 #define user_config_h
+
 /*-------------------VERSION----------------------*/
 #ifndef OMG_VERSION
 #  define OMG_VERSION "version_tag"
@@ -149,20 +150,6 @@
 #  endif
 #endif
 
-#ifndef JSON_MSG_BUFFER
-#  if defined(ESP32)
-#    define JSON_MSG_BUFFER 1024 // adjusted to minimum size covering largest home assistant discovery messages
-#    if MQTT_SECURE_DEFAULT
-#      define JSON_MSG_BUFFER_MAX 2048 // Json message buffer size increased to handle certificate changes through MQTT, used for the queue and the coming MQTT messages
-#    else
-#      define JSON_MSG_BUFFER_MAX 1024 // Minimum size for the cover MQTT discovery message
-#    endif
-#  elif defined(ESP8266)
-#    define JSON_MSG_BUFFER     512 // Json message max buffer size, don't put 768 or higher it is causing unexpected behaviour on ESP8266, certificates handling with ESP8266 is not tested
-#    define JSON_MSG_BUFFER_MAX 832 // Minimum size for MQTT discovery message
-#  endif
-#endif
-
 #ifndef mqtt_max_payload_size
 #  define mqtt_max_payload_size JSON_MSG_BUFFER_MAX + mqtt_topic_max_size + 10 // maximum size of the MQTT payload
 #endif
@@ -223,13 +210,13 @@
 #endif
 
 #define GITHUB_OTA_SERVER_CERT_HASH "d4d211b4553af9fac371f24c2268d59d2b0fec6b9aa0fdbbde068f078d7daf86" // SHA256 fingerprint of the certificate used by the OTA server
-
+// clang-format off
 #if AWS_IOT
 // Enable the use of ALPN for AWS IoT Core with the port 443
 #  define ALPN_PROTOCOLS \
-    { "x-amzn-mqtt-ca", NULL }
+    {"x-amzn-mqtt-ca", NULL}
 #endif
-
+// clang-format on
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.
 
 #ifdef MQTT_HTTPS_FW_UPDATE
@@ -599,46 +586,6 @@ extern ss_cnt_parameters cnt_parameters_array[];
 #  define subjectMQTTtoSYSupdate "/commands/MQTTtoSYS/firmware_update"
 #endif
 #define TimeToResetAtStart 5000 // Time we allow the user at start for the reset command by button press
-
-#include <ArduinoLog.h>
-
-/*-------------------DEFINE LOG LEVEL----------------------*/
-#ifndef LOG_LEVEL
-#  define LOG_LEVEL LOG_LEVEL_NOTICE
-#endif
-
-/*-------------------SIMPLIFIED LOGGING MACROS----------------------*/
-// ArduinoLog levels: SILENT=0, FATAL=1, ERROR=2, WARNING=3, NOTICE=4, TRACE=5, VERBOSE=6
-#if LOG_LEVEL >= LOG_LEVEL_VERBOSE
-#  define THEENGS_LOG_VERBOSE(...) Log.verbose(__VA_ARGS__)
-#else
-#  define THEENGS_LOG_VERBOSE(...) ((void)0)
-#endif
-#if LOG_LEVEL >= LOG_LEVEL_TRACE
-#  define THEENGS_LOG_TRACE(...) Log.trace(__VA_ARGS__)
-#else
-#  define THEENGS_LOG_TRACE(...) ((void)0)
-#endif
-#if LOG_LEVEL >= LOG_LEVEL_NOTICE
-#  define THEENGS_LOG_NOTICE(...) Log.notice(__VA_ARGS__)
-#else
-#  define THEENGS_LOG_NOTICE(...) ((void)0)
-#endif
-#if LOG_LEVEL >= LOG_LEVEL_WARNING
-#  define THEENGS_LOG_WARNING(...) Log.warning(__VA_ARGS__)
-#else
-#  define THEENGS_LOG_WARNING(...) ((void)0)
-#endif
-#if LOG_LEVEL >= LOG_LEVEL_ERROR
-#  define THEENGS_LOG_ERROR(...) Log.error(__VA_ARGS__)
-#else
-#  define THEENGS_LOG_ERROR(...) ((void)0)
-#endif
-#if LOG_LEVEL >= LOG_LEVEL_FATAL
-#  define LOG_FATAL(...) Log.fatal(__VA_ARGS__)
-#else
-#  define LOG_FATAL(...) ((void)0)
-#endif
 
 /*-------------------ESP Wifi band and tx power ---------------------*/
 //Certain sensors are sensitive to Wifi which can cause interference with their normal operation

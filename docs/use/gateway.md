@@ -39,6 +39,264 @@ Auto discovery is enabled by default on release binaries and platformio.
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"offline":true,"save":true}'`
 
+
+## Filter messages
+
+OpenMQTTGateway enables to set pass and block lists to filter outbound messages. The filter can be defined for any keys of the JSON containing a string, and also for MQTT topics.
+
+### Filter Constraints
+- **Maximum filters**: 50 total filters combined (pass + block lists)
+- **Pattern matching**: Supports simple wildcards `*` (any sequence) and `?` (single character)
+
+Here is an example of append a new setup of filter:
+
+```sh
+$> mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"block":{"name":["TP_*"]},"pass":{"name":["ATC*"]}}}'
+```
+
+You don't need to specify both filters; you can use any combination you prefer. The logic behind the pass and block filters is as follows:
+
+A message is allowed if both conditions are met:
+- The block list is disabled, or the message is not in the block list (it is not explicitly blocked).
+- The pass list is disabled, empty, or the message is in the pass list (it is explicitly allowed).
+
+
+### Wildcard Pattern Matching
+The filter supports two types of wildcards:
+- `*` - Matches any sequence of characters (including empty)
+- `?` - Matches exactly one character
+
+**Examples:**
+- `sensor_*` matches `sensor_123`, `sensor_abc`, `sensor_`
+- `dev??e` matches `device`, `devABe` but not `dev1e`
+- `*_sensor_*` matches `temp_sensor_01`, `humidity_sensor_data`
+
+### Topic Filtering
+OpenMQTTGateway also supports filtering based on MQTT topics. This allows you to control which topics are allowed or blocked at the gateway level.
+
+**Topic Filter Examples:**
+- `home/sensor/*` - Allows all topics under `home/sensor/`
+- `home/*/temp` - Allows topics like `home/kitchen/temp`, `home/bedroom/temp`
+- `home/blocked/*` - Blocks all topics under `home/blocked/`
+
+### Filter Limits
+::: warning IMPORTANT
+- Maximum of **50 total filters** (combined pass and block lists)
+- If you attempt to add more than 50 filters, the gateway will log a warning and reject the additional filters
+- The filter count includes both exact matches and wildcard patterns
+:::
+
+### Filter Commands API Documentation
+
+#### **Overview**
+
+Filter commands allow you to manage and control filtering rules on the gateway.  Take attention that some commands are **immediate actions**:
+
+#### **Command Table**
+
+| **Command**                    | **Description**                                                                                                       | **Parameters**                            | **Example**                                                                                                                                             |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reset`                        | Resets all filters and restores the gateway to its initial state.                                                     | `cmd: "reset"`                            | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"cmd":"reset"}}'`                                                  |
+| `clear`                        | Clears all filters but keeps the `ignore_pass` and `ignore_block` flags unchanged.                                    | `cmd: "clear"`                            | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"cmd":"clear"}}'`                                                  |
+| `persist`                      | Persists the current filter configuration across gateway restarts.                                                    | `cmd: "persist"`                          | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"cmd":"persist"}}'`                                                |
+| `reload`                       | Reloads the filter configuration from storage.                                                                        | `cmd: "reload"`                           | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"cmd":"reload"}}'`                                                 |
+| `purge`                        | Resets filters and purges any stored configuration.                                                                   | `cmd: "purge"`                            | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"cmd":"purge"}}'`                                                  |
+| `status`                       | Requests the gateway to publish its current filter   settings.                                                          | `cmd: "status"`                           | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"cmd":"status"}'`                                                            |
+| `ignore_pass` / `ignore_block` | Temporarily disables filter enforcement without removing configured filters. Can be combined with `pass` and `block`. | `ignore_pass: true`, `ignore_block: true` | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"ignore_pass":true,"ignore_block":true}}'`                         |
+| `new`                          | Creates a new filter configuration from scratch.                                                                      | `cmd: "new"`, `block`, `pass`             | `sh mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"filter":{"cmd":"new","block":{"name":["TP_*"]},"pass":{"name":["ATC*"]}}}'` |
+| `rules`                        | Programmatically add filter rules with full validation and error handling.                                            | `rules: [...]`                            | See **Rules Array Format** section below                                                                                                                 |
+
+***
+
+#### **Parameters**
+
+| **Parameter**  | **Type**  | **Description**                                                                           |
+| -------------- | --------- | ----------------------------------------------------------------------------------------- |
+| `cmd`          | `string`  | Specifies the command to execute (`reset`, `clear`, `persist`, `reload`, `purge`, `new`). |
+| `block`        | `object`  | Defines blocking rules (e.g., `{"name":["TP_*"]}`).                                       |
+| `pass`         | `object`  | Defines passing rules (e.g., `{"name":["ATC*"]}`).                                        |
+| `ignore_pass`  | `boolean` | If `true`, ignores pass rules temporarily.                                                |
+| `ignore_block` | `boolean` | If `true`, ignores block rules temporarily.                                               |
+| `rules`        | `array`   | Array of rule objects with validation (see **Rules Array Format** below).                  |
+
+***
+
+#### **Rules Array Format**
+
+The `rules` array allows programmatic definition of filters with built-in validation and error handling. Each rule must be a JSON object with the following structure:
+
+```json
+{
+  "target": "topic",
+  "action": "pass|block",
+  "value": "filter_value",
+  "key": "field_name (only for message target)"
+}
+```
+
+**Rule Fields:**
+- `target`(optional): `"topic"` for MQTT topic filtering (default is message) 
+- `action`(required): `"pass|block"` for the action to allow  (default si denay)
+- `key` : Field name when `target` is not `"topic"`, ignored for `"topic"`
+- `value` (required): The filter value (supports wildcards `*` and `?`)
+
+
+**Example with Rules Array:**
+
+```json
+{
+  "filter": {
+    "rules": [
+      {
+        "target": "topic",
+        "action": "pass",
+        "value": "home/sensor/*"
+      },
+      {
+        "action": "block",
+        "key": "id",
+        "value": "badDevice*"
+      },
+      {
+        "target": "topic",
+        "action": "block",
+        "value": "home/blocked/*"
+      },
+      {
+        "action": "pass",
+        "key": "name",
+        "value": "ATC*"
+      }
+    ]
+  }
+}
+```
+
+::: info VALIDATION
+The gateway validates each rule in the array individually:
+- Invalid rules are logged and skipped
+- Valid rules continue to be processed
+- If you accidentally mix non-object elements (strings, numbers, arrays) in the rules array, they are automatically skipped
+- Check the gateway logs to see details about rejected rules
+:::
+
+***
+
+#### **Usage Notes**
+
+*   Commands like `reset`, `clear`, `purge`, `persist`, and `reload` **cannot be combined** with other filter rules in the same message.
+*   Use `ignore_pass` and `ignore_block` for temporary overrides without deleting existing configurations.
+*   The `new` command replaces the entire filter configuration with the provided rules.
+*   The `rules` array provides programmatic control with full validation - use this for complex filter setups.
+
+
+
+### Filter Examples
+This is an advanced example that create a new configuration that allows only messages that contain the MAC address of "Tuya Smart Inc" and "Apple, Inc." and within those messages it blocks all devices with names starting with the prefix "BRO" and the attribute "something" with the exact value "strange."
+
+```json
+{ 
+  "filter":{
+    "cmd":"new",
+    "pass": {
+      "mac": ["00:33:7A:*","00:03:93:*"]
+    },
+    "block": {
+      "name": ["BRO*"],
+      "something": ["strange"]
+    },
+    "ignore_pass":false,
+    "ignore_block":false
+  }
+}
+```
+
+#### **Topic Filtering Examples**
+
+Example 1: Block all topics under a specific path while allowing sensor topics:
+
+```json
+{
+  "filter": {
+    "rules": [
+      {
+        "target": "topic",
+        "action": "pass",
+        "value": "home/sensor/*"
+      },
+      {
+        "target": "topic",
+        "action": "block",
+        "value": "home/debug/*"
+      }
+    ]
+  }
+}
+```
+
+Example 2: Complex topic and message filtering with rules array:
+
+```json
+{
+  "filter": {
+    "rules": [
+      {
+        "target": "topic",
+        "action": "pass",
+        "value": "home/*/temp"
+      },
+      {
+        "target": "topic",
+        "action": "block",
+        "value": "home/blocked/*"
+      },
+      {
+        "action": "pass",
+        "key": "mac",
+        "value": "00:33:7A:*"
+      },
+      {
+        "action": "block",
+        "key": "name",
+        "value": "BRO*"
+      }
+    ]
+  }
+}
+```
+
+Example 3: Using rules with message field filters:
+
+```json
+{
+  "filter": {
+    "rules": [
+      {
+        "action": "pass",
+        "key": "id",
+        "value": "sensor_*"
+      },
+      {
+        "action": "pass",
+        "key": "id",
+        "value": "device_*"
+      },
+      {
+        "action": "block",
+        "key": "name",
+        "value": "TEST*"
+      }
+    ]
+  }
+}
+```
+
+::: tip PERFORMANCE
+The wildcard matching is optimized for ESP32/ESP8266 and uses minimal resources. Unlike regex patterns, wildcards `*` and `?` have negligible performance impact and are safe to use even on ESP8266.
+:::
+
+
+
 ## Change the WiFi credentials
 
 `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"wifi_ssid":"ssid", "wifi_pass":"password"}'`

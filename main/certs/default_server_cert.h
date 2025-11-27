@@ -1,5 +1,8 @@
 #pragma once
-#include <Arduino.h>
+// Make compatible with both Arduino and native testing environments
+#ifndef PROGMEM
+#  define PROGMEM
+#endif
 
 static const char* ss_server_cert PROGMEM = R"EOF("
 -----BEGIN CERTIFICATE-----

@@ -34,6 +34,7 @@
 #include "LEDManager.h"
 #include "TheengsCommon.h"
 #include "TheengsUtils.h"
+#include "config_JSONMessages.h" //safe include used for the best configuration of ArduinoJson
 
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 static GatewayState previousGatewayState = gatewayState;
@@ -96,17 +97,25 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
 
 #if BLEDecryptor
-  char ble_aes[parameters_size] = BLE_AES;
-  StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
+char ble_aes[parameters_size] = BLE_AES;
+StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
 #endif
 
 #if !MQTT_BROKER_MODE
 ss_cnt_parameters cnt_parameters_array[cnt_parameters_array_size] = CNT_PARAMS_ARR;
 #endif
 
+// Configuration of the Storage used on the projects
+
 #if defined(ESP32)
 #  include <Preferences.h>
 Preferences preferences;
+//Wrapper of Preferences Storage
+#  include <storage/NVSPreferencesStorage.h>
+NVSPreferencesStorage myStorage(&preferences);
+#else
+#  include <storage/NoopStorage.h>
+NoopStorage myStorage;
 #endif
 
 // Modules config inclusion
@@ -285,8 +294,15 @@ int failure_number_ntwk = 0; // number of failure connecting to network
 int failure_number_mqtt = 0; // number of failure connecting to MQTT
 
 static unsigned long last_ota_activity_millis = 0;
+
 // Global struct to store live SYS configuration data
 SYSConfig_s SYSConfig;
+
+//Loard Filter Handling
+#include <core/Filter.h>
+#include <core/MessageFilter.h>
+Filter iFilter(myStorage);
+MessageFilter iMessageFilter(iFilter);
 
 bool failSafeMode = false;
 bool ProcessLock = true; // Process lock when we want to use a critical function like OTA for example
@@ -621,6 +637,21 @@ bool pub(JsonObject& data) {
     gatewayState = GatewayState::ERROR;
     return res;
   }
+
+  //------------------------
+  // filtering options
+  //------------------------
+  if (!iMessageFilter.allowedTopic(topic.c_str())) {
+    THEENGS_LOG_WARNING(F("Topic '%s' blocked by the filter" CR), topic.c_str());
+    return res;
+  }
+  if (iMessageFilter.inBlockList(data) || !iMessageFilter.inPassList(data)) {
+    std::string jsonString;
+    serializeJson(data, jsonString);
+    THEENGS_LOG_WARNING(F("Message blocked by the filter: %s" CR), jsonString.c_str());
+    return res;
+  }
+  //------------------------
 
 #if valueAsATopic
 #  ifdef ZgatewayPilight
@@ -1334,8 +1365,18 @@ void updateAndHandleLEDsTask() {
 void setup() {
   //Launch serial for debugging purposes
   Serial.begin(SERIAL_BAUD);
+#ifndef ESP8266
   Log.begin(LOG_LEVEL, &Serial);
+#endif
   THEENGS_LOG_NOTICE(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
+  THEENGS_LOG_NOTICE(F("Log Setup" CR));
+  THEENGS_LOG_VERBOSE(F("Verbose log initialized" CR));
+  THEENGS_LOG_TRACE(F("Trace log initialized" CR));
+  THEENGS_LOG_NOTICE(F("Notice log initialized" CR));
+  THEENGS_LOG_WARNING(F("Warning log initialized" CR));
+  THEENGS_LOG_ERROR(F("Error log initialized" CR));
+  THEENGS_LOG_FATAL(F("Fatal log initialized" CR));
+  THEENGS_LOG_NOTICE(F("************* WELCOME TO OpenMQTTGateway **************" CR));
 #if defined(TRIGGER_GPIO) && !defined(ESPWifiManualSetup)
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
   checkButton();
@@ -1345,6 +1386,8 @@ void setup() {
 
   SYSConfig_init();
   SYSConfig_load();
+
+  iFilter.loadFromStorage();
 
   if (SYSConfig.offline) {
     gatewayState = GatewayState::OFFLINE;
@@ -2183,11 +2226,11 @@ bool loadConfigFromFlash() {
         if (json.containsKey("ble_aes")) {
           strcpy(ble_aes, json["ble_aes"]);
           THEENGS_LOG_TRACE(F("loaded default BLE AES key %s" CR), ble_aes);
-        }        
+        }
         if (json.containsKey("ble_aes_keys")) {
           ble_aes_keys = json["ble_aes_keys"];
           THEENGS_LOG_TRACE(F("loaded %d custom BLE AES keys" CR), ble_aes_keys.size());
-        }        
+        }
 #  endif
         result = true;
       } else {
@@ -2883,6 +2926,10 @@ String stateMeasures() {
   SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
 #endif
   SYSdata["modules"] = modules;
+
+  //Provide filter configuration
+  JsonObject filterConfig = SYSdata.createNestedObject("filters");
+  iMessageFilter.to(filterConfig);
 
   SYSdata["origin"] = subjectSYStoMQTT;
   enqueueJsonObject(SYSdata);
@@ -3641,6 +3688,10 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
         THEENGS_LOG_WARNING(F("Discovery command not a boolean" CR));
       }
       THEENGS_LOG_NOTICE(F("Discovery state: %T" CR), SYSConfig.discovery);
+    }
+    if (SYSdata.containsKey("filter")) {
+      //JsonObject filterObj = SYSdata["filter"].as<JsonObject>();
+      iMessageFilter.handleMQTTCommand(SYSdata);
     }
     if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
       SYSConfig_save();

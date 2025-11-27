@@ -32,6 +32,8 @@
 #  include <rf/RFConfiguration.h>
 
 #  include "TheengsCommon.h"
+#  include "TheengsLogs.h"
+#  include "config_JSONMessages.h"
 #  include "config_RF.h"
 
 #  ifdef ZgatewayRTL_433
@@ -43,14 +45,22 @@ int currentReceiver = ACTIVE_NONE;
 extern void enableActiveReceiver();
 extern void disableCurrentReceiver();
 
+#  if defined(ESP32)
+#    include <storage/NVSPreferencesStorage.h>
+extern NVSPreferencesStorage myStorage;
+#  else
+#    include <storage/NoopStorage.h>
+extern NoopStorage myStorage;
+#  endif
+
 // Note: this is currently just a simple wrapper used to make everything work.
 // It prevents introducing external dependencies on newly added C++ structures,
 // and acts as a first approach to mask the concrete implementations (rf, rf2,
 // pilight, etc.). Later this can be extended or replaced by more complete driver
 // abstractions without changing the rest of the system.
-class ZCommonRFWrapper : public RFReceiver {
+class ZCommonRFWrapper : public RFBaseGateway {
 public:
-  ZCommonRFWrapper() : RFReceiver() {}
+  ZCommonRFWrapper() : RFBaseGateway() {}
   void enable() override { enableActiveReceiver(); }
   void disable() override { disableCurrentReceiver(); }
 
@@ -58,7 +68,7 @@ public:
 };
 
 ZCommonRFWrapper iRFReceiver;
-RFConfiguration iRFConfig(iRFReceiver);
+RFConfiguration iRFConfig(iRFReceiver, myStorage);
 
 //TODO review
 void initCC1101() {
@@ -194,7 +204,7 @@ String stateRFMeasures() {
   JsonObject RFdata = jsonBuffer.to<JsonObject>();
 
   // load the configuration
-  iRFConfig.toJson(RFdata);
+  iRFConfig.to(RFdata);
 
   // load the current state
 #  if defined(ZradioCC1101) || defined(ZradioSX127x)

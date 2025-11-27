@@ -1,4 +1,5 @@
-name: Close inactive issues or PR
+name: "🗑️ Close inactive issues or PR"
+
 on:
   schedule:
     - cron: "30 0 * * *"

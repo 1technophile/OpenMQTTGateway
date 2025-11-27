@@ -1,8 +1,8 @@
-name: Build binaries, docs and publish to dev folder
+name: 🛠️📚 Build binaries, docs and publish to dev folder
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 jobs:
   build:
     strategy:

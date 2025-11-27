@@ -6,8 +6,7 @@
 
 #if defined(ESP32) && defined(USE_BLUFI)
 
-#  include <ArduinoLog.h>
-
+#  include "TheengsLogs.h"
 #  include "User_config.h"
 #  include "esp_blufi_api.h"
 #  include "esp_crc.h"

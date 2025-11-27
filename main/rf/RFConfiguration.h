@@ -2,13 +2,15 @@
 #define RFCONFIG_H
 #pragma once
 
-#include <TheengsCommon.h>
-#include <rf/RFReceiver.h>
+#include <config_JSONMessages.h>
+#include <rf/RFBaseGateway.h>
+#include <storage/AbstractStorageObject.h>
+#include <storage/IJsonable.h>
 
-class RFConfiguration {
+class RFConfiguration : public AbstractStorageObject, public IJsonable {
 public:
   // Constructor
-  RFConfiguration(RFReceiver& receiver);
+  RFConfiguration(RFBaseGateway& receiver, IStorage& storageRef);
   ~RFConfiguration();
 
   // Getters and Setters
@@ -32,28 +34,7 @@ public:
    */
   void reInit();
 
-  /**
-   * Erases the RF configuration from non-volatile storage (NVS).
-   * 
-   * @note This function is only available on ESP32 platforms.
-   */
-  void eraseStorage();
-
-  /**
-   * Saves the RF configuration to non-volatile storage (NVS).
-   *
-   * @note This function is only available on ESP32 platforms.
-   */
-  void saveOnStorage();
-
-  /**
-   * Loads the RF configuration from persistent storage and applies it.
-   *
-   * @note This function has specific behavior for ESP32 platforms. On ESP32,
-   *       it uses the Preferences library to access stored configuration data.
-   *       For other platforms, it directly enables the active receiver.
-   */
-  void loadFromStorage();
+  bool loadFromStorage() override;
 
   /**
    * Loads the RF configuration from a JSON object and applies it.
@@ -84,14 +65,14 @@ public:
    * - "ookthreshold": Updates the OOK threshold for RTL_433 (requires RF_SX1276 or RF_SX1278).
    * - "status": Retrieves the current status of the RF configuration.
    */
-  void fromJson(JsonObject& RFdata);
+  void from(JsonObject& RFdata) override;
 
   /**
    * Serializes the RF configuration to a JSON object.
    *
    * @param RFdata A reference to a JsonObject where the RF configuration will be serialized.
    */
-  void toJson(JsonObject& RFdata);
+  void to(JsonObject& RFdata) override;
 
   /**
    * @brief Validates if the given frequency is within the acceptable ranges for the CC1101 module.
@@ -107,8 +88,8 @@ public:
   bool validFrequency(float mhz);
 
 private:
-  // Reference to the RFReceiver object
-  RFReceiver& iRFReceiver;
+  // Reference to the RFBaseGateway object
+  RFBaseGateway& iRFReceiver;
   float frequency;
   int rssiThreshold;
   int newOokThreshold;
