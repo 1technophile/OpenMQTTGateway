@@ -135,8 +135,16 @@ extern char discovery_prefix[];
 #  define GATEWAY_MANUFACTURER "OMG_community"
 #endif
 
+// ForceDeviceName: Set to true to force the device name to be from the name of the device and not the model
+// When enabled, device names will use BLE device name (may still include MAC suffix for uniqueness if device_id differs)
 #ifndef ForceDeviceName
-#  define ForceDeviceName false // Set to true to force the device name to be from the name of the device and not the model
+#  define ForceDeviceName false
+#endif
+
+// ForceDeviceNameNoSuffix: Set to true to force the device name to be from the name of the device without appending MAC suffix
+// This overrides ForceDeviceName behavior and ensures device name is used as-is without any MAC suffix
+#ifndef ForceDeviceNameNoSuffix
+#  define ForceDeviceNameNoSuffix false
 #endif
 
 /*-------------- Auto discovery macros-----------------*/

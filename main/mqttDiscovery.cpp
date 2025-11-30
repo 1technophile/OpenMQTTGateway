@@ -654,11 +654,20 @@ void createDiscovery(const char* sensor_type,
 
     // generate unique device name by adding the second half of the device_id only if device_name and device_id are different and we don't want to use the BLE name
     if (device_name[0]) {
+#  ifdef ForceDeviceNameNoSuffix
+      // ForceDeviceNameNoSuffix is enabled: always use the device name as-is without MAC suffix
+      device["name"] = device_name;
+#  else
+      // Original ForceDeviceName behavior: use BLE device name instead of model
+      // If ForceDeviceName is disabled, may add MAC suffix for uniqueness
       if (strcmp(device_id, device_name) != 0 && device_id[0] && !ForceDeviceName) {
+        // Append MAC suffix (last 6 chars) if device_id and device_name differ and ForceDeviceName is disabled
         device["name"] = device_name + String("-") + String(device_id + 6);
       } else {
+        // Use device name as-is (ForceDeviceName enabled, or device_id matches device_name, or no device_id)
         device["name"] = device_name;
       }
+#  endif
     }
 
     device["via_device"] = String(getMacAddress()); //mac address of the gateway so that the devices link to the gateway

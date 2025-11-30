@@ -507,7 +507,9 @@ void DT24Discovery(const char* mac, const char* sensorModel_id) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, "DT24", "ATorch", sensorModel_id);
+  // Use sensorModel_id (device name) as device_name if provided, otherwise use model name
+  const char* device_name = (sensorModel_id && sensorModel_id[0] != '\0') ? sensorModel_id : "DT24-BLE";
+  createDiscoveryFromList(mac, DT24sensor, DT24parametersCount, device_name, "ATorch", "DT24-BLE");
 }
 
 void BM2Discovery(const char* mac, const char* sensorModel_id) {
@@ -519,21 +521,27 @@ void BM2Discovery(const char* mac, const char* sensorModel_id) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, BM2sensor, BM2parametersCount, "BM2", "Generic", sensorModel_id);
+  // Use sensorModel_id (device name) as device_name if provided, otherwise use model name
+  const char* device_name = (sensorModel_id && sensorModel_id[0] != '\0') ? sensorModel_id : "BM2";
+  createDiscoveryFromList(mac, BM2sensor, BM2parametersCount, device_name, "Generic", "BM2");
 }
 
 void LYWSD03MMCDiscovery(const char* mac, const char* sensorModel) {
-#    define LYWSD03MMCparametersCount 4
+#    define LYWSD03MMCparametersCount 6
   THEENGS_LOG_TRACE(F("LYWSD03MMCDiscovery" CR));
   const char* LYWSD03MMCsensor[LYWSD03MMCparametersCount][9] = {
       {HASS_TYPE_SENSOR, "batt", mac, HASS_CLASS_BATTERY, jsonBatt, "", "", HASS_UNIT_PERCENT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "volt", mac, "", jsonVolt, "", "", HASS_UNIT_VOLT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "temp", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "tempc", mac, HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement},
+      {HASS_TYPE_SENSOR, "tempf", mac, HASS_CLASS_TEMPERATURE, jsonTempf, "", "", HASS_UNIT_FAHRENHEIT, stateClassMeasurement},
       {HASS_TYPE_SENSOR, "hum", mac, HASS_CLASS_HUMIDITY, jsonHum, "", "", HASS_UNIT_PERCENT, stateClassMeasurement}
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, "LYWSD03MMC", "Xiaomi", sensorModel);
+  // Use sensorModel (device name) as device_name if provided, otherwise use model name
+  const char* device_name = (sensorModel && sensorModel[0] != '\0') ? sensorModel : "LYWSD03MMC";
+  createDiscoveryFromList(mac, LYWSD03MMCsensor, LYWSD03MMCparametersCount, device_name, "Xiaomi", "LYWSD03MMC");
 }
 
 void MHO_C401Discovery(const char* mac, const char* sensorModel) {
@@ -547,7 +555,9 @@ void MHO_C401Discovery(const char* mac, const char* sensorModel) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, "MHO_C401", "Xiaomi", sensorModel);
+  // Use sensorModel (device name) as device_name if provided, otherwise use model name
+  const char* device_name = (sensorModel && sensorModel[0] != '\0') ? sensorModel : "MHO_C401";
+  createDiscoveryFromList(mac, MHO_C401sensor, MHO_C401parametersCount, device_name, "Xiaomi", "MHO-C401");
 }
 
 void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
@@ -562,7 +572,9 @@ void HHCCJCY01HHCCDiscovery(const char* mac, const char* sensorModel) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, HHCCJCY01HHCCsensor, HHCCJCY01HHCCparametersCount, "HHCCJCY01HHCC", "Xiaomi", sensorModel);
+  // Use sensorModel (device name) as device_name if provided, otherwise use model name
+  const char* device_name = (sensorModel && sensorModel[0] != '\0') ? sensorModel : "HHCCJCY01HHCC";
+  createDiscoveryFromList(mac, HHCCJCY01HHCCsensor, HHCCJCY01HHCCparametersCount, device_name, "Xiaomi", "HHCCJCY01HHCC");
 }
 
 void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
@@ -576,7 +588,9 @@ void XMWSDJ04MMCDiscovery(const char* mac, const char* sensorModel) {
       //component type,name,availability topic,device class,value template,payload on, payload off, unit of measurement
   };
 
-  createDiscoveryFromList(mac, XMWSDJ04MMCsensor, XMWSDJ04MMCparametersCount, "XMWSDJ04MMC", "Xiaomi", sensorModel);
+  // Use sensorModel (device name) as device_name if provided, otherwise use model name
+  const char* device_name = (sensorModel && sensorModel[0] != '\0') ? sensorModel : "XMWSDJ04MMC";
+  createDiscoveryFromList(mac, XMWSDJ04MMCsensor, XMWSDJ04MMCparametersCount, device_name, "Xiaomi", "XMWSDJ04MMC");
 }
 
 #  else
@@ -1126,12 +1140,15 @@ void launchBTDiscovery(bool overrideDiscovery) {
                p->sensorModel_id < BLEconectable::id::MAX) ||
               p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
             // Discovery of sensors from which we retrieve data only by connect
+            // Use device name if available, otherwise use model name
+            const char* device_name_for_discovery = (p->name[0] != '\0') ? p->name : model.c_str();
+
             if (p->sensorModel_id == BLEconectable::id::DT24_BLE) {
-              DT24Discovery(macWOdots.c_str(), "DT24-BLE");
+              DT24Discovery(macWOdots.c_str(), device_name_for_discovery);
             }
             if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::BM2) {
               // Sensor discovery
-              BM2Discovery(macWOdots.c_str(), "BM2");
+              BM2Discovery(macWOdots.c_str(), device_name_for_discovery);
               // Device tracker discovery
               String tracker_id = macWOdots + "-tracker";
               createDiscovery(HASS_TYPE_DEVICE_TRACKER,
@@ -1143,17 +1160,27 @@ void launchBTDiscovery(bool overrideDiscovery) {
                               stateClassNone);
             }
             if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC) {
-              LYWSD03MMCDiscovery(macWOdots.c_str(), "LYWSD03MMC");
+              LYWSD03MMCDiscovery(macWOdots.c_str(), device_name_for_discovery);
             }
             if (p->sensorModel_id == BLEconectable::id::MHO_C401) {
-              MHO_C401Discovery(macWOdots.c_str(), "MHO-C401");
+              MHO_C401Discovery(macWOdots.c_str(), device_name_for_discovery);
             }
             if (p->sensorModel_id == BLEconectable::id::XMWSDJ04MMC) {
-              XMWSDJ04MMCDiscovery(macWOdots.c_str(), "XMWSDJ04MMC");
+              XMWSDJ04MMCDiscovery(macWOdots.c_str(), device_name_for_discovery);
             }
             if (p->sensorModel_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC) {
-              HHCCJCY01HHCCDiscovery(macWOdots.c_str(), "HHCCJCY01HHCC");
+              HHCCJCY01HHCCDiscovery(macWOdots.c_str(), device_name_for_discovery);
             }
+
+            // Add RSSI sensor for connectable devices (RSSI is published in broadcast payload)
+            String rssi_id = macWOdots + "-rssi";
+            createDiscovery(HASS_TYPE_SENSOR,
+                            discovery_topic.c_str(), "rssi", rssi_id.c_str(),
+                            will_Topic, "signal_strength", jsonRSSI,
+                            "", "", "dB",
+                            0, "", "", false, "",
+                            device_name_for_discovery, brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
+                            stateClassMeasurement, nullptr, nullptr, nullptr, nullptr, true);
           } else {
             THEENGS_LOG_TRACE(F("Device UNKNOWN_MODEL %s" CR), p->macAdr);
           }
@@ -1429,7 +1456,23 @@ void process_bledata(JsonObject& BLEdata) {
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
       THEENGS_LOG_TRACE(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2) { // Device that broadcast and can be connected
+      // Check if this is a connectable device by model_id string (for devices with custom names like PVVX firmware)
+      if (BLEdata.containsKey("model_id")) {
+        std::string model_id_str = BLEdata["model_id"].as<std::string>();
+        if (model_id_str.find("LYWSD03MMC") != std::string::npos) {
+          model_id = BLEconectable::id::LYWSD03MMC;
+          THEENGS_LOG_TRACE(F("Connectable device identified by model_id: LYWSD03MMC" CR));
+        } else if (model_id_str.find("MHO-C401") != std::string::npos || model_id_str.find("MHOC401") != std::string::npos) {
+          model_id = BLEconectable::id::MHO_C401;
+          THEENGS_LOG_TRACE(F("Connectable device identified by model_id: MHO-C401" CR));
+        } else if (model_id_str.find("XMWSDJ04MMC") != std::string::npos) {
+          model_id = BLEconectable::id::XMWSDJ04MMC;
+          THEENGS_LOG_TRACE(F("Connectable device identified by model_id: XMWSDJ04MMC" CR));
+        }
+      }
+      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 ||
+          model_id == BLEconectable::id::LYWSD03MMC || model_id == BLEconectable::id::MHO_C401 ||
+          model_id == BLEconectable::id::XMWSDJ04MMC) { // Device that broadcast and can be connected
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
