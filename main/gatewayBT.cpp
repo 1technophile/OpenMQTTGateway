@@ -398,6 +398,20 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     device->lastUpdate = millis();
     device->macType = mac_type;
 
+    // Update device name if provided and current name is empty, or if name has changed
+    if (name != nullptr && name[0] != '\0') {
+      if (device->name[0] == '\0' || strcmp(device->name, name) != 0) {
+        // Check name length
+        if (strlen(name) > 20) {
+          THEENGS_LOG_WARNING(F("Name too long, truncating" CR));
+          strncpy(device->name, name, 20);
+          device->name[19] = '\0';
+        } else {
+          strcpy(device->name, name);
+        }
+      }
+    }
+
     if (flags & device_flags_isDisc) {
       device->isDisc = true;
     }
