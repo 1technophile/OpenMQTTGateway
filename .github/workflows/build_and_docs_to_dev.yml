@@ -4,10 +4,96 @@ on:
   schedule:
     - cron: '0 0 * * *'
 jobs:
-  build-upload:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        environments:
+          - "rfbridge"
+          - "rfbridge-direct"
+          - "theengs-bridge"
+          - "theengs-bridge-v11"
+          - "theengs-plug"
+          - "esp32dev-all-test"
+          - "esp32dev-rf"
+          - "esp32dev-pilight"
+          - "esp32dev-pilight-cc1101"
+          - "esp32dev-somfy-cc1101"
+          - "esp32dev-pilight-somfy-cc1101"
+          - "esp32dev-weatherstation"
+          - "esp32dev-gf-sun-inverter"
+          - "esp32dev-ir"
+          - "esp32dev-ble"
+          - "esp32dev-ble-broker"
+          - "esp32dev-ble-mqtt-undecoded"
+          - "esp32dev-ble-aws"
+          - "esp32feather-ble"
+          - "esp32-lolin32lite-ble"
+          - "esp32-olimex-gtw-ble-eth"
+          - "esp32-olimex-gtw-ble-poe"
+          - "esp32-olimex-gtw-ble-poe-iso"
+          - "esp32-wt32-eth01-ble-eth"
+          - "esp32-olimex-gtw-ble-wifi"
+          - "esp32-m5stick-ble"
+          - "esp32-m5stack-ble"
+          - "esp32-m5tough-ble"
+          - "esp32-m5stick-c-ble"
+          - "esp32-m5stick-cp-ble"
+          - "esp32-m5atom-matrix"
+          - "esp32-m5atom-lite"
+          - "esp32doitv1-aithinker-r01-sx1278"
+          - "esp32dev-rtl_433"
+          - "esp32dev-rtl_433-fsk"
+          - "heltec-rtl_433"
+          - "heltec-rtl_433-fsk"
+          - "heltec-ble"
+          - "lilygo-rtl_433"
+          - "lilygo-rtl_433-fsk"
+          - "lilygo-t3-s3-rtl_433"
+          - "lilygo-t3-s3-rtl_433-fsk"
+          - "lilygo-ble"
+          - "esp32dev-multi_receiver"
+          - "esp32dev-multi_receiver-pilight"
+          - "tinypico-ble"
+          - "ttgo-lora32-v1"
+          - "ttgo-lora32-v21"
+          - "ttgo-t-beam"
+          - "heltec-wifi-lora-32"
+          - "shelly-plus1"
+          - "nodemcuv2-all-test"
+          - "nodemcuv2-fastled-test"
+          - "nodemcuv2-2g"
+          - "nodemcuv2-ir"
+          - "nodemcuv2-serial"
+          - "avatto-bakeey-ir"
+          - "nodemcuv2-rf"
+          - "nodemcuv2-rf-cc1101"
+          - "nodemcuv2-somfy-cc1101"
+          - "manual-wifi-test"
+          - "rf-wifi-gateway"
+          - "nodemcuv2-rf2"
+          - "nodemcuv2-rf2-cc1101"
+          - "nodemcuv2-pilight"
+          - "nodemcuv2-weatherstation"
+          - "sonoff-basic"
+          - "sonoff-basic-rfr3"
+          - "esp32dev-ble-datatest"
+          - "esp32s3-dev-c1-ble"
+          - "esp32s3-m5stack-stamps3"
+          - "esp32s3-atomS3U"
+          - "esp32c3-dev-m1-ble"
+          - "airm2m_core_esp32c3"
+          - "esp32c3-dev-c2-ble"
+          - "esp32c3-dev-c2-ble-no-serial"
+          - "esp32c3_lolin_mini"
+          - "esp32c3_lolin_mini_with_serial"
+          - "esp32c3-m5stamp"
+          - "esp32c3u-m5stamp"
+          - "thingpulse-espgateway"
+          - "esp32dev-ble-idf"
     runs-on: ubuntu-latest
     if: github.repository_owner == '1technophile'
-    name: Build and upload Assets to Release
+    name: Build ${{ matrix.environments }}
     steps:
       - uses: actions/checkout@v4
       - uses: benjlevesque/short-sha@v2.1
@@ -29,23 +115,84 @@ jobs:
       - name: Set sha tag
         run: |
           sed -i "s/version_tag/${{ steps.short-sha.outputs.sha }}/g" main/User_config.h scripts/latest_version_dev.json
-          sed -i "s/version_tag/DEVELOPMENT SHA:${{ steps.short-sha.outputs.sha }} TEST ONLY/g" docs/.vuepress/config.js
-          sed -i "s|base: '/'|base: '/dev/'|g" docs/.vuepress/config.js
-      - name: Extract ESP32 platform version from platformio.ini
-        run: |
-          ESP32_VERSION=$(grep 'esp32_platform\s*=' platformio.ini | cut -d'@' -f2 | tr -d '[:space:]')
-          echo "ESP32_PLATFORM_VERSION=${ESP32_VERSION}" >> $GITHUB_ENV
       - name: Run PlatformIO
         env:
           PYTHONIOENCODING: utf-8
           PYTHONUTF8: '1'
         run: |
           export PLATFORMIO_BUILD_FLAGS="'-DDEVELOPMENTOTA=true'"
-          platformio run
-      - name: Prepare Release Assets
+          platformio run -e ${{ matrix.environments }}
+      - name: Prepare firmware artifacts
         run: |
-          sudo apt install rename
-          ./scripts/prepare_deploy.sh
+          mkdir -p firmware
+          cp .pio/build/${{ matrix.environments }}/firmware.bin firmware/${{ matrix.environments }}-firmware.bin
+          if [ -f .pio/build/${{ matrix.environments }}/partitions.bin ]; then
+            cp .pio/build/${{ matrix.environments }}/partitions.bin firmware/${{ matrix.environments }}-partitions.bin
+          fi
+          if [ -f .pio/build/${{ matrix.environments }}/bootloader.bin ]; then
+            cp .pio/build/${{ matrix.environments }}/bootloader.bin firmware/${{ matrix.environments }}-bootloader.bin
+          fi
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.environments }}
+          path: firmware/
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.repository_owner == '1technophile'
+    name: Deploy binaries and docs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 6
+      - name: Download all firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: firmware-*
+          path: toDeploy
+          merge-multiple: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: false
+      - name: Install dependencies
+        run: |
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.18.zip
+      - name: Create library zips
+        run: |
+          # Install libraries for a representative environment to get libdeps
+          platformio pkg install -e esp32dev-ble --no-save
+          cd .pio/libdeps
+          # Replace spaces with underscores in folder names
+          find . -type d -name "* *" | while read FNAME; do mv "$FNAME" "${FNAME// /_}"; done
+          # Zip libraries per board
+          for i in */; do
+            zip -r "${i%/}-libraries.zip" "$i"
+          done
+          mv *.zip ../../toDeploy/
+      - name: Prepare additional assets
+        run: |
+          cd toDeploy
+          # Remove binaries for *-all*, *-test* env
+          rm -f *-all*.bin *-test*.bin *-test*.zip || true
+          cd ..
+          # Zip source code
+          zip -r toDeploy/OpenMQTTGateway_sources.zip main LICENSE.txt
+          ls -lA toDeploy/
+      - name: Set sha tag for docs
+        run: |
+          sed -i "s/version_tag/DEVELOPMENT SHA:${{ steps.short-sha.outputs.sha }} TEST ONLY/g" docs/.vuepress/config.js
+          sed -i "s|base: '/'|base: '/dev/'|g" docs/.vuepress/config.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -56,6 +203,7 @@ jobs:
       - name: Build documentation
         run: |
           python ./scripts/gen_wu.py --dev
+          npm install
           npm run docs:build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
