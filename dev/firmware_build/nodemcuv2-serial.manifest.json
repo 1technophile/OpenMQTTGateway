@@ -1,0 +1,10 @@
+{
+  "name": "OpenMQTTGateway",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP8266",
+      "parts": [{ "path": "/dev/firmware_build/nodemcuv2-serial-firmware.bin", "offset": 0 }]
+    }
+  ]
+}

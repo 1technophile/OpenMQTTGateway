@@ -1,0 +1,16 @@
+{
+  "name": "OpenMQTTGateway",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "improv": false,
+      "parts": [
+        { "path": "/dev/firmware_build/esp32dev-ble-idf-bootloader.bin", "offset": 4096 },
+        { "path": "/dev/firmware_build/esp32dev-ble-idf-partitions.bin", "offset": 32768 },
+        { "path": "/dev/firmware_build/boot_app0.bin", "offset": 57344 },
+        { "path": "/dev/firmware_build/esp32dev-ble-idf-firmware.bin", "offset": 65536 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "OpenMQTTGateway",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "improv": false,
+      "parts": [
+        { "path": "/dev/firmware_build/esp32c3_lolin_mini_with_serial-bootloader.bin", "offset": 0 },
+        { "path": "/dev/firmware_build/esp32c3_lolin_mini_with_serial-partitions.bin", "offset": 32768 },
+        { "path": "/dev/firmware_build/boot_app0.bin", "offset": 57344 },
+        { "path": "/dev/firmware_build/esp32c3_lolin_mini_with_serial-firmware.bin", "offset": 65536 }
+      ]
+    }
+  ]
+}
