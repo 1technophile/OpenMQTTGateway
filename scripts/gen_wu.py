@@ -74,7 +74,7 @@ with open(manif_path + filename, 'wb') as output_file:
 wu_file = open(vue_path + 'web-uploader.vue', 'w')
 wu_file.write(wu_temp_p1)
 
-for name in os.listdir(manif_path):
+for name in sorted(os.listdir(manif_path)):
     if 'firmware.bin' in name  and ('esp32c3' not in name ) and ('esp32s3' not in name ) and ('esp32' in name or 'ttgo' in name or 'heltec' in name or 'thingpulse' in name or 'theengs' in name or 'lilygo' in name or 'shelly' in name or 'tinypico' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
@@ -92,7 +92,7 @@ for name in os.listdir(manif_path):
 
 wu_file.write(wu_temp_p2)
 
-for name in os.listdir(manif_path):
+for name in sorted(os.listdir(manif_path)):
     if 'firmware.bin' in name and ('esp32c3' in name ):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
@@ -110,7 +110,7 @@ for name in os.listdir(manif_path):
 
 wu_file.write(wu_temp_p3)
 
-for name in os.listdir(manif_path):
+for name in sorted(os.listdir(manif_path)):
     if 'firmware.bin' in name and ('esp32s3' in name ):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
@@ -128,7 +128,7 @@ for name in os.listdir(manif_path):
 
 wu_file.write(wu_temp_p4)
 
-for name in os.listdir(manif_path):
+for name in sorted(os.listdir(manif_path)):
     if 'firmware.bin' in name and ('nodemcu' in name or 'sonoff' in name or 'rf-wifi-gateway' in name or 'manual-wifi-test' in name or 'rfbridge' in name):
         fw = name.split('-firmware')[0]
         man_file = fw + '.manifest.json'
