@@ -51,8 +51,22 @@ With SRX882S receiver connect the CS pin to 3.3V
 |ESP8266|D2/**D3**/D1/D8|**RX**/D2|D5|**3V3**|D7|D6|D8|GND
 |ESP32|**D27**|D12|D18|**3V3**|D23|D19|D5|GND
 
-To use the CC1101 module, `ZradioCC1101` must be uncomment in the `User_config.h` or added to the `build_flags`.
-More information about the [CC1101 wiring](https://github.com/LSatan/SmartRC-CC1101-Driver-Lib#wiring). ( Please note that with OMG we are recommending CC1101 GDO2 to be connected to ESP32 D27 and GDO0 to be connected to D12, this is different than the LSatan diagram. This is due to the ESP32 using D2 as part of the boot process. )
+To use the CC1101 module, `ZradioCC1101` must be uncomment in the `User_config.h` or added to the `build_flags`. 
+
+More information about the [CC1101 wiring](https://github.com/LSatan/SmartRC-CC1101-Driver-Lib#wiring). 
+
+
+:::tip Please note that with OMG we are recommending CC1101 GDO2 to be connected to ESP32 D27 and GDO0 to be connected to D12, this is different than the LSatan diagram. This is due to the ESP32 using D2 as part of the boot process.
+
+If you want to use custom SPI pins for the CC1101 module, you can define the following variables in your `User_config.h` or as `build_flags` in `platformio.ini`:
+ - `RF_CC1101_SCK`: SPI clock pin (SCK)
+ - `RF_CC1101_SCK`: SPI clock pin (SCK)
+ - `RF_CC1101_MISO`: SPI MISO pin (Master In Slave Out)
+ - `RF_CC1101_MOSI`: SPI MOSI pin (Master Out Slave In)
+ - `RF_CC1101_CS`: SPI chip select pin (CSN)
+
+When **all** these variables are defined, OpenMQTTGateway will use your custom pinout for the CC1101 connection. This is useful if your board does not use the default pins or if you want to avoid conflicts with other devices.
+:::
 
 ## ESP32 Hardware setup
 ![Addon_RF](../img/OpenMQTTgateway_ESP32_Addon_RF.png)
@@ -73,3 +87,5 @@ The RF processing can be achieved after the modification by either RF, RF2 or Pi
 
 ## WIFI RF GATEWAY Hardware setup
 This board doesn't require any hardware modifications.
+
+

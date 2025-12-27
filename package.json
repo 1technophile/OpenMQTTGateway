@@ -1,12 +1,20 @@
 {
   "scripts": {
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "gen:ssl": "node scripts/ensure_ssl_certs.js",
+    "gen:metadata": "node docsgen/gen_wu.js",
+    "gen:site:only": "vuepress build docs",
+    "docs:dev": "npm run gen:metadata && vuepress dev docs",
+    "docs:build": "npm run gen:metadata && npm run gen:site:only",
+    "site:preview": " npm run gen:ssl && node scripts/preview_site.js",
+    "site:preview:full": "npm run docs:build && npm run gen:ssl && node scripts/preview_site.js"
   },
   "devDependencies": {
     "vuepress": "^1.9.10"
   },
   "dependencies": {
+    "ini": "^4.1.1",
+    "markdown-table": "^3.0.3",
+    "mime-types": "^2.1.35",
     "vuepress-plugin-sitemap": "^2.3.1"
   }
 }

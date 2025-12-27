@@ -92,6 +92,19 @@ extern bool cmpToMainTopic(const char*, const char*);
 extern bool pub(const char*, const char*, bool);
 extern bool pub(const char*, const char*);
 
+// Float-specific overload to log with the correct format specifier.
+inline void Config_update(JsonObject& data, const char* key, float& var) {
+  if (data.containsKey(key)) {
+    float newVal = data[key].as<float>();
+    if (var != newVal) {
+      var = newVal;
+      THEENGS_LOG_NOTICE(F("Config %s changed to: %F" CR), key, newVal);
+    } else {
+      THEENGS_LOG_NOTICE(F("Config %s unchanged, currently: %F" CR), key, newVal);
+    }
+  }
+}
+
 template <typename T>
 void Config_update(JsonObject& data, const char* key, T& var) {
   if (data.containsKey(key)) {

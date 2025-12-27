@@ -2,7 +2,14 @@
 pageClass: table-generated-page
 ---
 
-# (Option 1) Upload from the web
+## Select your firmware
+To upload firmware to your ESP device directly from this page, first connect your ESP device to a USB port on your computer. Then, choose the appropriate firmware from the available options. Next, click the **Connect** button and select the USB port where your ESP is plugged in. Wait for the upload process to finish. After the upload completes, you can set up your [WiFi and MQTT credentials](portal.md).
+
+<BoardEnvironmentTable 
+      boardsUrl="/boards-info.json"
+      selectorPath="/upload/board-selector.html"
+/>
+
 
 ::: tip Running on a tablet or phone
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a tablet or smartphone you can use [Theengs App](https://app.theengs.io/).
@@ -15,16 +22,8 @@ The correct driver to then select in the popup of this web install is
 `/dev/cu.wchusbserialXXXXXXXXXXX`
 :::
 
-You can upload the firmware to your ESP device directly from here.
-1. Plug in your ESP to a USB port.
-2. Select the firmware in the box below.
-3. Click the install button and choose the port that the ESP is connected to.
-4. Wait until the process is complete.
-5. Once completed you can configure your [WiFi and MQTT credentials](portal.md)
 
-<web-uploader/>
 
-Upload powered by [ESP Web Tools](https://esphome.github.io/esp-web-tools/)
 
 ## Using OpenMQTTGateway ?
 Support open-source development through sponsorship and gain exclusive access to our private forum. Your questions, issues, and feature requests will receive priority attention, plus you'll gain insider access to our roadmap.
@@ -33,5 +32,4 @@ Support open-source development through sponsorship and gain exclusive access to
     <iframe src="https://github.com/sponsors/theengs/button" title="Sponsor Theengs" height="32" width="228" style="border: 0; border-radius: 6px;"></iframe>
 </div>
 
-## Environments characteristics
-The auto-generated table below describes the libraries and the modules of each board configuration.
+

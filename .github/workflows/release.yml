@@ -18,7 +18,7 @@ jobs:
           VERSION_TAG=${GITHUB_REF#refs/tags/}
           echo "version=${VERSION_TAG}" >> $GITHUB_OUTPUT
           echo "Extracted version: ${VERSION_TAG}"
-      
+
       - name: Extract release info
         id: extract-release
         run: |
@@ -33,63 +33,26 @@ jobs:
     name: Build release firmware
     uses: ./.github/workflows/task-build.yml
     with:
-      python-version: '3.13'
       enable-dev-ota: false
       version-tag: ${{ needs.prepare.outputs.version-tag }}
       artifact-retention-days: 90
-      artifact-name-prefix: 'firmware-'
-      prepare-for-deploy: true
 
   deploy:
     needs: [prepare, build]
     runs-on: ubuntu-latest
     name: Deploy release assets
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download all firmware artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: firmware-*
-          path: .pio/build
-          merge-multiple: false
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
-          enable-cache: false
-
-      - name: Install platformio
-        run: |
-          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.18.zip
-
-      - name: Reorganize artifacts for prepare_deploy.sh
-        run: |
-          # Move artifacts from download structure to expected .pio/build structure
-          for env_dir in .pio/build/firmware-*; do
-            if [ -d "$env_dir" ]; then
-              env_name=$(basename "$env_dir" | sed 's/^firmware-//')
-              mkdir -p ".pio/build/${env_name}"
-              mv "$env_dir"/*.bin ".pio/build/${env_name}/" 2>/dev/null || true
-              rm -rf "$env_dir"
-            fi
-          done
-
-      - name: Prepare Release Assets
-        run: |
-          sudo apt install rename
-          ./scripts/prepare_deploy.sh
+          pattern: "*"
+          path: generated/artifacts
+          merge-multiple: true
 
       - name: Upload Release Assets
         uses: bgpat/release-asset-action@03b0c30db1c4031ce3474740b0e4275cd7e126a3
         with:
-          pattern: "toDeploy/*"
+          pattern: "generated/artifacts/*"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           release-url: ${{ needs.prepare.outputs.upload-url }}
           allow-overwrite: true
@@ -99,13 +62,9 @@ jobs:
     name: Build and deploy release documentation
     uses: ./.github/workflows/task-docs.yml
     with:
-      python-version: '3.11'
-      node-version: '18.x'
-      version-source: 'git-tag'
-      base-path: '/'
-      destination-dir: '.'
-      generate-webuploader: true
-      run-pagespeed: false
+      mode: "prod"
+      version: ${{ needs.prepare.outputs.version-tag }}
+      url-prefix: "/"
+      destination-dir: "."
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      APIKEY: ${{ secrets.APIKEY }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}

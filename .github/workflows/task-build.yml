@@ -4,37 +4,53 @@ on:
   workflow_call:
     inputs:
       python-version:
-        description: 'Python version to use'
+        description: "Python version to use"
         required: false
         type: string
-        default: '3.13'
+        default: "3.13"
+      pio-version:
+        description: "PlatformIO version to use"
+        required: false
+        type: string
+        default: "v6.1.18"
+      environment-set:
+        description: 'Which set of environments to build (all, ci)'
+        required: false
+        type: string
+        default: 'all'        
       enable-dev-ota:
-        description: 'Enable development OTA builds'
+        description: "Enable development OTA builds"
         required: false
         type: boolean
         default: false
       version-tag:
-        description: 'Version tag to inject into firmware (e.g., SHA or release tag)'
+        description: "Optional version tag to pass to ci.sh build (omitted if empty)"
         required: false
         type: string
-        default: 'unspecified'
+        default: ""        
       artifact-retention-days:
-        description: 'Number of days to retain build artifacts'
+        description: "Number of days to retain build artifacts"
         required: false
         type: number
         default: 7
-      artifact-name-prefix:
-        description: 'Prefix for artifact names (e.g., "firmware-" for dev builds)'
-        required: false
-        type: string
-        default: ''
-      prepare-for-deploy:
-        description: 'Prepare firmware files for deployment with specific naming'
-        required: false
-        type: boolean
-        default: false
 
 jobs:
+  lint:
+    name: Lint code format
+    uses: ./.github/workflows/task-lint.yml
+    with:
+      source: "main"
+      extensions: "h,ino,cpp"
+      clang-format-version: "9"
+      
+  security-scan:
+    name: Security vulnerability scan
+    uses: ./.github/workflows/task-security-scan.yml
+    with:
+      severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+      exit-code: "1"
+      upload-to-security-tab: true
+
   load-environments:
     runs-on: ubuntu-latest
     outputs:
@@ -43,11 +59,17 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         run: |
-          ENVIRONMENTS=$(jq -c '.environments.all' .github/workflows/environments.json)
+          ENV_SET="${{ inputs.environment-set }}"
+          if [ "$ENV_SET" = "ci" ]; then
+            ENVIRONMENTS=$(jq -c '.environments.ci' .github/workflows/environments.json)
+          else
+            ENVIRONMENTS=$(jq -c '.environments.all' .github/workflows/environments.json)
+          fi
           echo "matrix=${ENVIRONMENTS}" >> $GITHUB_OUTPUT
 
+          
   build:
-    needs: load-environments
+    needs: [lint, security-scan, load-environments]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -70,35 +92,29 @@ jobs:
 
       - name: Install PlatformIO dependencies
         run: |
-          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.18.zip
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/${{ inputs.pio-version }}.zip
 
       - name: Build firmware using ci.sh
         run: |
-          BUILD_ARGS="${{ matrix.environments }}"
-          
-          # Add version tag if specified
-          if [ "${{ inputs.version-tag }}" != "unspecified" ]; then
+          BUILD_ARGS="${{ matrix.environments }}"   
+          BUILD_ARGS="$BUILD_ARGS --deploy-ready"
+
+          # Optional version tag
+          if [ -n "${{ inputs.version-tag }}" ]; then
             BUILD_ARGS="$BUILD_ARGS --version ${{ inputs.version-tag }}"
           fi
-          
-          # Add mode flag (dev/prod)
+
+          # Mode
           if [ "${{ inputs.enable-dev-ota }}" = "true" ]; then
             BUILD_ARGS="$BUILD_ARGS --mode dev"
           else
             BUILD_ARGS="$BUILD_ARGS --mode prod"
           fi
-          
-          # Add deploy flag if needed
-          if [ "${{ inputs.prepare-for-deploy }}" = "true" ]; then
-            BUILD_ARGS="$BUILD_ARGS --deploy-ready"
-          fi
-          
-          # Execute build (uses default generated/artifacts/ directory)
           ./scripts/ci.sh build $BUILD_ARGS
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.artifact-name-prefix }}${{ matrix.environments }}
+          name: ${{ matrix.environments }}
           path: generated/artifacts/
           retention-days: ${{ inputs.artifact-retention-days }}

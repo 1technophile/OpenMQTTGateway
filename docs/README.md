@@ -1,3 +1,13 @@
+<ClientOnly>
+  <span v-if="$site.themeConfig.mode === 'dev'">
+  
+::: warning Development Version
+This is the edge version of the documentation. It is under active development and may contain bugs, incomplete features, or breaking changes. Use it at your own risk.
+:::
+
+  </span>
+</ClientOnly>
+
 OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
 
 <div style="text-align: center;">

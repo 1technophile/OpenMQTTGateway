@@ -1,30 +1,47 @@
 name: Build
+# See details in .github/workflows/README.md (workflow docs)
+run-name: "CI build for ${{ github.ref_name }}"
 
 on: [push, pull_request]
 
 jobs:
+  determine-build-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      environment-set: ${{ steps.decide.outputs.environment-set }}
+    steps:
+      - name: Decide environment set
+        id: decide
+        run: |
+          # Full build for: development, master, edge, stable, release/*, hotfix/*, and all PRs
+          if [[ "${{ github.event_name }}" == "pull_request" ]] || \
+             [[ "${{ github.ref }}" == "refs/heads/development" ]] || \
+             [[ "${{ github.ref }}" == "refs/heads/master" ]] || \
+             [[ "${{ github.ref }}" == "refs/heads/edge" ]] || \
+             [[ "${{ github.ref }}" == "refs/heads/stable" ]] || \
+             [[ "${{ github.ref }}" == refs/heads/release/* ]] || \
+             [[ "${{ github.ref }}" == refs/heads/hotfix/* ]]; then
+            echo "environment-set=all" >> $GITHUB_OUTPUT
+          else
+            echo "environment-set=ci" >> $GITHUB_OUTPUT
+          fi
+
+
   build:
+    needs: determine-build-scope
     name: Build firmware
     uses: ./.github/workflows/task-build.yml
     with:
-      python-version: '3.13'
-      enable-dev-ota: false
+      enable-dev-ota: true
       artifact-retention-days: 7
-      prepare-for-deploy: false
+      environment-set: ${{ needs.determine-build-scope.outputs.environment-set }}
 
   documentation:
+    needs: build
     name: Build documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "14.x"
-      - name: Download Common Config
-        run: |
-          curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
-      - name: Install build dependencies
-        run: npm install
-      - name: Build documentation
-        run: npm run docs:build
+    uses: ./.github/workflows/task-docs.yml
+    with:
+      mode: "dev"
+      run-pagespeed: false
+      just-check: true
+      

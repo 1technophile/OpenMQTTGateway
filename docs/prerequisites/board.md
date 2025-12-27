@@ -1,3 +1,7 @@
+--- 
+pageClass: table-generated-page
+---
+
 # Boards
 
 OpenMQTTGateway is not closed to one board or type of board, by using the power of the Arduino framework and libraries that are cross compatibles it let you many choice of hardware, from an ESP8266 to an ESP32.
@@ -43,4 +47,10 @@ The plug is available in North America only, other regions are planned.
 Choosing your board depends heavily on the technologies you want to use with it.
 To have a good overview of the compatibilities per board you can refer to the compatible modules attributes of each [board](https://compatible.openmqttgateway.com/index.php/boards/).
 
-The choice between these boards will depend on your knowledge and your requirements in terms of reliability, situation, modules wanted and devices you already have. The table below present those (auto-generated)
+The choice between these boards will depend on your knowledge and your requirements in terms of reliability, situation, modules wanted and devices you already have. Use the table below to explore the latest environments.
+
+<BoardEnvironmentTable 
+      boardsUrl="/boards-info.json"
+      selectorPath="/upload/board-selector.html"
+/>
+

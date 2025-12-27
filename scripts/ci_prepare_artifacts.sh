@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2015
 # Prepares firmware artifacts for upload or deployment
 # Used by: CI/CD pipelines for artifact packaging
 # Usage: ./prepare_artifacts.sh <environment> [OPTIONS]
@@ -6,8 +7,10 @@
 set -euo pipefail
 
 # Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+readonly SCRIPT_DIR
+readonly PROJECT_ROOT
 
 # Load shared configuration (colors, logging functions, paths)
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -22,17 +25,22 @@ BUILD_DIR="${PROJECT_ROOT}/${BUILD_DIR}"
 DEFAULT_OUTPUT_DIR="${PROJECT_ROOT}/${ARTIFACTS_DIR}"
 
 # Function to create output directory
-create_output_dir() {
+prepare_output_dir() {
     local output_dir="$1"
+    local clean_flag="${2:-false}"
     
     if [[ -d "$output_dir" ]]; then
-        log_warn "Output directory already exists: $output_dir"
-        log_info "Cleaning existing artifacts..."
-        rm -rf "$output_dir"
+        if [[ "$clean_flag" == "true" ]]; then
+            log_warn "Cleaning and recreating output directory: $output_dir"
+            rm -rf "$output_dir"
+            mkdir -p "$output_dir"
+        else
+            log_warn "Output directory already exists and will be reused: $output_dir"
+        fi
+    else
+        mkdir -p "$output_dir"
+        log_info "Created output directory: $output_dir"
     fi
-    
-    mkdir -p "$output_dir"
-    log_info "Created output directory: $output_dir"
 }
 
 # Function to copy artifact with optional renaming
@@ -58,42 +66,14 @@ copy_artifact() {
     fi
 }
 
-# Function to prepare standard artifacts (no renaming)
-prepare_standard_artifacts() {
-    local env="$1"
-    local output_dir="$2"
-    local env_dir="${BUILD_DIR}/${env}"
-    
-    log_info "Preparing STANDARD artifacts for: $env"
-    
-    local copied=0
-    
-    # Copy firmware.bin (required)
-    if copy_artifact "${env_dir}/firmware.bin" "${output_dir}/firmware.bin" "firmware"; then
-        ((copied++))
-    fi
-    
-    # Copy partitions.bin (optional)
-    copy_artifact "${env_dir}/partitions.bin" "${output_dir}/partitions.bin" "partitions" && ((copied++)) || true
-    
-    # Note: bootloader.bin is NOT copied in standard mode (only needed for deployment)
-    
-    if [[ $copied -eq 0 ]]; then
-        log_error "No artifacts were copied"
-        return 1
-    fi
-    
-    log_info "Copied ${copied} artifact(s) in standard mode"
-}
 
 # Function to prepare deployment artifacts (with renaming)
-prepare_deployment_artifacts() {
+prepare_artifacts() {
     local env="$1"
     local output_dir="$2"
     local env_dir="${BUILD_DIR}/${env}"
     
-    log_info "Preparing DEPLOYMENT artifacts for: $env"
-    
+    log_info "Preparing firmware directory for: $env"
     local copied=0
     
     # Copy and rename firmware.bin
@@ -118,53 +98,56 @@ prepare_deployment_artifacts() {
     log_info "Copied ${copied} artifact(s) in deployment mode"
 }
 
-# Function to create manifest file
-create_manifest() {
+prepare_libraries() {
     local env="$1"
     local output_dir="$2"
-    local manifest="${output_dir}/manifest.txt"
+    local env_dir="${BUILD_DIR}/${env}"
+  
+    # Process libraries: create temp copy with renamed folders, zip, preserve originals
+    log_info "Processing libraries for environment: $env"
+    TEMP_LIBDEPS=$(mktemp -p "$output_dir" -d) || { echo "Failed to create temp directory"; return 1; }
+
+    cp -r .pio/libdeps/"$env" "$TEMP_LIBDEPS/" || { log_error "Failed to copy libdeps for $env"; return 1; }
+
+    (
+    cd "$TEMP_LIBDEPS"
+    log_step "Replace space by _ in folder names (temp copy only)"
+    find . -type d -name "* *" | while read -r FNAME; do 
+        mv "$FNAME" "${FNAME// /_}"
+    done
     
-    log_info "Creating artifact manifest..."
+    log_step "Zipping libraries per board"
+    for i in */; do
+        tar -czf "${i%/}-libraries.tgz" "$i" > /dev/null
+    done
     
-    {
-        echo "Environment: $env"
-        echo "Build Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-        echo "Build Host: $(hostname)"
-        echo ""
-        echo "Artifacts:"
-        
-        find "$output_dir" -type f -name "*.bin" | sort | while read -r file; do
-            local size
-            size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
-            local size_kb=$((size / 1024))
-            local md5sum_val
-            md5sum_val=$(md5sum "$file" 2>/dev/null | cut -d' ' -f1 || md5 -q "$file" 2>/dev/null)
-            echo "  - $(basename "$file"): ${size_kb} KB (MD5: ${md5sum_val})"
-        done
-    } > "$manifest"
-    
-    log_info "Manifest created: $manifest"
+    mv ./*.tgz "${output_dir}"
+    )
+
+    rm -rf "$TEMP_LIBDEPS"
+    log_info "✓ Created library archives in: $output_dir"
 }
 
-# Function to compress artifacts (optional)
-compress_artifacts() {
+prepare_sources() {
     local output_dir="$1"
-    local archive_name="$2"
     
-    log_info "Compressing artifacts..."
+    log_info "Preparing source code archive"
     
-    local archive="${output_dir}/${archive_name}.tar.gz"
-    
-    if tar -czf "$archive" -C "$output_dir" .; then
-        local size
-        size=$(stat -f%z "$archive" 2>/dev/null || stat -c%s "$archive" 2>/dev/null)
-        local size_kb=$((size / 1024))
-        log_info "Archive created: ${archive_name}.tar.gz (${size_kb} KB)"
+    # Create and move sources tar.gz (newly generated, safe to move)
+    if tar -czf "${output_dir}/OpenMQTTGateway_sources.tgz" main LICENSE.txt > /dev/null; then
+        log_info "✓ Created source archive: OpenMQTTGateway_sources.tgz"
     else
-        log_error "Failed to create archive"
+        log_error "Failed to create source archive"
         return 1
     fi
 }
+
+
+
+
+
+
+
 
 # Function to list artifacts
 list_artifacts() {
@@ -194,17 +177,14 @@ usage() {
     cat << EOF
 Usage: $0 <environment> [OPTIONS]
 
-Prepare firmware artifacts for upload or deployment.
+Prepare artifacts for upload or deployment.
 
 Arguments:
-    environment     PlatformIO environment name
+    environment     PlatformIO environment name, if omitted will be created source archive only. 
 
 Options:
-    --deploy        Prepare for deployment (rename with environment prefix)
-    --standard      Prepare standard artifacts (no renaming) [default]
+    --clean         Clean existing output directory before preparing artifacts
     --output DIR    Output directory [default: generated/artifacts/]
-    --manifest      Create manifest file with artifact metadata
-    --compress      Compress artifacts into tar.gz archive
     --help          Show this help message
 
 Examples:
@@ -218,32 +198,27 @@ EOF
 # Main execution
 main() {
     local environment=""
-    local mode="standard"
     local output_dir="$DEFAULT_OUTPUT_DIR"
-    local create_manifest_flag=false
-    local compress_flag=false
+    local clean_flag=false
+    #local version=""   ## WILL BE USED WHEN THE VERSION ITSELF AFFECTS THE ARTIFACTS NAMING
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --deploy)
-                mode="deploy"
-                shift
-                ;;
-            --standard)
-                mode="standard"
-                shift
-                ;;
             --output)
                 output_dir="$2"
                 shift 2
                 ;;
-            --manifest)
-                create_manifest_flag=true
-                shift
+            -v|--version)
+                if [[ -z "${2:-}" ]]; then
+                    log_error "-v|--version requires a version string"
+                    return 1
+                fi
+                #version="$2"
+                shift 2
                 ;;
-            --compress)
-                compress_flag=true
+            --clean)
+                clean_flag=true
                 shift
                 ;;
             --help|-h)
@@ -262,48 +237,47 @@ main() {
         esac
     done
     
-    # Validate inputs
-    if [[ -z "$environment" ]]; then
-        log_error "Environment name is required"
-        usage
-        exit 1
-    fi
-    
     # Change to project root
     cd "$PROJECT_ROOT"
-    
-    # Check if build directory exists
-    if [[ ! -d "${BUILD_DIR}/${environment}" ]]; then
-        log_error "Build directory not found for environment: $environment"
-        log_error "Run build_firmware.sh first"
-        exit 1
-    fi
-    
-    # Create output directory
-    create_output_dir "$output_dir"
-    
-    # Prepare artifacts based on mode
-    case "$mode" in
-        standard)
-            prepare_standard_artifacts "$environment" "$output_dir" || exit 1
-            ;;
-        deploy)
-            prepare_deployment_artifacts "$environment" "$output_dir" || exit 1
-            ;;
-        *)
-            log_error "Unknown mode: $mode"
+
+    # TODO FOR NEXT STEP MULTI RELEASE: TAG, RC, edge
+    #if [[ -n "$version" ]]; then
+    #    # Sanitize version string for directory name
+    #    safe_version=$(echo "$version" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    #    output_dir="${output_dir}/${safe_version}" 
+    #fi
+
+
+    # Validate inputs
+    if [[ -z "$environment" ]]; then
+        log_info "No environment specified, only preparing source archive"
+        
+        # Create output directory
+        prepare_output_dir "$output_dir" "$clean_flag"
+
+        # Prepare source code archive
+        prepare_sources "$output_dir" || exit 1
+    else
+        # Check if build directory exists
+        if [[ ! -d "${BUILD_DIR}/${environment}" ]]; then
+            log_error "Build directory not found for environment: $environment"
+            log_error "Run build_firmware.sh first"
             exit 1
-            ;;
-    esac
-    
-    # Create manifest if requested
-    if [[ "$create_manifest_flag" == "true" ]]; then
-        create_manifest "$environment" "$output_dir"
-    fi
-    
-    # Compress if requested
-    if [[ "$compress_flag" == "true" ]]; then
-        compress_artifacts "$output_dir" "$environment"
+        fi
+
+        #normalize output directory path
+        #output_dir="${output_dir}/firmware-${environment}"
+        output_dir="${output_dir}/firmware_build"
+
+
+        # Create output directory
+        prepare_output_dir "$output_dir" "$clean_flag"
+        
+        # Prepare artifacts based on mode
+        prepare_artifacts "$environment" "$output_dir" || exit 1
+
+        # Prepare libraries
+        prepare_libraries "$environment" "$output_dir" || exit 1        
     fi
     
     # Show summary

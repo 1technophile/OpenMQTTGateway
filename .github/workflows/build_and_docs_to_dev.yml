@@ -3,7 +3,7 @@ name: Build binaries, docs and publish to dev folder
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   prepare:
@@ -18,86 +18,26 @@ jobs:
         with:
           length: 6
 
-  build:
+  handle-firmwares:
     needs: prepare
-    name: Build development firmware
+    name: Build and deploy development firmwares artefacts
     uses: ./.github/workflows/task-build.yml
     with:
-      python-version: '3.13'
       enable-dev-ota: true
       version-tag: ${{ needs.prepare.outputs.short-sha }}
       artifact-retention-days: 1
-      artifact-name-prefix: 'firmware-'
-      prepare-for-deploy: true
 
-  deploy:
-    needs: [prepare, build]
-    runs-on: ubuntu-latest
-    if: github.repository_owner == '1technophile'
-    name: Deploy binaries and docs
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all firmware artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: firmware-*
-          path: toDeploy
-          merge-multiple: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
-          enable-cache: false
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.18.zip
-
-      - name: Create library zips
-        run: |
-          # Install libraries for a representative environment to get libdeps
-          platformio pkg install -e esp32dev-ble --no-save
-          cd .pio/libdeps
-          # Replace spaces with underscores in folder names
-          find . -type d -name "* *" | while read FNAME; do mv "$FNAME" "${FNAME// /_}"; done
-          # Zip libraries per board
-          for i in */; do
-            zip -r "${i%/}-libraries.zip" "$i"
-          done
-          mv *.zip ../../toDeploy/
-
-      - name: Prepare additional assets
-        run: |
-          cd toDeploy
-          # Remove binaries for *-all*, *-test* env
-          rm -f *-all*.bin *-test*.bin *-test*.zip || true
-          cd ..
-          # Zip source code
-          zip -r toDeploy/OpenMQTTGateway_sources.zip main LICENSE.txt
-          ls -lA toDeploy/
-
-  documentation:
-    needs: [prepare, build]
+  handle-documentation:
+    needs: [prepare, handle-firmwares]
     name: Build and deploy development documentation
     uses: ./.github/workflows/task-docs.yml
     with:
-      python-version: '3.11'
-      node-version: '16.x'
-      version-source: 'custom'
-      custom-version: 'DEVELOPMENT SHA:${{ needs.prepare.outputs.short-sha }} TEST ONLY'
-      base-path: '/dev/'
-      destination-dir: 'dev'
-      generate-webuploader: true
-      webuploader-args: '--dev'
+      mode: "dev"
+      version: ${{ needs.prepare.outputs.short-sha }}
+      url-prefix: "/dev/"
+      destination-dir: "dev"
       run-pagespeed: true
       pagespeed-url: 'https://docs.openmqttgateway.com/dev/'
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      APIKEY: ${{ secrets.APIKEY }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      pagespeed-apikey: ${{ secrets.APIKEY }}

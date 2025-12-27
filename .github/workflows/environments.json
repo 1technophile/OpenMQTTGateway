@@ -88,19 +88,22 @@
             "sonoff-basic",
             "sonoff-basic-rfr3"
         ],
-        "metadata": {
-            "totalCount": 83,
-            "categories": {
-                "esp32": 42,
-                "esp8266": 17,
-                "specialized": 24
-            },
-            "notes": [
-                "This unified list contains all environments from both build.yml and build_and_docs_to_dev.yml",
-                "Previously build.yml had 85 environments and build_and_docs_to_dev.yml had 88",
-                "After deduplication and proper ordering, the total is 83 unique environments",
-                "Environments ending in -test or -all-test are typically excluded from production releases"
-            ]
-        }
+        "ci": [
+            "esp32dev-all-test",
+            "esp32dev-ble",
+            "esp32dev-ir",
+            "esp32dev-rf",
+            "esp32dev-rtl_433",
+            "esp32s3-dev-c1-ble",
+            "esp32c3-dev-m1-ble",
+            "heltec-ble",
+            "lilygo-ble",
+            "nodemcuv2-all-test",
+            "nodemcuv2-ir",
+            "nodemcuv2-rf",
+            "theengs-bridge",
+            "theengs-plug",
+            "rfbridge"
+        ]
     }
 }

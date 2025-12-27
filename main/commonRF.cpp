@@ -40,6 +40,7 @@ extern rtl_433_ESP rtl_433;
 #  endif
 
 int currentReceiver = ACTIVE_NONE;
+boolean isDriverEnabled = false;
 extern void enableActiveReceiver();
 extern void disableCurrentReceiver();
 
@@ -53,43 +54,63 @@ public:
   ZCommonRFWrapper() : RFReceiver() {}
   void enable() override { enableActiveReceiver(); }
   void disable() override { disableCurrentReceiver(); }
-
   int getReceiverID() const override { return currentReceiver; }
 };
 
 ZCommonRFWrapper iRFReceiver;
 RFConfiguration iRFConfig(iRFReceiver);
 
-//TODO review
+// Initialize the CC1101 and tune the RX frequency.
+// - Uses truncated exponential backoff to avoid tight retry loops
+// - Validates the configured frequency before touching the radio
+// - Emits explicit logs for success/failure so watchdog resets are traceable
 void initCC1101() {
-#  ifdef ZradioCC1101 //receiving with CC1101
-  // Loop on getCC1101() until it returns true and break after 10 attempts
+#  ifdef ZradioCC1101 // receiving with CC1101
+  const float freqMhz = iRFConfig.getFrequency();
+  if (!iRFConfig.validFrequency(freqMhz)) {
+    THEENGS_LOG_ERROR(F("C1101 invalid frequency: %F MHz" CR), freqMhz);
+    return;
+  }
+
   int delayMS = 16;
   int delayMaxMS = 500;
-  for (int i = 0; i < 10; i++) {
-#    if defined(RF_MODULE_SCK) && defined(RF_MODULE_MISO) && \
-        defined(RF_MODULE_MOSI) && defined(RF_MODULE_CS)
-    ELECHOUSE_cc1101.setSpiPin(RF_MODULE_SCK, RF_MODULE_MISO, RF_MODULE_MOSI, RF_MODULE_CS);
+  bool connected = false;
+
+  for (int attempt = 1; attempt <= 10; attempt++) {
+#    if defined(RF_CC1101_SCK) && defined(RF_CC1101_MISO) && \
+        defined(RF_CC1101_MOSI) && defined(RF_CC1101_CS)
+    THEENGS_LOG_TRACE(F("initCC1101 with custom SPI pins, SCK=%d, MISO=%d, MOSI=%d, CS=%d" CR), RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
+    ELECHOUSE_cc1101.setSpiPin(RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
 #    endif
+
     if (ELECHOUSE_cc1101.getCC1101()) {
-      THEENGS_LOG_NOTICE(F("C1101 spi Connection OK" CR));
+      connected = true;
+      THEENGS_LOG_NOTICE(F("C1101 SPI connection OK on attempt %d" CR), attempt);
       ELECHOUSE_cc1101.Init();
-      ELECHOUSE_cc1101.SetRx(iRFConfig.getFrequency());
+      ELECHOUSE_cc1101.SetRx(freqMhz);
+      THEENGS_LOG_NOTICE(F("C1101 tuned RX to %F MHz" CR), freqMhz);
       break;
-    } else {
-      THEENGS_LOG_ERROR(F("C1101 spi Connection Error" CR));
-      delay(delayMS);
     }
+
+    THEENGS_LOG_ERROR(F("C1101 SPI connection error (attempt %d), retrying" CR), attempt);
+    delay(delayMS);
+
     // truncated exponential backoff
     delayMS = delayMS * 2;
     if (delayMS > delayMaxMS) delayMS = delayMaxMS;
   }
+
+  if (!connected) {
+    THEENGS_LOG_ERROR(F("C1101 init failed after retries, radio left disabled" CR));
+  }
+#  else
+  THEENGS_LOG_TRACE(F("initCC1101 skipped: ZradioCC1101 not enabled" CR));
 #  endif
 }
 
 void setupCommonRF() {
   iRFConfig.reInit();
-  iRFConfig.loadFromStorage();
+  iRFConfig.loadFromStorage(true);
 }
 
 #  if !defined(ZgatewayRFM69) && !defined(ZactuatorSomfy)
@@ -120,28 +141,37 @@ bool validReceiver(int receiver) {
 #  endif
 
 void disableCurrentReceiver() {
+  if (!isDriverEnabled) {
+    THEENGS_LOG_TRACE(F("Receiver %d is already disabled" CR), currentReceiver);
+    return;
+  }
   THEENGS_LOG_TRACE(F("disableCurrentReceiver: %d" CR), currentReceiver);
   switch (currentReceiver) {
     case ACTIVE_NONE:
+      isDriverEnabled = false;
       break;
 #  ifdef ZgatewayPilight
     case ACTIVE_PILIGHT:
       disablePilightReceive();
+      isDriverEnabled = false;
       break;
 #  endif
 #  ifdef ZgatewayRF
     case ACTIVE_RF:
       disableRFReceive();
+      isDriverEnabled = false;
       break;
 #  endif
 #  ifdef ZgatewayRTL_433
     case ACTIVE_RTL:
       disableRTLreceive();
+      isDriverEnabled = false;
       break;
 #  endif
 #  ifdef ZgatewayRF2
     case ACTIVE_RF2:
       disableRF2Receive();
+      isDriverEnabled = false;
       break;
 #  endif
     default:
@@ -150,6 +180,10 @@ void disableCurrentReceiver() {
 }
 
 void enableActiveReceiver() {
+  if (isDriverEnabled) {
+    THEENGS_LOG_TRACE(F("Receiver %d is already enabled" CR), currentReceiver);
+    return;
+  }
   THEENGS_LOG_TRACE(F("enableActiveReceiver: %d" CR), iRFConfig.getActiveReceiver());
   switch (iRFConfig.getActiveReceiver()) {
 #  ifdef ZgatewayPilight
@@ -157,6 +191,7 @@ void enableActiveReceiver() {
       initCC1101();
       enablePilightReceive();
       currentReceiver = ACTIVE_PILIGHT;
+      isDriverEnabled = true;
       break;
 #  endif
 #  ifdef ZgatewayRF
@@ -164,6 +199,7 @@ void enableActiveReceiver() {
       initCC1101();
       enableRFReceive(iRFConfig.getFrequency(), RF_RECEIVER_GPIO, RF_EMITTER_GPIO);
       currentReceiver = ACTIVE_RF;
+      isDriverEnabled = true;
       break;
 #  endif
 #  ifdef ZgatewayRTL_433
@@ -171,6 +207,7 @@ void enableActiveReceiver() {
       initCC1101();
       enableRTLreceive();
       currentReceiver = ACTIVE_RTL;
+      isDriverEnabled = true;
       break;
 #  endif
 #  ifdef ZgatewayRF2
@@ -178,6 +215,7 @@ void enableActiveReceiver() {
       initCC1101();
       enableRF2Receive();
       currentReceiver = ACTIVE_RF2;
+      isDriverEnabled = true;
       break;
 #  endif
     case ACTIVE_RECERROR:

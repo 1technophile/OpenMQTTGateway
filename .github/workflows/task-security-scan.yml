@@ -1,0 +1,121 @@
+name: Reusable Security Scan Workflow
+
+on:
+  workflow_call:
+    inputs:
+      scan-type:
+        description: 'Type of scan: fs (filesystem), config, or image'
+        required: false
+        type: string
+        default: 'fs'
+      severity:
+        description: 'Severity levels to report (comma-separated: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL)'
+        required: false
+        type: string
+        default: 'HIGH,CRITICAL'
+      exit-code:
+        description: 'Exit code when vulnerabilities found (0=continue, 1=fail)'
+        required: false
+        type: string
+        default: '0'
+      upload-to-security-tab:
+        description: 'Upload SARIF to GitHub Security tab (GitHub-specific feature)'
+        required: false
+        type: boolean
+        default: true
+      scan-path:
+        description: 'Path to scan (default: entire repository)'
+        required: false
+        type: string
+        default: '.'
+      generate-sbom:
+        description: 'Generate Software Bill of Materials (SBOM) in CycloneDX and SPDX formats'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security vulnerability scan
+    permissions:
+      contents: read
+      security-events: write  # Required only for GitHub Security tab upload
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install -y trivy
+
+      - name: Run Security Scan using ci_security.sh
+        run: |
+          # Build command with provided inputs
+          CMD="./scripts/ci_security.sh"
+          CMD="$CMD --scan-type ${{ inputs.scan-type }}"
+          CMD="$CMD --scan-path ${{ inputs.scan-path }}"
+          CMD="$CMD --severity ${{ inputs.severity }}"
+          CMD="$CMD --exit-code ${{ inputs.exit-code }}"
+          
+          # Add SBOM generation if requested
+          if [[ "${{ inputs.generate-sbom }}" == "true" ]]; then
+            CMD="$CMD --generate-sbom"
+          fi
+          
+          # Execute the security scan
+          $CMD
+      
+      # GitHub-specific: Upload to Security tab
+      - name: Upload SARIF to GitHub Security tab
+        if: inputs.upload-to-security-tab == true && always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: './generated/reports/trivy-results.sarif'
+          category: 'trivy-security-scan'
+      
+      # Agnostic: Upload all reports as artifacts (works on any CI)
+      - name: Upload security reports as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-reports
+          path: |
+            ./generated/reports/trivy-results.sarif
+            ./generated/reports/trivy-report.json
+            ./generated/reports/trivy-report.txt
+            ./generated/reports/security-summary.md
+            ./generated/reports/trivy-scan.log
+          retention-days: 90
+
+      # Display summary in workflow output
+      - name: Display Security Summary
+        if: always()
+        run: |
+          cat ./generated/reports/security-summary.md >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "Summary not available"          
+
+      #
+      - name: Upload SBOM reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom-reports
+          path: |
+            ./generated/reports/sbom/
+          retention-days: 90          
+
+      # Optional: Fail the build if critical vulnerabilities found
+      - name: Check for critical vulnerabilities
+        if: inputs.exit-code == '1'
+        run: |
+          if [ -f ./generated/reports/trivy-results.sarif ]; then
+            CRITICAL=$(jq '[.runs[].results[] | select(.level == "error")] | length' ./generated/reports/trivy-results.sarif 2>/dev/null || echo "0")
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "❌ Found ${CRITICAL} critical vulnerabilities!"
+              echo "Review the security reports in artifacts."
+              exit 1
+            fi
+          fi

@@ -402,7 +402,7 @@ void enableRFReceive(
     float rfFrequency = iRFConfig.getFrequency(),
     int rfReceiverGPIO = RF_RECEIVER_GPIO,
     int rfEmitterGPIO = RF_EMITTER_GPIO) {
-  THEENGS_LOG_NOTICE(F("[RF] Enable RF Receiver: %fMhz, RF_EMITTER_GPIO: %d, RF_RECEIVER_GPIO: %d" CR), rfFrequency, rfEmitterGPIO, rfReceiverGPIO);
+  THEENGS_LOG_NOTICE(F("[RF] Enable RF Receiver: %F Mhz, RF_EMITTER_GPIO: %d, RF_RECEIVER_GPIO: %d" CR), rfFrequency, rfEmitterGPIO, rfReceiverGPIO);
 
 #  ifdef RF_DISABLE_TRANSMIT
   mySwitch.disableTransmit();
@@ -410,7 +410,7 @@ void enableRFReceive(
   mySwitch.enableTransmit(rfEmitterGPIO);
 #  endif
 
-  mySwitch.setRepeatTransmit(rfEmitterGPIO);
+  mySwitch.setRepeatTransmit(RF_EMITTER_REPEAT);
   mySwitch.enableReceive(rfReceiverGPIO);
 
   THEENGS_LOG_TRACE(F("[RF] Setup command topic: %s%s%s\n Setup done" CR), (const char*)mqtt_topic, (const char*)gateway_name, (const char*)subjectMQTTtoRF);

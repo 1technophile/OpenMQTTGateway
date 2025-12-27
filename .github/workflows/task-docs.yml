@@ -3,61 +3,59 @@ name: Reusable Documentation Workflow
 on:
   workflow_call:
     inputs:
-      python-version:
-        description: 'Python version to use'
+      mode:
+        description: 'Build mode: "prod" or "dev"'
         required: false
         type: string
-        default: '3.11'
-      node-version:
-        description: 'Node.js version to use'
+        default: "prod"
+      version:
+        description: 'Version string for documentation (use "auto" for automatic detection)'
         required: false
         type: string
-        default: '14.x'
-      version-source:
-        description: 'Source of version: "release" (from GitHub release) or "custom" (provided)'
-        required: false
-        type: string
-        default: 'release'
-      custom-version:
-        description: 'Custom version string when version-source is "custom"'
-        required: false
-        type: string
-        default: ''
-      base-path:
-        description: 'Base path for documentation (e.g., "/" for prod, "/dev/" for dev)'
-        required: false
-        type: string
-        default: '/'
-      destination-dir:
-        description: 'Destination directory for GitHub Pages deployment'
-        required: false
-        type: string
-        default: '.'
-      generate-webuploader:
-        description: 'Generate WebUploader manifest'
+        default: "auto"
+      just-check:
+        description: "Just create a quick build to check for errors"
         required: false
         type: boolean
-        default: true
-      webuploader-args:
-        description: 'Additional arguments for gen_wu.py script'
+        default: false
+      url-prefix:
+        description: 'URL prefix for docs (e.g., "/" for prod, "/dev/" for dev)'
         required: false
         type: string
-        default: ''
+        default: "/"
       run-pagespeed:
-        description: 'Run PageSpeed Insights after deployment'
+        description: "Run PageSpeed Insights after deploy"
         required: false
         type: boolean
         default: false
       pagespeed-url:
-        description: 'URL to test with PageSpeed Insights'
+        description: "URL to test with PageSpeed"
         required: false
         type: string
-        default: 'https://docs.openmqttgateway.com/'
-    secrets:
-      GITHUB_TOKEN:
-        required: true
-      APIKEY:
+        default: "https://docs.openmqttgateway.com/"
+      destination-dir:
+        description: "GitHub Pages destination directory"
         required: false
+        type: string
+        default: "."
+      python-version:
+        description: "Python version to use"
+        required: false
+        type: string
+        default: "3.13"
+      pio-version:
+        description: "PlatformIO version to use"
+        required: false
+        type: string
+        default: "v6.1.18"
+    secrets:
+      github-token:
+        description: "GitHub token for deploying to GitHub Pages"
+        required: false
+      pagespeed-apikey:
+        description: "API key for PageSpeed Insights"
+        required: false
+
 
 jobs:
   documentation:
@@ -65,63 +63,84 @@ jobs:
     name: Create and deploy documentation
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node-version }}
+          fetch-depth: 0 # Fetch all history for git tags
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Build documentation site
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: false
+
+      - name: Install PlatformIO dependencies
         run: |
-          # Build script arguments based on inputs
-          ARGS=""
-          
-          # Set version source and custom version
-          if [ "${{ inputs.version-source }}" = "custom" ] && [ -n "${{ inputs.custom-version }}" ]; then
-            ARGS="$ARGS --custom-version '${{ inputs.custom-version }}' --version-source custom"
-          elif [ "${{ inputs.version-source }}" = "release" ]; then
-            # Get latest release tag
-            if command -v git >/dev/null 2>&1; then
-              LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "development")
-              ARGS="$ARGS --custom-version '${LATEST_TAG}' --version-source release"
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/${{ inputs.pio-version }}.zip
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          MODE="${{ inputs.mode }}"
+
+          # If version is 'auto', determine it based on mode
+          if [ "$VERSION" = "auto" ]; then
+            if [ "$MODE" = "dev" ]; then
+              # Dev mode: always use short SHA
+              VERSION="$(git rev-parse --short HEAD)"
+              echo "Dev mode - using SHA: $VERSION"
             else
-              ARGS="$ARGS --version-source release"
+              # Prod mode: try to get git tag
+              if GIT_TAG=$(git describe --tags --exact-match 2>/dev/null); then
+                VERSION="$GIT_TAG"
+                echo "Using exact git tag: $VERSION"
+              elif LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null); then
+                VERSION="$LATEST_TAG"
+                echo "Using latest tag: $VERSION"
+              else
+                VERSION="v0.0.0-unknown"
+                echo "Warning: No tag found, using: $VERSION"
+              fi
             fi
           fi
-          
-          # Set base path/URL prefix
-          if [ "${{ inputs.base-path }}" != "/" ]; then
-            ARGS="$ARGS --url-prefix '${{ inputs.base-path }}'"
-          fi
-          
-          # WebUploader generation
-          if [ "${{ inputs.generate-webuploader }}" != "true" ]; then
-            ARGS="$ARGS --no-webuploader"
-          elif [ -n "${{ inputs.webuploader-args }}" ]; then
-            ARGS="$ARGS --webuploader-args '${{ inputs.webuploader-args }}'"
-          fi
-          
-          # Run the build script
-          eval "./scripts/ci_site.sh ${ARGS}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Final version: $VERSION"
+
+      - name: Download all firmware artifacts
+        if: ${{ inputs.mode == 'dev' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*"
+          path: generated/artifacts
+          merge-multiple: true
+
+      - name: Build documentation site
+        run: |
+          ./scripts/ci.sh site \
+            --clean \
+            --mode ${{ inputs.mode }} \
+            --version ${{ steps.version.outputs.version }} \
+            --url-prefix ${{ inputs.url-prefix }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
+        if: ${{ inputs.just-check == false }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.github-token }}
           publish_dir: ./generated/site
           destination_dir: ${{ inputs.destination-dir }}
           cname: docs.openmqttgateway.com
 
       - name: Run PageSpeed Insights
-        if: inputs.run-pagespeed
+        if: ${{ inputs.just-check == false && inputs.run-pagespeed == true }}
         uses: jakepartusch/psi-action@v1.3
         id: psi
         with:
           url: ${{ inputs.pagespeed-url }}
           threshold: 60
-          key: ${{ secrets.APIKEY }}
+          key: ${{ secrets.pagespeed-apikey }}

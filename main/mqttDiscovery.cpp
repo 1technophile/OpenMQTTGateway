@@ -600,7 +600,7 @@ void createDiscovery(const char* sensor_type,
     }
   }
 
-  if (diagnostic_entity) {  // entity_category
+  if (diagnostic_entity) { // entity_category
     sensor["ent_cat"] = "diagnostic";
   }
 

@@ -9,13 +9,9 @@ jobs:
     name: Build and deploy production documentation
     uses: ./.github/workflows/task-docs.yml
     with:
-      python-version: '3.11'
-      node-version: '14.x'
-      version-source: 'release'
-      base-path: '/'
-      destination-dir: '.'
-      generate-webuploader: true
-      webuploader-args: '${GITHUB_REPOSITORY}'
-      run-pagespeed: false
+      mode: "prod"
+      version: "auto" # Will detect latest git tag
+      url-prefix: "/"
+      destination-dir: "."
     secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}

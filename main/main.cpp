@@ -96,8 +96,8 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
 
 #if BLEDecryptor
-  char ble_aes[parameters_size] = BLE_AES;
-  StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
+char ble_aes[parameters_size] = BLE_AES;
+StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
 #endif
 
 #if !MQTT_BROKER_MODE
@@ -2185,11 +2185,11 @@ bool loadConfigFromFlash() {
         if (json.containsKey("ble_aes")) {
           strcpy(ble_aes, json["ble_aes"]);
           THEENGS_LOG_TRACE(F("loaded default BLE AES key %s" CR), ble_aes);
-        }        
+        }
         if (json.containsKey("ble_aes_keys")) {
           ble_aes_keys = json["ble_aes_keys"];
           THEENGS_LOG_TRACE(F("loaded %d custom BLE AES keys" CR), ble_aes_keys.size());
-        }        
+        }
 #  endif
         result = true;
       } else {

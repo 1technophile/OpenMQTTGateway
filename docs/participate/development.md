@@ -1,30 +1,37 @@
 # Development contributions
 
-We like pull requests from everyone. By participating in this project, you
-agree to follow the code of conduct below
+We like pull requests from everyone and ask you to follow the code of conduct below.
 
-[code of conduct](https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md)
+* [Code of conduct](https://github.com/1technophile/OpenMQTTGateway/blob/master/CODE_OF_CONDUCT.md)
 
-[code style guide](https://google.github.io/styleguide/cppguide.html#Formatting)
+* [Code style guide](https://google.github.io/styleguide/cppguide.html#Formatting)
 
-So as to format automatically your document you have to add the "clang-Format" extension to VSCode, once done, you can format the code by doing a right click into the code file window and clicking "Format document".
+If you need a step-by-step install and build guide, read the [Quick Start to Develop OpenMQTTGateway](./quick_start.md). It explains the tools, PlatformIO, and docs workflow. Use this page as a fast checklist once you know the flow.
 
-Fork the [development branch](https://github.com/1technophile/OpenMQTTGateway/tree/development), then clone the repo
+**Quick checklist**
+1. Fork the [development branch](https://github.com/1technophile/OpenMQTTGateway/tree/development) and clone the repo.
+2. Make your changes and follow the naming rules:
+    * New gateway: `ZgatewayXXX` where `XXX` is the protocol name.
+    * New sensor: `ZsensorYYY` where `YYY` is the sensor type.
+    * New actuator: `ZactuatorZZZ` where `ZZZ` is the actuator type.
+3. Review your code and compile for ESP32 and ESP8266.
+4. Test on your hardware.
+5. Open a pull request, verify the GitHub Actions CI build, and request a review.
 
-Make your modification,
-* If you want to add a new gateway, name it `ZgatewayXXX`, `XXX` replaced by your gateway communication type, can be more than three letters
-* If you want to add a new sensor, name it `ZsensorYYY`, `YYY` replaced by your sensor type, can be more than three letters
-* If you want to add a new actuator, name it `ZactuatorZZZ`, `ZZZ` replaced by your actuator type, can be more than three letters
+## Automated Testing and CI
 
-Review your code, compile it for ESP32 and ESP8266
+Your pull request will be automatically tested by GitHub Actions. If you want to run the same checks locally before pushing, you can use the `ci.sh` script in the scripts folder.
 
-Test it locally on your hardware config
+**Need help with the ci.sh commands?** See [section 5 in Quick Start](./quick_start.md#5-firmware-development-from-the-terminal-with-cish) for detailed examples of running QA checks and builds from the terminal.
 
-Emit a pull request
+For more details on how CI works and available scripts, see the [CI documentation](https://github.com/1technophile/OpenMQTTGateway/blob/development/scripts) in the scripts folder.
 
-Verify the GitHub Actions CI compilation results
+For a comprehensive overview of all GitHub Actions workflows used in this project, check the [Workflows README](https://github.com/1technophile/OpenMQTTGateway/tree/development/.github/workflows).
 
-Request for review
+## Code Quality
+
+To format your code automatically, add the "clang-Format" extension to VSCode, then right click in the file and choose "Format document".
+
 
 We may suggest some changes, improvements or alternatives.
 

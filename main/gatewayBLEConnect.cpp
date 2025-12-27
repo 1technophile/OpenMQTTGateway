@@ -337,20 +337,20 @@ void BM2_connect::publishData() {
 static const unsigned char BM6_AES_KEY[16] = {
     108, // l
     101, // e
-    97,  // a
+    97, // a
     103, // g
     101, // e
     110, // n
     100, // d
     255, // 0xff
     254, // 0xfe
-    48,  // 0
-    49,  // 1
-    48,  // 0
-    48,  // 0
-    48,  // 0
-    48,  // 0
-    57,  // 9
+    48, // 0
+    49, // 1
+    48, // 0
+    48, // 0
+    48, // 0
+    48, // 0
+    57, // 9
 };
 
 void BM6_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {

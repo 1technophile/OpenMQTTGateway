@@ -1,0 +1,12 @@
+{
+    "title": "Theengs OpenMQTTGateway",
+    "version": "edge",
+    "url_prefix": "/",
+    "dest": "generated/site",
+    "mode": "prod",
+    "url_license_file": "https://github.com/1technophile/OpenMQTTGateway/blob/development/LICENSE.txt",
+    "url_community_forum": "https://community.openmqttgateway.com",
+    "hostname": "https://docs.openmqttgateway.com",
+    "repo": "1technophile/OpenMQTTGateway",
+    "theme_config_repo": "1technophile/OpenMQTTGateway"
+}

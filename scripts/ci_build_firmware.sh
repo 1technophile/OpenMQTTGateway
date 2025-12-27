@@ -6,8 +6,10 @@
 set -euo pipefail
 
 # Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+readonly SCRIPT_DIR
+readonly PROJECT_ROOT
 
 # Load shared configuration (colors, logging functions, paths)
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -41,18 +43,7 @@ validate_environment() {
     log_info "Building environment: $env"
 }
 
-# Function to setup build environment variables
-setup_build_env() {
-    local enable_dev_ota="${1:-false}"
-    
-    export PYTHONIOENCODING=utf-8
-    export PYTHONUTF8=1
-    
-    if [[ "$enable_dev_ota" == "true" ]]; then
-        export PLATFORMIO_BUILD_FLAGS='"-DDEVELOPMENTOTA=true"'
-        log_info "Development OTA enabled"
-    fi
-}
+
 
 # Function to check PlatformIO availability
 check_platformio() {
@@ -78,6 +69,18 @@ run_build() {
     local env="$1"
     local clean="${2:-false}"
     local verbose="${3:-false}"
+    local enable_dev_ota="${4:-false}"
+    local version="${5:-edge}"
+
+    if [[ "$enable_dev_ota" == "true" ]]; then
+        log_info "Development OTA enabled"
+         export PLATFORMIO_BUILD_FLAGS='"-DDEVELOPMENTOTA=true"'
+    fi
+
+    if [[ -n "$version" ]]; then
+        log_info "Setting firmware version to: $version"
+        export PLATFORMIO_BUILD_FLAGS="${PLATFORMIO_BUILD_FLAGS} -DOMG_VERSION=\\\"${version}\\\""
+    fi
     
     log_build "Starting build for environment: $env"
     
@@ -94,6 +97,9 @@ run_build() {
     # Execute build with timing
     local start_time
     start_time=$(date +%s)
+    
+    log_info  "PlatformIO Build Flags: $PLATFORMIO_BUILD_FLAGS"
+    log_info "Executing: $build_cmd"
     
     if eval "$build_cmd"; then
         local end_time
@@ -184,6 +190,7 @@ Options:
     --clean         Clean build artifacts before building
     --verbose       Enable verbose build output
     --no-verify     Skip artifact verification
+    --version <ver> Set firmware version (default: edge)
     --help          Show this help message
 
 Examples:
@@ -201,10 +208,15 @@ main() {
     local clean_build_flag=false
     local verbose=false
     local verify=true
+    local version="edge"
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --version)
+                version="$2"
+                shift 2
+                ;;
             --dev-ota)
                 enable_dev_ota=true
                 shift
@@ -254,7 +266,8 @@ main() {
     validate_environment "$environment" || exit 1
     
     # Setup build environment
-    setup_build_env "$enable_dev_ota"
+    export PYTHONIOENCODING=utf-8
+    export PYTHONUTF8=1
     
     # Clean if requested
     if [[ "$clean_build_flag" == "true" ]]; then
@@ -262,7 +275,7 @@ main() {
     fi
     
     # Run build
-    run_build "$environment" "$clean_build_flag" "$verbose" || exit 1
+    run_build "$environment" "$clean_build_flag" "$verbose" "$enable_dev_ota" "$version" || exit 1
     
     # Verify artifacts
     if [[ "$verify" == "true" ]]; then
