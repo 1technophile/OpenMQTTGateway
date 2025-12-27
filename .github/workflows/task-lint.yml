@@ -7,7 +7,7 @@ on:
         description: 'Source directory to lint (single directory)'
         required: false
         type: string
-        default: './main'
+        default: 'main'
       extensions:
         description: 'File extensions to check (comma-separated)'
         required: false

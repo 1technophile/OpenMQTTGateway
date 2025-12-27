@@ -7,6 +7,6 @@ jobs:
     name: Lint code format
     uses: ./.github/workflows/task-lint.yml
     with:
-      source: './main'
+      source: 'main'
       extensions: 'h,ino,cpp'
       clang-format-version: '9'
