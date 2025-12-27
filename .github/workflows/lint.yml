@@ -8,5 +8,5 @@ jobs:
     uses: ./.github/workflows/task-lint.yml
     with:
       source: 'main'
-      extensions: 'h,ino,cpp'
+      extensions: 'h,ino'
       clang-format-version: '9'

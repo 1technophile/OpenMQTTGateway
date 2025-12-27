@@ -18,11 +18,6 @@ on:
         required: false
         type: string
         default: '9'
-      exclude-pattern:
-        description: 'Pattern to exclude from linting (regex)'
-        required: false
-        type: string
-        default: ''
 
 jobs:
   lint:
@@ -37,4 +32,3 @@ jobs:
           source: ${{ inputs.source }}
           extensions: ${{ inputs.extensions }}
           clangFormatVersion: ${{ inputs.clang-format-version }}
-          exclude: ${{ inputs.exclude-pattern }}
