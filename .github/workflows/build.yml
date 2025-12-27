@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Build firmware for all environments
+    name: Build firmware
     uses: ./.github/workflows/task-build.yml
     with:
       python-version: '3.13'
