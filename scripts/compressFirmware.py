@@ -1,3 +1,5 @@
+# Compresses firmware binaries with gzip for OTA updates during build
+# Used by: PlatformIO environments (optional, commented in environments.ini)
 import gzip
 import shutil
 import os

@@ -49,9 +49,9 @@ static NimBLEOta* pNimBLEOta;
 static NimBLECharacteristic* pCommandCharacteristic;
 static NimBLECharacteristic* pRecvFwCharacteristic;
 
-#ifndef BLUFI_MFG_ID
-#  define BLUFI_MFG_ID 0xFFFF // Default Manufacturer ID if not defined
-#endif
+#  ifndef BLUFI_MFG_ID
+#    define BLUFI_MFG_ID 0xFFFF // Default Manufacturer ID if not defined
+#  endif
 
 struct pkt_info {
   uint8_t* pkt;
@@ -201,7 +201,7 @@ void restart_connection_timer() {}
 void stop_connection_timer() {}
 #  endif
 
-void set_blufi_mfg_data () {
+void set_blufi_mfg_data() {
   if (!NimBLEDevice::isInitialized() || !NimBLEDevice::getAdvertising()->isAdvertising()) {
     THEENGS_LOG_NOTICE(F("Unable to set advertising data" CR));
     return;

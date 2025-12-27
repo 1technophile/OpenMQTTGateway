@@ -1,3 +1,5 @@
+# Adds compiler flags to suppress warnings during PlatformIO build
+# Used by: PlatformIO environments (esp32dev-pilight*, esp32-m5stick-c*)
 Import("env")
 
 

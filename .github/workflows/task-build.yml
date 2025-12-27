@@ -1,0 +1,111 @@
+name: Reusable Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version to use"
+        required: false
+        type: string
+        default: "3.13"
+      pio-version:
+        description: "PlatformIO version to use"
+        required: false
+        type: string
+        default: "v6.1.18"
+      environment-set:
+        description: 'Which set of environments to build (all, ci)'
+        required: false
+        type: string
+        default: 'all'        
+      enable-dev-ota:
+        description: "Enable development OTA builds"
+        required: false
+        type: boolean
+        default: false
+      version-tag:
+        description: "Optional version tag to pass to ci.sh build (omitted if empty)"
+        required: false
+        type: string
+        default: ""        
+      artifact-retention-days:
+        description: "Number of days to retain build artifacts"
+        required: false
+        type: number
+        default: 7        
+
+jobs:
+  lint:
+    name: Lint code format
+    uses: ./.github/workflows/task-lint.yml
+    with:
+      source: "main"
+      extensions: "h,ino"
+      clang-format-version: "9"
+
+  load-environments:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          ENV_SET="${{ inputs.environment-set }}"
+          if [ "$ENV_SET" = "ci" ]; then
+            ENVIRONMENTS=$(jq -c '.environments.ci' .github/workflows/environments.json)
+          else
+            ENVIRONMENTS=$(jq -c '.environments.all' .github/workflows/environments.json)
+          fi
+          echo "matrix=${ENVIRONMENTS}" >> $GITHUB_OUTPUT
+  build:
+    needs: [lint, load-environments]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environments: ${{ fromJson(needs.load-environments.outputs.matrix) }}
+    name: Build ${{ matrix.environments }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: false
+
+      - name: Install PlatformIO dependencies
+        run: |
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/${{ inputs.pio-version }}.zip
+
+      - name: Build firmware using ci.sh
+        run: |
+          BUILD_ARGS="${{ matrix.environments }}"   
+          BUILD_ARGS="$BUILD_ARGS --deploy-ready"
+
+          # Optional version tag
+          if [ -n "${{ inputs.version-tag }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --version ${{ inputs.version-tag }}"
+          fi
+
+          # Mode
+          if [ "${{ inputs.enable-dev-ota }}" = "true" ]; then
+            BUILD_ARGS="$BUILD_ARGS --mode dev"
+          else
+            BUILD_ARGS="$BUILD_ARGS --mode prod"
+          fi
+
+          ./scripts/ci.sh build $BUILD_ARGS
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.environments }}
+          path: generated/artifacts/
+          retention-days: ${{ inputs.artifact-retention-days }}

@@ -1,27 +1,45 @@
+let meta = require('./defaults.json');
+try {
+  meta_overload = require('./meta.json');
+  meta = { ...meta, ...meta_overload };
+} catch (e) {
+  console.warn('meta.json not found or not valid. Using default configuration.');
+}
+
+
+
+const fs = require('fs');
+const path = require('path');
+const commonConfigPath = path.resolve(__dirname, 'public/commonConfig.js');
+if (!fs.existsSync(commonConfigPath)) {
+  throw new Error(`commonConfig.js not found in ${commonConfigPath}.\nPlease download from https://www.theengs.io/commonConfig.js or create this file before you build the documentation.`);
+}
 const commonConfig = require('./public/commonConfig');
 
 module.exports = {
   ...commonConfig,
-  title: 'Theengs OpenMQTTGateway version_tag',
-  base: '/',
+  title: `${meta.title} - ${meta.version}`,
+  base: meta.url_prefix,
+  dest: meta.dest, // default is generated/site
   description: 'One gateway, many technologies: MQTT gateway for ESP8266 or ESP32 with bidirectional 433mhz/315mhz/868mhz, Infrared communications, BLE, LoRa, beacons detection, mi flora / mi jia / LYWSD02/ Mi Scale compatibility, SMS & LORA.',
   head: [
     ...commonConfig.head,
-    ['script', {type: 'module', src: 'https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module'}]
+    ['script', { type: 'module', src: meta.url_script_webuploader }]
   ],
   themeConfig: {
-    repo: '1technophile/OpenMQTTGateway',
+    repo: meta.theme_config_repo,
     docsDir: 'docs',
+    mode: meta.mode,
     ...commonConfig.themeConfig,
     sidebar: [
-      ['/','0 - What is it for 🏠'],
+      ['/', '0 - What is it for 🏠'],
       {
         title: '1 - Prerequisites🧭',   // required
         //collapsable: true, // optional, defaults to true
         sidebarDepth: 1,    // optional, defaults to 1
         children: [
           'prerequisites/devices',
-          'prerequisites/board',
+          'prerequisites/board-full',
           'prerequisites/parts',
           'prerequisites/broker',
           'prerequisites/controller']
@@ -44,7 +62,7 @@ module.exports = {
         title: '3 - Upload ➡️',   // required
         sidebarDepth: 1,    // optional, defaults to 1
         children: [
-          'upload/web-install',
+          'upload/web-install-full',
           'upload/binaries',
           'upload/builds',
           'upload/gitpod',
@@ -86,23 +104,25 @@ module.exports = {
       },
       {
         title: '6 - Participate 💻',   // required
+        path: '/participate/',
         sidebarDepth: 1,    // optional, defaults to 1
         children: [
+          'participate/quick_start',
           'participate/support',
           'participate/development',
           'participate/adding-protocols',
           'participate/community',
-          ['https://github.com/1technophile/OpenMQTTGateway/blob/development/LICENSE.txt','License']
+          [meta.url_license_file, 'License']
         ]
       }
-  ]
+    ]
   },
   plugins: {
     'sitemap': {
-      hostname: 'https://docs.openmqttgateway.com',
+      hostname: meta.hostname,
       urls: [
         'https://decoder.theengs.io/devices/devices.html',
-        'https://community.openmqttgateway.com/',
+        meta.url_community_forum,
         'https://shop.theengs.io/',
         'https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption',
         'https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna',

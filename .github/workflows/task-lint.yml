@@ -1,0 +1,40 @@
+name: Reusable Lint Workflow
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        description: "Source directory to lint"
+        required: false
+        type: string
+        default: "main"
+      extensions:
+        description: "File extensions to check (comma-separated)"
+        required: false
+        type: string
+        default: "h,ino,cpp"
+      clang-format-version:
+        description: "clang-format version to use"
+        required: false
+        type: string
+        default: "9"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Check code format
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Check code format with ci.sh qa
+        run: |
+          ./scripts/ci.sh qa \
+            --check \
+            --source "${{ inputs.source }}" \
+            --extensions "${{ inputs.extensions }}" \
+            --clang-format-version "${{ inputs.clang-format-version }}"

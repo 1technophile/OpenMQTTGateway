@@ -316,7 +316,7 @@ void sendMQTTfromNestedJson(JsonVariant obj, char* topic, int level, int maxLeve
         topic[topicLength] = '\0';
       } else {
         THEENGS_LOG_ERROR(F("Nested key '%s' at level %d does not fit within max topic length of %d, skipping"),
-                  key, level, mqtt_topic_max_size);
+                          key, level, mqtt_topic_max_size);
       }
     }
 

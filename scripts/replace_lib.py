@@ -1,4 +1,5 @@
-
+# Replaces BLE library with custom version during PlatformIO build
+# Used by: Currently unused (utility script for BLE library replacement)
 import shutil
 import os
 import hashlib

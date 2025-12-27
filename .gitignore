@@ -22,3 +22,28 @@ managed_components
 .github/chatmodes
 .github/prompts
 .github/*instructions.md
+.github/workflows/_docs
+# CI/CD Generated outputs
+docs/.vuepress/dist/
+docs/.vuepress/components/
+docs/.vuepress/public/
+^docs/.vuepress/public/img/
+^docs/.vuepress/public/*.png
+^docs/.vuepress/public/*.txt
+
+# Generated site/firmware/reports files
+generated/
+
+# Generated ssl for testing
+.ssl
+
+# Generated JSON files from templates
+scripts/latest_version.json
+scripts/latest_version_dev.json
+
+# Generated configuration files
+docs/.vuepress/meta.json
+
+# Generated full documentation pages
+docs/prerequisites/board-full.md
+docs/upload/web-install-full.md

@@ -1,0 +1,107 @@
+name: Reusable Documentation Workflow
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: 'Build mode: "prod" or "dev"'
+        required: false
+        type: string
+        default: "prod"
+      version:
+        description: 'Version string for documentation (use "auto" for automatic detection)'
+        required: false
+        type: string
+        default: "auto"
+      url-prefix:
+        description: 'URL prefix for docs (e.g., "/" for prod, "/dev/" for dev)'
+        required: false
+        type: string
+        default: "/"
+      run-pagespeed:
+        description: "Run PageSpeed Insights after deploy"
+        required: false
+        type: boolean
+        default: false
+      pagespeed-url:
+        description: "URL to test with PageSpeed"
+        required: false
+        type: string
+        default: "https://docs.openmqttgateway.com/"
+      destination-dir:
+        description: "GitHub Pages destination directory"
+        required: false
+        type: string
+        default: "."
+      github-token:
+        description: "GitHub token for deploying to GitHub Pages"
+        required: true
+        type: string
+      pagespeed-url-apikey:
+        description: "API key for PageSpeed Insights"
+        required: false
+        type: string
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    name: Create and deploy documentation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for git tags
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          MODE="${{ inputs.mode }}"
+
+          # If version is 'auto', determine it based on mode
+          if [ "$VERSION" = "auto" ]; then
+            if [ "$MODE" = "dev" ]; then
+              # Dev mode: always use short SHA
+              VERSION="$(git rev-parse --short HEAD)"
+              echo "Dev mode - using SHA: $VERSION"
+            else
+              # Prod mode: try to get git tag
+              if GIT_TAG=$(git describe --tags --exact-match 2>/dev/null); then
+                VERSION="$GIT_TAG"
+                echo "Using exact git tag: $VERSION"
+              elif LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null); then
+                VERSION="$LATEST_TAG"
+                echo "Using latest tag: $VERSION"
+              else
+                VERSION="v0.0.0-unknown"
+                echo "Warning: No tag found, using: $VERSION"
+              fi
+            fi
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Final version: $VERSION"
+
+      - name: Build documentation site
+        run: |
+          ./scripts/ci.sh site \
+            --clean \
+            --mode ${{ inputs.mode }} \
+            --version ${{ steps.version.outputs.version }} \
+            --url-prefix ${{ inputs.url-prefix }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ inputs.github-token }}
+          publish_dir: ./generated/site
+          destination_dir: ${{ inputs.destination-dir }}
+          cname: docs.openmqttgateway.com
+
+      - name: Run PageSpeed Insights
+        if: inputs.run-pagespeed == true
+        uses: jakepartusch/psi-action@v1.3
+        id: psi
+        with:
+          url: ${{ inputs.pagespeed-url }}
+          threshold: 60
+          key: ${{ inputs.pagespeed-url-apikey }}

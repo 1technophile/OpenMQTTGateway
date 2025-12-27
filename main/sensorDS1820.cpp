@@ -92,10 +92,10 @@ void setupZsensorDS1820() {
       }
       ds1820_resolution[ds1820_count] = ds1820.getResolution(ds1820_address);
       THEENGS_LOG_TRACE(F("DS1820: Device %d, Type: %s, Address: %s, Resolution: %d" CR),
-                ds1820_count,
-                (char*)ds1820_type[ds1820_count].c_str(),
-                (char*)ds1820_addr[ds1820_count].c_str(),
-                ds1820_resolution[ds1820_count]);
+                        ds1820_count,
+                        (char*)ds1820_type[ds1820_count].c_str(),
+                        (char*)ds1820_addr[ds1820_count].c_str(),
+                        ds1820_resolution[ds1820_count]);
       ds1820_count++;
     }
   }
