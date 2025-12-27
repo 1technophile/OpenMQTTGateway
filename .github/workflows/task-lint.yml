@@ -1,0 +1,34 @@
+name: Reusable Lint Workflow
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        description: 'Source directory to lint (single directory)'
+        required: false
+        type: string
+        default: 'main'
+      extensions:
+        description: 'File extensions to check (comma-separated)'
+        required: false
+        type: string
+        default: 'h,ino,cpp'
+      clang-format-version:
+        description: 'clang-format version to use'
+        required: false
+        type: string
+        default: '9'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Check code format
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check code format
+        uses: DoozyX/clang-format-lint-action@v0.6
+        with:
+          source: ${{ inputs.source }}
+          extensions: ${{ inputs.extensions }}
+          clangFormatVersion: ${{ inputs.clang-format-version }}

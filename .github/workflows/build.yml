@@ -4,125 +4,17 @@ on: [push, pull_request]
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        environments:
-          - "rfbridge"
-          - "rfbridge-direct"
-          - "esp32dev-all-test"
-          - "esp32dev-rf"
-          - "esp32dev-pilight-cc1101"
-          - "esp32dev-somfy-cc1101"
-          - "esp32dev-pilight-somfy-cc1101"
-          - "esp32dev-weatherstation"
-          - "esp32dev-gf-sun-inverter"
-          - "esp32dev-ir"
-          - "esp32dev-ble"
-          - "esp32dev-ble-mqtt-undecoded"
-          - "esp32dev-ble-aws"
-          - "esp32feather-ble"
-          - "esp32-lolin32lite-ble"
-          - "esp32-olimex-gtw-ble-eth"
-          - "esp32-olimex-gtw-ble-poe"
-          - "esp32-olimex-gtw-ble-poe-iso"
-          - "esp32-wt32-eth01-ble-eth"
-          - "esp32-olimex-gtw-ble-wifi"
-          - "esp32-m5stick-ble"
-          - "esp32-m5stack-ble"
-          - "esp32-m5tough-ble"
-          - "esp32-m5stick-c-ble"
-          - "esp32-m5stick-cp-ble"
-          - "esp32s3-atomS3U"
-          - "esp32-m5atom-matrix"
-          - "esp32-m5atom-lite"
-          - "esp32dev-rtl_433"
-          - "esp32dev-rtl_433-fsk"
-          - "esp32doitv1-aithinker-r01-sx1278"
-          - "heltec-rtl_433"
-          - "heltec-rtl_433-fsk"
-          - "heltec-ble"
-          - "lilygo-rtl_433"
-          - "lilygo-rtl_433-fsk"
-          - "lilygo-ble"
-          - "esp32dev-multi_receiver"
-          - "esp32dev-multi_receiver-pilight"
-          - "tinypico-ble"
-          - "ttgo-lora32-v1"
-          - "ttgo-lora32-v21"
-          - "ttgo-t-beam"
-          - "heltec-wifi-lora-32"
-          - "shelly-plus1"
-          - "nodemcuv2-all-test"
-          - "nodemcuv2-fastled-test"
-          - "nodemcuv2-2g"
-          - "nodemcuv2-ir"
-          - "nodemcuv2-serial"
-          - "avatto-bakeey-ir"
-          - "nodemcuv2-rf"
-          - "nodemcuv2-rf-cc1101"
-          - "nodemcuv2-somfy-cc1101"
-          - "manual-wifi-test"
-          - "rf-wifi-gateway"
-          - "nodemcuv2-rf2"
-          - "nodemcuv2-rf2-cc1101"
-          - "nodemcuv2-pilight"
-          - "nodemcuv2-weatherstation"
-          - "sonoff-basic"
-          - "sonoff-basic-rfr3"
-          - "esp32dev-ble-datatest"
-          - "esp32s3-dev-c1-ble"
-          - "esp32c3-dev-m1-ble"
-          - "airm2m_core_esp32c3"
-          - "esp32c3_lolin_mini"
-          - "esp32c3-m5stamp"
-          - "thingpulse-espgateway"
-          - "theengs-bridge"
-          - "esp32dev-ble-idf"
-          - "theengs-bridge-v11"
-          - "theengs-plug"
-          - "esp32dev-ble-broker"
-          - "esp32s3-m5stack-stamps3"
-          - "esp32c3u-m5stamp"
-          - "lilygo-t3-s3-rtl_433"
-          - "lilygo-t3-s3-rtl_433-fsk"
-    runs-on: ubuntu-latest
-    name: Build with PlatformIO
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "latest"
-          enable-cache: false
-      - name: Install dependencies
-        run: |
-          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.18.zip
-      - name: Extract ESP32 platform version from platformio.ini
-        run: |
-          ESP32_VERSION=$(grep 'esp32_platform\s*=' platformio.ini | cut -d'@' -f2 | tr -d '[:space:]')
-          echo "ESP32_PLATFORM_VERSION=${ESP32_VERSION}" >> $GITHUB_ENV
-      - name: Run PlatformIO
-        env:
-          PYTHONIOENCODING: utf-8
-          PYTHONUTF8: '1'
-        run: platformio run -e ${{ matrix.environments }}
-      - name: Upload Assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.environments }}
-          path: |
-            .pio/build/*/firmware.bin
-            .pio/build/*/partitions.bin
-          retention-days: 7
+    name: Build firmware
+    uses: ./.github/workflows/task-build.yml
+    with:
+      python-version: '3.13'
+      enable-dev-ota: false
+      artifact-retention-days: 7
+      prepare-for-deploy: false
 
   documentation:
+    name: Build documentation
     runs-on: ubuntu-latest
-    name: Create the documentation
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js

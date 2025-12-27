@@ -4,13 +4,9 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check main format
-        uses: DoozyX/clang-format-lint-action@v0.6
-        with:
-          source: "./main"
-          extensions: "h,ino"
-          clangFormatVersion: 9
+    name: Lint code format
+    uses: ./.github/workflows/task-lint.yml
+    with:
+      source: 'main'
+      extensions: 'h,ino'
+      clang-format-version: '9'

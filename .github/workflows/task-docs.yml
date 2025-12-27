@@ -1,0 +1,142 @@
+name: Reusable Documentation Workflow
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '14.x'
+      version-source:
+        description: 'Source of version: "release" (from GitHub release) or "custom" (provided)'
+        required: false
+        type: string
+        default: 'release'
+      custom-version:
+        description: 'Custom version string when version-source is "custom"'
+        required: false
+        type: string
+        default: ''
+      base-path:
+        description: 'Base path for documentation (e.g., "/" for prod, "/dev/" for dev)'
+        required: false
+        type: string
+        default: '/'
+      destination-dir:
+        description: 'Destination directory for GitHub Pages deployment'
+        required: false
+        type: string
+        default: '.'
+      generate-webuploader:
+        description: 'Generate WebUploader manifest'
+        required: false
+        type: boolean
+        default: true
+      webuploader-args:
+        description: 'Additional arguments for gen_wu.py script'
+        required: false
+        type: string
+        default: ''
+      run-pagespeed:
+        description: 'Run PageSpeed Insights after deployment'
+        required: false
+        type: boolean
+        default: false
+      pagespeed-url:
+        description: 'URL to test with PageSpeed Insights'
+        required: false
+        type: string
+        default: 'https://docs.openmqttgateway.com/'
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+      APIKEY:
+        required: false
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    name: Create and deploy documentation
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas markdown pytablereader tabulate
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Download Common Config
+        run: |
+          curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
+
+      - name: Get latest release tag
+        if: inputs.version-source == 'release'
+        id: last_release
+        uses: InsonusK/get-latest-release@v1.0.1
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+          view_top: 1
+
+      - name: Set version tag from release
+        if: inputs.version-source == 'release'
+        run: |
+          VERSION="${{ steps.last_release.outputs.tag_name }}"
+          sed -i "s/version_tag/${VERSION}/g" docs/.vuepress/config.js scripts/latest_version.json
+
+      - name: Set custom version tag
+        if: inputs.version-source == 'custom' && inputs.custom-version != ''
+        run: |
+          sed -i "s/version_tag/${{ inputs.custom-version }}/g" docs/.vuepress/config.js scripts/latest_version_dev.json
+
+      - name: Set base path
+        if: inputs.base-path != '/'
+        run: |
+          sed -i "s|base: '/'|base: '${{ inputs.base-path }}'|g" docs/.vuepress/config.js
+
+      - name: Generate board documentation
+        run: |
+          python ./scripts/generate_board_docs.py
+
+      - name: Generate WebUploader manifest
+        if: inputs.generate-webuploader
+        run: |
+          python ./scripts/gen_wu.py ${{ inputs.webuploader-args }}
+
+      - name: Build documentation
+        run: npm run docs:build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/.vuepress/dist
+          destination_dir: ${{ inputs.destination-dir }}
+          cname: docs.openmqttgateway.com
+
+      - name: Run PageSpeed Insights
+        if: inputs.run-pagespeed && secrets.APIKEY != ''
+        uses: jakepartusch/psi-action@v1.3
+        id: psi
+        with:
+          url: ${{ inputs.pagespeed-url }}
+          threshold: 60
+          key: ${{ secrets.APIKEY }}
