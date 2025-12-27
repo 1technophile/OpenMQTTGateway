@@ -1,0 +1,146 @@
+name: Reusable Security Scan Workflow
+
+on:
+  workflow_call:
+    inputs:
+      scan-type:
+        description: 'Type of scan: fs (filesystem), config, or image'
+        required: false
+        type: string
+        default: 'fs'
+      severity:
+        description: 'Severity levels to report (comma-separated: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL)'
+        required: false
+        type: string
+        default: 'HIGH,CRITICAL'
+      exit-code:
+        description: 'Exit code when vulnerabilities found (0=continue, 1=fail)'
+        required: false
+        type: string
+        default: '0'
+      upload-to-security-tab:
+        description: 'Upload SARIF to GitHub Security tab (GitHub-specific feature)'
+        required: false
+        type: boolean
+        default: true
+      scan-path:
+        description: 'Path to scan (default: entire repository)'
+        required: false
+        type: string
+        default: '.'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security vulnerability scan
+    permissions:
+      contents: read
+      security-events: write  # Required only for GitHub Security tab upload
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: ${{ inputs.scan-type }}
+          scan-ref: ${{ inputs.scan-path }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: ${{ inputs.severity }}
+          exit-code: ${{ inputs.exit-code }}
+
+      # GitHub-specific: Upload to Security tab
+      - name: Upload to GitHub Security tab
+        if: inputs.upload-to-security-tab == true && always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-security-scan'
+
+      # Agnostic: Generate human-readable report
+      - name: Generate security report (JSON)
+        if: always()
+        run: |
+          trivy ${{ inputs.scan-type }} ${{ inputs.scan-path }} \
+            --format json \
+            --output trivy-report.json \
+            --severity ${{ inputs.severity }} \
+            --exit-code 0 || true
+
+      # Agnostic: Generate human-readable report (table)
+      - name: Generate security report (Table)
+        if: always()
+        run: |
+          trivy ${{ inputs.scan-type }} ${{ inputs.scan-path }} \
+            --format table \
+            --output trivy-report.txt \
+            --severity ${{ inputs.severity }} \
+            --exit-code 0 || true
+
+      # Agnostic: Summary for any CI system
+      - name: Create summary report
+        if: always()
+        run: |
+          echo "# 🔒 Security Scan Results" > security-summary.md
+          echo "" >> security-summary.md
+          echo "**Scan Type**: ${{ inputs.scan-type }}" >> security-summary.md
+          echo "**Path Scanned**: ${{ inputs.scan-path }}" >> security-summary.md
+          echo "**Severity Filter**: ${{ inputs.severity }}" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          if [ -f trivy-results.sarif ]; then
+            # Parse SARIF to count vulnerabilities
+            VULN_COUNT=$(jq '[.runs[].results[]] | length' trivy-results.sarif 2>/dev/null || echo "0")
+            echo "**Vulnerabilities Found**: ${VULN_COUNT}" >> security-summary.md
+            echo "" >> security-summary.md
+            
+            # Group by severity
+            CRITICAL=$(jq '[.runs[].results[] | select(.level == "error")] | length' trivy-results.sarif 2>/dev/null || echo "0")
+            HIGH=$(jq '[.runs[].results[] | select(.level == "warning")] | length' trivy-results.sarif 2>/dev/null || echo "0")
+            
+            echo "- 🔴 Critical: ${CRITICAL}" >> security-summary.md
+            echo "- 🟠 High: ${HIGH}" >> security-summary.md
+            echo "" >> security-summary.md
+          fi
+          
+          echo "## Report Formats Available" >> security-summary.md
+          echo "- \`trivy-results.sarif\` - SARIF format (for GitHub/IDE integration)" >> security-summary.md
+          echo "- \`trivy-report.json\` - JSON format (for automation)" >> security-summary.md
+          echo "- \`trivy-report.txt\` - Human-readable table" >> security-summary.md
+          
+          # Display summary
+          cat security-summary.md
+
+      # GitHub-specific: Show in workflow summary
+      - name: Add to GitHub Step Summary
+        if: always()
+        run: |
+          cat security-summary.md >> $GITHUB_STEP_SUMMARY
+
+      # Agnostic: Upload all reports as artifacts (works on any CI)
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-reports
+          path: |
+            trivy-results.sarif
+            trivy-report.json
+            trivy-report.txt
+            security-summary.md
+          retention-days: 90
+
+      # Optional: Fail the build if critical vulnerabilities found
+      - name: Check for critical vulnerabilities
+        if: inputs.exit-code == '1'
+        run: |
+          if [ -f trivy-results.sarif ]; then
+            CRITICAL=$(jq '[.runs[].results[] | select(.level == "error")] | length' trivy-results.sarif 2>/dev/null || echo "0")
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "❌ Found ${CRITICAL} critical vulnerabilities!"
+              echo "Review the security reports in artifacts."
+              exit 1
+            fi
+          fi
