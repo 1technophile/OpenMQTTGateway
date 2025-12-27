@@ -1,3 +1,5 @@
+#!/bin/bash
+# shellcheck disable=SC2034
 # Build Scripts Configuration
 # Used by: All build scripts for centralized configuration
 
@@ -5,6 +7,7 @@
 # All CI/CD generated files go under generated/
 ARTIFACTS_DIR="generated/artifacts"
 SITE_DIR="generated/site"
+REPORTS_DIR="generated/reports"
 
 # PlatformIO Directory Configuration
 BUILD_DIR=".pio/build"

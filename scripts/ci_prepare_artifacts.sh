@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2015
 # Prepares firmware artifacts for upload or deployment
 # Used by: CI/CD pipelines for artifact packaging
 # Usage: ./prepare_artifacts.sh <environment> [OPTIONS]
@@ -6,8 +7,10 @@
 set -euo pipefail
 
 # Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+readonly SCRIPT_DIR
+readonly PROJECT_ROOT
 
 # Load shared configuration (colors, logging functions, paths)
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -118,7 +121,7 @@ prepare_libraries() {
         tar -czf "${i%/}-libraries.tgz" "$i" > /dev/null
     done
     
-    mv *.tgz "${output_dir}"
+    mv ./*.tgz "${output_dir}"
     )
 
     rm -rf "$TEMP_LIBDEPS"
@@ -195,10 +198,9 @@ EOF
 # Main execution
 main() {
     local environment=""
-    local mode="standard"
     local output_dir="$DEFAULT_OUTPUT_DIR"
     local clean_flag=false
-    local version=""
+    #local version=""   ## WILL BE USED WHEN THE VERSION ITSELF AFFECTS THE ARTIFACTS NAMING
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -207,10 +209,10 @@ main() {
                 output_dir="$2"
                 shift 2
                 ;;
-            --version)
-                version="$2"
-                shift 2
-                ;;
+            #--version)
+            #    #version="$2"
+            #    shift 2
+            #    ;;
             --clean)
                 clean_flag=true
                 shift
@@ -234,11 +236,12 @@ main() {
     # Change to project root
     cd "$PROJECT_ROOT"
 
-    if [[ -n "$version" ]]; then
-        # Sanitize version string for directory name
-        safe_version=$(echo "$version" | sed 's/[^a-zA-Z0-9._-]/_/g')
-        ## output_dir="${output_dir}/${safe_version}"  // TODO FOR NEXT STEP MULTI RELEASE: TAG, RC, edge
-    fi
+    # TODO FOR NEXT STEP MULTI RELEASE: TAG, RC, edge
+    #if [[ -n "$version" ]]; then
+    #    # Sanitize version string for directory name
+    #    safe_version=$(echo "$version" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    #    output_dir="${output_dir}/${safe_version}" 
+    #fi
 
 
     # Validate inputs

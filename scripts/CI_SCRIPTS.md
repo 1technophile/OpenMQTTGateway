@@ -11,11 +11,13 @@ This documentation describes the CI/CD scripts used to build OpenMQTTGateway fir
   - [ci.sh - Main Entry Point](#commands)
   - [ci.sh build - Build Firmware](#cish-build---build-firmware)
   - [ci.sh site - Build Documentation](#cish-site---build-documentation)
-  - [ci.sh qa - Code Formatting Check](#cish-qa---code-formatting-check)
+  - [ci.sh qa - Code Quality Checks](#cish-qa---code-quality-checks)
+  - [ci.sh security - Security Vulnerability Scan](#cish-security---security-vulnerability-scan)
 - [Internal Scripts](#internal-scripts)
   - [ci_list-env.sh](#ci_list-envsh)
   - [ci_build_firmware.sh](#ci_build_firmwaresh)
   - [ci_prepare_artifacts.sh](#ci_prepare_artifactssh)
+  - [ci_security.sh](#ci_securitysh)
   - [ci_00_config.sh](#ci_00_configsh)
 - [Python Helper Scripts](#python-helper-scripts)
   - [generate_board_docs.py](#generate_board_docspy)
@@ -23,6 +25,7 @@ This documentation describes the CI/CD scripts used to build OpenMQTTGateway fir
 - [Environment Variables](#environment-variables)
 - [Exit Codes](#exit-codes)
 - [Environment Detection](#environment-detection)
+- [GitHub Actions Workflows Integration](#github-actions-workflows-integration)
 
 
 
@@ -36,6 +39,7 @@ ci.sh (dispatcher)
 │                       → ci_prepare_artifacts.sh (when --deploy-ready)
 ├── site → ci_site.sh
 ├── qa → ci_qa.sh
+├── security → ci_security.sh (vulnerability scanning with Trivy)
 ├── list-env → ci_list-env.sh
 └── all → qa + build (all envs with --mode) + site sequential
 ```
@@ -43,12 +47,13 @@ ci.sh (dispatcher)
 ### Script Description
 
 | Script | Purpose | Called By |
-|--------|---------|-----------|
+|--------|---------|----------|
 | `ci.sh` | Main command dispatcher | User/GitHub Actions |
 | `ci_build.sh` | Build firmware orchestrator | ci.sh build |
 | `ci_site.sh` | Documentation build orchestrator | ci.sh site |
 | `ci_00_config.sh` | Shared configuration loader | ci.sh |
-| `ci_qa.sh` | Quality assurance checks | ci.sh qa |
+| `ci_qa.sh` | Quality assurance and shellcheck | ci.sh qa |
+| `ci_security.sh` | Security vulnerability scanning with Trivy | ci.sh security |
 | `ci_list-env.sh` | List PlatformIO environments (fast JSON or full scan) | ci.sh list-env / direct |
 | `ci_build_firmware.sh` | PlatformIO build execution | ci_build.sh |
 | `ci_prepare_artifacts.sh` | Artifact packaging (when requested) | ci_build.sh |
@@ -66,7 +71,9 @@ Build outputs are organized in the project root:
 
 generated/
 ├── artifacts/               # Packaged firmware artifacts
-└── site/                   # Built documentation (VuePress output)
+├── site/                    # Built documentation (VuePress output)
+└── reports/                 # Security scan and SBOM reports
+    └── sbom/                # SBOM in CycloneDX and SPDX formats
 ```
 
 ## Commands
@@ -81,7 +88,8 @@ generated/
 **Commands:**
 - `build` - Build firmware for a PlatformIO environment (optionally prepare artifacts)
 - `site` or `docs` - Build documentation site
-- `qa` or `lint` - Run formatting checks
+- `qa` or `lint` - Run formatting and shellcheck checks
+- `security` - Scan for security vulnerabilities using Trivy (filesystem, container images)
 - `all` or `pipeline` - Run qa → build (all environments) → site with injected mode
 - `list-env` - List available PlatformIO environments (JSON fast list or full ini scan)
 
@@ -91,6 +99,7 @@ generated/
 ./scripts/ci.sh build --help
 ./scripts/ci.sh site --help
 ./scripts/ci.sh qa --help
+./scripts/ci.sh security --help
 ./scripts/ci.sh list-env --help
 
 # Build firmware
@@ -101,9 +110,13 @@ generated/
 ./scripts/ci.sh site --mode prod --url-prefix /
 ./scripts/ci.sh site --mode dev --preview
 
-# QA
+# QA (formatting + shellcheck)
 ./scripts/ci.sh qa --check
 ./scripts/ci.sh qa --fix --verbose
+
+# Security scanning
+./scripts/ci.sh security --scan-type fs --severity HIGH,CRITICAL
+./scripts/ci.sh security --scan-type fs --generate-sbom
 
 # Full pipeline (qa + build all envs + site)
 ./scripts/ci.sh all --mode dev
@@ -191,9 +204,9 @@ Builds the VuePress documentation site.
 
 ---
 
-### ci.sh qa - Code Formatting Check
+### ci.sh qa - Code Quality Checks
 
-Checks and fixes code formatting using clang-format.
+Checks and fixes code formatting using clang-format and runs shellcheck on shell scripts.
 
 **Usage:**
 ```bash
@@ -203,10 +216,11 @@ Checks and fixes code formatting using clang-format.
 **Options:**
 - `--check` Check formatting only (default)
 - `--fix` Apply formatting in place
-- `--format` Run only format checks (same as default today)
-- `--all` Future hook to run all QA checks (current implementation runs formatting)
-- `--source <dir>` Source directory (default: main)
-- `--extensions <list>` File extensions (comma-separated, default: h,ino,cpp)
+- `--format` Run only format checks
+- `--shellcheck` Run shellcheck on shell scripts in scripts/ directory
+- `--all` Future hook to run all QA checks (current implementation runs formatting + shellcheck)
+- `--source <dir>` Source directory for formatting checks (default: main)
+- `--extensions <list>` File extensions for formatting (comma-separated, default: h,ino,cpp)
 - `--clang-format-version <ver>` clang-format version to use (default: 9)
 - `--verbose` Verbose output
 - `--help` Show help
@@ -217,26 +231,34 @@ ci.sh qa --check --source main --extensions h,ino
   │
   ├─> ci_qa.sh (orchestrator)
   │     ├─> check_clang_format() - Find clang-format-9 or clang-format
-  │     ├─> find_files() - Locate files matching extensions in source dir
-  │     └─> check_formatting() - Run clang-format --dry-run --Werror
-  │           └─> Report files with formatting issues
+  │     │     ├─> find_files() - Locate files matching extensions in source dir
+  │     │     └─> check_formatting() - Run clang-format --dry-run --Werror
+  │     │           └─> Report files with formatting issues
+  │     │
+  │     └─> shellcheck_check() - Find and scan shell scripts
+  │           ├─> find_shell_scripts() - Locate *.sh files in scripts/ directory
+  │           └─> run_shellcheck() - Run shellcheck on found scripts
+  │                 └─> Report shell script issues
   │
-  └─> Exit code: 0 (pass) or 1 (formatting issues found)
+  └─> Exit code: 0 (pass) or 1 (issues found)
 ```
 
 **Examples:**
 ```bash
-# Check formatting (CI mode)
+# Check both formatting and shellcheck (default)
 ./scripts/ci.sh qa --check
 
 # Fix formatting automatically
 ./scripts/ci.sh qa --fix
 
-# Check specific directory
-./scripts/ci.sh qa --check --source lib
+# Check only formatting for specific directory
+./scripts/ci.sh qa --check --format --source lib
 
 # Check only .h and .ino files
 ./scripts/ci.sh qa --check --extensions h,ino
+
+# Check only shellcheck for shell scripts
+./scripts/ci.sh qa --check --shellcheck
 
 # Check with verbose output
 ./scripts/ci.sh qa --check --verbose
@@ -248,12 +270,88 @@ ci.sh qa --check --source main --extensions h,ino
 **Required Tools:**
 - clang-format (version specified, default: 9)
   - Install: `sudo apt-get install clang-format-9`
+- shellcheck (for shell script linting)
+  - Install: `sudo apt-get install shellcheck`
 
 **Output:**
-- Check mode: Lists files with formatting issues and shows diffs
-- Fix mode: Modifies files in-place and reports changes
-- Exit code 0: All files properly formatted
-- Exit code 1: Formatting issues found (in check mode)
+- Check mode: Lists files with formatting issues and shell script errors, shows diffs
+- Fix mode: Modifies formatting in-place and reports changes
+- Exit code 0: All checks passed (proper formatting and no shellcheck errors)
+- Exit code 1: Issues found (formatting or shellcheck violations)
+
+---
+
+### ci.sh security - Security Vulnerability Scan
+
+Scans the project for security vulnerabilities using Trivy and generates Software Bill of Materials (SBOM).
+
+**Usage:**
+```bash
+./scripts/ci.sh security [OPTIONS]
+```
+
+**Options:**
+- `--scan-type <fs|config|image>` Type of scan (default: fs)
+  - `fs` - Filesystem scan (default, scans for vulnerabilities and misconfigurations)
+  - `config` - Configuration scan only
+  - `image` - Container image scan
+- `--severity <levels>` Severity levels to report (comma-separated: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL) (default: HIGH,CRITICAL)
+- `--scan-path <path>` Path to scan (default: current directory `.`)
+- `--generate-sbom` Generate Software Bill of Materials in CycloneDX and SPDX formats (default: true)
+- `--exit-code <0|1>` Exit code when vulnerabilities found (0=continue, 1=fail) (default: 0)
+- `--upload-to-security-tab` Upload SARIF report to GitHub Security tab (GitHub Actions only, default: true)
+- `--verbose` Verbose output
+- `--help` Show help
+
+**Behavior:**
+- Installs Trivy if not present
+- Scans filesystem or configuration for known vulnerabilities
+- Generates multiple report formats: SARIF, JSON, table summary
+- Creates SBOM in CycloneDX and SPDX formats when `--generate-sbom` is enabled
+- Reports are saved to `generated/reports/` directory
+- Summary is appended to GitHub job summary when running in GitHub Actions
+- Uploads SARIF to GitHub Security tab for dashboard visibility
+
+**Output Structure:**
+```
+generated/reports/
+├── trivy-results.sarif         # SARIF format (for GitHub Security tab)
+├── trivy-results.json          # JSON format (detailed results)
+├── security-summary.md         # Markdown summary
+└── sbom/
+    ├── sbom.cyclonedx.json     # CycloneDX format
+    └── sbom.spdx.json          # SPDX format
+```
+
+**Examples:**
+```bash
+# Scan filesystem for HIGH and CRITICAL vulnerabilities
+./scripts/ci.sh security --scan-type fs --severity HIGH,CRITICAL
+
+# Full scan with all severity levels and SBOM generation
+./scripts/ci.sh security --scan-type fs --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL --generate-sbom
+
+# Scan specific path with verbose output
+./scripts/ci.sh security --scan-path ./lib --verbose
+
+# Configuration scan only
+./scripts/ci.sh security --scan-type config
+
+# Scan and fail on vulnerabilities
+./scripts/ci.sh security --exit-code 1
+```
+
+**Required Tools:**
+- Trivy (vulnerability scanner)
+  - Install: `wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -` && `echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list` && `sudo apt-get update && sudo apt-get install -y trivy`
+
+**Output:**
+- Detailed SARIF and JSON reports for integration with tools
+- Human-readable Markdown summary with findings count
+- SBOM artifacts for supply chain tracking
+- GitHub Security tab integration when in GitHub Actions
+- Exit code 0: Scan completed (vulnerabilities may have been found)
+- Exit code 1: Scan failed or critical vulnerabilities found (only if `--exit-code 1`)
 
 ---
 
@@ -451,6 +549,7 @@ Shared configuration and helper functions for all CI scripts.
 - `BUILD_DIR=".pio/build"` - PlatformIO build directory
 - `ARTIFACTS_DIR="generated/artifacts"` - Artifact output directory
 - `SITE_DIR="generated/site"` - Documentation output directory
+- `REPORTS_DIR="generated/reports"` - Security scan and quality reports directory
 
 **Logging Functions:**
 ```bash
@@ -458,6 +557,71 @@ log_info "message"    # Blue [INFO] prefix
 log_warn "message"    # Yellow [WARN] prefix
 log_error "message"   # Red [ERROR] prefix
 log_success "message" # Green [SUCCESS] prefix
+```
+
+---
+
+### ci_security.sh
+
+Performs security vulnerability scanning and Software Bill of Materials (SBOM) generation using Trivy.
+
+**Called By:** `ci.sh security`
+
+**Usage:**
+```bash
+./scripts/ci_security.sh [OPTIONS]
+```
+
+**Options:**
+- `--scan-type <fs|config|image>` Type of scan (default: fs)
+  - `fs` - Filesystem scan (default)
+  - `config` - Configuration scan
+  - `image` - Container image scan
+- `--severity <levels>` Severity levels (comma-separated: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL) (default: HIGH,CRITICAL)
+- `--scan-path <path>` Path to scan (default: .)
+- `--generate-sbom` Generate SBOM (default: true)
+- `--exit-code <0|1>` Exit code behavior (0=continue, 1=fail) (default: 0)
+- `--upload-to-security-tab` Upload SARIF to GitHub (default: true)
+- `--verbose` Verbose output
+- `--help` Show help
+
+**Behavior:**
+- Ensures Trivy is installed via package manager
+- Creates `generated/reports/` directory structure
+- Runs Trivy with specified parameters
+- Generates SARIF, JSON, and table formats
+- Creates SBOM in CycloneDX and SPDX formats (when enabled)
+- Uploads SARIF to GitHub Security tab when `GITHUB_TOKEN` and `--upload-to-security-tab` are set
+- Appends summary to GitHub job summary if in GitHub Actions
+- Validates critical vulnerabilities and exits with code 1 if found and `--exit-code 1` is set
+
+**Output Files:**
+- `generated/reports/trivy-results.sarif` - SARIF format for GitHub integration
+- `generated/reports/trivy-results.json` - Full JSON results
+- `generated/reports/security-summary.md` - Human-readable summary
+- `generated/reports/sbom/sbom.cyclonedx.json` - CycloneDX SBOM
+- `generated/reports/sbom/sbom.spdx.json` - SPDX SBOM
+
+**Exit Codes:**
+- `0` - Success (vulnerabilities may have been found)
+- `1` - Scan failed, critical vulnerabilities found (only if `--exit-code 1`), or missing dependencies
+
+**Trivy Integration:**
+- Scans for known vulnerabilities in dependencies
+- Detects misconfigurations and insecure practices
+- Generates compliant SBOM artifacts
+- Provides detailed reporting in multiple formats
+
+**Example:**
+```bash
+# Scan filesystem with severity filter
+./scripts/ci_security.sh --scan-type fs --severity HIGH,CRITICAL
+
+# Local scan with SBOM and JSON output
+./scripts/ci_security.sh --scan-type fs --generate-sbom --verbose
+
+# In GitHub Actions with security tab upload
+./scripts/ci_security.sh --scan-type fs --severity HIGH,CRITICAL --upload-to-security-tab
 ```
 
 ---
@@ -566,6 +730,58 @@ CI/CD environments typically set:
 - `BUILD_NUMBER` (build number)
 - `GIT_COMMIT` (commit hash)
 
+---
+
+## GitHub Actions Workflows Integration
+
+The CI scripts integrate with GitHub Actions workflows in `.github/workflows/`:
+
+### task-lint.yml
+- Reusable workflow that runs `ci.sh qa --check`
+- Installs clang-format and shellcheck
+- Validates code formatting and shell script quality
+- Can be called with custom source directory and file extensions
+
+### task-build.yml
+- Main build workflow orchestrator
+- Calls task-lint.yml for code quality checks
+- Calls task-security-scan.yml for vulnerability scanning
+- Builds firmware for all or specified environments
+- Prepares and uploads build artifacts
+- Supports matrix builds for multiple environments
+- Manages build artifact retention
+
+### task-security-scan.yml
+- Reusable security scanning workflow
+- Installs Trivy vulnerability scanner
+- Calls `ci_security.sh` with configurable parameters
+- Generates SARIF, JSON, and SBOM reports
+- Uploads SARIF to GitHub Security tab for code scanning dashboard
+- Fails build on critical vulnerabilities when configured
+- Uploads SBOM artifacts for supply chain tracking
+
+### security-scan.yml
+- Scheduled security scanning (runs weekly by default)
+- Triggered manually with input parameters
+- Allows filtering by severity level
+- Configurable exit behavior (fail or continue)
+- Optional SBOM generation and upload
+
+**Workflow Dependencies:**
+```
+task-build.yml
+├─> task-lint.yml (linting)
+├─> task-security-scan.yml (security scanning)
+└─> Build environment matrix (firmware compilation)
+```
+
+**Key Features:**
+- Parallel linting and security scans
+- Artifact retention policies
+- GitHub Security tab integration
+- Detailed build reports
+- SBOM generation for compliance
+- Support for custom build parameters
 
 ---
 

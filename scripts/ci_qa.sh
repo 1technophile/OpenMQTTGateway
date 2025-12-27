@@ -6,8 +6,10 @@
 set -euo pipefail
 
 # Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+readonly SCRIPT_DIR
+readonly PROJECT_ROOT
 
 # Load shared configuration
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -18,7 +20,6 @@ else
 fi
 
 # Default values
-CHECK_MODE=true
 FIX_MODE=false
 FORMAT_ONLY=false
 SOURCE_DIR="main"
@@ -202,6 +203,63 @@ fix_formatting() {
     fi
 }
 
+# Function to run shellcheck on scripts
+run_shellcheck() {
+    log_info "Checking shell scripts with ShellCheck..."
+    
+    # Check if shellcheck is installed
+    if ! command -v shellcheck >/dev/null 2>&1; then
+        log_warn "ShellCheck not found, skipping shell script checks"
+        log_info "To install ShellCheck:"
+        log_info "  Ubuntu/Debian: sudo apt-get install shellcheck"
+        log_info "  macOS: brew install shellcheck"
+        return 0  # Don't fail, just skip
+    fi
+    
+    log_info "✓ ShellCheck found: $(shellcheck --version | head -n2 | tail -n1)"
+    
+    # Find all .sh files in scripts directory
+    local scripts_dir="${PROJECT_ROOT}/scripts"
+    if [[ ! -d "$scripts_dir" ]]; then
+        log_warn "Scripts directory not found: $scripts_dir"
+        return 0
+    fi
+    
+    local shell_files
+    shell_files=$(find "$scripts_dir" -type f -name "*.sh" 2>/dev/null)
+    
+    if [[ -z "$shell_files" ]]; then
+        log_warn "No shell scripts found in $scripts_dir"
+        return 0
+    fi
+    
+    local file_count
+    file_count=$(echo "$shell_files" | wc -l)
+    log_info "Found $file_count shell script(s) to check"
+    
+    # Run shellcheck on all files at once to allow cross-file analysis
+    log_info "Running ShellCheck on scripts directory..."
+    
+    local shellcheck_output
+    # shellcheck disable=SC2086
+    shellcheck_output=$(shellcheck -f gcc $shell_files 2>&1)
+    local shellcheck_result=$?
+    
+    if [[ $shellcheck_result -ne 0 ]]; then
+        echo ""
+        log_warn "⚠ ShellCheck found issues:"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "$shellcheck_output"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        log_error "Please fix the ShellCheck warnings/errors"
+        return 1
+    fi
+    
+    log_success "✓ All $file_count shell script(s) passed ShellCheck"
+    return 0
+}
+
 # Function to run all QA checks
 run_all_checks() {
     log_info "Running all quality assurance checks..."
@@ -211,6 +269,13 @@ run_all_checks() {
     # Format check
     log_info "═══ Code Formatting ═══"
     if ! run_format_check; then
+        all_passed=false
+    fi
+    echo ""
+    
+    # ShellCheck
+    log_info "═══ Shell Scripts Check ═══"
+    if ! run_shellcheck; then
         all_passed=false
     fi
     echo ""
@@ -237,6 +302,7 @@ run_format_check() {
     local clang_format_cmd
     clang_format_cmd=$(check_clang_format "$CLANG_FORMAT_VERSION")
     
+    # shellcheck disable=SC2181
     if [[ $? -ne 0 ]] || [[ -z "$clang_format_cmd" ]]; then
         log_error "clang-format not found"
         log_error "Please install clang-format:"
@@ -258,6 +324,7 @@ run_format_check() {
     local files
     files=$(find_files "$SOURCE_DIR" "$EXTENSIONS")
     
+    # shellcheck disable=SC2181
     if [[ $? -ne 0 ]] || [[ -z "$files" ]]; then
         log_error "Source directory not found: ${PROJECT_ROOT}/${SOURCE_DIR}"
         return 1
@@ -317,13 +384,11 @@ parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --check)
-                CHECK_MODE=true
                 FIX_MODE=false
                 shift
                 ;;
             --fix)
                 FIX_MODE=true
-                CHECK_MODE=false
                 shift
                 ;;
             --format)

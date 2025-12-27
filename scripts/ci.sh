@@ -6,8 +6,9 @@
 set -euo pipefail
 
 # Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+
 
 # Load shared configuration (colors, logging functions, paths)
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -36,6 +37,7 @@ Commands:
     build       Build firmware for specified environment
     site        Build and deploy documentation/website
     qa          Run quality assurance checks (linting, formatting)
+    security    Run security vulnerability scan using Trivy
     all         Run complete pipeline (qa + build + site)
     list-env    List available environments for building firmware
 
@@ -52,6 +54,11 @@ Examples:
     $0 qa --check
     $0 qa --fix
 
+    # Run security scan
+    $0 security
+    $0 security --scan-type config --exit-code 1
+    $0 security --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+
     # Run complete pipeline (all envs, mode required)
     $0 all --mode dev
     $0 all --mode prod --preview
@@ -64,6 +71,7 @@ Get help for specific commands:
     $0 build --help
     $0 site --help
     $0 qa --help
+    $0 security --help
     $0 list-env --help
 
 EOF
@@ -260,6 +268,10 @@ main() {
         qa|lint)
             log_info "Executing QA pipeline..."
             "${SCRIPT_DIR}/ci_qa.sh" "$@"
+            ;;
+        security)
+            log_info "Executing security scan..."
+            "${SCRIPT_DIR}/ci_security.sh" "$@"
             ;;
         list-env)
             log_info "Executing list-env pipeline..."

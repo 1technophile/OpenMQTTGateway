@@ -6,8 +6,10 @@
 set -euo pipefail
 
 # Constants
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+readonly SCRIPT_DIR
+readonly PROJECT_ROOT
 
 # Load shared configuration (colors, logging functions, paths)
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -71,7 +73,6 @@ verify_build_tools() {
     log_info "Verifying required build tools..."
     
     local missing_tools=()
-    local version_mismatch=()
     
     # Check Python
     if ! command_exists python3; then

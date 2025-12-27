@@ -29,7 +29,7 @@ jobs:
       - name: Install clang-format
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-format
+          sudo apt-get install -y clang-format shellcheck
 
       - name: Check code format with ci.sh qa
         run: |
@@ -38,3 +38,4 @@ jobs:
             --source "${{ inputs.source }}" \
             --extensions "${{ inputs.extensions }}" \
             --clang-format-version "${{ inputs.clang-format-version }}"
+

@@ -13,6 +13,7 @@ Entry points triggered by user actions, schedules, or events:
 - `build_and_docs_to_dev.yml` - Daily development builds
 - `release.yml` - Production releases
 - `manual_docs.yml` - Documentation deployment
+- `security-scan.yml` - Security vulnerability scanning
 - `stale.yml` - Issue management
 
 ### **Task Workflows** (Reusable components)
@@ -20,6 +21,7 @@ Parameterized building blocks called by main workflows:
 - `task-build.yml` - Configurable firmware build
 - `task-docs.yml` - Configurable documentation build
 - `task-lint.yml` - Configurable code formatting check
+- `task-security-scan.yml` - Configurable security scanning
 
 
 
@@ -31,10 +33,12 @@ Parameterized building blocks called by main workflows:
 | `build_and_docs_to_dev.yml` | Daily Cron, Manual | Development Builds + Docs | Firmware + Docs deployment |
 | `release.yml` | Release Published | Production Release | Release assets + Docs |
 | `manual_docs.yml` | Manual, Workflow Call | Documentation Only | GitHub Pages docs |
+| `security-scan.yml` | Weekly Cron, Manual | Security Vulnerability Scanning | SARIF, SBOM reports |
 | `stale.yml` | Daily Cron | Issue Management | None |
 | **`task-build.yml`** | **Workflow Call** | **Reusable Build Logic** | **Configurable** |
 | **`task-docs.yml`** | **Workflow Call** | **Reusable Docs Logic** | **GitHub Pages** |
 | **`task-lint.yml`** | **Workflow Call** | **Reusable Lint Logic** | **None** |
+| **`task-security-scan.yml`** | **Workflow Call** | **Reusable Security Scan** | **SARIF, SBOM, Reports** |
 
 
 
@@ -42,33 +46,38 @@ Parameterized building blocks called by main workflows:
 ## Workflow Dependencies and Call Chain
 
 ```mermaid
+
 flowchart TD
     %% Triggers
     subgraph triggers ["🎯 Triggers"]
         push["Push"]
         pr["Pull Request"]
         release["Release Published"]
+         cron1["Cron: Daily 00:00 UTC"]
         manual["Manual Trigger"]
-        cron1["Cron: Daily 00:00 UTC"]
+       cron3["Cron: Weekly Monday 02:00 UTC"]
         cron2["Cron: Daily 00:30 UTC"]
+        
     end
 
 subgraph github_workflows ["📋 GitHub Workflows"]
     %% Main Workflows
     subgraph main ["📋 Main Workflows"]
         build["build.yml<br/>CI Build"]
-        
         release_wf["release.yml<br/>Production Release"]
-        manual_docs["manual_docs.yml<br/>Docs Only"]
         build_dev["build_and_docs_to_dev.yml<br/>Dev Builds"]
+        security_scan["security-scan.yml<br/>Security Scan"]
         stale["stale.yml<br/>Issue Management"]
+        manual_docs["manual_docs.yml<br/>Docs Only"]
     end
 
     %% Task Workflows
     subgraph tasks ["⚙️ Task Workflows"]
         task_build["task-build.yml<br/>Build Firmware"]
-        task_docs["task-docs.yml<br/>Build & Deploy Docs"]
         task_lint["task-lint.yml<br/>Code Format"]
+        task_security["task-security-scan.yml<br/>Security Scan"]
+        task_docs["task-docs.yml<br/>Build & Deploy Docs"]
+
     end
 end
 
@@ -79,6 +88,7 @@ subgraph ci_scripts ["🔧 CI Scripts"]
         ci_build_script["ci_build.sh<br/>(build orchestrator)"]
         ci_site_script["ci_site.sh<br/>(docs orchestrator)"]
         ci_qa_script["ci_qa.sh<br/>(lint orchestrator)"]
+        ci_security_script["ci_security.sh<br/>(security orchestrator)"]
     end
 
     %% Sub-Scripts Layer
@@ -88,6 +98,7 @@ subgraph ci_scripts ["🔧 CI Scripts"]
         gen_board["generate_board_docs<br/>(npm package)"]
         gen_wu["gen_wu<br/>(npm package)"]
         clang_fmt["clang-format<br/>(code formatter)"]
+        trivy["Trivy<br/>(vulnerability scanner)"]
     end
 end
 
@@ -99,24 +110,32 @@ end
     manual --> manual_docs
     cron1 --> build_dev
     cron2 --> stale
+    cron3 --> security_scan
 
     %% Main workflow to task workflow connections
-    build -->|calls| task_build
-    build_dev -->|calls| task_build
-    build_dev -->|calls| task_docs
-    release_wf -->|calls| task_build
-    release_wf -->|calls| task_docs
-    manual_docs -->|calls| task_docs
+    build --> task_build
+    build_dev --> task_build
+    build_dev --> task_docs
+    release_wf --> task_build
+    release_wf --> task_docs
+    manual_docs --> task_docs
+    security_scan --> task_security
+
+    %% Task workflow internal dependencies
+    task_build --> task_lint
+    task_build --> task_security
 
     %% Task workflows to CI scripts
-    task_build -->|"ci.sh build<br/>--version --mode<br/>--deploy-ready"| ci_main
-    task_docs -->|"ci.sh site<br/>--mode --version<br/>--url-prefix"| ci_main
-    task_lint -->|"ci.sh qa<br/>--check --source<br/>--extensions"| ci_main
+    task_build -->|"ci.sh build ..."| ci_main
+    task_docs -->|"ci.sh site ..."| ci_main
+    task_lint -->|"ci.sh qa ..."| ci_main
+    task_security -->|"ci.sh security ..."| ci_main
 
     %% CI main dispatcher to orchestrators
     ci_main -->|"route: build"| ci_build_script
     ci_main -->|"route: site"| ci_site_script
     ci_main -->|"route: qa"| ci_qa_script
+    ci_main -->|"route: security"| ci_security_script
 
     %% Orchestrators to workers
     ci_build_script --> ci_build_fw
@@ -127,6 +146,8 @@ end
     
     ci_qa_script --> clang_fmt
 
+    ci_security_script --> trivy
+
     %% Styling
     classDef triggerStyle fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
     classDef mainStyle fill:#fff4e6,stroke:#ff9900,stroke-width:2px
@@ -134,11 +155,11 @@ end
     classDef ciStyle fill:#ffe6f0,stroke:#cc0066,stroke-width:2px
     classDef subStyle fill:#f0e6ff,stroke:#9933ff,stroke-width:2px
     
-    class push,pr,release,manual,cron1,cron2 triggerStyle
-    class build,release_wf,manual_docs,build_dev,stale mainStyle
-    class task_build,task_docs,task_lint taskStyle
-    class ci_main,ci_build_script,ci_site_script,ci_qa_script ciStyle
-    class ci_build_fw,ci_prep_art,gen_board,gen_wu,clang_fmt subStyle
+    class push,pr,release,manual,cron1,cron2,cron3 triggerStyle
+    class build,release_wf,manual_docs,build_dev,stale,security_scan mainStyle
+    class task_build,task_docs,task_lint,task_security taskStyle
+    class ci_main,ci_build_script,ci_site_script,ci_qa_script,ci_security_script ciStyle
+    class ci_build_fw,ci_prep_art,gen_board,gen_wu,clang_fmt,trivy subStyle
 
     
     style github_workflows stroke:#6A7BD8,stroke-dasharray:6 4,stroke-width:1.8px,fill:#fbfbfc
@@ -150,6 +171,10 @@ end
     style sub_scripts stroke:#FF9A3C,stroke-dasharray:6 4,stroke-width:0.6px,fill:#fffaf5
 
     style triggers fill:none,stroke:none
+
+    linkStyle 0,1,2,3,4,5,6 stroke:#0066cc,stroke-width:3px;
+    linkStyle 7,8,9,10,11,12,13,14,15 stroke:orange, stroke-width:2px;
+    linkStyle 16,17,18,19,20,21,22,23,24,25,26,27,28,29 stroke:red, stroke-width:2px;
     
 ```
 
@@ -160,17 +185,21 @@ end
 - `build_and_docs_to_dev.yml` → calls `task-build.yml` + `task-docs.yml`
 - `release.yml` → calls `task-build.yml` + `task-docs.yml`
 - `manual_docs.yml` → calls `task-docs.yml`
+- `security-scan.yml` → calls `task-security-scan.yml`
 - `stale.yml` → standalone (no dependencies)
 
 **Task → CI Script Mapping**:
+- `task-build.yml` → `ci.sh build --version --mode --deploy-ready`
+  - Routes to: `ci_build.sh` → `ci_build_firmware.sh`, `ci_prepare_artifacts.sh`
+  - Output: `generated/artifacts/firmware_build/`
 - `task-docs.yml` → `ci.sh site --mode --version --url-prefix`
   - Routes to: `ci_site.sh` → `generate_board_docs` (npm), `gen_wu` (npm), VuePress
-  - Output: `generated/site/`cts/` (default, can be overridden with `--output`)
-- `task-docs.yml` → `ci.sh site --mode --version --url-prefix`
-  - Routes to: `ci_site.sh` → npm/VuePress (Node.js build system)
   - Output: `generated/site/`
 - `task-lint.yml` → `ci.sh qa --check --source --extensions --clang-format-version`
   - Routes to: `ci_qa.sh` → `clang-format`
+- `task-security-scan.yml` → `ci.sh security --scan-type --severity --generate-sbom`
+  - Routes to: `ci_security.sh` → Trivy (vulnerability scanner)
+  - Output: `generated/reports/` (SARIF, JSON, SBOM)
 
 **Job Dependencies**:
 - `build_and_docs_to_dev.yml`: prepare → build (task) → deploy & documentation (task)
@@ -356,7 +385,59 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 
 ---
 
-### 5. `stale.yml` - Issue and PR Management
+### 5. `security-scan.yml` - Security Vulnerability Scanning
+
+**Purpose**: Scans the project for security vulnerabilities and generates Software Bill of Materials (SBOM) for supply chain security.
+
+**Triggers**:
+- **Schedule**: Weekly on Monday at 02:00 UTC (`0 2 * * 1`)
+- **Manual**: Via workflow_dispatch button with input parameters
+
+**Manual Trigger Inputs**:
+- `severity`: Severity levels to scan (choices: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL; default: HIGH,CRITICAL)
+- Allows filtering results to specific severity levels
+
+**What it does**:
+1. **Prepare job**: Sets up environment for scanning
+2. **Security scan job**: Calls `task-security-scan.yml` with parameters
+   - Runs Trivy vulnerability scanner on filesystem
+   - Filters results by severity level
+   - Generates SARIF format for GitHub Security tab integration
+   - Creates SBOM in CycloneDX and SPDX formats
+   - Uploads findings to GitHub Security tab (code scanning dashboard)
+3. **Artifact upload job**: Stores generated reports and SBOM
+   - SARIF results for GitHub integration
+   - SBOM files for supply chain tracking
+   - Retention: 90 days
+
+**Technical Details**:
+- **Calls**: `task-security-scan.yml`
+- Vulnerability scanner: Trivy (vulnerability database updated automatically)
+- Report formats: SARIF (GitHub), JSON (detailed), Markdown (summary)
+- SBOM formats: CycloneDX and SPDX (standard formats)
+- Failure behavior: Does NOT fail the workflow on vulnerabilities (exit-code: 0)
+- GitHub Security tab: Auto-uploads SARIF for code scanning dashboard visibility
+
+**Workflow Parameters**:
+- `scan-type: "fs"` (filesystem scan)
+- `severity: "HIGH,CRITICAL"` (default, or manual input)
+- `generate-sbom: true` (always enabled)
+- `upload-to-security-tab: true` (GitHub Security integration)
+
+**Outputs**:
+- SARIF report: `generated/reports/trivy-results.sarif` (GitHub Security tab)
+- JSON report: `generated/reports/trivy-results.json` (detailed findings)
+- Markdown summary: `generated/reports/security-summary.md`
+- SBOM: `generated/reports/sbom/sbom.cyclonedx.json` + `sbom.spdx.json`
+- Artifacts retained for 90 days
+
+**Use Case**: Regular security audits, compliance tracking, vulnerability management, supply chain security.
+
+**Execution Context**: Weekly automated scans + manual on-demand scanning for developers.
+
+---
+
+### 6. `stale.yml` - Issue and PR Management
 
 **Purpose**: Automatically closes inactive issues and pull requests to reduce maintenance burden.
 
@@ -386,7 +467,7 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 
 ## Task Workflows (Reusable Components)
 
-### 6. `task-build.yml` - Reusable Build Workflow
+### 7. `task-build.yml` - Reusable Build Workflow
 
 **Purpose**: Parameterized firmware build logic used by multiple workflows.
 
@@ -437,7 +518,7 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 
 ---
 
-### 7. `task-docs.yml` - Reusable Documentation Workflow
+### 8. `task-docs.yml` - Reusable Documentation Workflow
 
 **Purpose**: Parameterized documentation build and deployment logic.
 
@@ -471,7 +552,7 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 
 ---
 
-### 8. `task-lint.yml` - Reusable Lint Workflow
+### 9. `task-lint.yml` - Reusable Lint Workflow
 
 **Purpose**: Parameterized code formatting validation for consistent code style.
 
@@ -516,6 +597,65 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 **Default Behavior**: If called without parameters, lints `main` directory for `.h` and `.ino` files only.
 
 
+
+### 10. `task-security-scan.yml` - Reusable Security Scan Workflow
+
+**Purpose**: Parameterized security vulnerability scanning and SBOM generation logic.
+
+**Trigger**: `workflow_call` only (called by other workflows)
+
+**Parameters**:
+- `scan-type`: Type of scan: 'fs' (filesystem), 'config' (configuration), or 'image' (container) (default: 'fs')
+- `severity`: Severity levels to report (comma-separated: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL) (default: 'HIGH,CRITICAL')
+- `scan-path`: Path to scan (default: '.')
+- `exit-code`: Exit code when vulnerabilities found (0=continue, 1=fail) (default: '0')
+- `upload-to-security-tab`: Upload SARIF to GitHub Security tab (default: true)
+- `generate-sbom`: Generate SBOM artifacts (default: true)
+
+**What it does**:
+1. **Install Trivy**: Retrieves and installs Trivy vulnerability scanner
+2. **Run security scan**: Calls unified `ci.sh security` with parameters:
+   - `--scan-type <fs|config|image>`: Target type
+   - `--severity <levels>`: Filter by severity
+   - `--scan-path <path>`: Directory to scan
+   - `--generate-sbom`: Generate SBOM in CycloneDX and SPDX formats
+   - `--exit-code <0|1>`: Fail behavior on critical vulnerabilities
+   - `--upload-to-security-tab`: Upload SARIF to GitHub
+3. **Upload artifacts**: Stores reports and SBOM for later download
+4. **GitHub Security integration**: SARIF automatically appears in Security tab
+
+**Command Flow**:
+```bash
+./scripts/ci.sh security --scan-type fs --severity HIGH,CRITICAL --generate-sbom --upload-to-security-tab
+    ↓
+    └─→ ci_security.sh (security orchestrator)
+        └─→ Trivy (vulnerability scanner)
+            ├─→ Generate SARIF, JSON, summary
+            ├─→ Generate SBOM (CycloneDX, SPDX)
+            └─→ Upload to GitHub Security tab
+```
+
+**Technical Details**:
+- Runs on: Ubuntu latest
+- Scanner: Trivy (latest version auto-installed)
+- Report formats: SARIF (GitHub integration), JSON (detailed), Markdown (summary)
+- SBOM formats: CycloneDX and SPDX (industry standards)
+- GitHub Security tab: Auto-uploads SARIF for code scanning dashboard
+- Strategy: Single sequential job (not parallelized)
+- Artifact retention: As configured by caller
+
+**Output Files**:
+- `generated/reports/trivy-results.sarif` - SARIF format (GitHub Security tab upload)
+- `generated/reports/trivy-results.json` - JSON format (detailed results)
+- `generated/reports/security-summary.md` - Human-readable summary
+- `generated/reports/sbom/sbom.cyclonedx.json` - CycloneDX SBOM
+- `generated/reports/sbom/sbom.spdx.json` - SPDX SBOM
+
+**Callers**:
+- `security-scan.yml` (weekly + manual scanning)
+- Can be called by other workflows for custom security workflows
+
+---
 
 ## Environment Configuration
 
@@ -622,7 +762,17 @@ All build environments are defined in `.github/workflows/environments.json`:
 **Code Quality** (`ci.sh qa`):
 - Orchestrator: `ci_qa.sh`
   - Worker: `clang-format` version 9
+  - Worker: `shellcheck` for shell scripts
   - Default scope: `main` directory, `.h` and `.ino` files
+
+**Security Scanning System** (`ci.sh security`):
+- Vulnerability scanner: Trivy (container vulnerability database)
+- Orchestrator: `ci_security.sh`
+  - Worker: Trivy (filesystem, configuration, and container image scanning)
+  - Report formats: SARIF (GitHub Security tab), JSON (detailed), Markdown (summary)
+  - SBOM generation: CycloneDX and SPDX formats
+  - GitHub Security integration: Auto-uploads SARIF for code scanning dashboard
+  - Output: `generated/reports/` (security findings and artifacts)
 
 **Configuration**:
 - Environment list: `.github/workflows/environments.json`
@@ -641,12 +791,15 @@ All build environments are defined in `.github/workflows/environments.json`:
 # Check code format
 ./scripts/ci.sh qa --check --source main --extensions h,ino --clang-format-version 9
 
+# Security scanning
+./scripts/ci.sh security --scan-type fs --severity HIGH,CRITICAL --generate-sbom
+
 # Run complete pipeline
-./scripts/ci.sh all esp32dev-ble --version v1.8.0
+./scripts/ci.sh all --mode dev
 ```
 
 ---
 
-**Document Version**: 2.2  
-**Last Updated**: 12/01/2026  
+**Document Version**: 2.3  
+**Last Updated**: 01/14/2026  
 **Maintainer**: OpenMQTTGateway Development Team

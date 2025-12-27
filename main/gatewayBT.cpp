@@ -992,7 +992,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
         if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
             p->sensorModel_id > UNKWNON_MODEL &&
             p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
-            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && 
+            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
             p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 &&
             p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM6) { // Exception on HHCCJCY01HHCC and BM2/BM6 as these ones are discoverable and connectable
           if (isTracker) {

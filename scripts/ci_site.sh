@@ -7,10 +7,13 @@ set -euo pipefail
 
 # Constants
 # Resolve the folder containing this script so relative paths work
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-readonly DOCS_DIR="${PROJECT_ROOT}/docs"
-readonly VUEPRESS_BUILD_DIR="${DOCS_DIR}/.vuepress/dist"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+DOCS_DIR="${PROJECT_ROOT}/docs"
+readonly SCRIPT_DIR
+readonly PROJECT_ROOT
+readonly DOCS_DIR
+
 
 # Load shared configuration
 if [[ -f "${SCRIPT_DIR}/ci_00_config.sh" ]]; then
@@ -25,15 +28,6 @@ readonly SITE_OUTPUT_DIR="${PROJECT_ROOT}/${SITE_DIR}"
 
 # Default values
 MODE="prod"  # Set the default mode to production
-URL_PREFIX="/"  # Default URL prefix
-CUSTOM_VERSION=""  # Custom version if needed
-VERSION_SOURCE="release"  # Source for versioning
-PREVIEW=false  # Preview mode flag
-GENERATE_WEBUPLOADER=true  # Flag to generate web uploader
-WEBUPLOADER_ARGS=""  # Arguments for web uploader
-
-RUN_PAGESPEED=false  # Flag to run PageSpeed tests
-PAGESPEED_URL="https://docs.openmqttgateway.com/"  # URL for PageSpeed tests
 CURL_INSECURE=false  # Allow curl to skip TLS verification (use only when needed)
 CLEAN=false  # Clean generated/site before build
 LEGACY_OPENSSL=false  # Use --openssl-legacy-provider for older Node.js versions
