@@ -1,3 +1,5 @@
+# Generates board documentation table from platformio.ini environments
+# Used by: .github/workflows/task-docs.yml
 import pytablereader as ptr
 import pandas as pd
 import os

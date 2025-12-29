@@ -1,3 +1,5 @@
+# Creates web installer manifests for ESP Web Tools firmware installation
+# Used by: .github/workflows/task-docs.yml
 import os
 import requests
 import json

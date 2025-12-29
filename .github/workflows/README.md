@@ -52,20 +52,23 @@ Parameterized building blocks called by main workflows:
 - **Pull Request**: Every PR creation or update
 
 **What it does**:
-1. Calls `task-build.yml` with CI parameters
-2. Builds firmware for **83 hardware environments** in parallel
-3. Validates documentation builds (but doesn't deploy)
+1. **Build job**: Calls `task-build.yml` with CI parameters
+   - Builds firmware for **83 hardware environments** in parallel
+2. **Documentation job**: Inline job that validates docs build (doesn't deploy)
+   - Downloads common config from theengs.io
+   - Runs `npm install` and `npm run docs:build`
+   - Uses Node.js 14.x
 
 **Technical Details**:
-- **Calls**: `task-build.yml`
-- Python version: 3.13
+- **Calls**: `task-build.yml` only (documentation is inline)
+- Python version: 3.13 (for build job)
 - Build strategy: Parallel matrix via task workflow
 - Artifact retention: 7 days
-- Development OTA: Disabled
+- Development OTA: Disabled (`enable-dev-ota: false`)
 
 **Outputs**:
-- `firmware.bin` - Main firmware binary for each environment
-- `partitions.bin` - ESP32 partition table
+- Firmware binaries for each environment (83 artifacts)
+- No documentation deployment (validation only)
 
 **Use Case**: Ensures no breaking changes before merge. Fast feedback for developers.
 
@@ -98,10 +101,10 @@ Parameterized building blocks called by main workflows:
 **Technical Details**:
 - **Calls**: `task-build.yml` + `task-docs.yml`
 - Python version: 3.13 (build), 3.11 (docs)
-- Node.js version: 16.x
-- Repository restriction: Configurable via `DEPLOY_REPOSITORY_OWNER` variable
+- Node.js version: 16.x (docs)
+- Repository restriction: Hardcoded to `1technophile` owner only
 - Artifact retention: 1 day
-- Build flag: `DEVELOPMENTOTA=true`
+- Build flag: `enable-dev-ota: true` (passed to task-build.yml)
 
 **Outputs**:
 - Firmware binaries with `-firmware.bin` suffix
@@ -116,7 +119,7 @@ Parameterized building blocks called by main workflows:
 
 **Use Case**: Daily bleeding-edge builds for early adopters and testing. Preview documentation changes.
 
-**Execution Context**: Only runs if `DEPLOY_REPOSITORY_OWNER` variable is configured and matches current owner.
+**Execution Context**: Only runs on `1technophile` repository owner. Forks will skip this workflow automatically.
 
 ---
 
@@ -211,13 +214,13 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 **Technical Details**:
 - **Calls**: `task-lint.yml`
 - clang-format version: 9
-- File extensions: `.h`, `.ino`, `.cpp`
-- Source directory: `./main`
+- File extensions: `.h`, `.ino` (not `.cpp`)
+- Source directory: `main` (single directory)
 
 **Configuration**:
 ```yaml
-source: './main'
-extensions: 'h,ino,cpp'
+source: 'main'
+extensions: 'h,ino'
 clang-format-version: '9'
 ```
 
@@ -274,17 +277,29 @@ clang-format-version: '9'
 **What it does**:
 1. **Load environments**: Reads environment list from `environments.json`
 2. **Matrix build**: Builds all 83 environments in parallel
-3. **Version injection**: Injects version into firmware
-   - Dev builds: Updates `latest_version_dev.json`
-   - Prod builds: Updates `latest_version.json`
-4. **Artifact preparation**: Prepares firmware files based on `prepare-for-deploy` flag
-5. **Upload artifacts**: Uploads with configurable retention
+3. **Build execution**: Calls unified `ci.sh build <environment> [OPTIONS]`:
+   - `<environment>`: Target hardware (e.g., `esp32dev-ble`)
+   - `--version <tag>`: Version to inject (SHA for dev, tag for prod)
+   - `--mode <dev|prod>`: Build mode (enables/disables OTA)
+   - `--deploy-ready`: Prepare artifacts for deployment
+   - `--output <dir>`: Output directory for artifacts (default: `generated/artifacts/`)
+
+**Command Flow**:
+```bash
+./scripts/ci.sh build esp32dev-ble --version v1.8.0 --mode prod --deploy-ready
+    ↓
+    ├─→ ci_build.sh (orchestrator)
+    │   ├─→ ci_set_version.sh v1.8.0 [--dev]
+    │   ├─→ ci_build_firmware.sh esp32dev-ble [--dev-ota]
+    │   └─→ ci_prepare_artifacts.sh esp32dev-ble [--deploy] → outputs to generated/artifacts/
+```
 
 **Technical Details**:
 - Runs on: Ubuntu latest
-- PlatformIO version: 6.1.18 (custom fork)
+- PlatformIO version: 6.1.18 (custom fork: `pioarduino/platformio-core`)
+- Python package manager: `uv` (astral-sh/setup-uv@v6)
 - Strategy: Matrix with fail-fast: false
-- Conditional OTA flag: `DEVELOPMENTOTA=true` when enabled
+- Main orchestrator: `ci.sh` → `ci_build.sh` → sub-scripts
 
 **Callers**:
 - `build.yml` (CI validation)
@@ -312,17 +327,25 @@ clang-format-version: '9'
 - `pagespeed-url`: URL for PageSpeed test (optional)
 
 **What it does**:
-1. **Fetch version**: Gets version from GitHub release, git tag, or custom string
-2. **Download config**: Fetches common config from theengs.io
-3. **Generate docs**: Runs Python scripts to auto-generate board documentation
-4. **Build VuePress**: Compiles VuePress site
-5. **Generate WebUploader**: Creates OTA manifest
-6. **Deploy**: Publishes to GitHub Pages
-7. **PageSpeed test**: Optionally runs performance audit
+1. **Build documentation**: Calls unified `ci.sh site [OPTIONS]`:
+   - `--mode <dev|prod>`: Documentation mode
+   - `--custom-version <ver>`: Custom version string
+   - `--version-source <release|custom>`: Version source
+   - `--url-prefix <path>`: Base URL path (e.g., `/dev/`)
+   - `--webuploader-args <args>`: WebUploader options
+   - `--no-webuploader`: Skip manifest generation
+2. **Deploy**: Publishes to GitHub Pages using `peaceiris/actions-gh-pages@v3`
+3. **PageSpeed test**: Optionally runs performance audit
 
-**Scripts Used**:
-- `generate_board_docs.py` - Auto-generates board-specific documentation
-- `gen_wu.py` - Generates WebUpdater manifest for OTA
+**Command Flow**:
+```bash
+./scripts/ci.sh site --mode prod --version-source release --url-prefix /
+    ↓
+    └─→ ci_site.sh (orchestrator)
+        ├─→ generate_board_docs.py (auto-generate board docs)
+        ├─→ npm run docs:build (VuePress compilation)
+        └─→ gen_wu.py (WebUpdater manifest)
+```
 
 **Callers**:
 - `build_and_docs_to_dev.yml` (dev docs to `/dev`)
@@ -345,87 +368,188 @@ clang-format-version: '9'
 
 **What it does**:
 1. Checks out code
-2. Runs clang-format-lint-action with specified parameters
-3. Fails if formatting violations found
+2. Installs clang-format (specified version)
+3. Runs unified `ci.sh qa [OPTIONS]`:
+   - `--check`: Validation mode (exit on violations)
+   - `--fix`: Auto-fix formatting issues
+   - `--source <dir>`: Directory to lint
+   - `--extensions <list>`: File extensions (comma-separated)
+   - `--clang-format-version <ver>`: Formatter version
+4. Fails if formatting violations found
+
+**Command Flow**:
+```bash
+./scripts/ci.sh qa --check --source main --extensions h,ino --clang-format-version 9
+    ↓
+    └─→ ci_qa.sh (formatter)
+        └─→ clang-format (checks/fixes code style)
+```
 
 **Technical Details**:
-- Tool: DoozyX/clang-format-lint-action@v0.6
-- Supports multiple directories
-- Supports exclusion patterns
+- Script: `ci_qa.sh` (custom formatting check script)
+- Install: `clang-format-$version` via apt-get
+- Default source: `main` (single directory)
+- Default extensions: `h,ino` (not cpp)
 
 **Callers**:
 - `lint.yml` (CI lint check)
 
-**Default Behavior**: If called without parameters, lints both `./lib` and `./main` directories for `.h`, `.ino`, and `.cpp` files.
+**Default Behavior**: If called without parameters, lints `main` directory for `.h` and `.ino` files.
 
 ---
 
 ## Workflow Dependencies and Call Chain
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ DEVELOPER ACTIONS                                        │
-└─────────────────────────────────────────────────────────┘
-                           │
-      ┌────────────────────┼────────────────────┐
-      │                    │                    │
-      ▼                    ▼                    ▼
-┌──────────┐         ┌──────────┐        ┌──────────┐
-│  Push /  │         │ Release  │        │  Manual  │
-│    PR    │         │ Created  │        │ Trigger  │
-└──────────┘         └──────────┘        └──────────┘
-      │                    │                    │
-      ├─────────┐          │                    │
-      ▼         ▼          ▼                    ▼
-┌──────────┐ ┌────┐  ┌──────────┐        ┌──────────┐
-│build.yml │ │lint│  │release   │        │manual_   │
-│          │ │.yml│  │.yml      │        │docs.yml  │
-└──────────┘ └────┘  └──────────┘        └──────────┘
-      │         │          │                    │
-      │         │          ├─────┬──────┐       │
-      ▼         ▼          ▼     ▼      ▼       ▼
-┌──────────┐ ┌────┐      ┌────┐ ┌────┐ ┌────┐ ┌────┐
-│task-build│ │task│      │task│ │task│ │task│ │task│
-│   .yml   │ │lint│      │build  build |docs│ │docs│
-│          │ │.yml│      │.yml│ │.yml│ │.yml│ │.yml│
-└──────────┘ └────┘      └────┘ └────┘ └────┘ └────┘
+```mermaid
+flowchart TD
+    %% Triggers
+    subgraph triggers ["🎯 Triggers"]
+        push["Push / Pull Request"]
+        release["Release Published"]
+        manual["Manual Trigger"]
+        cron1["Cron: Daily 00:00 UTC"]
+        cron2["Cron: Daily 00:30 UTC"]
+    end
 
-┌─────────────────────────────────────────────────────────┐
-│ SCHEDULED ACTIONS                                       │
-└─────────────────────────────────────────────────────────┘
-                           │
-      ┌────────────────────┼────────────────────┐
-      │                    │                    │
-      ▼                    ▼                    ▼
-┌──────────┐         ┌──────────┐        ┌──────────┐
-│Daily 0:00│         │Daily 0:30│        │          │
-└──────────┘         └──────────┘        └──────────┘
-      │                    │                    
-      ▼                    ▼                    
-┌──────────┐         ┌──────────┐        
-│build_and_│         │stale.yml │        
-│docs_to_  │         │          │        
-│dev.yml   │         └──────────┘        
-└──────────┘                             
-      │
-      ├─────────┐
-      ▼         ▼
-┌──────────┐ ┌────┐
-│task-build│ │task│
-│   .yml   │ │docs│
-│          │ │.yml│
-└──────────┘ └────┘
+subgraph github_workflows ["📋 GitHub Workflows"]
+    %% Main Workflows
+    subgraph main ["📋 Main Workflows"]
+        lint["lint.yml<br/>Format Check"]
+        
+        build["build.yml<br/>CI Build"]
+        
+        release_wf["release.yml<br/>Production Release"]
+        manual_docs["manual_docs.yml<br/>Docs Only"]
+        build_dev["build_and_docs_to_dev.yml<br/>Dev Builds"]
+        stale["stale.yml<br/>Issue Management"]
+    end
+
+    %% Task Workflows
+    subgraph tasks ["⚙️ Task Workflows"]
+        task_build["task-build.yml<br/>Build Firmware"]
+        task_docs["task-docs.yml<br/>Build & Deploy Docs"]
+        task_lint["task-lint.yml<br/>Code Format"]
+    end
+end
+
+subgraph ci_scripts ["🔧 CI Scripts"]
+    %% CI Scripts Layer
+    subgraph bash ["🔧 Orchestrator"]
+        ci_main["ci.sh<br/>(main dispatcher)"]
+        ci_build_script["ci_build.sh<br/>(build orchestrator)"]
+        ci_site_script["ci_site.sh<br/>(docs orchestrator)"]
+        ci_qa_script["ci_qa.sh<br/>(lint orchestrator)"]
+    end
+
+    %% Sub-Scripts Layer
+    subgraph sub_scripts ["⚙️ Workers"]
+        ci_set_ver["ci_set_version.sh<br/>(version injection)"]
+        ci_build_fw["ci_build_firmware.sh<br/>(PlatformIO build)"]
+        ci_prep_art["ci_prepare_artifacts.sh<br/>(artifact packaging)"]
+        gen_board["generate_board_docs.py<br/>(board docs)"]
+        gen_wu["gen_wu.py<br/>(WebUpdater manifest)"]
+        clang_fmt["clang-format<br/>(code formatter)"]
+    end
+end
+
+    %% Trigger connections
+    push --> lint
+    push --> build
+    
+    release --> release_wf
+    manual --> manual_docs
+    cron1 --> build_dev
+    cron2 --> stale
+
+    %% Main workflow to task workflow connections
+    build -->|calls| task_build
+    lint -->|calls| task_lint
+    build_dev -->|calls| task_build
+    build_dev -->|calls| task_docs
+    release_wf -->|calls| task_build
+    release_wf -->|calls| task_docs
+    manual_docs -->|calls| task_docs
+
+    %% Task workflows to CI scripts
+    task_build -->|"ci.sh build<br/>--version --mode<br/>--deploy-ready"| ci_main
+    task_docs -->|"ci.sh site<br/>--mode --url-prefix<br/>--version-source"| ci_main
+    task_lint -->|"ci.sh qa<br/>--check --source<br/>--extensions"| ci_main
+
+    %% CI main dispatcher to orchestrators
+    ci_main -->|"route: build"| ci_build_script
+    ci_main -->|"route: site"| ci_site_script
+    ci_main -->|"route: qa"| ci_qa_script
+
+    %% Orchestrators to workers
+    ci_build_script --> ci_set_ver
+    ci_build_script --> ci_build_fw
+    ci_build_script --> ci_prep_art
+    
+    ci_site_script --> gen_board
+    ci_site_script --> gen_wu
+    
+    ci_qa_script --> clang_fmt
+
+    %% Styling
+    classDef triggerStyle fill:#e1f5ff,stroke:#0066cc,stroke-width:2px
+    classDef mainStyle fill:#fff4e6,stroke:#ff9900,stroke-width:2px
+    classDef taskStyle fill:#e6f7e6,stroke:#00aa00,stroke-width:2px
+    classDef ciStyle fill:#ffe6f0,stroke:#cc0066,stroke-width:2px
+    classDef subStyle fill:#f0e6ff,stroke:#9933ff,stroke-width:2px
+    
+    class push,release,manual,cron1,cron2 triggerStyle
+    class build,lint,release_wf,manual_docs,build_dev,stale mainStyle
+    class task_build,task_docs,task_lint taskStyle
+    class ci_main,ci_build_script,ci_site_script,ci_qa_script ciStyle
+    class ci_set_ver,ci_build_fw,ci_prep_art,gen_board,gen_wu,clang_fmt subStyle
+
+    
+    style github_workflows stroke:#6A7BD8,stroke-dasharray:6 4,stroke-width:1.8px,fill:#fbfbfc
+    style main stroke:#6A7BD8,stroke-dasharray:6 4,stroke-width:0.6px,fill:#fcfdff
+    style tasks stroke:#6A7BD8,stroke-dasharray:6 4,stroke-width:0.6px,fill:#fcfdff
+
+    style ci_scripts stroke:#FF9A3C,stroke-dasharray:6 4,stroke-width:1.8px,fill:#fffaf5
+    style bash stroke:#FF9A3C,stroke-dasharray:6 4,stroke-width:0.6px,fill:#fffaf5
+    style sub_scripts stroke:#FF9A3C,stroke-dasharray:6 4,stroke-width:0.6px,fill:#fffaf5
+
+    style triggers fill:none,stroke:none
+    
 ```
 
 ### Workflow Relationships
 
 **Main → Task Mapping**:
-- `build.yml` → calls `task-build.yml`
+- `build.yml` → calls `task-build.yml` (also contains inline documentation job)
 - `lint.yml` → calls `task-lint.yml`
-- `build_and_docs_to_dev.yml` → calls `task-build.yml` + `task-docs.yml`
-- `release.yml` → calls `task-build.yml` + `task-docs.yml`
+- `build_and_docs_to_dev.yml` → calls `task-build.yml` + `task-docs.yml` (with prepare/deploy jobs)
+- `release.yml` → calls `task-build.yml` + `task-docs.yml` (with prepare/deploy jobs)
 - `manual_docs.yml` → calls `task-docs.yml`
 - `stale.yml` → standalone (no dependencies)
+
+**Task → CI Script Mapping**:
+- `task-build.yml` → `ci.sh build <env> --version --mode --deploy-ready`
+  - Routes to: `ci_build.sh` → `ci_set_version.sh`, `ci_build_firmware.sh`, `ci_prepare_artifacts.sh`
+  - Output: `generated/artifacts/` (default, can be overridden with `--output`)
+- `task-docs.yml` → `ci.sh site --mode --version-source --url-prefix --webuploader-args`
+  - Routes to: `ci_site.sh` → `generate_board_docs.py`, `gen_wu.py`, VuePress
+  - Output: `generated/site/`
+- `task-lint.yml` → `ci.sh qa --check --source --extensions --clang-format-version`
+  - Routes to: `ci_qa.sh` → `clang-format`
+
+**Job Dependencies**:
+- `build_and_docs_to_dev.yml`: prepare → build (task) → deploy & documentation (task)
+- `release.yml`: prepare → build (task) → deploy → documentation (task)
+
+**Script Execution Flow**:
+```
+GitHub Action (task-*.yml)
+    ↓
+./scripts/ci.sh <command> [OPTIONS]  ← Main dispatcher
+    ↓
+./scripts/ci_<command>.sh            ← Command orchestrator
+    ↓
+./scripts/ci_*.sh / *.py             ← Worker scripts
+```
 
 ---
 
@@ -481,25 +605,23 @@ All build environments are defined in `.github/workflows/environments.json`:
 
 ## Configuration Variables
 
-### Repository Variables (GitHub Settings)
+### Repository Restrictions
 
-To enable deployment workflows in your fork, configure:
+**Development Builds** (`build_and_docs_to_dev.yml`):
+- Hardcoded restriction: `github.repository_owner == '1technophile'`
+- Only runs for the main repository owner
+- Prevents accidental deployments from forks
+- No configuration variable needed
 
-**Variable**: `DEPLOY_REPOSITORY_OWNER`  
-**Value**: Your GitHub username (e.g., `1technophile`)  
-**Location**: Settings → Secrets and variables → Actions → Variables
+**Release Builds** (`release.yml`):
+- No repository restrictions
+- Runs on any fork when a release is published
+- Deploy step requires proper GitHub token permissions
 
-**Purpose**: Controls which repository can deploy to GitHub Pages and run full build pipelines.
-
-**Usage Example**:
-```yaml
-if: github.repository_owner == vars.DEPLOY_REPOSITORY_OWNER || vars.DEPLOY_REPOSITORY_OWNER == ''
-```
-
-**Behavior**:
-- If set: Only specified owner can deploy
-- If empty: Deployment skipped (safe for forks)
-- Default: Empty (secure by default)
+**Documentation** (`manual_docs.yml`):
+- No repository restrictions
+- Can be triggered manually from any fork
+- Requires GitHub Pages to be configured
 
 ---
 
@@ -520,16 +642,56 @@ if: github.repository_owner == vars.DEPLOY_REPOSITORY_OWNER || vars.DEPLOY_REPOS
 
 ## Maintenance Notes
 
-- All workflows use PlatformIO 6.1.18 from custom fork: `pioarduino/platformio-core`
-- Documentation uses VuePress framework
-- Custom scripts in `./scripts/` generate board docs and WebUpdater manifests
-- Build process extracts ESP32 platform version from `platformio.ini`
-- Development builds enable OTA with flag: `DEVELOPMENTOTA=true`
-- All task workflows follow consistent naming: `task-*.yml`
-- Environment list centralized in `.github/workflows/environments.json`
+### CI/CD Script Architecture
+
+**Main Entry Point**: `ci.sh` (unified interface)
+- Commands: `build`, `site`, `qa`, `all`
+- Routes to specialized orchestrators
+- Provides consistent CLI across all operations
+
+**Build System** (`ci.sh build`):
+- PlatformIO 6.1.18 from custom fork: `pioarduino/platformio-core`
+- Python package manager: `uv` for fast dependency installation
+- Orchestrator: `ci_build.sh`
+  - Worker: `ci_set_version.sh` (version injection)
+  - Worker: `ci_build_firmware.sh` (PlatformIO compilation)
+  - Worker: `ci_prepare_artifacts.sh` (artifact packaging)
+
+**Documentation System** (`ci.sh site`):
+- Documentation framework: VuePress
+- Orchestrator: `ci_site.sh`
+  - Worker: `generate_board_docs.py` (auto-generate board pages)
+  - Worker: `gen_wu.py` (WebUpdater manifest)
+  - External: Common config from theengs.io
+
+**Code Quality** (`ci.sh qa`):
+- Orchestrator: `ci_qa.sh`
+  - Worker: `clang-format` version 9
+  - Default scope: `main` directory, `.h` and `.ino` files
+
+**Configuration**:
+- Environment list: `.github/workflows/environments.json` (83 environments)
+- Task workflows: `task-*.yml` (reusable GitHub Actions components)
+- Repository owner restriction: Hardcoded to `1technophile` for dev deployments
+- All scripts located in: `./scripts/`
+
+**Local Development**:
+```bash
+# Build firmware locally
+./scripts/ci.sh build esp32dev-ble --mode dev --version test
+
+# Build documentation locally
+./scripts/ci.sh site --mode dev --preview
+
+# Check code format
+./scripts/ci.sh qa --check
+
+# Run complete pipeline
+./scripts/ci.sh all esp32dev-ble --version v1.8.0
+```
 
 ---
 
-**Document Version**: 2.0  
-**Last Updated**: December 27, 2025  
-**Maintainer**: Development Team
+**Document Version**: 2.1  
+**Last Updated**: December 29, 2025  
+**Maintainer**: OpenMQTTGateway Development Team

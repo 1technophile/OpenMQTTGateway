@@ -1,4 +1,6 @@
 #!/bin/bash
+# Prepares firmware binaries and libraries for GitHub release deployment
+# Used by: .github/workflows/release.yml
 set -e
 echo "renaming bin files with the environment name"
 rename -v 's:/:-:g' .pio/build/*/*.bin

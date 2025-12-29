@@ -22,3 +22,14 @@ managed_components
 .github/chatmodes
 .github/prompts
 .github/*instructions.md
+.github/workflows/_docs
+# CI/CD Generated outputs
+docs/.vuepress/dist/
+docs/.vuepress/components/
+docs/.vuepress/public/
+^docs/.vuepress/public/img/
+^docs/.vuepress/public/*.png
+^docs/.vuepress/public/*.txt
+
+generated/
+

@@ -76,64 +76,49 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Install Python dependencies
+      - name: Build documentation site
         run: |
-          python -m pip install --upgrade pip
-          pip install requests pandas markdown pytablereader tabulate
-
-      - name: Install Node dependencies
-        run: npm install
-
-      - name: Download Common Config
-        run: |
-          curl -o docs/.vuepress/public/commonConfig.js https://www.theengs.io/commonConfig.js
-
-      - name: Get latest release tag
-        if: inputs.version-source == 'release'
-        id: last_release
-        uses: InsonusK/get-latest-release@v1.0.1
-        with:
-          myToken: ${{ secrets.GITHUB_TOKEN }}
-          view_top: 1
-
-      - name: Set version tag from release
-        if: inputs.version-source == 'release'
-        run: |
-          VERSION="${{ steps.last_release.outputs.tag_name }}"
-          sed -i "s/version_tag/${VERSION}/g" docs/.vuepress/config.js scripts/latest_version.json
-
-      - name: Set custom version tag
-        if: inputs.version-source == 'custom' && inputs.custom-version != ''
-        run: |
-          sed -i "s/version_tag/${{ inputs.custom-version }}/g" docs/.vuepress/config.js scripts/latest_version_dev.json
-
-      - name: Set base path
-        if: inputs.base-path != '/'
-        run: |
-          sed -i "s|base: '/'|base: '${{ inputs.base-path }}'|g" docs/.vuepress/config.js
-
-      - name: Generate board documentation
-        run: |
-          python ./scripts/generate_board_docs.py
-
-      - name: Generate WebUploader manifest
-        if: inputs.generate-webuploader
-        run: |
-          python ./scripts/gen_wu.py ${{ inputs.webuploader-args }}
-
-      - name: Build documentation
-        run: npm run docs:build
+          # Build script arguments based on inputs
+          ARGS=""
+          
+          # Set version source and custom version
+          if [ "${{ inputs.version-source }}" = "custom" ] && [ -n "${{ inputs.custom-version }}" ]; then
+            ARGS="$ARGS --custom-version '${{ inputs.custom-version }}' --version-source custom"
+          elif [ "${{ inputs.version-source }}" = "release" ]; then
+            # Get latest release tag
+            if command -v git >/dev/null 2>&1; then
+              LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "development")
+              ARGS="$ARGS --custom-version '${LATEST_TAG}' --version-source release"
+            else
+              ARGS="$ARGS --version-source release"
+            fi
+          fi
+          
+          # Set base path/URL prefix
+          if [ "${{ inputs.base-path }}" != "/" ]; then
+            ARGS="$ARGS --url-prefix '${{ inputs.base-path }}'"
+          fi
+          
+          # WebUploader generation
+          if [ "${{ inputs.generate-webuploader }}" != "true" ]; then
+            ARGS="$ARGS --no-webuploader"
+          elif [ -n "${{ inputs.webuploader-args }}" ]; then
+            ARGS="$ARGS --webuploader-args '${{ inputs.webuploader-args }}'"
+          fi
+          
+          # Run the build script
+          eval "./scripts/ci_site.sh ${ARGS}"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/.vuepress/dist
+          publish_dir: ./generated/site
           destination_dir: ${{ inputs.destination-dir }}
           cname: docs.openmqttgateway.com
 
       - name: Run PageSpeed Insights
-        if: inputs.run-pagespeed && secrets.APIKEY != ''
+        if: inputs.run-pagespeed
         uses: jakepartusch/psi-action@v1.3
         id: psi
         with:

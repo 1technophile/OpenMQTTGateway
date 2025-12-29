@@ -1,3 +1,5 @@
+# Common templates and constants for web installer manifest generation
+# Used by: scripts/gen_wu.py
 import string
 
 mf_temp32 = string.Template('''{

@@ -68,65 +68,37 @@ jobs:
           version: "latest"
           enable-cache: false
 
-      - name: Install dependencies
+      - name: Install PlatformIO dependencies
         run: |
           uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.18.zip
 
-      - name: Set version tag
-        if: inputs.version-tag != 'version_tag'
+      - name: Build firmware using ci.sh
         run: |
+          BUILD_ARGS="${{ matrix.environments }}"
+          
+          # Add version tag if specified
+          if [ "${{ inputs.version-tag }}" != "unspecified" ]; then
+            BUILD_ARGS="$BUILD_ARGS --version ${{ inputs.version-tag }}"
+          fi
+          
+          # Add mode flag (dev/prod)
           if [ "${{ inputs.enable-dev-ota }}" = "true" ]; then
-            # Development builds use latest_version_dev.json
-            sed -i "s/version_tag/${{ inputs.version-tag }}/g" main/User_config.h scripts/latest_version_dev.json
+            BUILD_ARGS="$BUILD_ARGS --mode dev"
           else
-            # Production builds use latest_version.json
-            sed -i "s/version_tag/${{ inputs.version-tag }}/g" main/User_config.h scripts/latest_version.json
+            BUILD_ARGS="$BUILD_ARGS --mode prod"
           fi
-
-      - name: Extract ESP32 platform version from platformio.ini
-        run: |
-          ESP32_VERSION=$(grep 'esp32_platform\s*=' platformio.ini | cut -d'@' -f2 | tr -d '[:space:]')
-          echo "ESP32_PLATFORM_VERSION=${ESP32_VERSION}" >> $GITHUB_ENV
-
-      - name: Run PlatformIO
-        env:
-          PYTHONIOENCODING: utf-8
-          PYTHONUTF8: '1'
-          PLATFORMIO_BUILD_FLAGS: ${{ inputs.enable-dev-ota && '"-DDEVELOPMENTOTA=true"' || '' }}
-        run: |
-          if [ "${{ inputs.enable-dev-ota }}" = "true" ]; then
-            export PLATFORMIO_BUILD_FLAGS='"-DDEVELOPMENTOTA=true"'
+          
+          # Add deploy flag if needed
+          if [ "${{ inputs.prepare-for-deploy }}" = "true" ]; then
+            BUILD_ARGS="$BUILD_ARGS --deploy-ready"
           fi
-          platformio run -e ${{ matrix.environments }}
-
-      - name: Prepare firmware artifacts (standard)
-        if: inputs.prepare-for-deploy == false
-        run: |
-          mkdir -p artifacts
-          if [ -f .pio/build/${{ matrix.environments }}/firmware.bin ]; then
-            cp .pio/build/${{ matrix.environments }}/firmware.bin artifacts/
-          fi
-          if [ -f .pio/build/${{ matrix.environments }}/partitions.bin ]; then
-            cp .pio/build/${{ matrix.environments }}/partitions.bin artifacts/
-          fi
-
-      - name: Prepare firmware artifacts (deployment)
-        if: inputs.prepare-for-deploy == true
-        run: |
-          mkdir -p artifacts
-          if [ -f .pio/build/${{ matrix.environments }}/firmware.bin ]; then
-            cp .pio/build/${{ matrix.environments }}/firmware.bin artifacts/${{ matrix.environments }}-firmware.bin
-          fi
-          if [ -f .pio/build/${{ matrix.environments }}/partitions.bin ]; then
-            cp .pio/build/${{ matrix.environments }}/partitions.bin artifacts/${{ matrix.environments }}-partitions.bin
-          fi
-          if [ -f .pio/build/${{ matrix.environments }}/bootloader.bin ]; then
-            cp .pio/build/${{ matrix.environments }}/bootloader.bin artifacts/${{ matrix.environments }}-bootloader.bin
-          fi
+          
+          # Execute build (uses default generated/artifacts/ directory)
+          ./scripts/ci.sh build $BUILD_ARGS
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name-prefix }}${{ matrix.environments }}
-          path: artifacts/
+          path: generated/artifacts/
           retention-days: ${{ inputs.artifact-retention-days }}

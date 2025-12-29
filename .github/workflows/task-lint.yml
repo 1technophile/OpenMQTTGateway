@@ -26,9 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Check code format
-        uses: DoozyX/clang-format-lint-action@v0.6
-        with:
-          source: ${{ inputs.source }}
-          extensions: ${{ inputs.extensions }}
-          clangFormatVersion: ${{ inputs.clang-format-version }}
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+      
+      - name: Check code format with ci.sh qa 
+        run: |
+          ./scripts/ci.sh qa \
+            --check \
+            --source "${{ inputs.source }}" \
+            --extensions "${{ inputs.extensions }}" \
+            --clang-format-version "${{ inputs.clang-format-version }}"
