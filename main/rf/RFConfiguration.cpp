@@ -156,6 +156,7 @@ void RFConfiguration::loadFromStorage() {
     JsonObject jo = jsonBuffer.as<JsonObject>();
     fromJson(jo);
     Log.notice(F("RF Config loaded" CR));
+    iRFReceiver.enable();
   } else {
     preferences.end();
     Log.notice(F("RF Config not found using default" CR));
