@@ -134,11 +134,14 @@ void RFConfiguration::saveOnStorage() {
  * is not found, a notice is logged, and the RF receiver is enabled with
  * default settings.
  *
+ * @param reinitReceiver If true (default), disables and re-enables the receiver.
+ *                       If false, only loads the configuration without reinitialization.
+ *
  * @note This function has specific behavior for ESP32 platforms. On ESP32,
  *       it uses the Preferences library to access stored configuration data.
  *       For other platforms, it directly enables the active receiver.
  */
-void RFConfiguration::loadFromStorage() {
+void RFConfiguration::loadFromStorage(bool reinitReceiver) {
 #ifdef ESP32
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
@@ -159,11 +162,13 @@ void RFConfiguration::loadFromStorage() {
   } else {
     preferences.end();
     Log.notice(F("RF Config not found using default" CR));
+  }
+#endif
+  // Disable and re-enable the receiver to ensure proper initialization
+  if (reinitReceiver) {
+    iRFReceiver.disable();
     iRFReceiver.enable();
   }
-#else
-  iRFReceiver.enable();
-#endif
 }
 
 /**
@@ -193,8 +198,8 @@ void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
     // Restore the default (initial) configuration
     reInit();
   } else if (RFdata.containsKey("load") && RFdata["load"].as<bool>()) {
-    // Load the saved configuration, if not initialised
-    loadFromStorage();
+    // Load the saved configuration from storage (without receiver reinitialization)
+    loadFromStorage(false);
   }
 
   fromJson(RFdata);

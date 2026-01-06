@@ -49,11 +49,14 @@ public:
   /**
    * Loads the RF configuration from persistent storage and applies it.
    *
+   * @param reinitReceiver If true (default), disables and re-enables the receiver.
+   *                       If false, only loads the configuration without reinitialization.
+   *
    * @note This function has specific behavior for ESP32 platforms. On ESP32,
    *       it uses the Preferences library to access stored configuration data.
    *       For other platforms, it directly enables the active receiver.
    */
-  void loadFromStorage();
+  void loadFromStorage(bool reinitReceiver = true);
 
   /**
    * Loads the RF configuration from a JSON object and applies it.
