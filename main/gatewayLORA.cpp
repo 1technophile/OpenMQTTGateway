@@ -44,6 +44,7 @@
 LORAConfig_s LORAConfig;
 
 void LORAConfig_fromJson(JsonObject& LORAdata);
+void LORAConfig_apply();
 String stateLORAMeasures();
 
 #  ifdef ZmqttDiscovery
@@ -320,23 +321,7 @@ byte hexStringToByte(const String& hexString) {
   return (byte)strtol(hexString.c_str(), NULL, 16);
 }
 
-void LORAConfig_fromJson(JsonObject& LORAdata) {
-  Config_update(LORAdata, "frequency", LORAConfig.frequency);
-  Config_update(LORAdata, "txpower", LORAConfig.txPower);
-  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
-  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
-  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
-  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
-  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
-  // Handle syncword separately
-  if (LORAdata.containsKey("syncword")) {
-    String syncWordStr = LORAdata["syncword"].as<String>();
-    LORAConfig.syncWord = hexStringToByte(syncWordStr);
-    THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
-  }
-  Config_update(LORAdata, "enablecrc", LORAConfig.crc);
-  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
-
+void LORAConfig_apply() {
   LoRa.setFrequency(LORAConfig.frequency);
   LoRa.setTxPower(LORAConfig.txPower);
   LoRa.setSpreadingFactor(LORAConfig.spreadingFactor);
@@ -346,6 +331,29 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   LoRa.setSyncWord(LORAConfig.syncWord);
   LORAConfig.crc ? LoRa.enableCrc() : LoRa.disableCrc();
   LORAConfig.invertIQ ? LoRa.enableInvertIQ() : LoRa.disableInvertIQ();
+}
+
+void LORAConfig_fromJson(JsonObject& LORAdata) {
+  Config_update(LORAdata, "frequency", LORAConfig.frequency);
+  Config_update(LORAdata, "txpower", LORAConfig.txPower);
+  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
+  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
+  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
+  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
+  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
+  // Handle syncword separately as it requires hex string conversion
+  if (LORAdata.containsKey("syncword")) {
+    String syncWordStr = LORAdata["syncword"].as<String>();
+    byte newSyncWord = hexStringToByte(syncWordStr);
+    if (newSyncWord != LORAConfig.syncWord) {
+      LORAConfig.syncWord = newSyncWord;
+      THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+    } else {
+      THEENGS_LOG_NOTICE(F("Config syncword unchanged, currently: %d" CR), LORAConfig.syncWord);
+    }
+  }
+  Config_update(LORAdata, "enablecrc", LORAConfig.crc);
+  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
 
   if (LORAdata.containsKey("erase") && LORAdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
@@ -409,6 +417,7 @@ void setupLORA() {
     THEENGS_LOG_ERROR(F("gatewayLORA setup failed!" CR));
     while (1);
   }
+  LORAConfig_apply();
   LoRa.receive();
   THEENGS_LOG_NOTICE(F("LORA_SCK: %d" CR), LORA_SCK);
   THEENGS_LOG_NOTICE(F("LORA_MISO: %d" CR), LORA_MISO);
@@ -505,6 +514,7 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
     const char* message = LORAdata["message"];
     const char* hex = LORAdata["hex"];
     LORAConfig_fromJson(LORAdata);
+    LORAConfig_apply();
     if (message || hex) {
       LoRa.beginPacket();
       uint8_t deviceId = _determineDevice(LORAdata);
@@ -547,6 +557,7 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
 
     // Load config from json if available
     LORAConfig_fromJson(LORAdata);
+    LORAConfig_apply();
     stateLORAMeasures();
   }
 }
