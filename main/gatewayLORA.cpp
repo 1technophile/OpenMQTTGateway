@@ -290,6 +290,20 @@ void LORAConfig_init() {
   LORAConfig.crc = DEFAULT_CRC;
   LORAConfig.invertIQ = INVERT_IQ;
   LORAConfig.onlyKnown = LORA_ONLY_KNOWN;
+
+#  ifdef ESP8266
+  SPI.begin();
+#  else
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+#  endif
+
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
+
+  if (!LoRa.begin(LORAConfig.frequency)) {
+    THEENGS_LOG_ERROR(F("LORA hardware init failed in LORAConfig_init!" CR));
+    return;
+  }
+  THEENGS_LOG_NOTICE(F("LORA hardware initialized" CR));
 }
 
 void LORAConfig_load() {
@@ -328,11 +342,16 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
   Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
   Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
-  // Handle syncword separately
+  // Handle syncword separately (requires hex string conversion)
   if (LORAdata.containsKey("syncword")) {
     String syncWordStr = LORAdata["syncword"].as<String>();
-    LORAConfig.syncWord = hexStringToByte(syncWordStr);
-    THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+    byte newSyncWord = hexStringToByte(syncWordStr);
+    if (newSyncWord != LORAConfig.syncWord) {
+      LORAConfig.syncWord = newSyncWord;
+      THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+    } else {
+      THEENGS_LOG_NOTICE(F("Config syncword unchanged, currently: %d" CR), LORAConfig.syncWord);
+    }
   }
   Config_update(LORAdata, "enablecrc", LORAConfig.crc);
   Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
@@ -396,20 +415,8 @@ void setupLORA() {
   semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
 #  endif
-  THEENGS_LOG_NOTICE(F("LORA Frequency: %d" CR), LORAConfig.frequency);
-#  ifdef ESP8266
-  SPI.begin();
-#  else
-  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
-#  endif
-
-  LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
-
-  if (!LoRa.begin(LORAConfig.frequency)) {
-    THEENGS_LOG_ERROR(F("gatewayLORA setup failed!" CR));
-    while (1);
-  }
   LoRa.receive();
+  THEENGS_LOG_NOTICE(F("LORA Frequency: %d" CR), LORAConfig.frequency);
   THEENGS_LOG_NOTICE(F("LORA_SCK: %d" CR), LORA_SCK);
   THEENGS_LOG_NOTICE(F("LORA_MISO: %d" CR), LORA_MISO);
   THEENGS_LOG_NOTICE(F("LORA_MOSI: %d" CR), LORA_MOSI);
