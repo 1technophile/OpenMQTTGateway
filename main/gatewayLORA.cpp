@@ -43,7 +43,8 @@
 
 LORAConfig_s LORAConfig;
 
-void LORAConfig_fromJson(JsonObject& LORAdata);
+void LORAConfig_fromJson(JsonObject& LORAdata, bool applyToHardware = true);
+void LORAConfig_apply();
 String stateLORAMeasures();
 
 #  ifdef ZmqttDiscovery
@@ -292,7 +293,7 @@ void LORAConfig_init() {
   LORAConfig.onlyKnown = LORA_ONLY_KNOWN;
 }
 
-void LORAConfig_load() {
+void LORAConfig_load(bool applyToHardware) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
   if (preferences.isKey("LORAConfig")) {
@@ -308,7 +309,7 @@ void LORAConfig_load() {
       return;
     }
     JsonObject jo = jsonBuffer.as<JsonObject>();
-    LORAConfig_fromJson(jo);
+    LORAConfig_fromJson(jo, applyToHardware);
     THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
   } else {
     preferences.end();
@@ -320,23 +321,7 @@ byte hexStringToByte(const String& hexString) {
   return (byte)strtol(hexString.c_str(), NULL, 16);
 }
 
-void LORAConfig_fromJson(JsonObject& LORAdata) {
-  Config_update(LORAdata, "frequency", LORAConfig.frequency);
-  Config_update(LORAdata, "txpower", LORAConfig.txPower);
-  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
-  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
-  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
-  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
-  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
-  // Handle syncword separately
-  if (LORAdata.containsKey("syncword")) {
-    String syncWordStr = LORAdata["syncword"].as<String>();
-    LORAConfig.syncWord = hexStringToByte(syncWordStr);
-    THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
-  }
-  Config_update(LORAdata, "enablecrc", LORAConfig.crc);
-  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
-
+void LORAConfig_apply() {
   LoRa.setFrequency(LORAConfig.frequency);
   LoRa.setTxPower(LORAConfig.txPower);
   LoRa.setSpreadingFactor(LORAConfig.spreadingFactor);
@@ -346,6 +331,33 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   LoRa.setSyncWord(LORAConfig.syncWord);
   LORAConfig.crc ? LoRa.enableCrc() : LoRa.disableCrc();
   LORAConfig.invertIQ ? LoRa.enableInvertIQ() : LoRa.disableInvertIQ();
+}
+
+void LORAConfig_fromJson(JsonObject& LORAdata, bool applyToHardware) {
+  Config_update(LORAdata, "frequency", LORAConfig.frequency);
+  Config_update(LORAdata, "txpower", LORAConfig.txPower);
+  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
+  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
+  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
+  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
+  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
+  // Handle syncword separately due to hex string conversion
+  if (LORAdata.containsKey("syncword")) {
+    String syncWordStr = LORAdata["syncword"].as<String>();
+    byte newSyncWord = hexStringToByte(syncWordStr);
+    if (LORAConfig.syncWord != newSyncWord) {
+      LORAConfig.syncWord = newSyncWord;
+      THEENGS_LOG_NOTICE(F("Config syncword changed to: %d" CR), LORAConfig.syncWord);
+    } else {
+      THEENGS_LOG_NOTICE(F("Config syncword unchanged, currently: %d" CR), LORAConfig.syncWord);
+    }
+  }
+  Config_update(LORAdata, "enablecrc", LORAConfig.crc);
+  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
+
+  if (applyToHardware) {
+    LORAConfig_apply();
+  }
 
   if (LORAdata.containsKey("erase") && LORAdata["erase"].as<bool>()) {
     // Erase config from NVS (non-volatile storage)
@@ -391,7 +403,7 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
 
 void setupLORA() {
   LORAConfig_init();
-  LORAConfig_load();
+  LORAConfig_load(false); // Load saved config into struct without applying to hardware yet
 #  ifdef ZmqttDiscovery
   semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
@@ -409,6 +421,8 @@ void setupLORA() {
     THEENGS_LOG_ERROR(F("gatewayLORA setup failed!" CR));
     while (1);
   }
+  // Apply saved configuration to hardware now that LoRa is initialized
+  LORAConfig_apply();
   LoRa.receive();
   THEENGS_LOG_NOTICE(F("LORA_SCK: %d" CR), LORA_SCK);
   THEENGS_LOG_NOTICE(F("LORA_MISO: %d" CR), LORA_MISO);
@@ -540,9 +554,10 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
     if (LORAdata.containsKey("init") && LORAdata["init"].as<bool>()) {
       // Restore the default (initial) configuration
       LORAConfig_init();
+      LORAConfig_apply();
     } else if (LORAdata.containsKey("load") && LORAdata["load"].as<bool>()) {
-      // Load the saved configuration, if not initialised
-      LORAConfig_load();
+      // Load the saved configuration and apply to hardware
+      LORAConfig_load(true);
     }
 
     // Load config from json if available
