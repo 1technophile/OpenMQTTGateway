@@ -1816,6 +1816,7 @@ void ESPRestart(byte reason) {
 #if defined(ESPWifiManualSetup)
 void setupWiFiFromBuild() {
   WiFi.mode(WIFI_STA);
+  WiFi.setHostname(gateway_name);
   wifiMulti.addAP(wifi_ssid, wifi_password);
   THEENGS_LOG_TRACE(F("Connecting to %s" CR), wifi_ssid);
 #  ifdef wifi_ssid1
@@ -2222,6 +2223,7 @@ void setupWiFiManager() {
 #  endif
 
   wifiManager.setDebugOutput(WM_DEBUG);
+  wifiManager.setHostname(gateway_name);
 
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
