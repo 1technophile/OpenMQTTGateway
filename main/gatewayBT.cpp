@@ -800,6 +800,7 @@ void BLEconnect() {
                     p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC &&
                     p->sensorModel_id != BLEconectable::id::LYWSD03MMC &&
                     p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 &&
+                    p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM6 &&
                     p->sensorModel_id != BLEconectable::id::MHO_C401 &&
                     p->sensorModel_id != BLEconectable::id::XMWSDJ04MMC) {
                   // if irregulary connected to and connection failed clear the connect flag.
@@ -991,7 +992,9 @@ void launchBTDiscovery(bool overrideDiscovery) {
         if (!BTConfig.extDecoderEnable && // Do not decode if an external decoder is configured
             p->sensorModel_id > UNKWNON_MODEL &&
             p->sensorModel_id < TheengsDecoder::BLE_ID_NUM::BLE_ID_MAX &&
-            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) { // Exception on HHCCJCY01HHCC and BM2 as these ones are discoverable and connectable
+            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC && 
+            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 &&
+            p->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM6) { // Exception on HHCCJCY01HHCC and BM2/BM6 as these ones are discoverable and connectable
           if (isTracker) {
             String tracker_name = String(model_id.c_str()) + "-tracker";
             String tracker_id = macWOdots + "-tracker";
