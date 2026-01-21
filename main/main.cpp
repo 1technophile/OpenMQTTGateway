@@ -1427,6 +1427,7 @@ void setup() {
   extern void setupWiFiFromBuild();
   setupWiFiFromBuild();
 #else
+  WiFi.setHostname(gateway_name);
   WiFi.mode(WIFI_STA);
   if (loadConfigFromFlash()) { // Config present
     THEENGS_LOG_NOTICE(F("Config loaded from flash" CR));
@@ -2223,7 +2224,6 @@ void setupWiFiManager() {
 #  endif
 
   wifiManager.setDebugOutput(WM_DEBUG);
-  wifiManager.setHostname(gateway_name);
 
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
