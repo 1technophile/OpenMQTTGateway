@@ -332,6 +332,142 @@ void BM2_connect::publishData() {
   }
 }
 
+/*-----------------------BM6 HANDLING-----------------------*/
+// BM6 AES encryption key: "leagend\xff\xfe0100009"
+static const unsigned char BM6_AES_KEY[16] = {
+    108, // l
+    101, // e
+    97,  // a
+    103, // g
+    101, // e
+    110, // n
+    100, // d
+    255, // 0xff
+    254, // 0xfe
+    48,  // 0
+    49,  // 1
+    48,  // 0
+    48,  // 0
+    48,  // 0
+    48,  // 0
+    57,  // 9
+};
+
+void BM6_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
+  if (m_taskHandle == nullptr) {
+    return; // unexpected notification
+  }
+
+  if (!BTProcessLock) {
+    THEENGS_LOG_TRACE(F("Callback from %s characteristic" CR), pChar->getUUID().toString().c_str());
+    if (length == 16) {
+      THEENGS_LOG_TRACE(F("Device identified creating BLE buffer" CR));
+      DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+      JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
+      BLEdata["model"] = "BM6 Battery Monitor";
+      BLEdata["id"] = m_pClient->getPeerAddress().toString();
+      mbedtls_aes_context aes;
+      mbedtls_aes_init(&aes);
+      unsigned char output[16];
+      unsigned char iv[16] = {};
+      mbedtls_aes_setkey_dec(&aes, BM6_AES_KEY, 128);
+      mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, 16, iv, (uint8_t*)&pData[0], output);
+      mbedtls_aes_free(&aes);
+
+      // Check for valid message signature (should start with D15507)
+      if (output[0] != 0xd1 || output[1] != 0x55 || output[2] != 0x07) {
+        THEENGS_LOG_NOTICE(F("BM6 invalid message signature" CR));
+        return;
+      }
+
+      // Parse according to BM6 protocol (from https://github.com/JeffWDH/bm6-battery-monitor)
+      // The decrypted data is converted to a hex string for parsing:
+      //   - Voltage: hex string positions 15-17 (3 chars) / 100
+      //   - Temperature: hex string positions 8-9 (2 chars), negated if positions 6-7 == "01"
+      //   - SoC (State of Charge): hex string positions 12-13 (2 chars)
+      char hexstr[33];
+      sprintf(hexstr, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+              output[0], output[1], output[2], output[3], output[4], output[5], output[6], output[7],
+              output[8], output[9], output[10], output[11], output[12], output[13], output[14], output[15]);
+
+      // Extract voltage (positions 15-17 in hex string)
+      char volt_str[4] = {hexstr[15], hexstr[16], hexstr[17], 0};
+      int volt_raw = (int)strtol(volt_str, NULL, 16);
+      float volt = volt_raw / 100.0f;
+
+      // Extract SoC (positions 12-13 in hex string)
+      char soc_str[3] = {hexstr[12], hexstr[13], 0};
+      int soc = (int)strtol(soc_str, NULL, 16);
+
+      // Extract temperature (positions 8-9 in hex string)
+      char temp_str[3] = {hexstr[8], hexstr[9], 0};
+      int temp_raw = (int)strtol(temp_str, NULL, 16);
+
+      // Check temperature sign (positions 6-7 in hex string)
+      char temp_sign_str[3] = {hexstr[6], hexstr[7], 0};
+      float temp = (strcmp(temp_sign_str, "01") == 0) ? -temp_raw : temp_raw;
+
+      BLEdata["tempc"] = temp;
+      BLEdata["tempf"] = (float)convertTemp_CtoF(temp);
+      BLEdata["volt"] = volt;
+      BLEdata["batt"] = soc;
+      // to avoid the BM6 device tracker going offline because of the voltage/temp MQTT message without an RSSI value
+      BLEdata["rssi"] = -60;
+      buildTopicFromId(BLEdata, subjectBTtoMQTT);
+      enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
+    } else {
+      THEENGS_LOG_NOTICE(F("Invalid notification data" CR));
+      return;
+    }
+  } else {
+    THEENGS_LOG_TRACE(F("Callback process canceled by BTProcessLock" CR));
+  }
+
+  xTaskNotifyGive(m_taskHandle);
+}
+
+void BM6_connect::publishData() {
+  NimBLEUUID serviceUUID("fff0");
+  NimBLEUUID charWriteUUID("fff3");
+  NimBLEUUID charNotifyUUID("fff4");
+
+  // Get write characteristic to send command
+  NimBLERemoteCharacteristic* pCharWrite = getCharacteristic(serviceUUID, charWriteUUID);
+  // Get notify characteristic to receive data
+  NimBLERemoteCharacteristic* pCharNotify = getCharacteristic(serviceUUID, charNotifyUUID);
+
+  if (pCharWrite && (pCharWrite->canWrite() || pCharWrite->canWriteNoResponse()) &&
+      pCharNotify && pCharNotify->canNotify()) {
+    THEENGS_LOG_TRACE(F("Registering notification" CR));
+    if (pCharNotify->subscribe(true, std::bind(&BM6_connect::notifyCB, this,
+                                               std::placeholders::_1, std::placeholders::_2,
+                                               std::placeholders::_3, std::placeholders::_4))) {
+      // Encrypt the command before sending (BM6 requires encrypted commands)
+      uint8_t command_plain[16] = {0xd1, 0x55, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+      uint8_t command_encrypted[16];
+      unsigned char iv[16] = {};
+
+      mbedtls_aes_context aes;
+      mbedtls_aes_init(&aes);
+      mbedtls_aes_setkey_enc(&aes, BM6_AES_KEY, 128);
+      mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, 16, iv, command_plain, command_encrypted);
+      mbedtls_aes_free(&aes);
+
+      if (pCharWrite->writeValue(command_encrypted, 16, true)) { // Use write with response
+        m_taskHandle = xTaskGetCurrentTaskHandle();
+        if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(BLE_CNCT_TIMEOUT)) == pdFALSE) {
+          m_taskHandle = nullptr;
+        }
+      } else {
+        THEENGS_LOG_NOTICE(F("Failed to send command" CR));
+      }
+    } else {
+      THEENGS_LOG_NOTICE(F("Failed registering notification" CR));
+    }
+  }
+}
+
 /*-----------------------HHCCJCY01HHCC HANDLING-----------------------*/
 void HHCCJCY01HHCC_connect::publishData() {
   NimBLEUUID serviceUUID("00001204-0000-1000-8000-00805f9b34fb");

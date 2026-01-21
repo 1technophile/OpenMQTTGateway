@@ -48,6 +48,14 @@ public:
   void publishData() override;
 };
 
+class BM6_connect : public zBLEConnect {
+  void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
+
+public:
+  BM6_connect(NimBLEAddress& addr) : zBLEConnect(addr) {}
+  void publishData() override;
+};
+
 class GENERIC_connect : public zBLEConnect {
   std::vector<uint8_t> m_data;
 

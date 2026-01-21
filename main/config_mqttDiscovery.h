@@ -177,7 +177,7 @@ extern char discovery_prefix[];
 #define jsonAlarm       "{{ value_json.alarm | is_defined }}"
 #define jsonInuse       "{{ value_json.power | is_defined | float > 0 }}"
 #define jsonInuseRN8209 "{% if value_json.power > 0.02 -%} on {% else %} off {%- endif %}"
-#define jsonVoltBM2     "{% if value_json.uuid is not defined and value_json.volt is defined -%} {{value_json.volt}} {%- endif %}"
+#define jsonVoltBM      "{% if value_json.uuid is not defined and value_json.volt is defined -%} {{value_json.volt}} {%- endif %}"
 #define jsonRSSI        "{{ value_json.rssi | is_defined }}"
 
 #define stateClassNone            ""
