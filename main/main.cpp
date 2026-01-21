@@ -1815,8 +1815,8 @@ void ESPRestart(byte reason) {
 
 #if defined(ESPWifiManualSetup)
 void setupWiFiFromBuild() {
-  WiFi.mode(WIFI_STA);
   WiFi.setHostname(gateway_name);
+  WiFi.mode(WIFI_STA);
   wifiMulti.addAP(wifi_ssid, wifi_password);
   THEENGS_LOG_TRACE(F("Connecting to %s" CR), wifi_ssid);
 #  ifdef wifi_ssid1
