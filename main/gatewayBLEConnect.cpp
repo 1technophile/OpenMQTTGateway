@@ -377,6 +377,7 @@ void BM6_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       // Check for valid message signature (should start with D15507)
       if (output[0] != 0xd1 || output[1] != 0x55 || output[2] != 0x07) {
         THEENGS_LOG_NOTICE(F("BM6 invalid message signature" CR));
+        xTaskNotifyGive(m_taskHandle);
         return;
       }
 
