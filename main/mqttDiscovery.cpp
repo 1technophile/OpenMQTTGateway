@@ -127,6 +127,7 @@ static const char* const availableHASSUnits[] = {
     HASS_UNIT_UGM3,
     HASS_UNIT_OHM,
     HASS_UNIT_PERCENT,
+    HASS_UNIT_PPM,
     HASS_UNIT_DEGREE,
     HASS_UNIT_CELSIUS,
     HASS_UNIT_FAHRENHEIT,
