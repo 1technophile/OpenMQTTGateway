@@ -2073,13 +2073,15 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           break;
         }
 #  endif
-#  ifdef ZsensorBME280
+#  if defined(ZsensorBME280) || defined(ZsensorBMP390)
         case webUIHash("CLIMAtoMQTT"): {
           // {"tempc":17.06,"tempf":62.708,"hum":50.0752,"pa":98876.14,"altim":205.8725,"altift":675.4348}
 
           // Line 1
 
-          strlcpy(message->line1, "bme280", WEBUI_TEXT_WIDTH);
+          const String origin = data["origin"] | "";
+          const bool isBmp390 = (origin.indexOf("bmp390") >= 0);
+          strlcpy(message->line1, isBmp390 ? "bmp390" : "bme280", WEBUI_TEXT_WIDTH);
 
           // Line 2
 
@@ -2101,11 +2103,24 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           // Line 3
 
           String line3 = "";
-          float humidity = data["hum"];
-          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            char hum[5];
-            dtostrf(humidity, 3, 1, hum);
-            line3 += "hum: " + (String)hum + "% ";
+          if (isBmp390) {
+            if (data.containsKey("altim") && data.containsKey("altift")) {
+              char altitude[7];
+              if (displayMetric) {
+                dtostrf((float)data["altim"], 4, 1, altitude);
+                line3 = "alt: " + (String)altitude + " m";
+              } else {
+                dtostrf((float)data["altift"], 4, 1, altitude);
+                line3 = "alt: " + (String)altitude + " ft";
+              }
+            }
+          } else {
+            float humidity = data["hum"];
+            if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
+              char hum[5];
+              dtostrf(humidity, 3, 1, hum);
+              line3 += "hum: " + (String)hum + "% ";
+            }
           }
           line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 
@@ -2604,18 +2619,21 @@ void SerialWeb::begin() {
 Dummy virtual functions carried over from Serial
 */
 int SerialWeb::available(void) {
+  return 0;
 }
 
 /*
 Dummy virtual functions carried over from Serial
 */
 int SerialWeb::peek(void) {
+  return -1;
 }
 
 /*
 Dummy virtual functions carried over from Serial
 */
 int SerialWeb::read(void) {
+  return -1;
 }
 
 /*
