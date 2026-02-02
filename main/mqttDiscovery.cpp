@@ -820,6 +820,19 @@ void pubMqttDiscovery() {
                           true, BMETOPIC, will_Topic, nullptr);
 #  endif
 
+#  ifdef ZsensorBMP390
+#    include "config_BMP390.h"
+  const char* BMP390sensor[][13] = {
+      {HASS_TYPE_SENSOR, "BMP390: Temp", "bmp390-temp", HASS_CLASS_TEMPERATURE, jsonTempc, "", "", HASS_UNIT_CELSIUS, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
+      {HASS_TYPE_SENSOR, "BMP390: Pressure", "bmp390-pressure", HASS_CLASS_PRESSURE, jsonPa, "", "", HASS_UNIT_HPA, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
+      {HASS_TYPE_SENSOR, "BMP390: Altitude", "bmp390-altim", "", jsonAltim, "", "", HASS_UNIT_METER, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
+      {HASS_TYPE_SENSOR, "BMP390: Altitude (ft)", "bmp390-altift", "", jsonAltif, "", "", HASS_UNIT_FT, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr}};
+
+  THEENGS_LOG_TRACE(F("bmp390Discovery" CR));
+  createDiscoveryFromList(nullptr, BMP390sensor, 4, nullptr, nullptr, nullptr,
+                          true, BMP390TOPIC, will_Topic, nullptr);
+#  endif
+
 #  ifdef ZsensorHTU21
 #    include "config_HTU21.h"
   const char* HTUsensor[][13] = {
