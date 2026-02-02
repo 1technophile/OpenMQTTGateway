@@ -164,6 +164,9 @@ Preferences preferences;
 #ifdef ZsensorBME280
 #  include "config_BME280.h"
 #endif
+#ifdef ZsensorBMP390
+#  include "config_BMP390.h"
+#endif
 #ifdef ZsensorHTU21
 #  include "config_HTU21.h"
 #endif
@@ -1484,6 +1487,10 @@ void setup() {
   setupZsensorBME280();
   modules.add(ZsensorBME280);
 #endif
+#ifdef ZsensorBMP390
+  setupZsensorBMP390();
+  modules.add(ZsensorBMP390);
+#endif
 #ifdef ZsensorHTU21
   setupZsensorHTU21();
   modules.add(ZsensorHTU21);
@@ -2622,6 +2629,9 @@ void loop() {
 #endif
 #ifdef ZsensorBME280
     MeasureTempHumAndPressure(); //Addon to measure Temperature, Humidity, Pressure and Altitude with a Bosch BME280/BMP280
+#endif
+#ifdef ZsensorBMP390
+  MeasureTempAndPressureBMP390(); //Addon to measure Temperature and Pressure with a Bosch BMP390
 #endif
 #ifdef ZsensorHTU21
     MeasureTempHum(); //Addon to measure Temperature, Humidity, of a HTU21 sensor

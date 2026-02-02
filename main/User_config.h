@@ -356,6 +356,7 @@ extern ss_cnt_parameters cnt_parameters_array[];
 //#define ZsensorTEMT6000 "TEMT6000"  //ESP8266
 //#define ZsensorTSL2561 "TSL2561"  //ESP8266, Arduino, ESP32
 //#define ZsensorBME280  "BME280"   //ESP8266, Arduino, ESP32
+//#define ZsensorBMP390 "BMP390"   //ESP8266, Arduino, ESP32
 //#define ZsensorHTU21   "HTU21"    //ESP8266, Arduino, ESP32
 //#define ZsensorLM75   "LM75"    //ESP8266, Arduino, ESP32
 //#define ZsensorDHT     "DHT"      //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
