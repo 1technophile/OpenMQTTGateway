@@ -20,10 +20,11 @@ jobs:
       id-token: write
 
     steps:
+      # Checkout base branch only — never checkout fork code to prevent
+      # CLAUDE.md poisoning and code-level prompt injection attacks.
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
 
       - name: Run Claude Code Review
@@ -35,7 +36,7 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Please review this pull request and provide feedback on:
+            Use `gh pr diff ${{ github.event.pull_request.number }}` to retrieve the changes, then review the pull request and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
             - Performance considerations
