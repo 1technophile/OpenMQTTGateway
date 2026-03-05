@@ -122,22 +122,28 @@ run_trivy_scan() {
     
     mkdir -p "$OUTPUT_DIR"
     
-    # Build trivy command - TUTTE le scansioni (vuln, config, secret, license)
-    # Senza limitazioni sui scanner
-    local trivy_cmd="trivy $SCAN_TYPE $SCAN_PATH --format $format --output $output_file --severity $SEVERITY --exit-code $exit_code"
+    # Build Trivy command with all enabled scanners
+    local trivy_cmd=(
+        trivy "$SCAN_TYPE" "$SCAN_PATH"
+        --format "$format"
+        --output "$output_file"
+        --severity "$SEVERITY"
+        --exit-code "$exit_code"
+    )
     
     # Add exclude paths if provided
     if [[ -n "$EXCLUDE_PATHS" ]]; then
-        # Convert comma-separated paths to trivy --skip-dirs format
-        local skip_dirs
-        skip_dirs=$(echo "$EXCLUDE_PATHS" | sed 's/,/ --skip-dirs /g' | sed 's/^/ --skip-dirs /')
-        trivy_cmd="$trivy_cmd $skip_dirs"
+        IFS=',' read -r -a exclude_dirs <<< "$EXCLUDE_PATHS"
+        for skip_dir in "${exclude_dirs[@]}"; do
+            if [[ -n "$skip_dir" ]]; then
+                trivy_cmd+=(--skip-dirs "$skip_dir")
+            fi
+        done
     fi
     
-    # Log il comando completo
-    log_info "Executing: $trivy_cmd"
+    log_info "Executing Trivy ${SCAN_TYPE} scan"
     
-    if eval "$trivy_cmd" 2>&1 | tee -a "${OUTPUT_DIR}/trivy-scan.log"; then
+    if "${trivy_cmd[@]}" 2>&1 | tee -a "${OUTPUT_DIR}/trivy-scan.log"; then
         log_success "${format^^} report generated: $output_file"
         return 0
     else

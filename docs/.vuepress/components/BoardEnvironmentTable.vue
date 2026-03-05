@@ -48,7 +48,7 @@
                 v-if="board.modules.length > 2"
                 class="expand-icon-btn"
                 @click.stop="toggleModules(board.environment)"
-                :title="expandedModules[board.environment] ? 'Nascondi' : 'Mostra tutto'">
+                :title="expandedModules[board.environment] ? 'Hide' : 'Show all'">
                 <svg :class="{rotated: expandedModules[board.environment]}" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
               </span>
             </div>
@@ -74,7 +74,7 @@
                 v-if="board.libraries.length > 2"
                 class="expand-icon-btn"
                 @click.stop="toggleLibraries(board.environment)"
-                :title="expandedLibraries[board.environment] ? 'Nascondi' : 'Mostra tutto'">
+                :title="expandedLibraries[board.environment] ? 'Hide' : 'Show all'">
                 <svg :class="{rotated: expandedLibraries[board.environment]}" width="19" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
               </span>
               

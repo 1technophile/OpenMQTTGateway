@@ -87,7 +87,7 @@ function rowConfigFromPlatformIO() {
         const config = JSON.parse(jsonConfig);
         return config;
     } catch (error) {
-        console.error("Assicurati che PlatformIO Core sia installato e nel PATH");
+        console.error("Make sure PlatformIO Core is installed and in PATH");
         throw error;
     }
 }

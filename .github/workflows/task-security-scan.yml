@@ -48,26 +48,29 @@ jobs:
 
       - name: Install Trivy
         run: |
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update && sudo apt-get install -y trivy
+          set -euo pipefail
+          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y trivy
 
       - name: Run Security Scan using ci_security.sh
         run: |
-          # Build command with provided inputs
-          CMD="./scripts/ci_security.sh"
-          CMD="$CMD --scan-type ${{ inputs.scan-type }}"
-          CMD="$CMD --scan-path ${{ inputs.scan-path }}"
-          CMD="$CMD --severity ${{ inputs.severity }}"
-          CMD="$CMD --exit-code ${{ inputs.exit-code }}"
-          
-          # Add SBOM generation if requested
+          set -euo pipefail
+          sbom_flag=""
           if [[ "${{ inputs.generate-sbom }}" == "true" ]]; then
-            CMD="$CMD --generate-sbom"
+            sbom_flag="--generate-sbom"
           fi
-          
-          # Execute the security scan
-          $CMD
+
+          ./scripts/ci_security.sh \
+            --scan-type "${{ inputs.scan-type }}" \
+            --scan-path "${{ inputs.scan-path }}" \
+            --severity "${{ inputs.severity }}" \
+            --exit-code "${{ inputs.exit-code }}" \
+            ${sbom_flag}
       
       # GitHub-specific: Upload to Security tab
       - name: Upload SARIF to GitHub Security tab

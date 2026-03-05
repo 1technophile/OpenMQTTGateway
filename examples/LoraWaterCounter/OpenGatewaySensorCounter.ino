@@ -1,16 +1,16 @@
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 #include <LoRa.h>
 #include <SPI.h>
 #include <WiFi.h>
 #include <Wire.h>
 #include <stdio.h>
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-#include <DHT_U.h>
 
 #include "SSD1306.h"
 
 //LoRa pins
-#define SCK   5 // GPIO5  -- SX1278's SCK
+#define SCK  5 // GPIO5  -- SX1278's SCK
 #define MISO 19 // GPIO19 -- SX1278's MISnO
 #define MOSI 27 // GPIO27 -- SX1278's MOSI
 #define SS   18 // GPIO18 -- SX1278's CS
@@ -20,17 +20,17 @@
 
 //OLED pins
 #define OLED_SDA 21
-#define OLED_SCL 22 
+#define OLED_SCL 22
 //#define OLED_RST 16
 
-#define LED      25
+#define LED 25
 
 #define DHT_PIN  14
 #define DHT_TYPE DHT22
 
-#define CNT_PIN  34
+#define CNT_PIN 34
 
-#define BAT_PIN  35
+#define BAT_PIN 35
 
 const int MAX_ANALOG_VAL = 4095;
 const float MAX_BATTERY_VOLTAGE = 4.2;
@@ -38,7 +38,7 @@ const float MAX_BATTERY_VOLTAGE = 4.2;
 int cntpkt = 0;
 unsigned long counter = 0;
 unsigned long last_interrupt_time = 0;
-int pulse_seen = 0;                                                   // pulse detected by interrupt function
+int pulse_seen = 0; // pulse detected by interrupt function
 int bounce_delay_ms = 100;
 
 SSD1306 display(0x3c, OLED_SDA, OLED_SCL);
@@ -46,9 +46,9 @@ String rssi = "RSSI --";
 String packSize = "--";
 String packet;
 
-DHT_Unified dht(DHT_PIN, DHT_TYPE); //Inizializza oggetto chiamato "dht", parametri: pin a cui è connesso il sensore, tipo di dht 11/22
+DHT_Unified dht(DHT_PIN, DHT_TYPE); // Initialize the "dht" object with sensor pin and DHT type (11/22)
 
-void ICACHE_RAM_ATTR bounceCheck ();
+void ICACHE_RAM_ATTR bounceCheck();
 
 void setup() {
   pinMode(LED, OUTPUT);
@@ -75,32 +75,50 @@ void setup() {
   display.flipScreenVertically();
   display.setFont(ArialMT_Plain_10);
 
-  pinMode(BAT_PIN, INPUT); 
+  pinMode(BAT_PIN, INPUT);
   pinMode(CNT_PIN, INPUT_PULLUP);
-  
-  attachInterrupt (CNT_PIN, bounceCheck, RISING);
+
+  attachInterrupt(CNT_PIN, bounceCheck, RISING);
 
   dht.begin();
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);
   Serial.println(F("------------------------------------"));
   Serial.println(F("Temperature Sensor"));
-  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
-  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
-  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
-  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("°C"));
-  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("°C"));
-  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("°C"));
+  Serial.print(F("Sensor Type: "));
+  Serial.println(sensor.name);
+  Serial.print(F("Driver Ver:  "));
+  Serial.println(sensor.version);
+  Serial.print(F("Unique ID:   "));
+  Serial.println(sensor.sensor_id);
+  Serial.print(F("Max Value:   "));
+  Serial.print(sensor.max_value);
+  Serial.println(F("°C"));
+  Serial.print(F("Min Value:   "));
+  Serial.print(sensor.min_value);
+  Serial.println(F("°C"));
+  Serial.print(F("Resolution:  "));
+  Serial.print(sensor.resolution);
+  Serial.println(F("°C"));
   Serial.println(F("------------------------------------"));
   // Print humidity sensor details.
   dht.humidity().getSensor(&sensor);
   Serial.println(F("Humidity Sensor"));
-  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
-  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
-  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
-  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("%"));
-  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
-  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
+  Serial.print(F("Sensor Type: "));
+  Serial.println(sensor.name);
+  Serial.print(F("Driver Ver:  "));
+  Serial.println(sensor.version);
+  Serial.print(F("Unique ID:   "));
+  Serial.println(sensor.sensor_id);
+  Serial.print(F("Max Value:   "));
+  Serial.print(sensor.max_value);
+  Serial.println(F("%"));
+  Serial.print(F("Min Value:   "));
+  Serial.print(sensor.min_value);
+  Serial.println(F("%"));
+  Serial.print(F("Resolution:  "));
+  Serial.print(sensor.resolution);
+  Serial.println(F("%"));
   Serial.println(F("------------------------------------"));
 
   delay(1500);
@@ -117,15 +135,14 @@ void loop() {
   display.drawString(90, 0, String(cntpkt));
 
   String NodeId = WiFi.macAddress();
- // float temp = dht.readTemperature();
- // float hum = dht.readHumidity();
+  // float temp = dht.readTemperature();
+  // float hum = dht.readHumidity();
   float battery = getBattery();
 
   dht.temperature().getEvent(&event1);
   if (isnan(event1.temperature)) {
     Serial.println(F("Error reading temperature!"));
-  }
-  else {
+  } else {
     Serial.print(F("Temperature: "));
     Serial.print(event1.temperature);
     Serial.println(F("°C"));
@@ -134,8 +151,7 @@ void loop() {
   dht.humidity().getEvent(&event2);
   if (isnan(event2.relative_humidity)) {
     Serial.println(F("Error reading humidity!"));
-  }
-  else {
+  } else {
     Serial.print(F("Humidity: "));
     Serial.print(event2.relative_humidity);
     Serial.println(F("%"));
@@ -150,10 +166,10 @@ void loop() {
   LoRa.endPacket();
 
   Serial.println(msg);
-  
+
   display.drawString(0, 15, String(NodeId));
   display.drawString(0, 30, "count: " + String(counter));
-  display.drawString(0, 45, "battery: " + String(battery)+ " %");
+  display.drawString(0, 45, "battery: " + String(battery) + " %");
   display.display();
 
   delay(5000);
@@ -167,10 +183,10 @@ void loop() {
   delay(6000);
 }
 
-void ICACHE_RAM_ATTR bounceCheck (){
-   unsigned long interrupt_time = millis();
-   if (interrupt_time - last_interrupt_time > bounce_delay_ms) counter++;    // void loop() then notes pulse == 1 and takes action      
-   last_interrupt_time = interrupt_time;
+void ICACHE_RAM_ATTR bounceCheck() {
+  unsigned long interrupt_time = millis();
+  if (interrupt_time - last_interrupt_time > bounce_delay_ms) counter++; // void loop() then notes pulse == 1 and takes action
+  last_interrupt_time = interrupt_time;
 }
 
 float getBattery(void) {
@@ -179,6 +195,5 @@ float getBattery(void) {
   float voltageLevel = (rawValue / 4095.0) * 2 * 1.1 * 3.3; // calculate voltage level
   float perc = voltageLevel / MAX_BATTERY_VOLTAGE * 100;
 
-  return(perc);
+  return (perc);
 }
-
