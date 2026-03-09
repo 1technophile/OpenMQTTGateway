@@ -113,11 +113,8 @@ create_configuration_files() {
     local url_prefix="$1"
     local version="$2"
     local mode="$3"
-    local dest_line=""
-
-    if [[ "$mode" == "dev" ]]; then
-        dest_line="    \"dest\": \"generated/site/dev\","
-    fi
+    # Note: dest is always "generated/site" (from defaults.json).
+    # The dev subdirectory is handled by destination_dir in the GitHub Actions deploy step.
 
     # download common config
     download_common_config
@@ -130,7 +127,6 @@ create_configuration_files() {
     "title": "Theengs OpenMQTTGateway",
     "version": "${version}",
     "url_prefix": "${url_prefix}",
-    ${dest_line}
     "mode": "${mode}"
 }
 EOF
