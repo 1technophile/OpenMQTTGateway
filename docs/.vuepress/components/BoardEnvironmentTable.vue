@@ -12,15 +12,75 @@
       <p>{{ error }}</p>
     </div>
 
-    <div v-if="!loading && !error" class="boards-grid">
+    <div v-if="!loading && !error">
+      <!-- Search and Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search by name, description, module..."
+            class="search-input"
+            aria-label="Search boards">
+          <button
+            v-if="searchQuery"
+            class="search-clear"
+            @click="searchQuery = ''"
+            aria-label="Clear search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="filter-groups">
+          <div class="filter-group">
+            <span class="filter-group__label">MCU:</span>
+            <div class="filter-chips">
+              <button
+                v-for="mcu in mcuFilters"
+                :key="mcu"
+                :class="['filter-chip', { 'filter-chip--active': activeMcuFilter === mcu }]"
+                @click="toggleMcuFilter(mcu)">
+                {{ mcu }}
+              </button>
+            </div>
+          </div>
+          <div class="filter-group">
+            <span class="filter-group__label">Gateway:</span>
+            <div class="filter-chips">
+              <button
+                v-for="gw in gatewayFilters"
+                :key="gw.key"
+                :class="['filter-chip', { 'filter-chip--active': activeGatewayFilter === gw.key }]"
+                @click="toggleGatewayFilter(gw.key)">
+                {{ gw.label }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="hasActiveFilters" class="filter-status">
+          <span>Showing {{ filteredBoards.length }} of {{ boards.length }} boards</span>
+          <button class="filter-clear" @click="clearFilters">Clear all filters</button>
+        </div>
+      </div>
+
+      <!-- No Results -->
+      <div v-if="filteredBoards.length === 0" class="no-results">
+        <p>No boards match your filters.</p>
+        <button class="filter-clear" @click="clearFilters">Clear all filters</button>
+      </div>
+
+      <div class="boards-grid">
       <article
-        v-for="board in boards"
+        v-for="board in filteredBoards"
         :key="board.environment"
         class="board-card"
         @click="openSelector(board.environment)">
         
         <div class="board-card__image">
-          <img 
+          <span v-if="popularEnvironments.indexOf(board.environment) !== -1" class="popular-badge">Popular</span>
+          <img
             :src="getBoardImageUrl(board)"
             :alt="board.environment"
             loading="lazy">
@@ -98,6 +158,7 @@
           </div>
         </div>
       </article>
+      </div>
     </div>
   </div>
 </template>
@@ -121,7 +182,17 @@ export default {
       loading: false,
       error: null,
       expandedModules: {},
-      expandedLibraries: {}
+      expandedLibraries: {},
+      searchQuery: '',
+      activeMcuFilter: null,
+      activeGatewayFilter: null,
+      popularEnvironments: [
+        'esp32dev-ble',
+        'theengs-bridge-v11',
+        'lilygo-rtl_433',
+        'lilygo-rtl_433-fsk',
+        'esp32dev-ir'
+      ]
     };
   },
   computed: {
@@ -130,9 +201,89 @@ export default {
     },
     resolvedSelectorUrl() {
       return this.buildUrl(this.selectorPath);
+    },
+    mcuFilters() {
+      var families = {};
+      this.boards.forEach(function(b) {
+        var family = this.getMcuFamily(b.microcontroller);
+        if (family) families[family] = true;
+      }.bind(this));
+      return Object.keys(families).sort();
+    },
+    gatewayFilters() {
+      var gateways = {
+        BT: 'BLE',
+        RF: 'RF',
+        IR: 'IR',
+        LORA: 'LoRa',
+        RTL_433: 'RTL_433',
+        Pilight: 'Pilight'
+      };
+      var result = [];
+      var self = this;
+      Object.keys(gateways).forEach(function(key) {
+        var hasBoards = self.boards.some(function(b) {
+          return Array.isArray(b.modules) && b.modules.some(function(m) {
+            return m.toLowerCase().indexOf(key.toLowerCase()) !== -1;
+          });
+        });
+        if (hasBoards) {
+          result.push({ key: key, label: gateways[key] });
+        }
+      });
+      return result;
+    },
+    hasActiveFilters() {
+      return this.searchQuery || this.activeMcuFilter || this.activeGatewayFilter;
+    },
+    filteredBoards() {
+      var self = this;
+      return this.boards.filter(function(board) {
+        if (self.searchQuery) {
+          var q = self.searchQuery.toLowerCase();
+          var haystack = [
+            board.environment,
+            board.description || '',
+            board.microcontroller || '',
+            (board.modules || []).join(' ')
+          ].join(' ').toLowerCase();
+          if (haystack.indexOf(q) === -1) return false;
+        }
+        if (self.activeMcuFilter) {
+          var family = self.getMcuFamily(board.microcontroller);
+          if (family !== self.activeMcuFilter) return false;
+        }
+        if (self.activeGatewayFilter) {
+          var key = self.activeGatewayFilter.toLowerCase();
+          if (!Array.isArray(board.modules) || !board.modules.some(function(m) {
+            return m.toLowerCase().indexOf(key) !== -1;
+          })) return false;
+        }
+        return true;
+      });
     }
   },
   methods: {
+    getMcuFamily(mcu) {
+      if (!mcu) return null;
+      var m = mcu.toLowerCase();
+      if (m.indexOf('esp32-s3') !== -1 || m.indexOf('esp32s3') !== -1 || m.indexOf('atoms3') !== -1 || m.indexOf('lilygo-t3-s3') !== -1) return 'ESP32-S3';
+      if (m.indexOf('esp32-c3') !== -1 || m.indexOf('esp32c3') !== -1 || m.indexOf('lolin_c3') !== -1 || m.indexOf('airm2m') !== -1) return 'ESP32-C3';
+      if (m.indexOf('esp32') !== -1 || m.indexOf('m5st') !== -1 || m.indexOf('heltec') !== -1 || m.indexOf('ttgo') !== -1 || m.indexOf('lolin32') !== -1 || m.indexOf('pico32') !== -1 || m.indexOf('tinypico') !== -1 || m.indexOf('feather') !== -1) return 'ESP32';
+      if (m.indexOf('esp8') !== -1 || m.indexOf('nodemcu') !== -1) return 'ESP8266';
+      return 'Other';
+    },
+    toggleMcuFilter(mcu) {
+      this.activeMcuFilter = this.activeMcuFilter === mcu ? null : mcu;
+    },
+    toggleGatewayFilter(gw) {
+      this.activeGatewayFilter = this.activeGatewayFilter === gw ? null : gw;
+    },
+    clearFilters() {
+      this.searchQuery = '';
+      this.activeMcuFilter = null;
+      this.activeGatewayFilter = null;
+    },
     buildUrl(path) {
       const base = this.$site?.base || '/';
       const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
@@ -151,9 +302,16 @@ export default {
         if (!Array.isArray(data)) {
           throw new Error('boards-info.json must be an array');
         }
+        var self = this;
         this.boards = data
           .filter(board => board && typeof board.environment === 'string')
-          .sort((a, b) => a.environment.localeCompare(b.environment));
+          .sort(function(a, b) {
+            var aPopular = self.popularEnvironments.indexOf(a.environment) !== -1;
+            var bPopular = self.popularEnvironments.indexOf(b.environment) !== -1;
+            if (aPopular && !bPopular) return -1;
+            if (!aPopular && bPopular) return 1;
+            return a.environment.localeCompare(b.environment);
+          });
       } catch (err) {
         console.error('Failed to load boards-info:', err);
         this.error = err.message || 'Unable to load board information';
@@ -196,10 +354,154 @@ export default {
   margin: 2rem 0;
 }
 
+/* Search and Filter Bar */
+.filter-bar {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-color-secondary, #666);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.6rem 2.2rem 0.6rem 2.4rem;
+  border: 1px solid var(--border-color, #eaecef);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  color: var(--text-color, #2c3e50);
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #3eaf7c);
+  box-shadow: 0 0 0 3px rgba(62, 175, 124, 0.15);
+}
+
+.search-input::placeholder {
+  color: var(--text-color-secondary, #999);
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-color-secondary, #666);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+}
+
+.search-clear:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.filter-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color-secondary, #666);
+  white-space: nowrap;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filter-chip {
+  background: var(--code-bg-color, #f6f8fa);
+  color: var(--text-color, #2c3e50);
+  border: 1px solid var(--border-color, #eaecef);
+  padding: 0.25rem 0.7rem;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-chip:hover {
+  border-color: var(--accent-color, #3eaf7c);
+  color: var(--accent-color, #3eaf7c);
+}
+
+.filter-chip--active {
+  background: var(--accent-color, #3eaf7c);
+  color: #ffffff;
+  border-color: var(--accent-color, #3eaf7c);
+}
+
+.filter-chip--active:hover {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.filter-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary, #666);
+}
+
+.filter-clear {
+  background: none;
+  border: none;
+  color: var(--accent-color, #3eaf7c);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0;
+}
+
+.filter-clear:hover {
+  text-decoration: underline;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-color-secondary, #666);
+}
+
+.no-results p {
+  margin-bottom: 1rem;
+}
+
 /* Grid Layout */
 .boards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
@@ -232,6 +534,21 @@ export default {
   justify-content: center;
   min-height: 120px;
   border-bottom: 1px solid var(--border-color, #eaecef);
+  position: relative;
+}
+
+.popular-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff9800;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
 }
 
 .board-card__image img {
@@ -374,6 +691,15 @@ export default {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .filter-groups {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-group {
+    flex-wrap: wrap;
+  }
+
   .boards-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
