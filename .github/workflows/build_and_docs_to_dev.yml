@@ -11,15 +11,33 @@ jobs:
     if: github.repository_owner == '1technophile'
     outputs:
       short-sha: ${{ steps.short-sha.outputs.sha }}
+      has-changes: ${{ steps.check-changes.outputs.has-changes }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for recent changes
+        id: check-changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "Manual trigger, skipping change check"
+          elif git log --since='24 hours ago' --oneline | grep -q .; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "Changes found in the last 24 hours"
+          else
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "No changes in the last 24 hours, skipping build"
+          fi
       - uses: benjlevesque/short-sha@v2.1
+        if: steps.check-changes.outputs.has-changes == 'true'
         id: short-sha
         with:
           length: 6
 
   handle-firmwares:
     needs: prepare
+    if: needs.prepare.outputs.has-changes == 'true'
     name: Build and deploy development firmwares artefacts
     uses: ./.github/workflows/task-build.yml
     with:
@@ -29,6 +47,7 @@ jobs:
 
   handle-documentation:
     needs: [prepare, handle-firmwares]
+    if: needs.prepare.outputs.has-changes == 'true'
     name: Build and deploy development documentation
     uses: ./.github/workflows/task-docs.yml
     with:
