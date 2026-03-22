@@ -100,7 +100,10 @@ extern String stateBTMeasures(bool);
 #endif
 
 #ifndef BLEScanDuplicateCacheSize
-#  define BLEScanDuplicateCacheSize 200
+#  define BLEScanDuplicateCacheSize 100
+#endif
+#ifndef MaxBLEDevices
+#  define MaxBLEDevices 80
 #endif
 #ifndef TimeBtwRead
 #  define TimeBtwRead 55555 //define default time between 2 scans; in milliseconds

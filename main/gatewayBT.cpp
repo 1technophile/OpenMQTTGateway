@@ -372,6 +372,23 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
   }
   BLEdevice* device = getDeviceByMac(mac);
   if (device == &NO_BT_DEVICE_FOUND) {
+    // Evict oldest non-listed device when at capacity
+    if ((int)devices.size() >= MaxBLEDevices) {
+      int oldestIdx = -1;
+      unsigned long oldestTime = ULONG_MAX;
+      for (int i = 0; i < (int)devices.size(); i++) {
+        if (!devices[i]->isWhtL && !devices[i]->isBlkL && !devices[i]->connect &&
+            devices[i]->lastUpdate < oldestTime) {
+          oldestTime = devices[i]->lastUpdate;
+          oldestIdx = i;
+        }
+      }
+      if (oldestIdx >= 0) {
+        THEENGS_LOG_TRACE(F("%.4s evict %s" CR), "BLE", devices[oldestIdx]->macAdr);
+        delete devices[oldestIdx];
+        devices.erase(devices.begin() + oldestIdx);
+      }
+    }
     THEENGS_LOG_TRACE(F("add %s" CR), mac);
     //new device
     device = new BLEdevice();
@@ -889,7 +906,7 @@ void setupBTTasksAndBLE() {
 #  if defined(USE_ESP_IDF) || defined(USE_BLUFI)
       14500,
 #  else
-      9500, /* Stack size in bytes */
+      8000, /* Stack size in bytes */
 #  endif
       NULL, /* Task input parameter */
       2, /* Priority of the task (set higher than core task) */
