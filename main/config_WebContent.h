@@ -62,8 +62,8 @@
 #else
 #  define configure_6
 #endif
-#if BLEDecryptor
-#  define configure_7 "<p><form action='bl' method='post'><button>Configure BLE</button></form></p>"
+#ifdef ZgatewayBT
+#  define configure_7 "<p><form action='bl' method='get'><button>Configure BLE</button></form></p>"
 #else
 #  define configure_7
 #endif
@@ -112,7 +112,16 @@ const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><s
 const char config_mqtt_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>MQTT Parameters</b></span></legend><form method='post' action='mq'><p><b>MQTT Server</b><br><input id='mh' name='mh' placeholder=" MQTT_SERVER " value='%s'></p><p><b>MQTT Port</b><br><input id='ml' name='ml' placeholder=" MQTT_PORT " value='%s'></p><p><b>MQTT Username</b><br><input id='mu' name='mu' placeholder=" MQTT_USER " value='%s'></p><p><label><b>MQTT Password</b></label><br><input id='mp' name='mp' type='password' placeholder=\"Password\" ></p><p><b>MQTT Secure Connection</b><br><input id='sc' name='sc' type='checkbox' %s></p><p><b>Gateway Name</b><br><input id='h' name='h' placeholder=" Gateway_Name " value=\"%s\"></p><p><b>MQTT Base Topic</b><br><input id='mt' name='mt' placeholder='' value='%s'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
 #endif
 #ifndef ESPWifiManualSetup
-const char config_gateway_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Gateway Configuration</b></span></legend><form method='post' action='cg'><p><b>Gateway Password (8 characters min)</b><br><input id='gp' name='gp' type='password' placeholder=\"********\"  minlength='8'></p><br><button name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+const char config_gateway_body[] = body_header
+    "<fieldset class=\"set1\"><legend><span><b>Gateway Configuration</b></span></legend>"
+    "<form method='post' action='cg'>"
+    "<p><b>Gateway Password (8 characters min)</b><br>"
+    "<input id='gp' name='gp' type='password' placeholder=\"********\" minlength='8'></p>"
+#  ifdef ZmqttDiscovery
+    "<p><label><input id='dc' name='dc' type='checkbox' %s> MQTT Discovery</label></p>"
+#  endif
+    "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
+    "</form></fieldset>" body_footer_config_menu;
 #endif
 const char config_logging_body[] = body_header
     "<fieldset class=\"set1\"><legend><span><b>OpenMQTTGateway Logging</b></span></legend><form method='get' action='lo'><p><b>Log Level</b><br><select id='lo'><option %s value='0'>Silent</option><option %s value='1'>Fatal</option><option %s value='2'>Error</option>"
@@ -237,11 +246,65 @@ const char config_lora_body[] = body_header
     "</form>"
     "</fieldset>" body_footer_config_menu;
 
-#if BLEDecryptor
-const char config_ble_body[] = body_header "<fieldset class=\"set1\"><legend><span><b>Configure BLE</b></span></legend><form method='post' action='bl'><p><b>BLE AES Default Key (32 char hex)</b></p><input id='bk' name='bk' minlength='32' maxlength='32' placeholder=" BLE_AES " value='%s' oninput='bkv()'><p id='bke' style='color:red;'></p><hr><p><b>BLE Key Pairs</b></p><p>MacAddress:AESKey with space separator</p><p><textarea id='kp' name='kp' placeholder='A4C138012345:00112233445566778899001122334455' rows='3' cols='46' oninput='kpv()'>%s</textarea></p><p id='kpe' style='color:red;'></p><br><button id='s' name='save' type='submit' class='button bgrn'>Save</button></form></fieldset>" body_footer_config_menu;
+#ifdef ZgatewayBT
+// BLE config page split into parts to fit within WEB_TEMPLATE_BUFFER_MAX_SIZE
 
-// Client side javascript validation of the Default AES Key is hex, and the custom keys are in the correct format. This pushes the theengs-bridge-v11 way of the file size, so reducing it now and leaving it commented out
-//const char ble_script[] = "function bkv(){let e=document.getElementById('bk'),t=document.getElementById('bke'),l=e.value.trim();0===l.length||/^[A-Fa-f0-9]{32}$/.test(l)?(t.textContent='',e.style.color=''):(t.textContent='Invalid key',e.style.color='red')}function kpv(){let e=document.getElementById('kp'),t=document.getElementById('kpe'),l=e.value.split(/ /),n=/^[A-Fa-f0-9]{12}:[A-Fa-f0-9]{32}$/,o=l.map((e,t)=>({line:e,index:t})).filter(e=>!n.test(e.line));if(0===e.value.trim().length||0===o.length)t.textContent='',e.style.color='';else{let i=o.map(e=>e.index+1).join(', ');t.textContent=`Invalid format on line(s): ${i}`,e.style.color='red'}}";
+// Part 1: Header + Scan settings (body_header %s=modules, %s=gateway_name, then: %s=enabled, %s=adaptivescan, %lu=interval, %lu=intervalacts, %lu=scanduration, %s=forcepscn, %s=bleconnect, %d=minrssi)
+const char config_ble_body_scan[] = body_header
+    "<fieldset class=\"set1\"><legend><span><b>Configure BLE</b></span></legend>"
+    "<form method='post' action='bl'>"
+    "<p><b>Scan Settings</b></p>"
+    "<p><label><input id='en' name='en' type='checkbox' %s> Enable BLE</label></p>"
+    "<p><label><input id='as' name='as' type='checkbox' %s> Adaptive Scan</label></p>"
+    "<p><b>Scan Interval (ms)</b><br><input id='bi' name='bi' type='number' min='0' value='%lu'></p>"
+    "<p><b>Active Scan Interval (ms)</b><br><input id='ai' name='ai' type='number' min='0' value='%lu'></p>"
+    "<p><b>Scan Duration (ms)</b><br><input id='sd' name='sd' type='number' min='0' value='%lu'></p>"
+    "<p><label><input id='fp' name='fp' type='checkbox' %s> Force Passive Scan</label></p>"
+    "<p><label><input id='bc' name='bc' type='checkbox' %s> BLE Connect</label></p>"
+    "<p><b>Min RSSI</b><br><input id='mr' name='mr' type='number' max='0' value='%d'></p>";
+
+// Part 2: Publish settings (%s=onlysensors, %s=randommacs, %s=pubadvdata, %s=pubuuid4topic, %s=filterConnectable, %s=ignoreWBlist)
+const char config_ble_body_publish[] =
+    "<hr><p><b>Publish Settings</b></p>"
+    "<p><label><input id='os' name='os' type='checkbox' %s> Only Sensors</label></p>"
+    "<p><label><input id='rm' name='rm' type='checkbox' %s> Random MACs</label></p>"
+    "<p><label><input id='pa' name='pa' type='checkbox' %s> Publish Adv Data</label></p>"
+    "<p><label><input id='ut' name='ut' type='checkbox' %s> UUID as Topic</label></p>"
+    "<p><label><input id='fc' name='fc' type='checkbox' %s> Filter Connectable</label></p>"
+    "<p><label><input id='iw' name='iw' type='checkbox' %s> Ignore White/Blacklist</label></p>";
+
+// Part 3: Presence settings (%s=hasspresence, %s=presuseuuid, %s=prestopic, %lu=presenceawaytimer, %lu=movingtimer)
+const char config_ble_body_presence[] =
+    "<hr><p><b>Presence Settings</b></p>"
+    "<p><label><input id='hp' name='hp' type='checkbox' %s> HA Presence</label></p>"
+    "<p><label><input id='pu' name='pu' type='checkbox' %s> Use UUID for Presence</label></p>"
+    "<p><b>Presence Topic</b><br><input id='pt' name='pt' value='%s'></p>"
+    "<p><b>Away Timer (ms)</b><br><input id='at' name='at' type='number' min='0' value='%lu'></p>"
+    "<p><b>Moving Timer (ms)</b><br><input id='mo' name='mo' type='number' min='0' value='%lu'></p>";
+
+// Part 4: External decoder settings (%s=extDecoderEnable, %s=extDecoderTopic, %lu=intervalcnct)
+const char config_ble_body_decoder[] =
+    "<hr><p><b>External Decoder</b></p>"
+    "<p><label><input id='ed' name='ed' type='checkbox' %s> Enable Ext Decoder</label></p>"
+    "<p><b>Ext Decoder Topic</b><br><input id='et' name='et' value='%s'></p>"
+    "<p><b>Connect Interval (ms)</b><br><input id='ci' name='ci' type='number' min='0' value='%lu'></p>";
+
+#  if BLEDecryptor
+// Part 5: Encryption settings (%s=ble_aes, %s=ble_aes_keys)
+const char config_ble_body_encrypt[] =
+    "<hr><p><b>Encryption</b></p>"
+    "<p><b>BLE AES Default Key (32 char hex)</b></p>"
+    "<input id='bk' name='bk' minlength='32' maxlength='32' placeholder=" BLE_AES
+    " value='%s'>"
+    "<hr><p><b>BLE Key Pairs</b></p>"
+    "<p>MacAddress:AESKey with space separator</p>"
+    "<p><textarea id='kp' name='kp' placeholder='A4C138012345:00112233445566778899001122334455' rows='3' cols='46'>%s</textarea></p>";
+#  endif
+
+// Part 6: Save button + footer
+const char config_ble_body_footer[] =
+    "<br><button id='s' name='save' type='submit' class='button bgrn'>Save</button>"
+    "</form></fieldset>" body_footer_config_menu;
 
 const char ble_script[] = "";
 #endif

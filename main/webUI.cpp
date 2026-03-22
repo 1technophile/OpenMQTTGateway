@@ -64,6 +64,7 @@ extern void eraseConfig();
 extern unsigned long uptime();
 extern void ESPRestart(byte reason);
 extern void XtoSYS(const char* topicOri, JsonObject& SYSdata);
+extern void SYSConfig_save();
 extern String stateMeasures();
 extern void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData);
 extern void receivingDATA(const char* topicOri, const char* datacallback);
@@ -862,44 +863,61 @@ void handleMQ() {
 void handleCG() {
   WEBUI_TRACE_LOG(F("handleCG: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
-  bool update = false;
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+  bool pwUpdate = false;
+  bool sysUpdate = false;
 
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleCG Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-    if (server.hasArg("save") && server.hasArg("gp") && strcmp(ota_pass, server.arg("gp").c_str())) {
-      strncpy(ota_pass, server.arg("gp").c_str(), parameters_size);
-      WEBtoSYS["gw_pass"] = ota_pass;
-      update = true;
+    if (server.hasArg("save")) {
+      if (server.hasArg("gp") && server.arg("gp").length() > 0 && strcmp(ota_pass, server.arg("gp").c_str())) {
+        strncpy(ota_pass, server.arg("gp").c_str(), parameters_size);
+        pwUpdate = true;
+      }
+#    ifdef ZmqttDiscovery
+      if (SYSConfig.discovery != server.hasArg("dc")) {
+        SYSConfig.discovery = server.hasArg("dc");
+        sysUpdate = true;
+      }
+#    endif
     }
   }
 
-  if (update) {
-    THEENGS_LOG_WARNING(F("[WebUI] Save Password and Restart" CR));
+  if (pwUpdate || sysUpdate) {
+    THEENGS_LOG_NOTICE(F("[WebUI] Save gateway config and restart" CR));
+
+    if (sysUpdate) {
+      SYSConfig_save();
+    }
 
     char jsonChar[100];
     serializeJson(modules, jsonChar, measureJson(modules) + 1);
     char buffer[WEB_TEMPLATE_BUFFER_MAX_SIZE];
 
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save Password and Restart").c_str());
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, header_html, (String(gateway_name) + " - Save and Restart").c_str());
     String response = String(buffer);
     response += String(restart_script);
     response += String(script);
     response += String(style);
-    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save Password and Restart");
+    snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, reset_body, jsonChar, gateway_name, "Save and Restart");
     response += String(buffer);
     snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
     response += String(buffer);
     server.send(200, "text/html", response);
 
-    delay(2000); // Wait for web page to be sent before
-    String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-    XtoSYS((char*)topic.c_str(), WEBtoSYS);
-  } else {
-    THEENGS_LOG_WARNING(F("[WebUI] No changes" CR));
+    if (pwUpdate) {
+      StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+      JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
+      WEBtoSYS["gw_pass"] = ota_pass;
+      delay(2000);
+      String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+      XtoSYS((char*)topic.c_str(), WEBtoSYS);
+    } else {
+      delay(2000);
+      ESPRestart(5);
+    }
+    return;
   }
 
   char jsonChar[100];
@@ -911,7 +929,12 @@ void handleCG() {
   String response = String(buffer);
   response += String(script);
   response += String(style);
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_gateway_body, jsonChar, gateway_name, ota_pass);
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_gateway_body, jsonChar, gateway_name
+#    ifdef ZmqttDiscovery
+           ,
+           (SYSConfig.discovery ? "checked" : "")
+#    endif
+  );
   response += String(buffer);
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
@@ -955,73 +978,121 @@ void handleLO() {
   server.send(200, "text/html", response);
 }
 
-#  if BLEDecryptor
+#  ifdef ZgatewayBT
+#    include "config_BT.h"
+extern void BTConfig_fromJson(JsonObject& BTdata, bool startup);
+extern String stateBTMeasures(bool start);
+extern BTConfig_s BTConfig;
+
 /**
  * @brief /BL - Config BLE
- * T: handleBL: uri: /bl, args: 3, method: 1
- * T: handleBL Arg: 0, dn=on - Force Device Name
- * T: handleBL Arg: 1, bk=on - BLE AES Key
- * T: handleBL Arg: 2, save=
  */
 void handleBL() {
   WEBUI_TRACE_LOG(F("handleBL: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
-  JsonObject WEBtoSYS = jsonBuffer.to<JsonObject>();
-
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleBL Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
     }
-    bool update = false;
-
     if (server.hasArg("save")) {
-      // Default BLE AES Key
-      if (server.hasArg("bk")) {
-        WEBtoSYS["ble_aes"] = server.arg("bk");
-        update = true;
-      }
+      // Save BLE config in its own scope so the JSON buffer is freed before stateBTMeasures
+      // runs (via BTConfig_fromJson), avoiding stack overflow from nested StaticJsonDocument allocations
+      {
+        StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+        JsonObject WEBtoBT = jsonBuffer.to<JsonObject>();
 
-      // Split Custom BLE AES key pair string add to config
-      if (server.hasArg("kp")) {
-        String kp = server.arg("kp");
-        while (kp.length() > 0) {
-          int kpindex = kp.indexOf(' ');
-          if (kpindex == -1) {
-            if (kp.indexOf(':') == 12) {
-              WEBtoSYS["ble_aes_keys"][kp.substring(0, 12)] = kp.substring(13, 45);
-            }
-            break;
-          } else {
-            if (kp.indexOf(':') == 12) {
-              WEBtoSYS["ble_aes_keys"][kp.substring(0, 12)] = kp.substring(13, 45);
-            }
-            kp = kp.substring(kpindex + 1);
-          }
+        // Scan settings
+        WEBtoBT["enabled"] = server.hasArg("en");
+        WEBtoBT["adaptivescan"] = server.hasArg("as");
+        if (server.hasArg("bi")) {
+          WEBtoBT["interval"] = server.arg("bi").toInt();
         }
-        update = true;
-      }
+        if (server.hasArg("ai")) {
+          WEBtoBT["intervalacts"] = server.arg("ai").toInt();
+        }
+        if (server.hasArg("sd")) {
+          WEBtoBT["scanduration"] = server.arg("sd").toInt();
+        }
+        WEBtoBT["forcepscn"] = server.hasArg("fp");
+        WEBtoBT["bleconnect"] = server.hasArg("bc");
+        if (server.hasArg("mr")) {
+          WEBtoBT["minrssi"] = server.arg("mr").toInt();
+        }
 
-      if (update) {
-        THEENGS_LOG_WARNING(F("[BLE] Save Config" CR));
-        String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
-        XtoSYS((char*)topic.c_str(), WEBtoSYS);
-      } else {
-        THEENGS_LOG_WARNING(F("[BLE] No changes" CR));
+        // Publish settings
+        WEBtoBT["onlysensors"] = server.hasArg("os");
+        WEBtoBT["randommacs"] = server.hasArg("rm");
+        WEBtoBT["pubadvdata"] = server.hasArg("pa");
+        WEBtoBT["pubuuid4topic"] = server.hasArg("ut");
+        WEBtoBT["filterConnectable"] = server.hasArg("fc");
+        WEBtoBT["ignoreWBlist"] = server.hasArg("iw");
+
+        // Presence settings
+        WEBtoBT["hasspresence"] = server.hasArg("hp");
+        WEBtoBT["presuseuuid"] = server.hasArg("pu");
+        if (server.hasArg("pt")) {
+          WEBtoBT["prestopic"] = server.arg("pt");
+        }
+        if (server.hasArg("at")) {
+          WEBtoBT["presenceawaytimer"] = server.arg("at").toInt();
+        }
+        if (server.hasArg("mo")) {
+          WEBtoBT["movingtimer"] = server.arg("mo").toInt();
+        }
+
+        // External decoder
+        WEBtoBT["extDecoderEnable"] = server.hasArg("ed");
+        if (server.hasArg("et")) {
+          WEBtoBT["extDecoderTopic"] = server.arg("et");
+        }
+        if (server.hasArg("ci")) {
+          WEBtoBT["intervalcnct"] = server.arg("ci").toInt();
+        }
+
+        THEENGS_LOG_NOTICE(F("[WebUI] Save BLE config" CR));
+        WEBtoBT["save"] = true;
+        BTConfig_fromJson(WEBtoBT, false);
+      } // jsonBuffer freed here before stateBTMeasures internal allocations complete
+
+#    if BLEDecryptor
+      // Encryption settings (via SYS topic) - separate scope
+      {
+        StaticJsonDocument<JSON_MSG_BUFFER> sysBuffer;
+        JsonObject WEBtoSYS = sysBuffer.to<JsonObject>();
+        bool sysUpdate = false;
+
+        if (server.hasArg("bk")) {
+          WEBtoSYS["ble_aes"] = server.arg("bk");
+          sysUpdate = true;
+        }
+        if (server.hasArg("kp")) {
+          String kp = server.arg("kp");
+          while (kp.length() > 0) {
+            int kpindex = kp.indexOf(' ');
+            if (kpindex == -1) {
+              if (kp.indexOf(':') == 12) {
+                WEBtoSYS["ble_aes_keys"][kp.substring(0, 12)] = kp.substring(13, 45);
+              }
+              break;
+            } else {
+              if (kp.indexOf(':') == 12) {
+                WEBtoSYS["ble_aes_keys"][kp.substring(0, 12)] = kp.substring(13, 45);
+              }
+              kp = kp.substring(kpindex + 1);
+            }
+          }
+          sysUpdate = true;
+        }
+
+        if (sysUpdate) {
+          THEENGS_LOG_NOTICE(F("[WebUI] Save BLE encryption config" CR));
+          String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
+          XtoSYS((char*)topic.c_str(), WEBtoSYS);
+        }
       }
+#    endif
     }
   }
-
-  // Build BLE Key Pair string
-  std::string aeskeysstring;
-  JsonObject root = ble_aes_keys.as<JsonObject>();
-  for (JsonPair kv : root) {
-    aeskeysstring += kv.key().c_str();
-    aeskeysstring += ":";
-    aeskeysstring += kv.value().as<const char*>();
-    aeskeysstring += " ";
-  }
-  aeskeysstring.pop_back();
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -1033,9 +1104,69 @@ void handleBL() {
   response += String(ble_script);
   response += String(script);
   response += String(style);
-  int logLevel = Log.getLevel();
-  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body, jsonChar, gateway_name, ble_aes, aeskeysstring.c_str());
+
+  // Scan settings
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body_scan,
+           jsonChar, gateway_name,
+           (BTConfig.enabled ? "checked" : ""),
+           (BTConfig.adaptiveScan ? "checked" : ""),
+           BTConfig.BLEinterval,
+           BTConfig.intervalActiveScan,
+           BTConfig.scanDuration,
+           (BTConfig.forcePassiveScan ? "checked" : ""),
+           (BTConfig.bleConnect ? "checked" : ""),
+           BTConfig.minRssi);
   response += String(buffer);
+
+  // Publish settings
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body_publish,
+           (BTConfig.pubOnlySensors ? "checked" : ""),
+           (BTConfig.pubRandomMACs ? "checked" : ""),
+           (BTConfig.pubAdvData ? "checked" : ""),
+           (BTConfig.pubBeaconUuidForTopic ? "checked" : ""),
+           (BTConfig.filterConnectable ? "checked" : ""),
+           (BTConfig.ignoreWBlist ? "checked" : ""));
+  response += String(buffer);
+
+  // Presence settings
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body_presence,
+           (BTConfig.presenceEnable ? "checked" : ""),
+           (BTConfig.presenceUseBeaconUuid ? "checked" : ""),
+           BTConfig.presenceTopic.c_str(),
+           BTConfig.presenceAwayTimer,
+           BTConfig.movingTimer);
+  response += String(buffer);
+
+  // External decoder settings
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body_decoder,
+           (BTConfig.extDecoderEnable ? "checked" : ""),
+           BTConfig.extDecoderTopic.c_str(),
+           BTConfig.intervalConnect);
+  response += String(buffer);
+
+#    if BLEDecryptor
+  // Encryption settings
+  std::string aeskeysstring;
+  JsonObject root = ble_aes_keys.as<JsonObject>();
+  for (JsonPair kv : root) {
+    aeskeysstring += kv.key().c_str();
+    aeskeysstring += ":";
+    aeskeysstring += kv.value().as<const char*>();
+    aeskeysstring += " ";
+  }
+  if (!aeskeysstring.empty()) {
+    aeskeysstring.pop_back();
+  }
+
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, config_ble_body_encrypt,
+           ble_aes, aeskeysstring.c_str());
+  response += String(buffer);
+#    endif
+
+  // Footer
+  snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, "%s", config_ble_body_footer);
+  response += String(buffer);
+
   snprintf(buffer, WEB_TEMPLATE_BUFFER_MAX_SIZE, footer, OMG_VERSION);
   response += String(buffer);
   server.send(200, "text/html", response);
@@ -1757,7 +1888,7 @@ void WebUISetup() {
   server.on("/wi", HTTP_POST, handleWI); // Configure Wifi
   server.on("/mq", HTTP_POST, handleMQ); // Configure MQTT
 #  ifndef ESPWifiManualSetup
-  server.on("/cg", HTTP_POST, handleCG); // Configure gateway"
+  server.on("/cg", handleCG); // Configure gateway
 #  endif
   server.on("/wu", handleWU); // Configure WebUI
 #  ifdef ZgatewayLORA
@@ -1771,8 +1902,8 @@ void WebUISetup() {
 #  endif
   server.on("/lo", handleLO); // Configure Logging
 
-#  if BLEDecryptor
-  server.on("/bl", HTTP_POST, handleBL); // Configure BLE
+#  ifdef ZgatewayBT
+  server.on("/bl", handleBL); // Configure BLE
 #  endif
 
   server.on("/rt", handleRT); // Reset configuration ( Erase and Restart )
