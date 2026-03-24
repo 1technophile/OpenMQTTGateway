@@ -44,7 +44,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Trivy
         run: |
@@ -82,7 +82,7 @@ jobs:
       
       # Agnostic: Upload all reports as artifacts (works on any CI)
       - name: Upload security reports as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: security-scan-reports
@@ -102,7 +102,7 @@ jobs:
 
       #
       - name: Upload SBOM reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: sbom-reports

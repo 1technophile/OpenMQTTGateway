@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Check code format
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install clang-format
         run: |
           sudo apt-get update

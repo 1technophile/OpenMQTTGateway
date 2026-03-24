@@ -43,7 +43,7 @@ jobs:
     name: Deploy release assets
     steps:
       - name: Download all firmware artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: "*"
           path: generated/artifacts

@@ -13,7 +13,7 @@ jobs:
       short-sha: ${{ steps.short-sha.outputs.sha }}
       has-changes: ${{ steps.check-changes.outputs.has-changes }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Check for recent changes
@@ -29,7 +29,7 @@ jobs:
             echo "has-changes=false" >> $GITHUB_OUTPUT
             echo "No changes in the last 24 hours, skipping build"
           fi
-      - uses: benjlevesque/short-sha@v2.1
+      - uses: benjlevesque/short-sha@v3.0
         if: steps.check-changes.outputs.has-changes == 'true'
         id: short-sha
         with:
