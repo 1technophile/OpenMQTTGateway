@@ -1089,7 +1089,9 @@ void handleBL() {
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure BLE").c_str());
-  server.sendContent(ble_script);
+  if (strlen(ble_script) > 0) {
+    server.sendContent(ble_script);
+  }
   server.sendContent(script);
   server.sendContent(style);
 
