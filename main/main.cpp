@@ -91,6 +91,7 @@ SemaphoreHandle_t xMqttMutex;
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
 bool ethConnected = false;
+bool ethLinkConnected = false;
 char mqtt_topic[parameters_size + 1] = Base_Topic;
 char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
@@ -312,7 +313,37 @@ bool BTProcessLock = true; // Process lock when we want to use a critical functi
 #    include "soc/sens_reg.h"
 #  endif
 #  ifdef ESP32_ETHERNET
+#    if defined(W5500) && !defined(ETH_PHY_TYPE)
+#      define ETH_PHY_TYPE ETH_PHY_W5500
+#    endif
+#    if !defined(ETH_PHY_ADDR)
+#      define ETH_PHY_ADDR 1
+#    endif
+#    if defined(ETH_CS) && !defined(ETH_PHY_CS)
+#      define ETH_PHY_CS ETH_CS
+#    endif
+#    if defined(ETH_INT) && !defined(ETH_PHY_IRQ)
+#      define ETH_PHY_IRQ ETH_INT
+#    endif
+#    if defined(ETH_RST) && !defined(ETH_PHY_RST)
+#      define ETH_PHY_RST ETH_RST
+#    endif
+#    if defined(ETH_SPI_HOST) && !defined(ETH_PHY_SPI_HOST)
+#      define ETH_PHY_SPI_HOST ETH_SPI_HOST
+#    endif
+#    if defined(ETH_SCLK) && !defined(ETH_PHY_SPI_SCK)
+#      define ETH_PHY_SPI_SCK ETH_SCLK
+#    endif
+#    if defined(ETH_MISO) && !defined(ETH_PHY_SPI_MISO)
+#      define ETH_PHY_SPI_MISO ETH_MISO
+#    endif
+#    if defined(ETH_MOSI) && !defined(ETH_PHY_SPI_MOSI)
+#      define ETH_PHY_SPI_MOSI ETH_MOSI
+#    endif
 #    include <ETH.h>
+#    ifdef W5500
+#      include <SPI.h>
+#    endif
 void WiFiEvent(WiFiEvent_t event);
 #  endif
 
@@ -1632,19 +1663,27 @@ bool wifi_reconnect_bypass() {
 #endif
   uint8_t wifi_autoreconnect_cnt = 0;
 #ifdef ESP32
+  WiFi.begin();
+#  if defined(WifiGMode) || defined(WifiPower)
+  setESPWifiProtocolTxPower();
+#  endif
   while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
+    THEENGS_LOG_NOTICE(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
+    delay(1200);
+    wifi_autoreconnect_cnt++;
+  }
 #else
   while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
-#endif
     THEENGS_LOG_NOTICE(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
     WiFi.begin();
 #if defined(WifiGMode) || defined(WifiPower)
     setESPWifiProtocolTxPower();
 #endif
-    delay(1000);
+    delay(1200);
     wifi_autoreconnect_cnt++;
   }
+#endif
   if (wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
     return true;
   } else {
@@ -2308,7 +2347,24 @@ void setupWiFiManager() {
   wifiManager.setBreakAfterConfig(true); // If ethernet is used, we don't want to block the connection by keeping the portal up
 #  endif
 
-  if (!SYSConfig.offline && !wifi_reconnect_bypass()) // if we didn't connect with saved credential we start Wifimanager web portal
+  bool wifiConnectedBySavedCreds = false;
+#  if defined(ESP32_ETHERNET)
+  if (!SYSConfig.offline && (ethConnected || ethLinkConnected)) {
+    THEENGS_LOG_NOTICE(F("Ethernet link available, skipping WiFiManager portal" CR));
+    return;
+  }
+  // On mixed ETH/WiFi ESP32 builds, repeated STA retry can trigger watchdog resets.
+  // Let WiFiManager handle fallback directly when Ethernet is not connected.
+  if (!SYSConfig.offline) {
+    THEENGS_LOG_NOTICE(F("Skipping saved AP retry in Ethernet build" CR));
+  }
+#  else
+  if (!SYSConfig.offline) {
+    wifiConnectedBySavedCreds = wifi_reconnect_bypass();
+  }
+#  endif
+
+  if (!SYSConfig.offline && !wifiConnectedBySavedCreds) // if we didn't connect with saved credential we start Wifimanager web portal
   {
     THEENGS_LOG_NOTICE(F("Connect your phone to WIFI AP: %s with PWD: %s" CR), WifiManager_ssid, ota_pass);
     gatewayState = GatewayState::ONBOARDING;
@@ -2398,7 +2454,13 @@ void setupWiFiManager() {
 #  ifdef ESP32_ETHERNET
 void setup_ethernet_esp32() {
   bool ethBeginSuccess = false;
+  uint8_t eth_wait_count = 0;
+  const uint8_t eth_wait_max = maxConnectionRetryNetwork * 4;
   WiFi.onEvent(WiFiEvent);
+#    if defined(W5500) && defined(ETH_PHY_TYPE) && defined(ETH_PHY_ADDR) && defined(ETH_PHY_CS) && defined(ETH_PHY_IRQ) && defined(ETH_PHY_RST) && defined(ETH_SCLK) && defined(ETH_MISO) && defined(ETH_MOSI)
+  // Match the Seeed reference init path for XIAO W5500 adapter.
+  SPI.begin(ETH_SCLK, ETH_MISO, ETH_MOSI, ETH_PHY_CS);
+#    endif
 #    ifdef NetworkAdvancedSetup
   IPAddress ip_adress;
   IPAddress gateway_adress;
@@ -2411,17 +2473,33 @@ void setup_ethernet_esp32() {
 
   THEENGS_LOG_TRACE(F("Adv eth cfg" CR));
   ETH.config(ip, gateway, subnet, Dns);
+#      if defined(W5500) && defined(ETH_PHY_TYPE) && defined(ETH_PHY_ADDR) && defined(ETH_PHY_CS) && defined(ETH_PHY_IRQ) && defined(ETH_PHY_RST) && defined(ETH_SCLK) && defined(ETH_MISO) && defined(ETH_MOSI)
+  ethBeginSuccess = ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, SPI);
+#      else
   ethBeginSuccess = ETH.begin();
+#      endif
 #    else
   THEENGS_LOG_NOTICE(F("Spl eth cfg" CR));
+#      if defined(W5500) && defined(ETH_PHY_TYPE) && defined(ETH_PHY_ADDR) && defined(ETH_PHY_CS) && defined(ETH_PHY_IRQ) && defined(ETH_PHY_RST) && defined(ETH_SCLK) && defined(ETH_MISO) && defined(ETH_MOSI)
+  ethBeginSuccess = ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, SPI);
+#      else
   ethBeginSuccess = ETH.begin();
+#      endif
 #    endif
   if (ethBeginSuccess) {
     THEENGS_LOG_NOTICE(F("Ethernet started" CR));
-    while (!ethConnected && failure_number_ntwk <= maxConnectionRetryNetwork) {
+    while (!ethConnected && eth_wait_count <= eth_wait_max) {
       delay(500);
       THEENGS_LOG_NOTICE(F("." CR));
-      failure_number_ntwk++;
+      eth_wait_count++;
+    }
+    if (!ethConnected) {
+      if (!ethLinkConnected) {
+        THEENGS_LOG_WARNING(F("Ethernet link timeout, stopping Ethernet before WiFi fallback" CR));
+        ETH.end();
+      } else {
+        THEENGS_LOG_WARNING(F("Ethernet link detected but no IP yet, keep Ethernet active" CR));
+      }
     }
   } else {
     THEENGS_LOG_ERROR(F("Ethernet not started" CR));
@@ -2437,6 +2515,7 @@ void WiFiEvent(WiFiEvent_t event) {
       break;
     case ARDUINO_EVENT_ETH_CONNECTED:
       THEENGS_LOG_NOTICE(F("Ethernet Connected" CR));
+      ethLinkConnected = true;
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet MAC: %s" CR), ETH.macAddress().c_str());
@@ -2444,14 +2523,17 @@ void WiFiEvent(WiFiEvent_t event) {
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet link speed: %d Mbps" CR), ETH.linkSpeed());
       gatewayState = GatewayState::NTWK_CONNECTED;
       ethConnected = true;
+      ethLinkConnected = true;
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       THEENGS_LOG_WARNING(F("Ethernet Disconnected" CR));
       ethConnected = false;
+      ethLinkConnected = false;
       break;
     case ARDUINO_EVENT_ETH_STOP:
       THEENGS_LOG_WARNING(F("Ethernet Stopped" CR));
       ethConnected = false;
+      ethLinkConnected = false;
       break;
     default:
       break;
