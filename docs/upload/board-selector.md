@@ -1,10 +1,3 @@
---- 
-pageClass: table-generated-page
----
-
-
-<FlashEnvironmentSelector 
+<FlashEnvironmentSelector
   boardsUrl="/boards-info.json"
   firmwareBaseUrl="firmware_build/" />
-
-  

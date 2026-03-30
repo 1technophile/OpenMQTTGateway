@@ -76,11 +76,11 @@ Install these tools first. They are useful for **all** types of work:
 
 On Windows you can download:
 
-- Git from the official site: <https://git-scm.com/downloads>
-- Visual Studio Code from <https://code.visualstudio.com/>
+- Git from the official site: https://git-scm.com/downloads
+- Visual Studio Code from https://code.visualstudio.com/
 - Git Bash comes with "Git for Windows".
 
-On Linux you can install these with your package manager (for example apt on Ubuntu). For more help you can read the Git book: <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>.
+On Linux you can install these with your package manager (for example apt on Ubuntu). For more help you can read the Git book: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git.
 
 **Check (common tools):** open a terminal (Git Bash, WSL, or Linux shell) and run:
 
@@ -117,9 +117,9 @@ Install these extra tools:
 - Python 3.10 or newer
 - PlatformIO CLI (pip package)
 
-PlatformIO is the main build system for this project. We will use it from VS Code and from the terminal. If you want to read more, the official docs are here: <https://docs.platformio.org/>.
+PlatformIO is the main build system for this project. We will use it from VS Code and from the terminal. If you want to read more, the official docs are here: https://docs.platformio.org/.
 
-On Windows you can download Python from: <https://www.python.org/downloads/>
+On Windows you can download Python from: https://www.python.org/downloads/
 
 On Linux you can install Python with your package manager.
 
@@ -150,9 +150,9 @@ Install:
 - Node.js 18 or newer
 - npm (usually comes with Node.js)
 
-On Windows you can get Node.js from: <https://nodejs.org/en/download>
+On Windows you can get Node.js from: https://nodejs.org/en/download
 
-On Linux you can install Node.js with your package manager or by following the docs: <https://nodejs.org/en/download/package-manager>.
+On Linux you can install Node.js with your package manager or by following the docs: https://nodejs.org/en/download/package-manager.
 
 **Check (docs tools):**
 
@@ -164,7 +164,7 @@ npm --version
 If one of these commands fails, reinstall Node.js, close the terminal, and try again.
 
 ### 2.4 PlatformIO extension in Visual Studio Code
-Now add PlatformIO inside VS Code. You can also see pictures of these steps in many ESP32 + PlatformIO tutorials, for example on the PlatformIO site: <https://platformio.org/install/ide?install=vscode>.
+Now add PlatformIO inside VS Code. You can also see pictures of these steps in many ESP32 + PlatformIO tutorials, for example on the PlatformIO site: https://platformio.org/install/ide?install=vscode.
 
 Steps (based on common PlatformIO + VS Code ESP32 guides, adapted for this project):
 
@@ -216,7 +216,7 @@ cd OpenMQTTGateway
 
    you should see main, lib, scripts, docs and other files.
 
-If the clone fails, check your internet connection or a possible proxy. Then try again. If you are new to Git, the GitHub "Hello World" guide can also help: <https://docs.github.com/en/get-started/start-your-journey/hello-world>.
+If the clone fails, check your internet connection or a possible proxy. Then try again. If you are new to Git, the GitHub "Hello World" guide can also help: https://docs.github.com/en/get-started/start-your-journey/hello-world.
 
 
 
@@ -224,7 +224,7 @@ If the clone fails, check your internet connection or a possible proxy. Then try
 
 This section explains how to build and flash the firmware using Visual Studio Code with the PlatformIO extension.
 
-If you know the classic Arduino IDE, you can think of PlatformIO as a more powerful alternative. It manages many boards, libraries, and environments for you. The official introduction is here: <https://docs.platformio.org/en/latest/what-is-platformio.html>.
+If you know the classic Arduino IDE, you can think of PlatformIO as a more powerful alternative. It manages many boards, libraries, and environments for you. The official introduction is here: https://docs.platformio.org/en/latest/what-is-platformio.html.
 
 You do **not** create a new PlatformIO project. This repository is already a PlatformIO project. You just open it.
 
@@ -268,7 +268,7 @@ In OpenMQTTGateway the structure is a bit different, because it is a large proje
 
 **Check:** open platformio.ini in VS Code and scroll. You should see several [env:...] sections. This means PlatformIO understands the project.
 
-If you want to know more about this file, see the PlatformIO docs about configuration: <https://docs.platformio.org/en/latest/projectconf/index.html>.
+If you want to know more about this file, see the PlatformIO docs about configuration: https://docs.platformio.org/en/latest/projectconf/index.html.
 
 ### 4.3 Choose a PlatformIO environment
 
@@ -350,7 +350,7 @@ The Serial Monitor lets you see log messages from the firmware.
 
 If the text is unreadable, check that the baud rate matches the value in platformio.ini (monitor_speed). In this project the default is usually 115200.
 
-If you want to learn more about Serial Monitor problems, the PlatformIO docs have a short page: <https://docs.platformio.org/en/latest/core/userguide/device/cmd_monitor.html>.
+If you want to learn more about Serial Monitor problems, the PlatformIO docs have a short page: https://docs.platformio.org/en/latest/core/userguide/device/cmd_monitor.html.
 
 ### 4.7 Run PlatformIO tests (optional)
 
@@ -387,7 +387,7 @@ This script calls other scripts:
 
 The scripts are written for bash. On Windows always use **Git Bash** or **WSL** for them, not plain PowerShell or cmd.
 
-If you are new to bash, a gentle introduction is here: <https://ubuntu.com/tutorials/command-line-for-beginners>.
+If you are new to bash, a gentle introduction is here: https://ubuntu.com/tutorials/command-line-for-beginners.
 
 ### 5.1 Check that you are in the right place
 
@@ -493,14 +493,14 @@ Example direct call to ci_prepare_artifacts.sh:
 
 This script:
 
-- Copies firmware.bin, partitions.bin, bootloader.bin and other files from .pio/build/<env> into the output folder.
+- Copies firmware.bin, partitions.bin, bootloader.bin and other files from `.pio/build/<env>` into the output folder.
 - Renames them with the environment name, for example esp32dev-all-test-firmware.bin.
 - Creates archives for the libraries used by that environment.
 
 **Check:**
 
 - The folder generated/toDeploy (or your custom output) exists.
-- It contains files like <env>-firmware.bin and one or more *-libraries.tgz archives.
+- It contains files like `<env>-firmware.bin` and one or more `*-libraries.tgz` archives.
 
 If the script says the build directory is missing, run a firmware build first (section 5.3 or 5.4).
 
@@ -790,18 +790,18 @@ If any word in this guide is not clear, you can search it on the web or ask in t
 
 Here is a list of useful links related to tools used in this project:
 
-- **OpenMQTTGateway project**: <https://github.com/1technophile/OpenMQTTGateway>
-- **PlatformIO main site**: <https://platformio.org/>
-- **PlatformIO installation for VS Code**: <https://platformio.org/install/ide?install=vscode>
-- **PlatformIO documentation**: <https://docs.platformio.org/>
-- **Visual Studio Code documentation**: <https://code.visualstudio.com/docs>
-- **Git official site**: <https://git-scm.com/>
-- **Pro Git book (free)**: <https://git-scm.com/book/en/v2>
-- **GitHub getting started**: <https://docs.github.com/en/get-started>
-- **Node.js documentation**: <https://nodejs.org/en/docs>
-- **npm documentation**: <https://docs.npmjs.com/>
-- **VuePress documentation** (v1, similar to what this project uses): <https://v1.vuepress.vuejs.org/>
-- **MQTT introduction (HiveMQ)**: <https://www.hivemq.com/mqtt-essentials/>
+- **OpenMQTTGateway project**: https://github.com/1technophile/OpenMQTTGateway
+- **PlatformIO main site**: https://platformio.org/
+- **PlatformIO installation for VS Code**: https://platformio.org/install/ide?install=vscode
+- **PlatformIO documentation**: https://docs.platformio.org/
+- **Visual Studio Code documentation**: https://code.visualstudio.com/docs
+- **Git official site**: https://git-scm.com/
+- **Pro Git book (free)**: https://git-scm.com/book/en/v2
+- **GitHub getting started**: https://docs.github.com/en/get-started
+- **Node.js documentation**: https://nodejs.org/en/docs
+- **npm documentation**: https://docs.npmjs.com/
+- **VuePress documentation** (v1, similar to what this project uses): https://v1.vuepress.vuejs.org/
+- **MQTT introduction (HiveMQ)**: https://www.hivemq.com/mqtt-essentials/
 
 You do **not** need to read all of them now. Keep this list as a bookmark and come back when you are curious or stuck.
 

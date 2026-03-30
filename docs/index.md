@@ -1,17 +1,18 @@
-<ClientOnly>
-  <span v-if="$site.themeConfig.mode === 'dev'">
-  
-::: warning Development Version
-This is the edge version of the documentation. It is under active development and may contain bugs, incomplete features, or breaking changes. Use it at your own risk.
-:::
+<script setup>
+import { useData } from 'vitepress'
+const { site } = useData()
+const isDev = site.value.title?.includes('edge') || site.value.title?.includes('dev')
+</script>
 
-  </span>
-</ClientOnly>
+<div v-if="isDev" class="warning custom-block">
+<p class="custom-block-title">Development Version</p>
+<p>This is the edge version of the documentation. It is under active development and may contain bugs, incomplete features, or breaking changes. Use it at your own risk.</p>
+</div>
 
 OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
 
 <div style="text-align: center;">
-<img src="img/OpenMQTTGateway.png" alt="Overview of the protocols and compatible controllers" style="max-width: 100%; height: auto;">
+<img src="./img/OpenMQTTGateway.png" alt="Overview of the protocols and compatible controllers" style="max-width: 100%; height: auto;">
 </div>
 
 # What is an MQTT gateway or bridge ?
@@ -83,7 +84,7 @@ Support open-source development through sponsorship and gain exclusive access to
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna" target="_blank" rel="noopener noreferrer">
-    <img src="img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" style="max-width: 100%; height: auto;">
+    <img src="./img/Theengs-Bridge-ble-gateway.png" alt="Theengs bridge view" style="max-width: 100%; height: auto;">
     </a>
 </div>
 
@@ -99,7 +100,7 @@ Support open-source development through sponsorship and gain exclusive access to
 
 <div style="text-align: center;">
     <a href="https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption" target="_blank" rel="noopener noreferrer">
-    <img src="img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" style="max-width: 100%; height: auto;">
+    <img src="./img/Theengs-Plug-OpenMQTTGateway.png" alt="Theengs plug view" style="max-width: 100%; height: auto;">
     </a>
 </div>
 

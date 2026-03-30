@@ -1,6 +1,6 @@
 #!/bin/bash
 # CI/CD Site/Documentation Builder
-# This script builds and deploys VuePress documentation with version management.
+# This script builds and deploys VitePress documentation with version management.
 # Usage: ./scripts/ci_site.sh [OPTIONS] - Specify options for the script execution.
 
 set -euo pipefail
@@ -91,7 +91,7 @@ download_common_config() {
     log_info "Downloading common configuration..."
     
     local config_url="https://www.theengs.io/commonConfig.js"
-    local config_dest="${DOCS_DIR}/.vuepress/public/commonConfig.js"
+    local config_dest="${DOCS_DIR}/.vitepress/public/commonConfig.js"
     local curl_opts="-sSf"
 
     # Optionally disable TLS verification if explicitly requested
@@ -121,7 +121,7 @@ create_configuration_files() {
 
 
     ## Create a meta.json file on config folder
-    local meta_file="${DOCS_DIR}/.vuepress/meta.json"
+    local meta_file="${DOCS_DIR}/.vitepress/meta.json"
     cat > "$meta_file" <<EOF
 {
     "title": "Theengs OpenMQTTGateway",
@@ -184,7 +184,7 @@ usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Build and deploy OpenMQTTGateway documentation with VuePress.
+Build and deploy OpenMQTTGateway documentation with VitePress.
 Generates site structure and meta.json file.
 
 OPTIONS:

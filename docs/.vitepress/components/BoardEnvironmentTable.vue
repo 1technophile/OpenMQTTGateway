@@ -77,9 +77,9 @@
         :key="board.environment"
         class="board-card"
         @click="openSelector(board.environment)">
-        
+
         <div class="board-card__image">
-          <span v-if="popularEnvironments.indexOf(board.environment) !== -1" class="popular-badge">Popular</span>
+          <span v-if="popularEnvironments.includes(board.environment)" class="popular-badge">Popular</span>
           <img
             :src="getBoardImageUrl(board)"
             :alt="board.environment"
@@ -112,18 +112,18 @@
                 <svg :class="{rotated: expandedModules[board.environment]}" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
               </span>
             </div>
-            <transition name="expand-fade">
+            <Transition name="expand-fade">
               <div class="libraries-badges"
                 :style="expandedModules[board.environment] ? '' : 'max-height: 2.2em; overflow: hidden;'">
-                <span 
-                  v-for="(mod, index) in board.modules" 
-                  :key="index" 
+                <span
+                  v-for="(mod, index) in board.modules"
+                  :key="index"
                   class="lib-badge">
                   {{ mod }}
                 </span>
               </div>
-            </transition>
-            
+            </Transition>
+
           </div>
 
           <!-- Libraries Section with expand/collapse -->
@@ -137,20 +137,20 @@
                 :title="expandedLibraries[board.environment] ? 'Hide' : 'Show all'">
                 <svg :class="{rotated: expandedLibraries[board.environment]}" width="19" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
               </span>
-              
+
             </div>
-            <transition name="expand-fade">
+            <Transition name="expand-fade">
               <div class="libraries-badges"
                 :style="expandedLibraries[board.environment] ? '' : 'max-height: 2.2em; overflow: hidden;'">
-                <span 
-                  v-for="(lib, index) in board.libraries" 
-                  :key="index" 
+                <span
+                  v-for="(lib, index) in board.libraries"
+                  :key="index"
                   class="lib-badge">
                   {{ lib }}
                 </span>
               </div>
-            </transition>
-            
+            </Transition>
+
           </div>
 
           <div class="board-card__action">
@@ -163,190 +163,202 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'BoardEnvironmentTable',
-  props: {
-    boardsUrl: {
-      type: String,
-      default: '/boards-info.json'
-    },
-    selectorPath: {
-      type: String,
-      default: '/upload/board-selector.html'
-    }
-  },
-  data() {
-    return {
-      boards: [],
-      loading: false,
-      error: null,
-      expandedModules: {},
-      expandedLibraries: {},
-      searchQuery: '',
-      activeMcuFilter: null,
-      activeGatewayFilter: null,
-      popularEnvironments: [
-        'esp32dev-ble',
-        'theengs-bridge-v11',
-        'lilygo-rtl_433',
-        'lilygo-rtl_433-fsk',
-        'esp32dev-ir'
-      ]
-    };
-  },
-  computed: {
-    resolvedBoardsUrl() {
-      return this.buildUrl(this.boardsUrl);
-    },
-    resolvedSelectorUrl() {
-      return this.buildUrl(this.selectorPath);
-    },
-    mcuFilters() {
-      var families = {};
-      this.boards.forEach(function(b) {
-        var family = this.getMcuFamily(b.microcontroller);
-        if (family) families[family] = true;
-      }.bind(this));
-      return Object.keys(families).sort();
-    },
-    gatewayFilters() {
-      var gateways = {
-        BT: 'BLE',
-        RF: 'RF',
-        IR: 'IR',
-        LORA: 'LoRa',
-        RTL_433: 'RTL_433',
-        Pilight: 'Pilight'
-      };
-      var result = [];
-      var self = this;
-      Object.keys(gateways).forEach(function(key) {
-        var hasBoards = self.boards.some(function(b) {
-          return Array.isArray(b.modules) && b.modules.some(function(m) {
-            return m.toLowerCase().indexOf(key.toLowerCase()) !== -1;
-          });
-        });
-        if (hasBoards) {
-          result.push({ key: key, label: gateways[key] });
-        }
-      });
-      return result;
-    },
-    hasActiveFilters() {
-      return this.searchQuery || this.activeMcuFilter || this.activeGatewayFilter;
-    },
-    filteredBoards() {
-      var self = this;
-      return this.boards.filter(function(board) {
-        if (self.searchQuery) {
-          var q = self.searchQuery.toLowerCase();
-          var haystack = [
-            board.environment,
-            board.description || '',
-            board.microcontroller || '',
-            (board.modules || []).join(' ')
-          ].join(' ').toLowerCase();
-          if (haystack.indexOf(q) === -1) return false;
-        }
-        if (self.activeMcuFilter) {
-          var family = self.getMcuFamily(board.microcontroller);
-          if (family !== self.activeMcuFilter) return false;
-        }
-        if (self.activeGatewayFilter) {
-          var key = self.activeGatewayFilter.toLowerCase();
-          if (!Array.isArray(board.modules) || !board.modules.some(function(m) {
-            return m.toLowerCase().indexOf(key) !== -1;
-          })) return false;
-        }
-        return true;
-      });
-    }
-  },
-  methods: {
-    getMcuFamily(mcu) {
-      if (!mcu) return null;
-      var m = mcu.toLowerCase();
-      if (m.indexOf('esp32-s3') !== -1 || m.indexOf('esp32s3') !== -1 || m.indexOf('atoms3') !== -1 || m.indexOf('lilygo-t3-s3') !== -1) return 'ESP32-S3';
-      if (m.indexOf('esp32-c3') !== -1 || m.indexOf('esp32c3') !== -1 || m.indexOf('lolin_c3') !== -1 || m.indexOf('airm2m') !== -1) return 'ESP32-C3';
-      if (m.indexOf('esp32') !== -1 || m.indexOf('m5st') !== -1 || m.indexOf('heltec') !== -1 || m.indexOf('ttgo') !== -1 || m.indexOf('lolin32') !== -1 || m.indexOf('pico32') !== -1 || m.indexOf('tinypico') !== -1 || m.indexOf('feather') !== -1) return 'ESP32';
-      if (m.indexOf('esp8') !== -1 || m.indexOf('nodemcu') !== -1) return 'ESP8266';
-      return 'Other';
-    },
-    toggleMcuFilter(mcu) {
-      this.activeMcuFilter = this.activeMcuFilter === mcu ? null : mcu;
-    },
-    toggleGatewayFilter(gw) {
-      this.activeGatewayFilter = this.activeGatewayFilter === gw ? null : gw;
-    },
-    clearFilters() {
-      this.searchQuery = '';
-      this.activeMcuFilter = null;
-      this.activeGatewayFilter = null;
-    },
-    buildUrl(path) {
-      const base = this.$site?.base || '/';
-      const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
-      const cleanPath = path.startsWith('/') ? path : `/${path}`;
-      return `${cleanBase}${cleanPath}`;
-    },
-    async loadBoards() {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await fetch(this.resolvedBoardsUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        if (!Array.isArray(data)) {
-          throw new Error('boards-info.json must be an array');
-        }
-        var self = this;
-        this.boards = data
-          .filter(board => board && typeof board.environment === 'string')
-          .sort(function(a, b) {
-            var aPopular = self.popularEnvironments.indexOf(a.environment) !== -1;
-            var bPopular = self.popularEnvironments.indexOf(b.environment) !== -1;
-            if (aPopular && !bPopular) return -1;
-            if (!aPopular && bPopular) return 1;
-            return a.environment.localeCompare(b.environment);
-          });
-      } catch (err) {
-        console.error('Failed to load boards-info:', err);
-        this.error = err.message || 'Unable to load board information';
-      } finally {
-        this.loading = false;
-      }
-    },
-    toggleModules(env) {
-      this.$set(this.expandedModules, env, !this.expandedModules[env]);
-    },
-    toggleLibraries(env) {
-      this.$set(this.expandedLibraries, env, !this.expandedLibraries[env]);
-    },
-    openSelector(environment) {
-      if (!environment) return;
-      const url = `${this.resolvedSelectorUrl}?env=${encodeURIComponent(environment)}`;
-      window.location.href = url;
-    },
-    getBoardImageUrl(board) {
-      const customImg = board.customImg || board.CustomImg;
-      if (customImg) {
-        // If it's an absolute URL, use it as-is
-        if (customImg.startsWith('http')) {
-          return customImg;
-        }
-        // Otherwise, build the URL with site base
-        return this.buildUrl(customImg);
-      }
-      return this.buildUrl('/img/microcontroller.gif');
-    }
-  },
-  mounted() {
-    this.loadBoards();
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted } from 'vue'
+
+interface Board {
+  environment: string
+  description?: string
+  microcontroller?: string
+  modules?: string[]
+  libraries?: string[]
+  customImg?: string
+  CustomImg?: string
+}
+
+interface GatewayFilter {
+  key: string
+  label: string
+}
+
+const props = withDefaults(defineProps<{
+  boardsUrl?: string
+  selectorPath?: string
+}>(), {
+  boardsUrl: '/boards-info.json',
+  selectorPath: '/upload/board-selector.html'
+})
+
+const boards = ref<Board[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+const expandedModules = reactive<Record<string, boolean>>({})
+const expandedLibraries = reactive<Record<string, boolean>>({})
+const searchQuery = ref('')
+const activeMcuFilter = ref<string | null>(null)
+const activeGatewayFilter = ref<string | null>(null)
+
+const popularEnvironments = [
+  'esp32dev-ble',
+  'theengs-bridge-v11',
+  'lilygo-rtl_433',
+  'lilygo-rtl_433-fsk',
+  'esp32dev-ir'
+]
+
+function buildUrl(path: string): string {
+  const base = import.meta.env.BASE_URL || '/'
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base
+  const cleanPath = path.startsWith('/') ? path : `/${path}`
+  return `${cleanBase}${cleanPath}`
+}
+
+const resolvedBoardsUrl = computed(() => buildUrl(props.boardsUrl))
+const resolvedSelectorUrl = computed(() => buildUrl(props.selectorPath))
+
+function getMcuFamily(mcu: string | undefined): string | null {
+  if (!mcu) return null
+  const m = mcu.toLowerCase()
+  if (m.includes('esp32-s3') || m.includes('esp32s3') || m.includes('atoms3') || m.includes('lilygo-t3-s3')) return 'ESP32-S3'
+  if (m.includes('esp32-c3') || m.includes('esp32c3') || m.includes('lolin_c3') || m.includes('airm2m')) return 'ESP32-C3'
+  if (m.includes('esp32') || m.includes('m5st') || m.includes('heltec') || m.includes('ttgo') || m.includes('lolin32') || m.includes('pico32') || m.includes('tinypico') || m.includes('feather')) return 'ESP32'
+  if (m.includes('esp8') || m.includes('nodemcu')) return 'ESP8266'
+  return 'Other'
+}
+
+const mcuFilters = computed<string[]>(() => {
+  const families: Record<string, boolean> = {}
+  boards.value.forEach(b => {
+    const family = getMcuFamily(b.microcontroller)
+    if (family) families[family] = true
+  })
+  return Object.keys(families).sort()
+})
+
+const gatewayFilters = computed<GatewayFilter[]>(() => {
+  const gateways: Record<string, string> = {
+    BT: 'BLE',
+    RF: 'RF',
+    IR: 'IR',
+    LORA: 'LoRa',
+    RTL_433: 'RTL_433',
+    Pilight: 'Pilight'
   }
-};
+  const result: GatewayFilter[] = []
+  Object.keys(gateways).forEach(key => {
+    const hasBoards = boards.value.some(b =>
+      Array.isArray(b.modules) && b.modules.some(m =>
+        m.toLowerCase().includes(key.toLowerCase())
+      )
+    )
+    if (hasBoards) {
+      result.push({ key, label: gateways[key] })
+    }
+  })
+  return result
+})
+
+const hasActiveFilters = computed(() =>
+  searchQuery.value || activeMcuFilter.value || activeGatewayFilter.value
+)
+
+const filteredBoards = computed<Board[]>(() =>
+  boards.value.filter(board => {
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase()
+      const haystack = [
+        board.environment,
+        board.description || '',
+        board.microcontroller || '',
+        (board.modules || []).join(' ')
+      ].join(' ').toLowerCase()
+      if (!haystack.includes(q)) return false
+    }
+    if (activeMcuFilter.value) {
+      const family = getMcuFamily(board.microcontroller)
+      if (family !== activeMcuFilter.value) return false
+    }
+    if (activeGatewayFilter.value) {
+      const key = activeGatewayFilter.value.toLowerCase()
+      if (!Array.isArray(board.modules) || !board.modules.some(m =>
+        m.toLowerCase().includes(key)
+      )) return false
+    }
+    return true
+  })
+)
+
+function toggleMcuFilter(mcu: string) {
+  activeMcuFilter.value = activeMcuFilter.value === mcu ? null : mcu
+}
+
+function toggleGatewayFilter(gw: string) {
+  activeGatewayFilter.value = activeGatewayFilter.value === gw ? null : gw
+}
+
+function clearFilters() {
+  searchQuery.value = ''
+  activeMcuFilter.value = null
+  activeGatewayFilter.value = null
+}
+
+async function loadBoards() {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await fetch(resolvedBoardsUrl.value)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    const data = await response.json()
+    if (!Array.isArray(data)) {
+      throw new Error('boards-info.json must be an array')
+    }
+    boards.value = data
+      .filter((board: Board) => board && typeof board.environment === 'string')
+      .sort((a: Board, b: Board) => {
+        const aPopular = popularEnvironments.includes(a.environment)
+        const bPopular = popularEnvironments.includes(b.environment)
+        if (aPopular && !bPopular) return -1
+        if (!aPopular && bPopular) return 1
+        return a.environment.localeCompare(b.environment)
+      })
+  } catch (err: unknown) {
+    console.error('Failed to load boards-info:', err)
+    error.value = err instanceof Error ? err.message : 'Unable to load board information'
+  } finally {
+    loading.value = false
+  }
+}
+
+function toggleModules(env: string) {
+  expandedModules[env] = !expandedModules[env]
+}
+
+function toggleLibraries(env: string) {
+  expandedLibraries[env] = !expandedLibraries[env]
+}
+
+function openSelector(environment: string) {
+  if (!environment) return
+  const url = `${resolvedSelectorUrl.value}?env=${encodeURIComponent(environment)}`
+  window.location.href = url
+}
+
+function getBoardImageUrl(board: Board): string {
+  const customImg = board.customImg || board.CustomImg
+  if (customImg) {
+    if (customImg.startsWith('http')) {
+      return customImg
+    }
+    return buildUrl(customImg)
+  }
+  return buildUrl('/img/microcontroller.gif')
+}
+
+onMounted(() => {
+  loadBoards()
+})
 </script>
 
 <style scoped>
@@ -371,29 +383,29 @@ export default {
 .search-icon {
   position: absolute;
   left: 12px;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
   padding: 0.6rem 2.2rem 0.6rem 2.4rem;
-  border: 1px solid var(--border-color, #eaecef);
+  border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
   font-size: 0.9rem;
-  background: #ffffff;
-  color: var(--text-color, #2c3e50);
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
   transition: border-color 0.2s;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--accent-color, #3eaf7c);
+  border-color: var(--vp-c-brand-1);
   box-shadow: 0 0 0 3px rgba(62, 175, 124, 0.15);
 }
 
 .search-input::placeholder {
-  color: var(--text-color-secondary, #999);
+  color: var(--vp-c-text-3);
 }
 
 .search-clear {
@@ -403,14 +415,14 @@ export default {
   border: none;
   cursor: pointer;
   padding: 4px;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
   border-radius: 50%;
   display: flex;
   align-items: center;
 }
 
 .search-clear:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--vp-c-bg-soft);
 }
 
 .filter-groups {
@@ -428,7 +440,7 @@ export default {
 .filter-group__label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
   white-space: nowrap;
 }
 
@@ -439,9 +451,9 @@ export default {
 }
 
 .filter-chip {
-  background: var(--code-bg-color, #f6f8fa);
-  color: var(--text-color, #2c3e50);
-  border: 1px solid var(--border-color, #eaecef);
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  border: 1px solid var(--vp-c-divider);
   padding: 0.25rem 0.7rem;
   border-radius: 16px;
   font-size: 0.78rem;
@@ -451,14 +463,14 @@ export default {
 }
 
 .filter-chip:hover {
-  border-color: var(--accent-color, #3eaf7c);
-  color: var(--accent-color, #3eaf7c);
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
 }
 
 .filter-chip--active {
-  background: var(--accent-color, #3eaf7c);
+  background: var(--vp-c-brand-1);
   color: #ffffff;
-  border-color: var(--accent-color, #3eaf7c);
+  border-color: var(--vp-c-brand-1);
 }
 
 .filter-chip--active:hover {
@@ -471,13 +483,13 @@ export default {
   align-items: center;
   gap: 0.75rem;
   font-size: 0.85rem;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
 }
 
 .filter-clear {
   background: none;
   border: none;
-  color: var(--accent-color, #3eaf7c);
+  color: var(--vp-c-brand-1);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 500;
@@ -491,7 +503,7 @@ export default {
 .no-results {
   text-align: center;
   padding: 3rem 1rem;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
 }
 
 .no-results p {
@@ -501,15 +513,15 @@ export default {
 /* Grid Layout */
 .boards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
   margin-top: 1.5rem;
 }
 
 /* Card Design */
 .board-card {
-  background: #ffffff;
-  border: 1px solid var(--border-color, #eaecef);
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
@@ -522,18 +534,18 @@ export default {
 .board-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  border-color: var(--accent-color, #3eaf7c);
+  border-color: var(--vp-c-brand-1);
 }
 
 /* Image Section */
 .board-card__image {
-  background: var(--code-bg-color, #f6f8fa);
+  background: var(--vp-c-bg-soft);
   padding: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 120px;
-  border-bottom: 1px solid var(--border-color, #eaecef);
+  border-bottom: 1px solid var(--vp-c-divider);
   position: relative;
 }
 
@@ -585,22 +597,22 @@ export default {
 
 .board-card__title code {
   background: transparent;
-  color: var(--accent-color, #3eaf7c);
+  color: var(--vp-c-brand-1);
   font-size: 0.9em;
   padding: 0;
   font-weight: 600;
 }
 
 .board-card__chip {
-  background: var(--code-bg-color, #f6f8fa);
-  color: var(--text-color-secondary, #666);
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
   padding: 0.3rem 0.8rem;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
-  border: 1px solid var(--border-color, #eaecef);
+  border: 1px solid var(--vp-c-divider);
 }
 
 /* Description */
@@ -608,7 +620,7 @@ export default {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.5;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
 
 }
 
@@ -616,7 +628,7 @@ export default {
 .board-card__libraries {
   margin-top: 0.5rem;
   padding-top: 0.25rem;
-  border-top: 1px solid var(--border-color, #eaecef);
+  border-top: 1px solid var(--vp-c-divider);
 }
 
 .modules-label-row {
@@ -628,7 +640,7 @@ export default {
 .libraries-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-color-secondary, #666);
+  color: var(--vp-c-text-2);
   display: inline-block;
 }
 
@@ -640,24 +652,24 @@ export default {
 
 .lib-badge {
   display: inline-block;
-  background: var(--code-bg-color, #f6f8fa);
-  color: var(--text-color, #2c3e50);
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
-  border: 1px solid var(--border-color, #eaecef);
+  border: 1px solid var(--vp-c-divider);
 }
 
 /* Action Footer */
 .board-card__action {
   padding-top: 0.75rem;
   margin-top: 0.5rem;
-  border-top: 1px solid var(--border-color, #eaecef);
+  border-top: 1px solid var(--vp-c-divider);
 }
 
 .action-text {
-  color: var(--accent-color, #3eaf7c);
+  color: var(--vp-c-brand-1);
   font-size: 0.85rem;
   font-weight: 600;
   display: flex;
@@ -676,7 +688,7 @@ export default {
   height: 16px;
   min-width: 16px;
   border: 2px solid #cfd8dc;
-  border-top-color: var(--accent-color, #3eaf7c);
+  border-top-color: var(--vp-c-brand-1);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   vertical-align: middle;
@@ -702,7 +714,6 @@ export default {
 
   .boards-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
 
   .board-card__image {
@@ -730,11 +741,11 @@ export default {
 .expand-fade-enter-active, .expand-fade-leave-active {
   transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
 }
-.expand-fade-enter, .expand-fade-leave-to {
+.expand-fade-enter-from, .expand-fade-leave-to {
   opacity: 0;
   max-height: 0;
 }
-.expand-fade-enter-to, .expand-fade-leave {
+.expand-fade-enter-to, .expand-fade-leave-from {
   opacity: 1;
   max-height: 500px;
 }
@@ -745,7 +756,7 @@ export default {
   justify-content: center;
   background: none;
   border: none;
-  color: var(--accent-color, #3eaf7c);
+  color: var(--vp-c-brand-1);
   cursor: pointer;
   margin-top: 0.3em;
   margin-left: 0.2em;

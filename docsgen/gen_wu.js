@@ -23,9 +23,9 @@ const {
 // Base directories
 const ROOT_DIR = path.join(__dirname, '..');
 const DOCS_DIR = path.join(ROOT_DIR, 'docs');
-const VUEPRESS_DIR = path.join(DOCS_DIR, '.vuepress');
-const PUBLIC_DIR = path.join(VUEPRESS_DIR, 'public');
-const COMPONENTS_DIR = path.join(VUEPRESS_DIR, 'components');
+const VITEPRESS_DIR = path.join(DOCS_DIR, '.vitepress');
+const PUBLIC_DIR = path.join(VITEPRESS_DIR, 'public');
+const COMPONENTS_DIR = path.join(VITEPRESS_DIR, 'components');
 const ARTIFACTS_DIR = path.join(ROOT_DIR, 'generated', 'artifacts');
 
 // Feature-specific directories
@@ -34,8 +34,8 @@ const FIRMWARE_BUILD_DIR = path.join(PUBLIC_DIR, 'firmware_build');
 const BOARDS_INFO_FILE = path.join(PUBLIC_DIR, 'boards-info.json');
 
 // Configuration files
-const DEFAULTS_CONFIG_PATH = path.join(VUEPRESS_DIR, 'defaults.json');
-const META_CONFIG_PATH = path.join(VUEPRESS_DIR, 'meta.json');
+const DEFAULTS_CONFIG_PATH = path.join(VITEPRESS_DIR, 'defaults.json');
+const META_CONFIG_PATH = path.join(VITEPRESS_DIR, 'meta.json');
 
 
 

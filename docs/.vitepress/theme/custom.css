@@ -1,0 +1,32 @@
+/* docs/.vitepress/theme/custom.css */
+
+/* Prevent long site title from overlapping sidebar/nav */
+.VPNavBarTitle .title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Widen the entire content column on pages without aside (board/flash pages) */
+.VPDoc:not(.has-aside) .content-container,
+.VPDoc:not(.has-aside) .container {
+  max-width: 100% !important;
+}
+
+.VPDoc:not(.has-aside) .vp-doc {
+  max-width: 100% !important;
+}
+
+/* Gray backdrop when ESP Web Tools install dialog is open */
+ewt-install-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

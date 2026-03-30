@@ -1,5 +1,5 @@
---- 
-pageClass: table-generated-page
+---
+aside: false
 ---
 
 # Boards

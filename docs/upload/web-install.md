@@ -1,5 +1,5 @@
---- 
-pageClass: table-generated-page
+---
+aside: false
 ---
 
 ## Select your firmware
@@ -31,5 +31,4 @@ Support open-source development through sponsorship and gain exclusive access to
 <div style="text-align: center;">
     <iframe src="https://github.com/sponsors/theengs/button" title="Sponsor Theengs" height="32" width="228" style="border: 0; border-radius: 6px;"></iframe>
 </div>
-
 

@@ -24,11 +24,11 @@ managed_components
 .github/*instructions.md
 .github/workflows/_docs
 # CI/CD Generated outputs
-docs/.vuepress/dist/
-docs/.vuepress/public/boards-info.json
-docs/.vuepress/public/commonConfig.js 
-docs/.vuepress/public/firmware_build
-
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/.vitepress/public/boards-info.json
+docs/.vitepress/public/commonConfig.js
+docs/.vitepress/public/firmware_build
 
 # Generated site/firmware/reports files
 generated/
@@ -41,8 +41,10 @@ scripts/latest_version.json
 scripts/latest_version_dev.json
 
 # Generated configuration files
-docs/.vuepress/meta.json
+docs/.vitepress/meta.json
 
 # Generated full documentation pages
 docs/prerequisites/board-full.md
 docs/upload/web-install-full.md
+.superpowers/
+docs/superpowers/
