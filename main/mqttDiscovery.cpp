@@ -451,7 +451,13 @@ void createDiscovery(const char* sensor_type,
                      const char* device_name, const char* device_manufacturer, const char* device_model, const char* device_id, bool retainCmd,
                      const char* state_class, const char* state_off, const char* state_on, const char* enum_options,
                      const char* command_template, bool diagnostic_entity) {
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  // Heap-allocate the two JsonDocuments: createDiscovery sits at the bottom of
+  // a deep call chain (loop → launchBTDiscovery → <device>Discovery →
+  // createDiscoveryFromList(9-col, VLA) → createDiscoveryFromList(13-col) →
+  // here). Keeping 2×1024 B on the stack burned loopTask's stack headroom
+  // down to ~100 B free under full perf load. Heap-backed docs drop that
+  // 2 KB off the peak.
+  DynamicJsonDocument jsonBuffer(JSON_MSG_BUFFER);
   JsonObject sensor = jsonBuffer.to<JsonObject>();
 
   // If a component cannot render it's state (f.i. KAKU relays) no state topic
@@ -608,7 +614,7 @@ void createDiscovery(const char* sensor_type,
     sensor["ops"] = enum_options; // options
   }
 
-  StaticJsonDocument<JSON_MSG_BUFFER> jsonDeviceBuffer;
+  DynamicJsonDocument jsonDeviceBuffer(JSON_MSG_BUFFER);
   JsonObject device = jsonDeviceBuffer.to<JsonObject>();
   JsonArray identifiers = device.createNestedArray("ids");
 
