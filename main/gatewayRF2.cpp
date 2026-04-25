@@ -113,7 +113,9 @@ void RF2toMQTTdiscovery(JsonObject& data) {
 
 void RF2toX() {
   if (rf2rd.hasNewData) {
-    StaticJsonDocument<JSON_MSG_BUFFER> RF2dataBuffer;
+    // Single-task pool: main-loop consumer, doc never escapes the call.
+    static StaticJsonDocument<JSON_MSG_BUFFER> RF2dataBuffer;
+    RF2dataBuffer.clear();
     JsonObject RF2data = RF2dataBuffer.to<JsonObject>();
     rf2rd.hasNewData = false;
 

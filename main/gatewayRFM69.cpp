@@ -143,7 +143,9 @@ void setupRFM69(void) {
 bool RFM69toX(void) {
   //check if something was received (could be an interrupt from the radio)
   if (radio.receiveDone()) {
-    StaticJsonDocument<JSON_MSG_BUFFER> RFM69dataBuffer;
+    // Single-task pool: main-loop consumer, doc never escapes the call.
+    static StaticJsonDocument<JSON_MSG_BUFFER> RFM69dataBuffer;
+    RFM69dataBuffer.clear();
     JsonObject RFM69data = RFM69dataBuffer.to<JsonObject>();
     uint8_t data[RF69_MAX_DATA_LEN + 1]; // For the null character
     uint8_t SENDERID = radio.SENDERID;

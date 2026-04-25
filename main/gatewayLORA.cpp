@@ -431,7 +431,9 @@ void setupLORA() {
 void LORAtoX() {
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
-    StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
+    // Single-task pool: main-loop consumer, doc never escapes the call.
+    static StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
+    LORAdataBuffer.clear();
     JsonObject LORAdata = LORAdataBuffer.to<JsonObject>();
     THEENGS_LOG_TRACE(F("Rcv. LORA" CR));
 #  ifdef ESP32

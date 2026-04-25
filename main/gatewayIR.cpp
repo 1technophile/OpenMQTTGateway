@@ -109,7 +109,9 @@ void IRtoX() {
 
   if (irrecv.decode(&results)) {
     THEENGS_LOG_TRACE(F("Creating IR buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> IRdataBuffer;
+    // Single-task pool: main-loop consumer, doc never escapes the call.
+    static StaticJsonDocument<JSON_MSG_BUFFER> IRdataBuffer;
+    IRdataBuffer.clear();
     JsonObject IRdata = IRdataBuffer.to<JsonObject>();
 
     THEENGS_LOG_TRACE(F("Rcv. IR" CR));

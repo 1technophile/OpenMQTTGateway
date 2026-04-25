@@ -664,6 +664,10 @@ bool checkIfIsTracker(char ch) {
 
 void procBLETask(void* pvParameters) {
   BLEAdvertisedDevice* advertisedDevice = nullptr;
+  // Single-task pool: procBLETask is the only consumer of this buffer, so a
+  // function-scope static lives in BSS and is reused across iterations
+  // instead of burning ~1 KB of stack per queued advertisement.
+  static StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
 
   for (;;) {
     xQueueReceive(BLEQueue, &advertisedDevice, portMAX_DELAY);
@@ -671,7 +675,7 @@ void procBLETask(void* pvParameters) {
     //esp_task_wdt_reset();
     if (!BTProcessLock) {
       THEENGS_LOG_TRACE(F("Creating BLE buffer" CR));
-      StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBuffer;
+      BLEdataBuffer.clear();
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       BLEdata["id"] = advertisedDevice->getAddress().toString();
       BLEdata["mac_type"] = advertisedDevice->getAddress().getType();
@@ -701,8 +705,9 @@ void procBLETask(void* pvParameters) {
         if (advertisedDevice->haveServiceData()) {
           int serviceDataCount = advertisedDevice->getServiceDataCount();
           THEENGS_LOG_TRACE(F("Get services data number: %d" CR), serviceDataCount);
+          static StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBufferTemp;
           for (int j = 0; j < serviceDataCount; j++) {
-            StaticJsonDocument<JSON_MSG_BUFFER> BLEdataBufferTemp;
+            BLEdataBufferTemp.clear();
             JsonObject BLEdataTemp = BLEdataBufferTemp.to<JsonObject>();
             BLEdataBufferTemp = BLEdataBuffer;
             std::string service_data = convertServiceData(advertisedDevice->getServiceData(j));

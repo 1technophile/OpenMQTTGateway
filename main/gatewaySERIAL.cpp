@@ -231,8 +231,9 @@ void SERIALtoX() {
       // Remove prefix and postfix
       String jsonString = buffer.substring(strlen(SERIALPre), buffer.length() - strlen(SERIALPost));
 
-      // Allocate the JSON document
-      StaticJsonDocument<JSON_MSG_BUFFER> SERIALBuffer;
+      // Single-task pool: main-loop consumer, doc never escapes the call.
+      static StaticJsonDocument<JSON_MSG_BUFFER> SERIALBuffer;
+      SERIALBuffer.clear();
       JsonObject SERIALdata = SERIALBuffer.to<JsonObject>();
 
       // Deserialize the JSON string

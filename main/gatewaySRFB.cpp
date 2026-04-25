@@ -109,7 +109,9 @@ void _rfbDecode() {
     TheengsUtils::_rawToHex(&_uartbuf[1], buffer, RF_MESSAGE_SIZE);
 
     THEENGS_LOG_TRACE(F("Creating SRFB buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> SRFBdataBuffer;
+    // Single-task pool: main-loop consumer, doc never escapes the call.
+    static StaticJsonDocument<JSON_MSG_BUFFER> SRFBdataBuffer;
+    SRFBdataBuffer.clear();
     JsonObject SRFBdata = SRFBdataBuffer.to<JsonObject>();
     SRFBdata["raw"] = String(buffer).substring(0, 18);
 

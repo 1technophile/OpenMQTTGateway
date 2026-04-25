@@ -85,7 +85,9 @@ bool _2GtoX() {
   // Get the memory locations of unread SMS messages.
   unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 512);
   THEENGS_LOG_TRACE(F("Creating SMS  buffer" CR));
-  StaticJsonDocument<JSON_MSG_BUFFER> SMSdataBuffer;
+  // Single-task pool: main-loop consumer, doc never escapes the call.
+  static StaticJsonDocument<JSON_MSG_BUFFER> SMSdataBuffer;
+  SMSdataBuffer.clear();
   JsonObject SMSdata = SMSdataBuffer.to<JsonObject>();
   for (int i = 0; i < unreadSMSNum; i++) {
     THEENGS_LOG_NOTICE(F("New  message at index: %d" CR), unreadSMSNum);

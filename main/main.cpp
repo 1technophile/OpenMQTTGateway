@@ -2830,6 +2830,12 @@ String stateMeasures() {
   }
 #endif
   SYSdata["freemem"] = freeMem;
+#ifdef ESP32
+  uint32_t maxAllocHeap = ESP.getMaxAllocHeap();
+  SYSdata["maxalloc"] = maxAllocHeap;
+#elif defined(ESP8266)
+  SYSdata["maxalloc"] = ESP.getMaxFreeBlockSize();
+#endif
 #if !MQTT_BROKER_MODE
   SYSdata["mqttp"] = cnt_parameters_array[cnt_index].mqtt_port;
   SYSdata["mqtts"] = cnt_parameters_array[cnt_index].isConnectionSecure;
@@ -2843,6 +2849,9 @@ String stateMeasures() {
 #ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
   SYSdata["minmem"] = minFreeMem;
+  static uint32_t minMaxAllocHeap = UINT32_MAX;
+  if (maxAllocHeap < minMaxAllocHeap) minMaxAllocHeap = maxAllocHeap;
+  SYSdata["minmaxalloc"] = minMaxAllocHeap;
 #  ifndef NO_INT_TEMP_READING
   SYSdata["tempc"] = TheengsUtils::round2(intTemperatureRead());
 #  endif

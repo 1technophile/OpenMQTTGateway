@@ -58,9 +58,12 @@ void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
   if (status == VALID) {
     THEENGS_LOG_TRACE(F("Creating RF PiLight buffer" CR));
-    StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
+    // Single-task pool: main-loop consumer, docs never escape the call.
+    static StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
+    RFPiLightdataBuffer.clear();
     JsonObject RFPiLightdata = RFPiLightdataBuffer.to<JsonObject>();
-    StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
+    static StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer2;
+    jsonBuffer2.clear();
     JsonObject msg = jsonBuffer2.to<JsonObject>();
 
     if (message.length() > 0) {
@@ -114,7 +117,9 @@ void pilightRawCallback(const uint16_t* pulses, size_t length) {
     return;
   }
 
-  StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
+  // Single-task pool: main-loop consumer, doc never escapes the call.
+  static StaticJsonDocument<JSON_MSG_BUFFER> RFPiLightdataBuffer;
+  RFPiLightdataBuffer.clear();
   JsonObject RFPiLightdata = RFPiLightdataBuffer.to<JsonObject>();
 
   RFPiLightdata["format"] = "RAW";
