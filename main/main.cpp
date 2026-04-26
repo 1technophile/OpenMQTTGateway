@@ -2848,6 +2848,10 @@ String stateMeasures() {
 #  endif
   SYSdata["freestck"] = uxTaskGetStackHighWaterMark(NULL);
   SYSdata["powermode"] = SYSConfig.powerMode;
+  if (psramFound()) {
+    SYSdata["psram"] = true;
+    SYSdata["psramfree"] = ESP.getFreePsram();
+  }
 #endif
 
   SYSdata["eth"] = ethConnected;
