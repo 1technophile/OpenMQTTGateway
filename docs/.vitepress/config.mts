@@ -32,6 +32,12 @@ export default defineConfig({
   },
   themeConfig: {
     siteTitle: 'OpenMQTTGateway',
+    // @ts-expect-error custom fields consumed by index.md to render the dev-version banner
+    mode: meta.mode,
+    // @ts-expect-error
+    version: meta.version,
+    // @ts-expect-error
+    repo: meta.theme_config_repo,
     nav: commonNav,
     socialLinks: [
       { icon: 'github', link: `https://github.com/${meta.theme_config_repo}` }

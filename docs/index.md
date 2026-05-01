@@ -1,12 +1,19 @@
 <script setup>
 import { useData } from 'vitepress'
-const { site } = useData()
-const isDev = site.value.title?.includes('edge') || site.value.title?.includes('dev')
+import { computed } from 'vue'
+const { theme } = useData()
+const isDev = theme.value.mode === 'dev'
+const version = theme.value.version
+const commitUrl = computed(() =>
+  theme.value.repo && version
+    ? `https://github.com/${theme.value.repo}/commit/${version}`
+    : null
+)
 </script>
 
 <div v-if="isDev" class="warning custom-block">
 <p class="custom-block-title">Development Version</p>
-<p>This is the edge version of the documentation. It is under active development and may contain bugs, incomplete features, or breaking changes. Use it at your own risk.</p>
+<p>This is the edge version of the documentation, built from commit <a v-if="commitUrl" :href="commitUrl"><code>{{ version }}</code></a><code v-else>{{ version }}</code>. It is under active development and may contain bugs, incomplete features, or breaking changes. Use it at your own risk.</p>
 </div>
 
 OpenMQTTGateway aims to unify various technologies and protocols into a single firmware. This reduces the need for multiple physical bridges and streamlines diverse technologies under the widely-used [MQTT](http://mqtt.org/) protocol.
