@@ -61,17 +61,17 @@ extern int getRTLMessageCount();
 extern int getRTLAverageRSSI();
 extern int getOOKThresh();
 
+#  define uniqueIdSize  60 // longest model + longest key
+#  define modelNameSize 31 // longest model
+#  define typeSize      10 // longest type
+
 #  ifdef ZmqttDiscovery
 extern void launchRTL_433Discovery(bool overrideDiscovery);
 // This structure stores the entities of the RTL 433 devices and is they have been discovered or not
 // The uniqueId is composed of the device id + the key
-
-#    define uniqueIdSize  60 // longest model + longest key
-#    define modelNameSize 31 // longest model
-#    define typeSize      10 // longest type
-
 struct RTL_433device {
   char uniqueId[uniqueIdSize];
+  char deviceId[uniqueIdSize];
   char modelName[modelNameSize];
   char type[typeSize];
   bool isDisc;
@@ -131,6 +131,15 @@ const char parameters[51][4][24] = {
     {"wind_speed_km_h", "Wind speed", "km/h", "wind_speed"},
     {"wind_speed_m_s", "Wind speed", "m/s", "wind_speed"}};
 #  endif
+extern void RTL_433Config_addState(JsonObject& data);
+extern bool RTL_433Config_fromJson(JsonObject& data);
+extern bool RTL_433Config_save();
+extern bool RTL_433Config_load();
+extern void RTL_433Config_setWhitelistEnabled(bool enabled);
+extern bool RTL_433Config_isWhitelistEnabled();
+extern void RTL_433Config_clearWhitelist();
+extern bool RTL_433Config_addWhitelistId(const char* id);
+extern String RTL_433Config_webWhitelist();
 #  ifdef RTL_433_DISCOVERY_LOGGING
 #    define DISCOVERY_TRACE_LOG(...) THEENGS_LOG_TRACE(__VA_ARGS__)
 #  else

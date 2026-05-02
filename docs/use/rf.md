@@ -72,6 +72,45 @@ This feature is only available on a ESP32 based device with a supported transcei
 
 For the most recent support decoder list please check the [rtl_433_esp](https://github.com/NorthernMan54/rtl_433_ESP?tab=readme-ov-file#ook-signal-device-decoders) repository.
 
+### RTL_433 device whitelist
+
+The RTL_433 gateway can filter received devices with a whitelist. When the whitelist is enabled, only devices matching one of the configured RTL_433 device identifiers are published to MQTT. Other received RTL_433 messages are ignored.
+
+The device identifier is built from the RTL_433 decoded fields in this order:
+
+`type/model/subtype/channel/id`
+
+Depending on the protocol, some parts may be absent. The WebUI shows the identifiers detected during the current runtime, making it easier to select devices without typing them manually.
+
+The whitelist can be configured from:
+
+- the WebUI RF configuration page
+- MQTT commands to the SYS command topic
+- Home Assistant, when MQTT discovery is enabled
+
+The whitelist supports up to 5 device identifiers.
+
+Enable or disable the whitelist:
+
+```bash
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"rtl433wle":true,"save":true}'
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"rtl433wle":false,"save":true}'
+```
+
+Set whitelist entries:
+
+```bash
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"rtl433wl1":"OOK/Acurite-Tower/1/12345","rtl433wl2":"OOK/Prologue-TH/9/1/215","save":true}'
+```
+
+Clear one whitelist entry by sending an empty string:
+
+```bash
+mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m '{"rtl433wl2":"","save":true}'
+```
+
+The current whitelist state is published in the SYS state topic with the keys `rtl433wle` and `rtl433wl1` to `rtl433wl5`.
+
 ### Change Signal RSSI Threshold Delta
 
 Delta applied to RSSI floor noise level to determine start and end of signal, defaults to 9db.
