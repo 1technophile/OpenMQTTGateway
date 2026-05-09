@@ -96,6 +96,10 @@ char gateway_name[parameters_size + 1] = Gateway_Name;
 unsigned long lastDiscovery = 0;
 
 #if BLEDecryptor
+// BLE_AES defaults to "" (see User_config.h) so encrypted PVVX/BTHome/Victron
+// frames are only decrypted when a per-MAC key is configured (ble_aes_keys) or
+// the user enters a default. Sites shipping a stock default key can still set
+// it at build time via -DBLE_AES='"<32-hex-key>"'.
 char ble_aes[parameters_size] = BLE_AES;
 StaticJsonDocument<JSON_BLE_AES_CUSTOM_KEYS> ble_aes_keys;
 #endif

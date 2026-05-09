@@ -1275,9 +1275,14 @@ void process_bledata(JsonObject& BLEdata) {
     if (ble_aes_keys.containsKey(macWOdots)) {
       THEENGS_LOG_TRACE(F("[BLEDecryptor] Custom AES key %s" CR), ble_aes_keys[macWOdots].as<const char*>());
       bleaeskeylength = hexToBytes(ble_aes_keys[macWOdots], bleaeskey, 16);
-    } else {
+    } else if (strlen(ble_aes) >= 32) {
       THEENGS_LOG_TRACE(F("[BLEDecryptor] Default AES key" CR));
       bleaeskeylength = hexToBytes(ble_aes, bleaeskey, 16);
+    } else {
+      // No per-MAC key configured and no default set: skip silently rather
+      // than attempting decryption with a placeholder key.
+      THEENGS_LOG_DEBUG(F("[BLEDecryptor] No AES key configured for %s, skipping" CR), macWOdots.c_str());
+      return;
     }
     // Check AES Key
     if (bleaeskeylength != 16) {

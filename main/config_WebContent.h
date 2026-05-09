@@ -294,8 +294,7 @@ const char config_ble_body_decoder[] =
 const char config_ble_body_encrypt[] =
     "<hr><p><b>Encryption</b></p>"
     "<p><b>BLE AES Default Key (32 char hex)</b></p>"
-    "<input id='bk' name='bk' minlength='32' maxlength='32' placeholder=" BLE_AES
-    " value='%s'>"
+    "<input id='bk' name='bk' minlength='32' maxlength='32' placeholder='00112233445566778899001122334455' value='%s'>"
     "<hr><p><b>BLE Key Pairs</b></p>"
     "<p>MacAddress:AESKey with space separator</p>"
     "<p><textarea id='kp' name='kp' placeholder='A4C138012345:00112233445566778899001122334455' rows='3' cols='46'>%s</textarea></p>";
