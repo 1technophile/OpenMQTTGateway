@@ -694,9 +694,10 @@ void storeSignalValue(uint64_t);
 #    ifndef JSON_BLE_AES_CUSTOM_KEYS
 #      define JSON_BLE_AES_CUSTOM_KEYS 256 // 42 byte BLE Custom Key * 6 rounded up to 256.
 #    endif
+// Runtime default for ble_aes[]. Empty = no default; override at build time
+// with -DBLE_AES='"<32-hex-key>"' to ship a stock key.
 #    ifndef BLE_AES
-#      define BLE_AES "" // Runtime default for ble_aes[]. Empty = no default; override
-                        // at build time with -DBLE_AES='"<32-hex-key>"' to ship one.
+#      define BLE_AES ""
 #    endif
 #  endif
 #endif
