@@ -1281,7 +1281,7 @@ void process_bledata(JsonObject& BLEdata) {
     } else {
       // No per-MAC key configured and no default set: skip silently rather
       // than attempting decryption with a placeholder key.
-      THEENGS_LOG_DEBUG(F("[BLEDecryptor] No AES key configured for %s, skipping" CR), macWOdots.c_str());
+      THEENGS_LOG_TRACE(F("[BLEDecryptor] No AES key configured for %s, skipping" CR), macWOdots.c_str());
       return;
     }
     // Check AES Key
