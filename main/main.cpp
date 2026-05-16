@@ -2364,9 +2364,11 @@ void setupWiFiManager() {
     if (strlen(custom_mqtt_user.getValue()) > 0) {
       strcpy(cnt_parameters_array[cnt_index].mqtt_user, custom_mqtt_user.getValue());
     }
-    // Check if the MQTT password field contains the default value
-    if (strcmp(custom_mqtt_pass.getValue(), MQTT_PASS) != 0) {
-      // If it's not the default password, update the MQTT password
+    // Persist the MQTT password only when the form supplied a non-empty value
+    // that also differs from the compile-time MQTT_PASS sentinel. An empty
+    // value (partial / programmatic POST) must not wipe the stored password.
+    if (strlen(custom_mqtt_pass.getValue()) > 0 &&
+        strcmp(custom_mqtt_pass.getValue(), MQTT_PASS) != 0) {
       strcpy(cnt_parameters_array[cnt_index].mqtt_pass, custom_mqtt_pass.getValue());
     }
     if (strlen(custom_mqtt_topic.getValue()) > 0) {
