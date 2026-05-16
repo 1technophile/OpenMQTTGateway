@@ -22,7 +22,7 @@ When the portal is active (no saved credentials, or trigger pressed at boot) the
 | `server`     | MQTT host (≤ 64) | `custom_mqtt_server`            | yes, if non-empty |
 | `port`       | MQTT port        | `custom_mqtt_port`              | yes, if non-empty |
 | `user`       | MQTT username    | `custom_mqtt_user`              | yes, if non-empty |
-| `pass`       | MQTT password    | `custom_mqtt_pass`              | yes, if value differs from compile-time `MQTT_PASS` sentinel |
+| `pass`       | MQTT password    | `custom_mqtt_pass`              | yes, if non-empty *and* value differs from the compile-time `MQTT_PASS` sentinel |
 | `secure`     | `0` / `1`        | `custom_mqtt_secure`            | yes (always) |
 | `validate`   | `0` / `1`        | `custom_validate_cert`          | yes (always) |
 | `cert`       | PEM (≤ 4096 B)   | `custom_mqtt_cert`              | yes, if length > `MIN_CERT_LENGTH` |
@@ -37,7 +37,7 @@ When the portal is active (no saved credentials, or trigger pressed at boot) the
 
 Empty `server` / `port` / `user` / `topic` / `name` / `ota` values are **ignored** rather than persisted. This means a partial POST (e.g. WiFi-only) preserves any pre-flashed defaults instead of clearing them. To intentionally clear a field, this portal API does not currently support it — re-flash with new build defaults or use the WebUI.
 
-The `pass` field uses a sentinel guard instead: the firmware compares to the compile-time `MQTT_PASS` value and persists only when they differ, so an unmodified form (which echoes back the default) does not overwrite an already-stored password.
+The `pass` field combines the empty-check with a sentinel guard: the firmware persists the form value only when it is non-empty *and* differs from the compile-time `MQTT_PASS` sentinel. The sentinel branch prevents an unmodified form (which echoes back the default) from overwriting a stored password; the non-empty branch prevents a partial POST from wiping it.
 
 ## Response and AP teardown
 
