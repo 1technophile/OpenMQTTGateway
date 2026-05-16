@@ -82,6 +82,7 @@ export default defineConfig({
           { text: 'Builds', link: '/upload/builds' },
           { text: 'Gitpod', link: '/upload/gitpod' },
           { text: 'Portal', link: '/upload/portal' },
+          { text: 'Portal HTTP API', link: '/upload/portal-api' },
           { text: 'Advanced Configuration', link: '/upload/advanced-configuration' },
           { text: 'Troubleshoot', link: '/upload/troubleshoot' }
         ]
