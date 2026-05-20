@@ -504,7 +504,10 @@ void createDiscovery(const char* sensor_type,
     }
   }
 
-  if (unit_of_meas && unit_of_meas[0]) {
+  // HA rejects a discovery payload that carries `options` (enum sensor) together
+  // with `unit_of_measurement` or `state_class` - they are mutually exclusive.
+  // Skip unit_of_measurement (and state_class below) when this is an enum sensor.
+  if (enum_options == nullptr && unit_of_meas && unit_of_meas[0]) {
     // We check if the class belongs to HAAS units list
     int num_units = sizeof(availableHASSUnits) / sizeof(availableHASSUnits[0]);
     for (int i = 0; i < num_units; i++) { // see units list and size into config_mqttDiscovery.h
@@ -578,8 +581,8 @@ void createDiscovery(const char* sensor_type,
     sensor["pl_avail"] = payload_available; // payload_on
   if (payload_not_available[0])
     sensor["pl_not_avail"] = payload_not_available; //payload_off
-  if (state_class && state_class[0])
-    sensor["stat_cla"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes )
+  if (enum_options == nullptr && state_class && state_class[0])
+    sensor["stat_cla"] = state_class; //add the state class on the sensors ( https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes ) - omitted for enum sensors (mutually exclusive with `options`)
   if (state_on != nullptr)
     if (strcmp(state_on, "true") == 0) {
       sensor["stat_on"] = true;
