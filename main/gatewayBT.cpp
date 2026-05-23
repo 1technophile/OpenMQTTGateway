@@ -1113,7 +1113,11 @@ void launchBTDiscovery(bool overrideDiscovery) {
                                 0, "", "", false, "",
                                 model.c_str(), brand.c_str(), model_id.c_str(), macWOdots.c_str(), false,
                                 stateClassMeasurement, nullptr, nullptr, "[\"lb\",\"kg\",\"jin\"]");
-              } else if (strcmp(prop.value()["unit"], "string") == 0 && strcmp(prop.key().c_str(), "mac") != 0) {
+              } else if ((strcmp(prop.value()["unit"], "string") == 0 || strcmp(prop.value()["unit"], "hex") == 0) && strcmp(prop.key().c_str(), "mac") != 0) {
+                // Non-numeric properties (e.g. iBeacon uuid/mfid/manufacturerdata
+                // carry unit "hex"). HA rejects a sensor that has state_class
+                // "measurement" but a non-numeric value, so emit these as plain
+                // text sensors: no state_class, no unit_of_measurement.
                 createDiscovery(HASS_TYPE_SENSOR,
                                 discovery_topic.c_str(), entity_name.c_str(), unique_id.c_str(),
                                 will_Topic, prop.value()["name"], value_template.c_str(),
