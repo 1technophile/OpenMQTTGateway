@@ -1692,6 +1692,10 @@ void immediateBTAction(void* pvParameters) {
         xSemaphoreGive(semaphoreCreateOrUpdateDevice);
       } else {
         THEENGS_LOG_ERROR(F("CreateOrUpdate Semaphore NOT taken" CR));
+        // Release the process lock we took above; otherwise a transient
+        // semaphore-contention failure here leaves BTProcessLock=true and
+        // wedges the BLE scanner/connect subsystem until a restart.
+        BTProcessLock = false;
       }
 
       // If we stopped the scheduled connect for this action, do the scheduled now
