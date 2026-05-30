@@ -2594,6 +2594,13 @@ void loop() {
     THEENGS_LOG_WARNING(F("Network disconnected" CR));
     gatewayState = GatewayState::NTWK_DISCONNECTED;
     if (!wifi_reconnect_bypass()) {
+      failure_number_ntwk++;
+      THEENGS_LOG_WARNING(F("failure_number_ntwk: %d" CR), failure_number_ntwk);
+      // Self-heal from a wedged WiFi stack: if reconnection keeps failing, restart the ESP.
+      // Disabled on environments where an unexpected reboot is undesirable (e.g. a smart plug).
+      if (WifiReconnectWatchDog && failure_number_ntwk > maxRetryWatchDog) {
+        ESPRestart(2);
+      }
       sleep();
     } else {
       gatewayState = GatewayState::NTWK_CONNECTED;

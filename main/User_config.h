@@ -135,6 +135,14 @@
 #define maxConnectionRetryNetwork 5 //maximum Wifi connection attempts with existing credential at start (used to bypass ESP32 issue on wifi connect)
 #define maxRetryWatchDog          11 //maximum Wifi or MQTT re-connection attempts before restarting
 
+// WifiReconnectWatchDog: restart the ESP if the network can't be recovered after maxRetryWatchDog
+// consecutive reconnection attempts in the main loop. This allows the gateway to self-heal from a
+// wedged WiFi stack (e.g. the ESP32 driver getting stuck after a long uptime). Disable it on
+// environments where an unexpected reboot is undesirable (e.g. a smart plug that would lose its relay state).
+#ifndef WifiReconnectWatchDog
+#  define WifiReconnectWatchDog true
+#endif
+
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
 
