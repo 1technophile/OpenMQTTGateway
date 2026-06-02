@@ -2939,6 +2939,7 @@
       "'-DWM_PWD_FROM_MAC=true'",
       "'-DUSE_MAC_AS_GATEWAY_NAME'",
       "'-DDEFAULT_LOW_POWER_MODE=DEACTIVATED'",
+      "'-DWifiReconnectWatchDog=false'",
       "'-DGATEWAY_MANUFACTURER=\"Theengs\"'",
       "'-DGATEWAY_MODEL=\"TPLUG01\"'",
       "'-UZwebUI=\"WebUI\"'"
