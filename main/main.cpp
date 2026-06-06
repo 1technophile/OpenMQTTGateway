@@ -3540,20 +3540,39 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 
       THEENGS_LOG_NOTICE(F("MQTT cnt index %d" CR), cnt_index);
 
+      // Length-check every MQTT-supplied string before copying into a fixed buffer
+      // to prevent heap overflows.
       if (SYSdata.containsKey("mqtt_user") && SYSdata["mqtt_user"].is<const char*>() && SYSdata.containsKey("mqtt_pass") && SYSdata["mqtt_pass"].is<const char*>()) {
-        strcpy(cnt_parameters_array[cnt_index].mqtt_user, SYSdata["mqtt_user"]);
-        strcpy(cnt_parameters_array[cnt_index].mqtt_pass, SYSdata["mqtt_pass"]);
-        cnt_parameters_array[cnt_index].validConnection = false;
+        const char* user = SYSdata["mqtt_user"];
+        const char* pass = SYSdata["mqtt_pass"];
+        if (strlen(user) >= sizeof(cnt_parameters_array[cnt_index].mqtt_user) ||
+            strlen(pass) >= sizeof(cnt_parameters_array[cnt_index].mqtt_pass)) {
+          THEENGS_LOG_WARNING(F("mqtt_user/mqtt_pass too long, ignoring" CR));
+        } else {
+          strcpy(cnt_parameters_array[cnt_index].mqtt_user, user);
+          strcpy(cnt_parameters_array[cnt_index].mqtt_pass, pass);
+          cnt_parameters_array[cnt_index].validConnection = false;
+        }
       }
 
       if (SYSdata.containsKey("mqtt_server") && SYSdata["mqtt_server"].is<const char*>()) {
-        strcpy(cnt_parameters_array[cnt_index].mqtt_server, SYSdata["mqtt_server"]);
-        cnt_parameters_array[cnt_index].validConnection = false;
+        const char* server = SYSdata["mqtt_server"];
+        if (strlen(server) >= sizeof(cnt_parameters_array[cnt_index].mqtt_server)) {
+          THEENGS_LOG_WARNING(F("mqtt_server too long, ignoring" CR));
+        } else {
+          strcpy(cnt_parameters_array[cnt_index].mqtt_server, server);
+          cnt_parameters_array[cnt_index].validConnection = false;
+        }
       }
 
       if (SYSdata.containsKey("mqtt_port") && SYSdata["mqtt_port"].is<const char*>()) {
-        strcpy(cnt_parameters_array[cnt_index].mqtt_port, SYSdata["mqtt_port"]);
-        cnt_parameters_array[cnt_index].validConnection = false;
+        const char* port = SYSdata["mqtt_port"];
+        if (strlen(port) >= sizeof(cnt_parameters_array[cnt_index].mqtt_port)) {
+          THEENGS_LOG_WARNING(F("mqtt_port too long, ignoring" CR));
+        } else {
+          strcpy(cnt_parameters_array[cnt_index].mqtt_port, port);
+          cnt_parameters_array[cnt_index].validConnection = false;
+        }
       }
 
       if (SYSdata.containsKey("mqtt_secure") && SYSdata["mqtt_secure"].is<bool>()) {

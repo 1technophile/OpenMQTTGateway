@@ -370,6 +370,13 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     THEENGS_LOG_ERROR(F("Semaphore NOT taken" CR));
     return;
   }
+  // A BLE MAC is XX:XX:XX:XX:XX:XX = 17 chars; macAdr is 18 bytes including the null.
+  // Reject anything longer so untrusted MQTT input cannot overflow the heap buffer.
+  if (mac == nullptr || strlen(mac) > 17) {
+    THEENGS_LOG_WARNING(F("Invalid MAC, skipping" CR));
+    xSemaphoreGive(semaphoreCreateOrUpdateDevice);
+    return;
+  }
   BLEdevice* device = getDeviceByMac(mac);
   if (device == &NO_BT_DEVICE_FOUND) {
     // Evict oldest non-listed device when at capacity
