@@ -2049,6 +2049,19 @@ void saveConfig() {
   configFile.close();
 }
 
+// Length-checked copy used when loading config.json values into fixed-size
+// buffers. The SPIFFS file is implicitly trusted once written, but historical
+// MQTT/HTTP paths could land over-length values there before we hardened them;
+// this prevents one stale config from overflowing globals on every boot.
+static void loadStrField(const char* name, char* dst, size_t dstSize, const char* src) {
+  if (!src) return;
+  if (strlen(src) >= dstSize) {
+    THEENGS_LOG_WARNING(F("Config field %s too long (%u), skipping" CR), name, (unsigned)strlen(src));
+    return;
+  }
+  strcpy(dst, src);
+}
+
 bool loadConfigFromFlash() {
   THEENGS_LOG_TRACE(F("mounting FS..." CR));
   bool result = false;
@@ -2124,22 +2137,22 @@ bool loadConfigFromFlash() {
           strcpy(key, "mqtt_server");
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
-            strcpy(cnt_parameters_array[i].mqtt_server, json[key].as<const char*>());
+            loadStrField(key, cnt_parameters_array[i].mqtt_server, sizeof(cnt_parameters_array[i].mqtt_server), json[key].as<const char*>());
           }
           strcpy(key, "mqtt_port");
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
-            strcpy(cnt_parameters_array[i].mqtt_port, json[key].as<const char*>());
+            loadStrField(key, cnt_parameters_array[i].mqtt_port, sizeof(cnt_parameters_array[i].mqtt_port), json[key].as<const char*>());
           }
           strcpy(key, "mqtt_user");
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
-            strcpy(cnt_parameters_array[i].mqtt_user, json[key].as<const char*>());
+            loadStrField(key, cnt_parameters_array[i].mqtt_user, sizeof(cnt_parameters_array[i].mqtt_user), json[key].as<const char*>());
           }
           strcpy(key, "mqtt_pass");
           strcat(key, index_suffix);
           if (json.containsKey(key)) {
-            strcpy(cnt_parameters_array[i].mqtt_pass, json[key].as<const char*>());
+            loadStrField(key, cnt_parameters_array[i].mqtt_pass, sizeof(cnt_parameters_array[i].mqtt_pass), json[key].as<const char*>());
           }
           strcpy(key, "mqtt_broker_secure");
           strcat(key, index_suffix);
@@ -2166,15 +2179,16 @@ bool loadConfigFromFlash() {
         }
 #  endif
         if (json.containsKey("mqtt_topic"))
-          strcpy(mqtt_topic, json["mqtt_topic"]);
+          loadStrField("mqtt_topic", mqtt_topic, sizeof(mqtt_topic), json["mqtt_topic"]);
 #  ifdef ZmqttDiscovery
         if (json.containsKey("discovery_prefix"))
-          strcpy(discovery_prefix, json["discovery_prefix"]);
+          // discovery_prefix is extern char[] in this TU; size is parameters_size + 1.
+          loadStrField("discovery_prefix", discovery_prefix, parameters_size + 1, json["discovery_prefix"]);
 #  endif
         if (json.containsKey("gateway_name"))
-          strcpy(gateway_name, json["gateway_name"]);
+          loadStrField("gateway_name", gateway_name, sizeof(gateway_name), json["gateway_name"]);
         if (json.containsKey("ota_pass")) {
-          strcpy(ota_pass, json["ota_pass"]);
+          loadStrField("ota_pass", ota_pass, sizeof(ota_pass), json["ota_pass"]);
 #  ifdef WM_PWD_FROM_MAC // From ESP Mac Address, last 8 digits as the password
           // Compare the existing ota_pass if ota_pass = OTAPASSWORD then replace with the last 8 digits of the mac address
           // This enable user migrating from previous version to have the same WiFi portal password as previously unless they changed it
@@ -2187,7 +2201,7 @@ bool loadConfigFromFlash() {
         }
 #  if BLEDecryptor
         if (json.containsKey("ble_aes")) {
-          strcpy(ble_aes, json["ble_aes"]);
+          loadStrField("ble_aes", ble_aes, sizeof(ble_aes), json["ble_aes"]);
           THEENGS_LOG_TRACE(F("loaded default BLE AES key %s" CR), ble_aes);
         }
         if (json.containsKey("ble_aes_keys")) {
@@ -2376,9 +2390,17 @@ void setupWiFiManager() {
       strcpy(cnt_parameters_array[cnt_index].mqtt_pass, custom_mqtt_pass.getValue());
     }
     if (strlen(custom_mqtt_topic.getValue()) > 0) {
-      strcpy(mqtt_topic, custom_mqtt_topic.getValue());
-      if (mqtt_topic[strlen(mqtt_topic) - 1] != '/' && strlen(mqtt_topic) < parameters_size) {
-        strcat(mqtt_topic, "/");
+      // The WiFiManagerParameter buffer is mqtt_topic_max_size (150) but the
+      // destination is sizeof(mqtt_topic). HTML maxlength is client-side only;
+      // a raw POST can deliver any length, so length-check before copying.
+      const char* src = custom_mqtt_topic.getValue();
+      if (strlen(src) >= sizeof(mqtt_topic)) {
+        THEENGS_LOG_WARNING(F("mqtt_topic from portal too long, ignoring" CR));
+      } else {
+        strcpy(mqtt_topic, src);
+        if (mqtt_topic[strlen(mqtt_topic) - 1] != '/' && strlen(mqtt_topic) < parameters_size) {
+          strcat(mqtt_topic, "/");
+        }
       }
     }
 
@@ -3474,20 +3496,45 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 #endif
         (SYSdata.containsKey("gateway_name") && SYSdata["gateway_name"].is<const char*>()) ||
         (SYSdata.containsKey("gw_pass") && SYSdata["gw_pass"].is<const char*>())) {
+      // Each of the destination buffers is sized at compile time; reject
+      // over-length MQTT-supplied values up front so a crafted publish cannot
+      // leave the destination non-NUL-terminated (which would corrupt the
+      // SPIFFS config on the next saveConfig()).
       if (SYSdata.containsKey("mqtt_topic")) {
-        strncpy(mqtt_topic, SYSdata["mqtt_topic"], parameters_size);
+        const char* src = SYSdata["mqtt_topic"];
+        if (strlen(src) >= sizeof(mqtt_topic)) {
+          THEENGS_LOG_WARNING(F("mqtt_topic too long, ignoring" CR));
+        } else {
+          strcpy(mqtt_topic, src);
+        }
       }
 #ifdef ZmqttDiscovery
       if (SYSdata.containsKey("discovery_prefix")) {
-        strncpy(discovery_prefix, SYSdata["discovery_prefix"], parameters_size);
+        const char* src = SYSdata["discovery_prefix"];
+        // discovery_prefix is defined in mqttDiscovery.cpp as char[parameters_size + 1].
+        if (strlen(src) > parameters_size) {
+          THEENGS_LOG_WARNING(F("discovery_prefix too long, ignoring" CR));
+        } else {
+          strcpy(discovery_prefix, src);
+        }
       }
 #endif
       if (SYSdata.containsKey("gateway_name")) {
-        strncpy(gateway_name, SYSdata["gateway_name"], parameters_size);
+        const char* src = SYSdata["gateway_name"];
+        if (strlen(src) >= sizeof(gateway_name)) {
+          THEENGS_LOG_WARNING(F("gateway_name too long, ignoring" CR));
+        } else {
+          strcpy(gateway_name, src);
+        }
       }
       if (SYSdata.containsKey("gw_pass")) {
-        strncpy(ota_pass, SYSdata["gw_pass"], parameters_size);
-        restartESP = true;
+        const char* src = SYSdata["gw_pass"];
+        if (strlen(src) >= sizeof(ota_pass)) {
+          THEENGS_LOG_WARNING(F("gw_pass too long, ignoring" CR));
+        } else {
+          strcpy(ota_pass, src);
+          restartESP = true;
+        }
       }
 #ifndef ESPWifiManualSetup
       saveConfig();
@@ -3498,7 +3545,12 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
 #if BLEDecryptor
     if (SYSdata.containsKey("ble_aes") || SYSdata.containsKey("ble_aes_keys")) {
       if (SYSdata.containsKey("ble_aes")) {
-        strncpy(ble_aes, SYSdata["ble_aes"], parameters_size);
+        const char* src = SYSdata["ble_aes"];
+        if (strlen(src) >= sizeof(ble_aes)) {
+          THEENGS_LOG_WARNING(F("ble_aes too long, ignoring" CR));
+        } else {
+          strcpy(ble_aes, src);
+        }
       }
       if (SYSdata.containsKey("ble_aes_keys")) {
         THEENGS_LOG_WARNING(F("Contains ble_aes_keys" CR));

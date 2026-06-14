@@ -880,8 +880,17 @@ void handleCG() {
     }
     if (server.hasArg("save")) {
       if (server.hasArg("gp") && server.arg("gp").length() > 0 && strcmp(ota_pass, server.arg("gp").c_str())) {
-        strncpy(ota_pass, server.arg("gp").c_str(), parameters_size);
-        pwUpdate = true;
+        // HTML maxlength is client-side only — a direct POST can deliver any
+        // length. Reject anything that would not fit (and leave dst
+        // NUL-terminated) before copying into the fixed-size buffer.
+        const char* gp = server.arg("gp").c_str();
+        // ota_pass is extern char[] in this TU; size is parameters_size.
+        if (strlen(gp) >= parameters_size) {
+          THEENGS_LOG_WARNING(F("[WebUI] gateway password too long, ignoring" CR));
+        } else {
+          strcpy(ota_pass, gp);
+          pwUpdate = true;
+        }
       }
 #    ifdef ZmqttDiscovery
       if (SYSConfig.discovery != server.hasArg("dc")) {

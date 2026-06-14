@@ -60,7 +60,9 @@ void _rfbSend(byte* message) {
 }
 
 void _rfbSend(byte* message, int times) {
-  char buffer[RF_MESSAGE_SIZE];
+  // _rawToHex writes 3 bytes per input byte (two hex chars + CR) followed by a
+  // terminating NUL, so the buffer needs 2 * RF_MESSAGE_SIZE + 2 bytes.
+  char buffer[RF_MESSAGE_SIZE * 2 + 2] = {0};
   TheengsUtils::_rawToHex(message, buffer, RF_MESSAGE_SIZE);
   THEENGS_LOG_NOTICE(F("[RFBRIDGE] Sending MESSAGE" CR));
 
@@ -85,8 +87,15 @@ bool SRFBtoX() {
       if (c == RF_CODE_STOP) {
         _rfbDecode();
         receiving = false;
-      } else {
+      } else if (_uartpos < sizeof(_uartbuf)) {
         _uartbuf[_uartpos++] = c;
+      } else {
+        // Frame longer than expected — drop it rather than overrun _uartbuf.
+        // A crafted 433 MHz transmission that emits START but never STOP would
+        // otherwise let _uartpos grow up to 255 and trample adjacent globals.
+        THEENGS_LOG_WARNING(F("[RFBRIDGE] RF frame too long, dropping" CR));
+        receiving = false;
+        _uartpos = 0;
       }
     } else if (c == RF_CODE_START) {
       _uartpos = 0;

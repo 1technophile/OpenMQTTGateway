@@ -1348,7 +1348,10 @@ void process_bledata(JsonObject& BLEdata) {
       THEENGS_LOG_TRACE(F("[BLEDecryptor] BTHomeV2 nonce %s" CR), NimBLEUtils::dataToHexString(nonce, noncelength).c_str());
 
     } else if (BLEdata["encr"].as<int>() == 3) {
-      nonce[16] = {0}; // Victron has a 16 byte zero padded nonce with IV bytes 6,7
+      // Victron has a 16-byte zero-padded nonce with IV bytes 0,1.
+      // (The line `nonce[16] = {0};` that lived here wrote a byte one past the
+      // end of the 16-byte `nonce` array on every Victron-encrypted advert;
+      // memset below already zeroes the whole buffer, so the typo was dead.)
       unsigned char iv[2];
       int ivlen = hexToBytes(BLEdata["ctr"].as<String>(), iv, 2);
       if (ivlen != 2) {
