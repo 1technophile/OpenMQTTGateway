@@ -32,7 +32,7 @@ Heltec LORA V3 is not compatible with RTL_433 library as it is based on an SX126
 ### SRX STX Pinout
 |Board| Receiver Pin| Emitter Pin|
 |-|:-:|:-:|
-|ESP8266|D2/**D3**/D1/D8|**RX**/D2|
+|ESP8266|**D2**/D1/D8|**RX**/D2|
 |ESP32|**27**/26|12|
 |RF BRIDGE|-|-|
 |RF BRIDGE [DIRECT HACK](https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack)|4|5|
@@ -48,7 +48,7 @@ With SRX882S receiver connect the CS pin to 3.3V
 ### CC1101 Pinout
 |Board|Receiver Pin(GDO2)|Emitter Pin(GDO0)|SCK|VCC|MOSI|MISO|CSN|GND
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|ESP8266|D2/**D3**/D1/D8|**RX**/D2|D5|**3V3**|D7|D6|D8|GND
+|ESP8266|**D2**/D1/D8|**RX**/D2|D5|**3V3**|D7|D6|D8|GND
 |ESP32|**D27**|D12|D18|**3V3**|D23|D19|D5|GND
 
 To use the CC1101 module, `ZradioCC1101` must be uncomment in the `User_config.h` or added to the `build_flags`. 
@@ -72,9 +72,9 @@ When **all** these variables are defined, OpenMQTTGateway will use your custom p
 ![Addon_RF](../img/OpenMQTTgateway_ESP32_Addon_RF.png)
 
 ## ESP8266 Hardware setup
-If the gateway works only when serial monitor is connected don't use D3 use D2 instead (gpio 4) and modify config_RF.h accordingly.
+The default receiver pin is D2 (gpio 4). Avoid D3 (gpio 0): it is a boot strapping pin, a receiver holding it low at reset forces the ESP8266 into flash mode and the board never starts.
 
-With SRX882 some users reported that D3 is not working use D1 instead in this case and modify config_RF.h accordingly.
+With SRX882 some users reported issues on D2, use D1 instead in this case and modify config_RF.h accordingly.
 
 ![Addon_RF](../img/OpenMQTTgateway_ESP8266_Addon_RF.png)
 
