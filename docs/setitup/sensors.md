@@ -2,20 +2,20 @@
 ## Compatible sensors
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|DHT11|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|DHT22|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|HCSR501|PIR|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|BH1750|Digital light|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|BME280|Temperature, Humidity, Pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|BMP280|Temperature, Pressure|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|C-37, YL-83, HM-RD|Leak, Water|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|HTU21|Temperature, Humidity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|DHT11|Temperature, Humidity|-|
+|DHT22|Temperature, Humidity|-|
+|HCSR501|PIR|-|
+|BH1750|Digital light|-|
+|BME280|Temperature, Humidity, Pressure|-|
+|BMP280|Temperature, Pressure|-|
+|C-37, YL-83, HM-RD|Leak, Water|-|
+|HTU21|Temperature, Humidity|-|
 |GPIO Input|Inputs|-|
-|GPIO KeyCode|Keycode|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|INA226|Current, Voltage|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|MQ2|Gas (flammable)|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|TEMT6000|Luminosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|TSL2561|Luminosity|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|GPIO KeyCode|Keycode|-|
+|INA226|Current, Voltage|-|
+|MQ2|Gas (flammable)|-|
+|TEMT6000|Luminosity|-|
+|TSL2561|Luminosity|-|
 
 ## Pinout
 |Module|Arduino Pin| ESP8266 Pin|ESP32 Pin|

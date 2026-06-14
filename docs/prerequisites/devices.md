@@ -1,8 +1,6 @@
 # Devices
 
-You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported devices](https://compatible.openmqttgateway.com/index.php/devices/).
-
-Added to that is an overview of devices supported by OpenMQTTGateway:
+Here is an overview of devices supported by OpenMQTTGateway:
 
 ## For radio frequency devices 
 OpenMQTTGateway can support a wide range of 433mhz/315mhz devices, all the ones with SC5262 / SC5272, HX2262 / HX2272, PT2262 / PT2272, EV1527, RT1527, FP1527, HS1527 chipsets are supported by the RF gateway. Added to that RF2 support Kaku and Pilight an [huge list](https://wiki.pilight.org/devices). 

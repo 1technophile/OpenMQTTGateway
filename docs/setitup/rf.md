@@ -23,11 +23,11 @@ Heltec LORA V3 is not compatible with RTL_433 library as it is based on an SX126
 ## Assembly/soldering required parts
 |Module|Purpose|Compatible modules|Receiver Switching|Where to Buy|
 |-|-|-|-|-|
-|SRX882 or SRX882S (recommended)|433Mhz Receiver|RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|STX882 (recommended)|433Mhz Transmitter|RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|CC1101|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|SX1276/SX1278|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|LilyGo/Heltec|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|[compatible parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|SRX882 or SRX882S (recommended)|433Mhz Receiver|RF(RCSwitch), RF2(KaKu), Pilight|Supported|-|
+|STX882 (recommended)|433Mhz Transmitter|RF(RCSwitch), RF2(KaKu), Pilight|Supported|-|
+|CC1101|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Supported|-|
+|SX1276/SX1278|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|-|
+|LilyGo/Heltec|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|-|
 
 ### SRX STX Pinout
 |Board| Receiver Pin| Emitter Pin|

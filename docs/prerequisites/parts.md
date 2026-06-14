@@ -1,8 +1,6 @@
 # Parts
 Depending on the gateway you would like to setup and your board, you may need extra parts/module to add.
 
-You can take a look to the [OpenMQTTGateway compatible website](https://compatible.openmqttgateway.com) to have a view of the [supported parts](https://compatible.openmqttgateway.com/index.php/parts/).
-
 Here is below the main parts reference.
 
 ## Main parts 
@@ -15,5 +13,5 @@ Here is below the main parts reference.
 |A6/A7|-|-|-|-|X|
 
 ::: tip
-There is a wide range of parts available that may be compatible with OpenMQTTGateway, the ones [listed](https://compatible.openmqttgateway.com/index.php/parts/) are the ones tested and for which you can ask for support. Indeed for other parts we may not have it so as to reproduce the issue, or in the worst case they may not be compatible.
+There is a wide range of parts available that may be compatible with OpenMQTTGateway, the ones listed above are the ones tested and for which you can ask for support. Indeed for other parts we may not have it so as to reproduce the issue, or in the worst case they may not be compatible.
 :::

@@ -12,7 +12,6 @@ If you like the project, you can help in different ways. Choose what fits you be
 
 ## Financial support
 - Purchase the [Theengs mobile application](https://app.theengs.io) or the [Theengs plug](https://shop.theengs.io).
-- Buy devices or parts via the [compatible web site](https://compatible.openmqttgateway.com) (affiliate links help the project).
 - Sponsor the project [developers](https://github.com/1technophile/OpenMQTTGateway/graphs/contributors).
 - Make a video or blog article about what you built with [OpenMQTTGateway](https://docs.openmqttgateway.com) and share it.
 

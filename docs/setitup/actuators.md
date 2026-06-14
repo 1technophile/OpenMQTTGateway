@@ -2,10 +2,10 @@
 ## Compatible parts 
 |Module|Purpose|Where to Buy|
 |-|-|-|
-|LED|Basic led|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|FASTLED|RGB Leds management|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|BUZZER|-|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
-|RELAY|Switch power circuit|[parts list](https://compatible.openmqttgateway.com/index.php/parts)|
+|LED|Basic led|-|
+|FASTLED|RGB Leds management|-|
+|BUZZER|-|-|
+|RELAY|Switch power circuit|-|
 
 ## Pinout
 |Module| Boards|

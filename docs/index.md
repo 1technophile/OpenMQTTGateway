@@ -39,9 +39,9 @@ In essence, an MQTT gateway ensures smooth communication between devices and MQT
 OpenMQTTGateway integrates with established technologies, such as 433mhz/315mhz protocols and infrared (IR), allowing you to upgrade and repurpose older devices. Additionally, OMG is compatible with modern technologies like Bluetooth Low Energy (BLE) and LoRa.
 
 To have an overview of the supported PIR, door, water, temperature, smoke sensors, sirens, rings, beacons, switches & weather stations you can take a look to the 
-[compatible devices list](https://compatible.openmqttgateway.com/index.php/devices)
+[compatible devices list](prerequisites/devices.md)
 
-You can run OpenMQTTGateway on a wide variety of [boards](https://compatible.openmqttgateway.com/index.php/boards/), ESP32, ESP8266, ESP32S3, ESP32C3.
+You can run OpenMQTTGateway on a wide variety of [boards](prerequisites/board.md), ESP32, ESP8266, ESP32S3, ESP32C3.
 BLE to MQTT gateway can also run on Raspberry Pi, Windows or Unix computers thanks to [Theengs Gateway](https://theengs.github.io/gateway/).
 
 Using MQTT, you can seamlessly integrate with home automation platforms such as OpenHAB, Home Assistant, and others, or with IoT software like Node-Red.
@@ -98,7 +98,7 @@ Support open-source development through sponsorship and gain exclusive access to
 ### Theengs Plug, BLE gateway and Smart Plug
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) brings the following features:
-* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://decoder.theengs.io/devices/devices.html) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
 * Device tracker,

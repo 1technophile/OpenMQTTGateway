@@ -34,7 +34,7 @@ Support open-source development through sponsorship and gain exclusive access to
 ### Theengs Plug, Bluetooth gateway (BLE) gateway and Smart Plug
 
 [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) brings the following features:
-* BLE to MQTT gateway, tens of [Bluetooth devices](https://compatible.openmqttgateway.com/index.php/devices/ble-devices/) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
+* BLE to MQTT gateway, tens of [Bluetooth devices](https://decoder.theengs.io/devices/devices.html) supported thanks to Theengs Decoder library. The plug uses an ESP32 acting as a BLE to Wifi gateway to scan, decode and forward the data of the nearby sensors,
 * Smart plug that can be controlled remotely,
 * Energy consumption monitoring,
 * Device tracker,
@@ -47,14 +47,14 @@ Support the project by purchasing the [Theengs bridge](https://shop.theengs.io/p
 
 ## Compatible items
 
-* [List of supported devices](https://compatible.openmqttgateway.com/index.php/devices/), door/window sensors, PIR sensors, smoke detectors, weather stations...
+* [List of supported devices](https://docs.openmqttgateway.com/prerequisites/devices.html), door/window sensors, PIR sensors, smoke detectors, weather stations...
 
-* [List of compatible boards (Off the shelf or DIY) is available](https://compatible.openmqttgateway.com/index.php/boards/), RF Bridge, IR, BLE gateways...
+* [List of compatible boards (Off the shelf or DIY) is available](https://docs.openmqttgateway.com/prerequisites/board.html), RF Bridge, IR, BLE gateways...
 
 *Running on a computer*
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
 
-* [List of compatible components to build your gateway](https://compatible.openmqttgateway.com/index.php/parts/), DHT, RF, IR emitters and receivers...
+* [List of compatible components to build your gateway](https://docs.openmqttgateway.com/prerequisites/parts.html), DHT, RF, IR emitters and receivers...
 
 ## Compatible controllers, saas or software
 
@@ -79,7 +79,7 @@ For Questions or Support please don't open an issue, first go to the [docs](http
 If you like the project and/or used it please consider supporting it! It can be done in different ways:
 * Helping other users in the [community](https://community.openmqttgateway.com)
 * [Contribute](development) to the [code](https://github.com/1technophile/OpenMQTTGateway) or the [documentation](https://docs.openmqttgateway.com)
-* Buy devices, boards or parts from the [compatible web site](https://compatible.openmqttgateway.com), the devices and parts linked use affiliated links.
+* Buy a [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) or a [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna)
 * Donate or sponsor the project [developers](https://github.com/1technophile/OpenMQTTGateway/graphs/contributors)
 * Make a video or a blog article about what you have done with [OpenMQTTGateway](https://docs.openmqttgateway.com) and share it to the [community](https://community.openmqttgateway.com)
 
