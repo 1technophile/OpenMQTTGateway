@@ -717,4 +717,8 @@ void storeSignalValue(uint64_t);
 #  define QueueSize 18
 #endif
 
+#ifndef PilightTxQueueSize
+#  define PilightTxQueueSize 8
+#endif
+
 #endif

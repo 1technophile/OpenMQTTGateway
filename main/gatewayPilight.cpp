@@ -43,6 +43,7 @@
 #  endif
 
 #  include <ESPiLight.h>
+
 #  include <queue>
 ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 extern int currentReceiver;
@@ -64,7 +65,9 @@ struct PilightTxRequest {
   float frequency;
 };
 static std::queue<PilightTxRequest> pilightTxQueue;
-static const size_t PILIGHT_TX_QUEUE_MAX = 8;
+// Drop-newest on overflow, matching the existing jsonQueue idiom in main.cpp.
+unsigned long pilightTxBlockedMessages = 0;
+int maxPilightTxQueueLength = 0;
 static void executePilightTx(const PilightTxRequest& req);
 
 void pilightCallback(const String& protocol, const String& message, int status,
@@ -268,21 +271,25 @@ static void executePilightTx(const PilightTxRequest& req) {
 }
 
 static void enqueuePilightTx(JsonObject& Pilightdata) {
-  PilightTxRequest req;
   const char* raw = Pilightdata["raw"];
   const char* message = Pilightdata["message"];
   const char* protocol = Pilightdata["protocol"];
+  THEENGS_LOG_NOTICE(F("MQTTtoPilight message: %s" CR), message ? message : "");
+  THEENGS_LOG_NOTICE(F("MQTTtoPilight protocol: %s" CR), protocol ? protocol : "");
+  if (pilightTxQueue.size() >= PilightTxQueueSize) {
+    THEENGS_LOG_WARNING(F("Pilight TX queue full (%d), dropping new request" CR), (int)pilightTxQueue.size());
+    pilightTxBlockedMessages++;
+    return;
+  }
+  PilightTxRequest req;
   if (raw) req.raw = raw;
   if (message) req.message = message;
   if (protocol) req.protocol = protocol;
   req.frequency = Pilightdata["frequency"] | iRFConfig.getFrequency();
-  THEENGS_LOG_NOTICE(F("MQTTtoPilight message: %s" CR), message ? message : "");
-  THEENGS_LOG_NOTICE(F("MQTTtoPilight protocol: %s" CR), protocol ? protocol : "");
-  if (pilightTxQueue.size() >= PILIGHT_TX_QUEUE_MAX) {
-    THEENGS_LOG_WARNING(F("Pilight TX queue full (%u), dropping oldest" CR), (unsigned)pilightTxQueue.size());
-    pilightTxQueue.pop();
-  }
   pilightTxQueue.push(std::move(req));
+  if ((int)pilightTxQueue.size() > maxPilightTxQueueLength) {
+    maxPilightTxQueueLength = pilightTxQueue.size();
+  }
 }
 
 void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
