@@ -43,6 +43,7 @@
 #  endif
 
 #  include <ESPiLight.h>
+#  include <queue>
 ESPiLight rf(RF_EMITTER_GPIO); // use -1 to disable transmitter
 extern int currentReceiver;
 #  ifdef Pilight_rawEnabled
@@ -53,6 +54,18 @@ bool pilightRawEnabled = 0;
 void disableCurrentReceiver();
 void initCC1101();
 void enableActiveReceiver();
+
+// Async TX so receivingDATA returns fast and MQTT keepalive isn't starved when
+// commands arrive in bursts. Drained one-per-PilighttoX from the main loop.
+struct PilightTxRequest {
+  String raw;
+  String message;
+  String protocol;
+  float frequency;
+};
+static std::queue<PilightTxRequest> pilightTxQueue;
+static const size_t PILIGHT_TX_QUEUE_MAX = 8;
+static void executePilightTx(const PilightTxRequest& req);
 
 void pilightCallback(const String& protocol, const String& message, int status,
                      size_t repeats, const String& deviceID) {
@@ -166,6 +179,110 @@ void loadPilightConfig() {
 
 void PilighttoX() {
   rf.loop();
+  // Drain one queued TX per call so the main loop hits mqtt->loop() between transmits and keepalive can fire.
+  if (!pilightTxQueue.empty()) {
+    PilightTxRequest req = pilightTxQueue.front();
+    pilightTxQueue.pop();
+    executePilightTx(req);
+  }
+}
+
+static void executePilightTx(const PilightTxRequest& req) {
+  bool success = false;
+  disableCurrentReceiver();
+  initCC1101();
+#  ifdef ZradioCC1101
+  ELECHOUSE_cc1101.SetTx(req.frequency);
+  THEENGS_LOG_NOTICE(F("Transmit frequency: %F" CR), req.frequency);
+#  endif
+  pinMode(RF_EMITTER_GPIO, OUTPUT);
+  if (req.raw.length()) {
+    uint16_t codes[MAXPULSESTREAMLENGTH];
+    int repeats = rf.stringToRepeats(req.raw);
+    if (repeats < 0) {
+      switch (repeats) {
+        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_R:
+          THEENGS_LOG_TRACE(F("'r' not found in string, or has no data" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
+          THEENGS_LOG_TRACE(F("';' or '@' not found in data string" CR));
+          break;
+      }
+      repeats = 10;
+    }
+    int msgLength = rf.stringToPulseTrain(req.raw, codes, MAXPULSESTREAMLENGTH);
+    if (msgLength > 0) {
+      rf.sendPulseTrain(codes, msgLength, repeats);
+      THEENGS_LOG_NOTICE(F("MQTTtoPilight raw ok" CR));
+      success = true;
+    } else {
+      THEENGS_LOG_TRACE(F("MQTTtoPilight raw KO" CR));
+      switch (msgLength) {
+        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_C:
+          THEENGS_LOG_TRACE(F("'c' not found in string, or has no data" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_P:
+          THEENGS_LOG_TRACE(F("'p' not found in string, or has no data" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
+          THEENGS_LOG_TRACE(F("';' or '@' not found in data string" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_TYPE:
+          THEENGS_LOG_TRACE(F("pulse type not defined" CR));
+          break;
+      }
+      THEENGS_LOG_ERROR(F("Invalid JSON: raw data malformed" CR));
+    }
+  }
+  if (req.message.length() && req.protocol.length()) {
+    THEENGS_LOG_TRACE(F("MQTTtoPilight msg & protocol ok" CR));
+    int msgLength = rf.send(req.protocol, req.message);
+    if (msgLength > 0) {
+      THEENGS_LOG_TRACE(F("Adv data XtoPilight push state via PilighttoMQTT" CR));
+      pub(subjectGTWPilighttoMQTT, req.message.c_str());
+      success = true;
+    } else {
+      switch (msgLength) {
+        case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
+          THEENGS_LOG_ERROR(F("protocol is not available" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
+          THEENGS_LOG_ERROR(F("message is invalid" CR));
+          break;
+        case ESPiLight::ERROR_INVALID_JSON:
+          THEENGS_LOG_ERROR(F("message is not a proper json object" CR));
+          break;
+        case ESPiLight::ERROR_NO_OUTPUT_PIN:
+          THEENGS_LOG_ERROR(F("no transmitter pin" CR));
+          break;
+        default:
+          THEENGS_LOG_ERROR(F("Invalid JSON: can't read message/protocol" CR));
+      }
+    }
+  }
+  if (!success) {
+    pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}");
+    THEENGS_LOG_ERROR(F("MQTTtoPilight Fail json" CR));
+  }
+  enableActiveReceiver();
+}
+
+static void enqueuePilightTx(JsonObject& Pilightdata) {
+  PilightTxRequest req;
+  const char* raw = Pilightdata["raw"];
+  const char* message = Pilightdata["message"];
+  const char* protocol = Pilightdata["protocol"];
+  if (raw) req.raw = raw;
+  if (message) req.message = message;
+  if (protocol) req.protocol = protocol;
+  req.frequency = Pilightdata["frequency"] | iRFConfig.getFrequency();
+  THEENGS_LOG_NOTICE(F("MQTTtoPilight message: %s" CR), message ? message : "");
+  THEENGS_LOG_NOTICE(F("MQTTtoPilight protocol: %s" CR), protocol ? protocol : "");
+  if (pilightTxQueue.size() >= PILIGHT_TX_QUEUE_MAX) {
+    THEENGS_LOG_WARNING(F("Pilight TX queue full (%u), dropping oldest" CR), (unsigned)pilightTxQueue.size());
+    pilightTxQueue.pop();
+  }
+  pilightTxQueue.push(std::move(req));
 }
 
 void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
@@ -213,90 +330,7 @@ void XtoPilight(const char* topicOri, JsonObject& Pilightdata) {
       THEENGS_LOG_ERROR(F("MQTTtoPilightProtocol Fail json" CR));
     }
   } else if (cmpToMainTopic(topicOri, subjectMQTTtoPilight)) {
-    const char* message = Pilightdata["message"];
-    THEENGS_LOG_NOTICE(F("MQTTtoPilight message: %s" CR), message);
-    const char* protocol = Pilightdata["protocol"];
-    THEENGS_LOG_NOTICE(F("MQTTtoPilight protocol: %s" CR), protocol);
-    const char* raw = Pilightdata["raw"];
-    float txFrequency = Pilightdata["frequency"] | iRFConfig.getFrequency();
-    bool success = false;
-    disableCurrentReceiver();
-    initCC1101();
-#  ifdef ZradioCC1101 // set Receive off and Transmitt on
-    ELECHOUSE_cc1101.SetTx(txFrequency);
-    THEENGS_LOG_NOTICE(F("Transmit frequency: %F" CR), txFrequency);
-#  endif
-    pinMode(RF_EMITTER_GPIO, OUTPUT);
-    if (raw) {
-      uint16_t codes[MAXPULSESTREAMLENGTH];
-      int repeats = rf.stringToRepeats(raw);
-      if (repeats < 0) {
-        switch (repeats) {
-          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_R:
-            THEENGS_LOG_TRACE(F("'r' not found in string, or has no data" CR));
-            break;
-          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
-            THEENGS_LOG_TRACE(F("';' or '@' not found in data string" CR));
-            break;
-        }
-        repeats = 10;
-      }
-      int msgLength = rf.stringToPulseTrain(raw, codes, MAXPULSESTREAMLENGTH);
-      if (msgLength > 0) {
-        rf.sendPulseTrain(codes, msgLength, repeats);
-        THEENGS_LOG_NOTICE(F("MQTTtoPilight raw ok" CR));
-        success = true;
-      } else {
-        THEENGS_LOG_TRACE(F("MQTTtoPilight raw KO" CR));
-        switch (msgLength) {
-          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_C:
-            THEENGS_LOG_TRACE(F("'c' not found in string, or has no data" CR));
-            break;
-          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_P:
-            THEENGS_LOG_TRACE(F("'p' not found in string, or has no data" CR));
-            break;
-          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_END:
-            THEENGS_LOG_TRACE(F("';' or '@' not found in data string" CR));
-            break;
-          case ESPiLight::ERROR_INVALID_PULSETRAIN_MSG_TYPE:
-            THEENGS_LOG_TRACE(F("pulse type not defined" CR));
-            break;
-        }
-        THEENGS_LOG_ERROR(F("Invalid JSON: raw data malformed" CR));
-      }
-    }
-    if (message && protocol) {
-      THEENGS_LOG_TRACE(F("MQTTtoPilight msg & protocol ok" CR));
-      int msgLength = rf.send(protocol, message);
-      if (msgLength > 0) {
-        THEENGS_LOG_TRACE(F("Adv data XtoPilight push state via PilighttoMQTT" CR));
-        // Acknowledgement
-        pub(subjectGTWPilighttoMQTT, message);
-        success = true;
-      } else {
-        switch (msgLength) {
-          case ESPiLight::ERROR_UNAVAILABLE_PROTOCOL:
-            THEENGS_LOG_ERROR(F("protocol is not available" CR));
-            break;
-          case ESPiLight::ERROR_INVALID_PILIGHT_MSG:
-            THEENGS_LOG_ERROR(F("message is invalid" CR));
-            break;
-          case ESPiLight::ERROR_INVALID_JSON:
-            THEENGS_LOG_ERROR(F("message is not a proper json object" CR));
-            break;
-          case ESPiLight::ERROR_NO_OUTPUT_PIN:
-            THEENGS_LOG_ERROR(F("no transmitter pin" CR));
-            break;
-          default:
-            THEENGS_LOG_ERROR(F("Invalid JSON: can't read message/protocol" CR));
-        }
-      }
-    }
-    if (!success) {
-      pub(subjectGTWPilighttoMQTT, "{\"Status\": \"Error\"}"); // Fail feedback
-      THEENGS_LOG_ERROR(F("MQTTtoPilight Fail json" CR));
-    }
-    enableActiveReceiver();
+    enqueuePilightTx(Pilightdata);
   }
 }
 
@@ -312,7 +346,7 @@ extern void enablePilightReceive() {
   THEENGS_LOG_NOTICE(F("RF_RECEIVER_GPIO: %d " CR), RF_RECEIVER_GPIO);
   THEENGS_LOG_TRACE(F("gatewayPilight command topic: %s%s%s" CR), mqtt_topic, gateway_name, subjectMQTTtoPilight);
 
-  initCC1101();
+  // Radio init is the caller's job (enableActiveReceiver already ran initCC1101); a second pass here failed often right after a Pilight TX and stalled MQTT in the 3 s retry backoff.
 
   rf.setCallback(pilightCallback);
 #  ifdef Pilight_rawEnabled
