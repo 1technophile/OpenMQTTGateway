@@ -472,7 +472,7 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 
 **Parameters**:
 - `python-version`: Python version to use (default: '3.13')
-- `pio-version`: PlatformIO version to use (default: 'v6.1.18')
+- `pio-version`: PlatformIO version to use (default: 'v6.1.19')
 - `environment-set`: Which set of environments to build: 'all' or 'ci' (default: 'all')
 - `enable-dev-ota`: Enable development OTA builds (default: false)
 - `version-tag`: Optional version tag to pass to ci.sh build - omitted if empty (default: '')
@@ -501,7 +501,7 @@ prepare → build (task-build.yml) → deploy → documentation (task-docs.yml)
 
 **Technical Details**:
 - Runs on: Ubuntu latest
-- PlatformIO version: Configurable via `pio-version` input (default: v6.1.18, custom fork: `pioarduino/platformio-core`)
+- PlatformIO version: Configurable via `pio-version` input (default: v6.1.19, custom fork: `pioarduino/platformio-core`)
 - Python package manager: `uv` (astral-sh/setup-uv@v6)
 - Environment sets: `all` (complete set) or `ci` (subset for quick validation)
 - Strategy: Matrix with fail-fast: false (builds complete even if one environment fails)
@@ -743,7 +743,7 @@ All build environments are defined in `.github/workflows/environments.json`:
 - Provides consistent CLI across all operations
 
 **Build System** (`ci.sh build`):
-- PlatformIO 6.1.18 from custom fork: `pioarduino/platformio-core`
+- PlatformIO 6.1.19 from custom fork: `pioarduino/platformio-core`
 - Python package manager: `uv` for fast dependency installation
 - Orchestrator: `ci_build.sh`
   - Worker: `ci_build_firmware.sh` (PlatformIO compilation)

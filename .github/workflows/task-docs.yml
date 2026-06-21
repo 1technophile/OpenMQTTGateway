@@ -47,7 +47,7 @@ on:
         description: "PlatformIO version to use"
         required: false
         type: string
-        default: "v6.1.18"
+        default: "v6.1.19"
     secrets:
       github-token:
         description: "GitHub token for deploying to GitHub Pages"

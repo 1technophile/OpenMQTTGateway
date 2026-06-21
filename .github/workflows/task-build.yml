@@ -7,12 +7,12 @@ on:
         description: "Python version to use"
         required: false
         type: string
-        default: "3.13"
+        default: "3.14"
       pio-version:
         description: "PlatformIO version to use"
         required: false
         type: string
-        default: "v6.1.18"
+        default: "v6.1.19"
       environment-set:
         description: 'Which set of environments to build (all, ci)'
         required: false
