@@ -1250,7 +1250,7 @@
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "rc-switch @ 98537e9 (gh:1technophile)",
       "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)",
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
       "NewRemoteSwitch @ 8eb980e (gh:1technophile)"
     ],
     "options": [
@@ -1484,7 +1484,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)",
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
       "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
     ],
     "options": [
@@ -1529,7 +1529,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)",
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
       "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
     ],
     "options": [
@@ -1646,7 +1646,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1889,7 +1889,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1927,7 +1927,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2044,7 +2044,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2082,7 +2082,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2122,7 +2122,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2176,7 +2176,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.0 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
