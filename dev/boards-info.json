@@ -7,14 +7,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -81,14 +81,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -120,14 +120,14 @@
       "gatewayBT",
       "gatewayIR"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "partitions/no_coredump.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
@@ -165,14 +165,14 @@
       "gatewayBT",
       "gatewayIR"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "partitions/no_coredump.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
@@ -223,7 +223,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "M5Stack @ 0.4.6",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -266,7 +266,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)"
     ],
@@ -310,7 +310,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "M5StickC @ 0.2.5",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)"
@@ -361,7 +361,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "M5StickC-Plus @ 0.1.1 (gh:m5stack)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)"
@@ -411,7 +411,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "M5Tough @ ccf49e1 (gh:m5stack)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -440,14 +440,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -479,14 +479,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -515,14 +515,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -551,14 +551,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -589,14 +589,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -628,14 +628,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -672,14 +672,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -719,14 +719,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -761,14 +761,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -805,14 +805,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -845,7 +845,7 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -853,7 +853,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -887,7 +887,7 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -895,7 +895,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -929,14 +929,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -966,14 +966,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -1013,14 +1013,14 @@
       "gatewayBT",
       "MQTT Broker Mode"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -1051,14 +1051,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -1092,7 +1092,7 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "partitions/min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1132,14 +1132,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)"
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1170,7 +1170,7 @@
     "modules": [
       "gatewayGFSunInverter"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1205,7 +1205,7 @@
     "modules": [
       "gatewayIR"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1288,7 +1288,7 @@
       "gatewayRF2",
       "gatewayPilight"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1333,7 +1333,7 @@
     "modules": [
       "gatewayPilight"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1367,7 +1367,7 @@
     "modules": [
       "gatewayPilight"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1404,7 +1404,7 @@
       "gatewayPilight",
       "actuatorSomfy"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1442,7 +1442,7 @@
     "modules": [
       "gatewayRF"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1569,7 +1569,7 @@
     "modules": [
       "actuatorSomfy"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1605,7 +1605,7 @@
     "modules": [
       "gatewayWeatherStation"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1682,14 +1682,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -1720,14 +1720,14 @@
       "gatewayBT",
       "gatewayIR"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)"
@@ -1764,14 +1764,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -1804,14 +1804,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)"
     ],
@@ -1844,7 +1844,7 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1852,7 +1852,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -1959,7 +1959,7 @@
     "modules": [
       "gatewayLORA"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1999,7 +1999,7 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -2007,7 +2007,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -2641,7 +2641,7 @@
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -2765,14 +2765,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)",
       "decoder @ development (gh:theengs)"
     ],
@@ -2823,14 +2823,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)",
       "decoder @ development (gh:theengs)"
     ],
@@ -2884,14 +2884,14 @@
       "actuatorONOFF",
       "sensorGPIOInput"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)",
       "RN8209C-SDK @ arduino (gh:theengs)"
@@ -2954,14 +2954,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "Adafruit NeoPixel @ 1.11.0 (pio:adafruit)",
       "decoder @ development (gh:theengs)"
     ],
@@ -3006,14 +3006,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
     "options": [
@@ -3041,7 +3041,7 @@
     "modules": [
       "gatewayLORA"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -3082,7 +3082,7 @@
     "modules": [
       "gatewayLORA"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -3120,14 +3120,14 @@
       "gatewayBT",
       "sensorADC"
     ],
-    "platform": "platform-espressif32 @ 55.03.33 (gh:pioarduino)",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "NimBLE-Arduino @ 2.3.2 (gh:h2zero)",
+      "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
       "arduino-LoRa @ f4a1d27 (gh:sandeepmistry)"
     ],
