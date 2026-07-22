@@ -38,6 +38,29 @@
 #  include "config_RTL_433SX1262.h"
 #  include "rtl_433sx1262/sensor_drivers.h"
 
+#  ifdef ZmqttDiscovery
+#    include <vector>
+
+#    include "config_mqttDiscovery.h"
+
+struct RTL433SX1262Device {
+  uint32_t id;
+  char model[16];
+  uint16_t caps;
+  bool hasBattV;
+  bool isDisc;
+};
+static std::vector<RTL433SX1262Device> rtl433sx1262Devices;
+#  endif
+
+static String sx1262Topic(uint32_t id, const char* model) {
+  String topic = subjectRTL_433toMQTT;
+#  if valueAsATopic
+  topic = topic + "/" + String(model) + "/" + String(id);
+#  endif
+  return topic;
+}
+
 #  ifndef IRAM_ATTR
 #    define IRAM_ATTR
 #  endif
@@ -80,6 +103,126 @@ void setupRTL_433SX1262() {
   THEENGS_LOG_TRACE(F("gatewayRTL_433SX1262 setup done" CR));
 }
 
+#  ifdef ZmqttDiscovery
+// Matches the {key, name, unit, device_class} rows used by gatewayRTL_433.cpp's
+// discovery so both gateways surface the same entities for the same fields.
+struct SX1262DiscoveryParam {
+  const char* key;
+  const char* name;
+  const char* unit;
+  const char* deviceClass;
+};
+
+static const SX1262DiscoveryParam SX1262_DISCOVERY_PARAMS[] = {
+    {"temperature_C", "Temperature", HASS_UNIT_CELSIUS, HASS_CLASS_TEMPERATURE},
+    {"humidity", "Humidity", HASS_UNIT_PERCENT, HASS_CLASS_HUMIDITY},
+    {"pressure_hPa", "Pressure", HASS_UNIT_HPA, HASS_CLASS_PRESSURE},
+    {"rain_mm", "Rain", HASS_UNIT_MM, HASS_CLASS_PRECIPITATION},
+    {"wind_avg_m_s", "Wind average", HASS_UNIT_MS, HASS_CLASS_WIND_SPEED},
+    {"wind_max_m_s", "Wind max", HASS_UNIT_MS, HASS_CLASS_WIND_SPEED},
+    {"wind_dir_deg", "Wind direction", HASS_UNIT_DEGREE, ""},
+    {"uv", "UV value", "", ""},
+    {"light_lux", "Illuminance", HASS_UNIT_LX, HASS_CLASS_ILLUMINANCE},
+    {"strike_count", "Strike count", "", ""},
+    {"strike_distance_km", "Strike distance", "km", HASS_CLASS_DISTANCE},
+    {"pm2_5_ug_m3", "PM2.5", HASS_UNIT_UGM3, HASS_CLASS_PM25},
+    {"pm10_ug_m3", "PM10", HASS_UNIT_UGM3, HASS_CLASS_PM10},
+    {"co2_ppm", "Carbon Dioxide", HASS_UNIT_PPM, HASS_CLASS_CARBON_DIOXIDE},
+    {"moisture", "Moisture", HASS_UNIT_PERCENT, HASS_CLASS_HUMIDITY},
+};
+
+static void discoverParam(const char* key, const char* topic, const char* deviceId, const char* model, const char* stateClass) {
+  for (const auto& p : SX1262_DISCOVERY_PARAMS) {
+    if (strcmp(p.key, key) == 0) {
+      String value_template = "{{ value_json." + String(key) + " | is_defined }}";
+      String unique_id = String(deviceId) + "-" + key;
+      createDiscovery("sensor",
+                      topic, p.name, unique_id.c_str(),
+                      "", p.deviceClass, value_template.c_str(),
+                      "", "", p.unit,
+                      0,
+                      "", "", false, "",
+                      deviceId, "", model, deviceId, false,
+                      stateClass);
+      return;
+    }
+  }
+  THEENGS_LOG_WARNING(F("[RTL_433SX1262] discovery key %s not found" CR), key);
+}
+
+static void emitSX1262Discovery(const RTL433SX1262Device& dev, const String& topicStr) {
+  String deviceIdStr = String(dev.model) + "-" + String(dev.id);
+  const char* deviceId = deviceIdStr.c_str();
+  const char* topic = topicStr.c_str();
+
+  if (dev.caps & CAP_TEMP)
+    discoverParam("temperature_C", topic, deviceId, dev.model, stateClassMeasurement);
+  if (dev.caps & CAP_HUM)
+    discoverParam("humidity", topic, deviceId, dev.model, stateClassMeasurement);
+  if (dev.caps & CAP_PRESSURE)
+    discoverParam("pressure_hPa", topic, deviceId, dev.model, stateClassMeasurement);
+  if (dev.caps & CAP_RAIN)
+    discoverParam("rain_mm", topic, deviceId, dev.model, stateClassTotalIncreasing);
+  if (dev.caps & CAP_WIND) {
+    discoverParam("wind_avg_m_s", topic, deviceId, dev.model, stateClassMeasurement);
+    discoverParam("wind_max_m_s", topic, deviceId, dev.model, stateClassMeasurement);
+    discoverParam("wind_dir_deg", topic, deviceId, dev.model, stateClassMeasurement);
+  }
+  if (dev.caps & CAP_UV) {
+    discoverParam("uv", topic, deviceId, dev.model, stateClassMeasurement);
+    discoverParam("light_lux", topic, deviceId, dev.model, stateClassMeasurement);
+  }
+  if (dev.caps & CAP_LIGHTNING) {
+    discoverParam("strike_count", topic, deviceId, dev.model, stateClassTotalIncreasing);
+    discoverParam("strike_distance_km", topic, deviceId, dev.model, stateClassMeasurement);
+  }
+  if (dev.caps & CAP_PM) {
+    discoverParam("pm2_5_ug_m3", topic, deviceId, dev.model, stateClassMeasurement);
+    discoverParam("pm10_ug_m3", topic, deviceId, dev.model, stateClassMeasurement);
+  }
+  if (dev.caps & CAP_CO2)
+    discoverParam("co2_ppm", topic, deviceId, dev.model, stateClassMeasurement);
+  if (dev.caps & CAP_SOIL)
+    discoverParam("moisture", topic, deviceId, dev.model, stateClassMeasurement);
+
+  // battery_ok is 0/1, mirrored as a percent sensor for consistency with gatewayRTL_433.cpp
+  String battOkTemplate = "{{ (float(value_json.battery_ok) * 100) | round(0) | is_defined }}";
+  String battOkUniqueId = String(deviceId) + "-battery_ok";
+  createDiscovery("sensor",
+                  topic, "Battery", battOkUniqueId.c_str(),
+                  "", HASS_CLASS_BATTERY, battOkTemplate.c_str(),
+                  "", "", HASS_UNIT_PERCENT,
+                  0,
+                  "", "", false, "",
+                  deviceId, "", dev.model, deviceId, false,
+                  stateClassMeasurement);
+
+  if (dev.hasBattV) {
+    String battVTemplate = "{{ value_json.battery_V | is_defined }}";
+    String battVUniqueId = String(deviceId) + "-battery_V";
+    createDiscovery("sensor",
+                    topic, "Battery Voltage", battVUniqueId.c_str(),
+                    "", HASS_CLASS_VOLTAGE, battVTemplate.c_str(),
+                    "", "", HASS_UNIT_VOLT,
+                    0,
+                    "", "", false, "",
+                    deviceId, "", dev.model, deviceId, false,
+                    stateClassMeasurement);
+  }
+}
+
+void launchRTL_433SX1262Discovery(bool overrideDiscovery) {
+  if (!SYSConfig.discovery)
+    return;
+  for (auto& dev : rtl433sx1262Devices) {
+    if (overrideDiscovery || !dev.isDisc) {
+      emitSX1262Discovery(dev, sx1262Topic(dev.id, dev.model));
+      dev.isDisc = true;
+    }
+  }
+}
+#  endif
+
 static void rtl433sx1262_publish(const SensorReading& r) {
   unsigned long MQTTvalue = r.id * 1000UL + (unsigned long)round(r.tempC * 10.0f + 500.0f) + (unsigned long)round(r.humidity) + (unsigned long)round(r.rainMm * 10.0f) + (unsigned long)round(r.windAvgMs * 10.0f) + (unsigned long)r.lightningCount + (unsigned long)r.soilMoisture + (unsigned long)round(r.pm25 * 10.0f) + (unsigned long)r.co2;
   if (isAduplicateSignal(MQTTvalue))
@@ -115,7 +258,7 @@ static void rtl433sx1262_publish(const SensorReading& r) {
   if (r.caps & CAP_LIGHTNING) {
     data["strike_count"] = r.lightningCount;
     if (r.lightningDistKm != 63)
-      data["strike_distance"] = r.lightningDistKm;
+      data["strike_distance_km"] = r.lightningDistKm;
   }
   if (r.caps & CAP_PM) {
     data["pm2_5_ug_m3"] = r.pm25;
@@ -126,11 +269,36 @@ static void rtl433sx1262_publish(const SensorReading& r) {
   if (r.caps & CAP_SOIL)
     data["moisture"] = r.soilMoisture;
 
-  String topic = subjectRTL_433toMQTT;
-#  if valueAsATopic
-  topic = topic + "/" + String(r.model) + "/" + String(r.id);
-#  endif
+  String topic = sx1262Topic(r.id, r.model);
   data["origin"] = (char*)topic.c_str();
+
+#  ifdef ZmqttDiscovery
+  if (SYSConfig.discovery) {
+    RTL433SX1262Device* dev = nullptr;
+    for (auto& d : rtl433sx1262Devices) {
+      if (d.id == r.id && strcmp(d.model, r.model) == 0) {
+        dev = &d;
+        break;
+      }
+    }
+    if (!dev) {
+      RTL433SX1262Device newDev;
+      newDev.id = r.id;
+      strlcpy(newDev.model, r.model, sizeof(newDev.model));
+      newDev.caps = 0;
+      newDev.hasBattV = false;
+      newDev.isDisc = false;
+      rtl433sx1262Devices.push_back(newDev);
+      dev = &rtl433sx1262Devices.back();
+    }
+    dev->caps = r.caps;
+    dev->hasBattV = dev->hasBattV || (r.battV > 0);
+    if (!dev->isDisc) {
+      emitSX1262Discovery(*dev, topic);
+      dev->isDisc = true;
+    }
+  }
+#  endif
 
   enqueueJsonObject(data);
   storeSignalValue(MQTTvalue);

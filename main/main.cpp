@@ -373,6 +373,9 @@ void handle_autodiscovery() {
 #  ifdef ZgatewayRTL_433
     launchRTL_433Discovery(true);
 #  endif
+#  ifdef ZgatewayRTL_433SX1262
+    launchRTL_433SX1262Discovery(true);
+#  endif
   }
 
   connectedOnce = true;

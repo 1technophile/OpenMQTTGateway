@@ -33,6 +33,9 @@
 
 extern void setupRTL_433SX1262();
 extern void RTL_433SX1262Loop();
+#ifdef ZmqttDiscovery
+extern void launchRTL_433SX1262Discovery(bool overrideDiscovery);
+#endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
 // Heltec WiFi LoRa 32 V3/V4 onboard SX1262 (V4 is pin-compatible with V3)
