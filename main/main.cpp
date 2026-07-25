@@ -2317,7 +2317,11 @@ void setupWiFiManager() {
     // Check if the config file exists and prevent the portal from showing if yes
     // Showing the portal if the config file exist would enable access to the configuration data and to the ESP update page
     // This is a security risk if an attacker has access to the gateway password
-    if (SPIFFS.exists("/config.json")) {
+    // Only suppress the portal when we still have saved WiFi credentials. If the
+    // credentials were lost (e.g. NVS erased) while config.json remains, keeping
+    // the portal disabled makes the gateway impossible to re-onboard and it
+    // reboot-loops (autoConnect fails immediately -> ESPRestart, forever).
+    if (SPIFFS.exists("/config.json") && WiFi.SSID().length() > 0) {
       wifiManager.setEnableConfigPortal(false);
     }
   }
