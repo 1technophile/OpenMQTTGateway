@@ -81,6 +81,10 @@ extern bool XtoSERIAL(const char* topicOri, JsonObject& SERIALdata);
 #  define SERIALBaud 9600 // The serial connection Baud
 #endif
 
+#ifndef SERIAL_CONFIG
+#  define SERIAL_CONFIG SERIAL_8N1 // The serial frame format (data/parity/stop bits), e.g. SERIAL_8E1 for 8 data bits/even parity/1 stop bit
+#endif
+
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef SERIAL_UART
 // set hardware serial UART to be used for device communication or
