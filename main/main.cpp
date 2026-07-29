@@ -265,6 +265,9 @@ void updateAndHandleLEDsTask();
 bool loadConfigFromFlash();
 void setupWiFiManager();
 void setOTA();
+#if defined(ESP32_ETHERNET) && defined(IP_DISCOVERY_AP)
+void setupIPDiscoveryAP();
+#endif
 void setupCommonRF();
 void sleep();
 bool checkForUpdates();
@@ -2476,6 +2479,28 @@ void setup_ethernet_esp32() {
   }
 }
 
+#if defined(ESP32_ETHERNET) && defined(IP_DISCOVERY_AP)
+// Broadcasts a WiFi AP whose SSID *is* the gateway's current IP address, so it can be found
+// with nothing more than a phone's normal WiFi network list -- no app, no mDNS/network-path
+// dependency. Aimed at Ethernet-only boards (no onboard display, no serial access without a
+// USB-TTL adapter) where finding the DHCP-assigned IP otherwise means a scanner app or a
+// router login. Password reuses ota_pass (already a per-device secret derived from the MAC
+// unless overridden) so the AP itself isn't open to anyone nearby -- the SSID/IP is still
+// readable in a WiFi network list without joining, same as any other visible network.
+void setupIPDiscoveryAP() {
+  static IPAddress lastAdvertisedIp;
+  const IPAddress ip = ETH.localIP();
+  if (ip == lastAdvertisedIp) {
+    return; // already advertising this address, nothing to do
+  }
+  lastAdvertisedIp = ip;
+
+  WiFi.mode((WiFiMode_t)(WiFi.getMode() | WIFI_MODE_AP));
+  WiFi.softAP(ip.toString().c_str(), ota_pass);
+  THEENGS_LOG_NOTICE(F("IP discovery AP started, SSID: %s" CR), ip.toString().c_str());
+}
+#endif
+
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
@@ -2489,6 +2514,9 @@ void WiFiEvent(WiFiEvent_t event) {
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet MAC: %s" CR), ETH.macAddress().c_str());
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet IP: %s" CR), ETH.localIP().toString().c_str());
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet link speed: %d Mbps" CR), ETH.linkSpeed());
+#if defined(IP_DISCOVERY_AP)
+      setupIPDiscoveryAP();
+#endif
       gatewayState = GatewayState::NTWK_CONNECTED;
       ethConnected = true;
       break;
