@@ -2514,11 +2514,15 @@ void WiFiEvent(WiFiEvent_t event) {
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet MAC: %s" CR), ETH.macAddress().c_str());
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet IP: %s" CR), ETH.localIP().toString().c_str());
       THEENGS_LOG_NOTICE(F("OpenMQTTGateway Ethernet link speed: %d Mbps" CR), ETH.linkSpeed());
-#if defined(IP_DISCOVERY_AP)
-      setupIPDiscoveryAP();
-#endif
       gatewayState = GatewayState::NTWK_CONNECTED;
       ethConnected = true;
+#if defined(IP_DISCOVERY_AP)
+      // Must run after ethConnected = true, not before: setup_ethernet_esp32()'s caller polls
+      // ethConnected with a short (~2.5s) timeout budget before deciding whether to launch
+      // WiFiManager's portal, and starting the WiFi radio in AP mode here can easily eat into
+      // that budget on its own.
+      setupIPDiscoveryAP();
+#endif
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       THEENGS_LOG_WARNING(F("Ethernet Disconnected" CR));
