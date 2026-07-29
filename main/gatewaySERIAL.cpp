@@ -78,9 +78,9 @@ void setupSERIAL() {
 #    if SERIAL_UART == 0 // init UART0
   Serial.end(); // stop if already initialized
 #      ifdef ESP32
-  Serial.begin(SERIALBaud, SERIAL_8N1, SERIAL_RX_GPIO, SERIAL_TX_GPIO);
+  Serial.begin(SERIALBaud, SERIAL_CONFIG, SERIAL_RX_GPIO, SERIAL_TX_GPIO);
 #      else
-  Serial.begin(SERIALBaud, SERIAL_8N1);
+  Serial.begin(SERIALBaud, SERIAL_CONFIG);
 #      endif
 #      if defined(ESP8266) && defined(SERIAL_UART0_SWAP)
   Serial.swap(); // swap UART0 ports from (GPIO1,GPIO3) to (GPIO15,GPIO13)
@@ -91,9 +91,9 @@ void setupSERIAL() {
 #    elif SERIAL_UART == 1 // init UART1
   Serial1.end(); // stop if already initialized
 #      ifdef ESP32
-  Serial1.begin(SERIALBaud, SERIAL_8N1, SERIAL_RX_GPIO, SERIAL_TX_GPIO);
+  Serial1.begin(SERIALBaud, SERIAL_CONFIG, SERIAL_RX_GPIO, SERIAL_TX_GPIO);
 #      else
-  Serial1.begin(SERIALBaud, SERIAL_8N1);
+  Serial1.begin(SERIALBaud, SERIAL_CONFIG);
 #      endif
   SERIALStream = &Serial1;
   THEENGS_LOG_NOTICE(F("SERIAL HW UART1" CR));
@@ -101,16 +101,16 @@ void setupSERIAL() {
 #    elif SERIAL_UART == 2 // init UART2
   Serial2.end(); // stop if already initialized
 #      ifdef ESP32
-  Serial2.begin(SERIALBaud, SERIAL_8N1, SERIAL_RX_GPIO, SERIAL_TX_GPIO);
+  Serial2.begin(SERIALBaud, SERIAL_CONFIG, SERIAL_RX_GPIO, SERIAL_TX_GPIO);
 #      else
-  Serial2.begin(SERIALBaud, SERIAL_8N1);
+  Serial2.begin(SERIALBaud, SERIAL_CONFIG);
 #      endif
   SERIALStream = &Serial2;
   THEENGS_LOG_NOTICE(F("SERIAL HW UART2" CR));
 
 #    elif SERIAL_UART == 3 // init UART3
   Serial3.end(); // stop if already initialized
-  Serial3.begin(SERIALBaud, SERIAL_8N1);
+  Serial3.begin(SERIALBaud, SERIAL_CONFIG);
   SERIALStream = &Serial3;
   THEENGS_LOG_NOTICE(F("SERIAL HW UART3" CR));
 #    endif
