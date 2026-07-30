@@ -304,6 +304,14 @@ static void rtl433sx1262_publish(const SensorReading& r) {
   storeSignalValue(MQTTvalue);
 }
 
+static void rtl433sx1262_logHex(const uint8_t* buf, size_t len) {
+  char hex[RTL433_SX1262_PKT_LEN * 3 + 1];
+  size_t pos = 0;
+  for (size_t i = 0; i < len && pos + 3 < sizeof(hex); i++)
+    pos += snprintf(hex + pos, sizeof(hex) - pos, "%02X ", buf[i]);
+  THEENGS_LOG_TRACE(F("[RTL_433SX1262] raw: %s" CR), hex);
+}
+
 void RTL_433SX1262Loop() {
   if (!rtl433sx1262_rxFlag)
     return;
@@ -314,8 +322,13 @@ void RTL_433SX1262Loop() {
   float rssi = rtl433sx1262_radio.getRSSI();
   rtl433sx1262_radio.startReceive();
 
-  if (state != RADIOLIB_ERR_NONE)
+  if (state != RADIOLIB_ERR_NONE) {
+    THEENGS_LOG_TRACE(F("[RTL_433SX1262] readData failed, code %d, rssi %.1f" CR), state, rssi);
     return;
+  }
+
+  THEENGS_LOG_TRACE(F("[RTL_433SX1262] packet received, rssi %.1f" CR), rssi);
+  rtl433sx1262_logHex(buf, RTL433_SX1262_PKT_LEN);
 
   for (size_t i = 0; i < RTL433SX1262_DRIVER_COUNT; i++) {
     const SensorDriver* drv = RTL433SX1262_DRIVERS[i];
@@ -323,9 +336,11 @@ void RTL_433SX1262Loop() {
       continue;
     SensorReading reading;
     if (drv->parse(buf, RTL433_SX1262_PKT_LEN, rssi, reading)) {
+      THEENGS_LOG_NOTICE(F("[RTL_433SX1262] Decoded %s id=%lu rssi=%.1f" CR), reading.model, (unsigned long)reading.id, rssi);
       rtl433sx1262_publish(reading);
       return;
     }
+    THEENGS_LOG_TRACE(F("[RTL_433SX1262] %s sync matched but parse/CRC failed" CR), drv->model);
   }
 }
 
