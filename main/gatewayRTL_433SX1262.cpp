@@ -313,6 +313,12 @@ static void rtl433sx1262_logHex(const uint8_t* buf, size_t len) {
 }
 
 void RTL_433SX1262Loop() {
+  static unsigned long lastHeartbeat = 0;
+  if (millis() - lastHeartbeat > 10000) {
+    lastHeartbeat = millis();
+    THEENGS_LOG_TRACE(F("[RTL_433SX1262] listening, rssi %.1f" CR), rtl433sx1262_radio.getRSSI());
+  }
+
   if (!rtl433sx1262_rxFlag)
     return;
   rtl433sx1262_rxFlag = false;

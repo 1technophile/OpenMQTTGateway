@@ -1845,7 +1845,10 @@ void WebUISetup() {
   server.on("/favicon.ico", handleFavicon); // Information
   server.begin();
 
+#  if !LOG_TO_OLED && !LOG_TO_LCD
+  // Don't clobber the OLED/LCD log redirection setupSSD1306()/setupM5() already established
   Log.begin(LOG_LEVEL, &WebLog);
+#  endif
 
   THEENGS_LOG_TRACE(F("[WebUI] displayMetric %T" CR), displayMetric);
   THEENGS_LOG_TRACE(F("[WebUI] WebUI Secure %T" CR), webUISecure);
