@@ -1820,7 +1820,8 @@ void WebUISetup() {
   server.on("/up", handleUP); // Firmware Upgrade
 #  endif
   server.on("/cn", handleCN); // Configuration
-  server.on("/wi", HTTP_POST, handleWI); // Configure Wifi
+  server.on("/wi", HTTP_GET, handleWI); // Scan for WiFi networks (GET link)
+  server.on("/wi", HTTP_POST, handleWI); // Configure Wifi (save form, POST)
   server.on("/mq", HTTP_POST, handleMQ); // Configure MQTT
 #  ifndef ESPWifiManualSetup
   server.on("/cg", handleCG); // Configure gateway
