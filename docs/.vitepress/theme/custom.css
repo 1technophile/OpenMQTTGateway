@@ -17,6 +17,32 @@
   max-width: 100% !important;
 }
 
+/* Enlarge the home hero image beyond the theme's ~320px default cap */
+.VPHome .VPHero .image-container {
+  transform: none;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.VPHome .VPHero .image-bg {
+  display: none;
+}
+
+.VPHome .VPHero .image-src {
+  position: static;
+  transform: none;
+  width: 100%;
+  max-width: 420px;
+  max-height: none;
+}
+
+@media (min-width: 960px) {
+  .VPHome .VPHero .image-src {
+    max-width: 520px;
+  }
+}
+
 /* Gray backdrop when ESP Web Tools install dialog is open */
 ewt-install-dialog {
   position: fixed;

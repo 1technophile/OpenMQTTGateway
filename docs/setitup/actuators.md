@@ -1,11 +1,11 @@
 # Actuators
 ## Compatible parts 
-|Module|Purpose|Where to Buy|
-|-|-|-|
-|LED|Basic led|-|
-|FASTLED|RGB Leds management|-|
-|BUZZER|-|-|
-|RELAY|Switch power circuit|-|
+|Module|Purpose|
+|-|-|
+|LED|Basic led|
+|FASTLED|RGB Leds management|
+|BUZZER|-|
+|RELAY|Switch power circuit|
 
 ## Pinout
 |Module| Boards|

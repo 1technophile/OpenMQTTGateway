@@ -13,6 +13,46 @@
     </div>
 
     <div v-if="!loading && !error">
+      <!-- Guided picker -->
+      <div class="wizard">
+        <span class="wizard-title">Help me choose</span>
+        <div class="wizard-row">
+          <span class="filter-group__label">I want to bridge:</span>
+          <div class="filter-chips">
+            <button
+              v-for="b in bridgeOptions"
+              :key="b.key"
+              :class="['filter-chip', { 'filter-chip--active': wizardBridge === b.key }]"
+              @click="wizardBridge = wizardBridge === b.key ? null : b.key">
+              {{ b.label }}
+            </button>
+          </div>
+        </div>
+        <div class="wizard-row">
+          <span class="filter-group__label">My hardware:</span>
+          <div class="filter-chips">
+            <button
+              v-for="h in hardwareOptions"
+              :key="h.key"
+              :class="['filter-chip', { 'filter-chip--active': wizardHardware === h.key }]"
+              @click="wizardHardware = wizardHardware === h.key ? null : h.key">
+              {{ h.label }}
+            </button>
+          </div>
+        </div>
+        <div v-if="wizardBridge && recommendedBoard" class="wizard-result">
+          <div class="wizard-result__text">
+            <span>Recommended: <code>{{ recommendedBoard.environment }}</code></span>
+            <span v-if="recommendedBoard.description" class="wizard-result__desc" v-html="recommendedBoard.description"></span>
+            <span v-if="wizardHardware === 'none' && shoppingHint" class="wizard-result__desc">🛒 {{ shoppingHint }}</span>
+          </div>
+          <button class="wizard-result__cta" @click="openSelector(recommendedBoard.environment)">Flash it →</button>
+        </div>
+        <div v-else-if="wizardBridge && !recommendedBoard" class="wizard-result wizard-result--none">
+          No pre-built environment matches this combination<template v-if="wizardBridge === 'ble' && wizardHardware === 'esp8266'"> — Bluetooth needs an ESP32</template>. Try another hardware choice, or <a :href="buildsUrl">build from source</a>.
+        </div>
+      </div>
+
       <!-- Search and Filter Bar -->
       <div class="filter-bar">
         <div class="search-box">
@@ -30,33 +70,6 @@
             aria-label="Clear search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
-        </div>
-
-        <div class="filter-groups">
-          <div class="filter-group">
-            <span class="filter-group__label">MCU:</span>
-            <div class="filter-chips">
-              <button
-                v-for="mcu in mcuFilters"
-                :key="mcu"
-                :class="['filter-chip', { 'filter-chip--active': activeMcuFilter === mcu }]"
-                @click="toggleMcuFilter(mcu)">
-                {{ mcu }}
-              </button>
-            </div>
-          </div>
-          <div class="filter-group">
-            <span class="filter-group__label">Gateway:</span>
-            <div class="filter-chips">
-              <button
-                v-for="gw in gatewayFilters"
-                :key="gw.key"
-                :class="['filter-chip', { 'filter-chip--active': activeGatewayFilter === gw.key }]"
-                @click="toggleGatewayFilter(gw.key)">
-                {{ gw.label }}
-              </button>
-            </div>
-          </div>
         </div>
 
         <div v-if="hasActiveFilters" class="filter-status">
@@ -164,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 
 interface Board {
   environment: string
@@ -174,11 +187,6 @@ interface Board {
   libraries?: string[]
   customImg?: string
   CustomImg?: string
-}
-
-interface GatewayFilter {
-  key: string
-  label: string
 }
 
 const props = withDefaults(defineProps<{
@@ -195,8 +203,25 @@ const error = ref<string | null>(null)
 const expandedModules = reactive<Record<string, boolean>>({})
 const expandedLibraries = reactive<Record<string, boolean>>({})
 const searchQuery = ref('')
-const activeMcuFilter = ref<string | null>(null)
-const activeGatewayFilter = ref<string | null>(null)
+const wizardBridge = ref<string | null>(null)
+const wizardHardware = ref<string | null>(null)
+
+const bridgeOptions = [
+  { key: 'ble', label: 'Bluetooth devices' },
+  { key: 'rf433', label: 'RF devices (433/868/915MHz)' },
+  { key: 'ir', label: 'Infrared' },
+  { key: 'lora', label: 'LoRa' }
+]
+
+const hardwareOptions = [
+  { key: 'esp32dev', label: 'Generic ESP32' },
+  { key: 'esp32c3', label: 'ESP32-C3' },
+  { key: 'esp32s3', label: 'ESP32-S3' },
+  { key: 'lilygo', label: 'LilyGo / Heltec / TTGO' },
+  { key: 'm5', label: 'M5Stack' },
+  { key: 'esp8266', label: 'ESP8266 / NodeMCU' },
+  { key: 'none', label: "I don't have hardware yet" }
+]
 
 const popularEnvironments = [
   'esp32dev-ble',
@@ -226,44 +251,105 @@ function getMcuFamily(mcu: string | undefined): string | null {
   return 'Other'
 }
 
-const mcuFilters = computed<string[]>(() => {
-  const families: Record<string, boolean> = {}
-  boards.value.forEach(b => {
-    const family = getMcuFamily(b.microcontroller)
-    if (family) families[family] = true
+function matchesBridge(board: Board, bridge: string): boolean {
+  const mods = (board.modules || []).map(m => m.toLowerCase())
+  switch (bridge) {
+    case 'ble': return mods.some(m => m.includes('bt'))
+    case 'rf433': return mods.some(m => m.includes('rf') || m.includes('rtl_433') || m.includes('pilight'))
+    case 'ir': return mods.some(m => m.includes('ir'))
+    case 'lora': return mods.some(m => m.includes('lora'))
+    default: return true
+  }
+}
+
+function matchesHardware(board: Board, hardware: string): boolean {
+  const haystack = `${board.environment} ${board.microcontroller || ''}`.toLowerCase()
+  switch (hardware) {
+    case 'esp32dev': return board.environment.toLowerCase().includes('esp32dev')
+    case 'esp32c3': return getMcuFamily(board.microcontroller) === 'ESP32-C3'
+    case 'esp32s3': return getMcuFamily(board.microcontroller) === 'ESP32-S3'
+    case 'lilygo': return /lilygo|heltec|ttgo/.test(haystack)
+    case 'm5': return haystack.includes('m5')
+    case 'esp8266': return getMcuFamily(board.microcontroller) === 'ESP8266'
+    default: return true // 'none': no hardware constraint
+  }
+}
+
+// Preferred defaults per bridge choice, consulted before the generic
+// popular-first order. All entries must be web-flashable environments.
+const preferredByBridge: Record<string, string[]> = {
+  ble: ['esp32dev-ble', 'esp32c3-dev-c2-ble', 'esp32s3-dev-c1-ble', 'esp32-m5atom-lite', 'heltec-ble', 'lilygo-ble'],
+  rf433: ['lilygo-rtl_433', 'esp32dev-rtl_433', 'heltec-rtl_433', 'nodemcuv2-rf'],
+  ir: ['esp32dev-ir', 'nodemcuv2-ir', 'esp32-m5atom-lite'],
+  lora: ['ttgo-lora32-v21', 'heltec-wifi-lora-32', 'ttgo-lora32-v1', 'ttgo-t-beam']
+}
+
+const recommendedBoard = ref<Board | null>(null)
+const manifestCache = new Map<string, boolean>()
+
+// Not every environment in boards-info.json has a pre-built firmware
+// manifest; only recommend ones that can actually be web-flashed.
+async function hasManifest(env: string): Promise<boolean> {
+  const cached = manifestCache.get(env)
+  if (cached !== undefined) return cached
+  let ok = false
+  try {
+    const response = await fetch(buildUrl(`/firmware_build/${env}.manifest.json`), { method: 'HEAD' })
+    ok = response.ok
+  } catch {
+    ok = false
+  }
+  manifestCache.set(env, ok)
+  return ok
+}
+
+let recommendationToken = 0
+watch([wizardBridge, wizardHardware, boards], async () => {
+  const token = ++recommendationToken
+  const bridge = wizardBridge.value
+  if (!bridge) {
+    recommendedBoard.value = null
+    return
+  }
+  const candidates = boards.value.filter(b =>
+    matchesBridge(b, bridge) &&
+    (!wizardHardware.value || matchesHardware(b, wizardHardware.value))
+  )
+  const preferred = preferredByBridge[bridge] || []
+  const ordered = [...candidates].sort((a, b) => {
+    const ai = preferred.indexOf(a.environment)
+    const bi = preferred.indexOf(b.environment)
+    return (ai === -1 ? preferred.length : ai) - (bi === -1 ? preferred.length : bi)
   })
-  return Object.keys(families).sort()
+  for (const candidate of ordered.slice(0, 8)) {
+    if (await hasManifest(candidate.environment)) {
+      if (token === recommendationToken) recommendedBoard.value = candidate
+      return
+    }
+  }
+  if (token === recommendationToken) recommendedBoard.value = null
 })
 
-const gatewayFilters = computed<GatewayFilter[]>(() => {
-  const gateways: Record<string, string> = {
-    BT: 'BLE',
-    RF: 'RF',
-    IR: 'IR',
-    LORA: 'LoRa',
-    RTL_433: 'RTL_433',
-    Pilight: 'Pilight'
+const shoppingHint = computed<string>(() => {
+  switch (wizardBridge.value) {
+    case 'ble':
+    case 'ir': return 'Any ESP32 development board will do.'
+    case 'rf433': return 'A LILYGO LoRa32 or Heltec LoRa V2 board matching your devices\' frequency (433/868/915MHz) needs no soldering.'
+    case 'lora': return 'Get a LILYGO LoRa32 or Heltec LoRa board matching the frequency used in your region.'
+    default: return ''
   }
-  const result: GatewayFilter[] = []
-  Object.keys(gateways).forEach(key => {
-    const hasBoards = boards.value.some(b =>
-      Array.isArray(b.modules) && b.modules.some(m =>
-        m.toLowerCase().includes(key.toLowerCase())
-      )
-    )
-    if (hasBoards) {
-      result.push({ key, label: gateways[key] })
-    }
-  })
-  return result
 })
+
+const buildsUrl = computed(() => buildUrl('/upload/builds.html'))
 
 const hasActiveFilters = computed(() =>
-  searchQuery.value || activeMcuFilter.value || activeGatewayFilter.value
+  searchQuery.value || wizardBridge.value || wizardHardware.value
 )
 
 const filteredBoards = computed<Board[]>(() =>
   boards.value.filter(board => {
+    if (wizardBridge.value && !matchesBridge(board, wizardBridge.value)) return false
+    if (wizardHardware.value && wizardHardware.value !== 'none' && !matchesHardware(board, wizardHardware.value)) return false
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase()
       const haystack = [
@@ -274,32 +360,14 @@ const filteredBoards = computed<Board[]>(() =>
       ].join(' ').toLowerCase()
       if (!haystack.includes(q)) return false
     }
-    if (activeMcuFilter.value) {
-      const family = getMcuFamily(board.microcontroller)
-      if (family !== activeMcuFilter.value) return false
-    }
-    if (activeGatewayFilter.value) {
-      const key = activeGatewayFilter.value.toLowerCase()
-      if (!Array.isArray(board.modules) || !board.modules.some(m =>
-        m.toLowerCase().includes(key)
-      )) return false
-    }
     return true
   })
 )
 
-function toggleMcuFilter(mcu: string) {
-  activeMcuFilter.value = activeMcuFilter.value === mcu ? null : mcu
-}
-
-function toggleGatewayFilter(gw: string) {
-  activeGatewayFilter.value = activeGatewayFilter.value === gw ? null : gw
-}
-
 function clearFilters() {
   searchQuery.value = ''
-  activeMcuFilter.value = null
-  activeGatewayFilter.value = null
+  wizardBridge.value = null
+  wizardHardware.value = null
 }
 
 async function loadBoards() {
@@ -357,6 +425,16 @@ function getBoardImageUrl(board: Board): string {
 }
 
 onMounted(() => {
+  // Preset the guided picker from query parameters, e.g. ?bridge=ble&hardware=esp32dev
+  const params = new URLSearchParams(window.location.search)
+  const bridgeParam = params.get('bridge')
+  if (bridgeParam && bridgeOptions.some(b => b.key === bridgeParam)) {
+    wizardBridge.value = bridgeParam
+  }
+  const hardwareParam = params.get('hardware')
+  if (hardwareParam && hardwareOptions.some(h => h.key === hardwareParam)) {
+    wizardHardware.value = hardwareParam
+  }
   loadBoards()
 })
 </script>
@@ -364,6 +442,77 @@ onMounted(() => {
 <style scoped>
 .board-environment-list {
   margin: 2rem 0;
+}
+
+/* Guided picker */
+.wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 1.25rem;
+}
+
+.wizard-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.wizard-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wizard-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px dashed var(--vp-c-divider);
+  padding-top: 12px;
+  font-size: 0.9rem;
+}
+
+.wizard-result__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wizard-result__desc {
+  color: var(--vp-c-text-2);
+  font-size: 0.85rem;
+}
+
+.wizard-result__cta {
+  background: var(--vp-c-brand-1);
+  color: var(--vp-c-white, #fff);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.wizard-result__cta:hover {
+  background: var(--vp-c-brand-2);
+}
+
+.wizard-result--none {
+  display: block;
+  color: var(--vp-c-text-2);
+}
+
+.wizard-result--none a {
+  color: var(--vp-c-brand-1);
 }
 
 /* Search and Filter Bar */

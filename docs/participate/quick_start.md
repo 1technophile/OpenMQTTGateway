@@ -1,11 +1,13 @@
 ---
-title: Quick Start to Develop OpenMQTTGateway
+title: Contributor Quick Start
 permalink: /participate/quick_start.html
 sidebarDepth: 2
 lang: en-US
 ---
 
-# Quick Start to Develop OpenMQTTGateway
+# Contributor Quick Start
+
+Looking to **use** OpenMQTTGateway rather than develop it? Head to the [Getting Started guide](../getting-started.md) instead.
 
 This document helps a new contributor. Maybe this is your first time with:
 

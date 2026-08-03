@@ -1,12 +1,12 @@
 # IR gateway
 ## Compatible parts
-|Module|Purpose|Where to Buy|
-|-|-|-|
-|IR diode|Emitting|-|
-|IR receiver|Receiving|-|
-|transistor 2N2222|Amplify uC signal for the IR diode|-|
-|330 ohms resistor|-|-|
-|220 ohms resistor|limit current to LED|-|
+|Module|Purpose|
+|-|-|
+|IR diode|Emitting|
+|IR receiver|Receiving|
+|transistor 2N2222|Amplify uC signal for the IR diode|
+|330 ohms resistor|-|
+|220 ohms resistor|limit current to LED|
 
 The IR setup can work with bc547 and a 4x3 LED-Matrix.
 

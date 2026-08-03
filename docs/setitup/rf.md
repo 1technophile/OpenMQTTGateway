@@ -1,4 +1,4 @@
-# RF gateway (433mhz/315mhz)
+# RF gateway (433/315/868/915MHz)
 
 ## Protocols, modules and library
 
@@ -21,13 +21,13 @@ If you want to try the RTL_433 module with a combination or a board outside of t
 Heltec LORA V3 is not compatible with RTL_433 library as it is based on an SX1262 module.
 
 ## Assembly/soldering required parts
-|Module|Purpose|Compatible modules|Receiver Switching|Where to Buy|
-|-|-|-|-|-|
-|SRX882 or SRX882S (recommended)|433Mhz Receiver|RF(RCSwitch), RF2(KaKu), Pilight|Supported|-|
-|STX882 (recommended)|433Mhz Transmitter|RF(RCSwitch), RF2(KaKu), Pilight|Supported|-|
-|CC1101|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Supported|-|
-|SX1276/SX1278|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|-|
-|LilyGo/Heltec|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|-|
+|Module|Purpose|Compatible modules|Receiver Switching|
+|-|-|-|-|
+|SRX882 or SRX882S (recommended)|433Mhz Receiver|RF(RCSwitch), RF2(KaKu), Pilight|Supported|
+|STX882 (recommended)|433Mhz Transmitter|RF(RCSwitch), RF2(KaKu), Pilight|Supported|
+|CC1101|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders), RF(RCSwitch), RF2(KaKu), Pilight|Supported|
+|SX1276/SX1278|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|
+|LilyGo/Heltec|433Mhz Transceiver|[RTL_433](../use/rf#supported-decoders)|Not Supported|
 
 ### SRX STX Pinout
 |Board| Receiver Pin| Emitter Pin|
@@ -72,9 +72,9 @@ When **all** these variables are defined, OpenMQTTGateway will use your custom p
 ![Addon_RF](../img/OpenMQTTgateway_ESP32_Addon_RF.png)
 
 ## ESP8266 Hardware setup
-The default receiver pin is D2 (gpio 4). Avoid D3 (gpio 0): it is a boot strapping pin, a receiver holding it low at reset forces the ESP8266 into flash mode and the board never starts.
+If the gateway works only when serial monitor is connected don't use D3 use D2 instead (gpio 4) and modify config_RF.h accordingly.
 
-With SRX882 some users reported issues on D2, use D1 instead in this case and modify config_RF.h accordingly.
+With SRX882 some users reported that D3 is not working use D1 instead in this case and modify config_RF.h accordingly.
 
 ![Addon_RF](../img/OpenMQTTgateway_ESP8266_Addon_RF.png)
 

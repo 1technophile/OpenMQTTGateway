@@ -12,6 +12,8 @@ OpenMQTTGateway aims to unify various technologies and protocols into a single f
 
 The documentation is [here](https://docs.openmqttgateway.com)
 
+New to OpenMQTTGateway? Follow the [Getting Started guide](https://docs.openmqttgateway.com/getting-started.html) to flash a board from your browser and see your first sensor data in about 15 minutes.
+
 The reference sheet, with the list of all functions, pinouts is [here](https://docs.google.com/spreadsheets/d/1_5fQjAixzRtepkykmL-3uN3G5bLfQ0zMajM9OBZ1bx0/edit#gid=0)
 
 ## Upload
@@ -19,9 +21,9 @@ The reference sheet, with the list of all functions, pinouts is [here](https://d
 Upload OpenMQTTGateway directly from the [upload page](https://docs.openmqttgateway.com/upload/web-install.html) (no additional software required) or [build your own configuration](https://docs.openmqttgateway.com/upload/builds.html) with [PlatformIO](https://platformio.org/).
 
 ## Using OpenMQTTGateway ?
-Support open-source development through sponsorship and gain exclusive access to our private forum. Your questions, issues, and feature requests will receive priority attention, plus you'll gain insider access to our roadmap.
+Support open-source development through sponsorship, it helps keep the project healthy and evolving.
 
-[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/theengs)
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/1technophile)
 
 ## Products powered by OpenMQTTGateway
 
@@ -41,20 +43,20 @@ Support open-source development through sponsorship and gain exclusive access to
 * Presence detection (beta),
 * Local connectivity first.
 
-[![Theengs plug view](./docs/.vuepress/public/img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
+[![Theengs plug view](./docs/img/Theengs-Plug-OpenMQTTGateway.png)](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 Support the project by purchasing the [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna) or the [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption)
 
 ## Compatible items
 
-* [List of supported devices](https://docs.openmqttgateway.com/prerequisites/devices.html), door/window sensors, PIR sensors, smoke detectors, weather stations...
+* [List of supported BLE devices](https://decoder.theengs.io/devices/devices.html), thermometers, scales, plant sensors, beacons...
 
-* [List of compatible boards (Off the shelf or DIY) is available](https://docs.openmqttgateway.com/prerequisites/board.html), RF Bridge, IR, BLE gateways...
+* [Boards guide](https://docs.openmqttgateway.com/prerequisites/board.html), RF Bridge, IR, BLE gateways...
 
 *Running on a computer*
 If you want to use the BLE decoding capabilities of OpenMQTTGateway with a Raspberry Pi, Windows or Unix PC you can now leverage [Theengs Gateway](https://theengs.github.io/gateway/).
 
-* [List of compatible components to build your gateway](https://docs.openmqttgateway.com/prerequisites/parts.html), DHT, RF, IR emitters and receivers...
+* [Parts to build your gateway](https://docs.openmqttgateway.com/prerequisites/parts.html), DHT, RF, IR emitters and receivers...
 
 ## Compatible controllers, saas or software
 
@@ -79,7 +81,6 @@ For Questions or Support please don't open an issue, first go to the [docs](http
 If you like the project and/or used it please consider supporting it! It can be done in different ways:
 * Helping other users in the [community](https://community.openmqttgateway.com)
 * [Contribute](development) to the [code](https://github.com/1technophile/OpenMQTTGateway) or the [documentation](https://docs.openmqttgateway.com)
-* Buy a [Theengs plug](https://shop.theengs.io/products/theengs-plug-smart-plug-ble-gateway-and-energy-consumption) or a [Theengs bridge](https://shop.theengs.io/products/theengs-bridge-esp32-ble-mqtt-gateway-with-ethernet-and-external-antenna)
 * Donate or sponsor the project [developers](https://github.com/1technophile/OpenMQTTGateway/graphs/contributors)
 * Make a video or a blog article about what you have done with [OpenMQTTGateway](https://docs.openmqttgateway.com) and share it to the [community](https://community.openmqttgateway.com)
 

@@ -214,11 +214,27 @@ function collectBoardsInformations(sections, { includeTests = false } = {}) {
     return rows;
 }
 
+// pio project config resolves extra_configs, which pulls in user-specific
+// files like prod_env.ini; only environments declared in environments.ini
+// belong in the published boards list.
+function publicEnvironmentNames() {
+    const fs = require('fs');
+    const path = require('path');
+    const ini = fs.readFileSync(path.resolve(__dirname, '..', 'environments.ini'), 'utf8');
+    const names = new Set();
+    for (const match of ini.matchAll(/^\[env:([^\]]+)\]/gm)) {
+        names.add(match[1].trim());
+    }
+    return names;
+}
+
 function loadBoardsInfo(options = {}) {
     const { includeTests = false } = options;
     const config = rowConfigFromPlatformIO();
     const sections = convertJsonToSections(config);
-    return collectBoardsInformations(sections, { includeTests });
+    const rows = collectBoardsInformations(sections, { includeTests });
+    const publicEnvs = publicEnvironmentNames();
+    return rows.filter(row => publicEnvs.has(row.Environment));
 }
 
 function ensureDir(dir) {

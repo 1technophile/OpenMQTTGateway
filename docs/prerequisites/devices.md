@@ -1,6 +1,6 @@
 # Devices
 
-Here is an overview of devices supported by OpenMQTTGateway:
+For Bluetooth, the maintained list of supported devices is the [Theengs Decoder compatible devices list](https://decoder.theengs.io/devices/devices.html). For the other technologies, the sections below give an overview of what is supported:
 
 ## For radio frequency devices 
 OpenMQTTGateway can support a wide range of 433mhz/315mhz devices, all the ones with SC5262 / SC5272, HX2262 / HX2272, PT2262 / PT2272, EV1527, RT1527, FP1527, HS1527 chipsets are supported by the RF gateway. Added to that RF2 support Kaku and Pilight an [huge list](https://wiki.pilight.org/devices). 

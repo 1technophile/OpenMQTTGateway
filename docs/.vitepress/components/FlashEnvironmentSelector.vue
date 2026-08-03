@@ -135,6 +135,16 @@
             </div>
           </div>
         </details>
+
+        <!-- Post-flash next steps -->
+        <div class="next-steps">
+          <h3 class="next-steps__title">✅ After flashing</h3>
+          <ol class="next-steps__list">
+            <li>Keep the board powered — it starts a WiFi access point named <code>OpenMQTTGateway</code> or starting with <code>OMG_</code>.</li>
+            <li>From your phone or computer, connect to that WiFi network and follow the <a :href="portalUrl">configuration portal guide</a> to enter your WiFi and MQTT broker credentials.</li>
+            <li>The gateway restarts, joins your network and connects to your broker — <a :href="verifyUrl">check that it works</a>.</li>
+          </ol>
+        </div>
       </div>
 
     </Transition>
@@ -189,6 +199,9 @@ const manifestUrl = computed<string | null>(() => {
   if (!selectedEnvironment.value) return null
   return `${resolvedFirmwareBaseUrl.value}${selectedEnvironment.value}.manifest.json`
 })
+
+const portalUrl = computed<string>(() => buildUrl('/upload/portal.html'))
+const verifyUrl = computed<string>(() => buildUrl('/getting-started.html#step-4-check-that-it-works'))
 
 const boardImageUrl = computed<string | null>(() => {
   if (!currentEnvironment.value) return null
@@ -294,6 +307,36 @@ function handleImageError(): void {
 </script>
 
 <style scoped>
+/* Post-flash next steps */
+.next-steps {
+  margin-top: 16px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.next-steps__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.next-steps__list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.next-steps__list li {
+  margin: 6px 0;
+  line-height: 1.6;
+}
+
+.next-steps__list a {
+  color: var(--vp-c-brand-1);
+  font-weight: 500;
+}
+
 /* Main Container */
 .flash-selector {
   max-width: 1200px;
@@ -323,6 +366,7 @@ function handleImageError(): void {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .board-hero__title {
@@ -341,6 +385,7 @@ function handleImageError(): void {
   align-items: center;
   gap: 8px;
   margin: 0;
+  min-width: 0;
 }
 
 .switcher-label {
@@ -355,10 +400,14 @@ function handleImageError(): void {
   position: relative;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .switcher-select {
   appearance: none;
+  max-width: 100%;
+  text-overflow: ellipsis;
   background: var(--vp-c-bg-soft);
   color: var(--vp-c-text-1);
   border: none;
@@ -425,7 +474,7 @@ function handleImageError(): void {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  min-width: 180px;
+  min-width: 0;
   max-width: 200px;
 }
 

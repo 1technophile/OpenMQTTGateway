@@ -3,6 +3,11 @@ The broker will act as an intermediary between OpenMQTTGateway and your [control
 
 All the events or commands could pass by the broker.
 
+::: tip Recommended setup
+* **You use Home Assistant**: install the **Mosquitto broker add-on** (Settings → Add-ons → Add-on store), enable the MQTT integration, and create a dedicated user for the gateway. This is the path followed by the [Getting Started guide](../getting-started.md).
+* **You don't**: install [Mosquitto](https://mosquitto.org/) on any always-on machine (Raspberry Pi, NAS, server), it is lightweight, open source and well documented.
+:::
+
 There are many choices of brokers, here are some of the most popular:
 * [Mosquitto](https://mosquitto.org/) (Open source)
 * [Moquette](https://moquette-io.github.io/moquette/) (Open source)

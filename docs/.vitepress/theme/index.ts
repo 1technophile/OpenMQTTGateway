@@ -6,12 +6,14 @@ import { useRoute } from 'vitepress'
 import './custom.css'
 import BoardEnvironmentTable from '../components/BoardEnvironmentTable.vue'
 import FlashEnvironmentSelector from '../components/FlashEnvironmentSelector.vue'
+import OmgPipeline from '../components/OmgPipeline.vue'
 
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.component('BoardEnvironmentTable', BoardEnvironmentTable)
     app.component('FlashEnvironmentSelector', FlashEnvironmentSelector)
+    app.component('OmgPipeline', OmgPipeline)
   },
   setup() {
     const route = useRoute()
