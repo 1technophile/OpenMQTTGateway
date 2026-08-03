@@ -11,12 +11,12 @@ If you like the project, you can help in different ways. Choose what fits you be
 - Improve docs or examples if you spot unclear steps.
 
 ## Financial support
-- Purchase the [Theengs mobile application](https://app.theengs.io) or the [Theengs plug](https://shop.theengs.io).
+- Purchase the [Theengs mobile application](https://app.theengs.io) or the [Theengs Bridge](https://shop.theengs.io).
 - Sponsor the project [developers](https://github.com/1technophile/OpenMQTTGateway/graphs/contributors).
 - Make a video or blog article about what you built with [OpenMQTTGateway](https://docs.openmqttgateway.com) and share it.
 
-Support open-source development through sponsorship and gain exclusive access to our private forum. Your questions, issues, and feature requests receive priority attention, plus you'll see the roadmap early.
+Support open-source development through sponsorship, it helps keep the project healthy and evolving.
 
 <div style="text-align: center;">
-    <iframe src="https://github.com/sponsors/theengs/button" title="Sponsor Theengs" height="32" width="228" style="border: 0; border-radius: 6px;"></iframe>
+    <iframe src="https://github.com/sponsors/1technophile/button" title="Sponsor 1technophile" height="32" width="228" style="border: 0; border-radius: 6px;"></iframe>
 </div>

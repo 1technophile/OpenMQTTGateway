@@ -18,9 +18,11 @@ try {
 
 export default defineConfig({
   title: `${meta.title} - ${meta.version}`,
-  description: 'One gateway, many technologies: MQTT gateway for ESP8266 or ESP32 with bidirectional 433mhz/315mhz/868mhz, Infrared communications, BLE, LoRa, beacons detection, mi flora / mi jia / LYWSD02/ Mi Scale compatibility, SMS & LORA.',
+  description: 'One gateway, many technologies: MQTT gateway for ESP8266 or ESP32 with bidirectional 433mhz/315mhz/868mhz/915mhz RF, Infrared communications, BLE, LoRa, beacons detection, mi flora / mi jia / LYWSD02/ Mi Scale compatibility, SMS & LORA.',
   base: meta.url_prefix as '/' | `/${string}/`,
   outDir: resolve(__dirname, '../../', meta.dest),
+  // Internal working documents, not part of the published site
+  srcExclude: ['superpowers/**'],
   head: commonHead,
   ignoreDeadLinks: [
     /localhost/,
@@ -46,7 +48,8 @@ export default defineConfig({
       pattern: `https://github.com/${meta.theme_config_repo}/edit/development/docs/:path`
     },
     sidebar: [
-      { text: '0 - What is it for', link: '/' },
+      { text: 'What is it for', link: '/' },
+      { text: 'Getting Started', link: '/getting-started' },
       {
         text: '1 - Prerequisites',
         collapsed: true,
@@ -59,7 +62,21 @@ export default defineConfig({
         ]
       },
       {
-        text: '2 - Set it up',
+        text: '2 - Upload',
+        collapsed: true,
+        link: '/upload/',
+        items: [
+          { text: '1. Web installer (easiest)', link: '/upload/web-install' },
+          { text: '2. Ready-to-go binaries', link: '/upload/binaries' },
+          { text: '3. Build from source', link: '/upload/builds' },
+          { text: 'Configuration portal', link: '/upload/portal' },
+          { text: 'Portal HTTP API', link: '/upload/portal-api' },
+          { text: 'Advanced Configuration', link: '/upload/advanced-configuration' },
+          { text: 'Troubleshoot', link: '/upload/troubleshoot' }
+        ]
+      },
+      {
+        text: '3 - Hardware setup',
         collapsed: true,
         items: [
           { text: 'RF', link: '/setitup/rf' },
@@ -70,21 +87,6 @@ export default defineConfig({
           { text: 'Serial', link: '/setitup/serial' },
           { text: 'Sensors', link: '/setitup/sensors' },
           { text: 'Actuators', link: '/setitup/actuators' }
-        ]
-      },
-      {
-        text: '3 - Upload',
-        collapsed: true,
-        link: '/upload/',
-        items: [
-          { text: '(Option 1) Upload from the web', link: '/upload/web-install' },
-          { text: 'Binaries', link: '/upload/binaries' },
-          { text: 'Builds', link: '/upload/builds' },
-          { text: 'Gitpod', link: '/upload/gitpod' },
-          { text: 'Portal', link: '/upload/portal' },
-          { text: 'Portal HTTP API', link: '/upload/portal-api' },
-          { text: 'Advanced Configuration', link: '/upload/advanced-configuration' },
-          { text: 'Troubleshoot', link: '/upload/troubleshoot' }
         ]
       },
       {
@@ -123,7 +125,7 @@ export default defineConfig({
         collapsed: true,
         link: '/participate/',
         items: [
-          { text: 'Quick Start', link: '/participate/quick_start' },
+          { text: 'Contributor Quick Start', link: '/participate/quick_start' },
           { text: 'Support', link: '/participate/support' },
           { text: 'Development', link: '/participate/development' },
           { text: 'Adding Protocols', link: '/participate/adding-protocols' },

@@ -1,21 +1,21 @@
 # Sensors
 ## Compatible sensors
-|Module|Purpose|Where to Buy|
-|-|-|-|
-|DHT11|Temperature, Humidity|-|
-|DHT22|Temperature, Humidity|-|
-|HCSR501|PIR|-|
-|BH1750|Digital light|-|
-|BME280|Temperature, Humidity, Pressure|-|
-|BMP280|Temperature, Pressure|-|
-|C-37, YL-83, HM-RD|Leak, Water|-|
-|HTU21|Temperature, Humidity|-|
-|GPIO Input|Inputs|-|
-|GPIO KeyCode|Keycode|-|
-|INA226|Current, Voltage|-|
-|MQ2|Gas (flammable)|-|
-|TEMT6000|Luminosity|-|
-|TSL2561|Luminosity|-|
+|Module|Purpose|
+|-|-|
+|DHT11|Temperature, Humidity|
+|DHT22|Temperature, Humidity|
+|HCSR501|PIR|
+|BH1750|Digital light|
+|BME280|Temperature, Humidity, Pressure|
+|BMP280|Temperature, Pressure|
+|C-37, YL-83, HM-RD|Leak, Water|
+|HTU21|Temperature, Humidity|
+|GPIO Input|Inputs|
+|GPIO KeyCode|Keycode|
+|INA226|Current, Voltage|
+|MQ2|Gas (flammable)|
+|TEMT6000|Luminosity|
+|TSL2561|Luminosity|
 
 ## Pinout
 |Module|Arduino Pin| ESP8266 Pin|ESP32 Pin|

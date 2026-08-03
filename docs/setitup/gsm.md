@@ -1,10 +1,10 @@
 # GSM 2G gateway
 ## Compatible parts
 
-|Module|Purpose|Where to Buy|
-|-|-|-|
-|A6|GSM GPRS module|-|
-|A7|GSM GPRS module with GPS|-|
+|Module|Purpose|
+|-|-|
+|A6|GSM GPRS module|
+|A7|GSM GPRS module with GPS|
 
 ## Hardware setup
 
