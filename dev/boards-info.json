@@ -35,7 +35,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DGateway_Name=\"OMG_AirM2M_Core_ESP32C3\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/airm2m.png"
   },
   {
     "environment": "avatto-bakeey-ir",
@@ -109,7 +109,7 @@
       "'-DGateway_Name=\"OMG_LOLIN32LITE_BLE\"'",
       "'-DDEFAULT_LOW_POWER_MODE=INTERVAL'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lolin32-lite.jpg"
   },
   {
     "environment": "esp32-m5atom-lite",
@@ -154,7 +154,7 @@
       "'-DLED_ADDRESSABLE=true'",
       "'-DGateway_Name=\"OMG_ATOM_L\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5atom-lite.webp"
   },
   {
     "environment": "esp32-m5atom-matrix",
@@ -204,7 +204,7 @@
       "'-DLED_POWER=0'",
       "'-DGateway_Name=\"OMG_ATOM_M\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5atom-matrix.webp"
   },
   {
     "environment": "esp32-m5stack-ble",
@@ -248,7 +248,7 @@
       "'-DDEFAULT_LOW_POWER_MODE=ALWAYS_ON'",
       "'-DGateway_Name=\"OMG_ESP32_M5STACK_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stack-core.webp"
   },
   {
     "environment": "esp32-m5stick-ble",
@@ -291,7 +291,7 @@
       "'-DDEFAULT_LOW_POWER_MODE=ALWAYS_ON'",
       "'-DGateway_Name=\"OMG_ESP32_M5STICK_BLE_IR\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stick.webp"
   },
   {
     "environment": "esp32-m5stick-c-ble",
@@ -342,7 +342,7 @@
       "'-DDEFAULT_LOW_POWER_MODE=ALWAYS_ON'",
       "'-DGateway_Name=\"OMG_ESP32_M5STICK_C_BLE_IR\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stick-c.webp"
   },
   {
     "environment": "esp32-m5stick-cp-ble",
@@ -393,7 +393,7 @@
       "'-DDEFAULT_LOW_POWER_MODE=ALWAYS_ON'",
       "'-DGateway_Name=\"OMG_ESP32_M5STICK_CP_BLE_IR\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stick-c-plus.webp"
   },
   {
     "environment": "esp32-m5tough-ble",
@@ -430,7 +430,7 @@
       "'-DZboardM5TOUGH=\"M5Tough\"'",
       "'-DGateway_Name=\"OMG_ESP32_M5TOUGH_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5tough.webp"
   },
   {
     "environment": "esp32-olimex-gtw-ble-eth",
@@ -469,7 +469,7 @@
       "'-DESP32_ETHERNET=true'",
       "'-DGateway_Name=\"OMG_ESP32_OLM_GTWE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/olimex-esp32-gateway.jpg"
   },
   {
     "environment": "esp32-olimex-gtw-ble-poe",
@@ -505,7 +505,7 @@
       "'-DESP32_ETHERNET=true'",
       "'-DGateway_Name=\"OMG_ESP32_OLM_POE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/olimex-esp32-poe.jpg"
   },
   {
     "environment": "esp32-olimex-gtw-ble-poe-iso",
@@ -541,7 +541,7 @@
       "'-DESP32_ETHERNET=true'",
       "'-DGateway_Name=\"OMG_ESP32_OLM_POE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/olimex-esp32-poe-iso.jpg"
   },
   {
     "environment": "esp32-olimex-gtw-ble-wifi",
@@ -579,7 +579,7 @@
       "'-DTRIGGER_GPIO=34'",
       "'-DGateway_Name=\"OMG_ESP32_OLM_GTWW\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/olimex-esp32-gateway.jpg"
   },
   {
     "environment": "esp32-wt32-eth01-ble-eth",
@@ -618,7 +618,7 @@
       "'-DETH_CLK_MODE=ETH_CLOCK_GPIO0_IN'",
       "'-DGateway_Name=\"OMG_ESP32_WT32-ETH01\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/wt32-eth01.jpg"
   },
   {
     "environment": "esp32c3_lolin_mini",
@@ -662,7 +662,7 @@
       "'-DLOG_LEVEL=LOG_LEVEL_SILENT'",
       "'-DWM_DEBUG=0'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lolin-c3-mini.jpg"
   },
   {
     "environment": "esp32c3_lolin_mini_with_serial",
@@ -709,7 +709,7 @@
       "'-DCONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=true'",
       "'-DCONFIG_ESP_CONSOLE_UART=ESP_CONSOLE_USB_SERIAL_JTAG'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lolin-c3-mini.jpg"
   },
   {
     "environment": "esp32c3-dev-c2-ble",
@@ -751,7 +751,7 @@
       "'-DTRIGGER_GPIO=7'",
       "'-DGateway_Name=\"OpenMQTTGateway_ESP32C3_DKC02\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32c3-devkit-c02.png"
   },
   {
     "environment": "esp32c3-dev-c2-ble-no-serial",
@@ -795,7 +795,7 @@
       "'-DLOG_LEVEL=LOG_LEVEL_SILENT'",
       "'-DWM_DEBUG=0'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32c3-devkit-c02.png"
   },
   {
     "environment": "esp32c3-dev-m1-ble",
@@ -835,7 +835,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32c3-devkit-m1.png"
   },
   {
     "environment": "esp32c3-m5stamp",
@@ -877,7 +877,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DUSE_MAC_AS_GATEWAY_NAME'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stamp-c3.webp"
   },
   {
     "environment": "esp32c3u-m5stamp",
@@ -919,7 +919,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DUSE_MAC_AS_GATEWAY_NAME'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stamp-c3u.webp"
   },
   {
     "environment": "esp32dev-ble",
@@ -956,7 +956,7 @@
       "'-DLED_PIN_ON=0'",
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-ble-aws",
@@ -1002,7 +1002,7 @@
       "'-DMQTT_PASS=\"\"'",
       "'-DAWS_IOT=true'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-ble-broker",
@@ -1041,7 +1041,7 @@
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'",
       "'-DMQTT_BROKER_MODE=true'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-ble-datatest",
@@ -1082,7 +1082,7 @@
       "'-DpubBLEAdvData=true'",
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-ble-idf",
@@ -1122,7 +1122,7 @@
       "'-DUSE_BLUFI=1'",
       "'-DenableMultiGTWSync=false'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-ble-mqtt-undecoded",
@@ -1160,7 +1160,7 @@
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'",
       "'-DMQTTDecodeTopic=\"undecoded\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-gf-sun-inverter",
@@ -1195,7 +1195,7 @@
       "'-DZgatewayGFSunInverter=\"GFSunInverter\"'",
       "'-DGateway_Name=\"OMG_ESP32_GFSunInverter\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-ir",
@@ -1229,7 +1229,7 @@
       "'-DZgatewayIR=\"IR\"'",
       "'-DGateway_Name=\"OMG_ESP32_IR\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-multi_receiver",
@@ -1276,7 +1276,7 @@
       "'-DRF_MODULE_GDO0=12'",
       "'-DRF_MODULE_GDO2=27'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-multi_receiver-pilight",
@@ -1323,7 +1323,7 @@
       "'-DRF_MODULE_GDO0=12'",
       "'-DRF_MODULE_GDO2=27'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-pilight",
@@ -1357,7 +1357,7 @@
       "'-DZgatewayPilight=\"Pilight\"'",
       "'-DGateway_Name=\"OMG_ESP32_Pilight\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-pilight-cc1101",
@@ -1393,7 +1393,7 @@
       "'-DZradioCC1101=\"CC1101\"'",
       "'-DGateway_Name=\"OMG_ESP32_Pilight-CC1101\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-pilight-somfy-cc1101",
@@ -1432,7 +1432,7 @@
       "'-DZradioCC1101=\"CC1101\"'",
       "'-DGateway_Name=\"OMG_ESP32_Pilight-Somfy-CC1101\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-rf",
@@ -1467,7 +1467,7 @@
       "'-DGateway_Name=\"OMG_ESP32_RF\"'",
       "'-DvalueAsATopic=true'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-rtl_433",
@@ -1512,7 +1512,7 @@
       "'-DRF_MODULE_GDO0=12'",
       "'-DRF_MODULE_GDO2=27'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-rtl_433-fsk",
@@ -1559,7 +1559,7 @@
       "'-DRF_MODULE_GDO0=12'",
       "'-DRF_MODULE_GDO2=27'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-somfy-cc1101",
@@ -1595,7 +1595,7 @@
       "'-DZradioCC1101=\"CC1101\"'",
       "'-DGateway_Name=\"OMG_ESP32_Somfy-CC1101\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32dev-weatherstation",
@@ -1629,7 +1629,7 @@
       "'-DZgatewayWeatherStation=\"WeatherStation\"'",
       "'-DGateway_Name=\"OMG_ESP32_WeatherStation\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32dev.jpg"
   },
   {
     "environment": "esp32doitv1-aithinker-r01-sx1278",
@@ -1672,7 +1672,7 @@
       "'-DRF_MODULE_RST=17'",
       "'-DRF_MODULE_CS=5'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32doitv1.jpg"
   },
   {
     "environment": "esp32feather-ble",
@@ -1709,7 +1709,7 @@
       "'-DLED_PIN_ON=0'",
       "'-DGateway_Name=\"OMG_ESP32_FTH_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32-feather.jpg"
   },
   {
     "environment": "esp32s3-atomS3U",
@@ -1754,7 +1754,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DGateway_Name=\"OMG_ATOMS3_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5atoms3u.webp"
   },
   {
     "environment": "esp32s3-dev-c1-ble",
@@ -1794,7 +1794,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/esp32s3-devkit-c1.png"
   },
   {
     "environment": "esp32s3-m5stack-stamps3",
@@ -1834,7 +1834,7 @@
       "'-DNO_INT_TEMP_READING=true'",
       "'-DGateway_Name=\"OMG_ESP32_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/m5stamp-s3.webp"
   },
   {
     "environment": "heltec-ble",
@@ -1871,7 +1871,7 @@
       "'-DGateway_Name=\"OMG_heltec_ble\"'",
       "'-DZdisplaySSD1306=\"HELTEC_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/heltec-wifi-lora-32.png"
   },
   {
     "environment": "heltec-rtl_433",
@@ -1909,7 +1909,7 @@
       "'-DZradioSX127x=\"SX127x\"'",
       "'-DZdisplaySSD1306=\"HELTEC_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/heltec-wifi-lora-32.png"
   },
   {
     "environment": "heltec-rtl_433-fsk",
@@ -1949,7 +1949,7 @@
       "'-DZradioSX127x=\"SX127x\"'",
       "'-DZdisplaySSD1306=\"HELTEC_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/heltec-wifi-lora-32.png"
   },
   {
     "environment": "heltec-wifi-lora-32",
@@ -1989,7 +1989,7 @@
       "'-DLED_PIN_ON=1'",
       "'-DZdisplaySSD1306=\"HELTEC_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/heltec-wifi-lora-32.png"
   },
   {
     "environment": "lilygo-ble",
@@ -2026,7 +2026,7 @@
       "'-DGateway_Name=\"OMG_lilygo_ble\"'",
       "'-DZdisplaySSD1306=\"LilyGo_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lilygo-lora32-v21.jpg"
   },
   {
     "environment": "lilygo-rtl_433",
@@ -2064,7 +2064,7 @@
       "'-DZradioSX127x=\"SX127x\"'",
       "'-DZdisplaySSD1306=\"LilyGo_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lilygo-lora32-v21.jpg"
   },
   {
     "environment": "lilygo-rtl_433-fsk",
@@ -2104,7 +2104,7 @@
       "'-DZradioSX127x=\"SX127x\"'",
       "'-DZdisplaySSD1306=\"LilyGo_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lilygo-lora32-v21.jpg"
   },
   {
     "environment": "lilygo-t3-s3-rtl_433",
@@ -2158,7 +2158,7 @@
       "'-DRF_MODULE_DIO4=10'",
       "'-DRF_MODULE_DIO5=36'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lilygo-t3-s3.jpg"
   },
   {
     "environment": "lilygo-t3-s3-rtl_433-fsk",
@@ -2214,7 +2214,7 @@
       "'-DRF_MODULE_DIO4=10'",
       "'-DRF_MODULE_DIO5=36'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lilygo-t3-s3.jpg"
   },
   {
     "environment": "nodemcuv2-2g",
@@ -2243,7 +2243,7 @@
       "'-DZgateway2G=\"2G\"'",
       "'-DGateway_Name=\"OMG_ESP8266_2G\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-ir",
@@ -2273,7 +2273,7 @@
       "'-DZgatewayIR=\"IR\"'",
       "'-DGateway_Name=\"OMG_ESP8266_IR\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-pilight",
@@ -2304,7 +2304,7 @@
       "'-DGateway_Name=\"OMG_ESP8266_Pilight\"'",
       "'-fcommon'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-rf",
@@ -2335,7 +2335,7 @@
       "'-DGateway_Name=\"OMG_ESP8266_RF\"'",
       "'-DvalueAsATopic=true'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-rf-cc1101",
@@ -2368,7 +2368,7 @@
       "'-DGateway_Name=\"OMG_ESP8266_RF-CC1101\"'",
       "'-DvalueAsATopic=true'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-rf2",
@@ -2398,7 +2398,7 @@
       "'-DZgatewayRF2=\"RF2\"'",
       "'-DGateway_Name=\"OMG_ESP8266_RF2\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-rf2-cc1101",
@@ -2430,7 +2430,7 @@
       "'-DZradioCC1101=\"CC1101\"'",
       "'-DGateway_Name=\"OMG_ESP8266_RF2-CC1101\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-serial",
@@ -2459,7 +2459,7 @@
       "'-DZgatewaySERIAL=\"SERIAL\"'",
       "'-DGateway_Name=\"OMG_ESP8266_SERIAL\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-somfy-cc1101",
@@ -2491,7 +2491,7 @@
       "'-DZradioCC1101=\"CC1101\"'",
       "'-DGateway_Name=\"OMG_ESP8266_Somfy-CC1101\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "nodemcuv2-weatherstation",
@@ -2521,7 +2521,7 @@
       "'-DZgatewayWeatherStation=\"WeatherStationDataRx\"'",
       "'-DGateway_Name=\"OMG_ESP8266_RF3\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/nodemcuv2.jpg"
   },
   {
     "environment": "rf-wifi-gateway",
@@ -2584,7 +2584,7 @@
       "'-DGateway_Name=\"OMG_SRFB\"'",
       "'-UMQTTsetMQTT'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/sonoff-rf-bridge.jpg"
   },
   {
     "environment": "rfbridge-direct",
@@ -2621,7 +2621,7 @@
       "'-DGateway_Name=\"OMG_SRFB_Direct\"'",
       "'-fcommon'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/sonoff-rf-bridge.jpg"
   },
   {
     "environment": "shelly-plus1",
@@ -2677,7 +2677,7 @@
       "'-DGATEWAY_MANUFACTURER=\"Shelly\"'",
       "'-DGATEWAY_MODEL=\"SPLUS1\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/shelly-plus1.jpg"
   },
   {
     "environment": "sonoff-basic",
@@ -2714,7 +2714,7 @@
       "'-DACTUATOR_TRIGGER=true'",
       "'-DGateway_Name=\"OMG_SONOFF_RELAY\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/sonoff-basic.jpg"
   },
   {
     "environment": "sonoff-basic-rfr3",
@@ -2755,7 +2755,7 @@
       "'-DZgatewayRF=\"RF\"'",
       "'-DGateway_Name=\"OMG_SONOFF_BASIC_RFR3\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/sonoff-rfr3.jpg"
   },
   {
     "environment": "theengs-bridge",
@@ -2813,7 +2813,7 @@
       "'-mfix-esp32-psram-cache-issue'",
       "'-mfix-esp32-psram-cache-strategy=memw'"
     ],
-    "customImg": ""
+    "customImg": "img/Theengs-Bridge-ble-gateway.png"
   },
   {
     "environment": "theengs-bridge-v11",
@@ -2996,7 +2996,7 @@
       "'-DDEFAULT_ADJ_BRIGHTNESS=255'",
       "'-DLED_ADDRESSABLE=true'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/thingpulse-espgateway.jpg"
   },
   {
     "environment": "tinypico-ble",
@@ -3031,7 +3031,7 @@
       "'-DZgatewayBT=\"BT\"'",
       "'-DGateway_Name=\"OMG_ESP32_TINYPICO_BLE\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/tinypico.jpg"
   },
   {
     "environment": "ttgo-lora32-v1",
@@ -3072,7 +3072,7 @@
       "'-DWIFI_LoRa_32=true'",
       "'-DGateway_Name=\"OMG_ESP32_LORA\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/ttgo-lora32-v1.jpg"
   },
   {
     "environment": "ttgo-lora32-v21",
@@ -3108,7 +3108,7 @@
       "'-DZgatewayLORA=\"LORA\"'",
       "'-DZdisplaySSD1306=\"LilyGo_SSD1306\"'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/lilygo-lora32-v21.jpg"
   },
   {
     "environment": "ttgo-t-beam",
@@ -3154,6 +3154,6 @@
       "'-DADC_DIVIDER=2'",
       "'-DTimeBetweenReadingADC=60000'"
     ],
-    "customImg": ""
+    "customImg": "img/boards/ttgo-t-beam.jpg"
   }
 ]
