@@ -76,17 +76,21 @@ void initCC1101() {
   int delayMaxMS = 500;
   bool connected = false;
 
-  for (int attempt = 1; attempt <= 10; attempt++) {
 #    if defined(RF_CC1101_SCK) && defined(RF_CC1101_MISO) && \
         defined(RF_CC1101_MOSI) && defined(RF_CC1101_CS)
-    THEENGS_LOG_TRACE(F("initCC1101 with custom SPI pins, SCK=%d, MISO=%d, MOSI=%d, CS=%d" CR), RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
-    ELECHOUSE_cc1101.setSpiPin(RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
+  THEENGS_LOG_TRACE(F("initCC1101 with custom SPI pins, SCK=%d, MISO=%d, MOSI=%d, CS=%d" CR), RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
+  ELECHOUSE_cc1101.setSpiPin(RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
 #    endif
 
+  // Init() must run before getCC1101(): from driver V3.x on it is Init() that
+  // starts the SPI bus, so the status-register read behind getCC1101() would
+  // otherwise run on a bus that was never begun.
+  ELECHOUSE_cc1101.Init();
+
+  for (int attempt = 1; attempt <= 10; attempt++) {
     if (ELECHOUSE_cc1101.getCC1101()) {
       connected = true;
       THEENGS_LOG_NOTICE(F("C1101 SPI connection OK on attempt %d" CR), attempt);
-      ELECHOUSE_cc1101.Init();
       ELECHOUSE_cc1101.SetRx(freqMhz);
       THEENGS_LOG_NOTICE(F("C1101 tuned RX to %F MHz" CR), freqMhz);
       break;
@@ -98,6 +102,8 @@ void initCC1101() {
     // truncated exponential backoff
     delayMS = delayMS * 2;
     if (delayMS > delayMaxMS) delayMS = delayMaxMS;
+
+    ELECHOUSE_cc1101.Init();
   }
 
   if (!connected) {
