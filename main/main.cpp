@@ -3224,12 +3224,29 @@ bool checkForUpdates() {
     jsondata["entity_picture"] = ENTITY_PICTURE;
     if (!jsondata.containsKey("release_summary"))
       jsondata["release_summary"] = "";
-    latestVersion = jsondata["latest_version"].as<String>();
+    // Per-environment version pinning: if the manifest carries an "envs" map with
+    // an entry for this build's ENV_NAME, that entry caps the version offered to
+    // this board; boards without an entry fall back to the global latest_version.
+    // This lets the OTA server hold e.g. theengs-plug at an older release while the
+    // rest of the fleet advances, with no board-specific firmware build flags.
+    // The "envs" map is expected to list only pinned exceptions so the manifest
+    // stays within JSON_MSG_BUFFER (1024 B on ESP32).
+    JsonVariant envVersion = jsondata["envs"][ENV_NAME];
+    if (!envVersion.isNull()) {
+      latestVersion = envVersion.as<String>();
+    } else {
+      latestVersion = jsondata["latest_version"].as<String>();
+    }
+    // Publish the resolved value as latest_version so the Home Assistant update
+    // entity compares against the (possibly pinned) version, and drop the map so
+    // it is not carried in the retained state topic.
+    jsondata["latest_version"] = latestVersion;
+    jsondata.remove("envs");
     jsondata["origin"] = subjectRLStoMQTT;
     jsondata["retain"] = true;
     enqueueJsonObject(jsondata);
 
-    THEENGS_LOG_TRACE(F("Update file found on server" CR));
+    THEENGS_LOG_TRACE(F("Update file found on server, offering version %s" CR), latestVersion.c_str());
     return true;
   } else {
     THEENGS_LOG_TRACE(F("No update file found on server" CR));
