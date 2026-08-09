@@ -7,6 +7,28 @@
   white-space: nowrap;
 }
 
+/* The shared Theengs nav has seven top-level entries, and the default theme
+   switches from the hamburger to the full nav bar at 768px -- far too early for
+   this menu. Between 768px and ~1180px the entries overflowed: Shop, Sponsor,
+   the appearance switch and the GitHub link ended up clipped or off-screen, and
+   the page picked up a horizontal scrollbar. Keep the compact nav (hamburger +
+   full-screen menu, which already lists every entry plus the appearance switch
+   and social links) until the full menu genuinely fits. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .VPNav .VPNavBar .VPNavBarMenu.menu,
+  .VPNav .VPNavBar .VPNavBarExtra.extra {
+    display: none;
+  }
+
+  .VPNav .VPNavBar .VPNavBarHamburger.hamburger {
+    display: flex;
+  }
+
+  header.VPNav .VPNavScreen {
+    display: block;
+  }
+}
+
 /* Widen the entire content column on pages without aside (board/flash pages) */
 .VPDoc:not(.has-aside) .content-container,
 .VPDoc:not(.has-aside) .container {
@@ -37,10 +59,53 @@
   max-height: none;
 }
 
+/* Below the desktop breakpoint the default theme stacks the image on top of the
+   hero text and pulls it with negative margins (-76px -24px -48px), which only
+   works because the image is normally absolutely positioned inside a fixed
+   320px box. Since we let it flow, those margins made it bleed off-screen and
+   collide with the hero title -- reset them. */
+@media (max-width: 959px) {
+  .VPHome .VPHero .image {
+    margin: 0 0 16px;
+  }
+}
+
+/* On phones the stacked image is a wall of unreadable logos that pushes the
+   title, tagline and call-to-action buttons below the fold. Drop it and let the
+   hero lead with the text. */
+@media (max-width: 639px) {
+  .VPHome .VPHero .image {
+    display: none;
+  }
+}
+
 @media (min-width: 960px) {
   .VPHome .VPHero .image-src {
     max-width: 520px;
   }
+}
+
+/* Indented (non-fenced) markdown code blocks render as a bare <pre>; the default
+   theme only makes code scroll inside its language-* wrapper, so long lines such
+   as the esptool.py commands pushed the whole page sideways on phones. */
+.vp-doc pre {
+  overflow-x: auto;
+}
+
+/* Embeds are written as raw HTML in markdown with fixed width/height attributes
+   (e.g. <iframe width="560" height="315"> for YouTube), which pushes the whole
+   page sideways on phones. */
+.vp-doc iframe {
+  max-width: 100%;
+}
+
+.vp-doc iframe[src*="youtube.com/embed"],
+.vp-doc iframe[src*="youtube-nocookie.com/embed"],
+.vp-doc iframe[src*="player.vimeo.com"] {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
 }
 
 /* Gray backdrop when ESP Web Tools install dialog is open */

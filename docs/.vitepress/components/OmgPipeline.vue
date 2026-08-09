@@ -104,8 +104,10 @@
   }
 }
 
-/* Very narrow (phones): stack vertically */
-@container (max-width: 480px) {
+/* Narrow (phones, small tablets): stack vertically. Below ~680px the four nodes
+   no longer leave room for the longest label ("OpenMQTTGateway"), which spilled
+   out of its box and over the arrows. */
+@container (max-width: 680px) {
   .omg-pipeline {
     flex-direction: column;
   }
