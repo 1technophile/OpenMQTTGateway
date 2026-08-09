@@ -283,9 +283,4 @@ const press = [
   font-size: 12px;
   line-height: 1.6;
 }
-
-@media (max-width: 640px) {
-  .omg-pipeline { flex-direction: column; }
-  .omg-arrow { transform: rotate(90deg); }
-}
 </style>
