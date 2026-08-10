@@ -251,10 +251,12 @@
 #  ifndef MQTT_HTTPS_FW_UPDATE_USE_PASSWORD
 #    define MQTT_HTTPS_FW_UPDATE_USE_PASSWORD 1 // Set this to 0 if not using TLS connection to MQTT broker to prevent clear text passwords being sent.
 #  endif
-#  if DEVELOPMENTOTA
-#    define OTA_JSON_URL "https://ota.openmqttgateway.com/binaries/dev/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
-#  else
-#    define OTA_JSON_URL "https://ota.openmqttgateway.com/binaries/latest_version.json" //OTA url used to discover new versions of the firmware
+#  ifndef OTA_JSON_URL // may be overridden by a build flag to use another OTA server
+#    if DEVELOPMENTOTA
+#      define OTA_JSON_URL "https://ota.openmqttgateway.com/binaries/dev/latest_version_dev.json" //OTA url used to discover new versions of the firmware from development nightly builds
+#    else
+#      define OTA_JSON_URL "https://ota.openmqttgateway.com/binaries/latest_version.json" //OTA url used to discover new versions of the firmware
+#    endif
 #  endif
 #  define ENTITY_PICTURE   "https://github.com/1technophile/OpenMQTTGateway/raw/development/docs/img/Openmqttgateway_logo_mini_margins.png"
 #  define RELEASE_LINK_DEV "https://ota.openmqttgateway.com/binaries/dev/"
