@@ -1451,9 +1451,13 @@ void setup() {
     checkSerial();
 #  endif
 
-    THEENGS_LOG_NOTICE(F("No config in flash, launching wifi manager" CR));
-    // In failSafeMode we don't want to setup wifi manager as it has already been done before
-    if (!failSafeMode) setupWiFiManager();
+    // In failSafeMode we don't want to setup wifi manager as it has already been done before,
+    // and with Ethernet already connected we don't need it at all: bringing up the WiFi radio
+    // would only add 2.4GHz contention with BLE.
+    if (!failSafeMode && !ethConnected) {
+      THEENGS_LOG_NOTICE(F("No config in flash, launching wifi manager" CR));
+      setupWiFiManager();
+    }
   }
 
 #endif
@@ -2447,18 +2451,23 @@ void setup_ethernet_esp32() {
   bool ethBeginSuccess = false;
   WiFi.onEvent(WiFiEvent);
 #    ifdef NetworkAdvancedSetup
-  IPAddress ip_adress;
-  IPAddress gateway_adress;
-  IPAddress subnet_adress;
-  IPAddress dns_adress;
-  ip.fromString(NET_IP);
-  gateway.fromString(NET_GW);
-  subnet.fromString(NET_MASK);
-  Dns.fromString(NET_DNS);
-
   THEENGS_LOG_TRACE(F("Adv eth cfg" CR));
-  ETH.config(ip, gateway, subnet, Dns);
+  // ETH.config() has to be called after ETH.begin(): the underlying netif is
+  // created by begin(), before that the call returns false and is a no-op.
   ethBeginSuccess = ETH.begin();
+  if (ethBeginSuccess) {
+    IPAddress ip_adress;
+    IPAddress gateway_adress;
+    IPAddress subnet_adress;
+    IPAddress dns_adress;
+    ip_adress.fromString(NET_IP);
+    gateway_adress.fromString(NET_GW);
+    subnet_adress.fromString(NET_MASK);
+    dns_adress.fromString(NET_DNS);
+    if (!ETH.config(ip_adress, gateway_adress, subnet_adress, dns_adress)) {
+      THEENGS_LOG_ERROR(F("Adv eth cfg failed" CR));
+    }
+  }
 #    else
   THEENGS_LOG_NOTICE(F("Spl eth cfg" CR));
   ethBeginSuccess = ETH.begin();
