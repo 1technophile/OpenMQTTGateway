@@ -30,19 +30,7 @@
 
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5STACK) || defined(ZboardM5TOUGH)
 #  include "TheengsCommon.h"
-#  include "config_M5.h"
-#  ifdef ZboardM5STICKC
-#    include <M5StickC.h>
-#  endif
-#  ifdef ZboardM5STICKCP
-#    include <M5StickCPlus.h>
-#  endif
-#  ifdef ZboardM5STACK
-#    include <M5Stack.h>
-#  endif
-#  ifdef ZboardM5TOUGH
-#    include <M5Tough.h>
-#  endif
+#  include "config_M5.h" // pulls in <M5Unified.h> for every M5 board
 
 void wakeScreen(int brightness);
 void displayIntro(int i, int X, int Y);
@@ -55,22 +43,22 @@ void logToLCD(bool display) {
 }
 
 void setBrightness(int brightness) {
-#  if defined(ZboardM5STACK)
-  M5.Lcd.setBrightness(brightness * 2);
-#  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
-  (!brightness) ? M5.Axp.ScreenBreath(0) : M5.Axp.ScreenBreath(7 + (int)brightness * 0.08);
-#  endif
+  // M5Unified drives the backlight uniformly across Core (direct control) and
+  // the AXP-powered boards (Stick C/CP, Tough), replacing the old per-board
+  // M5.Lcd.setBrightness / M5.Axp.ScreenBreath split. Map the 0..100 OMG scale
+  // onto the panel's 0..255 range (100 -> 200, sleep 2 -> 4).
+  M5.Display.setBrightness(brightness * 2);
 }
 
 void setupM5() {
   THEENGS_LOG_NOTICE(F("Setup M5" CR));
+  M5.begin(); // auto-detects the board, initialises the display and power
   pinMode(SLEEP_BUTTON, INPUT);
   // M5 stack 320*240
   // M5StickC 160*80
   // M5Stick LCD not supported
   wakeScreen(NORMAL_LCD_BRIGHTNESS);
-  M5.Lcd.fillScreen(WHITE);
+  M5.Lcd.fillScreen(TFT_WHITE);
   displayIntro(M5.Lcd.width() * 0.25, (M5.Lcd.width() / 2) + M5.Lcd.width() * 0.12, (M5.Lcd.height() / 2) + M5.Lcd.height() * 0.2);
 #  if LOG_TO_LCD
   Log.begin(LOG_LEVEL_LCD, &M5.Lcd); // Log on LCD following LOG_LEVEL_LCD
@@ -81,18 +69,15 @@ void setupM5() {
 
 void sleepScreen() {
   THEENGS_LOG_TRACE(F("Screen going to sleep" CR));
-#  if defined(ZboardM5STACK)
-  M5.begin(false, false, false); // M5.lcd.sleep() provokes a reset of the ESP
-#  endif
-#  if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
-  M5.Axp.ScreenBreath(0);
-  M5.Axp.SetLDO2(false);
-#  endif
+  // Backlight off + panel sleep. M5Unified routes this to the AXP LDO on
+  // Stick/Tough and to the Core's backlight control, so the old M5.begin()
+  // re-init workaround and the M5.Axp calls are no longer needed.
+  M5.Display.sleep();
 }
 
 void wakeScreen(int brightness) {
   THEENGS_LOG_TRACE(F("Screen wake up" CR));
-  M5.begin();
+  M5.Display.wakeup(); // undo sleepScreen(); harmless if already awake
   M5.Lcd.setCursor(0, 0, (M5.Lcd.height() > 200) ? 4 : 2);
   M5.Lcd.setTextSize(1);
   M5.Lcd.setRotation(1);
@@ -167,38 +152,38 @@ void drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circl
   int circle2Y = circle1Y - (logoSize * 0.8);
 
   if (line1) {
-    M5.Lcd.drawLine(circle1X - 2, circle1Y, circle2X - 2, circle2Y, BLUE);
-    M5.Lcd.drawLine(circle1X - 1, circle1Y, circle2X - 1, circle2Y, BLUE);
-    M5.Lcd.drawLine(circle1X, circle1Y, circle2X, circle2Y, BLUE);
-    M5.Lcd.drawLine(circle1X + 1, circle1Y, circle2X + 1, circle2Y, BLUE);
-    M5.Lcd.drawLine(circle1X + 2, circle1Y, circle2X + 2, circle2Y, BLUE);
-    M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2, WHITE);
+    M5.Lcd.drawLine(circle1X - 2, circle1Y, circle2X - 2, circle2Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X - 1, circle1Y, circle2X - 1, circle2Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X, circle1Y, circle2X, circle2Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X + 1, circle1Y, circle2X + 1, circle2Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X + 2, circle1Y, circle2X + 2, circle2Y, TFT_BLUE);
+    M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2, TFT_WHITE);
   }
   if (line2) {
-    M5.Lcd.drawLine(circle1X - 2, circle1Y, circle3X - 2, circle3Y, BLUE);
-    M5.Lcd.drawLine(circle1X - 1, circle1Y, circle3X - 1, circle3Y, BLUE);
-    M5.Lcd.drawLine(circle1X, circle1Y, circle3X, circle3Y, BLUE);
-    M5.Lcd.drawLine(circle1X + 1, circle1Y, circle3X + 1, circle3Y, BLUE);
-    M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2, WHITE);
+    M5.Lcd.drawLine(circle1X - 2, circle1Y, circle3X - 2, circle3Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X - 1, circle1Y, circle3X - 1, circle3Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X, circle1Y, circle3X, circle3Y, TFT_BLUE);
+    M5.Lcd.drawLine(circle1X + 1, circle1Y, circle3X + 1, circle3Y, TFT_BLUE);
+    M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2, TFT_WHITE);
   }
-  M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2, WHITE);
+  M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2, TFT_WHITE);
   if (circle1) {
-    M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2, WHITE);
+    M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2, TFT_WHITE);
     M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T, TFT_GREEN);
-    M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2, WHITE);
+    M5.Lcd.fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2, TFT_WHITE);
   }
   if (circle2) {
-    M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3, WHITE);
+    M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3, TFT_WHITE);
     M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T, TFT_ORANGE);
-    M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2, WHITE);
+    M5.Lcd.fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2, TFT_WHITE);
   }
   if (circle3) {
-    M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4, WHITE);
+    M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4, TFT_WHITE);
     M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T, TFT_PINK);
-    M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2, WHITE);
+    M5.Lcd.fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2, TFT_WHITE);
   }
   if (name) {
-    M5.Lcd.setTextColor(BLUE);
+    M5.Lcd.setTextColor(TFT_BLUE);
     M5.Lcd.drawString("penMQTTGateway", circle1X + (circle1X * 0.27), circle1Y, (M5.Lcd.height() > 200) ? 4 : 2);
   }
 }
@@ -207,7 +192,7 @@ void M5Print(char* line1, char* line2, char* line3) {
   wakeScreen(NORMAL_LCD_BRIGHTNESS);
   M5.Lcd.fillScreen(TFT_WHITE);
   drawLogo(M5.Lcd.width() * 0.1875, (M5.Lcd.width() / 2) - M5.Lcd.width() * 0.24, M5.Lcd.height() * 0.5, true, true, true, true, true, true);
-  M5.Lcd.setTextColor(BLUE);
+  M5.Lcd.setTextColor(TFT_BLUE);
   M5.Lcd.drawString(line1, 5, M5.Lcd.height() * 0.7, 1);
   M5.Lcd.drawString(line2, 5, M5.Lcd.height() * 0.8, 1);
   M5.Lcd.drawString(line3, 5, M5.Lcd.height() * 0.9, 1);
