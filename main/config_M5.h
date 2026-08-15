@@ -26,18 +26,12 @@
 #ifndef config_M5_h
 #define config_M5_h
 
-#ifdef ZboardM5STICKC
-#  include <M5StickC.h>
-#endif
-#ifdef ZboardM5STICKCP
-#  include <M5StickCPlus.h>
-#endif
-#ifdef ZboardM5STACK
-#  include <M5Stack.h>
-#endif
-#ifdef ZboardM5TOUGH
-#  include <M5Tough.h>
-#endif
+// All M5 boards (Core / Stick C / Stick C Plus / Tough) are driven through the
+// unified M5Unified + M5GFX libraries, which build on the modern Arduino core
+// and auto-detect the board at runtime. This replaces the per-board libraries
+// (M5Stack / M5StickC / M5StickC-Plus / M5Tough) that were pinned to Arduino
+// core 2.x (espressif32@6.1.0) because they don't compile on core 3.x.
+#include <M5Unified.h>
 
 extern void setupM5();
 extern void loopM5();

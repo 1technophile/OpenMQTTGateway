@@ -787,10 +787,12 @@ void pubMqttDiscovery() {
   const char* esp32Sensors[][13] = {
       {HASS_TYPE_SENSOR, "SYS: Internal temperature", "tempc", HASS_CLASS_TEMPERATURE, "{{ value_json.tempc  | round(1)}}", "", "", HASS_UNIT_CELSIUS, stateClassMeasurement, nullptr, nullptr, nullptr, nullptr},
 #    if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
+      // Portable M5Unified battery telemetry. The AXP192-only Vin sensors were
+      // dropped in the M5Unified migration (no portable equivalent).
       {HASS_TYPE_SENSOR, "SYS: Bat voltage", "m5batvoltage", HASS_CLASS_VOLTAGE, "{{ value_json.m5batvoltage }}", "", "", HASS_UNIT_VOLT, stateClassNone, nullptr, nullptr, nullptr, nullptr},
       {HASS_TYPE_SENSOR, "SYS: Bat current", "m5batcurrent", HASS_CLASS_CURRENT, "{{ value_json.m5batcurrent }}", "", "", HASS_UNIT_AMP, stateClassNone, nullptr, nullptr, nullptr, nullptr},
-      {HASS_TYPE_SENSOR, "SYS: Vin voltage", "m5vinvoltage", HASS_CLASS_VOLTAGE, "{{ value_json.m5vinvoltage }}", "", "", HASS_UNIT_VOLT, stateClassNone, nullptr, nullptr, nullptr, nullptr},
-      {HASS_TYPE_SENSOR, "SYS: Vin current", "m5vincurrent", HASS_CLASS_CURRENT, "{{ value_json.m5vincurrent }}", "", "", HASS_UNIT_AMP, stateClassNone, nullptr, nullptr, nullptr, nullptr},
+      {HASS_TYPE_SENSOR, "SYS: Batt level", "m5battlevel", HASS_CLASS_BATTERY, "{{ value_json.m5battlevel }}", "", "", HASS_UNIT_PERCENT, stateClassNone, nullptr, nullptr, nullptr, nullptr},
+      {HASS_TYPE_BINARY_SENSOR, "SYS: Is Charging", "m5ischarging", "", "{{ value_json.m5ischarging }}", "", "", "", stateClassNone, nullptr, nullptr, nullptr, nullptr},
 #    endif
 #    ifdef ZboardM5STACK
       {HASS_TYPE_SENSOR, "SYS: Batt level", "m5battlevel", HASS_CLASS_BATTERY, "{{ value_json.m5battlevel }}", "", "", HASS_UNIT_PERCENT, stateClassNone, nullptr, nullptr, nullptr, nullptr},

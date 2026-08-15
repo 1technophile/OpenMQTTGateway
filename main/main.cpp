@@ -2933,23 +2933,20 @@ String stateMeasures() {
     SYSdata["mac"] = (char*)WiFi.macAddress().c_str();
   }
 #ifdef ZboardM5STACK
-  M5.Power.begin();
+  // Power is initialised by M5.begin() in setupM5(); no explicit begin() needed.
   SYSdata["m5battlevel"] = (int8_t)M5.Power.getBatteryLevel();
-  SYSdata["m5ischarging"] = (bool)M5.Power.isCharging();
-  SYSdata["m5ischargefull"] = (bool)M5.Power.isChargeFull();
+  SYSdata["m5ischarging"] = (bool)(M5.Power.isCharging() == m5::Power_Class::is_charging);
+  SYSdata["m5ischargefull"] = (bool)(M5.Power.getBatteryLevel() >= 100);
 #endif
 #if defined(ZboardM5STICKC) || defined(ZboardM5STICKCP) || defined(ZboardM5TOUGH)
-  M5.Axp.EnableCoulombcounter();
-  SYSdata["m5batvoltage"] = (float)M5.Axp.GetBatVoltage();
-  SYSdata["m5batcurrent"] = (float)M5.Axp.GetBatCurrent();
-  SYSdata["m5vinvoltage"] = (float)M5.Axp.GetVinVoltage();
-  SYSdata["m5vincurrent"] = (float)M5.Axp.GetVinCurrent();
-  SYSdata["m5vbusvoltage"] = (float)M5.Axp.GetVBusVoltage();
-  SYSdata["m5vbuscurrent"] = (float)M5.Axp.GetVBusCurrent();
-  SYSdata["m5tempaxp"] = (float)M5.Axp.GetTempInAXP192();
-  SYSdata["m5batpower"] = (float)M5.Axp.GetBatPower();
-  SYSdata["m5batchargecurrent"] = (float)M5.Axp.GetBatChargeCurrent();
-  SYSdata["m5apsvoltage"] = (float)M5.Axp.GetAPSVoltage();
+  // M5Unified exposes a portable battery API across the AXP192/AXP2101 PMICs.
+  // getBatteryVoltage() is in mV; convert to volts to preserve the previous
+  // field semantics. The AXP192-only Vin/VBus/internal-temperature/power
+  // readings have no portable M5Unified equivalent, so those fields are dropped.
+  SYSdata["m5batvoltage"] = (float)M5.Power.getBatteryVoltage() / 1000.0f;
+  SYSdata["m5batcurrent"] = (float)M5.Power.getBatteryCurrent();
+  SYSdata["m5battlevel"] = (int8_t)M5.Power.getBatteryLevel();
+  SYSdata["m5ischarging"] = (bool)(M5.Power.isCharging() == m5::Power_Class::is_charging);
 #endif
   SYSdata["modules"] = modules;
 
