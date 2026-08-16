@@ -215,14 +215,14 @@
       "gatewayBT",
       "sensorGPIOInput"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "M5Stack @ 0.4.6",
+      "M5Unified @ 0.2.5 (pio:m5stack)",
       "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
@@ -259,7 +259,7 @@
       "gatewayBT",
       "gatewayIR"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "partitions/no_coredump.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -297,14 +297,14 @@
     "environment": "esp32-m5stick-c-ble",
     "hardware": "M5Stick C",
     "description": "Expandable module with BLE gateway, display, and little IR emitter",
-    "microcontroller": "m5stick-c",
+    "microcontroller": "pico32",
     "modules": [
       "gatewayBT",
       "gatewayIR",
       "sensorGPIOInput"
     ],
-    "platform": "espressif32 @ 6.1.0",
-    "partitions": "min_spiffs.csv",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
+    "partitions": "partitions/no_coredump.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
@@ -312,7 +312,7 @@
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
-      "M5StickC @ 0.2.5",
+      "M5Unified @ 0.2.5 (pio:m5stack)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)"
     ],
     "options": [
@@ -354,7 +354,7 @@
       "gatewayIR",
       "sensorGPIOInput"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "partitions/no_coredump.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -363,7 +363,7 @@
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
-      "M5StickC-Plus @ 0.1.1 (gh:m5stack)",
+      "M5Unified @ 0.2.5 (pio:m5stack)",
       "IRremoteESP8266 @ arduinov3 (gh:theengs)"
     ],
     "options": [
@@ -403,14 +403,14 @@
     "modules": [
       "gatewayBT"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "M5Tough @ ccf49e1 (gh:m5stack)",
+      "M5Unified @ 0.2.5 (pio:m5stack)",
       "NimBLE-Arduino @ 2.5.0 (gh:h2zero)",
       "decoder @ development (gh:theengs)"
     ],
@@ -1249,7 +1249,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "rc-switch @ 98537e9 (gh:1technophile)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)",
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)",
       "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
       "NewRemoteSwitch @ 8eb980e (gh:1technophile)"
     ],
@@ -1296,7 +1296,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "rc-switch @ 98537e9 (gh:1technophile)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)",
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)",
       "ESPiLight @ b9dd7a1 (gh:theengs)",
       "NewRemoteSwitch @ 8eb980e (gh:1technophile)"
     ],
@@ -1375,7 +1375,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "ESPiLight @ b9dd7a1 (gh:theengs)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1413,7 +1413,7 @@
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "ESPiLight @ b9dd7a1 (gh:theengs)",
       "Somfy_Remote_Lib @ 0.3.0",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1485,7 +1485,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1530,7 +1530,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1577,7 +1577,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "Somfy_Remote_Lib @ 0.3.0",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)"
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2353,7 +2353,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 2.0.5-beta (gh:tzapu)",
       "rc-switch @ 98537e9 (gh:1technophile)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)",
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)",
       "esp8266_mdns"
     ],
     "options": [
@@ -2416,7 +2416,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 2.0.5-beta (gh:tzapu)",
       "NewRemoteSwitch @ 8eb980e (gh:1technophile)",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)",
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)",
       "esp8266_mdns"
     ],
     "options": [
@@ -2477,7 +2477,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 2.0.5-beta (gh:tzapu)",
       "Somfy_Remote_Lib @ 0.3.0",
-      "SmartRC-CC1101-Driver-Lib @ 2.5.7 (gh:LSatan)",
+      "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)",
       "esp8266_mdns"
     ],
     "options": [
