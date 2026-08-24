@@ -76,6 +76,15 @@ void initCC1101() {
   int delayMaxMS = 500;
   bool connected = false;
 
+#    ifdef RF_MODULE_SECONDARY_CS
+  // Boards carrying two radios on one SPI bus must hold the unused radio's
+  // chip-select high, or it answers on MISO and corrupts every transfer to the
+  // radio we do use.
+  pinMode(RF_MODULE_SECONDARY_CS, OUTPUT);
+  digitalWrite(RF_MODULE_SECONDARY_CS, HIGH);
+  THEENGS_LOG_NOTICE(F("Deselected secondary radio CS on GPIO%d" CR), RF_MODULE_SECONDARY_CS);
+#    endif
+
 #    if defined(RF_CC1101_SCK) && defined(RF_CC1101_MISO) && \
         defined(RF_CC1101_MOSI) && defined(RF_CC1101_CS)
   THEENGS_LOG_TRACE(F("initCC1101 with custom SPI pins, SCK=%d, MISO=%d, MOSI=%d, CS=%d" CR), RF_CC1101_SCK, RF_CC1101_MISO, RF_CC1101_MOSI, RF_CC1101_CS);
