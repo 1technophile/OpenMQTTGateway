@@ -1100,7 +1100,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "decoder @ development (gh:theengs)",
-      "esp-nimble-cpp @ 2.1.1 (pio:h2zero)",
+      "esp-nimble-cpp @ 2.5.0 (gh:h2zero)",
       "NimBLEOta @ 0.2.0 (pio:h2zero)"
     ],
     "options": [
@@ -1241,7 +1241,7 @@
       "gatewayRF2",
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1250,7 +1250,7 @@
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "rc-switch @ 98537e9 (gh:1technophile)",
       "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)",
       "NewRemoteSwitch @ 8eb980e (gh:1technophile)"
     ],
     "options": [
@@ -1477,14 +1477,14 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)",
       "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
@@ -1522,14 +1522,14 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)",
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)",
       "SmartRC-CC1101-Driver-Lib @ 3.0.2 (gh:LSatan)"
     ],
     "options": [
@@ -1639,14 +1639,14 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
       "ArduinoJson @ 6.18.5",
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1881,7 +1881,7 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1889,7 +1889,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -1919,7 +1919,7 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -1927,7 +1927,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2036,7 +2036,7 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -2044,7 +2044,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2074,7 +2074,7 @@
     "modules": [
       "gatewayRTL_433"
     ],
-    "platform": "espressif32 @ 6.1.0",
+    "platform": "platform-espressif32 @ 55.03.39 (gh:pioarduino)",
     "partitions": "min_spiffs.csv",
     "libraries": [
       "PicoMQTT @ 1.1.1",
@@ -2082,7 +2082,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2122,7 +2122,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
@@ -2176,7 +2176,7 @@
       "Arduino-Log @ 6d1f14a (gh:1technophile)",
       "WiFiManager @ 1ac24f4 (gh:h2zero)",
       "esp8266-oled-ssd1306 @ f96fd6a (gh:ThingPulse)",
-      "rtl_433_ESP @ 0.5.1 (gh:NorthernMan54)"
+      "rtl_433_ESP @ 0.6.0 (gh:NorthernMan54)"
     ],
     "options": [
       "'-DWM_DEBUG_LEVEL=1'",
