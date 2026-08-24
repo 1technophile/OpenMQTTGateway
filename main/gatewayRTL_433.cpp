@@ -294,6 +294,11 @@ void rtl_433_Callback(char* message) {
     serializeJson(kv.value(), val);
     for (unsigned int i = 0; i < val.length(); i++)
       kvHash = kvHash * 31 + (unsigned char)val[i];
+    kvHash ^= kvHash >> 16;
+    kvHash *= 0x85ebca6bUL;
+    kvHash ^= kvHash >> 13;
+    kvHash *= 0xc2b2ae35UL;
+    kvHash ^= kvHash >> 16;
     MQTTvalue += kvHash; // additive combination is order-independent
   }
   String topic = subjectRTL_433toMQTT;
