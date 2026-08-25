@@ -281,7 +281,7 @@ void rtl_433_Callback(char* message) {
   unsigned long MQTTvalue = 0;
   for (JsonPair kv : RFrtl_433_ESPdata) {
     const char* key = kv.key().c_str();
-    if (strcmp(key, "time") == 0 || strcmp(key, "rssi") == 0 ||
+    if (strcmp(key, "time") == 0 || strcmp(key, "time_ms") == 0 || strcmp(key, "rssi") == 0 ||
         strcmp(key, "snr") == 0 || strcmp(key, "noise_floor") == 0 ||
         strcmp(key, "duration") == 0) {
       continue;
