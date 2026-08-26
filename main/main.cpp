@@ -35,6 +35,10 @@
 #include "TheengsCommon.h"
 #include "TheengsUtils.h"
 
+#if defined(CONFIG_IDF_TARGET_ESP32) && !defined(ZgatewayBT) && !defined(USE_BLUFI)
+#  include "esp_bt.h" // esp_bt_mem_release() — BT DRAM reclaim in setup()
+#endif
+
 GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 static GatewayState previousGatewayState = gatewayState;
 
@@ -1340,6 +1344,23 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
   Log.begin(LOG_LEVEL, &Serial);
   THEENGS_LOG_NOTICE(F(CR "************* WELCOME TO OpenMQTTGateway **************" CR));
+#if defined(CONFIG_IDF_TARGET_ESP32) && !defined(ZgatewayBT) && !defined(USE_BLUFI)
+  // Reclaim the Bluetooth controller's reserved DRAM on BT-less ESP32 builds.
+  // arduino-esp32 3.x releases only the BLE slice: esp32-hal-bt.c initialises
+  // _classicMemReleased = true whenever CONFIG_BT_CLASSIC_ENABLED is unset,
+  // which is the case for a BLE-only controller build — so its
+  // btMemRelease(BT_MODE_CLASSIC_BT) call short-circuits and ~33 KB of the
+  // 0xdb5c reservation is never returned to the heap. ESP32 has Classic BT
+  // hardware (CONFIG_SOC_BT_CLASSIC_SUPPORTED) and the DRAM is reserved
+  // regardless of the configured controller mode. arduino-esp32 2.x released
+  // the whole BTDM region unconditionally here.
+  // Safe no-op if the core ever releases it correctly, or if BT is later started.
+  {
+    uint32_t heapBeforeBtRelease = ESP.getFreeHeap();
+    esp_bt_mem_release(ESP_BT_MODE_BTDM);
+    THEENGS_LOG_NOTICE(F("BT DRAM reclaimed: %d -> %d" CR), heapBeforeBtRelease, ESP.getFreeHeap());
+  }
+#endif
 #if defined(TRIGGER_GPIO) && !defined(ESPWifiManualSetup)
   pinMode(TRIGGER_GPIO, INPUT_PULLUP);
   checkButton();
