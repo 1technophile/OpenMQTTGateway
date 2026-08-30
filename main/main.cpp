@@ -940,7 +940,11 @@ std::pair<String, uint16_t> discoverMQTTbroker() {
     THEENGS_LOG_TRACE(F("%d service(s) found" CR), n);
     for (int i = 0; i < n; ++i) {
       THEENGS_LOG_TRACE(F("Service %d %s found" CR), i, MDNS.hostname(i).c_str());
+#  if defined(ESP32)
+      THEENGS_LOG_TRACE(F("IP %s Port %d" CR), MDNS.address(i).toString().c_str(), MDNS.port(i));
+#  else
       THEENGS_LOG_TRACE(F("IP %s Port %d" CR), MDNS.IP(i).toString().c_str(), MDNS.port(i));
+#  endif
     }
     if (n == 1) {
       THEENGS_LOG_TRACE(F("One MQTT server found setting parameters" CR));

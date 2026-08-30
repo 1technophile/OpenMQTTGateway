@@ -273,7 +273,34 @@ void rtl_433_Callback(char* message) {
     return;
   }
 
-  unsigned long MQTTvalue = (int)RFrtl_433_ESPdata["id"] + round((float)RFrtl_433_ESPdata["temperature_C"]);
+  // Hash the message payload excluding volatile fields (time, rssi, snr, noise_floor)
+  // that change between retransmissions of the same physical signal. This replaces the
+  // previous id+temperature_C approach which failed for devices lacking temperature_C.
+  // Use an order-independent (additive) combination of per-key hashes since JsonObject
+  // iteration order is not guaranteed to be consistent.
+  unsigned long MQTTvalue = 0;
+  for (JsonPair kv : RFrtl_433_ESPdata) {
+    const char* key = kv.key().c_str();
+    if (strcmp(key, "time") == 0 || strcmp(key, "time_ms") == 0 || strcmp(key, "rssi") == 0 ||
+        strcmp(key, "snr") == 0 || strcmp(key, "noise_floor") == 0 || strcmp(key, "pulses") == 0 ||
+        strcmp(key, "duration") == 0) {
+      continue;
+    }
+    unsigned long kvHash = 0;
+    for (int i = 0; key[i] != '\0'; i++)
+      kvHash = kvHash * 31 + (unsigned char)key[i];
+    kvHash = kvHash * 31 + 0xFF; // separator between key and value
+    String val;
+    serializeJson(kv.value(), val);
+    for (unsigned int i = 0; i < val.length(); i++)
+      kvHash = kvHash * 31 + (unsigned char)val[i];
+    kvHash ^= kvHash >> 16;
+    kvHash *= 0x85ebca6bUL;
+    kvHash ^= kvHash >> 13;
+    kvHash *= 0xc2b2ae35UL;
+    kvHash ^= kvHash >> 16;
+    MQTTvalue += kvHash; // additive combination is order-independent
+  }
   String topic = subjectRTL_433toMQTT;
   String model = RFrtl_433_ESPdata["model"];
   String type = RFrtl_433_ESPdata["type"];
