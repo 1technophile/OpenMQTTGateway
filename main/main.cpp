@@ -374,6 +374,7 @@ void handle_autodiscovery() {
 #  ifdef ZgatewayRTL_433
     launchRTL_433Discovery(true);
 #  endif
+    stateMeasures();
   }
 
   connectedOnce = true;
@@ -2918,6 +2919,10 @@ String stateMeasures() {
 #ifdef ZmqttDiscovery
   SYSdata["disc"] = SYSConfig.discovery;
 #endif
+#ifdef ZgatewayRTL_433
+  JsonObject SYSobject = SYSdata.as<JsonObject>();
+  RTL_433Config_addState(SYSobject);
+#endif
   SYSdata["env"] = ENV_NAME;
   uint32_t freeMem;
   uint32_t minFreeMem;
@@ -3812,8 +3817,16 @@ void XtoSYS(const char* topicOri, JsonObject& SYSdata) { // json object decoding
       }
       THEENGS_LOG_NOTICE(F("Discovery state: %T" CR), SYSConfig.discovery);
     }
+#ifdef ZgatewayRTL_433
+    if (RTL_433Config_fromJson(SYSdata)) {
+      publishState = true;
+    }
+#endif
     if (SYSdata.containsKey("save") && SYSdata["save"].as<bool>()) {
       SYSConfig_save();
+#ifdef ZgatewayRTL_433
+      RTL_433Config_save();
+#endif
     }
     if (publishState) {
       stateMeasures();

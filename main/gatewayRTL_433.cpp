@@ -43,13 +43,221 @@
 static char messageBuffer[JSON_MSG_BUFFER];
 rtl_433_ESP rtl_433;
 
+static const uint8_t RTL_433_WHITELIST_MAX = 5;
+static const uint8_t RTL_433_SEEN_MAX = 30;
+static const char* RTL_433_CONFIG_KEY = "RTL433Config";
+
+bool RTL_433WhitelistEnabled = false;
+char RTL_433Whitelist[RTL_433_WHITELIST_MAX][uniqueIdSize] = {{0}};
+
+struct RTL_433seenDevice {
+  char deviceId[uniqueIdSize];
+  char modelName[modelNameSize];
+  char type[typeSize];
+};
+
+std::vector<RTL_433seenDevice*> RTL_433seenDevices;
+
+static String htmlEscape(const char* value) {
+  String escaped = value;
+  escaped.replace("&", "&amp;");
+  escaped.replace("\"", "&quot;");
+  escaped.replace("'", "&#39;");
+  escaped.replace("<", "&lt;");
+  escaped.replace(">", "&gt;");
+  return escaped;
+}
+
+static bool RTL_433Config_isWhitelisted(const char* id) {
+  for (uint8_t i = 0; i < RTL_433_WHITELIST_MAX; i++) {
+    if (RTL_433Whitelist[i][0] && strcmp(RTL_433Whitelist[i], id) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void RTL_433Config_storeSeenDevice(const char* id, const char* model, const char* type) {
+  if (!id || !id[0]) {
+    return;
+  }
+  for (std::vector<RTL_433seenDevice*>::iterator it = RTL_433seenDevices.begin(); it != RTL_433seenDevices.end(); ++it) {
+    if (strcmp((*it)->deviceId, id) == 0) {
+      return;
+    }
+  }
+  if (RTL_433seenDevices.size() >= RTL_433_SEEN_MAX) {
+    delete RTL_433seenDevices.front();
+    RTL_433seenDevices.erase(RTL_433seenDevices.begin());
+  }
+  RTL_433seenDevice* device = new RTL_433seenDevice();
+  strlcpy(device->deviceId, id, uniqueIdSize);
+  strlcpy(device->modelName, model ? model : "", modelNameSize);
+  strlcpy(device->type, type ? type : "", typeSize);
+  RTL_433seenDevices.push_back(device);
+}
+
+void RTL_433Config_setWhitelistEnabled(bool enabled) {
+  RTL_433WhitelistEnabled = enabled;
+}
+
+bool RTL_433Config_isWhitelistEnabled() {
+  return RTL_433WhitelistEnabled;
+}
+
+void RTL_433Config_clearWhitelist() {
+  for (uint8_t i = 0; i < RTL_433_WHITELIST_MAX; i++) {
+    RTL_433Whitelist[i][0] = '\0';
+  }
+}
+
+bool RTL_433Config_addWhitelistId(const char* id) {
+  if (!id || !id[0]) {
+    return false;
+  }
+  if (RTL_433Config_isWhitelisted(id)) {
+    return true;
+  }
+  for (uint8_t i = 0; i < RTL_433_WHITELIST_MAX; i++) {
+    if (!RTL_433Whitelist[i][0]) {
+      strlcpy(RTL_433Whitelist[i], id, uniqueIdSize);
+      return true;
+    }
+  }
+  THEENGS_LOG_WARNING(F("[rtl_433] Whitelist is full, ignoring %s" CR), id);
+  return false;
+}
+
+void RTL_433Config_addState(JsonObject& data) {
+  data["rtl433wle"] = RTL_433WhitelistEnabled;
+  for (uint8_t i = 0; i < RTL_433_WHITELIST_MAX; i++) {
+    if (!RTL_433Whitelist[i][0]) {
+      continue;
+    }
+    String key = "rtl433wl" + String(i + 1);
+    data[key] = RTL_433Whitelist[i];
+  }
+}
+
+bool RTL_433Config_fromJson(JsonObject& data) {
+  bool updated = false;
+  if (data.containsKey("rtl433wle") && data["rtl433wle"].is<bool>()) {
+    bool enabled = data["rtl433wle"].as<bool>();
+    if (RTL_433WhitelistEnabled != enabled) {
+      RTL_433WhitelistEnabled = enabled;
+      updated = true;
+    }
+  }
+  for (uint8_t i = 0; i < RTL_433_WHITELIST_MAX; i++) {
+    String key = "rtl433wl" + String(i + 1);
+    if (data.containsKey(key) && data[key].is<const char*>()) {
+      const char* newId = data[key].as<const char*>();
+      if (strncmp(RTL_433Whitelist[i], newId, uniqueIdSize) != 0) {
+        strlcpy(RTL_433Whitelist[i], newId, uniqueIdSize);
+        updated = true;
+      }
+    }
+  }
+  return updated;
+}
+
+bool RTL_433Config_save() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  JsonObject data = jsonBuffer.to<JsonObject>();
+  RTL_433Config_addState(data);
+  String conf = "";
+  serializeJson(jsonBuffer, conf);
+  preferences.begin(Gateway_Short_Name, false);
+  int result = preferences.putString(RTL_433_CONFIG_KEY, conf);
+  preferences.end();
+  THEENGS_LOG_NOTICE(F("[rtl_433] Config_save: %s, result: %d" CR), conf.c_str(), result);
+  return result > 0;
+}
+
+bool RTL_433Config_load() {
+  StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
+  preferences.begin(Gateway_Short_Name, true);
+  if (!preferences.isKey(RTL_433_CONFIG_KEY)) {
+    preferences.end();
+    THEENGS_LOG_NOTICE(F("[rtl_433] Config not found" CR));
+    return false;
+  }
+  auto error = deserializeJson(jsonBuffer, preferences.getString(RTL_433_CONFIG_KEY, "{}"));
+  preferences.end();
+  if (error) {
+    THEENGS_LOG_ERROR(F("[rtl_433] Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    return false;
+  }
+  JsonObject data = jsonBuffer.as<JsonObject>();
+  RTL_433Config_fromJson(data);
+  THEENGS_LOG_NOTICE(F("[rtl_433] Config loaded" CR));
+  return true;
+}
+
+String RTL_433Config_webWhitelist() {
+  String html = "<p><label><input id='rwe' name='rwe' type='checkbox' ";
+  html += RTL_433WhitelistEnabled ? "checked" : "";
+  html += "> RTL_433 Whitelist enabled</label></p>";
+  html += "<input type='hidden' name='rwlsave' value='1'>";
+  html += "<p><b>RTL_433 Whitelist devices</b></p>";
+  if (RTL_433seenDevices.empty()) {
+    html += "<p>No RTL_433 devices seen yet</p>";
+  }
+  uint8_t index = 0;
+  for (std::vector<RTL_433seenDevice*>::iterator it = RTL_433seenDevices.begin(); it != RTL_433seenDevices.end() && index < RTL_433_SEEN_MAX; ++it) {
+    RTL_433seenDevice* device = *it;
+    String escapedId = htmlEscape(device->deviceId);
+    html += "<p><label><input type='checkbox' name='rwl";
+    html += String(index);
+    html += "' value='";
+    html += escapedId;
+    html += "' ";
+    html += RTL_433Config_isWhitelisted(device->deviceId) ? "checked" : "";
+    html += "> ";
+    html += escapedId;
+    if (device->modelName[0]) {
+      html += " (";
+      html += htmlEscape(device->modelName);
+      html += ")";
+    }
+    html += "</label></p>";
+    index++;
+  }
+  for (uint8_t i = 0; i < RTL_433_WHITELIST_MAX; i++) {
+    if (!RTL_433Whitelist[i][0]) {
+      continue;
+    }
+    bool alreadyListed = false;
+    for (std::vector<RTL_433seenDevice*>::iterator it = RTL_433seenDevices.begin(); it != RTL_433seenDevices.end(); ++it) {
+      if (strcmp((*it)->deviceId, RTL_433Whitelist[i]) == 0) {
+        alreadyListed = true;
+        break;
+      }
+    }
+    if (alreadyListed) {
+      continue;
+    }
+    String escapedId = htmlEscape(RTL_433Whitelist[i]);
+    html += "<p><label><input type='checkbox' name='rwlm";
+    html += String(i);
+    html += "' value='";
+    html += escapedId;
+    html += "' checked> ";
+    html += escapedId;
+    html += " (not seen in this session)</label></p>";
+  }
+  return html;
+}
+
 #  ifdef ZmqttDiscovery
 SemaphoreHandle_t semaphorecreateOrUpdateDeviceRTL_433;
 std::vector<RTL_433device*> RTL_433devices;
 int newRTL_433Devices = 0;
 
 static RTL_433device NO_RTL_433_DEVICE_FOUND = {{0},
-                                                0,
+                                                {0},
+                                                {0},
+                                                {0},
                                                 false};
 
 RTL_433device* getDeviceById(const char* id); // Declared here to avoid pre-compilation issue (misplaced auto declaration by pio)
@@ -68,13 +276,14 @@ void dumpRTL_433Devices() {
   for (std::vector<RTL_433device*>::iterator it = RTL_433devices.begin(); it != RTL_433devices.end(); ++it) {
     RTL_433device* p = *it;
     DISCOVERY_TRACE_LOG(F("uniqueId %s" CR), p->uniqueId);
+    DISCOVERY_TRACE_LOG(F("deviceId %s" CR), p->deviceId);
     DISCOVERY_TRACE_LOG(F("modelName %s" CR), p->modelName);
     DISCOVERY_TRACE_LOG(F("type %s" CR), p->type);
     DISCOVERY_TRACE_LOG(F("isDisc %d" CR), p->isDisc);
   }
 }
 
-void createOrUpdateDeviceRTL_433(const char* id, const char* model, const char* type, uint8_t flags) {
+void createOrUpdateDeviceRTL_433(const char* id, const char* deviceId, const char* model, const char* type, uint8_t flags) {
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceRTL_433, pdMS_TO_TICKS(30000)) == pdFALSE) {
     THEENGS_LOG_ERROR(F("[rtl_433] semaphorecreateOrUpdateDeviceRTL_433 Semaphore NOT taken" CR));
     return;
@@ -87,6 +296,9 @@ void createOrUpdateDeviceRTL_433(const char* id, const char* model, const char* 
     device = new RTL_433device();
     if (strlcpy(device->uniqueId, id, uniqueIdSize) > uniqueIdSize) {
       THEENGS_LOG_WARNING(F("[rtl_433] Device id %s exceeds available space" CR), id); // Remove from production release ?
+    };
+    if (strlcpy(device->deviceId, deviceId, uniqueIdSize) > uniqueIdSize) {
+      THEENGS_LOG_WARNING(F("[rtl_433] Device base id %s exceeds available space" CR), deviceId); // Remove from production release ?
     };
     if (strlcpy(device->modelName, model, modelNameSize) > modelNameSize) {
       THEENGS_LOG_WARNING(F("[rtl_433] Device model %s exceeds available space" CR), model); // Remove from production release ?
@@ -124,6 +336,10 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
   for (std::vector<RTL_433device*>::iterator it = localDevices.begin(); it != localDevices.end(); ++it) {
     RTL_433device* pdevice = *it;
     DISCOVERY_TRACE_LOG(F("Device id %s" CR), pdevice->uniqueId);
+    if (RTL_433WhitelistEnabled && !RTL_433Config_isWhitelisted(pdevice->deviceId)) {
+      DISCOVERY_TRACE_LOG(F("Device skipped by whitelist %s" CR), pdevice->deviceId);
+      continue;
+    }
     // Do not launch discovery for the RTL_433devices already discovered (unless we have overrideDiscovery) or that are not unique by their MAC Address (Ibeacon, GAEN and Microsoft Cdp)
     if (overrideDiscovery || !isDiscovered(pdevice)) {
       size_t numRows = sizeof(parameters) / sizeof(parameters[0]);
@@ -244,7 +460,7 @@ void launchRTL_433Discovery(bool overrideDiscovery) {
   }
 }
 
-void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, const char* type, const char* uniqueid) {
+void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, const char* type, const char* uniqueid, const char* rawDeviceId) {
   //Sanitize model name
   String modelSanitized = model;
   modelSanitized.replace(" ", "_");
@@ -258,7 +474,7 @@ void storeRTL_433Discovery(JsonObject& RFrtl_433_ESPdata, const char* model, con
   for (int i = 0; i < numRows; i++) {
     if (RFrtl_433_ESPdata.containsKey(parameters[i][0])) {
       String key_id = String(uniqueid) + "-" + String(parameters[i][0]);
-      createOrUpdateDeviceRTL_433((char*)key_id.c_str(), (char*)modelSanitized.c_str(), (char*)type, device_flags_init);
+      createOrUpdateDeviceRTL_433((char*)key_id.c_str(), rawDeviceId, (char*)modelSanitized.c_str(), (char*)type, device_flags_init);
     }
   }
 }
@@ -322,13 +538,19 @@ void rtl_433_Callback(char* message) {
   topic = topic + "/" + uniqueid;
 #  endif
 
+  String rawDeviceId = uniqueid;
   uniqueid.replace("/", "-");
 
   DISCOVERY_TRACE_LOG(F("uniqueid: %s" CR), uniqueid.c_str());
+  RTL_433Config_storeSeenDevice(rawDeviceId.c_str(), model.c_str(), type.c_str());
+  if (RTL_433WhitelistEnabled && !RTL_433Config_isWhitelisted(rawDeviceId.c_str())) {
+    THEENGS_LOG_TRACE(F("[rtl_433] Message skipped by whitelist: %s" CR), rawDeviceId.c_str());
+    return;
+  }
   if (!isAduplicateSignal(MQTTvalue)) {
 #  ifdef ZmqttDiscovery
     if (SYSConfig.discovery)
-      storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)type.c_str(), (char*)uniqueid.c_str());
+      storeRTL_433Discovery(RFrtl_433_ESPdata, (char*)model.c_str(), (char*)type.c_str(), (char*)uniqueid.c_str(), (char*)rawDeviceId.c_str());
 #  endif
     RFrtl_433_ESPdata["origin"] = (char*)topic.c_str();
     enqueueJsonObject(RFrtl_433_ESPdata);
@@ -340,6 +562,7 @@ void rtl_433_Callback(char* message) {
 }
 
 void setupRTL_433() {
+  RTL_433Config_load();
   rtl_433.setCallback(rtl_433_Callback, messageBuffer, JSON_MSG_BUFFER);
 #  ifdef ZmqttDiscovery
   semaphorecreateOrUpdateDeviceRTL_433 = xSemaphoreCreateBinary();

@@ -730,6 +730,9 @@ void pubMqttDiscovery() {
 #  endif
       // Switch with state_on/state_off
       {HASS_TYPE_SWITCH, "SYS: Auto discovery", "disc", "", "{{ value_json.disc }}", "{\"disc\":true,\"save\":true}", "{\"disc\":false,\"save\":true}", "", stateClassNone, "false", "true", nullptr, subjectMQTTtoSYSset},
+#  ifdef ZgatewayRTL_433
+      {HASS_TYPE_SWITCH, "RTL_433: Whitelist", "rtl433wle", "", "{{ value_json.rtl433wle }}", "{\"rtl433wle\":true,\"save\":true}", "{\"rtl433wle\":false,\"save\":true}", "", stateClassNone, "false", "true", nullptr, subjectMQTTtoSYSset},
+#  endif
       // Buttons
       {HASS_TYPE_BUTTON, "SYS: Restart gateway", "restart", HASS_CLASS_RESTART, "", "{\"cmd\":\"restart\"}", "", "", stateClassNone, nullptr, nullptr, will_Topic, subjectMQTTtoSYSset},
       {HASS_TYPE_BUTTON, "SYS: Erase credentials", "erase", "", "", "{\"cmd\":\"erase\"}", "", "", stateClassNone, nullptr, nullptr, will_Topic, subjectMQTTtoSYSset},

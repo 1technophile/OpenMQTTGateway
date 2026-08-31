@@ -1319,6 +1319,7 @@ void handleLA() {
 #  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
 #    include <map>
 
+#    include "config_RF.h"
 #    include "rf/RFConfiguration.h"
 std::map<int, String> activeReceiverOptions = {
     {0, "Inactive"},
@@ -1410,6 +1411,20 @@ void handleRF() {
         WEBtoRF["rssithreshold"] = iRFConfig.getRssiThreshold();
         update = true;
       }
+#    ifdef ZgatewayRTL_433
+      if (server.hasArg("rwlsave")) {
+        RTL_433Config_setWhitelistEnabled(server.hasArg("rwe"));
+        RTL_433Config_clearWhitelist();
+        for (uint8_t i = 0; i < server.args(); i++) {
+          if (server.argName(i).startsWith("rwl") && server.argName(i) != "rwlsave") {
+            RTL_433Config_addWhitelistId(server.arg(i).c_str());
+          }
+        }
+        RTL_433Config_save();
+        stateMeasures();
+        update = true;
+      }
+#    endif
       if (update) {
         THEENGS_LOG_NOTICE(F("[WebUI] Save data" CR));
         WEBtoRF["save"] = true;
@@ -1421,6 +1436,10 @@ void handleRF() {
   }
 
   String activeReceiverHtml = generateActiveReceiverOptions(iRFConfig.getActiveReceiver());
+  String rtl433WhitelistHtml = "";
+#    ifdef ZgatewayRTL_433
+  rtl433WhitelistHtml = RTL_433Config_webWhitelist();
+#    endif
 
   char jsonChar[100];
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
@@ -1428,7 +1447,7 @@ void handleRF() {
   sendHeaderChunk((String(gateway_name) + " - Configure RF").c_str());
   server.sendContent(script);
   server.sendContent(style);
-  sendBodyChunk(config_rf_body, jsonChar, gateway_name, iRFConfig.getFrequency(), activeReceiverHtml.c_str());
+  sendBodyChunk(config_rf_body, jsonChar, gateway_name, iRFConfig.getFrequency(), activeReceiverHtml.c_str(), rtl433WhitelistHtml.c_str());
   sendFooterChunk();
 }
 #  endif
