@@ -2475,6 +2475,19 @@ void setupWiFiManager() {
 void setup_ethernet_esp32() {
   bool ethBeginSuccess = false;
   WiFi.onEvent(WiFiEvent);
+#    if defined(ETH_PHY_COLD_CYCLE) && defined(ETH_PHY_POWER) && (ETH_PHY_POWER >= 0)
+  // Give the PHY a true cold start before begin(): a warm PHY left in a stale
+  // state (seen after an NVS erase with PSRAM enabled on Theengs Bridge v1.1)
+  // can flap the link until a manual power cycle, and the in-driver reset
+  // begin() performs (short assert, short delay) does not clear it. Power the
+  // PHY down, then back up, and let its oscillator settle before begin()
+  // starts talking to it.
+  pinMode(ETH_PHY_POWER, OUTPUT);
+  digitalWrite(ETH_PHY_POWER, LOW);
+  delay(200); // hold the PHY powered down
+  digitalWrite(ETH_PHY_POWER, HIGH);
+  delay(200); // let the PHY oscillator settle
+#    endif
 #    ifdef NetworkAdvancedSetup
   THEENGS_LOG_TRACE(F("Adv eth cfg" CR));
   // ETH.config() has to be called after ETH.begin(): the underlying netif is
