@@ -1001,7 +1001,27 @@ void setupMQTT() {
 
 #  if defined(MDNS_SD)
   THEENGS_LOG_TRACE(F("Connecting to MQTT by mDNS without MQTT hostname" CR));
-  const auto discovered_broker = discoverMQTTbroker();
+  std::pair<String, uint16_t> discovered_broker;
+  int mdns_discovery_attempt = 0;
+  do {
+    discovered_broker = discoverMQTTbroker();
+    if (!discovered_broker.first.isEmpty() && discovered_broker.second != 0) {
+      break;
+    }
+
+    mdns_discovery_attempt++;
+    THEENGS_LOG_WARNING(F("MQTT broker mDNS discovery attempt %d failed" CR), mdns_discovery_attempt);
+    if (mdns_discovery_attempt <= maxRetryWatchDog) {
+      delayWithOTA(1000);
+    }
+  } while (mdns_discovery_attempt <= maxRetryWatchDog);
+
+  if (discovered_broker.first.isEmpty() || discovered_broker.second == 0) {
+    THEENGS_LOG_ERROR(F("No unique MQTT broker found by mDNS after %d attempts" CR), mdns_discovery_attempt);
+    ESPRestart(1);
+    return;
+  }
+
   const auto broker_host = discovered_broker.first.c_str();
   const auto broker_port = discovered_broker.second;
 #  else
@@ -1663,12 +1683,40 @@ bool wifi_reconnect_bypass() {
     return true;
   }
 #endif
-  uint8_t wifi_autoreconnect_cnt = 0;
 #ifdef ESP32
-  while (WiFi.status() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
+  // The ESP32 core starts its own reconnect from the STA_DISCONNECTED event.
+  // Calling WiFi.begin() while that attempt is active fails with
+  // "sta is connecting, cannot set config", so give auto-reconnect a chance
+  // before taking control of the connection.
+  THEENGS_LOG_NOTICE(F("Waiting for ESP32 WiFi auto-reconnect" CR));
+  for (uint8_t wifi_autoreconnect_cnt = 0; wifi_autoreconnect_cnt < maxConnectionRetryNetwork; wifi_autoreconnect_cnt++) {
+    if (WiFi.status() == WL_CONNECTED) {
+      THEENGS_LOG_NOTICE(F("WiFi auto-reconnect succeeded after %d seconds" CR), wifi_autoreconnect_cnt);
+      return true;
+    }
+    delayWithOTA(1000);
+  }
+
+  THEENGS_LOG_WARNING(F("WiFi auto-reconnect timed out; starting controlled reconnect" CR));
+  WiFi.setAutoReconnect(false);
+  WiFi.disconnect(false, false, 1000);
+  delay(100);
+
+#  ifdef ESPWifiManualSetup
+  const unsigned long reconnectStart = millis();
+  const uint8_t reconnectStatus = wifiMulti.run(10000, false);
+  THEENGS_LOG_NOTICE(F("Controlled WiFiMulti reconnect: status=%d duration=%lu ms" CR), reconnectStatus, millis() - reconnectStart);
+#  else
+  WiFi.begin();
+  const uint8_t reconnectStatus = WiFi.waitForConnectResult(10000);
+  THEENGS_LOG_NOTICE(F("Controlled saved-AP reconnect: status=%d" CR), reconnectStatus);
+#  endif
+
+  WiFi.setAutoReconnect(true);
+  return reconnectStatus == WL_CONNECTED;
 #else
+  uint8_t wifi_autoreconnect_cnt = 0;
   while (WiFi.waitForConnectResult() != WL_CONNECTED && wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
-#endif
     THEENGS_LOG_NOTICE(F("Attempting Wifi connection with saved AP: %d" CR), wifi_autoreconnect_cnt);
 
     WiFi.begin();
@@ -1678,12 +1726,116 @@ bool wifi_reconnect_bypass() {
     delay(1000);
     wifi_autoreconnect_cnt++;
   }
-  if (wifi_autoreconnect_cnt < maxConnectionRetryNetwork) {
-    return true;
-  } else {
-    return false;
-  }
+  return wifi_autoreconnect_cnt < maxConnectionRetryNetwork;
+#endif
 }
+
+#if defined(ESP32) && defined(ESPWifiManualSetup) && WIFI_SCAN_REGULARLY
+static bool wifiRoamScanRunning = false;
+static unsigned long lastWifiRoamScan = 0;
+static uint8_t wifiRoamCurrentBSSID[6] = {};
+static int32_t wifiRoamMinimumRSSI = -127;
+
+// Periodic roaming modelled after Tasmota SetOption57: asynchronously scan
+// visible configured SSIDs and move only when a different BSSID is at least
+// WIFI_RSSI_THRESHOLD dB stronger than the current connection.
+void wifiPeriodicRoaming() {
+  constexpr unsigned long wifiRescanInterval = WIFI_RESCAN_MINUTES * 60UL * 1000UL;
+
+  if (!wifiRoamScanRunning) {
+    if (WiFi.status() != WL_CONNECTED || ethConnected || ProcessLock || last_ota_activity_millis != 0 || (millis() - lastWifiRoamScan) < wifiRescanInterval) {
+      return;
+    }
+
+    const uint8_t* currentBSSID = WiFi.BSSID();
+    if (currentBSSID == nullptr) {
+      THEENGS_LOG_WARNING(F("WiFi roam scan skipped: current BSSID unavailable" CR));
+      lastWifiRoamScan = millis();
+      return;
+    }
+
+    memcpy(wifiRoamCurrentBSSID, currentBSSID, sizeof(wifiRoamCurrentBSSID));
+    wifiRoamMinimumRSSI = WiFi.RSSI();
+    if (wifiRoamMinimumRSSI < -WIFI_RSSI_THRESHOLD) {
+      wifiRoamMinimumRSSI += WIFI_RSSI_THRESHOLD;
+    }
+    lastWifiRoamScan = millis();
+
+    const int16_t scanStatus = WiFi.scanNetworks(true, false);
+    if (scanStatus == WIFI_SCAN_RUNNING) {
+      wifiRoamScanRunning = true;
+      THEENGS_LOG_NOTICE(F("WiFi periodic roam scan started: current_rssi=%d threshold=%d" CR), WiFi.RSSI(), wifiRoamMinimumRSSI);
+    } else {
+      THEENGS_LOG_WARNING(F("WiFi periodic roam scan failed to start: status=%d" CR), scanStatus);
+    }
+    return;
+  }
+
+  const int16_t scanResult = WiFi.scanComplete();
+  if (scanResult == WIFI_SCAN_RUNNING) {
+    return;
+  }
+  wifiRoamScanRunning = false;
+
+  if (scanResult <= 0 || WiFi.status() != WL_CONNECTED || ethConnected || last_ota_activity_millis != 0) {
+    THEENGS_LOG_WARNING(F("WiFi periodic roam scan discarded: result=%d wifi_status=%d" CR), scanResult, WiFi.status());
+    WiFi.scanDelete();
+    return;
+  }
+
+  int32_t bestRSSI = wifiRoamMinimumRSSI;
+  int32_t bestChannel = 0;
+  const char* bestSSID = nullptr;
+  const char* bestPassword = nullptr;
+  uint8_t bestBSSID[6] = {};
+
+  for (int16_t i = 0; i < scanResult; i++) {
+    const String scannedSSID = WiFi.SSID(i);
+    const char* candidateSSID = nullptr;
+    const char* candidatePassword = nullptr;
+    if (scannedSSID == wifi_ssid) {
+      candidateSSID = wifi_ssid;
+      candidatePassword = wifi_password;
+    }
+#  ifdef wifi_ssid1
+    else if (scannedSSID == wifi_ssid1) {
+      candidateSSID = wifi_ssid1;
+      candidatePassword = wifi_password1;
+    }
+#  endif
+
+    if (candidateSSID == nullptr) {
+      continue;
+    }
+
+    const int32_t candidateRSSI = WiFi.RSSI(i);
+    const uint8_t* candidateBSSID = WiFi.BSSID(i);
+    THEENGS_LOG_NOTICE(F("WiFi roam candidate: ssid=[%s] bssid=%s channel=%d rssi=%d" CR), candidateSSID, WiFi.BSSIDstr(i).c_str(), WiFi.channel(i), candidateRSSI);
+    if (candidateBSSID != nullptr && candidateRSSI > bestRSSI && memcmp(candidateBSSID, wifiRoamCurrentBSSID, sizeof(bestBSSID)) != 0) {
+      bestRSSI = candidateRSSI;
+      bestChannel = WiFi.channel(i);
+      bestSSID = candidateSSID;
+      bestPassword = candidatePassword;
+      memcpy(bestBSSID, candidateBSSID, sizeof(bestBSSID));
+    }
+  }
+  WiFi.scanDelete();
+
+  if (bestSSID == nullptr) {
+    THEENGS_LOG_NOTICE(F("WiFi periodic roam scan complete: no AP exceeds threshold %d" CR), wifiRoamMinimumRSSI);
+    return;
+  }
+
+  THEENGS_LOG_NOTICE(F("WiFi roaming to ssid=[%s] bssid=%02X:%02X:%02X:%02X:%02X:%02X channel=%d rssi=%d" CR), bestSSID, bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestChannel, bestRSSI);
+  WiFi.setAutoReconnect(false);
+  WiFi.disconnect(false, false, 1000);
+  delay(100);
+  WiFi.begin(bestSSID, bestPassword, bestChannel, bestBSSID);
+  WiFi.setAutoReconnect(true);
+}
+#else
+void wifiPeriodicRoaming() {}
+#endif
 
 void setOTA() {
   // Port defaults to 8266
@@ -1849,17 +2001,32 @@ void ESPRestart(byte reason) {
 
 #if defined(ESPWifiManualSetup)
 void setupWiFiFromBuild() {
-  WiFi.setHostname(gateway_name);
-  WiFi.mode(WIFI_STA);
-  wifiMulti.addAP(wifi_ssid, wifi_password);
-  THEENGS_LOG_TRACE(F("Connecting to %s" CR), wifi_ssid);
+  const bool hostnameSet = WiFi.setHostname(gateway_name);
+  const bool stationModeSet = WiFi.mode(WIFI_STA);
+  const bool primaryAPAdded = wifiMulti.addAP(wifi_ssid, wifi_password);
+  THEENGS_LOG_NOTICE(F("WiFi init: hostname=%s mode=%s current_mode=%d mac=%s" CR), hostnameSet ? "ok" : "failed", stationModeSet ? "ok" : "failed", WiFi.getMode(), WiFi.macAddress().c_str());
+  THEENGS_LOG_NOTICE(F("WiFi configured AP 0: ssid=[%s] length=%u added=%s password_length=%u" CR), wifi_ssid, strlen(wifi_ssid), primaryAPAdded ? "yes" : "no", strlen(wifi_password));
 #  ifdef wifi_ssid1
-  wifiMulti.addAP(wifi_ssid1, wifi_password1);
-  THEENGS_LOG_TRACE(F("Connecting to %s" CR), wifi_ssid1);
+  const bool secondaryAPAdded = wifiMulti.addAP(wifi_ssid1, wifi_password1);
+  THEENGS_LOG_NOTICE(F("WiFi configured AP 1: ssid=[%s] length=%u added=%s password_length=%u" CR), wifi_ssid1, strlen(wifi_ssid1), secondaryAPAdded ? "yes" : "no", strlen(wifi_password1));
 #  endif
   delay(10);
 
   // We start by connecting to a WiFi network
+  THEENGS_LOG_NOTICE(F("Starting WiFi connection" CR));
+
+  const unsigned long diagnosticScanStart = millis();
+  const int16_t diagnosticScanResult = WiFi.scanNetworks(false, false);
+  THEENGS_LOG_NOTICE(F("WiFi diagnostic scan: result=%d duration=%lu ms" CR), diagnosticScanResult, millis() - diagnosticScanStart);
+  for (int16_t i = 0; i < diagnosticScanResult; i++) {
+    const String scannedSSID = WiFi.SSID(i);
+    bool configuredSSID = scannedSSID == wifi_ssid;
+#  ifdef wifi_ssid1
+    configuredSSID = configuredSSID || scannedSSID == wifi_ssid1;
+#  endif
+    THEENGS_LOG_NOTICE(F("WiFi scan %d: ssid=[%s] length=%u channel=%d rssi=%d auth=%d configured=%s" CR), i, scannedSSID.c_str(), scannedSSID.length(), WiFi.channel(i), WiFi.RSSI(i), WiFi.encryptionType(i), configuredSSID ? "yes" : "no");
+  }
+  WiFi.scanDelete();
 
 #  ifdef NetworkAdvancedSetup
   IPAddress ip_adress;
@@ -1878,9 +2045,15 @@ void setupWiFiFromBuild() {
 
 #  endif
 
-  while (wifiMulti.run() != WL_CONNECTED) {
+  uint8_t wifiStatus = WL_IDLE_STATUS;
+  while (wifiStatus != WL_CONNECTED) {
+    const unsigned long attemptStart = millis();
+    wifiStatus = wifiMulti.run(10000, false);
+    THEENGS_LOG_NOTICE(F("WiFiMulti attempt %d: status=%d duration=%lu ms" CR), failure_number_ntwk + 1, wifiStatus, millis() - attemptStart);
+    if (wifiStatus == WL_CONNECTED) {
+      break;
+    }
     delay(500);
-    THEENGS_LOG_TRACE(F("." CR));
     failure_number_ntwk++;
 #  if defined(ESP32) && defined(ZgatewayBT)
     if (SYSConfig.powerMode) {
@@ -2627,6 +2800,8 @@ void loop() {
 #endif
   }
   unsigned long now = millis();
+
+  wifiPeriodicRoaming();
 
 #ifdef ZgatewaySERIAL // Serial is a module and a communication layer so it's always processed
   SERIALtoX();
