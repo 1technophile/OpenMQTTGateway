@@ -143,6 +143,19 @@
 #  define WifiReconnectWatchDog true
 #endif
 
+// Periodically scan visible configured access points and roam when another
+// BSSID is at least WIFI_RSSI_THRESHOLD dB stronger. Defaults mirror
+// Tasmota SetOption57.
+#ifndef WIFI_SCAN_REGULARLY
+#  define WIFI_SCAN_REGULARLY true
+#endif
+#ifndef WIFI_RSSI_THRESHOLD
+#  define WIFI_RSSI_THRESHOLD 10
+#endif
+#ifndef WIFI_RESCAN_MINUTES
+#  define WIFI_RESCAN_MINUTES 44
+#endif
+
 //set minimum quality of signal so it ignores AP's under that quality
 #define MinimumWifiSignalQuality 8
 
