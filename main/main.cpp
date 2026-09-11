@@ -2452,10 +2452,10 @@ void setup_ethernet_esp32() {
   // created by begin(), before that the call returns false and is a no-op.
   ethBeginSuccess = ETH.begin();
   if (ethBeginSuccess) {
-  IPAddress ip_adress;
-  IPAddress gateway_adress;
-  IPAddress subnet_adress;
-  IPAddress dns_adress;
+    IPAddress ip_adress;
+    IPAddress gateway_adress;
+    IPAddress subnet_adress;
+    IPAddress dns_adress;
     ip_adress.fromString(NET_IP);
     gateway_adress.fromString(NET_GW);
     subnet_adress.fromString(NET_MASK);
@@ -3237,7 +3237,7 @@ bool checkForUpdates() {
     if (!envVersion.isNull()) {
       latestVersion = envVersion.as<String>();
     } else {
-    latestVersion = jsondata["latest_version"].as<String>();
+      latestVersion = jsondata["latest_version"].as<String>();
     }
     // Publish the resolved value as latest_version so the Home Assistant update
     // entity compares against the (possibly pinned) version, and drop the map so
