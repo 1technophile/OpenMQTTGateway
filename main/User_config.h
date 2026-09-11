@@ -147,7 +147,7 @@
 // BSSID is at least WIFI_RSSI_THRESHOLD dB stronger. Defaults mirror
 // Tasmota SetOption57.
 #ifndef WIFI_SCAN_REGULARLY
-#  define WIFI_SCAN_REGULARLY true
+#  define WIFI_SCAN_REGULARLY false
 #endif
 #ifndef WIFI_RSSI_THRESHOLD
 #  define WIFI_RSSI_THRESHOLD 10
@@ -248,7 +248,7 @@
 #if AWS_IOT
 // Enable the use of ALPN for AWS IoT Core with the port 443
 #  define ALPN_PROTOCOLS \
-    { "x-amzn-mqtt-ca", NULL }
+    {"x-amzn-mqtt-ca", NULL}
 #endif
 
 //#  define MQTT_HTTPS_FW_UPDATE //uncomment to enable updating via MQTT message.
