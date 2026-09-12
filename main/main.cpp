@@ -2890,7 +2890,13 @@ void eraseConfig() {
   receivingDATA(subjectMQTTtoSYSsetSecondaryModule, eraseCmdStr.c_str());
   delay(2000);
 #endif
-  THEENGS_LOG_TRACE(F("Formatting requested, result: %d" CR), SPIFFS.format());
+  // SPIFFS.format() has to be called outside of the log macro, THEENGS_LOG_TRACE
+  // expands to ((void)0) below LOG_LEVEL_TRACE and discards its arguments with it
+  bool formatted = SPIFFS.format();
+  THEENGS_LOG_TRACE(F("Formatting requested, result: %d" CR), formatted);
+  if (!formatted) {
+    THEENGS_LOG_ERROR(F("SPIFFS format failed, config may be retained" CR));
+  }
 
 #if defined(ESP8266)
   WiFi.disconnect(true);
