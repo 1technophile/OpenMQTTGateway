@@ -750,15 +750,11 @@ bool pubMQTT(String topic, String payload) {
 }
 
 bool pubMQTT(String topic, int payload) {
-  char val[12];
-  sprintf(val, "%d", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(String topic, unsigned long long payload) {
-  char val[21];
-  sprintf(val, "%llu", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(String topic, float payload) {
@@ -802,9 +798,7 @@ bool pubMQTT(const char* topic, double payload) {
 }
 
 bool pubMQTT(String topic, unsigned long payload) {
-  char val[11];
-  sprintf(val, "%lu", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 void delayWithOTA(long waitMillis) {
