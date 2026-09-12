@@ -43,7 +43,7 @@ GatewayState gatewayState = GatewayState::WAITING_ONBOARDING;
 static GatewayState previousGatewayState = gatewayState;
 
 // Macros and structure to enable the duplicates removing on the following gateways
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433) || defined(ZgatewayRTL_433SX1262)
 // array to store previous received RFs, IRs codes and their timestamps
 struct ReceivedSignal {
   uint64_t value;
@@ -132,6 +132,9 @@ Preferences preferences;
 #endif
 #ifdef ZgatewayLORA
 #  include "config_LORA.h"
+#endif
+#ifdef ZgatewayRTL_433SX1262
+#  include "config_RTL_433SX1262.h"
 #endif
 #ifdef ZgatewaySRFB
 #  include "config_SRFB.h"
@@ -373,6 +376,9 @@ void handle_autodiscovery() {
 #  endif
 #  ifdef ZgatewayRTL_433
     launchRTL_433Discovery(true);
+#  endif
+#  ifdef ZgatewayRTL_433SX1262
+    launchRTL_433SX1262Discovery(true);
 #  endif
   }
 
@@ -1556,6 +1562,10 @@ void setup() {
 #ifdef ZgatewayLORA
   setupLORA();
   modules.add(ZgatewayLORA);
+#endif
+#ifdef ZgatewayRTL_433SX1262
+  setupRTL_433SX1262();
+  modules.add(ZgatewayRTL_433SX1262);
 #endif
 #ifdef ZgatewayRF
   modules.add(ZgatewayRF);
@@ -2786,6 +2796,9 @@ void loop() {
       launchLORADiscovery(false);
 #  endif
 #endif
+#ifdef ZgatewayRTL_433SX1262
+    RTL_433SX1262Loop();
+#endif
 #ifdef ZgatewayRF
     RFtoX();
 #endif
@@ -3009,7 +3022,7 @@ String stateMeasures() {
   return output;
 }
 
-#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433)
+#if defined(ZgatewayRF) || defined(ZgatewayIR) || defined(ZgatewaySRFB) || defined(ZgatewayWeatherStation) || defined(ZgatewayRTL_433) || defined(ZgatewayRTL_433SX1262)
 /**
  * Store signal values from RF, IR, SRFB or Weather stations so as to avoid duplicates
  */
