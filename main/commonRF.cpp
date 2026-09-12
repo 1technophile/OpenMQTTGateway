@@ -61,14 +61,21 @@ ZCommonRFWrapper iRFReceiver;
 RFConfiguration iRFConfig(iRFReceiver);
 
 // Initialize the CC1101 and tune the RX frequency.
-// - Uses truncated exponential backoff to avoid tight retry loops
-// - Validates the configured frequency before touching the radio
-// - Emits explicit logs for success/failure so watchdog resets are traceable
+// - First call does the full Init + retry-with-backoff to configure the radio.
+// - Subsequent calls just SetRx(freq) — once the radio is configured, every TX→RX
+//   re-init was wasting 3+ s in retry backoff if SPI got transiently flaky, and
+//   the radio's register state is retained anyway. SetRx is a SIDLE+freq+SRX strobe.
 void initCC1101() {
 #  ifdef ZradioCC1101 // receiving with CC1101
+  static bool ever_inited = false;
   const float freqMhz = iRFConfig.getFrequency();
   if (!iRFConfig.validFrequency(freqMhz)) {
     THEENGS_LOG_ERROR(F("C1101 invalid frequency: %F MHz" CR), freqMhz);
+    return;
+  }
+
+  if (ever_inited) {
+    ELECHOUSE_cc1101.SetRx(freqMhz);
     return;
   }
 
@@ -102,6 +109,7 @@ void initCC1101() {
       THEENGS_LOG_NOTICE(F("C1101 SPI connection OK on attempt %d" CR), attempt);
       ELECHOUSE_cc1101.SetRx(freqMhz);
       THEENGS_LOG_NOTICE(F("C1101 tuned RX to %F MHz" CR), freqMhz);
+      ever_inited = true;
       break;
     }
 
