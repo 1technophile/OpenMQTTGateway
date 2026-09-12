@@ -440,6 +440,21 @@ bool exists(String path) {
 }
 #  endif
 
+static String intToString(int number) {
+  char buffer[12];
+  itoa(number, buffer, 10);
+  return String(buffer);
+}
+
+static String doubleToString(double number, signed int width, unsigned int prec) {
+  char buffer[16];
+  int n = snprintf(buffer, sizeof(buffer), "%*.*f", width, prec, number);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(buffer)) {
+    return String();
+  }
+  return String(buffer);
+}
+
 /*------------------- Chunked Response Helpers ----------------------*/
 // Send HTML pages in chunks to avoid large String heap allocations.
 // Each helper puts a temporary buffer on its own stack frame, sends
@@ -2077,29 +2092,29 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
               float temperature_C = data["temperature_C"];
 
               if (displayMetric) {
-                line3 = "temp: " + String(temperature_C, 1) + "°C ";
+                line3 = "temp: " + doubleToString(temperature_C, 3, 1) + "°C ";
               } else {
-                line3 = "temp: " + String(convertTemp_CtoF(temperature_C), 1) + "°F ";
+                line3 = "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F ";
               }
             }
 
             float humidity = data["humidity"];
             if (data.containsKey("humidity") && humidity <= 100 && humidity >= 0) {
-              line3 += "hum: " + String(humidity, 1) + "% ";
+              line3 += "hum: " + doubleToString(humidity, 3, 1) + "% ";
             }
             if (data.containsKey("wind_avg_km_h")) {
               float wind_avg_km_h = data["wind_avg_km_h"];
 
               if (displayMetric) {
-                line3 += "wind: " + String(wind_avg_km_h, 1) + "km/h ";
+                line3 += "wind: " + doubleToString(wind_avg_km_h, 3, 1) + "km/h ";
               } else {
-                line3 += "wind: " + String(convert_kmph2mph(wind_avg_km_h), 1) + "mp/h ";
+                line3 += "wind: " + doubleToString(convert_kmph2mph(wind_avg_km_h), 3, 1) + "mp/h ";
               }
             }
 
             float moisture = data["moisture"];
             if (data.containsKey("moisture") && moisture <= 100 && moisture >= 0) {
-              line3 += "moist: " + String(moisture, 1) + "% ";
+              line3 += "moist: " + doubleToString(moisture, 3, 1) + "% ";
             }
 
             line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
@@ -2146,9 +2161,9 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             float temperature_C = data["tempc"];
 
             if (displayMetric) {
-              line2 = "temp: " + String(temperature_C, 1) + "°C ";
+              line2 = "temp: " + doubleToString(temperature_C, 3, 1) + "°C ";
             } else {
-              line2 = "temp: " + String(convertTemp_CtoF(temperature_C), 1) + "°F ";
+              line2 = "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F ";
             }
           }
           line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
@@ -2158,7 +2173,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line3 = "";
           float humidity = data["hum"];
           if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            line3 += "hum: " + String(humidity, 1) + "% ";
+            line3 += "hum: " + doubleToString(humidity, 3, 1) + "% ";
           }
           line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 
@@ -2168,9 +2183,9 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
           String line4 = "";
           if (displayMetric) {
-            line4 = "pressure: " + String(pa, 1) + " hPa";
+            line4 = "pressure: " + doubleToString(pa, 3, 1) + " hPa";
           } else {
-            line4 = "pressure: " + String(convert_hpa2inhg(pa), 1) + " inHg";
+            line4 = "pressure: " + doubleToString(convert_hpa2inhg(pa), 3, 1) + " inHg";
           }
           line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
@@ -2204,10 +2219,10 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 property++;
                 if (displayMetric) {
                   float temperature = data["tempc"];
-                  properties[property] = "temp: " + String(temperature, 1) + "°C ";
+                  properties[property] = "temp: " + doubleToString(temperature, 3, 1) + "°C ";
                 } else {
                   float temperature = data["tempf"];
-                  properties[property] = "temp: " + String(temperature, 1) + "°F ";
+                  properties[property] = "temp: " + doubleToString(temperature, 3, 1) + "°F ";
                 }
               }
 
@@ -2215,10 +2230,10 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 property++;
                 if (displayMetric) {
                   float temperature = data["tempc2_dp"];
-                  properties[property] = "dewp: " + String(temperature, 1) + "°C ";
+                  properties[property] = "dewp: " + doubleToString(temperature, 3, 1) + "°C ";
                 } else {
                   float temperature = data["tempf2_dp"];
-                  properties[property] = "dewp: " + String(temperature, 1) + "°F ";
+                  properties[property] = "dewp: " + doubleToString(temperature, 3, 1) + "°F ";
                 }
               }
 
@@ -2231,103 +2246,85 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 property++;
                 float humidity = data["hum"];
 
-                properties[property] = "hum: " + String(humidity, 1) + "% ";
+                properties[property] = "hum: " + doubleToString(humidity, 3, 1) + "% ";
               }
 
               if (data.containsKey("pm25")) {
                 property++;
                 int pm25int = data["pm25"];
-                char pm25[3];
-                itoa(pm25int, pm25, 10);
+                String pm25 = intToString(pm25int);
                 if ((data.containsKey("pm10"))) {
-                  properties[property] = "PM 2.5: " + (String)pm25 + " ";
+                  properties[property] = "PM 2.5: " + pm25 + " ";
 
                 } else {
-                  properties[property] = "pm2.5: " + (String)pm25 + "μg/m³ ";
+                  properties[property] = "pm2.5: " + pm25 + "μg/m³ ";
                 }
               }
 
               if (data.containsKey("pm10")) {
                 property++;
                 int pm10int = data["pm10"];
-                char pm10[3];
-                itoa(pm10int, pm10, 10);
+                String pm10 = intToString(pm10int);
                 if ((data.containsKey("pm25"))) {
-                  properties[property] = "/ 10: " + (String)pm10 + "μg/m³ ";
+                  properties[property] = "/ 10: " + pm10 + "μg/m³ ";
 
                 } else {
-                  properties[property] = "pm10: " + (String)pm10 + "μg/m³ ";
+                  properties[property] = "pm10: " + pm10 + "μg/m³ ";
                 }
               }
 
               if (data.containsKey("for")) {
                 property++;
                 int formint = data["for"];
-                char form[3];
-                itoa(formint, form, 10);
-                properties[property] = "CH₂O: " + (String)form + "mg/m³ ";
+                properties[property] = "CH₂O: " + intToString(formint) + "mg/m³ ";
               }
 
               if (data.containsKey("co2")) {
                 property++;
                 int co2int = data["co2"];
-                char co2[4];
-                itoa(co2int, co2, 10);
-                properties[property] = "co2: " + (String)co2 + "ppm ";
+                properties[property] = "co2: " + intToString(co2int) + "ppm ";
               }
 
               if (data.containsKey("moi")) {
                 property++;
                 int moiint = data["moi"];
-                char moi[4];
-                itoa(moiint, moi, 10);
-                properties[property] = "moi: " + (String)moi + "% ";
+                properties[property] = "moi: " + intToString(moiint) + "% ";
               }
 
               if (data.containsKey("lux")) {
                 property++;
                 int luxint = data["lux"];
-                char lux[5];
-                itoa(luxint, lux, 10);
-                properties[property] = "lux: " + (String)lux + "lx ";
+                properties[property] = "lux: " + intToString(luxint) + "lx ";
               }
 
               if (data.containsKey("fer")) {
                 property++;
                 int ferint = data["fer"];
-                char fer[7];
-                itoa(ferint, fer, 10);
-                properties[property] = "fer: " + (String)fer + "µS/cm ";
+                properties[property] = "fer: " + intToString(ferint) + "µS/cm ";
               }
 
               if (data.containsKey("pres")) {
                 property++;
                 int presint = data["pres"];
-                char pres[4];
-                itoa(presint, pres, 10);
-                properties[property] = "pres: " + (String)pres + "hPa ";
+                properties[property] = "pres: " + intToString(presint) + "hPa ";
               }
 
               if (data.containsKey("batt")) {
                 property++;
                 int battery = data["batt"];
-                char batt[5];
-                itoa(battery, batt, 10);
-                properties[property] = "batt: " + (String)batt + "% ";
+                properties[property] = "batt: " + intToString(battery) + "% ";
               }
 
               if (data.containsKey("shake")) {
                 property++;
                 int shakeint = data["shake"];
-                char shake[3];
-                itoa(shakeint, shake, 10);
-                properties[property] = "shake: " + (String)shake + " ";
+                properties[property] = "shake: " + intToString(shakeint) + " ";
               }
 
               if (data.containsKey("volt")) {
                 property++;
                 float voltf = data["volt"];
-                properties[property] = "volt: " + String(voltf, 1) + "V ";
+                properties[property] = "volt: " + doubleToString(voltf, 3, 1) + "V ";
               }
 
               if (data.containsKey("wake")) {
@@ -2340,7 +2337,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 property++;
                 property++;
                 float gravityf = data["gravity"];
-                properties[property] = "SG: " + String(gravityf, 3) + " ";
+                properties[property] = "SG: " + doubleToString(gravityf, 5, 3) + " ";
               }
 
             } else if (data["type"] == "BBQ") {
@@ -2370,7 +2367,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
                 if (data.containsKey(tempcstr)) {
                   float temperature = data[tempcstr];
-                  properties[i - 1] = "tp" + (String)i + ": " + String(temperature, 1);
+                  properties[i - 1] = "tp" + (String)i + ": " + doubleToString(temperature, 3, 1);
                   if (displayMetric) {
                     properties[i - 1] += "°C ";
                   } else {
@@ -2420,9 +2417,9 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 float weightf = data["weight"];
                 if (data.containsKey("unit")) {
                   String unit = data["unit"];
-                  properties[property] = "weight: " + String(weightf, 1) + unit + " ";
+                  properties[property] = "weight: " + doubleToString(weightf, 3, 1) + unit + " ";
                 } else {
-                  properties[property] = "weight: " + String(weightf, 1);
+                  properties[property] = "weight: " + doubleToString(weightf, 3, 1);
                 }
                 // next line
                 property++;
@@ -2441,10 +2438,10 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                   property++;
                   if (displayMetric) {
                     float lvlf = data["lvl_cm"];
-                    properties[property] = "level: " + String(lvlf, 1) + "cm ";
+                    properties[property] = "level: " + doubleToString(lvlf, 3, 1) + "cm ";
                   } else {
                     float lvlf = data["lvl_in"];
-                    properties[property] = "level: " + String(lvlf, 1) + "\" ";
+                    properties[property] = "level: " + doubleToString(lvlf, 3, 1) + "\" ";
                   }
                 }
 
@@ -2513,7 +2510,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line1 = "";
           if (data.containsKey("volt")) {
             float voltage = data["volt"];
-            line1 = "volt: " + String(voltage, 1);
+            line1 = "volt: " + doubleToString(voltage, 3, 1);
           }
           line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
 
@@ -2522,7 +2519,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line2 = "";
           if (data.containsKey("current")) {
             float current = data["current"];
-            line2 = "current: " + String(current, 1) + " A";
+            line2 = "current: " + doubleToString(current, 3, 1) + " A";
           }
           line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 
@@ -2531,7 +2528,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line3 = "";
           if (data.containsKey("power")) {
             float power = data["power"];
-            line3 = "power: " + String(power, 1) + " W";
+            line3 = "power: " + doubleToString(power, 3, 1) + " W";
           }
           line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
 
@@ -2555,9 +2552,9 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             float temperature_C = data["tempc"];
 
             if (displayMetric) {
-              line1 = "temp: " + String(temperature_C, 1) + "°C ";
+              line1 = "temp: " + doubleToString(temperature_C, 3, 1) + "°C ";
             } else {
-              line1 = "temp: " + String(convertTemp_CtoF(temperature_C), 1) + "°F ";
+              line1 = "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F ";
             }
           }
           line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
@@ -2567,7 +2564,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line2 = "";
           float humidity = data["hum"];
           if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            line2 += "hum: " + String(humidity, 1) + "% ";
+            line2 += "hum: " + doubleToString(humidity, 3, 1) + "% ";
           }
           line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 
@@ -2576,7 +2573,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
           String line3 = "";
           float adc = data["adc"];
           if (data.containsKey("adc") && adc <= 100 && adc >= 0) {
-            line3 += "adc: " + String(adc, 1) + "µS/cm ";
+            line3 += "adc: " + doubleToString(adc, 3, 1) + "µS/cm ";
           }
           line3.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
 

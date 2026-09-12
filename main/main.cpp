@@ -762,11 +762,16 @@ bool pubMQTT(String topic, unsigned long long payload) {
 }
 
 bool pubMQTT(String topic, float payload) {
-  return pubMQTT(topic.c_str(), String(payload, 1).c_str());
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(const char* topic, float payload) {
-  return pubMQTT(topic, String(payload, 1).c_str());
+  char val[16];
+  int n = snprintf(val, sizeof(val), "%.1f", payload);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(val)) {
+    return false;
+  }
+  return pubMQTT(topic, val);
 }
 
 bool pubMQTT(const char* topic, int payload) {
@@ -782,14 +787,17 @@ bool pubMQTT(const char* topic, unsigned int payload) {
 }
 
 bool pubMQTT(const char* topic, long payload) {
-  char val[11];
+  char val[12];
   sprintf(val, "%ld", payload);
   return pubMQTT(topic, val);
 }
 
 bool pubMQTT(const char* topic, double payload) {
-  char val[16];
-  sprintf(val, "%f", payload);
+  char val[24];
+  int n = snprintf(val, sizeof(val), "%f", payload);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(val)) {
+    return false;
+  }
   return pubMQTT(topic, val);
 }
 
