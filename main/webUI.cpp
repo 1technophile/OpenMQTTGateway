@@ -32,6 +32,7 @@
 #  include "TheengsCommon.h"
 #  include "config_WebContent.h"
 #  include "config_WebUI.h"
+#  include "webUIMessage.h"
 
 #  if defined(ZgatewayCloud)
 #    include "config_Cloud.h"
@@ -500,7 +501,12 @@ void handleRoot() {
     }
     if (server.hasArg("m")) {
       if (currentWebUIMessage) {
-        server.send(200, "application/json", "{t}{s}<b>" + String(currentWebUIMessage->title) + "</b>{e}{s}" + String(currentWebUIMessage->line1) + "{e}{s}" + String(currentWebUIMessage->line2) + "{e}{s}" + String(currentWebUIMessage->line3) + "{e}{s}" + String(currentWebUIMessage->line4) + "{e}</table>");
+        // The message text is module supplied, so it is escaped on the way into
+        // the template, see webUIRenderMessageRows().
+        server.send(200, "application/json",
+                    webUIRenderMessageRows(currentWebUIMessage->title, currentWebUIMessage->line1,
+                                           currentWebUIMessage->line2, currentWebUIMessage->line3,
+                                           currentWebUIMessage->line4, WEBUI_TEXT_WIDTH));
       } else {
         server.send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
       }
@@ -1811,6 +1817,12 @@ void WebUISetup() {
 
   WebUIConfig_load();
   webUIQueue = xQueueCreate(5, sizeof(webUIQueueMessage*));
+  if (webUIQueue == NULL) {
+    // Everything below still works, the display simply stays on its last message:
+    // webUIPubPrint() checks the handle before it allocates, and WebUILoop() before
+    // it dequeues.
+    THEENGS_LOG_ERROR(F("[ WebUI ] could not create the display queue" CR));
+  }
 
 #  ifdef WEBUI_DEVELOPMENT
   FILESYSTEM.begin();
@@ -1876,7 +1888,7 @@ void WebUILoop() {
   server.handleClient();
   freeLogBufferIfIdle();
 
-  if (uptime() >= nextWebUIMessage && uxQueueMessagesWaiting(webUIQueue)) {
+  if (webUIQueue != NULL && uptime() >= nextWebUIMessage && uxQueueMessagesWaiting(webUIQueue)) {
     webUIQueueMessage* message = nullptr;
     xQueueReceive(webUIQueue, &message, portMAX_DELAY);
 #  if defined(ZdisplaySSD1306)
@@ -1941,7 +1953,7 @@ String stateWebUIStatus() {
   JsonObject WebUIdata = WebUIdataBuffer.to<JsonObject>();
   WebUIdata["displayMetric"] = (bool)displayMetric;
   WebUIdata["webUISecure"] = (bool)webUISecure;
-  WebUIdata["displayQueue"] = uxQueueMessagesWaiting(webUIQueue);
+  WebUIdata["displayQueue"] = (webUIQueue != NULL) ? uxQueueMessagesWaiting(webUIQueue) : 0;
 
   String output;
   serializeJson(WebUIdata, output);
@@ -2006,10 +2018,45 @@ constexpr unsigned int webUIHash(const char* s, int off = 0) { // workaround for
 }
 
 /*
+Put a message on the display queue, the queue owns it from then on
+*/
+static bool webUIQueueSendMessage(webUIQueueMessage* message) {
+  return webUIQueue != NULL && xQueueSend(webUIQueue, (void*)&message, 0) == pdTRUE;
+}
+
+/*
+Queue a completed message, reporting the topic when the display cannot keep up.
+Ownership always leaves the caller, see webUIHandOffMessage().
+*/
+static bool webUIQueueSubmit(webUIQueueMessage*& message, const char* topicori) {
+  if (webUIHandOffMessage(message, webUIQueueSendMessage)) {
+    // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), topicori);
+    return true;
+  }
+  THEENGS_LOG_WARNING(F("[ WebUI ] webUIQueue full, discarding %s" CR), topicori);
+  return false;
+}
+
+/*
+Release a message we decided not to display
+*/
+static void webUIDiscardMessage(webUIQueueMessage*& message) {
+  webUIHandOffMessage(message, NULL);
+}
+
+/*
 Parse json message from module into a format for display
 */
 void webUIPubPrint(const char* topicori, JsonObject& data) {
-  WEBUI_TRACE_LOG(F("[ webUIPubPrint ] pub %s " CR), topicori);
+  WEBUI_TRACE_LOG(F("[ webUIPubPrint ] pub %s " CR), topicori != NULL ? topicori : "(null)");
+  // topicori is whatever the producer put in the "origin" key, so it can be
+  // absent, of the wrong type (ArduinoJson then hands us a null pointer), empty,
+  // or nothing but separators. Resolve the title before allocating anything.
+  char title[WEBUI_TEXT_WIDTH];
+  if (!webUITopicTitle(topicori, title, WEBUI_TEXT_WIDTH)) {
+    THEENGS_LOG_ERROR(F("[ WebUI ] discarding a message without a usable topic" CR));
+    return;
+  }
   if (webUIQueue) {
     webUIQueueMessage* message = (webUIQueueMessage*)heap_caps_calloc(1, sizeof(webUIQueueMessage), MALLOC_CAP_8BIT);
     if (message != NULL) {
@@ -2018,20 +2065,14 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
       strlcpy(message->line2, "", WEBUI_TEXT_WIDTH);
       strlcpy(message->line3, "", WEBUI_TEXT_WIDTH);
       strlcpy(message->line4, "", WEBUI_TEXT_WIDTH);
-      char* topic = strdup(topicori);
-      strlcpy(message->title, strtok(topic, "/"), WEBUI_TEXT_WIDTH);
-      free(topic);
+      strlcpy(message->title, title, WEBUI_TEXT_WIDTH);
 
       //  WEBUI_TRACE_LOG(F("[ webUIPubPrint ] switch %s " CR), message->title);
       switch (webUIHash(message->title)) {
         case webUIHash("SYStoMQTT"): {
           // Line 1
 
-          if (data["version"]) {
-            strlcpy(message->line1, data["version"], WEBUI_TEXT_WIDTH);
-          } else {
-            strlcpy(message->line1, "", WEBUI_TEXT_WIDTH);
-          }
+          strlcpy(message->line1, webUIStringFieldOrEmpty(data["version"]), WEBUI_TEXT_WIDTH);
 
           // Line 2
 
@@ -2053,23 +2094,19 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
           // Queue completed message
 
-          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            THEENGS_LOG_WARNING(F("[ WebUI ] ERROR: webUIQueue full, discarding %s" CR), message->title);
-            free(message);
-          } else {
-            // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), message->title);
-          }
+          webUIQueueSubmit(message, topicori);
           break;
         }
 
 #  ifdef ZgatewayRTL_433
         case webUIHash("RTL_433toMQTT"): {
-          if (data["model"] && strncmp(data["model"], "status", 6)) { // Does not contain "status"
+          const char* model = webUIStringField(data["model"]);
+          if (model != NULL && model[0] != '\0' && strncmp(model, "status", 6)) { // Is a string, and does not contain "status"
             // {"model":"Acurite-Tower","id":2043,"channel":"B","battery_ok":1,"temperature_C":5.3,"humidity":81,"mic":"CHECKSUM","protocol":"Acurite 592TXR Temp/Humidity, 5n1 Weather Station, 6045 Lightning, 3N1, Atlas","rssi":-81,"duration":121060}
 
             // Line 1
 
-            strlcpy(message->line1, data["model"], WEBUI_TEXT_WIDTH);
+            strlcpy(message->line1, model, WEBUI_TEXT_WIDTH);
 
             // Line 2
 
@@ -2133,15 +2170,10 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
             // Queue completed message
 
-            if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-              THEENGS_LOG_WARNING(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
-              free(message);
-            } else {
-              // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), message->title);
-            }
+            webUIQueueSubmit(message, topicori);
           } else {
-            THEENGS_LOG_ERROR(F("[ WebUI ] rtl_433 not displaying %s" CR), message->title);
-            free(message);
+            THEENGS_LOG_ERROR(F("[ WebUI ] rtl_433 not displaying %s" CR), topicori);
+            webUIDiscardMessage(message);
           }
           break;
         }
@@ -2191,12 +2223,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
           // Queue completed message
 
-          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            THEENGS_LOG_WARNING(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), message->title);
-          }
+          webUIQueueSubmit(message, topicori);
           break;
         }
 #  endif
@@ -2211,133 +2238,135 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
             String line4 = "";
 
             // Properties
-            String properties[6] = {"", "", "", "", "", ""};
-            int property = -1;
+            // There are many more candidate fields below than there are slots,
+            // and nothing stops a message from carrying all of them, so the
+            // slots bound both the advance and every write.
+            WebUIProperties properties;
 
             if (data["type"] == "THB" || data["type"] == "THBX" || data["type"] == "PLANT" || data["type"] == "AIR" || data["type"] == "BATT" || data["type"] == "ACEL" || (data["type"] == "UNIQ" && data["model_id"] == "SDLS")) {
               if (data.containsKey("tempc")) {
-                property++;
+                properties.next();
                 if (displayMetric) {
                   float temperature = data["tempc"];
-                  properties[property] = "temp: " + doubleToString(temperature, 3, 1) + "°C ";
+                  properties.set("temp: " + doubleToString(temperature, 3, 1) + "°C ");
                 } else {
                   float temperature = data["tempf"];
-                  properties[property] = "temp: " + doubleToString(temperature, 3, 1) + "°F ";
+                  properties.set("temp: " + doubleToString(temperature, 3, 1) + "°F ");
                 }
               }
 
               if (data.containsKey("tempc2_dp")) {
-                property++;
+                properties.next();
                 if (displayMetric) {
                   float temperature = data["tempc2_dp"];
-                  properties[property] = "dewp: " + doubleToString(temperature, 3, 1) + "°C ";
+                  properties.set("dewp: " + doubleToString(temperature, 3, 1) + "°C ");
                 } else {
                   float temperature = data["tempf2_dp"];
-                  properties[property] = "dewp: " + doubleToString(temperature, 3, 1) + "°F ";
+                  properties.set("dewp: " + doubleToString(temperature, 3, 1) + "°F ");
                 }
               }
 
               if (data.containsKey("extprobe") && data["extprobe"]) {
-                property++;
-                properties[property] = " ext. probe";
+                properties.next();
+                properties.set(" ext. probe");
               }
 
               if (data.containsKey("hum")) {
-                property++;
+                properties.next();
                 float humidity = data["hum"];
 
-                properties[property] = "hum: " + doubleToString(humidity, 3, 1) + "% ";
+                properties.set("hum: " + doubleToString(humidity, 3, 1) + "% ");
               }
 
               if (data.containsKey("pm25")) {
-                property++;
+                properties.next();
                 int pm25int = data["pm25"];
                 String pm25 = intToString(pm25int);
                 if ((data.containsKey("pm10"))) {
-                  properties[property] = "PM 2.5: " + pm25 + " ";
+                  properties.set("PM 2.5: " + pm25 + " ");
 
                 } else {
-                  properties[property] = "pm2.5: " + pm25 + "μg/m³ ";
+                  properties.set("pm2.5: " + pm25 + "μg/m³ ");
                 }
               }
 
               if (data.containsKey("pm10")) {
-                property++;
+                properties.next();
                 int pm10int = data["pm10"];
                 String pm10 = intToString(pm10int);
                 if ((data.containsKey("pm25"))) {
-                  properties[property] = "/ 10: " + pm10 + "μg/m³ ";
+                  properties.set("/ 10: " + pm10 + "μg/m³ ");
 
                 } else {
-                  properties[property] = "pm10: " + pm10 + "μg/m³ ";
+                  properties.set("pm10: " + pm10 + "μg/m³ ");
                 }
               }
 
               if (data.containsKey("for")) {
-                property++;
+                properties.next();
                 int formint = data["for"];
-                properties[property] = "CH₂O: " + intToString(formint) + "mg/m³ ";
+                properties.set("CH₂O: " + intToString(formint) + "mg/m³ ");
               }
 
               if (data.containsKey("co2")) {
-                property++;
+                properties.next();
                 int co2int = data["co2"];
-                properties[property] = "co2: " + intToString(co2int) + "ppm ";
+                properties.set("co2: " + intToString(co2int) + "ppm ");
               }
 
               if (data.containsKey("moi")) {
-                property++;
+                properties.next();
                 int moiint = data["moi"];
-                properties[property] = "moi: " + intToString(moiint) + "% ";
+                properties.set("moi: " + intToString(moiint) + "% ");
               }
 
               if (data.containsKey("lux")) {
-                property++;
+                properties.next();
                 int luxint = data["lux"];
-                properties[property] = "lux: " + intToString(luxint) + "lx ";
+                properties.set("lux: " + intToString(luxint) + "lx ");
               }
 
               if (data.containsKey("fer")) {
-                property++;
+                properties.next();
                 int ferint = data["fer"];
-                properties[property] = "fer: " + intToString(ferint) + "µS/cm ";
+                properties.set("fer: " + intToString(ferint) + "µS/cm ");
               }
 
               if (data.containsKey("pres")) {
-                property++;
+                properties.next();
                 int presint = data["pres"];
-                properties[property] = "pres: " + intToString(presint) + "hPa ";
+                properties.set("pres: " + intToString(presint) + "hPa ");
               }
 
               if (data.containsKey("batt")) {
-                property++;
+                properties.next();
                 int battery = data["batt"];
-                properties[property] = "batt: " + intToString(battery) + "% ";
+                properties.set("batt: " + intToString(battery) + "% ");
               }
 
               if (data.containsKey("shake")) {
-                property++;
+                properties.next();
                 int shakeint = data["shake"];
-                properties[property] = "shake: " + intToString(shakeint) + " ";
+                properties.set("shake: " + intToString(shakeint) + " ");
               }
 
               if (data.containsKey("volt")) {
-                property++;
+                properties.next();
                 float voltf = data["volt"];
-                properties[property] = "volt: " + doubleToString(voltf, 3, 1) + "V ";
+                properties.set("volt: " + doubleToString(voltf, 3, 1) + "V ");
               }
 
               if (data.containsKey("wake")) {
-                property++;
+                properties.next();
                 String wakestr = data["wake"];
-                properties[property] = "wake: " + wakestr + " ";
+                properties.set("wake: " + wakestr + " ");
               }
 
               if (data.containsKey("gravity")) {
-                property++;
-                property++;
+                properties.next();
+                properties.next();
                 float gravityf = data["gravity"];
-                properties[property] = "SG: " + doubleToString(gravityf, 5, 3) + " ";
+                properties.set("SG: " + doubleToString(gravityf, 5, 3) + " ");
               }
 
             } else if (data["type"] == "BBQ") {
@@ -2367,124 +2396,115 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
                 if (data.containsKey(tempcstr)) {
                   float temperature = data[tempcstr];
-                  properties[i - 1] = "tp" + (String)i + ": " + doubleToString(temperature, 3, 1);
-                  if (displayMetric) {
-                    properties[i - 1] += "°C ";
-                  } else {
-                    properties[i - 1] += "°F ";
-                  }
+                  String probe = "tp" + (String)i + ": " + doubleToString(temperature, 3, 1);
+                  probe += displayMetric ? "°C " : "°F ";
+                  properties.setAt(i - 1, probe);
                 } else {
-                  properties[i - 1] = "tp" + (String)i + ": " + "off ";
+                  properties.setAt(i - 1, "tp" + (String)i + ": " + "off ");
                 }
               }
             } else if (data["type"] == "BODY") {
               if (data.containsKey("steps")) {
-                property++;
+                properties.next();
                 int stepsint = data["steps"];
-                properties[property] = "steps: " + intToString(stepsint) + " ";
+                properties.set("steps: " + intToString(stepsint) + " ");
                 // next line
-                property++;
+                properties.next();
               }
 
               if (data.containsKey("act_bpm")) {
-                property++;
+                properties.next();
                 int actbpmint = data["act_bpm"];
-                properties[property] = "activity bpm: " + intToString(actbpmint) + " ";
+                properties.set("activity bpm: " + intToString(actbpmint) + " ");
               }
 
               if (data.containsKey("bpm")) {
-                property++;
+                properties.next();
                 int bpmint = data["bpm"];
-                properties[property] = "bpm: " + intToString(bpmint) + " ";
+                properties.set("bpm: " + intToString(bpmint) + " ");
               }
             } else if (data["type"] == "SCALE") {
               if (data.containsKey("weighing_mode")) {
-                property++;
+                properties.next();
                 String mode = data["weighing_mode"];
-                properties[property] = mode + " ";
+                properties.set(mode + " ");
                 // next line
-                property++;
+                properties.next();
               }
 
               if (data.containsKey("weight")) {
-                property++;
+                properties.next();
                 float weightf = data["weight"];
                 if (data.containsKey("unit")) {
                   String unit = data["unit"];
-                  properties[property] = "weight: " + doubleToString(weightf, 3, 1) + unit + " ";
+                  properties.set("weight: " + doubleToString(weightf, 3, 1) + unit + " ");
                 } else {
-                  properties[property] = "weight: " + doubleToString(weightf, 3, 1);
+                  properties.set("weight: " + doubleToString(weightf, 3, 1));
                 }
                 // next line
-                property++;
+                properties.next();
               }
 
               if (data.containsKey("impedance")) {
-                property++;
+                properties.next();
                 int impint = data["impedance"];
-                properties[property] = "impedance: " + intToString(impint) + "ohm ";
+                properties.set("impedance: " + intToString(impint) + "ohm ");
               }
             } else if (data["type"] == "UNIQ") {
               if (data["model_id"] == "M1017" || data["model_id"] == "HOBOMX2001") {
                 if (data.containsKey("lvl_cm")) {
-                  property++;
+                  properties.next();
                   if (displayMetric) {
                     float lvlf = data["lvl_cm"];
-                    properties[property] = "level: " + doubleToString(lvlf, 3, 1) + "cm ";
+                    properties.set("level: " + doubleToString(lvlf, 3, 1) + "cm ");
                   } else {
                     float lvlf = data["lvl_in"];
-                    properties[property] = "level: " + doubleToString(lvlf, 3, 1) + "\" ";
+                    properties.set("level: " + doubleToString(lvlf, 3, 1) + "\" ");
                   }
                 }
 
                 if (data.containsKey("quality")) {
-                  property++;
+                  properties.next();
                   int qualint = data["quality"];
-                  properties[property] = "qy: " + intToString(qualint) + " ";
+                  properties.set("qy: " + intToString(qualint) + " ");
                 }
 
                 if (data.containsKey("batt")) {
-                  property++;
+                  properties.next();
                   int battery = data["batt"];
-                  properties[property] = "batt: " + intToString(battery) + "% ";
+                  properties.set("batt: " + intToString(battery) + "% ");
                 }
               }
             }
 
-            line2 = properties[0] + properties[1];
-            line3 = properties[2] + properties[3];
-            line4 = properties[4] + properties[5];
+            line2 = properties.line(0);
+            line3 = properties.line(1);
+            line4 = properties.line(2);
 
             if (!(line2 == "" && line3 == "" && line4 == "")) {
               // Titel
-              char* topic = strdup(topicori);
-              String heading = strtok(topic, "/");
-              String line0 = heading + "           " + data["id"].as<String>().substring(9, 17);
+              // message->title already holds the topic's first token, so there is
+              // no second strdup()/strtok() pair to get wrong here.
+              String line0 = String(message->title) + "           " + data["id"].as<String>().substring(9, 17);
               line0.toCharArray(message->title, WEBUI_TEXT_WIDTH);
-              free(topic);
 
               // Line 1
-              strlcpy(message->line1, data["model"], WEBUI_TEXT_WIDTH);
+              strlcpy(message->line1, webUIStringFieldOrEmpty(data["model"]), WEBUI_TEXT_WIDTH);
 
               line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
               line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
               line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
-              if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-                THEENGS_LOG_WARNING(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
-                free(message);
-              } else {
-                // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), message->title);
-              }
+              webUIQueueSubmit(message, topicori);
             } else {
               WEBUI_TRACE_LOG(F("[ WebUI ] incomplete messaage %s" CR), topicori);
-              free(message);
+              webUIDiscardMessage(message);
             }
 
             break;
           } else {
             WEBUI_TRACE_LOG(F("[ WebUI ] incorrect model_id %s" CR), topicori);
-            free(message);
+            webUIDiscardMessage(message);
             break;
           }
         }
@@ -2522,12 +2542,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
           // Queue completed message
 
-          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            THEENGS_LOG_WARNING(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), message->title);
-          }
+          webUIQueueSubmit(message, topicori);
           break;
         }
 #  endif
@@ -2567,18 +2582,13 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 
           // Queue completed message
 
-          if (xQueueSend(webUIQueue, (void*)&message, 0) != pdTRUE) {
-            THEENGS_LOG_WARNING(F("[ WebUI ] webUIQueue full, discarding signal %s" CR), message->title);
-            free(message);
-          } else {
-            // THEENGS_LOG_NOTICE(F("[ WebUI ] Queued %s" CR), message->title);
-          }
+          webUIQueueSubmit(message, topicori);
           break;
         }
 #  endif
         default:
           THEENGS_LOG_VERBOSE(F("[ WebUI ] unhandled topic %s" CR), message->title);
-          free(message);
+          webUIDiscardMessage(message);
       }
     } else {
       THEENGS_LOG_ERROR(F("[ WebUI ] insufficent memory " CR));

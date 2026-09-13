@@ -48,3 +48,6 @@ docs/prerequisites/board-full.md
 docs/upload/web-install-full.md
 .superpowers/
 docs/superpowers/
+
+# Host test binaries
+tests/host/**/build/
