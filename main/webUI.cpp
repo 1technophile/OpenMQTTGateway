@@ -2381,9 +2381,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
               if (data.containsKey("steps")) {
                 property++;
                 int stepsint = data["steps"];
-                char steps[5];
-                itoa(stepsint, steps, 10);
-                properties[property] = "steps: " + (String)steps + " ";
+                properties[property] = "steps: " + intToString(stepsint) + " ";
                 // next line
                 property++;
               }
@@ -2391,17 +2389,13 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
               if (data.containsKey("act_bpm")) {
                 property++;
                 int actbpmint = data["act_bpm"];
-                char actbpm[3];
-                itoa(actbpmint, actbpm, 10);
-                properties[property] = "activity bpm: " + (String)actbpm + " ";
+                properties[property] = "activity bpm: " + intToString(actbpmint) + " ";
               }
 
               if (data.containsKey("bpm")) {
                 property++;
                 int bpmint = data["bpm"];
-                char bpm[3];
-                itoa(bpmint, bpm, 10);
-                properties[property] = "bpm: " + (String)bpm + " ";
+                properties[property] = "bpm: " + intToString(bpmint) + " ";
               }
             } else if (data["type"] == "SCALE") {
               if (data.containsKey("weighing_mode")) {
@@ -2428,9 +2422,7 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
               if (data.containsKey("impedance")) {
                 property++;
                 int impint = data["impedance"];
-                char imp[3];
-                itoa(impint, imp, 10);
-                properties[property] = "impedance: " + (String)imp + "ohm ";
+                properties[property] = "impedance: " + intToString(impint) + "ohm ";
               }
             } else if (data["type"] == "UNIQ") {
               if (data["model_id"] == "M1017" || data["model_id"] == "HOBOMX2001") {
@@ -2448,17 +2440,13 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
                 if (data.containsKey("quality")) {
                   property++;
                   int qualint = data["quality"];
-                  char qual[3];
-                  itoa(qualint, qual, 10);
-                  properties[property] = "qy: " + (String)qual + " ";
+                  properties[property] = "qy: " + intToString(qualint) + " ";
                 }
 
                 if (data.containsKey("batt")) {
                   property++;
                   int battery = data["batt"];
-                  char batt[5];
-                  itoa(battery, batt, 10);
-                  properties[property] = "batt: " + (String)batt + "% ";
+                  properties[property] = "batt: " + intToString(battery) + "% ";
                 }
               }
             }
