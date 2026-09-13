@@ -754,26 +754,23 @@ bool pubMQTT(String topic, String payload) {
 }
 
 bool pubMQTT(String topic, int payload) {
-  char val[12];
-  sprintf(val, "%d", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(String topic, unsigned long long payload) {
-  char val[21];
-  sprintf(val, "%llu", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(String topic, float payload) {
-  char val[12];
-  dtostrf(payload, 3, 1, val);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(const char* topic, float payload) {
-  char val[12];
-  dtostrf(payload, 3, 1, val);
+  char val[16];
+  int n = snprintf(val, sizeof(val), "%.1f", payload);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(val)) {
+    return false;
+  }
   return pubMQTT(topic, val);
 }
 
@@ -790,21 +787,22 @@ bool pubMQTT(const char* topic, unsigned int payload) {
 }
 
 bool pubMQTT(const char* topic, long payload) {
-  char val[11];
+  char val[12];
   sprintf(val, "%ld", payload);
   return pubMQTT(topic, val);
 }
 
 bool pubMQTT(const char* topic, double payload) {
-  char val[16];
-  sprintf(val, "%f", payload);
+  char val[24];
+  int n = snprintf(val, sizeof(val), "%f", payload);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(val)) {
+    return false;
+  }
   return pubMQTT(topic, val);
 }
 
 bool pubMQTT(String topic, unsigned long payload) {
-  char val[11];
-  sprintf(val, "%lu", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 void delayWithOTA(long waitMillis) {
