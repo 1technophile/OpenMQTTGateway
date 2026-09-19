@@ -234,6 +234,7 @@ struct BLEdevice {
   bool connect;
   int sensorModel_id;
   unsigned long lastUpdate;
+  bool advData; // true once the device data has been obtained from its advertisements, so that no connection is needed
 };
 
 class BLEconectable {
