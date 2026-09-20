@@ -153,6 +153,8 @@ const char config_rf_body[] = body_header
     "<p><b>Active library</b><br>"
     "<select id='ar' name='ar'>%s</select></p>"
 
+    "%s"
+
     /* // Need testing
     "<p><b>OOK Threshold</b><br>"
     "<input type='number' id='oo' name='oo' step='any' value='%d'></p>"
