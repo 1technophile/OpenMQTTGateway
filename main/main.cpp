@@ -3441,7 +3441,17 @@ void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData) {
         case HTTP_UPDATE_OK:
           THEENGS_LOG_NOTICE(F("HTTP_UPDATE_OK" CR));
           jsondata["release_summary"] = "Update success !";
-          jsondata["installed_version"] = latestVersion;
+          // Report what was installed, not the latest release: latestVersion only
+          // describes a "latest" request, while "dev" and "vX.Y.Z" install what the
+          // caller asked for. systemUrl is filled in only when we built the URL from
+          // version; for a caller supplied URL the version is just a label with no
+          // guarantee (the WebUI sends "test"), so the field is omitted rather than
+          // published wrong; the value is republished from OMG_VERSION after reboot.
+          // The version is stored as a String so its content is copied into the
+          // document instead of being referenced from the caller's document.
+          if (systemUrl.length()) {
+            jsondata["installed_version"] = strcmp(version, "latest") == 0 ? latestVersion : String(version);
+          }
           jsondata["origin"] = subjectRLStoMQTT;
           enqueueJsonObject(jsondata);
 #  if !MQTT_BROKER_MODE
