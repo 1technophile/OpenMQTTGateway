@@ -2944,6 +2944,12 @@ String stateMeasures() {
   SYSdata["msgblck"] = blockedMessages;
   SYSdata["msgrcv"] = receivedMessages;
   SYSdata["maxq"] = maxQueueLength;
+#ifdef ZgatewayPilight
+  extern unsigned long pilightTxBlockedMessages;
+  extern int maxPilightTxQueueLength;
+  SYSdata["pltxblck"] = pilightTxBlockedMessages;
+  SYSdata["pltxmaxq"] = maxPilightTxQueueLength;
+#endif
   SYSdata["cnt_index"] = cnt_index;
 #ifdef ESP32
   minFreeMem = ESP.getMinFreeHeap();
