@@ -39,6 +39,10 @@ public:
   void publishData() override;
 };
 
+// Decrypt one 16-byte BM2 AES-128-CBC block (zero IV). Shared by the connect
+// handler below and by the advertisement decoder in gatewayBT.cpp.
+void BM2_decryptBlock(const uint8_t* input, uint8_t* output);
+
 class BM2_connect : public zBLEConnect {
   //std::vector<uint8_t> m_data;
   void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
