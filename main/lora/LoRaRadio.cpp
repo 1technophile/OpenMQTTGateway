@@ -175,8 +175,9 @@ bool LoRaRadio::receive(uint8_t* payload, size_t capacity, size_t& length, LoRaP
 
   const size_t packetLength = radio.getPacketLength();
   if (packetLength == 0 || packetLength > capacity) {
-    setError(packetLength > capacity ? RADIOLIB_ERR_PACKET_TOO_LONG : kRadioError);
+    const int16_t state = packetLength > capacity ? RADIOLIB_ERR_PACKET_TOO_LONG : kRadioError;
     startReceive();
+    setError(state);
     return false;
   }
 
@@ -197,8 +198,8 @@ bool LoRaRadio::receive(uint8_t* payload, size_t capacity, size_t& length, LoRaP
   if (packetSize <= 0) return false;
   if (static_cast<size_t>(packetSize) > capacity) {
     while (LoRa.available()) LoRa.read();
-    setError(kPacketTooLongError);
     startReceive();
+    setError(kPacketTooLongError);
     return false;
   }
 
@@ -242,13 +243,13 @@ bool LoRaRadio::transmit(const uint8_t* payload, size_t length) {
   return resumed;
 #else
   if (!LoRa.beginPacket()) {
-    setError(kRadioError);
     startReceive();
+    setError(kRadioError);
     return false;
   }
   if (LoRa.write(payload, length) != length) {
-    setError(kRadioError);
     startReceive();
+    setError(kRadioError);
     return false;
   }
   const int result = LoRa.endPacket();

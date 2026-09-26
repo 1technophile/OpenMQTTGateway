@@ -538,7 +538,7 @@ void LORAtoX() {
       }
     }
 
-    LORAdata["rssi"] = metrics.rssi;
+    LORAdata["rssi"] = static_cast<int>(metrics.rssi);
     LORAdata["snr"] = metrics.snr;
     LORAdata["pferror"] = metrics.frequencyError;
     LORAdata["packetSize"] = (int)packetSize;

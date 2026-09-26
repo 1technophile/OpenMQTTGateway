@@ -95,6 +95,7 @@ int main() {
   assert(!radio.receive(undersizedBuffer, sizeof(undersizedBuffer), receivedLength, metrics));
   assert(receivedLength == 0);
   assert(radio.ready());
+  assert(radio.lastError() != 0);
 #if defined(LORA_RADIO_SX1262)
   assert(fake_radiolib::receiveCalls > receiveCallsBeforeOversize);
 #else
@@ -125,6 +126,13 @@ int main() {
   assert(radio.lastError() != 0);
   assert(LoRa.receiveCalls > receiveCallsBeforeFailure);
   LoRa.endPacketResult = 1;
+
+  LoRa.beginPacketResult = 0;
+  const int receiveCallsBeforeStartFailure = LoRa.receiveCalls;
+  assert(!radio.transmit(outgoing, sizeof(outgoing)));
+  assert(radio.lastError() != 0);
+  assert(LoRa.receiveCalls > receiveCallsBeforeStartFailure);
+  LoRa.beginPacketResult = 1;
 #endif
 
   LoRaRadio failedRadio;
