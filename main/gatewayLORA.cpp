@@ -605,8 +605,11 @@ void XtoLORA(const char* topicOri, const char* LORAarray) { // json object decod
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
     uint8_t packet[255] = {};
     size_t packetLength = 0;
-    if (!copyLoRaText(LORAarray, packet, sizeof(packet), packetLength) ||
-        !OMGLoRaRadio.transmit(packet, packetLength)) {
+    if (!copyLoRaText(LORAarray, packet, sizeof(packet), packetLength)) {
+      THEENGS_LOG_ERROR(F("MQTTtoLORA payload invalid or longer than 255 bytes" CR));
+      return;
+    }
+    if (!OMGLoRaRadio.transmit(packet, packetLength)) {
       THEENGS_LOG_ERROR(F("MQTTtoLORA transmit failed: %d" CR), OMGLoRaRadio.lastError());
       return;
     }

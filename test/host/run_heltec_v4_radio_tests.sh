@@ -21,6 +21,12 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 
 "${build_dir}/lora_payload_codec_test"
 
+# The radio backend must remain an empty translation unit when ZgatewayLORA
+# is disabled so non-LoRa environments need neither radio library.
+c++ -std=c++17 -Wall -Wextra -Werror \
+  -c "${repo_root}/main/lora/LoRaRadio.cpp" \
+  -o "${build_dir}/lora_radio_disabled.o"
+
 facade_sources=(
   "${repo_root}/test/host/lora_radio_facade_test.cpp"
   "${repo_root}/main/lora/LoRaRadio.cpp"

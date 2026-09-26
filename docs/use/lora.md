@@ -40,9 +40,10 @@ The LoRa gateway can be configured by MQTT commands or by using the WebUI, here 
 * invertiq: boolean
 * onlyknown: boolean
 
-On the Heltec V4 profile, `txpower` is the requested output at the board RF
-connector and accepts 4 to 28 dBm; the default is 14 dBm. The gateway converts
-this value to the lower SX1262 drive required by the KCT8103L front end.
+When configured through MQTT, the Heltec V4 profile's `txpower` is the
+requested output at the board RF connector and accepts 4 to 28 dBm; the
+default is 14 dBm. The gateway converts this value to the lower SX1262 drive
+required by the KCT8103L front end.
 Frequency accepts 150000000 to 960000000 Hz, spreading factor accepts 5 to 12,
 and coding rate accepts 5 to 8. Supported SX1262 bandwidth values include 7800,
 10400, 15600, 20800, 31250, 41700, 62500, 125000, 250000, and 500000 Hz.
