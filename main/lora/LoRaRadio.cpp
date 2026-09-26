@@ -1,14 +1,16 @@
-#include "LoRaRadio.h"
+#ifdef ZgatewayLORA
 
-#include <SPI.h>
+#  include "LoRaRadio.h"
 
-#include "LoRaRadioPins.h"
+#  include <SPI.h>
 
-#if defined(LORA_RADIO_SX1262)
-#  include <RadioLib.h>
-#else
-#  include <LoRa.h>
-#endif
+#  include "LoRaRadioPins.h"
+
+#  if defined(LORA_RADIO_SX1262)
+#    include <RadioLib.h>
+#  else
+#    include <LoRa.h>
+#  endif
 
 namespace {
 
@@ -297,3 +299,5 @@ bool LoRaRadio::startReceive() {
 void LoRaRadio::setError(int16_t state) {
   lastError_ = state;
 }
+
+#endif

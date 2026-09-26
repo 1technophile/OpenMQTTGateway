@@ -28,6 +28,7 @@ facade_sources=(
 )
 
 c++ -std=c++17 -Wall -Wextra -Werror \
+  -DZgatewayLORA \
   -I"${repo_root}/test/host/fakes" \
   -I"${repo_root}/main" \
   "${facade_sources[@]}" \
@@ -36,7 +37,7 @@ c++ -std=c++17 -Wall -Wextra -Werror \
 "${build_dir}/lora_radio_legacy_test"
 
 c++ -std=c++17 -Wall -Wextra -Werror \
-  -DLORA_RADIO_SX1262 -DLORA_KCT8103L \
+  -DZgatewayLORA -DLORA_RADIO_SX1262 -DLORA_KCT8103L \
   -DLORA_SCK=9 -DLORA_MISO=11 -DLORA_MOSI=10 -DLORA_SS=8 \
   -DLORA_RST=12 -DLORA_DIO1=14 -DLORA_BUSY=13 \
   -DLORA_PA_POWER=7 -DLORA_PA_CSD=2 -DLORA_PA_CTX=5 -DLORA_RX_LNA=0 \
