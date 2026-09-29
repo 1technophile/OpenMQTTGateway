@@ -22,6 +22,15 @@ inline int16_t operationResult = RADIOLIB_ERR_NONE;
 inline int16_t receiveResult = RADIOLIB_ERR_NONE;
 inline int16_t readResult = RADIOLIB_ERR_NONE;
 inline int16_t transmitResult = RADIOLIB_ERR_NONE;
+inline int16_t bandwidthFailureOnce = 0;
+inline int16_t registerReadResult = 0;
+inline int16_t registerWriteResult = 0;
+inline int16_t rfSwitchResult = 0;
+inline int16_t currentLimitResult = 0;
+inline uint8_t receiveRegister = 0xA4;
+inline int registerWrites = 0;
+inline float currentLimit = 0;
+inline bool boostedGain = false;
 inline float frequency = 0;
 inline float bandwidth = 0;
 inline uint8_t spreadingFactor = 0;
@@ -47,6 +56,15 @@ inline void reset() {
   receiveResult = RADIOLIB_ERR_NONE;
   readResult = RADIOLIB_ERR_NONE;
   transmitResult = RADIOLIB_ERR_NONE;
+  bandwidthFailureOnce = 0;
+  registerReadResult = 0;
+  registerWriteResult = 0;
+  rfSwitchResult = 0;
+  currentLimitResult = 0;
+  receiveRegister = 0xA4;
+  registerWrites = 0;
+  currentLimit = 0;
+  boostedGain = false;
   frequency = 0;
   bandwidth = 0;
   spreadingFactor = 0;
@@ -90,6 +108,16 @@ public:
 
   int16_t setDio2AsRfSwitch(bool enabled) {
     fake_radiolib::dio2RfSwitch = enabled;
+    return fake_radiolib::rfSwitchResult;
+  }
+
+  int16_t setCurrentLimit(float value) {
+    fake_radiolib::currentLimit = value;
+    return fake_radiolib::currentLimitResult;
+  }
+
+  int16_t setRxBoostedGainMode(bool value) {
+    fake_radiolib::boostedGain = value;
     return fake_radiolib::operationResult;
   }
 
@@ -112,6 +140,11 @@ public:
   }
   int16_t setBandwidth(float value) {
     fake_radiolib::bandwidth = value;
+    if (fake_radiolib::bandwidthFailureOnce != 0) {
+      const int16_t result = fake_radiolib::bandwidthFailureOnce;
+      fake_radiolib::bandwidthFailureOnce = 0;
+      return result;
+    }
     return fake_radiolib::operationResult;
   }
   int16_t setCodingRate(uint8_t value) {
@@ -149,6 +182,20 @@ public:
   int16_t transmit(const uint8_t* payload, size_t length) {
     fake_radiolib::transmitted.assign(payload, payload + length);
     return fake_radiolib::transmitResult;
+  }
+
+protected:
+  int16_t readRegister(uint16_t address, uint8_t* output, uint8_t length) {
+    if (address != 0x08B5 || length != 1) return -90;
+    *output = fake_radiolib::receiveRegister;
+    return fake_radiolib::registerReadResult;
+  }
+  int16_t writeRegister(uint16_t address, const uint8_t* input, uint8_t length) {
+    if (address != 0x08B5 || length != 1) return -90;
+    ++fake_radiolib::registerWrites;
+    if (fake_radiolib::registerWriteResult != 0) return fake_radiolib::registerWriteResult;
+    fake_radiolib::receiveRegister = *input;
+    return 0;
   }
 };
 

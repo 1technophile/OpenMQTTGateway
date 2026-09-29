@@ -1,13 +1,19 @@
 #include "LoRaRadioConfig.h"
 
 #include <cstddef>
+#include <initializer_list>
 
 bool validateSX1262Config(const LORAConfig_s& config) {
-  return config.frequency >= 150000000 && config.frequency <= 960000000 &&
+  bool supportedBandwidth = false;
+  for (const int32_t bandwidth : {7800, 10400, 15500, 15600, 20800, 31250, 41700, 62500, 125000, 250000, 500000}) {
+    if (config.signalBandwidth == bandwidth) supportedBandwidth = true;
+  }
+  return config.frequency >= 863000000 && config.frequency <= 928000000 &&
          config.txPower >= 4 && config.txPower <= 28 &&
          config.spreadingFactor >= 5 && config.spreadingFactor <= 12 &&
-         config.signalBandwidth >= 7800 && config.signalBandwidth <= 500000 &&
-         config.codingRateDenominator >= 5 && config.codingRateDenominator <= 8;
+         supportedBandwidth &&
+         config.codingRateDenominator >= 5 && config.codingRateDenominator <= 8 &&
+         config.preambleLength >= 6 && config.preambleLength <= 65535;
 }
 
 int8_t heltecV4RadioOutputPower(int requestedPower) {

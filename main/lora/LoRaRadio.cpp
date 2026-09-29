@@ -27,7 +27,25 @@ void onPacketReceived() {
 }
 
 Module radioModule(LORA_SS, LORA_DIO1, LORA_RST, LORA_BUSY, SPI);
-SX1262 radio(&radioModule);
+class HeltecSX1262 : public SX1262 {
+public:
+  explicit HeltecSX1262(Module* module) : SX1262(module) {}
+
+  int16_t prepareReceive() {
+#    if defined(LORA_KCT8103L)
+    // Heltec's mandatory RX workaround is independent of optional RX gain.
+    // Preserve all other bits in the IQ polarity register.
+    uint8_t value = 0;
+    int16_t state = readRegister(0x08B5, &value, 1);
+    if (state != RADIOLIB_ERR_NONE) return state;
+    value |= 0x01;
+    return writeRegister(0x08B5, &value, 1);
+#    else
+    return RADIOLIB_ERR_NONE;
+#    endif
+  }
+};
+HeltecSX1262 radio(&radioModule);
 
 #    if defined(LORA_KCT8103L)
 void frontEndOff() {
@@ -78,6 +96,13 @@ LoRaRadio OMGLoRaRadio;
 bool LoRaRadio::begin(const LORAConfig_s& config) {
   ready_ = false;
   lastError_ = 0;
+  hasAppliedConfig_ = false;
+#  if defined(LORA_RADIO_SX1262)
+  if (!validateSX1262Config(config)) {
+    setError(-3);
+    return false;
+  }
+#  endif
 
 #  ifdef ESP8266
   SPI.begin();
@@ -104,7 +129,8 @@ bool LoRaRadio::begin(const LORAConfig_s& config) {
     setError(state);
     return false;
   }
-  state = radio.setDio2AsRfSwitch(false);
+  state = radio.setDio2AsRfSwitch(true);
+  if (state == RADIOLIB_ERR_NONE) state = radio.setCurrentLimit(140.0f);
   if (state != RADIOLIB_ERR_NONE) {
     setError(state);
     return false;
@@ -130,6 +156,35 @@ bool LoRaRadio::apply(const LORAConfig_s& config) {
   if (!ready_) return false;
 
 #  if defined(LORA_RADIO_SX1262)
+  if (!validateSX1262Config(config)) {
+    setError(-3);
+    return false;
+  }
+#  endif
+  if (applySettings(config)) {
+    appliedConfig_ = config;
+    hasAppliedConfig_ = true;
+    return true;
+  }
+
+  const int16_t failure = lastError_;
+  // Settings may have partially reached the chip. Restore every setting,
+  // including RX mode, before accepting another packet or command.
+  if (hasAppliedConfig_) {
+    ready_ = true;
+    if (!applySettings(appliedConfig_)) ready_ = false;
+  } else {
+    ready_ = false;
+  }
+#  if defined(LORA_RADIO_SX1262)
+  if (!ready_) frontEndOff();
+#  endif
+  setError(failure);
+  return false;
+}
+
+bool LoRaRadio::applySettings(const LORAConfig_s& config) {
+#  if defined(LORA_RADIO_SX1262)
   int16_t state = radio.standby();
   frontEndOff();
   if (state == RADIOLIB_ERR_NONE)
@@ -147,8 +202,8 @@ bool LoRaRadio::apply(const LORAConfig_s& config) {
   if (state == RADIOLIB_ERR_NONE) state = radio.setSyncWord(config.syncWord);
   if (state == RADIOLIB_ERR_NONE) state = radio.setCRC(config.crc ? 2 : 0);
   if (state == RADIOLIB_ERR_NONE) state = radio.invertIQ(config.invertIQ);
+  if (state == RADIOLIB_ERR_NONE) state = radio.setRxBoostedGainMode(config.rxBoostedGain);
   if (state != RADIOLIB_ERR_NONE) {
-    startReceive();
     setError(state);
     return false;
   }
@@ -284,10 +339,16 @@ bool LoRaRadio::startReceive() {
   if (!ready_) return false;
 #  if defined(LORA_RADIO_SX1262)
   packetReceived = false;
-  frontEndReceive();
-  const int16_t state = radio.startReceive();
+  int16_t state = radio.prepareReceive();
+  if (state == RADIOLIB_ERR_NONE) {
+    frontEndReceive();
+    state = radio.startReceive();
+  }
   setError(state);
-  if (state != RADIOLIB_ERR_NONE) ready_ = false;
+  if (state != RADIOLIB_ERR_NONE) {
+    ready_ = false;
+    frontEndOff();
+  }
   return state == RADIOLIB_ERR_NONE;
 #  else
   LoRa.receive();

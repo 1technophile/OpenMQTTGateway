@@ -14,6 +14,7 @@ struct LORAConfig_s {
   bool crc;
   bool invertIQ;
   bool onlyKnown;
+  bool rxBoostedGain = false;
 };
 
 int8_t heltecV4RadioOutputPower(int requestedPower);

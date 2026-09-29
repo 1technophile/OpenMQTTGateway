@@ -23,11 +23,14 @@ public:
   const char* family() const;
 
 private:
+  bool applySettings(const LORAConfig_s& config);
   bool startReceive();
   void setError(int16_t state);
 
   bool ready_ = false;
   int16_t lastError_ = 0;
+  bool hasAppliedConfig_ = false;
+  LORAConfig_s appliedConfig_ = {};
 };
 
 extern LoRaRadio OMGLoRaRadio;

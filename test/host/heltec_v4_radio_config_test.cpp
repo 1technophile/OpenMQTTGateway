@@ -1,7 +1,7 @@
-#include "lora/LoRaRadioConfig.h"
-
 #include <cassert>
 #include <iostream>
+
+#include "lora/LoRaRadioConfig.h"
 
 int main() {
   assert(heltecV4RadioOutputPower(4) == -9);
@@ -13,15 +13,15 @@ int main() {
   assert(validateSX1262Config(defaults));
 
   LORAConfig_s invalid = defaults;
-  invalid.frequency = 149999999;
+  invalid.frequency = 862999999;
   assert(!validateSX1262Config(invalid));
 
   invalid = defaults;
-  invalid.frequency = 960000001;
+  invalid.frequency = 928000001;
   assert(!validateSX1262Config(invalid));
-  invalid.frequency = 150000000;
+  invalid.frequency = 863000000;
   assert(validateSX1262Config(invalid));
-  invalid.frequency = 960000000;
+  invalid.frequency = 928000000;
   assert(validateSX1262Config(invalid));
 
   invalid = defaults;
@@ -53,6 +53,24 @@ int main() {
   assert(validateSX1262Config(invalid));
   invalid.signalBandwidth = 500000;
   assert(validateSX1262Config(invalid));
+  for (const int bandwidth : {7800, 10400, 15500, 15600, 20800, 31250, 41700, 62500, 125000, 250000, 500000}) {
+    invalid.signalBandwidth = bandwidth;
+    assert(validateSX1262Config(invalid));
+  }
+  for (const int bandwidth : {10000, 125001, 499999}) {
+    invalid.signalBandwidth = bandwidth;
+    assert(!validateSX1262Config(invalid));
+  }
+
+  invalid = defaults;
+  for (const int preamble : {6, 8, 65535}) {
+    invalid.preambleLength = preamble;
+    assert(validateSX1262Config(invalid));
+  }
+  for (const int preamble : {-1, 5, 65536}) {
+    invalid.preambleLength = preamble;
+    assert(!validateSX1262Config(invalid));
+  }
 
   invalid = defaults;
   invalid.codingRateDenominator = 4;
