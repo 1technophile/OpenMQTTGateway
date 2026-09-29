@@ -316,6 +316,7 @@ void LORAConfig_defaults(LORAConfig_s& config) {
   config.crc = DEFAULT_CRC;
   config.invertIQ = INVERT_IQ;
   config.onlyKnown = LORA_ONLY_KNOWN;
+  config.rxBoostedGain = false;
 }
 
 void LORAConfig_init() {
@@ -343,6 +344,11 @@ bool LORAConfig_load(LORAConfig_s& candidate) {
     return false;
   }
   JsonObject jo = jsonBuffer.as<JsonObject>();
+#  if defined(LORA_RADIO_SX1262)
+  // Old NVS records have no RX gain field. Loading one must not inherit an
+  // enabled gain from the current runtime configuration.
+  candidate.rxBoostedGain = false;
+#  endif
   if (!LORAConfig_fromJson(jo, candidate)) return false;
   THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
   return true;
@@ -381,6 +387,13 @@ bool LORAConfig_fromJson(JsonObject& LORAdata, LORAConfig_s& candidate) {
   Config_update(LORAdata, "invertiq", candidate.invertIQ);
 
 #  if defined(LORA_RADIO_SX1262)
+  if (LORAdata.containsKey("rxboostedgain")) {
+    if (!LORAdata["rxboostedgain"].is<bool>()) {
+      THEENGS_LOG_ERROR(F("[LORA] rxboostedgain must be a boolean" CR));
+      return false;
+    }
+    Config_update(LORAdata, "rxboostedgain", candidate.rxBoostedGain);
+  }
   if (!validateSX1262Config(candidate)) {
     THEENGS_LOG_ERROR(F("[LORA] Invalid SX1262 configuration rejected" CR));
     return false;
@@ -417,6 +430,9 @@ void LORAConfig_persist(const LORAConfig_s& config, bool erase, bool save) {
     jo["enablecrc"] = config.crc;
     jo["invertiq"] = config.invertIQ;
     jo["onlyknown"] = config.onlyKnown;
+#  if defined(LORA_RADIO_SX1262)
+    jo["rxboostedgain"] = config.rxBoostedGain;
+#  endif
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -429,6 +445,9 @@ void LORAConfig_persist(const LORAConfig_s& config, bool erase, bool save) {
 
 bool hasLORAConfig(JsonObject& LORAdata) {
   return LORAdata.containsKey("frequency") || LORAdata.containsKey("txpower") ||
+#  if defined(LORA_RADIO_SX1262)
+         LORAdata.containsKey("rxboostedgain") ||
+#  endif
          LORAdata.containsKey("spreadingfactor") || LORAdata.containsKey("signalbandwidth") ||
          LORAdata.containsKey("codingrate") || LORAdata.containsKey("preamblelength") ||
          LORAdata.containsKey("syncword") || LORAdata.containsKey("enablecrc") ||
@@ -448,10 +467,7 @@ bool LORAConfig_update(JsonObject& LORAdata) {
   }
 
   if (!LORAConfig_fromJson(LORAdata, candidate)) return false;
-  if (!LORAConfig_apply(candidate)) {
-    if (OMGLoRaRadio.ready()) LORAConfig_apply(previous);
-    return false;
-  }
+  if (!LORAConfig_apply(candidate)) return false; // The facade restores prior hardware settings.
 
   LORAConfig = candidate;
   LORAConfig_persist(candidate,
@@ -635,6 +651,9 @@ String stateLORAMeasures() {
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
   LORAdata["onlyknown"] = LORAConfig.onlyKnown;
+#  if defined(LORA_RADIO_SX1262)
+  LORAdata["rxboostedgain"] = LORAConfig.rxBoostedGain;
+#  endif
   LORAdata["origin"] = subjectGTWLORAtoMQTT;
   enqueueJsonObject(LORAdata);
 

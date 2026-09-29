@@ -173,30 +173,27 @@ const char config_lora_body[] = body_header
     "<select id='lf' name='lf'>"
     "<option %s value='868000000'>868MHz</option>"
     "<option %s value='915000000'>915MHz</option>"
+#if !defined(LORA_RADIO_SX1262)
     "<option %s value='433000000'>433MHz</option>"
+#endif
     "</select></p>"
 
     "<p><b>TX Power</b><br>"
-    "<select id='lt' name='lt'>"
-    "<option %s value='0'>0 dBm</option>"
-    "<option %s value='1'>1 dBm</option>"
-    "<option %s value='2'>2 dBm</option>"
-    "<option %s value='3'>3 dBm</option>"
-    "<option %s value='4'>4 dBm</option>"
-    "<option %s value='5'>5 dBm</option>"
-    "<option %s value='6'>6 dBm</option>"
-    "<option %s value='7'>7 dBm</option>"
-    "<option %s value='8'>8 dBm</option>"
-    "<option %s value='9'>9 dBm</option>"
-    "<option %s value='10'>10 dBm</option>"
-    "<option %s value='11'>11 dBm</option>"
-    "<option %s value='12'>12 dBm</option>"
-    "<option %s value='13'>13 dBm</option>"
-    "<option %s value='14'>14 dBm</option>"
+    "<select id='lt' name='lt'>";
+
+const char config_lora_power_option[] = "<option %s value='%d'>%d dBm</option>";
+
+// Stream TX options separately so the expanded V4.3 page stays within the
+// fixed WEB_TEMPLATE_BUFFER_MAX_SIZE rather than silently truncating its tail.
+const char config_lora_modulation[] =
     "</select></p>"
 
     "<p><b>Spreading Factor</b><br>"
     "<select id='ls' name='ls'>"
+#if defined(LORA_RADIO_SX1262)
+    "<option %s value='5'>SF5</option>"
+    "<option %s value='6'>SF6</option>"
+#endif
     "<option %s value='7'>SF7</option>"
     "<option %s value='8'>SF8</option>"
     "<option %s value='9'>SF9</option>"
@@ -228,7 +225,11 @@ const char config_lora_body[] = body_header
     "</select></p>"
 
     "<p><b>Preamble Length</b><br>"
+#if defined(LORA_RADIO_SX1262)
+    "<input type='number' id='ll' name='ll' min='6' max='65535' value='%d'></p>"
+#else
     "<input type='number' id='ll' name='ll' value='%d'></p>"
+#endif
 
     "<p><b>Sync Word</b><br>"
     "<input type='text' id='lw' name='lw' value='0x%02X'></p>"
@@ -241,6 +242,10 @@ const char config_lora_body[] = body_header
 
     "<p><b>Only known</b><br>"
     "<input type='checkbox' id='ok' name='ok' %s></p>"
+#if defined(LORA_RADIO_SX1262)
+    "<p><b>RX boosted gain</b><br>"
+    "<input type='checkbox' id='bg' name='bg' %s> Higher RX current consumption</p>"
+#endif
 
     "<br><button name='save' type='submit' class='button bgrn'>Save</button>"
     "</form>"
