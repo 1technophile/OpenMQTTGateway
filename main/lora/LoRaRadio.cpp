@@ -15,11 +15,11 @@
 namespace {
 
 constexpr int16_t kRadioError = -1;
-#if !defined(LORA_RADIO_SX1262)
+#  if !defined(LORA_RADIO_SX1262)
 constexpr int16_t kPacketTooLongError = -2;
-#endif
+#  endif
 
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
 volatile bool packetReceived = false;
 
 void onPacketReceived() {
@@ -29,7 +29,7 @@ void onPacketReceived() {
 Module radioModule(LORA_SS, LORA_DIO1, LORA_RST, LORA_BUSY, SPI);
 SX1262 radio(&radioModule);
 
-#  if defined(LORA_KCT8103L)
+#    if defined(LORA_KCT8103L)
 void frontEndOff() {
   pinMode(LORA_PA_CTX, OUTPUT);
   digitalWrite(LORA_PA_CTX, LOW);
@@ -63,13 +63,13 @@ void frontEndTransmit() {
   delay(2);
 }
 
-#  else
+#    else
 void frontEndOff() {}
 void frontEndReceive() {}
 void frontEndTransmit() {}
-#  endif
+#    endif
 
-#endif
+#  endif
 
 } // namespace
 
@@ -79,18 +79,18 @@ bool LoRaRadio::begin(const LORAConfig_s& config) {
   ready_ = false;
   lastError_ = 0;
 
-#ifdef ESP8266
+#  ifdef ESP8266
   SPI.begin();
-#else
+#  else
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
-#endif
+#  endif
 
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
   packetReceived = false;
   frontEndOff();
-#  ifndef LORA_TCXO_VOLTAGE
-#    define LORA_TCXO_VOLTAGE 1.8f
-#  endif
+#    ifndef LORA_TCXO_VOLTAGE
+#      define LORA_TCXO_VOLTAGE 1.8f
+#    endif
   int16_t state = radio.begin(
       static_cast<float>(config.frequency) / 1000000.0f,
       static_cast<float>(config.signalBandwidth) / 1000.0f,
@@ -110,13 +110,13 @@ bool LoRaRadio::begin(const LORAConfig_s& config) {
     return false;
   }
   radio.setPacketReceivedAction(onPacketReceived);
-#else
+#  else
   LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
   if (!LoRa.begin(config.frequency)) {
     setError(kRadioError);
     return false;
   }
-#endif
+#  endif
 
   ready_ = true;
   if (!apply(config)) {
@@ -129,7 +129,7 @@ bool LoRaRadio::begin(const LORAConfig_s& config) {
 bool LoRaRadio::apply(const LORAConfig_s& config) {
   if (!ready_) return false;
 
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
   int16_t state = radio.standby();
   frontEndOff();
   if (state == RADIOLIB_ERR_NONE)
@@ -152,7 +152,7 @@ bool LoRaRadio::apply(const LORAConfig_s& config) {
     setError(state);
     return false;
   }
-#else
+#  else
   LoRa.setFrequency(config.frequency);
   LoRa.setTxPower(config.txPower);
   LoRa.setSpreadingFactor(config.spreadingFactor);
@@ -162,7 +162,7 @@ bool LoRaRadio::apply(const LORAConfig_s& config) {
   LoRa.setSyncWord(config.syncWord);
   config.crc ? LoRa.enableCrc() : LoRa.disableCrc();
   config.invertIQ ? LoRa.enableInvertIQ() : LoRa.disableInvertIQ();
-#endif
+#  endif
 
   return startReceive();
 }
@@ -171,7 +171,7 @@ bool LoRaRadio::receive(uint8_t* payload, size_t capacity, size_t& length, LoRaP
   length = 0;
   if (!ready_ || payload == nullptr || capacity == 0) return false;
 
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
   if (!packetReceived) return false;
   packetReceived = false;
 
@@ -195,7 +195,7 @@ bool LoRaRadio::receive(uint8_t* payload, size_t capacity, size_t& length, LoRaP
   if (!resumed) return false;
   length = packetLength;
   return true;
-#else
+#  else
   const int packetSize = LoRa.parsePacket();
   if (packetSize <= 0) return false;
   if (static_cast<size_t>(packetSize) > capacity) {
@@ -220,20 +220,20 @@ bool LoRaRadio::receive(uint8_t* payload, size_t capacity, size_t& length, LoRaP
   if (!startReceive()) return false;
   length = static_cast<size_t>(packetSize);
   return true;
-#endif
+#  endif
 }
 
 bool LoRaRadio::transmit(const uint8_t* payload, size_t length) {
   if (!ready_ || payload == nullptr || length > 255) {
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
     setError(RADIOLIB_ERR_PACKET_TOO_LONG);
-#else
+#  else
     setError(kPacketTooLongError);
-#endif
+#  endif
     return false;
   }
 
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
   packetReceived = false;
   frontEndTransmit();
   const int16_t state = radio.transmit(payload, length);
@@ -243,7 +243,7 @@ bool LoRaRadio::transmit(const uint8_t* payload, size_t length) {
     return false;
   }
   return resumed;
-#else
+#  else
   if (!LoRa.beginPacket()) {
     startReceive();
     setError(kRadioError);
@@ -261,7 +261,7 @@ bool LoRaRadio::transmit(const uint8_t* payload, size_t length) {
     return false;
   }
   return resumed;
-#endif
+#  endif
 }
 
 bool LoRaRadio::ready() const {
@@ -273,27 +273,27 @@ int16_t LoRaRadio::lastError() const {
 }
 
 const char* LoRaRadio::family() const {
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
   return "SX1262";
-#else
+#  else
   return "SX127x";
-#endif
+#  endif
 }
 
 bool LoRaRadio::startReceive() {
   if (!ready_) return false;
-#if defined(LORA_RADIO_SX1262)
+#  if defined(LORA_RADIO_SX1262)
   packetReceived = false;
   frontEndReceive();
   const int16_t state = radio.startReceive();
   setError(state);
   if (state != RADIOLIB_ERR_NONE) ready_ = false;
   return state == RADIOLIB_ERR_NONE;
-#else
+#  else
   LoRa.receive();
   setError(0);
   return true;
-#endif
+#  endif
 }
 
 void LoRaRadio::setError(int16_t state) {
