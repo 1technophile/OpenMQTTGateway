@@ -5,6 +5,7 @@
     "lastUpdated": "2025-12-24",
     "environments": {
         "all": [
+            "isno-super",
             "rfbridge",
             "rfbridge-direct",
             "theengs-bridge",
