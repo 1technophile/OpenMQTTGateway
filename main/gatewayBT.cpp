@@ -1231,7 +1231,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void launchBTDiscovery(bool overrideDiscovery) {}
 #  endif
 
-#  if BLEDecryptor
+#  if BLEDecryptor || BLEDecoder
 // ** TODO - Hex string to bytes, there is probably a function for this already just need to find it
 int hexToBytes(String hex, uint8_t* out, size_t maxLen) {
   int len = hex.length();
@@ -1254,6 +1254,54 @@ void reverseBytes(uint8_t* data, size_t length) {
 #  endif
 
 #  if BLEDecoder
+/**
+ * BM2 encrypted advertisement decoding.
+ * Beside its iBeacon advertisement (state of charge only, decoded by Theengs Decoder) the BM2
+ * broadcasts 16 bytes of manufacturer data encrypted with the same AES-128-CBC key as the one
+ * used by the connect handler. Plaintext layout:
+ *   [0:6] device MAC address, reversed
+ *   [6:8] voltage, big endian, in 1/100 V
+ *   [8]   state of charge in %
+ *   [9:]  unknown
+ * The advertisement carries no plaintext marker, so the embedded MAC is what identifies it:
+ * a payload is accepted only if it decrypts to the address it was received from. Any other
+ * device broadcasting 16 bytes is rejected instead of producing a plausible false reading.
+ * Returns true and fills BLEdata if the advertisement is a valid BM2 one.
+ */
+bool decodeBM2Advert(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"] | "";
+  if (strlen(manufacturerdata) != 32) {
+    return false;
+  }
+  String macWOdots = BLEdata["id"].as<String>();
+  macWOdots.replace(":", "");
+  uint8_t macAddress[6];
+  uint8_t ciphertext[16];
+  uint8_t plaintext[16];
+  if (hexToBytes(macWOdots, macAddress, 6) != 6 || hexToBytes(String(manufacturerdata), ciphertext, 16) != 16) {
+    return false;
+  }
+  BM2_decryptBlock(ciphertext, plaintext);
+  reverseBytes(macAddress, 6);
+  if (memcmp(plaintext, macAddress, 6) != 0) {
+    THEENGS_LOG_TRACE(F("[BM2] Not a BM2 advertisement, MAC mismatch for %s" CR), BLEdata["id"].as<const char*>());
+    return false;
+  }
+  uint16_t centivolt = (plaintext[6] << 8) | plaintext[7];
+  uint8_t batt = plaintext[8];
+  if (centivolt < 500 || centivolt > 2000 || batt > 100) {
+    THEENGS_LOG_WARNING(F("[BM2] Implausible data rejected for %s: %d cV, %d %%" CR), BLEdata["id"].as<const char*>(), centivolt, batt);
+    return false;
+  }
+  BLEdata["brand"] = "GENERIC";
+  BLEdata["model"] = "BM2 Battery Monitor";
+  BLEdata["model_id"] = "BM2";
+  BLEdata["type"] = "BATT";
+  BLEdata["volt"] = centivolt / 100.0;
+  BLEdata["batt"] = batt;
+  return true;
+}
+
 void process_bledata(JsonObject& BLEdata) {
   yield(); // Necessary to let the loop run in case of connectivity issues
   if (!BLEdata.containsKey("id")) {
@@ -1485,6 +1533,13 @@ void process_bledata(JsonObject& BLEdata) {
   }
 #    endif
 
+  // BM2 encrypted advertisement, can't be handled by the decoder as it requires AES decryption
+  bool bm2AdvertDecoded = false;
+  if (model_id < 0 && !BTConfig.extDecoderEnable && decodeBM2Advert(BLEdata)) {
+    model_id = TheengsDecoder::BLE_ID_NUM::BM2;
+    bm2AdvertDecoded = true;
+  }
+
   // Convert prmacs to RMACS until or if OMG gets Identity MAC/IRK decoding
   if (BLEdata["prmac"]) {
     BLEdata.remove("prmac");
@@ -1499,7 +1554,14 @@ void process_bledata(JsonObject& BLEdata) {
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
       THEENGS_LOG_TRACE(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 || model_id == TheengsDecoder::BLE_ID_NUM::BM6) { // Device that broadcast and can be connected
+      if (bm2AdvertDecoded || getDeviceByMac(mac)->advData) { // Device from which we already get all the data by advertisement, no need to connect
+        createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
+        BLEdevice* device = getDeviceByMac(mac);
+        if (device != &NO_BT_DEVICE_FOUND) {
+          device->advData = true;
+          device->connect = false;
+        }
+      } else if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 || model_id == TheengsDecoder::BLE_ID_NUM::BM6) { // Device that broadcast and can be connected
         createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);

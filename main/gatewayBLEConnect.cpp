@@ -256,6 +256,20 @@ void DT24_connect::publishData() {
 }
 
 /*-----------------------BM2 HANDLING-----------------------*/
+// BM2 AES encryption key: "leagend\xff\xfe1882466"
+static const unsigned char BM2_AES_KEY[16] = {
+    0x6c, 0x65, 0x61, 0x67, 0x65, 0x6e, 0x64, 0xff,
+    0xfe, 0x31, 0x38, 0x38, 0x32, 0x34, 0x36, 0x36};
+
+void BM2_decryptBlock(const uint8_t* input, uint8_t* output) {
+  mbedtls_aes_context aes;
+  mbedtls_aes_init(&aes);
+  unsigned char iv[16] = {};
+  mbedtls_aes_setkey_dec(&aes, BM2_AES_KEY, 128);
+  mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, 16, iv, input, output);
+  mbedtls_aes_free(&aes);
+}
+
 void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
   if (m_taskHandle == nullptr) {
     return; // unexpected notification
@@ -269,31 +283,8 @@ void BM2_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       BLEdata["model"] = "BM2 Battery Monitor";
       BLEdata["id"] = m_pClient->getPeerAddress().toString();
-      mbedtls_aes_context aes;
-      mbedtls_aes_init(&aes);
       unsigned char output[16];
-      unsigned char iv[16] = {};
-      unsigned char key[16] = {
-          108,
-          101,
-          97,
-          103,
-          101,
-          110,
-          100,
-          255,
-          254,
-          49,
-          56,
-          56,
-          50,
-          52,
-          54,
-          54,
-      };
-      mbedtls_aes_setkey_dec(&aes, key, 128);
-      mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, 16, iv, (uint8_t*)&pData[0], output);
-      mbedtls_aes_free(&aes);
+      BM2_decryptBlock(pData, output);
       float volt = ((output[2] | (output[1] << 8)) >> 4) / 100.0f;
       BLEdata["volt"] = volt;
       THEENGS_LOG_TRACE(F("volt: %F" CR), volt);
