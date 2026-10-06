@@ -1315,8 +1315,7 @@ void handleLA() {
                 gateway_name,
                 LORAConfig.frequency == 868000000 ? "selected" : "",
                 LORAConfig.frequency == 915000000 ? "selected" : "",
-                LORAConfig.frequency == 433000000 ? "selected" : ""
-  );
+                LORAConfig.frequency == 433000000 ? "selected" : "");
 #    endif
 #    if defined(LORA_RADIO_SX1262)
   constexpr int minPower = 4;
