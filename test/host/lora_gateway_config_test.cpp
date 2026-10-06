@@ -12,6 +12,7 @@
 #define MQTT_USER    ""
 #define Gateway_Name "test"
 #include <cassert>
+#include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -167,6 +168,36 @@ int main() {
   assert(server.page.find("name='save'") != std::string::npos);
   assert(server.page.find("</form></fieldset>") != std::string::npos);
 #if defined(LORA_RADIO_SX1262)
+  assert(command("{\"frequency\":869525000,\"txpower\":21,\"save\":true}"));
+  server.arguments.clear();
+  handleLA();
+  assert(server.page.find("name='lf' min='863000000' max='928000000' step='1' value='869525000'") != std::string::npos);
+  server.arguments = {{"save", ""}, {"lf", "869525000"}, {"lt", "18"}};
+  handleLA();
+  assert(LORAConfig.frequency == 869525000 && LORAConfig.txPower == 18);
+  assert(std::fabs(fake_radiolib::frequency - 869.525f) < 0.001f);
+  assert(!deserializeJson(stored, preferences.records.at("LORAConfig")));
+  assert(stored["frequency"] == 869525000 && stored["txpower"] == 18);
+  for (const char* invalid : {"", "869.525", "869525000x", "999999999999", "433000000"}) {
+    const auto before = preferences.records.at("LORAConfig");
+    server.arguments = {{"save", ""}, {"lf", invalid}, {"lt", "19"}};
+    handleLA();
+    assert(LORAConfig.frequency == 869525000 && LORAConfig.txPower == 18);
+    assert(preferences.records.at("LORAConfig") == before);
+    assert(server.page.find("LoRa configuration rejected") != std::string::npos);
+  }
+  fake_radiolib::bandwidthFailureOnce = -66;
+  server.arguments = {{"save", ""}, {"lf", "869525000"}, {"lb", "250000"}, {"lt", "19"}};
+  handleLA();
+  assert(LORAConfig.frequency == 869525000 && LORAConfig.txPower == 18);
+  assert(server.page.find("LoRa configuration rejected") != std::string::npos);
+  assert(command("{\"txpower\":18,\"save\":true}"));
+  LORAConfig_init();
+  assert(command("{\"load\":true}"));
+  assert(LORAConfig.frequency == 869525000 && LORAConfig.txPower == 18);
+  assert(command("{\"frequency\":868000000,\"txpower\":21,\"rxboostedgain\":true,\"save\":true}"));
+  server.arguments.clear();
+  handleLA();
   assert(server.page.find("433MHz") == std::string::npos);
   assert(server.page.find("value='5'>SF5") != std::string::npos);
   for (int power = 4; power <= 28; ++power) {

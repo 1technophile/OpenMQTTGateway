@@ -170,13 +170,15 @@ const char config_lora_body[] = body_header
     "<form method='get' action='la'>"
 
     "<p><b>Frequency</b><br>"
+#if defined(LORA_RADIO_SX1262)
+    "<input type='number' id='lf' name='lf' min='863000000' max='928000000' step='1' value='%d'> Hz</p>"
+#else
     "<select id='lf' name='lf'>"
     "<option %s value='868000000'>868MHz</option>"
     "<option %s value='915000000'>915MHz</option>"
-#if !defined(LORA_RADIO_SX1262)
     "<option %s value='433000000'>433MHz</option>"
-#endif
     "</select></p>"
+#endif
 
     "<p><b>TX Power</b><br>"
     "<select id='lt' name='lt'>";

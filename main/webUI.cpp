@@ -1180,7 +1180,7 @@ void handleBL() {
 
 #  ifdef ZgatewayLORA
 #    include "config_LORA.h"
-extern void LORAConfig_fromJson(JsonObject& LORAdata);
+extern bool LORAConfig_update(JsonObject& LORAdata);
 extern String stateLORAMeasures();
 extern LORAConfig_s LORAConfig;
 
@@ -1202,6 +1202,7 @@ extern LORAConfig_s LORAConfig;
 void handleLA() {
   WEBUI_TRACE_LOG(F("handleLA: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
+  bool rejected = false;
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleLA Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1211,7 +1212,23 @@ void handleLA() {
       JsonObject WEBtoLORA = jsonBuffer.to<JsonObject>();
       bool update = false;
       if (server.hasArg("lf")) {
+#    if defined(LORA_RADIO_SX1262)
+        const String frequencyText = server.arg("lf");
+        int32_t frequency = 0;
+        if (frequencyText.length() == 0) rejected = true;
+        for (size_t i = 0; i < frequencyText.length() && !rejected; ++i) {
+          const char digit = frequencyText[i];
+          if (digit < '0' || digit > '9' || frequency > (928000000 - (digit - '0')) / 10) {
+            rejected = true;
+          } else {
+            frequency = frequency * 10 + (digit - '0');
+          }
+        }
+        if (frequency < 863000000) rejected = true;
+        if (!rejected) WEBtoLORA["frequency"] = frequency;
+#    else
         WEBtoLORA["frequency"] = server.arg("lf");
+#    endif
         update = true;
       }
 
@@ -1272,11 +1289,13 @@ void handleLA() {
       WEBtoLORA["rxboostedgain"] = server.hasArg("bg");
       update = true;
 #    endif
-      if (update) {
+      if (update && !rejected) {
         THEENGS_LOG_NOTICE(F("[WebUI] Save data" CR));
         WEBtoLORA["save"] = true;
-        LORAConfig_fromJson(WEBtoLORA);
-        stateLORAMeasures();
+        if (LORAConfig_update(WEBtoLORA))
+          stateLORAMeasures();
+        else
+          rejected = true;
         THEENGS_LOG_TRACE(F("[WebUI] LORAConfig end" CR));
       }
     }
@@ -1287,16 +1306,18 @@ void handleLA() {
   sendHeaderChunk((String(gateway_name) + " - Configure LORA").c_str());
   server.sendContent(script);
   server.sendContent(style);
+  if (rejected) server.sendContent("<p>LoRa configuration rejected</p>");
+#    if defined(LORA_RADIO_SX1262)
+  sendBodyChunk(config_lora_body, jsonChar, gateway_name, LORAConfig.frequency);
+#    else
   sendBodyChunk(config_lora_body,
                 jsonChar,
                 gateway_name,
                 LORAConfig.frequency == 868000000 ? "selected" : "",
-                LORAConfig.frequency == 915000000 ? "selected" : ""
-#    if !defined(LORA_RADIO_SX1262)
-                ,
+                LORAConfig.frequency == 915000000 ? "selected" : "",
                 LORAConfig.frequency == 433000000 ? "selected" : ""
-#    endif
   );
+#    endif
 #    if defined(LORA_RADIO_SX1262)
   constexpr int minPower = 4;
   constexpr int maxPower = 28;
