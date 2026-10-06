@@ -1180,7 +1180,7 @@ void handleBL() {
 
 #  ifdef ZgatewayLORA
 #    include "config_LORA.h"
-extern void LORAConfig_fromJson(JsonObject& LORAdata);
+extern bool LORAConfig_update(JsonObject& LORAdata);
 extern String stateLORAMeasures();
 extern LORAConfig_s LORAConfig;
 
@@ -1202,6 +1202,7 @@ extern LORAConfig_s LORAConfig;
 void handleLA() {
   WEBUI_TRACE_LOG(F("handleLA: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
+  bool rejected = false;
   if (server.args()) {
     for (uint8_t i = 0; i < server.args(); i++) {
       WEBUI_TRACE_LOG(F("handleLA Arg: %d, %s=%s" CR), i, server.argName(i).c_str(), server.arg(i).c_str());
@@ -1211,7 +1212,23 @@ void handleLA() {
       JsonObject WEBtoLORA = jsonBuffer.to<JsonObject>();
       bool update = false;
       if (server.hasArg("lf")) {
+#    if defined(LORA_RADIO_SX1262)
+        const String frequencyText = server.arg("lf");
+        int32_t frequency = 0;
+        if (frequencyText.length() == 0) rejected = true;
+        for (size_t i = 0; i < frequencyText.length() && !rejected; ++i) {
+          const char digit = frequencyText[i];
+          if (digit < '0' || digit > '9' || frequency > (928000000 - (digit - '0')) / 10) {
+            rejected = true;
+          } else {
+            frequency = frequency * 10 + (digit - '0');
+          }
+        }
+        if (frequency < 863000000) rejected = true;
+        if (!rejected) WEBtoLORA["frequency"] = frequency;
+#    else
         WEBtoLORA["frequency"] = server.arg("lf");
+#    endif
         update = true;
       }
 
@@ -1268,11 +1285,17 @@ void handleLA() {
         WEBtoLORA["onlyknown"] = false;
         update = true;
       }
-      if (update) {
+#    if defined(LORA_RADIO_SX1262)
+      WEBtoLORA["rxboostedgain"] = server.hasArg("bg");
+      update = true;
+#    endif
+      if (update && !rejected) {
         THEENGS_LOG_NOTICE(F("[WebUI] Save data" CR));
         WEBtoLORA["save"] = true;
-        LORAConfig_fromJson(WEBtoLORA);
-        stateLORAMeasures();
+        if (LORAConfig_update(WEBtoLORA))
+          stateLORAMeasures();
+        else
+          rejected = true;
         THEENGS_LOG_TRACE(F("[WebUI] LORAConfig end" CR));
       }
     }
@@ -1283,27 +1306,32 @@ void handleLA() {
   sendHeaderChunk((String(gateway_name) + " - Configure LORA").c_str());
   server.sendContent(script);
   server.sendContent(style);
+  if (rejected) server.sendContent("<p>LoRa configuration rejected</p>");
+#    if defined(LORA_RADIO_SX1262)
+  sendBodyChunk(config_lora_body, jsonChar, gateway_name, LORAConfig.frequency);
+#    else
   sendBodyChunk(config_lora_body,
                 jsonChar,
                 gateway_name,
                 LORAConfig.frequency == 868000000 ? "selected" : "",
                 LORAConfig.frequency == 915000000 ? "selected" : "",
-                LORAConfig.frequency == 433000000 ? "selected" : "",
-                LORAConfig.txPower == 0 ? "selected" : "",
-                LORAConfig.txPower == 1 ? "selected" : "",
-                LORAConfig.txPower == 2 ? "selected" : "",
-                LORAConfig.txPower == 3 ? "selected" : "",
-                LORAConfig.txPower == 4 ? "selected" : "",
-                LORAConfig.txPower == 5 ? "selected" : "",
-                LORAConfig.txPower == 6 ? "selected" : "",
-                LORAConfig.txPower == 7 ? "selected" : "",
-                LORAConfig.txPower == 8 ? "selected" : "",
-                LORAConfig.txPower == 9 ? "selected" : "",
-                LORAConfig.txPower == 10 ? "selected" : "",
-                LORAConfig.txPower == 11 ? "selected" : "",
-                LORAConfig.txPower == 12 ? "selected" : "",
-                LORAConfig.txPower == 13 ? "selected" : "",
-                LORAConfig.txPower == 14 ? "selected" : "",
+                LORAConfig.frequency == 433000000 ? "selected" : "");
+#    endif
+#    if defined(LORA_RADIO_SX1262)
+  constexpr int minPower = 4;
+  constexpr int maxPower = 28;
+#    else
+  constexpr int minPower = 0;
+  constexpr int maxPower = 14;
+#    endif
+  for (int power = minPower; power <= maxPower; ++power) {
+    sendBodyChunk(config_lora_power_option, LORAConfig.txPower == power ? "selected" : "", power, power);
+  }
+  sendBodyChunk(config_lora_modulation,
+#    if defined(LORA_RADIO_SX1262)
+                LORAConfig.spreadingFactor == 5 ? "selected" : "",
+                LORAConfig.spreadingFactor == 6 ? "selected" : "",
+#    endif
                 LORAConfig.spreadingFactor == 7 ? "selected" : "",
                 LORAConfig.spreadingFactor == 8 ? "selected" : "",
                 LORAConfig.spreadingFactor == 9 ? "selected" : "",
@@ -1312,7 +1340,7 @@ void handleLA() {
                 LORAConfig.spreadingFactor == 12 ? "selected" : "",
                 LORAConfig.signalBandwidth == 7800 ? "selected" : "",
                 LORAConfig.signalBandwidth == 10400 ? "selected" : "",
-                LORAConfig.signalBandwidth == 15600 ? "selected" : "",
+                (LORAConfig.signalBandwidth == 15600 || LORAConfig.signalBandwidth == 15500) ? "selected" : "",
                 LORAConfig.signalBandwidth == 20800 ? "selected" : "",
                 LORAConfig.signalBandwidth == 31250 ? "selected" : "",
                 LORAConfig.signalBandwidth == 41700 ? "selected" : "",
@@ -1328,7 +1356,12 @@ void handleLA() {
                 LORAConfig.syncWord,
                 LORAConfig.crc ? "checked" : "",
                 LORAConfig.invertIQ ? "checked" : "",
-                LORAConfig.onlyKnown ? "checked" : "");
+                LORAConfig.onlyKnown ? "checked" : ""
+#    if defined(LORA_RADIO_SX1262)
+                ,
+                LORAConfig.rxBoostedGain ? "checked" : ""
+#    endif
+  );
   sendFooterChunk();
 }
 #  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)

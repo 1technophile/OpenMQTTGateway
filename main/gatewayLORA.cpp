@@ -28,14 +28,14 @@
 #include "User_config.h"
 
 #ifdef ZgatewayLORA
-#  include <LoRa.h>
-#  include <SPI.h>
 #  include <TheengsUtils.h>
 #  include <Wire.h>
 
 #  include "TheengsCommon.h"
 #  include "config_LORA.h"
 #  include "config_mqttDiscovery.h"
+#  include "lora/LoRaPayloadCodec.h"
+#  include "lora/LoRaRadio.h"
 
 #  define WIPHONE_MESSAGE_MAGIC   0x6c6d
 #  define WIPHONE_MESSAGE_MIN_LEN sizeof(wiphone_message) - WIPHONE_MAX_MESSAGE_LEN
@@ -43,8 +43,9 @@
 
 LORAConfig_s LORAConfig;
 
+bool LORAConfig_fromJson(JsonObject& LORAdata, LORAConfig_s& candidate);
 void LORAConfig_fromJson(JsonObject& LORAdata);
-void LORAConfig_apply();
+bool LORAConfig_apply(const LORAConfig_s& candidate);
 String stateLORAMeasures();
 
 #  ifdef ZmqttDiscovery
@@ -263,130 +264,175 @@ boolean _WiPhonetoX(byte* packet, JsonObject& LORAdata) {
 /*
 Create WiPhone packet from JSON
  */
-boolean _MQTTtoWiPhone(JsonObject& LORAdata) {
+boolean _MQTTtoWiPhone(JsonObject& LORAdata, uint8_t* packet, size_t capacity, size_t& packetLength) {
   // Prepare a LoRa packet to send to the WiPhone
-  wiphone_message wiphonemsg;
+  wiphone_message wiphonemsg = {};
   wiphonemsg.rh_to = 0xff;
   wiphonemsg.rh_from = 0xff;
   wiphonemsg.rh_id = 0x00;
   wiphonemsg.rh_flags = 0x00;
 
   wiphonemsg.magic = WIPHONE_MESSAGE_MAGIC;
-  wiphonemsg.from = strtol(LORAdata["from"], NULL, 16);
-  wiphonemsg.to = strtol(LORAdata["to"], NULL, 16);
+  const char* from = LORAdata["from"];
+  const char* to = LORAdata["to"];
   const char* message = LORAdata["message"];
+  if (packet == nullptr || from == nullptr || to == nullptr || message == nullptr) {
+    packetLength = 0;
+    return false;
+  }
+  wiphonemsg.from = strtol(from, NULL, 16);
+  wiphonemsg.to = strtol(to, NULL, 16);
   strlcpy(wiphonemsg.message, message, WIPHONE_MAX_MESSAGE_LEN);
-  LoRa.write((uint8_t*)&wiphonemsg, strlen(message) + WIPHONE_MESSAGE_MIN_LEN + 1);
+  packetLength = strlen(wiphonemsg.message) + WIPHONE_MESSAGE_MIN_LEN + 1;
+  if (packetLength > capacity || packetLength > 255) {
+    packetLength = 0;
+    return false;
+  }
+  memcpy(packet, &wiphonemsg, packetLength);
   return true;
 }
 
-void LORAConfig_init() {
-  LORAConfig.frequency = LORA_BAND;
-  LORAConfig.txPower = LORA_TX_POWER;
-  LORAConfig.spreadingFactor = LORA_SPREADING_FACTOR;
-  LORAConfig.signalBandwidth = LORA_SIGNAL_BANDWIDTH;
-  LORAConfig.codingRateDenominator = LORA_CODING_RATE;
-  LORAConfig.preambleLength = LORA_PREAMBLE_LENGTH;
-  LORAConfig.syncWord = LORA_SYNC_WORD;
-  LORAConfig.crc = DEFAULT_CRC;
-  LORAConfig.invertIQ = INVERT_IQ;
-  LORAConfig.onlyKnown = LORA_ONLY_KNOWN;
+bool buildLoRaPayload(JsonObject& LORAdata, uint8_t* packet, size_t capacity, size_t& packetLength) {
+  const uint8_t deviceId = _determineDevice(LORAdata);
+  if (deviceId == WIPHONE) {
+    return _MQTTtoWiPhone(LORAdata, packet, capacity, packetLength);
+  }
+
+  const char* hex = LORAdata["hex"];
+  if (hex != nullptr) return decodeLoRaHex(hex, packet, capacity, packetLength);
+
+  const char* message = LORAdata["message"];
+  return copyLoRaText(message, packet, capacity, packetLength);
 }
 
-void LORAConfig_load() {
+void LORAConfig_defaults(LORAConfig_s& config) {
+  config.frequency = LORA_BAND;
+  config.txPower = LORA_TX_POWER;
+  config.spreadingFactor = LORA_SPREADING_FACTOR;
+  config.signalBandwidth = LORA_SIGNAL_BANDWIDTH;
+  config.codingRateDenominator = LORA_CODING_RATE;
+  config.preambleLength = LORA_PREAMBLE_LENGTH;
+  config.syncWord = LORA_SYNC_WORD;
+  config.crc = DEFAULT_CRC;
+  config.invertIQ = INVERT_IQ;
+  config.onlyKnown = LORA_ONLY_KNOWN;
+  config.rxBoostedGain = false;
+}
+
+void LORAConfig_init() {
+  LORAConfig_defaults(LORAConfig);
+}
+
+bool LORAConfig_load(LORAConfig_s& candidate) {
   StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
   preferences.begin(Gateway_Short_Name, true);
-  if (preferences.isKey("LORAConfig")) {
-    auto error = deserializeJson(jsonBuffer, preferences.getString("LORAConfig", "{}"));
-    preferences.end();
-    THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
-    if (error) {
-      THEENGS_LOG_ERROR(F("LORA Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
-      return;
-    }
-    if (jsonBuffer.isNull()) {
-      THEENGS_LOG_WARNING(F("LORA Config is null" CR));
-      return;
-    }
-    JsonObject jo = jsonBuffer.as<JsonObject>();
-    LORAConfig_fromJson(jo);
-    THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
-  } else {
+  if (!preferences.isKey("LORAConfig")) {
     preferences.end();
     THEENGS_LOG_NOTICE(F("LORA Config not found" CR));
+    return true;
   }
+  const String storedConfig = preferences.getString("LORAConfig", "{}");
+  preferences.end();
+
+  auto error = deserializeJson(jsonBuffer, storedConfig);
+  if (error) {
+    THEENGS_LOG_ERROR(F("LORA Config deserialization failed: %s, buffer capacity: %u" CR), error.c_str(), jsonBuffer.capacity());
+    return false;
+  }
+  if (jsonBuffer.isNull()) {
+    THEENGS_LOG_WARNING(F("LORA Config is null" CR));
+    return false;
+  }
+  JsonObject jo = jsonBuffer.as<JsonObject>();
+#  if defined(LORA_RADIO_SX1262)
+  // Old NVS records have no RX gain field. Loading one must not inherit an
+  // enabled gain from the current runtime configuration.
+  candidate.rxBoostedGain = false;
+#  endif
+  if (!LORAConfig_fromJson(jo, candidate)) return false;
+  THEENGS_LOG_NOTICE(F("LORA Config loaded" CR));
+  return true;
 }
 
-byte hexStringToByte(const String& hexString) {
-  return (byte)strtol(hexString.c_str(), NULL, 16);
+uint8_t hexStringToByte(const String& hexString) {
+  return static_cast<uint8_t>(strtol(hexString.c_str(), NULL, 16));
 }
 
-void LORAConfig_apply() {
-  LoRa.setFrequency(LORAConfig.frequency);
-  LoRa.setTxPower(LORAConfig.txPower);
-  LoRa.setSpreadingFactor(LORAConfig.spreadingFactor);
-  LoRa.setSignalBandwidth(LORAConfig.signalBandwidth);
-  LoRa.setCodingRate4(LORAConfig.codingRateDenominator);
-  LoRa.setPreambleLength(LORAConfig.preambleLength);
-  LoRa.setSyncWord(LORAConfig.syncWord);
-  LORAConfig.crc ? LoRa.enableCrc() : LoRa.disableCrc();
-  LORAConfig.invertIQ ? LoRa.enableInvertIQ() : LoRa.disableInvertIQ();
+bool LORAConfig_apply(const LORAConfig_s& candidate) {
+  if (OMGLoRaRadio.apply(candidate)) return true;
+  THEENGS_LOG_ERROR(F("[LORA] Configuration failed: %d" CR), OMGLoRaRadio.lastError());
+  return false;
 }
 
-void LORAConfig_fromJson(JsonObject& LORAdata) {
-  Config_update(LORAdata, "frequency", LORAConfig.frequency);
-  Config_update(LORAdata, "txpower", LORAConfig.txPower);
-  Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
-  Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
-  Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);
-  Config_update(LORAdata, "preamblelength", LORAConfig.preambleLength);
-  Config_update(LORAdata, "onlyknown", LORAConfig.onlyKnown);
+bool LORAConfig_fromJson(JsonObject& LORAdata, LORAConfig_s& candidate) {
+  Config_update(LORAdata, "frequency", candidate.frequency);
+  Config_update(LORAdata, "txpower", candidate.txPower);
+  Config_update(LORAdata, "spreadingfactor", candidate.spreadingFactor);
+  Config_update(LORAdata, "signalbandwidth", candidate.signalBandwidth);
+  Config_update(LORAdata, "codingrate", candidate.codingRateDenominator);
+  Config_update(LORAdata, "preamblelength", candidate.preambleLength);
+  Config_update(LORAdata, "onlyknown", candidate.onlyKnown);
   // Handle syncword separately as it requires hex string conversion
   if (LORAdata.containsKey("syncword")) {
     String syncWordStr = LORAdata["syncword"].as<String>();
-    byte newSyncWord = hexStringToByte(syncWordStr);
-    if (newSyncWord != LORAConfig.syncWord) {
-      LORAConfig.syncWord = newSyncWord;
-      THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), LORAConfig.syncWord);
+    uint8_t newSyncWord = hexStringToByte(syncWordStr);
+    if (newSyncWord != candidate.syncWord) {
+      candidate.syncWord = newSyncWord;
+      THEENGS_LOG_NOTICE(F("Config syncword changed: %d" CR), candidate.syncWord);
     } else {
-      THEENGS_LOG_NOTICE(F("Config syncword unchanged, currently: %d" CR), LORAConfig.syncWord);
+      THEENGS_LOG_NOTICE(F("Config syncword unchanged, currently: %d" CR), candidate.syncWord);
     }
   }
-  Config_update(LORAdata, "enablecrc", LORAConfig.crc);
-  Config_update(LORAdata, "invertiq", LORAConfig.invertIQ);
+  Config_update(LORAdata, "enablecrc", candidate.crc);
+  Config_update(LORAdata, "invertiq", candidate.invertIQ);
 
-  if (LORAdata.containsKey("erase") && LORAdata["erase"].as<bool>()) {
+#  if defined(LORA_RADIO_SX1262)
+  if (LORAdata.containsKey("rxboostedgain")) {
+    if (!LORAdata["rxboostedgain"].is<bool>()) {
+      THEENGS_LOG_ERROR(F("[LORA] rxboostedgain must be a boolean" CR));
+      return false;
+    }
+    Config_update(LORAdata, "rxboostedgain", candidate.rxBoostedGain);
+  }
+  if (!validateSX1262Config(candidate)) {
+    THEENGS_LOG_ERROR(F("[LORA] Invalid SX1262 configuration rejected" CR));
+    return false;
+  }
+#  endif
+  return true;
+}
+
+void LORAConfig_persist(const LORAConfig_s& config, bool erase, bool save) {
+  if (erase) {
     // Erase config from NVS (non-volatile storage)
     preferences.begin(Gateway_Short_Name, false);
     if (preferences.isKey("LORAConfig")) {
       int result = preferences.remove("LORAConfig");
       THEENGS_LOG_NOTICE(F("LORA config erase result: %d" CR), result);
-      preferences.end();
-      return; // Erase prevails on save, so skipping save
     } else {
       THEENGS_LOG_NOTICE(F("LORA config not found" CR));
-      preferences.end();
     }
+    preferences.end();
+    return; // Erase prevails on save, so skipping save
   }
-  if (LORAdata.containsKey("save") && LORAdata["save"].as<bool>()) {
+  if (save) {
     StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
     JsonObject jo = jsonBuffer.to<JsonObject>();
-    jo["frequency"] = LORAConfig.frequency;
-    jo["txpower"] = LORAConfig.txPower;
-    jo["spreadingfactor"] = LORAConfig.spreadingFactor;
-    jo["signalbandwidth"] = LORAConfig.signalBandwidth;
-    jo["codingrate"] = LORAConfig.codingRateDenominator;
-    jo["preamblelength"] = LORAConfig.preambleLength;
-    if (LORAConfig.syncWord < 0 || LORAConfig.syncWord > 255) {
-      THEENGS_LOG_ERROR(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
-    } else {
-      char syncWordHex[5];
-      snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
-      jo["syncword"] = syncWordHex;
-    }
-    jo["enablecrc"] = LORAConfig.crc;
-    jo["invertiq"] = LORAConfig.invertIQ;
-    jo["onlyknown"] = LORAConfig.onlyKnown;
+    jo["frequency"] = config.frequency;
+    jo["txpower"] = config.txPower;
+    jo["spreadingfactor"] = config.spreadingFactor;
+    jo["signalbandwidth"] = config.signalBandwidth;
+    jo["codingrate"] = config.codingRateDenominator;
+    jo["preamblelength"] = config.preambleLength;
+    char syncWordHex[5];
+    snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", config.syncWord);
+    jo["syncword"] = syncWordHex;
+    jo["enablecrc"] = config.crc;
+    jo["invertiq"] = config.invertIQ;
+    jo["onlyknown"] = config.onlyKnown;
+#  if defined(LORA_RADIO_SX1262)
+    jo["rxboostedgain"] = config.rxBoostedGain;
+#  endif
     // Save config into NVS (non-volatile storage)
     String conf = "";
     serializeJson(jsonBuffer, conf);
@@ -397,40 +443,74 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
   }
 }
 
+bool hasLORAConfig(JsonObject& LORAdata) {
+  return LORAdata.containsKey("frequency") || LORAdata.containsKey("txpower") ||
+#  if defined(LORA_RADIO_SX1262)
+         LORAdata.containsKey("rxboostedgain") ||
+#  endif
+         LORAdata.containsKey("spreadingfactor") || LORAdata.containsKey("signalbandwidth") ||
+         LORAdata.containsKey("codingrate") || LORAdata.containsKey("preamblelength") ||
+         LORAdata.containsKey("syncword") || LORAdata.containsKey("enablecrc") ||
+         LORAdata.containsKey("invertiq") || LORAdata.containsKey("onlyknown") ||
+         LORAdata.containsKey("init") || LORAdata.containsKey("load") ||
+         LORAdata.containsKey("erase") || LORAdata.containsKey("save");
+}
+
+bool LORAConfig_update(JsonObject& LORAdata) {
+  const LORAConfig_s previous = LORAConfig;
+  LORAConfig_s candidate = previous;
+
+  if (LORAdata.containsKey("init") && LORAdata["init"].as<bool>()) {
+    LORAConfig_defaults(candidate);
+  } else if (LORAdata.containsKey("load") && LORAdata["load"].as<bool>()) {
+    if (!LORAConfig_load(candidate)) return false;
+  }
+
+  if (!LORAConfig_fromJson(LORAdata, candidate)) return false;
+  if (!LORAConfig_apply(candidate)) return false; // The facade restores prior hardware settings.
+
+  LORAConfig = candidate;
+  LORAConfig_persist(candidate,
+                     LORAdata["erase"] | false,
+                     LORAdata["save"] | false);
+  return true;
+}
+
+// Preserve the public hook used by webUI.cpp while keeping validation and
+// persistence transactional inside the gateway.
+void LORAConfig_fromJson(JsonObject& LORAdata) {
+  LORAConfig_update(LORAdata);
+}
+
 void setupLORA() {
   LORAConfig_init();
-  LORAConfig_load();
+  LORAConfig_s loadedConfig = LORAConfig;
+  if (LORAConfig_load(loadedConfig)) LORAConfig = loadedConfig;
 #  ifdef ZmqttDiscovery
   semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
 #  endif
   THEENGS_LOG_NOTICE(F("LORA Frequency: %d" CR), LORAConfig.frequency);
-#  ifdef ESP8266
-  SPI.begin();
-#  else
-  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
-#  endif
-
-  LoRa.setPins(LORA_SS, LORA_RST, LORA_DI0);
-
-  if (!LoRa.begin(LORAConfig.frequency)) {
-    THEENGS_LOG_ERROR(F("gatewayLORA setup failed!" CR));
-    while (1);
+  if (!OMGLoRaRadio.begin(LORAConfig)) {
+    THEENGS_LOG_ERROR(F("gatewayLORA %s setup failed: %d" CR), OMGLoRaRadio.family(), OMGLoRaRadio.lastError());
+    return;
   }
-  LORAConfig_apply();
-  LoRa.receive();
   THEENGS_LOG_NOTICE(F("LORA_SCK: %d" CR), LORA_SCK);
   THEENGS_LOG_NOTICE(F("LORA_MISO: %d" CR), LORA_MISO);
   THEENGS_LOG_NOTICE(F("LORA_MOSI: %d" CR), LORA_MOSI);
   THEENGS_LOG_NOTICE(F("LORA_SS: %d" CR), LORA_SS);
   THEENGS_LOG_NOTICE(F("LORA_RST: %d" CR), LORA_RST);
-  THEENGS_LOG_NOTICE(F("LORA_DI0: %d" CR), LORA_DI0);
+  THEENGS_LOG_NOTICE(F("LORA_DIO0: %d" CR), LORA_DIO0);
+  THEENGS_LOG_NOTICE(F("LORA_DIO1: %d" CR), LORA_DIO1);
+  THEENGS_LOG_NOTICE(F("LORA radio: %s" CR), OMGLoRaRadio.family());
   THEENGS_LOG_TRACE(F("gatewayLORA setup done" CR));
 }
 
 void LORAtoX() {
-  int packetSize = LoRa.parsePacket();
-  if (packetSize) {
+  uint8_t packet[256] = {};
+  size_t packetSize = 0;
+  LoRaPacketMetrics metrics;
+  if (OMGLoRaRadio.receive(packet, sizeof(packet) - 1, packetSize, metrics)) {
     StaticJsonDocument<JSON_MSG_BUFFER> LORAdataBuffer;
     JsonObject LORAdata = LORAdataBuffer.to<JsonObject>();
     THEENGS_LOG_TRACE(F("Rcv. LORA" CR));
@@ -439,18 +519,14 @@ void LORAtoX() {
     taskMessage = taskMessage + xPortGetCoreID();
     //trc(taskMessage);
 #  endif
-    // Create packet and reserve null terminator space
-    byte packet[packetSize + 1];
     boolean binary = false;
-    for (int i = 0; i < packetSize; i++) {
-      packet[i] = (char)LoRa.read();
-
+    for (size_t i = 0; i < packetSize; i++) {
       if (packet[i] < 32 || packet[i] > 127)
         binary = true;
     }
     // Terminate with a null character in case we have a string
     packet[packetSize] = 0;
-    uint8_t deviceId = _determineDevice(packet, packetSize);
+    uint8_t deviceId = _determineDevice(packet, static_cast<int>(packetSize));
     if (deviceId == WIPHONE) {
       _WiPhonetoX(packet, LORAdata);
     } else if (binary) {
@@ -459,8 +535,8 @@ void LORAtoX() {
         return;
       }
       // We have non-ascii data: create hex string of the data
-      char hex[packetSize * 2 + 1];
-      TheengsUtils::_rawToHex(packet, hex, packetSize);
+      char hex[511];
+      TheengsUtils::_rawToHex(packet, hex, static_cast<int>(packetSize));
       // Terminate with a null character
       hex[packetSize * 2] = 0;
 
@@ -478,9 +554,9 @@ void LORAtoX() {
       }
     }
 
-    LORAdata["rssi"] = (int)LoRa.packetRssi();
-    LORAdata["snr"] = (float)LoRa.packetSnr();
-    LORAdata["pferror"] = (float)LoRa.packetFrequencyError();
+    LORAdata["rssi"] = static_cast<int>(metrics.rssi);
+    LORAdata["snr"] = metrics.snr;
+    LORAdata["pferror"] = metrics.frequencyError;
     LORAdata["packetSize"] = (int)packetSize;
 
     if (LORAdata.containsKey("id")) {
@@ -513,24 +589,18 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
     THEENGS_LOG_TRACE(F("MQTTtoLORA json" CR));
     const char* message = LORAdata["message"];
     const char* hex = LORAdata["hex"];
-    LORAConfig_fromJson(LORAdata);
-    LORAConfig_apply();
+    if (hasLORAConfig(LORAdata) && !LORAConfig_update(LORAdata)) return;
     if (message || hex) {
-      LoRa.beginPacket();
-      uint8_t deviceId = _determineDevice(LORAdata);
-      if (deviceId == WIPHONE) {
-        _MQTTtoWiPhone(LORAdata);
-      } else if (hex) {
-        // We have hex data: create convert to binary
-        byte raw[strlen(hex) / 2];
-        TheengsUtils::_hexToRaw(hex, raw, sizeof(raw));
-        LoRa.write((uint8_t*)raw, sizeof(raw));
-      } else {
-        // ascii payload
-        LoRa.print(message);
+      uint8_t packet[255] = {};
+      size_t packetLength = 0;
+      if (!buildLoRaPayload(LORAdata, packet, sizeof(packet), packetLength)) {
+        THEENGS_LOG_ERROR(F("MQTTtoLORA payload invalid or longer than 255 bytes" CR));
+        return;
       }
-
-      LoRa.endPacket();
+      if (!OMGLoRaRadio.transmit(packet, packetLength)) {
+        THEENGS_LOG_ERROR(F("MQTTtoLORA transmit failed: %d" CR), OMGLoRaRadio.lastError());
+        return;
+      }
       THEENGS_LOG_TRACE(F("MQTTtoLORA OK" CR));
       // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
       LORAdata["origin"] = subjectGTWLORAtoMQTT;
@@ -541,23 +611,7 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
   }
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORAset)) {
     THEENGS_LOG_TRACE(F("MQTTtoLORA json set" CR));
-    /*
-     * Configuration modifications priorities:
-     *  First `init=true` and `load=true` commands are executed (if both are present, INIT prevails on LOAD)
-     *  Then parameters included in json are taken in account
-     *  Finally `erase=true` and `save=true` commands are executed (if both are present, ERASE prevails on SAVE)
-     */
-    if (LORAdata.containsKey("init") && LORAdata["init"].as<bool>()) {
-      // Restore the default (initial) configuration
-      LORAConfig_init();
-    } else if (LORAdata.containsKey("load") && LORAdata["load"].as<bool>()) {
-      // Load the saved configuration, if not initialised
-      LORAConfig_load();
-    }
-
-    // Load config from json if available
-    LORAConfig_fromJson(LORAdata);
-    LORAConfig_apply();
+    LORAConfig_update(LORAdata);
     stateLORAMeasures();
   }
 }
@@ -565,9 +619,16 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
 #  if simpleReceiving
 void XtoLORA(const char* topicOri, const char* LORAarray) { // json object decoding
   if (cmpToMainTopic(topicOri, subjectMQTTtoLORA)) {
-    LoRa.beginPacket();
-    LoRa.print(LORAarray);
-    LoRa.endPacket();
+    uint8_t packet[255] = {};
+    size_t packetLength = 0;
+    if (!copyLoRaText(LORAarray, packet, sizeof(packet), packetLength)) {
+      THEENGS_LOG_ERROR(F("MQTTtoLORA payload invalid or longer than 255 bytes" CR));
+      return;
+    }
+    if (!OMGLoRaRadio.transmit(packet, packetLength)) {
+      THEENGS_LOG_ERROR(F("MQTTtoLORA transmit failed: %d" CR), OMGLoRaRadio.lastError());
+      return;
+    }
     THEENGS_LOG_NOTICE(F("MQTTtoLORA OK" CR));
     // we acknowledge the sending by publishing the value to an acknowledgement topic, for the moment even if it is a signal repetition we acknowledge also
     pub(subjectGTWLORAtoMQTT, LORAarray);
@@ -584,16 +645,15 @@ String stateLORAMeasures() {
   LORAdata["signalbandwidth"] = LORAConfig.signalBandwidth;
   LORAdata["codingrate"] = LORAConfig.codingRateDenominator;
   LORAdata["preamblelength"] = LORAConfig.preambleLength;
-  if (LORAConfig.syncWord < 0 || LORAConfig.syncWord > 255) {
-    THEENGS_LOG_ERROR(F("Invalid syncWord value: %d" CR), LORAConfig.syncWord);
-  } else {
-    char syncWordHex[5];
-    snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
-    LORAdata["syncword"] = syncWordHex;
-  }
+  char syncWordHex[5];
+  snprintf(syncWordHex, sizeof(syncWordHex), "0x%02X", LORAConfig.syncWord);
+  LORAdata["syncword"] = syncWordHex;
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
   LORAdata["onlyknown"] = LORAConfig.onlyKnown;
+#  if defined(LORA_RADIO_SX1262)
+  LORAdata["rxboostedgain"] = LORAConfig.rxBoostedGain;
+#  endif
   LORAdata["origin"] = subjectGTWLORAtoMQTT;
   enqueueJsonObject(LORAdata);
 

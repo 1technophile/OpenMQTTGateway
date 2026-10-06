@@ -1,0 +1,58 @@
+{
+  "build": {
+    "arduino": {
+      "partitions": "default_16MB.csv",
+      "memory_type": "qio_qspi"
+    },
+    "core": "esp32",
+    "extra_flags": [
+      "-DARDUINO_HELTEC_WIFI_LORA_32_V4",
+      "-DARDUINO_USB_MODE=1",
+      "-DARDUINO_RUNNING_CORE=1",
+      "-DARDUINO_EVENT_RUNNING_CORE=1",
+      "-DBOARD_HAS_PSRAM",
+      "-DWIFI_LoRa_32_V4=true"
+    ],
+    "f_cpu": "240000000L",
+    "f_flash": "80000000L",
+    "flash_mode": "qio",
+    "hwids": [
+      [
+        "0x303A",
+        "0x1001"
+      ]
+    ],
+    "mcu": "esp32s3",
+    "psram_type": "qio",
+    "variant": "heltec_wifi_lora_32_V4"
+  },
+  "connectivity": [
+    "wifi",
+    "bluetooth",
+    "lora"
+  ],
+  "debug": {
+    "default_tool": "esp-builtin",
+    "onboard_tools": [
+      "esp-builtin"
+    ],
+    "openocd_target": "esp32s3.cfg"
+  },
+  "frameworks": [
+    "arduino",
+    "espidf"
+  ],
+  "name": "Heltec WiFi LoRa 32 (V4.3, KCT8103L, 16MB Flash, 2MB PSRAM)",
+  "platforms": [
+    "espressif32"
+  ],
+  "upload": {
+    "flash_size": "16MB",
+    "maximum_ram_size": 327680,
+    "maximum_size": 16777216,
+    "require_upload_port": true,
+    "speed": 460800
+  },
+  "url": "https://heltec.org/project/wifi-lora-32-v4/",
+  "vendor": "Heltec Automation"
+}

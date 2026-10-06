@@ -365,7 +365,13 @@ void ssd1306Print(char* line1) {
 // This pattern was borrowed from HardwareSerial and modified to support the ssd1306 display
 
 OledSerial::OledSerial(int x) {
-#  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2)
+#  if defined(WIFI_Kit_32) || defined(WIFI_LoRa_32) || defined(WIFI_LoRa_32_V2) || defined(WIFI_LoRa_32_V4)
+#    if defined(WIFI_LoRa_32_V4)
+  // Vext powers the onboard SSD1315 and is active-low on V4/V4.3.
+  pinMode(VEXT_PIN, OUTPUT);
+  digitalWrite(VEXT_PIN, LOW);
+  delay(10);
+#    endif
   pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
   digitalWrite(RST_OLED, LOW);
   delay(50);

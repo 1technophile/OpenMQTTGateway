@@ -15,6 +15,22 @@ LoRaWAN gateway: Operates at a higher layer and is part of the LoRaWAN network a
 
 In essence, while both gateways utilize LoRa technology for communication, a LoRaWAN gateway is more sophisticated, offering advanced features and integration with the LoRaWAN network infrastructure. The LoRa gateway, with its simpler architecture, is ideal for small networks of nodes, offering easier setup and configuration, making it an interesting choice for users keen on experimenting with LoRa technology.
 
+### Heltec WiFi LoRa 32 V4
+
+Use the `heltec-wifi-lora-32-v4` environment for the Heltec V4.3/KCT8103L board. It
+uses the onboard SX1262 through RadioLib and controls the KCT8103L RF front end
+and the onboard OLED power rail. The profile defaults to 868 MHz, spreading
+factor 7, 125 kHz bandwidth, coding rate 4/5, preamble length 8, sync word
+`0x12`, CRC enabled, and 14 dBm requested board output.
+RX boosted gain is disabled by default. Initialization enables DIO2 RF-switch
+control, configures the 1.8 V TCXO and 140 mA chip current limit, and applies
+Heltec's mandatory RX register workaround. The external LNA remains enabled;
+the workaround is not the optional RX boosted-gain setting.
+V4.2/GC1109 and V4 R8 are not supported by this profile.
+
+The MQTT topics and payload formats described below are the same for the V4
+profile and existing SX127x profiles.
+
 ## Configuring the LoRa gateway
 
 The LoRa gateway can be configured by MQTT commands or by using the WebUI, here are the parameters available, they can be combined with the key "save" or "erase":
@@ -28,6 +44,39 @@ The LoRa gateway can be configured by MQTT commands or by using the WebUI, here 
 * enablecrc: boolean
 * invertiq: boolean
 * onlyknown: boolean
+
+Through both MQTT and WebUI, the Heltec V4.3 profile's `txpower` is the
+requested output at the board RF connector and accepts 4 to 28 dBm; the
+default is 14 dBm. The gateway converts this value to the lower SX1262 drive
+required by the KCT8103L front end.
+Frequency accepts 863000000 to 928000000 Hz, spreading factor accepts 5 to 12,
+coding rate accepts 5 to 8, and preamble length accepts 6 to 65535.
+Supported SX1262 bandwidth values are 7800, 10400, 15500, 15600, 20800,
+31250, 41700, 62500, 125000, 250000, and 500000 Hz; 15500 and 15600 select
+the same radio bandwidth. The WebUI offers 868 and 915 MHz frequency choices.
+Other supported frequencies can be set through MQTT.
+Invalid settings are rejected before changing the radio. A hardware error
+restores the previous active settings; a failed recovery marks the radio
+unavailable. Rejected settings are not saved.
+Always comply with the transmit-power and duty-cycle limits for your region.
+
+`rxboostedgain` is an SX1262-only boolean, controlled by the WebUI checkbox or
+MQTT. It trades higher receiver current consumption for boosted internal RX
+gain without changing TX power. It is included in LoRa state and persisted
+with `save`; old saved configurations without this field load it as `false`.
+
+Enable and save it using the existing configuration topic:
+
+```bash
+mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA/config -m '{"rxboostedgain":true,"save":true}'
+```
+
+Disable it with `{"rxboostedgain":false,"save":true}` on the same topic.
+`{"load":true}` restores saved settings; `{"init":true}` restores runtime
+defaults, including disabled boost. Add `"save":true` to persist those defaults.
+`{"erase":true}` removes the saved configuration without changing runtime
+settings. Existing SX127x profiles retain their original ranges and do not
+expose this field.
 
 With the WebUI:
 ![LoRa configuration page](../img/OpenMQTTGateway_LORA_Configuration.png)
