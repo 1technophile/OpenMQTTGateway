@@ -52,6 +52,20 @@ WebServer server(80);
 webUIQueueMessage* currentWebUIMessage;
 
 extern JsonArray modules;
+
+/**
+ * Active modules as readable text for the page heading, e.g. "LilyGo_SSD1306, WebUI, LORA"
+ * (the modules list is a JSON array, serializing it showed ["LilyGo_SSD1306","WebUI","LORA"]).
+ * Truncated to the buffer size.
+ */
+static void modulesHeading(char* out, size_t size) {
+  String text;
+  for (JsonVariant module : modules) {
+    if (text.length()) text += ", ";
+    text += module.as<const char*>();
+  }
+  strlcpy(out, text.c_str(), size);
+}
 extern char discovery_prefix[];
 extern String latestVersion;
 
@@ -507,7 +521,7 @@ void handleRoot() {
     } else if (server.hasArg("rst")) { // TODO: This should redirect to the RST page
       THEENGS_LOG_WARNING(F("[WebUI] Restart" CR));
       char jsonChar[100];
-      serializeJson(modules, jsonChar, measureJson(modules) + 1);
+      modulesHeading(jsonChar, sizeof(jsonChar));
       beginChunkedResponse();
       sendHeaderChunk((String(gateway_name) + " - Restart").c_str());
       server.sendContent(restart_script);
@@ -525,7 +539,7 @@ void handleRoot() {
     }
   } else {
     char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    modulesHeading(jsonChar, sizeof(jsonChar));
     beginChunkedResponse();
     sendHeaderChunk((String(gateway_name) + " - Main Menu").c_str());
     server.sendContent(root_script);
@@ -549,7 +563,7 @@ void handleCN() {
     }
   } else {
     char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    modulesHeading(jsonChar, sizeof(jsonChar));
     beginChunkedResponse();
     sendHeaderChunk((String(gateway_name) + " - Configuration").c_str());
     server.sendContent(script);
@@ -591,7 +605,7 @@ void handleWU() {
   }
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure WebUI").c_str());
   server.sendContent(script);
@@ -678,7 +692,7 @@ void handleWI() {
       WEBUI_TRACE_LOG(F("handleWI scan: results %s" CR), WiFiScan.c_str());
 
       char jsonChar[100];
-      serializeJson(modules, jsonChar, measureJson(modules) + 1);
+      modulesHeading(jsonChar, sizeof(jsonChar));
       beginChunkedResponse();
       sendHeaderChunk((String(gateway_name) + " - Configure WiFi").c_str());
       server.sendContent(wifi_script);
@@ -708,7 +722,7 @@ void handleWI() {
         String topic = String(mqtt_topic) + String(gateway_name) + String(subjectMQTTtoSYSset);
         THEENGS_LOG_WARNING(F("[WebUI] Save WiFi and Restart" CR));
         char jsonChar[100];
-        serializeJson(modules, jsonChar, measureJson(modules) + 1);
+        modulesHeading(jsonChar, sizeof(jsonChar));
         beginChunkedResponse();
         sendHeaderChunk((String(gateway_name) + " - Save WiFi and Restart").c_str());
         server.sendContent(restart_script);
@@ -726,7 +740,7 @@ void handleWI() {
     }
   }
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure WiFi").c_str());
   server.sendContent(wifi_script);
@@ -832,7 +846,7 @@ void handleMQ() {
         WEBtoSYS["cnt_index"] = CNT_DEFAULT_INDEX;
         WEBtoSYS["save_cnt"] = true;
         char jsonChar[100];
-        serializeJson(modules, jsonChar, measureJson(modules) + 1);
+        modulesHeading(jsonChar, sizeof(jsonChar));
         beginChunkedResponse();
         sendHeaderChunk((String(gateway_name) + " - Save MQTT and Reconnect").c_str());
         server.sendContent(restart_script);
@@ -853,7 +867,7 @@ void handleMQ() {
   }
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure MQTT").c_str());
   server.sendContent(script);
@@ -924,7 +938,7 @@ void handleCG() {
     }
 
     char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    modulesHeading(jsonChar, sizeof(jsonChar));
     beginChunkedResponse();
     sendHeaderChunk((String(gateway_name) + " - Save and Restart").c_str());
     server.sendContent(restart_script);
@@ -948,7 +962,7 @@ void handleCG() {
   }
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure gateway").c_str());
   server.sendContent(script);
@@ -983,7 +997,7 @@ void handleLO() {
   }
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure Logging").c_str());
   server.sendContent(script);
@@ -1110,7 +1124,7 @@ void handleBL() {
   }
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure BLE").c_str());
   if (strlen(ble_script) > 0) {
@@ -1278,7 +1292,7 @@ void handleLA() {
     }
   }
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure LORA").c_str());
   server.sendContent(script);
@@ -1438,7 +1452,7 @@ void handleRF() {
   String activeReceiverHtml = generateActiveReceiverOptions(iRFConfig.getActiveReceiver());
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure RF").c_str());
   server.sendContent(script);
@@ -1462,7 +1476,7 @@ void handleRT() {
   }
   if (server.hasArg("non")) {
     char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    modulesHeading(jsonChar, sizeof(jsonChar));
     THEENGS_LOG_WARNING(F("[WebUI] Erase and Restart" CR));
     beginChunkedResponse();
     sendHeaderChunk((String(gateway_name) + " - Erase and Restart").c_str());
@@ -1502,7 +1516,7 @@ void handleCL() {
   }
 
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Configure Cloud").c_str());
   server.sendContent(script);
@@ -1546,7 +1560,7 @@ void handleTK() {
     if (setCloudDeviceToken(deviceToken) && server.arg("RT").toInt() == requestToken && server.arg("uptime").toInt() + 600 > uptime()) {
       setCloudEnabled(true);
       char jsonChar[100];
-      serializeJson(modules, jsonChar, measureJson(modules) + 1);
+      modulesHeading(jsonChar, sizeof(jsonChar));
       beginChunkedResponse();
       sendHeaderChunk((String(gateway_name) + " - Received Device Token").c_str());
       server.sendContent(script);
@@ -1577,7 +1591,7 @@ void handleIN() {
     }
   } else {
     char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    modulesHeading(jsonChar, sizeof(jsonChar));
 
     String informationDisplay = stateMeasures(); // .replace(",\"", "}1");  // .replace("\":", "=2")
 
@@ -1694,7 +1708,7 @@ void handleUP() {
     }
   }
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
 
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Firmware Upgrade").c_str());
@@ -1708,7 +1722,7 @@ void handleUP() {
 
 void sendRestartPage() {
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  modulesHeading(jsonChar, sizeof(jsonChar));
   beginChunkedResponse();
   sendHeaderChunk((String(gateway_name) + " - Updating Firmware and Restart").c_str());
   server.sendContent(restart_script);
@@ -1769,7 +1783,7 @@ void handleCS() {
     server.send(200, "text/plain", message);
   } else {
     char jsonChar[100];
-    serializeJson(modules, jsonChar, measureJson(modules) + 1);
+    modulesHeading(jsonChar, sizeof(jsonChar));
     beginChunkedResponse();
     sendHeaderChunk((String(gateway_name) + " - Console").c_str());
     server.sendContent(console_script);
