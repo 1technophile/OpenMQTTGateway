@@ -85,7 +85,7 @@ will send "test" to a WiPhone with chip ID 123ABC
 
 The gateway can decrypt uplinks from LoRaWAN devices using ABP (activation by personalization), such as Dragino sensors switched to ABP mode. It is not a LoRaWAN network server, so this only suits a simple setup:
 * The gateway listens on a single frequency, spreading factor and bandwidth. Set each device to send on that same channel (for example `AT+CHS=903900000` and a fixed data rate with ADR off on Dragino devices) and use sync word `0x34`.
-* Only uplinks are handled. There is no join (OTAA), no downlink and no MAC commands, so turn off on the device any feature that waits for a downlink (confirmed uplinks, link checks, "rejoin when no downlink").
+* There is no join (OTAA) and no MAC command handling. Downlinks are sent only when you queue them (see below), and confirmed uplinks are acknowledged. Turn off on the device any feature that waits for MAC answers, such as link checks.
 
 This feature is available on ESP32 only. It is not part of the default binaries: build with `'-DLORA_LORAWAN'`. To also decode the payload with a JavaScript decoder, add `'-DLORA_LORAWAN_JS'` and the Duktape library, for example in your `prod_env.ini`:
 ```ini
@@ -140,6 +140,42 @@ Add an `entities` list to the device declaration to create Home Assistant entiti
   {"key":"rssi","name":"RSSI","class":"signal_strength","unit":"dBm"}]},"save":true}
 ```
 `type` is `sensor` by default. `class` is the Home Assistant device class. Sensors use `state_class` `measurement` unless you set another one. Fields named like the existing LoRa sensors (`tempc`, `hum`, `moi`, `batt`, `count`) are discovered automatically.
+
+### Downlinks
+LoRaWAN devices are usually class A: they only listen for a short time 1 s (RX1) and 2 s (RX2) after each of their uplinks. You can't send a command whenever you want. You queue it, and the gateway sends it in the receive window that follows the next uplink of the device. One queued downlink is sent per uplink, and up to 8 can be queued per device (`LORAWAN_MAX_QUEUE`). Downlinks are encrypted and signed with the device keys. The downlink frame counter is kept in flash.
+
+Queue a command with the `send` key, as an object or an array. The payload is the hex FRMPayload, up to 51 bytes:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA/config -m '{"lorawan":{"devaddr":"0187F184","send":{"fport":1,"hex":"01000E10"}}}'`
+
+Use `{"lorawan":{"devaddr":"0187F184","clear_queue":true}}` to drop the pending commands. You can also queue and clear commands from the device page of **Configure LoRaWAN**, which shows the pending commands and the downlink frame counter. The uplink message that triggered a downlink reports it:
+```json
+{"id":"0187F184","fcnt":5,"fport":10,"payload":"8D500100007300000300","downlink":{"fcnt":0,"window":"rx2","power":20,"fport":1,"payload":"01000E10","source":"mqtt"},"downlink_pending":1}
+```
+
+Uplinks with a confirmed data type are acknowledged in the same way, even if no command is queued.
+
+#### Downlink rules
+The `downlinks` object of a device declaration holds commands sent automatically, and receive window settings:
+```json
+{"lorawan":{"devaddr":"0187F184","downlinks":{
+  "window":"rx2",
+  "schedules":[{"every":86400,"fport":1,"hex":"01015180"}],
+  "triggers":[{"when":{"DOOR_STATE":"open"},"fport":1,"hex":"A601","cooldown":3600}]}},"save":true}
+```
+* `schedules`: queues the command every `every` seconds. It is sent after the first uplink, then after the first uplink following each interval.
+* `triggers`: answers an uplink that matches `when`. Use `"uplink"` to match any uplink, or an object of decoded field values that must all be equal. The command is sent in the receive window of that uplink, before the queued ones. `cooldown` (seconds) limits how often it fires.
+* `window`: `auto` (default) uses RX1, or RX2 if RX1 can no longer be reached. `rx1` and `rx2` force one window.
+* `rx1_frequency`, `rx1_sf`, `rx1_bw`, `rx2_frequency`, `rx2_sf`, `rx2_bw` and `rx1_delay` (seconds, default 1) override the receive windows.
+* `tx_power` (dBm) overrides the downlink power.
+
+By default the receive windows follow the region of the configured frequency. For US915 and AU915, RX1 uses the 500 kHz channel matching the uplink channel with the same spreading factor, and RX2 uses 923.3 MHz, SF12, 500 kHz. Both are sent at 20 dBm, because 500 kHz downlinks are about 6 dB less sensitive than 125 kHz uplinks. For EU868, RX1 uses the uplink channel at no more than 14 dBm, and RX2 uses 869.525 MHz, SF12, 125 kHz at 20 dBm. Elsewhere, both windows use the uplink settings and the configured power.
+
+::: tip Dragino devices in single channel mode
+With `AT+CHS`, Dragino devices (e.g. LDS02) transmit on the fixed channel, but compute their RX1 channel from their internal channel hopping, so RX1 changes from one uplink to the next. RX2 is fixed: use `"window":"rx2"`. Their downlink commands (e.g. `01000E10` for a 1 hour uplink interval) were accepted on port 1 in testing.
+:::
+
+ABP devices usually restart their frame counter when they reboot. The gateway accepts such a restart (the message contains `"fcnt_reset":true`) instead of rejecting the frames.
 
 More info on where the LoRa library is born [@sandeepmistry](https://github.com/sandeepmistry/arduino-LoRa/blob/master/API.md#radio-parameters)
 
