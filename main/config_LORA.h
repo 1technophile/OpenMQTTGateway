@@ -82,23 +82,40 @@ extern void XtoLORA(const char* topicOri, JsonObject& RFdata);
 #  define LORAWAN_DECODED     1
 #  define LORAWAN_DROP        2 // duplicate frame
 #  include <vector>
+struct LoRaWANDownlink {
+  uint8_t fport;
+  String hex; // FRMPayload, not encrypted
+  String source; // "mqtt", "webui", "schedule", "trigger"
+};
 struct LoRaWANDevice {
-  uint32_t devAddr;
-  uint8_t nwkSKey[16];
-  uint8_t appSKey[16];
+  uint32_t devAddr = 0;
+  uint8_t nwkSKey[16] = {0};
+  uint8_t appSKey[16] = {0};
   String name;
   String model;
   String entities; // serialized JSON array of Home Assistant entity declarations
+  String downlinks; // serialized JSON object: receive windows overrides, "schedules" and "triggers"
 #  ifdef LORA_LORAWAN_JS
   String decoder;
 #  endif
-  uint32_t lastFcnt;
-  bool seen;
+  uint32_t lastFcnt = 0;
+  bool seen = false;
   String lastPayload; // last decrypted FRMPayload (hex), to test decoders from the WebUI
-  uint8_t lastPort;
+  uint8_t lastPort = 0;
+  uint32_t fcntDown = 0; // next downlink frame counter, persisted
+  std::vector<LoRaWANDownlink> queue; // sent one per uplink, in the receive windows following it
+  std::vector<uint32_t> ruleLast; // millis() of the last schedule/trigger firing, by rule index
 };
 extern const std::vector<LoRaWANDevice>& LORAWANdevices();
 extern bool LORAWANconfigureDevice(JsonObject& device, bool save, String* error);
+extern bool LORAWANqueueDownlink(uint32_t devAddr, uint8_t fport, const String& hex, const char* source, String* error);
+extern void LORAWANclearQueue(uint32_t devAddr);
+#  ifndef LORAWAN_MAX_QUEUE
+#    define LORAWAN_MAX_QUEUE 8 // pending downlinks per device
+#  endif
+#  ifndef LORAWAN_MAX_DOWNLINK_SIZE
+#    define LORAWAN_MAX_DOWNLINK_SIZE 51 // FRMPayload bytes, fits every data rate of the common regions
+#  endif
 extern void LORAWANsetup();
 extern int LORAWANtoJson(const uint8_t* packet, int packetSize, JsonObject& LORAdata);
 extern void LORAWANConfig_fromJson(JsonObject& LORAdata);

@@ -1390,11 +1390,27 @@ void handleLW() {
   bool isNew = server.arg("nw") == "1";
   String fDa = server.arg("da"), fNm = server.arg("nm"), fMd = server.arg("md"), fEn = server.arg("en");
   String fDc = server.arg("dc"), fTp = server.arg("tp"), fTf = server.hasArg("tf") ? server.arg("tf") : "1";
+  String fDl = server.arg("dl"), fQp = server.hasArg("qp") ? server.arg("qp") : "1", fQh = server.arg("qh");
   String testOutput;
   fDa.trim();
   fDa.toUpperCase();
 
-  if (server.hasArg("rm")) {
+  if (server.hasArg("qs") || server.hasArg("qc")) {
+    showForm = true;
+    const LoRaWANDevice* dev = findLoRaWANDevice(fDa);
+    String error;
+    if (!dev) {
+      message = "Error: save the device before queuing downlinks";
+    } else if (server.hasArg("qc")) {
+      LORAWANclearQueue(dev->devAddr);
+      message = "Downlink queue cleared";
+    } else if (LORAWANqueueDownlink(dev->devAddr, (uint8_t)fQp.toInt(), fQh, "webui", &error)) {
+      message = "Downlink queued, it will be sent after the next uplink of the device";
+      fQh = "";
+    } else {
+      message = "Error: " + error;
+    }
+  } else if (server.hasArg("rm")) {
     DynamicJsonDocument doc(128);
     JsonObject jo = doc.to<JsonObject>();
     jo["devaddr"] = fDa;
@@ -1444,6 +1460,20 @@ void handleLW() {
       } else {
         jo.createNestedArray("entities"); // clears the entities
       }
+      String trimmedDownlinks = fDl;
+      trimmedDownlinks.trim();
+      if (valid && trimmedDownlinks.length()) {
+        DynamicJsonDocument downlinks(2048);
+        DeserializationError error = deserializeJson(downlinks, trimmedDownlinks);
+        if (error || !downlinks.is<JsonObject>()) {
+          message = String("Error: downlink rules must be a JSON object (") + (error ? error.c_str() : "not an object") + ")";
+          valid = false;
+        } else {
+          jo["downlinks"] = downlinks.as<JsonObject>();
+        }
+      } else if (valid) {
+        jo.createNestedObject("downlinks"); // clears the rules
+      }
       String error;
       if (valid && !LORAWANconfigureDevice(jo, true, &error)) {
         message = "Error: " + error;
@@ -1477,6 +1507,11 @@ void handleLW() {
         fDa = hex;
         fNm = dev->name;
         fMd = dev->model;
+        fDl = "";
+        if (dev->downlinks.length()) {
+          DynamicJsonDocument downlinks(2048);
+          if (!deserializeJson(downlinks, dev->downlinks)) serializeJsonPretty(downlinks, fDl);
+        }
         fEn = "";
         if (dev->entities.length()) {
           DynamicJsonDocument entities(2048);
@@ -1507,7 +1542,7 @@ void handleLW() {
 #      ifdef LORA_LORAWAN_JS
         "<th>Decoder</th>"
 #      endif
-        "<th>FCnt</th></tr>");
+        "<th>FCnt</th><th>Pending</th></tr>");
     for (auto& dev : LORAWANdevices()) {
       char hex[9];
       snprintf(hex, sizeof(hex), "%08" PRIX32, dev.devAddr);
@@ -1515,7 +1550,7 @@ void handleLW() {
 #      ifdef LORA_LORAWAN_JS
       row += String("<td>") + (dev.decoder.length() ? "yes" : "no") + "</td>";
 #      endif
-      row += String("<td>") + (dev.seen ? String(dev.lastFcnt) : String("-")) + "</td></tr>";
+      row += String("<td>") + (dev.seen ? String(dev.lastFcnt) : String("-")) + "</td><td>" + String(dev.queue.size()) + "</td></tr>";
       server.sendContent(row);
     }
     server.sendContent("</table><br><p><form action='lw' method='get'><button name='d' value='new'>Add device</button></form></p></fieldset>");
@@ -1534,7 +1569,17 @@ void handleLW() {
     server.sendContent("<p><button name='ts' type='submit' formnovalidate>Test decoder</button></p>");
     if (testOutput.length()) server.sendContent("<pre style='text-align:left;white-space:pre-wrap'>" + htmlEscape(testOutput) + "</pre>");
 #      endif
-    server.sendContent("<br><button name='sv' type='submit' class='button bgrn'>Save</button></form>");
+    server.sendContent("<p><b>Downlink rules</b> (JSON object, optional): <code>schedules</code> queue a command every N seconds (sent after the next uplink), <code>triggers</code> answer an uplink matching <code>when</code> (<code>\"uplink\"</code> or field values); receive windows can be overridden (<code>rx1_frequency</code>, <code>rx1_sf</code>, <code>rx1_bw</code>, <code>rx2_...</code>, <code>rx1_delay</code>) and the downlink power (<code>tx_power</code>, dBm)<br><textarea name='dl' spellcheck='false' style='height:9em' placeholder='{\"rx1_frequency\":924500000,\"schedules\":[{\"every\":86400,\"fport\":1,\"hex\":\"01015180\"}],\"triggers\":[{\"when\":{\"DOOR_STATE\":\"open\"},\"fport\":1,\"hex\":\"A601\",\"cooldown\":3600}]}'>" + htmlEscape(fDl) + "</textarea></p>");
+    server.sendContent("<br><button name='sv' type='submit' class='button bgrn'>Save</button>");
+    if (dev) {
+      String queue = "<p><b>Send a downlink</b> (queued, sent in the receive windows after the next uplink; downlink FCnt " + String(dev->fcntDown) + ")<br>";
+      for (auto& dl : dev->queue) queue += "pending: port " + String(dl.fport) + " " + htmlEscape(dl.hex) + " (" + htmlEscape(dl.source) + ")<br>";
+      queue += "<input type='number' name='qp' style='width:20%' min='1' max='223' value='" + htmlEscape(fQp) + "'> <input name='qh' style='width:75%' placeholder='payload hex, e.g. 0100003C' value='" + htmlEscape(fQh) + "'></p>";
+      queue += "<p><button name='qs' type='submit' formnovalidate>Queue downlink</button></p>";
+      if (dev->queue.size()) queue += "<p><button name='qc' type='submit' formnovalidate class='button bred'>Clear queue</button></p>";
+      server.sendContent(queue);
+    }
+    server.sendContent("</form>");
     if (dev) {
       server.sendContent("<p><form method='post' action='lw' onsubmit='return confirm(\"Delete device " + htmlEscape(fDa) + "?\");'><input type='hidden' name='da' value='" + htmlEscape(fDa) + "'><button name='rm' class='button bred'>Delete device</button></form></p>");
     }

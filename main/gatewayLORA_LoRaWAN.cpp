@@ -35,12 +35,14 @@
 #  ifndef ESP32
 #    error "LORA_LORAWAN is only supported on ESP32"
 #  endif
+#  include <LoRa.h>
 #  include <TheengsUtils.h>
 
 #  include <vector>
 
 #  include "TheengsCommon.h"
 #  include "config_LORA.h"
+#  include "esp_timer.h"
 #  include "mbedtls/aes.h"
 #  ifdef ZmqttDiscovery
 #    include "config_mqttDiscovery.h"
@@ -49,7 +51,16 @@
 #    include <duktape.h>
 #  endif
 
+extern LORAConfig_s LORAConfig;
+extern void LORAConfig_apply();
+
 static std::vector<LoRaWANDevice> lorawanDevices;
+
+// End of the last received packet (DIO0 = RxDone), the reference of the downlink receive windows
+static volatile int64_t lorawanRxDoneUs = 0;
+static void IRAM_ATTR lorawanRxDoneIsr() {
+  lorawanRxDoneUs = esp_timer_get_time();
+}
 
 const std::vector<LoRaWANDevice>& LORAWANdevices() {
   return lorawanDevices;
@@ -130,9 +141,9 @@ static void lorawanMic(const uint8_t* key, const uint8_t* b0, const uint8_t* msg
   memcpy(mac, x, 16);
 }
 
-// LoRaWAN 1.0.x FRMPayload encryption (AES-CTR like, uplink direction)
-static void lorawanDecrypt(const uint8_t* key, uint32_t devAddr, uint32_t fcnt, const uint8_t* in, uint8_t* out, size_t len) {
-  uint8_t a[16] = {0x01, 0, 0, 0, 0, 0,
+// LoRaWAN 1.0.x FRMPayload encryption, symmetric (AES-CTR like), dir 0 = uplink, 1 = downlink
+static void lorawanCrypt(const uint8_t* key, uint8_t dir, uint32_t devAddr, uint32_t fcnt, const uint8_t* in, uint8_t* out, size_t len) {
+  uint8_t a[16] = {0x01, 0, 0, 0, 0, dir,
                    (uint8_t)devAddr, (uint8_t)(devAddr >> 8), (uint8_t)(devAddr >> 16), (uint8_t)(devAddr >> 24),
                    (uint8_t)fcnt, (uint8_t)(fcnt >> 8), (uint8_t)(fcnt >> 16), (uint8_t)(fcnt >> 24), 0, 0};
   uint8_t s[16];
@@ -237,6 +248,227 @@ bool LORAWANtestDecoder(const String& script, uint8_t fport, const uint8_t* byte
 }
 #  endif
 
+/*-------------------- Downlinks --------------------*/
+
+static bool lorawanParseHex(const String& hex, uint8_t* out, size_t maxLen, size_t& len) {
+  if (hex.length() % 2 || hex.length() / 2 > maxLen) return false;
+  for (size_t i = 0; i < hex.length(); i++) {
+    if (!isxdigit(hex[i])) return false;
+  }
+  len = hex.length() / 2;
+  return len == 0 || TheengsUtils::_hexToRaw(hex.c_str(), out, len);
+}
+
+// Queues a downlink, sent in the receive windows following the next uplink of the device
+bool LORAWANqueueDownlink(uint32_t devAddr, uint8_t fport, const String& hexIn, const char* source, String* error) {
+  LoRaWANDevice* dev = lorawanFind(devAddr);
+  String hex = hexIn;
+  hex.replace(" ", "");
+  hex.toUpperCase();
+  uint8_t bytes[LORAWAN_MAX_DOWNLINK_SIZE];
+  size_t len;
+  const char* problem = nullptr;
+  if (!dev)
+    problem = "unknown device";
+  else if (fport < 1 || fport > 223)
+    problem = "fport must be 1 to 223";
+  else if (!lorawanParseHex(hex, bytes, LORAWAN_MAX_DOWNLINK_SIZE, len))
+    problem = "payload must be an even number of hex digits, up to LORAWAN_MAX_DOWNLINK_SIZE bytes";
+  else if (dev->queue.size() >= LORAWAN_MAX_QUEUE)
+    problem = "downlink queue full";
+  if (problem) {
+    THEENGS_LOG_ERROR(F("[LoRaWAN] downlink for %X not queued: %s" CR), devAddr, problem);
+    if (error) *error = problem;
+    return false;
+  }
+  dev->queue.push_back({fport, hex, source});
+  THEENGS_LOG_NOTICE(F("[LoRaWAN] downlink queued for %X (%s): port %d %s, %d pending" CR), devAddr, source, fport, hex.c_str(), dev->queue.size());
+  return true;
+}
+
+void LORAWANclearQueue(uint32_t devAddr) {
+  LoRaWANDevice* dev = lorawanFind(devAddr);
+  if (dev) dev->queue.clear();
+}
+
+struct LoRaWANWindow {
+  long frequency;
+  int sf;
+  long bw;
+  int power; // dBm, PA_BOOST output: 2 to 20
+};
+
+// Receive windows of the device: region defaults derived from the (single) uplink channel, overridable per device
+static void lorawanWindows(JsonObject rules, LoRaWANWindow& rx1, LoRaWANWindow& rx2) {
+  long f = LORAConfig.frequency;
+  int sf = LORAConfig.spreadingFactor;
+  long bw = LORAConfig.signalBandwidth;
+  int power = LORAConfig.txPower;
+  if (f >= 902000000 && f <= 928000000 && bw == 125000) {
+    // US915 / AU915: RX1 on the 500 kHz channel (uplink channel modulo 8) with the same SF, RX2 923.3 MHz SF12 500 kHz;
+    // downlinks use 500 kHz (about 6 dB less sensitive than the 125 kHz uplinks) and up to 30 dBm are allowed: use the 20 dBm maximum
+    long base = f < 915200000 ? 902300000 : 915200000;
+    int channel = (f - base + 100000) / 200000;
+    rx1 = {923300000L + 600000L * (channel % 8), sf, 500000, 20};
+    rx2 = {923300000L, 12, 500000, 20};
+  } else if (f >= 863000000 && f <= 870000000) {
+    // EU868: RX1 on the uplink channel (14 dBm ERP limit), RX2 869.525 MHz SF12 125 kHz (869.4-869.65 MHz allows 500 mW)
+    rx1 = {f, sf, bw, power > 14 ? 14 : power};
+    rx2 = {869525000L, 12, 125000, 20};
+  } else {
+    rx1 = {f, sf, bw, power};
+    rx2 = {f, sf, bw, power};
+  }
+  rx1.frequency = rules["rx1_frequency"] | rx1.frequency;
+  rx1.sf = rules["rx1_sf"] | rx1.sf;
+  rx1.bw = rules["rx1_bw"] | rx1.bw;
+  rx2.frequency = rules["rx2_frequency"] | rx2.frequency;
+  rx2.sf = rules["rx2_sf"] | rx2.sf;
+  rx2.bw = rules["rx2_bw"] | rx2.bw;
+  rx1.power = rules["tx_power"] | rx1.power;
+  rx2.power = rules["tx_power"] | rx2.power;
+}
+
+// Transmits the frame when esp_timer reaches atUs, then restores the uplink reception settings
+static bool lorawanTransmitAt(int64_t atUs, const LoRaWANWindow& w, const uint8_t* frame, size_t len) {
+  LoRa.idle();
+  LoRa.setFrequency(w.frequency);
+  LoRa.setSpreadingFactor(w.sf);
+  LoRa.setSignalBandwidth(w.bw);
+  LoRa.setCodingRate4(5);
+  LoRa.setPreambleLength(8);
+  LoRa.setSyncWord(LORAConfig.syncWord);
+  LoRa.disableCrc(); // LoRaWAN downlinks have no payload CRC
+  LoRa.enableInvertIQ(); // and use inverted IQ
+  LoRa.setTxPower(w.power);
+  LoRa.beginPacket();
+  LoRa.write(frame, len);
+  bool sent = false;
+  int64_t wait = atUs - esp_timer_get_time();
+  if (wait > 500) {
+    if (wait > 3000) delay((wait - 2000) / 1000);
+    while (esp_timer_get_time() < atUs) {
+    }
+    LoRa.endPacket(); // starts the transmission and waits for TxDone
+    sent = true;
+  }
+  LORAConfig_apply();
+  LoRa.receive();
+  return sent;
+}
+
+static void lorawanSaveFcntDown(const LoRaWANDevice& dev) {
+  char key[11];
+  lorawanNvsKey(key, "lc", dev.devAddr);
+  preferences.begin(Gateway_Short_Name, false);
+  preferences.putUInt(key, dev.fcntDown);
+  preferences.end();
+}
+
+// Does the decoded uplink match a trigger condition: "uplink" or an object of field values that must all be equal
+static bool lorawanTriggerMatches(JsonVariant when, JsonObject& LORAdata) {
+  if (when.is<const char*>()) return strcmp(when.as<const char*>(), "uplink") == 0;
+  if (!when.is<JsonObject>()) return false;
+  for (JsonPair kv : when.as<JsonObject>()) {
+    if (!LORAdata.containsKey(kv.key())) return false;
+    String expected, actual;
+    serializeJson(kv.value(), expected);
+    serializeJson(LORAdata[kv.key()], actual);
+    if (expected != actual) return false;
+  }
+  return true;
+}
+
+// Applies the schedules and triggers of the device, then sends the first queued downlink (and/or the ACK of a
+// confirmed uplink) in RX1, or RX2 if RX1 cannot be reached anymore
+static void lorawanProcessDownlink(LoRaWANDevice& dev, bool confirmedUplink, int64_t rxDoneUs, JsonObject& LORAdata) {
+  DynamicJsonDocument rulesDoc(LORAWAN_DEVICE_JSON_SIZE);
+  if (dev.downlinks.length()) deserializeJson(rulesDoc, dev.downlinks);
+  JsonObject rules = rulesDoc.as<JsonObject>();
+  uint32_t now = millis();
+  size_t ruleCount = rules["schedules"].size() + rules["triggers"].size();
+  if (dev.ruleLast.size() != ruleCount) dev.ruleLast.assign(ruleCount, 0);
+  size_t rule = 0;
+  for (JsonObject schedule : rules["schedules"].as<JsonArray>()) {
+    uint32_t every = schedule["every"] | 0;
+    // schedules fire at the first uplink, then at the first uplink after each interval
+    if (every && (dev.ruleLast[rule] == 0 || now - dev.ruleLast[rule] >= every * 1000UL)) {
+      if (LORAWANqueueDownlink(dev.devAddr, schedule["fport"] | 0, schedule["hex"] | "", "schedule", nullptr)) dev.ruleLast[rule] = now ? now : 1;
+    }
+    rule++;
+  }
+  for (JsonObject trigger : rules["triggers"].as<JsonArray>()) {
+    uint32_t cooldown = trigger["cooldown"] | 0;
+    if (lorawanTriggerMatches(trigger["when"], LORAdata) && (dev.ruleLast[rule] == 0 || now - dev.ruleLast[rule] >= cooldown * 1000UL)) {
+      if (LORAWANqueueDownlink(dev.devAddr, trigger["fport"] | 0, trigger["hex"] | "", "trigger", nullptr)) {
+        dev.queue.insert(dev.queue.begin(), dev.queue.back()); // triggers answer this uplink first
+        dev.queue.pop_back();
+        dev.ruleLast[rule] = now ? now : 1;
+      }
+    }
+    rule++;
+  }
+  if (dev.queue.empty() && !confirmedUplink) return;
+  if (rxDoneUs == 0) {
+    LORAdata["downlink_error"] = "no RxDone timestamp";
+    return;
+  }
+
+  bool hasData = !dev.queue.empty();
+  uint8_t frame[13 + LORAWAN_MAX_DOWNLINK_SIZE];
+  size_t n = 0;
+  frame[n++] = 0x60; // unconfirmed data down
+  for (int i = 0; i < 4; i++) frame[n++] = (uint8_t)(dev.devAddr >> (8 * i));
+  frame[n++] = (confirmedUplink ? 0x20 : 0x00) | (dev.queue.size() > 1 ? 0x10 : 0x00); // FCtrl: ACK, FPending
+  frame[n++] = (uint8_t)dev.fcntDown;
+  frame[n++] = (uint8_t)(dev.fcntDown >> 8);
+  if (hasData) {
+    const LoRaWANDownlink& dl = dev.queue.front();
+    uint8_t payload[LORAWAN_MAX_DOWNLINK_SIZE];
+    size_t len = 0;
+    lorawanParseHex(dl.hex, payload, LORAWAN_MAX_DOWNLINK_SIZE, len);
+    frame[n++] = dl.fport;
+    lorawanCrypt(dev.appSKey, 1, dev.devAddr, dev.fcntDown, payload, frame + n, len);
+    n += len;
+  }
+  uint8_t b0[16] = {0x49, 0, 0, 0, 0, 1, frame[1], frame[2], frame[3], frame[4],
+                    (uint8_t)dev.fcntDown, (uint8_t)(dev.fcntDown >> 8), (uint8_t)(dev.fcntDown >> 16), (uint8_t)(dev.fcntDown >> 24), 0, (uint8_t)n};
+  uint8_t mac[16];
+  lorawanMic(dev.nwkSKey, b0, frame, n, mac);
+  memcpy(frame + n, mac, 4);
+  n += 4;
+
+  LoRaWANWindow rx1, rx2;
+  lorawanWindows(rules, rx1, rx2);
+  int64_t rx1At = rxDoneUs + (int64_t)(rules["rx1_delay"] | 1) * 1000000LL;
+  const char* window = "rx1";
+  bool sent = lorawanTransmitAt(rx1At, rx1, frame, n);
+  if (!sent) {
+    window = "rx2";
+    sent = lorawanTransmitAt(rx1At + 1000000LL, rx2, frame, n);
+  }
+  if (!sent) {
+    LORAdata["downlink_error"] = "receive windows missed";
+    THEENGS_LOG_WARNING(F("[LoRaWAN] downlink for %X: receive windows missed" CR), dev.devAddr);
+  } else {
+    JsonObject dl = LORAdata.createNestedObject("downlink");
+    dl["fcnt"] = dev.fcntDown;
+    dl["window"] = window;
+    dl["power"] = strcmp(window, "rx1") == 0 ? rx1.power : rx2.power;
+    if (confirmedUplink) dl["ack"] = true;
+    if (hasData) {
+      dl["fport"] = dev.queue.front().fport;
+      dl["payload"] = dev.queue.front().hex;
+      dl["source"] = dev.queue.front().source;
+      dev.queue.erase(dev.queue.begin());
+    }
+    THEENGS_LOG_NOTICE(F("[LoRaWAN] downlink sent to %X in %s, FCnt %u" CR), dev.devAddr, window, dev.fcntDown);
+    dev.fcntDown++;
+    lorawanSaveFcntDown(dev);
+  }
+  if (dev.queue.size()) LORAdata["downlink_pending"] = dev.queue.size();
+}
+
 /*-------------------- Uplink decoding --------------------*/
 
 int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
@@ -247,6 +479,7 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
   LoRaWANDevice* dev = lorawanFind(devAddr);
   if (!dev) return LORAWAN_NOT_HANDLED;
 
+  int64_t rxDoneUs = lorawanRxDoneUs;
   int hdrLen = 8 + (p[5] & 0x0F); // MHDR + DevAddr + FCtrl + FCnt + FOpts
   int msgLen = len - 4; // without MIC
   if (msgLen < hdrLen) return LORAWAN_NOT_HANDLED;
@@ -281,7 +514,7 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
     uint8_t fport = p[hdrLen];
     size_t n = msgLen - hdrLen - 1;
     uint8_t plain[n > 0 ? n : 1];
-    lorawanDecrypt(fport == 0 ? dev->nwkSKey : dev->appSKey, devAddr, fcnt, p + hdrLen + 1, plain, n);
+    lorawanCrypt(fport == 0 ? dev->nwkSKey : dev->appSKey, 0, devAddr, fcnt, p + hdrLen + 1, plain, n);
     char hex[n * 2 + 2]; // _rawToHex writes "%02X\r" per byte: needs 2 * size + 2
     TheengsUtils::_rawToHex(plain, hex, n);
     hex[n * 2] = 0;
@@ -294,6 +527,7 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
       THEENGS_LOG_WARNING(F("[LoRaWAN] decoder error for %X: %s" CR), devAddr, LORAdata["decoder_error"].as<const char*>());
 #  endif
   }
+  lorawanProcessDownlink(*dev, mtype == 4, rxDoneUs, LORAdata);
   return LORAWAN_DECODED;
 }
 
@@ -319,10 +553,20 @@ static void lorawanToJson(const LoRaWANDevice& dev, JsonObject& jo, bool withKey
     else
       jo["entities"] = true;
   }
+  if (dev.downlinks.length()) {
+    if (withKeys)
+      jo["downlinks"] = serialized(dev.downlinks);
+    else
+      jo["downlinks"] = true;
+  }
 #  ifdef LORA_LORAWAN_JS
   if (!withKeys) jo["decoder"] = dev.decoder.length() > 0;
 #  endif
   if (!withKeys && dev.seen) jo["fcnt"] = dev.lastFcnt;
+  if (!withKeys) {
+    jo["fcnt_down"] = dev.fcntDown;
+    if (dev.queue.size()) jo["downlink_pending"] = dev.queue.size();
+  }
 }
 
 static void lorawanSaveIndex() {
@@ -358,7 +602,9 @@ static void lorawanEraseDevice(uint32_t devAddr) {
   lorawanNvsKey(key, "lw", devAddr);
   preferences.remove(key);
   lorawanNvsKey(key, "lj", devAddr);
-  preferences.remove(key);
+  if (preferences.isKey(key)) preferences.remove(key);
+  lorawanNvsKey(key, "lc", devAddr);
+  if (preferences.isKey(key)) preferences.remove(key);
   preferences.end();
 }
 
@@ -369,6 +615,23 @@ static void lorawanEraseDevice(uint32_t devAddr) {
       THEENGS_LOG_ERROR(F("[LoRaWAN] %s" CR), msg); \
       if (error) *error = msg;                      \
     } while (0)
+
+// Checks the downlink rules: {"rx1_frequency":..,"schedules":[{"every":s,"fport":p,"hex":".."}],"triggers":[{"when":"uplink"|{..},"fport":p,"hex":"..","cooldown":s}]}
+static const char* lorawanCheckRules(JsonObject rules) {
+  uint8_t bytes[LORAWAN_MAX_DOWNLINK_SIZE];
+  size_t len;
+  for (const char* list : {"schedules", "triggers"}) {
+    if (rules.containsKey(list) && !rules[list].is<JsonArray>()) return "schedules and triggers must be arrays";
+    for (JsonObject rule : rules[list].as<JsonArray>()) {
+      int fport = rule["fport"] | 0;
+      if (fport < 1 || fport > 223) return "each schedule/trigger needs an fport from 1 to 223";
+      if (!lorawanParseHex(String(rule["hex"] | ""), bytes, LORAWAN_MAX_DOWNLINK_SIZE, len)) return "each schedule/trigger needs a hex payload";
+      if (strcmp(list, "schedules") == 0 && (rule["every"] | 0) <= 0) return "each schedule needs an interval in seconds (every)";
+      if (strcmp(list, "triggers") == 0 && !rule.containsKey("when")) return "each trigger needs a condition (when)";
+    }
+  }
+  return nullptr;
+}
 
 // Applies one device declaration, returns false (and the reason in error, if given) if invalid
 bool LORAWANconfigureDevice(JsonObject& jo, bool save, String* error) {
@@ -389,14 +652,11 @@ bool LORAWANconfigureDevice(JsonObject& jo, bool save, String* error) {
     }
     return true;
   }
-  LoRaWANDevice candidate = dev ? *dev : LoRaWANDevice{devAddr, {0}, {0}, "", "", "",
-#  ifdef LORA_LORAWAN_JS
-                                                       "",
-#  endif
-                                                       0,
-                                                       false,
-                                                       "",
-                                                       0};
+  LoRaWANDevice candidate;
+  if (dev)
+    candidate = *dev;
+  else
+    candidate.devAddr = devAddr;
   if (jo.containsKey("nwkskey") && !lorawanParseKey(jo["nwkskey"], candidate.nwkSKey)) {
     LORAWAN_CONFIG_ERROR(error, "invalid nwkskey (32 hex digits)");
     return false;
@@ -416,6 +676,18 @@ bool LORAWANconfigureDevice(JsonObject& jo, bool save, String* error) {
     if (jo["entities"].is<JsonArray>() && jo["entities"].size() > 0) serializeJson(jo["entities"], candidate.entities);
     lorawanDiscoveryPending = true;
   }
+  if (jo.containsKey("downlinks")) {
+    candidate.downlinks = "";
+    if (jo["downlinks"].is<JsonObject>() && jo["downlinks"].size() > 0) {
+      const char* problem = lorawanCheckRules(jo["downlinks"].as<JsonObject>());
+      if (problem) {
+        LORAWAN_CONFIG_ERROR(error, problem);
+        return false;
+      }
+      serializeJson(jo["downlinks"], candidate.downlinks);
+    }
+    candidate.ruleLast.clear();
+  }
   if (dev) {
     *dev = candidate;
   } else {
@@ -429,6 +701,18 @@ bool LORAWANconfigureDevice(JsonObject& jo, bool save, String* error) {
   if (save) {
     lorawanSaveDevice(candidate);
     lorawanSaveIndex();
+  }
+  // Commands: {"clear_queue":true}, {"send":{"fport":1,"hex":"0100003C"}} (or an array)
+  if (jo["clear_queue"] | false) LORAWANclearQueue(devAddr);
+  if (jo.containsKey("send")) {
+    JsonArray sends = jo["send"].is<JsonArray>() ? jo["send"].as<JsonArray>() : JsonArray();
+    bool ok = true;
+    if (sends.isNull()) {
+      ok = LORAWANqueueDownlink(devAddr, jo["send"]["fport"] | 0, String(jo["send"]["hex"] | ""), "mqtt", error);
+    } else {
+      for (JsonObject send : sends) ok = LORAWANqueueDownlink(devAddr, send["fport"] | 0, String(send["hex"] | ""), "mqtt", error) && ok;
+    }
+    if (!ok) return false;
   }
   return true;
 }
@@ -479,6 +763,10 @@ void LORAWANsetup() {
     }
     JsonObject jo = doc.as<JsonObject>();
     if (!LORAWANconfigureDevice(jo, false, nullptr)) continue;
+    lorawanNvsKey(key, "lc", devAddr);
+    preferences.begin(Gateway_Short_Name, true);
+    if (preferences.isKey(key)) lorawanFind(devAddr)->fcntDown = preferences.getUInt(key, 0);
+    preferences.end();
 #  ifdef LORA_LORAWAN_JS
     lorawanNvsKey(key, "lj", devAddr);
     preferences.begin(Gateway_Short_Name, true);
@@ -487,6 +775,8 @@ void LORAWANsetup() {
 #  endif
   }
   THEENGS_LOG_NOTICE(F("[LoRaWAN] %d device(s) loaded" CR), lorawanDevices.size());
+  pinMode(LORA_DI0, INPUT);
+  attachInterrupt(digitalPinToInterrupt(LORA_DI0), lorawanRxDoneIsr, RISING); // DIO0 is RxDone in receive mode
   lorawanDiscoveryPending = true;
 }
 
