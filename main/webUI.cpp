@@ -1781,6 +1781,32 @@ void handleTK() {
  * @brief /IN - Information Page
  *
  */
+#  if defined(ZgatewayLORA) && defined(LORA_LORAWAN)
+/**
+ * The Information page turns flat JSON into a table and can't display nested values:
+ * show each LoRaWAN device of the LORA state as one row instead of the nested "lorawan" array.
+ */
+static String lorawanInformation(const String& state) {
+  DynamicJsonDocument doc(JSON_MSG_BUFFER * 2);
+  if (deserializeJson(doc, state) || !doc["lorawan"].is<JsonArray>()) return state;
+  for (JsonObject device : doc["lorawan"].as<JsonArray>()) {
+    String value;
+    for (JsonPair kv : device) {
+      if (strcmp(kv.key().c_str(), "devaddr") == 0) continue;
+      if (value.length()) value += " / ";
+      value += kv.key().c_str();
+      value += " ";
+      value += kv.value().as<String>();
+    }
+    doc[String("LoRaWAN ") + (device["devaddr"] | "")] = value;
+  }
+  doc.remove("lorawan");
+  String output;
+  serializeJson(doc, output);
+  return output;
+}
+#  endif
+
 void handleIN() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
@@ -1810,7 +1836,11 @@ void handleIN() {
 #  endif
 #  if defined(ZgatewayLORA)
     informationDisplay += "1<BR>LORA}2}1";
+#    ifdef LORA_LORAWAN
+    informationDisplay += lorawanInformation(stateLORAMeasures());
+#    else
     informationDisplay += stateLORAMeasures();
+#    endif
 #  endif
 #  if defined(ZgatewayRF)
     informationDisplay += "1<BR>RF}2}1";
