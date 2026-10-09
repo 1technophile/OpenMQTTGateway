@@ -121,6 +121,9 @@ void createOrUpdateDeviceLORA(const char* id, const char* model, uint8_t flags) 
 // This function always should be called from the main core as it generates direct mqtt messages
 // When overrideDiscovery=true, we publish discovery messages of known LORAdevices (even if no new)
 void launchLORADiscovery(bool overrideDiscovery) {
+#    ifdef LORA_LORAWAN
+  launchLORAWANDiscovery(overrideDiscovery);
+#    endif
   if (!overrideDiscovery && newLORADevices == 0)
     return;
   if (xSemaphoreTake(semaphorecreateOrUpdateDeviceLORA, pdMS_TO_TICKS(QueueSemaphoreTimeOutLoop)) == pdFALSE) {
@@ -400,6 +403,9 @@ void LORAConfig_fromJson(JsonObject& LORAdata) {
 void setupLORA() {
   LORAConfig_init();
   LORAConfig_load();
+#  ifdef LORA_LORAWAN
+  LORAWANsetup();
+#  endif
 #  ifdef ZmqttDiscovery
   semaphorecreateOrUpdateDeviceLORA = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphorecreateOrUpdateDeviceLORA);
@@ -454,17 +460,26 @@ void LORAtoX() {
     if (deviceId == WIPHONE) {
       _WiPhonetoX(packet, LORAdata);
     } else if (binary) {
-      if (LORAConfig.onlyKnown) {
-        THEENGS_LOG_TRACE(F("Ignoring non identifiable packet" CR));
+#  ifdef LORA_LORAWAN
+      int lorawan = LORAWANtoJson(packet, packetSize, LORAdata);
+      if (lorawan == LORAWAN_DROP)
         return;
-      }
-      // We have non-ascii data: create hex string of the data
-      char hex[packetSize * 2 + 2]; // _rawToHex writes "%02X\r" per byte: needs 2 * size + 2
-      TheengsUtils::_rawToHex(packet, hex, packetSize);
-      // Terminate with a null character
-      hex[packetSize * 2] = 0;
+      if (lorawan == LORAWAN_NOT_HANDLED) {
+#  endif
+        if (LORAConfig.onlyKnown) {
+          THEENGS_LOG_TRACE(F("Ignoring non identifiable packet" CR));
+          return;
+        }
+        // We have non-ascii data: create hex string of the data
+        char hex[packetSize * 2 + 2]; // _rawToHex writes "%02X\r" per byte: needs 2 * size + 2
+        TheengsUtils::_rawToHex(packet, hex, packetSize);
+        // Terminate with a null character
+        hex[packetSize * 2] = 0;
 
-      LORAdata["hex"] = hex;
+        LORAdata["hex"] = hex;
+#  ifdef LORA_LORAWAN
+      }
+#  endif
     } else {
       // ascii payload
       std::string packetStrStd = (char*)packet;
@@ -557,6 +572,9 @@ void XtoLORA(const char* topicOri, JsonObject& LORAdata) { // json object decodi
 
     // Load config from json if available
     LORAConfig_fromJson(LORAdata);
+#    ifdef LORA_LORAWAN
+    LORAWANConfig_fromJson(LORAdata); // LoRaWAN devices are stored separately, "save" applies to them too
+#    endif
     LORAConfig_apply();
     stateLORAMeasures();
   }
@@ -594,6 +612,9 @@ String stateLORAMeasures() {
   LORAdata["enablecrc"] = LORAConfig.crc;
   LORAdata["invertiq"] = LORAConfig.invertIQ;
   LORAdata["onlyknown"] = LORAConfig.onlyKnown;
+#  ifdef LORA_LORAWAN
+  LORAWANState(LORAdata);
+#  endif
   LORAdata["origin"] = subjectGTWLORAtoMQTT;
   enqueueJsonObject(LORAdata);
 

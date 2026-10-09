@@ -72,6 +72,33 @@ extern void XtoLORA(const char* topicOri, JsonObject& RFdata);
 
 #define repeatLORAwMQTT false // do we repeat a received signal by using MQTT with LORA gateway
 
+/*-------------------LoRaWAN ABP decoding----------------------*/
+// Enable with '-DLORA_LORAWAN' (ESP32 only), add '-DLORA_LORAWAN_JS' and ${libraries.duktape} for JavaScript payload decoders
+#ifdef LORA_LORAWAN
+#  ifndef LORAWAN_MAX_DEVICES
+#    define LORAWAN_MAX_DEVICES 16
+#  endif
+#  define LORAWAN_NOT_HANDLED 0 // not a data uplink from a configured device (or MIC check failed)
+#  define LORAWAN_DECODED     1
+#  define LORAWAN_DROP        2 // duplicate frame
+extern void LORAWANsetup();
+extern int LORAWANtoJson(const uint8_t* packet, int packetSize, JsonObject& LORAdata);
+extern void LORAWANConfig_fromJson(JsonObject& LORAdata);
+extern void LORAWANState(JsonObject& LORAdata);
+#  ifdef ZmqttDiscovery
+extern void launchLORAWANDiscovery(bool overrideDiscovery);
+#  endif
+#  ifdef LORA_LORAWAN_JS
+// Decoder scripts are published raw (not JSON) to <base><gateway>/LORAWANdecoder/<DEVADDR>.
+// Deliberately outside /commands/#: that subscription only accepts JSON and is limited to JSON_MSG_BUFFER_MAX
+#    define subjectLORAWANdecoder "/LORAWANdecoder"
+#    ifndef LORAWAN_DECODER_MAX_SIZE
+#      define LORAWAN_DECODER_MAX_SIZE 3800 // bytes, NVS strings are limited to ~4000 bytes
+#    endif
+extern void LORAWANdecoderFromMQTT(const char* topic, const char* payload);
+#  endif
+#endif
+
 /*-------------------PIN DEFINITIONS----------------------*/
 
 //TTGO LORA BOARD ESP32 PIN DEFINITION

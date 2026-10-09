@@ -81,6 +81,64 @@ will send binary 0x01C0FFEE
 * WiPhone message: `mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoLORA" -m '{"message":"test","type":"WiPhone","to":"123ABC","from":"FFFFFF"}'`\
 will send "test" to a WiPhone with chip ID 123ABC
 
+## Decoding LoRaWAN ABP devices
+
+The gateway can decrypt uplinks from LoRaWAN devices using ABP (activation by personalization), such as Dragino sensors switched to ABP mode. It is not a LoRaWAN network server, so this only suits a simple setup:
+* The gateway listens on a single frequency, spreading factor and bandwidth. Set each device to send on that same channel (for example `AT+CHS=903900000` and a fixed data rate with ADR off on Dragino devices) and use sync word `0x34`.
+* Only uplinks are handled. There is no join (OTAA), no downlink and no MAC commands, so turn off on the device any feature that waits for a downlink (confirmed uplinks, link checks, "rejoin when no downlink").
+
+This feature is available on ESP32 only. It is not part of the default binaries: build with `'-DLORA_LORAWAN'`. To also decode the payload with a JavaScript decoder, add `'-DLORA_LORAWAN_JS'` and the Duktape library, for example in your `prod_env.ini`:
+```ini
+[env:ttgo-lora32-v21-lorawan]
+extends = env:ttgo-lora32-v21
+lib_deps =
+  ${env:ttgo-lora32-v21.lib_deps}
+  ${libraries.duktape}
+build_flags =
+  ${env:ttgo-lora32-v21.build_flags}
+  '-DLORA_LORAWAN'
+  '-DLORA_LORAWAN_JS'
+  '-DARDUINO_LOOP_STACK_SIZE=16384'
+```
+
+### Declaring a device
+Add the device with its DevAddr and session keys through the LoRa configuration command. Use `"save":true` to keep it after a restart:
+
+`mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA/config -m '{"lorawan":{"devaddr":"0187F184","nwkskey":"<32 hex digits>","appskey":"<32 hex digits>","name":"Front door","model":"LDS02"},"save":true}'`
+
+You can declare up to 16 devices (`LORAWAN_MAX_DEVICES`), either one at a time or as an array. To change the name or model later, send only the `devaddr` and the fields to change. To delete a device, send `{"lorawan":{"devaddr":"0187F184","remove":true},"save":true}`. The LoRa state message lists the configured devices, but never their keys.
+
+For each uplink, the gateway checks the message integrity code (MIC) with the NwkSKey, drops repeated frames (same frame counter) and decrypts the payload with the AppSKey. It then publishes to `home/OpenMQTTGateway/LORAtoMQTT/<DEVADDR>`:
+```json
+{"id":"0187F184","name":"Front door","model":"LDS02","fcnt":67,"fport":10,"payload":"8C6C0100003B00000000","rssi":-34,"snr":10.5,"pferror":-2435,"packetSize":23}
+```
+Packets from unknown devices, or that fail the MIC check, are published as raw `hex` like any other binary packet.
+
+### JavaScript payload decoders
+With `LORA_LORAWAN_JS`, you can attach a decoder to each device. It uses the same formats as The Things Network:
+* `function Decoder(bytes, port)` returns an object (TTN v2).
+* `function decodeUplink(input)` receives `{bytes, fPort}` and returns `{data, warnings, errors}` (TTN v3).
+
+Publish the script as is, not wrapped in JSON, to `home/OpenMQTTGateway/LORAWANdecoder/<DEVADDR>`. The device must already be declared. The script is stored in flash and can be up to 3800 bytes (`LORAWAN_DECODER_MAX_SIZE`); an empty message removes it:
+
+`mosquitto_pub -t home/OpenMQTTGateway/LORAWANdecoder/0187F184 -f lds02_decoder.js`
+
+The fields of the decoded object are added to the published message:
+```json
+{"id":"0187F184","name":"Front door","model":"LDS02","fcnt":67,"fport":10,"payload":"8C6C0100003B00000000","BAT_V":3.18,"BAT_PCNT":"88.33","DOOR_OPEN_STATUS":1,"DOOR_STATE":"open","LAST_DOOR_OPEN_DURATION":0,"UTC_TIME":"2026-10-09T06:49:17.000Z","rssi":-34,"snr":10.5,"pferror":-2435,"packetSize":23}
+```
+If the decoder fails, the message contains `decoder_error` instead. Decoders run on Duktape (ECMAScript 5.1 with some ES6 additions such as `const`), so arrow functions, `let` and template literals are not supported. When a decoder runs, the gateway sets its clock by NTP so that `new Date()` returns the current time.
+
+### Home Assistant entities
+Add an `entities` list to the device declaration to create Home Assistant entities from the published fields:
+```json
+{"lorawan":{"devaddr":"0187F184","entities":[
+  {"key":"DOOR_STATE","type":"binary_sensor","name":"Door","class":"door","on":"open","off":"close"},
+  {"key":"BAT_V","name":"Battery voltage","class":"voltage","unit":"V"},
+  {"key":"rssi","name":"RSSI","class":"signal_strength","unit":"dBm"}]},"save":true}
+```
+`type` is `sensor` by default. `class` is the Home Assistant device class. Sensors use `state_class` `measurement` unless you set another one. Fields named like the existing LoRa sensors (`tempc`, `hum`, `moi`, `batt`, `count`) are discovered automatically.
+
 More info on where the LoRa library is born [@sandeepmistry](https://github.com/sandeepmistry/arduino-LoRa/blob/master/API.md#radio-parameters)
 
 Tutorial on how to leverage LoRa for a mailbox sensor from [PricelessToolkit](https://www.youtube.com/channel/UCz75N6inuLHXnRC5tqagNLw):
