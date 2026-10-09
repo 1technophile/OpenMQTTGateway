@@ -18,9 +18,9 @@ In essence, while both gateways utilize LoRa technology for communication, a LoR
 ## Configuring the LoRa gateway
 
 The LoRa gateway can be configured by MQTT commands or by using the WebUI, here are the parameters available, they can be combined with the key "save" or "erase":
-* txpower: 0 to 14
+* txpower: 2 to 20 (dBm, on the PA_BOOST output used by the LoRa boards; stay within your regional limit, e.g. 14 dBm on most EU868 channels)
 * spreadingfactor: 7 to 12
-* frequency: 433000000, 868000000, 915000000
+* frequency: in Hz, e.g. 433000000, 868000000, 915000000 or any channel such as 903900000
 * signalbandwidth: 7800, 10400, 15500, 20800, 31250, 41700, 62500, 125000, and 250000
 * codingrate: 5 to 8
 * preamblelength: 6 to 65535
