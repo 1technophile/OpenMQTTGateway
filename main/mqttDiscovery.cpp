@@ -186,7 +186,7 @@ void createDiscoveryFromList(const char* mac,
   for (int i = 0; i < sensorCount; i++) {
     String unique_id;
     if (gateway_entity) {
-      unique_id = getUniqueId(sensorList[i][2] ? sensorList[i][2] : sensorList[i][1], "");
+      unique_id = getUniqueId(sensorList[i][2] && sensorList[i][2][0] ? sensorList[i][2] : sensorList[i][1], "");
     } else if (mac) {
       unique_id = String(mac) + "-" + sensorList[i][1];
     } else {
