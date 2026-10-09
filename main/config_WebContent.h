@@ -169,12 +169,9 @@ const char config_lora_body[] = body_header
     "<legend><span><b>Configure LORA</b></span></legend>"
     "<form method='get' action='la'>"
 
-    "<p><b>Frequency</b><br>"
-    "<select id='lf' name='lf'>"
-    "<option %s value='868000000'>868MHz</option>"
-    "<option %s value='915000000'>915MHz</option>"
-    "<option %s value='433000000'>433MHz</option>"
-    "</select></p>"
+    "<p><b>Frequency (Hz)</b><br>"
+    "<input type='number' id='lf' name='lf' min='137000000' max='1020000000' list='lfl' value='%ld'>"
+    "<datalist id='lfl'><option value='433000000'><option value='868000000'><option value='915000000'></datalist></p>"
 
     "<p><b>TX Power</b><br>"
     "<select id='lt' name='lt'>"
