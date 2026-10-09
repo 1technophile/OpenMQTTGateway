@@ -102,7 +102,9 @@ build_flags =
 ```
 
 ### Declaring a device
-Add the device with its DevAddr and session keys through the LoRa configuration command. Use `"save":true` to keep it after a restart:
+The easiest way is the WebUI: open **Configuration > Configure LoRaWAN**, then **Add device**. The page lists the declared devices. It lets you edit their name, model, session keys, Home Assistant entities and decoder, and test a decoder on a payload before saving. Stored keys are never shown, and an empty key field keeps the current key.
+
+You can also add the device with its DevAddr and session keys through the LoRa configuration command. Use `"save":true` to keep it after a restart:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoLORA/config -m '{"lorawan":{"devaddr":"0187F184","nwkskey":"<32 hex digits>","appskey":"<32 hex digits>","name":"Front door","model":"LDS02"},"save":true}'`
 
