@@ -459,7 +459,7 @@ void LORAtoX() {
         return;
       }
       // We have non-ascii data: create hex string of the data
-      char hex[packetSize * 2 + 1];
+      char hex[packetSize * 2 + 2]; // _rawToHex writes "%02X\r" per byte: needs 2 * size + 2
       TheengsUtils::_rawToHex(packet, hex, packetSize);
       // Terminate with a null character
       hex[packetSize * 2] = 0;
