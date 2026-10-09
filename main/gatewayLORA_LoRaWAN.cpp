@@ -49,25 +49,16 @@
 #    include <duktape.h>
 #  endif
 
-struct LoRaWANDevice {
-  uint32_t devAddr;
-  uint8_t nwkSKey[16];
-  uint8_t appSKey[16];
-  String name;
-  String model;
-  String entities; // serialized JSON array of Home Assistant entity declarations
-#  ifdef LORA_LORAWAN_JS
-  String decoder;
-#  endif
-  uint32_t lastFcnt;
-  bool seen;
-};
-
 static std::vector<LoRaWANDevice> lorawanDevices;
+
+const std::vector<LoRaWANDevice>& LORAWANdevices() {
+  return lorawanDevices;
+}
 static bool lorawanDiscoveryPending = false;
 
 // NVS keys are limited to 15 characters: "lw" + DevAddr for the device, "lj" + DevAddr for its decoder
-#  define LORAWAN_NVS_INDEX "lwdevs"
+#  define LORAWAN_NVS_INDEX        "lwdevs"
+#  define LORAWAN_DEVICE_JSON_SIZE 3072 // device declaration with keys and entities, NVS strings are limited to ~4000 bytes
 
 static void lorawanNvsKey(char* key, const char* prefix, uint32_t devAddr) {
   snprintf(key, 11, "%s%08X", prefix, devAddr);
@@ -172,7 +163,7 @@ static void lorawanDuktapeFatal(void* udata, const char* msg) {
 }
 
 // Runs the device decoder, merges the resulting object into LORAdata, returns false (and sets "decoder_error") on failure
-static bool lorawanRunDecoder(const LoRaWANDevice& dev, uint8_t fport, const uint8_t* bytes, size_t len, JsonObject& LORAdata) {
+static bool lorawanRunDecoder(const String& script, uint8_t fport, const uint8_t* bytes, size_t len, JsonObject& LORAdata) {
   lorawanStartNtp();
   duk_context* ctx = duk_create_heap(NULL, NULL, NULL, NULL, lorawanDuktapeFatal);
   if (!ctx) {
@@ -180,7 +171,7 @@ static bool lorawanRunDecoder(const LoRaWANDevice& dev, uint8_t fport, const uin
     return false;
   }
   bool ok = false;
-  if (duk_peval_lstring(ctx, dev.decoder.c_str(), dev.decoder.length()) != 0) {
+  if (duk_peval_lstring(ctx, script.c_str(), script.length()) != 0) {
     LORAdata["decoder_error"] = duk_safe_to_string(ctx, -1);
   } else {
     duk_pop(ctx);
@@ -237,8 +228,12 @@ static bool lorawanRunDecoder(const LoRaWANDevice& dev, uint8_t fport, const uin
     }
   }
   duk_destroy_heap(ctx);
-  if (!ok) THEENGS_LOG_WARNING(F("[LoRaWAN] decoder error for %X: %s" CR), dev.devAddr, LORAdata["decoder_error"].as<const char*>());
   return ok;
+}
+
+// Runs a decoder script on the given bytes without any device (used to test decoders from the WebUI)
+bool LORAWANtestDecoder(const String& script, uint8_t fport, const uint8_t* bytes, size_t len, JsonObject& result) {
+  return lorawanRunDecoder(script, fport, bytes, len, result);
 }
 #  endif
 
@@ -292,8 +287,11 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
     hex[n * 2] = 0;
     LORAdata["fport"] = fport;
     LORAdata["payload"] = hex;
+    dev->lastPayload = hex;
+    dev->lastPort = fport;
 #  ifdef LORA_LORAWAN_JS
-    if (fport != 0 && dev->decoder.length()) lorawanRunDecoder(*dev, fport, plain, n, LORAdata);
+    if (fport != 0 && dev->decoder.length() && !lorawanRunDecoder(dev->decoder, fport, plain, n, LORAdata))
+      THEENGS_LOG_WARNING(F("[LoRaWAN] decoder error for %X: %s" CR), devAddr, LORAdata["decoder_error"].as<const char*>());
 #  endif
   }
   return LORAWAN_DECODED;
@@ -341,7 +339,7 @@ static void lorawanSaveIndex() {
 }
 
 static void lorawanSaveDevice(const LoRaWANDevice& dev) {
-  StaticJsonDocument<JSON_MSG_BUFFER> doc;
+  DynamicJsonDocument doc(LORAWAN_DEVICE_JSON_SIZE);
   JsonObject jo = doc.to<JsonObject>();
   lorawanToJson(dev, jo, true);
   String conf;
@@ -365,10 +363,18 @@ static void lorawanEraseDevice(uint32_t devAddr) {
 }
 
 // Applies one device declaration, returns false if invalid
-static bool lorawanDeviceFromJson(JsonObject& jo, bool save) {
+// Logs a configuration error and reports it to the caller (WebUI) when requested
+#  define LORAWAN_CONFIG_ERROR(error, msg)          \
+    do {                                            \
+      THEENGS_LOG_ERROR(F("[LoRaWAN] %s" CR), msg); \
+      if (error) *error = msg;                      \
+    } while (0)
+
+// Applies one device declaration, returns false (and the reason in error, if given) if invalid
+bool LORAWANconfigureDevice(JsonObject& jo, bool save, String* error) {
   uint32_t devAddr;
   if (!lorawanParseDevAddr(jo["devaddr"], devAddr)) {
-    THEENGS_LOG_ERROR(F("[LoRaWAN] invalid or missing devaddr (8 hex digits)" CR));
+    LORAWAN_CONFIG_ERROR(error, "invalid or missing devaddr (8 hex digits)");
     return false;
   }
   LoRaWANDevice* dev = lorawanFind(devAddr);
@@ -388,31 +394,33 @@ static bool lorawanDeviceFromJson(JsonObject& jo, bool save) {
                                                        "",
 #  endif
                                                        0,
-                                                       false};
+                                                       false,
+                                                       "",
+                                                       0};
   if (jo.containsKey("nwkskey") && !lorawanParseKey(jo["nwkskey"], candidate.nwkSKey)) {
-    THEENGS_LOG_ERROR(F("[LoRaWAN] invalid nwkskey (32 hex digits)" CR));
+    LORAWAN_CONFIG_ERROR(error, "invalid nwkskey (32 hex digits)");
     return false;
   }
   if (jo.containsKey("appskey") && !lorawanParseKey(jo["appskey"], candidate.appSKey)) {
-    THEENGS_LOG_ERROR(F("[LoRaWAN] invalid appskey (32 hex digits)" CR));
+    LORAWAN_CONFIG_ERROR(error, "invalid appskey (32 hex digits)");
     return false;
   }
   if (!dev && !(jo.containsKey("nwkskey") && jo.containsKey("appskey"))) {
-    THEENGS_LOG_ERROR(F("[LoRaWAN] new device %X requires nwkskey and appskey" CR), devAddr);
+    LORAWAN_CONFIG_ERROR(error, "a new device requires nwkskey and appskey");
     return false;
   }
   if (jo.containsKey("name")) candidate.name = jo["name"].as<String>();
   if (jo.containsKey("model")) candidate.model = jo["model"].as<String>();
   if (jo.containsKey("entities")) {
     candidate.entities = "";
-    if (jo["entities"].is<JsonArray>()) serializeJson(jo["entities"], candidate.entities);
+    if (jo["entities"].is<JsonArray>() && jo["entities"].size() > 0) serializeJson(jo["entities"], candidate.entities);
     lorawanDiscoveryPending = true;
   }
   if (dev) {
     *dev = candidate;
   } else {
     if (lorawanDevices.size() >= LORAWAN_MAX_DEVICES) {
-      THEENGS_LOG_ERROR(F("[LoRaWAN] maximum number of devices (%d) reached" CR), LORAWAN_MAX_DEVICES);
+      LORAWAN_CONFIG_ERROR(error, "maximum number of devices reached (LORAWAN_MAX_DEVICES)");
       return false;
     }
     lorawanDevices.push_back(candidate);
@@ -430,10 +438,10 @@ void LORAWANConfig_fromJson(JsonObject& LORAdata) {
   if (!LORAdata.containsKey("lorawan")) return;
   bool save = LORAdata["save"] | false;
   if (LORAdata["lorawan"].is<JsonArray>()) {
-    for (JsonObject jo : LORAdata["lorawan"].as<JsonArray>()) lorawanDeviceFromJson(jo, save);
+    for (JsonObject jo : LORAdata["lorawan"].as<JsonArray>()) LORAWANconfigureDevice(jo, save, nullptr);
   } else if (LORAdata["lorawan"].is<JsonObject>()) {
     JsonObject jo = LORAdata["lorawan"].as<JsonObject>();
-    lorawanDeviceFromJson(jo, save);
+    LORAWANconfigureDevice(jo, save, nullptr);
   }
 }
 
@@ -464,13 +472,13 @@ void LORAWANsetup() {
     preferences.begin(Gateway_Short_Name, true);
     String conf = preferences.isKey(key) ? preferences.getString(key, "") : "";
     preferences.end();
-    StaticJsonDocument<JSON_MSG_BUFFER> doc;
+    DynamicJsonDocument doc(LORAWAN_DEVICE_JSON_SIZE);
     if (conf.length() == 0 || deserializeJson(doc, conf)) {
       THEENGS_LOG_ERROR(F("[LoRaWAN] cannot load device %X" CR), devAddr);
       continue;
     }
     JsonObject jo = doc.as<JsonObject>();
-    if (!lorawanDeviceFromJson(jo, false)) continue;
+    if (!LORAWANconfigureDevice(jo, false, nullptr)) continue;
 #  ifdef LORA_LORAWAN_JS
     lorawanNvsKey(key, "lj", devAddr);
     preferences.begin(Gateway_Short_Name, true);
@@ -483,6 +491,32 @@ void LORAWANsetup() {
 }
 
 #  ifdef LORA_LORAWAN_JS
+// Sets (and stores) the decoder of a configured device, an empty script removes it
+bool LORAWANsetDecoder(uint32_t devAddr, const String& script) {
+  LoRaWANDevice* dev = lorawanFind(devAddr);
+  if (!dev) {
+    THEENGS_LOG_ERROR(F("[LoRaWAN] decoder received for unknown device %X, configure it first" CR), devAddr);
+    return false;
+  }
+  if (script.length() > LORAWAN_DECODER_MAX_SIZE) {
+    THEENGS_LOG_ERROR(F("[LoRaWAN] decoder for %X exceeds %d bytes" CR), devAddr, LORAWAN_DECODER_MAX_SIZE);
+    return false;
+  }
+  dev->decoder = script;
+  char key[11];
+  lorawanNvsKey(key, "lj", devAddr);
+  preferences.begin(Gateway_Short_Name, false);
+  if (dev->decoder.length()) {
+    size_t result = preferences.putString(key, dev->decoder);
+    THEENGS_LOG_NOTICE(F("[LoRaWAN] decoder for %X saved (%d bytes), result: %d" CR), devAddr, dev->decoder.length(), result);
+  } else if (preferences.isKey(key)) {
+    preferences.remove(key);
+    THEENGS_LOG_NOTICE(F("[LoRaWAN] decoder for %X removed" CR), devAddr);
+  }
+  preferences.end();
+  return true;
+}
+
 // Decoder scripts are received raw (not JSON) on <base><gateway>/LORAWANdecoder/<DEVADDR>; an empty payload removes the decoder
 void LORAWANdecoderFromMQTT(const char* topic, const char* payload) {
   const char* slash = strrchr(topic, '/');
@@ -491,23 +525,7 @@ void LORAWANdecoderFromMQTT(const char* topic, const char* payload) {
     THEENGS_LOG_ERROR(F("[LoRaWAN] decoder topic must end with the 8 hex digits DevAddr: %s" CR), topic);
     return;
   }
-  LoRaWANDevice* dev = lorawanFind(devAddr);
-  if (!dev) {
-    THEENGS_LOG_ERROR(F("[LoRaWAN] decoder received for unknown device %X, configure it first" CR), devAddr);
-    return;
-  }
-  dev->decoder = payload;
-  char key[11];
-  lorawanNvsKey(key, "lj", devAddr);
-  preferences.begin(Gateway_Short_Name, false);
-  if (dev->decoder.length()) {
-    size_t result = preferences.putString(key, dev->decoder);
-    THEENGS_LOG_NOTICE(F("[LoRaWAN] decoder for %X saved (%d bytes), result: %d" CR), devAddr, dev->decoder.length(), result);
-  } else {
-    preferences.remove(key);
-    THEENGS_LOG_NOTICE(F("[LoRaWAN] decoder for %X removed" CR), devAddr);
-  }
-  preferences.end();
+  LORAWANsetDecoder(devAddr, payload);
 }
 #  endif
 
@@ -525,7 +543,7 @@ void launchLORAWANDiscovery(bool overrideDiscovery) {
   lorawanDiscoveryPending = false;
   for (auto& dev : lorawanDevices) {
     if (!dev.entities.length()) continue;
-    StaticJsonDocument<JSON_MSG_BUFFER> doc;
+    DynamicJsonDocument doc(LORAWAN_DEVICE_JSON_SIZE);
     if (deserializeJson(doc, dev.entities)) {
       THEENGS_LOG_ERROR(F("[LoRaWAN] invalid entities for %X" CR), dev.devAddr);
       continue;
