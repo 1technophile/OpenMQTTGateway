@@ -381,7 +381,7 @@ static bool lorawanTriggerMatches(JsonVariant when, JsonObject& LORAdata) {
 
 // Applies the schedules and triggers of the device, then sends the first queued downlink (and/or the ACK of a
 // confirmed uplink) in RX1, or RX2 if RX1 cannot be reached anymore
-static void lorawanProcessDownlink(LoRaWANDevice& dev, bool confirmedUplink, int64_t rxDoneUs, JsonObject& LORAdata) {
+static void lorawanProcessDownlink(LoRaWANDevice& dev, bool confirmedUplink, int64_t rxDoneUs, JsonObject& LORAdata, bool applyRules) {
   DynamicJsonDocument rulesDoc(LORAWAN_DEVICE_JSON_SIZE);
   if (dev.downlinks.length()) deserializeJson(rulesDoc, dev.downlinks);
   JsonObject rules = rulesDoc.as<JsonObject>();
@@ -389,7 +389,7 @@ static void lorawanProcessDownlink(LoRaWANDevice& dev, bool confirmedUplink, int
   size_t ruleCount = rules["schedules"].size() + rules["triggers"].size();
   if (dev.ruleLast.size() != ruleCount) dev.ruleLast.assign(ruleCount, 0);
   size_t rule = 0;
-  for (JsonObject schedule : rules["schedules"].as<JsonArray>()) {
+  for (JsonObject schedule : (applyRules ? rules["schedules"].as<JsonArray>() : JsonArray())) {
     uint32_t every = schedule["every"] | 0;
     // schedules fire at the first uplink, then at the first uplink after each interval
     if (every && (dev.ruleLast[rule] == 0 || now - dev.ruleLast[rule] >= every * 1000UL)) {
@@ -397,7 +397,7 @@ static void lorawanProcessDownlink(LoRaWANDevice& dev, bool confirmedUplink, int
     }
     rule++;
   }
-  for (JsonObject trigger : rules["triggers"].as<JsonArray>()) {
+  for (JsonObject trigger : (applyRules ? rules["triggers"].as<JsonArray>() : JsonArray())) {
     uint32_t cooldown = trigger["cooldown"] | 0;
     if (lorawanTriggerMatches(trigger["when"], LORAdata) && (dev.ruleLast[rule] == 0 || now - dev.ruleLast[rule] >= cooldown * 1000UL)) {
       if (LORAWANqueueDownlink(dev.devAddr, trigger["fport"] | 0, trigger["hex"] | "", "trigger", nullptr)) {
@@ -515,6 +515,8 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
   }
   if (dev->seen && fcnt == dev->lastFcnt) {
     THEENGS_LOG_NOTICE(F("[LoRaWAN] Duplicate FCnt %u from %X ignored" CR), fcnt, devAddr);
+    // A repeated confirmed uplink means our ACK was missed: acknowledge it again (without republishing it)
+    if (mtype == 4) lorawanProcessDownlink(*dev, true, rxDoneUs, LORAdata, false);
     return LORAWAN_DROP;
   }
   dev->lastFcnt = fcnt;
@@ -545,7 +547,7 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
       THEENGS_LOG_WARNING(F("[LoRaWAN] decoder error for %X: %s" CR), devAddr, LORAdata["decoder_error"].as<const char*>());
 #  endif
   }
-  lorawanProcessDownlink(*dev, mtype == 4, rxDoneUs, LORAdata);
+  lorawanProcessDownlink(*dev, mtype == 4, rxDoneUs, LORAdata, true);
   return LORAWAN_DECODED;
 }
 
