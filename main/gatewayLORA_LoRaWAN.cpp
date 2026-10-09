@@ -441,9 +441,12 @@ static void lorawanProcessDownlink(LoRaWANDevice& dev, bool confirmedUplink, int
   LoRaWANWindow rx1, rx2;
   lorawanWindows(rules, rx1, rx2);
   int64_t rx1At = rxDoneUs + (int64_t)(rules["rx1_delay"] | 1) * 1000000LL;
+  // "window": "auto" (RX1, else RX2), "rx1" or "rx2" (e.g. for devices with an unpredictable RX1 channel)
+  const char* windowRule = rules["window"] | "auto";
   const char* window = "rx1";
-  bool sent = lorawanTransmitAt(rx1At, rx1, frame, n);
-  if (!sent) {
+  bool sent = false;
+  if (strcmp(windowRule, "rx2") != 0) sent = lorawanTransmitAt(rx1At, rx1, frame, n);
+  if (!sent && strcmp(windowRule, "rx1") != 0) {
     window = "rx2";
     sent = lorawanTransmitAt(rx1At + 1000000LL, rx2, frame, n);
   }
@@ -492,8 +495,23 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
   uint8_t mac[16];
   lorawanMic(dev->nwkSKey, b0, p, msgLen, mac);
   if (memcmp(mac, p + msgLen, 4) != 0) {
-    THEENGS_LOG_WARNING(F("[LoRaWAN] MIC check failed for %X FCnt %u" CR), devAddr, fcnt);
-    return LORAWAN_NOT_HANDLED;
+    // ABP devices usually restart their frame counter when they reboot: accept a valid frame with the 16 bits counter
+    uint32_t fcnt16 = p[6] | (p[7] << 8);
+    bool reset = false;
+    if (fcnt != fcnt16) {
+      b0[12] = 0;
+      b0[13] = 0;
+      lorawanMic(dev->nwkSKey, b0, p, msgLen, mac);
+      reset = memcmp(mac, p + msgLen, 4) == 0;
+    }
+    if (!reset) {
+      THEENGS_LOG_WARNING(F("[LoRaWAN] MIC check failed for %X FCnt %u" CR), devAddr, fcnt);
+      return LORAWAN_NOT_HANDLED;
+    }
+    THEENGS_LOG_NOTICE(F("[LoRaWAN] %X frame counter restarted (%u after %u)" CR), devAddr, fcnt16, dev->lastFcnt);
+    LORAdata["fcnt_reset"] = true;
+    fcnt = fcnt16;
+    dev->seen = false; // not a duplicate of the previous counter value
   }
   if (dev->seen && fcnt == dev->lastFcnt) {
     THEENGS_LOG_NOTICE(F("[LoRaWAN] Duplicate FCnt %u from %X ignored" CR), fcnt, devAddr);
