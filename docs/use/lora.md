@@ -153,7 +153,7 @@ Use `{"lorawan":{"devaddr":"0187F184","clear_queue":true}}` to drop the pending 
 {"id":"0187F184","fcnt":5,"fport":10,"payload":"8D500100007300000300","downlink":{"fcnt":0,"window":"rx2","power":20,"fport":1,"payload":"01000E10","source":"mqtt"},"downlink_pending":1}
 ```
 
-Uplinks with a confirmed data type are acknowledged in the same way, even if no command is queued.
+Uplinks with a confirmed data type are acknowledged in the same way, even if no command is queued. When a device misses an ACK, it retransmits the same frame. The gateway acknowledges the retransmission again without publishing it twice. Confirmed uplinks (e.g. `AT+CCONFIRM=1` and `AT+CNBTRIALS=1,3` on Dragino devices) help a distant device make sure its events arrive. Keep in mind that the ACK is a downlink, so at the edge of the range the device may miss it and retransmit, which costs battery.
 
 #### Downlink rules
 The `downlinks` object of a device declaration holds commands sent automatically, and receive window settings:
