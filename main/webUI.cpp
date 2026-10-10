@@ -500,7 +500,11 @@ void handleRoot() {
     }
     if (server.hasArg("m")) {
       if (currentWebUIMessage) {
-        server.send(200, "application/json", "{t}{s}<b>" + String(currentWebUIMessage->title) + "</b>{e}{s}" + String(currentWebUIMessage->line1) + "{e}{s}" + String(currentWebUIMessage->line2) + "{e}{s}" + String(currentWebUIMessage->line3) + "{e}{s}" + String(currentWebUIMessage->line4) + "{e}</table>");
+        String content = "{t}{s}<b>" + String(currentWebUIMessage->title) + "</b>{e}";
+        for (const char* line : {currentWebUIMessage->line1, currentWebUIMessage->line2, currentWebUIMessage->line3, currentWebUIMessage->line4}) {
+          if (line[0]) content += "{s}" + String(line) + "{e}"; // only the lines in use, the box fits its content
+        }
+        server.send(200, "application/json", content + "</table>");
       } else {
         server.send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
       }
@@ -2533,37 +2537,49 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 #  endif
 #  ifdef ZgatewayLORA
         case webUIHash("LORAtoMQTT"): {
-          // {"tempc":25.4,"hum":0,"batt":0}
-
-          String line1 = "";
-          if (data.containsKey("tempc")) {
-            float temperature_C = data["tempc"];
-
-            if (displayMetric) {
-              line1 = "temp: " + doubleToString(temperature_C, 3, 1) + "°C ";
-            } else {
-              line1 = "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F ";
+          // LoRa packets ({"id":"..","model":"..","tempc":25.4,"hum":50,"rssi":-60,"snr":9}, {"hex":".."}, {"message":".."})
+          // or the gateway LoRa configuration ({"frequency":868000000,"spreadingfactor":7,...})
+          String line1 = "", line2 = "", line3 = "", line4 = "";
+          if (data.containsKey("frequency") && data.containsKey("spreadingfactor")) {
+            line1 = "frequency: " + String(data["frequency"].as<long>()) + " Hz";
+            line2 = "SF" + String(data["spreadingfactor"].as<int>()) + ", bandwidth: " + String(data["signalbandwidth"].as<long>()) + " Hz, sync word: " + data["syncword"].as<String>();
+            line3 = "tx power: " + String(data["txpower"].as<int>()) + " dBm";
+          } else {
+            // Line 1: the sender
+            if (data.containsKey("name")) {
+              line1 = data["name"].as<String>();
+            } else if (data.containsKey("id")) {
+              line1 = data["id"].as<String>();
             }
+            if (data.containsKey("model")) line1 += (line1.length() ? " (" : "(") + data["model"].as<String>() + ")";
+            // Lines 2 and 3: the data fields
+            static const char* radioKeys[] = {"id", "name", "model", "origin", "rssi", "snr", "pferror", "packetSize", "fcnt", "fport", "payload", "confirmed", "fcnt_reset", "downlink", "downlink_pending", "downlink_error"};
+            for (JsonPair kv : data) {
+              const char* key = kv.key().c_str();
+              bool skip = false;
+              for (const char* radioKey : radioKeys) skip = skip || strcmp(key, radioKey) == 0;
+              if (skip) continue;
+              String item;
+              if (strcmp(key, "tempc") == 0) {
+                float temperature_C = kv.value();
+                item = displayMetric ? "temp: " + doubleToString(temperature_C, 3, 1) + "°C" : "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F";
+              } else {
+                item = String(key) + ": " + kv.value().as<String>();
+              }
+              item.replace("<", "&lt;");
+              String& line = line2.length() + item.length() + 2 < WEBUI_TEXT_WIDTH ? line2 : line3;
+              if (line.length() + item.length() + 2 >= WEBUI_TEXT_WIDTH) break;
+              line += (line.length() ? ", " : "") + item;
+            }
+            // Line 4: the radio
+            if (data.containsKey("rssi")) line4 = "rssi: " + String(data["rssi"].as<int>()) + " dBm, snr: " + data["snr"].as<String>();
+            if (data.containsKey("fcnt")) line4 += ", fcnt: " + String(data["fcnt"].as<long>());
+            if (data.containsKey("downlink")) line4 += ", downlink " + data["downlink"]["window"].as<String>();
           }
           line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
-
-          // Line 2
-
-          String line2 = "";
-          float humidity = data["hum"];
-          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            line2 += "hum: " + doubleToString(humidity, 3, 1) + "% ";
-          }
           line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
-
-          // Line 3
-
-          String line3 = "";
-          float adc = data["adc"];
-          if (data.containsKey("adc") && adc <= 100 && adc >= 0) {
-            line3 += "adc: " + doubleToString(adc, 3, 1) + "µS/cm ";
-          }
-          line3.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+          line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+          line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
           // Queue completed message
 
