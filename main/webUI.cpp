@@ -1331,6 +1331,264 @@ void handleLA() {
                 LORAConfig.onlyKnown ? "checked" : "");
   sendFooterChunk();
 }
+
+#    ifdef LORA_LORAWAN
+#      include <TheengsUtils.h>
+
+static String htmlEscape(const String& in) {
+  String out;
+  out.reserve(in.length() + 16);
+  for (size_t i = 0; i < in.length(); i++) {
+    char c = in[i];
+    switch (c) {
+      case '&':
+        out += "&amp;";
+        break;
+      case '<':
+        out += "&lt;";
+        break;
+      case '>':
+        out += "&gt;";
+        break;
+      case '"':
+        out += "&quot;";
+        break;
+      case '\'':
+        out += "&#39;";
+        break;
+      default:
+        out += c;
+    }
+  }
+  return out;
+}
+
+static const LoRaWANDevice* findLoRaWANDevice(const String& devAddrHex) {
+  uint32_t devAddr = strtoul(devAddrHex.c_str(), NULL, 16);
+  for (auto& dev : LORAWANdevices()) {
+    if (dev.devAddr == devAddr) return &dev;
+  }
+  return nullptr;
+}
+
+static String keyHint(const uint8_t* key) {
+  char hint[64];
+  snprintf(hint, sizeof(hint), "set, ends with ...%02X%02X - leave empty to keep", key[14], key[15]);
+  return hint;
+}
+
+/**
+ * @brief /LW - Configure LoRaWAN devices: list (GET), edit form (GET ?d=<DEVADDR> or ?d=new), save/test/delete (POST)
+ * Form fields: da devaddr, nm name, md model, nk nwkskey, ak appskey, en entities (JSON array), dc decoder,
+ * tp test payload (hex), tf test port, nw 1 for a new device; buttons sv save, ts test decoder, rm delete
+ */
+void handleLW() {
+  WEBUI_TRACE_LOG(F("handleLW: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
+  WEBUI_SECURE
+  String message;
+  bool showForm = false;
+  bool isNew = server.arg("nw") == "1";
+  String fDa = server.arg("da"), fNm = server.arg("nm"), fMd = server.arg("md"), fEn = server.arg("en");
+  String fDc = server.arg("dc"), fTp = server.arg("tp"), fTf = server.hasArg("tf") ? server.arg("tf") : "1";
+  String fDl = server.arg("dl"), fQp = server.hasArg("qp") ? server.arg("qp") : "1", fQh = server.arg("qh");
+  String testOutput;
+  fDa.trim();
+  fDa.toUpperCase();
+
+  if (server.hasArg("qs") || server.hasArg("qc")) {
+    showForm = true;
+    const LoRaWANDevice* dev = findLoRaWANDevice(fDa);
+    String error;
+    if (!dev) {
+      message = "Error: save the device before queuing downlinks";
+    } else if (server.hasArg("qc")) {
+      LORAWANclearQueue(dev->devAddr);
+      message = "Downlink queue cleared";
+    } else if (LORAWANqueueDownlink(dev->devAddr, (uint8_t)fQp.toInt(), fQh, "webui", &error)) {
+      message = "Downlink queued, it will be sent after the next uplink of the device";
+      fQh = "";
+    } else {
+      message = "Error: " + error;
+    }
+  } else if (server.hasArg("rm")) {
+    DynamicJsonDocument doc(128);
+    JsonObject jo = doc.to<JsonObject>();
+    jo["devaddr"] = fDa;
+    jo["remove"] = true;
+    String error;
+    message = LORAWANconfigureDevice(jo, true, &error) ? "Device " + fDa + " removed" : "Error: " + error;
+  } else if (server.hasArg("sv") || server.hasArg("ts")) {
+    showForm = true;
+    if (server.hasArg("ts")) {
+#      ifdef LORA_LORAWAN_JS
+      String hex = fTp;
+      hex.replace(" ", "");
+      size_t n = hex.length() / 2;
+      uint8_t bytes[n > 0 ? n : 1];
+      if (hex.length() % 2 || !TheengsUtils::_hexToRaw(hex.c_str(), bytes, n)) {
+        testOutput = "Test payload must be an even number of hex digits";
+      } else {
+        DynamicJsonDocument result(JSON_MSG_BUFFER);
+        JsonObject ro = result.to<JsonObject>();
+        LORAWANtestDecoder(fDc, (uint8_t)fTf.toInt(), bytes, n, ro);
+        serializeJsonPretty(result, testOutput);
+      }
+#      endif
+    } else {
+      DynamicJsonDocument doc(4096);
+      JsonObject jo = doc.to<JsonObject>();
+      jo["devaddr"] = fDa;
+      jo["name"] = fNm;
+      jo["model"] = fMd;
+      String nk = server.arg("nk"), ak = server.arg("ak");
+      nk.trim();
+      ak.trim();
+      if (nk.length()) jo["nwkskey"] = nk;
+      if (ak.length()) jo["appskey"] = ak;
+      String trimmedEntities = fEn;
+      trimmedEntities.trim();
+      bool valid = true;
+      if (trimmedEntities.length()) {
+        DynamicJsonDocument entities(2048);
+        DeserializationError error = deserializeJson(entities, trimmedEntities);
+        if (error || !entities.is<JsonArray>()) {
+          message = String("Error: entities must be a JSON array (") + (error ? error.c_str() : "not an array") + ")";
+          valid = false;
+        } else {
+          jo["entities"] = entities.as<JsonArray>();
+        }
+      } else {
+        jo.createNestedArray("entities"); // clears the entities
+      }
+      String trimmedDownlinks = fDl;
+      trimmedDownlinks.trim();
+      if (valid && trimmedDownlinks.length()) {
+        DynamicJsonDocument downlinks(2048);
+        DeserializationError error = deserializeJson(downlinks, trimmedDownlinks);
+        if (error || !downlinks.is<JsonObject>()) {
+          message = String("Error: downlink rules must be a JSON object (") + (error ? error.c_str() : "not an object") + ")";
+          valid = false;
+        } else {
+          jo["downlinks"] = downlinks.as<JsonObject>();
+        }
+      } else if (valid) {
+        jo.createNestedObject("downlinks"); // clears the rules
+      }
+      String error;
+      if (valid && !LORAWANconfigureDevice(jo, true, &error)) {
+        message = "Error: " + error;
+        valid = false;
+      }
+#      ifdef LORA_LORAWAN_JS
+      if (valid) {
+        const LoRaWANDevice* dev = findLoRaWANDevice(fDa);
+        if (dev && dev->decoder != fDc && !LORAWANsetDecoder(dev->devAddr, fDc)) {
+          message = "Error: decoder not saved (maximum " + String(LORAWAN_DECODER_MAX_SIZE) + " bytes)";
+          valid = false;
+        }
+      }
+#      endif
+      if (valid) {
+        message = "Device " + fDa + " saved";
+        showForm = false;
+      }
+    }
+  } else if (server.hasArg("d")) {
+    showForm = true;
+    isNew = server.arg("d") == "new";
+    if (!isNew) {
+      const LoRaWANDevice* dev = findLoRaWANDevice(server.arg("d"));
+      if (!dev) {
+        message = "Unknown device";
+        showForm = false;
+      } else {
+        char hex[9];
+        snprintf(hex, sizeof(hex), "%08" PRIX32, dev->devAddr);
+        fDa = hex;
+        fNm = dev->name;
+        fMd = dev->model;
+        fDl = "";
+        if (dev->downlinks.length()) {
+          DynamicJsonDocument downlinks(2048);
+          if (!deserializeJson(downlinks, dev->downlinks)) serializeJsonPretty(downlinks, fDl);
+        }
+        fEn = "";
+        if (dev->entities.length()) {
+          DynamicJsonDocument entities(2048);
+          if (!deserializeJson(entities, dev->entities)) serializeJsonPretty(entities, fEn);
+        }
+#      ifdef LORA_LORAWAN_JS
+        fDc = dev->decoder;
+        fTp = dev->lastPayload;
+        if (dev->lastPayload.length()) fTf = String(dev->lastPort);
+#      endif
+      }
+    }
+  }
+
+  char jsonChar[100];
+  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  beginChunkedResponse();
+  sendHeaderChunk((String(gateway_name) + " - Configure LoRaWAN").c_str());
+  server.sendContent(script);
+  server.sendContent(style);
+  sendBodyChunk(body_header, jsonChar, gateway_name);
+  server.sendContent("<fieldset class='set1'><legend><span><b>LoRaWAN devices</b></span></legend>");
+  if (message.length()) server.sendContent("<p><b>" + htmlEscape(message) + "</b></p>");
+
+  if (!showForm) {
+    server.sendContent(
+        "<table style='width:100%;text-align:left'><tr><th>DevAddr</th><th>Name</th><th>Model</th>"
+#      ifdef LORA_LORAWAN_JS
+        "<th>Decoder</th>"
+#      endif
+        "<th>FCnt</th><th>Pending</th></tr>");
+    for (auto& dev : LORAWANdevices()) {
+      char hex[9];
+      snprintf(hex, sizeof(hex), "%08" PRIX32, dev.devAddr);
+      String row = String("<tr><td><a href='lw?d=") + hex + "'>" + hex + "</a></td><td>" + htmlEscape(dev.name) + "</td><td>" + htmlEscape(dev.model) + "</td>";
+#      ifdef LORA_LORAWAN_JS
+      row += String("<td>") + (dev.decoder.length() ? "yes" : "no") + "</td>";
+#      endif
+      row += String("<td>") + (dev.seen ? String(dev.lastFcnt) : String("-")) + "</td><td>" + String(dev.queue.size()) + "</td></tr>";
+      server.sendContent(row);
+    }
+    server.sendContent("</table><br><p><form action='lw' method='get'><button name='d' value='new'>Add device</button></form></p></fieldset>");
+  } else {
+    const LoRaWANDevice* dev = isNew ? nullptr : findLoRaWANDevice(fDa);
+    server.sendContent(String("<form method='post' action='lw'><input type='hidden' name='nw' value='") + (isNew ? "1" : "0") + "'>");
+    server.sendContent("<p><b>DevAddr</b> (8 hex digits)<br><input name='da' maxlength='8' pattern='[0-9A-Fa-f]{8}' required value='" + htmlEscape(fDa) + "'" + (isNew ? "" : " readonly") + "></p>");
+    server.sendContent("<p><b>Name</b><br><input name='nm' value='" + htmlEscape(fNm) + "'></p>");
+    server.sendContent("<p><b>Model</b><br><input name='md' value='" + htmlEscape(fMd) + "'></p>");
+    server.sendContent("<p><b>NwkSKey</b> (32 hex digits)<br><input name='nk' maxlength='32' pattern='[0-9A-Fa-f]{32}' autocomplete='off' " + (dev ? "placeholder='" + keyHint(dev->nwkSKey) + "'" : String("required")) + "></p>");
+    server.sendContent("<p><b>AppSKey</b> (32 hex digits)<br><input name='ak' maxlength='32' pattern='[0-9A-Fa-f]{32}' autocomplete='off' " + (dev ? "placeholder='" + keyHint(dev->appSKey) + "'" : String("required")) + "></p>");
+    server.sendContent("<p><b>Home Assistant entities</b> (JSON array, optional)<br><textarea name='en' spellcheck='false' style='height:9em' placeholder='[{\"key\":\"DOOR_STATE\",\"type\":\"binary_sensor\",\"class\":\"door\",\"on\":\"open\",\"off\":\"close\"},{\"key\":\"BAT_V\",\"class\":\"voltage\",\"unit\":\"V\"}]'>" + htmlEscape(fEn) + "</textarea></p>");
+#      ifdef LORA_LORAWAN_JS
+    server.sendContent("<p><b>Decoder</b> (<code>function Decoder(bytes, port)</code> or <code>function decodeUplink(input)</code>, max " + String(LORAWAN_DECODER_MAX_SIZE) + " bytes, empty for none)<br><textarea name='dc' spellcheck='false' style='height:22em'>" + htmlEscape(fDc) + "</textarea></p>");
+    server.sendContent("<p><b>Test the decoder above</b> (not saved): payload hex and port<br><input name='tp' style='width:75%' value='" + htmlEscape(fTp) + "' placeholder='decrypted payload, e.g. 8C6C0100003B00000000'> <input type='number' name='tf' style='width:20%' min='1' max='223' value='" + htmlEscape(fTf) + "'></p>");
+    server.sendContent("<p><button name='ts' type='submit' formnovalidate>Test decoder</button></p>");
+    if (testOutput.length()) server.sendContent("<pre style='text-align:left;white-space:pre-wrap'>" + htmlEscape(testOutput) + "</pre>");
+#      endif
+    server.sendContent("<p><b>Downlink rules</b> (JSON object, optional): <code>schedules</code> queue a command every N seconds (sent after the next uplink), <code>triggers</code> answer an uplink matching <code>when</code> (<code>\"uplink\"</code> or field values); receive windows can be overridden (<code>rx1_frequency</code>, <code>rx1_sf</code>, <code>rx1_bw</code>, <code>rx2_...</code>, <code>rx1_delay</code>, <code>window</code>: <code>auto</code>/<code>rx1</code>/<code>rx2</code>) and the downlink power (<code>tx_power</code>, dBm)<br><textarea name='dl' spellcheck='false' style='height:9em' placeholder='{\"rx1_frequency\":924500000,\"schedules\":[{\"every\":86400,\"fport\":1,\"hex\":\"01015180\"}],\"triggers\":[{\"when\":{\"DOOR_STATE\":\"open\"},\"fport\":1,\"hex\":\"A601\",\"cooldown\":3600}]}'>" + htmlEscape(fDl) + "</textarea></p>");
+    server.sendContent("<br><button name='sv' type='submit' class='button bgrn'>Save</button>");
+    if (dev) {
+      String queue = "<p><b>Send a downlink</b> (queued, sent in the receive windows after the next uplink; downlink FCnt " + String(dev->fcntDown) + ")<br>";
+      for (auto& dl : dev->queue) queue += "pending: port " + String(dl.fport) + " " + htmlEscape(dl.hex) + " (" + htmlEscape(dl.source) + ")<br>";
+      queue += "<input type='number' name='qp' style='width:20%' min='1' max='223' value='" + htmlEscape(fQp) + "'> <input name='qh' style='width:75%' placeholder='payload hex, e.g. 0100003C' value='" + htmlEscape(fQh) + "'></p>";
+      queue += "<p><button name='qs' type='submit' formnovalidate>Queue downlink</button></p>";
+      if (dev->queue.size()) queue += "<p><button name='qc' type='submit' formnovalidate class='button bred'>Clear queue</button></p>";
+      server.sendContent(queue);
+    }
+    server.sendContent("</form>");
+    if (dev) {
+      server.sendContent("<p><form method='post' action='lw' onsubmit='return confirm(\"Delete device " + htmlEscape(fDa) + "?\");'><input type='hidden' name='da' value='" + htmlEscape(fDa) + "'><button name='rm' class='button bred'>Delete device</button></form></p>");
+    }
+    server.sendContent("<p><form action='lw' method='get'><button>LoRaWAN devices</button></form></p></fieldset>");
+  }
+  server.sendContent(body_footer_config_menu);
+  sendFooterChunk();
+}
+#    endif
 #  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
 #    include <map>
 
@@ -1568,6 +1826,32 @@ void handleTK() {
  * @brief /IN - Information Page
  *
  */
+#  if defined(ZgatewayLORA) && defined(LORA_LORAWAN)
+/**
+ * The Information page turns flat JSON into a table and can't display nested values:
+ * show each LoRaWAN device of the LORA state as one row instead of the nested "lorawan" array.
+ */
+static String lorawanInformation(const String& state) {
+  DynamicJsonDocument doc(JSON_MSG_BUFFER * 2);
+  if (deserializeJson(doc, state) || !doc["lorawan"].is<JsonArray>()) return state;
+  for (JsonObject device : doc["lorawan"].as<JsonArray>()) {
+    String value;
+    for (JsonPair kv : device) {
+      if (strcmp(kv.key().c_str(), "devaddr") == 0) continue;
+      if (value.length()) value += " / ";
+      value += kv.key().c_str();
+      value += " ";
+      value += kv.value().as<String>();
+    }
+    doc[String("LoRaWAN ") + (device["devaddr"] | "")] = value;
+  }
+  doc.remove("lorawan");
+  String output;
+  serializeJson(doc, output);
+  return output;
+}
+#  endif
+
 void handleIN() {
   WEBUI_TRACE_LOG(F("handleCN: uri: %s, args: %d, method: %d" CR), server.uri(), server.args(), server.method());
   WEBUI_SECURE
@@ -1597,7 +1881,11 @@ void handleIN() {
 #  endif
 #  if defined(ZgatewayLORA)
     informationDisplay += "1<BR>LORA}2}1";
+#    ifdef LORA_LORAWAN
+    informationDisplay += lorawanInformation(stateLORAMeasures());
+#    else
     informationDisplay += stateLORAMeasures();
+#    endif
 #  endif
 #  if defined(ZgatewayRF)
     informationDisplay += "1<BR>RF}2}1";
@@ -1844,6 +2132,9 @@ void WebUISetup() {
   server.on("/wu", handleWU); // Configure WebUI
 #  ifdef ZgatewayLORA
   server.on("/la", handleLA); // Configure LORA
+#    ifdef LORA_LORAWAN
+  server.on("/lw", handleLW); // Configure LoRaWAN devices
+#    endif
 #  elif defined(ZgatewayRTL_433) || defined(ZgatewayPilight) || defined(ZgatewayRF) || defined(ZgatewayRF2) || defined(ZactuatorSomfy)
   server.on("/rf", handleRF); // Configure RF
 #  endif

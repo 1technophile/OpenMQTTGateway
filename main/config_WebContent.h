@@ -67,7 +67,11 @@
 #else
 #  define configure_7
 #endif
-#define configure_8
+#if defined(ZgatewayLORA) && defined(LORA_LORAWAN)
+#  define configure_8 "<p><form action='lw' method='get'><button>Configure LoRaWAN</button></form></p>"
+#else
+#  define configure_8
+#endif
 
 /*------------------- ----------------------*/
 
