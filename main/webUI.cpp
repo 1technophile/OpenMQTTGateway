@@ -1473,7 +1473,7 @@ void handleLW() {
         showForm = false;
       } else {
         char hex[9];
-        snprintf(hex, sizeof(hex), "%08X", dev->devAddr);
+        snprintf(hex, sizeof(hex), "%08" PRIX32, dev->devAddr);
         fDa = hex;
         fNm = dev->name;
         fMd = dev->model;
@@ -1510,7 +1510,7 @@ void handleLW() {
         "<th>FCnt</th></tr>");
     for (auto& dev : LORAWANdevices()) {
       char hex[9];
-      snprintf(hex, sizeof(hex), "%08X", dev.devAddr);
+      snprintf(hex, sizeof(hex), "%08" PRIX32, dev.devAddr);
       String row = String("<tr><td><a href='lw?d=") + hex + "'>" + hex + "</a></td><td>" + htmlEscape(dev.name) + "</td><td>" + htmlEscape(dev.model) + "</td>";
 #      ifdef LORA_LORAWAN_JS
       row += String("<td>") + (dev.decoder.length() ? "yes" : "no") + "</td>";

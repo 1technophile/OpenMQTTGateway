@@ -61,7 +61,7 @@ static bool lorawanDiscoveryPending = false;
 #  define LORAWAN_DEVICE_JSON_SIZE 3072 // device declaration with keys and entities, NVS strings are limited to ~4000 bytes
 
 static void lorawanNvsKey(char* key, const char* prefix, uint32_t devAddr) {
-  snprintf(key, 11, "%s%08X", prefix, devAddr);
+  snprintf(key, 11, "%s%08" PRIX32, prefix, devAddr);
 }
 
 static bool lorawanParseKey(const char* hex, uint8_t* key) {
@@ -270,7 +270,7 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
   dev->seen = true;
 
   char id[9];
-  snprintf(id, sizeof(id), "%08X", devAddr);
+  snprintf(id, sizeof(id), "%08" PRIX32, devAddr);
   LORAdata["id"] = id;
   if (dev->name.length()) LORAdata["name"] = dev->name;
   if (dev->model.length()) LORAdata["model"] = dev->model;
@@ -301,7 +301,7 @@ int LORAWANtoJson(const uint8_t* p, int len, JsonObject& LORAdata) {
 
 static void lorawanToJson(const LoRaWANDevice& dev, JsonObject& jo, bool withKeys) {
   char hex[34]; // _rawToHex writes "%02X\r" per byte: needs 2 * size + 2
-  snprintf(hex, 9, "%08X", dev.devAddr);
+  snprintf(hex, 9, "%08" PRIX32, dev.devAddr);
   jo["devaddr"] = hex;
   if (withKeys) {
     TheengsUtils::_rawToHex((byte*)dev.nwkSKey, hex, 16);
@@ -329,7 +329,7 @@ static void lorawanSaveIndex() {
   String index;
   for (auto& dev : lorawanDevices) {
     char hex[9];
-    snprintf(hex, sizeof(hex), "%08X", dev.devAddr);
+    snprintf(hex, sizeof(hex), "%08" PRIX32, dev.devAddr);
     if (index.length()) index += ",";
     index += hex;
   }
@@ -549,7 +549,7 @@ void launchLORAWANDiscovery(bool overrideDiscovery) {
       continue;
     }
     char id[9];
-    snprintf(id, sizeof(id), "%08X", dev.devAddr);
+    snprintf(id, sizeof(id), "%08" PRIX32, dev.devAddr);
     String topic = String(subjectLORAtoMQTT) + "/" + id;
     const char* deviceName = dev.name.length() ? dev.name.c_str() : id;
     for (JsonObject e : doc.as<JsonArray>()) {
