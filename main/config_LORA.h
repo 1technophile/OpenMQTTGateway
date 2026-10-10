@@ -72,6 +72,53 @@ extern void XtoLORA(const char* topicOri, JsonObject& RFdata);
 
 #define repeatLORAwMQTT false // do we repeat a received signal by using MQTT with LORA gateway
 
+/*-------------------LoRaWAN ABP decoding----------------------*/
+// Enable with '-DLORA_LORAWAN' (ESP32 only), add '-DLORA_LORAWAN_JS' and ${libraries.duktape} for JavaScript payload decoders
+#ifdef LORA_LORAWAN
+#  ifndef LORAWAN_MAX_DEVICES
+#    define LORAWAN_MAX_DEVICES 16
+#  endif
+#  define LORAWAN_NOT_HANDLED 0 // not a data uplink from a configured device (or MIC check failed)
+#  define LORAWAN_DECODED     1
+#  define LORAWAN_DROP        2 // duplicate frame
+#  include <vector>
+struct LoRaWANDevice {
+  uint32_t devAddr;
+  uint8_t nwkSKey[16];
+  uint8_t appSKey[16];
+  String name;
+  String model;
+  String entities; // serialized JSON array of Home Assistant entity declarations
+#  ifdef LORA_LORAWAN_JS
+  String decoder;
+#  endif
+  uint32_t lastFcnt;
+  bool seen;
+  String lastPayload; // last decrypted FRMPayload (hex), to test decoders from the WebUI
+  uint8_t lastPort;
+};
+extern const std::vector<LoRaWANDevice>& LORAWANdevices();
+extern bool LORAWANconfigureDevice(JsonObject& device, bool save, String* error);
+extern void LORAWANsetup();
+extern int LORAWANtoJson(const uint8_t* packet, int packetSize, JsonObject& LORAdata);
+extern void LORAWANConfig_fromJson(JsonObject& LORAdata);
+extern void LORAWANState(JsonObject& LORAdata);
+#  ifdef ZmqttDiscovery
+extern void launchLORAWANDiscovery(bool overrideDiscovery);
+#  endif
+#  ifdef LORA_LORAWAN_JS
+// Decoder scripts are published raw (not JSON) to <base><gateway>/LORAWANdecoder/<DEVADDR>.
+// Deliberately outside /commands/#: that subscription only accepts JSON and is limited to JSON_MSG_BUFFER_MAX
+#    define subjectLORAWANdecoder "/LORAWANdecoder"
+#    ifndef LORAWAN_DECODER_MAX_SIZE
+#      define LORAWAN_DECODER_MAX_SIZE 3800 // bytes, NVS strings are limited to ~4000 bytes
+#    endif
+extern void LORAWANdecoderFromMQTT(const char* topic, const char* payload);
+extern bool LORAWANsetDecoder(uint32_t devAddr, const String& script);
+extern bool LORAWANtestDecoder(const String& script, uint8_t fport, const uint8_t* bytes, size_t len, JsonObject& result);
+#  endif
+#endif
+
 /*-------------------PIN DEFINITIONS----------------------*/
 
 //TTGO LORA BOARD ESP32 PIN DEFINITION

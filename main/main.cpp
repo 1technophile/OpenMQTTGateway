@@ -1154,6 +1154,12 @@ void setupMQTT() {
 
   mqtt->subscribe(String(mqtt_topic) + gateway_name + subjectMQTTtoX, receivingDATA, mqtt_max_payload_size);
 
+#  if defined(ZgatewayLORA) && defined(LORA_LORAWAN_JS)
+  // LoRaWAN payload decoder scripts are raw JavaScript, larger than the JSON commands
+  mqtt->subscribe(
+      String(mqtt_topic) + gateway_name + subjectLORAWANdecoder + "/+", [](char* topic, char* payload) { LORAWANdecoderFromMQTT(topic, payload); }, LORAWAN_DECODER_MAX_SIZE + 1);
+#  endif
+
 #  ifdef ZgatewayRF
   // subject on which other OMG will publish, this OMG will store these msg and by the way don't republish them if they have been already published
   mqtt->subscribe(subjectMultiGTWRF, receivingDATA, mqtt_max_payload_size);
