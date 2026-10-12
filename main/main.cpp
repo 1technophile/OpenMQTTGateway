@@ -1646,7 +1646,7 @@ void setup() {
   THEENGS_LOG_TRACE(F("mqtt_max_payload_size: %d" CR), mqtt_max_payload_size);
   SYSConfig.offline ? THEENGS_LOG_NOTICE(F("Offline enabled" CR)) : THEENGS_LOG_NOTICE(F("Offline disabled" CR));
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  serializeJson(modules, jsonChar, sizeof(jsonChar));
   THEENGS_LOG_NOTICE(F("OpenMQTTGateway modules: %s" CR), jsonChar);
   THEENGS_LOG_NOTICE(F("************** Setup OpenMQTTGateway end **************" CR));
 }
