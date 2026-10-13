@@ -303,6 +303,7 @@ void rtl_433_Callback(char* message) {
   }
   String topic = subjectRTL_433toMQTT;
   String model = RFrtl_433_ESPdata["model"];
+  model.replace("/", "_"); // Some rtl_devices have / in the model string
   String type = RFrtl_433_ESPdata["type"];
   String uniqueid;
 
@@ -310,10 +311,15 @@ void rtl_433_Callback(char* message) {
   size_t numRows = sizeof(naming_keys) / sizeof(naming_keys[0]);
   for (int i = 0; i < numRows; i++) {
     if (RFrtl_433_ESPdata.containsKey(naming_keys[i])) {
+      String namingValue = RFrtl_433_ESPdata[naming_keys[i]].as<String>();
+      if (strcmp(naming_keys[i], "model") == 0)
+        namingValue = model;
+      else if (strcmp(naming_keys[i], "type") == 0)
+        namingValue = type;
       if (uniqueid == 0) {
-        uniqueid = RFrtl_433_ESPdata[naming_keys[i]].as<String>(); // Start of the unique id with the first key
+        uniqueid = namingValue; // Start of the unique id with the first key
       } else {
-        uniqueid = uniqueid + "/" + RFrtl_433_ESPdata[naming_keys[i]].as<String>(); // Following keys
+        uniqueid = uniqueid + "/" + namingValue; // Following keys
       }
     }
   }

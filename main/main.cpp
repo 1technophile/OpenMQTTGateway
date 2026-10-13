@@ -754,26 +754,23 @@ bool pubMQTT(String topic, String payload) {
 }
 
 bool pubMQTT(String topic, int payload) {
-  char val[12];
-  sprintf(val, "%d", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(String topic, unsigned long long payload) {
-  char val[21];
-  sprintf(val, "%llu", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(String topic, float payload) {
-  char val[12];
-  dtostrf(payload, 3, 1, val);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 bool pubMQTT(const char* topic, float payload) {
-  char val[12];
-  dtostrf(payload, 3, 1, val);
+  char val[16];
+  int n = snprintf(val, sizeof(val), "%.1f", payload);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(val)) {
+    return false;
+  }
   return pubMQTT(topic, val);
 }
 
@@ -790,21 +787,22 @@ bool pubMQTT(const char* topic, unsigned int payload) {
 }
 
 bool pubMQTT(const char* topic, long payload) {
-  char val[11];
+  char val[12];
   sprintf(val, "%ld", payload);
   return pubMQTT(topic, val);
 }
 
 bool pubMQTT(const char* topic, double payload) {
-  char val[16];
-  sprintf(val, "%f", payload);
+  char val[24];
+  int n = snprintf(val, sizeof(val), "%f", payload);
+  if (n < 0 || static_cast<size_t>(n) >= sizeof(val)) {
+    return false;
+  }
   return pubMQTT(topic, val);
 }
 
 bool pubMQTT(String topic, unsigned long payload) {
-  char val[11];
-  sprintf(val, "%lu", payload);
-  return pubMQTT(topic.c_str(), val);
+  return pubMQTT(topic.c_str(), payload);
 }
 
 void delayWithOTA(long waitMillis) {
@@ -1648,7 +1646,7 @@ void setup() {
   THEENGS_LOG_TRACE(F("mqtt_max_payload_size: %d" CR), mqtt_max_payload_size);
   SYSConfig.offline ? THEENGS_LOG_NOTICE(F("Offline enabled" CR)) : THEENGS_LOG_NOTICE(F("Offline disabled" CR));
   char jsonChar[100];
-  serializeJson(modules, jsonChar, measureJson(modules) + 1);
+  serializeJson(modules, jsonChar, sizeof(jsonChar));
   THEENGS_LOG_NOTICE(F("OpenMQTTGateway modules: %s" CR), jsonChar);
   THEENGS_LOG_NOTICE(F("************** Setup OpenMQTTGateway end **************" CR));
 }
@@ -2890,7 +2888,13 @@ void eraseConfig() {
   receivingDATA(subjectMQTTtoSYSsetSecondaryModule, eraseCmdStr.c_str());
   delay(2000);
 #endif
-  THEENGS_LOG_TRACE(F("Formatting requested, result: %d" CR), SPIFFS.format());
+  // SPIFFS.format() has to be called outside of the log macro, THEENGS_LOG_TRACE
+  // expands to ((void)0) below LOG_LEVEL_TRACE and discards its arguments with it
+  bool formatted = SPIFFS.format();
+  THEENGS_LOG_TRACE(F("Formatting requested, result: %d" CR), formatted);
+  if (!formatted) {
+    THEENGS_LOG_ERROR(F("SPIFFS format failed, config may be retained" CR));
+  }
 
 #if defined(ESP8266)
   WiFi.disconnect(true);
@@ -3437,7 +3441,17 @@ void MQTTHttpsFWUpdate(const char* topicOri, JsonObject& HttpsFwUpdateData) {
         case HTTP_UPDATE_OK:
           THEENGS_LOG_NOTICE(F("HTTP_UPDATE_OK" CR));
           jsondata["release_summary"] = "Update success !";
-          jsondata["installed_version"] = latestVersion;
+          // Report what was installed, not the latest release: latestVersion only
+          // describes a "latest" request, while "dev" and "vX.Y.Z" install what the
+          // caller asked for. systemUrl is filled in only when we built the URL from
+          // version; for a caller supplied URL the version is just a label with no
+          // guarantee (the WebUI sends "test"), so the field is omitted rather than
+          // published wrong; the value is republished from OMG_VERSION after reboot.
+          // The version is stored as a String so its content is copied into the
+          // document instead of being referenced from the caller's document.
+          if (systemUrl.length()) {
+            jsondata["installed_version"] = strcmp(version, "latest") == 0 ? latestVersion : String(version);
+          }
           jsondata["origin"] = subjectRLStoMQTT;
           enqueueJsonObject(jsondata);
 #  if !MQTT_BROKER_MODE
