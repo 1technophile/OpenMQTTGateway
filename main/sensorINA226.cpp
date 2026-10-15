@@ -66,12 +66,8 @@ void MeasureINA226() {
     // Bus Spannung, read-only, 16Bit, 0...40.96V max., LSB 1.25mV
     float volt = readRegister(0x02) * 0.00125;
     // Seite 24: Shunt Spannung +- 81,92mV mit 16 Bit, LSB 2,5uV
-    int shuntvolt = readRegister(0x01);
-    if (shuntvolt && 0x8000) { // eine negative Zahl? Dann 2er Komplement bilden
-      shuntvolt = ~shuntvolt; // alle Bits invertieren
-      shuntvolt += 1; // 1 dazuzählen
-      shuntvolt *= -1; // negativ machen
-    }
+    // The register holds a signed two's complement value, so a reverse current reads as negative
+    int16_t shuntvolt = (int16_t)readRegister(0x01);
     float current = shuntvolt * 0.0000025 / rShunt; // * LSB / R
     float power = abs(volt * current);
 
