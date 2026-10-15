@@ -371,6 +371,17 @@ OledSerial::OledSerial(int x) {
   delay(50);
   digitalWrite(RST_OLED, HIGH);
   display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
+#  elif defined(WIFI_LoRa_32_V3)
+  // Heltec WiFi LoRa 32 V3/V4: OLED (and other peripherals) are powered
+  // through Vext, which must be driven LOW to enable it.
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, LOW);
+  delay(50);
+  pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
+  digitalWrite(RST_OLED, LOW);
+  delay(50);
+  digitalWrite(RST_OLED, HIGH);
+  display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, GEOMETRY_128_64);
 #  elif defined(Wireless_Stick)
   // pinMode(RST_OLED, OUTPUT); // https://github.com/espressif/arduino-esp32/issues/4278
   // digitalWrite(RST_OLED, LOW);
