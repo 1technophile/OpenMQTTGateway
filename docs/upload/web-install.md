@@ -17,6 +17,7 @@ This is the easiest way to install OpenMQTTGateway: no software to download, no 
 2. Install the driver matching your board's USB chip (check the board's product page if unsure):
    * **CP210x** (Silicon Labs): [driver download](https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers)
    * **CH340 / CH341** (WCH): [driver download](https://www.wch-ic.com/downloads/CH341SER_ZIP.html)
+     * Linux may not associate some boards with the CH341 driver, so it won't be detected as a serial port. You will know this is happening if `usb-devices -a` shows Driver=none. If this happens, use `lsusb` to get the VID:PID and to `/sys/bus/usb-serial/drivers/ch341-uart/new_id` with e.g. `sudo echo 1a86 55d4 | sudo tee -a new_id`. 
    * **CH9102** (WCH): [macOS driver](https://github.com/WCHSoftGroup/ch34xser_macos), [Windows driver](https://www.wch-ic.com/downloads/CH343SER_ZIP.html)
 3. On macOS, complete the driver installation by confirming it in the **Security** section of **System Preferences**, then restart. For a LilyGo LoRa32 V2.1 board, the correct port to select is `/dev/cu.wchusbserialXXXXXXXXXXX`.
 4. Some boards need the **BOOT** button held down while plugging in the cable to enter flash mode.
