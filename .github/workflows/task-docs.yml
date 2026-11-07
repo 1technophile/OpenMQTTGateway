@@ -59,7 +59,7 @@ on:
 
 jobs:
   documentation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Create and deploy documentation
     steps:
       - uses: actions/checkout@v4
