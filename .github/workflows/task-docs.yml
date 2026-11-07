@@ -111,8 +111,10 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Final version: $VERSION"
 
+      # Needed in prod too: docsgen/gen_wu.js builds the web installer's
+      # firmware_build/ from these artifacts and fails without them. In the
+      # release run they come from the release's own build job.
       - name: Download all firmware artifacts
-        if: ${{ inputs.mode == 'dev' }}
         uses: actions/download-artifact@v4
         with:
           pattern: "*"
@@ -134,6 +136,10 @@ jobs:
           github_token: ${{ secrets.github-token }}
           publish_dir: ./generated/site
           destination_dir: ${{ inputs.destination-dir }}
+          # A release deploys to the branch root; without keep_files peaceiris
+          # empties the destination first and would delete /dev (dev docs and
+          # dev web installer). Dev deploys still clean dev/ as before.
+          keep_files: ${{ inputs.destination-dir == '.' }}
           cname: docs.openmqttgateway.com
 
       - name: Run PageSpeed Insights
