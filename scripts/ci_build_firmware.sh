@@ -79,7 +79,7 @@ run_build() {
 
     if [[ -n "$version" ]]; then
         log_info "Setting firmware version to: $version"
-        export PLATFORMIO_BUILD_FLAGS="${PLATFORMIO_BUILD_FLAGS} -DOMG_VERSION=\\\"${version}\\\""
+        export PLATFORMIO_BUILD_FLAGS="${PLATFORMIO_BUILD_FLAGS:-} -DOMG_VERSION=\\\"${version}\\\""
     fi
     
     log_build "Starting build for environment: $env"
@@ -98,7 +98,7 @@ run_build() {
     local start_time
     start_time=$(date +%s)
     
-    log_info  "PlatformIO Build Flags: $PLATFORMIO_BUILD_FLAGS"
+    log_info  "PlatformIO Build Flags: ${PLATFORMIO_BUILD_FLAGS:-}"
     log_info "Executing: $build_cmd"
     
     if eval "$build_cmd"; then
