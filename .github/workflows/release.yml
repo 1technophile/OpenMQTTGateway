@@ -49,6 +49,22 @@ jobs:
           path: generated/artifacts
           merge-multiple: true
 
+      # Each environment's artifact keeps its files under firmware_build/, so
+      # after the merged download the binaries sit one level down and the
+      # upload pattern below matched that directory (EISDIR). Move them up so
+      # every firmware, bootloader, partitions and libraries file is attached.
+      - name: Flatten firmware artifacts for upload
+        run: |
+          shopt -s nullglob
+          files=(generated/artifacts/firmware_build/*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No firmware artifacts found in generated/artifacts/firmware_build"
+            exit 1
+          fi
+          mv "${files[@]}" generated/artifacts/
+          rmdir generated/artifacts/firmware_build
+          echo "Firmware files to upload: ${#files[@]}"
+
       - name: Upload Release Assets
         uses: bgpat/release-asset-action@03b0c30db1c4031ce3474740b0e4275cd7e126a3
         with:
