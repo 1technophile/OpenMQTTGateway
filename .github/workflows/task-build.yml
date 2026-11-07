@@ -52,7 +52,7 @@ jobs:
       upload-to-security-tab: true
 
   load-environments:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -70,7 +70,7 @@ jobs:
           
   build:
     needs: [lint, security-scan, load-environments]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
