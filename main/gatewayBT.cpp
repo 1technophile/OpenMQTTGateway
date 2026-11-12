@@ -1321,15 +1321,19 @@ bool decodeBM2Advert(JsonObject& BLEdata) {
   uint16_t centivolt = (plaintext[6] << 8) | plaintext[7];
   uint8_t batt = plaintext[8];
   if (centivolt < 500 || centivolt > 2000 || batt > 100) {
-    THEENGS_LOG_WARNING(F("[BM2] Implausible data rejected for %s: %d cV, %d %%" CR), BLEdata["id"].as<const char*>(), centivolt, batt);
+    THEENGS_LOG_TRACE(F("[BM2] Implausible data rejected for %s: %d cV, %d %%" CR), BLEdata["id"].as<const char*>(), centivolt, batt);
     return false;
   }
+  // Same fields as the Theengs Decoder output for the BM2 iBeacon, so both adverts share one shape
   BLEdata["brand"] = "GENERIC";
   BLEdata["model"] = "BM2 Battery Monitor";
   BLEdata["model_id"] = "BM2";
   BLEdata["type"] = "BATT";
+  BLEdata["track"] = true;
+  BLEdata["bvpp"] = true;
   BLEdata["volt"] = centivolt / 100.0;
   BLEdata["batt"] = batt;
+  BLEdata["device"] = "BM2 Tracker";
   return true;
 }
 
