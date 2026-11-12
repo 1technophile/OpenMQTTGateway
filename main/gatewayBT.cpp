@@ -1259,7 +1259,7 @@ void reverseBytes(uint8_t* data, size_t length) {
  * Beside its iBeacon advertisement (state of charge only, decoded by Theengs Decoder) the BM2
  * broadcasts 16 bytes of manufacturer data encrypted with the same AES-128-CBC key as the one
  * used by the connect handler. Plaintext layout:
- *   [0:6] device MAC address, reversed
+ *   [0:6] device MAC address, reversed on some units and in transmission order on others
  *   [6:8] voltage, big endian, in 1/100 V
  *   [8]   state of charge in %
  *   [9:]  unknown
@@ -1282,8 +1282,10 @@ bool decodeBM2Advert(JsonObject& BLEdata) {
     return false;
   }
   BM2_decryptBlock(ciphertext, plaintext);
+  bool macMatch = memcmp(plaintext, macAddress, 6) == 0;
   reverseBytes(macAddress, 6);
-  if (memcmp(plaintext, macAddress, 6) != 0) {
+  macMatch = macMatch || memcmp(plaintext, macAddress, 6) == 0;
+  if (!macMatch) {
     THEENGS_LOG_TRACE(F("[BM2] Not a BM2 advertisement, MAC mismatch for %s" CR), BLEdata["id"].as<const char*>());
     return false;
   }
