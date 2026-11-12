@@ -404,6 +404,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     device->connect = flags & device_flags_connect;
+    device->advData = flags & device_flags_advData;
     device->macType = mac_type;
     // Check name length
     if (strlen(name) > 20) {
@@ -428,6 +429,10 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
 
     if (flags & device_flags_connect) {
       device->connect = true;
+    }
+
+    if (flags & device_flags_advData) {
+      device->advData = true;
     }
 
     if (model != UNKWNON_MODEL && device->sensorModel_id == UNKWNON_MODEL) {
@@ -505,6 +510,7 @@ void dumpDevices() {
     THEENGS_LOG_TRACE(F("isWhtL %d" CR), p->isWhtL);
     THEENGS_LOG_TRACE(F("isBlkL %d" CR), p->isBlkL);
     THEENGS_LOG_TRACE(F("connect %d" CR), p->connect);
+    THEENGS_LOG_TRACE(F("advData %d" CR), p->advData);
     THEENGS_LOG_TRACE(F("sensorModel_id %d" CR), p->sensorModel_id);
     THEENGS_LOG_TRACE(F("LastUpdate %u" CR), p->lastUpdate);
   }
@@ -763,6 +769,20 @@ void BLEscan() {
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 #  if BLEDecoder
+/**
+ * True if a BLE action is waiting for this device. The address type is not compared, as an
+ * action does not necessarily carry it.
+ */
+bool hasPendingBLEAction(BLEdevice* p) {
+  NimBLEAddress addr((const char*)p->macAdr, p->macType);
+  for (auto& it : BLEactions) {
+    if (!it.complete && memcmp(it.addr.getVal(), addr.getVal(), 6) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void BLEconnect() {
   if (!BTProcessLock) {
     THEENGS_LOG_NOTICE(F("BLE Connect begin" CR));
@@ -770,6 +790,9 @@ void BLEconnect() {
       for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
         if (p->connect) {
+          if (p->advData && !hasPendingBLEAction(p)) {
+            continue; // Its data comes from its advertisements, connect only to run an action
+          }
           THEENGS_LOG_TRACE(F("Model to connect found: %s" CR), p->macAdr);
           NimBLEAddress addr((const char*)p->macAdr, p->macType);
           if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC ||
@@ -1556,15 +1579,9 @@ void process_bledata(JsonObject& BLEdata) {
   if ((BLEdata["type"].as<string>()).compare("RMAC") != 0 && model_id != TheengsDecoder::BLE_ID_NUM::IBEACON) { // Do not store in memory the random mac devices and iBeacons
     if (model_id >= 0) { // Broadcaster devices
       THEENGS_LOG_TRACE(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
-      if (bm2AdvertDecoded || getDeviceByMac(mac)->advData) { // Device from which we already get all the data by advertisement, no need to connect
-        createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
-        BLEdevice* device = getDeviceByMac(mac);
-        if (device != &NO_BT_DEVICE_FOUND) {
-          device->advData = true;
-          device->connect = false;
-        }
-      } else if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 || model_id == TheengsDecoder::BLE_ID_NUM::BM6) { // Device that broadcast and can be connected
-        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
+      if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 || model_id == TheengsDecoder::BLE_ID_NUM::BM6) { // Device that broadcast and can be connected
+        // A device that delivered its data by advertisement is flagged so that BLEconnect skips it
+        createOrUpdateDevice(mac, bm2AdvertDecoded ? (device_flags_connect | device_flags_advData) : device_flags_connect, model_id, mac_type, deviceName);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
         if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
