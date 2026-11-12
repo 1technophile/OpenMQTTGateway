@@ -692,7 +692,13 @@ void procBLETask(void* pvParameters) {
       THEENGS_LOG_NOTICE(F("BT Device detected: %s" CR), BLEdata["id"].as<const char*>());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
-      if (BTConfig.filterConnectable && device->connect) {
+#  if BLEDecoder
+      // A BM2 may deliver its data by advertisement, which is only detected after this point
+      bool filterable = device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2;
+#  else
+      bool filterable = true;
+#  endif
+      if (BTConfig.filterConnectable && device->connect && filterable) {
         THEENGS_LOG_NOTICE(F("Filtered connectable device" CR));
         delete (advertisedDevice);
         continue;
