@@ -207,6 +207,7 @@ extern char discovery_prefix[];
 #define HASS_CLASS_MOTION                  "motion"
 #define HASS_CLASS_MOVING                  "moving"
 #define HASS_CLASS_OCCUPANCY               "occupancy"
+#define HASS_CLASS_OPENING                 "opening"
 #define HASS_CLASS_PM1                     "pm1"
 #define HASS_CLASS_PM10                    "pm10"
 #define HASS_CLASS_PM25                    "pm25"

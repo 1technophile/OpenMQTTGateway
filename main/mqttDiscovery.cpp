@@ -71,6 +71,7 @@ static const char* const availableHASSClasses[] = {
     HASS_CLASS_MOTION,
     HASS_CLASS_MOVING,
     HASS_CLASS_OCCUPANCY,
+    HASS_CLASS_OPENING,
     HASS_CLASS_PM1,
     HASS_CLASS_PM10,
     HASS_CLASS_PM25,
