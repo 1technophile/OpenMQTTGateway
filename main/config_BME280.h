@@ -53,7 +53,9 @@ extern void MeasureTempHumAndPressure();
 #  define BMETOPIC "/CLIMAtoMQTT/bme"
 #endif
 
-#define BME280_I2C_ADDR 0x76
+#ifndef BME280_I2C_ADDR
+#  define BME280_I2C_ADDR 0x76
+#endif
 
 // Only supported for ESP
 #ifndef BME280_PIN_SDA

@@ -199,6 +199,9 @@ Preferences preferences;
 #ifdef ZsensorDS1820
 #  include "config_DS1820.h"
 #endif
+#ifdef ZgatewayCONNEX
+#  include "config_CONNEX.h"
+#endif
 #ifdef ZgatewayRFM69
 #  include "config_RFM69.h"
 #endif
@@ -365,6 +368,9 @@ void handle_autodiscovery() {
 
   if (publishDiscovery) {
     pubMqttDiscovery();
+#  ifdef ZgatewayCONNEX
+    launchCONNEXDiscovery();
+#  endif
 #  ifdef ZgatewayLORA
     launchLORADiscovery(true);
 #  endif
@@ -1580,6 +1586,10 @@ void setup() {
   setupBT();
   modules.add(ZgatewayBT);
 #endif
+#ifdef ZgatewayCONNEX
+  setupCONNEX();
+  modules.add(ZgatewayCONNEX);
+#endif
 #ifdef ZgatewayRFM69
   setupRFM69();
   modules.add(ZgatewayRFM69);
@@ -2701,6 +2711,9 @@ void loop() {
 #ifdef ZdisplaySSD1306
       stateSSD1306Display();
 #endif
+#ifdef ZgatewayCONNEX
+      stateCONNEXMeasures();
+#endif
 #ifdef ZgatewayLORA
       extern String stateLORAMeasures();
       stateLORAMeasures();
@@ -2814,6 +2827,9 @@ void loop() {
 #ifdef Zgateway2G
     if (_2GtoX())
       THEENGS_LOG_TRACE(F("2GtoMQTT OK" CR));
+#endif
+#ifdef ZgatewayCONNEX
+    CONNEXtoX();
 #endif
 #ifdef ZgatewayRFM69
     if (RFM69toX())
@@ -3146,6 +3162,9 @@ void receivingDATA(const char* topicOri, const char* datacallback) {
 #  endif
 #  ifdef ZgatewayIR
     XtoIR(strTopicOri.c_str(), jsondata);
+#  endif
+#  ifdef ZgatewayCONNEX
+    XtoCONNEX(strTopicOri.c_str(), jsondata);
 #  endif
 #  ifdef ZgatewayRFM69
     XtoRFM69(strTopicOri.c_str(), jsondata);
