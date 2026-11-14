@@ -18,6 +18,7 @@ extern Preferences preferences;
 #define device_flags_isWhiteL 1 << 1
 #define device_flags_isBlackL 1 << 2
 #define device_flags_connect  1 << 3
+#define device_flags_advData  1 << 4
 #define isWhite(device)       device->isWhtL
 #define isBlack(device)       device->isBlkL
 #define isDiscovered(device)  device->isDisc
