@@ -133,13 +133,23 @@ static bool isValidConnexFrame(const uint8_t* b) {
          b[7] == 0x09 && b[8] == 0x01 && b[9] == 0x00;
 }
 
-// Round to the nearest tenth; the result goes in frame bytes 5 (high) and 6 (low)
+// Round to the nearest CONNEX_TEMP_STEP; the result in tenths goes in frame bytes 5 (high) and 6 (low)
 static bool encodeSetpoint(float tempC, uint16_t* out) {
   if (isnan(tempC) || tempC < CONNEX_MIN_TEMP || tempC > CONNEX_MAX_TEMP) return false;
-  long v = lroundf(tempC * 10.0f);
+  long v = lroundf(roundf(tempC / CONNEX_TEMP_STEP) * CONNEX_TEMP_STEP * 10.0f);
   if (v < lroundf(CONNEX_MIN_TEMP * 10.0f) || v < 0 || v > lroundf(CONNEX_MAX_TEMP * 10.0f)) return false;
   *out = (uint16_t)v;
   return true;
+}
+
+// Zone number from a JSON number or a numeric string ("1"); 0 when missing or invalid
+static int parseZone(JsonVariant v) {
+  if (v.is<int>()) return v.as<int>();
+  const char* s = v.as<const char*>();
+  if (!s || !*s) return 0;
+  char* end;
+  long n = strtol(s, &end, 10);
+  return *end == 0 ? (int)n : 0;
 }
 
 static const char* const paLevelNames[] = {"min", "low", "high", "max"};
@@ -600,7 +610,7 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
       THEENGS_LOG_ERROR(F("[CONNEX] no controller ID, learn the controller first" CR));
       return;
     }
-    int zone = data["zone"] | 0;
+    int zone = parseZone(data["zone"]);
     float temp = NAN;
     if (data.containsKey("temperature")) temp = data["temperature"].as<float>();
     else if (data.containsKey("setpoint")) temp = data["setpoint"].as<float>();
@@ -637,9 +647,12 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
       for (uint8_t z = 0; z < CONNEX_ZONES; z++) {
         zoneLast[z].valid = false;
 #  ifdef ZmqttDiscovery
-        updateZoneDiscovery(z); // removes the zone's climate entity
+        updateZoneDiscovery(z); // removes the zone's climate entity (needs the ID, so before clearing it)
 #  endif
       }
+      CONNEXConfig_init(); // forget the controller ID and settings in RAM too, not just in flash
+      if (radioOk) radio.setPALevel(CONNEXConfig.paLevel, true);
+      learning = false;
       THEENGS_LOG_NOTICE(F("[CONNEX] stored config erased" CR));
     }
     if (data.containsKey("save") && data["save"].as<bool>()) {
@@ -649,7 +662,7 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
     // {"pair":<zone>} or {"pair":<zone>,"temperature":20}. The heater adopts the controller ID of
     // the next frame it hears, so we invent and save an ID if we don't have one yet.
     if (data.containsKey("pair")) {
-      int zone = data["pair"] | 0;
+      int zone = parseZone(data["pair"]);
       float temp = data.containsKey("temperature") ? data["temperature"].as<float>() : 20.0f;
       uint16_t v;
       if (zone < 1 || zone > CONNEX_ZONES || !encodeSetpoint(temp, &v)) {
