@@ -77,12 +77,14 @@ struct RTL_433device {
   bool isDisc;
 };
 
-const char parameters[51][4][24] = {
+const char parameters[54][4][24] = {
     // RTL_433 key, name, unit, device_class
     {"alarm", "Alarm", "", ""},
     {"battery_mV", "Battery Voltage", "mV", "voltage"},
     {"battery_ok", "Battery", "", "battery"},
+    {"closed", "Contact", "", "opening"},
     {"co2_ppm", "Carbon Dioxide", "ppm", "carbon_dioxide"},
+    {"contact_open", "Contact", "", "opening"},
     {"depth_cm", "Depth", "cm", "distance"},
     {"estimated_pm10_0_ug_m3", "Estimated PM10", "μg/m³", "pm10"},
     {"event", "Status", "", ""},
@@ -95,6 +97,7 @@ const char parameters[51][4][24] = {
     {"moisture", "Moisture", "%", "humidity"},
     {"motion", "Motion", "", "motion"},
     {"noise", "Noise", "dB", "sound_pressure"},
+    {"opened", "Contact", "", "opening"},
     {"pm1_ug_m3", "PM1", "μg/m³", "pm1"},
     {"pm10_ug_m3", "PM10", "μg/m³", "pm10"},
     {"pm2_5_ug_m3", "PM2.5", "μg/m³", "pm25"},
