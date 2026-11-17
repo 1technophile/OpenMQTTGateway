@@ -1352,6 +1352,8 @@ void setup() {
 #endif
   Serial.begin(SERIAL_BAUD);
 #if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT
+  // Note: with a 0 timeout, HWCDC::flush() does not wait, it discards the pending
+  // TX ring. Do not rely on Serial.flush() to push logs out (e.g. before a restart).
   Serial.setTxTimeoutMs(SERIAL_TX_TIMEOUT_MS);
 #endif
   Log.begin(LOG_LEVEL, &Serial);

@@ -562,7 +562,7 @@ extern ss_cnt_parameters cnt_parameters_array[];
 // Native USB CDC (HWCDC) only: TX ring size and write timeout of the serial log.
 // A 0 timeout drops log output instead of blocking when the host does not read the port.
 #ifndef SERIAL_TX_BUFFER_SIZE
-#  define SERIAL_TX_BUFFER_SIZE 2048
+#  define SERIAL_TX_BUFFER_SIZE 1024
 #endif
 #ifndef SERIAL_TX_TIMEOUT_MS
 #  define SERIAL_TX_TIMEOUT_MS 0
