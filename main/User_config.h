@@ -559,6 +559,14 @@ extern ss_cnt_parameters cnt_parameters_array[];
 #    define SERIAL_BAUD 115200
 #  endif
 #endif
+// Native USB CDC (HWCDC) only: TX ring size and write timeout of the serial log.
+// A 0 timeout drops log output instead of blocking when the host does not read the port.
+#ifndef SERIAL_TX_BUFFER_SIZE
+#  define SERIAL_TX_BUFFER_SIZE 1024
+#endif
+#ifndef SERIAL_TX_TIMEOUT_MS
+#  define SERIAL_TX_TIMEOUT_MS 0
+#endif
 /*--------------MQTT general topics-----------------*/
 // global MQTT subject listened by the gateway to execute commands (send RF, IR or others)
 #ifndef subjectMQTTtoX
