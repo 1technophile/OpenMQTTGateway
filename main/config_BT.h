@@ -234,7 +234,7 @@ struct BLEdevice {
   bool connect;
   int sensorModel_id;
   unsigned long lastUpdate;
-  bool advData; // true once the device data has been obtained from its advertisements, so that it is connected only to run a BLE action
+  unsigned long lastAdvData; // millis() of the last data obtained from its advertisements, 0 if none; while recent the device is connected only to run a BLE action
 };
 
 class BLEconectable {
