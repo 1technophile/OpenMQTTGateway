@@ -404,6 +404,7 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
     device->isWhtL = flags & device_flags_isWhiteL;
     device->isBlkL = flags & device_flags_isBlackL;
     device->connect = flags & device_flags_connect;
+    device->lastAdvData = (flags & device_flags_advData) ? millis() : 0;
     device->macType = mac_type;
     // Check name length
     if (strlen(name) > 20) {
@@ -428,6 +429,10 @@ void createOrUpdateDevice(const char* mac, uint8_t flags, int model, int mac_typ
 
     if (flags & device_flags_connect) {
       device->connect = true;
+    }
+
+    if (flags & device_flags_advData) {
+      device->lastAdvData = millis();
     }
 
     if (model != UNKWNON_MODEL && device->sensorModel_id == UNKWNON_MODEL) {
@@ -505,6 +510,7 @@ void dumpDevices() {
     THEENGS_LOG_TRACE(F("isWhtL %d" CR), p->isWhtL);
     THEENGS_LOG_TRACE(F("isBlkL %d" CR), p->isBlkL);
     THEENGS_LOG_TRACE(F("connect %d" CR), p->connect);
+    THEENGS_LOG_TRACE(F("lastAdvData %u" CR), p->lastAdvData);
     THEENGS_LOG_TRACE(F("sensorModel_id %d" CR), p->sensorModel_id);
     THEENGS_LOG_TRACE(F("LastUpdate %u" CR), p->lastUpdate);
   }
@@ -686,7 +692,14 @@ void procBLETask(void* pvParameters) {
       THEENGS_LOG_NOTICE(F("BT Device detected: %s" CR), BLEdata["id"].as<const char*>());
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
-      if (BTConfig.filterConnectable && device->connect) {
+#  if BLEDecoder
+      // A BM2 may deliver its data by its 16 bytes encrypted advertisement, recognised in process_bledata
+      bool filterable = device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 ||
+                        advertisedDevice->getManufacturerData().length() != 16;
+#  else
+      bool filterable = true;
+#  endif
+      if (BTConfig.filterConnectable && device->connect && filterable) {
         THEENGS_LOG_NOTICE(F("Filtered connectable device" CR));
         delete (advertisedDevice);
         continue;
@@ -763,13 +776,62 @@ void BLEscan() {
  * Connect to BLE devices and initiate the callbacks with a service/characteristic request
  */
 #  if BLEDecoder
+/**
+ * True if a BLE action is waiting for this device. The address type is not compared, as an
+ * action does not necessarily carry it.
+ */
+bool hasPendingBLEAction(BLEdevice* p) {
+  NimBLEAddress addr((const char*)p->macAdr, p->macType);
+  for (auto& it : BLEactions) {
+    if (!it.complete && memcmp(it.addr.getVal(), addr.getVal(), 6) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * True while the device data comes from its advertisements: one was decoded within the last
+ * connection interval. If they stop, or stop passing the checks, connections resume.
+ */
+bool inAdvertMode(BLEdevice* p) {
+  return p->lastAdvData != 0 && millis() - p->lastAdvData < BTConfig.intervalConnect;
+}
+
+/**
+ * Report the remaining BLE actions as failed and drop them, used when no device is left to run them
+ * (target unknown or no longer flagged for connection), so that BLEconnect cannot loop forever.
+ */
+void failPendingBLEActions() {
+  for (auto& it : BLEactions) {
+    THEENGS_LOG_WARNING(F("BLE action for %s dropped, device not connectable" CR), it.addr.toString().c_str());
+    DynamicJsonDocument BLEdataBuffer(JSON_MSG_BUFFER);
+    JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
+    BLEdata["id"] = it.addr.toString();
+    BLEdata["service"] = it.service.toString();
+    BLEdata["characteristic"] = it.characteristic.toString();
+    if (it.write) {
+      BLEdata["write"] = std::string(it.value);
+    }
+    BLEdata["success"] = false;
+    buildTopicFromId(BLEdata, subjectBTtoMQTT);
+    enqueueJsonObject(BLEdata, QueueSemaphoreTimeOutTask);
+  }
+  BLEactions.clear();
+}
+
 void BLEconnect() {
   if (!BTProcessLock) {
     THEENGS_LOG_NOTICE(F("BLE Connect begin" CR));
     do {
+      bool processed = false;
       for (vector<BLEdevice*>::iterator it = devices.begin(); it != devices.end(); ++it) {
         BLEdevice* p = *it;
         if (p->connect) {
+          if (inAdvertMode(p) && !hasPendingBLEAction(p)) {
+            continue; // Its data comes from its advertisements, connect only to run an action
+          }
+          processed = true;
           THEENGS_LOG_TRACE(F("Model to connect found: %s" CR), p->macAdr);
           NimBLEAddress addr((const char*)p->macAdr, p->macType);
           if (p->sensorModel_id == BLEconectable::id::LYWSD03MMC ||
@@ -835,6 +897,10 @@ void BLEconnect() {
             std::swap(BLEactions, swap);
           }
         }
+      }
+      // Action TTLs only decrease while a device is processed
+      if (!processed && BLEactions.size() > 0) {
+        failPendingBLEActions();
       }
     } while (BLEactions.size() > 0);
     THEENGS_LOG_NOTICE(F("BLE Connect end" CR));
@@ -1231,7 +1297,7 @@ void launchBTDiscovery(bool overrideDiscovery) {
 void launchBTDiscovery(bool overrideDiscovery) {}
 #  endif
 
-#  if BLEDecryptor
+#  if BLEDecryptor || BLEDecoder
 // ** TODO - Hex string to bytes, there is probably a function for this already just need to find it
 int hexToBytes(String hex, uint8_t* out, size_t maxLen) {
   int len = hex.length();
@@ -1254,6 +1320,63 @@ void reverseBytes(uint8_t* data, size_t length) {
 #  endif
 
 #  if BLEDecoder
+/**
+ * BM2 encrypted advertisement decoding.
+ * Beside its iBeacon advertisement (state of charge only, decoded by Theengs Decoder) the BM2
+ * broadcasts 16 bytes of manufacturer data encrypted with the same AES-128-CBC key as the one
+ * used by the connect handler. Plaintext layout:
+ *   [0:6] device MAC address, reversed (over the air byte order) on some units, in display order on others
+ *   [6:8] voltage, big endian, in 1/100 V
+ *   [8]   state of charge in %
+ *   [9:]  unknown
+ * The advertisement carries no plaintext marker, so the embedded MAC is what identifies it:
+ * a payload is accepted only if it decrypts to the address it was received from. Any other
+ * device broadcasting 16 bytes is rejected instead of producing a plausible false reading.
+ * It is only tried for a device already identified as BM2 by its iBeacon, and before Theengs
+ * Decoder, as a ciphertext can also match another model condition.
+ * Returns true and fills BLEdata if the advertisement is a valid BM2 one.
+ */
+bool decodeBM2Advert(JsonObject& BLEdata) {
+  const char* manufacturerdata = BLEdata["manufacturerdata"] | "";
+  if (strlen(manufacturerdata) != 32 ||
+      getDeviceByMac(BLEdata["id"].as<const char*>())->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) {
+    return false;
+  }
+  String macWOdots = BLEdata["id"].as<String>();
+  macWOdots.replace(":", "");
+  uint8_t macAddress[6];
+  uint8_t ciphertext[16];
+  uint8_t plaintext[16];
+  if (hexToBytes(macWOdots, macAddress, 6) != 6 || hexToBytes(String(manufacturerdata), ciphertext, 16) != 16) {
+    return false;
+  }
+  BM2_decryptBlock(ciphertext, plaintext);
+  bool macMatch = memcmp(plaintext, macAddress, 6) == 0;
+  reverseBytes(macAddress, 6);
+  macMatch = macMatch || memcmp(plaintext, macAddress, 6) == 0;
+  if (!macMatch) {
+    THEENGS_LOG_TRACE(F("[BM2] Not a BM2 advertisement, MAC mismatch for %s" CR), BLEdata["id"].as<const char*>());
+    return false;
+  }
+  uint16_t centivolt = (plaintext[6] << 8) | plaintext[7];
+  uint8_t batt = plaintext[8];
+  if (centivolt < 500 || centivolt > 2000 || batt > 100) {
+    THEENGS_LOG_TRACE(F("[BM2] Implausible data rejected for %s: %d cV, %d %%" CR), BLEdata["id"].as<const char*>(), centivolt, batt);
+    return false;
+  }
+  // Same fields as the Theengs Decoder output for the BM2 iBeacon, so both adverts share one shape
+  BLEdata["brand"] = "GENERIC";
+  BLEdata["model"] = "BM2 Battery Monitor";
+  BLEdata["model_id"] = "BM2";
+  BLEdata["type"] = "BATT";
+  BLEdata["track"] = true;
+  BLEdata["bvpp"] = true;
+  BLEdata["volt"] = centivolt / 100.0;
+  BLEdata["batt"] = batt;
+  BLEdata["device"] = "BM2 Tracker";
+  return true;
+}
+
 void process_bledata(JsonObject& BLEdata) {
   yield(); // Necessary to let the loop run in case of connectivity issues
   if (!BLEdata.containsKey("id")) {
@@ -1262,7 +1385,14 @@ void process_bledata(JsonObject& BLEdata) {
   }
   const char* mac = BLEdata["id"].as<const char*>();
   THEENGS_LOG_TRACE(F("Processing BLE data %s" CR), BLEdata["id"].as<const char*>());
-  int model_id = BTConfig.extDecoderEnable ? -1 : decoder.decodeBLEJson(BLEdata);
+  // BM2 encrypted advertisement, can't be handled by the decoder as it requires AES decryption
+  bool bm2AdvertDecoded = !BTConfig.extDecoderEnable && decodeBM2Advert(BLEdata);
+  int model_id = -1;
+  if (bm2AdvertDecoded) {
+    model_id = TheengsDecoder::BLE_ID_NUM::BM2;
+  } else if (!BTConfig.extDecoderEnable) {
+    model_id = decoder.decodeBLEJson(BLEdata);
+  }
   int mac_type = BLEdata["mac_type"].as<int>();
 
 #    if BLEDecryptor
@@ -1500,7 +1630,8 @@ void process_bledata(JsonObject& BLEdata) {
     if (model_id >= 0) { // Broadcaster devices
       THEENGS_LOG_TRACE(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
       if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 || model_id == TheengsDecoder::BLE_ID_NUM::BM6) { // Device that broadcast and can be connected
-        createOrUpdateDevice(mac, device_flags_connect, model_id, mac_type, deviceName);
+        // A device that delivered its data by advertisement is flagged so that BLEconnect skips it
+        createOrUpdateDevice(mac, bm2AdvertDecoded ? (device_flags_connect | device_flags_advData) : device_flags_connect, model_id, mac_type, deviceName);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
         if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {
