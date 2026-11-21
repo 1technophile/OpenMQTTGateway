@@ -103,7 +103,6 @@ static struct {
 static uint8_t lastRxFrame[CONNEX_PAYLOAD_SIZE];
 static unsigned long lastRxMs = 0;
 
-
 /*-------------------- Helpers --------------------*/
 
 static String controllerIdString() {
@@ -612,8 +611,10 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
     }
     int zone = parseZone(data["zone"]);
     float temp = NAN;
-    if (data.containsKey("temperature")) temp = data["temperature"].as<float>();
-    else if (data.containsKey("setpoint")) temp = data["setpoint"].as<float>();
+    if (data.containsKey("temperature"))
+      temp = data["temperature"].as<float>();
+    else if (data.containsKey("setpoint"))
+      temp = data["setpoint"].as<float>();
     uint16_t v;
     if (zone < 1 || zone > CONNEX_ZONES || !encodeSetpoint(temp, &v)) {
       THEENGS_LOG_ERROR(F("[CONNEX] invalid command: zone 1-%d, temperature %.1f-%.1f C" CR),

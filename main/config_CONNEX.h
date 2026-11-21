@@ -34,11 +34,11 @@ extern void launchCONNEXDiscovery();
 
 /*----------------------CONNEX topics -------------------------*/
 // Gateway state, settings and the last setpoint of each zone (retained)
-#define subjectGTWCONNEXtoMQTT    "/CONNEXtoMQTT/gateway"
+#define subjectGTWCONNEXtoMQTT "/CONNEXtoMQTT/gateway"
 // Setpoint commands: {"zone":1,"temperature":20.5}
-#define subjectMQTTtoCONNEX       "/commands/MQTTtoCONNEX"
+#define subjectMQTTtoCONNEX "/commands/MQTTtoCONNEX"
 // Configuration: {"learn":true} {"pair":1} {"controllerid":"D677"} {"burst":200,"interval":3,"acks":10} {"power":"max"} {"save":true} {"erase":true} {"init":true}
-#define subjectMQTTtoCONNEXset    "/commands/MQTTtoCONNEXset"
+#define subjectMQTTtoCONNEXset "/commands/MQTTtoCONNEXset"
 
 /*----------------------CONNEX radio protocol -------------------------*/
 // Connex wall controller link (see OpenNRF24L01 Docs/connex.md)
