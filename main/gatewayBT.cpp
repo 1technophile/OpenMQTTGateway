@@ -1332,14 +1332,18 @@ void reverseBytes(uint8_t* data, size_t length) {
  * The advertisement carries no plaintext marker, so the embedded MAC is what identifies it:
  * a payload is accepted only if it decrypts to the address it was received from. Any other
  * device broadcasting 16 bytes is rejected instead of producing a plausible false reading.
- * It is only tried for a device already identified as BM2 by its iBeacon, and before Theengs
- * Decoder, as a ciphertext can also match another model condition.
+ * It is tried before Theengs Decoder, as a ciphertext can also match another model condition,
+ * and skipped for a device already identified as another model.
  * Returns true and fills BLEdata if the advertisement is a valid BM2 one.
  */
 bool decodeBM2Advert(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"] | "";
-  if (strlen(manufacturerdata) != 32 ||
-      getDeviceByMac(BLEdata["id"].as<const char*>())->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) {
+  if (strlen(manufacturerdata) != 32) {
+    return false;
+  }
+  BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
+  if (device != &NO_BT_DEVICE_FOUND && device->sensorModel_id != UNKWNON_MODEL &&
+      device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) {
     return false;
   }
   String macWOdots = BLEdata["id"].as<String>();
