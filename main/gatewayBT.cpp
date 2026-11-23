@@ -693,8 +693,9 @@ void procBLETask(void* pvParameters) {
       BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
 #  if BLEDecoder
-      // A BM2 may deliver its data by its 16 bytes encrypted advertisement, recognised in process_bledata
-      bool filterable = device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 ||
+      // A BM2 or BM6 may deliver its data by its 16 bytes encrypted advertisement, recognised in process_bledata
+      bool filterable = (device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2 &&
+                         device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM6) ||
                         advertisedDevice->getManufacturerData().length() != 16;
 #  else
       bool filterable = true;
@@ -1321,30 +1322,43 @@ void reverseBytes(uint8_t* data, size_t length) {
 
 #  if BLEDecoder
 /**
- * BM2 encrypted advertisement decoding.
- * Beside its iBeacon advertisement (state of charge only, decoded by Theengs Decoder) the BM2
- * broadcasts 16 bytes of manufacturer data encrypted with the same AES-128-CBC key as the one
- * used by the connect handler. Plaintext layout:
+ * BM2 and BM6 encrypted advertisement decoding.
+ * Beside its iBeacon advertisement (state of charge only, decoded by Theengs Decoder) a BM2 or a
+ * BM6 broadcasts 16 bytes of manufacturer data encrypted with the AES-128-CBC key of its connect
+ * handler. Both use the same plaintext layout:
  *   [0:6] device MAC address, reversed (over the air byte order) on some units, in display order on others
  *   [6:8] voltage, big endian, in 1/100 V
  *   [8]   state of charge in %
- *   [9:]  unknown
- * The advertisement carries no plaintext marker, so the embedded MAC is what identifies it:
- * a payload is accepted only if it decrypts to the address it was received from. Any other
- * device broadcasting 16 bytes is rejected instead of producing a plausible false reading.
+ *   [9:]  unknown; the BM6 advertisement carries no temperature
+ * The advertisement carries no plaintext marker, so the embedded MAC is what identifies it, and
+ * the key that decrypts it gives the model: a payload is accepted only if it decrypts to the
+ * address it was received from. Any other device broadcasting 16 bytes is rejected instead of
+ * producing a plausible false reading.
  * It is tried before Theengs Decoder, as a ciphertext can also match another model condition,
  * and skipped for a device already identified as another model.
- * Returns true and fills BLEdata if the advertisement is a valid BM2 one.
+ * Returns the model found, BM2 or BM6, and fills BLEdata, or -1.
  */
-bool decodeBM2Advert(JsonObject& BLEdata) {
+struct BatteryMonitor {
+  int model_id;
+  void (*decrypt)(const uint8_t* input, uint8_t* output);
+  const char* model;
+  const char* modelId;
+  const char* device;
+};
+static const BatteryMonitor batteryMonitors[] = {
+    {TheengsDecoder::BLE_ID_NUM::BM2, BM2_decryptBlock, "BM2 Battery Monitor", "BM2", "BM2 Tracker"},
+    {TheengsDecoder::BLE_ID_NUM::BM6, BM6_decryptBlock, "BM6 Battery Monitor", "BM6", "BM6 Tracker"},
+};
+
+int decodeBatteryMonitorAdvert(JsonObject& BLEdata) {
   const char* manufacturerdata = BLEdata["manufacturerdata"] | "";
   if (strlen(manufacturerdata) != 32) {
-    return false;
+    return -1;
   }
   BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
-  if (device != &NO_BT_DEVICE_FOUND && device->sensorModel_id != UNKWNON_MODEL &&
-      device->sensorModel_id != TheengsDecoder::BLE_ID_NUM::BM2) {
-    return false;
+  int known = device == &NO_BT_DEVICE_FOUND ? UNKWNON_MODEL : device->sensorModel_id;
+  if (known != UNKWNON_MODEL && known != TheengsDecoder::BLE_ID_NUM::BM2 && known != TheengsDecoder::BLE_ID_NUM::BM6) {
+    return -1;
   }
   String macWOdots = BLEdata["id"].as<String>();
   macWOdots.replace(":", "");
@@ -1352,33 +1366,39 @@ bool decodeBM2Advert(JsonObject& BLEdata) {
   uint8_t ciphertext[16];
   uint8_t plaintext[16];
   if (hexToBytes(macWOdots, macAddress, 6) != 6 || hexToBytes(String(manufacturerdata), ciphertext, 16) != 16) {
-    return false;
+    return -1;
   }
-  BM2_decryptBlock(ciphertext, plaintext);
-  bool macMatch = memcmp(plaintext, macAddress, 6) == 0;
-  reverseBytes(macAddress, 6);
-  macMatch = macMatch || memcmp(plaintext, macAddress, 6) == 0;
-  if (!macMatch) {
-    THEENGS_LOG_TRACE(F("[BM2] Not a BM2 advertisement, MAC mismatch for %s" CR), BLEdata["id"].as<const char*>());
-    return false;
+  uint8_t reversedMac[6];
+  memcpy(reversedMac, macAddress, 6);
+  reverseBytes(reversedMac, 6);
+  for (const BatteryMonitor& monitor : batteryMonitors) {
+    if (known != UNKWNON_MODEL && known != monitor.model_id) {
+      continue;
+    }
+    monitor.decrypt(ciphertext, plaintext);
+    if (memcmp(plaintext, macAddress, 6) != 0 && memcmp(plaintext, reversedMac, 6) != 0) {
+      continue;
+    }
+    uint16_t centivolt = (plaintext[6] << 8) | plaintext[7];
+    uint8_t batt = plaintext[8];
+    if (centivolt < 500 || centivolt > 2000 || batt > 100) {
+      THEENGS_LOG_TRACE(F("[%s] Implausible data rejected for %s: %d cV, %d %%" CR), monitor.modelId, BLEdata["id"].as<const char*>(), centivolt, batt);
+      return -1;
+    }
+    // Same fields as the Theengs Decoder output for the iBeacon, so both adverts share one shape
+    BLEdata["brand"] = "GENERIC";
+    BLEdata["model"] = monitor.model;
+    BLEdata["model_id"] = monitor.modelId;
+    BLEdata["type"] = "BATT";
+    BLEdata["track"] = true;
+    BLEdata["bvpp"] = true;
+    BLEdata["volt"] = centivolt / 100.0;
+    BLEdata["batt"] = batt;
+    BLEdata["device"] = monitor.device;
+    return monitor.model_id;
   }
-  uint16_t centivolt = (plaintext[6] << 8) | plaintext[7];
-  uint8_t batt = plaintext[8];
-  if (centivolt < 500 || centivolt > 2000 || batt > 100) {
-    THEENGS_LOG_TRACE(F("[BM2] Implausible data rejected for %s: %d cV, %d %%" CR), BLEdata["id"].as<const char*>(), centivolt, batt);
-    return false;
-  }
-  // Same fields as the Theengs Decoder output for the BM2 iBeacon, so both adverts share one shape
-  BLEdata["brand"] = "GENERIC";
-  BLEdata["model"] = "BM2 Battery Monitor";
-  BLEdata["model_id"] = "BM2";
-  BLEdata["type"] = "BATT";
-  BLEdata["track"] = true;
-  BLEdata["bvpp"] = true;
-  BLEdata["volt"] = centivolt / 100.0;
-  BLEdata["batt"] = batt;
-  BLEdata["device"] = "BM2 Tracker";
-  return true;
+  THEENGS_LOG_TRACE(F("[BM] Not a BM2/BM6 advertisement, MAC mismatch for %s" CR), BLEdata["id"].as<const char*>());
+  return -1;
 }
 
 void process_bledata(JsonObject& BLEdata) {
@@ -1389,12 +1409,10 @@ void process_bledata(JsonObject& BLEdata) {
   }
   const char* mac = BLEdata["id"].as<const char*>();
   THEENGS_LOG_TRACE(F("Processing BLE data %s" CR), BLEdata["id"].as<const char*>());
-  // BM2 encrypted advertisement, can't be handled by the decoder as it requires AES decryption
-  bool bm2AdvertDecoded = !BTConfig.extDecoderEnable && decodeBM2Advert(BLEdata);
-  int model_id = -1;
-  if (bm2AdvertDecoded) {
-    model_id = TheengsDecoder::BLE_ID_NUM::BM2;
-  } else if (!BTConfig.extDecoderEnable) {
+  // BM2 or BM6 encrypted advertisement, can't be handled by the decoder as it requires AES decryption
+  int advertModel = BTConfig.extDecoderEnable ? -1 : decodeBatteryMonitorAdvert(BLEdata);
+  int model_id = advertModel;
+  if (advertModel < 0 && !BTConfig.extDecoderEnable) {
     model_id = decoder.decodeBLEJson(BLEdata);
   }
   int mac_type = BLEdata["mac_type"].as<int>();
@@ -1634,8 +1652,10 @@ void process_bledata(JsonObject& BLEdata) {
     if (model_id >= 0) { // Broadcaster devices
       THEENGS_LOG_TRACE(F("Decoder found device: %s" CR), BLEdata["model_id"].as<const char*>());
       if (model_id == TheengsDecoder::BLE_ID_NUM::HHCCJCY01HHCC || model_id == TheengsDecoder::BLE_ID_NUM::BM2 || model_id == TheengsDecoder::BLE_ID_NUM::BM6) { // Device that broadcast and can be connected
-        // A device that delivered its data by advertisement is flagged so that BLEconnect skips it
-        createOrUpdateDevice(mac, bm2AdvertDecoded ? (device_flags_connect | device_flags_advData) : device_flags_connect, model_id, mac_type, deviceName);
+        // A BM2 that delivered its data by advertisement is flagged so that BLEconnect skips it. A BM6
+        // keeps its connections: its advertisement has no temperature.
+        bool advData = advertModel == TheengsDecoder::BLE_ID_NUM::BM2;
+        createOrUpdateDevice(mac, advData ? (device_flags_connect | device_flags_advData) : device_flags_connect, model_id, mac_type, deviceName);
       } else {
         createOrUpdateDevice(mac, device_flags_init, model_id, mac_type, deviceName);
         if (BTConfig.adaptiveScan == true && (BTConfig.BLEinterval != MinTimeBtwScan || BTConfig.intervalActiveScan != MinTimeBtwScan)) {

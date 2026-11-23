@@ -52,6 +52,10 @@ public:
   void publishData() override;
 };
 
+// Decrypt one 16-byte BM6 AES-128-CBC block (zero IV). Shared by the connect
+// handler below and by the advertisement decoder in gatewayBT.cpp.
+void BM6_decryptBlock(const uint8_t* input, uint8_t* output);
+
 class BM6_connect : public zBLEConnect {
   void notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
 
