@@ -1196,6 +1196,7 @@ void handleBL() {
 #  ifdef ZgatewayLORA
 #    include "config_LORA.h"
 extern void LORAConfig_fromJson(JsonObject& LORAdata);
+extern void LORAConfig_apply();
 extern String stateLORAMeasures();
 extern LORAConfig_s LORAConfig;
 
@@ -1287,6 +1288,7 @@ void handleLA() {
         THEENGS_LOG_NOTICE(F("[WebUI] Save data" CR));
         WEBtoLORA["save"] = true;
         LORAConfig_fromJson(WEBtoLORA);
+        LORAConfig_apply();
         stateLORAMeasures();
         THEENGS_LOG_TRACE(F("[WebUI] LORAConfig end" CR));
       }
@@ -1301,24 +1303,8 @@ void handleLA() {
   sendBodyChunk(config_lora_body,
                 jsonChar,
                 gateway_name,
-                LORAConfig.frequency == 868000000 ? "selected" : "",
-                LORAConfig.frequency == 915000000 ? "selected" : "",
-                LORAConfig.frequency == 433000000 ? "selected" : "",
-                LORAConfig.txPower == 0 ? "selected" : "",
-                LORAConfig.txPower == 1 ? "selected" : "",
-                LORAConfig.txPower == 2 ? "selected" : "",
-                LORAConfig.txPower == 3 ? "selected" : "",
-                LORAConfig.txPower == 4 ? "selected" : "",
-                LORAConfig.txPower == 5 ? "selected" : "",
-                LORAConfig.txPower == 6 ? "selected" : "",
-                LORAConfig.txPower == 7 ? "selected" : "",
-                LORAConfig.txPower == 8 ? "selected" : "",
-                LORAConfig.txPower == 9 ? "selected" : "",
-                LORAConfig.txPower == 10 ? "selected" : "",
-                LORAConfig.txPower == 11 ? "selected" : "",
-                LORAConfig.txPower == 12 ? "selected" : "",
-                LORAConfig.txPower == 13 ? "selected" : "",
-                LORAConfig.txPower == 14 ? "selected" : "",
+                LORAConfig.frequency,
+                LORAConfig.txPower,
                 LORAConfig.spreadingFactor == 7 ? "selected" : "",
                 LORAConfig.spreadingFactor == 8 ? "selected" : "",
                 LORAConfig.spreadingFactor == 9 ? "selected" : "",

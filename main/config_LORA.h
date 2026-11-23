@@ -48,6 +48,11 @@ extern void XtoLORA(const char* topicOri, JsonObject& RFdata);
 #ifndef LORA_TX_POWER
 #  define LORA_TX_POWER 14
 #endif
+// Accepted ranges: SX127x synthesizer, and TX power on the PA_BOOST output
+#define LORA_FREQUENCY_MIN 137000000
+#define LORA_FREQUENCY_MAX 1020000000
+#define LORA_TX_POWER_MIN  2
+#define LORA_TX_POWER_MAX  20
 #ifndef LORA_SPREADING_FACTOR
 #  define LORA_SPREADING_FACTOR 7
 #endif
