@@ -344,6 +344,15 @@ static const unsigned char BM6_AES_KEY[16] = {
     57, // 9
 };
 
+void BM6_decryptBlock(const uint8_t* input, uint8_t* output) {
+  mbedtls_aes_context aes;
+  mbedtls_aes_init(&aes);
+  unsigned char iv[16] = {};
+  mbedtls_aes_setkey_dec(&aes, BM6_AES_KEY, 128);
+  mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, 16, iv, input, output);
+  mbedtls_aes_free(&aes);
+}
+
 void BM6_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
   if (m_taskHandle == nullptr) {
     return; // unexpected notification
@@ -357,13 +366,8 @@ void BM6_connect::notifyCB(NimBLERemoteCharacteristic* pChar, uint8_t* pData, si
       JsonObject BLEdata = BLEdataBuffer.to<JsonObject>();
       BLEdata["model"] = "BM6 Battery Monitor";
       BLEdata["id"] = m_pClient->getPeerAddress().toString();
-      mbedtls_aes_context aes;
-      mbedtls_aes_init(&aes);
       unsigned char output[16];
-      unsigned char iv[16] = {};
-      mbedtls_aes_setkey_dec(&aes, BM6_AES_KEY, 128);
-      mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, 16, iv, (uint8_t*)&pData[0], output);
-      mbedtls_aes_free(&aes);
+      BM6_decryptBlock(pData, output);
 
       // Check for valid message signature (should start with D15507)
       if (output[0] != 0xd1 || output[1] != 0x55 || output[2] != 0x07) {
