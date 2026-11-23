@@ -334,8 +334,26 @@ void LORAConfig_apply() {
 }
 
 void LORAConfig_fromJson(JsonObject& LORAdata) {
+  // Reject a frequency outside the SX127x range (empty or non-numeric values convert to 0)
+  if (LORAdata.containsKey("frequency")) {
+    long frequency = LORAdata["frequency"].as<long>();
+    if (frequency < LORA_FREQUENCY_MIN || frequency > LORA_FREQUENCY_MAX) {
+      THEENGS_LOG_ERROR(F("Invalid frequency: %s, keeping %l" CR), LORAdata["frequency"].as<String>().c_str(), LORAConfig.frequency);
+      LORAdata.remove("frequency");
+    }
+  }
+  // Ignore an empty or non-numeric TX power instead of converting it to 0
+  if (LORAdata.containsKey("txpower") && LORAdata["txpower"].is<const char*>()) {
+    const char* txPower = LORAdata["txpower"];
+    if (!isdigit(txPower[0]) && txPower[0] != '-') {
+      THEENGS_LOG_ERROR(F("Invalid txpower: %s, keeping %d" CR), txPower, LORAConfig.txPower);
+      LORAdata.remove("txpower");
+    }
+  }
   Config_update(LORAdata, "frequency", LORAConfig.frequency);
   Config_update(LORAdata, "txpower", LORAConfig.txPower);
+  // Clamp TX power to the PA_BOOST range, also fixes 0 or 1 dBm stored by older versions
+  LORAConfig.txPower = constrain(LORAConfig.txPower, LORA_TX_POWER_MIN, LORA_TX_POWER_MAX);
   Config_update(LORAdata, "spreadingfactor", LORAConfig.spreadingFactor);
   Config_update(LORAdata, "signalbandwidth", LORAConfig.signalBandwidth);
   Config_update(LORAdata, "codingrate", LORAConfig.codingRateDenominator);

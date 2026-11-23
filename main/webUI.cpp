@@ -1181,6 +1181,7 @@ void handleBL() {
 #  ifdef ZgatewayLORA
 #    include "config_LORA.h"
 extern void LORAConfig_fromJson(JsonObject& LORAdata);
+extern void LORAConfig_apply();
 extern String stateLORAMeasures();
 extern LORAConfig_s LORAConfig;
 
@@ -1272,6 +1273,7 @@ void handleLA() {
         THEENGS_LOG_NOTICE(F("[WebUI] Save data" CR));
         WEBtoLORA["save"] = true;
         LORAConfig_fromJson(WEBtoLORA);
+        LORAConfig_apply();
         stateLORAMeasures();
         THEENGS_LOG_TRACE(F("[WebUI] LORAConfig end" CR));
       }

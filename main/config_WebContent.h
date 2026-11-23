@@ -170,11 +170,11 @@ const char config_lora_body[] = body_header
     "<form method='get' action='la'>"
 
     "<p><b>Frequency (Hz)</b><br>"
-    "<input type='number' id='lf' name='lf' min='137000000' max='1020000000' list='lfl' value='%ld'>"
+    "<input type='number' id='lf' name='lf' min='137000000' max='1020000000' list='lfl' value='%ld' required>"
     "<datalist id='lfl'><option value='433000000'><option value='868000000'><option value='915000000'></datalist></p>"
 
     "<p><b>TX Power (dBm, 2 to 20)</b><br>"
-    "<input type='number' id='lt' name='lt' min='2' max='20' value='%d'></p>"
+    "<input type='number' id='lt' name='lt' min='2' max='20' value='%d' required></p>"
 
     "<p><b>Spreading Factor</b><br>"
     "<select id='ls' name='ls'>"
