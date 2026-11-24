@@ -514,7 +514,11 @@ void handleRoot() {
     }
     if (server.hasArg("m")) {
       if (currentWebUIMessage) {
-        server.send(200, "application/json", "{t}{s}<b>" + String(currentWebUIMessage->title) + "</b>{e}{s}" + String(currentWebUIMessage->line1) + "{e}{s}" + String(currentWebUIMessage->line2) + "{e}{s}" + String(currentWebUIMessage->line3) + "{e}{s}" + String(currentWebUIMessage->line4) + "{e}</table>");
+        String content = "{t}{s}<b>" + String(currentWebUIMessage->title) + "</b>{e}";
+        for (const char* line : {currentWebUIMessage->line1, currentWebUIMessage->line2, currentWebUIMessage->line3, currentWebUIMessage->line4}) {
+          if (line[0]) content += "{s}" + String(line) + "{e}"; // only the lines in use, the box fits its content
+        }
+        server.send(200, "application/json", content + "</table>");
       } else {
         server.send(200, "application/json", "{t}{s}Uptime:{m}" + String(uptime()) + "{e}</table>");
       }
@@ -2006,6 +2010,71 @@ constexpr unsigned int webUIHash(const char* s, int off = 0) { // workaround for
   return !s[off] ? 5381 : (webUIHash(s, off + 1) * 33) ^ s[off];
 }
 
+#  ifdef ZgatewayLORA
+/*
+Escape a received value for the main page message box: HTML characters, and '{' so the value cannot form the {t}{s}{m}{e} layout tokens.
+The result holds in room bytes; a value too long is cut on a character boundary and ends with "...", the cut flag tells it.
+*/
+String webUIFit(const String& raw, int room, bool& cut) {
+  static const char ellipsis[] = "...";
+  String escaped = HtmlEscape(raw);
+  escaped.replace("{", "&#123;");
+  cut = (int)escaped.length() > room;
+  if (!cut) return escaped;
+  String result = "";
+  int limit = room - (int)strlen(ellipsis);
+  if (limit < 0) return result;
+  for (unsigned int i = 0; i < raw.length();) {
+    unsigned char c = raw[i];
+    unsigned int n = 1; // keep UTF-8 characters whole
+    if (c >= 0xF0) {
+      n = 4;
+    } else if (c >= 0xE0) {
+      n = 3;
+    } else if (c >= 0xC0) {
+      n = 2;
+    }
+    String piece = HtmlEscape(raw.substring(i, i + n));
+    piece.replace("{", "&#123;");
+    if ((int)(result.length() + piece.length()) > limit) break;
+    result += piece;
+    i += n;
+  }
+  return result + ellipsis;
+}
+
+String webUIFit(const String& raw) {
+  bool cut;
+  return webUIFit(raw, WEBUI_TEXT_WIDTH - 1, cut);
+}
+
+/*
+Add an item to the data lines of the message box, in order, line2 then line3.
+An item too long for an empty line is cut to fill it, and when line3 is full the last item is cut and false is returned.
+*/
+bool webUIAddItem(String*& line, String& line2, String& line3, const String& item) {
+  for (;;) {
+    String separator = line->length() ? ", " : "";
+    bool cut;
+    String fitted = webUIFit(item, WEBUI_TEXT_WIDTH - 1 - (int)line->length() - (int)separator.length(), cut);
+    if (!cut || line->length() == 0) {
+      *line += separator + fitted;
+      return true;
+    }
+    if (line == &line2) {
+      line = &line3;
+      continue;
+    }
+    if (fitted.length()) {
+      *line += separator + fitted;
+    } else if (line->length() + 3 <= WEBUI_TEXT_WIDTH - 1) {
+      *line += "..."; // no room for the item, show that the line is cut
+    }
+    return false;
+  }
+}
+#  endif
+
 /*
 Parse json message from module into a format for display
 */
@@ -2534,37 +2603,52 @@ void webUIPubPrint(const char* topicori, JsonObject& data) {
 #  endif
 #  ifdef ZgatewayLORA
         case webUIHash("LORAtoMQTT"): {
-          // {"tempc":25.4,"hum":0,"batt":0}
-
-          String line1 = "";
-          if (data.containsKey("tempc")) {
-            float temperature_C = data["tempc"];
-
-            if (displayMetric) {
-              line1 = "temp: " + doubleToString(temperature_C, 3, 1) + "°C ";
-            } else {
-              line1 = "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F ";
+          // LoRa packets ({"id":"..","model":"..","tempc":25.4,"hum":50,"rssi":-60,"snr":9}, {"hex":".."}, {"message":".."})
+          // or the gateway LoRa configuration ({"frequency":868000000,"spreadingfactor":7,...})
+          String line1 = "", line2 = "", line3 = "", line4 = "";
+          if (data.containsKey("frequency") && data.containsKey("spreadingfactor")) {
+            line1 = "frequency: " + String(data["frequency"].as<long>()) + " Hz";
+            line2 = "SF" + String(data["spreadingfactor"].as<int>()) + ", bandwidth: " + String(data["signalbandwidth"].as<long>()) + " Hz";
+            if (data.containsKey("syncword")) line2 += ", sync word: " + data["syncword"].as<String>();
+            line2 = webUIFit(line2);
+            line3 = "tx power: " + String(data["txpower"].as<int>()) + " dBm";
+          } else {
+            // Line 1: the sender
+            if (data.containsKey("name")) {
+              line1 = data["name"].as<String>();
+            } else if (data.containsKey("id")) {
+              line1 = data["id"].as<String>();
             }
+            if (data.containsKey("model")) line1 += (line1.length() ? " (" : "(") + data["model"].as<String>() + ")";
+            line1 = webUIFit(line1);
+            // Lines 2 and 3: the data fields, received values are escaped and a value too long is cut
+            static const char* radioKeys[] = {"id", "name", "model", "origin", "rssi", "snr", "pferror", "packetSize", "fcnt", "fport", "payload", "confirmed", "fcnt_reset", "downlink", "downlink_pending", "downlink_error"};
+            String* line = &line2;
+            for (JsonPair kv : data) {
+              const char* key = kv.key().c_str();
+              bool skip = false;
+              for (const char* radioKey : radioKeys) skip = skip || strcmp(key, radioKey) == 0;
+              if (skip) continue;
+              String item;
+              if (strcmp(key, "tempc") == 0) {
+                float temperature_C = kv.value();
+                item = displayMetric ? "temp: " + doubleToString(temperature_C, 3, 1) + "°C" : "temp: " + doubleToString(convertTemp_CtoF(temperature_C), 3, 1) + "°F";
+              } else {
+                item = String(key) + ": " + kv.value().as<String>();
+              }
+              if (!webUIAddItem(line, line2, line3, item)) break; // lines 2 and 3 are full
+            }
+            // Line 4: the radio
+            if (data.containsKey("rssi")) line4 = "rssi: " + String(data["rssi"].as<int>()) + " dBm";
+            if (data.containsKey("snr")) line4 += (line4.length() ? ", snr: " : "snr: ") + data["snr"].as<String>();
+            if (data.containsKey("fcnt")) line4 += (line4.length() ? ", fcnt: " : "fcnt: ") + String(data["fcnt"].as<long>());
+            if (!data["downlink"]["window"].isNull()) line4 += (line4.length() ? ", downlink " : "downlink ") + data["downlink"]["window"].as<String>();
+            line4 = webUIFit(line4);
           }
           line1.toCharArray(message->line1, WEBUI_TEXT_WIDTH);
-
-          // Line 2
-
-          String line2 = "";
-          float humidity = data["hum"];
-          if (data.containsKey("hum") && humidity <= 100 && humidity >= 0) {
-            line2 += "hum: " + doubleToString(humidity, 3, 1) + "% ";
-          }
           line2.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
-
-          // Line 3
-
-          String line3 = "";
-          float adc = data["adc"];
-          if (data.containsKey("adc") && adc <= 100 && adc >= 0) {
-            line3 += "adc: " + doubleToString(adc, 3, 1) + "µS/cm ";
-          }
-          line3.toCharArray(message->line2, WEBUI_TEXT_WIDTH);
+          line3.toCharArray(message->line3, WEBUI_TEXT_WIDTH);
+          line4.toCharArray(message->line4, WEBUI_TEXT_WIDTH);
 
           // Queue completed message
 
