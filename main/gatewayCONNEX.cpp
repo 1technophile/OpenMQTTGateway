@@ -43,13 +43,6 @@
 #  include "config_CONNEX.h"
 #  ifdef ZmqttDiscovery
 #    include "config_mqttDiscovery.h"
-extern String getMacAddress();
-extern void eraseTopic(const char* sensor_type, const char* unique_id); // mqttDiscovery.cpp
-// 13-column overload defined in mqttDiscovery.cpp (not declared in config_mqttDiscovery.h)
-extern void createDiscoveryFromList(const char* mac, const char* sensorList[][13], int sensorCount,
-                                    const char* device_name, const char* device_manufacturer, const char* device_model,
-                                    bool gateway_entity, const char* state_topic, const char* availability_topic,
-                                    const char* command_topic);
 #  endif
 #  ifdef ZsensorBME280
 #    include "config_BME280.h"
@@ -68,21 +61,26 @@ struct CONNEXConfig_s {
 static CONNEXConfig_s CONNEXConfig;
 
 static bool radioOk = false;
+static unsigned long radioRetryMs = 0; // last radio init attempt while the radio is down
+#  define CONNEX_RADIO_RETRY_MS 30000UL
 static bool learning = false;
 static unsigned long learnStartMs = 0;
 static uint8_t txSeq = 0;
 
-// Last setpoint per zone, sent by the gateway or heard from the wall controller.
-// Saved to NVS so it survives a reboot (marked "restored" until the zone changes again).
+// Last known setpoint per zone: acked by a heater, or heard from the wall controller.
+// The setpoint and its source are saved to NVS so they survive a reboot (marked "restored"
+// until the zone changes again). A burst nobody acked leaves the known setpoint untouched
+// and is reported separately as failedSetpoint.
 struct ZoneLast_s {
-  bool valid;
+  bool valid; // setpoint/source hold a known setpoint
   bool restored; // loaded from NVS at boot
   float setpoint;
   char source[11]; // "gateway" or "controller"
-  int16_t sent; // frames sent, -1 when heard from the wall controller
+  int16_t sent; // frames of the last gateway burst, -1 when none since boot
   int16_t acked;
-  bool ok;
-  unsigned long changedAt; // uptime() in s when recorded, unknown once restored
+  bool ok; // last gateway burst was acked
+  float failedSetpoint; // setpoint of the last unacked burst, NAN when the last burst was acked
+  unsigned long changedAt; // uptime() in s when setpoint changed, unknown once restored
 };
 static ZoneLast_s zoneLast[CONNEX_ZONES];
 // Setpoint waiting to be transmitted per zone (NAN = nothing pending)
@@ -151,6 +149,18 @@ static int parseZone(JsonVariant v) {
   return *end == 0 ? (int)n : 0;
 }
 
+// Temperature from a JSON number or a numeric string ("20.5"); NAN for null, booleans,
+// empty or non-numeric strings, so they can't be read as 0 C
+static float parseTemperature(JsonVariant v) {
+  if (v.is<bool>()) return NAN;
+  if (v.is<float>()) return v.as<float>();
+  const char* s = v.as<const char*>();
+  if (!s || !*s) return NAN;
+  char* end;
+  float t = strtof(s, &end);
+  return *end == 0 ? t : NAN;
+}
+
 static const char* const paLevelNames[] = {"min", "low", "high", "max"};
 
 // Accept 0-3 or "min" / "low" / "high" / "max"
@@ -193,9 +203,6 @@ static void zoneLastSave() {
     JsonObject zj = jo.createNestedObject(key);
     zj["sp"] = z.setpoint;
     zj["src"] = z.source;
-    zj["sent"] = z.sent;
-    zj["acked"] = z.acked;
-    zj["ok"] = z.ok;
   }
   String conf;
   serializeJson(doc, conf);
@@ -219,47 +226,75 @@ static void zoneLastLoad() {
     z.restored = true;
     z.setpoint = zj["sp"] | NAN;
     strlcpy(z.source, zj["src"] | "gateway", sizeof(z.source));
-    z.sent = zj["sent"] | -1;
-    z.acked = zj["acked"] | 0;
-    z.ok = zj["ok"] | false;
     z.changedAt = 0; // uptime restarted, so when it changed is unknown
   }
   THEENGS_LOG_NOTICE(F("[CONNEX] last setpoints restored: %s" CR), conf.c_str());
 }
 
-static void recordZone(uint8_t zone, const char* source, float setpoint, int sent, int acked, bool ok) {
+static void clearZone(uint8_t z) {
+  zoneLast[z] = ZoneLast_s{};
+  zoneLast[z].setpoint = NAN;
+  zoneLast[z].failedSetpoint = NAN;
+  zoneLast[z].sent = -1;
+}
+
+// A known setpoint: acked by a heater or heard from the wall controller. NVS is only
+// written when the setpoint or its source changes, not for repeats of the same value.
+static void recordSetpoint(uint8_t zone, const char* source, float setpoint) {
   ZoneLast_s& z = zoneLast[zone];
   bool firstUse = !z.valid;
+  bool changed = firstUse || z.setpoint != setpoint || strcmp(z.source, source) != 0;
   z.valid = true;
   z.restored = false;
   z.setpoint = setpoint;
   strlcpy(z.source, source, sizeof(z.source));
-  z.sent = sent;
-  z.acked = acked;
-  z.ok = ok;
-  z.changedAt = uptime();
-  zoneLastSave();
+  if (changed) {
+    z.changedAt = uptime();
+    zoneLastSave();
+  }
 #  ifdef ZmqttDiscovery
   if (firstUse) updateZoneDiscovery(zone); // a zone gets its climate entity once it is used
 #  endif
 }
 
-// Fill a JSON object with a zone's last setpoint: setpoint, source, sent/acked/status,
-// age (seconds since it changed, null when unknown after a reboot) and restored
+// Outcome of a gateway burst. Only an acked burst changes the known setpoint.
+static void recordBurst(uint8_t zone, float setpoint, int sent, int acked) {
+  ZoneLast_s& z = zoneLast[zone];
+  z.sent = sent;
+  z.acked = acked;
+  z.ok = acked > 0;
+  if (z.ok) {
+    z.failedSetpoint = NAN;
+    recordSetpoint(zone, "gateway", setpoint);
+  } else {
+    z.failedSetpoint = setpoint; // the heater keeps its previous setpoint
+  }
+}
+
+static bool zoneHasState(uint8_t z) {
+  return zoneLast[z].valid || zoneLast[z].sent >= 0;
+}
+
+// Fill a JSON object with a zone's state: known setpoint, source, age (seconds since it
+// changed, null when unknown after a reboot) and restored; then the last gateway burst
+// (sent/acked/status) and failed_setpoint when that burst got no ack.
 static void addZoneLast(JsonObject jo, uint8_t zone) {
   const ZoneLast_s& z = zoneLast[zone];
-  if (!isnan(z.setpoint)) jo["setpoint"] = round(z.setpoint * 10.0f) / 10.0f;
-  jo["source"] = z.source;
+  if (z.valid) {
+    if (!isnan(z.setpoint)) jo["setpoint"] = round(z.setpoint * 10.0f) / 10.0f;
+    jo["source"] = z.source;
+    if (z.restored) {
+      jo["age"] = nullptr; // set before the last reboot, when is unknown
+      jo["restored"] = true;
+    } else {
+      jo["age"] = uptime() - z.changedAt;
+    }
+  }
   if (z.sent >= 0) {
     jo["sent"] = z.sent;
     jo["acked"] = z.acked;
     jo["status"] = z.ok ? "ok" : "failed";
-  }
-  if (z.restored) {
-    jo["age"] = nullptr; // set before the last reboot, when is unknown
-    jo["restored"] = true;
-  } else {
-    jo["age"] = uptime() - z.changedAt;
+    if (!isnan(z.failedSetpoint)) jo["failed_setpoint"] = round(z.failedSetpoint * 10.0f) / 10.0f;
   }
 }
 
@@ -341,7 +376,9 @@ static void CONNEXConfig_load() {
 
 /*-------------------- Publishing --------------------*/
 
-void stateCONNEXMeasures() {
+// Gateway state. With an error (rejected command) the message is not retained, so the
+// retained copy Home Assistant reads at start-up never carries a stale error.
+static void publishState(const char* error = nullptr) {
   StaticJsonDocument<JSON_MSG_BUFFER> doc;
   JsonObject jo = doc.to<JsonObject>();
   jo["radio"] = radioOk ? "ok" : "not responding";
@@ -354,14 +391,25 @@ void stateCONNEXMeasures() {
   // Last setpoint sent or heard per zone (the heaters never report their own setting)
   JsonObject zones = jo.createNestedObject("zones");
   for (uint8_t z = 0; z < CONNEX_ZONES; z++) {
-    if (!zoneLast[z].valid) continue;
+    if (!zoneHasState(z)) continue;
     char key[2] = {(char)('1' + z), 0};
     addZoneLast(zones.createNestedObject(key), z);
   }
+  if (error) jo["error"] = error;
   if (doc.overflowed()) THEENGS_LOG_ERROR(F("[CONNEX] state JSON overflowed" CR));
   jo["origin"] = subjectGTWCONNEXtoMQTT;
-  jo["retain"] = true; // holds the zone setpoints Home Assistant reads at start-up
+  jo["retain"] = error == nullptr; // holds the zone setpoints Home Assistant reads at start-up
   enqueueJsonObject(doc);
+}
+
+void stateCONNEXMeasures() {
+  publishState();
+}
+
+// Log and publish a rejected command
+static void rejectCommand(const char* error) {
+  THEENGS_LOG_ERROR(F("[CONNEX] %s" CR), error);
+  publishState(error);
 }
 
 /*-------------------- Discovery --------------------*/
@@ -413,14 +461,19 @@ static void announceClimateZone(uint8_t z) {
   enqueueJsonObject(doc);
 }
 
-// Announce a zone that has a last setpoint (paired, commanded or heard from the wall
-// controller); remove the entity of a zone that has never been used
+static void removeClimateZone(uint8_t z) {
+  if (!SYSConfig.discovery) return;
+  eraseTopic("climate", getUniqueId("connex-zone", String(z + 1)).c_str());
+}
+
+// Announce a zone that has a known setpoint (paired, commanded or heard from the wall
+// controller) while a controller ID is set; otherwise remove its entity
 static void updateZoneDiscovery(uint8_t z) {
-  if (!SYSConfig.discovery || !CONNEXConfig.idValid) return;
-  if (zoneLast[z].valid) {
+  if (!SYSConfig.discovery) return;
+  if (CONNEXConfig.idValid && zoneLast[z].valid) {
     announceClimateZone(z);
   } else {
-    eraseTopic("climate", getUniqueId("connex-zone", String(z + 1)).c_str());
+    removeClimateZone(z);
   }
 }
 #  endif
@@ -446,24 +499,14 @@ void launchCONNEXDiscovery() {
 
 /*-------------------- Setup / loop --------------------*/
 
-void setupCONNEX() {
-  for (uint8_t z = 0; z < CONNEX_ZONES; z++) {
-    zoneLast[z] = ZoneLast_s{};
-    zoneLast[z].setpoint = NAN;
-    zoneLast[z].sent = -1;
-    pendingSetpoint[z] = NAN;
-  }
-  burst.active = false;
-
-  CONNEXConfig_init();
-  CONNEXConfig_load();
-  zoneLastLoad();
-
-  SPI.begin(CONNEX_SCK_GPIO, CONNEX_MISO_GPIO, CONNEX_MOSI_GPIO, CONNEX_CSN_GPIO);
+// Configure the nRF24L01; false when it doesn't answer (it is retried from the loop)
+static bool radioInit() {
+  radioRetryMs = millis();
   if (!radio.begin(&SPI) || !radio.isChipConnected()) {
     radioOk = false;
-    THEENGS_LOG_ERROR(F("[CONNEX] nRF24L01 not responding, check wiring (CE=%d CSN=%d)" CR), CONNEX_CE_GPIO, CONNEX_CSN_GPIO);
-    return;
+    THEENGS_LOG_ERROR(F("[CONNEX] nRF24L01 not responding, check wiring (CE=%d CSN=%d), retrying every %lus" CR),
+                      CONNEX_CE_GPIO, CONNEX_CSN_GPIO, CONNEX_RADIO_RETRY_MS / 1000);
+    return false;
   }
   radio.setChannel(CONNEX_CHANNEL);
   radio.setDataRate(RF24_250KBPS);
@@ -483,12 +526,45 @@ void setupCONNEX() {
 
   THEENGS_LOG_NOTICE(F("[CONNEX] radio ready: CH%d, 250kbps, CRC16, controller %s" CR), CONNEX_CHANNEL,
                      CONNEXConfig.idValid ? controllerIdString().c_str() : "not learned");
+  return true;
+}
+
+void setupCONNEX() {
+  for (uint8_t z = 0; z < CONNEX_ZONES; z++) {
+    clearZone(z);
+    pendingSetpoint[z] = NAN;
+  }
+  burst.active = false;
+
+  CONNEXConfig_init();
+  CONNEXConfig_load();
+  zoneLastLoad();
+
+  SPI.begin(CONNEX_SCK_GPIO, CONNEX_MISO_GPIO, CONNEX_MOSI_GPIO, CONNEX_CSN_GPIO);
+  radioInit();
+}
+
+// Stop the burst in progress and drop queued setpoints and learn mode, so nothing queued
+// under the old controller ID is sent after erase / init
+static void cancelRadioWork() {
+  if (burst.active) {
+    burst.active = false;
+    if (radioOk) {
+      radio.flush_tx();
+      radio.flush_rx();
+      startListening();
+    }
+    THEENGS_LOG_NOTICE(F("[CONNEX] burst for zone %d cancelled" CR), burst.zone + 1);
+  }
+  for (uint8_t z = 0; z < CONNEX_ZONES; z++) pendingSetpoint[z] = NAN;
+  learning = false;
 }
 
 static void handleRxFrame(const uint8_t* b) {
   unsigned long now = millis();
   if (now - lastRxMs < CONNEX_RX_DEDUP_MS && memcmp(b, lastRxFrame, CONNEX_PAYLOAD_SIZE) == 0) {
-    return; // repeat of the frame we just handled
+    lastRxMs = now; // a run of repeats is one event, however long it lasts
+    return;
   }
   memcpy(lastRxFrame, b, CONNEX_PAYLOAD_SIZE);
   lastRxMs = now;
@@ -519,8 +595,8 @@ static void handleRxFrame(const uint8_t* b) {
   float setpoint = (((uint16_t)b[5] << 8) | b[6]) / 10.0f;
   txSeq = b[2] + 1; // keep our sequence ahead of the wall controller's
   THEENGS_LOG_NOTICE(F("[CONNEX] wall controller: zone %d -> %.1f C" CR), zone + 1, setpoint);
-  recordZone(zone, "controller", setpoint, -1, 0, true);
-  stateCONNEXMeasures();
+  recordSetpoint(zone, "controller", setpoint);
+  publishState();
 }
 
 static void startNextBurst() {
@@ -569,14 +645,17 @@ static void serviceBurst() {
   bool ok = burst.acked > 0;
   THEENGS_LOG_NOTICE(F("[CONNEX] zone %d -> %.1f C %s (%d/%d acked)" CR), burst.zone + 1, burst.setpoint,
                      ok ? "OK" : "FAILED", burst.acked, burst.sent);
-  recordZone(burst.zone, "gateway", burst.setpoint, burst.sent, burst.acked, ok);
-  stateCONNEXMeasures();
+  recordBurst(burst.zone, burst.setpoint, burst.sent, burst.acked);
+  publishState();
   radio.flush_rx(); // drop anything received while we were transmitting
   startListening();
 }
 
 void CONNEXtoX() {
-  if (!radioOk) return;
+  if (!radioOk) {
+    if (millis() - radioRetryMs >= CONNEX_RADIO_RETRY_MS && radioInit()) publishState();
+    return;
+  }
 
   if (burst.active) {
     serviceBurst();
@@ -605,20 +684,23 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
   // cmpToMainTopic is a prefix match, so exclude the ...set topic explicitly
   if (cmpToMainTopic(topicOri, subjectMQTTtoCONNEX) && !cmpToMainTopic(topicOri, subjectMQTTtoCONNEXset)) {
     THEENGS_LOG_TRACE(F("[CONNEX] MQTTtoCONNEX json" CR));
+    if (!radioOk) {
+      rejectCommand("radio not responding, command dropped");
+      return;
+    }
     if (!CONNEXConfig.idValid) {
-      THEENGS_LOG_ERROR(F("[CONNEX] no controller ID, learn the controller first" CR));
+      rejectCommand("no controller ID, pair a heater or learn the controller first");
       return;
     }
     int zone = parseZone(data["zone"]);
     float temp = NAN;
     if (data.containsKey("temperature"))
-      temp = data["temperature"].as<float>();
+      temp = parseTemperature(data["temperature"]);
     else if (data.containsKey("setpoint"))
-      temp = data["setpoint"].as<float>();
+      temp = parseTemperature(data["setpoint"]);
     uint16_t v;
     if (zone < 1 || zone > CONNEX_ZONES || !encodeSetpoint(temp, &v)) {
-      THEENGS_LOG_ERROR(F("[CONNEX] invalid command: zone 1-%d, temperature %.1f-%.1f C" CR),
-                        CONNEX_ZONES, CONNEX_MIN_TEMP, CONNEX_MAX_TEMP);
+      rejectCommand("invalid command, expected zone 1-4 and a numeric temperature in range");
       return;
     }
     pendingSetpoint[zone - 1] = v / 10.0f; // latest command per zone wins
@@ -632,30 +714,32 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
       learnStartMs = millis();
       THEENGS_LOG_NOTICE(F("[CONNEX] learn mode %s" CR), learning ? "started: change a zone on the wall controller" : "cancelled");
     }
-    if (data.containsKey("init") && data["init"].as<bool>()) {
+    // init: defaults in RAM (controller ID dropped). erase: also clears NVS and the zones.
+    bool doInit = data.containsKey("init") && data["init"].as<bool>();
+    bool doErase = data.containsKey("erase") && data["erase"].as<bool>();
+    if (doInit || doErase) {
+      cancelRadioWork();
       CONNEXConfig_init();
+      if (radioOk) radio.setPALevel(CONNEXConfig.paLevel, true);
+      if (doErase) {
+        preferences.begin(Gateway_Short_Name, false);
+        if (preferences.isKey("CONNEXConfig")) preferences.remove("CONNEXConfig");
+        if (preferences.isKey("CONNEXZones")) preferences.remove("CONNEXZones");
+        preferences.end();
+        for (uint8_t z = 0; z < CONNEX_ZONES; z++) clearZone(z);
+      }
+#  ifdef ZmqttDiscovery
+      // without a controller ID the zones can't be commanded, so their entities go
+      for (uint8_t z = 0; z < CONNEX_ZONES; z++) removeClimateZone(z);
+#  endif
+      THEENGS_LOG_NOTICE(F("[CONNEX] %s" CR), doErase ? "stored config and zones erased" : "config reset to defaults");
     }
     if (data.containsKey("load") && data["load"].as<bool>()) {
       CONNEXConfig_load();
+      if (radioOk) radio.setPALevel(CONNEXConfig.paLevel, true);
     }
     bool hadId = CONNEXConfig.idValid;
     CONNEXConfig_fromJson(data);
-    if (data.containsKey("erase") && data["erase"].as<bool>()) {
-      preferences.begin(Gateway_Short_Name, false);
-      if (preferences.isKey("CONNEXConfig")) preferences.remove("CONNEXConfig");
-      if (preferences.isKey("CONNEXZones")) preferences.remove("CONNEXZones");
-      preferences.end();
-      for (uint8_t z = 0; z < CONNEX_ZONES; z++) {
-        zoneLast[z].valid = false;
-#  ifdef ZmqttDiscovery
-        updateZoneDiscovery(z); // removes the zone's climate entity (needs the ID, so before clearing it)
-#  endif
-      }
-      CONNEXConfig_init(); // forget the controller ID and settings in RAM too, not just in flash
-      if (radioOk) radio.setPALevel(CONNEXConfig.paLevel, true);
-      learning = false;
-      THEENGS_LOG_NOTICE(F("[CONNEX] stored config erased" CR));
-    }
     if (data.containsKey("save") && data["save"].as<bool>()) {
       CONNEXConfig_save();
     }
@@ -664,10 +748,14 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
     // the next frame it hears, so we invent and save an ID if we don't have one yet.
     if (data.containsKey("pair")) {
       int zone = parseZone(data["pair"]);
-      float temp = data.containsKey("temperature") ? data["temperature"].as<float>() : 20.0f;
+      float temp = data.containsKey("temperature") ? parseTemperature(data["temperature"]) : 20.0f;
       uint16_t v;
-      if (zone < 1 || zone > CONNEX_ZONES || !encodeSetpoint(temp, &v)) {
-        THEENGS_LOG_ERROR(F("[CONNEX] pair: zone 1-%d, temperature %.1f-%.1f C" CR), CONNEX_ZONES, CONNEX_MIN_TEMP, CONNEX_MAX_TEMP);
+      if (!radioOk) {
+        rejectCommand("radio not responding, pair dropped");
+        return;
+      } else if (zone < 1 || zone > CONNEX_ZONES || !encodeSetpoint(temp, &v)) {
+        rejectCommand("invalid pair, expected zone 1-4 and a numeric temperature in range");
+        return;
       } else {
         if (!CONNEXConfig.idValid) {
           uint16_t id;

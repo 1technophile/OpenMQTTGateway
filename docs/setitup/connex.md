@@ -36,7 +36,7 @@ nRF24L01 modules are sensitive to supply noise. A 10 µF capacitor across VCC an
 
 ## Firmware
 
-Build and upload the `esp32dev-connex` environment (`esp32dev-connex-ota` uploads over WiFi), see [Build from source](../upload/builds). Once the gateway is online, check the radio:
+Build and upload the `esp32dev-connex` environment, see [Build from source](../upload/builds). Once the gateway is online, check the radio:
 
 `mosquitto_pub -t home/OpenMQTTGateway/commands/MQTTtoCONNEXset -m '{}'`
 
@@ -85,6 +85,8 @@ The temperature range is 0 to 30 °C in 0.5 °C steps, the same as the heater's 
 {"radio":"ok","controllerid":"4D06","learning":false,"burst":200,"interval":3,"acks":10,"power":"low",
  "zones":{"1":{"setpoint":20.5,"source":"gateway","sent":11,"acked":10,"status":"ok","age":0}}}
 ```
+
+If no frame is acked (heater out of range or unpowered), the zone keeps its previous `setpoint` and the attempt is reported as `"status":"failed"` with `"failed_setpoint"`. A rejected command (invalid zone or temperature, no controller ID, radio not responding) publishes a non-retained status with an `"error"` field and sends nothing.
 
 The protocol has no off command, and the wall controller doesn't have one either. Setting 0 °C (or 5 °C for frost protection) has the same effect.
 

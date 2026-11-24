@@ -24,11 +24,14 @@ import time
 
 
 class MiniMQTT:
-    """Minimal MQTT 3.1.1 client: CONNECT, PUBLISH/SUBSCRIBE at QoS 0."""
+    """Minimal MQTT 3.1.1 client: CONNECT, PUBLISH/SUBSCRIBE at QoS 0, PINGREQ keepalive."""
+
+    KEEPALIVE = 60  # seconds; a PINGREQ goes out after KEEPALIVE/2 without sending anything
 
     def __init__(self, host, port=1883, user=None, password=None, client_id=None):
         self.sock = socket.create_connection((host, port), timeout=10)
         self.buf = b""
+        self.last_tx = time.time()
         cid = (client_id or "connex-harness-%d" % os.getpid()).encode()
         flags = 0x02  # clean session
         payload = self._str(cid)
@@ -38,7 +41,7 @@ class MiniMQTT:
             if password:
                 flags |= 0x40
                 payload += self._str(password.encode())
-        var = self._str(b"MQTT") + bytes([4, flags]) + struct.pack("!H", 60)
+        var = self._str(b"MQTT") + bytes([4, flags]) + struct.pack("!H", self.KEEPALIVE)
         self._send(0x10, var + payload)
         ptype, body = self._read_packet(10)
         if ptype != 0x20 or len(body) < 2 or body[1] != 0:
@@ -57,6 +60,7 @@ class MiniMQTT:
             if not n:
                 break
         self.sock.sendall(bytes([header]) + rem + body)
+        self.last_tx = time.time()
 
     def _read_packet(self, timeout):
         self.sock.settimeout(timeout)
@@ -89,16 +93,21 @@ class MiniMQTT:
         self.pid += 1
 
     def messages(self, seconds):
-        """Yield (topic, payload) for `seconds`."""
+        """Yield (topic, payload) for `seconds`, pinging the broker so long waits stay connected."""
         end = time.time() + seconds
         while True:
-            left = end - time.time()
+            now = time.time()
+            left = end - now
             if left <= 0:
                 return
+            ping_in = self.last_tx + self.KEEPALIVE / 2 - now
+            if ping_in <= 0:
+                self._send(0xC0, b"")  # PINGREQ; the PINGRESP (0xD0) is skipped below
+                continue
             try:
-                ptype, body = self._read_packet(left)
+                ptype, body = self._read_packet(min(left, ping_in))
             except socket.timeout:
-                return
+                continue
             if ptype == 0x30:
                 tlen = struct.unpack("!H", body[:2])[0]
                 yield body[2:2 + tlen].decode(errors="replace"), body[2 + tlen:].decode(errors="replace")
@@ -173,16 +182,20 @@ def run_test(h, wait):
             print("NOTE  no controller ID: run 'pair' or 'id' first; skipping setpoint checks")
             return ok
 
-    got = h.send(h.cmd, {"zone": 0, "temperature": 20}, 3)
-    check("zone 0 rejected (nothing published)", not h.gateway_msgs(got))
-    got = h.send(h.cmd, {"zone": 1, "temperature": 30.5}, 3)
-    check("30.5 C rejected (nothing published)", not h.gateway_msgs(got))
-    got = h.send(h.cmd, {"zone": 1, "temperature": -1}, 3)
-    check("-1.0 C rejected (nothing published)", not h.gateway_msgs(got))
+    # Rejected commands publish a non-retained state with "error" and send nothing
+    for name, cmd in (("zone 0", {"zone": 0, "temperature": 20}),
+                      ("30.5 C", {"zone": 1, "temperature": 30.5}),
+                      ("-1.0 C", {"zone": 1, "temperature": -1}),
+                      ("null temperature", {"zone": 1, "temperature": None}),
+                      ("non-numeric temperature", {"zone": 1, "temperature": "abc"})):
+        got = h.send(h.cmd, cmd, 3)
+        msgs = [json.loads(p) for p in h.gateway_msgs(got)]
+        check("%s rejected with error" % name, msgs and all(m.get("error") for m in msgs))
 
     got = h.send(h.cmd, {"zone": 1, "temperature": 20.5}, wait)
     z = h.zone_msgs(got, 1)
-    check("zone 1 result published", z and z[-1].get("setpoint") == 20.5)
+    # an unacked burst keeps the old setpoint and reports failed_setpoint instead
+    check("zone 1 result published", z and 20.5 in (z[-1].get("setpoint"), z[-1].get("failed_setpoint")))
     if z:
         r = z[-1]
         check("result from gateway", r.get("source") == "gateway")
