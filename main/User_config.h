@@ -269,10 +269,18 @@ static const char* OTAserver_cert = "";
 #  define MQTT_SECURE_SIGNED_CLIENT 0 // If using a signed certificate for the broker and using client certificate/key set this to true or 1
 #endif
 
+#ifndef MQTT_RUNTIME_CERTS
+#  define MQTT_RUNTIME_CERTS false // Provision MQTT certificates at runtime instead of embedding the default certificates
+#endif
+
 #ifdef PRIVATE_CERTS
 #  include "certs/private_client_cert.h"
 #  include "certs/private_client_key.h"
 #  include "certs/private_server_cert.h"
+#elif MQTT_RUNTIME_CERTS
+static const char* ss_client_cert PROGMEM = "";
+static const char* ss_client_key PROGMEM = "";
+static const char* ss_server_cert PROGMEM = "";
 #else
 #  include "certs/default_client_cert.h"
 #  include "certs/default_client_key.h"
