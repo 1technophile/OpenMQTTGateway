@@ -21,6 +21,7 @@
             "esp32dev-gf-sun-inverter",
             "esp32dev-ir",
             "esp32dev-ble",
+            "esp32dev-ble-mtls",
             "esp32dev-ble-broker",
             "esp32dev-ble-mqtt-undecoded",
             "esp32dev-ble-aws",
@@ -92,6 +93,7 @@
         "ci": [
             "esp32dev-all-test",
             "esp32dev-ble",
+            "esp32dev-ble-mtls",
             "esp32dev-ir",
             "esp32dev-rf",
             "esp32dev-rtl_433",

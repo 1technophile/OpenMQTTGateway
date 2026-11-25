@@ -90,6 +90,60 @@ mosquitto_pub -t "home/OpenMQTTGateway/commands/MQTTtoSYS/config" -m
 This will change the subscribed and published mqtt_topic/gateway_name that the gateway uses. No parameters are mandatory, the current topic or gateway name will be used if not supplied.
 :::
 
+## Generic BLE gateway with mutual TLS
+
+The `esp32dev-ble-mtls` environment extends `esp32dev-ble` with MQTT over TLS,
+server certificate validation, and client certificate authentication enabled by
+default. It uses port `8883` by default and does not enable AWS IoT or AWS ALPN.
+BLE decoding, adaptive scanning, the WebUI, and Home Assistant discovery are
+inherited from the regular BLE environment.
+
+To build it locally:
+
+```sh
+pio run -e esp32dev-ble-mtls
+```
+
+For a new gateway, use the initial WiFiManager setup portal to configure:
+
+* `mqtt server`: the broker hostname or IP address matching its server certificate.
+* `mqtt port`: the broker's TLS listener port.
+* `mqtt secure` and `validate cert`: keep both enabled.
+* `mqtt server cert`: the PEM CA certificate used to validate the broker, not the
+  broker's server certificate.
+* `mqtt client cert`: the gateway's complete PEM client certificate.
+* `mqtt client key`: the matching complete, unencrypted PEM private key.
+* `gateway name`, `mqtt base topic`, and `gateway password`: the settings for
+  this gateway. The gateway password is separate from MQTT authentication.
+
+Configure MQTT username/password only if your broker requires them in addition
+to the client certificate. Save the configuration, then verify a fresh MQTT
+message, BLE data, and reconnection after a restart.
+
+This profile sets `MQTT_RUNTIME_CERTS=true`, so no default MQTT CA, client
+certificate, or client private key is embedded in the firmware. MQTT certificates
+are provisioned and saved using the existing runtime configuration mechanism.
+No installation-specific certificate headers are needed to build the profile.
+Other environments retain their existing certificate defaults; `PRIVATE_CERTS`
+still takes precedence for custom builds.
+
+::: warning
+Provision each gateway with its own client identity. Never transfer the CA's
+private key to a gateway or include installation keys in a firmware contribution.
+The initial setup portal is not HTTPS; provision on a trusted device and network.
+The LAN WebUI does not expose the certificate fields. Do not disable TLS
+validation to work around a provisioning error, or send a private key through a
+shared MQTT topic or retained message.
+:::
+
+The HTTPS OTA trust anchor remains separate from the MQTT CA and uses the
+existing OTA certificate defaults. A firmware update notification alone does
+not prove that an update binary exists for this environment: automatic updates
+require a published `esp32dev-ble-mtls-firmware.bin` for the target version.
+Do not replace it with the regular `esp32dev-ble` binary. Before migrating an
+existing installation, test the update and preservation of certificates and
+settings on a non-production gateway.
+
 ## Switching brokers and using signed and client certificates
 
 In the `user_config.h` file it is possible to specify multiple MQTT brokers and client certificates.
