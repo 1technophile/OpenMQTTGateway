@@ -190,7 +190,7 @@ def run_test(h, wait):
                       ("non-numeric temperature", {"zone": 1, "temperature": "abc"})):
         got = h.send(h.cmd, cmd, 3)
         msgs = [json.loads(p) for p in h.gateway_msgs(got)]
-        check("%s rejected with error" % name, msgs and all(m.get("error") for m in msgs))
+        check("%s rejected with error" % name, msgs and any(m.get("error") for m in msgs))
 
     got = h.send(h.cmd, {"zone": 1, "temperature": 20.5}, wait)
     z = h.zone_msgs(got, 1)

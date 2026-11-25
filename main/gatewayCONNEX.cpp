@@ -243,7 +243,8 @@ static void clearZone(uint8_t z) {
 static void recordSetpoint(uint8_t zone, const char* source, float setpoint) {
   ZoneLast_s& z = zoneLast[zone];
   bool firstUse = !z.valid;
-  bool changed = firstUse || z.setpoint != setpoint || strcmp(z.source, source) != 0;
+  // leaving the restored state counts as a change, so age restarts from a known time
+  bool changed = firstUse || z.restored || z.setpoint != setpoint || strcmp(z.source, source) != 0;
   z.valid = true;
   z.restored = false;
   z.setpoint = setpoint;
@@ -596,6 +597,7 @@ static void handleRxFrame(const uint8_t* b) {
   txSeq = b[2] + 1; // keep our sequence ahead of the wall controller's
   THEENGS_LOG_NOTICE(F("[CONNEX] wall controller: zone %d -> %.1f C" CR), zone + 1, setpoint);
   recordSetpoint(zone, "controller", setpoint);
+  zoneLast[zone].failedSetpoint = NAN; // the setpoint is known again, drop a stale failure
   publishState();
 }
 
@@ -709,11 +711,8 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
 
   if (cmpToMainTopic(topicOri, subjectMQTTtoCONNEXset)) {
     THEENGS_LOG_TRACE(F("[CONNEX] MQTTtoCONNEXset json" CR));
-    if (data.containsKey("learn")) {
-      learning = data["learn"].as<bool>();
-      learnStartMs = millis();
-      THEENGS_LOG_NOTICE(F("[CONNEX] learn mode %s" CR), learning ? "started: change a zone on the wall controller" : "cancelled");
-    }
+    bool hadId = CONNEXConfig.idValid;
+    bool zonesRemoved = false;
     // init: defaults in RAM (controller ID dropped). erase: also clears NVS and the zones.
     bool doInit = data.containsKey("init") && data["init"].as<bool>();
     bool doErase = data.containsKey("erase") && data["erase"].as<bool>();
@@ -731,6 +730,7 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
 #  ifdef ZmqttDiscovery
       // without a controller ID the zones can't be commanded, so their entities go
       for (uint8_t z = 0; z < CONNEX_ZONES; z++) removeClimateZone(z);
+      zonesRemoved = true;
 #  endif
       THEENGS_LOG_NOTICE(F("[CONNEX] %s" CR), doErase ? "stored config and zones erased" : "config reset to defaults");
     }
@@ -738,11 +738,21 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
       CONNEXConfig_load();
       if (radioOk) radio.setPALevel(CONNEXConfig.paLevel, true);
     }
-    bool hadId = CONNEXConfig.idValid;
     CONNEXConfig_fromJson(data);
     if (data.containsKey("save") && data["save"].as<bool>()) {
       CONNEXConfig_save();
     }
+    // after init / erase, which cancel learn mode, so {"erase":true,"learn":true} works
+    if (data.containsKey("learn")) {
+      learning = data["learn"].as<bool>();
+      learnStartMs = millis();
+      THEENGS_LOG_NOTICE(F("[CONNEX] learn mode %s" CR), learning ? "started: change a zone on the wall controller" : "cancelled");
+    }
+    // announce the zones when the ID became valid or init removed their entities;
+    // also on the pair error paths, which return early
+    auto announceIfNeeded = [&]() {
+      if ((zonesRemoved || !hadId) && CONNEXConfig.idValid) launchCONNEXDiscovery();
+    };
     // Pair: put the heater in sync mode (hold V 3 s, then -, +, V), then within 10 s send
     // {"pair":<zone>} or {"pair":<zone>,"temperature":20}. The heater adopts the controller ID of
     // the next frame it hears, so we invent and save an ID if we don't have one yet.
@@ -752,9 +762,11 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
       uint16_t v;
       if (!radioOk) {
         rejectCommand("radio not responding, pair dropped");
+        announceIfNeeded();
         return;
       } else if (zone < 1 || zone > CONNEX_ZONES || !encodeSetpoint(temp, &v)) {
         rejectCommand("invalid pair, expected zone 1-4 and a numeric temperature in range");
+        announceIfNeeded();
         return;
       } else {
         if (!CONNEXConfig.idValid) {
@@ -775,7 +787,7 @@ void XtoCONNEX(const char* topicOri, JsonObject& data) {
       }
     }
     stateCONNEXMeasures();
-    if (!hadId && CONNEXConfig.idValid) launchCONNEXDiscovery();
+    announceIfNeeded();
   }
 }
 
