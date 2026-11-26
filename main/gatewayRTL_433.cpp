@@ -372,10 +372,26 @@ void RTL_433Loop() {
   rtl_433.loop();
 }
 
+// rtl_433_ESP sizes its decoder table, decoder task and pulse limits for one
+// modulation at the first initReceiver(), so the modulation is handed over once
+static bool RTLmodulationApplied = false;
+
 extern void enableRTLreceive() {
-  THEENGS_LOG_NOTICE(F("Enable RTL_433 Receiver: %FMhz" CR), iRFConfig.getFrequency());
+  if (!RTLmodulationApplied) {
+    rtl_433_ESP::ookModulation = iRFConfig.getOokModulation();
+    RTLmodulationApplied = true;
+  }
+  THEENGS_LOG_NOTICE(F("Enable RTL_433 Receiver: %FMhz, %s" CR), iRFConfig.getFrequency(), rtl_433_ESP::ookModulation ? "OOK" : "FSK");
   rtl_433.initReceiver(RF_MODULE_RECEIVER_GPIO, iRFConfig.getFrequency());
   rtl_433.enableReceiver();
+}
+
+/**
+ * Tells if the requested modulation differs from the one the receiver was
+ * initialized with, in which case only a restart can apply it.
+ */
+extern bool RTLmodulationRestartNeeded(bool ookModulation) {
+  return RTLmodulationApplied && rtl_433_ESP::ookModulation != ookModulation;
 }
 
 extern void disableRTLreceive() {

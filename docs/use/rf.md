@@ -72,6 +72,18 @@ This feature is only available on a ESP32 based device with a supported transcei
 
 For the most recent support decoder list please check the [rtl_433_esp](https://github.com/NorthernMan54/rtl_433_ESP?tab=readme-ov-file#ook-signal-device-decoders) repository.
 
+### Change the modulation (OOK or FSK)
+
+The same binary embeds the OOK and the FSK decoders, the modulation is a setting. Only one of them can be received at a time.
+
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"modulation":"FSK","frequency":868.3}`
+
+`home/OpenMQTTGateway/commands/MQTTtoRF/config {"modulation":"OOK","frequency":433.92}`
+
+When the modulation changes, the gateway saves the RF configuration (frequency included) and restarts to apply it. The current modulation is published with the RF state under the `modulation` key.
+
+The `-fsk` environments only set FSK as the default modulation of a fresh gateway.
+
 ### Change Signal RSSI Threshold Delta
 
 Delta applied to RSSI floor noise level to determine start and end of signal, defaults to 9db.

@@ -55,6 +55,7 @@ extern void RTL_433Loop();
 extern void setupRTL_433();
 extern void enableRTLreceive();
 extern void disableRTLreceive();
+extern bool RTLmodulationRestartNeeded(bool ookModulation);
 extern int getRTLrssiThreshold();
 extern int getRTLCurrentRSSI();
 extern int getRTLMessageCount();

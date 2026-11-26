@@ -5,6 +5,7 @@
 #ifdef ZgatewayRTL_433
 #  include <rtl_433_ESP.h>
 extern rtl_433_ESP rtl_433;
+extern void ESPRestart(byte reason);
 #endif
 
 // Constructor
@@ -49,6 +50,14 @@ void RFConfiguration::setActiveReceiver(int receiver) {
   activeReceiver = receiver;
 }
 
+bool RFConfiguration::getOokModulation() const {
+  return ookModulation;
+}
+
+void RFConfiguration::setOokModulation(bool ook) {
+  ookModulation = ook;
+}
+
 /**
  * @brief Initializes the RFConfiguration  with default values.
  * 
@@ -65,6 +74,11 @@ void RFConfiguration::reInit() {
   activeReceiver = ACTIVE_RECEIVER;
   rssiThreshold = 0;
   newOokThreshold = 0;
+#ifdef ZgatewayRTL_433
+  ookModulation = OOK_MODULATION; // Build default, OOK unless the environment says otherwise
+#else
+  ookModulation = true;
+#endif
   THEENGS_LOG_TRACE(F("RFConfiguration reInit: frequency=%F, activeReceiver=%d" CR), frequency, activeReceiver);
 }
 
@@ -193,6 +207,10 @@ void RFConfiguration::loadFromStorage(bool reinitReceiver) {
  * - "erase": If true, erases the RF configuration from storage.
  * - "save": If true, saves the current RF configuration to storage.
  *
+ * A change of the RTL_433 "modulation" can not be applied to a running receiver:
+ * the whole configuration is saved (whatever "save" and "erase" say) and the
+ * gateway restarts with the new modulation.
+ *
  * Logs messages to indicate the success or failure of each operation.
  */
 void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
@@ -205,6 +223,17 @@ void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
   }
 
   fromJson(RFdata);
+
+#ifdef ZgatewayRTL_433
+  if (RTLmodulationRestartNeeded(ookModulation)) {
+    // The decoders, their task and the radio are set up for one modulation at
+    // the first receiver initialization, so persist the request and restart
+    THEENGS_LOG_NOTICE(F("RTL_433 modulation changed to %s, saving RF config and restarting" CR), ookModulation ? "OOK" : "FSK");
+    saveOnStorage();
+    ESPRestart(7);
+    return;
+  }
+#endif
 
   iRFReceiver.disable();
   iRFReceiver.enable();
@@ -237,6 +266,7 @@ void RFConfiguration::loadFromMessage(JsonObject& RFdata) {
  * Additional keys supported when ZgatewayRTL_433 is defined:
  * - "rssithreshold": Updates the RSSI threshold for RTL_433.
  * - "ookthreshold": Updates the OOK threshold for RTL_433 (requires RF_SX1276 or RF_SX1278).
+ * - "modulation": "OOK" or "FSK", RTL_433 modulation. Applied at the next restart.
  * - "status": Retrieves the current status of the RF configuration.
  *
  * Logs messages to indicate the success or failure of each update operation.
@@ -270,6 +300,16 @@ void RFConfiguration::fromJson(JsonObject& RFdata) {
     success = true;
   }
 #  endif
+  if (RFdata.containsKey("modulation")) {
+    const char* modulation = RFdata["modulation"] | "";
+    if (strcasecmp(modulation, "OOK") == 0 || strcasecmp(modulation, "FSK") == 0) {
+      ookModulation = strcasecmp(modulation, "OOK") == 0;
+      THEENGS_LOG_NOTICE(F("RTL_433 modulation: %s" CR), ookModulation ? "OOK" : "FSK");
+      success = true;
+    } else {
+      THEENGS_LOG_ERROR(F("RTL_433 modulation must be OOK or FSK" CR));
+    }
+  }
   if (RFdata.containsKey("status")) {
     THEENGS_LOG_NOTICE(F("RF get status:" CR));
     rtl_433.getStatus();
@@ -298,6 +338,7 @@ void RFConfiguration::fromJson(JsonObject& RFdata) {
  *   "rssithreshold": <float>,      // RSSI threshold value
  *   "ookthreshold": <float>,       // OOK threshold value
  *   "active": <bool>,              // Active receiver status
+ *   "modulation": "OOK" | "FSK",   // RTL_433 modulation (ZgatewayRTL_433 only)
  *   "ignoreWhitelist": <bool>,     // Ignore white-list flag
  *   "ignoreBlacklist": <bool>,     // Ignore black-list flag
  *   "white-list": [<int>, ...],    // Array of white-list values
@@ -309,6 +350,9 @@ void RFConfiguration::toJson(JsonObject& RFdata) {
   RFdata["rssithreshold"] = rssiThreshold;
   RFdata["ookthreshold"] = newOokThreshold;
   RFdata["active"] = activeReceiver;
+#ifdef ZgatewayRTL_433
+  RFdata["modulation"] = ookModulation ? "OOK" : "FSK";
+#endif
 }
 
 /**

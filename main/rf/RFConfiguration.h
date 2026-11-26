@@ -25,6 +25,15 @@ public:
   void setActiveReceiver(int receiver);
 
   /**
+   * RTL_433 modulation: true for OOK, false for FSK.
+   *
+   * The receiver takes it into account at its first initialization only, a
+   * change afterwards requires a restart.
+   */
+  bool getOokModulation() const;
+  void setOokModulation(bool ook);
+
+  /**
    * Initializes the  structure with default values.
    * 
    * @note This function should be called during the initialization phase 
@@ -85,6 +94,7 @@ public:
    * Additional keys supported when ZgatewayRTL_433 is defined:
    * - "rssithreshold": Updates the RSSI threshold for RTL_433.
    * - "ookthreshold": Updates the OOK threshold for RTL_433 (requires RF_SX1276 or RF_SX1278).
+   * - "modulation": "OOK" or "FSK", RTL_433 modulation. Applied at the next restart.
    * - "status": Retrieves the current status of the RF configuration.
    */
   void fromJson(JsonObject& RFdata);
@@ -116,6 +126,7 @@ private:
   int rssiThreshold;
   int newOokThreshold;
   int activeReceiver;
+  bool ookModulation;
 };
 
 #endif // RFCONFIG_H
