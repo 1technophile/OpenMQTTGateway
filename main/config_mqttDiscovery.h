@@ -28,7 +28,21 @@
 #define config_mqttDiscovery_h
 
 extern String getUniqueId(String name, String sufix);
+extern String getMacAddress();
 extern void pubMqttDiscovery();
+// Remove a retained discovery config (empty payload) for <sensor_type>/<unique_id>
+extern void eraseTopic(const char* sensor_type, const char* unique_id);
+// 13-column form: [11] custom state topic, [12] custom command topic; see mqttDiscovery.cpp
+extern void createDiscoveryFromList(const char* mac,
+                                    const char* sensorList[][13],
+                                    int sensorCount,
+                                    const char* device_name,
+                                    const char* device_manufacturer,
+                                    const char* device_model,
+                                    bool gateway_entity,
+                                    const char* state_topic,
+                                    const char* availability_topic,
+                                    const char* command_topic);
 
 /**
  * Create a discover messages form a list of attribute

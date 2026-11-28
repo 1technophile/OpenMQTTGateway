@@ -83,6 +83,7 @@ export default defineConfig({
           { text: 'BLE', link: '/setitup/ble' },
           { text: 'IR', link: '/setitup/ir' },
           { text: 'LoRa', link: '/setitup/lora' },
+          { text: 'Dimplex Connex', link: '/setitup/connex' },
           { text: 'GSM', link: '/setitup/gsm' },
           { text: 'Serial', link: '/setitup/serial' },
           { text: 'Sensors', link: '/setitup/sensors' },
